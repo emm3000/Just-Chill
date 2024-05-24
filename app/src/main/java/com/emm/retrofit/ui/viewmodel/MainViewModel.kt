@@ -1,6 +1,5 @@
 package com.emm.retrofit.ui.viewmodel
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.liveData
 import com.emm.retrofit.data.model.Drink
