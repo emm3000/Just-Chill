@@ -9,12 +9,11 @@ import com.bumptech.glide.Glide
 import com.emm.retrofit.R
 import com.emm.retrofit.base.BaseViewHolder
 import com.emm.retrofit.data.model.Drink
-import kotlinx.android.synthetic.main.fragment_main.*
-import kotlinx.android.synthetic.main.main_item.view.*
+import com.emm.retrofit.databinding.MainItemBinding
 
 class MainAdapter(
     private val context: Context,
-    private val tragosList: List<Drink>,
+    private val drinks: List<Drink>,
     private  val itemClickListener: OnTragoClickListener
 ) : RecyclerView.Adapter<BaseViewHolder<*>>() {
 
@@ -28,19 +27,21 @@ class MainAdapter(
 
     override fun onBindViewHolder(holder: BaseViewHolder<*>, position: Int) {
         when(holder) {
-            is MainViewHolder -> holder.bind(tragosList[position], position)
+            is MainViewHolder -> holder.bind(drinks[position], position)
         }
     }
 
     override fun getItemCount(): Int {
-        return tragosList.size
+        return drinks.size
     }
-    /*Inner para accede al context del Adapter*/
+
     inner class MainViewHolder(itemView: View) : BaseViewHolder<Drink>(itemView) {
+
         override fun bind(item: Drink, position: Int) {
-            Glide.with(context).load(item.imagen).centerCrop().into(itemView.item_image)
-            itemView.item_title.text = item.nombre
-            itemView.item_description.text = item.description
+            val binding = MainItemBinding.bind(itemView)
+            Glide.with(context).load(item.imagen).centerCrop().into(binding.itemImage)
+            binding.itemTitle.text = item.nombre
+            binding.itemDescription.text = item.description
             itemView.setOnClickListener { itemClickListener.onTragoClick(item) }
         }
 
