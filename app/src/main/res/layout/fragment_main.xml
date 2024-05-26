@@ -3,14 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
     tools:context=".ui.MainFragment">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_tragos"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        />
+        android:layout_height="match_parent" />
 
     <RelativeLayout
         android:id="@+id/progessBar"
@@ -22,6 +20,4 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true" />
     </RelativeLayout>
-
-
 </FrameLayout>

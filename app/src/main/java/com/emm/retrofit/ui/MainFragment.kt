@@ -1,12 +1,12 @@
 package com.emm.retrofit.ui
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -15,19 +15,23 @@ import com.emm.retrofit.R
 import com.emm.retrofit.data.DataSource
 import com.emm.retrofit.data.model.Drink
 import com.emm.retrofit.databinding.FragmentMainBinding
-import com.emm.retrofit.domain.RepoImpl
+import com.emm.retrofit.domain.DrinkRepositoryImpl
 import com.emm.retrofit.ui.viewmodel.MainAdapter
 import com.emm.retrofit.ui.viewmodel.MainViewModel
 import com.emm.retrofit.ui.viewmodel.OnTragoClickListener
 import com.emm.retrofit.ui.viewmodel.VMFactory
-import com.emm.retrofit.vo.Resource
+import com.emm.retrofit.vo.Result
 
 class MainFragment : Fragment(), OnTragoClickListener {
 
     private lateinit var binding: FragmentMainBinding
 
     private val viewModel by viewModels<MainViewModel> {
-        VMFactory(RepoImpl(DataSource()))
+        VMFactory(DrinkRepositoryImpl(DataSource()))
+    }
+
+    private val mainAdapter: MainAdapter by lazy {
+        MainAdapter(this)
     }
 
     override fun onCreateView(
@@ -41,22 +45,22 @@ class MainFragment : Fragment(), OnTragoClickListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecycleView()
-        viewModel.fetchTragosList.observe(viewLifecycleOwner) {
+        viewModel.fetchDrinks.observe(viewLifecycleOwner) {
             when (it) {
-                is Resource.Loading -> {
+                is Result.Loading -> {
                     binding.progessBar.visibility = View.VISIBLE
-                    Log.d("LOADING", "LOADING")
                 }
 
-                is Resource.Success -> {
-                    Log.d("LOADING", "sUCESS")
+                is Result.Success -> {
                     binding.progessBar.visibility = View.INVISIBLE
-                    binding.rvTragos.adapter = MainAdapter(requireContext(), it.data, this)
+                    mainAdapter.submitList(it.data)
                 }
 
-                is Resource.Failure -> {
-                    Log.d("LOADING", "ERROR")
+                is Result.Failure -> {
                     Toast.makeText(requireContext(), "Error", Toast.LENGTH_LONG).show()
+                    AlertDialog.Builder(requireContext())
+                        .setMessage(it.exception.message)
+                        .show()
                 }
             }
         }
@@ -65,6 +69,7 @@ class MainFragment : Fragment(), OnTragoClickListener {
     private fun setupRecycleView() {
         binding.rvTragos.layoutManager = LinearLayoutManager(requireContext())
         binding.rvTragos.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+        binding.rvTragos.adapter = mainAdapter
     }
 
     override fun onTragoClick(drink: Drink) {

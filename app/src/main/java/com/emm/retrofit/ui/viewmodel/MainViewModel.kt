@@ -2,20 +2,18 @@ package com.emm.retrofit.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.liveData
-import com.emm.retrofit.data.model.Drink
-import com.emm.retrofit.domain.Repo
-import com.emm.retrofit.vo.Resource
-
+import com.emm.retrofit.domain.DrinkRepository
+import com.emm.retrofit.vo.Result
 import kotlinx.coroutines.Dispatchers
 
-class MainViewModel(private val repo: Repo) : ViewModel() {
+class MainViewModel(private val drinkRepository: DrinkRepository) : ViewModel() {
 
-    val fetchTragosList = liveData(Dispatchers.IO) {
-        emit(Resource.Loading())
+    val fetchDrinks = liveData(Dispatchers.IO) {
+        emit(Result.Loading)
         try {
-            emit(repo.getTragoslist("margarita"))
+            emit(drinkRepository.fetchByName("margarita"))
         } catch(ex: Exception) {
-            emit(Resource.Failure<List<Drink>>(ex))
+            emit(Result.Failure(ex))
         }
     }
 
