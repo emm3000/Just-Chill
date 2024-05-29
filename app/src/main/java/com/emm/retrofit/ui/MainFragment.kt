@@ -5,12 +5,10 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.emm.retrofit.R
 import com.emm.retrofit.data.DataSource
 import com.emm.retrofit.data.model.Drink
@@ -21,6 +19,7 @@ import com.emm.retrofit.ui.viewmodel.MainViewModel
 import com.emm.retrofit.ui.viewmodel.OnTragoClickListener
 import com.emm.retrofit.ui.viewmodel.VMFactory
 import com.emm.retrofit.vo.Result
+import com.emm.retrofit.vo.safeCollect
 
 class MainFragment : Fragment(), OnTragoClickListener {
 
@@ -45,29 +44,29 @@ class MainFragment : Fragment(), OnTragoClickListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecycleView()
-        viewModel.fetchDrinks.observe(viewLifecycleOwner) {
-            when (it) {
-                is Result.Loading -> {
-                    binding.progessBar.visibility = View.VISIBLE
-                }
+        safeCollect(viewModel.fetchDrinks, ::resolveResult)
+    }
 
-                is Result.Success -> {
-                    binding.progessBar.visibility = View.INVISIBLE
-                    mainAdapter.submitList(it.data)
-                }
+    private fun resolveResult(result: Result<List<Drink>>) {
+        when (result) {
+            is Result.Loading -> {
+                binding.progessBar.visibility = View.VISIBLE
+            }
 
-                is Result.Failure -> {
-                    Toast.makeText(requireContext(), "Error", Toast.LENGTH_LONG).show()
-                    AlertDialog.Builder(requireContext())
-                        .setMessage(it.exception.message)
-                        .show()
-                }
+            is Result.Success -> {
+                binding.progessBar.visibility = View.INVISIBLE
+                mainAdapter.submitList(result.data)
+            }
+
+            is Result.Failure -> {
+                AlertDialog.Builder(requireContext())
+                    .setMessage(result.exception.message)
+                    .show()
             }
         }
     }
 
     private fun setupRecycleView() {
-        binding.rvTragos.layoutManager = LinearLayoutManager(requireContext())
         binding.rvTragos.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
         binding.rvTragos.adapter = mainAdapter
     }

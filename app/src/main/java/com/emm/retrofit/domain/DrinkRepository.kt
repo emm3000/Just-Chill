@@ -2,8 +2,9 @@ package com.emm.retrofit.domain
 
 import com.emm.retrofit.data.model.Drink
 import com.emm.retrofit.vo.Result
+import kotlinx.coroutines.flow.Flow
 
 interface DrinkRepository {
 
-    suspend fun fetchByName(name: String) : Result<List<Drink>>
+    fun fetchByName(name: String) : Flow<List<Drink>>
 }

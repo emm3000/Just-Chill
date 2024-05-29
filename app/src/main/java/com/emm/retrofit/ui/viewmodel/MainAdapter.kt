@@ -1,14 +1,13 @@
 package com.emm.retrofit.ui.viewmodel
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.emm.retrofit.R
-import com.emm.retrofit.base.BaseViewHolder
 import com.emm.retrofit.data.model.Drink
 import com.emm.retrofit.databinding.MainItemBinding
 
@@ -25,12 +24,12 @@ class MainAdapter(
     }
 
     override fun onBindViewHolder(holder: MainViewHolder, position: Int) {
-        holder.bind(getItem(position), position)
+        holder.bind(getItem(position))
     }
 
-    inner class MainViewHolder(itemView: View) : BaseViewHolder<Drink>(itemView) {
+    inner class MainViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        override fun bind(item: Drink, position: Int) {
+        fun bind(item: Drink) {
             val binding = MainItemBinding.bind(itemView)
             Glide.with(binding.root).load(item.image).centerCrop().into(binding.itemImage)
             binding.itemTitle.text = item.name

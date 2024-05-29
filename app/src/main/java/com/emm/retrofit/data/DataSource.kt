@@ -3,14 +3,17 @@ package com.emm.retrofit.data
 import com.emm.retrofit.data.model.Drink
 import com.emm.retrofit.data.model.DrinkList
 import com.emm.retrofit.domain.WebService
-import com.emm.retrofit.vo.Result
 import com.emm.retrofit.vo.RetrofitClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 
 class DataSource {
 
-    suspend fun fetchDrinkByName(drinkName: String): Result<List<Drink>> {
+    fun fetchDrinkByName(drinkName: String): Flow<List<Drink>> = flow {
         val retrofitService: WebService = RetrofitClient.service
         val drinks: DrinkList = retrofitService.fetchDrinkByName(drinkName)
-        return Result.Success(drinks.drinkList)
-    }
+        emit(drinks.drinkList)
+    }.flowOn(Dispatchers.IO)
 }

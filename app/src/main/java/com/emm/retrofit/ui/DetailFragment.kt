@@ -1,30 +1,25 @@
 package com.emm.retrofit.ui
 
+import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import com.emm.retrofit.R
 import com.emm.retrofit.data.model.Drink
 
-class DetailFragment : Fragment() {
+class DetailFragment : Fragment(R.layout.fragment_detail) {
 
-    private lateinit var drink : Drink
+    private var drink: Drink? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requireArguments().let {
-            drink = it.getParcelable<Drink>("drink")!!
+        arguments.let {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                drink = it?.getParcelable("drink", Drink::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                it?.getParcelable<Drink>("drink")
+            }
         }
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_detail, container, false)
     }
 
 }
