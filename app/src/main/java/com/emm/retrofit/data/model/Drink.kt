@@ -1,15 +1,18 @@
 package com.emm.retrofit.data.model
 
 import android.os.Parcelable
-import com.google.gson.annotations.SerializedName
 import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 @Parcelize
+@Serializable
 data class Drink(
-    @SerializedName("idDrink") val id: String = "",
-    @SerializedName("strDrinkThumb") val image: String = "",
-    @SerializedName("strDrink") val name: String = "",
-    @SerializedName("strInstructions") val description: String = ""
+    @SerialName("idDrink") val id: String = "",
+    @SerialName("strDrinkThumb") val image: String = "",
+    @SerialName("strDrink") val name: String = "",
+    @SerialName("strInstructions") val description: String = ""
 ): Parcelable
 
-data class DrinkList(@SerializedName("drinks") val drinkList: List<Drink>)
+@Serializable
+data class DrinkList(@SerialName("drinks") val drinkList: List<Drink>)
