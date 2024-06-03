@@ -16,17 +16,17 @@ import com.emm.retrofit.databinding.FragmentMainBinding
 import com.emm.retrofit.domain.DrinkRepositoryImpl
 import com.emm.retrofit.ui.viewmodel.MainAdapter
 import com.emm.retrofit.ui.viewmodel.MainViewModel
-import com.emm.retrofit.ui.viewmodel.OnTragoClickListener
-import com.emm.retrofit.ui.viewmodel.VMFactory
+import com.emm.retrofit.ui.viewmodel.OnDrinkClickListener
+import com.emm.retrofit.ui.viewmodel.ViewModelFactory
 import com.emm.retrofit.vo.Result
 import com.emm.retrofit.vo.safeCollect
 
-class MainFragment : Fragment(), OnTragoClickListener {
+class MainFragment : Fragment(), OnDrinkClickListener {
 
     private lateinit var binding: FragmentMainBinding
 
     private val viewModel by viewModels<MainViewModel> {
-        VMFactory(DrinkRepositoryImpl(DataSource()))
+        ViewModelFactory(DrinkRepositoryImpl(DataSource()))
     }
 
     private val mainAdapter: MainAdapter by lazy {
@@ -36,7 +36,7 @@ class MainFragment : Fragment(), OnTragoClickListener {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentMainBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -71,7 +71,7 @@ class MainFragment : Fragment(), OnTragoClickListener {
         binding.rvTragos.adapter = mainAdapter
     }
 
-    override fun onTragoClick(drink: Drink) {
+    override fun onDrinkClick(drink: Drink) {
         val bundle = Bundle()
         bundle.putParcelable("drink", drink)
         findNavController().navigate(R.id.action_mainFragment_to_detailFragment, bundle)

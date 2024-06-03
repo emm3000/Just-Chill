@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import com.emm.retrofit.data.model.Drink
 
+@Suppress("DEPRECATION")
 class DetailFragment : Fragment() {
 
     private var drink: Drink? = null
@@ -22,7 +23,6 @@ class DetailFragment : Fragment() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 drink = it?.getParcelable("drink", Drink::class.java)
             } else {
-                @Suppress("DEPRECATION")
                 drink = it?.getParcelable("drink")
             }
         }

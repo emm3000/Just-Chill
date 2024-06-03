@@ -12,7 +12,7 @@ import com.emm.retrofit.data.model.Drink
 import com.emm.retrofit.databinding.MainItemBinding
 
 class MainAdapter(
-    private val itemClickListener: OnTragoClickListener
+    private val itemClickListener: OnDrinkClickListener
 ) : ListAdapter<Drink, MainAdapter.MainViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MainViewHolder {
@@ -34,7 +34,7 @@ class MainAdapter(
             Glide.with(binding.root).load(item.image).centerCrop().into(binding.itemImage)
             binding.itemTitle.text = item.name
             binding.itemDescription.text = item.description
-            itemView.setOnClickListener { itemClickListener.onTragoClick(item) }
+            itemView.setOnClickListener { itemClickListener.onDrinkClick(item) }
         }
     }
 
