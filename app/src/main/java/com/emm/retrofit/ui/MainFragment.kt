@@ -18,8 +18,8 @@ import com.emm.retrofit.ui.viewmodel.MainAdapter
 import com.emm.retrofit.ui.viewmodel.MainViewModel
 import com.emm.retrofit.ui.viewmodel.OnDrinkClickListener
 import com.emm.retrofit.ui.viewmodel.ViewModelFactory
-import com.emm.retrofit.vo.Result
-import com.emm.retrofit.vo.safeCollect
+import com.emm.retrofit.core.Result
+import com.emm.retrofit.core.safeCollect
 
 class MainFragment : Fragment(), OnDrinkClickListener {
 
