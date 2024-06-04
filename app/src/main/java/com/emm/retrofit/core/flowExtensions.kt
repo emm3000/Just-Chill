@@ -1,4 +1,4 @@
-package com.emm.retrofit.vo
+package com.emm.retrofit.core
 
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle

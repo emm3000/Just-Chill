@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.retrofit.data.model.Drink
 import com.emm.retrofit.domain.DrinkRepository
-import com.emm.retrofit.vo.Result
-import com.emm.retrofit.vo.asResult
+import com.emm.retrofit.core.Result
+import com.emm.retrofit.core.asResult
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
