@@ -7,11 +7,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
-inline fun <T> Fragment.safeCollect(flow: Flow<T>, crossinline cc: (T) -> Unit) {
+inline fun <T> Fragment.safeCollect(flow: Flow<T>, crossinline ccc: (T) -> Unit) {
     viewLifecycleOwner.lifecycleScope.launch {
         repeatOnLifecycle(Lifecycle.State.STARTED) {
             flow.collect {
-                cc(it)
+                ccc(it)
             }
         }
     }
