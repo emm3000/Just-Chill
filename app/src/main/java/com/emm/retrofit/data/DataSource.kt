@@ -3,7 +3,7 @@ package com.emm.retrofit.data
 import com.emm.retrofit.data.model.Drink
 import com.emm.retrofit.data.model.DrinkList
 import com.emm.retrofit.domain.DrinkService
-import com.emm.retrofit.vo.RetrofitClient
+import com.emm.retrofit.core.RetrofitClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

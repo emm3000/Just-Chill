@@ -1,4 +1,4 @@
-package com.emm.retrofit.vo
+package com.emm.retrofit.core
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
