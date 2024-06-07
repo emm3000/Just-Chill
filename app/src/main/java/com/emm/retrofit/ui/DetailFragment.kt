@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -20,10 +20,10 @@ class DetailFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments.let {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                drink = it?.getParcelable("drink", Drink::class.java)
+            drink = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                it?.getParcelable("drink", Drink::class.java)
             } else {
-                drink = it?.getParcelable("drink")
+                it?.getParcelable("drink")
             }
         }
     }
@@ -36,7 +36,7 @@ class DetailFragment : Fragment() {
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                MaterialTheme {
+                Surface {
                     Text(drink?.name.orEmpty())
                 }
             }
