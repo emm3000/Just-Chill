@@ -8,10 +8,19 @@ import kotlinx.serialization.Serializable
 @Parcelize
 @Serializable
 data class Drink(
-    @SerialName("idDrink") val id: String = "",
-    @SerialName("strDrinkThumb") val image: String = "",
-    @SerialName("strDrink") val name: String = "",
-    @SerialName("strInstructions") val description: String = ""
+
+    @SerialName("idDrink")
+    val id: String = "",
+
+    @SerialName("strDrinkThumb")
+    val image: String = "",
+
+    @SerialName("strDrink")
+    val name: String = "",
+
+    @SerialName("strInstructions")
+    val description: String = ""
+
 ): Parcelable
 
 @Serializable
