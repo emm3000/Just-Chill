@@ -1,4 +1,4 @@
-name: Android Action
+name: Just lint
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/trunk' }}
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the code
@@ -26,11 +26,11 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
+      - name: Run Lint
+        run: ./gradlew lintDebug
 
-      - name: Build Project
-        run: ./gradlew build
-
-      - name: Build Project
-        run: ./gradlew assemble
+      - name: Upload html test report
+        uses: actions/upload-artifact@v2
+        with:
+          name: lint.html
+          path: app/build/reports/lint-results-debug.html
