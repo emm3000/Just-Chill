@@ -2,29 +2,53 @@ package com.emm.retrofit
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.navigation.NavController
-import androidx.navigation.findNavController
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.emm.retrofit.core.theme.AppTheme
+import com.emm.retrofit.experiences.drinks.ui.DrinkDetail
+import com.emm.retrofit.experiences.drinks.ui.Drinks
 
 class MainActivity : AppCompatActivity() {
-
-    private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        setContent {
+            AppTheme {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(WindowInsets.systemBars.asPaddingValues()),
+                ) {
+                    Root()
+                }
+            }
         }
-        navController = findNavController(R.id.nav_host_fragment)
     }
+}
 
-    override fun onNavigateUp(): Boolean {
-        return navController.navigateUp()
+@Composable
+fun Root() {
+    val navController: NavHostController = rememberNavController()
+
+    NavHost(navController = navController, startDestination = "list") {
+        composable("list") {
+            Drinks(navController)
+        }
+        composable("detail") {
+            DrinkDetail()
+        }
     }
 }

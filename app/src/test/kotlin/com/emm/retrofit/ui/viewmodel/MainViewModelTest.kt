@@ -2,6 +2,8 @@ package com.emm.retrofit.ui.viewmodel
 
 import com.emm.retrofit.MainDispatcherRule
 import com.emm.retrofit.core.Result
+import com.emm.retrofit.experiences.drinks.domain.DrinkFetcher
+import com.emm.retrofit.experiences.drinks.ui.MainViewModel
 import com.emm.retrofit.fake.FakeDrinkRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
@@ -23,7 +25,7 @@ class MainViewModelTest {
 
     @Before
     fun setUp() {
-        mainViewModel = MainViewModel(drinkRepository)
+        mainViewModel = MainViewModel(DrinkFetcher(drinkRepository))
     }
 
     @Test
