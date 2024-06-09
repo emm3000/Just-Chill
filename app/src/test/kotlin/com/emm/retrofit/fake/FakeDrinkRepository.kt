@@ -1,7 +1,7 @@
 package com.emm.retrofit.fake
 
-import com.emm.retrofit.data.model.Drink
-import com.emm.retrofit.domain.DrinkRepository
+import com.emm.retrofit.experiences.drinks.data.DrinkApiModel
+import com.emm.retrofit.experiences.drinks.domain.DrinkRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.emitAll
@@ -10,24 +10,24 @@ import java.util.UUID
 
 class FakeDrinkRepository : DrinkRepository {
 
-    private val flow = MutableSharedFlow<List<Drink>>()
+    private val flow = MutableSharedFlow<List<DrinkApiModel>>()
 
     suspend fun emit() {
 
-        val fakeDrink = Drink(
+        val fakeDrinkApiModel = DrinkApiModel(
             id = UUID.randomUUID().toString(),
             image = UUID.randomUUID().toString(),
             name = UUID.randomUUID().toString(),
             description = UUID.randomUUID().toString()
         )
-        val fakeListOfDrinks: List<Drink> = listOf(
-            fakeDrink
+        val fakeListOfDrinkApiModels: List<DrinkApiModel> = listOf(
+            fakeDrinkApiModel
         )
 
-        flow.emit(fakeListOfDrinks)
+        flow.emit(fakeListOfDrinkApiModels)
     }
 
-    override fun fetchByName(name: String): Flow<List<Drink>> {
+    override fun fetchByName(name: String): Flow<List<DrinkApiModel>> {
         return flow { emitAll(flow) }
     }
 }

@@ -1,13 +1,10 @@
-package com.emm.retrofit.data.model
+package com.emm.retrofit.experiences.drinks.data
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@Parcelize
 @Serializable
-data class Drink(
+data class DrinkApiModel(
 
     @SerialName("idDrink")
     val id: String = "",
@@ -20,8 +17,10 @@ data class Drink(
 
     @SerialName("strInstructions")
     val description: String = ""
-
-): Parcelable
+)
 
 @Serializable
-data class DrinkList(@SerialName("drinks") val drinkList: List<Drink>)
+data class DrinkListApiModel(
+
+    @SerialName("drinks") val drinkApiModelList: List<DrinkApiModel>
+)
