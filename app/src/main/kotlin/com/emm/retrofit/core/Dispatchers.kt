@@ -1,4 +1,4 @@
-package com.emm.retrofit.di
+package com.emm.retrofit.core
 
 import kotlinx.coroutines.CoroutineDispatcher
 
