@@ -1,8 +1,9 @@
 package com.emm.retrofit
 
 import android.app.Application
-import com.emm.retrofit.di.mainModule
-import com.emm.retrofit.di.viewmodelModule
+import com.emm.retrofit.core.di.coreModule
+import com.emm.retrofit.experiences.drinks.drinkModule
+import com.emm.retrofit.experiences.readassets.experiencesModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -15,8 +16,9 @@ class EmmApp : Application() {
             androidLogger()
             androidContext(this@EmmApp)
             modules(
-                mainModule,
-                viewmodelModule
+                coreModule,
+                drinkModule,
+                experiencesModule,
             )
         }
     }

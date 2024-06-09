@@ -32,7 +32,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.emm.retrofit.core.Result
-import com.emm.retrofit.core.theme.AppTheme
+import com.emm.retrofit.core.theme.EmmTheme
 import com.emm.retrofit.experiences.drinks.data.DrinkApiModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -134,7 +134,7 @@ fun DrinkItem(
 @Preview(showBackground = true)
 @Composable
 fun DrinkItemPreview() {
-    AppTheme {
+    EmmTheme {
         val drinkApiModel = DrinkApiModel(
             name = "lorem lorem lorem lorem lorem",
             description = "lorem lorem lorem lorem"
@@ -146,7 +146,7 @@ fun DrinkItemPreview() {
 @Preview(showBackground = true)
 @Composable
 fun DrinksPreview() {
-    AppTheme {
+    EmmTheme {
         Drinks(Result.Success(emptyList()))
     }
 }

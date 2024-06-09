@@ -1,4 +1,4 @@
-package com.emm.retrofit.di
+package com.emm.retrofit.core
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json

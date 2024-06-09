@@ -16,9 +16,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.emm.retrofit.core.theme.AppTheme
+import com.emm.retrofit.core.theme.EmmTheme
 import com.emm.retrofit.experiences.drinks.ui.DrinkDetail
 import com.emm.retrofit.experiences.drinks.ui.Drinks
+import com.emm.retrofit.experiences.readassets.ui.Experiences
 
 class MainActivity : AppCompatActivity() {
 
@@ -26,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            AppTheme {
+            EmmTheme {
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
@@ -43,7 +44,10 @@ class MainActivity : AppCompatActivity() {
 fun Root() {
     val navController: NavHostController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "list") {
+    NavHost(navController = navController, startDestination = "experiences") {
+        composable("experiences") {
+            Experiences()
+        }
         composable("list") {
             Drinks(navController)
         }

@@ -1,6 +1,6 @@
 package com.emm.retrofit.experiences.drinks.data
 
-import com.emm.retrofit.di.Dispatchers
+import com.emm.retrofit.core.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
