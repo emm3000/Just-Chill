@@ -22,5 +22,5 @@ data class DrinkApiModel(
 @Serializable
 data class DrinkListApiModel(
 
-    @SerialName("drinks") val drinkApiModelList: List<DrinkApiModel>
+    @SerialName("drinks") val drinkApiModelList: List<DrinkApiModel>?
 )

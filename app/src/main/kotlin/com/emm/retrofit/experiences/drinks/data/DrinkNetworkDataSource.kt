@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.flowOn
 class DrinkNetworkDataSource(
     dispatchers: Dispatchers,
     private val drinkService: DrinkService,
-) : DrinkDataSource, Dispatchers by dispatchers {
+) : DrinkFetcher, Dispatchers by dispatchers {
 
-    override fun fetchDrinksByName(drinkName: String): Flow<List<DrinkApiModel>> = flow {
-        val drinks: DrinkListApiModel = drinkService.fetchDrinkByName(drinkName)
-        emit(drinks.drinkApiModelList)
+    override fun fetchByName(name: String): Flow<List<DrinkApiModel>> = flow {
+        val drinks: DrinkListApiModel? = drinkService.fetchDrinkByName(name)
+        emit(drinks?.drinkApiModelList.orEmpty())
     }.flowOn(ioDispatcher)
 }
