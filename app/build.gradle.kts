@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.emm.retrofit"
+    namespace = "com.emm.justchill"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.emm.retrofit"
+        applicationId = "com.emm.justchill"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
