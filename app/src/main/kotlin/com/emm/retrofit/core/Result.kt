@@ -17,3 +17,13 @@ sealed interface Result<out T> {
 fun <T> Flow<T>.asResult(): Flow<Result<T>> = map<T, Result<T>> { Result.Success(it) }
     .onStart { emit(Result.Loading) }
     .catch { emit(Result.Failure(it)) }
+
+inline fun <T, X> Flow<Result<T>>.mapResult(
+    crossinline mapping: (T) -> X
+): Flow<Result<X>> = map { result ->
+    when (result) {
+        is Result.Failure -> Result.Failure(result.exception)
+        Result.Loading -> Result.Loading
+        is Result.Success -> Result.Success(mapping(result.data))
+    }
+}
