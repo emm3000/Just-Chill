@@ -1,7 +1,7 @@
 package com.emm.retrofit.experiences.drinks.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,13 +14,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
@@ -44,42 +46,69 @@ fun Drinks(
 
     val state: Result<List<DrinkApiModel>> by mainViewModel.fetchDrinks.collectAsState()
 
-    Drinks(state)
+    Drinks(
+        state = state,
+        value = mainViewModel.searchText,
+        updateValue = mainViewModel::updateSearchText,
+    )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun Drinks(
-    state: Result<List<DrinkApiModel>>
+    state: Result<List<DrinkApiModel>>,
+    value: String,
+    updateValue: (String) -> Unit = {}
 ) {
 
-    Box(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
+            .padding(20.dp),
     ) {
 
+        stickyHeader {
+            Surface {
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    value = value,
+                    onValueChange = updateValue,
+                    placeholder = {
+                        Text(
+                            text = "buscar",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Black.copy(alpha = 0.5f)
+                        )
+                    },
+                )
+            }
+        }
+
         if (state is Result.Success) {
-            LazyColumn {
-                items(state.data) { drinkItem ->
-                    DrinkItem(drinkApiModel = drinkItem)
-                }
+            items(state.data) {
+                DrinkItem(drinkApiModel = it)
             }
         }
 
         if (state is Result.Loading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .align(Alignment.Center)
-            )
+            item {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                )
+            }
         }
 
         if (state is Result.Failure) {
-            Text(
-                text = state.exception.message.orEmpty(),
-                style = MaterialTheme.typography.displayLarge,
-                color = MaterialTheme.colorScheme.onError
-            )
+            item {
+                Text(
+                    text = state.exception.message.orEmpty(),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+            }
         }
     }
+
 }
 
 @Composable
@@ -147,6 +176,6 @@ fun DrinkItemPreview() {
 @Composable
 fun DrinksPreview() {
     EmmTheme {
-        Drinks(Result.Success(emptyList()))
+        Drinks(Result.Failure(Exception("gaaa")), "")
     }
 }

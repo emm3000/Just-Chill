@@ -6,5 +6,5 @@ import retrofit2.http.Query
 interface DrinkService {
 
     @GET("search.php")
-    suspend fun fetchDrinkByName(@Query("s") drink: String) : DrinkListApiModel
+    suspend fun fetchDrinkByName(@Query("s") drink: String) : DrinkListApiModel?
 }

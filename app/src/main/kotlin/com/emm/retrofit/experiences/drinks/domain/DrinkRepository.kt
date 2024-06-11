@@ -5,5 +5,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface DrinkRepository {
 
-    fun fetchByName(name: String) : Flow<List<DrinkApiModel>>
+    fun fetchByName(name: String): Flow<List<DrinkApiModel>>
 }

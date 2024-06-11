@@ -1,7 +1,7 @@
 package com.emm.retrofit
 
 import android.app.Application
-import com.emm.retrofit.core.di.coreModule
+import com.emm.retrofit.core.coreModule
 import com.emm.retrofit.experiences.drinks.drinkModule
 import com.emm.retrofit.experiences.readassets.experiencesModule
 import org.koin.android.ext.koin.androidContext
