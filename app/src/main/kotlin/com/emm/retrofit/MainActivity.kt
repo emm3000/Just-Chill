@@ -16,9 +16,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.emm.retrofit.core.navigation.Experiences
+import com.emm.retrofit.core.navigation.contactsDestination
 import com.emm.retrofit.core.theme.EmmTheme
-import com.emm.retrofit.experiences.drinks.ui.DrinkDetail
-import com.emm.retrofit.experiences.drinks.ui.Drinks
 import com.emm.retrofit.experiences.readassets.ui.Experiences
 
 class MainActivity : AppCompatActivity() {
@@ -44,15 +44,10 @@ class MainActivity : AppCompatActivity() {
 fun Root() {
     val navController: NavHostController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "experiences") {
-        composable("experiences") {
-            Experiences()
+    NavHost(navController = navController, startDestination = Experiences) {
+        composable<Experiences> {
+            Experiences(navController)
         }
-        composable("list") {
-            Drinks(navController)
-        }
-        composable("detail") {
-            DrinkDetail()
-        }
+        contactsDestination(navController)
     }
 }

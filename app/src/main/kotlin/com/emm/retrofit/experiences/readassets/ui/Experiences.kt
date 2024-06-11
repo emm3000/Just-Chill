@@ -30,23 +30,32 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.emm.retrofit.core.Result
+import com.emm.retrofit.core.navigation.Drink
 import com.emm.retrofit.core.theme.EmmTheme
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun Experiences(
+    navController: NavController,
     vm: ExperiencesViewModel = koinViewModel(),
 ) {
 
     val state: Result<List<ExperienceItemUiState>> by vm.experiences.collectAsState()
 
-    Experiences(state)
+    Experiences(
+        state = state,
+        navigateTo = {
+            navController.navigate(route = Drink)
+        },
+    )
 }
 
 @Composable
 private fun Experiences(
     state: Result<List<ExperienceItemUiState>>,
+    navigateTo: () -> Unit,
 ) {
 
     LazyColumn(
@@ -58,8 +67,11 @@ private fun Experiences(
 
         when (state) {
             is Result.Success -> {
-                items(state.data) {
-                    ExperienceItem(it)
+                items(state.data) { experience ->
+                    ExperienceItem(
+                        experience = experience,
+                        navigateTo = navigateTo
+                    )
                 }
             }
 
@@ -82,7 +94,10 @@ private fun Experiences(
 }
 
 @Composable
-fun ExperienceItem(experience: ExperienceItemUiState) {
+fun ExperienceItem(
+    experience: ExperienceItemUiState,
+    navigateTo: () -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -93,7 +108,7 @@ fun ExperienceItem(experience: ExperienceItemUiState) {
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
-
+                    navigateTo()
                 }
                 .padding(10.dp)
         ) {
@@ -145,9 +160,7 @@ fun ExperienceItem(experience: ExperienceItemUiState) {
                     fontWeight = FontWeight.Bold,
                     textDecoration = TextDecoration.Underline
                 ),
-            ) {
-
-            }
+            ) {  }
         }
     }
 }
