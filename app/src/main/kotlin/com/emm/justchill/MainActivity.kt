@@ -16,8 +16,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.emm.justchill.core.navigation.Experiences
-import com.emm.justchill.core.navigation.contactsDestination
+import com.emm.justchill.core.Experiences
+import com.emm.justchill.experiences.drinks.ui.drinksDestination
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.experiences.readassets.ui.Experiences
 
@@ -48,6 +48,6 @@ fun Root() {
         composable<Experiences> {
             Experiences(navController)
         }
-        contactsDestination(navController)
+        drinksDestination(navController)
     }
 }
