@@ -17,6 +17,9 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4
 
+      - name: Create keystore.properties file
+        run: echo "${{ secrets.JUST_VERONICA }}" > keystore.properties
+
       - name: Set Up JDK
         uses: actions/setup-java@v4
         with:
@@ -42,6 +45,9 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4
 
+      - name: Create keystore.properties file
+        run: echo "${{ secrets.JUST_VERONICA }}" > keystore.properties
+
       - name: Set Up JDK
         uses: actions/setup-java@v4
         with:
@@ -65,6 +71,14 @@ jobs:
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4
+
+      - name: Create keystore.properties file
+        run: echo "${{ secrets.JUST_VERONICA }}" > keystore.properties
+
+      - name: JUST CHILL
+        run: |
+          mkdir -p key
+          echo "${{ secrets.JUST_CHILL }}" | base64 --decode > key/just_chill_key.p12
 
       - name: Set Up JDK
         uses: actions/setup-java@v4

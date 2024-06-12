@@ -25,7 +25,13 @@ val drinkModule = module {
 
     drinkNetworkDataSource()
     drinkLocalDataSource()
+    drinkRepository()
 
+    factoryOf(::DomainDrinkFetcher)
+    viewModelOf(::MainViewModel)
+}
+
+private fun Module.drinkRepository() {
     single<DrinkRepository> {
         DefaultDrinkRepository(
             get(named("network")),
@@ -33,9 +39,6 @@ val drinkModule = module {
             get(named("local")),
         )
     }
-
-    factoryOf(::DomainDrinkFetcher)
-    viewModelOf(::MainViewModel)
 }
 
 private fun Module.drinkNetworkDataSource() {

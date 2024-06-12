@@ -39,26 +39,30 @@ import com.emm.justchill.experiences.drinks.data.DrinkApiModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun Drinks(
+fun DrinksScreen(
     navController: NavController,
     mainViewModel: MainViewModel = koinViewModel(),
 ) {
 
     val state: Result<List<DrinkApiModel>> by mainViewModel.fetchDrinks.collectAsState()
 
-    Drinks(
+    DrinksScreen(
         state = state,
         value = mainViewModel.searchText,
         updateValue = mainViewModel::updateSearchText,
+        navigateToDetail = {
+            navController.navigate(it.toRoute())
+        },
     )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun Drinks(
+private fun DrinksScreen(
     state: Result<List<DrinkApiModel>>,
     value: String,
-    updateValue: (String) -> Unit = {}
+    updateValue: (String) -> Unit = {},
+    navigateToDetail: (DrinkApiModel) -> Unit = {},
 ) {
 
     LazyColumn(
@@ -87,7 +91,10 @@ private fun Drinks(
 
         if (state is Result.Success) {
             items(state.data) {
-                DrinkItem(drinkApiModel = it)
+                DrinkItem(
+                    drinkApiModel = it,
+                    navigateToDetail = navigateToDetail,
+                )
             }
         }
 
@@ -115,16 +122,16 @@ private fun Drinks(
 fun DrinkItem(
     modifier: Modifier = Modifier,
     drinkApiModel: DrinkApiModel,
-    navigateToDetail: () -> Unit = {},
+    navigateToDetail: (DrinkApiModel) -> Unit = {},
 ) {
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clickable {
-
+                navigateToDetail(drinkApiModel)
             }
-            .padding(10.dp)
+            .padding(vertical = 10.dp)
             .height(120.dp)
     ) {
         AsyncImage(
@@ -176,6 +183,9 @@ fun DrinkItemPreview() {
 @Composable
 fun DrinksPreview() {
     EmmTheme {
-        Drinks(Result.Failure(Exception("gaaa")), "")
+        DrinksScreen(
+            Result.Failure(Exception("gaaa")),
+            ""
+        )
     }
 }

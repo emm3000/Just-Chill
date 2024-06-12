@@ -32,7 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.emm.justchill.core.Result
-import com.emm.justchill.core.navigation.Drink
+import com.emm.justchill.experiences.drinks.ui.Drink
 import com.emm.justchill.core.theme.EmmTheme
 import org.koin.androidx.compose.koinViewModel
 
