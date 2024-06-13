@@ -5,5 +5,12 @@
     "date": "09/06/2024",
     "category": "video",
     "resource": "no link"
+  },
+  {
+    "title": "Understanding Margin and Padding in Compose UI",
+    "description": "How work padding in Jetpack compose and margin with padding",
+    "date": "12/06/2024",
+    "category": "blog",
+    "resource": "https://sagarbalyan.medium.com/understanding-margin-and-padding-in-compose-ui-395039a77b76"
   }
 ]
