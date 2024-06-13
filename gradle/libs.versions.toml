@@ -7,6 +7,7 @@ composeBom = "2024.05.00"
 constraintlayout = "2.1.4"
 coreKtx = "1.13.1"
 espressoCore = "3.5.1"
+firebaseBom = "33.1.0"
 glide = "4.13.2"
 junit = "4.13.2"
 junitVersion = "1.1.5"
@@ -48,6 +49,9 @@ androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "compiler" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 junit = { module = "junit:junit", version.ref = "junit" }
 koin-android = { module = "io.insert-koin:koin-android" }

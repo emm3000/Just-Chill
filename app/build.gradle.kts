@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.kotlin)
     id("kotlin-parcelize")
     kotlin("plugin.serialization") version "1.9.24"
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -113,4 +115,8 @@ dependencies {
 
     debugImplementation(libs.library)
     releaseImplementation(libs.library.no.op)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
 }
