@@ -1,4 +1,4 @@
-package com.emm.justchill.experiences.readassets.domain
+package com.emm.justchill.experiences.readjsonfromassets.domain
 
 import com.emm.justchill.core.FlowResult
 import com.emm.justchill.core.asResult

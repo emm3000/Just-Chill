@@ -23,6 +23,44 @@
           "other_platform_oauth_client": []
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1018739465705:android:f1d40bf55618dee530ff78",
+        "android_client_info": {
+          "package_name": "com.emm.justchill.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2aSSBoW1PH8wJJgAY9pnNtZ_o6gmhCYA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1018739465705:android:8158d3412343732b30ff78",
+        "android_client_info": {
+          "package_name": "com.emm.justchill.qa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2aSSBoW1PH8wJJgAY9pnNtZ_o6gmhCYA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
     }
   ],
   "configuration_version": "1"

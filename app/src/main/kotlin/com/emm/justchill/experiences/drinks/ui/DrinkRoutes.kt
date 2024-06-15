@@ -26,14 +26,3 @@ fun DrinkApiModel.toRoute() = DrinkDetail(
     description = description,
     image = image
 )
-
-fun NavGraphBuilder.drinksDestination(navController: NavController) {
-
-    navigation<Drink>(startDestination = DrinkList) {
-        composable<DrinkList> { DrinksScreen(navController = navController) }
-        composable<DrinkDetail> {
-            val route: DrinkDetail = it.toRoute<DrinkDetail>()
-            DrinkDetailScreen(route)
-        }
-    }
-}

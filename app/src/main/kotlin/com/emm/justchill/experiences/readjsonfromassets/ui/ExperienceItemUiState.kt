@@ -1,4 +1,4 @@
-package com.emm.justchill.experiences.readassets.ui
+package com.emm.justchill.experiences.readjsonfromassets.ui
 
 import androidx.compose.ui.graphics.Color
 

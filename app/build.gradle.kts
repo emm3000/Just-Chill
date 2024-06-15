@@ -29,7 +29,7 @@ android {
     }
 
     signingConfigs {
-        create("release") {
+        create("config") {
             keyAlias = keystoreProperties["keyAlias"] as String
             keyPassword = keystoreProperties["keyPassword"] as String
             storeFile = file(keystoreProperties["storeFile"] as String)
@@ -41,7 +41,35 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+
+    val flavorDimension = "tier"
+    val appName = "JC"
+    flavorDimensions += listOf(flavorDimension)
+
+    productFlavors {
+
+        create("dev") {
+            dimension = flavorDimension
+            manifestPlaceholders["app_name"] = appName
+            manifestPlaceholders["flavor_suffix"] = "-DEV"
+            applicationIdSuffix = ".dev"
+        }
+
+        create("qa") {
+            dimension = flavorDimension
+            applicationIdSuffix = ".qa"
+            manifestPlaceholders["app_name"] = appName
+            manifestPlaceholders["flavor_suffix"] = "-QA"
+            signingConfig = signingConfigs["config"]
+        }
+
+        create("prod") {
+            dimension = flavorDimension
+            manifestPlaceholders["app_name"] = "Just Chill"
+            manifestPlaceholders["flavor_suffix"] = ""
+            signingConfig = signingConfigs["config"]
         }
     }
 

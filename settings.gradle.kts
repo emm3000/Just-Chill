@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 }
 
 include(":app")
-rootProject.name = "Retrofit"
+rootProject.name = "app"

@@ -1,6 +1,6 @@
-package com.emm.justchill.experiences.readassets.data
+package com.emm.justchill.experiences.readjsonfromassets.data
 
-import com.emm.justchill.experiences.readassets.domain.Experience
+import com.emm.justchill.experiences.readjsonfromassets.domain.Experience
 import kotlinx.serialization.Serializable
 
 @Serializable

@@ -128,9 +128,7 @@ fun DrinkItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable {
-                navigateToDetail(drinkApiModel)
-            }
+            .clickable { navigateToDetail(drinkApiModel) }
             .padding(vertical = 10.dp)
             .height(120.dp)
     ) {
