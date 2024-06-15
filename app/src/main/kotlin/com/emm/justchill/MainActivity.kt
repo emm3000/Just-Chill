@@ -1,9 +1,9 @@
 package com.emm.justchill
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,10 +16,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.emm.justchill.core.Experiences
-import com.emm.justchill.experiences.drinks.ui.drinksDestination
+import com.emm.justchill.core.RootRoutes
+import com.emm.justchill.core.rootData
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.experiences.readassets.ui.Experiences
 
 class MainActivity : AppCompatActivity() {
 
@@ -42,12 +41,15 @@ class MainActivity : AppCompatActivity() {
 
 @Composable
 fun Root() {
+
     val navController: NavHostController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Experiences) {
-        composable<Experiences> {
-            Experiences(navController)
+    NavHost(navController = navController, startDestination = RootRoutes.ExperiencesRoot.route) {
+        composable(RootRoutes.ExperiencesRoot.route) {
+            RootExperiences(navController = navController)
         }
-        drinksDestination(navController)
+        rootData.forEach { features ->
+            composable(features.route.route) { features.screen(navController) }
+        }
     }
 }

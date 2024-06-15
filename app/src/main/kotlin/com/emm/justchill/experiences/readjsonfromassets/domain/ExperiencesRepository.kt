@@ -1,4 +1,4 @@
-package com.emm.justchill.experiences.readassets.domain
+package com.emm.justchill.experiences.readjsonfromassets.domain
 
 import kotlinx.coroutines.flow.Flow
 

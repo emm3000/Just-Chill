@@ -1,11 +1,11 @@
-package com.emm.justchill.experiences.readassets.ui
+package com.emm.justchill.experiences.readjsonfromassets.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.core.Result
 import com.emm.justchill.core.mapResult
-import com.emm.justchill.experiences.readassets.domain.Experience
-import com.emm.justchill.experiences.readassets.domain.ExperiencesReader
+import com.emm.justchill.experiences.readjsonfromassets.domain.Experience
+import com.emm.justchill.experiences.readjsonfromassets.domain.ExperiencesReader
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn

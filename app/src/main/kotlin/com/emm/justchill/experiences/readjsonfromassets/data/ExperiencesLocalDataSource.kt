@@ -1,4 +1,4 @@
-package com.emm.justchill.experiences.readassets.data
+package com.emm.justchill.experiences.readjsonfromassets.data
 
 import android.content.Context
 import com.emm.justchill.core.Dispatchers
