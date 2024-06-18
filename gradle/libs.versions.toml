@@ -3,7 +3,7 @@ activityCompose = "1.9.0"
 appcompat = "1.7.0"
 coilCompose = "2.6.0"
 compiler = "4.11.0"
-composeBom = "2024.05.00"
+composeBom = "2024.06.00"
 constraintlayout = "2.1.4"
 coreKtx = "1.13.1"
 espressoCore = "3.5.1"
@@ -16,16 +16,18 @@ kotlinxCoroutinesTest = "1.9.0-RC"
 kotlinxSerializationJson = "1.6.3"
 library = "4.0.0"
 libraryNoOp = "4.0.0"
-lifecycleLivedataKtx = "2.8.1"
+lifecycleLivedataKtx = "2.8.2"
 loggingInterceptor = "4.12.0"
 material = "1.12.0"
 navigationCompose = "2.7.7"
 navigationFragmentKtx = "2.7.7"
-navigationUiKtx = "2.8.0-beta02"
+navigationUiKtx = "2.8.0-beta03"
 retrofit = "2.11.0"
 retrofit2KotlinxSerializationConverter = "1.0.0"
-androidApplication = "8.4.1"
+androidApplication = "8.5.0"
 kotlinVersion = "1.9.0"
+googleServicesVersion = "4.4.2"
+googleCrashlyticsVersion = "3.0.1"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -71,3 +73,5 @@ retrofit2-kotlinx-serialization-converter = { module = "com.jakewharton.retrofit
 
 android-application = { id = "com.android.application", version.ref = "androidApplication" }
 kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinVersion" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServicesVersion" }
+google-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleCrashlyticsVersion" }

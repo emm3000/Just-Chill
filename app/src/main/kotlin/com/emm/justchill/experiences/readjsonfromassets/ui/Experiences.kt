@@ -29,9 +29,7 @@ fun Experiences(
 
     val state: Result<List<ExperienceItemUiState>> by vm.experiences.collectAsState()
 
-    Experiences(
-        state = state,
-    )
+    Experiences(state = state,)
 }
 
 @Composable
