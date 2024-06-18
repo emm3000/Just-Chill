@@ -30,7 +30,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Run Lint
-        run: ./gradlew lintDebug
+        run: ./gradlew lint
 
       - name: Upload html test report
         uses: actions/upload-artifact@v2

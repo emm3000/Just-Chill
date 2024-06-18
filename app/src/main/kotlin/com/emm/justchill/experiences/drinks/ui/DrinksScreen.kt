@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -65,53 +66,58 @@ private fun DrinksScreen(
     navigateToDetail: (DrinkApiModel) -> Unit = {},
 ) {
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp),
-    ) {
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
 
-        stickyHeader {
-            Surface {
-                OutlinedTextField(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    value = value,
-                    onValueChange = updateValue,
-                    placeholder = {
-                        Text(
-                            text = "buscar",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Black.copy(alpha = 0.5f)
-                        )
-                    },
-                )
+        ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it),
+        ) {
+
+            stickyHeader {
+                Surface {
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        value = value,
+                        onValueChange = updateValue,
+                        placeholder = {
+                            Text(
+                                text = "buscar",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Black.copy(alpha = 0.5f)
+                            )
+                        },
+                    )
+                }
             }
-        }
 
-        if (state is Result.Success) {
-            items(state.data) {
-                DrinkItem(
-                    drinkApiModel = it,
-                    navigateToDetail = navigateToDetail,
-                )
+            if (state is Result.Success) {
+                items(state.data) {
+                    DrinkItem(
+                        drinkApiModel = it,
+                        navigateToDetail = navigateToDetail,
+                    )
+                }
             }
-        }
 
-        if (state is Result.Loading) {
-            item {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                )
+            if (state is Result.Loading) {
+                item {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                    )
+                }
             }
-        }
 
-        if (state is Result.Failure) {
-            item {
-                Text(
-                    text = state.exception.message.orEmpty(),
-                    style = MaterialTheme.typography.titleLarge,
-                )
+            if (state is Result.Failure) {
+                item {
+                    Text(
+                        text = state.exception.message.orEmpty(),
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                }
             }
         }
     }
@@ -181,9 +187,13 @@ fun DrinkItemPreview() {
 @Composable
 fun DrinksPreview() {
     EmmTheme {
+        val drinkApiModel = DrinkApiModel(
+            name = "lorem lorem lorem lorem lorem",
+            description = "lorem lorem lorem lorem"
+        )
         DrinksScreen(
-            Result.Failure(Exception("gaaa")),
-            ""
+            state = Result.Success(listOf(drinkApiModel)),
+            value = ""
         )
     }
 }

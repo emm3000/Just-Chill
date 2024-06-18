@@ -6,8 +6,8 @@ plugins {
     alias(libs.plugins.kotlin)
     id("kotlin-parcelize")
     kotlin("plugin.serialization") version "1.9.24"
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.google.crashlytics)
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
