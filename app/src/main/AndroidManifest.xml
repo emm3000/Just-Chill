@@ -7,9 +7,9 @@
     <application
         android:name=".EmmApp"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launcher_first"
         android:label="${app_name}${flavor_suffix}"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_launcher_first_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Retrofit"
         android:usesCleartextTraffic="true">
