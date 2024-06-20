@@ -1,0 +1,13 @@
+CREATE TABLE transactions (
+    transactionId INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL,
+    mounth TEXT NOT NULL,
+    description TEXT NOT NULL,
+    date INTEGER NOT NULL
+);
+
+retrieveAll:
+SELECT * FROM transactions;
+
+addTransaction:
+INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?);

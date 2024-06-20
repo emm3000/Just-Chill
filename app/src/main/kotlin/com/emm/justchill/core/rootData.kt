@@ -1,6 +1,7 @@
 package com.emm.justchill.core
 
 import com.emm.justchill.experiences.drinks.ui.DrinkMainScreen
+import com.emm.justchill.experiences.hh.presentation.Hh
 import com.emm.justchill.experiences.readjsonfromassets.ui.Experiences
 import java.util.UUID
 
@@ -9,6 +10,7 @@ sealed class RootRoutes(val route: String) {
     data object ExperiencesRoot : RootRoutes("ExperiencesRoot")
     data object Experiences : RootRoutes("Experiences")
     data object Drink : RootRoutes("Drink")
+    data object Hh : RootRoutes("hh")
 }
 
 val rootData: List<Feature> = listOf(
@@ -38,5 +40,14 @@ val rootData: List<Feature> = listOf(
         resource = "no link",
         route = RootRoutes.Drink,
         screen = { Experiences(it) }
+    ),
+    Feature(
+        id = UUID.randomUUID().toString(),
+        title = "Create finance app, with",
+        description = "Create complete app, after change the styles",
+        category = "personal",
+        resource = "-",
+        route = RootRoutes.Hh,
+        screen = { Hh() }
     )
 )

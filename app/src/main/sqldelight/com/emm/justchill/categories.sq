@@ -1,0 +1,14 @@
+CREATE TABLE categories (
+    categoryId INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    type TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL
+);
+
+retrieveAll:
+SELECT * FROM categories;
+
+addCategory:
+INSERT OR REPLACE INTO categories VALUES(?, ?, ?, ?, ?);
+

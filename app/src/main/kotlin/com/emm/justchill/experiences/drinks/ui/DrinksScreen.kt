@@ -1,6 +1,6 @@
 package com.emm.justchill.experiences.drinks.ui
 
-import androidx.compose.foundation.ExperimentalFoundationApi
+import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,8 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -57,7 +55,7 @@ fun DrinksScreen(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 private fun DrinksScreen(
     state: Result<List<DrinkApiModel>>,
@@ -66,34 +64,35 @@ private fun DrinksScreen(
     navigateToDetail: (DrinkApiModel) -> Unit = {},
 ) {
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(20.dp)
+    ) {
+        OutlinedTextField(
+            modifier = Modifier
+                .fillMaxWidth(),
+            value = value,
+            onValueChange = updateValue,
+            placeholder = {
+                Text(
+                    text = "Ingresa tu trago",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Black.copy(alpha = 0.5f)
+                )
+            },
+            label = {
+                Text(
+                    text = "Ingresa tu trago",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        )
 
-        ) {
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(it),
+                .fillMaxSize(),
         ) {
-
-            stickyHeader {
-                Surface {
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        value = value,
-                        onValueChange = updateValue,
-                        placeholder = {
-                            Text(
-                                text = "buscar",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.Black.copy(alpha = 0.5f)
-                            )
-                        },
-                    )
-                }
-            }
-
             if (state is Result.Success) {
                 items(state.data) {
                     DrinkItem(
