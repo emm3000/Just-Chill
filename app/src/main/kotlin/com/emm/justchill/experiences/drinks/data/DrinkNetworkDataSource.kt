@@ -1,14 +1,14 @@
 package com.emm.justchill.experiences.drinks.data
 
-import com.emm.justchill.core.Dispatchers
+import com.emm.justchill.core.DispatchersProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 
 class DrinkNetworkDataSource(
-    dispatchers: Dispatchers,
+    dispatchersProvider: DispatchersProvider,
     private val drinkService: DrinkService,
-) : DrinkFetcher, Dispatchers by dispatchers {
+) : DrinkFetcher, DispatchersProvider by dispatchersProvider {
 
     override fun fetchByName(name: String): Flow<List<DrinkApiModel>> = flow {
         val drinks: DrinkListApiModel? = drinkService.fetchDrinkByName(name)

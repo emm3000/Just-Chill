@@ -1,6 +1,6 @@
 CREATE TABLE categories (
-    categoryId INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
+    categoryId TEXT PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE ,
     type TEXT,
     createdAt INTEGER NOT NULL,
     updatedAt INTEGER NOT NULL

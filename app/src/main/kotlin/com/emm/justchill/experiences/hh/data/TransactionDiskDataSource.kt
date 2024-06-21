@@ -4,18 +4,19 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.emm.justchill.TransactionQueries
 import com.emm.justchill.Transactions
-import com.emm.justchill.core.Dispatchers
+import com.emm.justchill.core.DispatchersProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 class TransactionDiskDataSource(
-    dispatchers: Dispatchers,
+    dispatchersProvider: DispatchersProvider,
     private val transactionQueries: TransactionQueries,
-) : TransactionSaver, AllItemsRetriever<Transactions>, Dispatchers by dispatchers {
+) : TransactionSaver, AllItemsRetriever<Transactions>, DispatchersProvider by dispatchersProvider {
 
     override suspend fun save(entity: TransactionInsert) = withContext(ioDispatcher) {
+        checkNotNull(entity.id)
         transactionQueries.addTransaction(
-            transactionId = null,
+            transactionId = entity.id,
             type = entity.type,
             mounth = entity.mount,
             description = entity.description,

@@ -1,4 +1,4 @@
-package com.emm.justchill.experiences.hh.presentation
+package com.emm.justchill.experiences.hh.presentation.spent
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.experiences.hh.presentation.TextFieldWithLabel
 
 @Composable
 fun Spent() {

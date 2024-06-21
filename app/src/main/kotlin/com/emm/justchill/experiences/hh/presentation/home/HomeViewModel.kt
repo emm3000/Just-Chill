@@ -1,4 +1,4 @@
-package com.emm.justchill.experiences.hh.presentation
+package com.emm.justchill.experiences.hh.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

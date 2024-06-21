@@ -1,5 +1,5 @@
 CREATE TABLE transactions (
-    transactionId INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    transactionId TEXT NOT NULL PRIMARY KEY,
     type TEXT NOT NULL,
     mounth TEXT NOT NULL,
     description TEXT NOT NULL,

@@ -1,7 +1,10 @@
 CREATE TABLE transactionsCategories (
-    transactionId INTEGER,
-    categoryId INTEGER,
+    transactionId TEXT NOT NULL,
+    categoryId TEXT NOT NULL,
     PRIMARY KEY (transactionId, categoryId),
     FOREIGN KEY (transactionId) REFERENCES transactions(transactionId) ON DELETE CASCADE,
     FOREIGN KEY (categoryId) REFERENCES categories(categoryId) ON DELETE CASCADE
 );
+
+add:
+INSERT OR REPLACE INTO transactionsCategories VALUES(?, ?);

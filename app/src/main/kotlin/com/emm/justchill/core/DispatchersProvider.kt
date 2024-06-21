@@ -1,8 +1,9 @@
 package com.emm.justchill.core
 
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 
-interface Dispatchers {
+interface DispatchersProvider {
 
     val mainDispatcher: CoroutineDispatcher
 
@@ -11,14 +12,14 @@ interface Dispatchers {
     val defaultDispatcher: CoroutineDispatcher
 }
 
-class DefaultDispatcher : Dispatchers {
+class DefaultDispatcher : DispatchersProvider {
 
     override val mainDispatcher: CoroutineDispatcher
-        get() = kotlinx.coroutines.Dispatchers.Main
+        get() = Dispatchers.Main
 
     override val ioDispatcher: CoroutineDispatcher
-        get() = kotlinx.coroutines.Dispatchers.IO
+        get() = Dispatchers.IO
 
     override val defaultDispatcher: CoroutineDispatcher
-        get() = kotlinx.coroutines.Dispatchers.Default
+        get() = Dispatchers.Default
 }

@@ -1,16 +1,16 @@
 package com.emm.justchill.experiences.drinks.data
 
 import android.content.SharedPreferences
-import com.emm.justchill.core.Dispatchers
+import com.emm.justchill.core.DispatchersProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 class DrinkDiskDataSource(
-    dispatchers: Dispatchers,
+    dispatchersProvider: DispatchersProvider,
     private val pref: SharedPreferences,
-) : DrinkFetcher, DrinkSaver, Dispatchers by dispatchers {
+) : DrinkFetcher, DrinkSaver, DispatchersProvider by dispatchersProvider {
 
     private val editor get() = pref.edit()
 

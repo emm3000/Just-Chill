@@ -1,7 +1,7 @@
 package com.emm.justchill.experiences.readjsonfromassets.data
 
 import android.content.Context
-import com.emm.justchill.core.Dispatchers
+import com.emm.justchill.core.DispatchersProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -12,9 +12,9 @@ import java.io.InputStream
 private const val JSON_PATH = "experiences.json"
 
 class ExperiencesLocalDataSource(
-    dispatchers: Dispatchers,
+    dispatchersProvider: DispatchersProvider,
     private val context: Context,
-) : ExperiencesDataSource, Dispatchers by dispatchers {
+) : ExperiencesDataSource, DispatchersProvider by dispatchersProvider {
 
     override fun readExperiences(): Flow<List<ExperiencesLocalModel>> {
         return flow {
