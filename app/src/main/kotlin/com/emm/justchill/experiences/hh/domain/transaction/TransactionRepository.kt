@@ -9,4 +9,9 @@ interface TransactionRepository {
     suspend fun add(entity: TransactionInsert)
 
     fun all(): Flow<List<Transactions>>
+
+    fun retrieveByDateRange(
+        startDateMillis: Long,
+        endDateMillis: Long,
+    ): Flow<List<Transactions>>
 }

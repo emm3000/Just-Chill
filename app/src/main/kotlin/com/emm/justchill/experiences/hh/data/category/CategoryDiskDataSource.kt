@@ -5,7 +5,6 @@ import app.cash.sqldelight.coroutines.mapToList
 import com.emm.justchill.Categories
 import com.emm.justchill.CategoriesQueries
 import com.emm.justchill.core.DispatchersProvider
-import com.emm.justchill.experiences.hh.data.AllItemsRetriever
 import com.emm.justchill.experiences.hh.data.DefaultNowProvider
 import com.emm.justchill.experiences.hh.data.DefaultUniqueIdProvider
 import com.emm.justchill.experiences.hh.data.NowProvider
@@ -18,7 +17,7 @@ class CategoryDiskDataSource(
     private val categoryQueries: CategoriesQueries,
     private val nowProvider: NowProvider = DefaultNowProvider,
     private val idProvider: UniqueIdProvider = DefaultUniqueIdProvider,
-) : CategorySaver, AllItemsRetriever<Categories>, DispatchersProvider by dispatchersProvider {
+) : CategorySaver, AllCategoriesRetriever, DispatchersProvider by dispatchersProvider {
 
     override suspend fun save(name: String, type: String) = withContext(ioDispatcher) {
         categoryQueries.addCategory(

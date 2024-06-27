@@ -1,7 +1,7 @@
 CREATE TABLE transactions (
     transactionId TEXT NOT NULL PRIMARY KEY,
     type TEXT NOT NULL,
-    mounth TEXT NOT NULL,
+    amount TEXT NOT NULL,
     description TEXT NOT NULL,
     date INTEGER NOT NULL
 );
@@ -11,3 +11,7 @@ SELECT * FROM transactions;
 
 addTransaction:
 INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?);
+
+selectTransactionsByDateRange:
+SELECT * FROM transactions
+WHERE date BETWEEN ? AND ?;

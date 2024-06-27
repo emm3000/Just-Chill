@@ -1,4 +1,4 @@
-package com.emm.justchill.experiences.hh.presentation.income
+package com.emm.justchill.experiences.hh.presentation.transaction
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable

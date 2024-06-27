@@ -2,15 +2,8 @@ package com.emm.justchill
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContent
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -21,6 +14,7 @@ import androidx.navigation.compose.rememberNavController
 import com.emm.justchill.core.RootRoutes
 import com.emm.justchill.core.rootData
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.experiences.hh.presentation.Hh
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,7 +27,7 @@ class MainActivity : AppCompatActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
-                    Root()
+                    Hh()
                 }
             }
         }

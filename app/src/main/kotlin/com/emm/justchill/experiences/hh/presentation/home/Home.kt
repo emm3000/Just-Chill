@@ -21,7 +21,7 @@ import com.emm.justchill.core.Result
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.experiences.hh.presentation.Category
 import com.emm.justchill.experiences.hh.presentation.Income
-import com.emm.justchill.experiences.hh.presentation.Spent
+import com.emm.justchill.experiences.hh.presentation.SeeTransactions
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -34,18 +34,18 @@ fun Home(
 
     Home(
         state = state,
-        navigateToSpent = { navController.navigate(Spent) },
         navigateToIncome = { navController.navigate(Income) },
-        navigateToCategory = { navController.navigate(Category) }
+        navigateToCategory = { navController.navigate(Category) },
+        navigateToSeeTransactions = { navController.navigate(SeeTransactions) }
     )
 }
 
 @Composable
 fun Home(
     state: Result<List<Transactions>>,
-    navigateToSpent: () -> Unit = {},
     navigateToIncome: () -> Unit = {},
     navigateToCategory: () -> Unit = {},
+    navigateToSeeTransactions: () -> Unit = {},
 ) {
 
     Column(
@@ -57,21 +57,17 @@ fun Home(
 
         Text(text = "Hh")
 
-        Spacer(modifier = Modifier.height(50.dp))
-
-        FilledTonalButton(onClick = navigateToSpent, modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Ingresar Gasto")
-        }
+        Spacer(modifier = Modifier.height(30.dp))
 
         FilledTonalButton(onClick = navigateToIncome, modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Ingresar Ingreso")
+            Text(text = "Ingresar Transacción")
         }
 
         FilledTonalButton(onClick = navigateToCategory, modifier = Modifier.fillMaxWidth()) {
             Text(text = "Crear categorías")
         }
 
-        FilledTonalButton(onClick = {}, modifier = Modifier.fillMaxWidth()) {
+        FilledTonalButton(onClick = navigateToSeeTransactions, modifier = Modifier.fillMaxWidth()) {
             Text(text = "Ver transacciones")
         }
 

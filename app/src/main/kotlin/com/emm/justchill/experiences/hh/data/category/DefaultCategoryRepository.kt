@@ -1,13 +1,12 @@
 package com.emm.justchill.experiences.hh.data.category
 
 import com.emm.justchill.Categories
-import com.emm.justchill.experiences.hh.data.AllItemsRetriever
 import com.emm.justchill.experiences.hh.domain.category.CategoryRepository
 import kotlinx.coroutines.flow.Flow
 
 class DefaultCategoryRepository(
     private val categorySaver: CategorySaver,
-    private val retriever: AllItemsRetriever<Categories>,
+    private val retriever: AllCategoriesRetriever,
 ) : CategoryRepository {
 
     override suspend fun add(name: String, type: String) {

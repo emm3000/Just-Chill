@@ -9,7 +9,8 @@ import com.emm.justchill.CategoriesQueries
 import com.emm.justchill.EmmDatabase
 import com.emm.justchill.TransactionQueries
 import com.emm.justchill.TransactionsCategoriesQueries
-import com.emm.justchill.experiences.hh.data.AllItemsRetriever
+import com.emm.justchill.experiences.hh.data.AllTransactionsRetriever
+import com.emm.justchill.experiences.hh.data.category.AllCategoriesRetriever
 import com.emm.justchill.experiences.hh.data.category.CategoryDiskDataSource
 import com.emm.justchill.experiences.hh.data.category.CategorySaver
 import com.emm.justchill.experiences.hh.data.category.DefaultCategoryRepository
@@ -26,15 +27,16 @@ import com.emm.justchill.experiences.hh.domain.transaction.TransactionAdder
 import com.emm.justchill.experiences.hh.domain.transactioncategory.TransactionCategoryAdder
 import com.emm.justchill.experiences.hh.domain.transactioncategory.TransactionCategoryRepository
 import com.emm.justchill.experiences.hh.domain.transaction.TransactionLoader
+import com.emm.justchill.experiences.hh.domain.transaction.TransactionLoaderByDateRange
 import com.emm.justchill.experiences.hh.domain.transaction.TransactionRepository
 import com.emm.justchill.experiences.hh.presentation.category.CategoryViewModel
 import com.emm.justchill.experiences.hh.presentation.home.HomeViewModel
-import com.emm.justchill.experiences.hh.presentation.income.IncomeViewModel
+import com.emm.justchill.experiences.hh.presentation.seetransactions.SeeTransactionsViewModel
+import com.emm.justchill.experiences.hh.presentation.transaction.TransactionViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
-import org.koin.core.qualifier.named
 import org.koin.dsl.binds
 import org.koin.dsl.module
 
@@ -42,14 +44,14 @@ val hhModule = module {
 
     provideSqlDelight()
 
-    single(named("category")) { CategoryDiskDataSource(get(), get()) } binds arrayOf(
+    single { CategoryDiskDataSource(get(), get()) } binds arrayOf(
         CategorySaver::class,
-        AllItemsRetriever::class
+        AllCategoriesRetriever::class
     )
 
-    single(named("transaction")) { TransactionDiskDataSource(get(), get()) } binds arrayOf(
+    single { TransactionDiskDataSource(get(), get()) } binds arrayOf(
         TransactionSaver::class,
-        AllItemsRetriever::class
+        AllTransactionsRetriever::class
     )
 
     single { TransactionCategoryDiskDataSource(get(), get()) } binds arrayOf(
@@ -57,11 +59,11 @@ val hhModule = module {
     )
 
     single<TransactionRepository> {
-        DefaultTransactionRepository(get(named("transaction")), get(named("transaction")))
+        DefaultTransactionRepository(get(), get())
     }
 
     single<CategoryRepository> {
-        DefaultCategoryRepository(get(named("category")), get(named("category")))
+        DefaultCategoryRepository(get(), get())
     }
 
     single<TransactionCategoryRepository> {
@@ -78,9 +80,12 @@ val hhModule = module {
         TransactionCategoryAdder(get(), get())
     }
 
+    factoryOf(::TransactionLoaderByDateRange)
+
     viewModelOf(::HomeViewModel)
-    viewModelOf(::IncomeViewModel)
+    viewModelOf(::TransactionViewModel)
     viewModelOf(::CategoryViewModel)
+    viewModelOf(::SeeTransactionsViewModel)
 }
 
 private fun Module.provideSqlDelight() {
@@ -96,7 +101,9 @@ private fun provideSqlDriver(context: Context): SqlDriver {
         schema = EmmDatabase.Schema,
         context = context,
         name = "${BuildConfig.APPLICATION_ID}.db",
-        callback = object : AndroidSqliteDriver.Callback(EmmDatabase.Schema) {
+        callback = object : AndroidSqliteDriver.Callback(
+            schema = EmmDatabase.Schema,
+        ) {
             override fun onOpen(db: SupportSQLiteDatabase) {
                 db.setForeignKeyConstraintsEnabled(true)
             }

@@ -3,19 +3,15 @@ package com.emm.justchill.experiences.hh.presentation
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import com.emm.justchill.experiences.hh.presentation.category.Category
 import com.emm.justchill.experiences.hh.presentation.home.Home
-import com.emm.justchill.experiences.hh.presentation.income.Income
-import com.emm.justchill.experiences.hh.presentation.spent.Spent
+import com.emm.justchill.experiences.hh.presentation.seetransactions.SeeTransactions
+import com.emm.justchill.experiences.hh.presentation.transaction.Transaction
 import kotlinx.serialization.Serializable
 
 @Serializable
 object Home
-
-@Serializable
-object Spent
 
 @Serializable
 object Income
@@ -24,7 +20,7 @@ object Income
 object Category
 
 @Serializable
-object SimpleDialog
+object SeeTransactions
 
 @Composable
 fun Hh() {
@@ -35,17 +31,14 @@ fun Hh() {
         composable<Home> {
             Home(navController)
         }
-        composable<Spent> {
-            Spent()
-        }
         composable<Income> {
-            Income(navController)
+            Transaction(navController)
         }
         composable<Category> {
             Category(navController)
         }
-        dialog<SimpleDialog> {
-
+        composable<SeeTransactions> {
+            SeeTransactions(navController)
         }
     }
 }

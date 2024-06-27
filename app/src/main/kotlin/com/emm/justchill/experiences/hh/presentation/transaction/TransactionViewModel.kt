@@ -1,4 +1,4 @@
-package com.emm.justchill.experiences.hh.presentation.income
+package com.emm.justchill.experiences.hh.presentation.transaction
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,9 +18,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.Instant
 
-class IncomeViewModel(
+class TransactionViewModel(
     categoryLoader: CategoryLoader,
     private val transactionCategoryAdder: TransactionCategoryAdder,
 ) : ViewModel() {
@@ -31,7 +30,7 @@ class IncomeViewModel(
     var description by mutableStateOf("")
         private set
 
-    var date by mutableStateOf("")
+    var date by mutableStateOf(DateUtils.currentDateAtReadableFormat())
         private set
 
     private var categoryId by mutableStateOf("")
@@ -39,15 +38,21 @@ class IncomeViewModel(
     var isEnabled by mutableStateOf(false)
         private set
 
+    var transactionType by mutableStateOf(TransactionType.INCOME)
+        private set
+
+    private var dateInLong: Long = 0L
 
     init {
         combine(
             snapshotFlow { mount },
             snapshotFlow { date },
+            snapshotFlow { description },
             snapshotFlow { categoryId },
-        ) { mount, date, category ->
+        ) { mount, date, description, category ->
             isEnabled = mount.isNotEmpty()
                     && date.isNotEmpty()
+                    && description.isNotEmpty()
                     && category.isNotEmpty()
         }.launchIn(viewModelScope)
     }
@@ -61,10 +66,10 @@ class IncomeViewModel(
 
     fun addTransaction() = viewModelScope.launch {
         val transactionInsert = TransactionInsert(
-            type = TransactionType.INCOME.name,
-            mount = mount,
+            type = transactionType.name,
+            amount = mount,
             description = description,
-            date = Instant.now().toEpochMilli()
+            date = dateInLong
         )
         transactionCategoryAdder.add(categoryId, transactionInsert)
     }
@@ -77,11 +82,18 @@ class IncomeViewModel(
         description = value
     }
 
-    fun updateDate(value: String) {
-        date = value
+    fun updateCurrentDate(millis: Long?) {
+        if (millis != null) {
+            dateInLong = millis
+            date = DateUtils.millisToReadableFormat(millis)
+        }
     }
 
     fun updateCategory(value: Categories) {
         categoryId = value.categoryId
+    }
+
+    fun updateTransactionType(value: TransactionType) {
+        transactionType = value
     }
 }

@@ -1,7 +1,8 @@
-package com.emm.justchill.experiences.hh.presentation.income
+package com.emm.justchill.experiences.hh.presentation.transaction
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,19 +20,27 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -55,19 +64,21 @@ import androidx.navigation.NavController
 import com.emm.justchill.Categories
 import com.emm.justchill.core.Result
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.experiences.hh.domain.TransactionType
 import com.emm.justchill.experiences.hh.presentation.Category
 import com.emm.justchill.experiences.hh.presentation.TextFieldWithLabel
+import com.emm.justchill.experiences.hh.presentation.TransactionTypeRadioButton
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun Income(
+fun Transaction(
     navController: NavController,
-    vm: IncomeViewModel = koinViewModel(),
+    vm: TransactionViewModel = koinViewModel(),
 ) {
 
     val categories: Result<List<Categories>> by vm.categories.collectAsState()
 
-    Income(
+    Transaction(
         categories = categories,
         isEnabledButton = vm.isEnabled,
         mountValue = vm.mount,
@@ -75,17 +86,19 @@ fun Income(
         descriptionValue = vm.description,
         onDescriptionChange = vm::updateDescription,
         dateValue = vm.date,
-        onDateChange = vm::updateDate,
         addTransaction = vm::addTransaction,
         onCategoryChange = vm::updateCategory,
+        updateDate = vm::updateCurrentDate,
         navigateUp = { navController.navigateUp() },
-        navigateToCreateCategory = { navController.navigate(Category) }
+        navigateToCreateCategory = { navController.navigate(Category) },
+        initialTransactionType = vm.transactionType,
+        onOptionSelected = vm::updateTransactionType,
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Income(
+private fun Transaction(
     categories: Result<List<Categories>> = Result.Success(emptyList()),
     isEnabledButton: Boolean = false,
     mountValue: String = "",
@@ -93,11 +106,13 @@ private fun Income(
     descriptionValue: String = "",
     onDescriptionChange: (String) -> Unit = {},
     dateValue: String = "",
-    onDateChange: (String) -> Unit = {},
     onCategoryChange: (Categories) -> Unit = {},
     addTransaction: () -> Unit = {},
+    updateDate: (Long?) -> Unit = {},
     navigateUp: () -> Unit = {},
     navigateToCreateCategory: () -> Unit = {},
+    initialTransactionType: TransactionType = TransactionType.INCOME,
+    onOptionSelected: (TransactionType) -> Unit = {},
 ) {
 
     val (showDialog, setShowDialog) = rememberSaveable {
@@ -115,6 +130,38 @@ private fun Income(
         )
     }
 
+    val datePickerState: DatePickerState = rememberDatePickerState()
+
+    val (showSelectDate, setShowSelectDate) = remember {
+        mutableStateOf(false)
+    }
+
+    if (showSelectDate) {
+        DatePickerDialog(
+            onDismissRequest = {
+                setShowSelectDate(false)
+            },
+            confirmButton = {
+                OutlinedButton(onClick = {
+                    updateDate(datePickerState.selectedDateMillis)
+                    setShowSelectDate(false)
+                }) {
+                    Text(text = "Ok")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { setShowSelectDate(false) }) {
+                    Text(text = "Cancel")
+                }
+            }
+        ) {
+            DatePicker(
+                state = datePickerState,
+                showModeToggle = false
+            )
+        }
+    }
+
     Scaffold(
         modifier = Modifier,
         topBar = {
@@ -122,7 +169,7 @@ private fun Income(
                 modifier = Modifier,
                 title = { Text(text = "Agregar gasto", fontSize = 16.sp) },
                 navigationIcon = {
-                    IconButton(onClick = navigateUp) {
+                    IconButton(onClick = { navigateUp() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null
@@ -131,7 +178,7 @@ private fun Income(
                 },
                 actions = {
                     OutlinedButton(onClick = { setShowDialog(true) }) {
-                        Text(text = "CATEGORÍA")
+                        Text(text = "Categoría")
                     }
                 }
             )
@@ -143,49 +190,23 @@ private fun Income(
                 .padding(horizontal = 20.dp)
                 .padding(top = 10.dp)
                 .padding(it),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
 
-            Column(Modifier.fillMaxWidth()) {
-                Text(text = "Cantidad")
-                Spacer(modifier = Modifier.height(5.dp))
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = mountValue,
-                    onValueChange = onMountChange,
-                    placeholder = {
-                        Text(text = "Cantidad")
-                    },
-                    prefix = {
-                        Text(text = "S/ ")
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Decimal,
-                        imeAction = ImeAction.Next
-                    ),
-                )
-            }
+            Mount(mountValue, onMountChange)
 
-            Spacer(modifier = Modifier.height(15.dp))
-            TextFieldWithLabel(
-                label = "Fecha",
-                value = dateValue,
-                onChange = onDateChange
+            TransactionTypeRadioButton(
+                selectedOption = initialTransactionType,
+                onOptionSelected = onOptionSelected
             )
-            Spacer(modifier = Modifier.height(15.dp))
-            if (categories is Result.Success) {
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = "Seleccionar categoría"
-                )
-                Spacer(modifier = Modifier.height(5.dp))
-                DropDown(
-                    onCategoryChange = onCategoryChange,
-                    categories = categories.data
-                )
+
+            Date(dateValue) {
+                setShowSelectDate(true)
             }
 
-            Spacer(modifier = Modifier.height(15.dp))
+            DrowDowm(categories, onCategoryChange)
+
             TextFieldWithLabel(
                 modifier = Modifier
                     .height(140.dp),
@@ -193,23 +214,104 @@ private fun Income(
                 value = descriptionValue,
                 onChange = onDescriptionChange
             )
-            Spacer(modifier = Modifier.height(15.dp))
 
             FilledTonalButton(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(55.dp),
-                onClick = addTransaction,
+                onClick = {
+                    addTransaction()
+                    navigateUp()
+                },
                 shape = RoundedCornerShape(10.dp),
                 enabled = isEnabledButton,
             ) {
                 Text(text = "GUARDAR")
             }
-            Spacer(modifier = Modifier.height(15.dp))
+        }
+    }
+}
+
+@Composable
+private fun DrowDowm(
+    categories: Result<List<Categories>>,
+    onCategoryChange: (Categories) -> Unit
+) {
+
+    if (categories is Result.Success) {
+        Column {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = "Seleccionar categoría"
+            )
+            Spacer(modifier = Modifier.height(5.dp))
+            DropDown(
+                onCategoryChange = onCategoryChange,
+                categories = categories.data
+            )
         }
     }
 
+}
 
+@Composable
+private fun Date(
+    dateValue: String,
+    showDatePicker: () -> Unit,
+) {
+
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(text = "Fecha")
+        Spacer(modifier = Modifier.height(5.dp))
+        OutlinedTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    showDatePicker()
+                },
+            value = dateValue,
+            onValueChange = {},
+            readOnly = true,
+            enabled = false,
+            colors = OutlinedTextFieldDefaults.colors(
+                disabledTextColor = Color.Black,
+                disabledBorderColor = Color.Black,
+                disabledPlaceholderColor = Color.Black
+            ),
+            placeholder = {
+                Text(text = "Fecha")
+            }
+        )
+    }
+}
+
+@Composable
+private fun Mount(mountValue: String, onMountChange: (String) -> Unit) {
+
+    Column(Modifier.fillMaxWidth()) {
+
+        Text(text = "Cantidad")
+
+        Spacer(modifier = Modifier.height(5.dp))
+
+        OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = mountValue,
+            onValueChange = onMountChange,
+            placeholder = {
+                Text(text = "Cantidad")
+            },
+            prefix = {
+                Text(text = "S/ ")
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Decimal,
+                imeAction = ImeAction.Next
+            ),
+        )
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -253,11 +355,14 @@ fun TaskDialog(
                         modifier = Modifier,
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
-                        categories.forEachIndexed { index, it ->
-                            FilterChip(
-                                selected = true,
+                        categories.forEachIndexed { _, it ->
+                            SuggestionChip(
+                                enabled = true,
                                 onClick = { },
                                 label = { Text(text = it.name) },
+                                colors = SuggestionChipDefaults.suggestionChipColors(
+                                    containerColor = Color.Green
+                                )
                             )
                         }
                     }
@@ -266,11 +371,14 @@ fun TaskDialog(
                 FilledTonalButton(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(55.dp),
+                        .height(50.dp),
                     onClick = navigateToCreateCategory,
                     shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = Color.Green
+                    )
                 ) {
-                    Text(text = "GUARDAR")
+                    Text(text = "Crear")
                 }
             }
         }
@@ -333,6 +441,6 @@ private fun DropDown(
 @Composable
 fun IncomePreview() {
     EmmTheme {
-        Income()
+        Transaction()
     }
 }
