@@ -3,6 +3,7 @@ package com.emm.justchill.experiences.hh.presentation
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import com.emm.justchill.experiences.hh.presentation.category.Category
 import com.emm.justchill.experiences.hh.presentation.home.Home
@@ -22,6 +23,9 @@ object Income
 @Serializable
 object Category
 
+@Serializable
+object SimpleDialog
+
 @Composable
 fun Hh() {
 
@@ -39,6 +43,9 @@ fun Hh() {
         }
         composable<Category> {
             Category(navController)
+        }
+        dialog<SimpleDialog> {
+
         }
     }
 }

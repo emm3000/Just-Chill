@@ -1,7 +1,8 @@
-package com.emm.justchill.experiences.hh.data
+package com.emm.justchill.experiences.hh.data.category
 
 import com.emm.justchill.Categories
-import com.emm.justchill.experiences.hh.domain.CategoryRepository
+import com.emm.justchill.experiences.hh.data.AllItemsRetriever
+import com.emm.justchill.experiences.hh.domain.category.CategoryRepository
 import kotlinx.coroutines.flow.Flow
 
 class DefaultCategoryRepository(

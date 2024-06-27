@@ -8,9 +8,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.Categories
 import com.emm.justchill.core.Result
-import com.emm.justchill.experiences.hh.data.TransactionInsert
-import com.emm.justchill.experiences.hh.domain.CategoryLoader
-import com.emm.justchill.experiences.hh.domain.TransactionCategoryAdder
+import com.emm.justchill.experiences.hh.data.transaction.TransactionInsert
+import com.emm.justchill.experiences.hh.domain.category.CategoryLoader
+import com.emm.justchill.experiences.hh.domain.transactioncategory.TransactionCategoryAdder
 import com.emm.justchill.experiences.hh.domain.TransactionType
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -43,12 +43,10 @@ class IncomeViewModel(
     init {
         combine(
             snapshotFlow { mount },
-            snapshotFlow { description },
             snapshotFlow { date },
             snapshotFlow { categoryId },
-        ) { mount, description, date, category ->
+        ) { mount, date, category ->
             isEnabled = mount.isNotEmpty()
-                    && description.isNotEmpty()
                     && date.isNotEmpty()
                     && category.isNotEmpty()
         }.launchIn(viewModelScope)

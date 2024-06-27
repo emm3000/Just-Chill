@@ -1,10 +1,11 @@
-package com.emm.justchill.experiences.hh.data
+package com.emm.justchill.experiences.hh.data.transaction
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.emm.justchill.TransactionQueries
 import com.emm.justchill.Transactions
 import com.emm.justchill.core.DispatchersProvider
+import com.emm.justchill.experiences.hh.data.AllItemsRetriever
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 

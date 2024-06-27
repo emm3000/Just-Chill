@@ -1,4 +1,4 @@
-package com.emm.justchill.experiences.hh.domain
+package com.emm.justchill.experiences.hh.domain.category
 
 import com.emm.justchill.Categories
 import kotlinx.coroutines.flow.Flow

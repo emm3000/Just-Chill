@@ -1,4 +1,4 @@
-package com.emm.justchill.experiences.hh.data
+package com.emm.justchill.experiences.hh.data.transactioncategory
 
 import com.emm.justchill.TransactionsCategoriesQueries
 import com.emm.justchill.core.DispatchersProvider

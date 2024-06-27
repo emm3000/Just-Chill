@@ -1,8 +1,9 @@
-package com.emm.justchill.experiences.hh.domain
+package com.emm.justchill.experiences.hh.domain.transactioncategory
 
 import com.emm.justchill.experiences.hh.data.DefaultUniqueIdProvider
-import com.emm.justchill.experiences.hh.data.TransactionInsert
+import com.emm.justchill.experiences.hh.data.transaction.TransactionInsert
 import com.emm.justchill.experiences.hh.data.UniqueIdProvider
+import com.emm.justchill.experiences.hh.domain.transaction.TransactionAdder
 
 class TransactionCategoryAdder(
     private val transactionAdder: TransactionAdder,

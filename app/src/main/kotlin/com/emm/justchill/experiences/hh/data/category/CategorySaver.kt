@@ -1,4 +1,4 @@
-package com.emm.justchill.experiences.hh.data
+package com.emm.justchill.experiences.hh.data.category
 
 interface CategorySaver {
 

@@ -1,7 +1,8 @@
-package com.emm.justchill.experiences.hh.data
+package com.emm.justchill.experiences.hh.data.transaction
 
 import com.emm.justchill.Transactions
-import com.emm.justchill.experiences.hh.domain.TransactionRepository
+import com.emm.justchill.experiences.hh.data.AllItemsRetriever
+import com.emm.justchill.experiences.hh.domain.transaction.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 
 class DefaultTransactionRepository(

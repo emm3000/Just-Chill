@@ -1,6 +1,6 @@
-package com.emm.justchill.experiences.hh.domain
+package com.emm.justchill.experiences.hh.domain.transaction
 
-import com.emm.justchill.experiences.hh.data.TransactionInsert
+import com.emm.justchill.experiences.hh.data.transaction.TransactionInsert
 
 class TransactionAdder(private val repository: TransactionRepository) {
 

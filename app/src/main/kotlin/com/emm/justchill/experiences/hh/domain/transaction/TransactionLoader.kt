@@ -1,4 +1,4 @@
-package com.emm.justchill.experiences.hh.domain
+package com.emm.justchill.experiences.hh.domain.transaction
 
 import com.emm.justchill.Transactions
 import com.emm.justchill.core.Result

@@ -1,4 +1,4 @@
-package com.emm.justchill.experiences.hh.domain
+package com.emm.justchill.experiences.hh.domain.category
 
 class CategoryAdder(private val repository: CategoryRepository) {
 

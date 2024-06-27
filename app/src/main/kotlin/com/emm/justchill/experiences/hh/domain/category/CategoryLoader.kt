@@ -1,4 +1,4 @@
-package com.emm.justchill.experiences.hh.domain
+package com.emm.justchill.experiences.hh.domain.category
 
 import com.emm.justchill.Categories
 import com.emm.justchill.core.Result

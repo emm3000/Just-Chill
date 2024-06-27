@@ -1,4 +1,4 @@
-package com.emm.justchill.experiences.hh.domain
+package com.emm.justchill.experiences.hh.domain.transactioncategory
 
 interface TransactionCategoryRepository {
 

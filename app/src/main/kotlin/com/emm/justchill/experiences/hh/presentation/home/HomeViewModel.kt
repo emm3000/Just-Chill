@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.Transactions
 import com.emm.justchill.core.Result
-import com.emm.justchill.experiences.hh.domain.TransactionLoader
+import com.emm.justchill.experiences.hh.domain.transaction.TransactionLoader
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn

@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.experiences.hh.domain.CategoryAdder
+import com.emm.justchill.experiences.hh.domain.category.CategoryAdder
 import com.emm.justchill.experiences.hh.domain.TransactionType
 import kotlinx.coroutines.launch
 

@@ -1,6 +1,6 @@
-package com.emm.justchill.experiences.hh.data
+package com.emm.justchill.experiences.hh.data.transactioncategory
 
-import com.emm.justchill.experiences.hh.domain.TransactionCategoryRepository
+import com.emm.justchill.experiences.hh.domain.transactioncategory.TransactionCategoryRepository
 
 class DefaultTransactionCategoryRepository(
     private val saver: TransactionCategorySaver,
