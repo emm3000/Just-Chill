@@ -14,4 +14,10 @@ interface TransactionRepository {
         startDateMillis: Long,
         endDateMillis: Long,
     ): Flow<List<Transactions>>
+
+    fun sumIncome(): Flow<Long>
+
+    fun sumSpend(): Flow<Long>
+
+    fun difference(): Flow<Long>
 }

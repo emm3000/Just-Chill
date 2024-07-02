@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 class DefaultTransactionRepository(
     private val transactionSaver: TransactionSaver,
     private val transactionRetriever: AllTransactionsRetriever,
+    private val transactionCalculator: TransactionCalculator,
 ) : TransactionRepository {
 
     override suspend fun add(entity: TransactionInsert) {
@@ -23,5 +24,17 @@ class DefaultTransactionRepository(
         endDateMillis: Long
     ): Flow<List<Transactions>> {
         return transactionRetriever.retrieveByDateRange(startDateMillis, endDateMillis)
+    }
+
+    override fun sumIncome(): Flow<Long> {
+        return transactionCalculator.sumIncome()
+    }
+
+    override fun sumSpend(): Flow<Long> {
+        return transactionCalculator.sumSpend()
+    }
+
+    override fun difference(): Flow<Long> {
+        return transactionCalculator.difference()
     }
 }

@@ -20,15 +20,20 @@ import com.emm.justchill.experiences.hh.data.transactioncategory.TransactionCate
 import com.emm.justchill.experiences.hh.data.transactioncategory.TransactionCategorySaver
 import com.emm.justchill.experiences.hh.data.transaction.TransactionDiskDataSource
 import com.emm.justchill.experiences.hh.data.transaction.TransactionSaver
+import com.emm.justchill.experiences.hh.data.transaction.TransactionCalculator
 import com.emm.justchill.experiences.hh.domain.category.CategoryAdder
 import com.emm.justchill.experiences.hh.domain.category.CategoryLoader
 import com.emm.justchill.experiences.hh.domain.category.CategoryRepository
 import com.emm.justchill.experiences.hh.domain.transaction.TransactionAdder
+import com.emm.justchill.experiences.hh.domain.transaction.TransactionDifferenceCalculator
 import com.emm.justchill.experiences.hh.domain.transactioncategory.TransactionCategoryAdder
 import com.emm.justchill.experiences.hh.domain.transactioncategory.TransactionCategoryRepository
 import com.emm.justchill.experiences.hh.domain.transaction.TransactionLoader
 import com.emm.justchill.experiences.hh.domain.transaction.TransactionLoaderByDateRange
 import com.emm.justchill.experiences.hh.domain.transaction.TransactionRepository
+import com.emm.justchill.experiences.hh.domain.transaction.TransactionSumIncome
+import com.emm.justchill.experiences.hh.domain.transaction.TransactionSumSpend
+import com.emm.justchill.experiences.hh.domain.transactioncategory.AmountDbFormatter
 import com.emm.justchill.experiences.hh.presentation.category.CategoryViewModel
 import com.emm.justchill.experiences.hh.presentation.home.HomeViewModel
 import com.emm.justchill.experiences.hh.presentation.seetransactions.SeeTransactionsViewModel
@@ -51,7 +56,8 @@ val hhModule = module {
 
     single { TransactionDiskDataSource(get(), get()) } binds arrayOf(
         TransactionSaver::class,
-        AllTransactionsRetriever::class
+        AllTransactionsRetriever::class,
+        TransactionCalculator::class
     )
 
     single { TransactionCategoryDiskDataSource(get(), get()) } binds arrayOf(
@@ -59,7 +65,7 @@ val hhModule = module {
     )
 
     single<TransactionRepository> {
-        DefaultTransactionRepository(get(), get())
+        DefaultTransactionRepository(get(), get(), get())
     }
 
     single<CategoryRepository> {
@@ -77,10 +83,14 @@ val hhModule = module {
     factoryOf(::TransactionAdder)
 
     factory {
-        TransactionCategoryAdder(get(), get())
+        TransactionCategoryAdder(get(), get(), AmountDbFormatter())
     }
 
     factoryOf(::TransactionLoaderByDateRange)
+
+    factoryOf(::TransactionSumIncome)
+    factoryOf(::TransactionSumSpend)
+    factoryOf(::TransactionDifferenceCalculator)
 
     viewModelOf(::HomeViewModel)
     viewModelOf(::TransactionViewModel)

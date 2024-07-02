@@ -1,10 +1,26 @@
 CREATE TABLE transactions (
     transactionId TEXT NOT NULL PRIMARY KEY,
     type TEXT NOT NULL,
-    amount TEXT NOT NULL,
+    amount INTEGER NOT NULL,
     description TEXT NOT NULL,
     date INTEGER NOT NULL
 );
+
+sumAllIncomeAmounts:
+SELECT SUM(amount) AS totalIncome
+FROM transactions
+WHERE type = 'INCOME';
+
+sumAllSpendAmounts:
+SELECT SUM(amount) AS totalIncome
+FROM transactions
+WHERE type = 'SPENT';
+
+difference:
+SELECT (
+    COALESCE((SELECT SUM(amount) FROM transactions WHERE type = 'INCOME'), 0)
+    - COALESCE((SELECT SUM(amount) FROM transactions WHERE type = 'SPENT'), 0)
+) AS incomeMinusSpent;
 
 retrieveAll:
 SELECT * FROM transactions;

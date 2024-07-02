@@ -24,7 +24,7 @@ class TransactionViewModel(
     private val transactionCategoryAdder: TransactionCategoryAdder,
 ) : ViewModel() {
 
-    var mount by mutableStateOf("")
+    var amount by mutableStateOf("")
         private set
 
     var description by mutableStateOf("")
@@ -45,7 +45,7 @@ class TransactionViewModel(
 
     init {
         combine(
-            snapshotFlow { mount },
+            snapshotFlow { amount },
             snapshotFlow { date },
             snapshotFlow { description },
             snapshotFlow { categoryId },
@@ -67,15 +67,14 @@ class TransactionViewModel(
     fun addTransaction() = viewModelScope.launch {
         val transactionInsert = TransactionInsert(
             type = transactionType.name,
-            amount = mount,
             description = description,
             date = dateInLong
         )
-        transactionCategoryAdder.add(categoryId, transactionInsert)
+        transactionCategoryAdder.add(categoryId, amount, transactionInsert)
     }
 
     fun updateMount(value: String) {
-        mount = value
+        amount = value
     }
 
     fun updateDescription(value: String) {

@@ -81,7 +81,7 @@ fun Transaction(
     Transaction(
         categories = categories,
         isEnabledButton = vm.isEnabled,
-        mountValue = vm.mount,
+        mountValue = vm.amount,
         onMountChange = vm::updateMount,
         descriptionValue = vm.description,
         onDescriptionChange = vm::updateDescription,

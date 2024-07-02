@@ -2,6 +2,7 @@ package com.emm.justchill.experiences.hh.presentation.transaction
 
 import com.emm.justchill.Transactions
 import com.emm.justchill.experiences.hh.domain.TransactionType
+import com.emm.justchill.experiences.hh.domain.transaction.fromCentsToSoles
 
 data class TransactionUi(
     val transactionId: String,
@@ -19,7 +20,7 @@ private fun Transactions.toUi() = TransactionUi(
     } catch (e: Exception) {
         TransactionType.INCOME
     },
-    amount = amount,
+    amount = "S/. ${fromCentsToSoles(amount)}",
     description = description,
     date = date,
     readableDate = DateUtils.millisToReadableFormat(date)

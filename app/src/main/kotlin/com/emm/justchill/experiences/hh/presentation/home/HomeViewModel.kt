@@ -2,19 +2,44 @@ package com.emm.justchill.experiences.hh.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.Transactions
-import com.emm.justchill.core.Result
-import com.emm.justchill.experiences.hh.domain.transaction.TransactionLoader
+import com.emm.justchill.experiences.hh.domain.transaction.TransactionDifferenceCalculator
+import com.emm.justchill.experiences.hh.domain.transaction.TransactionSumIncome
+import com.emm.justchill.experiences.hh.domain.transaction.TransactionSumSpend
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import java.math.BigDecimal
 
-class HomeViewModel(transactionLoader: TransactionLoader) : ViewModel() {
+class HomeViewModel(
+    transactionSumIncome: TransactionSumIncome,
+    transactionSumSpend: TransactionSumSpend,
+    transactionDifferenceCalculator: TransactionDifferenceCalculator,
+) : ViewModel() {
 
-    val transactions: StateFlow<Result<List<Transactions>>> = transactionLoader.load()
+    val sumTransactions: StateFlow<Pair<String, String>> = combine(
+        transactionSumIncome(),
+        transactionSumSpend(),
+    ) { income: BigDecimal, spend: BigDecimal ->
+        Pair(income.toString(), spend.toString())
+    }
+        .catch {
+            it.printStackTrace()
+            emit(Pair("0.00", "0.00"))
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = Result.Loading
+            initialValue = Pair("0.00", "0.00")
+        )
+
+    val difference = transactionDifferenceCalculator.calculate()
+        .map { it.toString() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = "0.00"
         )
 }
