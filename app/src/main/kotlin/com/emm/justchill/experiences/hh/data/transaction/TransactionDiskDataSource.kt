@@ -1,6 +1,5 @@
 package com.emm.justchill.experiences.hh.data.transaction
 
-import android.util.Log
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
@@ -10,7 +9,6 @@ import com.emm.justchill.core.DispatchersProvider
 import com.emm.justchill.experiences.hh.data.AllTransactionsRetriever
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
 
 class TransactionDiskDataSource(
@@ -57,7 +55,6 @@ class TransactionDiskDataSource(
         return transactionQueries.sumAllIncomeAmounts()
             .asFlow()
             .mapToOneOrNull(ioDispatcher)
-            .onEach { Log.e("aea", it.toString()) }
             .map { it?.totalIncome ?: 0L }
     }
 

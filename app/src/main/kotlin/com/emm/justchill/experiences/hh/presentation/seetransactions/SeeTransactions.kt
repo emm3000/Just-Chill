@@ -27,8 +27,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.emm.justchill.core.Result
 import com.emm.justchill.core.theme.EmmTheme
@@ -146,12 +151,29 @@ fun ItemTransaction(transactionUi: TransactionUi) {
             modifier = Modifier.fillMaxWidth()
                 .padding(20.dp)
         ) {
-            Text(text = transactionUi.description)
-            Text(text = transactionUi.readableDate)
-            Text(text = transactionUi.amount.toString())
-            Text(text = transactionUi.transactionId)
+            TextWithLabel("ID", transactionUi.transactionId)
+            TextWithLabel("Descripción", transactionUi.description)
+            TextWithLabel("Fecha", transactionUi.readableDate)
+            TextWithLabel("Monto", transactionUi.amount)
+
         }
     }
+}
+
+@Composable
+private fun TextWithLabel(label: String, text: String) {
+    Text(text = buildAnnotatedString {
+        withStyle(
+            style = SpanStyle(
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+        ) {
+            append(label)
+        }
+        append(" : ")
+        append(text)
+    })
 }
 
 @Composable

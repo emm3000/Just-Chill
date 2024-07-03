@@ -17,13 +17,13 @@ object DateUtils {
             .ofLocalizedDate(FormatStyle.LONG)
             .withLocale(Locale("es"))
 
-        return currentLocalDate.format(readableFormatter) ?: String()
+        return currentLocalDate.format(readableFormatter)
     }
 
     fun millisToReadableFormat(millis: Long): String {
 
         val localDate: LocalDate = Instant.ofEpochMilli(millis)
-            .atZone(ZoneId.of("UTC"))
+            .atZone(ZoneId.systemDefault())
             .toLocalDate()
 
         val readableFormatter: DateTimeFormatter = DateTimeFormatter
@@ -33,4 +33,12 @@ object DateUtils {
         return localDate.format(readableFormatter) ?: String()
     }
 
+    fun currentDateInMillis(): Long {
+        val currentDate: LocalDate = LocalDate.now()
+
+        return currentDate
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+    }
 }

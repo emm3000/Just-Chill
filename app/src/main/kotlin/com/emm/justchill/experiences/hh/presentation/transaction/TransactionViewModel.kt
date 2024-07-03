@@ -33,6 +33,8 @@ class TransactionViewModel(
     var date by mutableStateOf(DateUtils.currentDateAtReadableFormat())
         private set
 
+    private var dateInLong: Long = DateUtils.currentDateInMillis()
+
     private var categoryId by mutableStateOf("")
 
     var isEnabled by mutableStateOf(false)
@@ -40,8 +42,6 @@ class TransactionViewModel(
 
     var transactionType by mutableStateOf(TransactionType.INCOME)
         private set
-
-    private var dateInLong: Long = 0L
 
     init {
         combine(

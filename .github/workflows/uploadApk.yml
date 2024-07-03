@@ -84,4 +84,3 @@ jobs:
         with:
           name: ${{ env.date_today }} - APK(s) qa debug generated
           path: app/build/outputs/apk/qa/debug/
-

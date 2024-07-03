@@ -1,7 +1,9 @@
 package com.emm.justchill.experiences.hh.domain
 
-enum class TransactionType(val value: String) {
+import androidx.compose.ui.graphics.Color
 
-    INCOME(value = "Ingreso"),
-    SPENT(value = "Gasto"),
+enum class TransactionType(val value: String, val color: Color) {
+
+    INCOME(value = "Ingreso", color = Color.Blue),
+    SPENT(value = "Gasto", color = Color.Red),
 }

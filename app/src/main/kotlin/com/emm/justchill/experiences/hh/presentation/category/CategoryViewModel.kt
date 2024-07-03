@@ -14,7 +14,7 @@ class CategoryViewModel(private val categoryAdder: CategoryAdder) : ViewModel() 
     var name by mutableStateOf("")
         private set
 
-    var transactionType by mutableStateOf(TransactionType.SPENT)
+    var transactionType by mutableStateOf(TransactionType.INCOME)
         private set
 
     fun updateName(value: String) {

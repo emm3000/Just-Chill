@@ -5,9 +5,7 @@ import com.emm.justchill.core.Result
 import com.emm.justchill.core.asResult
 import kotlinx.coroutines.flow.Flow
 
-class TransactionLoaderByDateRange(
-    private val repository: TransactionRepository,
-) {
+class TransactionLoaderByDateRange(private val repository: TransactionRepository) {
 
     fun load(
         startDateMillis: StartDateMillis,
@@ -17,7 +15,7 @@ class TransactionLoaderByDateRange(
         val validateInvalid = startDateMillis.value == 0L && endDateMillis.value == 0L
         if (validateInvalid) return repository.all().asResult()
 
-        val callRepo = repository.retrieveByDateRange(
+        val callRepo: Flow<List<Transactions>> = repository.retrieveByDateRange(
             startDateMillis = startDateMillis.value,
             endDateMillis = endDateMillis.value
         )

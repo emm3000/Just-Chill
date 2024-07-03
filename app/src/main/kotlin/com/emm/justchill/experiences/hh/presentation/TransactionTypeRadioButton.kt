@@ -32,16 +32,16 @@ fun TransactionTypeRadioButton(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start
     ) {
-        transactionTypes.forEach { transactionType ->
+        transactionTypes.forEach { transactionType: TransactionType ->
 
             val modifier: Modifier = if (transactionType == selectedOption) {
-                Modifier.border(1.dp, Color.Blue)
+                Modifier.border(1.dp, transactionType.color)
             } else {
                 Modifier.border(1.dp, Color.White)
             }
 
             val selectedColor: Color = if (transactionType == selectedOption) {
-                Color.Blue
+                transactionType.color
             } else {
                 Color.Black
             }
