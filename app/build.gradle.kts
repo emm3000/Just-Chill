@@ -154,6 +154,9 @@ dependencies {
 
     implementation(libs.android.driver)
     implementation(libs.coroutines.extensions)
+
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.activity.ktx)
 }
 
 sqldelight {

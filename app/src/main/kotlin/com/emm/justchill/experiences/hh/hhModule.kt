@@ -21,6 +21,8 @@ import com.emm.justchill.experiences.hh.data.transactioncategory.TransactionCate
 import com.emm.justchill.experiences.hh.data.transaction.TransactionDiskDataSource
 import com.emm.justchill.experiences.hh.data.transaction.TransactionSaver
 import com.emm.justchill.experiences.hh.data.transaction.TransactionCalculator
+import com.emm.justchill.experiences.hh.data.transactioncategory.TransactionCategoryRetriever
+import com.emm.justchill.experiences.hh.domain.BackupManager
 import com.emm.justchill.experiences.hh.domain.category.CategoryAdder
 import com.emm.justchill.experiences.hh.domain.category.CategoryLoader
 import com.emm.justchill.experiences.hh.domain.category.CategoryRepository
@@ -62,6 +64,7 @@ val hhModule = module {
 
     single { TransactionCategoryDiskDataSource(get(), get()) } binds arrayOf(
         TransactionCategorySaver::class,
+        TransactionCategoryRetriever::class,
     )
 
     single<TransactionRepository> {
@@ -91,6 +94,7 @@ val hhModule = module {
     factoryOf(::TransactionSumIncome)
     factoryOf(::TransactionSumSpend)
     factoryOf(::TransactionDifferenceCalculator)
+    factoryOf(::BackupManager)
 
     viewModelOf(::HomeViewModel)
     viewModelOf(::TransactionViewModel)

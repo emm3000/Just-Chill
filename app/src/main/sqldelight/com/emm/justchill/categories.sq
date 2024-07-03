@@ -1,7 +1,7 @@
 CREATE TABLE categories (
     categoryId TEXT PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
-    type TEXT,
+    type TEXT NOT NULL,
     createdAt INTEGER NOT NULL,
     updatedAt INTEGER NOT NULL
 );

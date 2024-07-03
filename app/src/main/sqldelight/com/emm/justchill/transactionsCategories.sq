@@ -8,3 +8,6 @@ CREATE TABLE transactionsCategories (
 
 add:
 INSERT OR REPLACE INTO transactionsCategories VALUES(?, ?);
+
+retrieve:
+SELECT * FROM transactionsCategories;
