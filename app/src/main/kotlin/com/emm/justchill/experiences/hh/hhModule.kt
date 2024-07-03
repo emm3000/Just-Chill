@@ -76,7 +76,7 @@ val hhModule = module {
     }
 
     single<TransactionCategoryRepository> {
-        DefaultTransactionCategoryRepository(get())
+        DefaultTransactionCategoryRepository(get(), get())
     }
 
     factoryOf(::CategoryAdder)
