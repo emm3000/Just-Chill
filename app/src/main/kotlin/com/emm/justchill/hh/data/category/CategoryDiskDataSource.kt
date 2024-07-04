@@ -15,10 +15,10 @@ import kotlinx.coroutines.withContext
 class CategoryDiskDataSource(
     dispatchersProvider: DispatchersProvider,
     private val categoryQueries: CategoriesQueries,
-    private val nowProvider: com.emm.justchill.hh.data.NowProvider = com.emm.justchill.hh.data.DefaultNowProvider,
-    private val idProvider: com.emm.justchill.hh.data.UniqueIdProvider = com.emm.justchill.hh.data.DefaultUniqueIdProvider,
-) : com.emm.justchill.hh.data.category.CategorySaver,
-    com.emm.justchill.hh.data.category.AllCategoriesRetriever, DispatchersProvider by dispatchersProvider {
+    private val nowProvider: NowProvider = DefaultNowProvider,
+    private val idProvider: UniqueIdProvider = DefaultUniqueIdProvider,
+) : CategorySaver,
+    AllCategoriesRetriever, DispatchersProvider by dispatchersProvider {
 
     override suspend fun save(name: String, type: String) = withContext(ioDispatcher) {
         categoryQueries.addCategory(

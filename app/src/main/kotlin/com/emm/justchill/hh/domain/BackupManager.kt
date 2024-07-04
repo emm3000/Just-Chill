@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.domain
 
 import android.os.Environment
+import com.emm.justchill.BuildConfig
 import com.emm.justchill.Categories
 import com.emm.justchill.Transactions
 import com.emm.justchill.TransactionsCategories
@@ -33,8 +34,7 @@ class BackupManager(
     fun backup(): Flow<Boolean> {
         val categoriesFlow: Flow<List<Categories>> = categoryRepository.all()
         val transactionsFlow: Flow<List<Transactions>> = transactionRepository.all()
-        val categoryTransactionsFlow: Flow<List<TransactionsCategories>> =
-            categoryTransactionRepository.retrieve()
+        val categoryTransactionsFlow: Flow<List<TransactionsCategories>> = categoryTransactionRepository.retrieve()
 
         return combineTransform(
             categoriesFlow, transactionsFlow, categoryTransactionsFlow
@@ -65,13 +65,13 @@ class BackupManager(
             return false
         }
 
-        val externalStoragePublicDirectory: File =
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val externalStoragePublicDirectory: File = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
         if (!externalStoragePublicDirectory.exists()) {
             externalStoragePublicDirectory.mkdirs()
         }
 
-        val jsonFile = File(externalStoragePublicDirectory, "$filename.json")
+        val applicationId = BuildConfig.FLAVOR
+        val jsonFile = File(externalStoragePublicDirectory, "$filename-$applicationId.json")
 
         try {
             FileWriter(jsonFile).use { writer ->
@@ -87,8 +87,7 @@ class BackupManager(
 
     @Suppress("unused")
     fun readJsonFile(filename: String): String? {
-        val externalStoragePublicDirectory =
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+        val externalStoragePublicDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
         val jsonFile = File(externalStoragePublicDirectory, "$filename.json")
 
         return if (jsonFile.exists()) {

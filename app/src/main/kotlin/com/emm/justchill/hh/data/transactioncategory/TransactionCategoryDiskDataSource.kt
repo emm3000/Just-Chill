@@ -11,8 +11,10 @@ import kotlinx.coroutines.withContext
 class TransactionCategoryDiskDataSource(
     dispatchersProvider: DispatchersProvider,
     private val queries: TransactionsCategoriesQueries,
-) : com.emm.justchill.hh.data.transactioncategory.TransactionCategorySaver,
-    com.emm.justchill.hh.data.transactioncategory.TransactionCategoryRetriever, DispatchersProvider by dispatchersProvider {
+) : TransactionCategorySaver,
+    TransactionCategoryRetriever,
+    DispatchersProvider by dispatchersProvider
+{
 
     override suspend fun save(
         transactionId: String,

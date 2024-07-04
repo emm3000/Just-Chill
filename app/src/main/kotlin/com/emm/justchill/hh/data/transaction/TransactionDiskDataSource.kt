@@ -14,12 +14,12 @@ import kotlinx.coroutines.withContext
 class TransactionDiskDataSource(
     dispatchersProvider: DispatchersProvider,
     private val transactionQueries: TransactionQueries,
-) : com.emm.justchill.hh.data.transaction.TransactionSaver,
-    com.emm.justchill.hh.data.AllTransactionsRetriever,
-    com.emm.justchill.hh.data.transaction.TransactionCalculator,
+) : TransactionSaver,
+    AllTransactionsRetriever,
+    TransactionCalculator,
     DispatchersProvider by dispatchersProvider {
 
-    override suspend fun save(entity: com.emm.justchill.hh.data.transaction.TransactionInsert) = withContext(ioDispatcher) {
+    override suspend fun save(entity: TransactionInsert) = withContext(ioDispatcher) {
         checkNotNull(entity.id)
         transactionQueries.addTransaction(
             transactionId = entity.id,

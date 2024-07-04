@@ -16,6 +16,7 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
@@ -109,9 +110,7 @@ fun SeeTransactions(
                     Text(text = firstDataHolder.readableDate)
                 }
             }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 OutlinedButton(onClick = { setShowSelectDate2(true) }) {
                     Text(text = "Hasta")
                 }
@@ -125,9 +124,18 @@ fun SeeTransactions(
             contentPadding = PaddingValues(10.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            if (transactions is Result.Success) {
+            if (transactions is Result.Success && transactions.data.isNotEmpty()) {
                 items(transactions.data) {
                     ItemTransaction(it)
+                }
+            } else {
+                item {
+                    Text(
+                        text = "No tienes transacciones",
+                        modifier = Modifier.padding(top = 20.dp),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.LightGray.copy(alpha = 0.8f)
+                    )
                 }
             }
         }
@@ -148,14 +156,14 @@ fun ItemTransaction(transactionUi: TransactionUi) {
         border = BorderStroke(1.dp, color = borderColor)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(20.dp)
         ) {
             TextWithLabel("ID", transactionUi.transactionId)
             TextWithLabel("Descripción", transactionUi.description)
             TextWithLabel("Fecha", transactionUi.readableDate)
             TextWithLabel("Monto", transactionUi.amount)
-
         }
     }
 }

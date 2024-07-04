@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface TransactionRepository {
 
-    suspend fun add(entity: com.emm.justchill.hh.data.transaction.TransactionInsert)
+    suspend fun add(entity: TransactionInsert)
 
     fun all(): Flow<List<Transactions>>
 

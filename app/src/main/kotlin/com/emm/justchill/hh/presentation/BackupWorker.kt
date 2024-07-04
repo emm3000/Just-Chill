@@ -19,7 +19,7 @@ class BackupWorker(
     parameters: WorkerParameters,
 ) : CoroutineWorker(context, parameters), KoinComponent {
 
-    private val backupManager: com.emm.justchill.hh.domain.BackupManager by inject()
+    private val backupManager: BackupManager by inject()
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val result: Boolean = backupManager.backup().single()
