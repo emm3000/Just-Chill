@@ -46,7 +46,7 @@ android {
     }
 
     val flavorDimension = "tier"
-    val appName = "JC"
+    val appName = "BETSY"
     flavorDimensions += listOf(flavorDimension)
 
     productFlavors {
@@ -99,6 +99,8 @@ android {
         }
     }
 }
+
+val devDebugImplementation: Configuration by configurations.creating
 
 dependencies {
     implementation(libs.androidx.core.ktx)
@@ -157,6 +159,15 @@ dependencies {
 
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.activity.ktx)
+
+    devDebugImplementation(libs.javafaker)
+
+    implementation(platform(libs.bom))
+    implementation(libs.postgrest.kt)
+    implementation(libs.gotrue.kt)
+
+    implementation(libs.ktor.client.okhttp)
+
 }
 
 sqldelight {

@@ -2,6 +2,7 @@ package com.emm.justchill.experiences.drinks.data
 
 import android.content.SharedPreferences
 import com.emm.justchill.core.DispatchersProvider
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.serialization.encodeToString

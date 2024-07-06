@@ -7,6 +7,7 @@ import com.emm.justchill.TransactionQueries
 import com.emm.justchill.Transactions
 import com.emm.justchill.core.DispatchersProvider
 import com.emm.justchill.hh.data.AllTransactionsRetriever
+import com.emm.justchill.hh.domain.TransactionModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -17,6 +18,7 @@ class TransactionDiskDataSource(
 ) : TransactionSaver,
     AllTransactionsRetriever,
     TransactionCalculator,
+    TransactionSeeder,
     DispatchersProvider by dispatchersProvider {
 
     override suspend fun save(entity: TransactionInsert) = withContext(ioDispatcher) {
@@ -63,5 +65,23 @@ class TransactionDiskDataSource(
             .asFlow()
             .mapToOneOrNull(ioDispatcher)
             .map { it ?: 0L }
+    }
+
+    override suspend fun seed(data: List<TransactionModel>) = withContext(ioDispatcher) {
+        transactionQueries.transaction {
+            populateTransactionTable(data)
+        }
+    }
+
+    private fun populateTransactionTable(data: List<TransactionModel>) {
+        data.forEach { transaction ->
+            transactionQueries.addTransaction(
+                transactionId = transaction.transactionId,
+                type = transaction.type,
+                amount = transaction.amount,
+                description = transaction.description,
+                date = transaction.date
+            )
+        }
     }
 }

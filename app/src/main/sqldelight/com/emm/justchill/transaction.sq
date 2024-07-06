@@ -6,6 +6,12 @@ CREATE TABLE transactions (
     date INTEGER NOT NULL
 );
 
+count:
+SELECT COUNT(*) AS transactionsCount FROM transactions;
+
+exist:
+SELECT EXISTS (SELECT 1 FROM transactions) AS existsRow;
+
 sumAllIncomeAmounts:
 SELECT SUM(amount) AS totalIncome
 FROM transactions

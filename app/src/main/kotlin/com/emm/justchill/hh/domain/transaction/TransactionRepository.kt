@@ -2,11 +2,14 @@ package com.emm.justchill.hh.domain.transaction
 
 import com.emm.justchill.Transactions
 import com.emm.justchill.hh.data.transaction.TransactionInsert
+import com.emm.justchill.hh.domain.TransactionModel
 import kotlinx.coroutines.flow.Flow
 
 interface TransactionRepository {
 
     suspend fun add(entity: TransactionInsert)
+
+    suspend fun seed(data: List<TransactionModel>)
 
     fun all(): Flow<List<Transactions>>
 

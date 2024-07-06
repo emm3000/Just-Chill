@@ -10,19 +10,28 @@ import com.emm.justchill.EmmDatabase
 import com.emm.justchill.TransactionQueries
 import com.emm.justchill.TransactionsCategoriesQueries
 import com.emm.justchill.hh.data.AllTransactionsRetriever
+import com.emm.justchill.hh.data.DefaultSharedRepository
+import com.emm.justchill.hh.data.SharedSqlDataSource
 import com.emm.justchill.hh.data.category.AllCategoriesRetriever
 import com.emm.justchill.hh.data.category.CategoryDiskDataSource
 import com.emm.justchill.hh.data.category.CategorySaver
+import com.emm.justchill.hh.data.category.CategorySeeder
 import com.emm.justchill.hh.data.category.DefaultCategoryRepository
 import com.emm.justchill.hh.data.transaction.DefaultTransactionRepository
 import com.emm.justchill.hh.data.transaction.TransactionCalculator
 import com.emm.justchill.hh.data.transaction.TransactionDiskDataSource
 import com.emm.justchill.hh.data.transaction.TransactionSaver
+import com.emm.justchill.hh.data.transaction.TransactionSeeder
 import com.emm.justchill.hh.data.transactioncategory.DefaultTransactionCategoryRepository
 import com.emm.justchill.hh.data.transactioncategory.TransactionCategoryDiskDataSource
 import com.emm.justchill.hh.data.transactioncategory.TransactionCategoryRetriever
 import com.emm.justchill.hh.data.transactioncategory.TransactionCategorySaver
+import com.emm.justchill.hh.data.transactioncategory.TransactionCategorySeeder
 import com.emm.justchill.hh.domain.BackupManager
+import com.emm.justchill.hh.domain.DefaultBackupManager
+import com.emm.justchill.hh.domain.SharedRepository
+import com.emm.justchill.hh.domain.SupabaseBackupManager
+import com.emm.justchill.hh.domain.TransactionModelFactory
 import com.emm.justchill.hh.domain.category.CategoryAdder
 import com.emm.justchill.hh.domain.category.CategoryLoader
 import com.emm.justchill.hh.domain.category.CategoryRepository
@@ -40,10 +49,19 @@ import com.emm.justchill.hh.presentation.category.CategoryViewModel
 import com.emm.justchill.hh.presentation.home.HomeViewModel
 import com.emm.justchill.hh.presentation.seetransactions.SeeTransactionsViewModel
 import com.emm.justchill.hh.presentation.transaction.TransactionViewModel
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.serializer.KotlinXSerializer
+import kotlinx.serialization.json.Json
+import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
+import org.koin.dsl.bind
 import org.koin.dsl.binds
 import org.koin.dsl.module
 
@@ -67,7 +85,29 @@ val hhModule = module {
     factoryOf(::TransactionSumIncome)
     factoryOf(::TransactionSumSpend)
     factoryOf(::TransactionDifferenceCalculator)
-    factoryOf(::BackupManager)
+
+    factory(named("disk")) {
+        DefaultBackupManager(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+        )
+    } bind BackupManager::class
+
+    factory(named("supabase")) {
+        SupabaseBackupManager(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+        )
+    } bind BackupManager::class
+
+    factory { TransactionModelFactory(androidApplication()) }
 
     viewModelsProviders()
 }
@@ -84,34 +124,45 @@ private fun Module.repositoriesProviders() {
         DefaultTransactionRepository(
             get(),
             get(),
-            get()
+            get(),
+            get(),
         )
     }
 
     single<CategoryRepository> {
         DefaultCategoryRepository(
             get(),
-            get()
+            get(),
+            get(),
         )
     }
 
     single<TransactionCategoryRepository> {
         DefaultTransactionCategoryRepository(
             get(),
-            get()
+            get(),
+            get(),
         )
     }
+
+    single<SharedRepository> {
+        DefaultSharedRepository(get())
+    }
+
+    single<SupabaseClient> { supabase() }
 }
 
 private fun Module.dataSourceProviders() {
     single { CategoryDiskDataSource(get(), get()) } binds arrayOf(
         CategorySaver::class,
-        AllCategoriesRetriever::class
+        AllCategoriesRetriever::class,
+        CategorySeeder::class
     )
     single { TransactionDiskDataSource(get(), get()) } binds arrayOf(
         TransactionSaver::class,
         AllTransactionsRetriever::class,
-        TransactionCalculator::class
+        TransactionCalculator::class,
+        TransactionSeeder::class
     )
     single {
         TransactionCategoryDiskDataSource(
@@ -121,7 +172,10 @@ private fun Module.dataSourceProviders() {
     } binds arrayOf(
         TransactionCategorySaver::class,
         TransactionCategoryRetriever::class,
+        TransactionCategorySeeder::class,
     )
+
+    singleOf(::SharedSqlDataSource)
 }
 
 private fun Module.provideSqlDelight() {
@@ -137,14 +191,14 @@ private fun provideSqlDriver(context: Context): SqlDriver {
         schema = EmmDatabase.Schema,
         context = context,
         name = "${BuildConfig.APPLICATION_ID}.db",
-        callback = object : AndroidSqliteDriver.Callback(
-            schema = EmmDatabase.Schema,
-        ) {
-            override fun onOpen(db: SupportSQLiteDatabase) {
-                db.setForeignKeyConstraintsEnabled(true)
-            }
-        }
+        callback = csm()
     )
+}
+
+private fun csm() = object : AndroidSqliteDriver.Callback(schema = EmmDatabase.Schema) {
+    override fun onOpen(db: SupportSQLiteDatabase) {
+        db.setForeignKeyConstraintsEnabled(true)
+    }
 }
 
 private fun provideDb(sqlDriver: SqlDriver): EmmDatabase = EmmDatabase(sqlDriver)
@@ -156,3 +210,13 @@ private fun provideTransactionQueries(db: EmmDatabase): TransactionQueries = db.
 private fun provideTransactionCategoryQueries(
     db: EmmDatabase
 ): TransactionsCategoriesQueries = db.transactionsCategoriesQueries
+
+private fun supabase(): SupabaseClient {
+    return createSupabaseClient(
+        supabaseUrl = "https://kudaoecydlgulzyidolz.supabase.co",
+        supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1ZGFvZWN5ZGxndWx6eWlkb2x6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjAzNjYyMjIsImV4cCI6MjAzNTk0MjIyMn0.d5Z1e8YUlXjVFPAgoVSusqq5S6TTLurC8PKNgxzDKbA"
+    ) {
+        install(Postgrest)
+        defaultSerializer = KotlinXSerializer(Json { ignoreUnknownKeys = true })
+    }
+}

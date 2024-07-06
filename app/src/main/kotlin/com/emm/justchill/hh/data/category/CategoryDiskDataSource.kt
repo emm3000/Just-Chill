@@ -9,6 +9,7 @@ import com.emm.justchill.hh.data.DefaultNowProvider
 import com.emm.justchill.hh.data.DefaultUniqueIdProvider
 import com.emm.justchill.hh.data.NowProvider
 import com.emm.justchill.hh.data.UniqueIdProvider
+import com.emm.justchill.hh.domain.CategoryModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
@@ -18,7 +19,10 @@ class CategoryDiskDataSource(
     private val nowProvider: NowProvider = DefaultNowProvider,
     private val idProvider: UniqueIdProvider = DefaultUniqueIdProvider,
 ) : CategorySaver,
-    AllCategoriesRetriever, DispatchersProvider by dispatchersProvider {
+    AllCategoriesRetriever,
+    CategorySeeder,
+    DispatchersProvider by dispatchersProvider
+{
 
     override suspend fun save(name: String, type: String) = withContext(ioDispatcher) {
         categoryQueries.addCategory(
@@ -35,5 +39,23 @@ class CategoryDiskDataSource(
             .retrieveAll()
             .asFlow()
             .mapToList(ioDispatcher)
+    }
+
+    override suspend fun seed(data: List<CategoryModel>) = withContext(ioDispatcher) {
+        categoryQueries.transaction {
+            populateCategoryTable(data)
+        }
+    }
+
+    private fun populateCategoryTable(data: List<CategoryModel>) {
+        data.forEach { category ->
+            categoryQueries.addCategory(
+                categoryId = category.categoryId,
+                name = category.name,
+                type = category.type,
+                createdAt = category.createdAt,
+                updatedAt = category.updatedAt
+            )
+        }
     }
 }

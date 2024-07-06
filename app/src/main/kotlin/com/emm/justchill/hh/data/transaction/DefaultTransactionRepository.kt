@@ -2,6 +2,7 @@ package com.emm.justchill.hh.data.transaction
 
 import com.emm.justchill.Transactions
 import com.emm.justchill.hh.data.AllTransactionsRetriever
+import com.emm.justchill.hh.domain.TransactionModel
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 
@@ -9,6 +10,7 @@ class DefaultTransactionRepository(
     private val transactionSaver: TransactionSaver,
     private val transactionRetriever: AllTransactionsRetriever,
     private val transactionCalculator: TransactionCalculator,
+    private val transactionSeeder: TransactionSeeder,
 ) : TransactionRepository {
 
     override suspend fun add(entity: TransactionInsert) {
@@ -36,5 +38,9 @@ class DefaultTransactionRepository(
 
     override fun difference(): Flow<Long> {
         return transactionCalculator.difference()
+    }
+
+    override suspend fun seed(data: List<TransactionModel>) {
+        transactionSeeder.seed(data)
     }
 }

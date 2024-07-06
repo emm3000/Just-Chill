@@ -5,6 +5,7 @@ import app.cash.sqldelight.coroutines.mapToList
 import com.emm.justchill.TransactionsCategories
 import com.emm.justchill.TransactionsCategoriesQueries
 import com.emm.justchill.core.DispatchersProvider
+import com.emm.justchill.hh.domain.TransactionCategoryModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
@@ -13,6 +14,7 @@ class TransactionCategoryDiskDataSource(
     private val queries: TransactionsCategoriesQueries,
 ) : TransactionCategorySaver,
     TransactionCategoryRetriever,
+    TransactionCategorySeeder,
     DispatchersProvider by dispatchersProvider
 {
 
@@ -27,5 +29,20 @@ class TransactionCategoryDiskDataSource(
         return queries.retrieve()
             .asFlow()
             .mapToList(ioDispatcher)
+    }
+
+    override suspend fun seed(data: List<TransactionCategoryModel>) = withContext(ioDispatcher) {
+        queries.transaction {
+            populateTransactionCategoryTable(data)
+        }
+    }
+
+    private fun populateTransactionCategoryTable(data: List<TransactionCategoryModel>) {
+        data.forEach { transactionsCategories ->
+            queries.add(
+                transactionId = transactionsCategories.transactionId,
+                categoryId = transactionsCategories.categoryId,
+            )
+        }
     }
 }

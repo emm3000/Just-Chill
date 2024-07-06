@@ -6,6 +6,9 @@ CREATE TABLE transactionsCategories (
     FOREIGN KEY (categoryId) REFERENCES categories(categoryId) ON DELETE CASCADE
 );
 
+count:
+SELECT COUNT(*) AS count FROM transactionsCategories;
+
 add:
 INSERT OR REPLACE INTO transactionsCategories VALUES(?, ?);
 

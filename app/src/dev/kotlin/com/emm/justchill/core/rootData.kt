@@ -2,6 +2,7 @@ package com.emm.justchill.core
 
 import com.emm.justchill.experiences.drinks.ui.DrinkMainScreen
 import com.emm.justchill.experiences.readjsonfromassets.ui.Experiences
+import com.emm.justchill.experiences.supabase.SupabaseScreen
 import com.emm.justchill.hh.presentation.Hh
 import java.util.UUID
 
@@ -49,5 +50,14 @@ val rootData: List<Feature> = listOf(
         resource = "-",
         route = RootRoutes.Hh,
         screen = { Hh() }
+    ),
+    Feature(
+        id = UUID.randomUUID().toString(),
+        title = "Supabase",
+        description = "Tab to test supabase",
+        category = "personal",
+        resource = "-",
+        route = RootRoutes.Hh,
+        screen = { SupabaseScreen() }
     )
 )

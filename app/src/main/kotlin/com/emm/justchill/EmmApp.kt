@@ -10,6 +10,7 @@ import androidx.work.WorkManager
 import com.emm.justchill.core.coreModule
 import com.emm.justchill.experiences.drinks.drinkModule
 import com.emm.justchill.experiences.readjsonfromassets.experiencesModule
+import com.emm.justchill.experiences.supabase.supabaseModule
 import com.emm.justchill.hh.hhModule
 import com.emm.justchill.hh.presentation.BackupWorker
 import org.koin.android.ext.koin.androidContext
@@ -33,7 +34,8 @@ class EmmApp : Application() {
                 coreModule,
                 drinkModule,
                 experiencesModule,
-                hhModule
+                hhModule,
+                supabaseModule,
             )
         }
     }
@@ -62,6 +64,28 @@ class EmmApp : Application() {
                 .atZone(ZoneId.systemDefault())
                 .toInstant()
                 .toEpochMilli() - System.currentTimeMillis()
+
+            val periodicWorkRequest = PeriodicWorkRequestBuilder<BackupWorker>(
+                repeatInterval = 1,
+                repeatIntervalTimeUnit = TimeUnit.DAYS
+            )
+                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+                .build()
+
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                "midnightWorker",
+                ExistingPeriodicWorkPolicy.UPDATE,
+                periodicWorkRequest
+            )
+        }
+
+        fun enqueueMidnightWorker2(context: Context) {
+            val currentTime = LocalDateTime.now()
+
+            val targetTime = currentTime.plusMinutes(5)
+
+            val delay = targetTime.atZone(ZoneId.systemDefault())
+                .toInstant().toEpochMilli() - System.currentTimeMillis()
 
             val periodicWorkRequest = PeriodicWorkRequestBuilder<BackupWorker>(
                 repeatInterval = 1,
