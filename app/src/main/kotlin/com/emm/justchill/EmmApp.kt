@@ -58,8 +58,14 @@ class EmmApp : Application() {
     companion object {
 
         fun enqueueMidnightWorker(context: Context) {
+
             val currentTime: LocalDateTime = LocalDateTime.now()
-            val midnight: LocalDateTime = currentTime.toLocalDate().atTime(LocalTime.MIDNIGHT)
+
+            val midnight: LocalDateTime = currentTime
+                .toLocalDate()
+                .atTime(LocalTime.MIDNIGHT)
+                .plusDays(1)
+
             val delay: Long = midnight
                 .atZone(ZoneId.systemDefault())
                 .toInstant()
