@@ -56,6 +56,8 @@ android {
             manifestPlaceholders["app_name"] = appName
             manifestPlaceholders["flavor_suffix"] = "-DEV"
             applicationIdSuffix = ".dev"
+            resValue("string", "supabase_url", keystoreProperties["supabaseDevUrl"] as String)
+            resValue("string", "supabase_key", keystoreProperties["supabaseDevKey"] as String)
         }
 
         create("qa") {
@@ -64,6 +66,8 @@ android {
             manifestPlaceholders["app_name"] = appName
             manifestPlaceholders["flavor_suffix"] = "-QA"
             signingConfig = signingConfigs["config"]
+            resValue("string", "supabase_url", keystoreProperties["supabaseQaUrl"] as String)
+            resValue("string", "supabase_key", keystoreProperties["supabaseQaKey"] as String)
         }
 
         create("prod") {
@@ -71,6 +75,8 @@ android {
             manifestPlaceholders["app_name"] = "Just Chill"
             manifestPlaceholders["flavor_suffix"] = ""
             signingConfig = signingConfigs["config"]
+            resValue("string", "supabase_url", keystoreProperties["supabaseQaUrl"] as String)
+            resValue("string", "supabase_key", keystoreProperties["supabaseQaKey"] as String)
         }
     }
 

@@ -7,6 +7,7 @@ import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import com.emm.justchill.BuildConfig
 import com.emm.justchill.CategoriesQueries
 import com.emm.justchill.EmmDatabase
+import com.emm.justchill.R
 import com.emm.justchill.TransactionQueries
 import com.emm.justchill.TransactionsCategoriesQueries
 import com.emm.justchill.hh.data.AllTransactionsRetriever
@@ -149,7 +150,7 @@ private fun Module.repositoriesProviders() {
         DefaultSharedRepository(get())
     }
 
-    single<SupabaseClient> { supabase() }
+    single<SupabaseClient> { supabase(androidApplication()) }
 }
 
 private fun Module.dataSourceProviders() {
@@ -211,10 +212,10 @@ private fun provideTransactionCategoryQueries(
     db: EmmDatabase
 ): TransactionsCategoriesQueries = db.transactionsCategoriesQueries
 
-private fun supabase(): SupabaseClient {
+private fun supabase(context: Context): SupabaseClient {
     return createSupabaseClient(
-        supabaseUrl = "https://kudaoecydlgulzyidolz.supabase.co",
-        supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1ZGFvZWN5ZGxndWx6eWlkb2x6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjAzNjYyMjIsImV4cCI6MjAzNTk0MjIyMn0.d5Z1e8YUlXjVFPAgoVSusqq5S6TTLurC8PKNgxzDKbA"
+        supabaseUrl = context.getString(R.string.supabase_url),
+        supabaseKey = context.getString(R.string.supabase_key)
     ) {
         install(Postgrest)
         defaultSerializer = KotlinXSerializer(Json { ignoreUnknownKeys = true })
