@@ -17,6 +17,9 @@ data class TransactionModel(
 
     @SerialName("device_id")
     val deviceId: String = "",
+
+    @SerialName("device_name")
+    val deviceName: String = "",
 )
 
 fun Transactions.toModel() = TransactionModel(

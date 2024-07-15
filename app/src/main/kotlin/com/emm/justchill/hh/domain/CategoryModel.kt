@@ -20,7 +20,10 @@ data class CategoryModel(
     val updatedAt: Long,
 
     @SerialName("device_id")
-    val deviceId: String = ""
+    val deviceId: String = "",
+
+    @SerialName("device_name")
+    val deviceName: String = "",
 )
 
 fun Categories.toModel() = CategoryModel(

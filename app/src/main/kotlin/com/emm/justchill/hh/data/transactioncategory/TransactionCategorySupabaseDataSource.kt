@@ -2,21 +2,21 @@ package com.emm.justchill.hh.data.transactioncategory
 
 import com.emm.justchill.hh.domain.TransactionCategoryModel
 import com.emm.justchill.hh.domain.TransactionModel
-import com.emm.justchill.hh.domain.AndroidIdProvider
+import com.emm.justchill.hh.domain.AndroidDataProvider
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.PostgrestQueryBuilder
 
 class TransactionCategorySupabaseDataSource(
     supabaseClient: SupabaseClient,
-    androidIdProvider: AndroidIdProvider,
+    androidDataProvider: AndroidDataProvider,
 ) : TransactionCategoryNetworkDataSource {
 
     private val client: PostgrestQueryBuilder by lazy {
         supabaseClient.from(TABLE_NAME)
     }
 
-    private val androidId = androidIdProvider.androidId()
+    private val androidId = androidDataProvider.androidId()
 
     override suspend fun upsert(transactionCategory: TransactionCategoryModel) {
         client.upsert(transactionCategory)

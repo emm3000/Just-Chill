@@ -5,7 +5,7 @@ import app.cash.sqldelight.coroutines.mapToList
 import com.emm.justchill.TransactionsCategories
 import com.emm.justchill.TransactionsCategoriesQueries
 import com.emm.justchill.core.DispatchersProvider
-import com.emm.justchill.hh.domain.AndroidIdProvider
+import com.emm.justchill.hh.domain.AndroidDataProvider
 import com.emm.justchill.hh.domain.TransactionCategoryModel
 import com.emm.justchill.hh.domain.toModel
 import com.emm.justchill.hh.domain.transactioncategory.TransactionCategoryRepository
@@ -15,7 +15,7 @@ class DefaultTransactionCategoryRepository(
     dispatchersProvider: DispatchersProvider,
     private val queries: TransactionsCategoriesQueries,
     private val networkDataSource: TransactionCategoryNetworkDataSource,
-    private val androidIdProvider: AndroidIdProvider,
+    private val androidDataProvider: AndroidDataProvider,
 ) : TransactionCategoryRepository, DispatchersProvider by dispatchersProvider {
 
     override suspend fun add(transactionId: String, categoryId: String) {
@@ -49,7 +49,12 @@ class DefaultTransactionCategoryRepository(
             .retrieve()
             .executeAsList()
             .map(TransactionsCategories::toModel)
-            .map { it.copy(deviceId = androidIdProvider.androidId()) }
+            .map {
+                it.copy(
+                    deviceId = androidDataProvider.androidId(),
+                    deviceName = androidDataProvider.deviceName(),
+                )
+            }
 
         networkDataSource.upsert(transactionCategory)
     }

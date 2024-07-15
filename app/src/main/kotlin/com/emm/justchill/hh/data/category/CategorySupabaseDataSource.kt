@@ -1,17 +1,17 @@
 package com.emm.justchill.hh.data.category
 
 import com.emm.justchill.hh.domain.CategoryModel
-import com.emm.justchill.hh.domain.AndroidIdProvider
+import com.emm.justchill.hh.domain.AndroidDataProvider
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.PostgrestQueryBuilder
 
 class CategorySupabaseDataSource(
     supabaseClient: SupabaseClient,
-    androidIdProvider: AndroidIdProvider,
+    androidDataProvider: AndroidDataProvider,
 ) : CategoryNetworkDataSource {
 
-    private val androidId: String = androidIdProvider.androidId()
+    private val androidId: String = androidDataProvider.androidId()
     private val builder: PostgrestQueryBuilder = supabaseClient.from(TABLE_NAME)
 
     override suspend fun upsert(category: CategoryModel) {

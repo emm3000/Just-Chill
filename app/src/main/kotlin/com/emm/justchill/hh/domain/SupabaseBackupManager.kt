@@ -7,8 +7,6 @@ import com.emm.justchill.hh.domain.category.CategoryRepository
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
 import com.emm.justchill.hh.domain.transactioncategory.TransactionCategoryRepository
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 
 class SupabaseBackupManager(

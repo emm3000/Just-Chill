@@ -6,7 +6,7 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.justchill.TransactionQueries
 import com.emm.justchill.Transactions
 import com.emm.justchill.core.DispatchersProvider
-import com.emm.justchill.hh.domain.AndroidIdProvider
+import com.emm.justchill.hh.domain.AndroidDataProvider
 import com.emm.justchill.hh.domain.TransactionModel
 import com.emm.justchill.hh.domain.toModel
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
@@ -17,7 +17,7 @@ class DefaultTransactionRepository(
     dispatchersProvider: DispatchersProvider,
     private val transactionsQueries: TransactionQueries,
     private val networkDataSource: TransactionNetworkDataSource,
-    private val androidIdProvider: AndroidIdProvider,
+    private val androidDataProvider: AndroidDataProvider,
 ) : TransactionRepository, DispatchersProvider by dispatchersProvider {
 
     override suspend fun add(entity: TransactionInsert) {
@@ -81,7 +81,12 @@ class DefaultTransactionRepository(
             .retrieveAll()
             .executeAsList()
             .map(Transactions::toModel)
-            .map { it.copy(deviceId = androidIdProvider.androidId()) }
+            .map {
+                it.copy(
+                    deviceId = androidDataProvider.androidId(),
+                    deviceName = androidDataProvider.deviceName()
+                )
+            }
 
         networkDataSource.upsert(transactions)
     }

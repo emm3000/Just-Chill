@@ -13,13 +13,11 @@ import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkerParameters
 import com.emm.justchill.R
 import com.emm.justchill.hh.domain.BackupManager
-import com.emm.justchill.hh.presentation.transaction.DateUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.LocalDateTime
-import java.time.format.FormatStyle
 
 class BackupWorker(
     private val context: Context,

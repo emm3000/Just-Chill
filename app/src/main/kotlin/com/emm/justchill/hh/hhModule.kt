@@ -26,7 +26,7 @@ import com.emm.justchill.hh.data.transactioncategory.TransactionCategorySupabase
 import com.emm.justchill.hh.domain.BackupManager
 import com.emm.justchill.hh.domain.SharedRepository
 import com.emm.justchill.hh.domain.SupabaseBackupManager
-import com.emm.justchill.hh.domain.AndroidIdProvider
+import com.emm.justchill.hh.domain.AndroidDataProvider
 import com.emm.justchill.hh.domain.category.CategoryAdder
 import com.emm.justchill.hh.domain.category.CategoryLoader
 import com.emm.justchill.hh.domain.category.CategoryRepository
@@ -88,7 +88,7 @@ val hhModule = module {
         )
     }
 
-    factory { AndroidIdProvider(androidApplication()) }
+    factory { AndroidDataProvider(androidApplication()) }
 
     viewModelsProviders()
 }

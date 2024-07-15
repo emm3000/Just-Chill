@@ -1,7 +1,6 @@
 package com.emm.justchill.hh.domain.category
 
 import com.emm.justchill.Categories
-import com.emm.justchill.hh.domain.CategoryModel
 import kotlinx.coroutines.flow.Flow
 
 interface CategoryRepository {

@@ -8,7 +8,7 @@ import com.emm.justchill.core.DispatchersProvider
 import com.emm.justchill.hh.data.NowProvider
 import com.emm.justchill.hh.data.UniqueIdProvider
 import com.emm.justchill.hh.domain.CategoryModel
-import com.emm.justchill.hh.domain.AndroidIdProvider
+import com.emm.justchill.hh.domain.AndroidDataProvider
 import com.emm.justchill.hh.domain.category.CategoryRepository
 import com.emm.justchill.hh.domain.toModel
 import kotlinx.coroutines.flow.Flow
@@ -19,7 +19,7 @@ class DefaultCategoryRepository(
     private val categoryNetworkDataSource: CategoryNetworkDataSource,
     private val nowProvider: NowProvider,
     private val uniqueIdProvider: UniqueIdProvider,
-    private val androidIdProvider: AndroidIdProvider,
+    private val androidDataProvider: AndroidDataProvider,
 ) : CategoryRepository, DispatchersProvider by dispatchersProvider {
 
     override suspend fun add(name: String, type: String) {
@@ -63,7 +63,12 @@ class DefaultCategoryRepository(
             .retrieveAll()
             .executeAsList()
             .map(Categories::toModel)
-            .map { it.copy(deviceId = androidIdProvider.androidId()) }
+            .map {
+                it.copy(
+                    deviceId = androidDataProvider.androidId(),
+                    deviceName = androidDataProvider.deviceName()
+                )
+            }
 
         categoryNetworkDataSource.upsert(categories)
     }
