@@ -12,11 +12,10 @@ import com.emm.justchill.hh.domain.BackupManager
 import com.emm.justchill.hh.presentation.Hh
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import org.koin.core.qualifier.named
 
 class MainActivity : AppCompatActivity() {
 
-    private val defaultBackupManager: BackupManager by inject(named("supabase"))
+    private val defaultBackupManager: BackupManager by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

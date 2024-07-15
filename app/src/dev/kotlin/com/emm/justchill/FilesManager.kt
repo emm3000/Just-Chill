@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.domain
+package com.emm.justchill
 
 import android.content.ContentResolver
 import android.content.ContentUris
@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import com.emm.justchill.BuildConfig
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 object FilesManager {

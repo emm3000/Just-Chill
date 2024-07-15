@@ -14,7 +14,7 @@ class SharedSqlDataSource(
     private val queries: TransactionsCategoriesQueries,
 ) : DispatchersProvider by dispatchersProvider {
 
-    suspend fun hasData(): Boolean = withContext(ioDispatcher) {
+    suspend fun hasAnyDataInLocalDataBase(): Boolean = withContext(ioDispatcher) {
         try {
             val categoryCount = categoryQueries.count().executeAsOneOrNull() ?: 0L
             val transactionCount = transactionQueries.count().executeAsOneOrNull() ?: 0L
@@ -26,5 +26,4 @@ class SharedSqlDataSource(
             false
         }
     }
-
 }

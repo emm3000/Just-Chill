@@ -10,5 +10,7 @@ interface CategoryRepository {
 
     fun all(): Flow<List<Categories>>
 
-    suspend fun seed(data: List<CategoryModel>)
+    suspend fun seed()
+
+    suspend fun backup()
 }

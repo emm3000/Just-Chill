@@ -41,7 +41,7 @@ class EmmApp : Application() {
     }
 
     private fun initWorkers() {
-        enqueueMidnightWorker(applicationContext)
+        Sync.initialize(applicationContext)
     }
 
     private fun createNotificationChannel() {
@@ -53,58 +53,5 @@ class EmmApp : Application() {
         channel.description = "Channel for backup notifications"
         val notificationManager: NotificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.createNotificationChannel(channel)
-    }
-
-    companion object {
-
-        fun enqueueMidnightWorker(context: Context) {
-
-            val currentTime: LocalDateTime = LocalDateTime.now()
-
-            val midnight: LocalDateTime = currentTime
-                .toLocalDate()
-                .atTime(LocalTime.MIDNIGHT)
-                .plusDays(1)
-
-            val delay: Long = midnight
-                .atZone(ZoneId.systemDefault())
-                .toInstant()
-                .toEpochMilli() - System.currentTimeMillis()
-
-            val periodicWorkRequest = PeriodicWorkRequestBuilder<BackupWorker>(
-                repeatInterval = 1,
-                repeatIntervalTimeUnit = TimeUnit.DAYS
-            )
-                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-                .build()
-
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                "midnightWorker",
-                ExistingPeriodicWorkPolicy.UPDATE,
-                periodicWorkRequest
-            )
-        }
-
-        fun enqueueMidnightWorker2(context: Context) {
-            val currentTime = LocalDateTime.now()
-
-            val targetTime = currentTime.plusMinutes(5)
-
-            val delay = targetTime.atZone(ZoneId.systemDefault())
-                .toInstant().toEpochMilli() - System.currentTimeMillis()
-
-            val periodicWorkRequest = PeriodicWorkRequestBuilder<BackupWorker>(
-                repeatInterval = 1,
-                repeatIntervalTimeUnit = TimeUnit.DAYS
-            )
-                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-                .build()
-
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                "midnightWorker",
-                ExistingPeriodicWorkPolicy.UPDATE,
-                periodicWorkRequest
-            )
-        }
     }
 }

@@ -10,5 +10,7 @@ interface TransactionCategoryRepository {
 
     fun retrieve(): Flow<List<TransactionsCategories>>
 
-    suspend fun seed(data: List<TransactionCategoryModel>)
+    suspend fun seed()
+
+    suspend fun backup()
 }

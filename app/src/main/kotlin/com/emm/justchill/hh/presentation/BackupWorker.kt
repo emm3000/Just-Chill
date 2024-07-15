@@ -3,28 +3,33 @@ package com.emm.justchill.hh.presentation
 import android.app.Notification
 import android.content.Context
 import androidx.core.app.NotificationCompat
+import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkerParameters
 import com.emm.justchill.R
 import com.emm.justchill.hh.domain.BackupManager
 import com.emm.justchill.hh.presentation.transaction.DateUtils
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.koin.core.qualifier.named
+import java.time.LocalDateTime
+import java.time.format.FormatStyle
 
 class BackupWorker(
     private val context: Context,
     parameters: WorkerParameters,
 ) : CoroutineWorker(context, parameters), KoinComponent {
 
-    private val defaultBackupManager: BackupManager by inject(named("supabase"))
+    private val defaultBackupManager: BackupManager by inject()
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        val result: Boolean = defaultBackupManager.backup().single()
+        val result: Boolean = defaultBackupManager.backup()
         if (result) {
             loggerForTest()
             Result.success()
@@ -35,7 +40,7 @@ class BackupWorker(
     }
 
     private fun loggerFailed() {
-        val message = "El backup se FALLO el ${DateUtils.currentDateAtReadableFormat()}"
+        val message = "backup failed: ${LocalDateTime.now()}"
         context.getSharedPreferences("random", Context.MODE_PRIVATE)
             .edit()
             .putString(
@@ -46,7 +51,7 @@ class BackupWorker(
     }
 
     private fun loggerForTest() {
-        val message = "El backup fue SUCCESS el ${DateUtils.currentDateAtReadableFormat()}"
+        val message = "backup success: ${LocalDateTime.now()}"
         context.getSharedPreferences("random", Context.MODE_PRIVATE)
             .edit()
             .putString(
@@ -67,5 +72,20 @@ class BackupWorker(
             .setContentText("Your data is being backed up")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
+    }
+
+    companion object {
+
+        fun startUpSyncWork(): OneTimeWorkRequest {
+
+            val constraints: Constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
+
+            return OneTimeWorkRequestBuilder<BackupWorker>()
+                .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                .setConstraints(constraints)
+                .build()
+        }
     }
 }

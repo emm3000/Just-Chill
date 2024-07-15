@@ -9,12 +9,12 @@ import java.util.*
 
 object DateUtils {
 
-    fun currentDateAtReadableFormat(): String {
+    fun currentDateAtReadableFormat(formatStyle: FormatStyle = FormatStyle.LONG): String {
 
         val currentLocalDate: LocalDate = LocalDate.now()
 
         val readableFormatter: DateTimeFormatter = DateTimeFormatter
-            .ofLocalizedDate(FormatStyle.LONG)
+            .ofLocalizedDate(formatStyle)
             .withLocale(Locale("es"))
 
         return currentLocalDate.format(readableFormatter)

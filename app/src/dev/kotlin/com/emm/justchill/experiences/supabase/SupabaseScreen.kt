@@ -17,7 +17,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
-@Suppress("SpellCheckingInspection")
 @Composable
 fun SupabaseScreen(
     supabasePlayground: SupabasePlayground = koinInject()

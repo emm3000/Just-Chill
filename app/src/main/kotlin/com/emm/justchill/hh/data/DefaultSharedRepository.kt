@@ -7,6 +7,6 @@ class DefaultSharedRepository(
 ): SharedRepository {
 
     override suspend fun existData(): Boolean {
-        return sharedSqlDataSource.hasData()
+        return sharedSqlDataSource.hasAnyDataInLocalDataBase()
     }
 }

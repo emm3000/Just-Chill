@@ -10,29 +10,23 @@ import com.emm.justchill.EmmDatabase
 import com.emm.justchill.R
 import com.emm.justchill.TransactionQueries
 import com.emm.justchill.TransactionsCategoriesQueries
-import com.emm.justchill.hh.data.AllTransactionsRetriever
+import com.emm.justchill.hh.data.DefaultNowProvider
 import com.emm.justchill.hh.data.DefaultSharedRepository
+import com.emm.justchill.hh.data.DefaultUniqueIdProvider
 import com.emm.justchill.hh.data.SharedSqlDataSource
-import com.emm.justchill.hh.data.category.AllCategoriesRetriever
-import com.emm.justchill.hh.data.category.CategoryDiskDataSource
-import com.emm.justchill.hh.data.category.CategorySaver
-import com.emm.justchill.hh.data.category.CategorySeeder
+import com.emm.justchill.hh.data.category.CategoryNetworkDataSource
+import com.emm.justchill.hh.data.category.CategorySupabaseDataSource
 import com.emm.justchill.hh.data.category.DefaultCategoryRepository
 import com.emm.justchill.hh.data.transaction.DefaultTransactionRepository
-import com.emm.justchill.hh.data.transaction.TransactionCalculator
-import com.emm.justchill.hh.data.transaction.TransactionDiskDataSource
-import com.emm.justchill.hh.data.transaction.TransactionSaver
-import com.emm.justchill.hh.data.transaction.TransactionSeeder
+import com.emm.justchill.hh.data.transaction.TransactionNetworkDataSource
+import com.emm.justchill.hh.data.transaction.TransactionSupabaseDataSource
 import com.emm.justchill.hh.data.transactioncategory.DefaultTransactionCategoryRepository
-import com.emm.justchill.hh.data.transactioncategory.TransactionCategoryDiskDataSource
-import com.emm.justchill.hh.data.transactioncategory.TransactionCategoryRetriever
-import com.emm.justchill.hh.data.transactioncategory.TransactionCategorySaver
-import com.emm.justchill.hh.data.transactioncategory.TransactionCategorySeeder
+import com.emm.justchill.hh.data.transactioncategory.TransactionCategoryNetworkDataSource
+import com.emm.justchill.hh.data.transactioncategory.TransactionCategorySupabaseDataSource
 import com.emm.justchill.hh.domain.BackupManager
-import com.emm.justchill.hh.domain.DefaultBackupManager
 import com.emm.justchill.hh.domain.SharedRepository
 import com.emm.justchill.hh.domain.SupabaseBackupManager
-import com.emm.justchill.hh.domain.TransactionModelFactory
+import com.emm.justchill.hh.domain.AndroidIdProvider
 import com.emm.justchill.hh.domain.category.CategoryAdder
 import com.emm.justchill.hh.domain.category.CategoryLoader
 import com.emm.justchill.hh.domain.category.CategoryRepository
@@ -60,10 +54,6 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
-import org.koin.core.module.dsl.singleOf
-import org.koin.core.qualifier.named
-import org.koin.dsl.bind
-import org.koin.dsl.binds
 import org.koin.dsl.module
 
 val hhModule = module {
@@ -87,28 +77,18 @@ val hhModule = module {
     factoryOf(::TransactionSumSpend)
     factoryOf(::TransactionDifferenceCalculator)
 
-    factory(named("disk")) {
-        DefaultBackupManager(
-            get(),
-            get(),
-            get(),
-            get(),
-            get(),
-        )
-    } bind BackupManager::class
-
-    factory(named("supabase")) {
+    factory<BackupManager> {
         SupabaseBackupManager(
             get(),
             get(),
             get(),
             get(),
             get(),
-            get(),
+            androidApplication(),
         )
-    } bind BackupManager::class
+    }
 
-    factory { TransactionModelFactory(androidApplication()) }
+    factory { AndroidIdProvider(androidApplication()) }
 
     viewModelsProviders()
 }
@@ -135,6 +115,9 @@ private fun Module.repositoriesProviders() {
             get(),
             get(),
             get(),
+            DefaultNowProvider,
+            DefaultUniqueIdProvider,
+            get()
         )
     }
 
@@ -143,40 +126,39 @@ private fun Module.repositoriesProviders() {
             get(),
             get(),
             get(),
+            get(),
         )
     }
 
     single<SharedRepository> {
-        DefaultSharedRepository(get())
+        DefaultSharedRepository(
+            get(),
+        )
     }
 
     single<SupabaseClient> { supabase(androidApplication()) }
 }
 
 private fun Module.dataSourceProviders() {
-    single { CategoryDiskDataSource(get(), get()) } binds arrayOf(
-        CategorySaver::class,
-        AllCategoriesRetriever::class,
-        CategorySeeder::class
-    )
-    single { TransactionDiskDataSource(get(), get()) } binds arrayOf(
-        TransactionSaver::class,
-        AllTransactionsRetriever::class,
-        TransactionCalculator::class,
-        TransactionSeeder::class
-    )
-    single {
-        TransactionCategoryDiskDataSource(
+    factory<CategoryNetworkDataSource> {
+        CategorySupabaseDataSource(
             get(),
-            get()
+            get(),
         )
-    } binds arrayOf(
-        TransactionCategorySaver::class,
-        TransactionCategoryRetriever::class,
-        TransactionCategorySeeder::class,
-    )
-
-    singleOf(::SharedSqlDataSource)
+    }
+    factory<TransactionNetworkDataSource> {
+        TransactionSupabaseDataSource(
+            get(),
+            get(),
+        )
+    }
+    factory<TransactionCategoryNetworkDataSource> {
+        TransactionCategorySupabaseDataSource(
+            get(),
+            get(),
+        )
+    }
+    factoryOf(::SharedSqlDataSource)
 }
 
 private fun Module.provideSqlDelight() {

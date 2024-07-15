@@ -2,6 +2,7 @@ package com.emm.justchill.hh.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.emm.justchill.hh.domain.AndroidIdProvider
 import com.emm.justchill.hh.domain.transaction.TransactionDifferenceCalculator
 import com.emm.justchill.hh.domain.transaction.TransactionSumIncome
 import com.emm.justchill.hh.domain.transaction.TransactionSumSpend
@@ -17,7 +18,10 @@ class HomeViewModel(
     transactionSumIncome: TransactionSumIncome,
     transactionSumSpend: TransactionSumSpend,
     transactionDifferenceCalculator: TransactionDifferenceCalculator,
+    androidIdProvider: AndroidIdProvider,
 ) : ViewModel() {
+
+    val androidId = androidIdProvider.androidId()
 
     val sumTransactions: StateFlow<Pair<String, String>> = combine(
         transactionSumIncome(),

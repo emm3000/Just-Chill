@@ -9,7 +9,9 @@ interface TransactionRepository {
 
     suspend fun add(entity: TransactionInsert)
 
-    suspend fun seed(data: List<TransactionModel>)
+    suspend fun seed()
+
+    suspend fun backup()
 
     fun all(): Flow<List<Transactions>>
 
