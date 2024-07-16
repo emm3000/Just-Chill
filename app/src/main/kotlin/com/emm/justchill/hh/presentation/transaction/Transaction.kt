@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.PopupProperties
+import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import com.emm.justchill.Categories
 import com.emm.justchill.core.Result
@@ -89,7 +90,7 @@ fun Transaction(
         addTransaction = vm::addTransaction,
         onCategoryChange = vm::updateCategory,
         updateDate = vm::updateCurrentDate,
-        navigateUp = { navController.navigateUp() },
+        navigateUp = { navController.popBackStack() },
         navigateToCreateCategory = { navController.navigate(Category) },
         initialTransactionType = vm.transactionType,
         onOptionSelected = vm::updateTransactionType,
@@ -169,7 +170,9 @@ private fun Transaction(
                 modifier = Modifier,
                 title = { Text(text = "Agregar gasto", fontSize = 16.sp) },
                 navigationIcon = {
-                    IconButton(onClick = { navigateUp() }) {
+                    IconButton(onClick = dropUnlessResumed {
+                        navigateUp()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null
@@ -219,7 +222,7 @@ private fun Transaction(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(55.dp),
-                onClick = {
+                onClick = dropUnlessResumed {
                     addTransaction()
                     navigateUp()
                 },

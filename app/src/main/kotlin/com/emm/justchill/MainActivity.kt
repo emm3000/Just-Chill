@@ -6,20 +6,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.lifecycleScope
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.hh.domain.BackupManager
 import com.emm.justchill.hh.presentation.Hh
-import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 
 class MainActivity : AppCompatActivity() {
 
-    private val defaultBackupManager: BackupManager by inject()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        populate()
         setContent {
             EmmTheme {
                 Surface(
@@ -30,10 +23,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    private fun populate() = lifecycleScope.launch {
-        defaultBackupManager.seed()
     }
 }
 

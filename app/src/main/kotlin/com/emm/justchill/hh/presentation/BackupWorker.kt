@@ -41,10 +41,7 @@ class BackupWorker(
         val message = "backup failed: ${LocalDateTime.now()}"
         context.getSharedPreferences("random", Context.MODE_PRIVATE)
             .edit()
-            .putString(
-                "RANDOM",
-                message
-            )
+            .putString("RANDOM", message)
             .apply()
     }
 
@@ -52,10 +49,7 @@ class BackupWorker(
         val message = "backup success: ${LocalDateTime.now()}"
         context.getSharedPreferences("random", Context.MODE_PRIVATE)
             .edit()
-            .putString(
-                "RANDOM",
-                message
-            )
+            .putString("RANDOM", message)
             .apply()
     }
 

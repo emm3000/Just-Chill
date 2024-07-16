@@ -7,6 +7,7 @@ import com.emm.justchill.TransactionsCategoriesQueries
 import com.emm.justchill.core.DispatchersProvider
 import com.emm.justchill.hh.domain.AndroidDataProvider
 import com.emm.justchill.hh.domain.TransactionCategoryModel
+import com.emm.justchill.hh.domain.auth.AuthRepository
 import com.emm.justchill.hh.domain.toModel
 import com.emm.justchill.hh.domain.transactioncategory.TransactionCategoryRepository
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +17,7 @@ class DefaultTransactionCategoryRepository(
     private val queries: TransactionsCategoriesQueries,
     private val networkDataSource: TransactionCategoryNetworkDataSource,
     private val androidDataProvider: AndroidDataProvider,
+    private val authRepository: AuthRepository,
 ) : TransactionCategoryRepository, DispatchersProvider by dispatchersProvider {
 
     override suspend fun add(transactionId: String, categoryId: String) {
@@ -45,6 +47,7 @@ class DefaultTransactionCategoryRepository(
     }
 
     override suspend fun backup() {
+        val authId: String = authRepository.session()?.id ?: return
         val transactionCategory: List<TransactionCategoryModel> = queries
             .retrieve()
             .executeAsList()
@@ -53,6 +56,7 @@ class DefaultTransactionCategoryRepository(
                 it.copy(
                     deviceId = androidDataProvider.androidId(),
                     deviceName = androidDataProvider.deviceName(),
+                    userId = authId
                 )
             }
 

@@ -3,6 +3,7 @@ package com.emm.justchill.hh.presentation.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.hh.domain.AndroidDataProvider
+import com.emm.justchill.hh.domain.BackupManager
 import com.emm.justchill.hh.domain.transaction.TransactionDifferenceCalculator
 import com.emm.justchill.hh.domain.transaction.TransactionSumIncome
 import com.emm.justchill.hh.domain.transaction.TransactionSumSpend
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
 class HomeViewModel(
@@ -19,6 +21,7 @@ class HomeViewModel(
     transactionSumSpend: TransactionSumSpend,
     transactionDifferenceCalculator: TransactionDifferenceCalculator,
     androidDataProvider: AndroidDataProvider,
+    private val backupManager: BackupManager,
 ) : ViewModel() {
 
     val androidId = androidDataProvider.androidId()
@@ -46,4 +49,10 @@ class HomeViewModel(
             started = SharingStarted.WhileSubscribed(5000L),
             initialValue = "0.00"
         )
+
+    init {
+        viewModelScope.launch {
+            backupManager.seed()
+        }
+    }
 }

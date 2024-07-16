@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.hh.domain.TransactionType
@@ -32,7 +33,7 @@ fun Category(
         initialTransactionType = vm.transactionType,
         onOptionSelected = vm::updateTransactionType,
         addCategory = vm::addCategory,
-        navigateUp = { navController.navigateUp() },
+        navigateUp = { navController.popBackStack() },
         nameValue = vm.name,
         onNameChange = vm::updateName,
     )
@@ -78,7 +79,7 @@ fun Category(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(55.dp),
-            onClick = {
+            onClick = dropUnlessResumed {
                 keyboardController?.hide()
                 addCategory()
                 navigateUp()
@@ -93,7 +94,9 @@ fun Category(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(55.dp),
-            onClick = navigateUp,
+            onClick = dropUnlessResumed {
+                navigateUp()
+            },
             shape = RoundedCornerShape(10.dp),
         ) {
             Text(text = "CANCELAR")

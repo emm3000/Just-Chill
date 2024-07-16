@@ -8,6 +8,7 @@ import com.emm.justchill.Transactions
 import com.emm.justchill.core.DispatchersProvider
 import com.emm.justchill.hh.domain.AndroidDataProvider
 import com.emm.justchill.hh.domain.TransactionModel
+import com.emm.justchill.hh.domain.auth.AuthRepository
 import com.emm.justchill.hh.domain.toModel
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
 import kotlinx.coroutines.flow.Flow
@@ -18,6 +19,7 @@ class DefaultTransactionRepository(
     private val transactionsQueries: TransactionQueries,
     private val networkDataSource: TransactionNetworkDataSource,
     private val androidDataProvider: AndroidDataProvider,
+    private val authRepository: AuthRepository,
 ) : TransactionRepository, DispatchersProvider by dispatchersProvider {
 
     override suspend fun add(entity: TransactionInsert) {
@@ -77,6 +79,7 @@ class DefaultTransactionRepository(
     }
 
     override suspend fun backup() {
+        val authId: String = authRepository.session()?.id ?: return
         val transactions: List<TransactionModel> = transactionsQueries
             .retrieveAll()
             .executeAsList()
@@ -84,7 +87,8 @@ class DefaultTransactionRepository(
             .map {
                 it.copy(
                     deviceId = androidDataProvider.androidId(),
-                    deviceName = androidDataProvider.deviceName()
+                    deviceName = androidDataProvider.deviceName(),
+                    userId = authId,
                 )
             }
 

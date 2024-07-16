@@ -18,6 +18,9 @@ data class TransactionCategoryModel(
 
     @SerialName("device_name")
     val deviceName: String = "",
+
+    @SerialName("user_id")
+    val userId: String = "",
 )
 
 fun TransactionsCategories.toModel() = TransactionCategoryModel(

@@ -14,6 +14,7 @@ import com.emm.justchill.hh.data.DefaultNowProvider
 import com.emm.justchill.hh.data.DefaultSharedRepository
 import com.emm.justchill.hh.data.DefaultUniqueIdProvider
 import com.emm.justchill.hh.data.SharedSqlDataSource
+import com.emm.justchill.hh.data.auth.DefaultAuthRepository
 import com.emm.justchill.hh.data.category.CategoryNetworkDataSource
 import com.emm.justchill.hh.data.category.CategorySupabaseDataSource
 import com.emm.justchill.hh.data.category.DefaultCategoryRepository
@@ -27,6 +28,9 @@ import com.emm.justchill.hh.domain.BackupManager
 import com.emm.justchill.hh.domain.SharedRepository
 import com.emm.justchill.hh.domain.SupabaseBackupManager
 import com.emm.justchill.hh.domain.AndroidDataProvider
+import com.emm.justchill.hh.domain.auth.AuthRepository
+import com.emm.justchill.hh.domain.auth.UserAuthenticator
+import com.emm.justchill.hh.domain.auth.UserCreator
 import com.emm.justchill.hh.domain.category.CategoryAdder
 import com.emm.justchill.hh.domain.category.CategoryLoader
 import com.emm.justchill.hh.domain.category.CategoryRepository
@@ -42,10 +46,12 @@ import com.emm.justchill.hh.domain.transactioncategory.TransactionCategoryAdder
 import com.emm.justchill.hh.domain.transactioncategory.TransactionCategoryRepository
 import com.emm.justchill.hh.presentation.category.CategoryViewModel
 import com.emm.justchill.hh.presentation.home.HomeViewModel
+import com.emm.justchill.hh.presentation.auth.LoginViewModel
 import com.emm.justchill.hh.presentation.seetransactions.SeeTransactionsViewModel
 import com.emm.justchill.hh.presentation.transaction.TransactionViewModel
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.gotrue.Auth
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.serializer.KotlinXSerializer
 import kotlinx.serialization.json.Json
@@ -77,6 +83,9 @@ val hhModule = module {
     factoryOf(::TransactionSumSpend)
     factoryOf(::TransactionDifferenceCalculator)
 
+    factoryOf(::UserAuthenticator)
+    factoryOf(::UserCreator)
+
     factory<BackupManager> {
         SupabaseBackupManager(
             get(),
@@ -98,11 +107,13 @@ private fun Module.viewModelsProviders() {
     viewModelOf(::TransactionViewModel)
     viewModelOf(::CategoryViewModel)
     viewModelOf(::SeeTransactionsViewModel)
+    viewModelOf(::LoginViewModel)
 }
 
 private fun Module.repositoriesProviders() {
     single<TransactionRepository> {
         DefaultTransactionRepository(
+            get(),
             get(),
             get(),
             get(),
@@ -117,12 +128,14 @@ private fun Module.repositoriesProviders() {
             get(),
             DefaultNowProvider,
             DefaultUniqueIdProvider,
+            get(),
             get()
         )
     }
 
     single<TransactionCategoryRepository> {
         DefaultTransactionCategoryRepository(
+            get(),
             get(),
             get(),
             get(),
@@ -137,6 +150,10 @@ private fun Module.repositoriesProviders() {
     }
 
     single<SupabaseClient> { supabase(androidApplication()) }
+
+    factory<AuthRepository> {
+        DefaultAuthRepository(get())
+    }
 }
 
 private fun Module.dataSourceProviders() {
@@ -199,6 +216,7 @@ private fun supabase(context: Context): SupabaseClient {
         supabaseUrl = context.getString(R.string.supabase_url),
         supabaseKey = context.getString(R.string.supabase_key)
     ) {
+        install(Auth)
         install(Postgrest)
         defaultSerializer = KotlinXSerializer(Json { ignoreUnknownKeys = true })
     }

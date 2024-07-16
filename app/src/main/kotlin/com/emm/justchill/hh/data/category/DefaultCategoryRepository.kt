@@ -9,6 +9,7 @@ import com.emm.justchill.hh.data.NowProvider
 import com.emm.justchill.hh.data.UniqueIdProvider
 import com.emm.justchill.hh.domain.CategoryModel
 import com.emm.justchill.hh.domain.AndroidDataProvider
+import com.emm.justchill.hh.domain.auth.AuthRepository
 import com.emm.justchill.hh.domain.category.CategoryRepository
 import com.emm.justchill.hh.domain.toModel
 import kotlinx.coroutines.flow.Flow
@@ -20,6 +21,7 @@ class DefaultCategoryRepository(
     private val nowProvider: NowProvider,
     private val uniqueIdProvider: UniqueIdProvider,
     private val androidDataProvider: AndroidDataProvider,
+    private val authRepository: AuthRepository,
 ) : CategoryRepository, DispatchersProvider by dispatchersProvider {
 
     override suspend fun add(name: String, type: String) {
@@ -59,6 +61,7 @@ class DefaultCategoryRepository(
     }
 
     override suspend fun backup() {
+        val authId: String = authRepository.session()?.id ?: return
         val categories: List<CategoryModel> = categoriesQueries
             .retrieveAll()
             .executeAsList()
@@ -66,7 +69,8 @@ class DefaultCategoryRepository(
             .map {
                 it.copy(
                     deviceId = androidDataProvider.androidId(),
-                    deviceName = androidDataProvider.deviceName()
+                    deviceName = androidDataProvider.deviceName(),
+                    userId = authId
                 )
             }
 

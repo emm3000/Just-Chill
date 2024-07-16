@@ -1,20 +1,22 @@
 package com.emm.justchill.hh.data.category
 
+import com.emm.justchill.hh.data.TableNames
 import com.emm.justchill.hh.domain.CategoryModel
-import com.emm.justchill.hh.domain.AndroidDataProvider
+import com.emm.justchill.hh.domain.auth.AuthRepository
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.PostgrestQueryBuilder
 
 class CategorySupabaseDataSource(
-    supabaseClient: SupabaseClient,
-    androidDataProvider: AndroidDataProvider,
+    private val supabaseClient: SupabaseClient,
+    private val authRepository: AuthRepository,
 ) : CategoryNetworkDataSource {
 
-    private val androidId: String = androidDataProvider.androidId()
-    private val builder: PostgrestQueryBuilder = supabaseClient.from(TABLE_NAME)
+    private val builder: PostgrestQueryBuilder = supabaseClient.from(TableNames.CATEGORY_TABLE)
 
     override suspend fun upsert(category: CategoryModel) {
+        supabaseClient.auth.refreshCurrentSession()
         builder.upsert(category)
     }
 
@@ -22,14 +24,12 @@ class CategorySupabaseDataSource(
         builder.upsert(categories)
     }
 
-    override suspend fun retrieve(): List<CategoryModel> = builder
-        .select {
-            filter { CategoryModel::deviceId eq androidId }
-        }
-        .decodeList<CategoryModel>()
-
-    private companion object {
-
-        const val TABLE_NAME = "categories"
+    override suspend fun retrieve(): List<CategoryModel> {
+        val userId: String = authRepository.session()?.id ?: return emptyList()
+        return builder
+            .select {
+                filter { CategoryModel::userId eq userId }
+            }
+            .decodeList<CategoryModel>()
     }
 }

@@ -1,22 +1,20 @@
 package com.emm.justchill.hh.data.transactioncategory
 
+import com.emm.justchill.hh.data.TableNames
 import com.emm.justchill.hh.domain.TransactionCategoryModel
-import com.emm.justchill.hh.domain.TransactionModel
-import com.emm.justchill.hh.domain.AndroidDataProvider
+import com.emm.justchill.hh.domain.auth.AuthRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.PostgrestQueryBuilder
 
 class TransactionCategorySupabaseDataSource(
     supabaseClient: SupabaseClient,
-    androidDataProvider: AndroidDataProvider,
+    private val authRepository: AuthRepository,
 ) : TransactionCategoryNetworkDataSource {
 
     private val client: PostgrestQueryBuilder by lazy {
-        supabaseClient.from(TABLE_NAME)
+        supabaseClient.from(TableNames.TRANSACTION_CATEGORY_TABLE)
     }
-
-    private val androidId = androidDataProvider.androidId()
 
     override suspend fun upsert(transactionCategory: TransactionCategoryModel) {
         client.upsert(transactionCategory)
@@ -27,17 +25,13 @@ class TransactionCategorySupabaseDataSource(
     }
 
     override suspend fun retrieve(): List<TransactionCategoryModel> {
+        val userId: String = authRepository.session()?.id ?: return emptyList()
         return client
             .select {
                 filter {
-                    TransactionModel::deviceId eq androidId
+                    TransactionCategoryModel::userId eq userId
                 }
             }
             .decodeList<TransactionCategoryModel>()
-    }
-
-    private companion object {
-
-        const val TABLE_NAME = "transactionsCategories"
     }
 }
