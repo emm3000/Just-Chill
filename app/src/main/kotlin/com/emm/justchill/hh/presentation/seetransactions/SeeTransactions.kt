@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.presentation.seetransactions
 
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,17 +12,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -35,12 +30,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,7 +45,7 @@ import java.util.*
 
 @Composable
 fun SeeTransactions(
-    navController: NavController,
+    @Suppress("UNUSED_PARAMETER") navController: NavController,
     vm: SeeTransactionsViewModel = koinViewModel(),
 ) {
 
@@ -131,7 +122,6 @@ fun SeeTransactions(
 
         LazyColumn(
             contentPadding = PaddingValues(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             if (transactions is Result.Success && transactions.data.isNotEmpty()) {
                 items(transactions.data) {
@@ -157,69 +147,48 @@ fun SeeTransactions(
 fun ItemTransaction(transactionUi: TransactionUi) {
 
     val borderColor = when (transactionUi.type) {
-        TransactionType.INCOME -> Color.Red
-        TransactionType.SPENT -> Color.White
+        TransactionType.INCOME -> Color.Unspecified
+        TransactionType.SPENT -> Color.Red
     }
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        border = BorderStroke(1.dp, color = borderColor)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {  }
+            .padding(15.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(15.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+            Column {
                 Text(
-                    text = transactionUi.amount,
+                    text = transactionUi.description,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
+                    modifier = Modifier,
                     text = transactionUi.readableDate,
                     fontSize = 17.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Light,
                 )
             }
-            Spacer(modifier = Modifier.height(5.dp))
             Text(
-                text = transactionUi.description,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                fontSize = 17.sp
+                modifier = Modifier
+                    .align(Alignment.CenterVertically),
+                text = transactionUi.amount,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = borderColor
             )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                IconButton(onClick = { /*TODO*/ }) {
-                    Icon(imageVector = Icons.Default.Edit, contentDescription = null)
-                }
-                IconButton(onClick = { /*TODO*/ }) {
-                    Icon(imageVector = Icons.Default.Delete, contentDescription = null)
-                }
-            }
         }
+        Spacer(modifier = Modifier.height(10.dp))
+        HorizontalDivider()
     }
-}
 
-@Composable
-private fun TextWithLabel(label: String, text: String) {
-    Text(text = buildAnnotatedString {
-        withStyle(
-            style = SpanStyle(
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-        ) {
-            append("$label: ")
-        }
-        append(text)
-    })
 }
 
 @Composable

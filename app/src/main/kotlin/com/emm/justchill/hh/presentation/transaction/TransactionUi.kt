@@ -14,18 +14,25 @@ data class TransactionUi(
     val readableDate: String,
 )
 
-private fun Transactions.toUi() = TransactionUi(
-    transactionId = transactionId,
-    type = try {
+private fun Transactions.toUi(): TransactionUi {
+    val transactionType: TransactionType = try {
         TransactionType.valueOf(type)
     } catch (e: Throwable) {
         FirebaseCrashlytics.getInstance().recordException(e)
         TransactionType.INCOME
-    },
-    amount = "S/. ${fromCentsToSoles(amount)}",
-    description = description,
-    date = date,
-    readableDate = DateUtils.millisToReadableFormat(date)
-)
+    }
+
+    return TransactionUi(
+        transactionId = transactionId,
+        type = transactionType,
+        amount = when (transactionType) {
+            TransactionType.INCOME -> "S/ ${fromCentsToSoles(amount)}"
+            TransactionType.SPENT -> "S/ -${fromCentsToSoles(amount)}"
+        },
+        description = description,
+        date = date,
+        readableDate = DateUtils.millisToReadableFormat(date)
+    )
+}
 
 fun List<Transactions>.toUi() = map(Transactions::toUi)
