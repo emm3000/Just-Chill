@@ -3,23 +3,14 @@ package com.emm.justchill
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import com.emm.justchill.core.coreModule
 import com.emm.justchill.experiences.drinks.drinkModule
 import com.emm.justchill.experiences.readjsonfromassets.experiencesModule
 import com.emm.justchill.experiences.supabase.supabaseModule
 import com.emm.justchill.hh.hhModule
-import com.emm.justchill.hh.presentation.BackupWorker
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneId
-import java.util.concurrent.TimeUnit
 
 class EmmApp : Application() {
 

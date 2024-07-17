@@ -7,7 +7,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.Categories
-import com.emm.justchill.core.Result
+import com.emm.justchill.hh.data.transaction.TransactionInsert
 import com.emm.justchill.hh.domain.TransactionType
 import com.emm.justchill.hh.domain.category.CategoryLoader
 import com.emm.justchill.hh.domain.transactioncategory.TransactionCategoryAdder
@@ -56,18 +56,21 @@ class TransactionViewModel(
         }.launchIn(viewModelScope)
     }
 
-    val categories: StateFlow<Result<List<Categories>>> = categoryLoader.load()
+    val categories: StateFlow<List<Categories>> = categoryLoader.load()
+        .combine(snapshotFlow { transactionType }) { list, transactionType ->
+            list.filter { it.type == transactionType.name }
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = Result.Loading
+            initialValue = emptyList()
         )
 
     fun addTransaction() = viewModelScope.launch {
-        val transactionInsert = com.emm.justchill.hh.data.transaction.TransactionInsert(
+        val transactionInsert = TransactionInsert(
             type = transactionType.name,
             description = description,
-            date = dateInLong
+            date = dateInLong,
         )
         transactionCategoryAdder.add(categoryId, amount, transactionInsert)
     }

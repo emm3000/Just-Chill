@@ -221,7 +221,7 @@ private fun Email(
             unfocusedContainerColor = Color.Transparent
         ),
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Password,
+            keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Next,
         ),
         keyboardActions = KeyboardActions(

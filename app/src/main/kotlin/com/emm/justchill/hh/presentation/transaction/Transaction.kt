@@ -77,7 +77,7 @@ fun Transaction(
     vm: TransactionViewModel = koinViewModel(),
 ) {
 
-    val categories: Result<List<Categories>> by vm.categories.collectAsState()
+    val categories: List<Categories> by vm.categories.collectAsState()
 
     Transaction(
         categories = categories,
@@ -100,7 +100,7 @@ fun Transaction(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Transaction(
-    categories: Result<List<Categories>> = Result.Success(emptyList()),
+    categories: List<Categories> = emptyList(),
     isEnabledButton: Boolean = false,
     mountValue: String = "",
     onMountChange: (String) -> Unit = {},
@@ -122,7 +122,7 @@ private fun Transaction(
 
     if (showDialog) {
         TaskDialog(
-            categories = (categories as? Result.Success)?.data.orEmpty(),
+            categories = categories,
             onDismissRequest = { setShowDialog(false) },
             navigateToCreateCategory = {
                 setShowDialog(false)
@@ -208,7 +208,7 @@ private fun Transaction(
                 setShowSelectDate(true)
             }
 
-            DrowDowm(categories, onCategoryChange)
+            DropDowms(categories, onCategoryChange)
 
             TextFieldWithLabel(
                 modifier = Modifier
@@ -236,12 +236,12 @@ private fun Transaction(
 }
 
 @Composable
-private fun DrowDowm(
-    categories: Result<List<Categories>>,
+private fun DropDowms(
+    categories: List<Categories>,
     onCategoryChange: (Categories) -> Unit
 ) {
 
-    if (categories is Result.Success) {
+    if (categories.isNotEmpty()) {
         Column {
             Text(
                 modifier = Modifier.fillMaxWidth(),
@@ -250,7 +250,7 @@ private fun DrowDowm(
             Spacer(modifier = Modifier.height(5.dp))
             DropDown(
                 onCategoryChange = onCategoryChange,
-                categories = categories.data
+                categories = categories
             )
         }
     }

@@ -33,6 +33,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -155,7 +157,7 @@ fun ItemTransaction(transactionUi: TransactionUi) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable {  }
-            .padding(15.dp)
+            .padding(horizontal = 15.dp, vertical = 10.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -164,23 +166,24 @@ fun ItemTransaction(transactionUi: TransactionUi) {
             Column {
                 Text(
                     text = transactionUi.description,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    fontSize = 20.sp,
+                    fontSize = 17.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     modifier = Modifier,
-                    text = transactionUi.readableDate,
-                    fontSize = 17.sp,
+                    text = "${transactionUi.readableDate}, ${transactionUi.readableTime}",
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Light,
+                    lineHeight = TextUnit(1f, TextUnitType.Em)
                 )
             }
             Text(
                 modifier = Modifier
                     .align(Alignment.CenterVertically),
                 text = transactionUi.amount,
-                fontSize = 20.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = borderColor
             )
@@ -235,7 +238,8 @@ fun ItemPreview(modifier: Modifier = Modifier) {
                 amount = "2000",
                 description = "gaa",
                 date = 0,
-                readableDate = "20 de abril"
+                readableDate = "20 de abril",
+                readableTime = "00:00 am"
             )
         )
     }

@@ -41,4 +41,12 @@ object DateUtils {
             .toInstant()
             .toEpochMilli()
     }
+
+    fun readableTime(millis: Long): String {
+        val toLocalTime = Instant.ofEpochMilli(millis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalTime()
+        val formatter = DateTimeFormatter.ofPattern("hh:mm a")
+        return toLocalTime.format(formatter)
+    }
 }

@@ -29,7 +29,8 @@ class DefaultTransactionRepository(
             type = entity.type,
             amount = entity.amount,
             description = entity.description,
-            date = entity.date
+            date = entity.date,
+            time = entity.time,
         )
     }
 
@@ -102,7 +103,8 @@ class DefaultTransactionRepository(
                 type = it.type,
                 amount = it.amount,
                 description = it.description,
-                date = it.date
+                date = it.date,
+                time = it.time,
             )
         }
     }

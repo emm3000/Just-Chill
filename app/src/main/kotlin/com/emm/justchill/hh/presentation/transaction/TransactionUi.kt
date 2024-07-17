@@ -12,6 +12,7 @@ data class TransactionUi(
     val description: String,
     val date: Long,
     val readableDate: String,
+    val readableTime: String,
 )
 
 private fun Transactions.toUi(): TransactionUi {
@@ -31,7 +32,12 @@ private fun Transactions.toUi(): TransactionUi {
         },
         description = description,
         date = date,
-        readableDate = DateUtils.millisToReadableFormat(date)
+        readableDate = DateUtils.millisToReadableFormat(date),
+        readableTime = if (time == 0L) {
+            "00:00 am"
+        } else {
+            DateUtils.readableTime(time)
+        }
     )
 }
 
