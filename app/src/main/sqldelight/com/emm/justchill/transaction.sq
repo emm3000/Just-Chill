@@ -7,6 +7,16 @@ CREATE TABLE transactions (
     date INTEGER NOT NULL
 );
 
+updateValues:
+UPDATE transactions
+SET
+    type = ?,
+    amount = ?,
+    description = ?,
+    date = ?
+WHERE
+    transactionId = ?;
+
 count:
 SELECT COUNT(*) AS transactionsCount FROM transactions;
 
@@ -38,3 +48,6 @@ INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?);
 selectTransactionsByDateRange:
 SELECT * FROM transactions
 WHERE date BETWEEN ? AND ?;
+
+find:
+SELECT * FROM transactions WHERE transactionId = ?;

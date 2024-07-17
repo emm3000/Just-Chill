@@ -13,6 +13,7 @@ import com.emm.justchill.hh.domain.toModel
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 
 class DefaultTransactionRepository(
     dispatchersProvider: DispatchersProvider,
@@ -22,7 +23,7 @@ class DefaultTransactionRepository(
     private val authRepository: AuthRepository,
 ) : TransactionRepository, DispatchersProvider by dispatchersProvider {
 
-    override suspend fun add(entity: TransactionInsert) {
+    override suspend fun add(entity: TransactionInsert) = withContext(ioDispatcher) {
         checkNotNull(entity.id)
         transactionsQueries.addTransaction(
             transactionId = entity.id,
@@ -94,6 +95,23 @@ class DefaultTransactionRepository(
             }
 
         networkDataSource.upsert(transactions)
+    }
+
+    override suspend fun find(transactionId: String): Transactions? = withContext(ioDispatcher) {
+        transactionsQueries.find(transactionId).executeAsOneOrNull()
+    }
+
+    override suspend fun update(
+        transactionId: String,
+        transactionUpdate: TransactionUpdate,
+    ) = withContext(ioDispatcher) {
+        transactionsQueries.updateValues(
+            type = transactionUpdate.type,
+            amount = transactionUpdate.amount,
+            description = transactionUpdate.description,
+            date = transactionUpdate.date,
+            transactionId = transactionId
+        )
     }
 
     private fun populate(data: List<TransactionModel>) {

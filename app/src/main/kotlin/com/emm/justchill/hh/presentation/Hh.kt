@@ -15,13 +15,14 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.emm.justchill.hh.domain.auth.AuthRepository
 import com.emm.justchill.hh.presentation.category.Category
 import com.emm.justchill.hh.presentation.home.Home
 import com.emm.justchill.hh.presentation.auth.Login
 import com.emm.justchill.hh.presentation.seetransactions.SeeTransactions
+import com.emm.justchill.hh.presentation.transaction.EditTransaction
 import com.emm.justchill.hh.presentation.transaction.Transaction
-import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
 import org.koin.compose.koinInject
 
@@ -35,7 +36,10 @@ object Login
 object Home
 
 @Serializable
-object Income
+object Transaction
+
+@Serializable
+data class EditTransaction(val transactionId: String)
 
 @Serializable
 object Category
@@ -53,7 +57,6 @@ fun Hh() {
             val repository: AuthRepository = koinInject()
 
             LaunchedEffect(Unit) {
-                delay(1000L)
                 repository.session()?.let {
                     navController.navigate(Home) {
                         popUpTo<PreLogin> {
@@ -85,8 +88,12 @@ fun Hh() {
         composable<Home> {
             Home(navController)
         }
-        composable<Income> {
+        composable<Transaction> {
             Transaction(navController)
+        }
+        composable<EditTransaction> {
+            val editTransaction: EditTransaction = it.toRoute<EditTransaction>()
+            EditTransaction(navController, editTransaction.transactionId)
         }
         composable<Category> {
             Category(navController)

@@ -13,6 +13,7 @@ import com.emm.justchill.hh.domain.auth.AuthRepository
 import com.emm.justchill.hh.domain.category.CategoryRepository
 import com.emm.justchill.hh.domain.toModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 
 class DefaultCategoryRepository(
     dispatchersProvider: DispatchersProvider,
@@ -24,7 +25,7 @@ class DefaultCategoryRepository(
     private val authRepository: AuthRepository,
 ) : CategoryRepository, DispatchersProvider by dispatchersProvider {
 
-    override suspend fun add(name: String, type: String) {
+    override suspend fun add(name: String, type: String) = withContext(ioDispatcher) {
         categoriesQueries.addCategory(
             categoryId = uniqueIdProvider.uniqueId,
             name = name,

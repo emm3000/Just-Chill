@@ -11,6 +11,7 @@ import com.emm.justchill.hh.domain.auth.AuthRepository
 import com.emm.justchill.hh.domain.toModel
 import com.emm.justchill.hh.domain.transactioncategory.TransactionCategoryRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 
 class DefaultTransactionCategoryRepository(
     dispatchersProvider: DispatchersProvider,
@@ -20,7 +21,7 @@ class DefaultTransactionCategoryRepository(
     private val authRepository: AuthRepository,
 ) : TransactionCategoryRepository, DispatchersProvider by dispatchersProvider {
 
-    override suspend fun add(transactionId: String, categoryId: String) {
+    override suspend fun add(transactionId: String, categoryId: String) = withContext(ioDispatcher) {
         queries.add(
             transactionId = transactionId,
             categoryId = categoryId

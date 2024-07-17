@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.hh.presentation.Category
-import com.emm.justchill.hh.presentation.Income
+import com.emm.justchill.hh.presentation.Transaction
 import com.emm.justchill.hh.presentation.SeeTransactions
 import org.koin.androidx.compose.koinViewModel
 
@@ -47,7 +45,7 @@ fun Home(
         sumTransaction = sumTransactions,
         difference = difference,
         androidId = homeViewModel.androidId,
-        navigateToIncome = { navController.navigate(Income) },
+        navigateToIncome = { navController.navigate(Transaction) },
         navigateToCategory = { navController.navigate(Category) },
         navigateToSeeTransactions = { navController.navigate(SeeTransactions) }
     )

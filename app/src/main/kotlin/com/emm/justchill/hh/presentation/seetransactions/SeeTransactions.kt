@@ -41,13 +41,14 @@ import androidx.navigation.NavController
 import com.emm.justchill.core.Result
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.hh.domain.TransactionType
+import com.emm.justchill.hh.presentation.EditTransaction
 import com.emm.justchill.hh.presentation.transaction.TransactionUi
 import org.koin.androidx.compose.koinViewModel
 import java.util.*
 
 @Composable
 fun SeeTransactions(
-    @Suppress("UNUSED_PARAMETER") navController: NavController,
+    navController: NavController,
     vm: SeeTransactionsViewModel = koinViewModel(),
 ) {
 
@@ -58,7 +59,10 @@ fun SeeTransactions(
         firstDataHolder = vm.holderForStartDate,
         secondDataHolder = vm.holderForEndDate,
         updateFirst = vm::updateDataHolder,
-        updateSecond = vm::updateDataHolder2
+        updateSecond = vm::updateDataHolder2,
+        navigateToEdit = {
+            navController.navigate(EditTransaction(it))
+        }
     )
 }
 
@@ -70,6 +74,7 @@ fun SeeTransactions(
     secondDataHolder: DateDataHolder = DateDataHolder(),
     updateFirst: (Long?) -> Unit = {},
     updateSecond: (Long?) -> Unit = {},
+    navigateToEdit: (String) -> Unit = {},
 ) {
 
     val datePickerState: DatePickerState = rememberDatePickerState()
@@ -127,7 +132,7 @@ fun SeeTransactions(
         ) {
             if (transactions is Result.Success && transactions.data.isNotEmpty()) {
                 items(transactions.data) {
-                    ItemTransaction(it)
+                    ItemTransaction(it, navigateToEdit)
                 }
             } else {
                 item {
@@ -146,7 +151,10 @@ fun SeeTransactions(
 }
 
 @Composable
-fun ItemTransaction(transactionUi: TransactionUi) {
+fun ItemTransaction(
+    transactionUi: TransactionUi,
+    navigateToEdit: (String) -> Unit,
+) {
 
     val borderColor = when (transactionUi.type) {
         TransactionType.INCOME -> Color.Unspecified
@@ -156,7 +164,9 @@ fun ItemTransaction(transactionUi: TransactionUi) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {  }
+            .clickable {
+                navigateToEdit(transactionUi.transactionId)
+            }
             .padding(horizontal = 15.dp, vertical = 10.dp)
     ) {
         Row(
@@ -168,13 +178,13 @@ fun ItemTransaction(transactionUi: TransactionUi) {
                     text = transactionUi.description,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    fontSize = 17.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     modifier = Modifier,
                     text = "${transactionUi.readableDate}, ${transactionUi.readableTime}",
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Light,
                     lineHeight = TextUnit(1f, TextUnitType.Em)
                 )
@@ -183,7 +193,7 @@ fun ItemTransaction(transactionUi: TransactionUi) {
                 modifier = Modifier
                     .align(Alignment.CenterVertically),
                 text = transactionUi.amount,
-                fontSize = 18.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 color = borderColor
             )
@@ -239,9 +249,9 @@ fun ItemPreview(modifier: Modifier = Modifier) {
                 description = "gaa",
                 date = 0,
                 readableDate = "20 de abril",
-                readableTime = "00:00 am"
+                readableTime = "00:00 am",
             )
-        )
+        ) {}
     }
 }
 

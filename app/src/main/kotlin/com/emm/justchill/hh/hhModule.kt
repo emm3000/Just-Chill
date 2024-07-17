@@ -36,11 +36,13 @@ import com.emm.justchill.hh.domain.category.CategoryLoader
 import com.emm.justchill.hh.domain.category.CategoryRepository
 import com.emm.justchill.hh.domain.transaction.TransactionAdder
 import com.emm.justchill.hh.domain.transaction.TransactionDifferenceCalculator
+import com.emm.justchill.hh.domain.transaction.TransactionFinder
 import com.emm.justchill.hh.domain.transaction.TransactionLoader
 import com.emm.justchill.hh.domain.transaction.TransactionLoaderByDateRange
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
 import com.emm.justchill.hh.domain.transaction.TransactionSumIncome
 import com.emm.justchill.hh.domain.transaction.TransactionSumSpend
+import com.emm.justchill.hh.domain.transaction.TransactionUpdater
 import com.emm.justchill.hh.domain.transactioncategory.AmountDbFormatter
 import com.emm.justchill.hh.domain.transactioncategory.TransactionCategoryAdder
 import com.emm.justchill.hh.domain.transactioncategory.TransactionCategoryRepository
@@ -48,6 +50,7 @@ import com.emm.justchill.hh.presentation.category.CategoryViewModel
 import com.emm.justchill.hh.presentation.home.HomeViewModel
 import com.emm.justchill.hh.presentation.auth.LoginViewModel
 import com.emm.justchill.hh.presentation.seetransactions.SeeTransactionsViewModel
+import com.emm.justchill.hh.presentation.transaction.EditTransactionViewModel
 import com.emm.justchill.hh.presentation.transaction.TransactionViewModel
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
@@ -57,6 +60,7 @@ import io.github.jan.supabase.serializer.KotlinXSerializer
 import kotlinx.serialization.json.Json
 import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
@@ -85,6 +89,8 @@ val hhModule = module {
 
     factoryOf(::UserAuthenticator)
     factoryOf(::UserCreator)
+    factoryOf(::TransactionFinder)
+    factoryOf(::TransactionUpdater)
 
     factory<BackupManager> {
         SupabaseBackupManager(
@@ -108,6 +114,16 @@ private fun Module.viewModelsProviders() {
     viewModelOf(::CategoryViewModel)
     viewModelOf(::SeeTransactionsViewModel)
     viewModelOf(::LoginViewModel)
+
+    viewModel { parameters ->
+        EditTransactionViewModel(
+            categoryLoader = get(),
+            transactionId = parameters.get(),
+            transactionUpdater = get(),
+            transactionFinder = get(),
+            amountCleaner = AmountDbFormatter(),
+        )
+    }
 }
 
 private fun Module.repositoriesProviders() {

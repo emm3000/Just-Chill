@@ -63,7 +63,6 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import com.emm.justchill.Categories
-import com.emm.justchill.core.Result
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.hh.domain.TransactionType
 import com.emm.justchill.hh.presentation.Category
@@ -236,7 +235,7 @@ private fun Transaction(
 }
 
 @Composable
-private fun DropDowms(
+fun DropDowms(
     categories: List<Categories>,
     onCategoryChange: (Categories) -> Unit
 ) {
@@ -258,7 +257,7 @@ private fun DropDowms(
 }
 
 @Composable
-private fun Date(
+fun Date(
     dateValue: String,
     showDatePicker: () -> Unit,
 ) {
@@ -291,7 +290,7 @@ private fun Date(
 }
 
 @Composable
-private fun Mount(mountValue: String, onMountChange: (String) -> Unit) {
+fun Mount(mountValue: String, onMountChange: (String) -> Unit) {
 
     Column(Modifier.fillMaxWidth()) {
 
@@ -438,7 +437,6 @@ private fun DropDown(
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
