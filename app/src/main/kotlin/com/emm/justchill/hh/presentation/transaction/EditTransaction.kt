@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
@@ -17,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -30,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -70,7 +73,8 @@ fun EditTransaction(
         initialTransactionType = vm.transactionType,
         onOptionSelected = vm::updateTransactionType,
         text = vm.categoryLabel,
-        setText = vm::updateCategoryLabel
+        setText = vm::updateCategoryLabel,
+        deleteTransaction = vm::deleteTransaction
     )
 
 }
@@ -94,6 +98,7 @@ private fun EditTransaction(
     onOptionSelected: (TransactionType) -> Unit = {},
     text: String = "",
     setText: (String) -> Unit = {},
+    deleteTransaction: () -> Unit = {},
 ) {
     val (showDialog, setShowDialog) = rememberSaveable {
         mutableStateOf(false)
@@ -147,7 +152,7 @@ private fun EditTransaction(
         topBar = {
             TopAppBar(
                 modifier = Modifier,
-                title = { Text(text = "Agregar gasto", fontSize = 16.sp) },
+                title = { Text(text = "Editar transacción", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = dropUnlessResumed {
                         navigateUp()
@@ -213,7 +218,22 @@ private fun EditTransaction(
                 shape = RoundedCornerShape(10.dp),
                 enabled = isEnabledButton,
             ) {
-                Text(text = "ACTUALIZAR")
+                Text(text = "ACTUALIZAR", fontWeight = FontWeight.Bold)
+            }
+            FilledTonalButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp),
+                onClick = dropUnlessResumed {
+                    deleteTransaction()
+                    navigateUp()
+                },
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Text(text = "ELIMINAR", fontWeight = FontWeight.Bold)
             }
         }
     }

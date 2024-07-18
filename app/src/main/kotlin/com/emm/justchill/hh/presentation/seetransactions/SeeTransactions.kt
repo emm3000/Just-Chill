@@ -111,7 +111,7 @@ fun SeeTransactions(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 OutlinedButton(onClick = { setShowSelectDate(true) }) {
-                    Text(text = "Desde")
+                    Text(text = "Desde", fontWeight = FontWeight.Bold)
                 }
                 if (firstDataHolder.readableDate.isNotEmpty()) {
                     Text(text = firstDataHolder.readableDate)
@@ -119,7 +119,7 @@ fun SeeTransactions(
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 OutlinedButton(onClick = { setShowSelectDate2(true) }) {
-                    Text(text = "Hasta")
+                    Text(text = "Hasta", fontWeight = FontWeight.ExtraBold)
                 }
                 if (secondDataHolder.readableDate.isNotEmpty()) {
                     Text(text = secondDataHolder.readableDate)
@@ -171,27 +171,29 @@ fun ItemTransaction(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
                     text = transactionUi.description,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    fontSize = 14.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     modifier = Modifier,
                     text = "${transactionUi.readableDate}, ${transactionUi.readableTime}",
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Light,
                     lineHeight = TextUnit(1f, TextUnitType.Em)
                 )
             }
             Text(
                 modifier = Modifier
-                    .align(Alignment.CenterVertically),
+                    .align(Alignment.CenterVertically)
+                    .padding(start = 13.dp),
                 text = transactionUi.amount,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
@@ -246,7 +248,7 @@ fun ItemPreview(modifier: Modifier = Modifier) {
                 transactionId = UUID.randomUUID().toString(),
                 type = TransactionType.INCOME,
                 amount = "2000",
-                description = "gaa",
+                description = "gaa asocinas coinas ocinasoc nasco nas coias coñ",
                 date = 0,
                 readableDate = "20 de abril",
                 readableTime = "00:00 am",

@@ -30,4 +30,6 @@ interface TransactionRepository {
     fun sumSpend(): Flow<Long>
 
     fun difference(): Flow<Long>
+
+   suspend fun delete(transactionId: String)
 }

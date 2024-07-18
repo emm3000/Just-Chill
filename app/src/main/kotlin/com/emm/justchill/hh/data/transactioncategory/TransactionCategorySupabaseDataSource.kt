@@ -34,4 +34,13 @@ class TransactionCategorySupabaseDataSource(
             }
             .decodeList<TransactionCategoryModel>()
     }
+
+    override suspend fun deleteAll() {
+        val userId: String = authRepository.session()?.id ?: return
+        client.delete {
+            filter {
+                TransactionCategoryModel::userId eq userId
+            }
+        }
+    }
 }

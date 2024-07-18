@@ -49,6 +49,7 @@ class DefaultTransactionCategoryRepository(
 
     override suspend fun backup() {
         val authId: String = authRepository.session()?.id ?: return
+        networkDataSource.deleteAll()
         val transactionCategory: List<TransactionCategoryModel> = queries
             .retrieve()
             .executeAsList()

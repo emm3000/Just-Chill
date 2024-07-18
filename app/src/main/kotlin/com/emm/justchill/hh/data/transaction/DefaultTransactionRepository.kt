@@ -74,6 +74,10 @@ class DefaultTransactionRepository(
             .map { it ?: 0L }
     }
 
+    override suspend fun delete(transactionId: String) = withContext(ioDispatcher) {
+        transactionsQueries.delete(transactionId)
+    }
+
     override suspend fun seed() {
         val transactions: List<TransactionModel> = networkDataSource.retrieve()
         transactionsQueries.transaction {
@@ -83,6 +87,7 @@ class DefaultTransactionRepository(
 
     override suspend fun backup() {
         val authId: String = authRepository.session()?.id ?: return
+        networkDataSource.deleteAll()
         val transactions: List<TransactionModel> = transactionsQueries
             .retrieveAll()
             .executeAsList()

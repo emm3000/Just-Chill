@@ -11,6 +11,7 @@ import com.emm.justchill.Ga
 import com.emm.justchill.hh.data.transaction.TransactionUpdate
 import com.emm.justchill.hh.domain.TransactionType
 import com.emm.justchill.hh.domain.category.CategoryLoader
+import com.emm.justchill.hh.domain.transaction.TransactionDeleter
 import com.emm.justchill.hh.domain.transaction.TransactionFinder
 import com.emm.justchill.hh.domain.transaction.TransactionUpdater
 import com.emm.justchill.hh.domain.transaction.fromCentsToSoles
@@ -29,6 +30,7 @@ class EditTransactionViewModel(
     private val transactionUpdater: TransactionUpdater,
     private val transactionFinder: TransactionFinder,
     private val amountCleaner: AmountDbFormatter,
+    private val transactionDeleter: TransactionDeleter,
 ) : ViewModel() {
 
     var amount by mutableStateOf("")
@@ -99,6 +101,10 @@ class EditTransactionViewModel(
             amount = amountCleaner.format(amount)
         )
         transactionUpdater.update(transactionId, transactionUpdate, categoryId)
+    }
+
+    fun deleteTransaction() = viewModelScope.launch {
+        transactionDeleter.delete(transactionId)
     }
 
     fun updateMount(value: String) {

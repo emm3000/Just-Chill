@@ -44,7 +44,6 @@ fun Home(
     Home(
         sumTransaction = sumTransactions,
         difference = difference,
-        androidId = homeViewModel.androidId,
         navigateToIncome = { navController.navigate(Transaction) },
         navigateToCategory = { navController.navigate(Category) },
         navigateToSeeTransactions = { navController.navigate(SeeTransactions) }
@@ -55,7 +54,6 @@ fun Home(
 fun Home(
     sumTransaction: Pair<String, String> = Pair("", ""),
     difference: String = "",
-    androidId: String = "",
     navigateToIncome: () -> Unit = {},
     navigateToCategory: () -> Unit = {},
     navigateToSeeTransactions: () -> Unit = {},
@@ -147,7 +145,6 @@ fun Home(
                 key = "error",
                 defValue = "no error yet"
             )
-            Text(text = androidId)
         }
     }
 }

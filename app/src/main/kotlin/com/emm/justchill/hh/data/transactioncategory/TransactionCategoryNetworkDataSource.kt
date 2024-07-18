@@ -9,4 +9,6 @@ interface TransactionCategoryNetworkDataSource {
     suspend fun upsert(transactionsCategories: List<TransactionCategoryModel>)
 
     suspend fun retrieve(): List<TransactionCategoryModel>
+
+    suspend fun deleteAll()
 }

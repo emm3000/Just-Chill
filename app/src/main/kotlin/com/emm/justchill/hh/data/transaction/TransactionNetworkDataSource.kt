@@ -9,4 +9,6 @@ interface TransactionNetworkDataSource {
     suspend fun upsert(transactions: List<TransactionModel>)
 
     suspend fun retrieve(): List<TransactionModel>
+
+    suspend fun deleteAll()
 }

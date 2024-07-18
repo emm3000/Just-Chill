@@ -36,6 +36,7 @@ import com.emm.justchill.hh.domain.category.CategoryAdder
 import com.emm.justchill.hh.domain.category.CategoryLoader
 import com.emm.justchill.hh.domain.category.CategoryRepository
 import com.emm.justchill.hh.domain.transaction.TransactionAdder
+import com.emm.justchill.hh.domain.transaction.TransactionDeleter
 import com.emm.justchill.hh.domain.transaction.TransactionDifferenceCalculator
 import com.emm.justchill.hh.domain.transaction.TransactionFinder
 import com.emm.justchill.hh.domain.transaction.TransactionLoader
@@ -93,6 +94,7 @@ val hhModule = module {
     factoryOf(::UserCreator)
     factoryOf(::TransactionFinder)
     factoryOf(::TransactionUpdater)
+    factoryOf(::TransactionDeleter)
 
     factory<BackupManager> {
         SupabaseBackupManager(
@@ -124,6 +126,7 @@ private fun Module.viewModelsProviders() {
             transactionUpdater = get(),
             transactionFinder = get(),
             amountCleaner = AmountDbFormatter(),
+            transactionDeleter = get()
         )
     }
 }
