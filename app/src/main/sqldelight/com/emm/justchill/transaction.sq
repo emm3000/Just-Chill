@@ -51,3 +51,11 @@ WHERE date BETWEEN ? AND ?;
 
 find:
 SELECT * FROM transactions WHERE transactionId = ?;
+
+ga:
+SELECT t.*, c.categoryId, c.name
+FROM transactions t
+LEFT JOIN transactionsCategories tc ON t.transactionId = tc.transactionId
+LEFT JOIN categories c ON tc.categoryId = c.categoryId
+WHERE t.transactionId = ?
+LIMIT 1;

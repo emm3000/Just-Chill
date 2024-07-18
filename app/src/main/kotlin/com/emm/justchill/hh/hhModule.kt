@@ -19,6 +19,7 @@ import com.emm.justchill.hh.data.category.CategoryNetworkDataSource
 import com.emm.justchill.hh.data.category.CategorySupabaseDataSource
 import com.emm.justchill.hh.data.category.DefaultCategoryRepository
 import com.emm.justchill.hh.data.transaction.DefaultTransactionRepository
+import com.emm.justchill.hh.data.transaction.DefaultTransactionUpdateRepository
 import com.emm.justchill.hh.data.transaction.TransactionNetworkDataSource
 import com.emm.justchill.hh.data.transaction.TransactionSupabaseDataSource
 import com.emm.justchill.hh.data.transactioncategory.DefaultTransactionCategoryRepository
@@ -42,6 +43,7 @@ import com.emm.justchill.hh.domain.transaction.TransactionLoaderByDateRange
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
 import com.emm.justchill.hh.domain.transaction.TransactionSumIncome
 import com.emm.justchill.hh.domain.transaction.TransactionSumSpend
+import com.emm.justchill.hh.domain.transaction.TransactionUpdateRepository
 import com.emm.justchill.hh.domain.transaction.TransactionUpdater
 import com.emm.justchill.hh.domain.transactioncategory.AmountDbFormatter
 import com.emm.justchill.hh.domain.transactioncategory.TransactionCategoryAdder
@@ -168,9 +170,24 @@ private fun Module.repositoriesProviders() {
     single<SupabaseClient> { supabase(androidApplication()) }
 
     factory<AuthRepository> {
-        DefaultAuthRepository(get())
+        DefaultAuthRepository(get(), provideSharedPreferences(androidApplication()))
+    }
+
+    factory<TransactionUpdateRepository> {
+        DefaultTransactionUpdateRepository(
+            get(),
+            get(),
+            get(),
+        )
     }
 }
+
+private fun provideSharedPreferences(
+    context: Context
+) = context.getSharedPreferences(
+    BuildConfig.APPLICATION_ID,
+    Context.MODE_PRIVATE
+)
 
 private fun Module.dataSourceProviders() {
     factory<CategoryNetworkDataSource> {

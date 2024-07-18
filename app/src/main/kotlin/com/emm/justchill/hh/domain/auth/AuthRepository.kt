@@ -9,4 +9,8 @@ interface AuthRepository {
     suspend fun create(email: Email, password: Password)
 
     fun session(): UserInfo?
+
+    fun saveUserInputs(email: String, password: String)
+
+    fun retrieveUserInputs(): Pair<String, String>
 }

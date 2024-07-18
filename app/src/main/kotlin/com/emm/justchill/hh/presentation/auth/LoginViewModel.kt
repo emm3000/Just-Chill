@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.emm.justchill.hh.domain.auth.AuthRepository
 import com.emm.justchill.hh.domain.auth.Email
 import com.emm.justchill.hh.domain.auth.Password
 import com.emm.justchill.hh.domain.auth.UserAuthenticator
@@ -24,6 +25,7 @@ import kotlinx.coroutines.launch
 class LoginViewModel(
     private val userAuthenticator: UserAuthenticator,
     private val userCreator: UserCreator,
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
 
     var email by mutableStateOf("")
@@ -36,6 +38,10 @@ class LoginViewModel(
     val loginState: StateFlow<LoginUi> get() = _loginState.asStateFlow()
 
     init {
+        authRepository.retrieveUserInputs().apply {
+            email = first
+            password = second
+        }
         combine(
             snapshotFlow { email },
             snapshotFlow { password },

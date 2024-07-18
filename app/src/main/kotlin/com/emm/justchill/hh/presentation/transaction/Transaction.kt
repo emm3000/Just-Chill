@@ -25,10 +25,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -59,7 +56,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import com.emm.justchill.Categories
@@ -68,6 +64,7 @@ import com.emm.justchill.hh.domain.TransactionType
 import com.emm.justchill.hh.presentation.Category
 import com.emm.justchill.hh.presentation.TextFieldWithLabel
 import com.emm.justchill.hh.presentation.TransactionTypeRadioButton
+import com.emm.justchill.hh.presentation.shared.DropDownContainer
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -207,7 +204,15 @@ private fun Transaction(
                 setShowSelectDate(true)
             }
 
-            DropDowms(categories, onCategoryChange)
+            val (text, setText) = remember {
+                mutableStateOf("")
+            }
+            DropDownContainer(
+                categories = categories,
+                onCategoryChange = onCategoryChange,
+                text = text,
+                setText = setText
+            )
 
             TextFieldWithLabel(
                 modifier = Modifier
@@ -232,28 +237,6 @@ private fun Transaction(
             }
         }
     }
-}
-
-@Composable
-fun DropDowms(
-    categories: List<Categories>,
-    onCategoryChange: (Categories) -> Unit
-) {
-
-    if (categories.isNotEmpty()) {
-        Column {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = "Seleccionar categoría"
-            )
-            Spacer(modifier = Modifier.height(5.dp))
-            DropDown(
-                onCategoryChange = onCategoryChange,
-                categories = categories
-            )
-        }
-    }
-
 }
 
 @Composable
@@ -382,57 +365,6 @@ fun TaskDialog(
                 ) {
                     Text(text = "Crear")
                 }
-            }
-        }
-    }
-}
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun DropDown(
-    onCategoryChange: (Categories) -> Unit,
-    categories: List<Categories>,
-) {
-
-    val (isExpanded, setIsExpanded) = remember {
-        mutableStateOf(false)
-    }
-
-    val (text, setText) = remember {
-        mutableStateOf("")
-    }
-
-    ExposedDropdownMenuBox(expanded = isExpanded, onExpandedChange = setIsExpanded) {
-        OutlinedTextField(
-            value = text,
-            onValueChange = setText,
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(),
-            readOnly = true,
-            placeholder = {
-                Text(text = "Seleccione la categoría")
-            }
-        )
-        DropdownMenu(
-            expanded = isExpanded,
-            onDismissRequest = { setIsExpanded(false) },
-            properties = PopupProperties(
-                focusable = true,
-                dismissOnClickOutside = true,
-                dismissOnBackPress = true,
-            ),
-            modifier = Modifier.exposedDropdownSize()
-        ) {
-            categories.forEach {
-                DropdownMenuItem(
-                    text = { Text(text = it.name) },
-                    onClick = {
-                        onCategoryChange(it)
-                        setText(it.name)
-                        setIsExpanded(false)
-                    }
-                )
             }
         }
     }

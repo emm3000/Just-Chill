@@ -41,6 +41,7 @@ import com.emm.justchill.hh.domain.TransactionType
 import com.emm.justchill.hh.presentation.Category
 import com.emm.justchill.hh.presentation.TextFieldWithLabel
 import com.emm.justchill.hh.presentation.TransactionTypeRadioButton
+import com.emm.justchill.hh.presentation.shared.DropDownContainer
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -61,13 +62,15 @@ fun EditTransaction(
         descriptionValue = vm.description,
         onDescriptionChange = vm::updateDescription,
         dateValue = vm.date,
-        addTransaction = vm::addTransaction,
+        updateTransaction = vm::updateTransaction,
         onCategoryChange = vm::updateCategory,
         updateDate = vm::updateCurrentDate,
         navigateUp = { navController.popBackStack() },
         navigateToCreateCategory = { navController.navigate(Category) },
         initialTransactionType = vm.transactionType,
         onOptionSelected = vm::updateTransactionType,
+        text = vm.categoryLabel,
+        setText = vm::updateCategoryLabel
     )
 
 }
@@ -83,12 +86,14 @@ private fun EditTransaction(
     onDescriptionChange: (String) -> Unit = {},
     dateValue: String = "",
     onCategoryChange: (Categories) -> Unit = {},
-    addTransaction: () -> Unit = {},
+    updateTransaction: () -> Unit = {},
     updateDate: (Long?) -> Unit = {},
     navigateUp: () -> Unit = {},
     navigateToCreateCategory: () -> Unit = {},
     initialTransactionType: TransactionType = TransactionType.INCOME,
     onOptionSelected: (TransactionType) -> Unit = {},
+    text: String = "",
+    setText: (String) -> Unit = {},
 ) {
     val (showDialog, setShowDialog) = rememberSaveable {
         mutableStateOf(false)
@@ -182,7 +187,12 @@ private fun EditTransaction(
                 setShowSelectDate(true)
             }
 
-            DropDowms(categories, onCategoryChange)
+            DropDownContainer(
+                categories = categories,
+                onCategoryChange = onCategoryChange,
+                text = text,
+                setText = setText
+            )
 
             TextFieldWithLabel(
                 modifier = Modifier
@@ -197,13 +207,13 @@ private fun EditTransaction(
                     .fillMaxWidth()
                     .height(55.dp),
                 onClick = dropUnlessResumed {
-                    addTransaction()
+                    updateTransaction()
                     navigateUp()
                 },
                 shape = RoundedCornerShape(10.dp),
                 enabled = isEnabledButton,
             ) {
-                Text(text = "GUARDAR")
+                Text(text = "ACTUALIZAR")
             }
         }
     }
