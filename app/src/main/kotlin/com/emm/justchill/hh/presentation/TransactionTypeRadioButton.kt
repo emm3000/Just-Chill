@@ -18,7 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.domain.TransactionType
 
 @Composable
@@ -66,7 +68,9 @@ fun TransactionTypeRadioButton(
                 Text(
                     text = transactionType.value,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = selectedColor
+                    color = selectedColor,
+                    fontWeight = FontWeight.Normal,
+                    fontFamily = LatoFontFamily
                 )
             }
         }

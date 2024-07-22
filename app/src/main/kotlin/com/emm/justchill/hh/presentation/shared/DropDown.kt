@@ -14,9 +14,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import com.emm.justchill.Categories
+import com.emm.justchill.core.theme.LatoFontFamily
 
 @Composable
 fun DropDownContainer(
@@ -30,7 +33,9 @@ fun DropDownContainer(
         Column {
             Text(
                 modifier = Modifier.fillMaxWidth(),
-                text = "Seleccionar categoría"
+                text = "Seleccionar categoría:",
+                fontWeight = FontWeight.ExtraBold,
+                fontFamily = LatoFontFamily
             )
             Spacer(modifier = Modifier.height(5.dp))
 
@@ -67,7 +72,8 @@ fun DropDown(
                 .menuAnchor(),
             readOnly = true,
             placeholder = {
-                Text(text = "Seleccione la categoría")
+                Text(text = "Seleccione la categoría", fontWeight = FontWeight.Normal,
+                    fontFamily = LatoFontFamily, color = Color.LightGray)
             }
         )
         DropdownMenu(

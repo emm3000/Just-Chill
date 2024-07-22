@@ -6,8 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -45,9 +44,6 @@ object PreLogin
 
 @Serializable
 object Login
-
-@Serializable
-object Home
 
 @Serializable
 object Main
@@ -90,7 +86,7 @@ fun Hh() {
             ) {
                 CircularProgressIndicator()
                 Spacer(modifier = Modifier.height(20.dp))
-                Text(text = "Verificando la sessión")
+                Text(text = "Verificando la sesión")
             }
         }
         composable<Login> {
@@ -117,6 +113,9 @@ fun Hh() {
             val editTransaction: EditTransaction = it.toRoute<EditTransaction>()
             EditTransaction(navController, editTransaction.transactionId)
         }
+        composable<Category> {
+            Category(navController)
+        }
     }
 }
 
@@ -138,18 +137,17 @@ private fun Csm(internalNavController: NavHostController) {
                             restoreState = true
                         }
                     },
-                    icon = { Icon(Icons.Filled.Favorite, contentDescription = null) },
+                    icon = { Icon(screen.icon, contentDescription = null, modifier = Modifier.size(24.dp)) },
                     label = {
                         Text(
                             text = screen.name,
                             textAlign = TextAlign.Center,
-                            maxLines = 1,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
                 )
             }
-
         }
     }
 }

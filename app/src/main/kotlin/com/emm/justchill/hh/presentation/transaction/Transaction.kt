@@ -65,8 +65,9 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import com.emm.justchill.Categories
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.domain.TransactionType
-import com.emm.justchill.hh.presentation.Category
+import com.emm.justchill.hh.presentation.HhRoutes
 import com.emm.justchill.hh.presentation.TextFieldWithLabel
 import com.emm.justchill.hh.presentation.TransactionTypeRadioButton
 import com.emm.justchill.hh.presentation.shared.DropDownContainer
@@ -92,7 +93,7 @@ fun Transaction(
         onCategoryChange = vm::updateCategory,
         updateDate = vm::updateCurrentDate,
         navigateUp = { navController.popBackStack() },
-        navigateToCreateCategory = { navController.navigate(Category) },
+        navigateToCreateCategory = { navController.navigate(HhRoutes.AddCategory.route) },
         initialTransactionType = vm.transactionType,
         onOptionSelected = vm::updateTransactionType,
     )
@@ -169,7 +170,14 @@ private fun Transaction(
         topBar = {
             TopAppBar(
                 modifier = Modifier,
-                title = { Text(text = "Agregar gasto", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold) },
+                title = {
+                    Text(
+                        text = "Agregar gasto",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Black,
+                        fontFamily = LatoFontFamily,
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = dropUnlessResumed {
                         navigateUp()
@@ -191,7 +199,11 @@ private fun Transaction(
                             contentDescription = null
                         )
                         Spacer(modifier = Modifier.width(5.dp))
-                        Text(text = "Categoría")
+                        Text(
+                            text = "Categoría",
+                            fontWeight = FontWeight.Normal,
+                            fontFamily = LatoFontFamily
+                        )
                     }
                 }
             )
@@ -231,7 +243,7 @@ private fun Transaction(
             TextFieldWithLabel(
                 modifier = Modifier
                     .height(140.dp),
-                label = "En que gaste",
+                label = "En que gaste:",
                 value = descriptionValue,
                 onChange = onDescriptionChange
             )
@@ -262,7 +274,10 @@ fun Date(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(text = "Fecha")
+        Text(
+            text = "Fecha:", fontWeight = FontWeight.ExtraBold,
+            fontFamily = LatoFontFamily
+        )
         Spacer(modifier = Modifier.height(5.dp))
         OutlinedTextField(
             modifier = Modifier
@@ -280,7 +295,10 @@ fun Date(
                 disabledPlaceholderColor = Color.Black
             ),
             placeholder = {
-                Text(text = "Fecha")
+                Text(
+                    text = "Fecha", fontWeight = FontWeight.Normal,
+                    fontFamily = LatoFontFamily, color = Color.LightGray
+                )
             }
         )
     }
@@ -291,7 +309,11 @@ fun Mount(mountValue: String, onMountChange: (String) -> Unit) {
 
     Column(Modifier.fillMaxWidth()) {
 
-        Text(text = "Cantidad")
+        Text(
+            text = "Cantidad:",
+            fontWeight = FontWeight.ExtraBold,
+            fontFamily = LatoFontFamily,
+        )
 
         Spacer(modifier = Modifier.height(5.dp))
 
@@ -300,10 +322,16 @@ fun Mount(mountValue: String, onMountChange: (String) -> Unit) {
             value = mountValue,
             onValueChange = onMountChange,
             placeholder = {
-                Text(text = "Cantidad")
+                Text(
+                    text = "Cantidad", fontWeight = FontWeight.Normal,
+                    fontFamily = LatoFontFamily, color = Color.LightGray
+                )
             },
             prefix = {
-                Text(text = "S/ ")
+                Text(
+                    text = "S/ ", fontWeight = FontWeight.Normal,
+                    fontFamily = LatoFontFamily
+                )
             },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Decimal,

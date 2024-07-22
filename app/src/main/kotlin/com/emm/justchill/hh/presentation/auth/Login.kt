@@ -39,8 +39,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.hh.presentation.Home
 import com.emm.justchill.hh.presentation.Login
+import com.emm.justchill.hh.presentation.Main
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -60,7 +60,7 @@ fun Login(
         onLogin = vm::login,
         onRegister = vm::register,
         navigateToHome = {
-            navController.navigate(Home) {
+            navController.navigate(Main) {
                 popUpTo<Login> {
                     inclusive = true
                 }
