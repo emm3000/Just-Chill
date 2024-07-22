@@ -5,21 +5,35 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.emm.justchill.hh.domain.auth.AuthRepository
+import com.emm.justchill.hh.presentation.auth.Login
 import com.emm.justchill.hh.presentation.category.Category
 import com.emm.justchill.hh.presentation.home.Home
-import com.emm.justchill.hh.presentation.auth.Login
 import com.emm.justchill.hh.presentation.seetransactions.SeeTransactions
 import com.emm.justchill.hh.presentation.transaction.EditTransaction
 import com.emm.justchill.hh.presentation.transaction.Transaction
@@ -36,16 +50,13 @@ object Login
 object Home
 
 @Serializable
-object Transaction
+object Main
 
 @Serializable
 data class EditTransaction(val transactionId: String)
 
 @Serializable
 object Category
-
-@Serializable
-object SeeTransactions
 
 @Composable
 fun Hh() {
@@ -58,7 +69,7 @@ fun Hh() {
 
             LaunchedEffect(Unit) {
                 repository.session()?.let {
-                    navController.navigate(Home) {
+                    navController.navigate(Main) {
                         popUpTo<PreLogin> {
                             inclusive = true
                         }
@@ -85,21 +96,60 @@ fun Hh() {
         composable<Login> {
             Login(navController)
         }
-        composable<Home> {
-            Home(navController)
-        }
-        composable<Transaction> {
-            Transaction(navController)
+        composable<Main> {
+            val internalNavController = rememberNavController()
+            Scaffold(
+                bottomBar = { Csm(internalNavController) }
+            ) { paddingValues ->
+                NavHost(
+                    navController = internalNavController,
+                    startDestination = HhRoutes.HhHome.route,
+                    modifier = Modifier.padding(paddingValues)
+                ) {
+                    composable(HhRoutes.HhHome.route) { Home() }
+                    composable(HhRoutes.AddTransaction.route) { Transaction(navController = internalNavController) }
+                    composable(HhRoutes.AddCategory.route) { Category(internalNavController) }
+                    composable(HhRoutes.SeeTransaction.route) { SeeTransactions(navController) }
+                }
+            }
         }
         composable<EditTransaction> {
             val editTransaction: EditTransaction = it.toRoute<EditTransaction>()
             EditTransaction(navController, editTransaction.transactionId)
         }
-        composable<Category> {
-            Category(navController)
-        }
-        composable<SeeTransactions> {
-            SeeTransactions(navController)
+    }
+}
+
+@Composable
+private fun Csm(internalNavController: NavHostController) {
+    val navBackStackEntry by internalNavController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+    if (currentDestination?.route in hhRoutes.map { it.route }) {
+        BottomAppBar {
+            hhRoutes.forEach { screen ->
+                NavigationBarItem(
+                    selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                    onClick = {
+                        internalNavController.navigate(screen.route) {
+                            popUpTo(internalNavController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = { Icon(Icons.Filled.Favorite, contentDescription = null) },
+                    label = {
+                        Text(
+                            text = screen.name,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                )
+            }
+
         }
     }
 }
