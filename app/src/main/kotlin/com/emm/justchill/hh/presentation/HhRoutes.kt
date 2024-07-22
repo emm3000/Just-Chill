@@ -14,9 +14,9 @@ sealed class HhRoutes(
 ) {
 
     data object HhHome: HhRoutes("Inicio", "home", Icons.Filled.Home)
-    data object AddCategory: HhRoutes("Agregar Categoría", "addCategory", Icons.Filled.Create)
-    data object AddTransaction: HhRoutes("Agregar transacción", "addTransaction", Icons.Filled.AddChart)
-    data object SeeTransaction: HhRoutes("Ver Transacciones", "seeTransactions", Icons.Filled.PlaylistAddCheckCircle)
+    data object AddCategory: HhRoutes("Categoría", "addCategory", Icons.Filled.Create)
+    data object AddTransaction: HhRoutes("Transacción", "addTransaction", Icons.Filled.AddChart)
+    data object SeeTransaction: HhRoutes("Ver", "seeTransactions", Icons.Filled.PlaylistAddCheckCircle)
 }
 
 val hhRoutes = listOf(

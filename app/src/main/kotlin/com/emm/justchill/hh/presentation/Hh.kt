@@ -142,7 +142,7 @@ private fun Csm(internalNavController: NavHostController) {
                         Text(
                             text = screen.name,
                             textAlign = TextAlign.Center,
-                            maxLines = 2,
+                            maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
