@@ -40,7 +40,7 @@ SELECT (
 ) AS incomeMinusSpent;
 
 retrieveAll:
-SELECT * FROM transactions;
+SELECT * FROM transactions ORDER BY date DESC;
 
 addTransaction:
 INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?);

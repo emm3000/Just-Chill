@@ -17,6 +17,7 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -110,7 +111,7 @@ fun SeeTransactions(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                OutlinedButton(onClick = { setShowSelectDate(true) }) {
+                FilledTonalButton(onClick = { setShowSelectDate(true) }) {
                     Text(text = "Desde", fontWeight = FontWeight.Bold)
                 }
                 if (firstDataHolder.readableDate.isNotEmpty()) {
@@ -118,7 +119,7 @@ fun SeeTransactions(
                 }
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                OutlinedButton(onClick = { setShowSelectDate2(true) }) {
+                FilledTonalButton(onClick = { setShowSelectDate2(true) }) {
                     Text(text = "Hasta", fontWeight = FontWeight.ExtraBold)
                 }
                 if (secondDataHolder.readableDate.isNotEmpty()) {
