@@ -20,9 +20,18 @@ interface TransactionRepository {
 
     fun all(): Flow<List<Transactions>>
 
+    fun retrieveWithLimit(limit: Long, offset: Long): Flow<List<Transactions>>
+
     fun retrieveByDateRange(
         startDateMillis: Long,
         endDateMillis: Long,
+    ): Flow<List<Transactions>>
+
+    fun retrieveByDateRangeWithLimit(
+        startDateMillis: Long,
+        endDateMillis: Long,
+        limit: Long,
+        offset: Long
     ): Flow<List<Transactions>>
 
     fun sumIncome(): Flow<Long>

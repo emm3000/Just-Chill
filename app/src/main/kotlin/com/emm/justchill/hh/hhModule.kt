@@ -41,6 +41,7 @@ import com.emm.justchill.hh.domain.transaction.TransactionDifferenceCalculator
 import com.emm.justchill.hh.domain.transaction.TransactionFinder
 import com.emm.justchill.hh.domain.transaction.TransactionLoader
 import com.emm.justchill.hh.domain.transaction.TransactionLoaderByDateRange
+import com.emm.justchill.hh.domain.transaction.TransactionLoaderByDateRangeWithPage
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
 import com.emm.justchill.hh.domain.transaction.TransactionSumIncome
 import com.emm.justchill.hh.domain.transaction.TransactionSumSpend
@@ -85,6 +86,7 @@ val hhModule = module {
     }
 
     factoryOf(::TransactionLoaderByDateRange)
+    factoryOf(::TransactionLoaderByDateRangeWithPage)
 
     factoryOf(::TransactionSumIncome)
     factoryOf(::TransactionSumSpend)

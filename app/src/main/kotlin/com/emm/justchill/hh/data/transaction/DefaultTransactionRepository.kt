@@ -43,12 +43,36 @@ class DefaultTransactionRepository(
             .mapToList(ioDispatcher)
     }
 
+    override fun retrieveWithLimit(limit: Long, offset: Long): Flow<List<Transactions>> {
+        return transactionsQueries
+            .retrieveWithPaging(limit, offset)
+            .asFlow()
+            .mapToList(ioDispatcher)
+    }
+
     override fun retrieveByDateRange(
         startDateMillis: Long,
         endDateMillis: Long
     ): Flow<List<Transactions>> {
         return transactionsQueries
             .selectTransactionsByDateRange(startDateMillis, endDateMillis)
+            .asFlow()
+            .mapToList(ioDispatcher)
+    }
+
+    override fun retrieveByDateRangeWithLimit(
+        startDateMillis: Long,
+        endDateMillis: Long,
+        limit: Long,
+        offset: Long
+    ): Flow<List<Transactions>> {
+        return transactionsQueries
+            .selectTransactionsByDateRangeWithPaging(
+                startDateMillis,
+                endDateMillis,
+                limit,
+                offset
+            )
             .asFlow()
             .mapToList(ioDispatcher)
     }

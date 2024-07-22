@@ -42,12 +42,19 @@ SELECT (
 retrieveAll:
 SELECT * FROM transactions ORDER BY date DESC;
 
+retrieveWithPaging:
+SELECT * FROM transactions ORDER BY date DESC LIMIT ? OFFSET ?;
+
 addTransaction:
 INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?);
 
 selectTransactionsByDateRange:
 SELECT * FROM transactions
-WHERE date BETWEEN ? AND ?;
+WHERE date BETWEEN ? AND ? ORDER BY date DESC;
+
+selectTransactionsByDateRangeWithPaging:
+SELECT * FROM transactions
+WHERE date BETWEEN ? AND ? ORDER BY date DESC LIMIT ? OFFSET ?;
 
 find:
 SELECT * FROM transactions WHERE transactionId = ?;
