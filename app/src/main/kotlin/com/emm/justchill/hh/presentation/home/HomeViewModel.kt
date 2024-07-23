@@ -6,11 +6,11 @@ import com.emm.justchill.hh.domain.BackupManager
 import com.emm.justchill.hh.domain.transaction.TransactionDifferenceCalculator
 import com.emm.justchill.hh.domain.transaction.TransactionSumIncome
 import com.emm.justchill.hh.domain.transaction.TransactionSumSpend
+import com.emm.justchill.hh.domain.transaction.fromCentsToSolesWith
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
@@ -26,7 +26,7 @@ class HomeViewModel(
         transactionSumIncome(),
         transactionSumSpend(),
     ) { income: BigDecimal, spend: BigDecimal ->
-        Pair(income.toString(), spend.toString())
+        Pair(fromCentsToSolesWith(income), fromCentsToSolesWith(spend))
     }
         .catch {
             it.printStackTrace()
@@ -39,7 +39,6 @@ class HomeViewModel(
         )
 
     val difference = transactionDifferenceCalculator.calculate()
-        .map { it.toString() }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),

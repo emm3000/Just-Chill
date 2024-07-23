@@ -260,7 +260,7 @@ fun ItemPreview(modifier: Modifier = Modifier) {
             TransactionUi(
                 transactionId = UUID.randomUUID().toString(),
                 type = TransactionType.INCOME,
-                amount = "2000",
+                amount = "S/ 232,000.00",
                 description = "gaa asocinas coinas ocinasoc nasco nas coias coñ",
                 date = 0,
                 readableDate = "20 de abril",

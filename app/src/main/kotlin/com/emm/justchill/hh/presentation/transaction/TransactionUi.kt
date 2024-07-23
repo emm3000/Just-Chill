@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import com.emm.justchill.Transactions
 import com.emm.justchill.hh.domain.TransactionType
 import com.emm.justchill.hh.domain.transaction.fromCentsToSoles
+import com.emm.justchill.hh.domain.transaction.fromCentsToSolesWith
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlin.random.Random
 
@@ -31,12 +32,13 @@ private fun Transactions.toUi(): TransactionUi {
         TransactionType.INCOME
     }
 
+    val amountFormated: String = fromCentsToSolesWith(fromCentsToSoles(amount))
     return TransactionUi(
         transactionId = transactionId,
         type = transactionType,
         amount = when (transactionType) {
-            TransactionType.INCOME -> "S/ ${fromCentsToSoles(amount)}"
-            TransactionType.SPENT -> "S/ -${fromCentsToSoles(amount)}"
+            TransactionType.INCOME -> "S/ $amountFormated"
+            TransactionType.SPENT -> "S/ -$amountFormated"
         },
         description = description,
         date = date,

@@ -58,8 +58,10 @@ class EditTransactionViewModel(
     val categories: StateFlow<List<Categories>> = categoryLoader.load()
         .combine(snapshotFlow { transactionType }) { list, transactionType ->
             list.filter { it.type == transactionType.name }
-        }.combine(snapshotFlow { categoryId }) { categories, categoryId ->
-            categoryLabel = categories.firstOrNull { it.categoryId == categoryId }?.name.orEmpty()
+        }.combine(snapshotFlow { categoryId }) { categories, categoryIdValue ->
+            val existOrNull: Categories? = categories.firstOrNull { it.categoryId == categoryIdValue }
+            categoryLabel = existOrNull?.name.orEmpty()
+            categoryId = existOrNull?.categoryId.orEmpty()
             categories
         }
         .stateIn(

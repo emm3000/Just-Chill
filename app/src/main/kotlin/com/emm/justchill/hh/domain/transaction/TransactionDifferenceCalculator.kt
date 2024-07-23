@@ -2,11 +2,12 @@ package com.emm.justchill.hh.domain.transaction
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.math.BigDecimal
 
 class TransactionDifferenceCalculator(private val repository: TransactionRepository) {
 
-    fun calculate(): Flow<BigDecimal> {
-        return repository.difference().map(::fromCentsToSoles)
+    fun calculate(): Flow<String> {
+        return repository.difference()
+            .map(::fromCentsToSoles)
+            .map(::fromCentsToSolesWith)
     }
 }

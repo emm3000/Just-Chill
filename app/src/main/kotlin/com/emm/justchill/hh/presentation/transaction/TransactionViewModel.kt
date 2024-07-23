@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -35,6 +36,8 @@ class TransactionViewModel(
     private var dateInLong: Long = DateUtils.currentDateInMillis()
 
     private var categoryId by mutableStateOf("")
+    var categoryLabel by mutableStateOf("")
+        private set
 
     var isEnabled by mutableStateOf(false)
         private set
@@ -59,6 +62,10 @@ class TransactionViewModel(
     val categories: StateFlow<List<Categories>> = categoryLoader.load()
         .combine(snapshotFlow { transactionType }) { list, transactionType ->
             list.filter { it.type == transactionType.name }
+        }
+        .onEach {
+            categoryLabel = ""
+            categoryId = ""
         }
         .stateIn(
             scope = viewModelScope,
@@ -92,6 +99,10 @@ class TransactionViewModel(
 
     fun updateCategory(value: Categories) {
         categoryId = value.categoryId
+    }
+
+    fun updateCategoryLabel(value: String) {
+        categoryLabel = value
     }
 
     fun updateTransactionType(value: TransactionType) {

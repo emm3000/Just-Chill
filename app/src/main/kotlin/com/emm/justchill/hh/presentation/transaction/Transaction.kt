@@ -106,6 +106,8 @@ fun Transaction(
         navigateToCreateCategory = { navController.navigate(HhRoutes.AddCategory.route) },
         initialTransactionType = vm.transactionType,
         onOptionSelected = vm::updateTransactionType,
+        text = vm.categoryLabel,
+        setText = vm::updateCategoryLabel
     )
 }
 
@@ -126,6 +128,8 @@ private fun Transaction(
     navigateToCreateCategory: () -> Unit = {},
     initialTransactionType: TransactionType = TransactionType.INCOME,
     onOptionSelected: (TransactionType) -> Unit = {},
+    text: String = "",
+    setText: (String) -> Unit = {},
 ) {
 
     val (showDialog, setShowDialog) = rememberSaveable {
@@ -256,9 +260,6 @@ private fun Transaction(
                 setShowSelectDate(true)
             }
 
-            val (text, setText) = remember {
-                mutableStateOf("")
-            }
             DropDownContainer(
                 categories = categories,
                 onCategoryChange = onCategoryChange,
