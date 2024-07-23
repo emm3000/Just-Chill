@@ -1,14 +1,23 @@
 package com.emm.justchill.hh.presentation.transaction
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
@@ -18,11 +27,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -39,11 +48,18 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import com.emm.justchill.Categories
+import com.emm.justchill.core.theme.BackgroundColor
+import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.PrimaryButtonColor
+import com.emm.justchill.core.theme.PrimaryDisableButtonColor
+import com.emm.justchill.core.theme.TextColor
+import com.emm.justchill.core.theme.TextDisableColor
 import com.emm.justchill.hh.domain.TransactionType
 import com.emm.justchill.hh.presentation.Category
 import com.emm.justchill.hh.presentation.TextFieldWithLabel
-import com.emm.justchill.hh.presentation.TransactionTypeRadioButton
+import com.emm.justchill.hh.presentation.TransactionRadioButton
 import com.emm.justchill.hh.presentation.shared.DropDownContainer
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -152,20 +168,53 @@ private fun EditTransaction(
         topBar = {
             TopAppBar(
                 modifier = Modifier,
-                title = { Text(text = "Editar transacción", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = BackgroundColor
+                ),
+                title = {
+                    Text(
+                        text = "Editar Transacción",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Black,
+                        fontFamily = LatoFontFamily,
+                        color = TextColor
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = dropUnlessResumed {
                         navigateUp()
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = TextColor
                         )
                     }
                 },
                 actions = {
-                    OutlinedButton(onClick = { setShowDialog(true) }) {
-                        Text(text = "Categoría")
+                    FilledTonalButton(
+                        contentPadding = PaddingValues(horizontal = 12.dp),
+                        onClick = { setShowDialog(true) },
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = PrimaryButtonColor,
+                            disabledContainerColor = PrimaryDisableButtonColor,
+                            contentColor = TextColor,
+                            disabledContentColor = TextDisableColor
+                        ),
+                        shape = RoundedCornerShape(25)
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(25.dp),
+                            imageVector = Icons.Filled.AddCircleOutline,
+                            contentDescription = null
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = "Categoría",
+                            fontFamily = LatoFontFamily,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black,
+                        )
                     }
                 }
             )
@@ -174,6 +223,8 @@ private fun EditTransaction(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .background(BackgroundColor)
                 .padding(horizontal = 20.dp)
                 .padding(top = 10.dp)
                 .padding(it),
@@ -183,7 +234,8 @@ private fun EditTransaction(
 
             Mount(mountValue, onMountChange)
 
-            TransactionTypeRadioButton(
+            TransactionRadioButton(
+                modifier = Modifier.fillMaxWidth(),
                 selectedOption = initialTransactionType,
                 onOptionSelected = onOptionSelected
             )
@@ -210,30 +262,49 @@ private fun EditTransaction(
             FilledTonalButton(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(55.dp),
+                    .height(50.dp),
                 onClick = dropUnlessResumed {
                     updateTransaction()
                     navigateUp()
                 },
-                shape = RoundedCornerShape(10.dp),
                 enabled = isEnabledButton,
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = PrimaryButtonColor,
+                    disabledContainerColor = PrimaryDisableButtonColor,
+                    contentColor = TextColor,
+                    disabledContentColor = TextDisableColor
+                ),
+                shape = RoundedCornerShape(25)
             ) {
-                Text(text = "ACTUALIZAR", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Actualizar",
+                    fontFamily = LatoFontFamily,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black,
+                )
             }
-            FilledTonalButton(
+            OutlinedButton(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(55.dp),
+                    .height(50.dp),
                 onClick = dropUnlessResumed {
                     deleteTransaction()
                     navigateUp()
                 },
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer
-                )
+                shape = RoundedCornerShape(25),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    disabledContainerColor = PrimaryDisableButtonColor,
+                    contentColor = DeleteButtonColor,
+                    disabledContentColor = TextDisableColor,
+                ),
+                border = BorderStroke(1.dp, DeleteButtonColor)
             ) {
-                Text(text = "ELIMINAR", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Eliminar",
+                    fontFamily = LatoFontFamily,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black,
+                )
             }
         }
     }

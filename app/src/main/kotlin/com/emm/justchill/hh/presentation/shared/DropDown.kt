@@ -9,17 +9,22 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import com.emm.justchill.Categories
 import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.TextColor
+import com.emm.justchill.hh.presentation.auth.LabelTextField
+import com.emm.justchill.hh.presentation.transaction.TransactionLabel
 
 @Composable
 fun DropDownContainer(
@@ -31,14 +36,8 @@ fun DropDownContainer(
 
     if (categories.isNotEmpty()) {
         Column {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = "Seleccionar categoría:",
-                fontWeight = FontWeight.ExtraBold,
-                fontFamily = LatoFontFamily
-            )
+            TransactionLabel(text = "Seleccionar categoría")
             Spacer(modifier = Modifier.height(5.dp))
-
             DropDown(
                 onCategoryChange = onCategoryChange,
                 categories = categories,
@@ -72,9 +71,17 @@ fun DropDown(
                 .menuAnchor(),
             readOnly = true,
             placeholder = {
-                Text(text = "Seleccione la categoría", fontWeight = FontWeight.Normal,
-                    fontFamily = LatoFontFamily, color = Color.LightGray)
-            }
+                LabelTextField("Seleccione la categoría")
+            },
+            textStyle = TextStyle(
+                fontFamily = LatoFontFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 18.sp,
+                color = TextColor
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = TextColor
+            )
         )
         DropdownMenu(
             expanded = isExpanded,

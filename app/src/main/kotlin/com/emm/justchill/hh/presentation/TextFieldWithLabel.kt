@@ -5,15 +5,19 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.TextColor
+import com.emm.justchill.hh.presentation.auth.LabelTextField
+import com.emm.justchill.hh.presentation.transaction.TransactionLabel
 
 @Composable
 fun TextFieldWithLabel(
@@ -24,21 +28,24 @@ fun TextFieldWithLabel(
 ) {
 
     Column(modifier.fillMaxWidth()) {
-        Text(
-            text = label, fontWeight = FontWeight.ExtraBold,
-            fontFamily = LatoFontFamily
-        )
+        TransactionLabel(text = label)
         Spacer(modifier = Modifier.height(5.dp))
         OutlinedTextField(
             modifier = modifier.fillMaxWidth(),
             value = value,
             onValueChange = onChange,
             placeholder = {
-                Text(
-                    text = label, fontWeight = FontWeight.Normal,
-                    fontFamily = LatoFontFamily, color = Color.LightGray
-                )
-            }
+                LabelTextField(label)
+            },
+            textStyle = TextStyle(
+                fontFamily = LatoFontFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 18.sp,
+                color = TextColor
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = TextColor
+            )
         )
     }
 }

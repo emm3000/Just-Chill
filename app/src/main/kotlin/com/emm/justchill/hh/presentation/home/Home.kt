@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.presentation.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,13 +12,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.theme.BackgroundColor
+import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.TextColor
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -41,7 +44,8 @@ fun Home(
 ) {
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize()
+            .background(BackgroundColor),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -51,6 +55,7 @@ fun Home(
             fontSize = 24.sp,
             fontFamily = LatoFontFamily,
             fontWeight = FontWeight.Bold,
+            color = TextColor
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -58,11 +63,13 @@ fun Home(
             text = "Ingreso",
             fontFamily = LatoFontFamily,
             fontWeight = FontWeight.Bold,
+            color = TextColor
         )
         Text(
             text = "S/ ${sumTransaction.first}",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
+            color = TextColor
         )
 
         Spacer(modifier = Modifier.height(40.dp))
@@ -71,22 +78,22 @@ fun Home(
             text = "Gasto",
             fontFamily = LatoFontFamily,
             fontWeight = FontWeight.Bold,
-            color = Color.Red,
+            color = DeleteButtonColor,
         )
         Text(
             text = "S/ ${sumTransaction.second}",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Red,
+            color = DeleteButtonColor,
         )
         Spacer(modifier = Modifier.height(20.dp))
         Text(
             text = "S/ $difference",
             fontSize = 25.sp,
             color = if (difference.contains("-")) {
-                Color.Red
+                DeleteButtonColor
             } else {
-                Color.Unspecified
+                TextColor
             }
         )
     }

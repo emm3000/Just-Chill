@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.presentation.seetransactions
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -40,7 +41,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.emm.justchill.core.Result
+import com.emm.justchill.core.theme.BackgroundColor
+import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.domain.TransactionType
 import com.emm.justchill.hh.presentation.EditTransaction
 import com.emm.justchill.hh.presentation.transaction.TransactionUi
@@ -99,6 +103,7 @@ fun SeeTransactions(
 
     Column(
         modifier = Modifier
+            .background(BackgroundColor)
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -158,13 +163,14 @@ fun ItemTransaction(
 ) {
 
     val borderColor = when (transactionUi.type) {
-        TransactionType.INCOME -> Color.Unspecified
-        TransactionType.SPENT -> Color.Red
+        TransactionType.INCOME -> TextColor
+        TransactionType.SPENT -> DeleteButtonColor
     }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .background(BackgroundColor)
             .clickable {
                 navigateToEdit(transactionUi.transactionId)
             }
@@ -181,14 +187,16 @@ fun ItemTransaction(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = TextColor
                 )
                 Text(
                     modifier = Modifier,
                     text = "${transactionUi.readableDate}, ${transactionUi.readableTime}",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Light,
-                    lineHeight = TextUnit(1f, TextUnitType.Em)
+                    lineHeight = TextUnit(1f, TextUnitType.Em),
+                    color = TextColor
                 )
             }
             Text(

@@ -53,6 +53,7 @@ import com.emm.justchill.hh.domain.transactioncategory.TransactionCategoryReposi
 import com.emm.justchill.hh.presentation.category.CategoryViewModel
 import com.emm.justchill.hh.presentation.home.HomeViewModel
 import com.emm.justchill.hh.presentation.auth.LoginViewModel
+import com.emm.justchill.hh.presentation.seetransactions.SeeTransactionsVersionTwoViewModel
 import com.emm.justchill.hh.presentation.seetransactions.SeeTransactionsViewModel
 import com.emm.justchill.hh.presentation.transaction.EditTransactionViewModel
 import com.emm.justchill.hh.presentation.transaction.TransactionViewModel
@@ -119,6 +120,7 @@ private fun Module.viewModelsProviders() {
     viewModelOf(::TransactionViewModel)
     viewModelOf(::CategoryViewModel)
     viewModelOf(::SeeTransactionsViewModel)
+    viewModelOf(::SeeTransactionsVersionTwoViewModel)
     viewModelOf(::LoginViewModel)
 
     viewModel { parameters ->

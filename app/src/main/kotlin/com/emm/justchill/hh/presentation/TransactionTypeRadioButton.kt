@@ -2,8 +2,10 @@ package com.emm.justchill.hh.presentation
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -13,15 +15,70 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.PrimaryButtonColor
+import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.domain.TransactionType
+
+@Composable
+fun TransactionRadioButton(
+    modifier: Modifier = Modifier,
+    selectedOption: TransactionType = TransactionType.INCOME,
+    onOptionSelected: (TransactionType) -> Unit = {},
+) {
+
+    val transactionTypes: List<TransactionType> = remember {
+        TransactionType.entries
+    }
+
+    Row(
+        modifier = modifier,
+    ) {
+
+        transactionTypes.forEach { transactionType ->
+            Row(
+                modifier = Modifier
+                    .selectableGroup()
+                    .selectable(
+                        selected = transactionType == selectedOption,
+                        onClick = { onOptionSelected(transactionType) },
+                        role = Role.RadioButton
+                    ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = transactionType == selectedOption,
+                    onClick = { onOptionSelected(transactionType) },
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = PrimaryButtonColor
+                    )
+                )
+                Text(
+                    text = transactionType.value,
+                    fontFamily = LatoFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    color = TextColor,
+                    fontSize = 18.sp
+                )
+            }
+        }
+    }
+
+}
 
 @Composable
 fun TransactionTypeRadioButton(
@@ -73,6 +130,19 @@ fun TransactionTypeRadioButton(
                     fontFamily = LatoFontFamily
                 )
             }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun RadioPreview(modifier: Modifier = Modifier) {
+    EmmTheme {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            TransactionRadioButton()
+            TransactionTypeRadioButton()
         }
     }
 }

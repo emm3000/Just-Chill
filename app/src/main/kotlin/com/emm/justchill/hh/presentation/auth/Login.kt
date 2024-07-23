@@ -6,13 +6,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,14 +34,23 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.PlaceholderOrLabel
+import com.emm.justchill.core.theme.PrimaryButtonColor
+import com.emm.justchill.core.theme.SecondaryButtonColor
+import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.presentation.Login
 import com.emm.justchill.hh.presentation.Main
 import org.koin.androidx.compose.koinViewModel
@@ -93,6 +105,7 @@ private fun Login(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(BackgroundColor)
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -117,9 +130,20 @@ private fun Login(
                     focusManager.clearFocus()
                     onLogin()
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(45.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PrimaryButtonColor
+                ),
+                shape = RoundedCornerShape(25)
             ) {
-                Text(text = "Entrar")
+                Text(
+                    text = "Entrar",
+                    fontFamily = LatoFontFamily,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 18.sp
+                )
             }
 
             Button(
@@ -128,8 +152,18 @@ private fun Login(
                     onRegister()
                 },
                 modifier = Modifier.fillMaxWidth()
+                    .height(45.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = SecondaryButtonColor
+                ),
+                shape = RoundedCornerShape(25)
             ) {
-                Text(text = "Registrar y Entrar")
+                Text(
+                    text = "Registrar y entrar",
+                    fontFamily = LatoFontFamily,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 18.sp
+                )
             }
 
             if (state.errorMsg != null) {
@@ -167,15 +201,13 @@ private fun Password(
         onValueChange = updatePassword,
         modifier = modifier.fillMaxWidth(),
         label = {
-            Text(text = "Password")
+            LabelTextField(text = "Password")
         },
         placeholder = {
-            Text(text = "Ingrese su password")
+            PlaceholderTextField(text = "Ingrese su password")
         },
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Transparent,
-            unfocusedContainerColor = Color.Transparent
-        ),
+        colors = textFieldColors(),
+        textStyle = textFieldTextStyle(),
         visualTransformation = if (showPassword) {
             PasswordVisualTransformation()
         } else {
@@ -210,16 +242,10 @@ private fun Email(
         value = email,
         onValueChange = updateEmail,
         modifier = Modifier.fillMaxWidth(),
-        label = {
-            Text(text = "Email")
-        },
-        placeholder = {
-            Text(text = "Ingrese su email")
-        },
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Transparent,
-            unfocusedContainerColor = Color.Transparent
-        ),
+        label = { LabelTextField("Email") },
+        placeholder = { PlaceholderTextField("Ingrese su email") },
+        textStyle = textFieldTextStyle(),
+        colors = textFieldColors(),
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Next,
@@ -229,6 +255,40 @@ private fun Email(
         )
     )
 
+}
+
+@Composable
+private fun textFieldColors() = TextFieldDefaults.colors(
+    focusedContainerColor = Color.Transparent,
+    unfocusedContainerColor = Color.Transparent,
+    focusedIndicatorColor = TextColor
+)
+
+private fun textFieldTextStyle() = TextStyle(
+    color = TextColor,
+    fontFamily = LatoFontFamily,
+    fontWeight = FontWeight.Normal
+)
+
+@Composable
+fun PlaceholderTextField(text: String) {
+    Text(
+        text = text,
+        fontFamily = LatoFontFamily,
+        fontWeight = FontWeight.Normal,
+        color = PlaceholderOrLabel
+    )
+}
+
+@Composable
+fun LabelTextField(text: String) {
+    Text(
+        text = text,
+        fontFamily = LatoFontFamily,
+        fontWeight = FontWeight.Normal,
+        color = PlaceholderOrLabel,
+        fontSize = 18.sp
+    )
 }
 
 @Preview(showBackground = true)

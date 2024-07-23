@@ -23,7 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
@@ -41,6 +41,7 @@ import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -53,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -64,12 +66,20 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import com.emm.justchill.Categories
+import com.emm.justchill.core.theme.BackgroundColor
+import com.emm.justchill.core.theme.BorderTextFieldColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.PlaceholderOrLabel
+import com.emm.justchill.core.theme.PrimaryButtonColor
+import com.emm.justchill.core.theme.PrimaryDisableButtonColor
+import com.emm.justchill.core.theme.TextColor
+import com.emm.justchill.core.theme.TextDisableColor
 import com.emm.justchill.hh.domain.TransactionType
 import com.emm.justchill.hh.presentation.HhRoutes
 import com.emm.justchill.hh.presentation.TextFieldWithLabel
-import com.emm.justchill.hh.presentation.TransactionTypeRadioButton
+import com.emm.justchill.hh.presentation.TransactionRadioButton
+import com.emm.justchill.hh.presentation.auth.LabelTextField
 import com.emm.justchill.hh.presentation.shared.DropDownContainer
 import org.koin.androidx.compose.koinViewModel
 
@@ -170,12 +180,16 @@ private fun Transaction(
         topBar = {
             TopAppBar(
                 modifier = Modifier,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = BackgroundColor
+                ),
                 title = {
                     Text(
                         text = "Agregar gasto",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Black,
                         fontFamily = LatoFontFamily,
+                        color = TextColor
                     )
                 },
                 navigationIcon = {
@@ -184,25 +198,34 @@ private fun Transaction(
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = TextColor
                         )
                     }
                 },
                 actions = {
                     FilledTonalButton(
                         contentPadding = PaddingValues(horizontal = 12.dp),
-                        onClick = { setShowDialog(true) }
+                        onClick = { setShowDialog(true) },
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = PrimaryButtonColor,
+                            disabledContainerColor = PrimaryDisableButtonColor,
+                            contentColor = TextColor,
+                            disabledContentColor = TextDisableColor
+                        ),
+                        shape = RoundedCornerShape(25)
                     ) {
                         Icon(
-                            modifier = Modifier.size(20.dp),
-                            imageVector = Icons.Filled.Add,
+                            modifier = Modifier.size(25.dp),
+                            imageVector = Icons.Filled.AddCircleOutline,
                             contentDescription = null
                         )
                         Spacer(modifier = Modifier.width(5.dp))
                         Text(
                             text = "Categoría",
-                            fontWeight = FontWeight.Normal,
-                            fontFamily = LatoFontFamily
+                            fontFamily = LatoFontFamily,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black,
                         )
                     }
                 }
@@ -212,16 +235,19 @@ private fun Transaction(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(BackgroundColor)
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
-                .padding(top = 10.dp)
+                .padding(vertical = 10.dp)
                 .padding(it),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
-
             Mount(mountValue, onMountChange)
 
-            TransactionTypeRadioButton(
+            TransactionRadioButton(
+                modifier = Modifier
+                    .fillMaxWidth(),
                 selectedOption = initialTransactionType,
                 onOptionSelected = onOptionSelected
             )
@@ -251,15 +277,26 @@ private fun Transaction(
             FilledTonalButton(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(55.dp),
+                    .height(50.dp),
                 onClick = dropUnlessResumed {
                     addTransaction()
                     navigateUp()
                 },
-                shape = RoundedCornerShape(10.dp),
                 enabled = isEnabledButton,
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = PrimaryButtonColor,
+                    disabledContainerColor = PrimaryDisableButtonColor,
+                    contentColor = TextColor,
+                    disabledContentColor = TextDisableColor
+                ),
+                shape = RoundedCornerShape(25)
             ) {
-                Text(text = "GUARDAR")
+                Text(
+                    text = "Guardar",
+                    fontFamily = LatoFontFamily,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black,
+                )
             }
         }
     }
@@ -274,10 +311,7 @@ fun Date(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(
-            text = "Fecha:", fontWeight = FontWeight.ExtraBold,
-            fontFamily = LatoFontFamily
-        )
+        TransactionLabel(text = "Fecha:")
         Spacer(modifier = Modifier.height(5.dp))
         OutlinedTextField(
             modifier = Modifier
@@ -290,16 +324,19 @@ fun Date(
             readOnly = true,
             enabled = false,
             colors = OutlinedTextFieldDefaults.colors(
-                disabledTextColor = Color.Black,
-                disabledBorderColor = Color.Black,
-                disabledPlaceholderColor = Color.Black
+                disabledTextColor = TextColor,
+                disabledBorderColor = BorderTextFieldColor,
+                disabledPlaceholderColor = BorderTextFieldColor,
+                focusedBorderColor = TextColor
             ),
             placeholder = {
-                Text(
-                    text = "Fecha", fontWeight = FontWeight.Normal,
-                    fontFamily = LatoFontFamily, color = Color.LightGray
-                )
-            }
+                LabelTextField("Fecha")
+            },
+            textStyle = TextStyle(
+                fontFamily = LatoFontFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 18.sp
+            )
         )
     }
 }
@@ -309,11 +346,7 @@ fun Mount(mountValue: String, onMountChange: (String) -> Unit) {
 
     Column(Modifier.fillMaxWidth()) {
 
-        Text(
-            text = "Cantidad:",
-            fontWeight = FontWeight.ExtraBold,
-            fontFamily = LatoFontFamily,
-        )
+        TransactionLabel("Cantidad:")
 
         Spacer(modifier = Modifier.height(5.dp))
 
@@ -322,23 +355,42 @@ fun Mount(mountValue: String, onMountChange: (String) -> Unit) {
             value = mountValue,
             onValueChange = onMountChange,
             placeholder = {
-                Text(
-                    text = "Cantidad", fontWeight = FontWeight.Normal,
-                    fontFamily = LatoFontFamily, color = Color.LightGray
-                )
+                LabelTextField("Cantidad")
             },
             prefix = {
                 Text(
-                    text = "S/ ", fontWeight = FontWeight.Normal,
-                    fontFamily = LatoFontFamily
+                    text = "S/ ",
+                    fontWeight = FontWeight.Normal,
+                    fontFamily = LatoFontFamily,
+                    color = PlaceholderOrLabel,
+                    fontSize = 18.sp
                 )
             },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Decimal,
                 imeAction = ImeAction.Next
             ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = TextColor
+            ),
+            textStyle = TextStyle(
+                color = TextColor,
+                fontFamily = LatoFontFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 18.sp
+            )
         )
     }
+}
+
+@Composable
+fun TransactionLabel(text: String) {
+    Text(
+        text = text,
+        fontWeight = FontWeight.ExtraBold,
+        fontFamily = LatoFontFamily,
+        color = TextColor
+    )
 }
 
 @OptIn(ExperimentalLayoutApi::class)

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -18,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -29,11 +31,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.emm.justchill.core.theme.BackgroundColor
+import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.PlaceholderOrLabel
+import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.domain.auth.AuthRepository
 import com.emm.justchill.hh.presentation.auth.Login
 import com.emm.justchill.hh.presentation.category.Category
 import com.emm.justchill.hh.presentation.home.Home
-import com.emm.justchill.hh.presentation.seetransactions.SeeTransactions
+import com.emm.justchill.hh.presentation.seetransactions.SeeTransactionsVersionTwo
 import com.emm.justchill.hh.presentation.transaction.EditTransaction
 import com.emm.justchill.hh.presentation.transaction.Transaction
 import kotlinx.serialization.Serializable
@@ -105,7 +111,7 @@ fun Hh() {
                     composable(HhRoutes.HhHome.route) { Home() }
                     composable(HhRoutes.AddTransaction.route) { Transaction(navController = internalNavController) }
                     composable(HhRoutes.AddCategory.route) { Category(internalNavController) }
-                    composable(HhRoutes.SeeTransaction.route) { SeeTransactions(navController) }
+                    composable(HhRoutes.SeeTransaction.route) { SeeTransactionsVersionTwo(navController) }
                 }
             }
         }
@@ -123,31 +129,53 @@ fun Hh() {
 private fun Csm(internalNavController: NavHostController) {
     val navBackStackEntry by internalNavController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    if (currentDestination?.route in hhRoutes.map { it.route }) {
-        BottomAppBar {
-            hhRoutes.forEach { screen ->
-                NavigationBarItem(
-                    selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                    onClick = {
-                        internalNavController.navigate(screen.route) {
-                            popUpTo(internalNavController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
+    BottomAppBar(
+        containerColor = BackgroundColor
+    ) {
+        hhRoutes.forEach { screen ->
+            NavigationBarItem(
+                selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                onClick = {
+                    internalNavController.navigate(screen.route) {
+                        popUpTo(internalNavController.graph.findStartDestination().id) {
+                            saveState = true
                         }
-                    },
-                    icon = { Icon(screen.icon, contentDescription = null, modifier = Modifier.size(24.dp)) },
-                    label = {
-                        Text(
-                            text = screen.name,
-                            textAlign = TextAlign.Center,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        launchSingleTop = true
+                        restoreState = true
                     }
-                )
-            }
+                },
+                icon = {
+                    Icon(
+                        screen.icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = if (currentDestination?.hierarchy?.any { it.route == screen.route } == true) {
+                            LocalContentColor.current
+                        } else {
+                            PlaceholderOrLabel
+                        }
+                    )
+                },
+                label = {
+                    Text(
+                        text = screen.name,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = if (currentDestination?.hierarchy?.any { it.route == screen.route } == true) {
+                            TextColor
+                        } else {
+                            PlaceholderOrLabel
+                        },
+                        fontFamily = LatoFontFamily,
+                        fontWeight = if (currentDestination?.hierarchy?.any { it.route == screen.route } == true) {
+                            FontWeight.Bold
+                        } else {
+                            FontWeight.Normal
+                        }
+                    )
+                }
+            )
         }
     }
 }
