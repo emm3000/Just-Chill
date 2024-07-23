@@ -32,7 +32,6 @@ class DefaultTransactionRepository(
             amount = entity.amount,
             description = entity.description,
             date = entity.date,
-            time = entity.time,
         )
     }
 
@@ -152,7 +151,6 @@ class DefaultTransactionRepository(
                 amount = it.amount,
                 description = it.description,
                 date = it.date,
-                time = it.time,
             )
         }
     }

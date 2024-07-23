@@ -44,6 +44,7 @@ import com.emm.justchill.core.Result
 import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.domain.TransactionType
 import com.emm.justchill.hh.presentation.EditTransaction
@@ -186,17 +187,19 @@ fun ItemTransaction(
                     text = transactionUi.description,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    fontSize = 15.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextColor
+                    color = TextColor,
+                    fontFamily = LatoFontFamily
                 )
                 Text(
                     modifier = Modifier,
                     text = "${transactionUi.readableDate}, ${transactionUi.readableTime}",
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Light,
                     lineHeight = TextUnit(1f, TextUnitType.Em),
-                    color = TextColor
+                    color = TextColor,
+                    fontFamily = LatoFontFamily
                 )
             }
             Text(
@@ -204,9 +207,10 @@ fun ItemTransaction(
                     .align(Alignment.CenterVertically)
                     .padding(start = 13.dp),
                 text = transactionUi.amount,
-                fontSize = 15.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = borderColor
+                color = borderColor,
+                fontFamily = LatoFontFamily
             )
         }
         Spacer(modifier = Modifier.height(10.dp))

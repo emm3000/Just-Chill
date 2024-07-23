@@ -71,7 +71,7 @@ fun Category(
 
         Text(
             text = "Ingresar categoria",
-            fontSize = 18.sp,
+            fontSize = 20.sp,
             fontFamily = LatoFontFamily,
             color = TextColor,
             fontWeight = FontWeight.Black

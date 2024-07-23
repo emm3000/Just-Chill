@@ -48,6 +48,7 @@ import com.emm.justchill.hh.domain.transaction.TransactionSumSpend
 import com.emm.justchill.hh.domain.transaction.TransactionUpdateRepository
 import com.emm.justchill.hh.domain.transaction.TransactionUpdater
 import com.emm.justchill.hh.domain.transactioncategory.AmountDbFormatter
+import com.emm.justchill.hh.domain.transactioncategory.DateAndTimeCombiner
 import com.emm.justchill.hh.domain.transactioncategory.TransactionCategoryAdder
 import com.emm.justchill.hh.domain.transactioncategory.TransactionCategoryRepository
 import com.emm.justchill.hh.presentation.category.CategoryViewModel
@@ -83,7 +84,12 @@ val hhModule = module {
     factoryOf(::TransactionAdder)
 
     factory {
-        TransactionCategoryAdder(get(), get(), AmountDbFormatter())
+        TransactionCategoryAdder(
+            transactionAdder = get(),
+            repository = get(),
+            amountCleaner = AmountDbFormatter(),
+            dateAndTimeCombiner = DateAndTimeCombiner()
+        )
     }
 
     factoryOf(::TransactionLoaderByDateRange)

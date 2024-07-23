@@ -224,7 +224,7 @@ private fun Transaction(
                         Text(
                             text = "Categoría",
                             fontFamily = LatoFontFamily,
-                            fontSize = 18.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Black,
                         )
                     }
@@ -387,9 +387,10 @@ fun Mount(mountValue: String, onMountChange: (String) -> Unit) {
 fun TransactionLabel(text: String) {
     Text(
         text = text,
-        fontWeight = FontWeight.ExtraBold,
+        fontWeight = FontWeight.Normal,
         fontFamily = LatoFontFamily,
-        color = TextColor
+        color = PlaceholderOrLabel,
+        fontSize = 17.sp
     )
 }
 

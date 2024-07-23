@@ -62,10 +62,10 @@ fun SeeTransactionsVersionTwo(
 
         item {
             Text(
-                text = "Listas",
+                text = "Transacciones",
                 color = TextColor,
                 fontFamily = LatoFontFamily,
-                fontSize = 30.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Black
             )
         }

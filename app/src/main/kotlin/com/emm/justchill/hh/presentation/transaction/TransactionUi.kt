@@ -41,11 +41,7 @@ private fun Transactions.toUi(): TransactionUi {
         description = description,
         date = date,
         readableDate = DateUtils.millisToReadableFormat(date),
-        readableTime = if (time == 0L) {
-            "00:00 a. m"
-        } else {
-            DateUtils.readableTime(time)
-        }
+        readableTime = DateUtils.readableTime(date)
     )
 }
 

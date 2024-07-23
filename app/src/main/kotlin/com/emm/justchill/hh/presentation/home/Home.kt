@@ -24,9 +24,7 @@ import com.emm.justchill.core.theme.TextColor
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun Home(
-    homeViewModel: HomeViewModel = koinViewModel(),
-) {
+fun Home(homeViewModel: HomeViewModel = koinViewModel()) {
 
     val sumTransactions by homeViewModel.sumTransactions.collectAsState()
     val difference by homeViewModel.difference.collectAsState()

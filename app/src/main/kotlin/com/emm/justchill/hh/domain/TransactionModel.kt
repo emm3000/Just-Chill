@@ -14,7 +14,6 @@ data class TransactionModel(
     val amount: Long,
     val description: String,
     val date: Long,
-    val time: Long,
 
     @SerialName("device_id")
     val deviceId: String = "",
@@ -33,5 +32,4 @@ fun Transactions.toModel() = TransactionModel(
     description = description,
     date = date,
     deviceId = "",
-    time = time
 )

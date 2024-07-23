@@ -9,6 +9,7 @@ class TransactionCategoryAdder(
     private val transactionAdder: TransactionAdder,
     private val repository: TransactionCategoryRepository,
     private val amountCleaner: AmountDbFormatter,
+    private val dateAndTimeCombiner: DateAndTimeCombiner,
     private val uniqueIdProvider: UniqueIdProvider = DefaultUniqueIdProvider,
 ) {
 
@@ -22,9 +23,12 @@ class TransactionCategoryAdder(
 
         val transactionId: String = uniqueIdProvider.uniqueId
 
+        val dateAndTimeCombined: Long = dateAndTimeCombiner.combine(transactionInsert.date)
+
         val transaction: TransactionInsert = transactionInsert.copy(
             id = transactionId,
-            amount = amountFormated
+            amount = amountFormated,
+            date = dateAndTimeCombined
         )
 
         transactionAdder.add(transaction)

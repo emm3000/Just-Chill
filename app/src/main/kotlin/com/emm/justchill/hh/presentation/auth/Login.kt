@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.presentation.auth
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +20,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -49,7 +51,6 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.PrimaryButtonColor
-import com.emm.justchill.core.theme.SecondaryButtonColor
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.presentation.Login
 import com.emm.justchill.hh.presentation.Main
@@ -146,17 +147,18 @@ private fun Login(
                 )
             }
 
-            Button(
+            OutlinedButton(
                 onClick = {
                     focusManager.clearFocus()
                     onRegister()
                 },
                 modifier = Modifier.fillMaxWidth()
                     .height(45.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = SecondaryButtonColor
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = TextColor
                 ),
-                shape = RoundedCornerShape(25)
+                shape = RoundedCornerShape(25),
+                border = BorderStroke(1.dp, TextColor)
             ) {
                 Text(
                     text = "Registrar y entrar",
@@ -267,7 +269,8 @@ private fun textFieldColors() = TextFieldDefaults.colors(
 private fun textFieldTextStyle() = TextStyle(
     color = TextColor,
     fontFamily = LatoFontFamily,
-    fontWeight = FontWeight.Normal
+    fontWeight = FontWeight.Normal,
+    fontSize = 18.sp
 )
 
 @Composable
@@ -287,7 +290,7 @@ fun LabelTextField(text: String) {
         fontFamily = LatoFontFamily,
         fontWeight = FontWeight.Normal,
         color = PlaceholderOrLabel,
-        fontSize = 18.sp
+        fontSize = 16.sp
     )
 }
 
@@ -296,7 +299,7 @@ fun LabelTextField(text: String) {
 fun LoginPreview() {
     EmmTheme {
         Login(
-            email = ""
+            email = "random@gmail.com"
         )
     }
 }

@@ -2,7 +2,6 @@ CREATE TABLE transactions (
     transactionId TEXT NOT NULL PRIMARY KEY,
     type TEXT NOT NULL,
     amount INTEGER NOT NULL,
-    time INTEGER DEFAULT 0 NOT NULL,
     description TEXT NOT NULL,
     date INTEGER NOT NULL
 );
@@ -46,7 +45,7 @@ retrieveWithPaging:
 SELECT * FROM transactions ORDER BY date DESC LIMIT ? OFFSET ?;
 
 addTransaction:
-INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?);
 
 selectTransactionsByDateRange:
 SELECT * FROM transactions
