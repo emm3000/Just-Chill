@@ -196,9 +196,9 @@ fun ItemTransaction(
                     modifier = Modifier,
                     text = "${transactionUi.readableDate}, ${transactionUi.readableTime}",
                     fontSize = 13.sp,
-                    fontWeight = FontWeight.Light,
+                    fontWeight = FontWeight.Normal,
                     lineHeight = TextUnit(1f, TextUnitType.Em),
-                    color = TextColor,
+                    color = TextColor.copy(alpha = .8f),
                     fontFamily = LatoFontFamily
                 )
             }
