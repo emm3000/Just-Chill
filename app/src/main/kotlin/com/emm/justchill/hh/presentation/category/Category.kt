@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.presentation.category
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,7 +22,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
 import com.emm.justchill.core.theme.BackgroundColor
-import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PrimaryButtonColor
@@ -116,29 +113,6 @@ fun Category(
         ) {
             Text(
                 text = "Guardar",
-                fontFamily = LatoFontFamily,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Black,
-            )
-        }
-        Spacer(modifier = Modifier.height(15.dp))
-        OutlinedButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            onClick = dropUnlessResumed {
-                navigateUp()
-            },
-            shape = RoundedCornerShape(25),
-            colors = ButtonDefaults.outlinedButtonColors(
-                disabledContainerColor = PrimaryDisableButtonColor,
-                contentColor = DeleteButtonColor,
-                disabledContentColor = TextDisableColor,
-            ),
-            border = BorderStroke(1.dp, DeleteButtonColor)
-        ) {
-            Text(
-                text = "Cancelar",
                 fontFamily = LatoFontFamily,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Black,
