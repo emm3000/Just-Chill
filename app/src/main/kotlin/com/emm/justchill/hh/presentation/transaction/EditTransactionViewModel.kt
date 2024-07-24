@@ -58,13 +58,7 @@ class EditTransactionViewModel(
     val categories: StateFlow<List<Categories>> = combine(
         categoryLoader.load(),
         snapshotFlow { transactionType },
-    ) { categories, transactionType ->
-        val categoriesFilter = categories.filter { it.type == transactionType.name }
-        val existOrNull: Categories? = categoriesFilter.firstOrNull { it.categoryId == categoryId }
-        categoryLabel = existOrNull?.name.orEmpty()
-        categoryId = existOrNull?.categoryId.orEmpty()
-        categoriesFilter
-    }
+    ) { categories, transactionType -> filterAndSetCategory(categories, transactionType) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),
@@ -94,6 +88,22 @@ class EditTransactionViewModel(
         transactionType = TransactionType.valueOf(transaction.type)
         date = millisToReadableFormat(transaction.date)
         categoryId = transaction.categoryId.orEmpty()
+    }
+
+    private fun filterAndSetCategory(
+        categories: List<Categories>,
+        transactionType: TransactionType,
+    ): List<Categories> {
+
+        val categoriesFilter: List<Categories> = categories.filter { it.type == transactionType.name }
+        val existOrNull: Categories? = categoriesFilter.firstOrNull { it.categoryId == categoryId }
+
+        existOrNull?.let {
+            categoryLabel = it.name
+            categoryId = it.categoryId
+        }
+
+        return categoriesFilter
     }
 
     fun updateTransaction() = viewModelScope.launch {
