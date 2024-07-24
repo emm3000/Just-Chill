@@ -55,15 +55,17 @@ class EditTransactionViewModel(
     var transactionType by mutableStateOf(TransactionType.INCOME)
         private set
 
-    val categories: StateFlow<List<Categories>> = categoryLoader.load()
-        .combine(snapshotFlow { transactionType }) { list, transactionType ->
-            list.filter { it.type == transactionType.name }
-        }.combine(snapshotFlow { categoryId }) { categories, categoryIdValue ->
-            val existOrNull: Categories? = categories.firstOrNull { it.categoryId == categoryIdValue }
-            categoryLabel = existOrNull?.name.orEmpty()
-            categoryId = existOrNull?.categoryId.orEmpty()
-            categories
-        }
+    val categories: StateFlow<List<Categories>> = combine(
+        categoryLoader.load(),
+        snapshotFlow { transactionType },
+        snapshotFlow { categoryId },
+    ) { categories, transactionType, categoryIdFlow ->
+        val categoriesFilter = categories.filter { it.type == transactionType.name }
+        val existOrNull: Categories? = categoriesFilter.firstOrNull { it.categoryId == categoryIdFlow }
+        categoryLabel = existOrNull?.name.orEmpty()
+        categoryId = existOrNull?.categoryId.orEmpty()
+        categoriesFilter
+    }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),

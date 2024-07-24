@@ -102,7 +102,9 @@ val hhModule = module {
     factoryOf(::UserAuthenticator)
     factoryOf(::UserCreator)
     factoryOf(::TransactionFinder)
-    factoryOf(::TransactionUpdater)
+    factory {
+        TransactionUpdater(get(), DateAndTimeCombiner())
+    }
     factoryOf(::TransactionDeleter)
 
     factory<BackupManager> {

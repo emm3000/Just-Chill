@@ -1,5 +1,6 @@
 package com.emm.justchill.core
 
+import com.emm.justchill.experiences.amount.Amount
 import com.emm.justchill.experiences.drinks.ui.DrinkMainScreen
 import com.emm.justchill.experiences.readjsonfromassets.ui.Experiences
 import com.emm.justchill.experiences.supabase.SupabaseScreen
@@ -59,5 +60,14 @@ val rootData: List<Feature> = listOf(
         resource = "-",
         route = RootRoutes.Hh,
         screen = { SupabaseScreen() }
+    ),
+    Feature(
+        id = UUID.randomUUID().toString(),
+        title = "Amount component",
+        description = "Create new component in jetpack compose like bcp app to add amount",
+        category = "personal",
+        resource = "-",
+        route = RootRoutes.Hh,
+        screen = { Amount() }
     )
 )
