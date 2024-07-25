@@ -23,8 +23,8 @@ android {
         applicationId = "com.emm.justchill"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        versionName = "1.0.2-alpha"
+        versionCode = 5
+        versionName = "1.0.3-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

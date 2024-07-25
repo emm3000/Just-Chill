@@ -126,8 +126,10 @@ class DefaultTransactionRepository(
         networkDataSource.upsert(transactions)
     }
 
-    override suspend fun find(transactionId: String): Ga? = withContext(ioDispatcher) {
-        transactionsQueries.ga(transactionId).executeAsOneOrNull()
+    override fun find(transactionId: String): Flow<Ga?> {
+        return transactionsQueries.ga(transactionId)
+            .asFlow()
+            .mapToOneOrNull(ioDispatcher)
     }
 
     override suspend fun update(

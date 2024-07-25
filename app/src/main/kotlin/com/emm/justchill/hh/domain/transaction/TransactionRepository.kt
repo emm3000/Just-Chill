@@ -14,7 +14,7 @@ interface TransactionRepository {
 
     suspend fun backup()
 
-    suspend fun find(transactionId: String): Ga?
+    fun find(transactionId: String): Flow<Ga?>
 
     suspend fun update(transactionId: String, transactionUpdate: TransactionUpdate)
 

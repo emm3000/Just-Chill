@@ -7,7 +7,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.Categories
-import com.emm.justchill.Ga
 import com.emm.justchill.hh.data.transaction.TransactionUpdate
 import com.emm.justchill.hh.domain.TransactionType
 import com.emm.justchill.hh.domain.category.CategoryLoader
@@ -17,11 +16,12 @@ import com.emm.justchill.hh.domain.transaction.TransactionUpdater
 import com.emm.justchill.hh.domain.transaction.fromCentsToSoles
 import com.emm.justchill.hh.domain.transactioncategory.AmountDbFormatter
 import com.emm.justchill.hh.presentation.transaction.DateUtils.millisToReadableFormat
-import com.emm.justchill.hh.presentation.transaction.DateUtils.millisToReadableFormatUTC
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -59,7 +59,19 @@ class EditTransactionViewModel(
     val categories: StateFlow<List<Categories>> = combine(
         categoryLoader.load(),
         snapshotFlow { transactionType },
-    ) { categories, transactionType -> filterAndSetCategory(categories, transactionType) }
+    ) { categories, transactionTypeFlow ->
+        filterAndSetCategory(categories, transactionTypeFlow)
+    }.onStart {
+        val currentTransaction = transactionFinder.find(transactionId).firstOrNull()
+        currentTransaction?.let { transaction ->
+            amount = fromCentsToSoles(transaction.amount).toString()
+            description = transaction.description
+            transactionType = TransactionType.valueOf(transaction.type)
+            date = millisToReadableFormat(transaction.date)
+            dateInLong = transaction.date
+            categoryId = transaction.categoryId.orEmpty()
+        }
+    }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),
@@ -78,18 +90,6 @@ class EditTransactionViewModel(
                     && description.isNotEmpty()
                     && category.isNotEmpty()
         }.launchIn(viewModelScope)
-
-        executeFind()
-    }
-
-    private fun executeFind() = viewModelScope.launch {
-        val transaction: Ga = transactionFinder.find(transactionId) ?: return@launch
-        amount = fromCentsToSoles(transaction.amount).toString()
-        description = transaction.description
-        transactionType = TransactionType.valueOf(transaction.type)
-        date = millisToReadableFormat(transaction.date)
-        dateInLong = transaction.date
-        categoryId = transaction.categoryId.orEmpty()
     }
 
     private fun filterAndSetCategory(
@@ -136,7 +136,7 @@ class EditTransactionViewModel(
     fun updateCurrentDate(millis: Long?) {
         if (millis != null) {
             dateInLong = millis
-            date = millisToReadableFormatUTC(millis)
+            date = DateUtils.millisToReadableFormatUTC(millis)
         }
     }
 

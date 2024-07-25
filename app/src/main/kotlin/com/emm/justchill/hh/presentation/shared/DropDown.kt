@@ -40,17 +40,15 @@ fun DropDownContainer(
     setText: (String) -> Unit,
 ) {
 
-    if (categories.isNotEmpty()) {
-        Column {
-            TransactionLabel(text = "Seleccionar categoría")
-            Spacer(modifier = Modifier.height(5.dp))
-            DropDown(
-                onCategoryChange = onCategoryChange,
-                categories = categories,
-                text = text,
-                setText = setText
-            )
-        }
+    Column {
+        TransactionLabel(text = "Seleccionar categoría")
+        Spacer(modifier = Modifier.height(5.dp))
+        DropDown(
+            onCategoryChange = onCategoryChange,
+            categories = categories,
+            text = text,
+            setText = setText
+        )
     }
 
 }
@@ -97,7 +95,8 @@ fun DropDown(
                 dismissOnClickOutside = true,
                 dismissOnBackPress = true,
             ),
-            modifier = Modifier.exposedDropdownSize()
+            modifier = Modifier
+                .exposedDropdownSize()
                 .background(BackgroundColor)
         ) {
             categories.forEach {
