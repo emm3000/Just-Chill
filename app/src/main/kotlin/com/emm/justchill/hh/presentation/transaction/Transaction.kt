@@ -354,7 +354,10 @@ fun Mount(mountValue: String, onMountChange: (String) -> Unit) {
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             value = mountValue,
-            onValueChange = onMountChange,
+            onValueChange = { value ->
+                val filter: String = value.filter { it.isDigit() || it == '.' }
+                onMountChange(filter)
+            },
             placeholder = {
                 LabelTextField("Cantidad")
             },

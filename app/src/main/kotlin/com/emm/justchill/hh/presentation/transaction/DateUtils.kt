@@ -23,6 +23,20 @@ object DateUtils {
     fun millisToReadableFormat(millis: Long): String {
 
         val localDate: LocalDate = Instant.ofEpochMilli(millis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+
+        val readableFormatter: DateTimeFormatter = DateTimeFormatter
+            .ofLocalizedDate(FormatStyle.LONG)
+            .withLocale(Locale("es"))
+
+        return localDate.format(readableFormatter)
+    }
+
+    // This is ok for TransactionViewModel
+    fun millisToReadableFormatUTC(millis: Long): String {
+
+        val localDate: LocalDate = Instant.ofEpochMilli(millis)
             .atZone(ZoneId.of("UTC"))
             .toLocalDate()
 

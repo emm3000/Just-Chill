@@ -93,7 +93,7 @@ class TransactionViewModel(
     fun updateCurrentDate(millis: Long?) {
         if (millis != null) {
             dateInLong = millis
-            date = DateUtils.millisToReadableFormat(millis)
+            date = DateUtils.millisToReadableFormatUTC(millis)
         }
     }
 

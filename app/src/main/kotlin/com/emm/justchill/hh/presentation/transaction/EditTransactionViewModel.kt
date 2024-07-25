@@ -17,6 +17,7 @@ import com.emm.justchill.hh.domain.transaction.TransactionUpdater
 import com.emm.justchill.hh.domain.transaction.fromCentsToSoles
 import com.emm.justchill.hh.domain.transactioncategory.AmountDbFormatter
 import com.emm.justchill.hh.presentation.transaction.DateUtils.millisToReadableFormat
+import com.emm.justchill.hh.presentation.transaction.DateUtils.millisToReadableFormatUTC
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -87,6 +88,7 @@ class EditTransactionViewModel(
         description = transaction.description
         transactionType = TransactionType.valueOf(transaction.type)
         date = millisToReadableFormat(transaction.date)
+        dateInLong = transaction.date
         categoryId = transaction.categoryId.orEmpty()
     }
 
@@ -101,6 +103,9 @@ class EditTransactionViewModel(
         existOrNull?.let {
             categoryLabel = it.name
             categoryId = it.categoryId
+        } ?: run {
+            categoryLabel = ""
+            categoryId = ""
         }
 
         return categoriesFilter
@@ -131,7 +136,7 @@ class EditTransactionViewModel(
     fun updateCurrentDate(millis: Long?) {
         if (millis != null) {
             dateInLong = millis
-            date = millisToReadableFormat(millis)
+            date = millisToReadableFormatUTC(millis)
         }
     }
 

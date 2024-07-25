@@ -15,7 +15,7 @@ class DateAndTimeCombiner {
                 ZoneId.of("UTC")
             )
 
-        val currentTime: LocalTime = LocalTime.now()
+        val currentTime: LocalTime = LocalTime.now(ZoneId.systemDefault())
 
         val combinedDateTime: LocalDateTime = selectedDateTime.with(currentTime)
 
