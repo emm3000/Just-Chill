@@ -22,6 +22,5 @@ sealed class HhRoutes(
 val hhRoutes = listOf(
     HhRoutes.HhHome,
     HhRoutes.AddTransaction,
-    HhRoutes.AddCategory,
     HhRoutes.SeeTransaction,
 )

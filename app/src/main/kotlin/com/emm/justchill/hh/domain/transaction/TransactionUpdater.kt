@@ -11,8 +11,8 @@ class TransactionUpdater(
     suspend fun update(
         transactionId: String,
         transactionUpdate: TransactionUpdate,
-        categoryId: String,
     ) {
+
         val dateAndTimeCombined: Long = dateAndTimeCombiner.combine(transactionUpdate.date)
 
         repository.update(
@@ -20,7 +20,6 @@ class TransactionUpdater(
             transactionUpdate = transactionUpdate.copy(
                 date = dateAndTimeCombined
             ),
-            categoryId = categoryId
         )
     }
 }

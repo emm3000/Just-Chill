@@ -7,6 +7,5 @@ interface TransactionUpdateRepository {
     suspend fun update(
         transactionId: String,
         transactionUpdate: TransactionUpdate,
-        categoryId: String,
     )
 }

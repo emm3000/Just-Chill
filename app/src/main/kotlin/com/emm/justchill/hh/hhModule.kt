@@ -81,7 +81,13 @@ val hhModule = module {
     factoryOf(::CategoryAdder)
     factoryOf(::CategoryLoader)
     factoryOf(::TransactionLoader)
-    factoryOf(::TransactionAdder)
+    factory {
+        TransactionAdder(
+            repository = get(),
+            amountCleaner = AmountDbFormatter(),
+            dateAndTimeCombiner = DateAndTimeCombiner(),
+        )
+    }
 
     factory {
         TransactionCategoryAdder(
@@ -133,7 +139,6 @@ private fun Module.viewModelsProviders() {
 
     viewModel { parameters ->
         EditTransactionViewModel(
-            categoryLoader = get(),
             transactionId = parameters.get(),
             transactionUpdater = get(),
             transactionFinder = get(),
@@ -190,8 +195,6 @@ private fun Module.repositoriesProviders() {
 
     factory<TransactionUpdateRepository> {
         DefaultTransactionUpdateRepository(
-            get(),
-            get(),
             get(),
         )
     }

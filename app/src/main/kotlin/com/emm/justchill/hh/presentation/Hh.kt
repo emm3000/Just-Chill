@@ -37,7 +37,6 @@ import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.domain.auth.AuthRepository
 import com.emm.justchill.hh.presentation.auth.Login
-import com.emm.justchill.hh.presentation.category.Category
 import com.emm.justchill.hh.presentation.home.Home
 import com.emm.justchill.hh.presentation.seetransactions.SeeTransactionsVersionTwo
 import com.emm.justchill.hh.presentation.transaction.EditTransaction
@@ -109,18 +108,25 @@ fun Hh() {
                     modifier = Modifier.padding(paddingValues)
                 ) {
                     composable(HhRoutes.HhHome.route) { Home() }
-                    composable(HhRoutes.AddTransaction.route) { Transaction(navController = internalNavController) }
-                    composable(HhRoutes.AddCategory.route) { Category(internalNavController) }
-                    composable(HhRoutes.SeeTransaction.route) { SeeTransactionsVersionTwo(navController) }
+                    composable(HhRoutes.AddTransaction.route) {
+                        Transaction {
+                            internalNavController.navigate(HhRoutes.SeeTransaction.route) {
+                                popUpTo(internalNavController.graph.findStartDestination().id)
+                                launchSingleTop = true
+                            }
+                        }
+                    }
+                    composable(HhRoutes.SeeTransaction.route) {
+                        SeeTransactionsVersionTwo(
+                            navController
+                        )
+                    }
                 }
             }
         }
         composable<EditTransaction> {
             val editTransaction: EditTransaction = it.toRoute<EditTransaction>()
             EditTransaction(navController, editTransaction.transactionId)
-        }
-        composable<Category> {
-            Category(navController)
         }
     }
 }

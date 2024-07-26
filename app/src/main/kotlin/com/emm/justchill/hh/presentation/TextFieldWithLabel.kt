@@ -41,11 +41,12 @@ fun TextFieldWithLabel(
                 fontFamily = LatoFontFamily,
                 fontWeight = FontWeight.Normal,
                 fontSize = 18.sp,
-                color = TextColor
+                color = TextColor,
             ),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = TextColor
-            )
+            ),
+            maxLines = 2,
         )
     }
 }

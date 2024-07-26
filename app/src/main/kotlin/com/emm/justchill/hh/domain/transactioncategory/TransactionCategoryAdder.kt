@@ -31,7 +31,7 @@ class TransactionCategoryAdder(
             date = dateAndTimeCombined
         )
 
-        transactionAdder.add(transaction)
+        transactionAdder.add(amount, transaction)
         repository.add(transactionId = transactionId, categoryId = categoryId)
     }
 }

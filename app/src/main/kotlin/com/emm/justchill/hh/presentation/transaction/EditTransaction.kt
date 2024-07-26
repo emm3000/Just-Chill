@@ -1,23 +1,19 @@
 package com.emm.justchill.hh.presentation.transaction
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AddCircleOutline
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
@@ -30,15 +26,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -47,7 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
-import com.emm.justchill.Categories
 import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
@@ -57,10 +50,8 @@ import com.emm.justchill.core.theme.PrimaryDisableButtonColor
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.core.theme.TextDisableColor
 import com.emm.justchill.hh.domain.TransactionType
-import com.emm.justchill.hh.presentation.Category
 import com.emm.justchill.hh.presentation.TextFieldWithLabel
 import com.emm.justchill.hh.presentation.TransactionRadioButton
-import com.emm.justchill.hh.presentation.shared.DropDownContainer
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -71,10 +62,7 @@ fun EditTransaction(
     vm: EditTransactionViewModel = koinViewModel(parameters = { parametersOf(transactionId) })
 ) {
 
-    val categories: List<Categories> by vm.categories.collectAsState()
-
     EditTransaction(
-        categories = categories,
         isEnabledButton = vm.isEnabled,
         mountValue = vm.amount,
         onMountChange = vm::updateMount,
@@ -82,14 +70,10 @@ fun EditTransaction(
         onDescriptionChange = vm::updateDescription,
         dateValue = vm.date,
         updateTransaction = vm::updateTransaction,
-        onCategoryChange = vm::updateCategory,
         updateDate = vm::updateCurrentDate,
         navigateUp = { navController.popBackStack() },
-        navigateToCreateCategory = { navController.navigate(Category) },
         initialTransactionType = vm.transactionType,
         onOptionSelected = vm::updateTransactionType,
-        text = vm.categoryLabel,
-        setText = vm::updateCategoryLabel,
         deleteTransaction = vm::deleteTransaction
     )
 
@@ -98,42 +82,27 @@ fun EditTransaction(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditTransaction(
-    categories: List<Categories> = emptyList(),
     isEnabledButton: Boolean = false,
     mountValue: String = "",
     onMountChange: (String) -> Unit = {},
     descriptionValue: String = "",
     onDescriptionChange: (String) -> Unit = {},
     dateValue: String = "",
-    onCategoryChange: (Categories) -> Unit = {},
     updateTransaction: () -> Unit = {},
     updateDate: (Long?) -> Unit = {},
     navigateUp: () -> Unit = {},
-    navigateToCreateCategory: () -> Unit = {},
     initialTransactionType: TransactionType = TransactionType.INCOME,
     onOptionSelected: (TransactionType) -> Unit = {},
-    text: String = "",
-    setText: (String) -> Unit = {},
     deleteTransaction: () -> Unit = {},
 ) {
-    val (showDialog, setShowDialog) = rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    if (showDialog) {
-        TaskDialog(
-            categories = categories,
-            onDismissRequest = { setShowDialog(false) },
-            navigateToCreateCategory = {
-                setShowDialog(false)
-                navigateToCreateCategory()
-            }
-        )
-    }
 
     val datePickerState: DatePickerState = rememberDatePickerState()
 
     val (showSelectDate, setShowSelectDate) = remember {
+        mutableStateOf(false)
+    }
+
+    val (showDeleteDialog, setShowDeleteDialog) = remember {
         mutableStateOf(false)
     }
 
@@ -161,6 +130,17 @@ private fun EditTransaction(
                 showModeToggle = false
             )
         }
+    }
+
+    if (showDeleteDialog) {
+        DeleteDialog(
+            setShowDeleteDialog = setShowDeleteDialog,
+            onConfirmButton = {
+                setShowDeleteDialog(false)
+                deleteTransaction()
+                navigateUp()
+            }
+        )
     }
 
     Scaffold(
@@ -192,28 +172,13 @@ private fun EditTransaction(
                     }
                 },
                 actions = {
-                    FilledTonalButton(
-                        contentPadding = PaddingValues(horizontal = 12.dp),
-                        onClick = { setShowDialog(true) },
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = PrimaryButtonColor,
-                            disabledContainerColor = PrimaryDisableButtonColor,
-                            contentColor = TextColor,
-                            disabledContentColor = TextDisableColor
-                        ),
-                        shape = RoundedCornerShape(25)
+                    IconButton(
+                        onClick = { setShowDeleteDialog(true) },
                     ) {
                         Icon(
-                            modifier = Modifier.size(25.dp),
-                            imageVector = Icons.Filled.AddCircleOutline,
-                            contentDescription = null
-                        )
-                        Spacer(modifier = Modifier.width(5.dp))
-                        Text(
-                            text = "Categoría",
-                            fontFamily = LatoFontFamily,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Black,
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = null,
+                            tint = DeleteButtonColor,
                         )
                     }
                 }
@@ -240,17 +205,6 @@ private fun EditTransaction(
                 onOptionSelected = onOptionSelected
             )
 
-            Date(dateValue) {
-                setShowSelectDate(true)
-            }
-
-            DropDownContainer(
-                categories = categories,
-                onCategoryChange = onCategoryChange,
-                text = text,
-                setText = setText
-            )
-
             TextFieldWithLabel(
                 modifier = Modifier
                     .height(140.dp),
@@ -258,6 +212,10 @@ private fun EditTransaction(
                 value = descriptionValue,
                 onChange = onDescriptionChange
             )
+
+            DateInput(dateValue) {
+                setShowSelectDate(true)
+            }
 
             FilledTonalButton(
                 modifier = Modifier
@@ -283,31 +241,61 @@ private fun EditTransaction(
                     fontWeight = FontWeight.Black,
                 )
             }
-            OutlinedButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                onClick = dropUnlessResumed {
-                    deleteTransaction()
-                    navigateUp()
-                },
-                shape = RoundedCornerShape(25),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    disabledContainerColor = PrimaryDisableButtonColor,
-                    contentColor = DeleteButtonColor,
-                    disabledContentColor = TextDisableColor,
-                ),
-                border = BorderStroke(1.dp, DeleteButtonColor)
-            ) {
+        }
+    }
+}
+
+@Composable
+private fun DeleteDialog(
+    setShowDeleteDialog: (Boolean) -> Unit,
+    onConfirmButton: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = { setShowDeleteDialog(false) },
+        containerColor = BackgroundColor,
+        text = {
+            Text(
+                text = "Estas seguro de eliminar esta transacción.",
+                color = TextColor,
+                fontFamily = LatoFontFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 16.sp
+            )
+        },
+        title = {
+            Text(
+                text = "Eliminar transacción",
+                fontFamily = LatoFontFamily,
+                fontWeight = FontWeight.Black,
+                color = TextColor
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirmButton()
+            }) {
                 Text(
-                    text = "Eliminar",
-                    fontFamily = LatoFontFamily,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Black,
+                    text = "Confirmar",
+                    fontSize = 16.sp,
+                    color = DeleteButtonColor,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = LatoFontFamily
+                )
+            }
+
+        },
+        dismissButton = {
+            TextButton(onClick = { setShowDeleteDialog(false) }) {
+                Text(
+                    text = "Cancelar",
+                    fontSize = 16.sp,
+                    color = TextColor,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = LatoFontFamily
                 )
             }
         }
-    }
+    )
 }
 
 @Preview(showBackground = true)

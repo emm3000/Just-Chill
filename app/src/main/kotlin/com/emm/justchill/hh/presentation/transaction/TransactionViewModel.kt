@@ -6,22 +6,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.Categories
 import com.emm.justchill.hh.data.transaction.TransactionInsert
 import com.emm.justchill.hh.domain.TransactionType
-import com.emm.justchill.hh.domain.category.CategoryLoader
-import com.emm.justchill.hh.domain.transactioncategory.TransactionCategoryAdder
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
+import com.emm.justchill.hh.domain.transaction.TransactionAdder
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class TransactionViewModel(
-    categoryLoader: CategoryLoader,
-    private val transactionCategoryAdder: TransactionCategoryAdder,
+    private val transactionAdder: TransactionAdder,
 ) : ViewModel() {
 
     var amount by mutableStateOf("")
@@ -35,10 +28,6 @@ class TransactionViewModel(
 
     private var dateInLong: Long = DateUtils.currentDateInMillis()
 
-    private var categoryId by mutableStateOf("")
-    var categoryLabel by mutableStateOf("")
-        private set
-
     var isEnabled by mutableStateOf(false)
         private set
 
@@ -50,28 +39,12 @@ class TransactionViewModel(
             snapshotFlow { amount },
             snapshotFlow { date },
             snapshotFlow { description },
-            snapshotFlow { categoryId },
-        ) { mount, date, description, category ->
+        ) { mount, date, description ->
             isEnabled = mount.isNotEmpty()
                     && date.isNotEmpty()
                     && description.isNotEmpty()
-                    && category.isNotEmpty()
         }.launchIn(viewModelScope)
     }
-
-    val categories: StateFlow<List<Categories>> = categoryLoader.load()
-        .combine(snapshotFlow { transactionType }) { list, transactionType ->
-            list.filter { it.type == transactionType.name }
-        }
-        .onEach {
-            categoryLabel = ""
-            categoryId = ""
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = emptyList()
-        )
 
     fun addTransaction() = viewModelScope.launch {
         val transactionInsert = TransactionInsert(
@@ -79,7 +52,7 @@ class TransactionViewModel(
             description = description,
             date = dateInLong,
         )
-        transactionCategoryAdder.add(categoryId, amount, transactionInsert)
+        transactionAdder.add(amount, transactionInsert)
     }
 
     fun updateMount(value: String) {
@@ -95,14 +68,6 @@ class TransactionViewModel(
             dateInLong = millis
             date = DateUtils.millisToReadableFormatUTC(millis)
         }
-    }
-
-    fun updateCategory(value: Categories) {
-        categoryId = value.categoryId
-    }
-
-    fun updateCategoryLabel(value: String) {
-        categoryLabel = value
     }
 
     fun updateTransactionType(value: TransactionType) {
