@@ -58,7 +58,8 @@ class SupabaseBackupManager(
 
     private fun logError(function: String, errorMessage: String?) {
         if (errorMessage == null) return
-        edit.putString("error", "$function: $errorMessage")
+        edit
+            .putString("error", "$function: $errorMessage")
             .apply()
     }
 }

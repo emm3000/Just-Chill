@@ -12,6 +12,11 @@
         <activity
             android:name=".ShortActivity"
             android:exported="true" />
+
+        <activity
+            android:name=".loans.LoansActivity"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true" />
     </application>
 
 </manifest>

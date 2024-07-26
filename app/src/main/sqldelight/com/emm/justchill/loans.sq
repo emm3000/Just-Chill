@@ -1,0 +1,9 @@
+CREATE TABLE loans (
+    loanId TEXT PRIMARY KEY,
+    amount INTEGER NOT NULL,
+    interestRate REAL NOT NULL,
+    startDate INTEGER NOT NULL,
+    duration INTEGER NOT NULL,
+    paymentFrequency TEXT NOT NULL,
+    status TEXT NOT NULL
+);

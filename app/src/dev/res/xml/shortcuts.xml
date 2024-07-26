@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
-        android:shortcutId="quefuecsm"
+        android:shortcutId="random"
         android:enabled="true"
         android:icon="@mipmap/ic_launcher_first_round"
         android:shortcutShortLabel="@string/app_name"
@@ -10,5 +10,17 @@
             android:action="android.intent.action.VIEW"
             android:targetPackage="com.emm.justchill.dev"
             android:targetClass="com.emm.justchill.ShortActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="loans"
+        android:enabled="true"
+        android:icon="@mipmap/ic_loans_icon"
+        android:roundIcon="@mipmap/ic_loans_icon_round"
+        android:shortcutShortLabel="@string/dev_loans"
+        android:shortcutLongLabel="@string/dev_loans">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.emm.justchill.dev"
+            android:targetClass="com.emm.justchill.loans.LoansActivity" />
     </shortcut>
 </shortcuts>
