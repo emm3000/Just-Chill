@@ -8,6 +8,7 @@ import com.emm.justchill.experiences.drinks.drinkModule
 import com.emm.justchill.experiences.readjsonfromassets.experiencesModule
 import com.emm.justchill.experiences.supabase.supabaseModule
 import com.emm.justchill.hh.hhModule
+import com.emm.justchill.loans.loansModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -27,6 +28,7 @@ class EmmApp : Application() {
                 experiencesModule,
                 hhModule,
                 supabaseModule,
+                loansModule,
             )
         }
     }

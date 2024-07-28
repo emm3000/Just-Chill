@@ -1,9 +1,9 @@
 CREATE TABLE payments (
     paymentId TEXT PRIMARY KEY,
-    loanId INTEGER NOT NULL,
-    dueDate TEXT NOT NULL,
+    loanId TEXT NOT NULL,
+    dueDate INTEGER NOT NULL,
     amount REAL NOT NULL,
     status TEXT NOT NULL,
-    paymentDate TEXT,
+    paymentDate INTEGER,
     FOREIGN KEY (loanId) REFERENCES loans (loanId)
 );

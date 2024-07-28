@@ -16,9 +16,15 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,9 +45,76 @@ import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.PrimaryButtonColor
 import com.emm.justchill.core.theme.PrimaryDisableButtonColor
 import com.emm.justchill.core.theme.TextColor
+import com.emm.justchill.loans.domain.FrequencyType
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun Loans() {
+fun Loans(
+    vm: LoansViewModel = koinViewModel(),
+) {
+
+    Loans(
+        updateDate = vm::updateStartDate,
+        dateValue = vm.startDate,
+        amount = vm.amount,
+        updateAmount = vm::updateAmount,
+        interestValue = vm.interest,
+        updateInterest = vm::updateInterest,
+        durationValue = vm.duration,
+        updateDuration = vm::updateDuration,
+        frequencyType = vm.frequencyType,
+        updateFrequencyType = vm::updateFrequencyType,
+        onSave = vm::create
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun Loans(
+    dateValue: String = "",
+    updateDate: (Long?) -> Unit = {},
+    amount: String = "",
+    updateAmount: (String) -> Unit = {},
+    interestValue: String = "",
+    updateInterest: (String) -> Unit = {},
+    durationValue: String = "",
+    updateDuration: (String) -> Unit = {},
+    frequencyType: FrequencyType = FrequencyType.DAILY,
+    updateFrequencyType: (FrequencyType) -> Unit = {},
+    onSave: () -> Unit = {},
+) {
+
+    val (showSelectDate, setShowSelectDate) = remember {
+        mutableStateOf(false)
+    }
+
+    val datePickerState: DatePickerState = rememberDatePickerState()
+
+    if (showSelectDate) {
+        DatePickerDialog(
+            onDismissRequest = {
+                setShowSelectDate(false)
+            },
+            confirmButton = {
+                OutlinedButton(onClick = {
+                    updateDate(datePickerState.selectedDateMillis)
+                    setShowSelectDate(false)
+                }) {
+                    Text(text = "Ok")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { setShowSelectDate(false) }) {
+                    Text(text = "Cancel")
+                }
+            }
+        ) {
+            DatePicker(
+                state = datePickerState,
+                showModeToggle = false
+            )
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -72,16 +145,33 @@ fun Loans() {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
-            LoansAmountTextField()
-            LoansInterestTextField()
-            LoansStartDateTextField()
-            LoansTextField("Duration")
-            LoansTextField("Payment frequency")
+            LoansAmountTextField(
+                text = amount,
+                setText = updateAmount
+            )
+            LoansInterestTextField(
+                text = interestValue,
+                setText = updateInterest
+            )
+            LoansStartDateTextField(
+                text = dateValue,
+                onTouch = { setShowSelectDate(true) }
+            )
+
+            LoansDurationTextField(
+                text = durationValue,
+                setText = updateDuration
+            )
+
+            LoansRadioButton(
+                selectedOption = frequencyType,
+                onOptionSelected = updateFrequencyType
+            )
 
             Spacer(modifier = Modifier.height(15.dp))
 
             Button(
-                onClick = {},
+                onClick = onSave,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -105,11 +195,10 @@ fun Loans() {
 }
 
 @Composable
-private fun LoansAmountTextField(modifier: Modifier = Modifier) {
-
-    val (text, setText) = remember {
-        mutableStateOf("")
-    }
+private fun LoansAmountTextField(
+    text: String,
+    setText: (String) -> Unit,
+) {
 
     TextField(
         modifier = Modifier.fillMaxWidth(),
@@ -140,11 +229,10 @@ private fun LoansAmountTextField(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun LoansInterestTextField(modifier: Modifier = Modifier) {
-
-    val (text, setText) = remember {
-        mutableStateOf("")
-    }
+private fun LoansInterestTextField(
+    text: String,
+    setText: (String) -> Unit,
+) {
 
     TextField(
         modifier = Modifier.fillMaxWidth(),
@@ -165,7 +253,7 @@ private fun LoansInterestTextField(modifier: Modifier = Modifier) {
         ),
         placeholder = {
             LoansLabelOrPlaceHolder(
-                "20",
+                "1 . . 100 %",
                 color = PlaceholderOrLabel.copy(alpha = 0.5f)
             )
         },
@@ -177,19 +265,17 @@ private fun LoansInterestTextField(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun LoansStartDateTextField(modifier: Modifier = Modifier) {
-
-    val (text, setText) = remember {
-        mutableStateOf("10 de Julio de 2024")
-    }
+private fun LoansStartDateTextField(
+    text: String,
+    onTouch: () -> Unit,
+) {
 
     TextField(
-        modifier = Modifier.fillMaxWidth()
-            .clickable {
-
-            },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onTouch),
         value = text,
-        onValueChange = setText,
+        onValueChange = {},
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Text,
         ),
@@ -210,6 +296,37 @@ private fun LoansStartDateTextField(modifier: Modifier = Modifier) {
         textStyle = loansTextStyle(),
         readOnly = true,
         enabled = false,
+    )
+}
+
+@Composable
+private fun LoansDurationTextField(
+    text: String,
+    setText: (String) -> Unit,
+) {
+
+    TextField(
+        modifier = Modifier.fillMaxWidth(),
+        value = text,
+        onValueChange = { value ->
+            value.filter(Char::isDigit).also(setText)
+        },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Number,
+        ),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            focusedIndicatorColor = PrimaryButtonColor
+        ),
+        placeholder = {
+            LoansLabelOrPlaceHolder(
+                "Duration (days)",
+                color = PlaceholderOrLabel.copy(alpha = 0.5f)
+            )
+        },
+        label = { LoansLabelOrPlaceHolder("Duration (days)") },
+        textStyle = loansTextStyle()
     )
 }
 

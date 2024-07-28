@@ -1,7 +1,8 @@
 CREATE TABLE loans (
     loanId TEXT PRIMARY KEY,
-    amount INTEGER NOT NULL,
-    interestRate REAL NOT NULL,
+    amount REAL NOT NULL,
+    interest REAL NOT NULL,
+    amountWithInterest REAL NOT NULL,
     startDate INTEGER NOT NULL,
     duration INTEGER NOT NULL,
     paymentFrequency TEXT NOT NULL,
