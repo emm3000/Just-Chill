@@ -5,4 +5,6 @@ object TableNames {
     const val CATEGORY_TABLE = "categories"
     const val TRANSACTION_TABLE = "transaction"
     const val TRANSACTION_CATEGORY_TABLE = "transactionsCategories"
+    const val LOANS_TABLE = "loans"
+    const val PAYMENTS_TABLE = "payments"
 }

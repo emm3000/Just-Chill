@@ -11,6 +11,7 @@ import com.emm.justchill.core.theme.EmmTheme
 
 @Composable
 fun Payments(modifier: Modifier = Modifier) {
+
     Column(
         modifier = Modifier
             .fillMaxSize()

@@ -19,9 +19,6 @@ WHERE
 count:
 SELECT COUNT(*) AS transactionsCount FROM transactions;
 
-exist:
-SELECT EXISTS (SELECT 1 FROM transactions) AS existsRow;
-
 sumAllIncomeAmounts:
 SELECT SUM(amount) AS totalIncome
 FROM transactions
@@ -57,14 +54,6 @@ WHERE date BETWEEN ? AND ? ORDER BY date DESC LIMIT ? OFFSET ?;
 
 find:
 SELECT * FROM transactions WHERE transactionId = ?;
-
-ga:
-SELECT t.*, c.categoryId, c.name
-FROM transactions t
-LEFT JOIN transactionsCategories tc ON t.transactionId = tc.transactionId
-LEFT JOIN categories c ON tc.categoryId = c.categoryId
-WHERE t.transactionId = ?
-LIMIT 1;
 
 delete:
 DELETE FROM transactions WHERE transactionId = ?;

@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.domain.transaction
 
-import com.emm.justchill.Ga
 import com.emm.justchill.Transactions
 import com.emm.justchill.hh.data.transaction.TransactionInsert
 import com.emm.justchill.hh.data.transaction.TransactionUpdate
@@ -14,7 +13,7 @@ interface TransactionRepository {
 
     suspend fun backup()
 
-    fun find(transactionId: String): Flow<Ga?>
+    fun find(transactionId: String): Flow<Transactions?>
 
     suspend fun update(transactionId: String, transactionUpdate: TransactionUpdate)
 

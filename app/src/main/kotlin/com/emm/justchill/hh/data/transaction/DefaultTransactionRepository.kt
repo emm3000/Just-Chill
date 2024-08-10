@@ -3,7 +3,6 @@ package com.emm.justchill.hh.data.transaction
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import com.emm.justchill.Ga
 import com.emm.justchill.TransactionQueries
 import com.emm.justchill.Transactions
 import com.emm.justchill.core.DispatchersProvider
@@ -126,8 +125,8 @@ class DefaultTransactionRepository(
         networkDataSource.upsert(transactions)
     }
 
-    override fun find(transactionId: String): Flow<Ga?> {
-        return transactionsQueries.ga(transactionId)
+    override fun find(transactionId: String): Flow<Transactions?> {
+        return transactionsQueries.find(transactionId)
             .asFlow()
             .mapToOneOrNull(ioDispatcher)
     }

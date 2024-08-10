@@ -3,6 +3,7 @@ package com.emm.justchill.loans.presentation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,18 +15,23 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -39,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.BorderTextFieldColor
+import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
@@ -53,7 +60,10 @@ fun Loans(
     vm: LoansViewModel = koinViewModel(),
 ) {
 
+    val state by vm.uiState.collectAsState()
+
     Loans(
+        state = state,
         updateDate = vm::updateStartDate,
         dateValue = vm.startDate,
         amount = vm.amount,
@@ -64,13 +74,15 @@ fun Loans(
         updateDuration = vm::updateDuration,
         frequencyType = vm.frequencyType,
         updateFrequencyType = vm::updateFrequencyType,
-        onSave = vm::create
+        onSave = vm::create,
+        dismissDialogError = vm::dismissErrorDialog
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Loans(
+    state: LoansUiState,
     dateValue: String = "",
     updateDate: (Long?) -> Unit = {},
     amount: String = "",
@@ -82,6 +94,7 @@ private fun Loans(
     frequencyType: FrequencyType = FrequencyType.DAILY,
     updateFrequencyType: (FrequencyType) -> Unit = {},
     onSave: () -> Unit = {},
+    dismissDialogError: () -> Unit = {},
 ) {
 
     val (showSelectDate, setShowSelectDate) = remember {
@@ -116,82 +129,149 @@ private fun Loans(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundColor)
-            .verticalScroll(rememberScrollState())
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            Text(
-                text = "Loans register",
-                color = TextColor,
-                fontFamily = LatoFontFamily,
-                fontWeight = FontWeight.Black,
-                fontSize = 20.sp
-            )
-        }
+    state.isError?.let {
+        DeleteDialog(
+            setShowDeleteDialog = {
+                dismissDialogError()
+            },
+            onConfirmButton = {
+                dismissDialogError()
+            }
+        )
+    }
 
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .background(BackgroundColor)
+                .verticalScroll(rememberScrollState())
         ) {
-
-            LoansAmountTextField(
-                text = amount,
-                setText = updateAmount
-            )
-            LoansInterestTextField(
-                text = interestValue,
-                setText = updateInterest
-            )
-            LoansStartDateTextField(
-                text = dateValue,
-                onTouch = { setShowSelectDate(true) }
-            )
-
-            LoansDurationTextField(
-                text = durationValue,
-                setText = updateDuration
-            )
-
-            LoansRadioButton(
-                selectedOption = frequencyType,
-                onOptionSelected = updateFrequencyType
-            )
-
-            Spacer(modifier = Modifier.height(15.dp))
-
-            Button(
-                onClick = onSave,
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryButtonColor,
-                    disabledContainerColor = PrimaryDisableButtonColor
-                ),
-                shape = RoundedCornerShape(20)
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
             ) {
                 Text(
-                    text = "Save",
+                    text = "Loans register",
+                    color = TextColor,
                     fontFamily = LatoFontFamily,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Black
+                    fontWeight = FontWeight.Black,
+                    fontSize = 20.sp
                 )
             }
-            Spacer(modifier = Modifier.height(10.dp))
-        }
 
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                LoansAmountTextField(
+                    text = amount,
+                    setText = updateAmount
+                )
+                LoansInterestTextField(
+                    text = interestValue,
+                    setText = updateInterest
+                )
+                LoansStartDateTextField(
+                    text = dateValue,
+                    onTouch = { setShowSelectDate(true) }
+                )
+
+                LoansDurationTextField(
+                    text = durationValue,
+                    setText = updateDuration
+                )
+
+                LoansRadioButton(
+                    selectedOption = frequencyType,
+                    onOptionSelected = updateFrequencyType
+                )
+
+                Spacer(modifier = Modifier.height(15.dp))
+
+                Button(
+                    onClick = onSave,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryButtonColor,
+                        disabledContainerColor = PrimaryDisableButtonColor
+                    ),
+                    shape = RoundedCornerShape(20)
+                ) {
+                    Text(
+                        text = "Save",
+                        fontFamily = LatoFontFamily,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+        }
+        if (state.isLoading) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color.Gray.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
+        }
     }
+}
+
+@Composable
+private fun DeleteDialog(
+    setShowDeleteDialog: (Boolean) -> Unit,
+    onConfirmButton: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = { setShowDeleteDialog(false) },
+        containerColor = BackgroundColor,
+        text = {
+            Text(
+                text = "Estas seguro de eliminar esta transacción.",
+                color = TextColor,
+                fontFamily = LatoFontFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 16.sp
+            )
+        },
+        title = {
+            Text(
+                text = "Eliminar transacción",
+                fontFamily = LatoFontFamily,
+                fontWeight = FontWeight.Black,
+                color = TextColor
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirmButton()
+            }) {
+                Text(
+                    text = "Ok",
+                    fontSize = 16.sp,
+                    color = DeleteButtonColor,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = LatoFontFamily
+                )
+            }
+
+        },
+    )
 }
 
 @Composable

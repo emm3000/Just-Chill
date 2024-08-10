@@ -5,4 +5,6 @@ interface PaymentRepository {
     suspend fun add(payment: Payment)
 
     suspend fun addAll(payments: List<Payment>)
+
+    suspend fun fetch(): List<Payment>
 }
