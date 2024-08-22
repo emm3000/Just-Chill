@@ -46,6 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.emm.justchill.components.ContainerWithLoading
 import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
@@ -100,9 +101,7 @@ private fun Login(
         }
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    ContainerWithLoading(isLoading = state.isLoading) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -152,7 +151,8 @@ private fun Login(
                     focusManager.clearFocus()
                     onRegister()
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .height(45.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = TextColor
@@ -170,16 +170,6 @@ private fun Login(
 
             if (state.errorMsg != null) {
                 Text(text = state.errorMsg, color = Color.Red)
-            }
-        }
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(Color.Gray.copy(alpha = 0.5f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
             }
         }
     }

@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 class LoginViewModel(
     private val userAuthenticator: UserAuthenticator,
     private val userCreator: UserCreator,
-    private val authRepository: AuthRepository,
+    authRepository: AuthRepository,
 ) : ViewModel() {
 
     var email by mutableStateOf("")
@@ -61,16 +61,12 @@ class LoginViewModel(
     }
 
     fun login() = viewModelScope.launch {
-        _loginState.update {
-            it.copy(isLoading = true)
-        }
+        loadingState()
         tryLogin()
     }
 
     fun register() = viewModelScope.launch {
-        _loginState.update {
-            it.copy(isLoading = true)
-        }
+        loadingState()
         tryRegister()
     }
 
@@ -79,31 +75,31 @@ class LoginViewModel(
         val password = Password(password)
         userCreator.create(email, password)
         userAuthenticator.authenticate(email, password)
-        _loginState.update { it.copy(successLogin = true) }
+        successState()
     } catch (e: Throwable) {
         FirebaseCrashlytics.getInstance().recordException(e)
-        _loginState.update {
-            it.copy(
-                isLoading = false,
-                errorMsg = e.message
-            )
-        }
+        errorState(e)
     }
 
     private suspend fun tryLogin() = try {
         val email = Email(email)
         val password = Password(password)
         userAuthenticator.authenticate(email, password)
-        _loginState.update { it.copy(successLogin = true) }
+        successState()
     } catch (e: Throwable) {
         FirebaseCrashlytics.getInstance().recordException(e)
+        errorState(e)
+    }
+
+    private fun errorState(e: Throwable) {
         _loginState.update {
-            it.copy(
-                isLoading = false,
-                errorMsg = e.message
-            )
+            it.copy(isLoading = false, errorMsg = e.message)
         }
     }
+
+    private fun loadingState() = _loginState.update { it.copy(isLoading = true) }
+
+    private fun successState() = _loginState.update { it.copy(successLogin = true) }
 }
 
 data class LoginUi(

@@ -11,9 +11,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
 
 class HomeViewModel(
     transactionSumIncome: TransactionSumIncome,
@@ -23,11 +23,15 @@ class HomeViewModel(
 ) : ViewModel() {
 
     val sumTransactions: StateFlow<Pair<String, String>> = combine(
-        transactionSumIncome(),
-        transactionSumSpend(),
-    ) { income: BigDecimal, spend: BigDecimal ->
-        Pair(fromCentsToSolesWith(income), fromCentsToSolesWith(spend))
-    }
+        flow = transactionSumIncome(),
+        flow2 = transactionSumSpend(),
+        transform = ::Pair
+    )
+        .map {
+            val first = fromCentsToSolesWith(it.first)
+            val second = fromCentsToSolesWith(it.second)
+            Pair(first, second)
+        }
         .catch {
             it.printStackTrace()
             emit(Pair("0.00", "0.00"))

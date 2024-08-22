@@ -63,7 +63,7 @@ fun LoansNavigation() {
             Loans()
         }
         composable<Payments> {
-            Payments()
+            Payments(payments = emptyList())
         }
     }
 }
