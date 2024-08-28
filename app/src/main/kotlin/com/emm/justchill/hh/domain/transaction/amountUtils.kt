@@ -9,7 +9,7 @@ fun fromCentsToSoles(cents: Long): BigDecimal {
     return BigDecimal(cents).divide(BigDecimal(100), 2, RoundingMode.HALF_UP)
 }
 
-fun fromCentsToSolesWith(cents: BigDecimal): String {
+fun fromCentsToSolesWith(cents: Double): String {
     val formatter = NumberFormat.getNumberInstance(Locale("es", "PE")).apply {
         minimumFractionDigits = 2
         maximumFractionDigits = 2

@@ -33,11 +33,11 @@ interface TransactionRepository {
         offset: Long
     ): Flow<List<Transactions>>
 
-    fun sumIncome(): Flow<Long>
+    fun sumIncome(): Flow<Double>
 
-    fun sumSpend(): Flow<Long>
+    fun sumSpend(): Flow<Double>
 
-    fun difference(): Flow<Long>
+    fun difference(): Flow<Double>
 
    suspend fun delete(transactionId: String)
 }

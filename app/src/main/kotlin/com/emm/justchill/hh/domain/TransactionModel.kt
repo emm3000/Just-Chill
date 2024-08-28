@@ -11,7 +11,7 @@ data class TransactionModel(
     val transactionId: String,
 
     val type: String,
-    val amount: Long,
+    val amount: Double,
     val description: String,
     val date: Long,
 

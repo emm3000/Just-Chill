@@ -6,6 +6,7 @@ import com.emm.justchill.hh.domain.BackupManager
 import com.emm.justchill.hh.domain.transaction.TransactionDifferenceCalculator
 import com.emm.justchill.hh.domain.transaction.TransactionSumIncome
 import com.emm.justchill.hh.domain.transaction.TransactionSumSpend
+import com.emm.justchill.hh.domain.transaction.fromCentsToSoles
 import com.emm.justchill.hh.domain.transaction.fromCentsToSolesWith
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -28,9 +29,7 @@ class HomeViewModel(
         transform = ::Pair
     )
         .map {
-            val first = fromCentsToSolesWith(it.first)
-            val second = fromCentsToSolesWith(it.second)
-            Pair(first, second)
+            Pair(fromCentsToSolesWith(it.first), fromCentsToSolesWith(it.second))
         }
         .catch {
             it.printStackTrace()
@@ -42,7 +41,8 @@ class HomeViewModel(
             initialValue = Pair("0.00", "0.00")
         )
 
-    val difference = transactionDifferenceCalculator.calculate()
+    val difference: StateFlow<String> = transactionDifferenceCalculator.calculate()
+        .map(::fromCentsToSolesWith)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),

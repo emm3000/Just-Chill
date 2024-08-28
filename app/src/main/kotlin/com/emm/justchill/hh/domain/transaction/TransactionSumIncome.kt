@@ -6,7 +6,7 @@ import java.math.BigDecimal
 
 class TransactionSumIncome(private val repository: TransactionRepository) {
 
-    operator fun invoke(): Flow<BigDecimal> {
-        return repository.sumIncome().map(::fromCentsToSoles)
+    operator fun invoke(): Flow<Double> {
+        return repository.sumIncome()
     }
 }

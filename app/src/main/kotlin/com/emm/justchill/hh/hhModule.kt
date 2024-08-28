@@ -65,7 +65,6 @@ val hhModule = module {
     factory {
         TransactionAdder(
             repository = get(),
-            amountCleaner = AmountDbFormatter(),
             dateAndTimeCombiner = DateAndTimeCombiner(),
         )
     }
@@ -90,7 +89,6 @@ val hhModule = module {
             get(),
             get(),
             get(),
-            androidApplication(),
         )
     }
 

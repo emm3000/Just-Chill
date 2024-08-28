@@ -61,7 +61,7 @@ class EditTransactionViewModel(
     private fun loadCurrentTransaction() = viewModelScope.launch {
         val currentTransaction = transactionFinder.find(transactionId).firstOrNull()
         currentTransaction?.let { transaction ->
-            amount = fromCentsToSoles(transaction.amount).toString()
+            amount = transaction.amount.toString()
             description = transaction.description
             transactionType = TransactionType.valueOf(transaction.type)
             date = millisToReadableFormat(transaction.date)
@@ -74,7 +74,7 @@ class EditTransactionViewModel(
             type = transactionType.name,
             description = description,
             date = dateInLong,
-            amount = amountCleaner.format(amount)
+            amount = amount.replace(Regex("[^\\d.]"), "").toDouble()
         )
         transactionUpdater.update(transactionId, transactionUpdate)
     }

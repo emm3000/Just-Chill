@@ -5,9 +5,7 @@ import kotlinx.coroutines.flow.map
 
 class TransactionDifferenceCalculator(private val repository: TransactionRepository) {
 
-    fun calculate(): Flow<String> {
+    fun calculate(): Flow<Double> {
         return repository.difference()
-            .map(::fromCentsToSoles)
-            .map(::fromCentsToSolesWith)
     }
 }

@@ -1,12 +1,9 @@
 package com.emm.justchill.hh.presentation.transaction
 
-import androidx.compose.ui.graphics.Color
 import com.emm.justchill.Transactions
 import com.emm.justchill.hh.domain.TransactionType
-import com.emm.justchill.hh.domain.transaction.fromCentsToSoles
 import com.emm.justchill.hh.domain.transaction.fromCentsToSolesWith
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import kotlin.random.Random
 
 data class TransactionUi(
     val transactionId: String,
@@ -16,12 +13,6 @@ data class TransactionUi(
     val date: Long,
     val readableDate: String,
     val readableTime: String,
-    val randomColor: Color = Color(
-        Random.nextFloat(),
-        Random.nextFloat(),
-        Random.nextFloat(),
-        Random.nextFloat(),
-    )
 )
 
 private fun Transactions.toUi(): TransactionUi {
@@ -32,13 +23,13 @@ private fun Transactions.toUi(): TransactionUi {
         TransactionType.INCOME
     }
 
-    val amountFormated: String = fromCentsToSolesWith(fromCentsToSoles(amount))
+    val formattedNumber: String = fromCentsToSolesWith(amount)
     return TransactionUi(
         transactionId = transactionId,
         type = transactionType,
         amount = when (transactionType) {
-            TransactionType.INCOME -> "S/ $amountFormated"
-            TransactionType.SPENT -> "S/ -$amountFormated"
+            TransactionType.INCOME -> "S/ $formattedNumber"
+            TransactionType.SPENT -> "S/ -$formattedNumber"
         },
         description = description,
         date = date,

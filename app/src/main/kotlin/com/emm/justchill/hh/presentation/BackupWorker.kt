@@ -17,10 +17,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.time.LocalDateTime
 
 class BackupWorker(
-    private val context: Context,
+    context: Context,
     parameters: WorkerParameters,
 ) : CoroutineWorker(context, parameters), KoinComponent {
 
@@ -29,28 +28,10 @@ class BackupWorker(
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val result: Boolean = defaultBackupManager.backup()
         if (result) {
-            loggerForTest()
             Result.success()
         } else {
-            loggerFailed()
-            Result.failure()
+            Result.retry()
         }
-    }
-
-    private fun loggerFailed() {
-        val message = "backup failed: ${LocalDateTime.now()}"
-        context.getSharedPreferences("random", Context.MODE_PRIVATE)
-            .edit()
-            .putString("RANDOM", message)
-            .apply()
-    }
-
-    private fun loggerForTest() {
-        val message = "backup success: ${LocalDateTime.now()}"
-        context.getSharedPreferences("random", Context.MODE_PRIVATE)
-            .edit()
-            .putString("RANDOM", message)
-            .apply()
     }
 
     override suspend fun getForegroundInfo(): ForegroundInfo {

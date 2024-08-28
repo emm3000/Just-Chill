@@ -3,12 +3,10 @@ package com.emm.justchill.hh.domain.transaction
 import com.emm.justchill.hh.data.DefaultUniqueIdProvider
 import com.emm.justchill.hh.data.UniqueIdProvider
 import com.emm.justchill.hh.data.transaction.TransactionInsert
-import com.emm.justchill.hh.domain.transactioncategory.AmountDbFormatter
 import com.emm.justchill.hh.domain.transactioncategory.DateAndTimeCombiner
 
 class TransactionAdder(
     private val repository: TransactionRepository,
-    private val amountCleaner: AmountDbFormatter,
     private val dateAndTimeCombiner: DateAndTimeCombiner,
     private val uniqueIdProvider: UniqueIdProvider = DefaultUniqueIdProvider,
 ) {
@@ -18,7 +16,7 @@ class TransactionAdder(
         transactionInsert: TransactionInsert
     ) {
 
-        val amountFormated: Long = amountCleaner.format(amount)
+        val format: String = amount.replace(Regex("[^\\d.]"), "")
 
         val transactionId: String = uniqueIdProvider.uniqueId
 
@@ -26,7 +24,7 @@ class TransactionAdder(
 
         val transaction: TransactionInsert = transactionInsert.copy(
             id = transactionId,
-            amount = amountFormated,
+            amount = format.toDouble(),
             date = dateAndTimeCombined
         )
 

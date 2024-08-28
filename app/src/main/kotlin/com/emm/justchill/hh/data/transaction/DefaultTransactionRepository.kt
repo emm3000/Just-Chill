@@ -75,25 +75,25 @@ class DefaultTransactionRepository(
             .mapToList(ioDispatcher)
     }
 
-    override fun sumIncome(): Flow<Long> {
+    override fun sumIncome(): Flow<Double> {
         return transactionsQueries.sumAllIncomeAmounts()
             .asFlow()
             .mapToOneOrNull(ioDispatcher)
-            .map { it?.totalIncome ?: 0L }
+            .map { it?.totalIncome ?: 0.0 }
     }
 
-    override fun sumSpend(): Flow<Long> {
+    override fun sumSpend(): Flow<Double> {
         return transactionsQueries.sumAllSpendAmounts()
             .asFlow()
             .mapToOneOrNull(ioDispatcher)
-            .map { it?.totalIncome ?: 0L }
+            .map { it?.totalIncome ?: 0.0 }
     }
 
-    override fun difference(): Flow<Long> {
+    override fun difference(): Flow<Double> {
         return transactionsQueries.difference()
             .asFlow()
             .mapToOneOrNull(ioDispatcher)
-            .map { it ?: 0L }
+            .map { it ?: 0.0 }
     }
 
     override suspend fun delete(transactionId: String) = withContext(ioDispatcher) {
