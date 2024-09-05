@@ -6,8 +6,7 @@ import com.emm.justchill.hh.domain.BackupManager
 import com.emm.justchill.hh.domain.transaction.TransactionDifferenceCalculator
 import com.emm.justchill.hh.domain.transaction.TransactionSumIncome
 import com.emm.justchill.hh.domain.transaction.TransactionSumSpend
-import com.emm.justchill.hh.domain.transaction.fromCentsToSoles
-import com.emm.justchill.hh.domain.transaction.fromCentsToSolesWith
+import com.emm.justchill.hh.domain.fromCentsToSolesWith
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch

@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.domain
+package com.emm.justchill.hh.domain.transaction
 
 import androidx.compose.ui.graphics.Color
 

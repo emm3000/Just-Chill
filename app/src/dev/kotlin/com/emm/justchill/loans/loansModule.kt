@@ -1,7 +1,7 @@
 package com.emm.justchill.loans
 
 import com.emm.justchill.hh.data.DefaultUniqueIdProvider
-import com.emm.justchill.hh.domain.transactioncategory.DateAndTimeCombiner
+import com.emm.justchill.hh.domain.DateAndTimeCombiner
 import com.emm.justchill.loans.data.DefaultLoanRepository
 import com.emm.justchill.loans.data.DefaultPaymentRepository
 import com.emm.justchill.loans.domain.LoanAndPaymentsCreator

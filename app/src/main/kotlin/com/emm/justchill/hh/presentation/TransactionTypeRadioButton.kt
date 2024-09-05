@@ -32,7 +32,7 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PrimaryButtonColor
 import com.emm.justchill.core.theme.TextColor
-import com.emm.justchill.hh.domain.TransactionType
+import com.emm.justchill.hh.domain.transaction.TransactionType
 
 @Composable
 fun TransactionRadioButton(

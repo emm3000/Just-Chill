@@ -23,7 +23,7 @@ import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.TextColor
-import com.emm.justchill.hh.domain.TransactionType
+import com.emm.justchill.hh.domain.transaction.TransactionType
 import com.emm.justchill.hh.presentation.transaction.TransactionUi
 
 @Composable

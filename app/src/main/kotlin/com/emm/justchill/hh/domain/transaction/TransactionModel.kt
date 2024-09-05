@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.domain
+package com.emm.justchill.hh.domain.transaction
 
 import com.emm.justchill.Transactions
 import kotlinx.serialization.SerialName
@@ -15,12 +15,6 @@ data class TransactionModel(
     val description: String,
     val date: Long,
 
-    @SerialName("device_id")
-    val deviceId: String = "",
-
-    @SerialName("device_name")
-    val deviceName: String = "",
-
     @SerialName("user_id")
     val userId: String = "",
 )
@@ -31,5 +25,4 @@ fun Transactions.toModel() = TransactionModel(
     amount = amount,
     description = description,
     date = date,
-    deviceId = "",
 )

@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.domain.transaction
 
 import com.emm.justchill.hh.data.transaction.TransactionUpdate
-import com.emm.justchill.hh.domain.transactioncategory.DateAndTimeCombiner
+import com.emm.justchill.hh.domain.DateAndTimeCombiner
 
 class TransactionUpdater(
     private val repository: TransactionUpdateRepository,

@@ -1,8 +1,8 @@
-package com.emm.justchill.hh.data.transaction
+package com.emm.justchill.hh.domain.transaction.remote
 
-import com.emm.justchill.hh.domain.TransactionModel
+import com.emm.justchill.hh.domain.transaction.TransactionModel
 
-interface TransactionNetworkDataSource {
+interface TransactionSupabaseRepository {
 
     suspend fun upsert(transaction: TransactionModel)
 

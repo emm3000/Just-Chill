@@ -28,7 +28,7 @@ import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.TextColor
-import com.emm.justchill.hh.domain.TransactionType
+import com.emm.justchill.hh.domain.transaction.TransactionType
 import com.emm.justchill.hh.presentation.EditTransaction
 import com.emm.justchill.hh.presentation.transaction.TransactionUi
 import org.koin.androidx.compose.koinViewModel

@@ -13,12 +13,11 @@ import com.emm.justchill.hh.data.SharedSqlDataSource
 import com.emm.justchill.hh.data.auth.DefaultAuthRepository
 import com.emm.justchill.hh.data.transaction.DefaultTransactionRepository
 import com.emm.justchill.hh.data.transaction.DefaultTransactionUpdateRepository
-import com.emm.justchill.hh.data.transaction.TransactionNetworkDataSource
-import com.emm.justchill.hh.data.transaction.TransactionSupabaseDataSource
+import com.emm.justchill.hh.domain.transaction.remote.TransactionSupabaseRepository
+import com.emm.justchill.hh.data.transaction.DefaultTransactionSupabaseRepository
 import com.emm.justchill.hh.domain.BackupManager
 import com.emm.justchill.hh.domain.SharedRepository
 import com.emm.justchill.hh.domain.SupabaseBackupManager
-import com.emm.justchill.hh.domain.AndroidDataProvider
 import com.emm.justchill.hh.domain.auth.AuthRepository
 import com.emm.justchill.hh.domain.auth.UserAuthenticator
 import com.emm.justchill.hh.domain.auth.UserCreator
@@ -34,8 +33,10 @@ import com.emm.justchill.hh.domain.transaction.TransactionSumIncome
 import com.emm.justchill.hh.domain.transaction.TransactionSumSpend
 import com.emm.justchill.hh.domain.transaction.TransactionUpdateRepository
 import com.emm.justchill.hh.domain.transaction.TransactionUpdater
-import com.emm.justchill.hh.domain.transactioncategory.AmountDbFormatter
-import com.emm.justchill.hh.domain.transactioncategory.DateAndTimeCombiner
+import com.emm.justchill.hh.domain.AmountDbFormatter
+import com.emm.justchill.hh.domain.DateAndTimeCombiner
+import com.emm.justchill.hh.domain.transaction.remote.TransactionAdderResolver
+import com.emm.justchill.hh.domain.transaction.remote.TransactionDeployer
 import com.emm.justchill.hh.presentation.home.HomeViewModel
 import com.emm.justchill.hh.presentation.auth.LoginViewModel
 import com.emm.justchill.hh.presentation.seetransactions.SeeTransactionsViewModel
@@ -62,10 +63,20 @@ val hhModule = module {
     repositoriesProviders()
 
     factoryOf(::TransactionLoader)
+
+    factory {
+        TransactionAdderResolver(androidApplication())
+    }
+    factory {
+        TransactionDeployer(
+            get(), get(), get()
+        )
+    }
     factory {
         TransactionAdder(
             repository = get(),
             dateAndTimeCombiner = DateAndTimeCombiner(),
+            transactionAdderResolver = get()
         )
     }
 
@@ -92,8 +103,6 @@ val hhModule = module {
         )
     }
 
-    factory { AndroidDataProvider(androidApplication()) }
-
     viewModelsProviders()
 }
 
@@ -117,7 +126,6 @@ private fun Module.viewModelsProviders() {
 private fun Module.repositoriesProviders() {
     single<TransactionRepository> {
         DefaultTransactionRepository(
-            get(),
             get(),
             get(),
             get(),
@@ -153,8 +161,8 @@ private fun provideSharedPreferences(
 
 private fun Module.dataSourceProviders() {
 
-    factory<TransactionNetworkDataSource> {
-        TransactionSupabaseDataSource(
+    factory<TransactionSupabaseRepository> {
+        DefaultTransactionSupabaseRepository(
             get(),
             get(),
         )

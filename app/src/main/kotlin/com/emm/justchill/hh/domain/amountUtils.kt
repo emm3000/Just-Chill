@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.domain.transaction
+package com.emm.justchill.hh.domain
 
 import java.math.BigDecimal
 import java.math.RoundingMode

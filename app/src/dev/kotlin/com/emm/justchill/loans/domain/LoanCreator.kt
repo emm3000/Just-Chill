@@ -1,6 +1,6 @@
 package com.emm.justchill.loans.domain
 
-import com.emm.justchill.hh.domain.transactioncategory.DateAndTimeCombiner
+import com.emm.justchill.hh.domain.DateAndTimeCombiner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

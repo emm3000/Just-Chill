@@ -7,7 +7,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.hh.data.transaction.TransactionInsert
-import com.emm.justchill.hh.domain.TransactionType
+import com.emm.justchill.hh.domain.transaction.TransactionType
 import com.emm.justchill.hh.domain.transaction.TransactionAdder
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn

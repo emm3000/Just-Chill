@@ -17,7 +17,6 @@ class EmmApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        initWorkers()
         createNotificationChannel()
         startKoin {
             androidLogger()
@@ -31,10 +30,6 @@ class EmmApp : Application() {
                 loansModule,
             )
         }
-    }
-
-    private fun initWorkers() {
-        Sync.initialize(applicationContext)
     }
 
     private fun createNotificationChannel() {

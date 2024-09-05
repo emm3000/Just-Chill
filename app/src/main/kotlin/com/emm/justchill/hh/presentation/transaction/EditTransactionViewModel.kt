@@ -7,12 +7,11 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.hh.data.transaction.TransactionUpdate
-import com.emm.justchill.hh.domain.TransactionType
+import com.emm.justchill.hh.domain.transaction.TransactionType
 import com.emm.justchill.hh.domain.transaction.TransactionDeleter
 import com.emm.justchill.hh.domain.transaction.TransactionFinder
 import com.emm.justchill.hh.domain.transaction.TransactionUpdater
-import com.emm.justchill.hh.domain.transaction.fromCentsToSoles
-import com.emm.justchill.hh.domain.transactioncategory.AmountDbFormatter
+import com.emm.justchill.hh.domain.AmountDbFormatter
 import com.emm.justchill.hh.presentation.transaction.DateUtils.millisToReadableFormat
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull

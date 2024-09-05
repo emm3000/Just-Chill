@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.domain.transactioncategory
+package com.emm.justchill.hh.domain
 
 import java.time.Instant
 import java.time.LocalDateTime

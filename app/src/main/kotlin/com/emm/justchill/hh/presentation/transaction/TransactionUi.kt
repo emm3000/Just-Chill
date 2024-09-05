@@ -1,8 +1,8 @@
 package com.emm.justchill.hh.presentation.transaction
 
 import com.emm.justchill.Transactions
-import com.emm.justchill.hh.domain.TransactionType
-import com.emm.justchill.hh.domain.transaction.fromCentsToSolesWith
+import com.emm.justchill.hh.domain.transaction.TransactionType
+import com.emm.justchill.hh.domain.fromCentsToSolesWith
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 data class TransactionUi(

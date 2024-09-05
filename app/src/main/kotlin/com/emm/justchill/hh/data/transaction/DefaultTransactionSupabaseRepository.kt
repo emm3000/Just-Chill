@@ -1,16 +1,17 @@
 package com.emm.justchill.hh.data.transaction
 
 import com.emm.justchill.hh.data.TableNames
-import com.emm.justchill.hh.domain.TransactionModel
+import com.emm.justchill.hh.domain.transaction.TransactionModel
 import com.emm.justchill.hh.domain.auth.AuthRepository
+import com.emm.justchill.hh.domain.transaction.remote.TransactionSupabaseRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.PostgrestQueryBuilder
 
-class TransactionSupabaseDataSource(
+class DefaultTransactionSupabaseRepository(
     supabaseClient: SupabaseClient,
     private val authRepository: AuthRepository,
-) : TransactionNetworkDataSource {
+) : TransactionSupabaseRepository {
 
     private val client: PostgrestQueryBuilder by lazy {
         supabaseClient.from(TableNames.TRANSACTION_TABLE)
