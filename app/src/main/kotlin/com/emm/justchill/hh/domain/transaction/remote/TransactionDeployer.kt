@@ -1,13 +1,13 @@
 package com.emm.justchill.hh.domain.transaction.remote
 
 import androidx.work.ListenableWorker
-import com.emm.justchill.Transactions
 import com.emm.justchill.hh.data.transaction.TransactionSupabaseRepository
 import com.emm.justchill.hh.data.transaction.TransactionModel
 import com.emm.justchill.hh.domain.auth.AuthRepository
 import com.emm.justchill.hh.domain.transaction.SyncStatus
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
 import com.emm.justchill.hh.domain.transaction.TransactionUpdateRepository
+import com.emm.justchill.hh.domain.transaction.model.Transaction
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import io.github.jan.supabase.gotrue.user.UserInfo
 import kotlinx.coroutines.flow.firstOrNull
@@ -21,7 +21,7 @@ class TransactionDeployer(
 
     suspend fun deploy(transactionId: String): ListenableWorker.Result {
 
-        val transaction: Transactions = repository.find(transactionId).firstOrNull()
+        val transaction: Transaction = repository.find(transactionId).firstOrNull()
             ?: return ListenableWorker.Result.failure()
 
         val session: UserInfo = authRepository.session()
@@ -57,7 +57,7 @@ class TransactionDeployer(
 
     private suspend fun upsert(
         transactionId: String,
-        transaction: Transactions,
+        transaction: Transaction,
         session: UserInfo,
     ) {
 
@@ -72,7 +72,7 @@ class TransactionDeployer(
         supabaseRepository.upsert(transactionModel)
     }
 
-    private fun syncStatus(transaction: Transactions): SyncStatus? {
+    private fun syncStatus(transaction: Transaction): SyncStatus? {
         return try {
             SyncStatus.valueOf(transaction.syncStatus)
         } catch (e: Throwable) {

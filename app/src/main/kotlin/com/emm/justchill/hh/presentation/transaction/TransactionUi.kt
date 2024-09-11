@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.presentation.transaction
 
-import com.emm.justchill.Transactions
 import com.emm.justchill.hh.domain.shared.fromCentsToSolesWith
+import com.emm.justchill.hh.domain.transaction.model.Transaction
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 data class TransactionUi(
@@ -14,7 +14,7 @@ data class TransactionUi(
     val readableTime: String,
 )
 
-private fun Transactions.toUi(): TransactionUi {
+private fun Transaction.toUi(): TransactionUi {
     val transactionType: TransactionType = try {
         TransactionType.valueOf(type)
     } catch (e: Throwable) {
@@ -37,4 +37,4 @@ private fun Transactions.toUi(): TransactionUi {
     )
 }
 
-fun List<Transactions>.toUi() = map(Transactions::toUi)
+fun List<Transaction>.toUi() = map(Transaction::toUi)

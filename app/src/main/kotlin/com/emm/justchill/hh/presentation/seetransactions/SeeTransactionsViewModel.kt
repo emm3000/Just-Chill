@@ -2,8 +2,8 @@ package com.emm.justchill.hh.presentation.seetransactions
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.Transactions
 import com.emm.justchill.hh.domain.transaction.crud.TransactionLoader
+import com.emm.justchill.hh.domain.transaction.model.Transaction
 import com.emm.justchill.hh.presentation.transaction.TransactionUi
 import com.emm.justchill.hh.presentation.transaction.toUi
 import kotlinx.coroutines.flow.FlowCollector
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.stateIn
 class SeeTransactionsViewModel(transactionLoader: TransactionLoader) : ViewModel() {
 
     val transactions: StateFlow<List<TransactionUi>> = transactionLoader.load()
-        .map(List<Transactions>::toUi)
+        .map(List<Transaction>::toUi)
         .catch(::catchThrowable)
         .stateIn(
             scope = viewModelScope,

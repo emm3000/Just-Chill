@@ -1,13 +1,13 @@
 package com.emm.justchill.hh.domain.shared
 
 import com.emm.justchill.core.DispatchersProvider
-import com.emm.justchill.hh.domain.transaction.TransactionRepository
+import com.emm.justchill.hh.domain.transaction.TransactionBackupRepository
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.withContext
 
 class SupabaseBackupManager(
     dispatchersProvider: DispatchersProvider,
-    private val transactionRepository: TransactionRepository,
+    private val transactionRepository: TransactionBackupRepository,
     private val sharedRepository: SharedRepository,
 ) : BackupManager, DispatchersProvider by dispatchersProvider {
 

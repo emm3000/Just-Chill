@@ -12,6 +12,7 @@ import com.emm.justchill.hh.data.DefaultSharedRepository
 import com.emm.justchill.hh.data.DefaultUniqueIdProvider
 import com.emm.justchill.hh.data.SharedSqlDataSource
 import com.emm.justchill.hh.data.auth.DefaultAuthRepository
+import com.emm.justchill.hh.data.transaction.DefaultTransactionBackupRepository
 import com.emm.justchill.hh.data.transaction.DefaultTransactionRepository
 import com.emm.justchill.hh.data.transaction.DefaultTransactionUpdateRepository
 import com.emm.justchill.hh.data.transaction.TransactionSupabaseRepository
@@ -34,6 +35,7 @@ import com.emm.justchill.hh.domain.transaction.TransactionSumSpend
 import com.emm.justchill.hh.domain.transaction.TransactionUpdateRepository
 import com.emm.justchill.hh.domain.transaction.crud.TransactionUpdater
 import com.emm.justchill.hh.domain.shared.DateAndTimeCombiner
+import com.emm.justchill.hh.domain.transaction.TransactionBackupRepository
 import com.emm.justchill.hh.domain.transaction.TransactionSyncer
 import com.emm.justchill.hh.domain.transaction.remote.TransactionDeployer
 import com.emm.justchill.hh.presentation.home.HomeViewModel
@@ -117,10 +119,18 @@ private fun Module.viewModelsProviders() {
 }
 
 private fun Module.repositoriesProviders() {
+
+    single<TransactionBackupRepository> {
+        DefaultTransactionBackupRepository(
+            get(),
+            get(),
+            get(),
+            get(),
+        )
+    }
+
     single<TransactionRepository> {
         DefaultTransactionRepository(
-            get(),
-            get(),
             get(),
             get(),
         )
