@@ -8,9 +8,10 @@ import com.emm.justchill.Transactions
 import com.emm.justchill.core.DispatchersProvider
 import com.emm.justchill.hh.domain.transaction.TransactionModel
 import com.emm.justchill.hh.domain.auth.AuthRepository
+import com.emm.justchill.hh.domain.transaction.model.TransactionInsert
 import com.emm.justchill.hh.domain.transaction.toModel
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
-import com.emm.justchill.hh.domain.transaction.remote.TransactionSupabaseRepository
+import com.emm.justchill.hh.domain.transaction.model.TransactionUpdate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -30,7 +31,7 @@ class DefaultTransactionRepository(
             amount = entity.amount,
             description = entity.description,
             date = entity.date,
-            syncStatus = "",
+            syncStatus = entity.syncStatus.name,
         )
     }
 
@@ -138,7 +139,8 @@ class DefaultTransactionRepository(
             amount = transactionUpdate.amount,
             description = transactionUpdate.description,
             date = transactionUpdate.date,
-            transactionId = transactionId
+            transactionId = transactionId,
+            syncStatus = transactionUpdate.syncStatus.name
         )
     }
 

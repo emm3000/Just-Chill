@@ -29,7 +29,7 @@ class TransactionAddedWorker(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val transactionId: String = inputData.getString("transactionId")
-            ?: return@withContext Result.retry()
+            ?: return@withContext Result.failure()
         return@withContext transactionDeployer.deploy(transactionId)
     }
 

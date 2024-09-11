@@ -1,8 +1,8 @@
 package com.emm.justchill.hh.domain.transaction
 
 import com.emm.justchill.Transactions
-import com.emm.justchill.hh.data.transaction.TransactionInsert
-import com.emm.justchill.hh.data.transaction.TransactionUpdate
+import com.emm.justchill.hh.domain.transaction.model.TransactionInsert
+import com.emm.justchill.hh.domain.transaction.model.TransactionUpdate
 import kotlinx.coroutines.flow.Flow
 
 interface TransactionRepository {

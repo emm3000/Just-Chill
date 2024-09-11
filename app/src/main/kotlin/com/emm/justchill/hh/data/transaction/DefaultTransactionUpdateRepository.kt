@@ -1,6 +1,8 @@
 package com.emm.justchill.hh.data.transaction
 
 import com.emm.justchill.TransactionQueries
+import com.emm.justchill.hh.domain.transaction.SyncStatus
+import com.emm.justchill.hh.domain.transaction.model.TransactionUpdate
 import com.emm.justchill.hh.domain.transaction.TransactionUpdateRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -18,7 +20,15 @@ class DefaultTransactionUpdateRepository(
             amount = transactionUpdate.amount,
             description = transactionUpdate.description,
             date = transactionUpdate.date,
-            transactionId = transactionId
+            transactionId = transactionId,
+            syncStatus = transactionUpdate.syncStatus.name
         )
+    }
+
+    override suspend fun updateStatus(
+        transactionId: String,
+        syncStatus: SyncStatus,
+    ) = withContext(Dispatchers.IO) {
+        transactionQueries.updateStatus(syncStatus.name, transactionId)
     }
 }

@@ -6,15 +6,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.hh.data.transaction.TransactionInsert
-import com.emm.justchill.hh.domain.transaction.TransactionType
-import com.emm.justchill.hh.domain.transaction.TransactionAdder
+import com.emm.justchill.hh.domain.transaction.model.TransactionInsert
+import com.emm.justchill.hh.domain.transaction.crud.TransactionCreator
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 
 class TransactionViewModel(
-    private val transactionAdder: TransactionAdder,
+    private val transactionCreator: TransactionCreator,
 ) : ViewModel() {
 
     var amount by mutableStateOf("")
@@ -52,7 +51,7 @@ class TransactionViewModel(
             description = description,
             date = dateInLong,
         )
-        transactionAdder.add(amount, transactionInsert)
+        transactionCreator.create(amount, transactionInsert)
     }
 
     fun updateMount(value: String) {

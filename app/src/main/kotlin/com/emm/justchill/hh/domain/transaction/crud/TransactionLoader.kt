@@ -1,8 +1,9 @@
-package com.emm.justchill.hh.domain.transaction
+package com.emm.justchill.hh.domain.transaction.crud
 
 import com.emm.justchill.Transactions
 import com.emm.justchill.core.Result
 import com.emm.justchill.core.asResult
+import com.emm.justchill.hh.domain.transaction.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 
 class TransactionLoader(private val repository: TransactionRepository) {

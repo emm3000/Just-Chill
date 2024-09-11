@@ -1,7 +1,7 @@
 package com.emm.justchill.loans.domain
 
 import com.emm.justchill.hh.data.DefaultUniqueIdProvider
-import com.emm.justchill.hh.data.UniqueIdProvider
+import com.emm.justchill.hh.domain.UniqueIdProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

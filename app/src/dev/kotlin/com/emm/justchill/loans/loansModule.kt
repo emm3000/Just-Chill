@@ -1,7 +1,6 @@
 package com.emm.justchill.loans
 
 import com.emm.justchill.hh.data.DefaultUniqueIdProvider
-import com.emm.justchill.hh.domain.DateAndTimeCombiner
 import com.emm.justchill.loans.data.DefaultLoanRepository
 import com.emm.justchill.loans.data.DefaultPaymentRepository
 import com.emm.justchill.loans.domain.LoanAndPaymentsCreator
@@ -23,7 +22,6 @@ val loansModule = module {
     factory { DefaultPaymentRepository(get()) } bind PaymentRepository::class
     factory { DefaultLoanRepository(get()) } bind LoanRepository::class
 
-    factory { DateAndTimeCombiner() }
     factory { LoanCreator(get(), get()) }
     factory { PaymentsCreator(get()) }
     factory { PaymentsGenerator(uniqueIdProvider = DefaultUniqueIdProvider) }

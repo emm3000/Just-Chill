@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.data
+package com.emm.justchill.hh.domain
 
 interface NowProvider {
 

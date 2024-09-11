@@ -1,16 +1,15 @@
-package com.emm.justchill.hh.domain.transaction.remote
+package com.emm.justchill.hh.data.workers
 
 import android.content.Context
 import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkManager
-import com.emm.justchill.hh.data.workers.TransactionAddedWorker
+import com.emm.justchill.hh.domain.transaction.TransactionSyncer
 
-class TransactionAdderResolver(
+class DefaultTransactionSyncer(
     private val context: Context,
-) {
+): TransactionSyncer {
 
-    fun resolve(transactionId: String) {
-
+    override fun sync(transactionId: String) {
         WorkManager.getInstance(context).apply {
             enqueueUniqueWork(
                 transactionId,

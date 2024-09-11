@@ -6,11 +6,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.hh.data.transaction.TransactionUpdate
-import com.emm.justchill.hh.domain.transaction.TransactionType
-import com.emm.justchill.hh.domain.transaction.TransactionDeleter
-import com.emm.justchill.hh.domain.transaction.TransactionFinder
-import com.emm.justchill.hh.domain.transaction.TransactionUpdater
+import com.emm.justchill.hh.domain.transaction.model.TransactionUpdate
+import com.emm.justchill.hh.domain.transaction.crud.TransactionDeleter
+import com.emm.justchill.hh.domain.transaction.crud.TransactionFinder
+import com.emm.justchill.hh.domain.transaction.crud.TransactionUpdater
 import com.emm.justchill.hh.domain.AmountDbFormatter
 import com.emm.justchill.hh.presentation.transaction.DateUtils.millisToReadableFormat
 import kotlinx.coroutines.flow.combine
@@ -22,7 +21,6 @@ class EditTransactionViewModel(
     private val transactionId: String,
     private val transactionUpdater: TransactionUpdater,
     private val transactionFinder: TransactionFinder,
-    private val amountCleaner: AmountDbFormatter,
     private val transactionDeleter: TransactionDeleter,
 ) : ViewModel() {
 
