@@ -6,10 +6,8 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.justchill.TransactionQueries
 import com.emm.justchill.Transactions
 import com.emm.justchill.core.DispatchersProvider
-import com.emm.justchill.hh.domain.transaction.TransactionModel
 import com.emm.justchill.hh.domain.auth.AuthRepository
 import com.emm.justchill.hh.domain.transaction.model.TransactionInsert
-import com.emm.justchill.hh.domain.transaction.toModel
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
 import com.emm.justchill.hh.domain.transaction.model.TransactionUpdate
 import kotlinx.coroutines.flow.Flow

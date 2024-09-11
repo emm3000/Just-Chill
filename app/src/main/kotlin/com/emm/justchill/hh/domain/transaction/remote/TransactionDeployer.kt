@@ -3,7 +3,7 @@ package com.emm.justchill.hh.domain.transaction.remote
 import androidx.work.ListenableWorker
 import com.emm.justchill.Transactions
 import com.emm.justchill.hh.data.transaction.TransactionSupabaseRepository
-import com.emm.justchill.hh.domain.transaction.TransactionModel
+import com.emm.justchill.hh.data.transaction.TransactionModel
 import com.emm.justchill.hh.domain.auth.AuthRepository
 import com.emm.justchill.hh.domain.transaction.SyncStatus
 import com.emm.justchill.hh.domain.transaction.TransactionRepository

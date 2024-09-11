@@ -2,11 +2,11 @@ package com.emm.justchill.hh.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.hh.domain.BackupManager
+import com.emm.justchill.hh.domain.shared.BackupManager
 import com.emm.justchill.hh.domain.transaction.TransactionDifferenceCalculator
 import com.emm.justchill.hh.domain.transaction.TransactionSumIncome
 import com.emm.justchill.hh.domain.transaction.TransactionSumSpend
-import com.emm.justchill.hh.domain.fromCentsToSolesWith
+import com.emm.justchill.hh.domain.shared.fromCentsToSolesWith
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch

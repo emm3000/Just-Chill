@@ -10,7 +10,6 @@ import com.emm.justchill.hh.domain.transaction.model.TransactionUpdate
 import com.emm.justchill.hh.domain.transaction.crud.TransactionDeleter
 import com.emm.justchill.hh.domain.transaction.crud.TransactionFinder
 import com.emm.justchill.hh.domain.transaction.crud.TransactionUpdater
-import com.emm.justchill.hh.domain.AmountDbFormatter
 import com.emm.justchill.hh.presentation.transaction.DateUtils.millisToReadableFormat
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull

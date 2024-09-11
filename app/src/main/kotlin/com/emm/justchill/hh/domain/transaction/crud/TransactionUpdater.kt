@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.domain.transaction.crud
 
-import com.emm.justchill.hh.domain.DateAndTimeCombiner
+import com.emm.justchill.hh.domain.shared.DateAndTimeCombiner
 import com.emm.justchill.hh.domain.transaction.TransactionSyncer
 import com.emm.justchill.hh.domain.transaction.TransactionUpdateRepository
 import com.emm.justchill.hh.domain.transaction.model.TransactionUpdate

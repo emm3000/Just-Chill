@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.domain.transaction
+package com.emm.justchill.hh.data.transaction
 
 import com.emm.justchill.Transactions
 import kotlinx.serialization.SerialName

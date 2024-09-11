@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.domain.transaction.crud
 
-import com.emm.justchill.hh.domain.UniqueIdProvider
-import com.emm.justchill.hh.domain.DateAndTimeCombiner
+import com.emm.justchill.hh.domain.shared.UniqueIdProvider
+import com.emm.justchill.hh.domain.shared.DateAndTimeCombiner
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
 import com.emm.justchill.hh.domain.transaction.TransactionSyncer
 import com.emm.justchill.hh.domain.transaction.model.TransactionInsert

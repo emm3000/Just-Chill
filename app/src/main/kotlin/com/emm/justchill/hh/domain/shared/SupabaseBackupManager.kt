@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.domain
+package com.emm.justchill.hh.domain.shared
 
 import com.emm.justchill.core.DispatchersProvider
 import com.emm.justchill.hh.domain.transaction.TransactionRepository

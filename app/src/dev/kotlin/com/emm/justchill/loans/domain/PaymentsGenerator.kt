@@ -1,7 +1,7 @@
 package com.emm.justchill.loans.domain
 
 import com.emm.justchill.hh.data.DefaultUniqueIdProvider
-import com.emm.justchill.hh.domain.UniqueIdProvider
+import com.emm.justchill.hh.domain.shared.UniqueIdProvider
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.floor

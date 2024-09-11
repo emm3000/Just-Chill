@@ -1,13 +1,7 @@
-package com.emm.justchill.hh.domain
+package com.emm.justchill.hh.domain.shared
 
-import java.math.BigDecimal
-import java.math.RoundingMode
 import java.text.NumberFormat
 import java.util.*
-
-fun fromCentsToSoles(cents: Long): BigDecimal {
-    return BigDecimal(cents).divide(BigDecimal(100), 2, RoundingMode.HALF_UP)
-}
 
 fun fromCentsToSolesWith(cents: Double): String {
     val formatter = NumberFormat.getNumberInstance(Locale("es", "PE")).apply {

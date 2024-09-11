@@ -17,9 +17,9 @@ import com.emm.justchill.hh.data.transaction.DefaultTransactionUpdateRepository
 import com.emm.justchill.hh.data.transaction.TransactionSupabaseRepository
 import com.emm.justchill.hh.data.transaction.DefaultTransactionSupabaseRepository
 import com.emm.justchill.hh.data.workers.DefaultTransactionSyncer
-import com.emm.justchill.hh.domain.BackupManager
-import com.emm.justchill.hh.domain.SharedRepository
-import com.emm.justchill.hh.domain.SupabaseBackupManager
+import com.emm.justchill.hh.domain.shared.BackupManager
+import com.emm.justchill.hh.domain.shared.SharedRepository
+import com.emm.justchill.hh.domain.shared.SupabaseBackupManager
 import com.emm.justchill.hh.domain.auth.AuthRepository
 import com.emm.justchill.hh.domain.auth.UserAuthenticator
 import com.emm.justchill.hh.domain.auth.UserCreator
@@ -28,14 +28,12 @@ import com.emm.justchill.hh.domain.transaction.crud.TransactionDeleter
 import com.emm.justchill.hh.domain.transaction.TransactionDifferenceCalculator
 import com.emm.justchill.hh.domain.transaction.crud.TransactionFinder
 import com.emm.justchill.hh.domain.transaction.crud.TransactionLoader
-import com.emm.justchill.hh.domain.transaction.TransactionLoaderByDateRange
-import com.emm.justchill.hh.domain.transaction.TransactionLoaderByDateRangeWithPage
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
 import com.emm.justchill.hh.domain.transaction.TransactionSumIncome
 import com.emm.justchill.hh.domain.transaction.TransactionSumSpend
 import com.emm.justchill.hh.domain.transaction.TransactionUpdateRepository
 import com.emm.justchill.hh.domain.transaction.crud.TransactionUpdater
-import com.emm.justchill.hh.domain.DateAndTimeCombiner
+import com.emm.justchill.hh.domain.shared.DateAndTimeCombiner
 import com.emm.justchill.hh.domain.transaction.TransactionSyncer
 import com.emm.justchill.hh.domain.transaction.remote.TransactionDeployer
 import com.emm.justchill.hh.presentation.home.HomeViewModel
@@ -75,9 +73,6 @@ val hhModule = module {
             uniqueIdProvider = DefaultUniqueIdProvider,
         )
     }
-
-    factoryOf(::TransactionLoaderByDateRange)
-    factoryOf(::TransactionLoaderByDateRangeWithPage)
 
     factoryOf(::TransactionSumIncome)
     factoryOf(::TransactionSumSpend)

@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.data
 
-import com.emm.justchill.hh.domain.SharedRepository
+import com.emm.justchill.hh.domain.shared.SharedRepository
 
 class DefaultSharedRepository(
     private val sharedSqlDataSource: SharedSqlDataSource,
