@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.presentation
+package com.emm.justchill.hh.presentation.shared
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement

@@ -54,8 +54,8 @@ import com.emm.justchill.core.theme.PrimaryButtonColor
 import com.emm.justchill.core.theme.PrimaryDisableButtonColor
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.core.theme.TextDisableColor
-import com.emm.justchill.hh.presentation.TextFieldWithLabel
-import com.emm.justchill.hh.presentation.TransactionRadioButton
+import com.emm.justchill.hh.presentation.shared.TextFieldWithLabel
+import com.emm.justchill.hh.presentation.shared.TransactionRadioButton
 import com.emm.justchill.hh.presentation.auth.LabelTextField
 import org.koin.androidx.compose.koinViewModel
 

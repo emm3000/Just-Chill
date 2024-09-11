@@ -35,7 +35,6 @@ import com.emm.justchill.hh.domain.transaction.TransactionSumIncome
 import com.emm.justchill.hh.domain.transaction.TransactionSumSpend
 import com.emm.justchill.hh.domain.transaction.TransactionUpdateRepository
 import com.emm.justchill.hh.domain.transaction.crud.TransactionUpdater
-import com.emm.justchill.hh.domain.AmountDbFormatter
 import com.emm.justchill.hh.domain.DateAndTimeCombiner
 import com.emm.justchill.hh.domain.transaction.TransactionSyncer
 import com.emm.justchill.hh.domain.transaction.remote.TransactionDeployer
