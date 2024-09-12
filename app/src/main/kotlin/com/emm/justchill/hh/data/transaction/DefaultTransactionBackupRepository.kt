@@ -10,7 +10,7 @@ import com.emm.justchill.hh.domain.transaction.TransactionBackupRepository
 class DefaultTransactionBackupRepository(
     dispatchersProvider: DispatchersProvider,
     private val transactionsQueries: TransactionQueries,
-    private val networkDataSource: TransactionSupabaseRepository,
+    private val networkDataSource: TransactionRemoteRepository,
     private val authRepository: AuthRepository,
 ): TransactionBackupRepository, DispatchersProvider by dispatchersProvider {
 
@@ -46,6 +46,8 @@ class DefaultTransactionBackupRepository(
                 description = it.description,
                 date = it.date,
                 syncStatus = SyncStatus.SYNCED.name,
+                categoryId = null,
+                accountId = ""
             )
         }
     }

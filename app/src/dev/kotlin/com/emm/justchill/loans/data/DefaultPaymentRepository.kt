@@ -1,6 +1,6 @@
 package com.emm.justchill.loans.data
 
-import com.emm.justchill.hh.data.TableNames
+import com.emm.justchill.hh.data.shared.TableNames
 import com.emm.justchill.loans.domain.Payment
 import com.emm.justchill.loans.domain.PaymentRepository
 import io.github.jan.supabase.SupabaseClient

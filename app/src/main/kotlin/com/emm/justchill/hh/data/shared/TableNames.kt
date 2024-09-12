@@ -1,10 +1,10 @@
-package com.emm.justchill.hh.data
+package com.emm.justchill.hh.data.shared
 
 object TableNames {
 
-    const val CATEGORY_TABLE = "categories"
+    const val CATEGORY_TABLE = "category"
     const val TRANSACTION_TABLE = "transaction"
-    const val TRANSACTION_CATEGORY_TABLE = "transactionsCategories"
     const val LOANS_TABLE = "loans"
     const val PAYMENTS_TABLE = "payments"
+    const val ACCOUNT_TABLE = "account"
 }

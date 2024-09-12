@@ -1,6 +1,6 @@
 package com.emm.justchill.loans
 
-import com.emm.justchill.hh.data.DefaultUniqueIdProvider
+import com.emm.justchill.hh.data.shared.DefaultUniqueIdProvider
 import com.emm.justchill.loans.data.DefaultLoanRepository
 import com.emm.justchill.loans.data.DefaultPaymentRepository
 import com.emm.justchill.loans.domain.LoanAndPaymentsCreator

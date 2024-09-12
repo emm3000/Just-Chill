@@ -4,7 +4,11 @@ CREATE TABLE transactions (
     amount REAL NOT NULL,
     description TEXT NOT NULL,
     date INTEGER NOT NULL,
-    syncStatus TEXT NOT NULL
+    syncStatus TEXT NOT NULL,
+    categoryId TEXT,
+    accountId TEXT NOT NULL,
+    FOREIGN KEY (categoryId) REFERENCES categories(categoryId) ON DELETE SET NULL,
+    FOREIGN KEY (accountId) REFERENCES accounts(accountId) ON DELETE CASCADE
 );
 
 updateValues:
@@ -47,19 +51,8 @@ SELECT (
 retrieveAll:
 SELECT * FROM transactions WHERE syncStatus != 'PENDING_DELETE' ORDER BY date DESC;
 
-retrieveWithPaging:
-SELECT * FROM transactions ORDER BY date DESC LIMIT ? OFFSET ?;
-
 addTransaction:
-INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?);
-
-selectTransactionsByDateRange:
-SELECT * FROM transactions
-WHERE date BETWEEN ? AND ? ORDER BY date DESC;
-
-selectTransactionsByDateRangeWithPaging:
-SELECT * FROM transactions
-WHERE date BETWEEN ? AND ? ORDER BY date DESC LIMIT ? OFFSET ?;
+INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?, ?, ?);
 
 find:
 SELECT * FROM transactions WHERE transactionId = ?;

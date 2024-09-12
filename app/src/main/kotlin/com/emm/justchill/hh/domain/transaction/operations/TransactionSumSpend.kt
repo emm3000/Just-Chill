@@ -1,8 +1,7 @@
-package com.emm.justchill.hh.domain.transaction
+package com.emm.justchill.hh.domain.transaction.operations
 
+import com.emm.justchill.hh.domain.transaction.TransactionRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import java.math.BigDecimal
 
 class TransactionSumSpend(private val repository: TransactionRepository) {
 

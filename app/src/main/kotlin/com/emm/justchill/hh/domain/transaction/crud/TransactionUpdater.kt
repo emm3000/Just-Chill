@@ -1,14 +1,12 @@
 package com.emm.justchill.hh.domain.transaction.crud
 
 import com.emm.justchill.hh.domain.shared.DateAndTimeCombiner
-import com.emm.justchill.hh.domain.transaction.TransactionSyncer
 import com.emm.justchill.hh.domain.transaction.TransactionUpdateRepository
 import com.emm.justchill.hh.domain.transaction.model.TransactionUpdate
 
 class TransactionUpdater(
     private val repository: TransactionUpdateRepository,
     private val dateAndTimeCombiner: DateAndTimeCombiner,
-    private val transactionSyncer: TransactionSyncer,
 ) {
 
     suspend fun update(
@@ -24,7 +22,5 @@ class TransactionUpdater(
                 date = dateAndTimeCombined
             ),
         )
-
-        transactionSyncer.sync(transactionId)
     }
 }

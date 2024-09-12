@@ -6,11 +6,11 @@ import kotlinx.coroutines.flow.Flow
 
 interface TransactionRepository {
 
-    suspend fun add(entity: TransactionInsert)
+    suspend fun create(transactionInsert: TransactionInsert)
 
-    fun find(transactionId: String): Flow<Transaction?>
+    fun findBy(transactionId: String): Flow<Transaction?>
 
-    fun all(): Flow<List<Transaction>>
+    fun retrieve(): Flow<List<Transaction>>
 
     fun sumIncome(): Flow<Double>
 
@@ -18,5 +18,5 @@ interface TransactionRepository {
 
     fun difference(): Flow<Double>
 
-   suspend fun delete(transactionId: String)
+   suspend fun deleteBy(transactionId: String)
 }

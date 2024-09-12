@@ -3,13 +3,11 @@ package com.emm.justchill.hh.domain.transaction.crud
 import com.emm.justchill.hh.domain.shared.UniqueIdProvider
 import com.emm.justchill.hh.domain.shared.DateAndTimeCombiner
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
-import com.emm.justchill.hh.domain.transaction.TransactionSyncer
 import com.emm.justchill.hh.domain.transaction.model.TransactionInsert
 
 class TransactionCreator(
     private val repository: TransactionRepository,
     private val dateAndTimeCombiner: DateAndTimeCombiner,
-    private val transactionSyncer: TransactionSyncer,
     private val uniqueIdProvider: UniqueIdProvider,
 ) {
 
@@ -28,8 +26,6 @@ class TransactionCreator(
             date = dateAndTimeCombined
         )
 
-        repository.add(transaction)
-
-        transactionSyncer.sync(transactionId)
+        repository.create(transaction)
     }
 }

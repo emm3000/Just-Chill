@@ -1,0 +1,36 @@
+CREATE TABLE accounts (
+    accountId TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    balance REAL NOT NULL,
+    description TEXT,
+    syncStatus TEXT NOT NULL
+);
+
+retrieveAll:
+SELECT * FROM accounts WHERE syncStatus != 'PENDING_DELETE';
+
+insert:
+INSERT OR REPLACE INTO accounts VALUES(?, ?, ?, ?, ?);
+
+delete:
+DELETE FROM accounts WHERE accountId = ?;
+
+find:
+SELECT * FROM accounts WHERE accountId = ?;
+
+updateValues:
+UPDATE accounts
+SET
+    name = ?,
+    balance = ?,
+    description = ?,
+    syncStatus = ?
+WHERE
+    accountId = ?;
+
+updateStatus:
+UPDATE accounts
+SET
+    syncStatus = ?
+WHERE
+    accountId = ?;

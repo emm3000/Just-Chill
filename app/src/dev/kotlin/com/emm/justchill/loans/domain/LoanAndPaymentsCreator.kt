@@ -1,6 +1,6 @@
 package com.emm.justchill.loans.domain
 
-import com.emm.justchill.hh.data.DefaultUniqueIdProvider
+import com.emm.justchill.hh.data.shared.DefaultUniqueIdProvider
 import com.emm.justchill.hh.domain.shared.UniqueIdProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

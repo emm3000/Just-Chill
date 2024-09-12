@@ -6,6 +6,8 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.justchill.TransactionQueries
 import com.emm.justchill.Transactions
 import com.emm.justchill.core.DispatchersProvider
+import com.emm.justchill.hh.data.shared.Syncer
+import com.emm.justchill.hh.domain.transaction.SyncStatus
 import com.emm.justchill.hh.domain.transaction.model.TransactionInsert
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
 import com.emm.justchill.hh.domain.transaction.model.Transaction
@@ -16,21 +18,25 @@ import kotlinx.coroutines.withContext
 class DefaultTransactionRepository(
     dispatchersProvider: DispatchersProvider,
     private val transactionsQueries: TransactionQueries,
+    private val syncer: Syncer,
 ) : TransactionRepository, DispatchersProvider by dispatchersProvider {
 
-    override suspend fun add(entity: TransactionInsert) = withContext(ioDispatcher) {
-        checkNotNull(entity.id)
+    override suspend fun create(transactionInsert: TransactionInsert) = withContext(ioDispatcher) {
+        checkNotNull(transactionInsert.id)
         transactionsQueries.addTransaction(
-            transactionId = entity.id,
-            type = entity.type,
-            amount = entity.amount,
-            description = entity.description,
-            date = entity.date,
-            syncStatus = entity.syncStatus.name,
+            transactionId = transactionInsert.id,
+            type = transactionInsert.type,
+            amount = transactionInsert.amount,
+            description = transactionInsert.description,
+            date = transactionInsert.date,
+            syncStatus = SyncStatus.PENDING_INSERT.name,
+            categoryId = transactionInsert.categoryId,
+            accountId = transactionInsert.accountId
         )
+        syncer.sync(transactionInsert.id)
     }
 
-    override fun all(): Flow<List<Transaction>> {
+    override fun retrieve(): Flow<List<Transaction>> {
         return transactionsQueries
             .retrieveAll()
             .asFlow()
@@ -59,11 +65,11 @@ class DefaultTransactionRepository(
             .map { it ?: 0.0 }
     }
 
-    override suspend fun delete(transactionId: String) = withContext(ioDispatcher) {
+    override suspend fun deleteBy(transactionId: String) = withContext(ioDispatcher) {
         transactionsQueries.delete(transactionId)
     }
 
-    override fun find(transactionId: String): Flow<Transaction?> {
+    override fun findBy(transactionId: String): Flow<Transaction?> {
         return transactionsQueries.find(transactionId)
             .asFlow()
             .mapToOneOrNull(ioDispatcher)

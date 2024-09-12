@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.data
+package com.emm.justchill.hh.data.shared
 
 import com.emm.justchill.TransactionQueries
 import com.emm.justchill.core.DispatchersProvider

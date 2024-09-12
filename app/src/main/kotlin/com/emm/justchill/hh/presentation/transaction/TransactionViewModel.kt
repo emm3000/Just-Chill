@@ -50,6 +50,7 @@ class TransactionViewModel(
             type = transactionType.name,
             description = description,
             date = dateInLong,
+            accountId = ""
         )
         transactionCreator.create(amount, transactionInsert)
     }
