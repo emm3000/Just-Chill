@@ -29,7 +29,6 @@ import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.domain.account.Account
-import com.emm.justchill.hh.domain.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.presentation.auth.LabelTextField
 import com.emm.justchill.hh.presentation.transaction.TransactionLabel
 

@@ -32,10 +32,6 @@ class TransactionCreator(
 
         repository.create(transaction)
 
-        accountBalanceUpdater.update(
-            accountId = transactionInsert.accountId,
-            balance = amountDouble,
-            transactionType = transactionInsert.type
-        )
+        accountBalanceUpdater.update(accountId = transactionInsert.accountId)
     }
 }

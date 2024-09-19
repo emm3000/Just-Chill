@@ -13,6 +13,9 @@ data class AccountModel(
 
     val balance: Double,
 
+    @SerialName("initial_balance")
+    val initialBalance: Double,
+
     val description: String,
 
     @SerialName("user_id")

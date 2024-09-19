@@ -4,7 +4,6 @@ import com.emm.justchill.hh.domain.account.crud.AccountBalanceUpdater
 import com.emm.justchill.hh.domain.shared.DateAndTimeCombiner
 import com.emm.justchill.hh.domain.transaction.TransactionUpdateRepository
 import com.emm.justchill.hh.domain.transaction.model.TransactionUpdate
-import com.emm.justchill.hh.presentation.transaction.TransactionType
 
 class TransactionUpdater(
     private val repository: TransactionUpdateRepository,
@@ -25,10 +24,6 @@ class TransactionUpdater(
                 date = dateAndTimeCombined
             ),
         )
-        accountBalanceUpdater.update(
-            accountId = transactionUpdate.accountId,
-            balance = transactionUpdate.amount,
-            transactionType = transactionUpdate.type
-        )
+        accountBalanceUpdater.update(accountId = transactionUpdate.accountId)
     }
 }

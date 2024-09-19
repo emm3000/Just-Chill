@@ -4,6 +4,7 @@ import androidx.work.ListenableWorker
 import com.emm.justchill.hh.data.shared.syncStatus
 import com.emm.justchill.hh.data.transaction.TransactionRemoteRepository
 import com.emm.justchill.hh.data.transaction.TransactionModel
+import com.emm.justchill.hh.domain.account.crud.AccountBalanceUpdater
 import com.emm.justchill.hh.domain.auth.AuthRepository
 import com.emm.justchill.hh.domain.transaction.SyncStatus
 import com.emm.justchill.hh.domain.transaction.TransactionRepository
@@ -17,6 +18,7 @@ class TransactionDeployer(
     private val repository: TransactionRepository,
     private val updateRepository: TransactionUpdateRepository,
     private val authRepository: AuthRepository,
+    private val transactionBalanceUpdater: AccountBalanceUpdater,
 ) {
 
     suspend fun deploy(transactionId: String): ListenableWorker.Result {
@@ -44,6 +46,7 @@ class TransactionDeployer(
 
             SyncStatus.PENDING_DELETE -> {
                 supabaseRepository.deleteBy(transactionId)
+                transactionBalanceUpdater.update(transaction.accountId)
                 repository.deleteBy(transactionId)
             }
 

@@ -48,6 +48,7 @@ class DefaultAccountRepository(
             accountId = accountId,
             name = account.name,
             balance = account.balance,
+            initialBalance = account.balance,
             description = account.description,
             syncStatus = SyncStatus.PENDING_INSERT.name
         )
@@ -72,6 +73,7 @@ class DefaultAccountRepository(
         aq.updateValues(
             name = account.name,
             balance = account.balance,
+            initialBalance = account.balance,
             description = account.description,
             syncStatus = SyncStatus.PENDING_UPDATE.name,
             accountId = accountId

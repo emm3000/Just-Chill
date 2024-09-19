@@ -2,6 +2,7 @@ CREATE TABLE accounts (
     accountId TEXT NOT NULL PRIMARY KEY,
     name TEXT NOT NULL,
     balance REAL NOT NULL,
+    initialBalance REAL NOT NULL,
     description TEXT,
     syncStatus TEXT NOT NULL
 );
@@ -10,7 +11,7 @@ retrieveAll:
 SELECT * FROM accounts WHERE syncStatus != 'PENDING_DELETE';
 
 insert:
-INSERT OR REPLACE INTO accounts VALUES(?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO accounts VALUES(?, ?, ?, ?, ?, ?);
 
 delete:
 DELETE FROM accounts WHERE accountId = ?;
@@ -23,6 +24,7 @@ UPDATE accounts
 SET
     name = ?,
     balance = ?,
+    initialBalance = ?,
     description = ?,
     syncStatus = ?
 WHERE

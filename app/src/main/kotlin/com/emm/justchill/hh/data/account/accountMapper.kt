@@ -7,6 +7,7 @@ fun Accounts.toDomain() = Account(
     accountId = accountId,
     name = name,
     balance = balance,
+    initialBalance = initialBalance,
     description = description.orEmpty(),
     syncStatus = syncStatus
 )
@@ -17,6 +18,7 @@ fun Account.toModel(userId: String) = AccountModel(
     accountId = accountId,
     name = name,
     balance = balance,
+    initialBalance = initialBalance,
     description = description,
     userId = userId
 )

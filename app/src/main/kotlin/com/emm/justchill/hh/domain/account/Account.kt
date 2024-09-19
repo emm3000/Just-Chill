@@ -6,10 +6,11 @@ data class Account(
     val accountId: String,
     val name: String,
     val balance: Double,
+    val initialBalance: Double,
     val description: String,
     val syncStatus: String,
 ) {
 
     val nameWithBalance: String
-        get() = "$name - ${fromCentsToSolesWith(balance)}"
+        get() = "$name - S/ ${fromCentsToSolesWith(balance)}"
 }
