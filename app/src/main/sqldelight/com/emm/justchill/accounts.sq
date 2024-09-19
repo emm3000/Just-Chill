@@ -34,3 +34,10 @@ SET
     syncStatus = ?
 WHERE
     accountId = ?;
+
+updateBalance:
+UPDATE accounts
+SET
+    balance = ?
+WHERE
+    accountId = ?;

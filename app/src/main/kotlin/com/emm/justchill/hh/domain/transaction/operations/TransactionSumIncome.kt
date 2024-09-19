@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 class TransactionSumIncome(private val repository: TransactionRepository) {
 
-    operator fun invoke(): Flow<Double> {
-        return repository.sumIncome()
+    operator fun invoke(accountId: String): Flow<Double> {
+        return repository.sumIncome(accountId)
     }
 }

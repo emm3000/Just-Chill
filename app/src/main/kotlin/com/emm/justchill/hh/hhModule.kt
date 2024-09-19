@@ -54,12 +54,16 @@ import com.emm.justchill.hh.domain.transaction.TransactionBackupRepository
 import com.emm.justchill.hh.data.shared.Syncer
 import com.emm.justchill.hh.data.transaction.workers.TransactionDeployer
 import com.emm.justchill.hh.domain.account.AccountRepository
+import com.emm.justchill.hh.domain.account.crud.AccountBalanceUpdater
 import com.emm.justchill.hh.domain.account.crud.AccountCreator
 import com.emm.justchill.hh.domain.account.crud.AccountDeleter
 import com.emm.justchill.hh.domain.account.crud.AccountFinder
 import com.emm.justchill.hh.domain.account.crud.AccountUpdater
+import com.emm.justchill.hh.domain.shared.UniqueIdProvider
+import com.emm.justchill.hh.presentation.account.AccountViewModel
 import com.emm.justchill.hh.presentation.home.HomeViewModel
 import com.emm.justchill.hh.presentation.auth.LoginViewModel
+import com.emm.justchill.hh.presentation.category.CategoryViewModel
 import com.emm.justchill.hh.presentation.seetransactions.SeeTransactionsViewModel
 import com.emm.justchill.hh.presentation.transaction.EditTransactionViewModel
 import com.emm.justchill.hh.presentation.transaction.TransactionViewModel
@@ -93,7 +97,7 @@ val hhModule = module {
     factoryOf(::UserCreator)
 
     factory { DateAndTimeCombiner() }
-    factory { DefaultUniqueIdProvider }
+    factory { DefaultUniqueIdProvider } bind UniqueIdProvider::class
 
     factoryOf(::SupabaseBackupManager) bind BackupManager::class
 
@@ -115,7 +119,12 @@ private fun Module.transactionsUseCases() {
 
 private fun Module.viewModelsProviders() {
     viewModelOf(::HomeViewModel)
-    viewModelOf(::TransactionViewModel)
+    viewModel {
+        TransactionViewModel(
+            transactionCreator = get(),
+            accountRepository = get()
+        )
+    }
     viewModelOf(::SeeTransactionsViewModel)
     viewModelOf(::LoginViewModel)
 
@@ -124,16 +133,20 @@ private fun Module.viewModelsProviders() {
             transactionId = parameters.get(),
             transactionUpdater = get(),
             transactionFinder = get(),
-            transactionDeleter = get()
+            transactionDeleter = get(),
+            accountFinder = get(),
+            accountRepository = get()
         )
     }
+
+    viewModelOf(::CategoryViewModel)
+    viewModelOf(::AccountViewModel)
 }
 
 private fun Module.repositoriesProviders() {
 
     single<TransactionBackupRepository> {
         DefaultTransactionBackupRepository(
-            dispatchersProvider = get(),
             transactionsQueries = get(),
             networkDataSource = get(),
             authRepository = get(),
@@ -261,4 +274,5 @@ val accountModule = module {
 
     factoryOf(::AccountSupabaseRepository) bind AccountRemoteRepository::class
     factoryOf(::AccountDeployer)
+    factoryOf(::AccountBalanceUpdater)
 }

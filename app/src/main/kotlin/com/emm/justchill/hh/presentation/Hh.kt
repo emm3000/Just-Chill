@@ -36,7 +36,9 @@ import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.domain.auth.AuthRepository
+import com.emm.justchill.hh.presentation.account.Account
 import com.emm.justchill.hh.presentation.auth.Login
+import com.emm.justchill.hh.presentation.category.Category
 import com.emm.justchill.hh.presentation.home.Home
 import com.emm.justchill.hh.presentation.seetransactions.SeeTransactionsVersionTwo
 import com.emm.justchill.hh.presentation.transaction.EditTransaction
@@ -58,6 +60,9 @@ data class EditTransaction(val transactionId: String)
 
 @Serializable
 object Category
+
+@Serializable
+object Account
 
 @Composable
 fun Hh() {
@@ -107,7 +112,14 @@ fun Hh() {
                     startDestination = HhRoutes.HhHome.route,
                     modifier = Modifier.padding(paddingValues)
                 ) {
-                    composable(HhRoutes.HhHome.route) { Home() }
+                    composable(HhRoutes.HhHome.route) { Home(
+                        navigateToCreateAccount = {
+                            navController.navigate(Account)
+                        },
+                        navigateToCreateCategory = {
+                            navController.navigate(Category)
+                        }
+                    ) }
                     composable(HhRoutes.AddTransaction.route) {
                         Transaction {
                             internalNavController.navigate(HhRoutes.SeeTransaction.route) {
@@ -127,6 +139,12 @@ fun Hh() {
         composable<EditTransaction> {
             val editTransaction: EditTransaction = it.toRoute<EditTransaction>()
             EditTransaction(navController, editTransaction.transactionId)
+        }
+        composable<Category> {
+            Category(navController)
+        }
+        composable<Account> {
+            Account(navController)
         }
     }
 }

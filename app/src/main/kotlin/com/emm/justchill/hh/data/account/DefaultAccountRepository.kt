@@ -78,4 +78,12 @@ class DefaultAccountRepository(
         )
         syncer.sync(accountId)
     }
+
+    override suspend fun updateAmount(
+        accountId: String,
+        amount: Double,
+    ) = withContext(Dispatchers.IO) {
+        aq.updateBalance(amount, accountId)
+        syncer.sync(accountId)
+    }
 }

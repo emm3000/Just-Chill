@@ -28,8 +28,10 @@ import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.TextColor
+import com.emm.justchill.hh.domain.account.Account
 import com.emm.justchill.hh.presentation.transaction.TransactionType
 import com.emm.justchill.hh.presentation.EditTransaction
+import com.emm.justchill.hh.presentation.shared.DropDownContainer
 import com.emm.justchill.hh.presentation.transaction.TransactionUi
 import org.koin.androidx.compose.koinViewModel
 import java.util.*
@@ -41,12 +43,17 @@ fun SeeTransactionsVersionTwo(
 ) {
 
     val collectAsState: List<TransactionUi> by vm.transactions.collectAsState()
+    val accounts: List<Account> by vm.accounts.collectAsState()
 
     SeeTransactionsVersionTwo(
         transactions = collectAsState,
         navigateToEdit = {
             navController.navigate(EditTransaction(it))
-        }
+        },
+        accounts = accounts,
+        onAccountChange = vm::updateAccountSelected,
+        accountLabel = vm.accountLabel,
+        onAccountLabelChange = vm::updateAccountLabel,
     )
 }
 
@@ -54,6 +61,10 @@ fun SeeTransactionsVersionTwo(
 fun SeeTransactionsVersionTwo(
     transactions: List<TransactionUi> = emptyList(),
     navigateToEdit: (String) -> Unit = {},
+    accounts: List<Account> = emptyList(),
+    onAccountChange: (Account) -> Unit = {},
+    accountLabel: String = "",
+    onAccountLabelChange: (String) -> Unit = {},
 ) {
 
     LazyColumn(
@@ -81,6 +92,15 @@ fun SeeTransactionsVersionTwo(
                     textAlign = TextAlign.Center
                 )
             }
+        }
+
+        item {
+            DropDownContainer(
+                account = accounts,
+                onAccountChange = onAccountChange,
+                text = accountLabel,
+                setText = onAccountLabelChange
+            )
         }
 
         if (transactions.isNotEmpty()) {

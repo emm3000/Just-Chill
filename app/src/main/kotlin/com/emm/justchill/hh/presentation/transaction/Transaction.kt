@@ -33,6 +33,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -54,9 +56,11 @@ import com.emm.justchill.core.theme.PrimaryButtonColor
 import com.emm.justchill.core.theme.PrimaryDisableButtonColor
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.core.theme.TextDisableColor
+import com.emm.justchill.hh.domain.account.Account
 import com.emm.justchill.hh.presentation.shared.TextFieldWithLabel
 import com.emm.justchill.hh.presentation.shared.TransactionRadioButton
 import com.emm.justchill.hh.presentation.auth.LabelTextField
+import com.emm.justchill.hh.presentation.shared.DropDownContainer
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -64,6 +68,8 @@ fun Transaction(
     vm: TransactionViewModel = koinViewModel(),
     navigateToSeeTransactions: () -> Unit,
 ) {
+
+    val accounts: List<Account> by vm.accounts.collectAsState()
 
     Transaction(
         isEnabledButton = vm.isEnabled,
@@ -77,6 +83,10 @@ fun Transaction(
         navigateToSeeTransactions = navigateToSeeTransactions,
         initialTransactionType = vm.transactionType,
         onOptionSelected = vm::updateTransactionType,
+        accounts = accounts,
+        onAccountChange = vm::updateAccountSelected,
+        accountLabel = vm.accountLabel,
+        onAccountLabelChange = vm::updateAccountLabel,
     )
 }
 
@@ -94,6 +104,10 @@ private fun Transaction(
     navigateToSeeTransactions: () -> Unit = {},
     initialTransactionType: TransactionType = TransactionType.INCOME,
     onOptionSelected: (TransactionType) -> Unit = {},
+    accounts: List<Account> = emptyList(),
+    onAccountChange: (Account) -> Unit = {},
+    accountLabel: String = "",
+    onAccountLabelChange: (String) -> Unit = {},
 ) {
 
     val datePickerState: DatePickerState = rememberDatePickerState()
@@ -170,6 +184,14 @@ private fun Transaction(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
+
+            DropDownContainer(
+                account = accounts,
+                text = accountLabel,
+                onAccountChange = onAccountChange,
+                setText = onAccountLabelChange
+            )
+
             Mount(mountValue, onMountChange)
 
             TransactionRadioButton(
@@ -180,8 +202,7 @@ private fun Transaction(
             )
 
             TextFieldWithLabel(
-                modifier = Modifier
-                    .height(140.dp),
+                modifier = Modifier,
                 label = "En que gaste",
                 value = descriptionValue,
                 onChange = onDescriptionChange

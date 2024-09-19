@@ -1,17 +1,29 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package com.emm.justchill.hh.presentation.home
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.emm.justchill.hh.domain.account.Account
+import com.emm.justchill.hh.domain.account.AccountRepository
 import com.emm.justchill.hh.domain.shared.BackupManager
 import com.emm.justchill.hh.domain.transaction.operations.TransactionDifferenceCalculator
 import com.emm.justchill.hh.domain.transaction.operations.TransactionSumIncome
 import com.emm.justchill.hh.domain.transaction.operations.TransactionSumSpend
 import com.emm.justchill.hh.domain.shared.fromCentsToSolesWith
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -19,19 +31,24 @@ class HomeViewModel(
     transactionSumIncome: TransactionSumIncome,
     transactionSumSpend: TransactionSumSpend,
     transactionDifferenceCalculator: TransactionDifferenceCalculator,
+    accountRepository: AccountRepository,
     private val backupManager: BackupManager,
 ) : ViewModel() {
 
-    val sumTransactions: StateFlow<Pair<String, String>> = combine(
-        flow = transactionSumIncome(),
-        flow2 = transactionSumSpend(),
-        transform = ::Pair
-    )
-        .map {
-            Pair(fromCentsToSolesWith(it.first), fromCentsToSolesWith(it.second))
+    var account: Account? by mutableStateOf(null)
+        private set
+
+    val sumTransactions: StateFlow<Pair<String, String>> = snapshotFlow { account }
+        .filterNotNull()
+        .flatMapLatest {
+            combine(
+                transactionSumIncome(it.accountId),
+                transactionSumSpend(it.accountId),
+            ) { income, spend ->
+                Pair(fromCentsToSolesWith(income), fromCentsToSolesWith(spend))
+            }
         }
         .catch {
-            it.printStackTrace()
             emit(Pair("0.00", "0.00"))
         }
         .stateIn(
@@ -40,7 +57,10 @@ class HomeViewModel(
             initialValue = Pair("0.00", "0.00")
         )
 
-    val difference: StateFlow<String> = transactionDifferenceCalculator.calculate()
+    val difference: StateFlow<String> = snapshotFlow { account }
+        .filterNotNull()
+        .map { it.accountId }
+        .flatMapLatest(transactionDifferenceCalculator::calculate)
         .map(::fromCentsToSolesWith)
         .stateIn(
             scope = viewModelScope,
@@ -48,9 +68,33 @@ class HomeViewModel(
             initialValue = "0.00"
         )
 
+    val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
+        .onEach { accounts ->
+            accounts.firstOrNull()?.let {
+                accountLabel = "${it.name} ${fromCentsToSolesWith(it.balance)}"
+                account = it
+            }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = emptyList()
+        )
+
+    var accountLabel: String by mutableStateOf("")
+        private set
+
     init {
         viewModelScope.launch {
             backupManager.seed()
         }
+    }
+
+    fun updateAccountLabel(value: String) {
+        accountLabel = value
+    }
+
+    fun updateAccountSelected(value: Account) {
+        account = value
     }
 }

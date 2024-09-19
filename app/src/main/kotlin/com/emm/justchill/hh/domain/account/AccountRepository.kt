@@ -17,4 +17,5 @@ interface AccountRepository {
 
     suspend fun update(accountId: String, account: AccountUpsert)
 
+    suspend fun updateAmount(accountId: String, amount: Double)
 }

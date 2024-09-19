@@ -6,14 +6,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.emm.justchill.hh.domain.account.Account
+import com.emm.justchill.hh.domain.account.AccountRepository
 import com.emm.justchill.hh.domain.transaction.model.TransactionInsert
 import com.emm.justchill.hh.domain.transaction.crud.TransactionCreator
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class TransactionViewModel(
     private val transactionCreator: TransactionCreator,
+    accountRepository: AccountRepository
 ) : ViewModel() {
 
     var amount by mutableStateOf("")
@@ -27,30 +33,44 @@ class TransactionViewModel(
 
     private var dateInLong: Long = DateUtils.currentDateInMillis()
 
-    var isEnabled by mutableStateOf(false)
+    var isEnabled: Boolean by mutableStateOf(false)
         private set
 
-    var transactionType by mutableStateOf(TransactionType.INCOME)
+    var transactionType: TransactionType by mutableStateOf(TransactionType.INCOME)
         private set
+
+    var accountLabel: String by mutableStateOf("")
+        private set
+
+    val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = emptyList()
+        )
+
+    private var accountSelected: Account? = null
 
     init {
         combine(
             snapshotFlow { amount },
             snapshotFlow { date },
             snapshotFlow { description },
-        ) { mount, date, description ->
+            snapshotFlow { accountLabel },
+        ) { mount, date, description, accountLabel ->
             isEnabled = mount.isNotEmpty()
                     && date.isNotEmpty()
                     && description.isNotEmpty()
+                    && accountLabel.isNotEmpty()
         }.launchIn(viewModelScope)
     }
 
     fun addTransaction() = viewModelScope.launch {
         val transactionInsert = TransactionInsert(
-            type = transactionType.name,
+            type = transactionType,
             description = description,
             date = dateInLong,
-            accountId = ""
+            accountId = accountSelected?.accountId ?: throw IllegalStateException()
         )
         transactionCreator.create(amount, transactionInsert)
     }
@@ -72,5 +92,13 @@ class TransactionViewModel(
 
     fun updateTransactionType(value: TransactionType) {
         transactionType = value
+    }
+
+    fun updateAccountLabel(value: String) {
+        accountLabel = value
+    }
+
+    fun updateAccountSelected(value: Account) {
+        accountSelected = value
     }
 }

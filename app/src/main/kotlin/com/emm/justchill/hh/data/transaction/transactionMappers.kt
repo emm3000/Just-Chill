@@ -9,6 +9,8 @@ fun Transactions.toDomain(): Transaction = Transaction(
     amount = amount,
     description = description,
     date = date,
+    categoryId = categoryId,
+    accountId = accountId,
     syncStatus = syncStatus,
 )
 

@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 class TransactionDifferenceCalculator(private val repository: TransactionRepository) {
 
-    fun calculate(): Flow<Double> {
-        return repository.difference()
+    fun calculate(accountId: String): Flow<Double> {
+        return repository.difference(accountId)
     }
 }

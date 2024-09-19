@@ -67,7 +67,9 @@ class TransactionDeployer(
             amount = transaction.amount,
             description = transaction.description,
             date = transaction.date,
-            userId = session.id
+            userId = session.id,
+            accountId = transaction.accountId,
+            categoryId = transaction.categoryId,
         )
         supabaseRepository.upsert(transactionModel)
     }

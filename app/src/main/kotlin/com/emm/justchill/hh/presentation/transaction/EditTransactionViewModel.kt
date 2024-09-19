@@ -6,14 +6,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.emm.justchill.hh.domain.account.Account
+import com.emm.justchill.hh.domain.account.AccountRepository
+import com.emm.justchill.hh.domain.account.crud.AccountFinder
 import com.emm.justchill.hh.domain.transaction.model.TransactionUpdate
 import com.emm.justchill.hh.domain.transaction.crud.TransactionDeleter
 import com.emm.justchill.hh.domain.transaction.crud.TransactionFinder
 import com.emm.justchill.hh.domain.transaction.crud.TransactionUpdater
 import com.emm.justchill.hh.presentation.transaction.DateUtils.millisToReadableFormat
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class EditTransactionViewModel(
@@ -21,6 +27,8 @@ class EditTransactionViewModel(
     private val transactionUpdater: TransactionUpdater,
     private val transactionFinder: TransactionFinder,
     private val transactionDeleter: TransactionDeleter,
+    private val accountFinder: AccountFinder,
+    accountRepository: AccountRepository,
 ) : ViewModel() {
 
     var amount by mutableStateOf("")
@@ -39,6 +47,18 @@ class EditTransactionViewModel(
 
     var transactionType by mutableStateOf(TransactionType.INCOME)
         private set
+
+    var accountLabel: String by mutableStateOf("")
+        private set
+
+    val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = emptyList()
+        )
+
+    private var accountSelected: Account? = null
 
     init {
         combine(
@@ -62,6 +82,11 @@ class EditTransactionViewModel(
             transactionType = TransactionType.valueOf(transaction.type)
             date = millisToReadableFormat(transaction.date)
             dateInLong = transaction.date
+            val account: Account? = accountFinder.find(currentTransaction.accountId).firstOrNull()
+            account?.let {
+                accountLabel = "${it.name} ${it.balance}"
+                accountSelected = it
+            }
         }
     }
 
@@ -70,7 +95,8 @@ class EditTransactionViewModel(
             type = transactionType.name,
             description = description,
             date = dateInLong,
-            amount = amount.replace(Regex("[^\\d.]"), "").toDouble()
+            amount = amount.replace(Regex("[^\\d.]"), "").toDouble(),
+            accountId = accountSelected?.accountId ?: throw IllegalStateException()
         )
         transactionUpdater.update(transactionId, transactionUpdate)
     }
@@ -96,5 +122,13 @@ class EditTransactionViewModel(
 
     fun updateTransactionType(value: TransactionType) {
         transactionType = value
+    }
+
+    fun updateAccountLabel(value: String) {
+        accountLabel = value
+    }
+
+    fun updateAccountSelected(value: Account) {
+        accountSelected = value
     }
 }

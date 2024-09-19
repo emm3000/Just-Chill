@@ -10,13 +10,13 @@ interface TransactionRepository {
 
     fun findBy(transactionId: String): Flow<Transaction?>
 
-    fun retrieve(): Flow<List<Transaction>>
+    fun retrieve(accountId: String): Flow<List<Transaction>>
 
-    fun sumIncome(): Flow<Double>
+    fun sumIncome(accountId: String): Flow<Double>
 
-    fun sumSpend(): Flow<Double>
+    fun sumSpend(accountId: String): Flow<Double>
 
-    fun difference(): Flow<Double>
+    fun difference(accountId: String): Flow<Double>
 
    suspend fun deleteBy(transactionId: String)
 }

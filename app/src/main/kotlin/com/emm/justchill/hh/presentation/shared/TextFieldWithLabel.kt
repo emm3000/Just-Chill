@@ -23,6 +23,7 @@ import com.emm.justchill.hh.presentation.transaction.TransactionLabel
 fun TextFieldWithLabel(
     modifier: Modifier = Modifier,
     label: String,
+    placeholder: String = label,
     value: String = "",
     onChange: (String) -> Unit = {},
 ) {
@@ -35,7 +36,7 @@ fun TextFieldWithLabel(
             value = value,
             onValueChange = onChange,
             placeholder = {
-                LabelTextField(label)
+                LabelTextField(placeholder)
             },
             textStyle = TextStyle(
                 fontFamily = LatoFontFamily,

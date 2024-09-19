@@ -17,6 +17,12 @@ data class TransactionModel(
 
     @SerialName("user_id")
     val userId: String = "",
+
+    @SerialName("category_id")
+    val categoryId: String?,
+
+    @SerialName("account_id")
+    val accountId: String,
 )
 
 fun Transactions.toModel() = TransactionModel(
@@ -25,4 +31,6 @@ fun Transactions.toModel() = TransactionModel(
     amount = amount,
     description = description,
     date = date,
+    categoryId = categoryId,
+    accountId = accountId
 )

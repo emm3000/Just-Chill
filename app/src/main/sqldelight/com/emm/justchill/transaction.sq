@@ -18,7 +18,8 @@ SET
     amount = ?,
     description = ?,
     date = ?,
-    syncStatus = ?
+    syncStatus = ?,
+    accountId = ?
 WHERE
     transactionId = ?;
 
@@ -35,21 +36,21 @@ SELECT COUNT(*) AS transactionsCount FROM transactions;
 sumAllIncomeAmounts:
 SELECT SUM(amount) AS totalIncome
 FROM transactions
-WHERE type = 'INCOME' AND syncStatus != 'PENDING_DELETE';
+WHERE type = 'INCOME' AND syncStatus != 'PENDING_DELETE' AND accountId = ?;
 
 sumAllSpendAmounts:
 SELECT SUM(amount) AS totalIncome
 FROM transactions
-WHERE type = 'SPENT' AND syncStatus != 'PENDING_DELETE';
+WHERE type = 'SPENT' AND syncStatus != 'PENDING_DELETE' AND accountId = ?;
 
 difference:
 SELECT (
-    COALESCE((SELECT SUM(amount) FROM transactions WHERE type = 'INCOME' AND syncStatus != 'PENDING_DELETE'), 0)
-    - COALESCE((SELECT SUM(amount) FROM transactions WHERE type = 'SPENT' AND syncStatus != 'PENDING_DELETE'), 0)
+    COALESCE((SELECT SUM(amount) FROM transactions WHERE type = 'INCOME' AND syncStatus != 'PENDING_DELETE' AND accountId = ?), 0)
+    - COALESCE((SELECT SUM(amount) FROM transactions WHERE type = 'SPENT' AND syncStatus != 'PENDING_DELETE' AND accountId = ?), 0)
 ) AS incomeMinusSpent;
 
 retrieveAll:
-SELECT * FROM transactions WHERE syncStatus != 'PENDING_DELETE' ORDER BY date DESC;
+SELECT * FROM transactions WHERE syncStatus != 'PENDING_DELETE' AND accountId = ? ORDER BY date DESC;
 
 addTransaction:
 INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?, ?, ?);

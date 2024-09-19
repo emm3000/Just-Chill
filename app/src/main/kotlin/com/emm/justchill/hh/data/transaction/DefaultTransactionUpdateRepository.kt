@@ -23,7 +23,8 @@ class DefaultTransactionUpdateRepository(
             description = transactionUpdate.description,
             date = transactionUpdate.date,
             transactionId = transactionId,
-            syncStatus = SyncStatus.PENDING_UPDATE.name
+            accountId = transactionUpdate.accountId,
+            syncStatus = SyncStatus.PENDING_UPDATE.name,
         )
         syncer.sync(transactionId)
     }

@@ -25,7 +25,7 @@ class DefaultTransactionRepository(
         checkNotNull(transactionInsert.id)
         transactionsQueries.addTransaction(
             transactionId = transactionInsert.id,
-            type = transactionInsert.type,
+            type = transactionInsert.type.name,
             amount = transactionInsert.amount,
             description = transactionInsert.description,
             date = transactionInsert.date,
@@ -36,30 +36,30 @@ class DefaultTransactionRepository(
         syncer.sync(transactionInsert.id)
     }
 
-    override fun retrieve(): Flow<List<Transaction>> {
+    override fun retrieve(accountId: String): Flow<List<Transaction>> {
         return transactionsQueries
-            .retrieveAll()
+            .retrieveAll(accountId)
             .asFlow()
             .mapToList(ioDispatcher)
             .map(List<Transactions>::toDomain)
     }
 
-    override fun sumIncome(): Flow<Double> {
-        return transactionsQueries.sumAllIncomeAmounts()
+    override fun sumIncome(accountId: String): Flow<Double> {
+        return transactionsQueries.sumAllIncomeAmounts(accountId)
             .asFlow()
             .mapToOneOrNull(ioDispatcher)
             .map { it?.totalIncome ?: 0.0 }
     }
 
-    override fun sumSpend(): Flow<Double> {
-        return transactionsQueries.sumAllSpendAmounts()
+    override fun sumSpend(accountId: String): Flow<Double> {
+        return transactionsQueries.sumAllSpendAmounts(accountId)
             .asFlow()
             .mapToOneOrNull(ioDispatcher)
             .map { it?.totalIncome ?: 0.0 }
     }
 
-    override fun difference(): Flow<Double> {
-        return transactionsQueries.difference()
+    override fun difference(accountId: String): Flow<Double> {
+        return transactionsQueries.difference(accountId, accountId)
             .asFlow()
             .mapToOneOrNull(ioDispatcher)
             .map { it ?: 0.0 }
