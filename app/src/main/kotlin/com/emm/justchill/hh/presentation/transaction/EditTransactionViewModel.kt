@@ -92,7 +92,7 @@ class EditTransactionViewModel(
 
     fun updateTransaction() = viewModelScope.launch {
         val transactionUpdate = TransactionUpdate(
-            type = transactionType.name,
+            type = transactionType,
             description = description,
             date = dateInLong,
             amount = amount.replace(Regex("[^\\d.]"), "").toDouble(),
