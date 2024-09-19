@@ -84,6 +84,7 @@ class DefaultAccountRepository(
         amount: Double,
     ) = withContext(Dispatchers.IO) {
         aq.updateBalance(amount, accountId)
+        updateStatus(accountId, SyncStatus.PENDING_UPDATE)
         syncer.sync(accountId)
     }
 }

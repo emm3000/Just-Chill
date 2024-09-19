@@ -71,7 +71,7 @@ class HomeViewModel(
     val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
         .onEach { accounts ->
             accounts.firstOrNull()?.let {
-                accountLabel = "${it.name} ${fromCentsToSolesWith(it.balance)}"
+                accountLabel = it.nameWithBalance
                 account = it
             }
         }

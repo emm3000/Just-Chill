@@ -107,7 +107,7 @@ fun DropDown(
                         .border(BorderStroke(1.dp, PlaceholderOrLabel), shape = RectangleShape),
                     text = {
                         Text(
-                            text = "${it.name} ${fromCentsToSolesWith(it.balance)}",
+                            text = it.nameWithBalance,
                             fontFamily = LatoFontFamily,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Normal,
@@ -116,7 +116,7 @@ fun DropDown(
                     },
                     onClick = {
                         onAccountChange(it)
-                        setText("${it.name} ${fromCentsToSolesWith(it.balance)}")
+                        setText(it.nameWithBalance)
                         setIsExpanded(false)
                     }
                 )
