@@ -13,4 +13,4 @@ retrieve:
 SELECT * FROM quotas;
 
 find:
-SELECT * FROM quotas WHERE driverId = ?;
+SELECT * FROM quotas WHERE driverId = ? ORDER BY quoteDate DESC;

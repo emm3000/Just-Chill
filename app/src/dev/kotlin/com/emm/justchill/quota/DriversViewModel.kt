@@ -6,7 +6,7 @@ import com.emm.justchill.quota.domain.Driver
 import com.emm.justchill.quota.domain.DriverRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.count
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -46,8 +46,8 @@ class DriversViewModel(
     }
 
     private fun insertIfNoExistData() = viewModelScope.launch {
-        val count = driverRepository.all().count()
-        if (count != 0) return@launch
+        val count: List<Driver> = driverRepository.all().firstOrNull().orEmpty()
+        if (count.isNotEmpty()) return@launch
         staticDrivers.forEach {
             driverRepository.insert(it)
         }
