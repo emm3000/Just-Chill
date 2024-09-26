@@ -1,0 +1,16 @@
+CREATE TABLE quotas (
+    quoteId TEXT PRIMARY KEY,
+    amount REAL NOT NULL,
+    quoteDate INTEGER NOT NULL,
+    driverId INTEGER NOT NULL,
+    FOREIGN KEY (driverId) REFERENCES drivers (driverId) ON DELETE CASCADE
+);
+
+insert:
+INSERT OR REPLACE INTO quotas VALUES(?, ?, ?, ?);
+
+retrieve:
+SELECT * FROM quotas;
+
+find:
+SELECT * FROM quotas WHERE driverId = ?;

@@ -28,6 +28,7 @@ import com.emm.justchill.core.theme.PrimaryDisableButtonColor
 fun LoansHome(
     navigateToLoans: () -> Unit,
     navigateToPayments: () -> Unit,
+    navigateToQuota: () -> Unit,
 ) {
 
     Column(
@@ -49,7 +50,7 @@ fun LoansHome(
             shape = RoundedCornerShape(20)
         ) {
             Text(
-                text = "Ingresar prestamo",
+                text = "xxx",
                 fontFamily = LatoFontFamily,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Black
@@ -68,7 +69,27 @@ fun LoansHome(
             shape = RoundedCornerShape(20)
         ) {
             Text(
-                text = "Lista de prestamos",
+                text = "xxx",
+                fontFamily = LatoFontFamily,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Black
+            )
+        }
+
+        Spacer(modifier = Modifier.height(13.dp))
+        Button(
+            onClick = navigateToQuota,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = PrimaryButtonColor,
+                disabledContainerColor = PrimaryDisableButtonColor
+            ),
+            shape = RoundedCornerShape(20)
+        ) {
+            Text(
+                text = "Ferias",
                 fontFamily = LatoFontFamily,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Black
@@ -81,6 +102,6 @@ fun LoansHome(
 @Composable
 fun LoansHomePreview(modifier: Modifier = Modifier) {
     EmmTheme {
-        LoansHome({}, {})
+        LoansHome({}, {}, {})
     }
 }

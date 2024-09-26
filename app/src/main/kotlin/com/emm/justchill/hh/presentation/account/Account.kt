@@ -36,7 +36,7 @@ import com.emm.justchill.core.theme.PrimaryDisableButtonColor
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.core.theme.TextDisableColor
 import com.emm.justchill.hh.presentation.shared.TextFieldWithLabel
-import com.emm.justchill.hh.presentation.transaction.Mount
+import com.emm.justchill.hh.presentation.transaction.Amount
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -116,7 +116,7 @@ fun Account(
             verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
 
-            Mount(amount, updateAmount)
+            Amount(amount, updateAmount)
 
             TextFieldWithLabel(
                 modifier = Modifier,

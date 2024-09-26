@@ -1,0 +1,13 @@
+CREATE TABLE drivers (
+    driverId INTEGER NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
+insert:
+INSERT OR REPLACE INTO drivers VALUES(?, ?);
+
+retrieve:
+SELECT * FROM drivers;
+
+find:
+SELECT * FROM drivers WHERE driverId = ?;

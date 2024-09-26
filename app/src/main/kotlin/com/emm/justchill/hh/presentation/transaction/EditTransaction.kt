@@ -217,7 +217,7 @@ private fun EditTransaction(
                 setText = onAccountLabelChange
             )
 
-            Mount(mountValue, onMountChange)
+            Amount(mountValue, onMountChange)
 
             TransactionRadioButton(
                 modifier = Modifier.fillMaxWidth(),

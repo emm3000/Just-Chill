@@ -192,7 +192,7 @@ private fun Transaction(
                 setText = onAccountLabelChange
             )
 
-            Mount(mountValue, onMountChange)
+            Amount(mountValue, onMountChange)
 
             TransactionRadioButton(
                 modifier = Modifier
@@ -280,7 +280,7 @@ fun DateInput(
 }
 
 @Composable
-fun Mount(mountValue: String, onMountChange: (String) -> Unit) {
+fun Amount(mountValue: String, onMountChange: (String) -> Unit) {
 
     Column(Modifier.fillMaxWidth()) {
 
