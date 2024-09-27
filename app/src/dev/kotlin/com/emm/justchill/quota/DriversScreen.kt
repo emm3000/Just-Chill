@@ -1,7 +1,6 @@
 package com.emm.justchill.quota
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,8 +16,10 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun DriversScreen(
     vm: DriversViewModel = koinViewModel(),
-    navigateToQuotas: (Long) -> Unit,
-    navigateToAddQuota: (Long) -> Unit,
+    navigateToSeeQuotas: (Long) -> Unit,
+    navigateToAddQuotas: (Long) -> Unit,
+    navigateToSeeLoans: (Long) -> Unit,
+    navigateToAddLoans: (Long) -> Unit,
 ) {
 
     val a by vm.drivers.collectAsState()
@@ -31,20 +32,14 @@ fun DriversScreen(
         items(a) {
             DriverItem(
                 driver = it,
-                navigateToQuotas = navigateToQuotas,
-                navigateToAddQuota = navigateToAddQuota
+                navigateToSeeQuotas = navigateToSeeQuotas,
+                navigateToAddQuotas = navigateToAddQuotas,
+                navigateToSeeLoans = navigateToSeeLoans,
+                navigateToAddLoans = navigateToAddLoans,
             )
         }
     }
 
-    Column {
-//        QuotaDropContainer(
-//            currentItem = vm.currentGa,
-//            items = a,
-//            onItemChange = vm::updateGa
-//        )
-
-    }
 }
 
 @Preview(showBackground = true)

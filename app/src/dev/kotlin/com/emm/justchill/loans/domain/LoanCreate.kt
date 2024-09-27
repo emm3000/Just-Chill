@@ -10,6 +10,7 @@ data class LoanCreate(
     val interest: String,
     val startDate: Long,
     val duration: String,
+    val driverId: Long,
     val frequencyType: FrequencyType,
 ) {
 

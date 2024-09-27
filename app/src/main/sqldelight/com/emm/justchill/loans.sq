@@ -1,10 +1,20 @@
 CREATE TABLE loans (
     loanId TEXT PRIMARY KEY,
     amount REAL NOT NULL,
-    interest REAL NOT NULL,
     amountWithInterest REAL NOT NULL,
+    interest INTEGER NOT NULL,
     startDate INTEGER NOT NULL,
     duration INTEGER NOT NULL,
-    paymentFrequency TEXT NOT NULL,
-    status TEXT NOT NULL
+    status TEXT NOT NULL,
+    driverId INTEGER NOT NULL,
+    FOREIGN KEY (driverId) REFERENCES drivers (driverId) ON DELETE CASCADE
 );
+
+insert:
+INSERT OR REPLACE INTO loans VALUES (?,?,?,?,?,?,?,?);
+
+find:
+SELECT * FROM loans WHERE loanId = ?;
+
+findByDriver:
+SELECT * FROM loans WHERE driverId = ?;

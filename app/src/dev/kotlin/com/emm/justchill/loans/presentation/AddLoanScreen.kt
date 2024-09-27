@@ -18,7 +18,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
@@ -37,12 +36,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.dropUnlessResumed
 import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.BorderTextFieldColor
 import com.emm.justchill.core.theme.DeleteButtonColor
@@ -52,18 +53,23 @@ import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.PrimaryButtonColor
 import com.emm.justchill.core.theme.PrimaryDisableButtonColor
 import com.emm.justchill.core.theme.TextColor
-import com.emm.justchill.loans.domain.FrequencyType
+import com.emm.justchill.quota.domain.Driver
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
-fun Loans(
-    vm: LoansViewModel = koinViewModel(),
+fun AddLoanScreen(
+    driverId: Long,
+    navigateToBack: () -> Unit,
+    vm: AddLoanViewModel = koinViewModel(
+        parameters = { parametersOf(driverId) }
+    ),
 ) {
 
-    val state by vm.uiState.collectAsState()
+    val driver: Driver? by vm.currentDriver.collectAsState()
 
-    Loans(
-        state = state,
+    AddLoanScreen(
+        driver = driver,
         updateDate = vm::updateStartDate,
         dateValue = vm.startDate,
         amount = vm.amount,
@@ -72,17 +78,15 @@ fun Loans(
         updateInterest = vm::updateInterest,
         durationValue = vm.duration,
         updateDuration = vm::updateDuration,
-        frequencyType = vm.frequencyType,
-        updateFrequencyType = vm::updateFrequencyType,
         onSave = vm::create,
-        dismissDialogError = vm::dismissErrorDialog
+        navigateToBack = navigateToBack
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Loans(
-    state: LoansUiState,
+private fun AddLoanScreen(
+    driver: Driver? = null,
     dateValue: String = "",
     updateDate: (Long?) -> Unit = {},
     amount: String = "",
@@ -91,10 +95,8 @@ private fun Loans(
     updateInterest: (String) -> Unit = {},
     durationValue: String = "",
     updateDuration: (String) -> Unit = {},
-    frequencyType: FrequencyType = FrequencyType.DAILY,
-    updateFrequencyType: (FrequencyType) -> Unit = {},
     onSave: () -> Unit = {},
-    dismissDialogError: () -> Unit = {},
+    navigateToBack: () -> Unit = {},
 ) {
 
     val (showSelectDate, setShowSelectDate) = remember {
@@ -129,17 +131,6 @@ private fun Loans(
         }
     }
 
-    state.isError?.let {
-        DeleteDialog(
-            setShowDeleteDialog = {
-                dismissDialogError()
-            },
-            onConfirmButton = {
-                dismissDialogError()
-            }
-        )
-    }
-
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -157,7 +148,7 @@ private fun Loans(
                 horizontalArrangement = Arrangement.Center,
             ) {
                 Text(
-                    text = "Loans register",
+                    text = "Prestamos (${driver?.name.orEmpty()})",
                     color = TextColor,
                     fontFamily = LatoFontFamily,
                     fontWeight = FontWeight.Black,
@@ -190,15 +181,15 @@ private fun Loans(
                     setText = updateDuration
                 )
 
-                LoansRadioButton(
-                    selectedOption = frequencyType,
-                    onOptionSelected = updateFrequencyType
-                )
-
                 Spacer(modifier = Modifier.height(15.dp))
 
+                val keyboardController = LocalSoftwareKeyboardController.current
                 Button(
-                    onClick = onSave,
+                    onClick = dropUnlessResumed {
+                        keyboardController?.hide()
+                        onSave()
+                        navigateToBack()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -209,7 +200,7 @@ private fun Loans(
                     shape = RoundedCornerShape(20)
                 ) {
                     Text(
-                        text = "Save",
+                        text = "Guardar",
                         fontFamily = LatoFontFamily,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Black
@@ -218,16 +209,6 @@ private fun Loans(
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
-        }
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(Color.Gray.copy(alpha = 0.5f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
-            }
         }
     }
 }
@@ -297,11 +278,11 @@ private fun LoansAmountTextField(
         ),
         placeholder = {
             LoansLabelOrPlaceHolder(
-                "Amount",
+                "Ingrese el monto",
                 color = PlaceholderOrLabel.copy(alpha = 0.5f)
             )
         },
-        label = { LoansLabelOrPlaceHolder("Amount (S/)") },
+        label = { LoansLabelOrPlaceHolder("Monto") },
         prefix = { LoansLabelOrPlaceHolder("S/ ", TextColor) },
         textStyle = loansTextStyle()
     )
@@ -333,11 +314,11 @@ private fun LoansInterestTextField(
         ),
         placeholder = {
             LoansLabelOrPlaceHolder(
-                "1 . . 100 %",
+                "Ingrese el interés, 1 . . 100 %",
                 color = PlaceholderOrLabel.copy(alpha = 0.5f)
             )
         },
-        label = { LoansLabelOrPlaceHolder("Interest (%)") },
+        label = { LoansLabelOrPlaceHolder("Interés") },
         prefix = { LoansLabelOrPlaceHolder("%", TextColor) },
         textStyle = loansTextStyle()
     )
@@ -401,11 +382,11 @@ private fun LoansDurationTextField(
         ),
         placeholder = {
             LoansLabelOrPlaceHolder(
-                "Duration (days)",
+                "En cuantos días?",
                 color = PlaceholderOrLabel.copy(alpha = 0.5f)
             )
         },
-        label = { LoansLabelOrPlaceHolder("Duration (days)") },
+        label = { LoansLabelOrPlaceHolder("Días") },
         textStyle = loansTextStyle()
     )
 }
@@ -466,8 +447,10 @@ private fun LoansLabelOrPlaceHolder(
 
 @Preview(showBackground = true)
 @Composable
-fun LoansPreview(modifier: Modifier = Modifier) {
+fun LoansPreview() {
     EmmTheme {
-        Loans()
+        AddLoanScreen(
+            dateValue = "gaa"
+        )
     }
 }

@@ -1,15 +1,16 @@
 package com.emm.justchill.loans
 
-import com.emm.justchill.hh.data.shared.DefaultUniqueIdProvider
-import com.emm.justchill.loans.data.DefaultLoanRepository
-import com.emm.justchill.loans.data.DefaultPaymentRepository
+import com.emm.justchill.loans.data.LocalLoanRepository
+import com.emm.justchill.loans.data.LocalPaymentRepository
 import com.emm.justchill.loans.domain.LoanAndPaymentsCreator
 import com.emm.justchill.loans.domain.LoanCreator
 import com.emm.justchill.loans.domain.LoanRepository
 import com.emm.justchill.loans.domain.PaymentRepository
 import com.emm.justchill.loans.domain.PaymentsCreator
 import com.emm.justchill.loans.domain.PaymentsGenerator
+import com.emm.justchill.loans.presentation.AddLoanViewModel
 import com.emm.justchill.loans.presentation.LoansViewModel
+import com.emm.justchill.loans.presentation.PaymentsViewModel
 import com.emm.justchill.quota.AddQuotaViewModel
 import com.emm.justchill.quota.DriversViewModel
 import com.emm.justchill.quota.QuotasViewModel
@@ -25,14 +26,34 @@ import org.koin.dsl.module
 
 val loansModule = module {
 
-    viewModelOf(::LoansViewModel)
+    viewModel { parameters ->
+        AddLoanViewModel(
+            driverRepository = get(),
+            driverId = parameters.get(),
+            loanAndPaymentsCreator = get(),
+        )
+    }
 
-    factory { DefaultPaymentRepository(get()) } bind PaymentRepository::class
-    factory { DefaultLoanRepository(get()) } bind LoanRepository::class
+    viewModel { parameters ->
+        LoansViewModel(
+            driverId = parameters.get(),
+            loanRepository = get()
+        )
+    }
+
+    viewModel { parameters ->
+        PaymentsViewModel(
+            loanId = parameters.get(),
+            paymentRepository = get()
+        )
+    }
+
+    factory { LocalPaymentRepository(get()) } bind PaymentRepository::class
+    factory { LocalLoanRepository(get()) } bind LoanRepository::class
 
     factory { LoanCreator(get(), get()) }
     factory { PaymentsCreator(get()) }
-    factory { PaymentsGenerator(uniqueIdProvider = DefaultUniqueIdProvider) }
+    factory { PaymentsGenerator(get()) }
 
     factoryOf(::LoanAndPaymentsCreator)
 

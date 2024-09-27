@@ -5,7 +5,7 @@ import kotlinx.coroutines.withContext
 
 class PaymentsCreator(private val repository: PaymentRepository) {
 
-    suspend fun create(payments: List<Payment>) = withContext(Dispatchers.IO) {
-        repository.addAll(payments)
+    suspend fun create(paymentModels: List<Payment>) = withContext(Dispatchers.IO) {
+        repository.addAll(paymentModels)
     }
 }

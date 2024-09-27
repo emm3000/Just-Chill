@@ -2,6 +2,7 @@ package com.emm.justchill.loans.domain
 
 import com.emm.justchill.hh.data.shared.DefaultUniqueIdProvider
 import com.emm.justchill.hh.domain.shared.UniqueIdProvider
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.floor
@@ -20,26 +21,32 @@ class PaymentsGenerator(private val uniqueIdProvider: UniqueIdProvider = Default
 
         var internalStartDate: LocalDate = loanCreate.startDateAtLocalDate
         var accumulatedAmount = 0.0
+        var paymentCount = 0
 
-        repeat(duration - 1) {
+        while (paymentCount < duration - 1) {
             internalStartDate = internalStartDate.plusOneDay()
+
+            if (internalStartDate.dayOfWeek == DayOfWeek.SUNDAY) {
+                continue
+            }
 
             val payment = Payment(
                 paymentId = uniqueIdProvider.uniqueId,
                 loanId = loanId,
                 dueDate = internalStartDate.toMillis(),
-                amount = exactQuote.toLong(),
+                amount = exactQuote,
                 status = PaymentStatus.PENDING.name,
             )
             payments.add(payment)
             accumulatedAmount += exactQuote
+            paymentCount++
         }
 
         addLastQuote(
             internalStartDate = internalStartDate,
             totalAmount = amountWithInterest,
             accumulatedAmount = accumulatedAmount,
-            payments = payments,
+            paymentModels = payments,
             loanId = loanId
         )
 
@@ -50,7 +57,7 @@ class PaymentsGenerator(private val uniqueIdProvider: UniqueIdProvider = Default
         internalStartDate: LocalDate,
         totalAmount: Double,
         accumulatedAmount: Double,
-        payments: MutableList<Payment>,
+        paymentModels: MutableList<Payment>,
         loanId: String,
     ) {
 
@@ -60,10 +67,10 @@ class PaymentsGenerator(private val uniqueIdProvider: UniqueIdProvider = Default
             paymentId = uniqueIdProvider.uniqueId,
             loanId = loanId,
             dueDate = internalStartDate.plusOneDay().toMillis(),
-            amount = lastQuota.toLong(),
+            amount = lastQuota,
             status = PaymentStatus.PENDING.name,
         )
-        payments.add(lastQuote)
+        paymentModels.add(lastQuote)
     }
 
     private fun LocalDate.plusOneDay(): LocalDate = plusDays(1)

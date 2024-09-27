@@ -14,7 +14,7 @@ class LoanCreator(
         val dateAndTimeCombined: Long = dateAndTimeCombiner.combine(loanCreate.startDate)
         val amountWithInterest: Double = loanCreate.amountWithInterest
 
-        val loan = buildLoan(
+        val loan: Loan = buildLoan(
             loanCreate = loanCreate,
             amountWithInterest = amountWithInterest,
             dateAndTimeCombined = dateAndTimeCombined
@@ -39,8 +39,8 @@ class LoanCreator(
             interest = loanCreate.interest.toLong(),
             startDate = dateAndTimeCombined,
             duration = loanCreate.durationAtNumber,
-            paymentFrequency = loanCreate.frequencyType.name,
-            status = PaymentStatus.PENDING.name
+            status = PaymentStatus.PENDING.name,
+            driverId = loanCreate.driverId,
         )
     }
 }

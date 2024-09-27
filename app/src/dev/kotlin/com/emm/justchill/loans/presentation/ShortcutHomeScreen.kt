@@ -25,7 +25,7 @@ import com.emm.justchill.core.theme.PrimaryButtonColor
 import com.emm.justchill.core.theme.PrimaryDisableButtonColor
 
 @Composable
-fun LoansHome(
+fun ShortcutHomeScreen(
     navigateToLoans: () -> Unit,
     navigateToPayments: () -> Unit,
     navigateToQuota: () -> Unit,
@@ -102,6 +102,6 @@ fun LoansHome(
 @Composable
 fun LoansHomePreview(modifier: Modifier = Modifier) {
     EmmTheme {
-        LoansHome({}, {}, {})
+        ShortcutHomeScreen({}, {}, {})
     }
 }
