@@ -43,7 +43,7 @@ class DriversViewModel(
     private val driverRepository: DriverRepository,
     private val quotaRepository: QuotaRepository,
     private val dateAndTimeCombiner: DateAndTimeCombiner,
-    loanRepository: LoanRepository,
+    private val loanRepository: LoanRepository,
 ) : ViewModel() {
 
     val drivers: StateFlow<Map<Driver, List<LoanUi>>> = combine(
@@ -82,5 +82,9 @@ class DriversViewModel(
             driverId = driverId
         )
         quotaRepository.insert(quota)
+    }
+
+    fun deleteLoan(loanId: String) = viewModelScope.launch {
+        loanRepository.delete(loanId)
     }
 }

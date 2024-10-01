@@ -1,6 +1,10 @@
 package com.emm.justchill.quota
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.HorizontalDivider
@@ -22,11 +27,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
@@ -55,11 +62,18 @@ fun DriverItem(
     navigateToSeePayments: (String, String) -> Unit,
     navigateToAddLoans: (Long) -> Unit,
     addQuota: (Long, String) -> Unit,
+    deleteLoan: (String) -> Unit,
 ) {
 
     var showAddQuota: Boolean by remember {
         mutableStateOf(false)
     }
+
+    val sizeInside by animateFloatAsState(
+        targetValue = if (showAddQuota) 180f else 0f,
+        animationSpec = tween(easing = LinearOutSlowInEasing),
+        label = ""
+    )
 
     Column(
         modifier = Modifier
@@ -86,11 +100,20 @@ fun DriverItem(
         ) {
             AssistChip(
                 onClick = {
-                    showAddQuota = true
+                    showAddQuota = !showAddQuota
                 },
                 label = {
-                    Text("AGREGAR FERIA 👍", color = TextColor)
-                }
+                    Text("AGREGAR FERIA", color = TextColor)
+                },
+                trailingIcon = {
+                    Icon(
+                        modifier = Modifier
+                            .rotate(sizeInside),
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = null,
+                        tint = TextColor,
+                    )
+                },
             )
             AssistChip(
                 onClick = {
@@ -102,8 +125,7 @@ fun DriverItem(
             )
         }
 
-        if (showAddQuota) {
-
+        AnimatedVisibility(showAddQuota) {
             var amountValue: String by remember {
                 mutableStateOf("")
             }
@@ -198,8 +220,16 @@ fun DriverItem(
         }
 
         loans.forEach { loanUi ->
-            LoanItem(loanUi) {
-                navigateToSeePayments(it, driver.name)
+            key(loanUi.loanId) {
+                LoanItem(
+                    loan = loanUi,
+                    navigateToPayments = {
+                        navigateToSeePayments(it, driver.name)
+                    },
+                    deleteLoan = {
+                        deleteLoan(it)
+                    }
+                )
             }
         }
 
@@ -218,7 +248,7 @@ fun ItemPreview(modifier: Modifier = Modifier) {
             navigateToAddLoans = {},
             addQuota = { _: Long, _: String -> },
             loans = listOf(),
-            navigateToSeePayments = { a, b -> },
+            navigateToSeePayments = { a, b -> }, deleteLoan = {},
         )
     }
 }

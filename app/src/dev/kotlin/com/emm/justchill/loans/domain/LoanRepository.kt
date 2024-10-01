@@ -11,4 +11,6 @@ interface LoanRepository {
     fun all(): Flow<List<Loan>>
 
     fun retrieveByDriverId(driverId: Long): Flow<List<Loan>>
+
+    suspend fun delete(loanId: String)
 }

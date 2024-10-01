@@ -19,7 +19,7 @@ class PaymentsGenerator(private val uniqueIdProvider: UniqueIdProvider = Default
         val amountWithInterest: Double = loanCreate.amountWithInterest
         val exactQuote: Double = floor(amountWithInterest / duration)
 
-        var internalStartDate: LocalDate = loanCreate.startDateAtLocalDate
+        var internalStartDate: LocalDate = loanCreate.startDateAtLocalDate.minusDays(1)
         var accumulatedAmount = 0.0
         var paymentCount = 0
 
@@ -63,10 +63,16 @@ class PaymentsGenerator(private val uniqueIdProvider: UniqueIdProvider = Default
 
         val lastQuota = round(totalAmount - accumulatedAmount)
 
+        var lastQuoteDate = internalStartDate.plusOneDay()
+
+        if (lastQuoteDate.dayOfWeek == DayOfWeek.SUNDAY) {
+            lastQuoteDate = lastQuoteDate.plusOneDay()
+        }
+
         val lastQuote = Payment(
             paymentId = uniqueIdProvider.uniqueId,
             loanId = loanId,
-            dueDate = internalStartDate.plusOneDay().toMillis(),
+            dueDate = lastQuoteDate.toMillis(),
             amount = lastQuota,
             status = PaymentStatus.PENDING,
         )

@@ -35,7 +35,7 @@ fun LoansScreen(
     ) {
 
         items(loans, key = LoanUi::loanId) {
-            LoanItem(it, navigateToPayments)
+            LoanItem(it, navigateToPayments, vm::delete)
         }
     }
 }

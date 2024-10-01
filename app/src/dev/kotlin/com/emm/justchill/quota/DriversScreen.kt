@@ -37,7 +37,8 @@ fun DriversScreen(
                 navigateToSeeQuotas = navigateToSeeQuotas,
                 navigateToAddLoans = navigateToAddLoans,
                 addQuota = vm::addQuota,
-                navigateToSeePayments = navigateToSeePayments
+                navigateToSeePayments = navigateToSeePayments,
+                deleteLoan = vm::deleteLoan,
             )
         }
     }

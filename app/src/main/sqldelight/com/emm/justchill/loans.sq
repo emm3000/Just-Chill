@@ -21,3 +21,6 @@ SELECT * FROM loans WHERE driverId = ?;
 
 all:
 SELECT * FROM loans;
+
+delete:
+DELETE FROM loans WHERE loanId = ?;

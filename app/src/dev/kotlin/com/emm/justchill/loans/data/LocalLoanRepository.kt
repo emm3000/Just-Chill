@@ -53,6 +53,10 @@ class LocalLoanRepository(
             .map(::toDomain)
     }
 
+    override suspend fun delete(loanId: String) = withContext(Dispatchers.IO) {
+        lq.delete(loanId)
+    }
+
     private fun toDomain(loans: List<Loans>): List<Loan> {
         return loans.map {
             Loan(

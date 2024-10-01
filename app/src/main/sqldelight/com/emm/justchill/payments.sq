@@ -4,7 +4,7 @@ CREATE TABLE payments (
     dueDate INTEGER NOT NULL,
     amount REAL NOT NULL,
     status TEXT NOT NULL,
-    FOREIGN KEY (loanId) REFERENCES loans (loanId)
+    FOREIGN KEY (loanId) REFERENCES loans (loanId) ON DELETE CASCADE
 );
 
 insert:

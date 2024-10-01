@@ -8,10 +8,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class LoansViewModel(
     driverId: Long,
-    loanRepository: LoanRepository
+    private val loanRepository: LoanRepository
 ): ViewModel() {
 
     val loans: StateFlow<List<LoanUi>> = loanRepository.retrieveByDriverId(driverId)
@@ -23,4 +24,8 @@ class LoansViewModel(
             started = SharingStarted.WhileSubscribed(5000L),
             initialValue = emptyList()
         )
+
+    fun delete(loanId: String) = viewModelScope.launch {
+        loanRepository.delete(loanId)
+    }
 }
