@@ -1,4 +1,4 @@
-package com.emm.justchill.quota
+package com.emm.justchill.daily
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -26,8 +26,8 @@ import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.TextColor
 
 @Composable
-fun QuotaItem(
-    quota: QuotaUi,
+fun DailyItem(
+    daily: DailyUi,
 ) {
 
     Column(
@@ -47,7 +47,7 @@ fun QuotaItem(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = quota.day,
+                        text = daily.day,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         fontSize = 20.sp,
@@ -56,7 +56,7 @@ fun QuotaItem(
                         fontFamily = LatoFontFamily
                     )
                     Text(
-                        text = quota.dayNumber,
+                        text = daily.dayNumber,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         fontSize = 20.sp,
@@ -74,7 +74,7 @@ fun QuotaItem(
             ) {
                 Text(
                     modifier = Modifier,
-                    text = quota.amount,
+                    text = daily.amount,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = LatoFontFamily,
@@ -83,7 +83,7 @@ fun QuotaItem(
                 Spacer(Modifier.height(5.dp))
                 Text(
                     modifier = Modifier,
-                    text = quota.readableTime,
+                    text = daily.readableTime,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Normal,
                     lineHeight = TextUnit(1f, TextUnitType.Em),
@@ -104,11 +104,11 @@ fun QuotaItem(
 @Composable
 fun Preview(modifier: Modifier = Modifier) {
     EmmTheme {
-        QuotaItem(
-            quota = QuotaUi(
-                quoteId = "",
+        DailyItem(
+            daily = DailyUi(
+                dailyId = "",
                 amount = "S./ 22",
-                quoteDate = 0,
+                dailyDate = 0,
                 driverId = 0,
                 readableTime = "random",
                 day = "LUN",

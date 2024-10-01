@@ -1,4 +1,4 @@
-package com.emm.justchill.quota
+package com.emm.justchill.daily
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -8,10 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.hh.domain.shared.DateAndTimeCombiner
 import com.emm.justchill.hh.presentation.transaction.DateUtils
-import com.emm.justchill.quota.domain.Driver
-import com.emm.justchill.quota.domain.DriverRepository
-import com.emm.justchill.quota.domain.Quota
-import com.emm.justchill.quota.domain.QuotaRepository
+import com.emm.justchill.daily.domain.Driver
+import com.emm.justchill.daily.domain.DriverRepository
+import com.emm.justchill.daily.domain.Daily
+import com.emm.justchill.daily.domain.DailyRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -20,10 +20,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-class AddQuotaViewModel(
+class AddDailyViewModel(
     driverRepository: DriverRepository,
     private val driverId: Long,
-    private val quotaRepository: QuotaRepository,
+    private val dailyRepository: DailyRepository,
     private val dateAndTimeCombiner: DateAndTimeCombiner,
 ) : ViewModel() {
 
@@ -63,13 +63,13 @@ class AddQuotaViewModel(
         }
     }
 
-    fun addQuota() = viewModelScope.launch {
-        val quota = Quota(
-            quoteId = UUID.randomUUID().toString(),
+    fun addDaily() = viewModelScope.launch {
+        val daily = Daily(
+            dailyId = UUID.randomUUID().toString(),
             amount = amount.toDouble(),
-            quoteDate = dateAndTimeCombiner.combine(dateInLong),
+            dailyDate = dateAndTimeCombiner.combine(dateInLong),
             driverId = driverId
         )
-        quotaRepository.insert(quota)
+        dailyRepository.insert(daily)
     }
 }

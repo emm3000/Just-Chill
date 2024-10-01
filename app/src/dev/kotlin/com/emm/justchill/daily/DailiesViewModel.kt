@@ -1,20 +1,20 @@
-package com.emm.justchill.quota
+package com.emm.justchill.daily
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.quota.domain.Driver
-import com.emm.justchill.quota.domain.DriverRepository
-import com.emm.justchill.quota.domain.Quota
-import com.emm.justchill.quota.domain.QuotaRepository
+import com.emm.justchill.daily.domain.Driver
+import com.emm.justchill.daily.domain.DriverRepository
+import com.emm.justchill.daily.domain.Daily
+import com.emm.justchill.daily.domain.DailyRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-class QuotasViewModel(
+class DailiesViewModel(
     driverId: Long,
     driverRepository: DriverRepository,
-    quotaRepository: QuotaRepository,
+    dailyRepository: DailyRepository,
 ) : ViewModel() {
 
     val driver: StateFlow<Driver?> = driverRepository.find(driverId)
@@ -24,8 +24,8 @@ class QuotasViewModel(
             null
         )
 
-    val quotas: StateFlow<List<QuotaUi>> = quotaRepository.retrieveBy(driverId)
-        .map { it.map(Quota::toUi) }
+    val dailies: StateFlow<List<DailyUi>> = dailyRepository.retrieveBy(driverId)
+        .map { it.map(Daily::toUi) }
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),

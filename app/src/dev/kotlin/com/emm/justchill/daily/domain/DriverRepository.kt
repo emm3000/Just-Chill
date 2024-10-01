@@ -1,4 +1,4 @@
-package com.emm.justchill.quota.domain
+package com.emm.justchill.daily.domain
 
 import kotlinx.coroutines.flow.Flow
 

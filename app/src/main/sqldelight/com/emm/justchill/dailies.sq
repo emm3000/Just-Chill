@@ -1,0 +1,16 @@
+CREATE TABLE dailies (
+    dailyId TEXT PRIMARY KEY,
+    amount REAL NOT NULL,
+    dailyDate INTEGER NOT NULL,
+    driverId INTEGER NOT NULL,
+    FOREIGN KEY (driverId) REFERENCES drivers (driverId) ON DELETE CASCADE
+);
+
+insert:
+INSERT OR REPLACE INTO dailies VALUES(?, ?, ?, ?);
+
+retrieve:
+SELECT * FROM dailies;
+
+find:
+SELECT * FROM dailies WHERE driverId = ? ORDER BY dailyDate DESC;

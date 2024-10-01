@@ -1,4 +1,4 @@
-package com.emm.justchill.quota
+package com.emm.justchill.daily
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,10 +7,10 @@ import com.emm.justchill.loans.domain.Loan
 import com.emm.justchill.loans.domain.LoanRepository
 import com.emm.justchill.loans.presentation.LoanUi
 import com.emm.justchill.loans.presentation.toUi
-import com.emm.justchill.quota.domain.Driver
-import com.emm.justchill.quota.domain.DriverRepository
-import com.emm.justchill.quota.domain.Quota
-import com.emm.justchill.quota.domain.QuotaRepository
+import com.emm.justchill.daily.domain.Driver
+import com.emm.justchill.daily.domain.DriverRepository
+import com.emm.justchill.daily.domain.Daily
+import com.emm.justchill.daily.domain.DailyRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -41,7 +41,7 @@ val staticDrivers = listOf(
 
 class DriversViewModel(
     private val driverRepository: DriverRepository,
-    private val quotaRepository: QuotaRepository,
+    private val dailyRepository: DailyRepository,
     private val dateAndTimeCombiner: DateAndTimeCombiner,
     private val loanRepository: LoanRepository,
 ) : ViewModel() {
@@ -74,14 +74,14 @@ class DriversViewModel(
         }
     }
 
-    fun addQuota(driverId: Long, amount: String) = viewModelScope.launch {
-        val quota = Quota(
-            quoteId = UUID.randomUUID().toString(),
+    fun addDaily(driverId: Long, amount: String) = viewModelScope.launch {
+        val daily = Daily(
+            dailyId = UUID.randomUUID().toString(),
             amount = amount.toDouble(),
-            quoteDate = dateAndTimeCombiner.combine(Instant.now().toEpochMilli()),
+            dailyDate = dateAndTimeCombiner.combine(Instant.now().toEpochMilli()),
             driverId = driverId
         )
-        quotaRepository.insert(quota)
+        dailyRepository.insert(daily)
     }
 
     fun deleteLoan(loanId: String) = viewModelScope.launch {

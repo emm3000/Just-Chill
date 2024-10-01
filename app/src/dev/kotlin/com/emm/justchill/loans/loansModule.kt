@@ -11,13 +11,13 @@ import com.emm.justchill.loans.domain.PaymentsGenerator
 import com.emm.justchill.loans.presentation.AddLoanViewModel
 import com.emm.justchill.loans.presentation.LoansViewModel
 import com.emm.justchill.loans.presentation.PaymentsViewModel
-import com.emm.justchill.quota.AddQuotaViewModel
-import com.emm.justchill.quota.DriversViewModel
-import com.emm.justchill.quota.QuotasViewModel
-import com.emm.justchill.quota.data.LocalDriverRepository
-import com.emm.justchill.quota.data.LocalQuotaRepository
-import com.emm.justchill.quota.domain.DriverRepository
-import com.emm.justchill.quota.domain.QuotaRepository
+import com.emm.justchill.daily.AddDailyViewModel
+import com.emm.justchill.daily.DriversViewModel
+import com.emm.justchill.daily.DailiesViewModel
+import com.emm.justchill.daily.data.LocalDriverRepository
+import com.emm.justchill.daily.data.LocalDailyRepository
+import com.emm.justchill.daily.domain.DriverRepository
+import com.emm.justchill.daily.domain.DailyRepository
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.module.dsl.factoryOf
@@ -57,25 +57,25 @@ val loansModule = module {
 
     factoryOf(::LoanAndPaymentsCreator)
 
-    factoryOf(::LocalQuotaRepository) bind QuotaRepository::class
+    factoryOf(::LocalDailyRepository) bind DailyRepository::class
     factoryOf(::LocalDriverRepository) bind DriverRepository::class
 
     viewModelOf(::DriversViewModel)
 
     viewModel { parameters ->
-        AddQuotaViewModel(
+        AddDailyViewModel(
             driverRepository = get(),
             driverId = parameters.get(),
-            quotaRepository = get(),
+            dailyRepository = get(),
             dateAndTimeCombiner = get(),
         )
     }
 
     viewModel { parameters ->
-        QuotasViewModel(
+        DailiesViewModel(
             driverRepository = get(),
             driverId = parameters.get(),
-            quotaRepository = get(),
+            dailyRepository = get(),
         )
     }
 }

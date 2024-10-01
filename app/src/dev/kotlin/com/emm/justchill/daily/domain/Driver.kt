@@ -1,4 +1,4 @@
-package com.emm.justchill.quota.domain
+package com.emm.justchill.daily.domain
 
 data class Driver(
     val driverId: Long,

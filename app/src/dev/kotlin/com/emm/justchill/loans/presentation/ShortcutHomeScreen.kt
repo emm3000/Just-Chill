@@ -28,7 +28,7 @@ import com.emm.justchill.core.theme.PrimaryDisableButtonColor
 fun ShortcutHomeScreen(
     navigateToLoans: () -> Unit,
     navigateToPayments: () -> Unit,
-    navigateToQuota: () -> Unit,
+    navigateToDaily: () -> Unit,
 ) {
 
     Column(
@@ -78,7 +78,7 @@ fun ShortcutHomeScreen(
 
         Spacer(modifier = Modifier.height(13.dp))
         Button(
-            onClick = navigateToQuota,
+            onClick = navigateToDaily,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),

@@ -1,4 +1,4 @@
-package com.emm.justchill.quota
+package com.emm.justchill.daily
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -43,14 +43,14 @@ import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.core.theme.TextDisableColor
 import com.emm.justchill.hh.presentation.transaction.Amount
 import com.emm.justchill.hh.presentation.transaction.DateInput
-import com.emm.justchill.quota.domain.Driver
+import com.emm.justchill.daily.domain.Driver
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
-fun AddQuoteScreen(
+fun AddDailyScreen(
     driverId: Long,
-    vm: AddQuotaViewModel = koinViewModel(
+    vm: AddDailyViewModel = koinViewModel(
         parameters = { parametersOf(driverId) }
     ),
     navigateToBack: () -> Unit,
@@ -58,21 +58,21 @@ fun AddQuoteScreen(
 
     val currentDriver: Driver? by vm.currentDriver.collectAsState()
 
-    AddQuotaScreen(
+    AddDailyScreen(
         currentDriver = currentDriver,
         isEnabledButton = vm.isEnabled,
         dateValue = vm.date,
         updateDate = vm::updateCurrentDate,
         currentAmount = vm.amount,
         updateAmount = vm::updateAmount,
-        saveAction = vm::addQuota,
+        saveAction = vm::addDaily,
         navigateToBack = navigateToBack
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddQuotaScreen(
+fun AddDailyScreen(
     currentDriver: Driver? = null,
     isEnabledButton: Boolean = false,
     dateValue: String = "",
@@ -176,7 +176,7 @@ fun AddQuotaScreen(
 
 @Preview(showBackground = true)
 @Composable
-private fun AddQuotaScreenPreview() {
+private fun AddDailyScreenPreview() {
     EmmTheme {
     }
 }

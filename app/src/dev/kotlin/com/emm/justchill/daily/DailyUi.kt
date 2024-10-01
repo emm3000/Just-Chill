@@ -1,35 +1,34 @@
-package com.emm.justchill.quota
+package com.emm.justchill.daily
 
 import com.emm.justchill.hh.domain.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.presentation.transaction.DateUtils
-import com.emm.justchill.quota.domain.Quota
+import com.emm.justchill.daily.domain.Daily
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.*
 
-data class QuotaUi(
-    val quoteId: String,
+data class DailyUi(
+    val dailyId: String,
     val amount: String,
-    val quoteDate: Long,
+    val dailyDate: Long,
     val driverId: Long,
     val readableTime: String,
     val day: String,
     val dayNumber: String,
 )
 
-fun Quota.toUi(): QuotaUi {
+fun Daily.toUi(): DailyUi {
 
-    val date: LocalDateTime = LocalDateTime
-        .ofInstant(Instant.ofEpochMilli(quoteDate), ZoneId.systemDefault())
+    val date: LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(dailyDate), ZoneId.systemDefault())
 
-    return QuotaUi(
-        quoteId = quoteId,
+    return DailyUi(
+        dailyId = dailyId,
         amount = "S/ ${fromCentsToSolesWith(amount)}",
-        quoteDate = quoteDate,
+        dailyDate = dailyDate,
         driverId = driverId,
-        readableTime = DateUtils.readableTime(quoteDate),
+        readableTime = DateUtils.readableTime(dailyDate),
         day = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale("es")).uppercase(),
         dayNumber = date.dayOfMonth.toString()
     )

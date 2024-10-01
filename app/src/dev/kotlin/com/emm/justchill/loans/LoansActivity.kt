@@ -20,9 +20,9 @@ import com.emm.justchill.loans.presentation.LoansScreen
 import com.emm.justchill.loans.presentation.ShortcutHomeScreen
 import com.emm.justchill.loans.presentation.PaymentsScreen
 import com.emm.justchill.loans.presentation.PaymentsViewModel
-import com.emm.justchill.quota.AddQuoteScreen
-import com.emm.justchill.quota.DriversScreen
-import com.emm.justchill.quota.QuotasScreen
+import com.emm.justchill.daily.AddDailyScreen
+import com.emm.justchill.daily.DriversScreen
+import com.emm.justchill.daily.DailyScreen
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -43,10 +43,10 @@ data class Payments(val loanId: String, val driverName: String)
 object Drivers
 
 @Serializable
-data class AddQuota(val driverId: Long)
+data class AddDaily(val driverId: Long)
 
 @Serializable
-data class Quotas(val driverId: Long)
+data class Daily(val driverId: Long)
 
 class LoansActivity : AppCompatActivity() {
 
@@ -79,7 +79,7 @@ fun LoansNavigation() {
                 navigateToPayments = {
                     navController.navigate(Payments)
                 },
-                navigateToQuota = {
+                navigateToDaily = {
                     navController.navigate(Drivers)
                 }
             )
@@ -103,8 +103,8 @@ fun LoansNavigation() {
         }
         composable<Drivers> {
             DriversScreen(
-                navigateToSeeQuotas = {
-                    navController.navigate(Quotas(it))
+                navigateToSeeDailies = {
+                    navController.navigate(Daily(it))
                 },
                 navigateToAddLoans = {
                     navController.navigate(AddLoan(it))
@@ -123,19 +123,19 @@ fun LoansNavigation() {
                 }
             )
         }
-        composable<AddQuota> {
-            val addQuota: AddQuota = it.toRoute<AddQuota>()
-            AddQuoteScreen(
-                driverId = addQuota.driverId,
+        composable<AddDaily> {
+            val addDaily: AddDaily = it.toRoute<AddDaily>()
+            AddDailyScreen(
+                driverId = addDaily.driverId,
                 navigateToBack = {
                     navController.popBackStack()
                 }
             )
         }
-        composable<Quotas> {
-            val quotas: Quotas = it.toRoute<Quotas>()
-            QuotasScreen(
-                driverId = quotas.driverId,
+        composable<Daily> {
+            val daily: Daily = it.toRoute<Daily>()
+            DailyScreen(
+                driverId = daily.driverId,
             )
         }
     }

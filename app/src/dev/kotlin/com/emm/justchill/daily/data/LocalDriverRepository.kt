@@ -1,4 +1,4 @@
-package com.emm.justchill.quota.data
+package com.emm.justchill.daily.data
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
@@ -6,8 +6,8 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.justchill.Drivers
 import com.emm.justchill.DriversQueries
 import com.emm.justchill.EmmDatabase
-import com.emm.justchill.quota.domain.Driver
-import com.emm.justchill.quota.domain.DriverRepository
+import com.emm.justchill.daily.domain.Driver
+import com.emm.justchill.daily.domain.DriverRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

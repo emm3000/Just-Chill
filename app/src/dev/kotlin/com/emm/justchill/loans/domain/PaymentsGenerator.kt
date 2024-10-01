@@ -17,7 +17,7 @@ class PaymentsGenerator(private val uniqueIdProvider: UniqueIdProvider = Default
         val payments: MutableList<Payment> = mutableListOf()
         val duration: Int = loanCreate.durationAtNumber.toInt()
         val amountWithInterest: Double = loanCreate.amountWithInterest
-        val exactQuote: Double = floor(amountWithInterest / duration)
+        val exactDaily: Double = floor(amountWithInterest / duration)
 
         var internalStartDate: LocalDate = loanCreate.startDateAtLocalDate.minusDays(1)
         var accumulatedAmount = 0.0
@@ -34,15 +34,15 @@ class PaymentsGenerator(private val uniqueIdProvider: UniqueIdProvider = Default
                 paymentId = uniqueIdProvider.uniqueId,
                 loanId = loanId,
                 dueDate = internalStartDate.toMillis(),
-                amount = exactQuote,
+                amount = exactDaily,
                 status = PaymentStatus.PENDING,
             )
             payments.add(payment)
-            accumulatedAmount += exactQuote
+            accumulatedAmount += exactDaily
             paymentCount++
         }
 
-        addLastQuote(
+        addLastDaily(
             internalStartDate = internalStartDate,
             totalAmount = amountWithInterest,
             accumulatedAmount = accumulatedAmount,
@@ -53,7 +53,7 @@ class PaymentsGenerator(private val uniqueIdProvider: UniqueIdProvider = Default
         return payments
     }
 
-    private fun addLastQuote(
+    private fun addLastDaily(
         internalStartDate: LocalDate,
         totalAmount: Double,
         accumulatedAmount: Double,
@@ -61,22 +61,22 @@ class PaymentsGenerator(private val uniqueIdProvider: UniqueIdProvider = Default
         loanId: String,
     ) {
 
-        val lastQuota = round(totalAmount - accumulatedAmount)
+        val lastDailyAmount = round(totalAmount - accumulatedAmount)
 
-        var lastQuoteDate = internalStartDate.plusOneDay()
+        var lastDailyDate = internalStartDate.plusOneDay()
 
-        if (lastQuoteDate.dayOfWeek == DayOfWeek.SUNDAY) {
-            lastQuoteDate = lastQuoteDate.plusOneDay()
+        if (lastDailyDate.dayOfWeek == DayOfWeek.SUNDAY) {
+            lastDailyDate = lastDailyDate.plusOneDay()
         }
 
-        val lastQuote = Payment(
+        val lastDaily = Payment(
             paymentId = uniqueIdProvider.uniqueId,
             loanId = loanId,
-            dueDate = lastQuoteDate.toMillis(),
-            amount = lastQuota,
+            dueDate = lastDailyDate.toMillis(),
+            amount = lastDailyAmount,
             status = PaymentStatus.PENDING,
         )
-        paymentModels.add(lastQuote)
+        paymentModels.add(lastDaily)
     }
 
     private fun LocalDate.plusOneDay(): LocalDate = plusDays(1)

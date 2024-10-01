@@ -53,7 +53,7 @@ import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.PrimaryButtonColor
 import com.emm.justchill.core.theme.PrimaryDisableButtonColor
 import com.emm.justchill.core.theme.TextColor
-import com.emm.justchill.quota.domain.Driver
+import com.emm.justchill.daily.domain.Driver
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 

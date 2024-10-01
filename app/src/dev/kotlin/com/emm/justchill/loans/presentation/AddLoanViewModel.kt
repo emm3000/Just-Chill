@@ -9,8 +9,8 @@ import com.emm.justchill.hh.presentation.transaction.DateUtils
 import com.emm.justchill.loans.domain.FrequencyType
 import com.emm.justchill.loans.domain.LoanAndPaymentsCreator
 import com.emm.justchill.loans.domain.LoanCreate
-import com.emm.justchill.quota.domain.Driver
-import com.emm.justchill.quota.domain.DriverRepository
+import com.emm.justchill.daily.domain.Driver
+import com.emm.justchill.daily.domain.DriverRepository
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

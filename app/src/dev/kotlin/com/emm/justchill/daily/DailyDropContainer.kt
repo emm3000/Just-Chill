@@ -1,4 +1,4 @@
-package com.emm.justchill.quota
+package com.emm.justchill.daily
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -34,7 +34,7 @@ import com.emm.justchill.hh.presentation.transaction.TransactionLabel
 data class Gaa(val name: String)
 
 @Composable
-fun QuotaDropContainer(
+fun DailyDropContainer(
     currentItem: Gaa,
     items: List<Gaa>,
     onItemChange: (Gaa) -> Unit,

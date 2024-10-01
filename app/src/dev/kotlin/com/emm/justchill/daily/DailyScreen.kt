@@ -1,4 +1,4 @@
-package com.emm.justchill.quota
+package com.emm.justchill.daily
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,14 +22,14 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
-fun QuotasScreen(
+fun DailyScreen(
     driverId: Long,
-    vm: QuotasViewModel = koinViewModel(
+    vm: DailiesViewModel = koinViewModel(
         parameters = { parametersOf(driverId) }
     ),
 ) {
 
-    val quotas by vm.quotas.collectAsState()
+    val dailies by vm.dailies.collectAsState()
     val driver by vm.driver.collectAsState()
 
     LazyColumn(
@@ -52,8 +52,8 @@ fun QuotasScreen(
             )
         }
 
-        items(quotas) {
-            QuotaItem(it)
+        items(dailies) {
+            DailyItem(it)
         }
     }
 }

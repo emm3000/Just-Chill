@@ -1,4 +1,4 @@
-package com.emm.justchill.quota
+package com.emm.justchill.daily
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,13 +12,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.loans.presentation.LoanUi
-import com.emm.justchill.quota.domain.Driver
+import com.emm.justchill.daily.domain.Driver
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun DriversScreen(
     vm: DriversViewModel = koinViewModel(),
-    navigateToSeeQuotas: (Long) -> Unit,
+    navigateToSeeDailies: (Long) -> Unit,
     navigateToAddLoans: (Long) -> Unit,
     navigateToSeePayments: (String, String) -> Unit,
 ) {
@@ -34,9 +34,9 @@ fun DriversScreen(
             DriverItem(
                 driver = it,
                 loans = a[it].orEmpty(),
-                navigateToSeeQuotas = navigateToSeeQuotas,
+                navigateToSeeDailies = navigateToSeeDailies,
                 navigateToAddLoans = navigateToAddLoans,
-                addQuota = vm::addQuota,
+                addDaily = vm::addDaily,
                 navigateToSeePayments = navigateToSeePayments,
                 deleteLoan = vm::deleteLoan,
             )
@@ -47,8 +47,7 @@ fun DriversScreen(
 
 @Preview(showBackground = true)
 @Composable
-fun QuotaScreenPreview(modifier: Modifier = Modifier) {
+fun DailyScreenPreview(modifier: Modifier = Modifier) {
     EmmTheme {
-//        QuotaScreen()
     }
 }
