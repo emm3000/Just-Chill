@@ -39,6 +39,13 @@ class LocalLoanRepository(
             .map(::toDomain)
     }
 
+    override fun all(): Flow<List<Loan>> {
+        return lq.all()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map(::toDomain)
+    }
+
     override fun retrieveByDriverId(driverId: Long): Flow<List<Loan>> {
         return lq.findByDriver(driverId)
             .asFlow()

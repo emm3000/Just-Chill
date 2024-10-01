@@ -8,5 +8,7 @@ interface LoanRepository {
 
     fun retrieveBy(loanId: String): Flow<List<Loan>>
 
+    fun all(): Flow<List<Loan>>
+
     fun retrieveByDriverId(driverId: Long): Flow<List<Loan>>
 }

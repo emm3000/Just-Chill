@@ -35,7 +35,7 @@ class PaymentsGenerator(private val uniqueIdProvider: UniqueIdProvider = Default
                 loanId = loanId,
                 dueDate = internalStartDate.toMillis(),
                 amount = exactQuote,
-                status = PaymentStatus.PENDING.name,
+                status = PaymentStatus.PENDING,
             )
             payments.add(payment)
             accumulatedAmount += exactQuote
@@ -68,7 +68,7 @@ class PaymentsGenerator(private val uniqueIdProvider: UniqueIdProvider = Default
             loanId = loanId,
             dueDate = internalStartDate.plusOneDay().toMillis(),
             amount = lastQuota,
-            status = PaymentStatus.PENDING.name,
+            status = PaymentStatus.PENDING,
         )
         paymentModels.add(lastQuote)
     }

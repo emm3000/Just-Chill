@@ -5,5 +5,5 @@ data class Payment(
     val loanId: String,
     val dueDate: Long,
     val amount: Double,
-    val status: String,
+    val status: PaymentStatus,
 )

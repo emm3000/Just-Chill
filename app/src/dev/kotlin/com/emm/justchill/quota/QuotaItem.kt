@@ -40,26 +40,31 @@ fun QuotaItem(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
-                Text(
-                    text = quota.day,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextColor,
-                    fontFamily = LatoFontFamily
-                )
-                Text(
-                    text = quota.dayNumber,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextColor,
-                    fontFamily = LatoFontFamily
-                )
+                Column(
+                    modifier = Modifier,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = quota.day,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextColor,
+                        fontFamily = LatoFontFamily
+                    )
+                    Text(
+                        text = quota.dayNumber,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextColor,
+                        fontFamily = LatoFontFamily
+                    )
+                }
             }
 
             Column(

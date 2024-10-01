@@ -4,14 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.loans.domain.Payment
 import com.emm.justchill.loans.domain.PaymentRepository
+import com.emm.justchill.loans.domain.PaymentStatus
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class PaymentsViewModel(
     loanId: String,
-    paymentRepository: PaymentRepository,
+    private val paymentRepository: PaymentRepository,
 ) : ViewModel() {
 
     val payments: StateFlow<List<PaymentUi>> = paymentRepository.fetch(loanId)
@@ -21,5 +23,10 @@ class PaymentsViewModel(
             started = SharingStarted.WhileSubscribed(5000L),
             initialValue = emptyList()
         )
+
+    fun pay(isPay: Boolean, paymentId: String) = viewModelScope.launch {
+        val status: PaymentStatus = if (isPay) PaymentStatus.PAID else PaymentStatus.PENDING
+        paymentRepository.pay(status, paymentId)
+    }
 
 }

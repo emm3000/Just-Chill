@@ -24,10 +24,13 @@ import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.TextColor
+import com.emm.justchill.loans.domain.PaymentStatus
 
 @Composable
 fun PaymentsScreen(
     payments: List<PaymentUi>,
+    driverName: String,
+    markPay: (Boolean, String) -> Unit,
 ) {
 
     LazyColumn(
@@ -47,7 +50,7 @@ fun PaymentsScreen(
             ) {
                 Text(
                     modifier = Modifier,
-                    text = "Pagos",
+                    text = "Pagos ($driverName)",
                     color = TextColor,
                     fontFamily = LatoFontFamily,
                     fontSize = 20.sp,
@@ -59,7 +62,7 @@ fun PaymentsScreen(
 
         if (payments.isNotEmpty()) {
             items(payments, key = PaymentUi::paymentId) {
-                PaymentItem(it)
+                PaymentItem(it, markPay)
             }
         } else {
             item {
@@ -79,9 +82,26 @@ fun PaymentsScreen(
 @Composable
 fun PaymentsPreview(modifier: Modifier = Modifier) {
     EmmTheme {
-        PaymentsScreen(
-            payments = listOf(
-            )
+        PaymentsScreen(payments = listOf(
+                PaymentUi(
+                    paymentId = "1",
+                    loanId = "",
+                    dueDate = 0,
+                    amount = "200.00",
+                    status = PaymentStatus.PAID,
+                    day = "Lunes",
+                    dayNumber = "22"
+                ),
+                PaymentUi(
+                    paymentId = "2",
+                    loanId = "",
+                    dueDate = 0,
+                    amount = "200.00",
+                    status = PaymentStatus.PAID,
+                    day = "Lunes",
+                    dayNumber = "22"
+                )
+            ), markPay = { b: Boolean, s: String -> }, driverName = ""
         )
     }
 }

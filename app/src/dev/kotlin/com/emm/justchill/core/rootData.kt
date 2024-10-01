@@ -1,6 +1,7 @@
 package com.emm.justchill.core
 
 import com.emm.justchill.experiences.amount.Amount
+import com.emm.justchill.experiences.calendar.Calendar
 import com.emm.justchill.experiences.drinks.ui.DrinkMainScreen
 import com.emm.justchill.experiences.readjsonfromassets.ui.Experiences
 import com.emm.justchill.experiences.supabase.SupabaseScreen
@@ -13,6 +14,7 @@ sealed class RootRoutes(val route: String) {
     data object Experiences : RootRoutes("Experiences")
     data object Drink : RootRoutes("Drink")
     data object Hh : RootRoutes("hh")
+    data object Calendar : RootRoutes("Calendar")
 }
 
 val rootData: List<Feature> = listOf(
@@ -69,5 +71,14 @@ val rootData: List<Feature> = listOf(
         resource = "-",
         route = RootRoutes.Hh,
         screen = { Amount() }
+    ),
+    Feature(
+        id = UUID.randomUUID().toString(),
+        title = "Calendar Component",
+        description = "Calendar Component",
+        category = "personal",
+        resource = "-",
+        route = RootRoutes.Calendar,
+        screen = { Calendar() }
     )
-)
+).reversed()

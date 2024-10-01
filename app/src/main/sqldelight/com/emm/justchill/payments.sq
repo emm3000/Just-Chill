@@ -12,3 +12,10 @@ INSERT OR REPLACE INTO payments VALUES (?,?,?,?,?);
 
 fetch:
 SELECT * FROM payments WHERE loanId = ?;
+
+pay:
+UPDATE payments
+SET
+    status = ?
+WHERE
+    paymentId = ?;

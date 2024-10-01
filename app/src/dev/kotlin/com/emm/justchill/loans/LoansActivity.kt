@@ -37,7 +37,7 @@ data class AddLoan(val driverId: Long)
 data class Loans(val driverId: Long)
 
 @Serializable
-data class Payments(val loanId: String)
+data class Payments(val loanId: String, val driverName: String)
 
 @Serializable
 object Drivers
@@ -99,21 +99,18 @@ fun LoansNavigation() {
                 parameters = { parametersOf(payments.loanId) }
             )
             val paymentUis by vm.payments.collectAsState()
-            PaymentsScreen(payments = paymentUis)
+            PaymentsScreen(payments = paymentUis, markPay = vm::pay, driverName = payments.driverName)
         }
         composable<Drivers> {
             DriversScreen(
                 navigateToSeeQuotas = {
                     navController.navigate(Quotas(it))
                 },
-                navigateToAddQuotas = {
-                    navController.navigate(AddQuota(it))
-                },
                 navigateToAddLoans = {
                     navController.navigate(AddLoan(it))
                 },
-                navigateToSeeLoans = {
-                    navController.navigate(Loans(it))
+                navigateToSeePayments = { loanId, driverName ->
+                    navController.navigate(Payments(loanId, driverName))
                 }
             )
         }
@@ -122,7 +119,7 @@ fun LoansNavigation() {
             LoansScreen(
                 driverId = loans.driverId,
                 navigateToPayments = {
-                    navController.navigate(Payments(it))
+                    navController.navigate(Payments(it, ""))
                 }
             )
         }

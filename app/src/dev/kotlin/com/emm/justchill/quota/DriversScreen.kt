@@ -11,31 +11,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.loans.presentation.LoanUi
+import com.emm.justchill.quota.domain.Driver
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun DriversScreen(
     vm: DriversViewModel = koinViewModel(),
     navigateToSeeQuotas: (Long) -> Unit,
-    navigateToAddQuotas: (Long) -> Unit,
-    navigateToSeeLoans: (Long) -> Unit,
     navigateToAddLoans: (Long) -> Unit,
+    navigateToSeePayments: (String, String) -> Unit,
 ) {
 
-    val a by vm.drivers.collectAsState()
+    val a: Map<Driver, List<LoanUi>> by vm.drivers.collectAsState()
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(BackgroundColor)
     ) {
-        items(a) {
+        items(a.keys.toList(), key = Driver::driverId) {
             DriverItem(
                 driver = it,
+                loans = a[it].orEmpty(),
                 navigateToSeeQuotas = navigateToSeeQuotas,
-                navigateToAddQuotas = navigateToAddQuotas,
-                navigateToSeeLoans = navigateToSeeLoans,
                 navigateToAddLoans = navigateToAddLoans,
+                addQuota = vm::addQuota,
+                navigateToSeePayments = navigateToSeePayments
             )
         }
     }

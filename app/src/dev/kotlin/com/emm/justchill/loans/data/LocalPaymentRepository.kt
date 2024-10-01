@@ -7,6 +7,7 @@ import com.emm.justchill.Payments
 import com.emm.justchill.PaymentsQueries
 import com.emm.justchill.loans.domain.Payment
 import com.emm.justchill.loans.domain.PaymentRepository
+import com.emm.justchill.loans.domain.PaymentStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -25,7 +26,7 @@ class LocalPaymentRepository(
             loanId = payment.loanId,
             dueDate = payment.dueDate,
             amount = payment.amount,
-            status = payment.status,
+            status = payment.status.name,
         )
     }
 
@@ -37,7 +38,7 @@ class LocalPaymentRepository(
                     loanId = it.loanId,
                     dueDate = it.dueDate,
                     amount = it.amount,
-                    status = it.status,
+                    status = it.status.name,
                 )
             }
         }
@@ -50,6 +51,13 @@ class LocalPaymentRepository(
             .map(::toDomain)
     }
 
+    override suspend fun pay(
+        paymentStatus: PaymentStatus,
+        paymentId: String,
+    ) = withContext(Dispatchers.IO) {
+        pq.pay(paymentStatus.name, paymentId)
+    }
+
     private fun toDomain(payments: List<Payments>): List<Payment> {
         return payments.map {
             Payment(
@@ -57,7 +65,11 @@ class LocalPaymentRepository(
                 loanId = it.loanId,
                 dueDate = it.dueDate,
                 amount = it.amount,
-                status = it.status,
+                status = try {
+                    PaymentStatus.valueOf(it.status)
+                } catch (e: Throwable) {
+                    PaymentStatus.PENDING
+                },
             )
         }
     }

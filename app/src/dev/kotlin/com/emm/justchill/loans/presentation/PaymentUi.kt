@@ -2,6 +2,7 @@ package com.emm.justchill.loans.presentation
 
 import com.emm.justchill.hh.domain.shared.fromCentsToSolesWith
 import com.emm.justchill.loans.domain.Payment
+import com.emm.justchill.loans.domain.PaymentStatus
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -13,7 +14,7 @@ data class PaymentUi(
     val loanId: String,
     val dueDate: Long,
     val amount: String,
-    val status: String,
+    val status: PaymentStatus,
     val day: String,
     val dayNumber: String,
 )
@@ -28,7 +29,7 @@ fun Payment.toUi(): PaymentUi {
         dueDate = dueDate,
         amount = "S/ ${fromCentsToSolesWith(amount)}",
         status = status,
-        day = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale("es")).uppercase(),
+        day = date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("es")).uppercase(),
         dayNumber = date.dayOfMonth.toString()
 
     )

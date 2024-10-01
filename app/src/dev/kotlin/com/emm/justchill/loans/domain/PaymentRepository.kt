@@ -9,4 +9,6 @@ interface PaymentRepository {
     suspend fun addAll(payments: List<Payment>)
 
     fun fetch(loanId: String): Flow<List<Payment>>
+
+    suspend fun pay(paymentStatus: PaymentStatus, paymentId: String)
 }
