@@ -51,6 +51,13 @@ class LocalPaymentRepository(
             .map(::toDomain)
     }
 
+    override fun all(): Flow<List<Payment>> {
+        return pq.all()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map(::toDomain)
+    }
+
     override suspend fun pay(
         paymentStatus: PaymentStatus,
         paymentId: String,

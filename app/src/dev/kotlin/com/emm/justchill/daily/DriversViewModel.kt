@@ -11,6 +11,7 @@ import com.emm.justchill.daily.domain.Driver
 import com.emm.justchill.daily.domain.DriverRepository
 import com.emm.justchill.daily.domain.Daily
 import com.emm.justchill.daily.domain.DailyRepository
+import com.emm.justchill.loans.data.export.DataExporter
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -49,6 +50,7 @@ class DriversViewModel(
     private val dailyRepository: DailyRepository,
     private val dateAndTimeCombiner: DateAndTimeCombiner,
     private val loanRepository: LoanRepository,
+    private val dataExporter: DataExporter,
 ) : ViewModel() {
 
     val drivers: StateFlow<Map<Driver, DriversScreenUi>> = combine(
@@ -98,5 +100,13 @@ class DriversViewModel(
 
     fun deleteLoan(loanId: String) = viewModelScope.launch {
         loanRepository.delete(loanId)
+    }
+
+    fun export() = viewModelScope.launch {
+        dataExporter.export()
+    }
+
+    fun import(json: String) = viewModelScope.launch {
+        dataExporter.import(json)
     }
 }

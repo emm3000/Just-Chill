@@ -13,6 +13,9 @@ INSERT OR REPLACE INTO payments VALUES (?,?,?,?,?);
 fetch:
 SELECT * FROM payments WHERE loanId = ?;
 
+all:
+SELECT * FROM payments;
+
 pay:
 UPDATE payments
 SET

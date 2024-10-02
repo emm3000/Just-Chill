@@ -18,6 +18,8 @@ import com.emm.justchill.daily.data.LocalDriverRepository
 import com.emm.justchill.daily.data.LocalDailyRepository
 import com.emm.justchill.daily.domain.DriverRepository
 import com.emm.justchill.daily.domain.DailyRepository
+import com.emm.justchill.loans.data.export.DataExporter
+import org.koin.android.ext.koin.androidApplication
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.module.dsl.factoryOf
@@ -54,6 +56,16 @@ val loansModule = module {
     factory { LoanCreator(get(), get()) }
     factory { PaymentsCreator(get()) }
     factory { PaymentsGenerator(get()) }
+
+    factory {
+        DataExporter(
+            context = androidApplication(),
+            driverRepository = get(),
+            dailyRepository = get(),
+            loanRepository = get(),
+            paymentRepository = get()
+        )
+    }
 
     factoryOf(::LoanAndPaymentsCreator)
 
