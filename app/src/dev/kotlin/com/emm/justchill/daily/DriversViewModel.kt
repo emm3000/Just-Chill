@@ -39,6 +39,11 @@ val staticDrivers = listOf(
     )
 )
 
+data class DriversScreenUi(
+    val loans: List<LoanUi>,
+    val dailies: List<DailyUi>,
+)
+
 class DriversViewModel(
     private val driverRepository: DriverRepository,
     private val dailyRepository: DailyRepository,
@@ -46,14 +51,21 @@ class DriversViewModel(
     private val loanRepository: LoanRepository,
 ) : ViewModel() {
 
-    val drivers: StateFlow<Map<Driver, List<LoanUi>>> = combine(
+    val drivers: StateFlow<Map<Driver, DriversScreenUi>> = combine(
         driverRepository.all(),
-        loanRepository.all()
-    ) { drivers, loans ->
+        loanRepository.all(),
+        dailyRepository.all(),
+    ) { drivers, loans, dailies ->
         drivers.associateWith { driver ->
-            loans
-                .filter { it.driverId == driver.driverId && it.status == "PENDING" }
-                .map(Loan::toUi)
+            DriversScreenUi(
+                loans = loans
+                    .filter { it.driverId == driver.driverId && it.status == "PENDING" }
+                    .map(Loan::toUi),
+                dailies = dailies
+                    .filter { it.driverId == driver.driverId }
+                    .take(2)
+                    .map(Daily::toUi)
+            )
         }
     }
         .stateIn(

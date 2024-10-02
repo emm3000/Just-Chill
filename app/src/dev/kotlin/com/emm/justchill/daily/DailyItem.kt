@@ -44,13 +44,12 @@ fun DailyItem(
             ) {
                 Column(
                     modifier = Modifier,
-                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = daily.day,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        fontSize = 20.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextColor,
                         fontFamily = LatoFontFamily
@@ -59,7 +58,7 @@ fun DailyItem(
                         text = daily.dayNumber,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        fontSize = 20.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextColor,
                         fontFamily = LatoFontFamily
@@ -75,7 +74,7 @@ fun DailyItem(
                 Text(
                     modifier = Modifier,
                     text = daily.amount,
-                    fontSize = 20.sp,
+                    fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = LatoFontFamily,
                     color = TextColor,

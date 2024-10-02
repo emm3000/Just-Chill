@@ -10,7 +10,7 @@ insert:
 INSERT OR REPLACE INTO dailies VALUES(?, ?, ?, ?);
 
 retrieve:
-SELECT * FROM dailies;
+SELECT * FROM dailies ORDER BY dailyDate DESC;
 
 find:
 SELECT * FROM dailies WHERE driverId = ? ORDER BY dailyDate DESC;

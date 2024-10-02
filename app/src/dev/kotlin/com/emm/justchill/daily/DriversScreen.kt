@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.loans.presentation.LoanUi
 import com.emm.justchill.daily.domain.Driver
 import org.koin.androidx.compose.koinViewModel
 
@@ -23,7 +22,7 @@ fun DriversScreen(
     navigateToSeePayments: (String, String) -> Unit,
 ) {
 
-    val a: Map<Driver, List<LoanUi>> by vm.drivers.collectAsState()
+    val a: Map<Driver, DriversScreenUi> by vm.drivers.collectAsState()
 
     LazyColumn(
         modifier = Modifier
@@ -33,12 +32,13 @@ fun DriversScreen(
         items(a.keys.toList(), key = Driver::driverId) {
             DriverItem(
                 driver = it,
-                loans = a[it].orEmpty(),
+                loans = a[it]?.loans.orEmpty(),
                 navigateToSeeDailies = navigateToSeeDailies,
                 navigateToAddLoans = navigateToAddLoans,
                 addDaily = vm::addDaily,
                 navigateToSeePayments = navigateToSeePayments,
                 deleteLoan = vm::deleteLoan,
+                dailies = a[it]?.dailies.orEmpty(),
             )
         }
     }
