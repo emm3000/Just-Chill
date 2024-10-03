@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
@@ -62,6 +63,7 @@ fun DriverViewItem(
     loans: List<LoanUi>,
     dailies: List<DailyUi>,
     navigateToSeeDailies: (Long) -> Unit,
+    navigateToAddDaily: (Long) -> Unit,
     navigateToSeePayments: (String, String) -> Unit,
     navigateToAddLoans: (Long) -> Unit,
     addDaily: (Long, String) -> Unit,
@@ -119,6 +121,14 @@ fun DriverViewItem(
                     )
                 },
             )
+            AssistChip(
+                onClick = {
+                    navigateToAddDaily(driver.driverId)
+                },
+                label = {
+                    Text("AGREGAR FERIA", color = TextColor)
+                },
+            )
         }
 
         AnimatedVisibility(showAddDaily) {
@@ -172,7 +182,8 @@ fun DriverViewItem(
                     )
                     TextButton(
                         modifier = Modifier
-                            .align(Alignment.Bottom),
+                            .align(Alignment.Bottom)
+                            .padding(start = 13.dp),
                         onClick = {
                             addDaily(driver.driverId, amountValue)
                             keyboardController?.hide()
@@ -183,6 +194,7 @@ fun DriverViewItem(
                                 Toast.LENGTH_LONG
                             ).show()
                         },
+                        shape = RoundedCornerShape(25),
                         border = BorderStroke(
                             width = 1.dp,
                             color = if (amountValue.isNotEmpty()) TextColor else TextDisableColor
@@ -190,7 +202,7 @@ fun DriverViewItem(
                         enabled = amountValue.isNotEmpty(),
                     ) {
                         Text(
-                            text = "Agregar monto",
+                            text = "Agregar feria",
                             fontSize = 15.sp,
                             color = if (amountValue.isNotEmpty()) TextColor else TextDisableColor,
                             fontWeight = FontWeight.Bold,
@@ -375,6 +387,7 @@ fun DriverViewPreview(modifier: Modifier = Modifier) {
                 )
             ),
             deleteDaily = {},
+            navigateToAddDaily = {},
         )
     }
 }

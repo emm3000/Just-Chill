@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.emm.justchill.me.driver.domain.Driver
 import com.emm.justchill.me.driver.domain.DriverRepository
 import com.emm.justchill.me.driver.presentation.staticDrivers
+import com.emm.justchill.me.export.DataExporter
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
@@ -13,6 +14,7 @@ import kotlinx.coroutines.launch
 
 class HomeViewModel(
     private val driverRepository: DriverRepository,
+    private val dataExporter: DataExporter,
 ): ViewModel() {
 
     val drivers: StateFlow<List<Driver>> = driverRepository.all()
@@ -32,5 +34,13 @@ class HomeViewModel(
         staticDrivers.forEach {
             driverRepository.insert(it)
         }
+    }
+
+    fun export() = viewModelScope.launch {
+        dataExporter.export()
+    }
+
+    fun import(json: String) = viewModelScope.launch {
+        dataExporter.import(json)
     }
 }

@@ -17,6 +17,7 @@ fun DriverViewScreen(
     driver: Driver,
     driversLoansAndDailies: Pair<List<LoanUi>, List<DailyUi>>,
     navigateToSeeDailies: (Long) -> Unit,
+    navigateToAddDailies: (Long) -> Unit,
     navigateToSeePayments: (String, String) -> Unit,
     navigateToAddLoans: (Long) -> Unit,
     addDaily: (Long, String) -> Unit,
@@ -39,7 +40,8 @@ fun DriverViewScreen(
             navigateToAddLoans = navigateToAddLoans,
             addDaily = addDaily,
             deleteLoan = deleteLoan,
-            deleteDaily = deleteDaily
+            deleteDaily = deleteDaily,
+            navigateToAddDaily = navigateToAddDailies
         )
     }
 }
@@ -55,7 +57,9 @@ fun DriverViewScreenPreview(modifier: Modifier = Modifier) {
             navigateToSeePayments = { s: String, s1: String -> },
             navigateToAddLoans = {},
             addDaily = { l: Long, s: String -> },
-            deleteLoan = {}, deleteDaily = {}
+            deleteLoan = {},
+            deleteDaily = {},
+            navigateToAddDailies = {}
         )
     }
 }

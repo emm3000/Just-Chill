@@ -1,7 +1,11 @@
 package com.emm.justchill.me
 
+import android.content.Context
+import android.net.Uri
 import android.os.Bundle
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
@@ -9,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -83,10 +88,27 @@ fun LoansNavigation() {
     NavHost(navController = navController, startDestination = LoansHome) {
         composable<LoansHome> {
             val vm: HomeViewModel = koinViewModel()
-            val drivers: List<Driver> by vm.drivers.collectAsStateWithLifecycle()
-            HomeScreen(drivers) {
-                navController.navigate(DriverView(it))
+
+            val context: Context = LocalContext.current
+
+            val launcher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.OpenDocument()
+            ) { uri: Uri? ->
+                uri ?: return@rememberLauncherForActivityResult
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val json: String = inputStream?.bufferedReader().use { it?.readText() }.orEmpty()
+                vm.import(json)
             }
+
+            val drivers: List<Driver> by vm.drivers.collectAsStateWithLifecycle()
+            HomeScreen(
+                drivers = drivers,
+                navigateToDriverView = { navController.navigate(DriverView(it)) },
+                saveData = vm::export,
+                selectFile = {
+                    launcher.launch(arrayOf("application/json"))
+                }
+            )
         }
         composable<AddLoan> {
             val addLoan: AddLoan = it.toRoute<AddLoan>()
@@ -119,6 +141,9 @@ fun LoansNavigation() {
                     },
                     navigateToSeePayments = { loanId, driverName ->
                         navController.navigate(Payments(loanId, driverName))
+                    },
+                    navigateToAddDailies = { driverId ->
+                        navController.navigate(AddDaily(driverId))
                     }
                 )
             }
@@ -152,8 +177,8 @@ fun LoansNavigation() {
             val loans: Loans = it.toRoute<Loans>()
             LoansScreen(
                 driverId = loans.driverId,
-                navigateToPayments = {
-                    navController.navigate(Payments(it, ""))
+                navigateToPayments = { loanId ->
+                    navController.navigate(Payments(loanId, ""))
                 }
             )
         }
