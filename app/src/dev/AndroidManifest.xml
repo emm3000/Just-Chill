@@ -10,11 +10,11 @@
         </activity>
 
         <activity
-            android:name=".ShortActivity"
+            android:name=".experiences.ShortActivity"
             android:exported="true" />
 
         <activity
-            android:name=".loans.LoansActivity"
+            android:name=".me.MeActivity"
             android:windowSoftInputMode="adjustResize"
             android:exported="true" />
     </application>

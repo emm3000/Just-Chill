@@ -10,7 +10,7 @@ import com.emm.justchill.experiences.supabase.supabaseModule
 import com.emm.justchill.hh.accountModule
 import com.emm.justchill.hh.categoryModule
 import com.emm.justchill.hh.hhModule
-import com.emm.justchill.loans.loansModule
+import com.emm.justchill.experiences.loans.loansModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin

@@ -1,6 +1,6 @@
 package com.emm.justchill.experiences.readjsonfromassets.ui
 
-import com.emm.justchill.ExperienceItem
+import com.emm.justchill.experiences.ExperienceItem
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.emm.justchill.core.Result
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.toBundle
+import com.emm.justchill.experiences.toBundle
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
