@@ -67,7 +67,7 @@ class AddDailyViewModel(
         val daily = Daily(
             dailyId = UUID.randomUUID().toString(),
             amount = amount.toDouble(),
-            dailyDate = dateAndTimeCombiner.combine(dateInLong),
+            dailyDate = dateAndTimeCombiner.combineWithUtc(dateInLong),
             driverId = driverId
         )
         dailyRepository.insert(daily)

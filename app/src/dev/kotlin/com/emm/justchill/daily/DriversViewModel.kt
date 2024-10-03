@@ -92,7 +92,7 @@ class DriversViewModel(
         val daily = Daily(
             dailyId = UUID.randomUUID().toString(),
             amount = amount.toDouble(),
-            dailyDate = dateAndTimeCombiner.combine(Instant.now().toEpochMilli()),
+            dailyDate = dateAndTimeCombiner.combineDefaultZone(Instant.now().toEpochMilli()),
             driverId = driverId
         )
         dailyRepository.insert(daily)
@@ -108,5 +108,9 @@ class DriversViewModel(
 
     fun import(json: String) = viewModelScope.launch {
         dataExporter.import(json)
+    }
+
+    fun deleteDaily(dailyId: String) = viewModelScope.launch {
+        dailyRepository.deleteBy(dailyId)
     }
 }

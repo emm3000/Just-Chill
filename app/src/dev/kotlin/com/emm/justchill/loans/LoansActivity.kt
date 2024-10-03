@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -17,12 +18,18 @@ import androidx.navigation.toRoute
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.loans.presentation.AddLoanScreen
 import com.emm.justchill.loans.presentation.LoansScreen
-import com.emm.justchill.loans.presentation.ShortcutHomeScreen
+import com.emm.justchill.loans.presentation.HomeScreen
 import com.emm.justchill.loans.presentation.PaymentsScreen
 import com.emm.justchill.loans.presentation.PaymentsViewModel
 import com.emm.justchill.daily.AddDailyScreen
 import com.emm.justchill.daily.DriversScreen
 import com.emm.justchill.daily.DailyScreen
+import com.emm.justchill.daily.DailyUi
+import com.emm.justchill.daily.domain.Driver
+import com.emm.justchill.loans.presentation.DriverViewScreen
+import com.emm.justchill.loans.presentation.DriverViewViewModel
+import com.emm.justchill.loans.presentation.HomeViewModel
+import com.emm.justchill.loans.presentation.LoanUi
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -41,6 +48,9 @@ data class Payments(val loanId: String, val driverName: String)
 
 @Serializable
 object Drivers
+
+@Serializable
+data class DriverView(val driverId: Long)
 
 @Serializable
 data class AddDaily(val driverId: Long)
@@ -70,19 +80,13 @@ fun LoansNavigation() {
 
     val navController: NavHostController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Drivers) {
+    NavHost(navController = navController, startDestination = LoansHome) {
         composable<LoansHome> {
-            ShortcutHomeScreen(
-                navigateToLoans = {
-                    navController.navigate(AddLoan)
-                },
-                navigateToPayments = {
-                    navController.navigate(Payments)
-                },
-                navigateToDaily = {
-                    navController.navigate(Drivers)
-                }
-            )
+            val vm: HomeViewModel = koinViewModel()
+            val drivers: List<Driver> by vm.drivers.collectAsStateWithLifecycle()
+            HomeScreen(drivers) {
+                navController.navigate(DriverView(it))
+            }
         }
         composable<AddLoan> {
             val addLoan: AddLoan = it.toRoute<AddLoan>()
@@ -93,13 +97,43 @@ fun LoansNavigation() {
                 }
             )
         }
+        composable<DriverView> {
+            val driverView: DriverView = it.toRoute<DriverView>()
+            val vm: DriverViewViewModel = koinViewModel(
+                parameters = { parametersOf(driverView.driverId) }
+            )
+            val driver: Driver? by vm.currentDriver.collectAsStateWithLifecycle()
+            val driversLoansAndDailies: Pair<List<LoanUi>, List<DailyUi>> by vm.driversLoansAndDailies.collectAsStateWithLifecycle()
+            driver?.let { notNullDriver ->
+                DriverViewScreen(
+                    driver = notNullDriver,
+                    driversLoansAndDailies = driversLoansAndDailies,
+                    addDaily = vm::addDaily,
+                    deleteLoan = vm::deleteLoan,
+                    deleteDaily = vm::deleteDaily,
+                    navigateToSeeDailies = { driverId ->
+                        navController.navigate(Daily(driverId))
+                    },
+                    navigateToAddLoans = { driverId ->
+                        navController.navigate(AddLoan(driverId))
+                    },
+                    navigateToSeePayments = { loanId, driverName ->
+                        navController.navigate(Payments(loanId, driverName))
+                    }
+                )
+            }
+        }
         composable<Payments> {
             val payments: Payments = it.toRoute<Payments>()
             val vm: PaymentsViewModel = koinViewModel(
                 parameters = { parametersOf(payments.loanId) }
             )
             val paymentUis by vm.payments.collectAsState()
-            PaymentsScreen(payments = paymentUis, markPay = vm::pay, driverName = payments.driverName)
+            PaymentsScreen(
+                payments = paymentUis,
+                markPay = vm::pay,
+                driverName = payments.driverName
+            )
         }
         composable<Drivers> {
             DriversScreen(

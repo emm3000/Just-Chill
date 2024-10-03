@@ -40,6 +40,10 @@ class LocalDailyRepository(private val emmDatabase: EmmDatabase) : DailyReposito
             .map(::toDomain)
     }
 
+    override suspend fun deleteBy(dailyId: String) = withContext(Dispatchers.IO) {
+        dq.delete(dailyId)
+    }
+
     private fun toDomain(list: List<Dailies>): List<Daily> {
         return list.map {
             Daily(

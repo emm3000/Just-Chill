@@ -10,11 +10,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class DailiesViewModel(
     driverId: Long,
     driverRepository: DriverRepository,
-    dailyRepository: DailyRepository,
+    private val dailyRepository: DailyRepository,
 ) : ViewModel() {
 
     val driver: StateFlow<Driver?> = driverRepository.find(driverId)
@@ -31,4 +32,8 @@ class DailiesViewModel(
             SharingStarted.WhileSubscribed(5000),
             emptyList()
         )
+
+    fun deleteDaily(dailyId: String) = viewModelScope.launch {
+        dailyRepository.deleteBy(dailyId)
+    }
 }

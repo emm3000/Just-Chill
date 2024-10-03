@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
 import com.emm.justchill.daily.domain.Daily
 import com.emm.justchill.daily.domain.DailyRepository
 import com.emm.justchill.daily.domain.Driver
@@ -73,7 +72,6 @@ class DataExporter(
             selectionArgs,
             null
         )?.use { cursor ->
-            Log.d("CursorCount", "Count: ${cursor.count}")
             if (cursor.moveToFirst()) {
                 val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
                 return ContentUris.withAppendedId(target, id)

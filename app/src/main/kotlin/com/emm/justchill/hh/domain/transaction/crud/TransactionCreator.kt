@@ -20,7 +20,7 @@ class TransactionCreator(
 
         val transactionId: String = uniqueIdProvider.uniqueId
 
-        val dateAndTimeCombined: Long = dateAndTimeCombiner.combine(transactionInsert.date)
+        val dateAndTimeCombined: Long = dateAndTimeCombiner.combineWithUtc(transactionInsert.date)
 
         val amountDouble: Double = amount.toDouble()
 

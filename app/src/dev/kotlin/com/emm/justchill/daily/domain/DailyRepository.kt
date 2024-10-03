@@ -9,4 +9,6 @@ interface DailyRepository {
     fun all(): Flow<List<Daily>>
 
     fun retrieveBy(driverId: Long): Flow<List<Daily>>
+
+    suspend fun deleteBy(dailyId: String)
 }

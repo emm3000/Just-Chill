@@ -1,6 +1,9 @@
 package com.emm.justchill.daily
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,9 +13,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,19 +30,32 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.BackgroundColor
+import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.TextColor
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DailyItem(
     daily: DailyUi,
+    deleteDaily: (String) -> Unit,
 ) {
+
+    var showOptions: Boolean by remember {
+        mutableStateOf(false)
+    }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(BackgroundColor)
+            .combinedClickable(
+                onClick = {},
+                onLongClick = {
+                    showOptions = true
+                }
+            )
             .padding(horizontal = 15.dp, vertical = 10.dp)
     ) {
         Row(
@@ -93,6 +115,37 @@ fun DailyItem(
             }
 
         }
+
+        AnimatedVisibility(showOptions) {
+            Row {
+                TextButton(onClick = {
+                    deleteDaily(daily.dailyId)
+                }) {
+                    Text(
+                        text = "Eliminar feria",
+                        style = TextStyle(
+                            fontFamily = LatoFontFamily,
+                            color = DeleteButtonColor,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    )
+                }
+                TextButton(onClick = {
+                    showOptions = false
+                }) {
+                    Text(
+                        text = "Cancelar",
+                        style = TextStyle(
+                            fontFamily = LatoFontFamily,
+                            color = TextColor,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    )
+                }
+            }
+        }
         Spacer(modifier = Modifier.height(10.dp))
         HorizontalDivider()
     }
@@ -101,7 +154,7 @@ fun DailyItem(
 
 @Preview(showBackground = true)
 @Composable
-fun Preview(modifier: Modifier = Modifier) {
+fun Preview() {
     EmmTheme {
         DailyItem(
             daily = DailyUi(
@@ -112,8 +165,8 @@ fun Preview(modifier: Modifier = Modifier) {
                 readableTime = "random",
                 day = "LUN",
                 dayNumber = "20"
-            )
-
+            ),
+            deleteDaily = {}
         )
     }
 }

@@ -53,7 +53,7 @@ fun DailyScreen(
         }
 
         items(dailies) {
-            DailyItem(it)
+            DailyItem(it, vm::deleteDaily)
         }
     }
 }

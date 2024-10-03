@@ -61,9 +61,7 @@ import org.koin.core.parameter.parametersOf
 fun AddLoanScreen(
     driverId: Long,
     navigateToBack: () -> Unit,
-    vm: AddLoanViewModel = koinViewModel(
-        parameters = { parametersOf(driverId) }
-    ),
+    vm: AddLoanViewModel = koinViewModel(parameters = { parametersOf(driverId) }),
 ) {
 
     val driver: Driver? by vm.currentDriver.collectAsState()
@@ -349,11 +347,11 @@ private fun LoansStartDateTextField(
         ),
         placeholder = {
             LoansLabelOrPlaceHolder(
-                "Start date",
+                "Fecha de inicio",
                 color = PlaceholderOrLabel.copy(alpha = 0.5f)
             )
         },
-        label = { LoansLabelOrPlaceHolder("Start date") },
+        label = { LoansLabelOrPlaceHolder("Fecha de inicio") },
         textStyle = loansTextStyle(),
         readOnly = true,
         enabled = false,

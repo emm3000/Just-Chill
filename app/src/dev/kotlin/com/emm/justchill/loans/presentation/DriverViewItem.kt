@@ -1,4 +1,4 @@
-package com.emm.justchill.daily
+package com.emm.justchill.loans.presentation
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -6,14 +6,13 @@ import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -52,13 +50,14 @@ import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.core.theme.TextDisableColor
+import com.emm.justchill.daily.DailyItem
+import com.emm.justchill.daily.DailyUi
 import com.emm.justchill.daily.domain.Driver
 import com.emm.justchill.hh.presentation.auth.LabelTextField
-import com.emm.justchill.loans.presentation.LoanItem
-import com.emm.justchill.loans.presentation.LoanUi
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun DriverItem(
+fun DriverViewItem(
     driver: Driver,
     loans: List<LoanUi>,
     dailies: List<DailyUi>,
@@ -71,7 +70,7 @@ fun DriverItem(
 ) {
 
     var showAddDaily: Boolean by remember {
-        mutableStateOf(false)
+        mutableStateOf(true)
     }
 
     val sizeInside by animateFloatAsState(
@@ -315,9 +314,6 @@ fun DriverItem(
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(10.dp))
-        HorizontalDivider()
     }
 }
 
@@ -325,7 +321,7 @@ fun DriverItem(
 @Composable
 fun ItemPreview(modifier: Modifier = Modifier) {
     EmmTheme {
-        DriverItem(
+        DriverViewItem(
             driver = Driver(driverId = 0, name = "Random name"),
             navigateToSeeDailies = {},
             navigateToAddLoans = {},
@@ -356,7 +352,7 @@ fun ItemPreview(modifier: Modifier = Modifier) {
                     readableTime = "23:10 am"
                 )
             ),
-            navigateToSeePayments = { _, _ -> },
+            navigateToSeePayments = { a, b -> },
             deleteLoan = {},
             dailies = listOf(
                 DailyUi(

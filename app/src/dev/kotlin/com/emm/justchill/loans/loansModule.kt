@@ -19,6 +19,8 @@ import com.emm.justchill.daily.data.LocalDailyRepository
 import com.emm.justchill.daily.domain.DriverRepository
 import com.emm.justchill.daily.domain.DailyRepository
 import com.emm.justchill.loans.data.export.DataExporter
+import com.emm.justchill.loans.presentation.DriverViewViewModel
+import com.emm.justchill.loans.presentation.HomeViewModel
 import org.koin.android.ext.koin.androidApplication
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.androidx.viewmodel.dsl.viewModelOf
@@ -64,6 +66,17 @@ val loansModule = module {
             dailyRepository = get(),
             loanRepository = get(),
             paymentRepository = get()
+        )
+    }
+
+    viewModelOf(::HomeViewModel)
+    viewModel {
+        DriverViewViewModel(
+            driverId = it.get(),
+            driverRepository = get(),
+            loanRepository = get(),
+            dailyRepository = get(),
+            dateAndTimeCombiner = get(),
         )
     }
 

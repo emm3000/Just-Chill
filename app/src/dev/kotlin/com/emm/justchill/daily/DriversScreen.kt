@@ -75,7 +75,6 @@ fun DriversScreen(
                     launcher.launch(arrayOf("application/json"))
                 }) {
                     Text(
-
                         text = "IMPORTAR DATOS",
                         fontSize = 16.sp,
                         fontFamily = LatoFontFamily,
@@ -95,6 +94,7 @@ fun DriversScreen(
                 navigateToSeePayments = navigateToSeePayments,
                 deleteLoan = vm::deleteLoan,
                 dailies = a[it]?.dailies.orEmpty(),
+                deleteDaily = vm::deleteDaily
             )
         }
     }

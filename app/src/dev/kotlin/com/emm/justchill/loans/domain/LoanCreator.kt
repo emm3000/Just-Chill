@@ -11,7 +11,7 @@ class LoanCreator(
 
     suspend fun create(loanCreate: LoanCreate) = withContext(Dispatchers.IO) {
 
-        val dateAndTimeCombined: Long = dateAndTimeCombiner.combine(loanCreate.startDate)
+        val dateAndTimeCombined: Long = dateAndTimeCombiner.combineWithUtc(loanCreate.startDate)
         val amountWithInterest: Double = loanCreate.amountWithInterest
 
         val loan: Loan = buildLoan(

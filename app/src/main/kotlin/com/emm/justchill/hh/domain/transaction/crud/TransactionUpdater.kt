@@ -16,7 +16,7 @@ class TransactionUpdater(
         transactionUpdate: TransactionUpdate,
     ) {
 
-        val dateAndTimeCombined: Long = dateAndTimeCombiner.combine(transactionUpdate.date)
+        val dateAndTimeCombined: Long = dateAndTimeCombiner.combineWithUtc(transactionUpdate.date)
 
         repository.update(
             transactionId = transactionId,
