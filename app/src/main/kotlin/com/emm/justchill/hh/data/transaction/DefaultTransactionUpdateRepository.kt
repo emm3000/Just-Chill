@@ -26,7 +26,7 @@ class DefaultTransactionUpdateRepository(
             accountId = transactionUpdate.accountId,
             syncStatus = SyncStatus.PENDING_UPDATE.name,
         )
-        syncer.sync(transactionId)
+//        syncer.sync(transactionId)
     }
 
     override suspend fun updateStatus(
@@ -34,6 +34,6 @@ class DefaultTransactionUpdateRepository(
         syncStatus: SyncStatus,
     ) = withContext(Dispatchers.IO) {
         transactionQueries.updateStatus(syncStatus.name, transactionId)
-        syncer.sync(transactionId)
+//        syncer.sync(transactionId)
     }
 }

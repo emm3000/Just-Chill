@@ -19,7 +19,7 @@ import kotlinx.coroutines.withContext
 class DefaultAccountRepository(
     private val emmDatabase: EmmDatabase,
     private val syncer: Syncer,
-): AccountRepository {
+) : AccountRepository {
 
     private val aq: AccountsQueries
         get() = emmDatabase.accountsQueries
@@ -52,7 +52,16 @@ class DefaultAccountRepository(
             description = account.description,
             syncStatus = SyncStatus.PENDING_INSERT.name
         )
-        syncer.sync(accountId)
+//        syncer.sync(accountId)
+    }
+
+    override fun existDailyAccount(): Flow<Account?> {
+        return aq.existDailyAccount()
+            .asFlow()
+            .mapToOneOrNull(Dispatchers.IO)
+            .map { accounts ->
+                accounts?.let(Accounts::toDomain)
+            }
     }
 
     override suspend fun deleteBy(accountId: String) = withContext(Dispatchers.IO) {
@@ -78,7 +87,7 @@ class DefaultAccountRepository(
             syncStatus = SyncStatus.PENDING_UPDATE.name,
             accountId = accountId
         )
-        syncer.sync(accountId)
+//        syncer.sync(accountId)
     }
 
     override suspend fun updateAmount(
@@ -87,6 +96,6 @@ class DefaultAccountRepository(
     ) = withContext(Dispatchers.IO) {
         aq.updateBalance(amount, accountId)
         updateStatus(accountId, SyncStatus.PENDING_UPDATE)
-        syncer.sync(accountId)
+//        syncer.sync(accountId)
     }
 }

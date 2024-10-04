@@ -6,25 +6,31 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.emm.justchill.hh.domain.account.crud.DailyAccountCreator
 import com.emm.justchill.hh.domain.shared.DateAndTimeCombiner
+import com.emm.justchill.hh.domain.transaction.crud.TransactionCreator
+import com.emm.justchill.hh.domain.transaction.model.TransactionInsert
 import com.emm.justchill.hh.presentation.transaction.DateUtils
-import com.emm.justchill.me.driver.domain.Driver
-import com.emm.justchill.me.driver.domain.DriverRepository
+import com.emm.justchill.hh.presentation.transaction.TransactionType
 import com.emm.justchill.me.daily.domain.Daily
 import com.emm.justchill.me.daily.domain.DailyRepository
+import com.emm.justchill.me.driver.domain.Driver
+import com.emm.justchill.me.driver.domain.DriverRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.UUID
+import java.util.*
 
 class AddDailyViewModel(
     driverRepository: DriverRepository,
     private val driverId: Long,
     private val dailyRepository: DailyRepository,
     private val dateAndTimeCombiner: DateAndTimeCombiner,
+    private val transactionCreator: TransactionCreator,
+    private val dailyAccountCreator: DailyAccountCreator,
 ) : ViewModel() {
 
     var amount: String by mutableStateOf("")
@@ -71,5 +77,19 @@ class AddDailyViewModel(
             driverId = driverId
         )
         dailyRepository.insert(daily)
+        resolveTransactionAndAccounts()
+    }
+
+    private suspend fun resolveTransactionAndAccounts() {
+        val accountId = dailyAccountCreator.create()
+
+        val transactionInsert = TransactionInsert(
+            type = TransactionType.INCOME,
+            amount = amount.toDouble(),
+            description = "Feria de ${currentDriver.value?.name}",
+            date = dateAndTimeCombiner.combineWithUtc(dateInLong),
+            accountId = accountId
+        )
+        transactionCreator.create(transactionInsert)
     }
 }

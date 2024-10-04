@@ -59,6 +59,7 @@ import com.emm.justchill.hh.domain.account.crud.AccountCreator
 import com.emm.justchill.hh.domain.account.crud.AccountDeleter
 import com.emm.justchill.hh.domain.account.crud.AccountFinder
 import com.emm.justchill.hh.domain.account.crud.AccountUpdater
+import com.emm.justchill.hh.domain.account.crud.DailyAccountCreator
 import com.emm.justchill.hh.domain.shared.UniqueIdProvider
 import com.emm.justchill.hh.presentation.account.AccountViewModel
 import com.emm.justchill.hh.presentation.home.HomeViewModel
@@ -260,6 +261,7 @@ val categoryModule = module {
 val accountModule = module {
 
     factoryOf(::AccountCreator)
+    factoryOf(::DailyAccountCreator)
     factoryOf(::AccountDeleter)
     factoryOf(::AccountFinder)
     factoryOf(::AccountUpdater)

@@ -11,6 +11,8 @@ interface AccountRepository {
 
     suspend fun create(accountId: String, account: AccountUpsert)
 
+    fun existDailyAccount(): Flow<Account?>
+
     suspend fun deleteBy(accountId: String)
 
     suspend fun updateStatus(accountId: String, syncStatus: SyncStatus)

@@ -8,6 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.unit.Constraints
 
 @Composable
 fun ContainerWithLoading(
@@ -19,6 +22,17 @@ fun ContainerWithLoading(
         modifier = Modifier.fillMaxSize()
     ) {
         content()
+        Layout(
+            content = content,
+            modifier = Modifier,
+        ) { measurable: List<Measurable>, constraints: Constraints ->
+            layout(
+                width = 1,
+                height = 2
+            ) {
+
+            }
+        }
         if (isLoading) {
             Box(
                 modifier = Modifier

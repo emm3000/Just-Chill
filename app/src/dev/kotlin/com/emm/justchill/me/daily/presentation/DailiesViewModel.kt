@@ -2,6 +2,7 @@ package com.emm.justchill.me.daily.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.emm.justchill.Dailies
 import com.emm.justchill.me.driver.domain.Driver
 import com.emm.justchill.me.driver.domain.DriverRepository
 import com.emm.justchill.me.daily.domain.Daily
@@ -26,7 +27,7 @@ class DailiesViewModel(
         )
 
     val dailies: StateFlow<List<DailyUi>> = dailyRepository.retrieveBy(driverId)
-        .map { it.map(Daily::toUi) }
+        .map(::mapping)
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
@@ -36,4 +37,6 @@ class DailiesViewModel(
     fun deleteDaily(dailyId: String) = viewModelScope.launch {
         dailyRepository.deleteBy(dailyId)
     }
+
+    private fun mapping(dailies: List<Daily>): List<DailyUi> = dailies.map(Daily::toUi)
 }

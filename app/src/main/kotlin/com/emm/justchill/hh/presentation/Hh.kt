@@ -69,7 +69,7 @@ fun Hh() {
 
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = PreLogin) {
+    NavHost(navController = navController, startDestination = Main) {
         composable<PreLogin> {
             val repository: AuthRepository = koinInject()
 

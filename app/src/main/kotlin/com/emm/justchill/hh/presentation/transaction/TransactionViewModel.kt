@@ -70,9 +70,10 @@ class TransactionViewModel(
             type = transactionType,
             description = description,
             date = dateInLong,
+            amount = amount.toDouble(),
             accountId = accountSelected?.accountId ?: throw IllegalStateException()
         )
-        transactionCreator.create(amount, transactionInsert)
+        transactionCreator.create(transactionInsert)
     }
 
     fun updateMount(value: String) {

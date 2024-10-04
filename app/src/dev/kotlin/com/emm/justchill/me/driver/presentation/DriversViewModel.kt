@@ -2,7 +2,11 @@ package com.emm.justchill.me.driver.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.emm.justchill.hh.domain.account.crud.DailyAccountCreator
 import com.emm.justchill.hh.domain.shared.DateAndTimeCombiner
+import com.emm.justchill.hh.domain.transaction.crud.TransactionCreator
+import com.emm.justchill.hh.domain.transaction.model.TransactionInsert
+import com.emm.justchill.hh.presentation.transaction.TransactionType
 import com.emm.justchill.me.loan.domain.Loan
 import com.emm.justchill.me.loan.domain.LoanRepository
 import com.emm.justchill.me.loan.presentation.LoanUi
@@ -53,6 +57,8 @@ class DriversViewModel(
     private val dateAndTimeCombiner: DateAndTimeCombiner,
     private val loanRepository: LoanRepository,
     private val dataExporter: DataExporter,
+    private val transactionCreator: TransactionCreator,
+    private val dailyAccountCreator: DailyAccountCreator,
 ) : ViewModel() {
 
     val drivers: StateFlow<Map<Driver, DriversScreenUi>> = combine(
@@ -91,13 +97,15 @@ class DriversViewModel(
     }
 
     fun addDaily(driverId: Long, amount: String) = viewModelScope.launch {
+        val dailyDate = dateAndTimeCombiner.combineDefaultZone(Instant.now().toEpochMilli())
         val daily = Daily(
             dailyId = UUID.randomUUID().toString(),
             amount = amount.toDouble(),
-            dailyDate = dateAndTimeCombiner.combineDefaultZone(Instant.now().toEpochMilli()),
+            dailyDate = dailyDate,
             driverId = driverId
         )
         dailyRepository.insert(daily)
+        resolveTransactionAndAccounts(amount, dailyDate, driverId)
     }
 
     fun deleteLoan(loanId: String) = viewModelScope.launch {
@@ -114,5 +122,24 @@ class DriversViewModel(
 
     fun deleteDaily(dailyId: String) = viewModelScope.launch {
         dailyRepository.deleteBy(dailyId)
+    }
+
+    private suspend fun resolveTransactionAndAccounts(
+        amount: String,
+        dailyDate: Long,
+        driverId: Long
+    ) {
+        val driver: Driver = drivers.value.keys.firstOrNull { it.driverId == driverId } ?: return
+
+        val accountId = dailyAccountCreator.create()
+
+        val transactionInsert = TransactionInsert(
+            type = TransactionType.INCOME,
+            amount = amount.toDouble(),
+            description = "Feria de ${driver.name}",
+            date = dailyDate,
+            accountId = accountId
+        )
+        transactionCreator.create(transactionInsert)
     }
 }

@@ -25,7 +25,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 class HomeViewModel(
     transactionSumIncome: TransactionSumIncome,
@@ -84,11 +83,11 @@ class HomeViewModel(
     var accountLabel: String by mutableStateOf("")
         private set
 
-    init {
-        viewModelScope.launch {
-            backupManager.seed()
-        }
-    }
+//    init {
+//        viewModelScope.launch {
+//            backupManager.seed()
+//        }
+//    }
 
     fun updateAccountLabel(value: String) {
         accountLabel = value

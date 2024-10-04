@@ -14,7 +14,6 @@ class TransactionCreator(
 ) {
 
     suspend fun create(
-        amount: String,
         transactionInsert: TransactionInsert,
     ) {
 
@@ -22,11 +21,8 @@ class TransactionCreator(
 
         val dateAndTimeCombined: Long = dateAndTimeCombiner.combineWithUtc(transactionInsert.date)
 
-        val amountDouble: Double = amount.toDouble()
-
         val transaction: TransactionInsert = transactionInsert.copy(
             id = transactionId,
-            amount = amountDouble,
             date = dateAndTimeCombined
         )
 

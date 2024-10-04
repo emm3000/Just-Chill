@@ -33,7 +33,7 @@ class DataExporter(
     private val defaultFileName = "xxx.json"
 
     suspend fun export() = withContext(Dispatchers.Default) {
-        val jsonString = generateJsonFromSqlDelight()
+        val jsonString: String = generateJsonFromSqlDelight()
 
         val target: Uri = targetUri()
 
@@ -89,44 +89,10 @@ class DataExporter(
 
     private suspend fun generateJsonFromSqlDelight(): String {
 
-        val drivers: List<DriverModel> = driverRepository.all().firstOrNull().orEmpty().map {
-            DriverModel(
-                driverId = it.driverId,
-                name = it.name
-            )
-        }
-
-        val payments: List<PaymentModel> = paymentRepository.all().firstOrNull().orEmpty().map {
-            PaymentModel(
-                paymentId = it.paymentId,
-                loanId = it.loanId,
-                dueDate = it.dueDate,
-                amount = it.amount,
-                status = it.status.name
-            )
-        }
-
-        val loans: List<LoanModel> = loanRepository.all().firstOrNull().orEmpty().map {
-            LoanModel(
-                loanId = it.loanId,
-                amount = it.amount,
-                amountWithInterest = it.amountWithInterest,
-                interest = it.interest,
-                startDate = it.startDate,
-                duration = it.duration,
-                status = it.status,
-                driverId = it.driverId,
-            )
-        }
-
-        val dailies: List<DailyModel> = dailyRepository.all().firstOrNull().orEmpty().map {
-            DailyModel(
-                dailyId = it.dailyId,
-                amount = it.amount,
-                dailyDate = it.dailyDate,
-                driverId = it.driverId,
-            )
-        }
+        val drivers: List<DriverModel> = drivers()
+        val payments: List<PaymentModel> = payments()
+        val loans: List<LoanModel> = loans()
+        val dailies: List<DailyModel> = dailies()
 
         val exportModel = ExportModel(
             drivers = drivers,
@@ -143,26 +109,72 @@ class DataExporter(
         return networkJson.encodeToString(exportModel)
     }
 
+    private suspend fun dailies() = dailyRepository.all().firstOrNull().orEmpty().map {
+        DailyModel(
+            dailyId = it.dailyId,
+            amount = it.amount,
+            dailyDate = it.dailyDate,
+            driverId = it.driverId,
+        )
+    }
+
+    private suspend fun loans() = loanRepository.all().firstOrNull().orEmpty().map {
+        LoanModel(
+            loanId = it.loanId,
+            amount = it.amount,
+            amountWithInterest = it.amountWithInterest,
+            interest = it.interest,
+            startDate = it.startDate,
+            duration = it.duration,
+            status = it.status,
+            driverId = it.driverId,
+        )
+    }
+
+    private suspend fun payments() = paymentRepository.all().firstOrNull().orEmpty().map {
+        PaymentModel(
+            paymentId = it.paymentId,
+            loanId = it.loanId,
+            dueDate = it.dueDate,
+            amount = it.amount,
+            status = it.status.name
+        )
+    }
+
+    private suspend fun drivers() = driverRepository.all().firstOrNull().orEmpty().map {
+        DriverModel(
+            driverId = it.driverId,
+            name = it.name
+        )
+    }
+
     suspend fun import(json: String): Unit = withContext(Dispatchers.Default) {
         val networkJson = Json {
             ignoreUnknownKeys = true
             prettyPrint = true
         }
-        val ga = networkJson.decodeFromString<ExportModel>(json)
-        ga.drivers.forEach {
-            val newDriver = Driver(driverId = it.driverId, name = it.name)
-            driverRepository.insert(newDriver)
-        }
-        ga.daily.forEach {
-            val newDaily = Daily(
-                dailyId = it.dailyId,
+        val exportModel = networkJson.decodeFromString<ExportModel>(json)
+        insertDrivers(exportModel)
+        insertDailies(exportModel)
+        insertLoans(exportModel)
+        insertPayments(exportModel)
+    }
+
+    private suspend fun insertPayments(exportModel: ExportModel) {
+        val payments: List<Payment> = exportModel.payments.map {
+            Payment(
+                paymentId = it.paymentId,
+                loanId = it.loanId,
+                dueDate = it.dueDate,
                 amount = it.amount,
-                dailyDate = it.dailyDate,
-                driverId = it.driverId
+                status = PaymentStatus.valueOf(it.status)
             )
-            dailyRepository.insert(newDaily)
         }
-        ga.loans.forEach {
+        paymentRepository.addAll(payments)
+    }
+
+    private suspend fun insertLoans(exportModel: ExportModel) {
+        exportModel.loans.forEach {
             val newLoan = Loan(
                 loanId = it.loanId,
                 amount = it.amount,
@@ -175,14 +187,24 @@ class DataExporter(
             )
             loanRepository.add(newLoan)
         }
-        paymentRepository.addAll(ga.payments.map {
-            Payment(
-                paymentId = it.paymentId,
-                loanId = it.loanId,
-                dueDate = it.dueDate,
+    }
+
+    private suspend fun insertDailies(exportModel: ExportModel) {
+        exportModel.daily.forEach {
+            val newDaily = Daily(
+                dailyId = it.dailyId,
                 amount = it.amount,
-                status = PaymentStatus.valueOf(it.status)
+                dailyDate = it.dailyDate,
+                driverId = it.driverId
             )
-        })
+            dailyRepository.insert(newDaily)
+        }
+    }
+
+    private suspend fun insertDrivers(exportModel: ExportModel) {
+        exportModel.drivers.forEach {
+            val newDriver = Driver(driverId = it.driverId, name = it.name)
+            driverRepository.insert(newDriver)
+        }
     }
 }

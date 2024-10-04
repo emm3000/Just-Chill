@@ -51,7 +51,7 @@ class DefaultCategoryRepository(
             description = categoryUpsert.description,
             syncStatus = SyncStatus.PENDING_INSERT.name
         )
-        syncer.sync(categoryId)
+//        syncer.sync(categoryId)
     }
 
     override suspend fun update(
@@ -64,7 +64,7 @@ class DefaultCategoryRepository(
             categoryId = categoryId,
             syncStatus = SyncStatus.PENDING_UPDATE.name
         )
-        syncer.sync(categoryId)
+//        syncer.sync(categoryId)
     }
 
     override suspend fun updateStatus(

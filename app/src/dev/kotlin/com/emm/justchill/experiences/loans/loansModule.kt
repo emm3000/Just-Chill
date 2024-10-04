@@ -77,6 +77,8 @@ val loansModule = module {
             loanRepository = get(),
             dailyRepository = get(),
             dateAndTimeCombiner = get(),
+            transactionCreator = get(),
+            dailyAccountCreator = get(),
         )
     }
 
@@ -93,6 +95,8 @@ val loansModule = module {
             driverId = parameters.get(),
             dailyRepository = get(),
             dateAndTimeCombiner = get(),
+            transactionCreator = get(),
+            dailyAccountCreator = get(),
         )
     }
 

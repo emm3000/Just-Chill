@@ -33,7 +33,7 @@ class DefaultTransactionRepository(
             categoryId = transactionInsert.categoryId,
             accountId = transactionInsert.accountId
         )
-        syncer.sync(transactionInsert.id)
+//        syncer.sync(transactionInsert.id)
     }
 
     override fun retrieve(accountId: String): Flow<List<Transaction>> {
