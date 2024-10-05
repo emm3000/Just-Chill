@@ -40,12 +40,22 @@ jobs:
       - name: Build Dev Debug (assembleDevDebug)
         run: ./gradlew assembleDevDebug
 
+      - name: Build Dev Debug (assembleProdDebug)
+        run: ./gradlew assembleProdDebug
+
       - name: Rename Dev Debug APK
         run: mv app/build/outputs/apk/dev/debug/app-dev-debug.apk app/build/outputs/apk/dev/debug/app-dev-debug-${{ env.date_today }}.apk
+
+      - name: Rename Prod Debug APK
+        run: mv app/build/outputs/apk/prod/debug/app-prod-debug.apk app/build/outputs/apk/prod/debug/app-prod-debug-${{ env.date_today }}.apk
 
       - name: Get Dev Debug APK path
         id: devDebugPath
         run: echo "devDebug=$(find app/build/outputs/apk/dev/debug/*.apk)" >> $GITHUB_OUTPUT
+
+      - name: Get Prod Debug APK path
+        id: prodDebugPath
+        run: echo "prodDebug=$(find app/build/outputs/apk/prod/debug/*.apk)" >> $GITHUB_OUTPUT
 
       - name: upload DEV DEBUG (APP DISTRIBUTION)
         uses: wzieba/Firebase-Distribution-Github-Action@v1
@@ -55,8 +65,22 @@ jobs:
           groups: BETSY
           file: ${{ steps.devDebugPath.outputs.devDebug }}
 
+      - name: upload PROD DEBUG (APP DISTRIBUTION)
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{secrets.FIREBASE_PROD_APP_ID}}
+          serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
+          groups: BETSY
+          file: ${{ steps.prodDebugPath.outputs.prodDebug }}
+
       - name: Upload APK Dev Debug
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.date_today }} - APK(s) dev debug generated
           path: app/build/outputs/apk/dev/debug/
+
+      - name: Upload APK Prod Debug
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.date_today }} - APK(s) prod debug generated
+          path: app/build/outputs/apk/prod/debug/
