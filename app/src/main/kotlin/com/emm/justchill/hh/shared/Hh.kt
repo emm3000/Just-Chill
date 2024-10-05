@@ -40,6 +40,7 @@ import com.emm.justchill.hh.account.presentation.Account
 import com.emm.justchill.hh.auth.presentation.Login
 import com.emm.justchill.hh.category.presentation.Category
 import com.emm.justchill.hh.home.Home
+import com.emm.justchill.hh.me.MeNavigation
 import com.emm.justchill.hh.shared.seetransactions.SeeTransactionsVersionTwo
 import com.emm.justchill.hh.transaction.presentation.EditTransaction
 import com.emm.justchill.hh.transaction.presentation.Transaction
@@ -112,14 +113,16 @@ fun Hh() {
                     startDestination = HhRoutes.HhHome.route,
                     modifier = Modifier.padding(paddingValues)
                 ) {
-                    composable(HhRoutes.HhHome.route) { Home(
-                        navigateToCreateAccount = {
-                            navController.navigate(Account)
-                        },
-                        navigateToCreateCategory = {
-                            navController.navigate(Category)
-                        }
-                    ) }
+                    composable(HhRoutes.HhHome.route) {
+                        Home(
+                            navigateToCreateAccount = {
+                                navController.navigate(Account)
+                            },
+                            navigateToCreateCategory = {
+                                navController.navigate(Category)
+                            }
+                        )
+                    }
                     composable(HhRoutes.AddTransaction.route) {
                         Transaction {
                             internalNavController.navigate(HhRoutes.SeeTransaction.route) {
@@ -132,6 +135,9 @@ fun Hh() {
                         SeeTransactionsVersionTwo(
                             navController
                         )
+                    }
+                    composable(HhRoutes.Me.route) {
+                        MeNavigation()
                     }
                 }
             }

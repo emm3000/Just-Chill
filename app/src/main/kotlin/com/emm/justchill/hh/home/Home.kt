@@ -6,10 +6,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -77,30 +83,56 @@ fun Home(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
-        Row(
-            horizontalArrangement = Arrangement.Center,
+        Column(
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            TextButton(
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(25),
                 onClick = dropUnlessResumed { navigateToCreateAccount() }
             ) {
-                Text(
-                    text = "Agregar cuenta",
-                    fontSize = 16.sp,
-                    fontFamily = LatoFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryButtonColor
-                )
+                Row(
+                    modifier = Modifier,
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "Agregar cuenta",
+                        fontSize = 16.sp,
+                        fontFamily = LatoFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryButtonColor
+                    )
+                    Icon(
+                        imageVector = Icons.Filled.AccountBalance,
+                        contentDescription = null,
+                        tint = PrimaryButtonColor
+                    )
+                }
             }
-            TextButton(
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(25),
                 onClick = dropUnlessResumed { navigateToCreateCategory() }
             ) {
-                Text(
-                    text = "Agregar categoría",
-                    fontSize = 16.sp,
-                    fontFamily = LatoFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryButtonColor
-                )
+                Row(
+                    modifier = Modifier,
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "Agregar categoría",
+                        fontSize = 16.sp,
+                        fontFamily = LatoFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryButtonColor
+                    )
+                    Icon(
+                        imageVector = Icons.Filled.Category,
+                        contentDescription = null,
+                        tint = PrimaryButtonColor
+                    )
+                }
             }
         }
 
