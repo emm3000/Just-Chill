@@ -3,7 +3,7 @@ package com.emm.justchill
 import android.content.Context
 import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkManager
-import com.emm.justchill.hh.presentation.BackupWorker
+import com.emm.justchill.hh.shared.BackupWorker
 
 object Sync {
 

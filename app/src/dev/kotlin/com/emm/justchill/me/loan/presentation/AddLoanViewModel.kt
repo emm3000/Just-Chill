@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.hh.presentation.transaction.DateUtils
+import com.emm.justchill.hh.transaction.presentation.DateUtils
 import com.emm.justchill.me.loan.domain.FrequencyType
 import com.emm.justchill.me.loan.domain.LoanAndPaymentsCreator
 import com.emm.justchill.me.loan.domain.LoanCreate

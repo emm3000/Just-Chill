@@ -1,6 +1,6 @@
 package com.emm.justchill.me.payment.presentation
 
-import com.emm.justchill.hh.domain.shared.fromCentsToSolesWith
+import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.me.payment.domain.Payment
 import com.emm.justchill.me.payment.domain.PaymentStatus
 import java.time.Instant

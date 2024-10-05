@@ -5,7 +5,7 @@ import com.emm.justchill.experiences.calendar.Calendar
 import com.emm.justchill.experiences.drinks.ui.DrinkMainScreen
 import com.emm.justchill.experiences.readjsonfromassets.ui.Experiences
 import com.emm.justchill.experiences.supabase.SupabaseScreen
-import com.emm.justchill.hh.presentation.Hh
+import com.emm.justchill.hh.shared.Hh
 import java.util.UUID
 
 sealed class RootRoutes(val route: String) {

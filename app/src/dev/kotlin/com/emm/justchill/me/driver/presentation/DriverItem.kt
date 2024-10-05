@@ -53,7 +53,7 @@ import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.core.theme.TextDisableColor
 import com.emm.justchill.me.driver.domain.Driver
-import com.emm.justchill.hh.presentation.auth.LabelTextField
+import com.emm.justchill.hh.auth.presentation.LabelTextField
 import com.emm.justchill.me.loan.presentation.LoanItem
 import com.emm.justchill.me.loan.presentation.LoanUi
 import com.emm.justchill.me.daily.presentation.DailyItem

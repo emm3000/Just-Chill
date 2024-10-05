@@ -2,17 +2,17 @@ package com.emm.justchill.me.driver.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.hh.domain.account.crud.DailyAccountCreator
+import com.emm.justchill.hh.account.domain.DailyAccountCreator
 import com.emm.justchill.me.daily.presentation.DailyUi
 import com.emm.justchill.me.daily.domain.Daily
 import com.emm.justchill.me.daily.domain.DailyRepository
 import com.emm.justchill.me.driver.domain.Driver
 import com.emm.justchill.me.driver.domain.DriverRepository
 import com.emm.justchill.me.daily.presentation.toUi
-import com.emm.justchill.hh.domain.shared.DateAndTimeCombiner
-import com.emm.justchill.hh.domain.transaction.crud.TransactionCreator
-import com.emm.justchill.hh.domain.transaction.model.TransactionInsert
-import com.emm.justchill.hh.presentation.transaction.TransactionType
+import com.emm.justchill.hh.shared.DateAndTimeCombiner
+import com.emm.justchill.hh.transaction.domain.TransactionCreator
+import com.emm.justchill.hh.transaction.domain.TransactionInsert
+import com.emm.justchill.hh.transaction.presentation.TransactionType
 import com.emm.justchill.me.loan.domain.Loan
 import com.emm.justchill.me.loan.domain.LoanRepository
 import com.emm.justchill.me.loan.presentation.LoanUi

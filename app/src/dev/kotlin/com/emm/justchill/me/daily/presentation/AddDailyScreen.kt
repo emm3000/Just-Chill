@@ -41,8 +41,8 @@ import com.emm.justchill.core.theme.PrimaryButtonColor
 import com.emm.justchill.core.theme.PrimaryDisableButtonColor
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.core.theme.TextDisableColor
-import com.emm.justchill.hh.presentation.transaction.Amount
-import com.emm.justchill.hh.presentation.transaction.DateInput
+import com.emm.justchill.hh.transaction.presentation.Amount
+import com.emm.justchill.hh.transaction.presentation.DateInput
 import com.emm.justchill.me.driver.domain.Driver
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf

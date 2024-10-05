@@ -1,7 +1,7 @@
 package com.emm.justchill.me.payment.domain
 
-import com.emm.justchill.hh.data.shared.DefaultUniqueIdProvider
-import com.emm.justchill.hh.domain.shared.UniqueIdProvider
+import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
+import com.emm.justchill.hh.shared.UniqueIdProvider
 import com.emm.justchill.me.loan.domain.LoanCreate
 import java.time.DayOfWeek
 import java.time.LocalDate

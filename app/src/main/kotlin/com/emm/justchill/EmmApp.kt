@@ -7,9 +7,9 @@ import com.emm.justchill.core.coreModule
 import com.emm.justchill.experiences.drinks.drinkModule
 import com.emm.justchill.experiences.readjsonfromassets.experiencesModule
 import com.emm.justchill.experiences.supabase.supabaseModule
-import com.emm.justchill.hh.accountModule
-import com.emm.justchill.hh.categoryModule
-import com.emm.justchill.hh.hhModule
+import com.emm.justchill.hh.di.accountModule
+import com.emm.justchill.hh.di.categoryModule
+import com.emm.justchill.hh.di.hhModule
 import com.emm.justchill.experiences.loans.loansModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger

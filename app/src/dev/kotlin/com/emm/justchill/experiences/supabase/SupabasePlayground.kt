@@ -1,7 +1,7 @@
 package com.emm.justchill.experiences.supabase
 
 import android.util.Log
-import com.emm.justchill.hh.data.shared.TableNames
+import com.emm.justchill.hh.shared.TableNames
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns

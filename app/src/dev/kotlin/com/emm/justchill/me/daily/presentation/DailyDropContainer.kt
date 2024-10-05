@@ -28,8 +28,8 @@ import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.TextColor
-import com.emm.justchill.hh.presentation.auth.LabelTextField
-import com.emm.justchill.hh.presentation.transaction.TransactionLabel
+import com.emm.justchill.hh.auth.presentation.LabelTextField
+import com.emm.justchill.hh.transaction.presentation.TransactionLabel
 
 data class Gaa(val name: String)
 
