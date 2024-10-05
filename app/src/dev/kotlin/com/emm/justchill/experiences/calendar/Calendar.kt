@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.TextColor
-import com.emm.justchill.me.payment.domain.Payment
+import com.emm.justchill.hh.me.payment.domain.Payment
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth

@@ -60,16 +60,6 @@ android {
             resValue("string", "supabase_key", keystoreProperties["supabaseDevKey"] as String)
         }
 
-        create("qa") {
-            dimension = flavorDimension
-            applicationIdSuffix = ".qa"
-            manifestPlaceholders["app_name"] = appName
-            manifestPlaceholders["flavor_suffix"] = "-QA"
-            signingConfig = signingConfigs["config"]
-            resValue("string", "supabase_url", keystoreProperties["supabaseQaUrl"] as String)
-            resValue("string", "supabase_key", keystoreProperties["supabaseQaKey"] as String)
-        }
-
         create("prod") {
             dimension = flavorDimension
             manifestPlaceholders["app_name"] = "Just Chill"
