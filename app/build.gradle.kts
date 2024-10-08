@@ -46,7 +46,7 @@ android {
     }
 
     val flavorDimension = "tier"
-    val appName = "Me"
+    val appName = "Yout"
     flavorDimensions += listOf(flavorDimension)
 
     productFlavors {
