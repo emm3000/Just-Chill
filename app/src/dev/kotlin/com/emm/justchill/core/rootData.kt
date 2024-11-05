@@ -5,6 +5,7 @@ import com.emm.justchill.experiences.calendar.Calendar
 import com.emm.justchill.experiences.drinks.ui.DrinkMainScreen
 import com.emm.justchill.experiences.readjsonfromassets.ui.Experiences
 import com.emm.justchill.experiences.supabase.SupabaseScreen
+import com.emm.justchill.experiences.timerpicker.MeTimerPicker
 import com.emm.justchill.hh.shared.Hh
 import java.util.UUID
 
@@ -15,6 +16,7 @@ sealed class RootRoutes(val route: String) {
     data object Drink : RootRoutes("Drink")
     data object Hh : RootRoutes("hh")
     data object Calendar : RootRoutes("Calendar")
+    data object MeTimerPicker : RootRoutes("MeTimerPicker")
 }
 
 val rootData: List<Feature> = listOf(
@@ -80,5 +82,14 @@ val rootData: List<Feature> = listOf(
         resource = "-",
         route = RootRoutes.Calendar,
         screen = { Calendar() }
+    ),
+    Feature(
+        id = UUID.randomUUID().toString(),
+        title = "NewComponent timer picker",
+        description = "Timer picker",
+        category = "personal",
+        resource = "-",
+        route = RootRoutes.MeTimerPicker,
+        screen = { MeTimerPicker() }
     )
 ).reversed()
