@@ -20,18 +20,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.account.domain.Account
-import com.emm.justchill.hh.transaction.presentation.TransactionType
 import com.emm.justchill.hh.shared.EditTransaction
-import com.emm.justchill.hh.shared.shared.DropDownContainer
+import com.emm.justchill.hh.shared.shared.EmmDropDown
+import com.emm.justchill.hh.transaction.presentation.TransactionType
 import com.emm.justchill.hh.transaction.presentation.TransactionUi
 import org.koin.androidx.compose.koinViewModel
 import java.util.*
@@ -47,30 +45,28 @@ fun SeeTransactionsVersionTwo(
 
     SeeTransactionsVersionTwo(
         transactions = collectAsState,
+        accountSelected = vm.accountSelected,
         navigateToEdit = {
             navController.navigate(EditTransaction(it))
         },
         accounts = accounts,
         onAccountChange = vm::updateAccountSelected,
-        accountLabel = vm.accountLabel,
-        onAccountLabelChange = vm::updateAccountLabel,
     )
 }
 
 @Composable
 fun SeeTransactionsVersionTwo(
     transactions: List<TransactionUi> = emptyList(),
+    accountSelected: Account? = null,
     navigateToEdit: (String) -> Unit = {},
     accounts: List<Account> = emptyList(),
     onAccountChange: (Account) -> Unit = {},
-    accountLabel: String = "",
-    onAccountLabelChange: (String) -> Unit = {},
 ) {
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundColor),
+            .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -85,7 +81,7 @@ fun SeeTransactionsVersionTwo(
                 Text(
                     modifier = Modifier,
                     text = "Transacciones",
-                    color = TextColor,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontFamily = LatoFontFamily,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Black,
@@ -95,11 +91,13 @@ fun SeeTransactionsVersionTwo(
         }
 
         item {
-            DropDownContainer(
-                account = accounts,
-                onAccountChange = onAccountChange,
-                text = accountLabel,
-                setText = onAccountLabelChange
+            EmmDropDown(
+                textLabel = "Cuentas",
+                textPlaceholder = "Seleccionar cuenta",
+                items = accounts,
+                itemSelected = accountSelected,
+                onItemSelected = onAccountChange,
+                modifier = Modifier.fillMaxWidth()
             )
         }
 
@@ -122,7 +120,7 @@ fun SeeTransactionsVersionTwo(
 
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 fun ItemPreviewVersionTwo(modifier: Modifier = Modifier) {
     EmmTheme {
@@ -140,7 +138,7 @@ fun ItemPreviewVersionTwo(modifier: Modifier = Modifier) {
     }
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 fun SeeTransactionsVersionTwoPreview(modifier: Modifier = Modifier) {
     EmmTheme {

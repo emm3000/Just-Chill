@@ -29,17 +29,12 @@ class SeeTransactionsViewModel(
     accountRepository: AccountRepository,
 ) : ViewModel() {
 
-    private var accountId: String by mutableStateOf("")
-
-    var accountLabel: String by mutableStateOf("")
+    var accountSelected: Account? by mutableStateOf(null)
         private set
 
     val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
         .onEach { accounts ->
-            accounts.firstOrNull()?.let {
-                accountLabel = "${it.name} ${it.balance}"
-                accountId = it.accountId
-            }
+            accountSelected = accountSelected ?: accounts.firstOrNull()
         }
         .stateIn(
             scope = viewModelScope,
@@ -47,8 +42,8 @@ class SeeTransactionsViewModel(
             initialValue = emptyList()
         )
 
-    val transactions: StateFlow<List<TransactionUi>> = snapshotFlow { accountId }
-        .flatMapLatest { transactionLoader.load(accountId) }
+    val transactions: StateFlow<List<TransactionUi>> = snapshotFlow { accountSelected }
+        .flatMapLatest { transactionLoader.load(it?.accountId.orEmpty()) }
         .map(List<Transaction>::toUi)
         .catch(::catchThrowable)
         .stateIn(
@@ -63,11 +58,7 @@ class SeeTransactionsViewModel(
         throwable: Throwable,
     ) = collector.emit(emptyList())
 
-    fun updateAccountLabel(value: String) {
-        accountLabel = value
-    }
-
-    fun updateAccountSelected(value: Account) {
-        accountId = value.accountId
+    fun updateAccountSelected(account: Account) {
+        accountSelected = account
     }
 }

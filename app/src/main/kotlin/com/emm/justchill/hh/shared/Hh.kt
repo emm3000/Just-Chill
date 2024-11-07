@@ -32,16 +32,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.core.theme.PlaceholderOrLabel
-import com.emm.justchill.core.theme.TextColor
-import com.emm.justchill.hh.auth.domain.AuthRepository
 import com.emm.justchill.hh.account.presentation.Account
+import com.emm.justchill.hh.auth.domain.AuthRepository
 import com.emm.justchill.hh.auth.presentation.Login
 import com.emm.justchill.hh.category.presentation.Category
 import com.emm.justchill.hh.home.Home
-import com.emm.justchill.hh.me.MeNavigation
 import com.emm.justchill.hh.shared.seetransactions.SeeTransactionsVersionTwo
 import com.emm.justchill.hh.transaction.presentation.EditTransaction
 import com.emm.justchill.hh.transaction.presentation.Transaction

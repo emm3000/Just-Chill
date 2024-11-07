@@ -9,20 +9,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.DeleteButtonColor
+import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.transaction.presentation.TransactionType
 import com.emm.justchill.hh.transaction.presentation.TransactionUi
 
@@ -33,14 +34,14 @@ fun ItemTransaction(
 ) {
 
     val borderColor = when (transactionUi.type) {
-        TransactionType.INCOME -> TextColor
+        TransactionType.INCOME -> MaterialTheme.colorScheme.onBackground
         TransactionType.SPENT -> DeleteButtonColor
     }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(BackgroundColor)
+            .background(MaterialTheme.colorScheme.background)
             .clickable {
                 navigateToEdit(transactionUi.transactionId)
             }
@@ -58,7 +59,7 @@ fun ItemTransaction(
                     overflow = TextOverflow.Ellipsis,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextColor,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontFamily = LatoFontFamily
                 )
                 Text(
@@ -67,7 +68,7 @@ fun ItemTransaction(
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Normal,
                     lineHeight = TextUnit(1f, TextUnitType.Em),
-                    color = TextColor.copy(alpha = .8f),
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = .8f),
                     fontFamily = LatoFontFamily
                 )
             }
@@ -85,5 +86,22 @@ fun ItemTransaction(
         Spacer(modifier = Modifier.height(10.dp))
         HorizontalDivider()
     }
+}
 
+@PreviewLightDark
+@Composable
+private fun ItemTransactionPreview() {
+    EmmTheme {
+        ItemTransaction(
+            transactionUi = TransactionUi(
+                transactionId = "quisque",
+                type = TransactionType.INCOME,
+                amount = "20.00",
+                description = "voluptatibus",
+                date = 8268,
+                readableDate = "20/20",
+                readableTime = "10 am"
+            )
+        ) { }
+    }
 }
