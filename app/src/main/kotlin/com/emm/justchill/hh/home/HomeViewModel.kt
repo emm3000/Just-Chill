@@ -2,98 +2,59 @@
 
 package com.emm.justchill.hh.home
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.hh.account.domain.Account
 import com.emm.justchill.hh.account.domain.AccountRepository
-import com.emm.justchill.hh.shared.BackupManager
+import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.transaction.domain.TransactionDifferenceCalculator
 import com.emm.justchill.hh.transaction.domain.TransactionSumIncome
 import com.emm.justchill.hh.transaction.domain.TransactionSumSpend
-import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 
 class HomeViewModel(
-    transactionSumIncome: TransactionSumIncome,
-    transactionSumSpend: TransactionSumSpend,
-    transactionDifferenceCalculator: TransactionDifferenceCalculator,
-    accountRepository: AccountRepository,
-    private val backupManager: BackupManager,
+    private val transactionSumIncome: TransactionSumIncome,
+    private val transactionSumSpend: TransactionSumSpend,
+    private val transactionDifferenceCalculator: TransactionDifferenceCalculator,
+    private val accountRepository: AccountRepository,
 ) : ViewModel() {
 
-    var account: Account? by mutableStateOf(null)
-        private set
-
-    val sumTransactions: StateFlow<Pair<String, String>> = snapshotFlow { account }
-        .filterNotNull()
-        .flatMapLatest {
+    private val _state = MutableStateFlow(HomeState())
+    val state: StateFlow<HomeState> = _state
+        .flatMapLatest { homeState ->
+            val accountId = homeState.accountSelected?.accountId.orEmpty()
             combine(
-                transactionSumIncome(it.accountId),
-                transactionSumSpend(it.accountId),
-            ) { income, spend ->
-                Pair(fromCentsToSolesWith(income), fromCentsToSolesWith(spend))
-            }
-        }
-        .catch {
-            emit(Pair("0.00", "0.00"))
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = Pair("0.00", "0.00")
-        )
-
-    val difference: StateFlow<String> = snapshotFlow { account }
-        .filterNotNull()
-        .map { it.accountId }
-        .flatMapLatest(transactionDifferenceCalculator::calculate)
-        .map(::fromCentsToSolesWith)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = "0.00"
-        )
-
-    val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
-        .onEach { accounts ->
-            accounts.firstOrNull()?.let {
-                accountLabel = it.nameWithBalance
-                account = it
+                accountRepository.retrieve(),
+                transactionSumIncome(accountId),
+                transactionSumSpend(accountId),
+                transactionDifferenceCalculator.calculate(accountId),
+            ) { accounts, income, spend, difference ->
+                _state.update {
+                    it.copy(
+                        accounts = accounts,
+                        accountSelected = homeState.accountSelected ?: accounts.firstOrNull(),
+                        income = fromCentsToSolesWith(income),
+                        spend = fromCentsToSolesWith(spend),
+                        difference = fromCentsToSolesWith(difference),
+                    )
+                }
+                _state.value
             }
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = emptyList()
+            initialValue = HomeState()
         )
-
-    var accountLabel: String by mutableStateOf("")
-        private set
-
-//    init {
-//        viewModelScope.launch {
-//            backupManager.seed()
-//        }
-//    }
-
-    fun updateAccountLabel(value: String) {
-        accountLabel = value
-    }
 
     fun updateAccountSelected(value: Account) {
-        account = value
+        _state.update { it.copy(accountSelected = value) }
     }
 }

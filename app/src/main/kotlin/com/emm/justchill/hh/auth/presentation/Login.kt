@@ -18,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -277,7 +278,7 @@ fun LabelTextField(text: String) {
         text = text,
         fontFamily = LatoFontFamily,
         fontWeight = FontWeight.Normal,
-        color = PlaceholderOrLabel,
+        color = MaterialTheme.colorScheme.onBackground,
         fontSize = 16.sp
     )
 }

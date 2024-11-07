@@ -1,41 +1,30 @@
 package com.emm.justchill.hh.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Category
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.dropUnlessResumed
-import com.emm.justchill.core.theme.BackgroundColor
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.core.theme.PrimaryButtonColor
-import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.account.domain.Account
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
-import com.emm.justchill.hh.shared.shared.DropDownContainer
+import com.emm.justchill.hh.shared.shared.EmmDropDown
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -45,40 +34,28 @@ fun Home(
     navigateToCreateCategory: () -> Unit,
 ) {
 
-    val sumTransactions by homeViewModel.sumTransactions.collectAsState()
-    val difference by homeViewModel.difference.collectAsState()
-    val accounts by homeViewModel.accounts.collectAsState()
+    val state: HomeState by homeViewModel.state.collectAsStateWithLifecycle()
 
     Home(
-        sumTransaction = sumTransactions,
-        difference = difference,
+        homeState = state,
         navigateToCreateAccount = navigateToCreateAccount,
         navigateToCreateCategory = navigateToCreateCategory,
-        accounts = accounts,
         onAccountChange = homeViewModel::updateAccountSelected,
-        accountLabel = homeViewModel.accountLabel,
-        onAccountLabelChange = homeViewModel::updateAccountLabel,
-        account = homeViewModel.account
     )
 }
 
 @Composable
 fun Home(
-    sumTransaction: Pair<String, String> = Pair("", ""),
-    difference: String = "",
-    navigateToCreateAccount: () -> Unit = {},
-    navigateToCreateCategory: () -> Unit = {},
-    accounts: List<Account> = emptyList(),
-    onAccountChange: (Account) -> Unit = {},
-    accountLabel: String = "",
-    onAccountLabelChange: (String) -> Unit = {},
-    account: Account? = null,
+    homeState: HomeState,
+    navigateToCreateAccount: () -> Unit,
+    navigateToCreateCategory: () -> Unit,
+    onAccountChange: (Account) -> Unit,
 ) {
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundColor)
+            .background(MaterialTheme.colorScheme.background)
             .padding(vertical = 40.dp, horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -86,153 +63,119 @@ fun Home(
         Column(
             modifier = Modifier.fillMaxWidth(),
         ) {
-            OutlinedButton(
+            EmmSecondaryButton(
+                text = "Agregar cuenta",
+                imageVector = Icons.Filled.AccountBalance,
+                onClick = navigateToCreateAccount,
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(25),
-                onClick = dropUnlessResumed { navigateToCreateAccount() }
-            ) {
-                Row(
-                    modifier = Modifier,
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Text(
-                        text = "Agregar cuenta",
-                        fontSize = 16.sp,
-                        fontFamily = LatoFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        color = PrimaryButtonColor
-                    )
-                    Icon(
-                        imageVector = Icons.Filled.AccountBalance,
-                        contentDescription = null,
-                        tint = PrimaryButtonColor
-                    )
-                }
-            }
-            OutlinedButton(
+            )
+            EmmSecondaryButton(
+                text = "Agregar categoría",
+                imageVector = Icons.Filled.Category,
+                onClick = navigateToCreateCategory,
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(25),
-                onClick = dropUnlessResumed { navigateToCreateCategory() }
-            ) {
-                Row(
-                    modifier = Modifier,
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Text(
-                        text = "Agregar categoría",
-                        fontSize = 16.sp,
-                        fontFamily = LatoFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        color = PrimaryButtonColor
-                    )
-                    Icon(
-                        imageVector = Icons.Filled.Category,
-                        contentDescription = null,
-                        tint = PrimaryButtonColor
-                    )
-                }
-            }
+            )
         }
 
         Spacer(Modifier.height(20.dp))
 
-        DropDownContainer(
-            account = accounts,
-            onAccountChange = onAccountChange,
-            text = accountLabel,
-            setText = onAccountLabelChange
+        EmmDropDown(
+            textLabel = "Accounts",
+            textPlaceholder = "Selecciona una cuenta",
+            items = homeState.accounts,
+            itemSelected = homeState.accountSelected,
+            onItemSelected = onAccountChange,
+            modifier = Modifier.fillMaxWidth(),
         )
 
         Spacer(Modifier.height(50.dp))
 
-        account?.let {
-            val balance = remember(it) {
-                fromCentsToSolesWith(it.balance)
-            }
-            Text(
-                text = "Balance",
-                fontFamily = LatoFontFamily,
-                fontWeight = FontWeight.Bold,
-                color = if (balance.contains("-")) {
-                    DeleteButtonColor
-                } else {
-                    TextColor
-                }
-            )
-            Text(
-                text = "S/ $balance",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (balance.contains("-")) {
-                    DeleteButtonColor
-                } else {
-                    TextColor
-                }
-            )
-        }
+        homeState.accountSelected?.let { BalanceSection(it) }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = "Ingreso",
-            fontFamily = LatoFontFamily,
-            fontWeight = FontWeight.Bold,
-            color = TextColor
-        )
-        Text(
-            text = "S/ ${sumTransaction.first}",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = TextColor
-        )
+        EmmHeading(text = "Ingreso")
+        
+        EmmHeadlineMedium(text = "S/ ${homeState.income}")
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        Text(
+        EmmHeading(
             text = "Gasto",
-            fontFamily = LatoFontFamily,
-            fontWeight = FontWeight.Bold,
-            color = DeleteButtonColor,
+            textColor = DeleteButtonColor,
         )
-        Text(
-            text = "S/ ${sumTransaction.second}",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = DeleteButtonColor,
+        EmmHeadlineMedium(
+            text = "S/ ${homeState.spend}",
+            textColor = DeleteButtonColor,
         )
+
         Spacer(modifier = Modifier.height(20.dp))
 
-        Text(
+        val pickColorBy = if (homeState.difference.contains("-")) {
+            DeleteButtonColor
+        } else {
+            MaterialTheme.colorScheme.onBackground
+        }
+        EmmHeading(
             text = "Diferencia",
-            fontFamily = LatoFontFamily,
-            fontWeight = FontWeight.Bold,
-            color = if (difference.contains("-")) {
-                DeleteButtonColor
-            } else {
-                TextColor
-            },
+            textColor = pickColorBy,
         )
-        Text(
-            text = "S/ $difference",
-            fontSize = 25.sp,
-            color = if (difference.contains("-")) {
-                DeleteButtonColor
-            } else {
-                TextColor
-            }
+
+        EmmHeadlineMediumLight(
+            text = "S/ ${homeState.difference}",
+            textColor = pickColorBy
         )
     }
 }
 
-@Preview(showBackground = true)
+@Composable
+private fun BalanceSection(account: Account) {
+    val balance = remember(account) {
+        fromCentsToSolesWith(account.balance)
+    }
+
+    val pickColorByBalance = if (balance.contains("-")) {
+        DeleteButtonColor
+    } else {
+        MaterialTheme.colorScheme.onBackground
+    }
+    EmmHeading(
+        text = "Balance",
+        textColor = pickColorByBalance
+    )
+    EmmHeadlineMedium(
+        text = "S/ $balance",
+        textColor = pickColorByBalance
+    )
+}
+
+@PreviewLightDark
 @Composable
 fun HomePreview(modifier: Modifier = Modifier) {
     EmmTheme {
+        val accounts = remember {
+            (1..10).map {
+                Account(
+                    accountId = "$it",
+                    name = "name $it",
+                    balance = 200.00,
+                    initialBalance = 202.00,
+                    description = "description $it",
+                    syncStatus = "Sync"
+                )
+            }
+        }
         Home(
-            sumTransaction = Pair("200.50", "502.5"),
-            difference = "200.00"
+            homeState = HomeState(
+                accounts = accounts,
+                accountSelected = accounts[5],
+                difference = "202.00",
+                income = "300.00",
+                spend = "404.00"
+            ),
+            navigateToCreateAccount = {},
+            navigateToCreateCategory = {},
+            onAccountChange = {}
         )
     }
 }

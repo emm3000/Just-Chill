@@ -13,4 +13,6 @@ data class Account(
 
     val nameWithBalance: String
         get() = "$name - S/ ${fromCentsToSolesWith(balance)}"
+
+    override fun toString(): String = name
 }

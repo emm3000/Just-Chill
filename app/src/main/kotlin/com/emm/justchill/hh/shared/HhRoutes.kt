@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 sealed class HhRoutes(
     val name: String,
     val route: String,
-    val icon: ImageVector
+    val icon: ImageVector,
 ) {
 
     data object HhHome: HhRoutes("Inicio", "home", Icons.Filled.Home)
@@ -25,5 +25,4 @@ val hhRoutes = listOf(
     HhRoutes.HhHome,
     HhRoutes.AddTransaction,
     HhRoutes.SeeTransaction,
-    HhRoutes.Me,
 )

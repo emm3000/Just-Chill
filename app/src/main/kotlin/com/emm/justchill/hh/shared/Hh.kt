@@ -136,9 +136,6 @@ fun Hh() {
                             navController
                         )
                     }
-                    composable(HhRoutes.Me.route) {
-                        MeNavigation()
-                    }
                 }
             }
         }
