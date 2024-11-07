@@ -89,7 +89,7 @@ private val highContrastDarkColorScheme = darkColorScheme(
 
 @Composable
 fun EmmTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = !isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -105,7 +105,14 @@ fun EmmTheme(
             } else {
                 backgroundLightHighContrast.toArgb()
             }
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            window.navigationBarColor = if (darkTheme) {
+                backgroundDarkHighContrast.toArgb()
+            } else {
+                backgroundLightHighContrast.toArgb()
+            }
+            val insetsController = WindowCompat.getInsetsController(window, view)
+            insetsController.isAppearanceLightStatusBars = !darkTheme
+            insetsController.isAppearanceLightNavigationBars = !darkTheme
         }
     }
 

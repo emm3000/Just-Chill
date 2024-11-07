@@ -1,6 +1,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.Retrofit" parent="Base.Theme.Retrofit">
-
+    <style name="Base.Theme.Retrofit" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:navigationBarColor">#FF0E1415</item>
     </style>
+
+    <style name="Theme.Retrofit" parent="Base.Theme.Retrofit" />
 </resources>

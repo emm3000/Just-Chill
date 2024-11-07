@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.shared.shared
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
@@ -10,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.emm.justchill.core.theme.EmmTheme
@@ -29,9 +31,9 @@ fun EmmPrimaryButton(
         enabled = enabled,
         colors = ButtonDefaults.filledTonalButtonColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
-            disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+            disabledContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.50f),
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            disabledContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            disabledContentColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.50f)
         ),
         shape = RoundedCornerShape(25)
     ) {
@@ -53,6 +55,7 @@ private fun EmmPrimaryButtonPreview() {
             onClick = {},
             enabled = true,
             modifier = Modifier.fillMaxWidth()
+                .height(50.dp)
         )
     }
 }
@@ -66,6 +69,7 @@ private fun EmmPrimaryButton2Preview() {
             onClick = {},
             enabled = false,
             modifier = Modifier.fillMaxWidth()
+                .height(50.dp)
         )
     }
 }
