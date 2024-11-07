@@ -53,8 +53,8 @@ import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.core.theme.TextDisableColor
 import com.emm.justchill.hh.account.domain.Account
 import com.emm.justchill.hh.shared.shared.DropDownContainer
-import com.emm.justchill.hh.shared.shared.TextFieldWithLabel
-import com.emm.justchill.hh.shared.shared.TransactionRadioButton
+import com.emm.justchill.hh.shared.shared.EmmTextInput
+import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -219,13 +219,13 @@ private fun EditTransaction(
 
             Amount(mountValue, onMountChange)
 
-            TransactionRadioButton(
+            EmmTransactionRadioButton(
                 modifier = Modifier.fillMaxWidth(),
                 selectedOption = initialTransactionType,
                 onOptionSelected = onOptionSelected
             )
 
-            TextFieldWithLabel(
+            EmmTextInput(
                 modifier = Modifier,
                 label = "Descripción (opcional)",
                 placeholder = "Ingresa una descripción",

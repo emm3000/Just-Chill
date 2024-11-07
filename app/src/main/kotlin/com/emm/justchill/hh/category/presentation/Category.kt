@@ -35,8 +35,8 @@ import com.emm.justchill.core.theme.PrimaryButtonColor
 import com.emm.justchill.core.theme.PrimaryDisableButtonColor
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.core.theme.TextDisableColor
-import com.emm.justchill.hh.shared.shared.TextFieldWithLabel
-import com.emm.justchill.hh.shared.shared.TransactionRadioButton
+import com.emm.justchill.hh.shared.shared.EmmTextInput
+import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
 import com.emm.justchill.hh.transaction.presentation.TransactionType
 import org.koin.androidx.compose.koinViewModel
 
@@ -118,7 +118,7 @@ private fun Category(
             verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
 
-            TextFieldWithLabel(
+            EmmTextInput(
                 modifier = Modifier,
                 label = "Nombre *",
                 placeholder = "Ingresa el nombre",
@@ -126,14 +126,14 @@ private fun Category(
                 onChange = updateName
             )
 
-            TransactionRadioButton(
+            EmmTransactionRadioButton(
                 modifier = Modifier
                     .fillMaxWidth(),
                 selectedOption = transactionType,
                 onOptionSelected = updateTransactionType
             )
 
-            TextFieldWithLabel(
+            EmmTextInput(
                 modifier = Modifier,
                 label = "Descripción (opcional)",
                 placeholder = "Ingresa la descripción",

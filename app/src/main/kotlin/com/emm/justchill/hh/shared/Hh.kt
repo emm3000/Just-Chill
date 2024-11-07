@@ -11,6 +11,7 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -157,7 +158,8 @@ private fun Csm(internalNavController: NavHostController) {
     val navBackStackEntry by internalNavController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     BottomAppBar(
-        containerColor = BackgroundColor
+        containerColor = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onBackground
     ) {
         hhRoutes.forEach { screen ->
             NavigationBarItem(
@@ -176,11 +178,7 @@ private fun Csm(internalNavController: NavHostController) {
                         screen.icon,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
-                        tint = if (currentDestination?.hierarchy?.any { it.route == screen.route } == true) {
-                            LocalContentColor.current
-                        } else {
-                            PlaceholderOrLabel
-                        }
+                        tint = LocalContentColor.current,
                     )
                 },
                 label = {
@@ -189,11 +187,7 @@ private fun Csm(internalNavController: NavHostController) {
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = if (currentDestination?.hierarchy?.any { it.route == screen.route } == true) {
-                            TextColor
-                        } else {
-                            PlaceholderOrLabel
-                        },
+                        color = LocalContentColor.current,
                         fontFamily = LatoFontFamily,
                         fontWeight = if (currentDestination?.hierarchy?.any { it.route == screen.route } == true) {
                             FontWeight.Bold

@@ -35,7 +35,7 @@ import com.emm.justchill.core.theme.PrimaryButtonColor
 import com.emm.justchill.core.theme.PrimaryDisableButtonColor
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.core.theme.TextDisableColor
-import com.emm.justchill.hh.shared.shared.TextFieldWithLabel
+import com.emm.justchill.hh.shared.shared.EmmTextInput
 import com.emm.justchill.hh.transaction.presentation.Amount
 import org.koin.androidx.compose.koinViewModel
 
@@ -118,7 +118,7 @@ fun Account(
 
             Amount(amount, updateAmount)
 
-            TextFieldWithLabel(
+            EmmTextInput(
                 modifier = Modifier,
                 label = "Nombre *",
                 placeholder = "Ingresa el nombre",
@@ -126,7 +126,7 @@ fun Account(
                 onChange = updateName
             )
 
-            TextFieldWithLabel(
+            EmmTextInput(
                 modifier = Modifier,
                 label = "Descripción (opcional)",
                 placeholder = "Ingresa la descripción",

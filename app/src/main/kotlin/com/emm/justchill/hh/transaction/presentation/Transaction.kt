@@ -10,27 +10,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -43,24 +35,20 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.dropUnlessResumed
-import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.BorderTextFieldColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
-import com.emm.justchill.core.theme.PrimaryButtonColor
-import com.emm.justchill.core.theme.PrimaryDisableButtonColor
 import com.emm.justchill.core.theme.TextColor
-import com.emm.justchill.core.theme.TextDisableColor
 import com.emm.justchill.hh.account.domain.Account
-import com.emm.justchill.hh.shared.shared.TextFieldWithLabel
-import com.emm.justchill.hh.shared.shared.TransactionRadioButton
 import com.emm.justchill.hh.auth.presentation.LabelTextField
-import com.emm.justchill.hh.shared.shared.DropDownContainer
+import com.emm.justchill.hh.shared.shared.EmmDropDown
+import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
+import com.emm.justchill.hh.shared.shared.EmmTextInput
+import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -69,12 +57,11 @@ fun Transaction(
     navigateToSeeTransactions: () -> Unit,
 ) {
 
-    val accounts: List<Account> by vm.accounts.collectAsState()
+    val transactionState: TransactionState by vm.state.collectAsState()
 
     Transaction(
-        isEnabledButton = vm.isEnabled,
         mountValue = vm.amount,
-        onMountChange = vm::updateMount,
+        onMountChange = vm::updateAmount,
         descriptionValue = vm.description,
         onDescriptionChange = vm::updateDescription,
         dateValue = vm.date,
@@ -83,17 +70,14 @@ fun Transaction(
         navigateToSeeTransactions = navigateToSeeTransactions,
         initialTransactionType = vm.transactionType,
         onOptionSelected = vm::updateTransactionType,
-        accounts = accounts,
+        state = transactionState,
         onAccountChange = vm::updateAccountSelected,
-        accountLabel = vm.accountLabel,
-        onAccountLabelChange = vm::updateAccountLabel,
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Transaction(
-    isEnabledButton: Boolean = false,
     mountValue: String = "",
     onMountChange: (String) -> Unit = {},
     descriptionValue: String = "",
@@ -104,10 +88,8 @@ private fun Transaction(
     navigateToSeeTransactions: () -> Unit = {},
     initialTransactionType: TransactionType = TransactionType.INCOME,
     onOptionSelected: (TransactionType) -> Unit = {},
-    accounts: List<Account> = emptyList(),
+    state: TransactionState,
     onAccountChange: (Account) -> Unit = {},
-    accountLabel: String = "",
-    onAccountLabelChange: (String) -> Unit = {},
 ) {
 
     val datePickerState: DatePickerState = rememberDatePickerState()
@@ -145,97 +127,72 @@ private fun Transaction(
     Scaffold(
         modifier = Modifier,
         topBar = {
-            TopAppBar(
-                modifier = Modifier,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundColor
-                ),
-                title = {
-                    Text(
-                        text = "Agregar gasto",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Black,
-                        fontFamily = LatoFontFamily,
-                        color = TextColor
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = dropUnlessResumed {
-                        navigateToSeeTransactions()
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                            tint = TextColor
-                        )
-                    }
-                },
+            EmmToolbarTitle(
+                title = "Agregar gasto",
+                navigationIconClick = navigateToSeeTransactions,
+                modifier = Modifier.fillMaxWidth()
             )
         }
-    ) {
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(BackgroundColor)
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
                 .padding(vertical = 10.dp)
-                .padding(it),
+                .padding(innerPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
 
-            DropDownContainer(
-                account = accounts,
-                text = accountLabel,
-                onAccountChange = onAccountChange,
-                setText = onAccountLabelChange
+            EmmDropDown(
+                textLabel = "Cuentas",
+                textPlaceholder = "Seleccionar cuenta",
+                items = state.accounts,
+                itemSelected = state.accountSelected,
+                onItemSelected = onAccountChange,
+                modifier = Modifier.fillMaxWidth(),
             )
 
-            Amount(mountValue, onMountChange)
+            EmmTextAmount(
+                value = mountValue,
+                onAmountChange = onMountChange,
+                label = "Cantidad",
+                placeholder = "Ingrese una cantidad",
+                modifier = Modifier.fillMaxWidth()
+            )
 
-            TransactionRadioButton(
+            EmmTransactionRadioButton(
                 modifier = Modifier
                     .fillMaxWidth(),
                 selectedOption = initialTransactionType,
                 onOptionSelected = onOptionSelected
             )
 
-            TextFieldWithLabel(
+            EmmTextInput(
                 modifier = Modifier,
                 label = "En que gaste",
+                placeholder = "Ingresa tu gasto",
                 value = descriptionValue,
-                onChange = onDescriptionChange
+                onChange = onDescriptionChange,
             )
 
             DateInput(dateValue) {
                 setShowSelectDate(true)
             }
 
-            FilledTonalButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                onClick = dropUnlessResumed {
+            EmmPrimaryButton(
+                text = "Guardar",
+                onClick = {
                     addTransaction()
                     navigateToSeeTransactions()
                 },
-                enabled = isEnabledButton,
-                colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = PrimaryButtonColor,
-                    disabledContainerColor = PrimaryDisableButtonColor,
-                    contentColor = TextColor,
-                    disabledContentColor = TextDisableColor
-                ),
-                shape = RoundedCornerShape(25)
-            ) {
-                Text(
-                    text = "Guardar",
-                    fontFamily = LatoFontFamily,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Black,
-                )
-            }
+                enabled = state.isEnabledButton,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            )
         }
     }
 }
@@ -335,10 +292,12 @@ fun TransactionLabel(text: String) {
     )
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 fun IncomePreview() {
     EmmTheme {
-        Transaction()
+        Transaction(
+            state = TransactionState()
+        )
     }
 }
