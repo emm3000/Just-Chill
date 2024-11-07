@@ -57,7 +57,7 @@ fun Transaction(
     navigateToSeeTransactions: () -> Unit,
 ) {
 
-    val transactionState: TransactionState by vm.state.collectAsState()
+    val accounts: List<Account> by vm.accounts.collectAsState()
 
     Transaction(
         mountValue = vm.amount,
@@ -70,7 +70,9 @@ fun Transaction(
         navigateToSeeTransactions = navigateToSeeTransactions,
         initialTransactionType = vm.transactionType,
         onOptionSelected = vm::updateTransactionType,
-        state = transactionState,
+        accounts = accounts,
+        isEnabled = vm.isEnabled,
+        accountSelected = vm.accountSelected,
         onAccountChange = vm::updateAccountSelected,
     )
 }
@@ -88,7 +90,9 @@ private fun Transaction(
     navigateToSeeTransactions: () -> Unit = {},
     initialTransactionType: TransactionType = TransactionType.INCOME,
     onOptionSelected: (TransactionType) -> Unit = {},
-    state: TransactionState,
+    accounts: List<Account> = emptyList(),
+    accountSelected: Account? = null,
+    isEnabled: Boolean = false,
     onAccountChange: (Account) -> Unit = {},
 ) {
 
@@ -149,8 +153,8 @@ private fun Transaction(
             EmmDropDown(
                 textLabel = "Cuentas",
                 textPlaceholder = "Seleccionar cuenta",
-                items = state.accounts,
-                itemSelected = state.accountSelected,
+                items = accounts,
+                itemSelected = accountSelected,
                 onItemSelected = onAccountChange,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -188,7 +192,7 @@ private fun Transaction(
                     addTransaction()
                     navigateToSeeTransactions()
                 },
-                enabled = state.isEnabledButton,
+                enabled = isEnabled,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
@@ -297,7 +301,6 @@ fun TransactionLabel(text: String) {
 fun IncomePreview() {
     EmmTheme {
         Transaction(
-            state = TransactionState()
         )
     }
 }

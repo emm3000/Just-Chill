@@ -10,13 +10,12 @@ import com.emm.justchill.hh.account.domain.Account
 import com.emm.justchill.hh.account.domain.AccountRepository
 import com.emm.justchill.hh.transaction.domain.TransactionCreator
 import com.emm.justchill.hh.transaction.domain.TransactionInsert
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class TransactionViewModel(
@@ -38,24 +37,20 @@ class TransactionViewModel(
     var transactionType: TransactionType by mutableStateOf(TransactionType.INCOME)
         private set
 
+    var isEnabled by mutableStateOf(false)
+        private set
 
-    private val _state = MutableStateFlow(TransactionState())
-    val state: StateFlow<TransactionState> = combine(
-        _state,
-        accountRepository.retrieve(),
-    ) { transactionState, accounts ->
-        _state.update {
-            it.copy(
-                accounts = accounts,
-                accountSelected = transactionState.accountSelected ?: accounts.firstOrNull()
-            )
+    var accountSelected: Account? by mutableStateOf(null)
+        private set
+
+    val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
+        .onEach { accounts ->
+            accountSelected = accountSelected ?: accounts.firstOrNull()
         }
-        _state.value
-    }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = TransactionState()
+            initialValue = emptyList()
         )
 
     init {
@@ -63,26 +58,22 @@ class TransactionViewModel(
             snapshotFlow { amount },
             snapshotFlow { date },
             snapshotFlow { description },
-        ) { mount, date, description ->
-            _state.update {
-                it.copy(
-                    isEnabledButton = mount.isNotEmpty()
-                            && date.isNotEmpty()
-                            && description.isNotEmpty()
-                            && _state.value.accountSelected != null
-                )
-            }
+            snapshotFlow { accountSelected },
+        ) { mount, date, description, account ->
+            isEnabled = mount.isNotEmpty()
+                    && date.isNotEmpty()
+                    && description.isNotEmpty()
+                    && account != null
         }.launchIn(viewModelScope)
     }
 
     fun addTransaction() = viewModelScope.launch {
-        val accountId: String = _state.value.accountSelected?.accountId ?: throw IllegalStateException()
         val transactionInsert = TransactionInsert(
             type = transactionType,
             description = description,
             date = dateInLong,
             amount = amount.toDouble(),
-            accountId = accountId
+            accountId = accountSelected?.accountId ?: throw IllegalStateException()
         )
         transactionCreator.create(transactionInsert)
     }
@@ -107,10 +98,6 @@ class TransactionViewModel(
     }
 
     fun updateAccountSelected(value: Account) {
-        _state.update {
-            it.copy(
-                accountSelected = value
-            )
-        }
+        accountSelected = value
     }
 }

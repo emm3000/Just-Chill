@@ -2,6 +2,10 @@
 
 package com.emm.justchill.hh.home
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.hh.account.domain.Account
@@ -11,43 +15,38 @@ import com.emm.justchill.hh.transaction.domain.TransactionDifferenceCalculator
 import com.emm.justchill.hh.transaction.domain.TransactionSumIncome
 import com.emm.justchill.hh.transaction.domain.TransactionSumSpend
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 
 class HomeViewModel(
     private val transactionSumIncome: TransactionSumIncome,
     private val transactionSumSpend: TransactionSumSpend,
     private val transactionDifferenceCalculator: TransactionDifferenceCalculator,
-    private val accountRepository: AccountRepository,
+    accountRepository: AccountRepository,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(HomeState())
-    val state: StateFlow<HomeState> = _state
-        .flatMapLatest { homeState ->
-            val accountId = homeState.accountSelected?.accountId.orEmpty()
-            combine(
-                accountRepository.retrieve(),
-                transactionSumIncome(accountId),
-                transactionSumSpend(accountId),
-                transactionDifferenceCalculator.calculate(accountId),
-            ) { accounts, income, spend, difference ->
-                _state.update {
-                    it.copy(
-                        accounts = accounts,
-                        accountSelected = homeState.accountSelected ?: accounts.firstOrNull(),
-                        income = fromCentsToSolesWith(income),
-                        spend = fromCentsToSolesWith(spend),
-                        difference = fromCentsToSolesWith(difference),
-                    )
-                }
-                _state.value
-            }
+    var accountSelected: Account? by mutableStateOf(null)
+        private set
+
+    val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
+        .onEach { accounts ->
+            accountSelected = accountSelected ?: accounts.firstOrNull()
         }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = emptyList()
+        )
+
+    val calculators: StateFlow<HomeState> = snapshotFlow { accountSelected }
+        .filterNotNull()
+        .flatMapLatest(::extract)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),
@@ -55,6 +54,20 @@ class HomeViewModel(
         )
 
     fun updateAccountSelected(value: Account) {
-        _state.update { it.copy(accountSelected = value) }
+        accountSelected = value
+    }
+
+    private fun extract(
+        account: Account
+    ): Flow<HomeState> = combine(
+        transactionSumIncome(account.accountId),
+        transactionSumSpend(account.accountId),
+        transactionDifferenceCalculator.calculate(account.accountId)
+    ) { income, spend, difference ->
+        HomeState(
+            difference = fromCentsToSolesWith(difference),
+            income = fromCentsToSolesWith(income),
+            spend = fromCentsToSolesWith(spend)
+        )
     }
 }

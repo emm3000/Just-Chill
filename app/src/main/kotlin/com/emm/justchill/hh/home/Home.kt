@@ -14,7 +14,6 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -36,10 +35,13 @@ fun Home(
     navigateToCreateCategory: () -> Unit,
 ) {
 
-    val state: HomeState by homeViewModel.state.collectAsStateWithLifecycle()
+    val accounts: List<Account> by homeViewModel.accounts.collectAsStateWithLifecycle()
+    val homeState: HomeState by homeViewModel.calculators.collectAsStateWithLifecycle()
 
     Home(
-        homeState = state,
+        accounts = accounts,
+        homeState = homeState,
+        accountSelected = homeViewModel.accountSelected,
         navigateToCreateAccount = navigateToCreateAccount,
         navigateToCreateCategory = navigateToCreateCategory,
         onAccountChange = homeViewModel::updateAccountSelected,
@@ -48,7 +50,9 @@ fun Home(
 
 @Composable
 fun Home(
+    accounts: List<Account> = emptyList(),
     homeState: HomeState,
+    accountSelected: Account? = null,
     navigateToCreateAccount: () -> Unit,
     navigateToCreateCategory: () -> Unit,
     onAccountChange: (Account) -> Unit,
@@ -85,15 +89,15 @@ fun Home(
         EmmDropDown(
             textLabel = "Accounts",
             textPlaceholder = "Selecciona una cuenta",
-            items = homeState.accounts,
-            itemSelected = homeState.accountSelected,
+            items = accounts,
+            itemSelected = accountSelected,
             onItemSelected = onAccountChange,
             modifier = Modifier.fillMaxWidth(),
         )
 
         Spacer(Modifier.height(50.dp))
 
-        homeState.accountSelected?.let { BalanceSection(it) }
+        accountSelected?.let { BalanceSection(it) }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -156,22 +160,8 @@ private fun BalanceSection(account: Account) {
 @Composable
 fun HomePreview(modifier: Modifier = Modifier) {
     EmmTheme {
-        val accounts = remember {
-            (1..10).map {
-                Account(
-                    accountId = "$it",
-                    name = "name $it",
-                    balance = 200.00,
-                    initialBalance = 202.00,
-                    description = "description $it",
-                    syncStatus = "Sync"
-                )
-            }
-        }
         Home(
             homeState = HomeState(
-                accounts = accounts,
-                accountSelected = accounts[5],
                 difference = "202.00",
                 income = "300.00",
                 spend = "404.00"
