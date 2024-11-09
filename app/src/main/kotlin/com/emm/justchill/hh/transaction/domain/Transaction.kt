@@ -8,5 +8,4 @@ data class Transaction(
     val date: Long,
     val accountId: String,
     val categoryId: String?,
-    val syncStatus: String,
 )

@@ -6,6 +6,4 @@ interface TransactionUpdateRepository {
         transactionId: String,
         transactionUpdate: TransactionUpdate,
     )
-
-    suspend fun updateStatus(transactionId: String, syncStatus: SyncStatus)
 }

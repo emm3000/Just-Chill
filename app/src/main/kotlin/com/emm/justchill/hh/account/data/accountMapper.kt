@@ -9,7 +9,6 @@ fun Accounts.toDomain() = Account(
     balance = balance,
     initialBalance = initialBalance,
     description = description.orEmpty(),
-    syncStatus = syncStatus
 )
 
 fun List<Accounts>.toDomain() = map(Accounts::toDomain)

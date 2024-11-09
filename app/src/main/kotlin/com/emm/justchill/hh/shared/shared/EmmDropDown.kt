@@ -90,7 +90,7 @@ fun <T> EmmDropDown(
                 ),
                 modifier = Modifier
                     .exposedDropdownSize()
-                    .background(MaterialTheme.colorScheme.background)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
             ) {
                 items.forEach { item ->
                     DropdownMenuItem(
@@ -101,7 +101,7 @@ fun <T> EmmDropDown(
                                 fontFamily = LatoFontFamily,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Normal,
-                                color = MaterialTheme.colorScheme.onBackground
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         },
                         onClick = {

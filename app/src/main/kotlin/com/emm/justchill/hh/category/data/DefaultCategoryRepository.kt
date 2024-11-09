@@ -18,7 +18,6 @@ import kotlinx.coroutines.withContext
 
 class DefaultCategoryRepository(
     private val emmDatabase: EmmDatabase,
-    private val syncer: Syncer,
 ) : CategoryRepository {
 
     private val cq: CategoriesQueries
@@ -49,9 +48,7 @@ class DefaultCategoryRepository(
             name = categoryUpsert.name,
             type = categoryUpsert.type,
             description = categoryUpsert.description,
-            syncStatus = SyncStatus.PENDING_INSERT.name
         )
-//        syncer.sync(categoryId)
     }
 
     override suspend fun update(
@@ -62,17 +59,6 @@ class DefaultCategoryRepository(
             name = categoryUpsert.name,
             description = categoryUpsert.description,
             categoryId = categoryId,
-            syncStatus = SyncStatus.PENDING_UPDATE.name
-        )
-//        syncer.sync(categoryId)
-    }
-
-    override suspend fun updateStatus(
-        categoryId: String,
-        syncStatus: SyncStatus,
-    ) = withContext(Dispatchers.IO) {
-        cq.updateStatus(
-            syncStatus = syncStatus.name, categoryId = categoryId
         )
     }
 

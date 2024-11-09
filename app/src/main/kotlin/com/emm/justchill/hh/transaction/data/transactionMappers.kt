@@ -11,7 +11,6 @@ fun Transactions.toDomain(): Transaction = Transaction(
     date = date,
     categoryId = categoryId,
     accountId = accountId,
-    syncStatus = syncStatus,
 )
 
 fun List<Transactions>.toDomain(): List<Transaction> = map(Transactions::toDomain)

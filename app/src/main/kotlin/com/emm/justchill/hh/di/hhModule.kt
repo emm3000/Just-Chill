@@ -11,8 +11,6 @@ import com.emm.justchill.TransactionQueries
 import com.emm.justchill.hh.account.data.AccountRemoteRepository
 import com.emm.justchill.hh.account.data.AccountSupabaseRepository
 import com.emm.justchill.hh.account.data.DefaultAccountRepository
-import com.emm.justchill.hh.account.data.worker.AccountDeployer
-import com.emm.justchill.hh.account.data.worker.AccountSyncer
 import com.emm.justchill.hh.shared.DefaultSharedRepository
 import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
 import com.emm.justchill.hh.shared.SharedSqlDataSource
@@ -20,14 +18,10 @@ import com.emm.justchill.hh.auth.data.DefaultAuthRepository
 import com.emm.justchill.hh.category.data.CategoryRemoteRepository
 import com.emm.justchill.hh.category.data.CategorySupabaseRepository
 import com.emm.justchill.hh.category.data.DefaultCategoryRepository
-import com.emm.justchill.hh.category.data.worker.CategoryDeployer
-import com.emm.justchill.hh.category.data.worker.CategorySyncer
-import com.emm.justchill.hh.transaction.data.DefaultTransactionBackupRepository
 import com.emm.justchill.hh.transaction.data.DefaultTransactionRepository
 import com.emm.justchill.hh.transaction.data.DefaultTransactionUpdateRepository
 import com.emm.justchill.hh.transaction.data.TransactionRemoteRepository
 import com.emm.justchill.hh.transaction.data.TransactionSupabaseRepository
-import com.emm.justchill.hh.transaction.data.workers.TransactionSyncer
 import com.emm.justchill.hh.shared.BackupManager
 import com.emm.justchill.hh.shared.SharedRepository
 import com.emm.justchill.hh.shared.SupabaseBackupManager
@@ -50,9 +44,7 @@ import com.emm.justchill.hh.transaction.domain.TransactionSumSpend
 import com.emm.justchill.hh.transaction.domain.TransactionUpdateRepository
 import com.emm.justchill.hh.transaction.domain.TransactionUpdater
 import com.emm.justchill.hh.shared.DateAndTimeCombiner
-import com.emm.justchill.hh.transaction.domain.TransactionBackupRepository
 import com.emm.justchill.hh.shared.Syncer
-import com.emm.justchill.hh.transaction.data.workers.TransactionDeployer
 import com.emm.justchill.hh.account.domain.AccountRepository
 import com.emm.justchill.hh.account.domain.AccountBalanceUpdater
 import com.emm.justchill.hh.account.domain.AccountCreator
@@ -107,7 +99,6 @@ val hhModule = module {
 
 private fun Module.transactionsUseCases() {
     factoryOf(::TransactionLoader)
-    factoryOf(::TransactionDeployer)
     factoryOf(::TransactionCreator)
     factoryOf(::TransactionSumIncome)
     factoryOf(::TransactionSumSpend)
@@ -115,7 +106,6 @@ private fun Module.transactionsUseCases() {
     factoryOf(::TransactionFinder)
     factoryOf(::TransactionUpdater)
     factoryOf(::TransactionDeleter)
-    factoryOf(::TransactionSyncer) bind Syncer::class withOptions { named(TransactionSyncer::class.java.simpleName) }
 }
 
 private fun Module.viewModelsProviders() {
@@ -146,19 +136,10 @@ private fun Module.viewModelsProviders() {
 
 private fun Module.repositoriesProviders() {
 
-    single<TransactionBackupRepository> {
-        DefaultTransactionBackupRepository(
-            transactionsQueries = get(),
-            networkDataSource = get(),
-            authRepository = get(),
-        )
-    }
-
     single<TransactionRepository> {
         DefaultTransactionRepository(
             dispatchersProvider = get(),
             transactionsQueries = get(),
-            syncer = get(named(TransactionSyncer::class.java.simpleName)),
         )
     }
 
@@ -177,7 +158,6 @@ private fun Module.repositoriesProviders() {
     factory<TransactionUpdateRepository> {
         DefaultTransactionUpdateRepository(
             transactionQueries = get(),
-            syncer = get(named(TransactionSyncer::class.java.simpleName)),
         )
     }
 }
@@ -245,17 +225,14 @@ val categoryModule = module {
     factoryOf(::CategoryDeleter)
     factoryOf(::CategoryUpdater)
     factoryOf(::CategoryFinder)
-    factoryOf(::CategorySyncer) bind Syncer::class withOptions { named(CategorySyncer::class.java.simpleName) }
 
     factory {
         DefaultCategoryRepository(
             emmDatabase = get(),
-            syncer = get(named(CategorySyncer::class.java.simpleName))
         )
     } bind CategoryRepository::class
 
     factoryOf(::CategorySupabaseRepository) bind CategoryRemoteRepository::class
-    factoryOf(::CategoryDeployer)
 }
 
 val accountModule = module {
@@ -265,16 +242,13 @@ val accountModule = module {
     factoryOf(::AccountDeleter)
     factoryOf(::AccountFinder)
     factoryOf(::AccountUpdater)
-    factoryOf(::AccountSyncer) bind Syncer::class withOptions { named(AccountSyncer::class.java.simpleName) }
 
     factory {
         DefaultAccountRepository(
             emmDatabase = get(),
-            syncer = get(named(AccountSyncer::class.java.simpleName))
         )
     } bind AccountRepository::class
 
     factoryOf(::AccountSupabaseRepository) bind AccountRemoteRepository::class
-    factoryOf(::AccountDeployer)
     factoryOf(::AccountBalanceUpdater)
 }

@@ -27,7 +27,7 @@ import androidx.navigation.NavController
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.account.domain.Account
-import com.emm.justchill.hh.shared.EditTransaction
+import com.emm.justchill.hh.shared.shared.EditTransaction
 import com.emm.justchill.hh.shared.shared.EmmDropDown
 import com.emm.justchill.hh.transaction.presentation.TransactionType
 import com.emm.justchill.hh.transaction.presentation.TransactionUi
@@ -123,7 +123,7 @@ fun SeeTransactionsVersionTwo(
 
 @PreviewLightDark
 @Composable
-fun ItemPreviewVersionTwo(modifier: Modifier = Modifier) {
+fun ItemPreviewVersionTwo() {
     EmmTheme {
         ItemTransaction(
             TransactionUi(
@@ -141,7 +141,7 @@ fun ItemPreviewVersionTwo(modifier: Modifier = Modifier) {
 
 @PreviewLightDark
 @Composable
-fun SeeTransactionsVersionTwoPreview(modifier: Modifier = Modifier) {
+fun SeeTransactionsVersionTwoPreview() {
     EmmTheme {
         val xx = remember {
             (0..15).map {

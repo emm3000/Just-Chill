@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.account.domain
 
-import com.emm.justchill.hh.transaction.domain.SyncStatus
 import kotlinx.coroutines.flow.Flow
 
 interface AccountRepository {
@@ -14,8 +13,6 @@ interface AccountRepository {
     fun existDailyAccount(): Flow<Account?>
 
     suspend fun deleteBy(accountId: String)
-
-    suspend fun updateStatus(accountId: String, syncStatus: SyncStatus)
 
     suspend fun update(accountId: String, account: AccountUpsert)
 

@@ -8,7 +8,6 @@ fun Categories.toDomain() = Category(
     name = name,
     type = type,
     description = description.orEmpty(),
-    syncStatus = syncStatus
 )
 
 fun List<Categories>.toDomain() = map(Categories::toDomain)

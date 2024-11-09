@@ -6,8 +6,6 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.justchill.TransactionQueries
 import com.emm.justchill.Transactions
 import com.emm.justchill.core.DispatchersProvider
-import com.emm.justchill.hh.shared.Syncer
-import com.emm.justchill.hh.transaction.domain.SyncStatus
 import com.emm.justchill.hh.transaction.domain.TransactionInsert
 import com.emm.justchill.hh.transaction.domain.TransactionRepository
 import com.emm.justchill.hh.transaction.domain.Transaction
@@ -18,7 +16,6 @@ import kotlinx.coroutines.withContext
 class DefaultTransactionRepository(
     dispatchersProvider: DispatchersProvider,
     private val transactionsQueries: TransactionQueries,
-    private val syncer: Syncer,
 ) : TransactionRepository, DispatchersProvider by dispatchersProvider {
 
     override suspend fun create(transactionInsert: TransactionInsert) = withContext(ioDispatcher) {
@@ -29,11 +26,9 @@ class DefaultTransactionRepository(
             amount = transactionInsert.amount,
             description = transactionInsert.description,
             date = transactionInsert.date,
-            syncStatus = SyncStatus.PENDING_INSERT.name,
             categoryId = transactionInsert.categoryId,
             accountId = transactionInsert.accountId
         )
-//        syncer.sync(transactionInsert.id)
     }
 
     override fun retrieve(accountId: String): Flow<List<Transaction>> {

@@ -4,4 +4,3 @@ interface NowProvider {
 
     val now: Long
 }
-

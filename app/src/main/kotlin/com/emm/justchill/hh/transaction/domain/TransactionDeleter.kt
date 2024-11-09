@@ -1,10 +1,10 @@
 package com.emm.justchill.hh.transaction.domain
 
 class TransactionDeleter(
-    private val updateRepository: TransactionUpdateRepository,
+    private val updateRepository: TransactionRepository,
 ) {
 
     suspend fun delete(transactionId: String) {
-        updateRepository.updateStatus(transactionId, SyncStatus.PENDING_DELETE)
+        updateRepository.deleteBy(transactionId)
     }
 }

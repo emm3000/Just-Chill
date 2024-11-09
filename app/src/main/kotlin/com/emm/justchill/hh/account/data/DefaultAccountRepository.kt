@@ -6,11 +6,9 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.justchill.Accounts
 import com.emm.justchill.AccountsQueries
 import com.emm.justchill.EmmDatabase
-import com.emm.justchill.hh.shared.Syncer
 import com.emm.justchill.hh.account.domain.Account
 import com.emm.justchill.hh.account.domain.AccountRepository
 import com.emm.justchill.hh.account.domain.AccountUpsert
-import com.emm.justchill.hh.transaction.domain.SyncStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -18,7 +16,6 @@ import kotlinx.coroutines.withContext
 
 class DefaultAccountRepository(
     private val emmDatabase: EmmDatabase,
-    private val syncer: Syncer,
 ) : AccountRepository {
 
     private val aq: AccountsQueries
@@ -50,9 +47,7 @@ class DefaultAccountRepository(
             balance = account.balance,
             initialBalance = account.balance,
             description = account.description,
-            syncStatus = SyncStatus.PENDING_INSERT.name
         )
-//        syncer.sync(accountId)
     }
 
     override fun existDailyAccount(): Flow<Account?> {
@@ -68,13 +63,6 @@ class DefaultAccountRepository(
         aq.delete(accountId)
     }
 
-    override suspend fun updateStatus(
-        accountId: String,
-        syncStatus: SyncStatus,
-    ) = withContext(Dispatchers.IO) {
-        aq.updateStatus(syncStatus.name, accountId)
-    }
-
     override suspend fun update(
         accountId: String,
         account: AccountUpsert,
@@ -84,10 +72,8 @@ class DefaultAccountRepository(
             balance = account.balance,
             initialBalance = account.balance,
             description = account.description,
-            syncStatus = SyncStatus.PENDING_UPDATE.name,
             accountId = accountId
         )
-//        syncer.sync(accountId)
     }
 
     override suspend fun updateAmount(
@@ -95,7 +81,5 @@ class DefaultAccountRepository(
         amount: Double,
     ) = withContext(Dispatchers.IO) {
         aq.updateBalance(amount, accountId)
-        updateStatus(accountId, SyncStatus.PENDING_UPDATE)
-//        syncer.sync(accountId)
     }
 }

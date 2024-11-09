@@ -39,28 +39,16 @@ import com.emm.justchill.hh.auth.presentation.Login
 import com.emm.justchill.hh.category.presentation.Category
 import com.emm.justchill.hh.home.Home
 import com.emm.justchill.hh.shared.seetransactions.SeeTransactionsVersionTwo
+import com.emm.justchill.hh.shared.shared.Account
+import com.emm.justchill.hh.shared.shared.Category
+import com.emm.justchill.hh.shared.shared.EditTransaction
+import com.emm.justchill.hh.shared.shared.Login
+import com.emm.justchill.hh.shared.shared.Main
+import com.emm.justchill.hh.shared.shared.PreLogin
 import com.emm.justchill.hh.transaction.presentation.EditTransaction
 import com.emm.justchill.hh.transaction.presentation.Transaction
-import kotlinx.serialization.Serializable
 import org.koin.compose.koinInject
 
-@Serializable
-object PreLogin
-
-@Serializable
-object Login
-
-@Serializable
-object Main
-
-@Serializable
-data class EditTransaction(val transactionId: String)
-
-@Serializable
-object Category
-
-@Serializable
-object Account
 
 @Composable
 fun Hh() {

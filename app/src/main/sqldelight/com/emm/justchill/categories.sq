@@ -2,15 +2,14 @@ CREATE TABLE categories (
     categoryId TEXT NOT NULL PRIMARY KEY,
     name TEXT NOT NULL,
     type TEXT NOT NULL,
-    description TEXT,
-    syncStatus TEXT NOT NULL
+    description TEXT
 );
 
 retrieveAll:
-SELECT * FROM categories WHERE syncStatus != 'PENDING_DELETE';
+SELECT * FROM categories;
 
 insertCategory:
-INSERT OR REPLACE INTO categories VALUES(?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO categories VALUES(?, ?, ?, ?);
 
 delete:
 DELETE FROM categories WHERE categoryId = ?;
@@ -22,14 +21,6 @@ updateValues:
 UPDATE categories
 SET
     name = ?,
-    description = ?,
-    syncStatus = ?
-WHERE
-    categoryId = ?;
-
-updateStatus:
-UPDATE categories
-SET
-    syncStatus = ?
+    description = ?
 WHERE
     categoryId = ?;

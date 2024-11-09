@@ -3,15 +3,14 @@ CREATE TABLE accounts (
     name TEXT NOT NULL,
     balance REAL NOT NULL,
     initialBalance REAL NOT NULL,
-    description TEXT,
-    syncStatus TEXT NOT NULL
+    description TEXT
 );
 
 retrieveAll:
-SELECT * FROM accounts WHERE syncStatus != 'PENDING_DELETE';
+SELECT * FROM accounts;
 
 insert:
-INSERT OR REPLACE INTO accounts VALUES(?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO accounts VALUES(?, ?, ?, ?, ?);
 
 existDailyAccount:
 SELECT * FROM accounts WHERE name = 'FERIA';
@@ -28,15 +27,7 @@ SET
     name = ?,
     balance = ?,
     initialBalance = ?,
-    description = ?,
-    syncStatus = ?
-WHERE
-    accountId = ?;
-
-updateStatus:
-UPDATE accounts
-SET
-    syncStatus = ?
+    description = ?
 WHERE
     accountId = ?;
 

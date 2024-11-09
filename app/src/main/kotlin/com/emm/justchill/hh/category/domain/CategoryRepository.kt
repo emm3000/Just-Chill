@@ -13,7 +13,5 @@ interface CategoryRepository {
 
     suspend fun update(categoryId: String, categoryUpsert: CategoryUpsert)
 
-    suspend fun updateStatus(categoryId: String, syncStatus: SyncStatus)
-
     suspend fun deleteBy(categoryId: String)
 }

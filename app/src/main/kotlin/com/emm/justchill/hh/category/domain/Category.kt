@@ -5,5 +5,4 @@ data class Category(
     val name: String,
     val type: String,
     val description: String,
-    val syncStatus: String,
 )
