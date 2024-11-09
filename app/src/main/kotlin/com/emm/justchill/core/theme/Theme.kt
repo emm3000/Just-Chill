@@ -89,7 +89,7 @@ private val highContrastDarkColorScheme = darkColorScheme(
 
 @Composable
 fun EmmTheme(
-    darkTheme: Boolean = !isSystemInDarkTheme(),
+    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

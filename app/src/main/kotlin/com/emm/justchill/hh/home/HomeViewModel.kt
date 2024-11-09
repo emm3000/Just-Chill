@@ -36,7 +36,7 @@ class HomeViewModel(
 
     val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
         .onEach { accounts ->
-            accountSelected = accountSelected ?: accounts.firstOrNull()
+            accountSelected = accounts.firstOrNull()
         }
         .stateIn(
             scope = viewModelScope,

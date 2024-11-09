@@ -5,38 +5,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
-import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.core.theme.PrimaryButtonColor
-import com.emm.justchill.core.theme.PrimaryDisableButtonColor
-import com.emm.justchill.core.theme.TextColor
-import com.emm.justchill.core.theme.TextDisableColor
+import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextInput
 import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
+import com.emm.justchill.hh.transaction.presentation.EmmToolbarTitle
 import com.emm.justchill.hh.transaction.presentation.TransactionType
 import org.koin.androidx.compose.koinViewModel
 
@@ -61,7 +43,6 @@ fun Category(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Category(
     name: String = "",
@@ -78,31 +59,12 @@ private fun Category(
     Scaffold(
         modifier = Modifier,
         topBar = {
-            TopAppBar(
-                modifier = Modifier,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundColor
-                ),
-                title = {
-                    Text(
-                        text = "Agregar categoría",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Black,
-                        fontFamily = LatoFontFamily,
-                        color = TextColor
-                    )
+            EmmToolbarTitle(
+                title = "Agregar categoría",
+                navigationIconClick = {
+                    navigateToBack()
                 },
-                navigationIcon = {
-                    IconButton(onClick = dropUnlessResumed {
-                        navigateToBack()
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                            tint = TextColor
-                        )
-                    }
-                },
+                modifier = Modifier.fillMaxWidth()
             )
         }
     ) {
@@ -110,7 +72,7 @@ private fun Category(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(BackgroundColor)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 20.dp)
                 .padding(vertical = 10.dp)
                 .padding(it),
@@ -141,38 +103,23 @@ private fun Category(
                 onChange = updateDescription
             )
 
-            FilledTonalButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                onClick = dropUnlessResumed {
+            EmmPrimaryButton(
+                text = "Guardar",
+                onClick = {
                     saveAction()
                     navigateToBack()
                 },
                 enabled = isEnabledButton,
-                colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = PrimaryButtonColor,
-                    disabledContainerColor = PrimaryDisableButtonColor,
-                    contentColor = TextColor,
-                    disabledContentColor = TextDisableColor
-                ),
-                shape = RoundedCornerShape(25)
-            ) {
-                Text(
-                    text = "Guardar",
-                    fontFamily = LatoFontFamily,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Black,
-                )
-            }
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
-fun CategoryPreview(modifier: Modifier = Modifier) {
+fun CategoryPreview() {
 
     EmmTheme {
         Category()

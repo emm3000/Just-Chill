@@ -31,6 +31,9 @@ class EditTransactionViewModel(
     accountRepository: AccountRepository,
 ) : ViewModel() {
 
+    var accountSelected: Account? by mutableStateOf(null)
+        private set
+
     var amount by mutableStateOf("")
         private set
 
@@ -58,8 +61,6 @@ class EditTransactionViewModel(
             initialValue = emptyList()
         )
 
-    private var accountSelected: Account? = null
-
     init {
         combine(
             snapshotFlow { amount },
@@ -84,7 +85,6 @@ class EditTransactionViewModel(
             dateInLong = transaction.date
             val account: Account? = accountFinder.find(currentTransaction.accountId).firstOrNull()
             account?.let {
-                accountLabel = "${it.name} ${it.balance}"
                 accountSelected = it
             }
         }

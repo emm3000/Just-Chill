@@ -38,7 +38,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.emm.justchill.core.theme.BorderTextFieldColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
@@ -195,7 +194,6 @@ private fun Transaction(
                 enabled = isEnabled,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
             )
         }
     }
@@ -210,7 +208,13 @@ fun DateInput(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        TransactionLabel(text = "Fecha:")
+        Text(
+            text = "Fecha",
+            fontWeight = FontWeight.Normal,
+            fontFamily = LatoFontFamily,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 17.sp
+        )
         Spacer(modifier = Modifier.height(5.dp))
         OutlinedTextField(
             modifier = Modifier
@@ -223,10 +227,10 @@ fun DateInput(
             readOnly = true,
             enabled = false,
             colors = OutlinedTextFieldDefaults.colors(
-                disabledTextColor = TextColor,
-                disabledBorderColor = BorderTextFieldColor,
-                disabledPlaceholderColor = BorderTextFieldColor,
-                focusedBorderColor = TextColor
+                disabledTextColor = MaterialTheme.colorScheme.onBackground,
+                disabledBorderColor = MaterialTheme.colorScheme.onBackground,
+                disabledPlaceholderColor = MaterialTheme.colorScheme.onBackground,
+                focusedBorderColor = MaterialTheme.colorScheme.onBackground
             ),
             placeholder = {
                 LabelTextField("Fecha")
@@ -273,7 +277,7 @@ fun Amount(mountValue: String, onMountChange: (String) -> Unit) {
                 imeAction = ImeAction.Next
             ),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = TextColor
+                focusedBorderColor = MaterialTheme.colorScheme.onBackground
             ),
             textStyle = TextStyle(
                 color = TextColor,

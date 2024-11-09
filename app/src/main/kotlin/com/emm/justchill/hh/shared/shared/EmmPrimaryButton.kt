@@ -26,7 +26,8 @@ fun EmmPrimaryButton(
 ) {
 
     FilledTonalButton(
-        modifier = modifier,
+        modifier = modifier
+            .height(50.dp),
         onClick = dropUnlessResumed { onClick() },
         enabled = enabled,
         colors = ButtonDefaults.filledTonalButtonColors(
@@ -55,7 +56,6 @@ private fun EmmPrimaryButtonPreview() {
             onClick = {},
             enabled = true,
             modifier = Modifier.fillMaxWidth()
-                .height(50.dp)
         )
     }
 }
@@ -69,7 +69,6 @@ private fun EmmPrimaryButton2Preview() {
             onClick = {},
             enabled = false,
             modifier = Modifier.fillMaxWidth()
-                .height(50.dp)
         )
     }
 }

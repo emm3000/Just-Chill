@@ -50,7 +50,7 @@ fun EmmTextInput(
                     text = placeholder,
                     fontFamily = LatoFontFamily,
                     fontWeight = FontWeight.Normal,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                     fontSize = 16.sp
                 )
             },
@@ -61,7 +61,7 @@ fun EmmTextInput(
                 color = MaterialTheme.colorScheme.onBackground,
             ),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = TextColor
+                focusedBorderColor = MaterialTheme.colorScheme.onBackground
             ),
             maxLines = 2,
         )

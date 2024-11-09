@@ -5,24 +5,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,7 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
@@ -47,12 +44,10 @@ import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.core.theme.PrimaryButtonColor
-import com.emm.justchill.core.theme.PrimaryDisableButtonColor
 import com.emm.justchill.core.theme.TextColor
-import com.emm.justchill.core.theme.TextDisableColor
 import com.emm.justchill.hh.account.domain.Account
-import com.emm.justchill.hh.shared.shared.DropDownContainer
+import com.emm.justchill.hh.shared.shared.EmmDropDown
+import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextInput
 import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
 import org.koin.androidx.compose.koinViewModel
@@ -62,7 +57,7 @@ import org.koin.core.parameter.parametersOf
 fun EditTransaction(
     navController: NavController,
     transactionId: String,
-    vm: EditTransactionViewModel = koinViewModel(parameters = { parametersOf(transactionId) })
+    vm: EditTransactionViewModel = koinViewModel(parameters = { parametersOf(transactionId) }),
 ) {
 
     val accounts: List<Account> by vm.accounts.collectAsState()
@@ -82,8 +77,7 @@ fun EditTransaction(
         deleteTransaction = vm::deleteTransaction,
         accounts = accounts,
         onAccountChange = vm::updateAccountSelected,
-        accountLabel = vm.accountLabel,
-        onAccountLabelChange = vm::updateAccountLabel,
+        accountSelected = vm.accountSelected,
     )
 
 }
@@ -104,9 +98,8 @@ private fun EditTransaction(
     onOptionSelected: (TransactionType) -> Unit = {},
     deleteTransaction: () -> Unit = {},
     accounts: List<Account> = emptyList(),
+    accountSelected: Account? = null,
     onAccountChange: (Account) -> Unit = {},
-    accountLabel: String = "",
-    onAccountLabelChange: (String) -> Unit = {},
 ) {
 
     val datePickerState: DatePickerState = rememberDatePickerState()
@@ -146,7 +139,7 @@ private fun EditTransaction(
     }
 
     if (showDeleteDialog) {
-        DeleteDialog(
+        EmmDeleteDialog(
             setShowDeleteDialog = setShowDeleteDialog,
             onConfirmButton = {
                 setShowDeleteDialog(false)
@@ -162,7 +155,7 @@ private fun EditTransaction(
             TopAppBar(
                 modifier = Modifier,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundColor
+                    containerColor = MaterialTheme.colorScheme.background
                 ),
                 title = {
                     Text(
@@ -170,7 +163,7 @@ private fun EditTransaction(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Black,
                         fontFamily = LatoFontFamily,
-                        color = TextColor
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 },
                 navigationIcon = {
@@ -180,7 +173,7 @@ private fun EditTransaction(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,
-                            tint = TextColor
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 },
@@ -202,7 +195,7 @@ private fun EditTransaction(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .background(BackgroundColor)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 20.dp)
                 .padding(top = 10.dp)
                 .padding(it),
@@ -210,14 +203,22 @@ private fun EditTransaction(
             verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
 
-            DropDownContainer(
-                account = accounts,
-                onAccountChange = onAccountChange,
-                text = accountLabel,
-                setText = onAccountLabelChange
+            EmmDropDown(
+                textLabel = "Cuentas",
+                textPlaceholder = "Seleccione una cuenta",
+                items = accounts,
+                itemSelected = accountSelected,
+                onItemSelected = onAccountChange,
+                modifier = Modifier.fillMaxWidth(),
             )
 
-            Amount(mountValue, onMountChange)
+            EmmTextAmount(
+                value = mountValue,
+                onAmountChange = onMountChange,
+                label = "Cantidad",
+                placeholder = "Ingrese una cantidad",
+                modifier = Modifier.fillMaxWidth(),
+            )
 
             EmmTransactionRadioButton(
                 modifier = Modifier.fillMaxWidth(),
@@ -237,30 +238,15 @@ private fun EditTransaction(
                 setShowSelectDate(true)
             }
 
-            FilledTonalButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                onClick = dropUnlessResumed {
+            EmmPrimaryButton(
+                text = "Actualizar",
+                onClick = {
                     updateTransaction()
                     navigateUp()
                 },
                 enabled = isEnabledButton,
-                colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = PrimaryButtonColor,
-                    disabledContainerColor = PrimaryDisableButtonColor,
-                    contentColor = TextColor,
-                    disabledContentColor = TextDisableColor
-                ),
-                shape = RoundedCornerShape(25)
-            ) {
-                Text(
-                    text = "Actualizar",
-                    fontFamily = LatoFontFamily,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Black,
-                )
-            }
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
@@ -318,7 +304,7 @@ private fun DeleteDialog(
     )
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 fun EditTransactionPreview() {
     EmmTheme {

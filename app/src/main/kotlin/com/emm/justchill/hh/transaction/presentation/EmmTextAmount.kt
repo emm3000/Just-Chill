@@ -78,7 +78,7 @@ fun EmmTextAmount(
                 imeAction = ImeAction.Next
             ),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = TextColor
+                focusedBorderColor = MaterialTheme.colorScheme.onBackground
             ),
             textStyle = TextStyle(
                 color = MaterialTheme.colorScheme.onBackground,

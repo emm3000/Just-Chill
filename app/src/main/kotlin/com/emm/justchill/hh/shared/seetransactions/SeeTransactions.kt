@@ -98,6 +98,7 @@ fun SeeTransactionsVersionTwo(
                 itemSelected = accountSelected,
                 onItemSelected = onAccountChange,
                 modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 12.dp)
             )
         }
 
