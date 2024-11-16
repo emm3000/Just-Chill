@@ -114,6 +114,7 @@ fun Home(
                 }
             },
             modifier = Modifier.fillMaxWidth()
+                .padding(bottom = 10.dp)
         )
 
         EmmDropDown(

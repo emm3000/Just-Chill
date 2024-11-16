@@ -6,7 +6,6 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.justchill.Categories
 import com.emm.justchill.CategoriesQueries
 import com.emm.justchill.EmmDatabase
-import com.emm.justchill.hh.shared.Syncer
 import com.emm.justchill.hh.category.domain.Category
 import com.emm.justchill.hh.category.domain.CategoryRepository
 import com.emm.justchill.hh.category.domain.CategoryUpsert

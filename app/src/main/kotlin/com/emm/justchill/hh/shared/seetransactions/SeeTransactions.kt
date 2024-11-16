@@ -66,7 +66,8 @@ fun SeeTransactionsVersionTwo(
     ) {
         EmmCenteredToolbar(
             title = "Transacciones",
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth()
+                .padding(bottom = 10.dp),
         )
 
         LazyColumn(

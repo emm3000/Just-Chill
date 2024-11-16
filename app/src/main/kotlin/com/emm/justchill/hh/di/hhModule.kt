@@ -11,28 +11,37 @@ import com.emm.justchill.TransactionQueries
 import com.emm.justchill.hh.account.data.AccountRemoteRepository
 import com.emm.justchill.hh.account.data.AccountSupabaseRepository
 import com.emm.justchill.hh.account.data.DefaultAccountRepository
-import com.emm.justchill.hh.shared.DefaultSharedRepository
-import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
-import com.emm.justchill.hh.shared.SharedSqlDataSource
+import com.emm.justchill.hh.account.domain.AccountBalanceUpdater
+import com.emm.justchill.hh.account.domain.AccountCreator
+import com.emm.justchill.hh.account.domain.AccountDeleter
+import com.emm.justchill.hh.account.domain.AccountFinder
+import com.emm.justchill.hh.account.domain.AccountRepository
+import com.emm.justchill.hh.account.domain.AccountUpdater
+import com.emm.justchill.hh.account.domain.DailyAccountCreator
+import com.emm.justchill.hh.account.presentation.AccountViewModel
 import com.emm.justchill.hh.auth.data.DefaultAuthRepository
+import com.emm.justchill.hh.auth.domain.AuthRepository
+import com.emm.justchill.hh.auth.domain.UserAuthenticator
+import com.emm.justchill.hh.auth.domain.UserCreator
+import com.emm.justchill.hh.auth.presentation.LoginViewModel
 import com.emm.justchill.hh.category.data.CategoryRemoteRepository
 import com.emm.justchill.hh.category.data.CategorySupabaseRepository
 import com.emm.justchill.hh.category.data.DefaultCategoryRepository
+import com.emm.justchill.hh.category.domain.CategoryCreator
+import com.emm.justchill.hh.category.domain.CategoryDeleter
+import com.emm.justchill.hh.category.domain.CategoryFinder
+import com.emm.justchill.hh.category.domain.CategoryRepository
+import com.emm.justchill.hh.category.domain.CategoryUpdater
+import com.emm.justchill.hh.category.presentation.CategoryViewModel
+import com.emm.justchill.hh.home.HomeViewModel
+import com.emm.justchill.hh.shared.DateAndTimeCombiner
+import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
+import com.emm.justchill.hh.shared.UniqueIdProvider
+import com.emm.justchill.hh.shared.seetransactions.SeeTransactionsViewModel
 import com.emm.justchill.hh.transaction.data.DefaultTransactionRepository
 import com.emm.justchill.hh.transaction.data.DefaultTransactionUpdateRepository
 import com.emm.justchill.hh.transaction.data.TransactionRemoteRepository
 import com.emm.justchill.hh.transaction.data.TransactionSupabaseRepository
-import com.emm.justchill.hh.shared.BackupManager
-import com.emm.justchill.hh.shared.SharedRepository
-import com.emm.justchill.hh.shared.SupabaseBackupManager
-import com.emm.justchill.hh.auth.domain.AuthRepository
-import com.emm.justchill.hh.auth.domain.UserAuthenticator
-import com.emm.justchill.hh.auth.domain.UserCreator
-import com.emm.justchill.hh.category.domain.CategoryRepository
-import com.emm.justchill.hh.category.domain.CategoryCreator
-import com.emm.justchill.hh.category.domain.CategoryDeleter
-import com.emm.justchill.hh.category.domain.CategoryFinder
-import com.emm.justchill.hh.category.domain.CategoryUpdater
 import com.emm.justchill.hh.transaction.domain.TransactionCreator
 import com.emm.justchill.hh.transaction.domain.TransactionDeleter
 import com.emm.justchill.hh.transaction.domain.TransactionDifferenceCalculator
@@ -43,21 +52,6 @@ import com.emm.justchill.hh.transaction.domain.TransactionSumIncome
 import com.emm.justchill.hh.transaction.domain.TransactionSumSpend
 import com.emm.justchill.hh.transaction.domain.TransactionUpdateRepository
 import com.emm.justchill.hh.transaction.domain.TransactionUpdater
-import com.emm.justchill.hh.shared.DateAndTimeCombiner
-import com.emm.justchill.hh.shared.Syncer
-import com.emm.justchill.hh.account.domain.AccountRepository
-import com.emm.justchill.hh.account.domain.AccountBalanceUpdater
-import com.emm.justchill.hh.account.domain.AccountCreator
-import com.emm.justchill.hh.account.domain.AccountDeleter
-import com.emm.justchill.hh.account.domain.AccountFinder
-import com.emm.justchill.hh.account.domain.AccountUpdater
-import com.emm.justchill.hh.account.domain.DailyAccountCreator
-import com.emm.justchill.hh.shared.UniqueIdProvider
-import com.emm.justchill.hh.account.presentation.AccountViewModel
-import com.emm.justchill.hh.home.HomeViewModel
-import com.emm.justchill.hh.auth.presentation.LoginViewModel
-import com.emm.justchill.hh.category.presentation.CategoryViewModel
-import com.emm.justchill.hh.shared.seetransactions.SeeTransactionsViewModel
 import com.emm.justchill.hh.transaction.presentation.EditTransactionViewModel
 import com.emm.justchill.hh.transaction.presentation.TransactionViewModel
 import io.github.jan.supabase.SupabaseClient
@@ -72,9 +66,6 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
-import org.koin.core.module.dsl.named
-import org.koin.core.module.dsl.withOptions
-import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -91,8 +82,6 @@ val hhModule = module {
 
     factory { DateAndTimeCombiner() }
     factory { DefaultUniqueIdProvider } bind UniqueIdProvider::class
-
-    factoryOf(::SupabaseBackupManager) bind BackupManager::class
 
     viewModelsProviders()
 }
@@ -143,12 +132,6 @@ private fun Module.repositoriesProviders() {
         )
     }
 
-    single<SharedRepository> {
-        DefaultSharedRepository(
-            get(),
-        )
-    }
-
     single<SupabaseClient> { supabase(androidApplication()) }
 
     factory<AuthRepository> {
@@ -177,8 +160,6 @@ private fun Module.dataSourceProviders() {
             get(),
         )
     }
-
-    factoryOf(::SharedSqlDataSource)
 }
 
 private fun Module.provideSqlDelight() {

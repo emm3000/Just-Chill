@@ -130,73 +130,66 @@ private fun Transaction(
         }
     }
 
-    Scaffold(
-        modifier = Modifier,
-        topBar = {
-            EmmToolbarTitle(
-                title = "Agregar gasto",
-                navigationIconClick = navigateToSeeTransactions,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-    ) { innerPadding ->
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(15.dp)
+    ) {
+
+        EmmCenteredToolbar(
+            title = "Agregar gasto",
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        EmmDropDown(
+            textLabel = "Cuentas",
+            textPlaceholder = "Seleccionar cuenta",
+            items = accounts,
+            itemSelected = accountSelected,
+            onItemSelected = onAccountChange,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        EmmAmountChill(
+            value = amount,
+            onValueChange = onAmountChange,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        EmmTransactionRadioButton(
             modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(vertical = 10.dp)
-                .padding(innerPadding),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(15.dp)
-        ) {
+                .fillMaxWidth(),
+            selectedOption = initialTransactionType,
+            onOptionSelected = onOptionSelected
+        )
 
-            EmmDropDown(
-                textLabel = "Cuentas",
-                textPlaceholder = "Seleccionar cuenta",
-                items = accounts,
-                itemSelected = accountSelected,
-                onItemSelected = onAccountChange,
-                modifier = Modifier.fillMaxWidth(),
-            )
+        EmmTextFieldChill(
+            modifier = Modifier,
+            label = "En que gaste",
+            placeholder = "Ingresa tu gasto",
+            value = descriptionValue,
+            onChange = onDescriptionChange,
+        )
 
-            EmmAmountChill(
-                value = amount,
-                onValueChange = onAmountChange,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            EmmTransactionRadioButton(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                selectedOption = initialTransactionType,
-                onOptionSelected = onOptionSelected
-            )
-
-            EmmTextFieldChill(
-                modifier = Modifier,
-                label = "En que gaste",
-                placeholder = "Ingresa tu gasto",
-                value = descriptionValue,
-                onChange = onDescriptionChange,
-            )
-
-            DateInput(dateValue) {
-                setShowSelectDate(true)
-            }
-
-            EmmPrimaryButton(
-                text = "Guardar",
-                onClick = {
-                    addTransaction()
-                    navigateToSeeTransactions()
-                },
-                enabled = isEnabled,
-                modifier = Modifier
-                    .fillMaxWidth()
-            )
+        DateInput(dateValue) {
+            setShowSelectDate(true)
         }
+
+        EmmPrimaryButton(
+            text = "Guardar",
+            onClick = {
+                addTransaction()
+                navigateToSeeTransactions()
+            },
+            enabled = isEnabled,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 30.dp)
+        )
     }
 }
 
