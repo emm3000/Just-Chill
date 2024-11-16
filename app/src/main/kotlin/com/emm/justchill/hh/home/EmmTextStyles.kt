@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.LatoFontFamily
 
 @Composable
 fun EmmHeadlineMedium(
@@ -28,6 +29,7 @@ fun EmmHeadlineMedium(
         text = text,
         modifier = modifier,
         fontSize = 28.sp,
+        fontFamily = LatoFontFamily,
         fontWeight = FontWeight.Bold,
         color = textColor
     )
@@ -44,6 +46,7 @@ fun EmmHeadlineMediumLight(
         text = text,
         modifier = modifier,
         fontSize = 28.sp,
+        fontFamily = LatoFontFamily,
         fontWeight = FontWeight.Light,
         color = textColor
     )
@@ -59,6 +62,7 @@ fun EmmHeading(
     Text(
         text = text,
         modifier = modifier,
+        fontFamily = LatoFontFamily,
         fontWeight = FontWeight.Bold,
         color = textColor
     )

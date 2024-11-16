@@ -23,8 +23,8 @@ android {
         applicationId = "com.emm.justchill"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "1.0.4-alpha"
+        versionCode = 7
+        versionName = "1.0.5-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -40,13 +40,14 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 
     val flavorDimension = "tier"
-    val appName = "Yout"
+    val appName = "EMM"
     flavorDimensions += listOf(flavorDimension)
 
     productFlavors {

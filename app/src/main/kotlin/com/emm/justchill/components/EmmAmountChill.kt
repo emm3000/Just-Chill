@@ -2,7 +2,6 @@ package com.emm.justchill.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
@@ -62,6 +61,7 @@ fun AmountTextField(
     textColor: Color,
     modifier: Modifier = Modifier,
 ) {
+
     BasicTextField(
         modifier = modifier,
         value = value,
@@ -105,13 +105,13 @@ fun formatInputToAmount(input: TextFieldValue): TextFieldValue {
 
 @PreviewLightDark
 @Composable
-fun AmountPreview(modifier: Modifier = Modifier) {
+fun AmountPreview() {
     EmmTheme {
         Surface {
             EmmAmountChill(
-                value = TextFieldValue("20,100.00"),
+                value = TextFieldValue("100.00"),
                 onValueChange = {},
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
             )
         }
     }
