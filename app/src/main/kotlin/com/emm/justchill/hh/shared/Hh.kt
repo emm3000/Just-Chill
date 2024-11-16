@@ -1,14 +1,8 @@
 package com.emm.justchill.hh.shared
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -16,14 +10,14 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -34,113 +28,69 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.account.presentation.Account
-import com.emm.justchill.hh.auth.domain.AuthRepository
-import com.emm.justchill.hh.auth.presentation.Login
 import com.emm.justchill.hh.category.presentation.Category
 import com.emm.justchill.hh.home.Home
 import com.emm.justchill.hh.shared.seetransactions.SeeTransactionsVersionTwo
 import com.emm.justchill.hh.shared.shared.Account
 import com.emm.justchill.hh.shared.shared.Category
 import com.emm.justchill.hh.shared.shared.EditTransaction
-import com.emm.justchill.hh.shared.shared.Login
-import com.emm.justchill.hh.shared.shared.Main
-import com.emm.justchill.hh.shared.shared.PreLogin
 import com.emm.justchill.hh.transaction.presentation.EditTransaction
 import com.emm.justchill.hh.transaction.presentation.Transaction
-import org.koin.compose.koinInject
-
 
 @Composable
 fun Hh() {
 
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Main) {
-        composable<PreLogin> {
-            val repository: AuthRepository = koinInject()
+    Scaffold(bottomBar = { Csm(navController) }) { paddingValues ->
+        NavHost(
+            navController = navController,
+            startDestination = HhRoutes.HhHome.route,
+            modifier = Modifier.padding(paddingValues)
+        ) {
 
-            LaunchedEffect(Unit) {
-                repository.session()?.let {
-                    navController.navigate(Main) {
-                        popUpTo<PreLogin> {
-                            inclusive = true
-                        }
+            composable(HhRoutes.HhHome.route) {
+                Home(
+                    navigateToCreateAccount = {
+                        navController.navigate(Account)
+                    },
+                    navigateToCreateCategory = {
+                        navController.navigate(Category)
                     }
-                } ?: run {
-                    navController.navigate(Login) {
-                        popUpTo<PreLogin> {
-                            inclusive = true
-                        }
+                )
+            }
+            composable(HhRoutes.AddTransaction.route) {
+                Transaction {
+                    navController.navigate(HhRoutes.SeeTransaction.route) {
+                        popUpTo(navController.graph.findStartDestination().id)
+                        launchSingleTop = true
                     }
                 }
             }
-
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                CircularProgressIndicator()
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(text = "Verificando la sesión")
+            composable(HhRoutes.SeeTransaction.route) {
+                SeeTransactionsVersionTwo(navController)
             }
-        }
-        composable<Login> {
-            Login(navController)
-        }
-        composable<Main> {
-            val internalNavController = rememberNavController()
-            Scaffold(
-                bottomBar = { Csm(internalNavController) }
-            ) { paddingValues ->
-                NavHost(
-                    navController = internalNavController,
-                    startDestination = HhRoutes.HhHome.route,
-                    modifier = Modifier.padding(paddingValues)
-                ) {
-                    composable(HhRoutes.HhHome.route) {
-                        Home(
-                            navigateToCreateAccount = {
-                                navController.navigate(Account)
-                            },
-                            navigateToCreateCategory = {
-                                navController.navigate(Category)
-                            }
-                        )
-                    }
-                    composable(HhRoutes.AddTransaction.route) {
-                        Transaction {
-                            internalNavController.navigate(HhRoutes.SeeTransaction.route) {
-                                popUpTo(internalNavController.graph.findStartDestination().id)
-                                launchSingleTop = true
-                            }
-                        }
-                    }
-                    composable(HhRoutes.SeeTransaction.route) {
-                        SeeTransactionsVersionTwo(
-                            navController
-                        )
-                    }
-                }
+            composable<EditTransaction> {
+                val editTransaction: EditTransaction = it.toRoute<EditTransaction>()
+                EditTransaction(navController, editTransaction.transactionId)
             }
-        }
-        composable<EditTransaction> {
-            val editTransaction: EditTransaction = it.toRoute<EditTransaction>()
-            EditTransaction(navController, editTransaction.transactionId)
-        }
-        composable<Category> {
-            Category(navController)
-        }
-        composable<Account> {
-            Account(navController)
+            composable<Account> {
+                Account(navController)
+            }
+            composable<Category> {
+                Category(navController)
+            }
         }
     }
 }
 
 @Composable
 private fun Csm(internalNavController: NavHostController) {
-    val navBackStackEntry by internalNavController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
+    val navBackStackEntry: NavBackStackEntry? by internalNavController.currentBackStackEntryAsState()
+    val currentDestination: NavDestination? = navBackStackEntry?.destination
+
+    if (currentDestination?.route !in hhRoutes.map { it.route }) return
+
     BottomAppBar(
         containerColor = MaterialTheme.colorScheme.background,
         contentColor = MaterialTheme.colorScheme.onBackground

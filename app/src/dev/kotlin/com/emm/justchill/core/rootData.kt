@@ -1,6 +1,12 @@
 package com.emm.justchill.core
 
-import com.emm.justchill.experiences.amount.Amount
+import android.util.Log
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.TextFieldValue
+import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.experiences.calendar.Calendar
 import com.emm.justchill.experiences.drinks.ui.DrinkMainScreen
 import com.emm.justchill.experiences.readjsonfromassets.ui.Experiences
@@ -15,6 +21,7 @@ sealed class RootRoutes(val route: String) {
     data object Experiences : RootRoutes("Experiences")
     data object Drink : RootRoutes("Drink")
     data object Hh : RootRoutes("hh")
+    data object Amount : RootRoutes("amount")
     data object Calendar : RootRoutes("Calendar")
     data object MeTimerPicker : RootRoutes("MeTimerPicker")
 }
@@ -71,8 +78,18 @@ val rootData: List<Feature> = listOf(
         description = "Create new component in jetpack compose like bcp app to add amount",
         category = "personal",
         resource = "-",
-        route = RootRoutes.Hh,
-        screen = { Amount() }
+        route = RootRoutes.Amount,
+        screen = {
+            Column(Modifier.fillMaxSize()) {
+                EmmAmountChill(
+                    value = TextFieldValue(),
+                    onValueChange = {
+                        Log.e("aea", it.toString())
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
     ),
     Feature(
         id = UUID.randomUUID().toString(),

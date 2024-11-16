@@ -23,6 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -35,9 +36,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
@@ -46,7 +49,7 @@ import com.emm.justchill.hh.account.domain.Account
 import com.emm.justchill.hh.auth.presentation.LabelTextField
 import com.emm.justchill.hh.shared.shared.EmmDropDown
 import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
-import com.emm.justchill.hh.shared.shared.EmmTextInput
+import com.emm.justchill.hh.shared.shared.EmmTextFieldChill
 import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
 import org.koin.androidx.compose.koinViewModel
 
@@ -59,8 +62,8 @@ fun Transaction(
     val accounts: List<Account> by vm.accounts.collectAsState()
 
     Transaction(
-        mountValue = vm.amount,
-        onMountChange = vm::updateAmount,
+        amount = vm.amount,
+        onAmountChange = vm::updateAmount,
         descriptionValue = vm.description,
         onDescriptionChange = vm::updateDescription,
         dateValue = vm.date,
@@ -79,8 +82,8 @@ fun Transaction(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Transaction(
-    mountValue: String = "",
-    onMountChange: (String) -> Unit = {},
+    amount: TextFieldValue = TextFieldValue("0.00"),
+    onAmountChange: (TextFieldValue) -> Unit = {},
     descriptionValue: String = "",
     onDescriptionChange: (String) -> Unit = {},
     dateValue: String = "",
@@ -158,11 +161,9 @@ private fun Transaction(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            EmmTextAmount(
-                value = mountValue,
-                onAmountChange = onMountChange,
-                label = "Cantidad",
-                placeholder = "Ingrese una cantidad",
+            EmmAmountChill(
+                value = amount,
+                onValueChange = onAmountChange,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -173,7 +174,7 @@ private fun Transaction(
                 onOptionSelected = onOptionSelected
             )
 
-            EmmTextInput(
+            EmmTextFieldChill(
                 modifier = Modifier,
                 label = "En que gaste",
                 placeholder = "Ingresa tu gasto",
@@ -208,15 +209,7 @@ fun DateInput(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(
-            text = "Fecha",
-            fontWeight = FontWeight.Normal,
-            fontFamily = LatoFontFamily,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontSize = 17.sp
-        )
-        Spacer(modifier = Modifier.height(5.dp))
-        OutlinedTextField(
+        TextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
@@ -232,8 +225,15 @@ fun DateInput(
                 disabledPlaceholderColor = MaterialTheme.colorScheme.onBackground,
                 focusedBorderColor = MaterialTheme.colorScheme.onBackground
             ),
-            placeholder = {
-                LabelTextField("Fecha")
+            label = {
+                Text(
+                    text = "Fecha:",
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontFamily = LatoFontFamily,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(bottom = 5.dp)
+                )
             },
             textStyle = TextStyle(
                 fontFamily = LatoFontFamily,
@@ -304,7 +304,6 @@ fun TransactionLabel(text: String) {
 @Composable
 fun IncomePreview() {
     EmmTheme {
-        Transaction(
-        )
+        Transaction()
     }
 }

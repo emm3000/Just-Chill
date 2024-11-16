@@ -3,6 +3,7 @@ package com.emm.justchill.hh.transaction.presentation
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,6 +54,38 @@ fun EmmToolbarTitle(
             }
         },
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EmmCenteredToolbar(
+    title: String,
+    modifier: Modifier = Modifier,
+) {
+
+    CenterAlignedTopAppBar(
+        modifier = modifier,
+        title = {
+            Text(
+                text = title,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Black,
+                fontFamily = LatoFontFamily,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
+    )
+}
+
+@PreviewLightDark
+@Composable
+private fun EmmCenteredToolbarPreview() {
+    EmmTheme {
+        EmmCenteredToolbar(
+            title = "Transacciones",
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
 }
 
 @PreviewLightDark

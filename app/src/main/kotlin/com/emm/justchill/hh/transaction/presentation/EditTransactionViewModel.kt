@@ -4,8 +4,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.emm.justchill.core.formatInputToDouble
 import com.emm.justchill.hh.account.domain.Account
 import com.emm.justchill.hh.account.domain.AccountRepository
 import com.emm.justchill.hh.account.domain.AccountFinder
@@ -34,7 +36,7 @@ class EditTransactionViewModel(
     var accountSelected: Account? by mutableStateOf(null)
         private set
 
-    var amount by mutableStateOf("")
+    var amount by mutableStateOf(TextFieldValue("0.00"))
         private set
 
     var description by mutableStateOf("")
@@ -51,9 +53,6 @@ class EditTransactionViewModel(
     var transactionType by mutableStateOf(TransactionType.INCOME)
         private set
 
-    var accountLabel: String by mutableStateOf("")
-        private set
-
     val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
         .stateIn(
             scope = viewModelScope,
@@ -67,7 +66,7 @@ class EditTransactionViewModel(
             snapshotFlow { date },
             snapshotFlow { description },
         ) { mount, date, description ->
-            isEnabled = mount.isNotEmpty()
+            isEnabled = mount.formatInputToDouble() >= 1
                     && date.isNotEmpty()
                     && description.isNotEmpty()
         }.launchIn(viewModelScope)
@@ -78,7 +77,7 @@ class EditTransactionViewModel(
     private fun loadCurrentTransaction() = viewModelScope.launch {
         val currentTransaction = transactionFinder.find(transactionId).firstOrNull()
         currentTransaction?.let { transaction ->
-            amount = transaction.amount.toString()
+            amount = TextFieldValue(transaction.amountDecimalFormat)
             description = transaction.description
             transactionType = TransactionType.valueOf(transaction.type)
             date = millisToReadableFormat(transaction.date)
@@ -95,7 +94,7 @@ class EditTransactionViewModel(
             type = transactionType,
             description = description,
             date = dateInLong,
-            amount = amount.replace(Regex("[^\\d.]"), "").toDouble(),
+            amount = amount.formatInputToDouble(),
             accountId = accountSelected?.accountId ?: throw IllegalStateException()
         )
         transactionUpdater.update(transactionId, transactionUpdate)
@@ -105,7 +104,7 @@ class EditTransactionViewModel(
         transactionDeleter.delete(transactionId)
     }
 
-    fun updateMount(value: String) {
+    fun updateMount(value: TextFieldValue) {
         amount = value
     }
 
@@ -122,10 +121,6 @@ class EditTransactionViewModel(
 
     fun updateTransactionType(value: TransactionType) {
         transactionType = value
-    }
-
-    fun updateAccountLabel(value: String) {
-        accountLabel = value
     }
 
     fun updateAccountSelected(value: Account) {

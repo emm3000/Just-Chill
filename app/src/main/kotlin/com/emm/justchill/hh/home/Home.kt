@@ -1,8 +1,9 @@
 package com.emm.justchill.hh.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +28,7 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.hh.account.domain.Account
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.shared.shared.EmmDropDown
+import com.emm.justchill.hh.transaction.presentation.EmmCenteredToolbar
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -63,29 +65,15 @@ fun Home(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(vertical = 40.dp, horizontal = 20.dp)
+            .padding(horizontal = 20.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            EmmSecondaryButton(
-                text = "Agregar cuenta",
-                imageVector = Icons.Filled.AccountBalance,
-                onClick = navigateToCreateAccount,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            EmmSecondaryButton(
-                text = "Agregar categoría",
-                imageVector = Icons.Filled.Category,
-                onClick = navigateToCreateCategory,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-
-        Spacer(Modifier.height(20.dp))
+        EmmCenteredToolbar(
+            title = "Just Chill",
+            modifier = Modifier.fillMaxWidth()
+        )
 
         EmmDropDown(
             textLabel = "Accounts",
@@ -96,28 +84,38 @@ fun Home(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Spacer(Modifier.height(50.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         accountSelected?.let { BalanceSection(it) }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        EmmHeading(text = "Ingreso")
-        
-        EmmHeadlineMedium(text = "S/ ${homeState.income}")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                EmmHeading(text = "Ingreso")
+                EmmHeadlineMedium(text = "S/ ${homeState.income}")
+            }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                EmmHeading(
+                    text = "Gasto",
+                    textColor = DeleteButtonColor,
+                )
+                EmmHeadlineMedium(
+                    text = "S/ ${homeState.spend}",
+                    textColor = DeleteButtonColor,
+                )
+            }
+        }
 
-        Spacer(modifier = Modifier.height(40.dp))
-
-        EmmHeading(
-            text = "Gasto",
-            textColor = DeleteButtonColor,
-        )
-        EmmHeadlineMedium(
-            text = "S/ ${homeState.spend}",
-            textColor = DeleteButtonColor,
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         val pickColorBy = if (homeState.difference.contains("-")) {
             DeleteButtonColor
@@ -132,6 +130,21 @@ fun Home(
         EmmHeadlineMediumLight(
             text = "S/ ${homeState.difference}",
             textColor = pickColorBy
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        EmmSecondaryButton(
+            text = "Agregar cuenta",
+            imageVector = Icons.Filled.AccountBalance,
+            onClick = navigateToCreateAccount,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        EmmSecondaryButton(
+            text = "Agregar categoría",
+            imageVector = Icons.Filled.Category,
+            onClick = navigateToCreateCategory,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

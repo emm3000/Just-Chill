@@ -3,12 +3,6 @@ package com.emm.justchill.hh.shared.shared
 import kotlinx.serialization.Serializable
 
 @Serializable
-object PreLogin
-
-@Serializable
-object Login
-
-@Serializable
 object Main
 
 @Serializable

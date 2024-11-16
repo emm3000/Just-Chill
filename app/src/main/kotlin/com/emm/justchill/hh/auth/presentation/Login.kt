@@ -52,7 +52,6 @@ import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.PrimaryButtonColor
 import com.emm.justchill.core.theme.TextColor
-import com.emm.justchill.hh.shared.shared.Login
 import com.emm.justchill.hh.shared.shared.Main
 import org.koin.androidx.compose.koinViewModel
 
@@ -73,11 +72,11 @@ fun Login(
         onLogin = vm::login,
         onRegister = vm::register,
         navigateToHome = {
-            navController.navigate(Main) {
-                popUpTo<Login> {
-                    inclusive = true
-                }
-            }
+//            navController.navigate(Main) {
+//                popUpTo<Login> {
+//                    inclusive = true
+//                }
+//            }
         }
     )
 }

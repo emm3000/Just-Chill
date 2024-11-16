@@ -8,14 +8,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
+import com.emm.justchill.hh.shared.shared.EmmTextFieldChill
 import com.emm.justchill.hh.shared.shared.EmmTextInput
 import com.emm.justchill.hh.transaction.presentation.EmmTextAmount
 import com.emm.justchill.hh.transaction.presentation.EmmToolbarTitle
@@ -44,8 +52,8 @@ fun Account(
 
 @Composable
 fun Account(
-    amount: String = "",
-    updateAmount: (String) -> Unit = {},
+    amount: TextFieldValue = TextFieldValue(),
+    updateAmount: (TextFieldValue) -> Unit = {},
     name: String = "",
     updateName: (String) -> Unit = {},
     description: String = "",
@@ -76,28 +84,35 @@ fun Account(
             verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
 
-            EmmTextAmount(
-                value = amount,
-                onAmountChange = updateAmount,
-                label = "Monto",
-                placeholder = "Ingrese un monto",
+            Text(
+                text = "Monto inicial",
+                color = MaterialTheme.colorScheme.onBackground,
+                fontFamily = LatoFontFamily,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 16.sp,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            EmmTextInput(
-                modifier = Modifier,
-                label = "Nombre *",
-                placeholder = "Ingresa el nombre",
-                value = name,
-                onChange = updateName
+            EmmAmountChill(
+                value = amount,
+                onValueChange = updateAmount,
+                modifier = Modifier.fillMaxWidth()
             )
 
-            EmmTextInput(
-                modifier = Modifier,
+            EmmTextFieldChill(
+                value = name,
+                onChange = updateName,
+                label = "Nombre *",
+                placeholder = "Ingresa el nombre",
+                modifier = Modifier
+            )
+
+            EmmTextFieldChill(
+                value = description,
+                onChange = updateDescription,
                 label = "Descripción (opcional)",
                 placeholder = "Ingresa la descripción",
-                value = description,
-                onChange = updateDescription
+                modifier = Modifier
             )
 
             EmmPrimaryButton(

@@ -35,11 +35,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
+import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
@@ -48,6 +50,7 @@ import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.account.domain.Account
 import com.emm.justchill.hh.shared.shared.EmmDropDown
 import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
+import com.emm.justchill.hh.shared.shared.EmmTextFieldChill
 import com.emm.justchill.hh.shared.shared.EmmTextInput
 import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
 import org.koin.androidx.compose.koinViewModel
@@ -86,8 +89,8 @@ fun EditTransaction(
 @Composable
 private fun EditTransaction(
     isEnabledButton: Boolean = false,
-    mountValue: String = "",
-    onMountChange: (String) -> Unit = {},
+    mountValue: TextFieldValue = TextFieldValue("0.00"),
+    onMountChange: (TextFieldValue) -> Unit = {},
     descriptionValue: String = "",
     onDescriptionChange: (String) -> Unit = {},
     dateValue: String = "",
@@ -212,11 +215,18 @@ private fun EditTransaction(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            EmmTextAmount(
+            Text(
+                text = "Ingrese un monto",
+                color = MaterialTheme.colorScheme.onBackground,
+                fontFamily = LatoFontFamily,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 16.sp,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            EmmAmountChill(
                 value = mountValue,
-                onAmountChange = onMountChange,
-                label = "Cantidad",
-                placeholder = "Ingrese una cantidad",
+                onValueChange = onMountChange,
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -226,12 +236,12 @@ private fun EditTransaction(
                 onOptionSelected = onOptionSelected
             )
 
-            EmmTextInput(
-                modifier = Modifier,
-                label = "Descripción (opcional)",
-                placeholder = "Ingresa una descripción",
+            EmmTextFieldChill(
                 value = descriptionValue,
-                onChange = onDescriptionChange
+                placeholder = "Ingresa una descripción",
+                label = "Descripción (opcional)",
+                onChange = onDescriptionChange,
+                modifier = Modifier,
             )
 
             DateInput(dateValue) {

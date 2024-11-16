@@ -1,11 +1,14 @@
 package com.emm.justchill.hh.transaction.presentation
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.emm.justchill.core.formatInputToDouble
 import com.emm.justchill.hh.account.domain.Account
 import com.emm.justchill.hh.account.domain.AccountRepository
 import com.emm.justchill.hh.transaction.domain.TransactionCreator
@@ -23,7 +26,7 @@ class TransactionViewModel(
     accountRepository: AccountRepository,
 ) : ViewModel() {
 
-    var amount by mutableStateOf("")
+    var amount by mutableStateOf(TextFieldValue("0.00"))
         private set
 
     var description by mutableStateOf("")
@@ -60,7 +63,7 @@ class TransactionViewModel(
             snapshotFlow { description },
             snapshotFlow { accountSelected },
         ) { mount, date, description, account ->
-            isEnabled = mount.isNotEmpty()
+            isEnabled = mount.formatInputToDouble() >= 1.0
                     && date.isNotEmpty()
                     && description.isNotEmpty()
                     && account != null
@@ -72,13 +75,13 @@ class TransactionViewModel(
             type = transactionType,
             description = description,
             date = dateInLong,
-            amount = amount.toDouble(),
+            amount = amount.formatInputToDouble(),
             accountId = accountSelected?.accountId ?: throw IllegalStateException()
         )
         transactionCreator.create(transactionInsert)
     }
 
-    fun updateAmount(value: String) {
+    fun updateAmount(value: TextFieldValue) {
         amount = value
     }
 
