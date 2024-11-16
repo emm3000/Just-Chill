@@ -1,9 +1,7 @@
 package com.emm.justchill.hh.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,10 +12,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -72,6 +78,41 @@ fun Home(
 
         EmmCenteredToolbar(
             title = "Just Chill",
+            actions = {
+                var showMenu by remember { mutableStateOf(false) }
+                IconButton(onClick = { showMenu = !showMenu }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = null)
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        onClick = {
+                            showMenu = !showMenu
+                            navigateToCreateAccount()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Filled.AccountBalance, contentDescription = null)
+                        },
+                        text = {
+                            Text("Agregar cuentas")
+                        }
+                    )
+                    DropdownMenuItem(
+                        onClick = {
+                            showMenu = !showMenu
+                            navigateToCreateCategory()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Filled.Category, contentDescription = null)
+                        },
+                        text = {
+                            Text("Agregar categorías")
+                        }
+                    )
+                }
+            },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -84,38 +125,27 @@ fun Home(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         accountSelected?.let { BalanceSection(it) }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                EmmHeading(text = "Ingreso")
-                EmmHeadlineMedium(text = "S/ ${homeState.income}")
-            }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                EmmHeading(
-                    text = "Gasto",
-                    textColor = DeleteButtonColor,
-                )
-                EmmHeadlineMedium(
-                    text = "S/ ${homeState.spend}",
-                    textColor = DeleteButtonColor,
-                )
-            }
-        }
+        EmmHeading(text = "Ingreso")
+        EmmHeadlineMedium(text = "S/ ${homeState.income}")
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
+
+        EmmHeading(
+            text = "Gasto",
+            textColor = DeleteButtonColor,
+        )
+        EmmHeadlineMedium(
+            text = "S/ ${homeState.spend}",
+            textColor = DeleteButtonColor,
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         val pickColorBy = if (homeState.difference.contains("-")) {
             DeleteButtonColor
@@ -133,19 +163,6 @@ fun Home(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        EmmSecondaryButton(
-            text = "Agregar cuenta",
-            imageVector = Icons.Filled.AccountBalance,
-            onClick = navigateToCreateAccount,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        EmmSecondaryButton(
-            text = "Agregar categoría",
-            imageVector = Icons.Filled.Category,
-            onClick = navigateToCreateCategory,
-            modifier = Modifier.fillMaxWidth(),
-        )
     }
 }
 

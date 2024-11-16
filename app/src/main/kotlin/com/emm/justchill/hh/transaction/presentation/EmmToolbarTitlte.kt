@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.transaction.presentation
 
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -60,6 +61,7 @@ fun EmmToolbarTitle(
 @Composable
 fun EmmCenteredToolbar(
     title: String,
+    actions: @Composable RowScope.() -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
 
@@ -73,7 +75,8 @@ fun EmmCenteredToolbar(
                 fontFamily = LatoFontFamily,
                 color = MaterialTheme.colorScheme.onBackground
             )
-        }
+        },
+        actions = actions
     )
 }
 

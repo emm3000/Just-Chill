@@ -5,10 +5,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -18,7 +16,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -37,7 +34,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.auth.presentation.LabelTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,7 +94,7 @@ fun <T> EmmDropDown(
                             .rotate(sizeInside),
                         imageVector = Icons.Default.ArrowDropDown,
                         contentDescription = null,
-                        tint = TextColor,
+                        tint = MaterialTheme.colorScheme.onBackground,
                     )
                 },
                 label = {
