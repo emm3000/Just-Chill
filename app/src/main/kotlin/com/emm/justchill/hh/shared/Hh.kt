@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.shared
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.BottomAppBar
@@ -16,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -27,15 +29,22 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.hh.account.domain.AccountRepository
 import com.emm.justchill.hh.account.presentation.Account
 import com.emm.justchill.hh.category.presentation.Category
+import com.emm.justchill.hh.fasttransaction.Accounts
+import com.emm.justchill.hh.fasttransaction.FastTransaction
+import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.Home
 import com.emm.justchill.hh.shared.seetransactions.SeeTransactionsVersionTwo
 import com.emm.justchill.hh.shared.shared.Account
 import com.emm.justchill.hh.shared.shared.Category
 import com.emm.justchill.hh.shared.shared.EditTransaction
+import com.emm.justchill.hh.shared.shared.FastTransaction
 import com.emm.justchill.hh.transaction.presentation.EditTransaction
 import com.emm.justchill.hh.transaction.presentation.Transaction
+import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @Composable
 fun Hh() {
@@ -45,10 +54,43 @@ fun Hh() {
     Scaffold(bottomBar = { Csm(navController) }) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = HhRoutes.HhHome.route,
+            startDestination = HhRoutes.HnNewHome.route,
             modifier = Modifier.padding(paddingValues)
         ) {
 
+            composable(HhRoutes.HnNewHome.route) {
+                val repository: AccountRepository = koinInject()
+                val accounts: List<com.emm.justchill.hh.account.domain.Account> by repository.retrieve()
+                    .collectAsStateWithLifecycle(emptyList())
+                Accounts(
+                    accounts = accounts,
+                    onCardClick = { account, transactionType ->
+                        navController.navigate(FastTransaction(account.accountId, transactionType))
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            composable<FastTransaction> {
+                val fastTransaction: FastTransaction = it.toRoute<FastTransaction>()
+                val vm: FastTransactionViewModel = koinViewModel()
+
+                FastTransaction(
+                    transactionType = fastTransaction.transactionType,
+                    amountValue = vm.amount,
+                    onAmountChange = vm::updateAmount,
+                    description = vm.description,
+                    onDescriptionChange = vm::updateDescription,
+                    isEnabledButton = vm.isEnabled,
+                    addTransaction = {
+                        vm.addTransaction(
+                            accountId = fastTransaction.accountId,
+                            type = fastTransaction.transactionType
+                        )
+                        navController.popBackStack()
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
             composable(HhRoutes.HhHome.route) {
                 Home(
                     navigateToCreateAccount = {

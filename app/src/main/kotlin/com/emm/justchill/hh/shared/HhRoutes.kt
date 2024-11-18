@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.shared
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.AddChart
 import androidx.compose.material.icons.filled.AirlineSeatLegroomExtra
 import androidx.compose.material.icons.filled.Create
@@ -15,6 +16,7 @@ sealed class HhRoutes(
 ) {
 
     data object HhHome: HhRoutes("Inicio", "home", Icons.Filled.Home)
+    data object HnNewHome: HhRoutes("Cuentas", "cuentas", Icons.Filled.AccountBalance)
     data object AddCategory: HhRoutes("Categoría", "addCategory", Icons.Filled.Create)
     data object AddTransaction: HhRoutes("Transacción", "addTransaction", Icons.Filled.AddChart)
     data object SeeTransaction: HhRoutes("Ver", "seeTransactions", Icons.Filled.PlaylistAddCheckCircle)
@@ -22,6 +24,7 @@ sealed class HhRoutes(
 }
 
 val hhRoutes = listOf(
+    HhRoutes.HnNewHome,
     HhRoutes.HhHome,
     HhRoutes.AddTransaction,
     HhRoutes.SeeTransaction,

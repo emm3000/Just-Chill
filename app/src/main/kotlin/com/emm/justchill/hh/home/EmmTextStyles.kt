@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -21,6 +22,7 @@ import com.emm.justchill.core.theme.LatoFontFamily
 @Composable
 fun EmmHeadlineMedium(
     text: String,
+    textAlign: TextAlign = TextAlign.Center,
     textColor: Color = MaterialTheme.colorScheme.onBackground,
     modifier: Modifier = Modifier,
 ) {
@@ -30,6 +32,7 @@ fun EmmHeadlineMedium(
         modifier = modifier,
         fontSize = 28.sp,
         fontFamily = LatoFontFamily,
+        textAlign = textAlign,
         fontWeight = FontWeight.Bold,
         color = textColor
     )

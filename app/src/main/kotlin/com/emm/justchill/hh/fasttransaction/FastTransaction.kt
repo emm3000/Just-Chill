@@ -14,7 +14,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,34 +21,48 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.home.EmmHeadlineMedium
 import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
+import com.emm.justchill.hh.transaction.presentation.DateUtils
+import com.emm.justchill.hh.transaction.presentation.TransactionType
 
 @Composable
-fun FastTransaction(modifier: Modifier = Modifier) {
+fun FastTransaction(
+    transactionType: TransactionType,
+    amountValue: TextFieldValue,
+    onAmountChange: (TextFieldValue) -> Unit,
+    description: String,
+    onDescriptionChange: (String) -> Unit,
+    isEnabledButton: Boolean,
+    addTransaction: () -> Unit,
+    modifier: Modifier = Modifier
+) {
 
     Column(
         modifier = modifier
             .background(MaterialTheme.colorScheme.background)
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
 
         EmmHeadlineMedium(
-            text = "Agregar transacción",
+            text = "Agregar ${transactionType.value}",
             textColor = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center,
             modifier = Modifier,
         )
 
         Spacer(Modifier.height(15.dp))
 
         EmmBoldText(
-            text = "Fecha actual: 10 de nov. 3:05",
+            text = remember { DateUtils.currentDateAtReadableFormat() },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -58,16 +71,15 @@ fun FastTransaction(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(),
         )
         EmmAmountChill(
-            value = TextFieldValue("123"),
-            onValueChange = {},
+            value = amountValue,
+            onValueChange = onAmountChange,
             modifier = Modifier.fillMaxWidth()
         )
 
-        val (text, setText) = remember { mutableStateOf("") }
         TextField(
             modifier = Modifier.fillMaxWidth(),
-            value = text,
-            onValueChange = setText,
+            value = description,
+            onValueChange = onDescriptionChange,
             shape = RoundedCornerShape(10.dp),
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = Color.Transparent,
@@ -79,7 +91,8 @@ fun FastTransaction(modifier: Modifier = Modifier) {
                 Text(
                     text = "Descripción",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.ExtraBold,
+                    fontFamily = LatoFontFamily,
                 )
             },
             textStyle = TextStyle(
@@ -88,15 +101,16 @@ fun FastTransaction(modifier: Modifier = Modifier) {
             placeholder = {
                 Text(
                     text = "Descripción",
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    fontFamily = LatoFontFamily,
                 )
             }
         )
 
         EmmPrimaryButton(
             text = "Guardar",
-            onClick = {},
-            enabled = true,
+            onClick = addTransaction,
+            enabled = isEnabledButton,
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -108,6 +122,13 @@ fun FastTransaction(modifier: Modifier = Modifier) {
 private fun FastTransactionPreview() {
     EmmTheme {
         FastTransaction(
+            transactionType = TransactionType.INCOME,
+            addTransaction = {},
+            amountValue = TextFieldValue("123"),
+            onAmountChange = {},
+            description = "",
+            onDescriptionChange = {},
+            isEnabledButton = false,
             modifier = Modifier.fillMaxSize()
         )
     }

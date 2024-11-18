@@ -33,6 +33,7 @@ import com.emm.justchill.hh.category.domain.CategoryFinder
 import com.emm.justchill.hh.category.domain.CategoryRepository
 import com.emm.justchill.hh.category.domain.CategoryUpdater
 import com.emm.justchill.hh.category.presentation.CategoryViewModel
+import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.HomeViewModel
 import com.emm.justchill.hh.shared.DateAndTimeCombiner
 import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
@@ -121,6 +122,8 @@ private fun Module.viewModelsProviders() {
 
     viewModelOf(::CategoryViewModel)
     viewModelOf(::AccountViewModel)
+
+    viewModelOf(::FastTransactionViewModel)
 }
 
 private fun Module.repositoriesProviders() {
