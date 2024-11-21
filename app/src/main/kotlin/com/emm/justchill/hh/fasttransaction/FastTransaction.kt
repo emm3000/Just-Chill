@@ -3,10 +3,8 @@ package com.emm.justchill.hh.fasttransaction
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -21,15 +19,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.hh.home.EmmHeadlineMedium
 import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.transaction.presentation.DateUtils
+import com.emm.justchill.hh.transaction.presentation.EmmCenteredToolbar
 import com.emm.justchill.hh.transaction.presentation.TransactionType
 
 @Composable
@@ -47,19 +44,14 @@ fun FastTransaction(
     Column(
         modifier = modifier
             .background(MaterialTheme.colorScheme.background)
-            .padding(20.dp),
+            .padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
 
-        EmmHeadlineMedium(
-            text = "Agregar ${transactionType.value}",
-            textColor = MaterialTheme.colorScheme.onBackground,
-            textAlign = TextAlign.Center,
-            modifier = Modifier,
+        EmmCenteredToolbar(
+            title = "Agregar ${transactionType.value}"
         )
-
-        Spacer(Modifier.height(15.dp))
 
         EmmBoldText(
             text = remember { DateUtils.currentDateAtReadableFormat() },
@@ -70,6 +62,7 @@ fun FastTransaction(
             text = "Ingrese un monto",
             modifier = Modifier.fillMaxWidth(),
         )
+
         EmmAmountChill(
             value = amountValue,
             onValueChange = onAmountChange,
