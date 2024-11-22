@@ -9,7 +9,7 @@ composeBom = "2024.11.00"
 constraintlayout = "2.2.0"
 coreKtx = "1.15.0"
 espressoCore = "3.6.1"
-firebaseBom = "33.5.1"
+firebaseBom = "33.6.0"
 glide = "4.16.0"
 javafaker = "1.0.2"
 junit = "4.13.2"
@@ -29,7 +29,7 @@ navigationUiKtx = "2.8.4"
 retrofit = "2.11.0"
 retrofit2KotlinxSerializationConverter = "1.0.0"
 androidApplication = "8.7.2"
-kotlinVersion = "1.9.24"
+kotlinVersion = "2.0.20"
 googleServicesVersion = "4.4.2"
 googleCrashlyticsVersion = "3.0.2"
 workRuntimeKtx = "2.10.0"
@@ -90,3 +90,4 @@ android-application = { id = "com.android.application", version.ref = "androidAp
 kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinVersion" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServicesVersion" }
 google-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleCrashlyticsVersion" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinVersion" }

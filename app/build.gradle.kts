@@ -5,9 +5,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin)
     id("kotlin-parcelize")
-    kotlin("plugin.serialization") version "1.9.24"
+    kotlin("plugin.serialization") version libs.versions.kotlinVersion
     alias(libs.plugins.google.services)
     alias(libs.plugins.google.crashlytics)
+    alias(libs.plugins.kotlin.compose)
     id("app.cash.sqldelight") version "2.0.2"
 }
 
@@ -86,10 +87,6 @@ android {
         buildConfig = true
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
-    }
-    
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
