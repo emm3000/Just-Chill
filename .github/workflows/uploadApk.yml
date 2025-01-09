@@ -40,8 +40,11 @@ jobs:
       - name: Build Dev Debug (assembleDevDebug)
         run: ./gradlew assembleDevDebug
 
-      - name: Build Dev Debug (assembleProdDebug)
+      - name: Build Prod Debug (assembleProdDebug)
         run: ./gradlew assembleProdDebug
+
+      - name: Build Release
+        run: ./gradlew bundleProdRelease
 
       - name: Rename Dev Debug APK
         run: mv app/build/outputs/apk/dev/debug/app-dev-debug.apk app/build/outputs/apk/dev/debug/app-dev-debug-${{ env.date_today }}.apk
@@ -84,3 +87,9 @@ jobs:
         with:
           name: ${{ env.date_today }} - APK(s) prod debug generated
           path: app/build/outputs/apk/prod/debug/
+
+      - name: Upload AAB Prod Release
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.date_today }} - AAB(s) prod release
+          path: app/build/outputs/bundle/prodRelease/
