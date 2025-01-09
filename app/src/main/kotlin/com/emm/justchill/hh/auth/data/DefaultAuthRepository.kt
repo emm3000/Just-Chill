@@ -5,9 +5,9 @@ import com.emm.justchill.hh.auth.domain.AuthRepository
 import com.emm.justchill.hh.auth.domain.Email as EmailModel
 import com.emm.justchill.hh.auth.domain.Password
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.gotrue.auth
-import io.github.jan.supabase.gotrue.providers.builtin.Email
-import io.github.jan.supabase.gotrue.user.UserInfo
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.user.UserInfo
 
 class DefaultAuthRepository(
     private val client: SupabaseClient,

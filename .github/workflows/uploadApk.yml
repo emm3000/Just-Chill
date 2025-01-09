@@ -74,13 +74,13 @@ jobs:
           file: ${{ steps.prodDebugPath.outputs.prodDebug }}
 
       - name: Upload APK Dev Debug
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.date_today }} - APK(s) dev debug generated
           path: app/build/outputs/apk/dev/debug/
 
       - name: Upload APK Prod Debug
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.date_today }} - APK(s) prod debug generated
           path: app/build/outputs/apk/prod/debug/

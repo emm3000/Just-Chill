@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.auth.domain
 
-import io.github.jan.supabase.gotrue.user.UserInfo
+import io.github.jan.supabase.auth.user.UserInfo
 
 interface AuthRepository {
 
