@@ -93,3 +93,12 @@ jobs:
         with:
           name: ${{ env.date_today }} - AAB(s) prod release
           path: app/build/outputs/bundle/prodRelease/
+
+      - name: Publish to Play Store
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: com.emm.justchill
+          releaseFiles: app/build/outputs/bundle/prodRelease/app-prod-release.aab
+          status: draft
+          track: internal
