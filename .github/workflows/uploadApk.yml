@@ -100,5 +100,5 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: com.emm.justchill
           releaseFiles: app/build/outputs/bundle/prodRelease/app-prod-release.aab
-          status: draft
+          status: completed
           track: internal
