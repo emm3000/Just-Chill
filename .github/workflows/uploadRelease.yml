@@ -14,6 +14,9 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v4
 
+      - name: Create keystore.properties file
+        run: echo "${{ secrets.JUST_VERONICA }}" > keystore.properties
+
       - name: JUST CHILL
         run: |
           mkdir -p key
