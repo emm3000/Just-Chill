@@ -43,15 +43,6 @@ jobs:
       - name: Build Prod Debug (assembleProdDebug)
         run: ./gradlew assembleProdDebug
 
-      - name: Build Release
-        run: ./gradlew bundleProdRelease
-
-      - name: Rename Dev Debug APK
-        run: mv app/build/outputs/apk/dev/debug/app-dev-debug.apk app/build/outputs/apk/dev/debug/app-dev-debug-${{ env.date_today }}.apk
-
-      - name: Rename Prod Debug APK
-        run: mv app/build/outputs/apk/prod/debug/app-prod-debug.apk app/build/outputs/apk/prod/debug/app-prod-debug-${{ env.date_today }}.apk
-
       - name: Get Dev Debug APK path
         id: devDebugPath
         run: echo "devDebug=$(find app/build/outputs/apk/dev/debug/*.apk)" >> $GITHUB_OUTPUT
@@ -87,18 +78,3 @@ jobs:
         with:
           name: ${{ env.date_today }} - APK(s) prod debug generated
           path: app/build/outputs/apk/prod/debug/
-
-      - name: Upload AAB Prod Release
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.date_today }} - AAB(s) prod release
-          path: app/build/outputs/bundle/prodRelease/
-
-      - name: Publish to Play Store
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
-          packageName: com.emm.justchill
-          releaseFiles: app/build/outputs/bundle/prodRelease/app-prod-release.aab
-          status: completed
-          track: internal
