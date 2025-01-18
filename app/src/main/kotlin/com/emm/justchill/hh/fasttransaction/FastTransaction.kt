@@ -109,7 +109,6 @@ fun FastTransaction(
     }
 }
 
-
 @PreviewLightDark
 @Composable
 private fun FastTransactionPreview() {

@@ -2,6 +2,18 @@ package com.emm.justchill.core.theme
 
 import androidx.compose.ui.graphics.Color
 
+val HhBackgroundColor = Color(0xFF020202)
+val HhOnBackgroundColor = Color(0xFFFFFFFF)
+
+val HhDisabledPrimaryButtonColor = Color(0xFF505050)
+val HhPrimaryTextColor = Color(0xFF010101)
+val HhSecondaryTextBackground = Color(0xFFB0B0B0)
+val HhDisabledTextPrimaryBackground = Color(0xFF393939)
+// card colors
+val HhCardBackground = Color(0xFF171717)
+val HhCardTextColor = Color(0xFFB7B7B7)
+
+
 val BackgroundColor = Color(0xFF0E0519)
 val BackgroundLayerColor = Color(0xFF130722)
 val BackgroundLayer2Color = Color(0xFF11061E)
