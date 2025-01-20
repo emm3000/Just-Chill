@@ -24,8 +24,8 @@ android {
         applicationId = "com.emm.justchill"
         minSdk = 26
         targetSdk = 35
-        versionCode = 12
-        versionName = "1.0.10-alpha"
+        versionCode = 13
+        versionName = "1.0.11-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -122,8 +122,6 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
-    implementation(libs.glide)
-    annotationProcessor(libs.compiler)
     implementation(libs.retrofit)
     implementation(libs.logging.interceptor)
 
