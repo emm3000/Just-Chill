@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.hh.shared.NewHh
+import com.emm.justchill.hh.shared.Hh
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
-                    NewHh()
+                    Hh()
                 }
             }
         }

@@ -9,24 +9,26 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.components.HhCard
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.HhBackgroundColor
+import com.emm.justchill.core.theme.HhCardTextColor
 import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.PrimaryButtonColor
 import com.emm.justchill.hh.account.domain.Account
 import com.emm.justchill.hh.transaction.presentation.EmmCenteredToolbar
 import com.emm.justchill.hh.transaction.presentation.TransactionType
@@ -40,7 +42,7 @@ fun Accounts(
 
     Column(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.background)
+            .background(HhBackgroundColor)
     ) {
 
         EmmCenteredToolbar(
@@ -64,18 +66,12 @@ private fun AccountItem(
     account: Account,
     onCardClick: (Account, TransactionType) -> Unit,
 ) {
-    Card(
+    HhCard(
         modifier = Modifier
             .fillMaxWidth(),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 7.dp),
-        ) {
-            TitleAndDescription(account)
-            AddTransactionButtons(onCardClick, account)
-        }
+        TitleAndDescription(account)
+        AddTransactionButtons(onCardClick, account)
     }
 }
 
@@ -91,9 +87,10 @@ private fun AddTransactionButtons(
         ) {
             Text(
                 text = "Ingreso",
-                fontFamily = LatoFontFamily,
+                fontFamily = FontFamily.SansSerif,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.ExtraBold,
+                color = PrimaryButtonColor
             )
         }
         TextButton(
@@ -102,7 +99,7 @@ private fun AddTransactionButtons(
         ) {
             Text(
                 text = "Gasto",
-                fontFamily = LatoFontFamily,
+                fontFamily = FontFamily.SansSerif,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = DeleteButtonColor,
@@ -118,8 +115,9 @@ private fun TitleAndDescription(it: Account) {
             text = it.name,
             fontSize = 16.sp,
             fontWeight = FontWeight.ExtraBold,
-            fontFamily = LatoFontFamily,
+            fontFamily = FontFamily.SansSerif,
             fontStyle = FontStyle.Normal,
+            color = HhCardTextColor,
         )
         Spacer(Modifier.width(10.dp))
         Text(
@@ -128,11 +126,12 @@ private fun TitleAndDescription(it: Account) {
             fontFamily = LatoFontFamily,
             fontWeight = FontWeight.Bold,
             fontStyle = FontStyle.Normal,
+            color = HhCardTextColor,
         )
     }
 }
 
-@PreviewLightDark
+@Preview(showBackground = true)
 @Composable
 private fun AccountsPreview() {
     EmmTheme {

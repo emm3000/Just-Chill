@@ -3,23 +3,24 @@ package com.emm.justchill.hh.transaction.presentation
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.HhBackgroundColor
+import com.emm.justchill.core.theme.HhOnBackgroundColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,25 +33,27 @@ fun EmmToolbarTitle(
     TopAppBar(
         modifier = modifier,
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background
+            containerColor = HhBackgroundColor,
         ),
         title = {
             Text(
                 text = title,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Black,
-                fontFamily = LatoFontFamily,
-                color = MaterialTheme.colorScheme.onBackground
+                fontFamily = FontFamily.SansSerif,
+                color = HhOnBackgroundColor,
             )
         },
         navigationIcon = {
-            IconButton(onClick = dropUnlessResumed {
-                navigationIconClick()
-            }) {
+            IconButton(
+                onClick = dropUnlessResumed {
+                    navigationIconClick()
+                }
+            ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBackIos,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onBackground
+                    tint = HhOnBackgroundColor,
                 )
             }
         },
@@ -67,20 +70,23 @@ fun EmmCenteredToolbar(
 
     CenterAlignedTopAppBar(
         modifier = modifier,
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            containerColor = HhBackgroundColor,
+        ),
         title = {
             Text(
                 text = title,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Black,
-                fontFamily = LatoFontFamily,
-                color = MaterialTheme.colorScheme.onBackground
+                fontFamily = FontFamily.SansSerif,
+                color = HhOnBackgroundColor,
             )
         },
         actions = actions
     )
 }
 
-@PreviewLightDark
+@Preview(showBackground = true)
 @Composable
 private fun EmmCenteredToolbarPreview() {
     EmmTheme {
@@ -91,7 +97,7 @@ private fun EmmCenteredToolbarPreview() {
     }
 }
 
-@PreviewLightDark
+@Preview(showBackground = true)
 @Composable
 private fun EmmToolbarTitlePreview() {
     EmmTheme {

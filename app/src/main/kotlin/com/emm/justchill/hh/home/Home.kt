@@ -26,11 +26,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.HhBackgroundColor
+import com.emm.justchill.core.theme.HhOnBackgroundColor
 import com.emm.justchill.hh.account.domain.Account
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.shared.shared.EmmDropDown
@@ -70,7 +72,7 @@ fun Home(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(HhBackgroundColor)
             .padding(horizontal = 20.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -81,7 +83,11 @@ fun Home(
             actions = {
                 var showMenu by remember { mutableStateOf(false) }
                 IconButton(onClick = { showMenu = !showMenu }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = null)
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = null,
+                        tint = HhOnBackgroundColor,
+                    )
                 }
                 DropdownMenu(
                     expanded = showMenu,
@@ -113,7 +119,8 @@ fun Home(
                     )
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(bottom = 10.dp)
         )
 
@@ -132,8 +139,14 @@ fun Home(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        EmmHeading(text = "Ingreso")
-        EmmHeadlineMedium(text = "S/ ${homeState.income}")
+        EmmHeading(
+            text = "Ingreso",
+            textColor = HhOnBackgroundColor,
+        )
+        EmmHeadlineMedium(
+            text = "S/ ${homeState.income}",
+            textColor = HhOnBackgroundColor,
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -151,7 +164,7 @@ fun Home(
         val pickColorBy = if (homeState.difference.contains("-")) {
             DeleteButtonColor
         } else {
-            MaterialTheme.colorScheme.onBackground
+            HhOnBackgroundColor
         }
         EmmHeading(
             text = "Diferencia",
@@ -188,7 +201,7 @@ private fun BalanceSection(account: Account) {
     )
 }
 
-@PreviewLightDark
+@Preview(showBackground = true)
 @Composable
 fun HomePreview(modifier: Modifier = Modifier) {
     EmmTheme {

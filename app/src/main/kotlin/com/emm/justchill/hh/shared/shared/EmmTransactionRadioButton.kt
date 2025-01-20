@@ -15,11 +15,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.HhBackgroundColor
+import com.emm.justchill.core.theme.HhOnBackgroundColor
 import com.emm.justchill.hh.transaction.presentation.TransactionType
 
 @Composable
@@ -52,14 +54,14 @@ fun EmmTransactionRadioButton(
                     selected = transactionType == selectedOption,
                     onClick = { onOptionSelected(transactionType) },
                     colors = RadioButtonDefaults.colors(
-                        selectedColor = MaterialTheme.colorScheme.primary
+                        selectedColor = HhOnBackgroundColor
                     )
                 )
                 Text(
                     text = transactionType.value,
-                    fontFamily = LatoFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.SemiBold,
+                    color = HhOnBackgroundColor,
                     fontSize = 18.sp
                 )
             }
@@ -68,7 +70,7 @@ fun EmmTransactionRadioButton(
 
 }
 
-@PreviewLightDark
+@Preview(showBackground = true)
 @Composable
 fun RadioPreview(modifier: Modifier = Modifier) {
     EmmTheme {
@@ -77,7 +79,11 @@ fun RadioPreview(modifier: Modifier = Modifier) {
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            EmmTransactionRadioButton()
+            EmmTransactionRadioButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(HhBackgroundColor)
+            )
         }
     }
 }

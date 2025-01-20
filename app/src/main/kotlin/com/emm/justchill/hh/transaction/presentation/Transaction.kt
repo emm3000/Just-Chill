@@ -21,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
@@ -33,22 +32,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.components.EmmAmountChill
+import com.emm.justchill.components.HhPrimaryButton
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.HhBackgroundColor
+import com.emm.justchill.core.theme.HhOnBackgroundColor
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.account.domain.Account
 import com.emm.justchill.hh.auth.presentation.LabelTextField
 import com.emm.justchill.hh.shared.shared.EmmDropDown
-import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextFieldChill
 import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
 import org.koin.androidx.compose.koinViewModel
@@ -133,7 +135,7 @@ private fun Transaction(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(HhBackgroundColor)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -179,13 +181,13 @@ private fun Transaction(
             setShowSelectDate(true)
         }
 
-        EmmPrimaryButton(
+        HhPrimaryButton(
             text = "Guardar",
+            isEnabled = isEnabled,
             onClick = {
                 addTransaction()
                 navigateToSeeTransactions()
             },
-            enabled = isEnabled,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 30.dp)
@@ -213,16 +215,16 @@ fun DateInput(
             readOnly = true,
             enabled = false,
             colors = OutlinedTextFieldDefaults.colors(
-                disabledTextColor = MaterialTheme.colorScheme.onBackground,
-                disabledBorderColor = MaterialTheme.colorScheme.onBackground,
-                disabledPlaceholderColor = MaterialTheme.colorScheme.onBackground,
-                focusedBorderColor = MaterialTheme.colorScheme.onBackground
+                disabledTextColor = HhOnBackgroundColor,
+                disabledBorderColor = HhOnBackgroundColor,
+                disabledPlaceholderColor = HhOnBackgroundColor,
+                focusedBorderColor = HhOnBackgroundColor,
             ),
             label = {
                 Text(
                     text = "Fecha:",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontFamily = LatoFontFamily,
+                    color = HhOnBackgroundColor,
+                    fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 16.sp,
                     modifier = Modifier.padding(bottom = 5.dp)
@@ -293,7 +295,7 @@ fun TransactionLabel(text: String) {
     )
 }
 
-@PreviewLightDark
+@Preview(showBackground = true)
 @Composable
 fun IncomePreview() {
     EmmTheme {
