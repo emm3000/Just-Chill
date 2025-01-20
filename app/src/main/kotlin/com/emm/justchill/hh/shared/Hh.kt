@@ -5,15 +5,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,8 +28,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.emm.justchill.core.theme.HhBackgroundColor
-import com.emm.justchill.core.theme.HhOnBackgroundColor
+import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.account.domain.AccountRepository
 import com.emm.justchill.hh.account.presentation.Account
 import com.emm.justchill.hh.category.presentation.Category
@@ -136,18 +134,11 @@ private fun Csm(internalNavController: NavHostController) {
     if (currentDestination?.route !in hhRoutes.map { it.route }) return
 
     BottomAppBar(
-        containerColor = HhBackgroundColor,
-        contentColor = HhOnBackgroundColor,
+        containerColor = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onBackground
     ) {
         hhRoutes.forEach { screen ->
             NavigationBarItem(
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = HhOnBackgroundColor,
-                    selectedTextColor = HhOnBackgroundColor,
-                    unselectedTextColor = HhOnBackgroundColor.copy(0.5f),
-                    unselectedIconColor = HhOnBackgroundColor.copy(0.5f),
-                    indicatorColor = Color.Transparent
-                ),
                 selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                 onClick = {
                     internalNavController.navigate(screen.route) {
@@ -163,6 +154,7 @@ private fun Csm(internalNavController: NavHostController) {
                         screen.icon,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
+                        tint = LocalContentColor.current,
                     )
                 },
                 label = {
@@ -171,7 +163,8 @@ private fun Csm(internalNavController: NavHostController) {
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        fontFamily = FontFamily.SansSerif,
+                        color = LocalContentColor.current,
+                        fontFamily = LatoFontFamily,
                         fontWeight = if (currentDestination?.hierarchy?.any { it.route == screen.route } == true) {
                             FontWeight.Bold
                         } else {

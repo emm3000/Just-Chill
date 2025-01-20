@@ -1,6 +1,5 @@
 package com.emm.justchill.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.text.BasicTextField
@@ -15,15 +14,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.HhBackgroundColor
-import com.emm.justchill.core.theme.HhOnBackgroundColor
+import com.emm.justchill.core.theme.LatoFontFamily
 import java.math.BigDecimal
 import java.text.DecimalFormat
 
@@ -37,10 +34,10 @@ fun EmmAmountChill(
     val amount = value.text.replace(",", "").toBigDecimalOrNull() ?: BigDecimal.ZERO
     val textColor = when {
         amount == BigDecimal("0.00") -> {
-            HhOnBackgroundColor.copy(alpha = 0.5f)
+            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
         }
         amount < BigDecimal("1.00") -> DeleteButtonColor
-        amount >= BigDecimal("1.00") -> HhOnBackgroundColor
+        amount >= BigDecimal("1.00") -> MaterialTheme.colorScheme.onBackground
         else -> MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
     }
 
@@ -73,7 +70,7 @@ fun AmountTextField(
         textStyle = TextStyle(
             fontSize = 40.sp,
             color = textColor,
-            fontFamily = FontFamily.SansSerif,
+            fontFamily = LatoFontFamily,
         ),
         decorationBox = { innerTextField ->
             Row(
@@ -83,7 +80,7 @@ fun AmountTextField(
             ) {
                 Text(
                     text = "S/  ",
-                    fontFamily = FontFamily.SansSerif,
+                    fontFamily = LatoFontFamily,
                     fontSize = 40.sp,
                     color = textColor
                 )
@@ -106,15 +103,15 @@ fun formatInputToAmount(input: TextFieldValue): TextFieldValue {
     return input.copy(text = formattedAmount, selection = TextRange(formattedAmount.length))
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 fun AmountPreview() {
     EmmTheme {
-        Surface(modifier = Modifier.background(HhBackgroundColor)) {
+        Surface {
             EmmAmountChill(
                 value = TextFieldValue("100.00"),
                 onValueChange = {},
-                modifier = Modifier.background(HhBackgroundColor)
+                modifier = Modifier
             )
         }
     }

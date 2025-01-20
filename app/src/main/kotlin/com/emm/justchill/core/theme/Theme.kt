@@ -100,11 +100,19 @@ fun EmmTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = HhBackgroundColor.toArgb()
-            window.navigationBarColor = HhBackgroundColor.toArgb()
+            window.statusBarColor = if (darkTheme) {
+                backgroundDarkHighContrast.toArgb()
+            } else {
+                backgroundLightHighContrast.toArgb()
+            }
+            window.navigationBarColor = if (darkTheme) {
+                backgroundDarkHighContrast.toArgb()
+            } else {
+                backgroundLightHighContrast.toArgb()
+            }
             val insetsController = WindowCompat.getInsetsController(window, view)
-            insetsController.isAppearanceLightStatusBars = false
-            insetsController.isAppearanceLightNavigationBars = false
+            insetsController.isAppearanceLightStatusBars = !darkTheme
+            insetsController.isAppearanceLightNavigationBars = !darkTheme
         }
     }
 

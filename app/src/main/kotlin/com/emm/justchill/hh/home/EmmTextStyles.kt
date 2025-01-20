@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -32,7 +31,7 @@ fun EmmHeadlineMedium(
         text = text,
         modifier = modifier,
         fontSize = 28.sp,
-        fontFamily = FontFamily.SansSerif,
+        fontFamily = LatoFontFamily,
         textAlign = textAlign,
         fontWeight = FontWeight.Bold,
         color = textColor
@@ -66,7 +65,7 @@ fun EmmHeading(
     Text(
         text = text,
         modifier = modifier,
-        fontFamily = FontFamily.SansSerif,
+        fontFamily = LatoFontFamily,
         fontWeight = FontWeight.Bold,
         color = textColor
     )

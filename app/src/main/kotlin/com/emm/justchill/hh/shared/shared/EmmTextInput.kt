@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -15,14 +16,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.HhBackgroundColor
-import com.emm.justchill.core.theme.HhOnBackgroundColor
+import com.emm.justchill.core.theme.LatoFontFamily
 
 @Composable
 fun EmmTextFieldChill(
@@ -40,8 +39,8 @@ fun EmmTextFieldChill(
         placeholder = {
             Text(
                 text = placeholder,
-                color = HhOnBackgroundColor.copy(alpha = 0.5f),
-                fontFamily = FontFamily.SansSerif,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                fontFamily = LatoFontFamily,
                 fontWeight = FontWeight.Normal,
                 fontSize = 18.sp
             )
@@ -49,23 +48,23 @@ fun EmmTextFieldChill(
         label = {
             Text(
                 text = label,
-                color = HhOnBackgroundColor,
-                fontFamily = FontFamily.SansSerif,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontFamily = LatoFontFamily,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 16.sp,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
         },
         textStyle = TextStyle(
-            fontFamily = FontFamily.SansSerif,
+            fontFamily = LatoFontFamily,
             fontWeight = FontWeight.Normal,
             fontSize = 18.sp,
-            color = HhOnBackgroundColor,
+            color = MaterialTheme.colorScheme.onBackground,
         ),
         colors = TextFieldDefaults.colors(
             focusedContainerColor = Color.Transparent,
             unfocusedContainerColor = Color.Transparent,
-            focusedIndicatorColor = HhOnBackgroundColor,
+            focusedIndicatorColor = MaterialTheme.colorScheme.onBackground
         ),
         maxLines = 1,
     )
@@ -85,8 +84,8 @@ fun EmmTextInput(
         Text(
             text = label,
             fontWeight = FontWeight.Normal,
-            fontFamily = FontFamily.SansSerif,
-            color = HhOnBackgroundColor,
+            fontFamily = LatoFontFamily,
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 17.sp
         )
 
@@ -99,31 +98,31 @@ fun EmmTextInput(
             placeholder = {
                 Text(
                     text = placeholder,
-                    fontFamily = FontFamily.SansSerif,
+                    fontFamily = LatoFontFamily,
                     fontWeight = FontWeight.Normal,
-                    color = HhOnBackgroundColor.copy(alpha = 0.5f),
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                     fontSize = 16.sp
                 )
             },
             textStyle = TextStyle(
-                fontFamily = FontFamily.SansSerif,
+                fontFamily = LatoFontFamily,
                 fontWeight = FontWeight.Normal,
                 fontSize = 18.sp,
-                color = HhOnBackgroundColor,
+                color = MaterialTheme.colorScheme.onBackground,
             ),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = HhOnBackgroundColor,
+                focusedBorderColor = MaterialTheme.colorScheme.onBackground
             ),
             maxLines = 2,
         )
     }
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 fun TextFieldWithLabelPreview() {
     EmmTheme {
-        Surface(color = HhBackgroundColor) {
+        Surface {
             EmmTextInput(
                 label = "Cantidad",
                 placeholder = "Ingrese una cantidad",
@@ -135,11 +134,11 @@ fun TextFieldWithLabelPreview() {
     }
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 private fun EmmTextFieldChild() {
     EmmTheme {
-        Surface(color = HhBackgroundColor) {
+        Surface {
             EmmTextFieldChill(
                 value = "Cantidad",
                 placeholder = "Ingresa una cantidad",
@@ -151,14 +150,14 @@ private fun EmmTextFieldChild() {
     }
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 fun TextFieldWithLabel2Preview() {
     EmmTheme {
-        Surface(color = HhBackgroundColor) {
+        Surface {
             EmmTextInput(
-                label = "eres la ga",
-                placeholder = "Ingrese una cantidad 2",
+                label = "",
+                placeholder = "Ingrese una cantidad",
                 value = "",
                 onChange = {  },
                 modifier = Modifier.fillMaxWidth()

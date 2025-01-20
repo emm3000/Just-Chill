@@ -9,22 +9,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.HhBackgroundColor
-import com.emm.justchill.core.theme.HhOnBackgroundColor
+import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.transaction.presentation.TransactionType
 import com.emm.justchill.hh.transaction.presentation.TransactionUi
 
@@ -35,14 +34,14 @@ fun ItemTransaction(
 ) {
 
     val borderColor = when (transactionUi.type) {
-        TransactionType.INCOME -> HhOnBackgroundColor
+        TransactionType.INCOME -> MaterialTheme.colorScheme.onBackground
         TransactionType.SPENT -> DeleteButtonColor
     }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(HhBackgroundColor)
+            .background(MaterialTheme.colorScheme.background)
             .clickable {
                 navigateToEdit(transactionUi.transactionId)
             }
@@ -60,8 +59,8 @@ fun ItemTransaction(
                     overflow = TextOverflow.Ellipsis,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = HhOnBackgroundColor,
-                    fontFamily = FontFamily.SansSerif
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontFamily = LatoFontFamily
                 )
                 Text(
                     modifier = Modifier,
@@ -69,8 +68,8 @@ fun ItemTransaction(
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Normal,
                     lineHeight = TextUnit(1f, TextUnitType.Em),
-                    color = HhOnBackgroundColor.copy(alpha = .8f),
-                    fontFamily = FontFamily.SansSerif
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = .8f),
+                    fontFamily = LatoFontFamily
                 )
             }
             Text(
@@ -81,7 +80,7 @@ fun ItemTransaction(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = borderColor,
-                fontFamily = FontFamily.SansSerif
+                fontFamily = LatoFontFamily
             )
         }
         Spacer(modifier = Modifier.height(10.dp))
@@ -89,7 +88,7 @@ fun ItemTransaction(
     }
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
 @Composable
 private fun ItemTransactionPreview() {
     EmmTheme {
