@@ -22,9 +22,9 @@ import com.emm.justchill.hh.me.export.DataExporter
 import com.emm.justchill.hh.me.driver.presentation.DriverViewViewModel
 import com.emm.justchill.hh.me.home.HomeViewModel
 import org.koin.android.ext.koin.androidApplication
-import org.koin.androidx.viewmodel.dsl.viewModel
-import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.viewModel
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 

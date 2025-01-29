@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.me.loan.domain
 
-import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
 import com.emm.justchill.hh.shared.UniqueIdProvider
 import com.emm.justchill.hh.me.payment.domain.Payment
 import com.emm.justchill.hh.me.payment.domain.PaymentsCreator
@@ -12,7 +11,7 @@ class LoanAndPaymentsCreator(
     private val loanCreator: LoanCreator,
     private val paymentsCreator: PaymentsCreator,
     private val paymentsGenerator: PaymentsGenerator,
-    private val uniqueIdProvider: UniqueIdProvider = DefaultUniqueIdProvider,
+    private val uniqueIdProvider: UniqueIdProvider,
 ) {
 
     suspend fun create(loanCreate: LoanCreate) = withContext(Dispatchers.IO) {
