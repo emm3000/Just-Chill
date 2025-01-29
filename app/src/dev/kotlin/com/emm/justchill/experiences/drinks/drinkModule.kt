@@ -9,9 +9,9 @@ import com.emm.justchill.experiences.drinks.data.DrinkService
 import com.emm.justchill.experiences.drinks.domain.DrinkFetcher as DomainDrinkFetcher
 import com.emm.justchill.experiences.drinks.domain.DrinkRepository
 import com.emm.justchill.experiences.drinks.ui.MainViewModel
-import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.binds
