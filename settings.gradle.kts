@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 pluginManagement {
     repositories {
         google {
@@ -21,5 +23,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "JustChill"
-include(":app")
+include(":presentation")
 include(":domain")
