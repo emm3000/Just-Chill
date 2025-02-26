@@ -31,6 +31,7 @@ kotlinVersion = "2.1.10"
 googleServicesVersion = "4.4.2"
 googleCrashlyticsVersion = "3.0.3"
 workRuntimeKtx = "2.10.0"
+jetbrainsKotlinJvm = "2.1.10"
 
 [libraries]
 android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "androidDriver" }
@@ -87,3 +88,4 @@ kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinVersion" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServicesVersion" }
 google-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleCrashlyticsVersion" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinVersion" }
+jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
