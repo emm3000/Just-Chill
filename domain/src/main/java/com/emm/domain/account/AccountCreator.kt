@@ -1,6 +1,6 @@
-package com.emm.justchill.hh.account.domain
+package com.emm.domain.account
 
-import com.emm.justchill.hh.shared.UniqueIdProvider
+import com.emm.domain.shared.UniqueIdProvider
 
 class AccountCreator(
     private val repository: AccountRepository,

@@ -6,9 +6,9 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.justchill.Accounts
 import com.emm.justchill.AccountsQueries
 import com.emm.justchill.EmmDatabase
-import com.emm.justchill.hh.account.domain.Account
-import com.emm.justchill.hh.account.domain.AccountRepository
-import com.emm.justchill.hh.account.domain.AccountUpsert
+import com.emm.domain.account.Account
+import com.emm.domain.account.AccountRepository
+import com.emm.domain.account.AccountUpsert
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

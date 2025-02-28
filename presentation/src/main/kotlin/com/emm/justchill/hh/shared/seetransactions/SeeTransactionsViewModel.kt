@@ -8,8 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.hh.account.domain.Account
-import com.emm.justchill.hh.account.domain.AccountRepository
+import com.emm.domain.account.Account
+import com.emm.domain.account.AccountRepository
 import com.emm.justchill.hh.transaction.domain.TransactionLoader
 import com.emm.justchill.hh.transaction.domain.Transaction
 import com.emm.justchill.hh.transaction.presentation.TransactionUi

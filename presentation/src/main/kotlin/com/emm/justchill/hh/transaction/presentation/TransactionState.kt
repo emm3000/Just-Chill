@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.transaction.presentation
 
 import androidx.compose.runtime.Immutable
-import com.emm.justchill.hh.account.domain.Account
+import com.emm.domain.account.Account
 
 @Immutable
 data class TransactionState(

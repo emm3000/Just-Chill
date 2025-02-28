@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.account.domain
+package com.emm.domain.account
 
 class AccountDeleter(private val repository: AccountRepository) {
 

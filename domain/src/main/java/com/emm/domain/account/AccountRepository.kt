@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.account.domain
+package com.emm.domain.account
 
 import kotlinx.coroutines.flow.Flow
 

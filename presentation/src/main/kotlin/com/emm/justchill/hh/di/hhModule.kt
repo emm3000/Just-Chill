@@ -12,12 +12,12 @@ import com.emm.justchill.hh.account.data.AccountRemoteRepository
 import com.emm.justchill.hh.account.data.AccountSupabaseRepository
 import com.emm.justchill.hh.account.data.DefaultAccountRepository
 import com.emm.justchill.hh.account.domain.AccountBalanceUpdater
-import com.emm.justchill.hh.account.domain.AccountCreator
-import com.emm.justchill.hh.account.domain.AccountDeleter
-import com.emm.justchill.hh.account.domain.AccountFinder
-import com.emm.justchill.hh.account.domain.AccountRepository
-import com.emm.justchill.hh.account.domain.AccountUpdater
-import com.emm.justchill.hh.account.domain.DailyAccountCreator
+import com.emm.domain.account.AccountCreator
+import com.emm.domain.account.AccountDeleter
+import com.emm.domain.account.AccountFinder
+import com.emm.domain.account.AccountRepository
+import com.emm.domain.account.AccountUpdater
+import com.emm.domain.account.DailyAccountCreator
 import com.emm.justchill.hh.account.presentation.AccountViewModel
 import com.emm.justchill.hh.auth.data.DefaultAuthRepository
 import com.emm.justchill.hh.auth.domain.AuthRepository
@@ -37,7 +37,7 @@ import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.HomeViewModel
 import com.emm.justchill.hh.shared.DateAndTimeCombiner
 import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
-import com.emm.justchill.hh.shared.UniqueIdProvider
+import com.emm.domain.shared.UniqueIdProvider
 import com.emm.justchill.hh.shared.seetransactions.SeeTransactionsViewModel
 import com.emm.justchill.hh.transaction.data.DefaultTransactionRepository
 import com.emm.justchill.hh.transaction.data.DefaultTransactionUpdateRepository

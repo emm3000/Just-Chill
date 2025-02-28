@@ -13,6 +13,7 @@ javafaker = "1.0.2"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 koinBom = "4.0.1"
+kotlinxCoroutinesCore = "1.8.1"
 kotlinxCoroutinesTest = "1.10.1"
 kotlinxSerializationJson = "1.8.0"
 ktorClientOkhttp = "2.3.11"
@@ -70,6 +71,7 @@ koin-android = { module = "io.insert-koin:koin-android" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koinBom" }
 koin-core = { module = "io.insert-koin:koin-core" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorClientOkhttp" }

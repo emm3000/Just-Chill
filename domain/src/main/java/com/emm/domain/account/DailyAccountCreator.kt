@@ -1,6 +1,6 @@
-package com.emm.justchill.hh.account.domain
+package com.emm.domain.account
 
-import com.emm.justchill.hh.shared.UniqueIdProvider
+import com.emm.domain.shared.UniqueIdProvider
 import kotlinx.coroutines.flow.firstOrNull
 
 class DailyAccountCreator(

@@ -31,7 +31,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.hh.account.domain.AccountRepository
+import com.emm.domain.account.AccountRepository
 import com.emm.justchill.hh.account.presentation.Account
 import com.emm.justchill.hh.category.presentation.Category
 import com.emm.justchill.hh.fasttransaction.Accounts
@@ -89,7 +89,7 @@ fun NewHh(modifier: Modifier = Modifier) {
 
             composable(HhRoutes.HnNewHome.route) {
                 val repository: AccountRepository = koinInject()
-                val accounts: List<com.emm.justchill.hh.account.domain.Account> by repository.retrieve()
+                val accounts: List<com.emm.domain.account.Account> by repository.retrieve()
                     .collectAsStateWithLifecycle(emptyList())
                 Accounts(
                     accounts = accounts,

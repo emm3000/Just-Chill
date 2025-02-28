@@ -2,7 +2,7 @@ package com.emm.justchill.hh.me.driver.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.hh.account.domain.DailyAccountCreator
+import com.emm.domain.account.DailyAccountCreator
 import com.emm.justchill.hh.me.daily.presentation.DailyUi
 import com.emm.justchill.hh.me.daily.domain.Daily
 import com.emm.justchill.hh.me.daily.domain.DailyRepository

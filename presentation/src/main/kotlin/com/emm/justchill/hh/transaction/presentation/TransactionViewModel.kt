@@ -1,7 +1,6 @@
 package com.emm.justchill.hh.transaction.presentation
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -9,8 +8,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.core.formatInputToDouble
-import com.emm.justchill.hh.account.domain.Account
-import com.emm.justchill.hh.account.domain.AccountRepository
+import com.emm.domain.account.Account
+import com.emm.domain.account.AccountRepository
 import com.emm.justchill.hh.transaction.domain.TransactionCreator
 import com.emm.justchill.hh.transaction.domain.TransactionInsert
 import kotlinx.coroutines.flow.SharingStarted

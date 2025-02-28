@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.category.domain
 
-import com.emm.justchill.hh.shared.UniqueIdProvider
+import com.emm.domain.shared.UniqueIdProvider
 
 class CategoryCreator(
     private val repository: CategoryRepository,

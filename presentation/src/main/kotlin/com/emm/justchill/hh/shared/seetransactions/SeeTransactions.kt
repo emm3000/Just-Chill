@@ -21,7 +21,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.hh.account.domain.Account
+import com.emm.domain.account.Account
 import com.emm.justchill.hh.shared.shared.EditTransaction
 import com.emm.justchill.hh.shared.shared.EmmDropDown
 import com.emm.justchill.hh.transaction.presentation.EmmCenteredToolbar

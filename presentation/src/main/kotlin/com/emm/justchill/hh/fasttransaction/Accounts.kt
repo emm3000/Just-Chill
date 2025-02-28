@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.hh.account.domain.Account
+import com.emm.domain.account.Account
 import com.emm.justchill.hh.transaction.presentation.EmmCenteredToolbar
 import com.emm.justchill.hh.transaction.presentation.TransactionType
 

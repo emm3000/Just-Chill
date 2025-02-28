@@ -8,8 +8,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.core.formatInputToDouble
-import com.emm.justchill.hh.account.domain.AccountUpsert
-import com.emm.justchill.hh.account.domain.AccountCreator
+import com.emm.domain.account.AccountUpsert
+import com.emm.domain.account.AccountCreator
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
