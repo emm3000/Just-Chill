@@ -4,13 +4,6 @@ import android.content.Context
 import androidx.sqlite.db.SupportSQLiteDatabase
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
-import com.emm.justchill.BuildConfig
-import com.emm.justchill.EmmDatabase
-import com.emm.justchill.R
-import com.emm.justchill.TransactionQueries
-import com.emm.justchill.hh.account.data.AccountRemoteRepository
-import com.emm.justchill.hh.account.data.AccountSupabaseRepository
-import com.emm.justchill.hh.account.data.DefaultAccountRepository
 import com.emm.domain.account.AccountBalanceUpdater
 import com.emm.domain.account.AccountCreator
 import com.emm.domain.account.AccountDeleter
@@ -18,31 +11,16 @@ import com.emm.domain.account.AccountFinder
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountUpdater
 import com.emm.domain.account.DailyAccountCreator
-import com.emm.justchill.hh.account.presentation.AccountViewModel
-import com.emm.justchill.hh.auth.data.DefaultAuthRepository
 import com.emm.domain.auth.AuthRepository
 import com.emm.domain.auth.UserAuthenticator
 import com.emm.domain.auth.UserCreator
-import com.emm.justchill.hh.auth.presentation.LoginViewModel
-import com.emm.justchill.hh.category.data.CategoryRemoteRepository
-import com.emm.justchill.hh.category.data.CategorySupabaseRepository
-import com.emm.justchill.hh.category.data.DefaultCategoryRepository
 import com.emm.domain.category.CategoryCreator
 import com.emm.domain.category.CategoryDeleter
 import com.emm.domain.category.CategoryFinder
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryUpdater
-import com.emm.justchill.hh.category.presentation.CategoryViewModel
-import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
-import com.emm.justchill.hh.home.HomeViewModel
 import com.emm.domain.shared.DateAndTimeCombiner
-import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
 import com.emm.domain.shared.UniqueIdProvider
-import com.emm.justchill.hh.shared.seetransactions.SeeTransactionsViewModel
-import com.emm.justchill.hh.transaction.data.DefaultTransactionRepository
-import com.emm.justchill.hh.transaction.data.DefaultTransactionUpdateRepository
-import com.emm.justchill.hh.transaction.data.TransactionRemoteRepository
-import com.emm.justchill.hh.transaction.data.TransactionSupabaseRepository
 import com.emm.domain.transaction.TransactionCreator
 import com.emm.domain.transaction.TransactionDeleter
 import com.emm.domain.transaction.TransactionDifferenceCalculator
@@ -53,6 +31,21 @@ import com.emm.domain.transaction.TransactionSumIncome
 import com.emm.domain.transaction.TransactionSumSpend
 import com.emm.domain.transaction.TransactionUpdateRepository
 import com.emm.domain.transaction.TransactionUpdater
+import com.emm.justchill.BuildConfig
+import com.emm.justchill.EmmDatabase
+import com.emm.justchill.R
+import com.emm.justchill.TransactionQueries
+import com.emm.justchill.hh.account.data.DefaultAccountRepository
+import com.emm.justchill.hh.account.presentation.AccountViewModel
+import com.emm.justchill.hh.auth.presentation.LoginViewModel
+import com.emm.justchill.hh.category.data.DefaultCategoryRepository
+import com.emm.justchill.hh.category.presentation.CategoryViewModel
+import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
+import com.emm.justchill.hh.home.HomeViewModel
+import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
+import com.emm.justchill.hh.shared.seetransactions.SeeTransactionsViewModel
+import com.emm.justchill.hh.transaction.data.DefaultTransactionRepository
+import com.emm.justchill.hh.transaction.data.DefaultTransactionUpdateRepository
 import com.emm.justchill.hh.transaction.presentation.EditTransactionViewModel
 import com.emm.justchill.hh.transaction.presentation.TransactionViewModel
 import io.github.jan.supabase.SupabaseClient
@@ -73,7 +66,6 @@ import org.koin.dsl.module
 val hhModule = module {
 
     provideSqlDelight()
-    dataSourceProviders()
     repositoriesProviders()
 
     transactionsUseCases()
@@ -137,30 +129,9 @@ private fun Module.repositoriesProviders() {
 
     single<SupabaseClient> { supabase(androidApplication()) }
 
-    factory<AuthRepository> {
-        DefaultAuthRepository(get(), provideSharedPreferences(androidApplication()))
-    }
-
     factory<TransactionUpdateRepository> {
         DefaultTransactionUpdateRepository(
             transactionQueries = get(),
-        )
-    }
-}
-
-private fun provideSharedPreferences(
-    context: Context,
-) = context.getSharedPreferences(
-    BuildConfig.APPLICATION_ID,
-    Context.MODE_PRIVATE
-)
-
-private fun Module.dataSourceProviders() {
-
-    factory<TransactionRemoteRepository> {
-        TransactionSupabaseRepository(
-            get(),
-            get(),
         )
     }
 }
@@ -215,8 +186,6 @@ val categoryModule = module {
             emmDatabase = get(),
         )
     } bind CategoryRepository::class
-
-    factoryOf(::CategorySupabaseRepository) bind CategoryRemoteRepository::class
 }
 
 val accountModule = module {
@@ -233,6 +202,5 @@ val accountModule = module {
         )
     } bind AccountRepository::class
 
-    factoryOf(::AccountSupabaseRepository) bind AccountRemoteRepository::class
     factoryOf(::AccountBalanceUpdater)
 }
