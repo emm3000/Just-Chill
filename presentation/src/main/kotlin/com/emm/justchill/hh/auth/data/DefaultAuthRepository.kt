@@ -1,9 +1,9 @@
 package com.emm.justchill.hh.auth.data
 
 import android.content.SharedPreferences
-import com.emm.justchill.hh.auth.domain.AuthRepository
-import com.emm.justchill.hh.auth.domain.Email as EmailModel
-import com.emm.justchill.hh.auth.domain.Password
+import com.emm.domain.auth.Email as EmailModel
+import com.emm.domain.auth.Password
+import com.emm.domain.auth.AuthRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email

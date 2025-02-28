@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.account.data
 
 import com.emm.justchill.hh.shared.TableNames
-import com.emm.justchill.hh.auth.domain.AuthRepository
+import com.emm.domain.auth.AuthRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.PostgrestQueryBuilder
@@ -20,12 +20,7 @@ class AccountSupabaseRepository(
     }
 
     override suspend fun retrieve(): List<AccountModel> {
-        val userId: String = authRepository.session()?.id ?: return emptyList()
-        return client
-            .select {
-                filter { AccountModel::userId eq userId }
-            }
-            .decodeList<AccountModel>()
+        return emptyList()
     }
 
     override suspend fun deleteBy(accountId: String) {
@@ -37,11 +32,6 @@ class AccountSupabaseRepository(
     }
 
     override suspend fun deleteAll() {
-        val userId: String = authRepository.session()?.id ?: return
-        client.delete {
-            filter {
-                AccountModel::userId eq userId
-            }
-        }
+
     }
 }

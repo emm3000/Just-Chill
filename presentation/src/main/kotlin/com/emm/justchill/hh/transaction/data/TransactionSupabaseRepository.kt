@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.transaction.data
 
 import com.emm.justchill.hh.shared.TableNames
-import com.emm.justchill.hh.auth.domain.AuthRepository
+import com.emm.domain.auth.AuthRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.PostgrestQueryBuilder
@@ -24,12 +24,7 @@ class TransactionSupabaseRepository(
     }
 
     override suspend fun retrieve(): List<TransactionModel> {
-        val userId: String = authRepository.session()?.id ?: return emptyList()
-        return client
-            .select {
-                filter { TransactionModel::userId eq userId }
-            }
-            .decodeList<TransactionModel>()
+        return emptyList()
     }
 
     override suspend fun deleteBy(transactionId: String) {
@@ -41,11 +36,6 @@ class TransactionSupabaseRepository(
     }
 
     override suspend fun deleteAll() {
-        val userId: String = authRepository.session()?.id ?: return
-        client.delete {
-            filter {
-                TransactionModel::userId eq userId
-            }
-        }
+
     }
 }

@@ -20,9 +20,9 @@ import com.emm.domain.account.AccountUpdater
 import com.emm.domain.account.DailyAccountCreator
 import com.emm.justchill.hh.account.presentation.AccountViewModel
 import com.emm.justchill.hh.auth.data.DefaultAuthRepository
-import com.emm.justchill.hh.auth.domain.AuthRepository
-import com.emm.justchill.hh.auth.domain.UserAuthenticator
-import com.emm.justchill.hh.auth.domain.UserCreator
+import com.emm.domain.auth.AuthRepository
+import com.emm.domain.auth.UserAuthenticator
+import com.emm.domain.auth.UserCreator
 import com.emm.justchill.hh.auth.presentation.LoginViewModel
 import com.emm.justchill.hh.category.data.CategoryRemoteRepository
 import com.emm.justchill.hh.category.data.CategorySupabaseRepository

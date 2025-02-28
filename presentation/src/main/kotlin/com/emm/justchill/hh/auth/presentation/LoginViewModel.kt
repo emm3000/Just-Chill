@@ -7,11 +7,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.hh.auth.domain.AuthRepository
-import com.emm.justchill.hh.auth.domain.Email
-import com.emm.justchill.hh.auth.domain.Password
-import com.emm.justchill.hh.auth.domain.UserAuthenticator
-import com.emm.justchill.hh.auth.domain.UserCreator
+import com.emm.domain.auth.AuthRepository
+import com.emm.domain.auth.Email
+import com.emm.domain.auth.Password
+import com.emm.domain.auth.UserAuthenticator
+import com.emm.domain.auth.UserCreator
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

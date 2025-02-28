@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.category.data
 
 import com.emm.justchill.hh.shared.TableNames
-import com.emm.justchill.hh.auth.domain.AuthRepository
+import com.emm.domain.auth.AuthRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.PostgrestQueryBuilder
@@ -20,12 +20,7 @@ class CategorySupabaseRepository(
     }
 
     override suspend fun retrieve(): List<CategoryModel> {
-        val userId: String = authRepository.session()?.id ?: return emptyList()
-        return client
-            .select {
-                filter { CategoryModel::userId eq userId }
-            }
-            .decodeList<CategoryModel>()
+        return emptyList()
     }
 
     override suspend fun deleteBy(categoryId: String) {
@@ -37,11 +32,6 @@ class CategorySupabaseRepository(
     }
 
     override suspend fun deleteAll() {
-        val userId: String = authRepository.session()?.id ?: return
-        client.delete {
-            filter {
-                CategoryModel::userId eq userId
-            }
-        }
+
     }
 }

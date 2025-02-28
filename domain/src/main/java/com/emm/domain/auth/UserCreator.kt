@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.auth.domain
+package com.emm.domain.auth
 
 class UserCreator(private val repository: AuthRepository) {
 
