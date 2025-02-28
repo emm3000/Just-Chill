@@ -26,5 +26,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "JustChill"
-include(":presentation")
+include(":app")
 include(":domain")
