@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category.domain
+package com.emm.domain.category
 
 data class Category(
     val categoryId: String,

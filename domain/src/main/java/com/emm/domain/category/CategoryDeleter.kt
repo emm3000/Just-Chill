@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category.domain
+package com.emm.domain.category
 
 class CategoryDeleter(
     private val repository: CategoryRepository,

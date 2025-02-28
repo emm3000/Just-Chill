@@ -27,11 +27,11 @@ import com.emm.justchill.hh.auth.presentation.LoginViewModel
 import com.emm.justchill.hh.category.data.CategoryRemoteRepository
 import com.emm.justchill.hh.category.data.CategorySupabaseRepository
 import com.emm.justchill.hh.category.data.DefaultCategoryRepository
-import com.emm.justchill.hh.category.domain.CategoryCreator
-import com.emm.justchill.hh.category.domain.CategoryDeleter
-import com.emm.justchill.hh.category.domain.CategoryFinder
-import com.emm.justchill.hh.category.domain.CategoryRepository
-import com.emm.justchill.hh.category.domain.CategoryUpdater
+import com.emm.domain.category.CategoryCreator
+import com.emm.domain.category.CategoryDeleter
+import com.emm.domain.category.CategoryFinder
+import com.emm.domain.category.CategoryRepository
+import com.emm.domain.category.CategoryUpdater
 import com.emm.justchill.hh.category.presentation.CategoryViewModel
 import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.HomeViewModel

@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category.domain
+package com.emm.domain.category
 
 import com.emm.domain.shared.UniqueIdProvider
 

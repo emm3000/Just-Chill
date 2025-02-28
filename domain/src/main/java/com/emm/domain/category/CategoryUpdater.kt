@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category.domain
+package com.emm.domain.category
 
 class CategoryUpdater(
     private val repository: CategoryRepository,

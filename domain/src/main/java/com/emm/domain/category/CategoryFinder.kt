@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category.domain
+package com.emm.domain.category
 
 import kotlinx.coroutines.flow.firstOrNull
 

@@ -6,8 +6,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.hh.category.domain.CategoryUpsert
-import com.emm.justchill.hh.category.domain.CategoryCreator
+import com.emm.domain.category.CategoryUpsert
+import com.emm.domain.category.CategoryCreator
 import com.emm.domain.transaction.TransactionType
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach

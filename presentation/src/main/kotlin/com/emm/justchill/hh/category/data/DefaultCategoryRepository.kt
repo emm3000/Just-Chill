@@ -6,10 +6,9 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.justchill.Categories
 import com.emm.justchill.CategoriesQueries
 import com.emm.justchill.EmmDatabase
-import com.emm.justchill.hh.category.domain.Category
-import com.emm.justchill.hh.category.domain.CategoryRepository
-import com.emm.justchill.hh.category.domain.CategoryUpsert
-import com.emm.justchill.hh.transaction.domain.SyncStatus
+import com.emm.domain.category.Category
+import com.emm.domain.category.CategoryRepository
+import com.emm.domain.category.CategoryUpsert
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
