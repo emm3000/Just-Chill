@@ -4,9 +4,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import com.emm.justchill.core.coreModule
-import com.emm.justchill.experiences.drinks.drinkModule
 import com.emm.justchill.experiences.readjsonfromassets.experiencesModule
-import com.emm.justchill.experiences.supabase.supabaseModule
 import com.emm.justchill.hh.di.accountModule
 import com.emm.justchill.hh.di.categoryModule
 import com.emm.justchill.hh.di.hhModule
@@ -25,10 +23,8 @@ class EmmApp : Application() {
             androidContext(this@EmmApp)
             modules(
                 coreModule,
-                drinkModule,
                 experiencesModule,
                 hhModule,
-                supabaseModule,
                 loansModule,
                 categoryModule,
                 accountModule,

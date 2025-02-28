@@ -8,9 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.experiences.calendar.Calendar
-import com.emm.justchill.experiences.drinks.ui.DrinkMainScreen
 import com.emm.justchill.experiences.readjsonfromassets.ui.Experiences
-import com.emm.justchill.experiences.supabase.SupabaseScreen
 import com.emm.justchill.experiences.timerpicker.MeTimerPicker
 import com.emm.justchill.hh.shared.Hh
 import java.util.UUID
@@ -27,15 +25,6 @@ sealed class RootRoutes(val route: String) {
 }
 
 val rootData: List<Feature> = listOf(
-    Feature(
-        id = UUID.randomUUID().toString(),
-        title = "Simple list and detail from drinks api",
-        description = "In this part, it was used jetpack compose components, (LazyColumn), In this part, it was used jetpack compose components, (LazyColumn)",
-        category = "video",
-        resource = "no link",
-        route = RootRoutes.Experiences,
-        screen = { DrinkMainScreen() }
-    ),
     Feature(
         id = UUID.randomUUID().toString(),
         title = "Simple clean architecture, the data is from local assets in json format",
@@ -62,15 +51,6 @@ val rootData: List<Feature> = listOf(
         resource = "-",
         route = RootRoutes.Hh,
         screen = { Hh() }
-    ),
-    Feature(
-        id = UUID.randomUUID().toString(),
-        title = "Supabase",
-        description = "Tab to test supabase",
-        category = "personal",
-        resource = "-",
-        route = RootRoutes.Hh,
-        screen = { SupabaseScreen() }
     ),
     Feature(
         id = UUID.randomUUID().toString(),
