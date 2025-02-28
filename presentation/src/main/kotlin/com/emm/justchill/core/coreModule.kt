@@ -5,12 +5,10 @@ import android.content.SharedPreferences
 import android.os.Build
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
-import retrofit2.Retrofit
 
 val coreModule = module {
 
     single<DispatchersProvider> { DefaultDispatcher() }
-    single<Retrofit> { provideDrinkService(androidContext()) }
     single<SharedPreferences> { provideSharedPreferences(androidContext()) }
 }
 
