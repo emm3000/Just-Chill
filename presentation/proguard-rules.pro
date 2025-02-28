@@ -28,4 +28,4 @@
 -dontwarn io.ktor.client.plugins.HttpTimeout
 -dontwarn io.ktor.utils.io.CoroutinesKt
 
--keep class com.emm.justchill.hh.transaction.presentation.TransactionType { *; }
+-keep class com.emm.domain.transaction.TransactionType { *; }

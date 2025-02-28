@@ -6,9 +6,9 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.justchill.TransactionQueries
 import com.emm.justchill.Transactions
 import com.emm.justchill.core.DispatchersProvider
-import com.emm.justchill.hh.transaction.domain.TransactionInsert
-import com.emm.justchill.hh.transaction.domain.TransactionRepository
-import com.emm.justchill.hh.transaction.domain.Transaction
+import com.emm.domain.transaction.TransactionInsert
+import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.Transaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -21,7 +21,7 @@ class DefaultTransactionRepository(
     override suspend fun create(transactionInsert: TransactionInsert) = withContext(ioDispatcher) {
         checkNotNull(transactionInsert.id)
         transactionsQueries.addTransaction(
-            transactionId = transactionInsert.id,
+            transactionId = transactionInsert.id!!,
             type = transactionInsert.type.name,
             amount = transactionInsert.amount,
             description = transactionInsert.description,

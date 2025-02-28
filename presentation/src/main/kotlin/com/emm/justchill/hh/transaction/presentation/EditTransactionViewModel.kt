@@ -11,6 +11,7 @@ import com.emm.justchill.core.formatInputToDouble
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountFinder
+import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.transaction.domain.TransactionUpdate
 import com.emm.justchill.hh.transaction.domain.TransactionDeleter
 import com.emm.justchill.hh.transaction.domain.TransactionFinder

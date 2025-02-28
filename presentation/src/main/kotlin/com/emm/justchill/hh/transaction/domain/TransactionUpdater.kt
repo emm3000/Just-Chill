@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.transaction.domain
 
-import com.emm.justchill.hh.account.domain.AccountBalanceUpdater
+import com.emm.domain.account.AccountBalanceUpdater
 import com.emm.justchill.hh.shared.DateAndTimeCombiner
 
 class TransactionUpdater(

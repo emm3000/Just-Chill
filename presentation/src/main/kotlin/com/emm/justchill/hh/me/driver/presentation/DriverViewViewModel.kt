@@ -11,8 +11,8 @@ import com.emm.justchill.hh.me.driver.domain.DriverRepository
 import com.emm.justchill.hh.me.daily.presentation.toUi
 import com.emm.justchill.hh.shared.DateAndTimeCombiner
 import com.emm.justchill.hh.transaction.domain.TransactionCreator
-import com.emm.justchill.hh.transaction.domain.TransactionInsert
-import com.emm.justchill.hh.transaction.presentation.TransactionType
+import com.emm.domain.transaction.TransactionInsert
+import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.me.loan.domain.Loan
 import com.emm.justchill.hh.me.loan.domain.LoanRepository
 import com.emm.justchill.hh.me.loan.presentation.LoanUi

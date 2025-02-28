@@ -1,8 +1,6 @@
-package com.emm.justchill.hh.account.domain
+package com.emm.domain.account
 
-import com.emm.domain.account.Account
-import com.emm.domain.account.AccountRepository
-import com.emm.justchill.hh.transaction.domain.TransactionDifferenceCalculator
+import com.emm.domain.transaction.TransactionDifferenceCalculator
 import kotlinx.coroutines.flow.firstOrNull
 
 class AccountBalanceUpdater(

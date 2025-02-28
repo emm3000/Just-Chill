@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.transaction.domain
+package com.emm.domain.transaction
 
 import java.text.DecimalFormat
 

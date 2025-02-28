@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.hh.category.domain.CategoryUpsert
 import com.emm.justchill.hh.category.domain.CategoryCreator
-import com.emm.justchill.hh.transaction.presentation.TransactionType
+import com.emm.domain.transaction.TransactionType
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch

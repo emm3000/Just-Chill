@@ -1,6 +1,4 @@
-package com.emm.justchill.hh.transaction.domain
-
-import com.emm.justchill.hh.transaction.presentation.TransactionType
+package com.emm.domain.transaction
 
 data class TransactionInsert(
     val id: String? = null,

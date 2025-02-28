@@ -30,7 +30,7 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.HhBackgroundColor
 import com.emm.justchill.core.theme.HhOnBackgroundColor
 import com.emm.justchill.core.theme.HhSecondaryTextBackground
-import com.emm.justchill.hh.transaction.presentation.TransactionType
+import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.transaction.presentation.TransactionUi
 
 @Composable

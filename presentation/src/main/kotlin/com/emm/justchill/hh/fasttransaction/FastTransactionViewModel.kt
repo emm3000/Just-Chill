@@ -9,9 +9,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.core.formatInputToDouble
 import com.emm.justchill.hh.transaction.domain.TransactionCreator
-import com.emm.justchill.hh.transaction.domain.TransactionInsert
+import com.emm.domain.transaction.TransactionInsert
 import com.emm.justchill.hh.transaction.presentation.DateUtils
-import com.emm.justchill.hh.transaction.presentation.TransactionType
+import com.emm.domain.transaction.TransactionType
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch

@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.transaction.domain
 
-import com.emm.justchill.hh.transaction.presentation.TransactionType
+import com.emm.domain.transaction.TransactionType
 
 data class TransactionUpdate(
     val type: TransactionType,

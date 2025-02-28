@@ -19,7 +19,7 @@ import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextInput
 import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
 import com.emm.justchill.hh.transaction.presentation.EmmToolbarTitle
-import com.emm.justchill.hh.transaction.presentation.TransactionType
+import com.emm.domain.transaction.TransactionType
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

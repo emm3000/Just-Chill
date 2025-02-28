@@ -11,7 +11,8 @@ import com.emm.justchill.core.formatInputToDouble
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.justchill.hh.transaction.domain.TransactionCreator
-import com.emm.justchill.hh.transaction.domain.TransactionInsert
+import com.emm.domain.transaction.TransactionInsert
+import com.emm.domain.transaction.TransactionType
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine

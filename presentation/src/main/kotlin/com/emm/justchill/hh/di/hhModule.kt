@@ -11,7 +11,7 @@ import com.emm.justchill.TransactionQueries
 import com.emm.justchill.hh.account.data.AccountRemoteRepository
 import com.emm.justchill.hh.account.data.AccountSupabaseRepository
 import com.emm.justchill.hh.account.data.DefaultAccountRepository
-import com.emm.justchill.hh.account.domain.AccountBalanceUpdater
+import com.emm.domain.account.AccountBalanceUpdater
 import com.emm.domain.account.AccountCreator
 import com.emm.domain.account.AccountDeleter
 import com.emm.domain.account.AccountFinder
@@ -45,10 +45,10 @@ import com.emm.justchill.hh.transaction.data.TransactionRemoteRepository
 import com.emm.justchill.hh.transaction.data.TransactionSupabaseRepository
 import com.emm.justchill.hh.transaction.domain.TransactionCreator
 import com.emm.justchill.hh.transaction.domain.TransactionDeleter
-import com.emm.justchill.hh.transaction.domain.TransactionDifferenceCalculator
+import com.emm.domain.transaction.TransactionDifferenceCalculator
 import com.emm.justchill.hh.transaction.domain.TransactionFinder
 import com.emm.justchill.hh.transaction.domain.TransactionLoader
-import com.emm.justchill.hh.transaction.domain.TransactionRepository
+import com.emm.domain.transaction.TransactionRepository
 import com.emm.justchill.hh.transaction.domain.TransactionSumIncome
 import com.emm.justchill.hh.transaction.domain.TransactionSumSpend
 import com.emm.justchill.hh.transaction.domain.TransactionUpdateRepository

@@ -25,7 +25,7 @@ import com.emm.domain.account.Account
 import com.emm.justchill.hh.shared.shared.EditTransaction
 import com.emm.justchill.hh.shared.shared.EmmDropDown
 import com.emm.justchill.hh.transaction.presentation.EmmCenteredToolbar
-import com.emm.justchill.hh.transaction.presentation.TransactionType
+import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.transaction.presentation.TransactionUi
 import org.koin.androidx.compose.koinViewModel
 import java.util.*

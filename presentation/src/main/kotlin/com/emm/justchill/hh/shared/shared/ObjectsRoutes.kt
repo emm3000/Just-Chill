@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.shared.shared
 
-import com.emm.justchill.hh.transaction.presentation.TransactionType
+import com.emm.domain.transaction.TransactionType
 import kotlinx.serialization.Serializable
 
 @Serializable

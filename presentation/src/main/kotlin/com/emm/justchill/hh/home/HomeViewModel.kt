@@ -11,7 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
-import com.emm.justchill.hh.transaction.domain.TransactionDifferenceCalculator
+import com.emm.domain.transaction.TransactionDifferenceCalculator
 import com.emm.justchill.hh.transaction.domain.TransactionSumIncome
 import com.emm.justchill.hh.transaction.domain.TransactionSumSpend
 import kotlinx.coroutines.ExperimentalCoroutinesApi
