@@ -1,6 +1,5 @@
-package com.emm.justchill.hh.transaction.domain
+package com.emm.domain.transaction
 
-import com.emm.domain.transaction.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 
 class TransactionSumSpend(private val repository: TransactionRepository) {

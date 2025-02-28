@@ -8,7 +8,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.core.formatInputToDouble
-import com.emm.justchill.hh.transaction.domain.TransactionCreator
+import com.emm.domain.transaction.TransactionCreator
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.justchill.hh.transaction.presentation.DateUtils
 import com.emm.domain.transaction.TransactionType

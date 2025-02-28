@@ -7,8 +7,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.DailyAccountCreator
-import com.emm.justchill.hh.shared.DateAndTimeCombiner
-import com.emm.justchill.hh.transaction.domain.TransactionCreator
+import com.emm.domain.shared.DateAndTimeCombiner
+import com.emm.domain.transaction.TransactionCreator
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.justchill.hh.transaction.presentation.DateUtils
 import com.emm.domain.transaction.TransactionType

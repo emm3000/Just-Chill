@@ -3,8 +3,8 @@ package com.emm.justchill.hh.me.driver.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.DailyAccountCreator
-import com.emm.justchill.hh.shared.DateAndTimeCombiner
-import com.emm.justchill.hh.transaction.domain.TransactionCreator
+import com.emm.domain.shared.DateAndTimeCombiner
+import com.emm.domain.transaction.TransactionCreator
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.me.loan.domain.Loan

@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.me.loan.domain
 
-import com.emm.justchill.hh.shared.DateAndTimeCombiner
+import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.justchill.hh.me.payment.domain.PaymentStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

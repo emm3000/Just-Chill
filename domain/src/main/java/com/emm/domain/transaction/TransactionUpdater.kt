@@ -1,7 +1,7 @@
-package com.emm.justchill.hh.transaction.domain
+package com.emm.domain.transaction
 
 import com.emm.domain.account.AccountBalanceUpdater
-import com.emm.justchill.hh.shared.DateAndTimeCombiner
+import com.emm.domain.shared.DateAndTimeCombiner
 
 class TransactionUpdater(
     private val repository: TransactionUpdateRepository,

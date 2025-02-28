@@ -9,8 +9,8 @@ import com.emm.justchill.hh.me.daily.domain.DailyRepository
 import com.emm.justchill.hh.me.driver.domain.Driver
 import com.emm.justchill.hh.me.driver.domain.DriverRepository
 import com.emm.justchill.hh.me.daily.presentation.toUi
-import com.emm.justchill.hh.shared.DateAndTimeCombiner
-import com.emm.justchill.hh.transaction.domain.TransactionCreator
+import com.emm.domain.shared.DateAndTimeCombiner
+import com.emm.domain.transaction.TransactionCreator
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.me.loan.domain.Loan

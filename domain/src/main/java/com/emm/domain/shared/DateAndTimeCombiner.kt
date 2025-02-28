@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared
+package com.emm.domain.shared
 
 import java.time.Instant
 import java.time.LocalDateTime

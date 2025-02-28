@@ -1,10 +1,8 @@
-package com.emm.justchill.hh.transaction.domain
+package com.emm.domain.transaction
 
 import com.emm.domain.account.AccountBalanceUpdater
+import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.shared.UniqueIdProvider
-import com.emm.domain.transaction.TransactionInsert
-import com.emm.domain.transaction.TransactionRepository
-import com.emm.justchill.hh.shared.DateAndTimeCombiner
 
 class TransactionCreator(
     private val repository: TransactionRepository,
