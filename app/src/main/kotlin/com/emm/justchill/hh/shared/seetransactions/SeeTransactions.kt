@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.domain.account.Account
-import com.emm.justchill.hh.shared.shared.EditTransaction
+import com.emm.justchill.hh.shared.shared.EditTransactionRoute
 import com.emm.justchill.hh.shared.shared.EmmDropDown
 import com.emm.justchill.hh.transaction.presentation.EmmCenteredToolbar
 import com.emm.domain.transaction.TransactionType
@@ -43,7 +43,7 @@ fun SeeTransactionsVersionTwo(
         transactions = collectAsState,
         accountSelected = vm.accountSelected,
         navigateToEdit = {
-            navController.navigate(EditTransaction(it))
+            navController.navigate(EditTransactionRoute(it))
         },
         accounts = accounts,
         onAccountChange = vm::updateAccountSelected,

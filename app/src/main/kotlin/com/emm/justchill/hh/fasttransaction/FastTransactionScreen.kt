@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.components.EmmAmountChill
@@ -31,13 +30,11 @@ import com.emm.domain.transaction.TransactionType
 
 @Composable
 fun FastTransactionScreen(
+    state: FastTransactionUiState,
     transactionType: TransactionType,
-    amountValue: TextFieldValue,
-    onAmountChange: (TextFieldValue) -> Unit,
-    description: String,
-    onDescriptionChange: (String) -> Unit,
-    isEnabledButton: Boolean,
-    addTransaction: () -> Unit,
+    transactionId: String,
+    onAction: (FastTransactionAction) -> Unit,
+    popBackStack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
 
@@ -64,15 +61,15 @@ fun FastTransactionScreen(
         )
 
         EmmAmountChill(
-            value = amountValue,
-            onValueChange = onAmountChange,
+            value = state.amount,
+            onValueChange = { onAction(FastTransactionAction.OnAmountChange(it)) },
             modifier = Modifier.fillMaxWidth()
         )
 
         TextField(
             modifier = Modifier.fillMaxWidth(),
-            value = description,
-            onValueChange = onDescriptionChange,
+            value = state.description,
+            onValueChange = { onAction(FastTransactionAction.OnDescriptionChange(it)) },
             shape = RoundedCornerShape(10.dp),
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = Color.Transparent,
@@ -102,8 +99,11 @@ fun FastTransactionScreen(
 
         EmmPrimaryButton(
             text = "Guardar",
-            onClick = addTransaction,
-            enabled = isEnabledButton,
+            onClick = {
+                onAction(FastTransactionAction.AddTransaction(transactionId, transactionType))
+                popBackStack()
+            },
+            enabled = state.isEnabled,
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -115,12 +115,10 @@ private fun FastTransactionScreenPreview() {
     EmmTheme {
         FastTransactionScreen(
             transactionType = TransactionType.Income,
-            addTransaction = {},
-            amountValue = TextFieldValue("123"),
-            onAmountChange = {},
-            description = "",
-            onDescriptionChange = {},
-            isEnabledButton = false,
+            transactionId = "",
+            state = FastTransactionUiState(),
+            onAction = {},
+            popBackStack = {},
             modifier = Modifier.fillMaxSize()
         )
     }

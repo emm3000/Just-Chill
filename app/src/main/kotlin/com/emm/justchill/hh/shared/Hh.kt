@@ -32,15 +32,15 @@ import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.domain.account.AccountRepository
 import com.emm.justchill.hh.account.AddAccountScreen
 import com.emm.justchill.hh.category.CategoryScreen
-import com.emm.justchill.hh.fasttransaction.Accounts
+import com.emm.justchill.hh.fasttransaction.AccountsScreen
 import com.emm.justchill.hh.fasttransaction.FastTransactionScreen
 import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.Home
 import com.emm.justchill.hh.shared.seetransactions.SeeTransactionsVersionTwo
-import com.emm.justchill.hh.shared.shared.Account
-import com.emm.justchill.hh.shared.shared.Category
-import com.emm.justchill.hh.shared.shared.EditTransaction
-import com.emm.justchill.hh.shared.shared.FastTransaction
+import com.emm.justchill.hh.shared.shared.AccountRoute
+import com.emm.justchill.hh.shared.shared.CategoryRoute
+import com.emm.justchill.hh.shared.shared.EditTransactionRoute
+import com.emm.justchill.hh.shared.shared.FastTransactionRoute
 import com.emm.justchill.hh.transaction.presentation.EditTransaction
 import com.emm.justchill.hh.transaction.presentation.TransactionScreen
 import org.koin.androidx.compose.koinViewModel
@@ -62,42 +62,34 @@ fun Hh() {
                 val repository: AccountRepository = koinInject()
                 val accounts: List<com.emm.domain.account.Account> by repository.retrieve()
                     .collectAsStateWithLifecycle(emptyList())
-                Accounts(
+                AccountsScreen(
                     accounts = accounts,
                     onCardClick = { account, transactionType ->
-                        navController.navigate(FastTransaction(account.accountId, transactionType))
+                        navController.navigate(FastTransactionRoute(account.accountId, transactionType))
                     },
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            composable<FastTransaction> {
-                val fastTransaction: FastTransaction = it.toRoute<FastTransaction>()
+            composable<FastTransactionRoute> {
+                val fastTransactionRoute: FastTransactionRoute = it.toRoute<FastTransactionRoute>()
                 val vm: FastTransactionViewModel = koinViewModel()
 
                 FastTransactionScreen(
-                    transactionType = fastTransaction.transactionType,
-                    amountValue = vm.amount,
-                    onAmountChange = vm::updateAmount,
-                    description = vm.description,
-                    onDescriptionChange = vm::updateDescription,
-                    isEnabledButton = vm.isEnabled,
-                    addTransaction = {
-                        vm.addTransaction(
-                            accountId = fastTransaction.accountId,
-                            type = fastTransaction.transactionType
-                        )
-                        navController.popBackStack()
-                    },
+                    transactionType = fastTransactionRoute.transactionType,
+                    transactionId = fastTransactionRoute.accountId,
+                    state = vm.state,
+                    onAction = vm::onAction,
+                    popBackStack = { navController.popBackStack() },
                     modifier = Modifier.fillMaxSize()
                 )
             }
             composable(HhRoutes.HhHome.route) {
                 Home(
                     navigateToCreateAccount = {
-                        navController.navigate(Account)
+                        navController.navigate(AccountRoute)
                     },
                     navigateToCreateCategory = {
-                        navController.navigate(Category)
+                        navController.navigate(CategoryRoute)
                     }
                 )
             }
@@ -112,14 +104,14 @@ fun Hh() {
             composable(HhRoutes.SeeTransaction.route) {
                 SeeTransactionsVersionTwo(navController)
             }
-            composable<EditTransaction> {
-                val editTransaction: EditTransaction = it.toRoute<EditTransaction>()
-                EditTransaction(navController, editTransaction.transactionId)
+            composable<EditTransactionRoute> {
+                val editTransactionRoute: EditTransactionRoute = it.toRoute<EditTransactionRoute>()
+                EditTransaction(navController, editTransactionRoute.transactionId)
             }
-            composable<Account> {
+            composable<AccountRoute> {
                 AddAccountScreen(navController)
             }
-            composable<Category> {
+            composable<CategoryRoute> {
                 CategoryScreen(navController)
             }
         }

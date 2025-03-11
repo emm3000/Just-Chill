@@ -4,16 +4,13 @@ import com.emm.domain.transaction.TransactionType
 import kotlinx.serialization.Serializable
 
 @Serializable
-object Main
+data class EditTransactionRoute(val transactionId: String)
 
 @Serializable
-data class EditTransaction(val transactionId: String)
+object CategoryRoute
 
 @Serializable
-object Category
+object AccountRoute
 
 @Serializable
-object Account
-
-@Serializable
-data class FastTransaction(val accountId: String, val transactionType: TransactionType)
+data class FastTransactionRoute(val accountId: String, val transactionType: TransactionType)

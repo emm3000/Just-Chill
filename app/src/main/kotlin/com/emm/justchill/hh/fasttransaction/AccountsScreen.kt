@@ -32,20 +32,17 @@ import com.emm.justchill.hh.transaction.presentation.EmmCenteredToolbar
 import com.emm.domain.transaction.TransactionType
 
 @Composable
-fun Accounts(
+fun AccountsScreen(
     accounts: List<Account>,
     onCardClick: (Account, TransactionType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
 
     Column(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.background)
+        modifier = modifier.background(MaterialTheme.colorScheme.background)
     ) {
 
-        EmmCenteredToolbar(
-            title = "Cuentas",
-        )
+        EmmCenteredToolbar(title = "Cuentas")
 
         LazyColumn(
             contentPadding = PaddingValues(20.dp),
@@ -134,9 +131,9 @@ private fun TitleAndDescription(it: Account) {
 
 @PreviewLightDark
 @Composable
-private fun AccountsPreview() {
+private fun AccountsScreenPreview() {
     EmmTheme {
-        Accounts(
+        AccountsScreen(
             accounts = listOf(
                 Account(
                     accountId = "1",

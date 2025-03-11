@@ -4,7 +4,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.core.formatInputToDouble
@@ -20,42 +19,34 @@ class FastTransactionViewModel(
     private val transactionCreator: TransactionCreator,
 ) : ViewModel() {
 
-    var amount by mutableStateOf(TextFieldValue("0.00"))
-        private set
-
-    var description by mutableStateOf("")
-        private set
-
-    var isEnabled by mutableStateOf(false)
+    var state by mutableStateOf(FastTransactionUiState())
         private set
 
     init {
-        snapshotFlow { amount }
+        snapshotFlow { state.amount }
             .onEach {
-                isEnabled = amount.formatInputToDouble() > 1.0
+                val isEnabled = state.amount.formatInputToDouble() > 1.0
+                state = state.copy(isEnabled = isEnabled)
             }
             .launchIn(viewModelScope)
     }
 
-    fun addTransaction(accountId: String, type: TransactionType) {
-        viewModelScope.launch {
-            transactionCreator.create(
-                TransactionInsert(
-                    type = type,
-                    amount = amount.formatInputToDouble(),
-                    description = description,
-                    date = DateUtils.currentDateInMillis(),
-                    accountId = accountId
-                )
-            )
+    fun onAction(action: FastTransactionAction) {
+        when (action) {
+            is FastTransactionAction.AddTransaction -> addTransaction(action.accountId, action.type)
+            is FastTransactionAction.OnAmountChange -> state = state.copy(amount = action.amount)
+            is FastTransactionAction.OnDescriptionChange -> state = state.copy(description = action.description)
         }
     }
 
-    fun updateAmount(value: TextFieldValue) {
-        amount = value
-    }
-
-    fun updateDescription(value: String) {
-        description = value
+    private fun addTransaction(accountId: String, type: TransactionType) = viewModelScope.launch {
+        val transactionInsert = TransactionInsert(
+            type = type,
+            amount = state.amount.formatInputToDouble(),
+            description = state.description,
+            date = DateUtils.currentDateInMillis(),
+            accountId = accountId,
+        )
+        transactionCreator.create(transactionInsert)
     }
 }
