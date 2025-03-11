@@ -1,13 +1,13 @@
 package com.emm.data.transaction
 
-import com.emm.data.TransactionQueries
+import com.emm.data.TransactionsQueries
 import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.TransactionUpdateRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class DefaultTransactionUpdateRepository(
-    private val transactionQueries: TransactionQueries,
+    private val transactionQueries: TransactionsQueries,
 ) : TransactionUpdateRepository {
 
     override suspend fun update(

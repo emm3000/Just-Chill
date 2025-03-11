@@ -3,8 +3,8 @@ package com.emm.data.transaction
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import com.emm.data.TransactionQueries
 import com.emm.data.Transactions
+import com.emm.data.TransactionsQueries
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.Transaction
@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class DefaultTransactionRepository(
-    private val transactionsQueries: TransactionQueries,
+    private val transactionsQueries: TransactionsQueries,
 ) : TransactionRepository {
 
     override suspend fun create(transactionInsert: TransactionInsert) = withContext(Dispatchers.IO) {

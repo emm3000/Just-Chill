@@ -22,4 +22,4 @@ fun csm() = object : AndroidSqliteDriver.Callback(schema = EmmDatabaseData.Schem
 
 fun provideDb(sqlDriver: SqlDriver): EmmDatabaseData = EmmDatabaseData(sqlDriver)
 
-fun provideTransactionQueries(db: EmmDatabaseData): TransactionQueries = db.transactionQueries
+fun provideTransactionQueries(db: EmmDatabaseData): TransactionsQueries = db.transactionsQueries
