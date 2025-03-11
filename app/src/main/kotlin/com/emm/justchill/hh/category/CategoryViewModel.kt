@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category.presentation
+package com.emm.justchill.hh.category
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

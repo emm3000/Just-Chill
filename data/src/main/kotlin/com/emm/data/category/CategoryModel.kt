@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category.data
+package com.emm.data.category
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -10,7 +10,7 @@ import com.emm.domain.transaction.TransactionUpdateRepository
 import com.emm.justchill.R
 import com.emm.justchill.hh.account.presentation.AccountViewModel
 import com.emm.justchill.hh.auth.presentation.LoginViewModel
-import com.emm.justchill.hh.category.presentation.CategoryViewModel
+import com.emm.justchill.hh.category.CategoryViewModel
 import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.HomeViewModel
 import com.emm.justchill.hh.shared.DefaultUniqueIdProvider

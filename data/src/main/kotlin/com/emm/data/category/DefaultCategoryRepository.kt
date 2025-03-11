@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category.data
+package com.emm.data.category
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList

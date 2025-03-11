@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category.data
+package com.emm.data.category
 
 import com.emm.data.Categories
 import com.emm.domain.category.Category

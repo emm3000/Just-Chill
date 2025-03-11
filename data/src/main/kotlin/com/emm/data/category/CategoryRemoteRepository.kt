@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category.data
+package com.emm.data.category
 
 interface CategoryRemoteRepository {
 

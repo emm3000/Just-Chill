@@ -5,7 +5,7 @@ import com.emm.domain.category.CategoryDeleter
 import com.emm.domain.category.CategoryFinder
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryUpdater
-import com.emm.justchill.hh.category.data.DefaultCategoryRepository
+import com.emm.data.category.DefaultCategoryRepository
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.bind
 import org.koin.dsl.module

@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category.presentation
+package com.emm.justchill.hh.category
 
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.shared.Empty

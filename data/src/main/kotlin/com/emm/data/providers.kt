@@ -1,12 +1,9 @@
-package com.emm.data.category
+package com.emm.data
 
 import android.content.Context
 import androidx.sqlite.db.SupportSQLiteDatabase
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
-import com.emm.data.BuildConfig
-import com.emm.data.EmmDatabaseData
-import com.emm.data.TransactionQueries
 
 fun provideSqlDriver(context: Context): SqlDriver {
     return AndroidSqliteDriver(
