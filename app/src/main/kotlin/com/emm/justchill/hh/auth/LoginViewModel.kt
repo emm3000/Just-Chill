@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.auth.presentation
+package com.emm.justchill.hh.auth
 
 import android.util.Log
 import androidx.compose.runtime.getValue

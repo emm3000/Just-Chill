@@ -44,7 +44,7 @@ import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.TextColor
 import com.emm.domain.account.Account
-import com.emm.justchill.hh.auth.presentation.LabelTextField
+import com.emm.justchill.hh.auth.LabelTextField
 import com.emm.justchill.hh.shared.shared.EmmDropDown
 import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextFieldChill

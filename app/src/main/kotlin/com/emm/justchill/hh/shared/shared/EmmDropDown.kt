@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.hh.auth.presentation.LabelTextField
+import com.emm.justchill.hh.auth.LabelTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -9,7 +9,7 @@ import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionUpdateRepository
 import com.emm.justchill.R
 import com.emm.justchill.hh.account.AccountViewModel
-import com.emm.justchill.hh.auth.presentation.LoginViewModel
+import com.emm.justchill.hh.auth.LoginViewModel
 import com.emm.justchill.hh.category.CategoryViewModel
 import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.HomeViewModel
