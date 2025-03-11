@@ -26,12 +26,12 @@ import com.emm.justchill.hh.transaction.presentation.EmmToolbarTitle
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun Account(
+fun AccountScreen(
     navController: NavController,
     vm: AccountViewModel = koinViewModel(),
 ) {
 
-    Account(
+    AccountScreen(
         state = vm.state,
         onAction = vm::onAction,
         navigateToBack = {
@@ -41,7 +41,7 @@ fun Account(
 }
 
 @Composable
-fun Account(
+fun AccountScreen(
     state: AccountUiState,
     onAction: (AccountAction) -> Unit,
     navigateToBack: () -> Unit = {},
@@ -114,9 +114,9 @@ fun Account(
 
 @PreviewLightDark
 @Composable
-fun AccountPreview(modifier: Modifier = Modifier) {
+fun AccountScreenPreview(modifier: Modifier = Modifier) {
     EmmTheme {
-        Account(
+        AccountScreen(
             state = AccountUiState(),
             onAction = {},
         )

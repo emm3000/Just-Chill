@@ -32,7 +32,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.domain.account.AccountRepository
-import com.emm.justchill.hh.account.Account
+import com.emm.justchill.hh.account.AccountScreen
 import com.emm.justchill.hh.category.CategoryScreen
 import com.emm.justchill.hh.fasttransaction.Accounts
 import com.emm.justchill.hh.fasttransaction.FastTransaction
@@ -146,7 +146,7 @@ fun NewHh(modifier: Modifier = Modifier) {
                 EditTransaction(navController, editTransaction.transactionId)
             }
             composable<Account> {
-                Account(navController)
+                AccountScreen(navController)
             }
             composable<Category> {
                 CategoryScreen(navController)
