@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.transaction.data
+package com.emm.data.transaction
 
 import com.emm.data.Transactions
 import com.emm.domain.transaction.Transaction

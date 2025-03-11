@@ -1,24 +1,23 @@
-package com.emm.justchill.hh.transaction.data
+package com.emm.data.transaction
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.data.TransactionQueries
 import com.emm.data.Transactions
-import com.emm.justchill.core.DispatchersProvider
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.Transaction
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class DefaultTransactionRepository(
-    dispatchersProvider: DispatchersProvider,
     private val transactionsQueries: TransactionQueries,
-) : TransactionRepository, DispatchersProvider by dispatchersProvider {
+) : TransactionRepository {
 
-    override suspend fun create(transactionInsert: TransactionInsert) = withContext(ioDispatcher) {
+    override suspend fun create(transactionInsert: TransactionInsert) = withContext(Dispatchers.IO) {
         checkNotNull(transactionInsert.id)
         transactionsQueries.addTransaction(
             transactionId = transactionInsert.id!!,
@@ -35,39 +34,39 @@ class DefaultTransactionRepository(
         return transactionsQueries
             .retrieveAll(accountId)
             .asFlow()
-            .mapToList(ioDispatcher)
+            .mapToList(Dispatchers.IO)
             .map(List<Transactions>::toDomain)
     }
 
     override fun sumIncome(accountId: String): Flow<Double> {
         return transactionsQueries.sumAllIncomeAmounts(accountId)
             .asFlow()
-            .mapToOneOrNull(ioDispatcher)
+            .mapToOneOrNull(Dispatchers.IO)
             .map { it?.totalIncome ?: 0.0 }
     }
 
     override fun sumSpend(accountId: String): Flow<Double> {
         return transactionsQueries.sumAllSpendAmounts(accountId)
             .asFlow()
-            .mapToOneOrNull(ioDispatcher)
+            .mapToOneOrNull(Dispatchers.IO)
             .map { it?.totalIncome ?: 0.0 }
     }
 
     override fun difference(accountId: String): Flow<Double> {
         return transactionsQueries.difference(accountId, accountId)
             .asFlow()
-            .mapToOneOrNull(ioDispatcher)
+            .mapToOneOrNull(Dispatchers.IO)
             .map { it ?: 0.0 }
     }
 
-    override suspend fun deleteBy(transactionId: String) = withContext(ioDispatcher) {
+    override suspend fun deleteBy(transactionId: String) = withContext(Dispatchers.IO) {
         transactionsQueries.delete(transactionId)
     }
 
     override fun findBy(transactionId: String): Flow<Transaction?> {
         return transactionsQueries.find(transactionId)
             .asFlow()
-            .mapToOneOrNull(ioDispatcher)
+            .mapToOneOrNull(Dispatchers.IO)
             .map { it?.let(Transactions::toDomain) }
     }
 }

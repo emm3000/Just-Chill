@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.transaction.data
+package com.emm.data.transaction
 
 interface TransactionRemoteRepository {
 

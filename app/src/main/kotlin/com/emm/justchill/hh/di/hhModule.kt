@@ -15,8 +15,8 @@ import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.HomeViewModel
 import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
 import com.emm.justchill.hh.shared.seetransactions.SeeTransactionsViewModel
-import com.emm.justchill.hh.transaction.data.DefaultTransactionRepository
-import com.emm.justchill.hh.transaction.data.DefaultTransactionUpdateRepository
+import com.emm.data.transaction.DefaultTransactionRepository
+import com.emm.data.transaction.DefaultTransactionUpdateRepository
 import com.emm.justchill.hh.transaction.presentation.EditTransactionViewModel
 import com.emm.justchill.hh.transaction.presentation.TransactionViewModel
 import io.github.jan.supabase.SupabaseClient
@@ -77,7 +77,6 @@ private fun Module.repositoriesProviders() {
 
     single<TransactionRepository> {
         DefaultTransactionRepository(
-            dispatchersProvider = get(),
             transactionsQueries = get(),
         )
     }
