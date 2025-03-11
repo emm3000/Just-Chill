@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.account.data
+package com.emm.data.account
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList

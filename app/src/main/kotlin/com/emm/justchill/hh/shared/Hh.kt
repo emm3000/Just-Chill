@@ -30,7 +30,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.domain.account.AccountRepository
-import com.emm.justchill.hh.account.presentation.Account
+import com.emm.justchill.hh.account.Account
 import com.emm.justchill.hh.category.CategoryScreen
 import com.emm.justchill.hh.fasttransaction.Accounts
 import com.emm.justchill.hh.fasttransaction.FastTransaction

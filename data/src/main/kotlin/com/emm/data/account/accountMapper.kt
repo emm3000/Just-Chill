@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.account.data
+package com.emm.data.account
 
 import com.emm.data.Accounts
 import com.emm.domain.account.Account

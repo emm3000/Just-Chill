@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.account.data
+package com.emm.data.account
 
 interface AccountRemoteRepository {
 

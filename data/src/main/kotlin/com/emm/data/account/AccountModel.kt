@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.account.data
+package com.emm.data.account
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

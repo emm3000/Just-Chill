@@ -7,7 +7,7 @@ import com.emm.domain.account.AccountFinder
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountUpdater
 import com.emm.domain.account.DailyAccountCreator
-import com.emm.justchill.hh.account.data.DefaultAccountRepository
+import com.emm.data.account.DefaultAccountRepository
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.bind
 import org.koin.dsl.module

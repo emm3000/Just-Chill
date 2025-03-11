@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.account.presentation
+package com.emm.justchill.hh.account
 
 import androidx.compose.ui.text.input.TextFieldValue
 
