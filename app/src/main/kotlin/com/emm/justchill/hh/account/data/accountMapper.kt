@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.account.data
 
-import com.emm.justchill.Accounts
+import com.emm.data.Accounts
 import com.emm.domain.account.Account
 
 fun Accounts.toDomain() = Account(

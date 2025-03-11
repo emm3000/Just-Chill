@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.transaction.data
 
-import com.emm.justchill.TransactionQueries
+import com.emm.data.TransactionQueries
 import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.TransactionUpdateRepository
 import kotlinx.coroutines.Dispatchers

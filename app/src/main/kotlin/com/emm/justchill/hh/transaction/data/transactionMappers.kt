@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.transaction.data
 
-import com.emm.justchill.Transactions
+import com.emm.data.Transactions
 import com.emm.domain.transaction.Transaction
 
 fun Transactions.toDomain(): Transaction = Transaction(

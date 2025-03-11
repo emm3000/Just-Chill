@@ -3,9 +3,9 @@ package com.emm.justchill.me.driver.data
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import com.emm.justchill.Drivers
-import com.emm.justchill.DriversQueries
-import com.emm.justchill.EmmDatabase
+import com.emm.data.Drivers
+import com.emm.data.DriversQueries
+import com.emm.data.EmmDatabaseData
 import com.emm.justchill.me.driver.domain.Driver
 import com.emm.justchill.me.driver.domain.DriverRepository
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-class LocalDriverRepository(private val emmDatabase: EmmDatabase) : DriverRepository {
+class LocalDriverRepository(private val emmDatabase: EmmDatabaseData) : DriverRepository {
 
     private val dq: DriversQueries
         get() = emmDatabase.driversQueries

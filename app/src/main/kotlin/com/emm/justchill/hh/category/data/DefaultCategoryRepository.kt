@@ -3,9 +3,9 @@ package com.emm.justchill.hh.category.data
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import com.emm.justchill.Categories
-import com.emm.justchill.CategoriesQueries
-import com.emm.justchill.EmmDatabase
+import com.emm.data.Categories
+import com.emm.data.CategoriesQueries
+import com.emm.data.EmmDatabaseData
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryUpsert
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class DefaultCategoryRepository(
-    private val emmDatabase: EmmDatabase,
+    private val emmDatabase: EmmDatabaseData,
     private val uniqueIdProvider: UniqueIdProvider,
 ) : CategoryRepository {
 
@@ -31,8 +31,8 @@ class DefaultCategoryRepository(
     override fun findBy(categoryId: String): Flow<Category?> = cq.find(categoryId)
         .asFlow()
         .mapToOneOrNull(Dispatchers.IO)
-        .map {
-            it?.let(Categories::toDomain)
+        .map { category ->
+            category?.let(Categories::toDomain)
         }
 
     override suspend fun create(categoryUpsert: CategoryUpsert) = withContext(Dispatchers.IO) {

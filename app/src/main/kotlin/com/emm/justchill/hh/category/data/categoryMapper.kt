@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.category.data
 
-import com.emm.justchill.Categories
+import com.emm.data.Categories
 import com.emm.domain.category.Category
 
 fun Categories.toDomain() = Category(

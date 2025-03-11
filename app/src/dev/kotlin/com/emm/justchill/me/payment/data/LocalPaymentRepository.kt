@@ -2,9 +2,9 @@ package com.emm.justchill.me.payment.data
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import com.emm.justchill.EmmDatabase
-import com.emm.justchill.Payments
-import com.emm.justchill.PaymentsQueries
+import com.emm.data.EmmDatabaseData
+import com.emm.data.Payments
+import com.emm.data.PaymentsQueries
 import com.emm.justchill.me.payment.domain.Payment
 import com.emm.justchill.me.payment.domain.PaymentRepository
 import com.emm.justchill.me.payment.domain.PaymentStatus
@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class LocalPaymentRepository(
-    private val emmDatabase: EmmDatabase,
+    private val emmDatabase: EmmDatabaseData,
 ) : PaymentRepository {
 
     private val pq: PaymentsQueries

@@ -3,8 +3,8 @@ package com.emm.justchill.hh.transaction.data
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import com.emm.justchill.TransactionQueries
-import com.emm.justchill.Transactions
+import com.emm.data.TransactionQueries
+import com.emm.data.Transactions
 import com.emm.justchill.core.DispatchersProvider
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionRepository

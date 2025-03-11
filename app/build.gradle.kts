@@ -9,7 +9,6 @@ plugins {
     alias(libs.plugins.google.services)
     alias(libs.plugins.google.crashlytics)
     alias(libs.plugins.kotlin.compose)
-    id("app.cash.sqldelight") version "2.0.2"
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -99,6 +98,7 @@ val devDebugImplementation: Configuration by configurations.creating
 dependencies {
 
     implementation(project(":domain"))
+    implementation(project(":data"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -150,9 +150,9 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
-
-    implementation(libs.android.driver)
-    implementation(libs.coroutines.extensions)
+//
+//    implementation(libs.android.driver)
+//    implementation(libs.coroutines.extensions)
 
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.activity.ktx)
@@ -165,12 +165,4 @@ dependencies {
 
     implementation(libs.ktor.client.okhttp)
 
-}
-
-sqldelight {
-    databases {
-        create("EmmDatabase") {
-            packageName.set("com.emm.justchill")
-        }
-    }
 }

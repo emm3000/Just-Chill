@@ -2,9 +2,9 @@ package com.emm.justchill.me.loan.data
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import com.emm.justchill.EmmDatabase
-import com.emm.justchill.Loans
-import com.emm.justchill.LoansQueries
+import com.emm.data.EmmDatabaseData
+import com.emm.data.Loans
+import com.emm.data.LoansQueries
 import com.emm.justchill.me.loan.domain.Loan
 import com.emm.justchill.me.loan.domain.LoanRepository
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class LocalLoanRepository(
-    private val emmDatabase: EmmDatabase,
+    private val emmDatabase: EmmDatabaseData,
 ): LoanRepository {
 
     private val lq: LoansQueries

@@ -3,9 +3,9 @@ package com.emm.justchill.hh.account.data
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import com.emm.justchill.Accounts
-import com.emm.justchill.AccountsQueries
-import com.emm.justchill.EmmDatabase
+import com.emm.data.Accounts
+import com.emm.data.AccountsQueries
+import com.emm.data.EmmDatabaseData
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountUpsert
@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class DefaultAccountRepository(
-    private val emmDatabase: EmmDatabase,
+    private val emmDatabase: EmmDatabaseData,
 ) : AccountRepository {
 
     private val aq: AccountsQueries

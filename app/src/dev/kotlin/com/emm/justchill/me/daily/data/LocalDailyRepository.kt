@@ -2,9 +2,9 @@ package com.emm.justchill.me.daily.data
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import com.emm.justchill.Dailies
-import com.emm.justchill.DailiesQueries
-import com.emm.justchill.EmmDatabase
+import com.emm.data.Dailies
+import com.emm.data.DailiesQueries
+import com.emm.data.EmmDatabaseData
 import com.emm.justchill.me.daily.domain.Daily
 import com.emm.justchill.me.daily.domain.DailyRepository
 import kotlinx.coroutines.Dispatchers
@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-class LocalDailyRepository(private val emmDatabase: EmmDatabase) : DailyRepository {
+class LocalDailyRepository(private val emmDatabase: EmmDatabaseData) : DailyRepository {
 
     private val dq: DailiesQueries
         get() = emmDatabase.dailiesQueries
