@@ -51,7 +51,7 @@ class EditTransactionViewModel(
     var isEnabled by mutableStateOf(false)
         private set
 
-    var transactionType by mutableStateOf(TransactionType.INCOME)
+    var transactionType by mutableStateOf(TransactionType.Income)
         private set
 
     val accounts: StateFlow<List<Account>> = accountRepository.retrieve()

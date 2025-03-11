@@ -86,7 +86,7 @@ private fun AddTransactionButtons(
 ) {
     Row {
         TextButton(
-            onClick = { onCardClick(account, TransactionType.INCOME) },
+            onClick = { onCardClick(account, TransactionType.Income) },
             modifier = Modifier.height(40.dp),
         ) {
             Text(
@@ -97,7 +97,7 @@ private fun AddTransactionButtons(
             )
         }
         TextButton(
-            onClick = { onCardClick(account, TransactionType.SPENT) },
+            onClick = { onCardClick(account, TransactionType.Spent) },
             modifier = Modifier.height(40.dp),
         ) {
             Text(

@@ -25,7 +25,7 @@ import com.emm.domain.transaction.TransactionType
 @Composable
 fun EmmTransactionRadioButton(
     modifier: Modifier = Modifier,
-    selectedOption: TransactionType = TransactionType.INCOME,
+    selectedOption: TransactionType = TransactionType.Income,
     onOptionSelected: (TransactionType) -> Unit = {},
 ) {
 

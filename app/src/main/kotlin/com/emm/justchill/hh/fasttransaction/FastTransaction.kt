@@ -114,7 +114,7 @@ fun FastTransaction(
 private fun FastTransactionPreview() {
     EmmTheme {
         FastTransaction(
-            transactionType = TransactionType.INCOME,
+            transactionType = TransactionType.Income,
             addTransaction = {},
             amountValue = TextFieldValue("123"),
             onAmountChange = {},

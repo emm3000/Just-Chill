@@ -97,7 +97,7 @@ private fun EditTransaction(
     updateTransaction: () -> Unit = {},
     updateDate: (Long?) -> Unit = {},
     navigateUp: () -> Unit = {},
-    initialTransactionType: TransactionType = TransactionType.INCOME,
+    initialTransactionType: TransactionType = TransactionType.Income,
     onOptionSelected: (TransactionType) -> Unit = {},
     deleteTransaction: () -> Unit = {},
     accounts: List<Account> = emptyList(),

@@ -44,7 +44,7 @@ import com.emm.justchill.hh.shared.shared.Category
 import com.emm.justchill.hh.shared.shared.EditTransaction
 import com.emm.justchill.hh.shared.shared.FastTransaction
 import com.emm.justchill.hh.transaction.presentation.EditTransaction
-import com.emm.justchill.hh.transaction.presentation.Transaction
+import com.emm.justchill.hh.transaction.presentation.TransactionScreen
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -131,7 +131,7 @@ fun NewHh(modifier: Modifier = Modifier) {
                 )
             }
             composable(HhRoutes.AddTransaction.route) {
-                Transaction {
+                TransactionScreen {
                     navController.navigate(HhRoutes.SeeTransaction.route) {
                         popUpTo(navController.graph.findStartDestination().id)
                         launchSingleTop = true

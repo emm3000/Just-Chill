@@ -20,7 +20,7 @@ private fun Transaction.toUi(): TransactionUi {
         TransactionType.valueOf(type)
     } catch (e: Throwable) {
         FirebaseCrashlytics.getInstance().recordException(e)
-        TransactionType.INCOME
+        TransactionType.Income
     }
 
     val formattedNumber: String = fromCentsToSolesWith(amount)
@@ -28,8 +28,8 @@ private fun Transaction.toUi(): TransactionUi {
         transactionId = transactionId,
         type = transactionType,
         amount = when (transactionType) {
-            TransactionType.INCOME -> "S/ $formattedNumber"
-            TransactionType.SPENT -> "S/ -$formattedNumber"
+            TransactionType.Income -> "S/ $formattedNumber"
+            TransactionType.Spent -> "S/ -$formattedNumber"
         },
         description = description,
         date = date,

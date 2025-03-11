@@ -134,7 +134,7 @@ class DriversViewModel(
         val accountId = dailyAccountCreator.create()
 
         val transactionInsert = TransactionInsert(
-            type = TransactionType.INCOME,
+            type = TransactionType.Income,
             amount = amount.toDouble(),
             description = "Feria de ${driver.name}",
             date = dailyDate,

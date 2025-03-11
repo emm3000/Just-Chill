@@ -1,0 +1,15 @@
+package com.emm.justchill.hh.transaction.presentation
+
+import androidx.compose.ui.text.input.TextFieldValue
+import com.emm.domain.account.Account
+import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.hh.shared.Empty
+
+data class AddTransactionUiState(
+    val amount: TextFieldValue = TextFieldValue("0.00"),
+    val description: String = String.Empty,
+    val date: String = DateUtils.currentDateAtReadableFormat(),
+    val transactionType: TransactionType = TransactionType.Income,
+    val isEnabled: Boolean = false,
+    val accountSelected: Account? = null,
+)

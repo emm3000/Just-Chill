@@ -116,7 +116,7 @@ fun ItemPreviewVersionTwo() {
         ItemTransaction(
             TransactionUi(
                 transactionId = UUID.randomUUID().toString(),
-                type = TransactionType.INCOME,
+                type = TransactionType.Income,
                 amount = "2000",
                 description = "gaa asocinas coinas ocinasoc nasco nas coias coñ",
                 date = 0,
@@ -135,7 +135,7 @@ fun SeeTransactionsVersionTwoPreview() {
             (0..15).map {
                 TransactionUi(
                     transactionId = UUID.randomUUID().toString(),
-                    type = TransactionType.INCOME,
+                    type = TransactionType.Income,
                     amount = "2000",
                     description = "gaa asocinas coinas ocinasoc nasco nas coias coñ",
                     date = 0,

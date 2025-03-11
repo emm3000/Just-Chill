@@ -98,7 +98,7 @@ private fun SpendPreview() {
             (1..100).map {
                 TransactionUi(
                     transactionId = it.toString(),
-                    type = TransactionType.INCOME,
+                    type = TransactionType.Income,
                     amount = "amount",
                     description = "description",
                     date = 2L,

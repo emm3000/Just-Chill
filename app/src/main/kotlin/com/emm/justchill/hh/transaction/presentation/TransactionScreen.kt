@@ -35,7 +35,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,7 +44,6 @@ import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.TextColor
 import com.emm.domain.account.Account
-import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.auth.presentation.LabelTextField
 import com.emm.justchill.hh.shared.shared.EmmDropDown
 import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
@@ -54,48 +52,28 @@ import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun Transaction(
+fun TransactionScreen(
     vm: TransactionViewModel = koinViewModel(),
     navigateToSeeTransactions: () -> Unit,
 ) {
 
     val accounts: List<Account> by vm.accounts.collectAsState()
 
-    Transaction(
-        amount = vm.amount,
-        onAmountChange = vm::updateAmount,
-        descriptionValue = vm.description,
-        onDescriptionChange = vm::updateDescription,
-        dateValue = vm.date,
-        addTransaction = vm::addTransaction,
-        updateDate = vm::updateCurrentDate,
-        navigateToSeeTransactions = navigateToSeeTransactions,
-        initialTransactionType = vm.transactionType,
-        onOptionSelected = vm::updateTransactionType,
+    TransactionScreen(
+        state = vm.state,
+        onAction = vm::onAction,
         accounts = accounts,
-        isEnabled = vm.isEnabled,
-        accountSelected = vm.accountSelected,
-        onAccountChange = vm::updateAccountSelected,
+        navigateToSeeTransactions = navigateToSeeTransactions
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Transaction(
-    amount: TextFieldValue = TextFieldValue("0.00"),
-    onAmountChange: (TextFieldValue) -> Unit = {},
-    descriptionValue: String = "",
-    onDescriptionChange: (String) -> Unit = {},
-    dateValue: String = "",
-    addTransaction: () -> Unit = {},
-    updateDate: (Long?) -> Unit = {},
-    navigateToSeeTransactions: () -> Unit = {},
-    initialTransactionType: TransactionType = TransactionType.INCOME,
-    onOptionSelected: (TransactionType) -> Unit = {},
-    accounts: List<Account> = emptyList(),
-    accountSelected: Account? = null,
-    isEnabled: Boolean = false,
-    onAccountChange: (Account) -> Unit = {},
+private fun TransactionScreen(
+    state: AddTransactionUiState,
+    accounts: List<Account>,
+    onAction: (AccountAction) -> Unit,
+    navigateToSeeTransactions: () -> Unit,
 ) {
 
     val datePickerState: DatePickerState = rememberDatePickerState()
@@ -111,7 +89,7 @@ private fun Transaction(
             },
             confirmButton = {
                 OutlinedButton(onClick = {
-                    updateDate(datePickerState.selectedDateMillis)
+                    onAction(AccountAction.OnDateChangeInMillis(datePickerState.selectedDateMillis))
                     setShowSelectDate(false)
                 }) {
                     Text(text = "Ok")
@@ -149,43 +127,43 @@ private fun Transaction(
             textLabel = "Cuentas",
             textPlaceholder = "Seleccionar cuenta",
             items = accounts,
-            itemSelected = accountSelected,
-            onItemSelected = onAccountChange,
+            itemSelected = state.accountSelected,
+            onItemSelected = { onAction(AccountAction.OnAccountSelected(it)) },
             modifier = Modifier.fillMaxWidth(),
         )
 
         EmmAmountChill(
-            value = amount,
-            onValueChange = onAmountChange,
+            value = state.amount,
+            onValueChange = { onAction(AccountAction.OnAmountChange(it)) },
             modifier = Modifier.fillMaxWidth()
         )
 
         EmmTransactionRadioButton(
             modifier = Modifier
                 .fillMaxWidth(),
-            selectedOption = initialTransactionType,
-            onOptionSelected = onOptionSelected
+            selectedOption = state.transactionType,
+            onOptionSelected = { onAction(AccountAction.OnTransactionTypeChange(it)) }
         )
 
         EmmTextFieldChill(
             modifier = Modifier,
             label = "En que gaste",
             placeholder = "Ingresa tu gasto",
-            value = descriptionValue,
-            onChange = onDescriptionChange,
+            value = state.description,
+            onChange = { onAction(AccountAction.OnDescriptionChange(it)) },
         )
 
-        DateInput(dateValue) {
+        DateInput(state.date) {
             setShowSelectDate(true)
         }
 
         EmmPrimaryButton(
             text = "Guardar",
             onClick = {
-                addTransaction()
+                onAction(AccountAction.OnSave)
                 navigateToSeeTransactions()
             },
-            enabled = isEnabled,
+            enabled = state.isEnabled,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 30.dp)
@@ -297,6 +275,11 @@ fun TransactionLabel(text: String) {
 @Composable
 fun IncomePreview() {
     EmmTheme {
-        Transaction()
+        TransactionScreen(
+            state = AddTransactionUiState(),
+            accounts = emptyList(),
+            onAction = {},
+            navigateToSeeTransactions = {}
+        )
     }
 }

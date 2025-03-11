@@ -12,7 +12,6 @@ import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.transaction.TransactionCreator
 import com.emm.domain.transaction.TransactionInsert
-import com.emm.domain.transaction.TransactionType
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -26,30 +25,13 @@ class TransactionViewModel(
     accountRepository: AccountRepository,
 ) : ViewModel() {
 
-    var amount by mutableStateOf(TextFieldValue("0.00"))
-        private set
-
-    var description by mutableStateOf("")
-        private set
-
-    var date by mutableStateOf(DateUtils.currentDateAtReadableFormat())
-        private set
-
     private var dateInLong: Long = DateUtils.currentDateInMillis()
 
-    var transactionType: TransactionType by mutableStateOf(TransactionType.INCOME)
-        private set
-
-    var isEnabled by mutableStateOf(false)
-        private set
-
-    var accountSelected: Account? by mutableStateOf(null)
+    var state by mutableStateOf(AddTransactionUiState())
         private set
 
     val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
-        .onEach { accounts ->
-            accountSelected = accountSelected ?: accounts.firstOrNull()
-        }
+        .onEach(::pickFirstAccount)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),
@@ -58,49 +40,56 @@ class TransactionViewModel(
 
     init {
         combine(
-            snapshotFlow { amount },
-            snapshotFlow { date },
-            snapshotFlow { description },
-            snapshotFlow { accountSelected },
-        ) { mount, date, description, account ->
-            isEnabled = mount.formatInputToDouble() >= 1.0
-                    && date.isNotEmpty()
-                    && description.isNotEmpty()
-                    && account != null
-        }.launchIn(viewModelScope)
+            flow = snapshotFlow { state.amount },
+            flow2 = snapshotFlow { state.date },
+            flow3 = snapshotFlow { state.description },
+            flow4 = snapshotFlow { state.accountSelected },
+            transform = ::validateFields,
+        ).launchIn(viewModelScope)
     }
 
-    fun addTransaction() = viewModelScope.launch {
+    private fun validateFields(
+        mount: TextFieldValue,
+        date: String,
+        description: String,
+        account: Account?
+    ) {
+        val isEnabled = mount.formatInputToDouble() >= 1.0
+                && date.isNotEmpty()
+                && description.isNotEmpty()
+                && account != null
+        state = state.copy(isEnabled = isEnabled)
+    }
+
+    fun onAction(action: AccountAction) {
+        when (action) {
+            is AccountAction.OnAmountChange -> state = state.copy(amount = action.value)
+            is AccountAction.OnDateChange -> state = state.copy(date = action.value)
+            is AccountAction.OnDescriptionChange -> state = state.copy(description = action.value)
+            is AccountAction.OnTransactionTypeChange -> state = state.copy(transactionType = action.value)
+            is AccountAction.OnAccountSelected -> state = state.copy(accountSelected = action.account)
+            is AccountAction.OnDateChangeInMillis -> updateCurrentDate(action.value)
+            AccountAction.OnSave -> addTransaction()
+        }
+    }
+
+    private fun addTransaction() = viewModelScope.launch {
         val transactionInsert = TransactionInsert(
-            type = transactionType,
-            description = description,
+            type = state.transactionType,
+            description = state.description,
             date = dateInLong,
-            amount = amount.formatInputToDouble(),
-            accountId = accountSelected?.accountId ?: throw IllegalStateException()
+            amount = state.amount.formatInputToDouble(),
+            accountId = state.accountSelected?.accountId ?: throw IllegalStateException()
         )
         transactionCreator.create(transactionInsert)
     }
 
-    fun updateAmount(value: TextFieldValue) {
-        amount = value
+    private fun pickFirstAccount(accounts: List<Account>) {
+        state = state.copy(accountSelected = state.accountSelected ?: accounts.firstOrNull())
     }
 
-    fun updateDescription(value: String) {
-        description = value
-    }
-
-    fun updateCurrentDate(millis: Long?) {
-        if (millis != null) {
-            dateInLong = millis
-            date = DateUtils.millisToReadableFormatUTC(millis)
-        }
-    }
-
-    fun updateTransactionType(value: TransactionType) {
-        transactionType = value
-    }
-
-    fun updateAccountSelected(value: Account) {
-        accountSelected = value
+    private fun updateCurrentDate(millis: Long?) = millis?.let {
+        dateInLong = it
+        state = state.copy(date = DateUtils.millisToReadableFormatUTC(it))
     }
 }

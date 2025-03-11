@@ -34,8 +34,8 @@ fun ItemTransaction(
 ) {
 
     val borderColor = when (transactionUi.type) {
-        TransactionType.INCOME -> MaterialTheme.colorScheme.onBackground
-        TransactionType.SPENT -> DeleteButtonColor
+        TransactionType.Income -> MaterialTheme.colorScheme.onBackground
+        TransactionType.Spent -> DeleteButtonColor
     }
 
     Column(
@@ -95,7 +95,7 @@ private fun ItemTransactionPreview() {
         ItemTransaction(
             transactionUi = TransactionUi(
                 transactionId = "quisque",
-                type = TransactionType.INCOME,
+                type = TransactionType.Income,
                 amount = "20.00",
                 description = "voluptatibus",
                 date = 8268,
