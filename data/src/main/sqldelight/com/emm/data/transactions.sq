@@ -24,17 +24,17 @@ WHERE
 sumAllIncomeAmounts:
 SELECT SUM(amount) AS totalIncome
 FROM transactions
-WHERE type = 'INCOME' AND accountId = ?;
+WHERE type = 'Income' AND accountId = ?;
 
 sumAllSpendAmounts:
 SELECT SUM(amount) AS totalIncome
 FROM transactions
-WHERE type = 'SPENT' AND accountId = ?;
+WHERE type = 'Spend' AND accountId = ?;
 
 difference:
 SELECT (
-    COALESCE((SELECT SUM(amount) FROM transactions WHERE type = 'INCOME' AND accountId = ?), 0)
-    - COALESCE((SELECT SUM(amount) FROM transactions WHERE type = 'SPENT' AND accountId = ?), 0)
+    COALESCE((SELECT SUM(amount) FROM transactions WHERE type = 'Income' AND accountId = ?), 0)
+    - COALESCE((SELECT SUM(amount) FROM transactions WHERE type = 'Spend' AND accountId = ?), 0)
 ) AS incomeMinusSpent;
 
 retrieveAll:
