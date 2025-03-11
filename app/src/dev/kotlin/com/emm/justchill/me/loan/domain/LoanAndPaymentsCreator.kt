@@ -16,7 +16,7 @@ class LoanAndPaymentsCreator(
 
     suspend fun create(loanCreate: LoanCreate) = withContext(Dispatchers.IO) {
 
-        val loanId: String = uniqueIdProvider.uniqueId
+        val loanId: String = uniqueIdProvider.id
         val loanCreateWithId = loanCreate.copy(loanId = loanId)
 
         val payments: List<Payment> = paymentsGenerator.generate(

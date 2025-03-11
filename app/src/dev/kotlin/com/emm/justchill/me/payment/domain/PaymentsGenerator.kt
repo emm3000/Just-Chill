@@ -32,7 +32,7 @@ class PaymentsGenerator(private val uniqueIdProvider: UniqueIdProvider = Default
             }
 
             val payment = Payment(
-                paymentId = uniqueIdProvider.uniqueId,
+                paymentId = uniqueIdProvider.id,
                 loanId = loanId,
                 dueDate = internalStartDate.toMillis(),
                 amount = exactDaily,
@@ -71,7 +71,7 @@ class PaymentsGenerator(private val uniqueIdProvider: UniqueIdProvider = Default
         }
 
         val lastDaily = Payment(
-            paymentId = uniqueIdProvider.uniqueId,
+            paymentId = uniqueIdProvider.id,
             loanId = loanId,
             dueDate = lastDailyDate.toMillis(),
             amount = lastDailyAmount,

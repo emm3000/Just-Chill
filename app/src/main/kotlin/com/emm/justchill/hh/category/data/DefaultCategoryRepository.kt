@@ -9,48 +9,42 @@ import com.emm.justchill.EmmDatabase
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryUpsert
+import com.emm.domain.shared.UniqueIdProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-class DefaultCategoryRepository(private val emmDatabase: EmmDatabase) : CategoryRepository {
+class DefaultCategoryRepository(
+    private val emmDatabase: EmmDatabase,
+    private val uniqueIdProvider: UniqueIdProvider,
+) : CategoryRepository {
 
     private val cq: CategoriesQueries
         get() = emmDatabase.categoriesQueries
 
-    override fun retrieve(): Flow<List<Category>> {
-        return cq.retrieveAll()
-            .asFlow()
-            .mapToList(Dispatchers.IO)
-            .map(List<Categories>::toDomain)
-    }
+    override fun retrieve(): Flow<List<Category>> = cq.retrieveAll()
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+        .map(List<Categories>::toDomain)
 
-    override fun findBy(categoryId: String): Flow<Category?> {
-        return cq.find(categoryId)
-            .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
-            .map {
-                it?.let(Categories::toDomain)
-            }
-    }
+    override fun findBy(categoryId: String): Flow<Category?> = cq.find(categoryId)
+        .asFlow()
+        .mapToOneOrNull(Dispatchers.IO)
+        .map {
+            it?.let(Categories::toDomain)
+        }
 
-    override suspend fun create(
-        categoryId: String,
-        categoryUpsert: CategoryUpsert,
-    ) = withContext(Dispatchers.IO) {
+    override suspend fun create(categoryUpsert: CategoryUpsert) = withContext(Dispatchers.IO) {
         cq.insertCategory(
-            categoryId = categoryId,
+            categoryId = uniqueIdProvider.id,
             name = categoryUpsert.name,
             type = categoryUpsert.type.name,
             description = categoryUpsert.description,
         )
     }
 
-    override suspend fun update(
-        categoryId: String,
-        categoryUpsert: CategoryUpsert,
-    ) = withContext(Dispatchers.IO) {
+    override suspend fun update(categoryId: String, categoryUpsert: CategoryUpsert) = withContext(Dispatchers.IO) {
         cq.updateValues(
             name = categoryUpsert.name,
             description = categoryUpsert.description,
@@ -58,9 +52,7 @@ class DefaultCategoryRepository(private val emmDatabase: EmmDatabase) : Category
         )
     }
 
-    override suspend fun deleteBy(
-        categoryId: String,
-    ) = withContext(Dispatchers.IO) {
+    override suspend fun deleteBy(categoryId: String) = withContext(Dispatchers.IO) {
         cq.delete(categoryId)
     }
 }

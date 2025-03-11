@@ -15,7 +15,7 @@ class TransactionCreator(
         transactionInsert: TransactionInsert,
     ) {
 
-        val transactionId: String = uniqueIdProvider.uniqueId
+        val transactionId: String = uniqueIdProvider.id
 
         val dateAndTimeCombined: Long = dateAndTimeCombiner.combineWithUtc(transactionInsert.date)
 

@@ -13,7 +13,7 @@ class DailyAccountCreator(
 
         if (existDaily != null) return existDaily.accountId
 
-        val uniqueId: String = uniqueIdProvider.uniqueId
+        val uniqueId: String = uniqueIdProvider.id
         val accountUpsert = AccountUpsert(
             name = "FERIA",
             balance = 0.0,

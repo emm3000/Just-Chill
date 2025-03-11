@@ -8,7 +8,7 @@ class AccountCreator(
 ) {
 
     suspend fun create(accountUpsert: AccountUpsert) {
-        val uniqueId: String = uniqueIdProvider.uniqueId
+        val uniqueId: String = uniqueIdProvider.id
         repository.create(uniqueId, accountUpsert)
     }
 }

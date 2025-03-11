@@ -5,6 +5,6 @@ import java.util.UUID
 
 object DefaultUniqueIdProvider : UniqueIdProvider {
 
-    override val uniqueId: String
+    override val id: String
         get() = UUID.randomUUID().toString()
 }

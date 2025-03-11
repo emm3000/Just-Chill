@@ -8,7 +8,7 @@ interface CategoryRepository {
 
     fun findBy(categoryId: String): Flow<Category?>
 
-    suspend fun create(categoryId: String, categoryUpsert: CategoryUpsert)
+    suspend fun create(categoryUpsert: CategoryUpsert)
 
     suspend fun update(categoryId: String, categoryUpsert: CategoryUpsert)
 
