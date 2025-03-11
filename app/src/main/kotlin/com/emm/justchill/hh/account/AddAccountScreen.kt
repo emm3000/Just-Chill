@@ -26,12 +26,12 @@ import com.emm.justchill.hh.transaction.presentation.EmmToolbarTitle
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun AccountScreen(
+fun AddAccountScreen(
     navController: NavController,
-    vm: AccountViewModel = koinViewModel(),
+    vm: AddAccountViewModel = koinViewModel(),
 ) {
 
-    AccountScreen(
+    AddAccountScreen(
         state = vm.state,
         onAction = vm::onAction,
         navigateToBack = {
@@ -41,9 +41,9 @@ fun AccountScreen(
 }
 
 @Composable
-fun AccountScreen(
-    state: AccountUiState,
-    onAction: (AccountAction) -> Unit,
+fun AddAccountScreen(
+    state: AddAccountUiState,
+    onAction: (AddAccountAction) -> Unit,
     navigateToBack: () -> Unit = {},
 ) {
 
@@ -79,13 +79,13 @@ fun AccountScreen(
 
             EmmAmountChill(
                 value = state.amount,
-                onValueChange = { onAction(AccountAction.OnAmountChange(it)) },
+                onValueChange = { onAction(AddAccountAction.OnAmountChange(it)) },
                 modifier = Modifier.fillMaxWidth()
             )
 
             EmmTextFieldChill(
                 value = state.name,
-                onChange = { onAction(AccountAction.OnNameChange(it)) },
+                onChange = { onAction(AddAccountAction.OnNameChange(it)) },
                 label = "Nombre *",
                 placeholder = "Ingresa el nombre",
                 modifier = Modifier
@@ -93,7 +93,7 @@ fun AccountScreen(
 
             EmmTextFieldChill(
                 value = state.description,
-                onChange = { onAction(AccountAction.OnDescriptionChange(it)) },
+                onChange = { onAction(AddAccountAction.OnDescriptionChange(it)) },
                 label = "Descripción (opcional)",
                 placeholder = "Ingresa la descripción",
                 modifier = Modifier,
@@ -102,7 +102,7 @@ fun AccountScreen(
             EmmPrimaryButton(
                 text = "Guardar",
                 onClick = {
-                    onAction(AccountAction.OnSave)
+                    onAction(AddAccountAction.OnSave)
                     navigateToBack()
                 },
                 enabled = state.isEnabled,
@@ -114,10 +114,10 @@ fun AccountScreen(
 
 @PreviewLightDark
 @Composable
-fun AccountScreenPreview(modifier: Modifier = Modifier) {
+fun AddAccountScreenPreview(modifier: Modifier = Modifier) {
     EmmTheme {
-        AccountScreen(
-            state = AccountUiState(),
+        AddAccountScreen(
+            state = AddAccountUiState(),
             onAction = {},
         )
     }

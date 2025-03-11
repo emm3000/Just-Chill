@@ -32,10 +32,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.domain.account.AccountRepository
-import com.emm.justchill.hh.account.AccountScreen
+import com.emm.justchill.hh.account.AddAccountScreen
 import com.emm.justchill.hh.category.CategoryScreen
 import com.emm.justchill.hh.fasttransaction.Accounts
-import com.emm.justchill.hh.fasttransaction.FastTransaction
+import com.emm.justchill.hh.fasttransaction.FastTransactionScreen
 import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.Home
 import com.emm.justchill.hh.shared.seetransactions.SeeTransactionsVersionTwo
@@ -103,7 +103,7 @@ fun NewHh(modifier: Modifier = Modifier) {
                 val fastTransaction: FastTransaction = it.toRoute<FastTransaction>()
                 val vm: FastTransactionViewModel = koinViewModel()
 
-                FastTransaction(
+                FastTransactionScreen(
                     transactionType = fastTransaction.transactionType,
                     amountValue = vm.amount,
                     onAmountChange = vm::updateAmount,
@@ -146,7 +146,7 @@ fun NewHh(modifier: Modifier = Modifier) {
                 EditTransaction(navController, editTransaction.transactionId)
             }
             composable<Account> {
-                AccountScreen(navController)
+                AddAccountScreen(navController)
             }
             composable<Category> {
                 CategoryScreen(navController)

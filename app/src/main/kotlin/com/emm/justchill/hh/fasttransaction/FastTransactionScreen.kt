@@ -30,7 +30,7 @@ import com.emm.justchill.hh.transaction.presentation.EmmCenteredToolbar
 import com.emm.domain.transaction.TransactionType
 
 @Composable
-fun FastTransaction(
+fun FastTransactionScreen(
     transactionType: TransactionType,
     amountValue: TextFieldValue,
     onAmountChange: (TextFieldValue) -> Unit,
@@ -111,9 +111,9 @@ fun FastTransaction(
 
 @PreviewLightDark
 @Composable
-private fun FastTransactionPreview() {
+private fun FastTransactionScreenPreview() {
     EmmTheme {
-        FastTransaction(
+        FastTransactionScreen(
             transactionType = TransactionType.Income,
             addTransaction = {},
             amountValue = TextFieldValue("123"),

@@ -8,7 +8,7 @@ import com.emm.domain.shared.UniqueIdProvider
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionUpdateRepository
 import com.emm.justchill.R
-import com.emm.justchill.hh.account.AccountViewModel
+import com.emm.justchill.hh.account.AddAccountViewModel
 import com.emm.justchill.hh.auth.LoginViewModel
 import com.emm.justchill.hh.category.CategoryViewModel
 import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
@@ -68,7 +68,7 @@ private fun Module.viewModelsProviders() {
     }
 
     viewModelOf(::CategoryViewModel)
-    viewModelOf(::AccountViewModel)
+    viewModelOf(::AddAccountViewModel)
 
     viewModelOf(::FastTransactionViewModel)
 }

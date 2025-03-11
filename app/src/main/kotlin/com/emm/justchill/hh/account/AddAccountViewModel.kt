@@ -14,9 +14,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 
-class AccountViewModel(private val accountCreator: AccountCreator) : ViewModel() {
+class AddAccountViewModel(private val accountCreator: AccountCreator) : ViewModel() {
 
-    var state by mutableStateOf(AccountUiState())
+    var state by mutableStateOf(AddAccountUiState())
         private set
 
     init {
@@ -27,21 +27,21 @@ class AccountViewModel(private val accountCreator: AccountCreator) : ViewModel()
         ).launchIn(viewModelScope)
     }
 
-    fun onAction(action: AccountAction) {
+    fun onAction(action: AddAccountAction) {
         when (action) {
-            is AccountAction.OnAmountChange -> {
+            is AddAccountAction.OnAmountChange -> {
                 state = state.copy(amount = action.value)
             }
 
-            is AccountAction.OnDescriptionChange -> {
+            is AddAccountAction.OnDescriptionChange -> {
                 state = state.copy(description = action.value)
             }
 
-            is AccountAction.OnNameChange -> {
+            is AddAccountAction.OnNameChange -> {
                 state = state.copy(name = action.value)
             }
 
-            AccountAction.OnSave -> save()
+            AddAccountAction.OnSave -> save()
         }
     }
 
