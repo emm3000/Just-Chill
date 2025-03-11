@@ -12,9 +12,6 @@ SELECT * FROM accounts;
 insert:
 INSERT OR REPLACE INTO accounts VALUES(?, ?, ?, ?, ?);
 
-existDailyAccount:
-SELECT * FROM accounts WHERE name = 'FERIA';
-
 delete:
 DELETE FROM accounts WHERE accountId = ?;
 

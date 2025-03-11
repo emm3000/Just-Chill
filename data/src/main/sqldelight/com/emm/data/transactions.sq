@@ -21,9 +21,6 @@ SET
 WHERE
     transactionId = ?;
 
-count:
-SELECT COUNT(*) AS transactionsCount FROM transactions;
-
 sumAllIncomeAmounts:
 SELECT SUM(amount) AS totalIncome
 FROM transactions

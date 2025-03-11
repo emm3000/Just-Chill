@@ -12,6 +12,7 @@ import com.emm.domain.account.AccountUpsert
 import com.emm.domain.shared.UniqueIdProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
@@ -52,12 +53,7 @@ class DefaultAccountRepository(
     }
 
     override fun existDailyAccount(): Flow<Account?> {
-        return aq.existDailyAccount()
-            .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
-            .map { accounts ->
-                accounts?.let(Accounts::toDomain)
-            }
+        return flowOf(null)
     }
 
     override suspend fun deleteBy(accountId: String) = withContext(Dispatchers.IO) {
