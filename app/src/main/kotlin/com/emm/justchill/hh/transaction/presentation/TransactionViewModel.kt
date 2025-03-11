@@ -27,7 +27,7 @@ class TransactionViewModel(
 
     private var dateInLong: Long = DateUtils.currentDateInMillis()
 
-    var state by mutableStateOf(AddTransactionUiState())
+    var state by mutableStateOf(TransactionUiState())
         private set
 
     val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
@@ -70,6 +70,7 @@ class TransactionViewModel(
             is AccountAction.OnAccountSelected -> state = state.copy(accountSelected = action.account)
             is AccountAction.OnDateChangeInMillis -> updateCurrentDate(action.value)
             AccountAction.OnSave -> addTransaction()
+            else -> {}
         }
     }
 

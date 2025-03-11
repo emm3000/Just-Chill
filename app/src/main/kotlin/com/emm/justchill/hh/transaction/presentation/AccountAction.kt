@@ -19,4 +19,6 @@ sealed interface AccountAction {
     class OnAccountSelected(val account: Account) : AccountAction
 
     data object OnSave : AccountAction
+
+    data object OnDelete : AccountAction
 }

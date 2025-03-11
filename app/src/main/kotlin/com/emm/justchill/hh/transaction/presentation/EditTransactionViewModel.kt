@@ -11,6 +11,7 @@ import com.emm.justchill.core.formatInputToDouble
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountFinder
+import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.TransactionDeleter
@@ -34,25 +35,10 @@ class EditTransactionViewModel(
     accountRepository: AccountRepository,
 ) : ViewModel() {
 
-    var accountSelected: Account? by mutableStateOf(null)
-        private set
-
-    var amount by mutableStateOf(TextFieldValue("0.00"))
-        private set
-
-    var description by mutableStateOf("")
-        private set
-
-    var date by mutableStateOf(DateUtils.currentDateAtReadableFormat())
+    var state by mutableStateOf(TransactionUiState())
         private set
 
     private var dateInLong: Long = DateUtils.currentDateInMillis()
-
-    var isEnabled by mutableStateOf(false)
-        private set
-
-    var transactionType by mutableStateOf(TransactionType.Income)
-        private set
 
     val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
         .stateIn(
@@ -63,68 +49,62 @@ class EditTransactionViewModel(
 
     init {
         combine(
-            snapshotFlow { amount },
-            snapshotFlow { date },
-            snapshotFlow { description },
+            snapshotFlow { state.amount },
+            snapshotFlow { state.date },
+            snapshotFlow { state.description },
         ) { mount, date, description ->
-            isEnabled = mount.formatInputToDouble() >= 1
+            val isEnabled = mount.formatInputToDouble() >= 1
                     && date.isNotEmpty()
                     && description.isNotEmpty()
+            state = state.copy(isEnabled = isEnabled)
         }.launchIn(viewModelScope)
 
         loadCurrentTransaction()
     }
 
-    private fun loadCurrentTransaction() = viewModelScope.launch {
-        val currentTransaction = transactionFinder.find(transactionId).firstOrNull()
-        currentTransaction?.let { transaction ->
-            amount = TextFieldValue(transaction.amountDecimalFormat)
-            description = transaction.description
-            transactionType = TransactionType.valueOf(transaction.type)
-            date = millisToReadableFormat(transaction.date)
-            dateInLong = transaction.date
-            val account: Account? = accountFinder.find(currentTransaction.accountId).firstOrNull()
-            account?.let {
-                accountSelected = it
-            }
+    fun onAction(action: AccountAction) {
+        when (action) {
+            is AccountAction.OnAmountChange -> state = state.copy(amount = action.value)
+            is AccountAction.OnDateChange -> state = state.copy(date = action.value)
+            is AccountAction.OnDescriptionChange -> state = state.copy(description = action.value)
+            is AccountAction.OnTransactionTypeChange -> state = state.copy(transactionType = action.value)
+            is AccountAction.OnAccountSelected -> state = state.copy(accountSelected = action.account)
+            is AccountAction.OnDateChangeInMillis -> updateCurrentDate(action.value)
+            AccountAction.OnSave -> updateTransaction()
+            AccountAction.OnDelete -> deleteTransaction()
         }
     }
 
-    fun updateTransaction() = viewModelScope.launch {
+    private fun loadCurrentTransaction() = viewModelScope.launch {
+        val currentTransaction: Transaction = transactionFinder.find(transactionId).firstOrNull() ?: return@launch
+        val account: Account = accountFinder.find(currentTransaction.accountId).firstOrNull() ?: return@launch
+        state = state.copy(
+            amount = TextFieldValue(currentTransaction.amountDecimalFormat),
+            description = currentTransaction.description,
+            date = millisToReadableFormat(currentTransaction.date),
+            transactionType = TransactionType.valueOf(currentTransaction.type),
+            accountSelected = account,
+        )
+        dateInLong = currentTransaction.date
+    }
+
+    private fun updateTransaction() = viewModelScope.launch {
         val transactionUpdate = TransactionUpdate(
-            type = transactionType,
-            description = description,
+            type = state.transactionType,
+            description = state.description,
             date = dateInLong,
-            amount = amount.formatInputToDouble(),
-            accountId = accountSelected?.accountId ?: throw IllegalStateException()
+            amount = state.amount.formatInputToDouble(),
+            accountId = state.accountSelected?.accountId ?: throw IllegalStateException()
         )
         transactionUpdater.update(transactionId, transactionUpdate)
     }
 
-    fun deleteTransaction() = viewModelScope.launch {
+    private fun deleteTransaction() = viewModelScope.launch {
         transactionDeleter.delete(transactionId)
     }
 
-    fun updateMount(value: TextFieldValue) {
-        amount = value
-    }
-
-    fun updateDescription(value: String) {
-        description = value
-    }
-
-    fun updateCurrentDate(millis: Long?) {
-        if (millis != null) {
-            dateInLong = millis
-            date = DateUtils.millisToReadableFormatUTC(millis)
-        }
-    }
-
-    fun updateTransactionType(value: TransactionType) {
-        transactionType = value
-    }
-
-    fun updateAccountSelected(value: Account) {
-        accountSelected = value
+    private fun updateCurrentDate(millis: Long?) = millis?.let {
+        dateInLong = it
+        state = state.copy(date = DateUtils.millisToReadableFormatUTC(it))
     }
 }

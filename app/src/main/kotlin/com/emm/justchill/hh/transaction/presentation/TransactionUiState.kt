@@ -5,7 +5,7 @@ import com.emm.domain.account.Account
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.shared.Empty
 
-data class AddTransactionUiState(
+data class TransactionUiState(
     val amount: TextFieldValue = TextFieldValue("0.00"),
     val description: String = String.Empty,
     val date: String = DateUtils.currentDateAtReadableFormat(),

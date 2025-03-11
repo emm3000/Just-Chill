@@ -70,7 +70,7 @@ fun TransactionScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TransactionScreen(
-    state: AddTransactionUiState,
+    state: TransactionUiState,
     accounts: List<Account>,
     onAction: (AccountAction) -> Unit,
     navigateToSeeTransactions: () -> Unit,
@@ -276,7 +276,7 @@ fun TransactionLabel(text: String) {
 fun IncomePreview() {
     EmmTheme {
         TransactionScreen(
-            state = AddTransactionUiState(),
+            state = TransactionUiState(),
             accounts = emptyList(),
             onAction = {},
             navigateToSeeTransactions = {}

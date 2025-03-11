@@ -11,7 +11,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -23,7 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
@@ -35,20 +33,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavController
+import com.emm.domain.account.Account
 import com.emm.justchill.components.EmmAmountChill
-import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.core.theme.TextColor
-import com.emm.domain.account.Account
-import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.shared.shared.EmmDropDown
 import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextFieldChill
@@ -66,21 +60,10 @@ fun EditTransaction(
     val accounts: List<Account> by vm.accounts.collectAsState()
 
     EditTransaction(
-        isEnabledButton = vm.isEnabled,
-        mountValue = vm.amount,
-        onMountChange = vm::updateMount,
-        descriptionValue = vm.description,
-        onDescriptionChange = vm::updateDescription,
-        dateValue = vm.date,
-        updateTransaction = vm::updateTransaction,
-        updateDate = vm::updateCurrentDate,
+        state = vm.state,
+        onAction = vm::onAction,
         navigateUp = { navController.popBackStack() },
-        initialTransactionType = vm.transactionType,
-        onOptionSelected = vm::updateTransactionType,
-        deleteTransaction = vm::deleteTransaction,
         accounts = accounts,
-        onAccountChange = vm::updateAccountSelected,
-        accountSelected = vm.accountSelected,
     )
 
 }
@@ -88,21 +71,10 @@ fun EditTransaction(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditTransaction(
-    isEnabledButton: Boolean = false,
-    mountValue: TextFieldValue = TextFieldValue("0.00"),
-    onMountChange: (TextFieldValue) -> Unit = {},
-    descriptionValue: String = "",
-    onDescriptionChange: (String) -> Unit = {},
-    dateValue: String = "",
-    updateTransaction: () -> Unit = {},
-    updateDate: (Long?) -> Unit = {},
+    state: TransactionUiState,
+    onAction: (AccountAction) -> Unit,
     navigateUp: () -> Unit = {},
-    initialTransactionType: TransactionType = TransactionType.Income,
-    onOptionSelected: (TransactionType) -> Unit = {},
-    deleteTransaction: () -> Unit = {},
     accounts: List<Account> = emptyList(),
-    accountSelected: Account? = null,
-    onAccountChange: (Account) -> Unit = {},
 ) {
 
     val datePickerState: DatePickerState = rememberDatePickerState()
@@ -122,7 +94,7 @@ private fun EditTransaction(
             },
             confirmButton = {
                 OutlinedButton(onClick = {
-                    updateDate(datePickerState.selectedDateMillis)
+                    onAction(AccountAction.OnDateChangeInMillis(datePickerState.selectedDateMillis))
                     setShowSelectDate(false)
                 }) {
                     Text(text = "Ok")
@@ -146,7 +118,7 @@ private fun EditTransaction(
             setShowDeleteDialog = setShowDeleteDialog,
             onConfirmButton = {
                 setShowDeleteDialog(false)
-                deleteTransaction()
+                onAction(AccountAction.OnDelete)
                 navigateUp()
             }
         )
@@ -193,7 +165,7 @@ private fun EditTransaction(
                 }
             )
         }
-    ) {
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -201,7 +173,7 @@ private fun EditTransaction(
                 .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 20.dp)
                 .padding(top = 10.dp)
-                .padding(it),
+                .padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
@@ -210,8 +182,8 @@ private fun EditTransaction(
                 textLabel = "Cuentas",
                 textPlaceholder = "Seleccione una cuenta",
                 items = accounts,
-                itemSelected = accountSelected,
-                onItemSelected = onAccountChange,
+                itemSelected = state.accountSelected,
+                onItemSelected = { onAction(AccountAction.OnAccountSelected(it)) },
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -225,99 +197,49 @@ private fun EditTransaction(
             )
 
             EmmAmountChill(
-                value = mountValue,
-                onValueChange = onMountChange,
+                value = state.amount,
+                onValueChange = { onAction(AccountAction.OnAmountChange(it)) },
                 modifier = Modifier.fillMaxWidth(),
             )
 
             EmmTransactionRadioButton(
                 modifier = Modifier.fillMaxWidth(),
-                selectedOption = initialTransactionType,
-                onOptionSelected = onOptionSelected
+                selectedOption = state.transactionType,
+                onOptionSelected = { onAction(AccountAction.OnTransactionTypeChange(it)) }
             )
 
             EmmTextFieldChill(
-                value = descriptionValue,
+                value = state.description,
                 placeholder = "Ingresa una descripción",
                 label = "Descripción (opcional)",
-                onChange = onDescriptionChange,
+                onChange = { onAction(AccountAction.OnDescriptionChange(it)) },
                 modifier = Modifier,
             )
 
-            DateInput(dateValue) {
+            DateInput(state.date) {
                 setShowSelectDate(true)
             }
 
             EmmPrimaryButton(
                 text = "Actualizar",
                 onClick = {
-                    updateTransaction()
+                    onAction(AccountAction.OnSave)
                     navigateUp()
                 },
-                enabled = isEnabledButton,
+                enabled = state.isEnabled,
                 modifier = Modifier.fillMaxWidth()
             )
         }
     }
 }
 
-@Composable
-private fun DeleteDialog(
-    setShowDeleteDialog: (Boolean) -> Unit,
-    onConfirmButton: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = { setShowDeleteDialog(false) },
-        containerColor = BackgroundColor,
-        text = {
-            Text(
-                text = "Estas seguro de eliminar esta transacción.",
-                color = TextColor,
-                fontFamily = LatoFontFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 16.sp
-            )
-        },
-        title = {
-            Text(
-                text = "Eliminar transacción",
-                fontFamily = LatoFontFamily,
-                fontWeight = FontWeight.Black,
-                color = TextColor
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                onConfirmButton()
-            }) {
-                Text(
-                    text = "Confirmar",
-                    fontSize = 16.sp,
-                    color = DeleteButtonColor,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = LatoFontFamily
-                )
-            }
-
-        },
-        dismissButton = {
-            TextButton(onClick = { setShowDeleteDialog(false) }) {
-                Text(
-                    text = "Cancelar",
-                    fontSize = 16.sp,
-                    color = TextColor,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = LatoFontFamily
-                )
-            }
-        }
-    )
-}
-
 @PreviewLightDark
 @Composable
 fun EditTransactionPreview() {
     EmmTheme {
-        EditTransaction()
+        EditTransaction(
+            state = TransactionUiState(),
+            onAction = {},
+        )
     }
 }
