@@ -31,7 +31,7 @@ import androidx.navigation.toRoute
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.domain.account.AccountRepository
 import com.emm.justchill.hh.account.presentation.Account
-import com.emm.justchill.hh.category.presentation.Category
+import com.emm.justchill.hh.category.presentation.CategoryScreen
 import com.emm.justchill.hh.fasttransaction.Accounts
 import com.emm.justchill.hh.fasttransaction.FastTransaction
 import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
@@ -120,7 +120,7 @@ fun Hh() {
                 Account(navController)
             }
             composable<Category> {
-                Category(navController)
+                CategoryScreen(navController)
             }
         }
     }

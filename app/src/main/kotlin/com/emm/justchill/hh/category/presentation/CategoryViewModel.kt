@@ -8,50 +8,49 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.category.CategoryUpsert
 import com.emm.domain.category.CategoryCreator
-import com.emm.domain.transaction.TransactionType
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class CategoryViewModel(private val categoryCreator: CategoryCreator) : ViewModel() {
 
-    var name: String by mutableStateOf("")
-        private set
-
-    var description: String by mutableStateOf("")
-        private set
-
-    var transactionType by mutableStateOf(TransactionType.INCOME)
-        private set
-
-    var isEnabled by mutableStateOf(false)
+    var categoryUiState by mutableStateOf(CategoryUiState())
         private set
 
     init {
-        snapshotFlow { name }
-            .onEach {
-                isEnabled = name.isNotEmpty()
-                        && name.length >= 4
-            }.launchIn(viewModelScope)
+        snapshotFlow { categoryUiState.name }
+            .onEach(::checkFields)
+            .launchIn(viewModelScope)
     }
 
-    fun updateName(value: String) {
-        name = value
+    fun onAction(action: CategoryAction) {
+        when (action) {
+            is CategoryAction.OnDescriptionChange -> {
+                categoryUiState = categoryUiState.copy(description = action.value)
+            }
+
+            is CategoryAction.OnNameChange -> {
+                categoryUiState = categoryUiState.copy(name = action.value)
+            }
+
+            is CategoryAction.OnTransactionTypeChange -> {
+                categoryUiState = categoryUiState.copy(transactionType = action.value)
+            }
+
+            CategoryAction.OnSave -> saveCategory()
+        }
     }
 
-    fun updateDescription(value: String) {
-        description = value
+    private fun checkFields(it: String) {
+        val isEnabled: Boolean = it.isNotEmpty() && it.length >= 4
+        categoryUiState = categoryUiState.copy(isAllFieldValidated = isEnabled)
     }
 
-    fun updateTransactionType(value: TransactionType) {
-        transactionType = value
-    }
-
-    fun save() = viewModelScope.launch {
+    private fun saveCategory() = viewModelScope.launch {
         val categoryUpsert = CategoryUpsert(
-            name = name,
-            description = description,
-            type = transactionType.name
+            name = categoryUiState.name,
+            description = categoryUiState.description,
+            type = categoryUiState.transactionType
         )
         categoryCreator.create(categoryUpsert)
     }

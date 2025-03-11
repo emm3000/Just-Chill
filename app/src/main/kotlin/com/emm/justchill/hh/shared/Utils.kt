@@ -10,3 +10,8 @@ fun fromCentsToSolesWith(cents: Double): String {
     }
     return formatter.format(cents)
 }
+
+private val EmptyString: String = String()
+
+val String.Companion.Empty: String
+    get() = EmptyString

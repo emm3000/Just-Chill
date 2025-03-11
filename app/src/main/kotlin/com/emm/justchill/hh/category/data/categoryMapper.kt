@@ -11,11 +11,3 @@ fun Categories.toDomain() = Category(
 )
 
 fun List<Categories>.toDomain() = map(Categories::toDomain)
-
-fun Category.toModel(userId: String) = CategoryModel(
-    categoryId = categoryId,
-    name = name,
-    description = description,
-    type = type,
-    userId = userId
-)

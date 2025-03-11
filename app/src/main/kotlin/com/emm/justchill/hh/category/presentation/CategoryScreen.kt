@@ -19,24 +19,17 @@ import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextInput
 import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
 import com.emm.justchill.hh.transaction.presentation.EmmToolbarTitle
-import com.emm.domain.transaction.TransactionType
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun Category(
+fun CategoryScreen(
     navController: NavController,
     vm: CategoryViewModel = koinViewModel(),
 ) {
 
-    Category(
-        name = vm.name,
-        updateName = vm::updateName,
-        transactionType = vm.transactionType,
-        updateTransactionType = vm::updateTransactionType,
-        description = vm.name,
-        updateDescription = vm::updateDescription,
-        saveAction = vm::save,
-        isEnabledButton = vm.isEnabled,
+    CategoryScreen(
+        state = vm.categoryUiState,
+        onAction = vm::onAction,
         navigateToBack = {
             navController.popBackStack()
         }
@@ -44,15 +37,9 @@ fun Category(
 }
 
 @Composable
-private fun Category(
-    name: String = "",
-    updateName: (String) -> Unit = {},
-    transactionType: TransactionType = TransactionType.INCOME,
-    updateTransactionType: (TransactionType) -> Unit = {},
-    description: String = "",
-    updateDescription: (String) -> Unit = {},
-    saveAction: () -> Unit = {},
-    isEnabledButton: Boolean = true,
+private fun CategoryScreen(
+    state: CategoryUiState,
+    onAction: (CategoryAction) -> Unit,
     navigateToBack: () -> Unit = {},
 ) {
 
@@ -67,7 +54,7 @@ private fun Category(
                 modifier = Modifier.fillMaxWidth()
             )
         }
-    ) {
+    ) { paddingValues ->
 
         Column(
             modifier = Modifier
@@ -75,7 +62,7 @@ private fun Category(
                 .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 20.dp)
                 .padding(vertical = 10.dp)
-                .padding(it),
+                .padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
@@ -84,32 +71,32 @@ private fun Category(
                 modifier = Modifier,
                 label = "Nombre *",
                 placeholder = "Ingresa el nombre",
-                value = name,
-                onChange = updateName
+                value = state.name,
+                onChange = { onAction(CategoryAction.OnNameChange(it)) }
             )
 
             EmmTransactionRadioButton(
                 modifier = Modifier
                     .fillMaxWidth(),
-                selectedOption = transactionType,
-                onOptionSelected = updateTransactionType
+                selectedOption = state.transactionType,
+                onOptionSelected = { onAction(CategoryAction.OnTransactionTypeChange(it)) }
             )
 
             EmmTextInput(
                 modifier = Modifier,
                 label = "Descripción (opcional)",
                 placeholder = "Ingresa la descripción",
-                value = description,
-                onChange = updateDescription
+                value = state.description,
+                onChange = { onAction(CategoryAction.OnDescriptionChange(it)) }
             )
 
             EmmPrimaryButton(
                 text = "Guardar",
                 onClick = {
-                    saveAction()
+                    onAction(CategoryAction.OnSave)
                     navigateToBack()
                 },
-                enabled = isEnabledButton,
+                enabled = state.isAllFieldValidated,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -122,6 +109,9 @@ private fun Category(
 fun CategoryPreview() {
 
     EmmTheme {
-        Category()
+        CategoryScreen(
+            state = CategoryUiState(),
+            onAction = {},
+        )
     }
 }

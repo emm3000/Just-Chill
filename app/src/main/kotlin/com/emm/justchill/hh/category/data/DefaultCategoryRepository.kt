@@ -14,9 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-class DefaultCategoryRepository(
-    private val emmDatabase: EmmDatabase,
-) : CategoryRepository {
+class DefaultCategoryRepository(private val emmDatabase: EmmDatabase) : CategoryRepository {
 
     private val cq: CategoriesQueries
         get() = emmDatabase.categoriesQueries
@@ -44,7 +42,7 @@ class DefaultCategoryRepository(
         cq.insertCategory(
             categoryId = categoryId,
             name = categoryUpsert.name,
-            type = categoryUpsert.type,
+            type = categoryUpsert.type.name,
             description = categoryUpsert.description,
         )
     }
