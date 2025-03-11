@@ -9,6 +9,7 @@ import com.emm.data.EmmDatabaseData
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountUpsert
+import com.emm.domain.shared.UniqueIdProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -16,6 +17,7 @@ import kotlinx.coroutines.withContext
 
 class DefaultAccountRepository(
     private val emmDatabase: EmmDatabaseData,
+    private val uniqueIdProvider: UniqueIdProvider,
 ) : AccountRepository {
 
     private val aq: AccountsQueries
@@ -38,11 +40,10 @@ class DefaultAccountRepository(
     }
 
     override suspend fun create(
-        accountId: String,
         account: AccountUpsert,
     ) = withContext(Dispatchers.IO) {
         aq.insert(
-            accountId = accountId,
+            accountId = uniqueIdProvider.id,
             name = account.name,
             balance = account.balance,
             initialBalance = account.balance,

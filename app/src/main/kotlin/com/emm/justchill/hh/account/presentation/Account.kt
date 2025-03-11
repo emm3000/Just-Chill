@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,31 +32,19 @@ fun Account(
 ) {
 
     Account(
-        amount = vm.amount,
-        updateAmount = vm::updateAmount,
-        name = vm.name,
-        updateName = vm::updateName,
-        description = vm.description,
-        updateDescription = vm::updateDescription,
+        state = vm.state,
+        onAction = vm::onAction,
         navigateToBack = {
             navController.popBackStack()
         },
-        isEnabledButton = vm.isEnabled,
-        save = vm::save
     )
 }
 
 @Composable
 fun Account(
-    amount: TextFieldValue = TextFieldValue(),
-    updateAmount: (TextFieldValue) -> Unit = {},
-    name: String = "",
-    updateName: (String) -> Unit = {},
-    description: String = "",
-    updateDescription: (String) -> Unit = {},
+    state: AccountUiState,
+    onAction: (AccountAction) -> Unit,
     navigateToBack: () -> Unit = {},
-    isEnabledButton: Boolean = true,
-    save: () -> Unit = {},
 ) {
 
     Scaffold(
@@ -69,14 +56,14 @@ fun Account(
                 modifier = Modifier,
             )
         }
-    ) {
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 20.dp)
                 .padding(vertical = 10.dp)
-                .padding(it),
+                .padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
@@ -91,36 +78,35 @@ fun Account(
             )
 
             EmmAmountChill(
-                value = amount,
-                onValueChange = updateAmount,
+                value = state.amount,
+                onValueChange = { onAction(AccountAction.OnAmountChange(it)) },
                 modifier = Modifier.fillMaxWidth()
             )
 
             EmmTextFieldChill(
-                value = name,
-                onChange = updateName,
+                value = state.name,
+                onChange = { onAction(AccountAction.OnNameChange(it)) },
                 label = "Nombre *",
                 placeholder = "Ingresa el nombre",
                 modifier = Modifier
             )
 
             EmmTextFieldChill(
-                value = description,
-                onChange = updateDescription,
+                value = state.description,
+                onChange = { onAction(AccountAction.OnDescriptionChange(it)) },
                 label = "Descripción (opcional)",
                 placeholder = "Ingresa la descripción",
-                modifier = Modifier
+                modifier = Modifier,
             )
 
             EmmPrimaryButton(
                 text = "Guardar",
                 onClick = {
-                    save()
+                    onAction(AccountAction.OnSave)
                     navigateToBack()
                 },
-                enabled = isEnabledButton,
-                modifier = Modifier
-                    .fillMaxWidth()
+                enabled = state.isEnabled,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
@@ -130,6 +116,9 @@ fun Account(
 @Composable
 fun AccountPreview(modifier: Modifier = Modifier) {
     EmmTheme {
-        Account()
+        Account(
+            state = AccountUiState(),
+            onAction = {},
+        )
     }
 }

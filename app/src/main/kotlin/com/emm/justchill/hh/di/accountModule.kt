@@ -23,6 +23,7 @@ val accountModule = module {
     factory {
         DefaultAccountRepository(
             emmDatabase = get(),
+            uniqueIdProvider = get(),
         )
     } bind AccountRepository::class
 

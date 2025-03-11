@@ -19,7 +19,7 @@ class DailyAccountCreator(
             balance = 0.0,
             description = "JUST FERIA"
         )
-        repository.create(uniqueId, accountUpsert)
+        repository.create(accountUpsert)
         return uniqueId
     }
 }

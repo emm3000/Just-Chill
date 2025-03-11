@@ -14,47 +14,47 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 
-class AccountViewModel(private val accountCreator: AccountCreator): ViewModel() {
+class AccountViewModel(private val accountCreator: AccountCreator) : ViewModel() {
 
-    var name: String by mutableStateOf("")
-        private set
-
-    var description: String by mutableStateOf("")
-        private set
-
-    var amount by mutableStateOf(TextFieldValue("0.00"))
-        private set
-
-    var isEnabled by mutableStateOf(false)
+    var state by mutableStateOf(AccountUiState())
         private set
 
     init {
         combine(
-            snapshotFlow { amount },
-            snapshotFlow { name },
-        ) { mount, name ->
-            isEnabled = mount.text.isNotEmpty()
-                    && name.isNotEmpty()
-        }.launchIn(viewModelScope)
+            flow = snapshotFlow { state.amount },
+            flow2 = snapshotFlow { state.name },
+            transform = ::checkFields
+        ).launchIn(viewModelScope)
     }
 
-    fun updateName(value: String) {
-        name = value
+    fun onAction(action: AccountAction) {
+        when (action) {
+            is AccountAction.OnAmountChange -> {
+                state = state.copy(amount = action.value)
+            }
+
+            is AccountAction.OnDescriptionChange -> {
+                state = state.copy(description = action.value)
+            }
+
+            is AccountAction.OnNameChange -> {
+                state = state.copy(name = action.value)
+            }
+
+            AccountAction.OnSave -> save()
+        }
     }
 
-    fun updateDescription(value: String) {
-        description = value
+    private fun checkFields(mount: TextFieldValue, name: String) {
+        val isEnabled: Boolean = mount.text.isNotEmpty() && name.isNotEmpty()
+        state = state.copy(isEnabled = isEnabled)
     }
 
-    fun updateAmount(value: TextFieldValue) {
-        amount = value
-    }
-
-    fun save() = viewModelScope.launch {
+    private fun save() = viewModelScope.launch {
         val accountUpsert = AccountUpsert(
-            name = name,
-            balance = amount.formatInputToDouble(),
-            description = description
+            name = state.name,
+            balance = state.amount.formatInputToDouble(),
+            description = state.description
         )
         accountCreator.create(accountUpsert)
     }
