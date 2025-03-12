@@ -2,7 +2,6 @@ CREATE TABLE accounts (
     accountId TEXT NOT NULL PRIMARY KEY,
     name TEXT NOT NULL,
     balance REAL NOT NULL,
-    initialBalance REAL NOT NULL,
     description TEXT
 );
 
@@ -10,7 +9,7 @@ retrieveAll:
 SELECT * FROM accounts;
 
 insert:
-INSERT OR REPLACE INTO accounts VALUES(?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO accounts VALUES(?, ?, ?, ?);
 
 delete:
 DELETE FROM accounts WHERE accountId = ?;
@@ -23,7 +22,6 @@ UPDATE accounts
 SET
     name = ?,
     balance = ?,
-    initialBalance = ?,
     description = ?
 WHERE
     accountId = ?;

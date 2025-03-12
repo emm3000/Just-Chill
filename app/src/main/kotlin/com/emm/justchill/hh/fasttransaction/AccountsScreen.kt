@@ -139,7 +139,6 @@ private fun AccountsScreenPreview() {
                     accountId = "1",
                     name = "random name",
                     balance = 123.22,
-                    initialBalance = 322.322,
                     description = "random descripction"
 
                 ),
@@ -147,7 +146,6 @@ private fun AccountsScreenPreview() {
                     accountId = "2",
                     name = "lorem itsum",
                     balance = 123.22,
-                    initialBalance = 322.322,
                     description = "random descripction"
 
                 ),
@@ -155,7 +153,6 @@ private fun AccountsScreenPreview() {
                     accountId = "3",
                     name = "random name",
                     balance = 123.22,
-                    initialBalance = 322.322,
                     description = "random descripction"
 
                 )

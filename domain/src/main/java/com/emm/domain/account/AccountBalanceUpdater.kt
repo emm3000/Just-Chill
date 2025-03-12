@@ -17,7 +17,7 @@ class AccountBalanceUpdater(
             .calculate(accountId)
             .firstOrNull() ?: return
 
-        val newBalance = account.initialBalance + difference
+        val newBalance = account.balance + difference
 
         repository.updateAmount(accountId, newBalance)
     }

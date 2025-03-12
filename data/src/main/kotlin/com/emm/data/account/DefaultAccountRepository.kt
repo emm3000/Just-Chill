@@ -47,7 +47,6 @@ class DefaultAccountRepository(
             accountId = uniqueIdProvider.id,
             name = account.name,
             balance = account.balance,
-            initialBalance = account.balance,
             description = account.description,
         )
     }
@@ -67,7 +66,6 @@ class DefaultAccountRepository(
         aq.updateValues(
             name = account.name,
             balance = account.balance,
-            initialBalance = account.balance,
             description = account.description,
             accountId = accountId
         )
