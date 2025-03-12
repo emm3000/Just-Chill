@@ -1,6 +1,8 @@
 package com.emm.justchill.hh.shared
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.BottomAppBar
@@ -51,7 +53,10 @@ fun Hh() {
 
     val navController = rememberNavController()
 
-    Scaffold(bottomBar = { Csm(navController) }) { paddingValues ->
+    Scaffold(
+        bottomBar = { Csm(navController) },
+        contentWindowInsets = WindowInsets.navigationBars
+    ) { paddingValues ->
         NavHost(
             navController = navController,
             startDestination = HhRoutes.HnNewHome.route,
