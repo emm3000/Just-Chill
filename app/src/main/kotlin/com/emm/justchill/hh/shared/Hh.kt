@@ -36,13 +36,13 @@ import com.emm.justchill.hh.fasttransaction.AccountsScreen
 import com.emm.justchill.hh.fasttransaction.FastTransactionScreen
 import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.Home
-import com.emm.justchill.hh.shared.seetransactions.SeeTransactionsVersionTwo
+import com.emm.justchill.hh.seetransactions.SeeTransactionsVersionTwo
 import com.emm.justchill.hh.shared.shared.AccountRoute
 import com.emm.justchill.hh.shared.shared.CategoryRoute
 import com.emm.justchill.hh.shared.shared.EditTransactionRoute
 import com.emm.justchill.hh.shared.shared.FastTransactionRoute
-import com.emm.justchill.hh.transaction.presentation.EditTransaction
-import com.emm.justchill.hh.transaction.presentation.TransactionScreen
+import com.emm.justchill.hh.transaction.EditTransaction
+import com.emm.justchill.hh.transaction.TransactionScreen
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 

@@ -22,7 +22,7 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextFieldChill
-import com.emm.justchill.hh.transaction.presentation.EmmToolbarTitle
+import com.emm.justchill.hh.transaction.EmmToolbarTitle
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared.seetransactions
+package com.emm.justchill.hh.seetransactions
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,7 +25,7 @@ import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.domain.transaction.TransactionType
-import com.emm.justchill.hh.transaction.presentation.TransactionUi
+import com.emm.justchill.hh.transaction.TransactionUi
 
 @Composable
 fun ItemTransaction(

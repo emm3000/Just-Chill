@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.transaction.presentation
+package com.emm.justchill.hh.transaction
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.core.theme.TextColor
 
 @Composable
 fun EmmTextAmount(

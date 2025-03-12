@@ -14,11 +14,11 @@ import com.emm.justchill.hh.category.CategoryViewModel
 import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.HomeViewModel
 import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
-import com.emm.justchill.hh.shared.seetransactions.SeeTransactionsViewModel
+import com.emm.justchill.hh.seetransactions.SeeTransactionsViewModel
 import com.emm.data.transaction.DefaultTransactionRepository
 import com.emm.data.transaction.DefaultTransactionUpdateRepository
-import com.emm.justchill.hh.transaction.presentation.EditTransactionViewModel
-import com.emm.justchill.hh.transaction.presentation.TransactionViewModel
+import com.emm.justchill.hh.transaction.EditTransactionViewModel
+import com.emm.justchill.hh.transaction.TransactionViewModel
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient

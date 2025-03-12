@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.transaction.presentation
+package com.emm.justchill.hh.transaction
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

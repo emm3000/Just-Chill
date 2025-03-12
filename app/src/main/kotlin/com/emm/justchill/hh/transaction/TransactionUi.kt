@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.transaction.presentation
+package com.emm.justchill.hh.transaction
 
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.domain.transaction.Transaction

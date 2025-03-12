@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared.seetransactions
+package com.emm.justchill.hh.seetransactions
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState

@@ -34,7 +34,7 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.domain.account.Account
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.shared.shared.EmmDropDown
-import com.emm.justchill.hh.transaction.presentation.EmmCenteredToolbar
+import com.emm.justchill.hh.transaction.EmmCenteredToolbar
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

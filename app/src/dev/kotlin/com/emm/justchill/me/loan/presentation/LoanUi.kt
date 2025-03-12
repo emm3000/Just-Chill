@@ -1,7 +1,7 @@
 package com.emm.justchill.me.loan.presentation
 
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
-import com.emm.justchill.hh.transaction.presentation.DateUtils
+import com.emm.justchill.hh.transaction.DateUtils
 import com.emm.justchill.me.loan.domain.Loan
 
 data class LoanUi(

@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared.seetransactions
+package com.emm.justchill.hh.seetransactions
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -24,9 +24,9 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.domain.account.Account
 import com.emm.justchill.hh.shared.shared.EditTransactionRoute
 import com.emm.justchill.hh.shared.shared.EmmDropDown
-import com.emm.justchill.hh.transaction.presentation.EmmCenteredToolbar
+import com.emm.justchill.hh.transaction.EmmCenteredToolbar
 import com.emm.domain.transaction.TransactionType
-import com.emm.justchill.hh.transaction.presentation.TransactionUi
+import com.emm.justchill.hh.transaction.TransactionUi
 import org.koin.androidx.compose.koinViewModel
 import java.util.*
 

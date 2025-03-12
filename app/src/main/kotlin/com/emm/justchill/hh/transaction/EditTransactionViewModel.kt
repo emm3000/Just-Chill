@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.transaction.presentation
+package com.emm.justchill.hh.transaction
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,7 +17,7 @@ import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.TransactionDeleter
 import com.emm.domain.transaction.TransactionFinder
 import com.emm.domain.transaction.TransactionUpdater
-import com.emm.justchill.hh.transaction.presentation.DateUtils.millisToReadableFormat
+import com.emm.justchill.hh.transaction.DateUtils.millisToReadableFormat
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine

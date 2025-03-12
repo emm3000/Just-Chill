@@ -31,7 +31,7 @@ import com.emm.justchill.core.theme.HhBackgroundColor
 import com.emm.justchill.core.theme.HhOnBackgroundColor
 import com.emm.justchill.core.theme.HhSecondaryTextBackground
 import com.emm.domain.transaction.TransactionType
-import com.emm.justchill.hh.transaction.presentation.TransactionUi
+import com.emm.justchill.hh.transaction.TransactionUi
 
 @Composable
 fun Spend(

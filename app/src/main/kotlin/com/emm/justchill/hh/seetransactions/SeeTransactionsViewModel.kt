@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalCoroutinesApi::class)
 
-package com.emm.justchill.hh.shared.seetransactions
+package com.emm.justchill.hh.seetransactions
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,8 +12,8 @@ import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.transaction.TransactionLoader
 import com.emm.domain.transaction.Transaction
-import com.emm.justchill.hh.transaction.presentation.TransactionUi
-import com.emm.justchill.hh.transaction.presentation.toUi
+import com.emm.justchill.hh.transaction.TransactionUi
+import com.emm.justchill.hh.transaction.toUi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.SharingStarted

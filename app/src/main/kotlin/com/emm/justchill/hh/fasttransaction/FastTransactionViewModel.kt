@@ -9,7 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.emm.justchill.core.formatInputToDouble
 import com.emm.domain.transaction.TransactionCreator
 import com.emm.domain.transaction.TransactionInsert
-import com.emm.justchill.hh.transaction.presentation.DateUtils
+import com.emm.justchill.hh.transaction.DateUtils
 import com.emm.domain.transaction.TransactionType
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
