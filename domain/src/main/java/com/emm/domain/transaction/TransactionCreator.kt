@@ -11,9 +11,7 @@ class TransactionCreator(
     private val accountBalanceUpdater: AccountBalanceUpdater,
 ) {
 
-    suspend fun create(
-        transactionInsert: TransactionInsert,
-    ) {
+    suspend fun create(transactionInsert: TransactionInsert) {
 
         val transactionId: String = uniqueIdProvider.id
 
@@ -26,6 +24,10 @@ class TransactionCreator(
 
         repository.create(transaction)
 
-        accountBalanceUpdater.update(accountId = transactionInsert.accountId)
+        accountBalanceUpdater.update(
+            accountId = transactionInsert.accountId,
+            transactionType = transactionInsert.type,
+            amount = transactionInsert.amount,
+        )
     }
 }

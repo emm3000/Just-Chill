@@ -29,7 +29,7 @@ private fun Transaction.toUi(): TransactionUi {
         type = transactionType,
         amount = when (transactionType) {
             TransactionType.Income -> "S/ $formattedNumber"
-            TransactionType.Spent -> "S/ -$formattedNumber"
+            TransactionType.Spend -> "S/ -$formattedNumber"
         },
         description = description,
         date = date,

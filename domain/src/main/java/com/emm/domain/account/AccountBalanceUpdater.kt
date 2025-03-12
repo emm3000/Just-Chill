@@ -1,23 +1,19 @@
 package com.emm.domain.account
 
-import com.emm.domain.transaction.TransactionDifferenceCalculator
+import com.emm.domain.transaction.TransactionType
 import kotlinx.coroutines.flow.firstOrNull
 
-class AccountBalanceUpdater(
-    private val repository: AccountRepository,
-    private val transactionDifferenceCalculator: TransactionDifferenceCalculator,
-) {
+class AccountBalanceUpdater(private val repository: AccountRepository) {
 
-    suspend fun update(accountId: String) {
+    suspend fun update(accountId: String, transactionType: TransactionType, amount: Double) {
 
         val account: Account = repository.findBy(accountId).firstOrNull()
             ?: return
 
-        val difference: Double = transactionDifferenceCalculator
-            .calculate(accountId)
-            .firstOrNull() ?: return
-
-        val newBalance = account.balance + difference
+        val newBalance: Double = when (transactionType) {
+            TransactionType.Income -> account.balance + amount
+            TransactionType.Spend -> account.balance - amount
+        }
 
         repository.updateAmount(accountId, newBalance)
     }

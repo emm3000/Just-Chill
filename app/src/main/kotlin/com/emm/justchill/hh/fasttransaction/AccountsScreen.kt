@@ -94,7 +94,7 @@ private fun AddTransactionButtons(
             )
         }
         TextButton(
-            onClick = { onCardClick(account, TransactionType.Spent) },
+            onClick = { onCardClick(account, TransactionType.Spend) },
             modifier = Modifier.height(40.dp),
         ) {
             Text(

@@ -22,6 +22,10 @@ class TransactionUpdater(
                 date = dateAndTimeCombined
             ),
         )
-        accountBalanceUpdater.update(accountId = transactionUpdate.accountId)
+        accountBalanceUpdater.update(
+            accountId = transactionUpdate.accountId,
+            transactionType = transactionUpdate.type,
+            amount = transactionUpdate.amount
+        )
     }
 }
