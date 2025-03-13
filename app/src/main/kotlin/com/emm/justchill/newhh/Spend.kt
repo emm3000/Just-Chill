@@ -1,4 +1,4 @@
-package com.emm.justchill.newhh.home
+package com.emm.justchill.newhh
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
