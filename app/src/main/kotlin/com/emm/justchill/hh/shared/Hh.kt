@@ -14,6 +14,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,8 +31,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.domain.account.AccountRepository
+import com.emm.domain.account.AccountUpdateRepository
+import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.account.AddAccountScreen
 import com.emm.justchill.hh.category.CategoryScreen
 import com.emm.justchill.hh.fasttransaction.AccountsScreen
@@ -39,12 +41,12 @@ import com.emm.justchill.hh.fasttransaction.FastTransactionScreen
 import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.Home
 import com.emm.justchill.hh.seetransactions.SeeTransactionsVersionTwo
-import com.emm.justchill.hh.shared.shared.AccountRoute
 import com.emm.justchill.hh.shared.shared.CategoryRoute
 import com.emm.justchill.hh.shared.shared.EditTransactionRoute
 import com.emm.justchill.hh.shared.shared.FastTransactionRoute
 import com.emm.justchill.hh.transaction.EditTransaction
 import com.emm.justchill.hh.transaction.TransactionScreen
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -65,12 +67,19 @@ fun Hh() {
 
             composable(HhRoutes.HnNewHome.route) {
                 val repository: AccountRepository = koinInject()
-                val accounts: List<com.emm.domain.account.Account> by repository.retrieve()
-                    .collectAsStateWithLifecycle(emptyList())
+                val updateRepository: AccountUpdateRepository = koinInject()
+                val coroutineScope = rememberCoroutineScope()
+                val accounts: List<com.emm.domain.account.Account> by repository.retrieve().collectAsStateWithLifecycle(emptyList())
+
                 AccountsScreen(
                     accounts = accounts,
-                    onCardClick = { account, transactionType ->
-                        navController.navigate(FastTransactionRoute(account.accountId, transactionType))
+                    onCardClick = { account ->
+                        coroutineScope.launch {
+                            updateRepository.updateSelected(account.accountId)
+                        }
+                    },
+                    addAccount = {
+                        navController.navigate(HhRoutes.AddAccount.route)
                     },
                     modifier = Modifier.fillMaxSize()
                 )

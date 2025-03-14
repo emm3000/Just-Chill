@@ -36,11 +36,12 @@ class HomeViewModel(
     private fun aggregateAccount(account: Account): Flow<HomeState> = combine(
         flow = transactionSumIncome(account.accountId),
         flow2 = transactionSumSpend(account.accountId),
-        transform = ::createHomeState
-    )
-
-    private fun createHomeState(income: Double, spend: Double) = HomeState(
-        income = fromCentsToSolesWith(income),
-        spend = fromCentsToSolesWith(spend)
+        transform = { income, spend ->
+            HomeState(
+                income = fromCentsToSolesWith(income),
+                spend = fromCentsToSolesWith(spend),
+                account = account,
+            )
+        }
     )
 }

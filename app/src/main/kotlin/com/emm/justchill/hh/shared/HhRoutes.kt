@@ -29,5 +29,5 @@ val hhRoutes = listOf(
     HhRoutes.HhHome,
     HhRoutes.AddTransaction,
     HhRoutes.SeeTransaction,
-    HhRoutes.AddAccount,
+    HhRoutes.HnNewHome,
 )

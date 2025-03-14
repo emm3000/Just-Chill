@@ -50,13 +50,15 @@ class DefaultAccountRepository(
     }
 
     override suspend fun create(account: AccountUpsert) = withContext(Dispatchers.IO) {
+        val accountId = uniqueIdProvider.id
         aq.insert(
-            accountId = uniqueIdProvider.id,
+            accountId = accountId,
             name = account.name,
             balance = account.balance,
             description = account.description,
             defaultSelection = account.isSelected.value
         )
+        updateSelected(accountId)
     }
 
     override suspend fun deleteBy(accountId: String) = withContext(Dispatchers.IO) {

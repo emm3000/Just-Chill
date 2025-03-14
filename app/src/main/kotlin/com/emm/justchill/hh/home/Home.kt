@@ -43,7 +43,7 @@ fun Home(homeState: HomeState) {
     ) {
 
         EmmCenteredToolbar(
-            title = "Just Chill",
+            title = "Just Chill ${homeState.account?.name.orEmpty()}",
             modifier = Modifier.fillMaxWidth()
                 .padding(bottom = 10.dp)
         )
