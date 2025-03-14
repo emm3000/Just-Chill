@@ -7,23 +7,19 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.core.formatInputToDouble
 import com.emm.domain.account.Account
-import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountFinder
 import com.emm.domain.transaction.Transaction
-import com.emm.domain.transaction.TransactionType
-import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.TransactionDeleter
 import com.emm.domain.transaction.TransactionFinder
+import com.emm.domain.transaction.TransactionType
+import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.TransactionUpdater
+import com.emm.justchill.core.formatInputToDouble
 import com.emm.justchill.hh.transaction.DateUtils.millisToReadableFormat
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class EditTransactionViewModel(
@@ -32,20 +28,12 @@ class EditTransactionViewModel(
     private val transactionFinder: TransactionFinder,
     private val transactionDeleter: TransactionDeleter,
     private val accountFinder: AccountFinder,
-    accountRepository: AccountRepository,
 ) : ViewModel() {
 
     var state by mutableStateOf(TransactionUiState())
         private set
 
     private var dateInLong: Long = DateUtils.currentDateInMillis()
-
-    val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = emptyList()
-        )
 
     init {
         combine(
@@ -68,7 +56,6 @@ class EditTransactionViewModel(
             is AccountAction.OnDateChange -> state = state.copy(date = action.value)
             is AccountAction.OnDescriptionChange -> state = state.copy(description = action.value)
             is AccountAction.OnTransactionTypeChange -> state = state.copy(transactionType = action.value)
-            is AccountAction.OnAccountSelected -> state = state.copy(accountSelected = action.account)
             is AccountAction.OnDateChangeInMillis -> updateCurrentDate(action.value)
             AccountAction.OnSave -> updateTransaction()
             AccountAction.OnDelete -> deleteTransaction()

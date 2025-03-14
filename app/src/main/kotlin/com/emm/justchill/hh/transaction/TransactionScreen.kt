@@ -57,12 +57,9 @@ fun TransactionScreen(
     navigateToSeeTransactions: () -> Unit,
 ) {
 
-    val accounts: List<Account> by vm.accounts.collectAsState()
-
     TransactionScreen(
         state = vm.state,
         onAction = vm::onAction,
-        accounts = accounts,
         navigateToSeeTransactions = navigateToSeeTransactions
     )
 }
@@ -71,7 +68,6 @@ fun TransactionScreen(
 @Composable
 private fun TransactionScreen(
     state: TransactionUiState,
-    accounts: List<Account>,
     onAction: (AccountAction) -> Unit,
     navigateToSeeTransactions: () -> Unit,
 ) {
@@ -120,15 +116,6 @@ private fun TransactionScreen(
 
         EmmCenteredToolbar(
             title = "Agregar gasto",
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        EmmDropDown(
-            textLabel = "Cuentas",
-            textPlaceholder = "Seleccionar cuenta",
-            items = accounts,
-            itemSelected = state.accountSelected,
-            onItemSelected = { onAction(AccountAction.OnAccountSelected(it)) },
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -277,7 +264,6 @@ fun IncomePreview() {
     EmmTheme {
         TransactionScreen(
             state = TransactionUiState(),
-            accounts = emptyList(),
             onAction = {},
             navigateToSeeTransactions = {}
         )

@@ -58,15 +58,11 @@ fun EditTransaction(
     vm: EditTransactionViewModel = koinViewModel(parameters = { parametersOf(transactionId) }),
 ) {
 
-    val accounts: List<Account> by vm.accounts.collectAsState()
-
     EditTransaction(
         state = vm.state,
         onAction = vm::onAction,
         navigateUp = { navController.popBackStack() },
-        accounts = accounts,
     )
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,7 +71,6 @@ private fun EditTransaction(
     state: TransactionUiState,
     onAction: (AccountAction) -> Unit,
     navigateUp: () -> Unit = {},
-    accounts: List<Account> = emptyList(),
 ) {
 
     val datePickerState: DatePickerState = rememberDatePickerState()
@@ -180,15 +175,6 @@ private fun EditTransaction(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
-
-            EmmDropDown(
-                textLabel = "Cuentas",
-                textPlaceholder = "Seleccione una cuenta",
-                items = accounts,
-                itemSelected = state.accountSelected,
-                onItemSelected = { onAction(AccountAction.OnAccountSelected(it)) },
-                modifier = Modifier.fillMaxWidth(),
-            )
 
             Text(
                 text = "Ingrese un monto",

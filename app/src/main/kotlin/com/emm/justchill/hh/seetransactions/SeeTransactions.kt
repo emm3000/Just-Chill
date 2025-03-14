@@ -37,26 +37,19 @@ fun SeeTransactionsVersionTwo(
 ) {
 
     val collectAsState: List<TransactionUi> by vm.transactions.collectAsState()
-    val accounts: List<Account> by vm.accounts.collectAsState()
 
     SeeTransactionsVersionTwo(
         transactions = collectAsState,
-        accountSelected = vm.accountSelected,
         navigateToEdit = {
             navController.navigate(EditTransactionRoute(it))
         },
-        accounts = accounts,
-        onAccountChange = vm::updateAccountSelected,
     )
 }
 
 @Composable
 fun SeeTransactionsVersionTwo(
     transactions: List<TransactionUi> = emptyList(),
-    accountSelected: Account? = null,
     navigateToEdit: (String) -> Unit = {},
-    accounts: List<Account> = emptyList(),
-    onAccountChange: (Account) -> Unit = {},
 ) {
 
     Column(
@@ -76,18 +69,6 @@ fun SeeTransactionsVersionTwo(
             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 3.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            item {
-                EmmDropDown(
-                    textLabel = "Cuentas",
-                    textPlaceholder = "Seleccionar cuenta",
-                    items = accounts,
-                    itemSelected = accountSelected,
-                    onItemSelected = onAccountChange,
-                    modifier = Modifier.fillMaxWidth()
-                        .padding(horizontal = 12.dp)
-                )
-            }
 
             if (transactions.isNotEmpty()) {
                 items(transactions, key = TransactionUi::transactionId) {
