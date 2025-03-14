@@ -16,8 +16,6 @@ sealed interface AccountAction {
 
     class OnDateChangeInMillis(val value: Long?) : AccountAction
 
-    class OnAccountSelected(val account: Account) : AccountAction
-
     data object OnSave : AccountAction
 
     data object OnDelete : AccountAction

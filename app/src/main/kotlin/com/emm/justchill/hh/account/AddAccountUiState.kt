@@ -6,6 +6,6 @@ import com.emm.justchill.hh.shared.Empty
 data class AddAccountUiState(
     val name: String = String.Empty,
     val description: String = String.Empty,
-    val amount: TextFieldValue = TextFieldValue(""),
+    val amount: TextFieldValue = TextFieldValue("0.00"),
     val isEnabled: Boolean = false,
 )

@@ -22,6 +22,7 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextFieldChill
+import com.emm.justchill.hh.transaction.EmmCenteredToolbar
 import com.emm.justchill.hh.transaction.EmmToolbarTitle
 import org.koin.androidx.compose.koinViewModel
 
@@ -50,10 +51,8 @@ fun AddAccountScreen(
     Scaffold(
         modifier = Modifier,
         topBar = {
-            EmmToolbarTitle(
+            EmmCenteredToolbar(
                 title = "Agregar cuenta",
-                navigationIconClick = navigateToBack,
-                modifier = Modifier,
             )
         }
     ) { paddingValues ->

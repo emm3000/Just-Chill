@@ -8,13 +8,9 @@ interface AccountRepository {
 
     fun findBy(accountId: String): Flow<Account?>
 
+    fun default(): Flow<Account?>
+
     suspend fun create(account: AccountUpsert)
 
-    fun existDailyAccount(): Flow<Account?>
-
     suspend fun deleteBy(accountId: String)
-
-    suspend fun update(accountId: String, account: AccountUpsert)
-
-    suspend fun updateAmount(accountId: String, amount: Double)
 }

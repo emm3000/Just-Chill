@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.emm.justchill.core.formatInputToDouble
 import com.emm.domain.account.AccountUpsert
 import com.emm.domain.account.AccountCreator
+import com.emm.domain.account.AccountSelect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
@@ -29,18 +30,9 @@ class AddAccountViewModel(private val accountCreator: AccountCreator) : ViewMode
 
     fun onAction(action: AddAccountAction) {
         when (action) {
-            is AddAccountAction.OnAmountChange -> {
-                state = state.copy(amount = action.value)
-            }
-
-            is AddAccountAction.OnDescriptionChange -> {
-                state = state.copy(description = action.value)
-            }
-
-            is AddAccountAction.OnNameChange -> {
-                state = state.copy(name = action.value)
-            }
-
+            is AddAccountAction.OnAmountChange -> state = state.copy(amount = action.value)
+            is AddAccountAction.OnDescriptionChange -> state = state.copy(description = action.value)
+            is AddAccountAction.OnNameChange -> state = state.copy(name = action.value)
             AddAccountAction.OnSave -> save()
         }
     }
@@ -54,7 +46,8 @@ class AddAccountViewModel(private val accountCreator: AccountCreator) : ViewMode
         val accountUpsert = AccountUpsert(
             name = state.name,
             balance = state.amount.formatInputToDouble(),
-            description = state.description
+            description = state.description,
+            isSelected = AccountSelect.NonSelected
         )
         accountCreator.create(accountUpsert)
     }

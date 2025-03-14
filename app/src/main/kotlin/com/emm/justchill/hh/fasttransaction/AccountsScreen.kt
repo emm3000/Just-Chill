@@ -28,6 +28,7 @@ import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.domain.account.Account
+import com.emm.domain.account.AccountSelect
 import com.emm.justchill.hh.transaction.EmmCenteredToolbar
 import com.emm.domain.transaction.TransactionType
 
@@ -139,21 +140,24 @@ private fun AccountsScreenPreview() {
                     accountId = "1",
                     name = "random name",
                     balance = 123.22,
-                    description = "random descripction"
+                    description = "random descripction",
+                    isSelected = AccountSelect.NonSelected
 
                 ),
                 Account(
                     accountId = "2",
                     name = "lorem itsum",
                     balance = 123.22,
-                    description = "random descripction"
+                    description = "random descripction",
+                    isSelected = AccountSelect.NonSelected
 
                 ),
                 Account(
                     accountId = "3",
                     name = "random name",
                     balance = 123.22,
-                    description = "random descripction"
+                    description = "random descripction",
+                    isSelected = AccountSelect.NonSelected
 
                 )
             ),

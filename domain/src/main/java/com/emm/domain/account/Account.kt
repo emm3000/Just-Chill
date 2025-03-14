@@ -5,6 +5,7 @@ data class Account(
     val name: String,
     val balance: Double,
     val description: String,
+    val isSelected: AccountSelect,
 ) {
 
     override fun toString(): String = name

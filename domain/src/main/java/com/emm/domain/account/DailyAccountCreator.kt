@@ -9,7 +9,7 @@ class DailyAccountCreator(
 ) {
 
     suspend fun create(): String {
-        val existDaily: Account? = repository.existDailyAccount().firstOrNull()
+        val existDaily: Account? = null
 
         if (existDaily != null) return existDaily.accountId
 
@@ -17,7 +17,8 @@ class DailyAccountCreator(
         val accountUpsert = AccountUpsert(
             name = "FERIA",
             balance = 0.0,
-            description = "JUST FERIA"
+            description = "JUST FERIA",
+            isSelected = AccountSelect.NonSelected,
         )
         repository.create(accountUpsert)
         return uniqueId
