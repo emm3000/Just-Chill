@@ -59,7 +59,7 @@ fun Hh() {
     ) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = HhRoutes.HnNewHome.route,
+            startDestination = HhRoutes.HhHome.route,
             modifier = Modifier.padding(paddingValues)
         ) {
 
@@ -89,14 +89,7 @@ fun Hh() {
                 )
             }
             composable(HhRoutes.HhHome.route) {
-                Home(
-                    navigateToCreateAccount = {
-                        navController.navigate(AccountRoute)
-                    },
-                    navigateToCreateCategory = {
-                        navController.navigate(CategoryRoute)
-                    }
-                )
+                Home()
             }
             composable(HhRoutes.AddTransaction.route) {
                 TransactionScreen {
@@ -113,7 +106,7 @@ fun Hh() {
                 val editTransactionRoute: EditTransactionRoute = it.toRoute<EditTransactionRoute>()
                 EditTransaction(navController, editTransactionRoute.transactionId)
             }
-            composable<AccountRoute> {
+            composable(HhRoutes.AddAccount.route) {
                 AddAccountScreen(navController)
             }
             composable<CategoryRoute> {
