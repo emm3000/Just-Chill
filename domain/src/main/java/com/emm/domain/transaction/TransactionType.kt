@@ -1,7 +1,7 @@
 package com.emm.domain.transaction
 
-enum class TransactionType(val value: String, val colorHex: String) {
+enum class TransactionType(val value: String) {
 
-    Income(value = "Ingreso", colorHex = "Color.Blue"),
-    Spend(value = "Gasto", colorHex = "Color.Red"),
+    Income(value = "Ingreso"),
+    Spend(value = "Gasto"),
 }
