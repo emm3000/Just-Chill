@@ -31,12 +31,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.emm.domain.account.AccountRepository
-import com.emm.domain.account.AccountUpdateRepository
+import com.emm.domain.account.Account
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.account.AddAccountScreen
 import com.emm.justchill.hh.category.CategoryScreen
 import com.emm.justchill.hh.fasttransaction.AccountsScreen
+import com.emm.justchill.hh.fasttransaction.AccountsViewModel
 import com.emm.justchill.hh.fasttransaction.FastTransactionScreen
 import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.Home
@@ -46,9 +46,7 @@ import com.emm.justchill.hh.shared.shared.EditTransactionRoute
 import com.emm.justchill.hh.shared.shared.FastTransactionRoute
 import com.emm.justchill.hh.transaction.EditTransaction
 import com.emm.justchill.hh.transaction.TransactionScreen
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 
 @Composable
 fun Hh() {
@@ -66,21 +64,14 @@ fun Hh() {
         ) {
 
             composable(HhRoutes.HnNewHome.route) {
-                val repository: AccountRepository = koinInject()
-                val updateRepository: AccountUpdateRepository = koinInject()
-                val coroutineScope = rememberCoroutineScope()
-                val accounts: List<com.emm.domain.account.Account> by repository.retrieve().collectAsStateWithLifecycle(emptyList())
+                val vm: AccountsViewModel = koinViewModel()
+
+                val accounts: List<Account> by vm.accounts.collectAsStateWithLifecycle()
 
                 AccountsScreen(
                     accounts = accounts,
-                    onCardClick = { account ->
-                        coroutineScope.launch {
-                            updateRepository.updateSelected(account.accountId)
-                        }
-                    },
-                    addAccount = {
-                        navController.navigate(HhRoutes.AddAccount.route)
-                    },
+                    onCardClick = vm::updateSelected,
+                    addAccount = { navController.navigate(HhRoutes.AddAccount.route) },
                     modifier = Modifier.fillMaxSize()
                 )
             }

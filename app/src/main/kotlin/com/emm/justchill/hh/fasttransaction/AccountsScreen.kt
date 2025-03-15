@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.fasttransaction
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -87,9 +88,9 @@ private fun AccountItem(
     onCardClick: (Account) -> Unit,
 ) {
 
-    val isSelected = when (account.isSelected){
-        AccountSelect.IsSelected -> "(Selected)"
-        AccountSelect.NonSelected -> ""
+    val isSelected: BorderStroke? = when (account.isSelected){
+        AccountSelect.IsSelected -> BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+        AccountSelect.NonSelected -> null
     }
 
     Card(
@@ -100,6 +101,7 @@ private fun AccountItem(
                 role = Role.RadioButton,
                 onClick = { onCardClick(account) }
             ),
+        border = isSelected
     ) {
         Column(
             modifier = Modifier
@@ -107,7 +109,7 @@ private fun AccountItem(
                 .padding(horizontal = 14.dp, vertical = 7.dp),
         ) {
             Text(
-                text = "${account.name} $isSelected",
+                text = account.name,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.ExtraBold,
                 fontFamily = LatoFontFamily,

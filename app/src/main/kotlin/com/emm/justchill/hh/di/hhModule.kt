@@ -17,6 +17,7 @@ import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
 import com.emm.justchill.hh.seetransactions.SeeTransactionsViewModel
 import com.emm.data.transaction.DefaultTransactionRepository
 import com.emm.data.transaction.DefaultTransactionUpdateRepository
+import com.emm.justchill.hh.fasttransaction.AccountsViewModel
 import com.emm.justchill.hh.transaction.EditTransactionViewModel
 import com.emm.justchill.hh.transaction.TransactionViewModel
 import io.github.jan.supabase.SupabaseClient
@@ -70,6 +71,7 @@ private fun Module.viewModelsProviders() {
     viewModelOf(::AddAccountViewModel)
 
     viewModelOf(::FastTransactionViewModel)
+    viewModelOf(::AccountsViewModel)
 }
 
 private fun Module.repositoriesProviders() {
