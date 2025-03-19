@@ -25,14 +25,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.dropUnlessResumed
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountSelect
 import com.emm.justchill.core.theme.EmmTheme
@@ -60,7 +58,7 @@ fun AccountsScreen(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .statusBarsPadding(),
-                onClick = dropUnlessResumed { addAccount() }
+                onClick = addAccount
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -88,7 +86,7 @@ private fun AccountItem(
     onCardClick: (Account) -> Unit,
 ) {
 
-    val isSelected: BorderStroke? = when (account.isSelected){
+    val isSelected: BorderStroke? = when (account.isSelected) {
         AccountSelect.IsSelected -> BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
         AccountSelect.NonSelected -> null
     }
