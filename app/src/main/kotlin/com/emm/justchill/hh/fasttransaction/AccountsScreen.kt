@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,6 +36,7 @@ import com.emm.domain.account.Account
 import com.emm.domain.account.AccountSelect
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.transaction.EmmCenteredToolbar
 
 @Composable
@@ -101,22 +103,37 @@ private fun AccountItem(
             ),
         border = isSelected
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 14.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = account.name,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontFamily = LatoFontFamily,
+                    fontStyle = FontStyle.Normal,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    text = account.description.ifBlank { "No description" },
+                    fontSize = 14.sp,
+                    fontFamily = LatoFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontStyle = FontStyle.Normal,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                )
+
+            }
             Text(
-                text = account.name,
+                text = "S/ ${fromCentsToSolesWith(account.balance)}",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.ExtraBold,
-                fontFamily = LatoFontFamily,
-                fontStyle = FontStyle.Normal,
-            )
-            Spacer(Modifier.width(10.dp))
-            Text(
-                text = account.description.ifBlank { "No description" },
-                fontSize = 14.sp,
                 fontFamily = LatoFontFamily,
                 fontWeight = FontWeight.Bold,
                 fontStyle = FontStyle.Normal,

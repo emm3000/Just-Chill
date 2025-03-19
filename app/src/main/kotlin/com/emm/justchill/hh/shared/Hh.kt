@@ -125,7 +125,7 @@ private fun Csm(internalNavController: NavHostController) {
 
     BottomAppBar(
         containerColor = MaterialTheme.colorScheme.background,
-        contentColor = MaterialTheme.colorScheme.onBackground
+        contentColor = MaterialTheme.colorScheme.onBackground,
     ) {
         hhRoutes.forEach { screen ->
             NavigationBarItem(
