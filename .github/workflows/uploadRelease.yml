@@ -47,4 +47,4 @@ jobs:
           packageName: com.emm.justchill
           releaseFiles: app/build/outputs/bundle/prodRelease/app-prod-release.aab
           status: draft
-          track: internal
+          track: alpha
