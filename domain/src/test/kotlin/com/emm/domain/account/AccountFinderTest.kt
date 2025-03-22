@@ -1,0 +1,28 @@
+package com.emm.domain.account
+
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
+import org.junit.Test
+import kotlin.test.assertNull
+
+class AccountFinderTest {
+
+    private val repository = mockk<AccountRepository>()
+    private val accountFinder = AccountFinder(repository)
+
+    @Test
+    fun `find should call repository findBy with correct accountId`() = runTest {
+
+        coEvery { repository.findBy(any()) } returns flowOf()
+
+        val find: Account? = accountFinder.find("1234").firstOrNull()
+
+        assertNull(find)
+
+        coVerify(exactly = 1) { repository.findBy("1234") }
+    }
+}
