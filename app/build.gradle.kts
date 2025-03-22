@@ -165,4 +165,5 @@ dependencies {
 
     implementation(libs.ktor.client.okhttp)
 
+    testImplementation(libs.mockk)
 }
