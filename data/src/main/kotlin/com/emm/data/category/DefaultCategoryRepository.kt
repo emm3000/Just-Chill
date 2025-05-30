@@ -23,7 +23,7 @@ class DefaultCategoryRepository(
     private val cq: CategoriesQueries
         get() = emmDatabase.categoriesQueries
 
-    override fun retrieve(): Flow<List<Category>> = cq.retrieveAll()
+    override fun retrieve(): Flow<List<Category>> = cq.all()
         .asFlow()
         .mapToList(Dispatchers.IO)
         .map(List<Categories>::toDomain)
@@ -36,7 +36,7 @@ class DefaultCategoryRepository(
         }
 
     override suspend fun create(categoryUpsert: CategoryUpsert) = withContext(Dispatchers.IO) {
-        cq.insertCategory(
+        cq.insert(
             categoryId = uniqueIdProvider.id,
             name = categoryUpsert.name,
             type = categoryUpsert.type.name,

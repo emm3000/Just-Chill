@@ -131,8 +131,11 @@ private fun Csm(internalNavController: NavHostController) {
                 selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                 onClick = {
                     internalNavController.navigate(screen.route) {
-                        popUpTo(internalNavController.graph.findStartDestination().id)
+                        popUpTo(internalNavController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
                         launchSingleTop = true
+                        restoreState = true
                     }
                 },
                 icon = {

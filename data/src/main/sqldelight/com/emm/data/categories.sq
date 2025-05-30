@@ -5,10 +5,10 @@ CREATE TABLE categories (
     description TEXT
 );
 
-retrieveAll:
+all:
 SELECT * FROM categories;
 
-insertCategory:
+insert:
 INSERT OR REPLACE INTO categories VALUES(?, ?, ?, ?);
 
 delete:

@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.fasttransaction
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,7 +32,6 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.domain.account.Account
-import com.emm.domain.account.AccountSelect
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
@@ -88,11 +86,6 @@ private fun AccountItem(
     onCardClick: (Account) -> Unit,
 ) {
 
-    val isSelected: BorderStroke? = when (account.isSelected) {
-        AccountSelect.IsSelected -> BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
-        AccountSelect.NonSelected -> null
-    }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -101,7 +94,6 @@ private fun AccountItem(
                 role = Role.RadioButton,
                 onClick = { onCardClick(account) }
             ),
-        border = isSelected
     ) {
         Row(
             modifier = Modifier
@@ -153,15 +145,12 @@ private fun AccountsScreenPreview() {
                     name = "random name",
                     balance = 123.22,
                     description = "random descripction",
-                    isSelected = AccountSelect.NonSelected
-
                 ),
                 Account(
                     accountId = "2",
                     name = "lorem itsum",
                     balance = 123.22,
                     description = "random descripction",
-                    isSelected = AccountSelect.NonSelected
 
                 ),
                 Account(
@@ -169,7 +158,6 @@ private fun AccountsScreenPreview() {
                     name = "random name",
                     balance = 123.22,
                     description = "random descripction",
-                    isSelected = AccountSelect.NonSelected
 
                 )
             ),

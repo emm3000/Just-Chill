@@ -10,7 +10,19 @@ CREATE TABLE transactions (
     FOREIGN KEY (accountId) REFERENCES accounts(accountId) ON DELETE CASCADE
 );
 
-updateValues:
+all:
+SELECT * FROM transactions WHERE accountId = ? ORDER BY date DESC;
+
+insert:
+INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?, ?);
+
+find:
+SELECT * FROM transactions WHERE transactionId = ?;
+
+delete:
+DELETE FROM transactions WHERE transactionId = ?;
+
+update:
 UPDATE transactions
 SET
     type = ?,
@@ -36,15 +48,3 @@ SELECT (
     COALESCE((SELECT SUM(amount) FROM transactions WHERE type = 'Income' AND accountId = ?), 0)
     - COALESCE((SELECT SUM(amount) FROM transactions WHERE type = 'Spend' AND accountId = ?), 0)
 ) AS incomeMinusSpent;
-
-retrieveAll:
-SELECT * FROM transactions WHERE accountId = ? ORDER BY date DESC;
-
-addTransaction:
-INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?, ?);
-
-find:
-SELECT * FROM transactions WHERE transactionId = ?;
-
-delete:
-DELETE FROM transactions WHERE transactionId = ?;

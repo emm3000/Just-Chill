@@ -14,7 +14,7 @@ class DefaultTransactionUpdateRepository(
         transactionId: String,
         transactionUpdate: TransactionUpdate,
     ) = withContext(Dispatchers.IO) {
-        transactionQueries.updateValues(
+        transactionQueries.update(
             type = transactionUpdate.type.name,
             amount = transactionUpdate.amount,
             description = transactionUpdate.description,

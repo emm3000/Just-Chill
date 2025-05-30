@@ -5,9 +5,9 @@ import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.data.Transactions
 import com.emm.data.TransactionsQueries
+import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionRepository
-import com.emm.domain.transaction.Transaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -19,7 +19,7 @@ class DefaultTransactionRepository(
 
     override suspend fun create(transactionInsert: TransactionInsert) = withContext(Dispatchers.IO) {
         checkNotNull(transactionInsert.id)
-        transactionsQueries.addTransaction(
+        transactionsQueries.insert(
             transactionId = transactionInsert.id!!,
             type = transactionInsert.type.name,
             amount = transactionInsert.amount,
@@ -32,7 +32,7 @@ class DefaultTransactionRepository(
 
     override fun retrieve(accountId: String): Flow<List<Transaction>> {
         return transactionsQueries
-            .retrieveAll(accountId)
+            .all(accountId)
             .asFlow()
             .mapToList(Dispatchers.IO)
             .map(List<Transactions>::toDomain)

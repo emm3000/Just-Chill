@@ -13,6 +13,7 @@ import com.emm.domain.account.AccountUpsert
 import com.emm.domain.shared.UniqueIdProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
@@ -25,7 +26,7 @@ class DefaultAccountRepository(
         get() = emmDatabase.accountsQueries
 
     override fun retrieve(): Flow<List<Account>> {
-        return aq.retrieveAll()
+        return aq.all()
             .asFlow()
             .mapToList(Dispatchers.IO)
             .map(List<Accounts>::toDomain)
@@ -41,12 +42,7 @@ class DefaultAccountRepository(
     }
 
     override fun default(): Flow<Account?> {
-        return aq.default()
-            .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
-            .map {
-                it?.let(Accounts::toDomain)
-            }
+        return flowOf()
     }
 
     override suspend fun create(account: AccountUpsert) = withContext(Dispatchers.IO) {
@@ -56,9 +52,7 @@ class DefaultAccountRepository(
             name = account.name,
             balance = account.balance,
             description = account.description,
-            defaultSelection = account.isSelected.value
         )
-        updateSelected(accountId)
     }
 
     override suspend fun deleteBy(accountId: String) = withContext(Dispatchers.IO) {
@@ -66,19 +60,15 @@ class DefaultAccountRepository(
     }
 
     override suspend fun update(accountId: String, account: AccountUpsert) = withContext(Dispatchers.IO) {
-        aq.updateValues(
+        aq.update(
             name = account.name,
             balance = account.balance,
             description = account.description,
-            accountId = accountId
+            accountId = accountId,
         )
     }
 
     override suspend fun updateAmount(accountId: String, amount: Double) = withContext(Dispatchers.IO) {
         aq.updateBalance(amount, accountId)
-    }
-
-    override suspend fun updateSelected(accountId: String) = withContext(Dispatchers.IO) {
-        aq.defaultAccount(accountId)
     }
 }

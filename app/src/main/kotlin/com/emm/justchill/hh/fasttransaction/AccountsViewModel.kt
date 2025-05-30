@@ -4,16 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
-import com.emm.domain.account.AccountUpdateRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class AccountsViewModel(
-    private val accountUpdateRepository: AccountUpdateRepository,
-    accountRepository: AccountRepository,
-) : ViewModel() {
+class AccountsViewModel(accountRepository: AccountRepository) : ViewModel() {
 
     val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
         .stateIn(
@@ -23,6 +19,6 @@ class AccountsViewModel(
         )
 
     fun updateSelected(account: Account) = viewModelScope.launch {
-        accountUpdateRepository.updateSelected(account.accountId)
+
     }
 }
