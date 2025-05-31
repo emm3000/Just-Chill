@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -39,13 +40,11 @@ import com.emm.justchill.hh.account.AddAccountScreen
 import com.emm.justchill.hh.category.CategoryScreen
 import com.emm.justchill.hh.fasttransaction.AccountsScreen
 import com.emm.justchill.hh.fasttransaction.AccountsViewModel
-import com.emm.justchill.hh.fasttransaction.FastTransactionScreen
-import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.Home
 import com.emm.justchill.hh.seetransactions.SeeTransactionsVersionTwo
 import com.emm.justchill.hh.shared.shared.CategoryRoute
+import com.emm.justchill.hh.shared.shared.Dashboard
 import com.emm.justchill.hh.shared.shared.EditTransactionRoute
-import com.emm.justchill.hh.shared.shared.FastTransactionRoute
 import com.emm.justchill.hh.transaction.EditTransaction
 import com.emm.justchill.hh.transaction.TransactionScreen
 import org.koin.androidx.compose.koinViewModel
@@ -55,6 +54,34 @@ fun Hh() {
 
     val navController = rememberNavController()
 
+    NavHost(
+        navController = navController,
+        startDestination = Dashboard,
+    ) {
+        composable<Dashboard> {
+            DashboardContent(navController)
+        }
+        composable(HhRoutes.AddTransaction.route) {
+            TransactionScreen(
+                popBackStack = { navController.popBackStack() }
+            )
+        }
+        composable<EditTransactionRoute> {
+            val editTransactionRoute: EditTransactionRoute = it.toRoute<EditTransactionRoute>()
+            EditTransaction(navController, editTransactionRoute.transactionId)
+        }
+        composable(HhRoutes.AddAccount.route) {
+            AddAccountScreen(navController)
+        }
+        composable<CategoryRoute> {
+            CategoryScreen(navController)
+        }
+    }
+}
+
+@Composable
+private fun DashboardContent(externalNavController: NavController) {
+    val navController = rememberNavController()
     val navBackStackEntry: NavBackStackEntry? by navController.currentBackStackEntryAsState()
     val currentDestination: NavDestination? = navBackStackEntry?.destination
     val showNavBar = currentDestination?.route !in hhRoutes.map { it.route }
@@ -62,7 +89,7 @@ fun Hh() {
     Scaffold(
         bottomBar = { Csm(navController) },
         contentWindowInsets = WindowInsets.navigationBars,
-        floatingActionButton = { FabMenu(navController, showNavBar) }
+        floatingActionButton = { FabMenu(externalNavController, showNavBar) }
     ) { paddingValues ->
         NavHost(
             navController = navController,
@@ -70,7 +97,7 @@ fun Hh() {
             modifier = Modifier.padding(paddingValues)
         ) {
 
-            composable(HhRoutes.HnNewHome.route) {
+            composable(HhRoutes.AccountsScreen.route) {
                 val vm: AccountsViewModel = koinViewModel()
 
                 val accounts: List<Account> by vm.accounts.collectAsStateWithLifecycle()
@@ -78,43 +105,15 @@ fun Hh() {
                 AccountsScreen(
                     accounts = accounts,
                     onCardClick = vm::updateSelected,
-                    addAccount = { navController.navigate(HhRoutes.AddAccount.route) },
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-            composable<FastTransactionRoute> {
-                val fastTransactionRoute: FastTransactionRoute = it.toRoute<FastTransactionRoute>()
-                val vm: FastTransactionViewModel = koinViewModel()
-
-                FastTransactionScreen(
-                    transactionType = fastTransactionRoute.transactionType,
-                    transactionId = fastTransactionRoute.accountId,
-                    state = vm.state,
-                    onAction = vm::onAction,
-                    popBackStack = { navController.popBackStack() },
+                    addAccount = { externalNavController.navigate(HhRoutes.AddAccount.route) },
                     modifier = Modifier.fillMaxSize()
                 )
             }
             composable(HhRoutes.HhHome.route) {
                 Home()
             }
-            composable(HhRoutes.AddTransaction.route) {
-                TransactionScreen(
-                    popBackStack = { navController.popBackStack() }
-                )
-            }
             composable(HhRoutes.SeeTransaction.route) {
-                SeeTransactionsVersionTwo(navController)
-            }
-            composable<EditTransactionRoute> {
-                val editTransactionRoute: EditTransactionRoute = it.toRoute<EditTransactionRoute>()
-                EditTransaction(navController, editTransactionRoute.transactionId)
-            }
-            composable(HhRoutes.AddAccount.route) {
-                AddAccountScreen(navController)
-            }
-            composable<CategoryRoute> {
-                CategoryScreen(navController)
+                SeeTransactionsVersionTwo(externalNavController)
             }
         }
     }

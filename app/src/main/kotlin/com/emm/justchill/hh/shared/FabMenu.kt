@@ -28,7 +28,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
+import androidx.navigation.NavController
+import com.emm.justchill.hh.shared.shared.CategoryRoute
 
 data class FabAction(
     val text: String,
@@ -36,7 +37,7 @@ data class FabAction(
 )
 
 @Composable
-fun FabMenu(navController: NavHostController, showNavBar: Boolean) {
+fun FabMenu(navController: NavController, showNavBar: Boolean) {
 
     var fabExpanded by remember { mutableStateOf(false) }
 
@@ -46,6 +47,7 @@ fun FabMenu(navController: NavHostController, showNavBar: Boolean) {
             fabExpanded = false
         },
         FabAction("Crear Categorías") {
+            navController.navigate(CategoryRoute)
             fabExpanded = false
         },
         FabAction("Crear Cuenta") {
