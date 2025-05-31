@@ -11,5 +11,6 @@ data class TransactionUiState(
     val date: String = DateUtils.currentDateAtReadableFormat(),
     val transactionType: TransactionType = TransactionType.Income,
     val isEnabled: Boolean = false,
+    val accounts: List<Account> = emptyList(),
     val accountSelected: Account? = null,
 )

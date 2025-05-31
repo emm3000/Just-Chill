@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 class AccountsViewModel(accountRepository: AccountRepository) : ViewModel() {
 
-    val accounts: StateFlow<List<Account>> = accountRepository.retrieve()
+    val accounts: StateFlow<List<Account>> = accountRepository.all()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

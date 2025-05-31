@@ -83,7 +83,7 @@ fun EmmTextInput(
 
         Text(
             text = label,
-            fontWeight = FontWeight.Normal,
+            fontWeight = FontWeight.Bold,
             fontFamily = LatoFontFamily,
             color = MaterialTheme.colorScheme.onBackground,
             fontSize = 17.sp
@@ -127,7 +127,7 @@ fun TextFieldWithLabelPreview() {
                 label = "Cantidad",
                 placeholder = "Ingrese una cantidad",
                 value = "random",
-                onChange = {  },
+                onChange = { },
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -159,7 +159,7 @@ fun TextFieldWithLabel2Preview() {
                 label = "",
                 placeholder = "Ingrese una cantidad",
                 value = "",
-                onChange = {  },
+                onChange = { },
                 modifier = Modifier.fillMaxWidth()
             )
         }

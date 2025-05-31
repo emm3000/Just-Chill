@@ -24,20 +24,23 @@ class DefaultAccountRepository(
     private val aq: AccountsQueries
         get() = emmDatabase.accountsQueries
 
-    override fun retrieve(): Flow<List<Account>> {
+    override fun all(): Flow<List<Account>> {
         return aq.all()
             .asFlow()
             .mapToList(Dispatchers.IO)
             .map(List<Accounts>::toDomain)
     }
 
-    override fun findBy(accountId: String): Flow<Account?> {
-        return aq.find(accountId)
-            .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
-            .map {
-                it?.let(Accounts::toDomain)
-            }
+    override suspend fun find(accountId: String): Account? = withContext(Dispatchers.IO) {
+        val accountResult: Accounts? = aq.find(accountId).executeAsOneOrNull()
+        return@withContext accountResult?.let {
+            Account(
+                accountId = it.accountId,
+                name = it.name,
+                balance = it.balance,
+                description = it.description.orEmpty(),
+            )
+        }
     }
 
     override fun default(): Flow<Account?> {

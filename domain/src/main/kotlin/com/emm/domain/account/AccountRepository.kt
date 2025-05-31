@@ -4,9 +4,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface AccountRepository {
 
-    fun retrieve(): Flow<List<Account>>
+    fun all(): Flow<List<Account>>
 
-    fun findBy(accountId: String): Flow<Account?>
+    suspend fun find(accountId: String): Account?
 
     fun default(): Flow<Account?>
 

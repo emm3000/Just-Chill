@@ -1,7 +1,6 @@
 package com.emm.domain.account
 
 import com.emm.domain.transaction.TransactionType
-import kotlinx.coroutines.flow.firstOrNull
 
 class AccountBalanceUpdater(
     private val repository: AccountRepository,
@@ -10,7 +9,7 @@ class AccountBalanceUpdater(
 
     suspend fun update(accountId: String, transactionType: TransactionType, amount: Double) {
 
-        val account: Account = repository.findBy(accountId).firstOrNull()
+        val account: Account = repository.find(accountId)
             ?: return
 
         val newBalance: Double = when (transactionType) {

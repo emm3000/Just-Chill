@@ -64,7 +64,7 @@ class EditTransactionViewModel(
 
     private fun loadCurrentTransaction() = viewModelScope.launch {
         val currentTransaction: Transaction = transactionFinder.find(transactionId).firstOrNull() ?: return@launch
-        val account: Account = accountFinder.find(currentTransaction.accountId).firstOrNull() ?: return@launch
+        val account: Account = accountFinder.find(currentTransaction.accountId) ?: return@launch
         state = state.copy(
             amount = TextFieldValue(currentTransaction.amountDecimalFormat),
             description = currentTransaction.description,

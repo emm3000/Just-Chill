@@ -23,7 +23,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -34,7 +33,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.components.EmmAmountChill
@@ -44,7 +43,7 @@ import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.auth.LabelTextField
 import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
-import com.emm.justchill.hh.shared.shared.EmmTextFieldChill
+import com.emm.justchill.hh.shared.shared.EmmTextInput
 import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
 import org.koin.androidx.compose.koinViewModel
 
@@ -151,7 +150,7 @@ private fun TransactionScreen(
             )
         }
 
-        EmmTextFieldChill(
+        EmmTextInput(
             modifier = Modifier,
             label = "En que gaste",
             placeholder = "Ingresa tu gasto",
@@ -186,7 +185,7 @@ fun DateInput(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        TextField(
+        OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
@@ -277,7 +276,7 @@ fun TransactionLabel(text: String) {
     )
 }
 
-@PreviewLightDark
+@Preview(showBackground = true)
 @Composable
 fun IncomePreview() {
     EmmTheme {
