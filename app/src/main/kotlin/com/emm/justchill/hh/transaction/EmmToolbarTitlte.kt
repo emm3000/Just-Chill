@@ -14,6 +14,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.sp
@@ -60,9 +61,11 @@ fun EmmToolbarTitle(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmmCenteredToolbar(
-    title: String,
-    actions: @Composable RowScope.() -> Unit = {},
     modifier: Modifier = Modifier,
+    title: String,
+    navigationIconClick: ImageVector? = null,
+    onNavigationIconClick: () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
 
     CenterAlignedTopAppBar(
@@ -75,6 +78,18 @@ fun EmmCenteredToolbar(
                 fontFamily = LatoFontFamily,
                 color = MaterialTheme.colorScheme.onBackground
             )
+        },
+        navigationIcon = {
+            if (navigationIconClick != null) {
+                IconButton(onClick = onNavigationIconClick) {
+                    Icon(
+                        imageVector = navigationIconClick,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+
         },
         actions = actions,
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(

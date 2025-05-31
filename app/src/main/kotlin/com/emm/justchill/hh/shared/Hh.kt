@@ -1,5 +1,8 @@
 package com.emm.justchill.hh.shared
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
@@ -52,9 +55,14 @@ fun Hh() {
 
     val navController = rememberNavController()
 
+    val navBackStackEntry: NavBackStackEntry? by navController.currentBackStackEntryAsState()
+    val currentDestination: NavDestination? = navBackStackEntry?.destination
+    val showNavBar = currentDestination?.route !in hhRoutes.map { it.route }
+
     Scaffold(
         bottomBar = { Csm(navController) },
-        contentWindowInsets = WindowInsets.navigationBars
+        contentWindowInsets = WindowInsets.navigationBars,
+        floatingActionButton = { FabMenu(navController, showNavBar) }
     ) { paddingValues ->
         NavHost(
             navController = navController,
@@ -91,12 +99,9 @@ fun Hh() {
                 Home()
             }
             composable(HhRoutes.AddTransaction.route) {
-                TransactionScreen {
-                    navController.navigate(HhRoutes.SeeTransaction.route) {
-                        popUpTo(navController.graph.findStartDestination().id)
-                        launchSingleTop = true
-                    }
-                }
+                TransactionScreen(
+                    popBackStack = { navController.popBackStack() }
+                )
             }
             composable(HhRoutes.SeeTransaction.route) {
                 SeeTransactionsVersionTwo(navController)
@@ -120,48 +125,54 @@ private fun Csm(internalNavController: NavHostController) {
     val navBackStackEntry: NavBackStackEntry? by internalNavController.currentBackStackEntryAsState()
     val currentDestination: NavDestination? = navBackStackEntry?.destination
 
-    if (currentDestination?.route !in hhRoutes.map { it.route }) return
+    val showName = currentDestination?.route !in hhRoutes.map { it.route }
 
-    BottomAppBar(
-        containerColor = MaterialTheme.colorScheme.background,
-        contentColor = MaterialTheme.colorScheme.onBackground,
+    AnimatedVisibility(
+        visible = !showName,
+        enter = slideInVertically(initialOffsetY = { it }),
+        exit = slideOutVertically(targetOffsetY = { it })
     ) {
-        hhRoutes.forEach { screen ->
-            NavigationBarItem(
-                selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                onClick = {
-                    internalNavController.navigate(screen.route) {
-                        popUpTo(internalNavController.graph.findStartDestination().id) {
-                            saveState = true
+        BottomAppBar(
+            containerColor = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.onBackground,
+        ) {
+            hhRoutes.forEach { screen ->
+                NavigationBarItem(
+                    selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                    onClick = {
+                        internalNavController.navigate(screen.route) {
+                            popUpTo(internalNavController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
+                    },
+                    icon = {
+                        Icon(
+                            screen.icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = LocalContentColor.current,
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = screen.name,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = LocalContentColor.current,
+                            fontFamily = LatoFontFamily,
+                            fontWeight = if (currentDestination?.hierarchy?.any { it.route == screen.route } == true) {
+                                FontWeight.Bold
+                            } else {
+                                FontWeight.Normal
+                            }
+                        )
                     }
-                },
-                icon = {
-                    Icon(
-                        screen.icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = LocalContentColor.current,
-                    )
-                },
-                label = {
-                    Text(
-                        text = screen.name,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = LocalContentColor.current,
-                        fontFamily = LatoFontFamily,
-                        fontWeight = if (currentDestination?.hierarchy?.any { it.route == screen.route } == true) {
-                            FontWeight.Bold
-                        } else {
-                            FontWeight.Normal
-                        }
-                    )
-                }
-            )
+                )
+            }
         }
     }
 }

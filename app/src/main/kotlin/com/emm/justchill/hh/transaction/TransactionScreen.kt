@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -42,12 +43,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogWindowProvider
@@ -68,13 +71,13 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun TransactionScreen(
     vm: TransactionViewModel = koinViewModel(),
-    navigateToSeeTransactions: () -> Unit,
+    popBackStack: () -> Unit,
 ) {
 
     TransactionScreen(
         state = vm.state,
         onAction = vm::onAction,
-        navigateToSeeTransactions = navigateToSeeTransactions
+        popBackStack = popBackStack,
     )
 }
 
@@ -83,7 +86,7 @@ fun TransactionScreen(
 private fun TransactionScreen(
     state: TransactionUiState,
     onAction: (AccountAction) -> Unit,
-    navigateToSeeTransactions: () -> Unit,
+    popBackStack: () -> Unit,
 ) {
 
     val datePickerState: DatePickerState = rememberDatePickerState()
@@ -130,9 +133,12 @@ private fun TransactionScreen(
         verticalArrangement = Arrangement.spacedBy(25.dp)
     ) {
 
+        val screenWidthDp: Dp = LocalConfiguration.current.screenWidthDp.dp
         EmmCenteredToolbar(
             title = "Agregar Transacción",
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.requiredWidth(screenWidthDp),
+            navigationIconClick = Icons.Rounded.Close,
+            onNavigationIconClick = { popBackStack() }
         )
 
         Column {
@@ -188,12 +194,12 @@ private fun TransactionScreen(
             text = "Guardar",
             onClick = {
                 onAction(AccountAction.OnSave)
-                navigateToSeeTransactions()
+                popBackStack()
             },
             enabled = state.isEnabled,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 30.dp)
+                .padding(top = 10.dp)
         )
     }
 
@@ -443,7 +449,7 @@ fun IncomePreview() {
         TransactionScreen(
             state = TransactionUiState(),
             onAction = {},
-            navigateToSeeTransactions = {}
+            popBackStack = {}
         )
     }
 }
