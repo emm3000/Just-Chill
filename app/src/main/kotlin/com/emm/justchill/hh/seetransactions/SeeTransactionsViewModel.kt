@@ -1,30 +1,23 @@
-@file:OptIn(ExperimentalCoroutinesApi::class)
-
 package com.emm.justchill.hh.seetransactions
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.domain.account.AccountRepository
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionLoader
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.toUi
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 class SeeTransactionsViewModel(
     transactionLoader: TransactionLoader,
-    accountRepository: AccountRepository,
 ) : ViewModel() {
 
-    val transactions: StateFlow<List<TransactionUi>> = accountRepository.default()
-        .flatMapLatest { transactionLoader.load(it?.accountId.orEmpty()) }
+    val transactions: StateFlow<List<TransactionUi>> = transactionLoader.load()
         .map(List<Transaction>::toUi)
         .catch(::catchThrowable)
         .stateIn(

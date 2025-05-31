@@ -30,9 +30,9 @@ class DefaultTransactionRepository(
         )
     }
 
-    override fun retrieve(accountId: String): Flow<List<Transaction>> {
+    override fun retrieve(): Flow<List<Transaction>> {
         return transactionsQueries
-            .all(accountId)
+            .all()
             .asFlow()
             .mapToList(Dispatchers.IO)
             .map(List<Transactions>::toDomain)

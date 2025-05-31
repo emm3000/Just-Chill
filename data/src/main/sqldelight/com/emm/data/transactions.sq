@@ -11,6 +11,9 @@ CREATE TABLE transactions (
 );
 
 all:
+SELECT * FROM transactions ORDER BY date DESC;
+
+allByAccount:
 SELECT * FROM transactions WHERE accountId = ? ORDER BY date DESC;
 
 insert:

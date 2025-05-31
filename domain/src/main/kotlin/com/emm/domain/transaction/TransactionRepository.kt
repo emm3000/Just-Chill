@@ -8,7 +8,7 @@ interface TransactionRepository {
 
     fun findBy(transactionId: String): Flow<Transaction?>
 
-    fun retrieve(accountId: String): Flow<List<Transaction>>
+    fun retrieve(): Flow<List<Transaction>>
 
     fun sumIncome(accountId: String): Flow<Double>
 
