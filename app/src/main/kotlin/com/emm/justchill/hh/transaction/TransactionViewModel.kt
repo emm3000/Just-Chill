@@ -31,7 +31,7 @@ class TransactionViewModel(
             flow = snapshotFlow { state.amount },
             flow2 = snapshotFlow { state.date },
             flow3 = snapshotFlow { state.description },
-            flow4 = accountRepository.default(),
+            flow4 = accountRepository.all(),
             transform = ::validateFields,
         ).launchIn(viewModelScope)
     }
@@ -40,13 +40,13 @@ class TransactionViewModel(
         mount: TextFieldValue,
         date: String,
         description: String,
-        account: Account?
+        accounts: List<Account>,
     ) {
         val isEnabled = mount.formatInputToDouble() >= 1.0
                 && date.isNotEmpty()
                 && description.isNotEmpty()
-                && account != null
-        state = state.copy(isEnabled = isEnabled, accountSelected = account)
+                && state.accountSelected != null
+        state = state.copy(isEnabled = isEnabled, accounts = accounts)
     }
 
     fun onAction(action: AccountAction) {
@@ -57,7 +57,8 @@ class TransactionViewModel(
             is AccountAction.OnTransactionTypeChange -> state = state.copy(transactionType = action.value)
             is AccountAction.OnDateChangeInMillis -> updateCurrentDate(action.value)
             AccountAction.OnSave -> addTransaction()
-            else -> {}
+            is AccountAction.OnAccountSelected -> state = state.copy(accountSelected = action.value)
+            AccountAction.OnDelete -> {}
         }
     }
 

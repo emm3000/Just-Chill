@@ -2,7 +2,6 @@ package com.emm.data.account
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.data.Accounts
 import com.emm.data.AccountsQueries
 import com.emm.data.EmmDatabaseData
@@ -47,9 +46,9 @@ class DefaultAccountRepository(
         return aq
             .all()
             .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
+            .mapToList(Dispatchers.IO)
             .map {
-                it?.let(Accounts::toDomain)
+                it.firstOrNull()?.let(Accounts::toDomain)
             }
     }
 
