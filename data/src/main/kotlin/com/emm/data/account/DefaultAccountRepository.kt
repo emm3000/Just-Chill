@@ -13,7 +13,6 @@ import com.emm.domain.account.AccountUpsert
 import com.emm.domain.shared.UniqueIdProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
@@ -42,7 +41,13 @@ class DefaultAccountRepository(
     }
 
     override fun default(): Flow<Account?> {
-        return flowOf()
+        return aq
+            .all()
+            .asFlow()
+            .mapToOneOrNull(Dispatchers.IO)
+            .map {
+                it?.let(Accounts::toDomain)
+            }
     }
 
     override suspend fun create(account: AccountUpsert) = withContext(Dispatchers.IO) {

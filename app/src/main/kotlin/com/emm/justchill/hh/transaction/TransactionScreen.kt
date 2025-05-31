@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,8 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -43,9 +42,7 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.TextColor
-import com.emm.domain.account.Account
 import com.emm.justchill.hh.auth.LabelTextField
-import com.emm.justchill.hh.shared.shared.EmmDropDown
 import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextFieldChill
 import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
@@ -115,8 +112,17 @@ private fun TransactionScreen(
     ) {
 
         EmmCenteredToolbar(
-            title = "Agregar gasto",
+            title = "Agregar Transacción",
             modifier = Modifier.fillMaxWidth(),
+        )
+
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = "Monto",
+            fontWeight = FontWeight.Bold,
+            fontFamily = LatoFontFamily,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 17.sp
         )
 
         EmmAmountChill(
@@ -125,12 +131,25 @@ private fun TransactionScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        EmmTransactionRadioButton(
-            modifier = Modifier
-                .fillMaxWidth(),
-            selectedOption = state.transactionType,
-            onOptionSelected = { onAction(AccountAction.OnTransactionTypeChange(it)) }
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = "Tipo: ",
+                fontWeight = FontWeight.Bold,
+                fontFamily = LatoFontFamily,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = 17.sp
+
+            )
+            EmmTransactionRadioButton(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                selectedOption = state.transactionType,
+                onOptionSelected = { onAction(AccountAction.OnTransactionTypeChange(it)) }
+            )
+        }
 
         EmmTextFieldChill(
             modifier = Modifier,
