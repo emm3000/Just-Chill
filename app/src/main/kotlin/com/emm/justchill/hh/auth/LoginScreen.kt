@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.login
+package com.emm.justchill.hh.auth
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -45,10 +45,15 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier) {
+fun LoginScreen(
+    modifier: Modifier = Modifier,
+    state: LoginUiState,
+    onAction: (LoginAction) -> Unit,
+    navigateToRegister: () -> Unit = {},
+) {
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 24.dp),
@@ -73,9 +78,9 @@ fun LoginScreen(modifier: Modifier = Modifier) {
         )
 
         OutlinedTextField(
-            value = "state.email",
+            value = state.email,
             onValueChange = {
-//                onAction(LoginAction.OnEmailChange(it))
+                onAction(LoginAction.UpdateEmail(it))
             },
             label = {
                 Text(
@@ -100,9 +105,9 @@ fun LoginScreen(modifier: Modifier = Modifier) {
         val (showPassword, setShowPassword) = remember { mutableStateOf(false) }
 
         OutlinedTextField(
-            value = "state.password",
+            value = state.password,
             onValueChange = {
-//                onAction(LoginAction.OnPasswordChange(it))
+                onAction(LoginAction.UpdatePassword(it))
             },
             label = {
                 Text(
@@ -148,10 +153,8 @@ fun LoginScreen(modifier: Modifier = Modifier) {
         }
 
         Button(
-            onClick = {
-//                onAction(LoginAction.Login)
-            },
-            enabled = false,
+            onClick = { onAction(LoginAction.Login) },
+            enabled = state.isValidFields,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
@@ -189,7 +192,7 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 fontFamily = LatoFontFamily,
             )
-            TextButton(onClick = {}) {
+            TextButton(onClick = navigateToRegister) {
                 Text(
                     text = "Regístrate",
                     fontFamily = LatoFontFamily,
@@ -203,10 +206,31 @@ fun LoginScreen(modifier: Modifier = Modifier) {
     }
 }
 
+@Composable
+fun LabelTextField(text: String) {
+    Text(
+        text = text,
+        fontFamily = LatoFontFamily,
+        fontWeight = FontWeight.Normal,
+        color = MaterialTheme.colorScheme.onBackground,
+        fontSize = 16.sp
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun LoginScreenPreview() {
     EmmTheme {
-        LoginScreen()
+        LoginScreen(
+            modifier = Modifier, state = LoginUiState(
+                email = "allen.waller@example.com",
+                password = "mi",
+                isLoading = false,
+                errorMsg = null,
+                isValidFields = false,
+                successLogin = false
+            ), onAction = {}
+
+        )
     }
 }

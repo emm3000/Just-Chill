@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.auth
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,94 +9,51 @@ import androidx.lifecycle.viewModelScope
 import com.emm.domain.auth.Email
 import com.emm.domain.auth.Password
 import com.emm.domain.auth.UserAuthenticator
-import com.emm.domain.auth.UserCreator
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class LoginViewModel(
-    private val userAuthenticator: UserAuthenticator,
-    private val userCreator: UserCreator,
-) : ViewModel() {
+class LoginViewModel(private val userAuthenticator: UserAuthenticator) : ViewModel() {
 
-    var email by mutableStateOf("")
+    var state by mutableStateOf(LoginUiState())
         private set
-
-    var password by mutableStateOf("")
-        private set
-
-    private val _loginState: MutableStateFlow<LoginUi> = MutableStateFlow(LoginUi())
-    val loginState: StateFlow<LoginUi> get() = _loginState.asStateFlow()
 
     init {
         combine(
-            snapshotFlow { email },
-            snapshotFlow { password },
+            snapshotFlow { state.email },
+            snapshotFlow { state.password },
         ) { email, password ->
-            "$email - $password"
+            val isValidFields = email.isNotBlank() && password.isNotBlank()
+            state = state.copy(isValidFields = isValidFields)
         }
-            .onEach { Log.e("aea", it) }
             .launchIn(viewModelScope)
     }
 
-    fun updateEmail(value: String) {
-        email = value
-    }
-
-    fun updatePassword(value: String) {
-        password = value
+    fun onAction(action: LoginAction) {
+        when (action) {
+            LoginAction.Login -> login()
+            is LoginAction.UpdateEmail -> state = state.copy(email = action.value)
+            is LoginAction.UpdatePassword -> state = state.copy(password = action.value)
+        }
     }
 
     fun login() = viewModelScope.launch {
-        loadingState()
         tryLogin()
     }
 
-    fun register() = viewModelScope.launch {
-        loadingState()
-        tryRegister()
-    }
-
-    private suspend fun tryRegister() = try {
-        val email = Email(email)
-        val password = Password(password)
-        userCreator.create(email, password)
-        userAuthenticator.authenticate(email, password)
-        successState()
-    } catch (e: Throwable) {
-        FirebaseCrashlytics.getInstance().recordException(e)
-        errorState(e)
-    }
-
     private suspend fun tryLogin() = try {
-        val email = Email(email)
-        val password = Password(password)
+        state = state.copy(isLoading = true)
+        val email = Email(state.email)
+        val password = Password(state.password)
         userAuthenticator.authenticate(email, password)
-        successState()
+        state = state.copy(successLogin = true)
     } catch (e: Throwable) {
         FirebaseCrashlytics.getInstance().recordException(e)
         errorState(e)
     }
 
     private fun errorState(e: Throwable) {
-        _loginState.update {
-            it.copy(isLoading = false, errorMsg = e.message)
-        }
+        state = state.copy(isLoading = false, errorMsg = e.message)
     }
-
-    private fun loadingState() = _loginState.update { it.copy(isLoading = true) }
-
-    private fun successState() = _loginState.update { it.copy(successLogin = true) }
 }
-
-data class LoginUi(
-    val isLoading: Boolean = false,
-    val errorMsg: String? = null,
-    val successLogin: Boolean = false,
-)
