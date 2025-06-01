@@ -3,16 +3,16 @@ package com.emm.justchill.me.driver.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.DailyAccountCreator
-import com.emm.justchill.me.daily.presentation.DailyUi
-import com.emm.justchill.me.daily.domain.Daily
-import com.emm.justchill.me.daily.domain.DailyRepository
-import com.emm.justchill.me.driver.domain.Driver
-import com.emm.justchill.me.driver.domain.DriverRepository
-import com.emm.justchill.me.daily.presentation.toUi
 import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.transaction.TransactionCreator
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.me.daily.domain.Daily
+import com.emm.justchill.me.daily.domain.DailyRepository
+import com.emm.justchill.me.daily.presentation.DailyUi
+import com.emm.justchill.me.daily.presentation.toUi
+import com.emm.justchill.me.driver.domain.Driver
+import com.emm.justchill.me.driver.domain.DriverRepository
 import com.emm.justchill.me.loan.domain.Loan
 import com.emm.justchill.me.loan.domain.LoanRepository
 import com.emm.justchill.me.loan.presentation.LoanUi
@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 class DriverViewViewModel(
     driverRepository: DriverRepository,
@@ -44,7 +44,7 @@ class DriverViewViewModel(
 
     val driversLoansAndDailies: StateFlow<Pair<List<LoanUi>, List<DailyUi>>> = combine(
         loanRepository.retrieveByDriverId(driverId),
-        dailyRepository.retrieveBy(driverId),
+        dailyRepository.retrieve(driverId),
     ) { loans, dailies ->
         Pair(
             first = loans
@@ -82,7 +82,7 @@ class DriverViewViewModel(
     }
 
     fun deleteDaily(dailyId: String) = viewModelScope.launch {
-        dailyRepository.deleteBy(dailyId)
+        dailyRepository.delete(dailyId)
     }
 
     private suspend fun resolveTransactionAndAccounts(

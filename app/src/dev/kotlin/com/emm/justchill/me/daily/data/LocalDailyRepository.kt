@@ -33,14 +33,14 @@ class LocalDailyRepository(private val emmDatabase: EmmDatabaseData) : DailyRepo
             .map(::toDomain)
     }
 
-    override fun retrieveBy(driverId: Long): Flow<List<Daily>> {
+    override fun retrieve(driverId: Long): Flow<List<Daily>> {
         return dq.find(driverId)
             .asFlow()
             .mapToList(Dispatchers.IO)
             .map(::toDomain)
     }
 
-    override suspend fun deleteBy(dailyId: String) = withContext(Dispatchers.IO) {
+    override suspend fun delete(dailyId: String) = withContext(Dispatchers.IO) {
         dq.delete(dailyId)
     }
 

@@ -12,5 +12,5 @@ interface AccountRepository {
 
     suspend fun create(account: AccountUpsert)
 
-    suspend fun deleteBy(accountId: String)
+    suspend fun delete(accountId: String)
 }

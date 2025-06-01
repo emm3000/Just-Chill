@@ -8,7 +8,7 @@ class TransactionRemoteDataSource {
 
     suspend fun retrieve(): List<TransactionModel> = listOf()
 
-    suspend fun deleteBy(transactionId: String) {}
+    suspend fun delete(transactionId: String) {}
 
     suspend fun deleteAll() {}
 }

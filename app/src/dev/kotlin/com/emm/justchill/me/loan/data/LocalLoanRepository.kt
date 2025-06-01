@@ -32,7 +32,7 @@ class LocalLoanRepository(
         )
     }
 
-    override fun retrieveBy(loanId: String): Flow<List<Loan>> {
+    override fun retrieve(loanId: String): Flow<List<Loan>> {
         return lq.find(loanId)
             .asFlow()
             .mapToList(Dispatchers.IO)

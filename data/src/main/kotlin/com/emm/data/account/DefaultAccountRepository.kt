@@ -24,7 +24,7 @@ class DefaultAccountRepository(private val localDataSource: AccountLocalDataSour
         localDataSource.create(account)
     }
 
-    override suspend fun deleteBy(accountId: String) {
+    override suspend fun delete(accountId: String) {
         localDataSource.delete(accountId)
     }
 

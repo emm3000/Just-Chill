@@ -8,7 +8,7 @@ class AccountRemoteDataSource {
         return listOf()
     }
 
-    suspend fun deleteBy(accountId: String) {}
+    suspend fun delete(accountId: String) {}
 
     suspend fun deleteAll() {}
 }

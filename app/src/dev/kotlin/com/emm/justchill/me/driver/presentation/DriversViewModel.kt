@@ -7,16 +7,16 @@ import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.transaction.TransactionCreator
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.me.daily.domain.Daily
+import com.emm.justchill.me.daily.domain.DailyRepository
+import com.emm.justchill.me.daily.presentation.DailyUi
+import com.emm.justchill.me.daily.presentation.toUi
+import com.emm.justchill.me.driver.domain.Driver
+import com.emm.justchill.me.driver.domain.DriverRepository
+import com.emm.justchill.me.export.DataExporter
 import com.emm.justchill.me.loan.domain.Loan
 import com.emm.justchill.me.loan.domain.LoanRepository
 import com.emm.justchill.me.loan.presentation.LoanUi
-import com.emm.justchill.me.driver.domain.Driver
-import com.emm.justchill.me.driver.domain.DriverRepository
-import com.emm.justchill.me.daily.domain.Daily
-import com.emm.justchill.me.daily.domain.DailyRepository
-import com.emm.justchill.me.export.DataExporter
-import com.emm.justchill.me.daily.presentation.DailyUi
-import com.emm.justchill.me.daily.presentation.toUi
 import com.emm.justchill.me.loan.presentation.toUi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 val staticDrivers = listOf(
     Driver(
@@ -121,7 +121,7 @@ class DriversViewModel(
     }
 
     fun deleteDaily(dailyId: String) = viewModelScope.launch {
-        dailyRepository.deleteBy(dailyId)
+        dailyRepository.delete(dailyId)
     }
 
     private suspend fun resolveTransactionAndAccounts(

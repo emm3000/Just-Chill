@@ -8,7 +8,7 @@ class RemoteCategoryDataSource {
         return listOf()
     }
 
-    suspend fun deleteBy(categoryId: String) {}
+    suspend fun delete(categoryId: String) {}
 
     suspend fun deleteAll() {}
 }

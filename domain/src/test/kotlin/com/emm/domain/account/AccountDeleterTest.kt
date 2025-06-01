@@ -16,11 +16,11 @@ class AccountDeleterTest {
     @Test
     fun `delete should call repository deleteBy with correct accountId`() = runTest {
 
-        coEvery { repository.deleteBy(any()) } just Runs
+        coEvery { repository.delete(any()) } just Runs
 
         accountDeleter.delete("1234")
 
-        coVerify(exactly = 1) { repository.deleteBy("1234") }
+        coVerify(exactly = 1) { repository.delete("1234") }
 
     }
 

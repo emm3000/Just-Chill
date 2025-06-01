@@ -6,7 +6,7 @@ interface LoanRepository {
 
     suspend fun add(loan: Loan)
 
-    fun retrieveBy(loanId: String): Flow<List<Loan>>
+    fun retrieve(loanId: String): Flow<List<Loan>>
 
     fun all(): Flow<List<Loan>>
 
