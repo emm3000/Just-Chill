@@ -29,7 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.emm.justchill.hh.shared.shared.CategoryRoute
+import com.emm.justchill.hh.shared.shared.Screen
 
 data class FabAction(
     val text: String,
@@ -47,7 +47,7 @@ fun FabMenu(navController: NavController, showNavBar: Boolean) {
             fabExpanded = false
         },
         FabAction("Crear Categorías") {
-            navController.navigate(CategoryRoute)
+            navController.navigate(Screen.Category)
             fabExpanded = false
         },
         FabAction("Crear Cuenta") {

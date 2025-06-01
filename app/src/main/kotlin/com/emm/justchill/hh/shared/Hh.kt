@@ -42,9 +42,7 @@ import com.emm.justchill.hh.fasttransaction.AccountsScreen
 import com.emm.justchill.hh.fasttransaction.AccountsViewModel
 import com.emm.justchill.hh.home.Home
 import com.emm.justchill.hh.seetransactions.SeeTransactionsVersionTwo
-import com.emm.justchill.hh.shared.shared.CategoryRoute
-import com.emm.justchill.hh.shared.shared.Dashboard
-import com.emm.justchill.hh.shared.shared.EditTransactionRoute
+import com.emm.justchill.hh.shared.shared.Screen
 import com.emm.justchill.hh.transaction.EditTransaction
 import com.emm.justchill.hh.transaction.TransactionScreen
 import org.koin.androidx.compose.koinViewModel
@@ -56,9 +54,12 @@ fun Hh() {
 
     NavHost(
         navController = navController,
-        startDestination = Dashboard,
+        startDestination = Screen.Dashboard,
     ) {
-        composable<Dashboard> {
+        composable<Screen.Dashboard> {
+            DashboardContent(navController)
+        }
+        composable<Screen.Dashboard> {
             DashboardContent(navController)
         }
         composable(HhRoutes.AddTransaction.route) {
@@ -66,14 +67,14 @@ fun Hh() {
                 popBackStack = { navController.popBackStack() }
             )
         }
-        composable<EditTransactionRoute> {
-            val editTransactionRoute: EditTransactionRoute = it.toRoute<EditTransactionRoute>()
-            EditTransaction(navController, editTransactionRoute.transactionId)
+        composable<Screen.EditTransaction> {
+            val editTransaction: Screen.EditTransaction = it.toRoute<Screen.EditTransaction>()
+            EditTransaction(navController, editTransaction.transactionId)
         }
         composable(HhRoutes.AddAccount.route) {
             AddAccountScreen(navController)
         }
-        composable<CategoryRoute> {
+        composable<Screen.Category> {
             CategoryScreen(navController)
         }
     }

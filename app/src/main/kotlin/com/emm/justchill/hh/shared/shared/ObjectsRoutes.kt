@@ -2,11 +2,19 @@ package com.emm.justchill.hh.shared.shared
 
 import kotlinx.serialization.Serializable
 
-@Serializable
-data class EditTransactionRoute(val transactionId: String)
+sealed interface Screen {
 
-@Serializable
-object CategoryRoute
+    @Serializable
+    data class EditTransaction(val transactionId: String) : Screen
 
-@Serializable
-object Dashboard
+    @Serializable
+    object Category : Screen
+
+    @Serializable
+    object Dashboard : Screen
+
+    @Serializable
+    object Login : Screen
+}
+
+

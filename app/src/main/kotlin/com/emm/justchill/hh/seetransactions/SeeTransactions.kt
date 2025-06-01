@@ -20,13 +20,13 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.hh.shared.shared.EditTransactionRoute
-import com.emm.justchill.hh.transaction.EmmCenteredToolbar
 import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.hh.shared.shared.Screen
+import com.emm.justchill.hh.transaction.EmmCenteredToolbar
 import com.emm.justchill.hh.transaction.TransactionUi
 import org.koin.androidx.compose.koinViewModel
-import java.util.*
+import java.util.UUID
 
 @Composable
 fun SeeTransactionsVersionTwo(
@@ -39,7 +39,7 @@ fun SeeTransactionsVersionTwo(
     SeeTransactionsVersionTwo(
         transactions = collectAsState,
         navigateToEdit = {
-            navController.navigate(EditTransactionRoute(it))
+            navController.navigate(Screen.EditTransaction(it))
         },
     )
 }
