@@ -23,12 +23,12 @@ class DefaultCategoryRepository(
     private val cq: CategoriesQueries
         get() = emmDatabase.categoriesQueries
 
-    override fun retrieve(): Flow<List<Category>> = cq.all()
+    override fun all(): Flow<List<Category>> = cq.all()
         .asFlow()
         .mapToList(Dispatchers.IO)
         .map(List<Categories>::toDomain)
 
-    override fun findBy(categoryId: String): Flow<Category?> = cq.find(categoryId)
+    override fun find(categoryId: String): Flow<Category?> = cq.find(categoryId)
         .asFlow()
         .mapToOneOrNull(Dispatchers.IO)
         .map { category ->
@@ -39,20 +39,17 @@ class DefaultCategoryRepository(
         cq.insert(
             categoryId = uniqueIdProvider.id,
             name = categoryUpsert.name,
-            type = categoryUpsert.type.name,
-            description = categoryUpsert.description,
         )
     }
 
     override suspend fun update(categoryId: String, categoryUpsert: CategoryUpsert) = withContext(Dispatchers.IO) {
         cq.updateValues(
             name = categoryUpsert.name,
-            description = categoryUpsert.description,
             categoryId = categoryId,
         )
     }
 
-    override suspend fun deleteBy(categoryId: String) = withContext(Dispatchers.IO) {
+    override suspend fun delete(categoryId: String) = withContext(Dispatchers.IO) {
         cq.delete(categoryId)
     }
 }

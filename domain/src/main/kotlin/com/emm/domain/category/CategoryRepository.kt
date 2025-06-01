@@ -4,13 +4,13 @@ import kotlinx.coroutines.flow.Flow
 
 interface CategoryRepository {
 
-    fun retrieve(): Flow<List<Category>>
+    fun all(): Flow<List<Category>>
 
-    fun findBy(categoryId: String): Flow<Category?>
+    fun find(categoryId: String): Flow<Category?>
 
     suspend fun create(categoryUpsert: CategoryUpsert)
 
     suspend fun update(categoryId: String, categoryUpsert: CategoryUpsert)
 
-    suspend fun deleteBy(categoryId: String)
+    suspend fun delete(categoryId: String)
 }
