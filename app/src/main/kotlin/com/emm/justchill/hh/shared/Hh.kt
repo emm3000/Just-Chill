@@ -3,12 +3,14 @@ package com.emm.justchill.hh.shared
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -16,7 +18,9 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -35,10 +39,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.emm.domain.account.Account
+import com.emm.domain.auth.AuthRepository
+import com.emm.domain.auth.SessionStatus
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.account.AddAccountScreen
 import com.emm.justchill.hh.auth.LoginScreen
 import com.emm.justchill.hh.auth.LoginViewModel
+import com.emm.justchill.hh.auth.SignUpScreen
+import com.emm.justchill.hh.auth.SignUpViewModel
 import com.emm.justchill.hh.category.CategoryScreen
 import com.emm.justchill.hh.fasttransaction.AccountsScreen
 import com.emm.justchill.hh.fasttransaction.AccountsViewModel
@@ -48,6 +56,7 @@ import com.emm.justchill.hh.shared.shared.Screen
 import com.emm.justchill.hh.transaction.EditTransaction
 import com.emm.justchill.hh.transaction.TransactionScreen
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @Composable
 fun Hh() {
@@ -56,11 +65,52 @@ fun Hh() {
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Dashboard,
+        startDestination = Screen.PreLogin,
     ) {
+        composable<Screen.PreLogin> {
+            val repo: AuthRepository = koinInject()
+
+            val sessionStatus: SessionStatus by repo.sessionStatus.collectAsStateWithLifecycle(SessionStatus.Initializing)
+
+            LaunchedEffect(sessionStatus) {
+                when (sessionStatus) {
+                    SessionStatus.Authenticated -> {
+                        navController.navigate(Screen.Dashboard) {
+                            popUpTo(Screen.PreLogin) {
+                                inclusive = true
+                            }
+                        }
+                    }
+                    SessionStatus.NotAuthenticated -> {
+                        navController.navigate(Screen.Login) {
+                            popUpTo(Screen.PreLogin) {
+                                inclusive = true
+                            }
+                        }
+                    }
+                    else -> {}
+                }
+            }
+
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
+        }
         composable<Screen.Login> {
             val vm: LoginViewModel = koinViewModel()
 
+            LaunchedEffect(vm.state.successLogin) {
+                if (vm.state.successLogin) {
+                    navController.navigate(Screen.Dashboard) {
+                        popUpTo(Screen.Login) {
+                            inclusive = true
+                        }
+                    }
+                }
+            }
             LoginScreen(
                 modifier = Modifier,
                 state = vm.state,
@@ -69,7 +119,13 @@ fun Hh() {
             )
         }
         composable<Screen.Register> {
-//            DashboardContent(navController)
+            val vm: SignUpViewModel = koinViewModel()
+
+            SignUpScreen(
+                state = vm.state,
+                onAction = vm::onAction,
+                onBack = { navController.popBackStack() }
+            )
         }
         composable<Screen.Dashboard> {
             DashboardContent(navController)

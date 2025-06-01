@@ -14,6 +14,9 @@ sealed interface Screen {
     object Dashboard : Screen
 
     @Serializable
+    object PreLogin : Screen
+
+    @Serializable
     object Login : Screen
 
     @Serializable

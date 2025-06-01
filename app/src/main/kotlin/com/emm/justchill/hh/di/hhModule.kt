@@ -1,8 +1,10 @@
 package com.emm.justchill.hh.di
 
 import android.content.Context
+import com.emm.data.transaction.DefaultAuthRepository
 import com.emm.data.transaction.DefaultTransactionRepository
 import com.emm.data.transaction.DefaultTransactionUpdateRepository
+import com.emm.domain.auth.AuthRepository
 import com.emm.domain.auth.UserAuthenticator
 import com.emm.domain.auth.UserCreator
 import com.emm.domain.shared.DateAndTimeCombiner
@@ -92,6 +94,8 @@ private fun Module.repositoriesProviders() {
             transactionQueries = get(),
         )
     }
+
+    factoryOf(::DefaultAuthRepository) bind  AuthRepository::class
 }
 
 private fun supabase(context: Context): SupabaseClient {
