@@ -6,10 +6,10 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.data.Categories
 import com.emm.data.CategoriesQueries
 import com.emm.data.EmmDatabaseData
-import com.emm.data.currentTimeInMillis
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryUpsert
 import com.emm.domain.shared.UniqueIdProvider
+import com.emm.domain.shared.currentTimeInMillis
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

@@ -13,6 +13,9 @@ data class AccountModel(
 
     val balance: Double,
 
+    @SerialName("updated_at")
+    val updatedAt: Long,
+
     @SerialName("user_id")
-    val userId: String = "",
+    val userId: String,
 )

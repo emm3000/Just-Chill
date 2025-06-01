@@ -15,5 +15,6 @@ fun Account.toModel(userId: String) = AccountModel(
     accountId = accountId,
     name = name,
     balance = balance,
-    userId = userId
+    userId = userId,
+    updatedAt = 0L
 )

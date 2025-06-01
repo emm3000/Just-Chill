@@ -5,19 +5,15 @@ import app.cash.sqldelight.coroutines.mapToList
 import com.emm.data.Accounts
 import com.emm.data.AccountsQueries
 import com.emm.data.EmmDatabaseData
-import com.emm.data.currentTimeInMillis
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountUpsert
-import com.emm.domain.shared.UniqueIdProvider
+import com.emm.domain.shared.currentTimeInMillis
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-class AccountLocalDataSource(
-    private val emmDatabase: EmmDatabaseData,
-    private val uniqueIdProvider: UniqueIdProvider,
-) {
+class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
 
     private val aq: AccountsQueries
         get() = emmDatabase.accountsQueries
@@ -49,12 +45,11 @@ class AccountLocalDataSource(
         }
 
     suspend fun create(account: AccountUpsert) = withContext(Dispatchers.IO) {
-        val accountId = uniqueIdProvider.id
         aq.insert(
-            accountId = accountId,
+            accountId = account.accountId,
             name = account.name,
             balance = account.balance,
-            updatedAt = currentTimeInMillis(),
+            updatedAt = account.updatedAt,
         )
     }
 
@@ -66,8 +61,8 @@ class AccountLocalDataSource(
         aq.update(
             name = account.name,
             balance = account.balance,
-            accountId = accountId,
             updatedAt = currentTimeInMillis(),
+            accountId = accountId,
         )
     }
 

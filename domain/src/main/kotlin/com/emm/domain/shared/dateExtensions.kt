@@ -1,4 +1,4 @@
-package com.emm.data
+package com.emm.domain.shared
 
 import java.time.Instant
 

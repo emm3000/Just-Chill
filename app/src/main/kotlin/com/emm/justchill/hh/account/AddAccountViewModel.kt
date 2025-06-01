@@ -8,7 +8,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.AccountCreator
-import com.emm.domain.account.AccountUpsert
 import com.emm.justchill.core.formatInputToDouble
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
@@ -41,10 +40,9 @@ class AddAccountViewModel(private val accountCreator: AccountCreator) : ViewMode
     }
 
     private fun save() = viewModelScope.launch {
-        val accountUpsert = AccountUpsert(
+        accountCreator.create(
             name = state.name,
             balance = state.balance.formatInputToDouble(),
         )
-        accountCreator.create(accountUpsert)
     }
 }

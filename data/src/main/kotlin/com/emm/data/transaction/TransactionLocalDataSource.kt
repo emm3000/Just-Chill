@@ -5,7 +5,7 @@ import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.data.Transactions
 import com.emm.data.TransactionsQueries
-import com.emm.data.currentTimeInMillis
+import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionUpdate

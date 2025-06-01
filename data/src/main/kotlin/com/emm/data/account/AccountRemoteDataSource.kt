@@ -1,14 +1,29 @@
 package com.emm.data.account
 
-class AccountRemoteDataSource {
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.PostgrestQueryBuilder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-    suspend fun upsert(account: AccountModel) {}
+class AccountRemoteDataSource(private val client: SupabaseClient) {
 
-    suspend fun retrieve(): List<AccountModel> {
-        return listOf()
+    private val table: PostgrestQueryBuilder
+        get() = client.from("accounts_v2")
+
+    suspend fun insert(account: AccountModel) = withContext(Dispatchers.IO) {
+        table.insert(account)
     }
 
-    suspend fun delete(accountId: String) {}
+    suspend fun all(): List<AccountModel> = withContext(Dispatchers.IO) {
+        table.select().decodeList<AccountModel>()
+    }
 
-    suspend fun deleteAll() {}
+    suspend fun delete(accountId: String) {
+        table.delete {
+            filter {
+                eq("account_id", accountId)
+            }
+        }
+    }
 }

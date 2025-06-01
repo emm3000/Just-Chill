@@ -15,7 +15,7 @@ class DailyAccountCreator(
         val uniqueId: String = uniqueIdProvider.id
         val accountUpsert = AccountUpsert(
             name = "FERIA",
-            balance = 0.0,
+            balance = 0.0, accountId = "lacus", updatedAt = 9652,
         )
         repository.create(accountUpsert)
         return uniqueId
