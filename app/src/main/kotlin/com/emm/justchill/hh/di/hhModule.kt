@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.di
 
 import android.content.Context
+import com.emm.data.category.LocalCategoryDataSource
 import com.emm.data.transaction.DefaultAuthRepository
 import com.emm.data.transaction.DefaultTransactionRepository
 import com.emm.data.transaction.DefaultTransactionUpdateRepository
@@ -47,6 +48,7 @@ val hhModule = module {
     factory { DefaultUniqueIdProvider } bind UniqueIdProvider::class
 
     viewModelsProviders()
+    dataSource()
 }
 
 private fun Module.viewModelsProviders() {
@@ -77,6 +79,11 @@ private fun Module.viewModelsProviders() {
     viewModelOf(::AccountsViewModel)
 
     viewModelOf(::SignUpViewModel)
+}
+
+
+private fun Module.dataSource() {
+    factoryOf(::LocalCategoryDataSource)
 }
 
 private fun Module.repositoriesProviders() {
