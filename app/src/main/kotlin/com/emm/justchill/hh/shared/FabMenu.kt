@@ -41,7 +41,7 @@ fun FabMenu(navController: NavController, showNavBar: Boolean) {
 
     var fabExpanded by remember { mutableStateOf(false) }
 
-    val fabActions = listOf(
+    val fabActions = remember { listOf(
         FabAction("Crear Transacción") {
             navController.navigate(HhRoutes.AddTransaction.route)
             fabExpanded = false
@@ -53,7 +53,7 @@ fun FabMenu(navController: NavController, showNavBar: Boolean) {
         FabAction("Crear Cuenta") {
             fabExpanded = false
         }
-    )
+    ) }
     AnimatedVisibility(
         visible = !showNavBar,
         enter = fadeIn(animationSpec = tween(durationMillis = 200)),

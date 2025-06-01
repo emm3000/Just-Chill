@@ -2,12 +2,9 @@ package com.emm.justchill.hh.category
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.material.icons.Icons
@@ -37,9 +34,7 @@ fun CategoryScreen(
     CategoryScreen(
         state = vm.categoryUiState,
         onAction = vm::onAction,
-        navigateToBack = {
-            navController.popBackStack()
-        }
+        navigateToBack = navController::popBackStack
     )
 }
 
@@ -50,39 +45,34 @@ private fun CategoryScreen(
     navigateToBack: () -> Unit = {},
 ) {
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .navigationBarsPadding()
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        Column(
+
+        val screenWidthDp: Dp = LocalConfiguration.current.screenWidthDp.dp
+        val current = LocalSoftwareKeyboardController.current
+        EmmCenteredToolbar(
+            title = "Agregar Categoría",
+            modifier = Modifier.requiredWidth(screenWidthDp),
+            navigationIconClick = Icons.Default.Close,
+            onNavigationIconClick = {
+                current?.hide()
+                navigateToBack()
+            }
+        )
+
+        EmmTextInput(
             modifier = Modifier,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(15.dp)
-        ) {
-
-            val screenWidthDp: Dp = LocalConfiguration.current.screenWidthDp.dp
-            val current = LocalSoftwareKeyboardController.current
-            EmmCenteredToolbar(
-                title = "Agregar Categoría",
-                modifier = Modifier.requiredWidth(screenWidthDp),
-                navigationIconClick = Icons.Default.Close,
-                onNavigationIconClick = {
-                    current?.hide()
-                    navigateToBack()
-                }
-            )
-
-            EmmTextInput(
-                modifier = Modifier,
-                label = "Nombre",
-                placeholder = "Ingresa el nombre",
-                value = state.name,
-                onChange = { onAction(CategoryAction.OnNameChange(it)) }
-            )
-        }
+            label = "Nombre",
+            placeholder = "Ingresa el nombre",
+            value = state.name,
+            onChange = { onAction(CategoryAction.OnNameChange(it)) }
+        )
 
         EmmPrimaryButton(
             text = "Guardar",
@@ -93,8 +83,6 @@ private fun CategoryScreen(
             enabled = state.isAllFieldValidated,
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .imePadding()
                 .padding(bottom = 20.dp)
         )
     }
