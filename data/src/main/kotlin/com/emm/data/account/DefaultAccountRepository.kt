@@ -1,78 +1,38 @@
 package com.emm.data.account
 
-import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToList
-import com.emm.data.Accounts
-import com.emm.data.AccountsQueries
-import com.emm.data.EmmDatabaseData
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountUpdateRepository
 import com.emm.domain.account.AccountUpsert
-import com.emm.domain.shared.UniqueIdProvider
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 
-class DefaultAccountRepository(
-    private val emmDatabase: EmmDatabaseData,
-    private val uniqueIdProvider: UniqueIdProvider,
-) : AccountRepository, AccountUpdateRepository {
-
-    private val aq: AccountsQueries
-        get() = emmDatabase.accountsQueries
+class DefaultAccountRepository(private val localDataSource: LocalAccountDataSource) : AccountRepository, AccountUpdateRepository {
 
     override fun all(): Flow<List<Account>> {
-        return aq.all()
-            .asFlow()
-            .mapToList(Dispatchers.IO)
-            .map(List<Accounts>::toDomain)
+        return localDataSource.all()
     }
 
-    override suspend fun find(accountId: String): Account? = withContext(Dispatchers.IO) {
-        val accountResult: Accounts? = aq.find(accountId).executeAsOneOrNull()
-        return@withContext accountResult?.let {
-            Account(
-                accountId = it.accountId,
-                name = it.name,
-                balance = it.balance,
-            )
-        }
+    override suspend fun find(accountId: String): Account? {
+        return localDataSource.find(accountId)
     }
 
     override fun default(): Flow<Account?> {
-        return aq
-            .all()
-            .asFlow()
-            .mapToList(Dispatchers.IO)
-            .map {
-                it.firstOrNull()?.let(Accounts::toDomain)
-            }
+        return localDataSource.default()
     }
 
-    override suspend fun create(account: AccountUpsert) = withContext(Dispatchers.IO) {
-        val accountId = uniqueIdProvider.id
-        aq.insert(
-            accountId = accountId,
-            name = account.name,
-            balance = account.balance,
-        )
+    override suspend fun create(account: AccountUpsert) {
+        localDataSource.create(account)
     }
 
-    override suspend fun deleteBy(accountId: String) = withContext(Dispatchers.IO) {
-        aq.delete(accountId)
+    override suspend fun deleteBy(accountId: String) {
+        localDataSource.delete(accountId)
     }
 
-    override suspend fun update(accountId: String, account: AccountUpsert) = withContext(Dispatchers.IO) {
-        aq.update(
-            name = account.name,
-            balance = account.balance,
-            accountId = accountId,
-        )
+    override suspend fun update(accountId: String, account: AccountUpsert) {
+        localDataSource.update(accountId, account)
     }
 
-    override suspend fun updateAmount(accountId: String, amount: Double) = withContext(Dispatchers.IO) {
-        aq.updateBalance(amount, accountId)
+    override suspend fun updateAmount(accountId: String, amount: Double) {
+        localDataSource.updateAmount(accountId, amount)
     }
 }
