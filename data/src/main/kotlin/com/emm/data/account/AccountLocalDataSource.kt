@@ -5,6 +5,7 @@ import app.cash.sqldelight.coroutines.mapToList
 import com.emm.data.Accounts
 import com.emm.data.AccountsQueries
 import com.emm.data.EmmDatabaseData
+import com.emm.data.currentTimeInMillis
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountUpsert
 import com.emm.domain.shared.UniqueIdProvider
@@ -39,15 +40,13 @@ class AccountLocalDataSource(
         }
     }
 
-    fun default(): Flow<Account?> {
-        return aq
-            .all()
-            .asFlow()
-            .mapToList(Dispatchers.IO)
-            .map {
-                it.firstOrNull()?.let(Accounts::toDomain)
-            }
-    }
+    fun default(): Flow<Account?> = aq
+        .all()
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+        .map {
+            it.firstOrNull()?.let(Accounts::toDomain)
+        }
 
     suspend fun create(account: AccountUpsert) = withContext(Dispatchers.IO) {
         val accountId = uniqueIdProvider.id
@@ -55,6 +54,7 @@ class AccountLocalDataSource(
             accountId = accountId,
             name = account.name,
             balance = account.balance,
+            updatedAt = currentTimeInMillis(),
         )
     }
 
@@ -67,6 +67,7 @@ class AccountLocalDataSource(
             name = account.name,
             balance = account.balance,
             accountId = accountId,
+            updatedAt = currentTimeInMillis(),
         )
     }
 

@@ -1,13 +1,14 @@
 CREATE TABLE categories (
     categoryId TEXT NOT NULL PRIMARY KEY,
-    name TEXT NOT NULL
+    name TEXT NOT NULL,
+    updatedAt INTEGER NOT NULL
 );
 
 all:
 SELECT * FROM categories;
 
 insert:
-INSERT OR REPLACE INTO categories VALUES(?, ?);
+INSERT OR REPLACE INTO categories VALUES(?, ?, ?);
 
 delete:
 DELETE FROM categories WHERE categoryId = ?;
@@ -18,6 +19,7 @@ SELECT * FROM categories WHERE categoryId = ?;
 updateValues:
 UPDATE categories
 SET
-    name = ?
+    name = ?,
+    updatedAt = ?
 WHERE
     categoryId = ?;

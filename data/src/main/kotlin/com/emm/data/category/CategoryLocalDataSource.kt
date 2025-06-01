@@ -6,6 +6,7 @@ import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.data.Categories
 import com.emm.data.CategoriesQueries
 import com.emm.data.EmmDatabaseData
+import com.emm.data.currentTimeInMillis
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryUpsert
 import com.emm.domain.shared.UniqueIdProvider
@@ -38,6 +39,7 @@ class CategoryLocalDataSource(
         cq.insert(
             categoryId = uniqueIdProvider.id,
             name = categoryUpsert.name,
+            updatedAt = currentTimeInMillis()
         )
     }
 
@@ -45,6 +47,7 @@ class CategoryLocalDataSource(
         cq.updateValues(
             name = categoryUpsert.name,
             categoryId = categoryId,
+            updatedAt = currentTimeInMillis()
         )
     }
 

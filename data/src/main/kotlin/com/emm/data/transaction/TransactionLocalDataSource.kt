@@ -5,6 +5,7 @@ import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.data.Transactions
 import com.emm.data.TransactionsQueries
+import com.emm.data.currentTimeInMillis
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionUpdate
@@ -24,7 +25,8 @@ class TransactionLocalDataSource(private val transactionsQueries: TransactionsQu
             description = transactionInsert.description,
             date = transactionInsert.date,
             categoryId = transactionInsert.categoryId,
-            accountId = transactionInsert.accountId
+            accountId = transactionInsert.accountId,
+            updatedAt = currentTimeInMillis(),
         )
     }
 
@@ -79,6 +81,7 @@ class TransactionLocalDataSource(private val transactionsQueries: TransactionsQu
             date = transactionUpdate.date,
             transactionId = transactionId,
             accountId = transactionUpdate.accountId,
+            updatedAt = currentTimeInMillis(),
         )
     }
 }
