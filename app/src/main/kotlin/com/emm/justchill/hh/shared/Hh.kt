@@ -56,7 +56,7 @@ fun Hh() {
         navController = navController,
         startDestination = Screen.Dashboard,
     ) {
-        composable<Screen.Dashboard> {
+        composable<Screen.Login> {
             DashboardContent(navController)
         }
         composable<Screen.Dashboard> {

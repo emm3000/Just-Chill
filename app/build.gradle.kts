@@ -57,8 +57,8 @@ android {
             manifestPlaceholders["app_name"] = appName
             manifestPlaceholders["flavor_suffix"] = "-DEV"
             applicationIdSuffix = ".dev"
-            resValue("string", "supabase_url", keystoreProperties["supabaseDevUrl"] as String)
-            resValue("string", "supabase_key", keystoreProperties["supabaseDevKey"] as String)
+            resValue("string", "supabase_url", keystoreProperties["supabaseUrl"] as String)
+            resValue("string", "supabase_key", keystoreProperties["supabaseKey"] as String)
         }
 
         create("prod") {
@@ -66,8 +66,8 @@ android {
             manifestPlaceholders["app_name"] = "Just Chill"
             manifestPlaceholders["flavor_suffix"] = ""
             signingConfig = signingConfigs["config"]
-            resValue("string", "supabase_url", keystoreProperties["supabaseQaUrl"] as String)
-            resValue("string", "supabase_key", keystoreProperties["supabaseQaKey"] as String)
+            resValue("string", "supabase_url", keystoreProperties["supabaseUrl"] as String)
+            resValue("string", "supabase_key", keystoreProperties["supabaseKey"] as String)
         }
     }
 
@@ -140,7 +140,6 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation(libs.androidx.material.icons.extended)
 
-
     implementation(libs.androidx.navigation.compose)
     implementation(libs.coil.compose)
 
@@ -150,18 +149,11 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
-//
-//    implementation(libs.android.driver)
-//    implementation(libs.coroutines.extensions)
 
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.activity.ktx)
 
     devDebugImplementation(libs.javafaker)
-
-    implementation(platform(libs.bom))
-    implementation(libs.postgrest.kt)
-    implementation(libs.gotrue.kt)
 
     implementation(libs.ktor.client.okhttp)
 

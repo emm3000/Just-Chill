@@ -49,8 +49,11 @@ dependencies {
     implementation(libs.android.driver)
     api(libs.coroutines.extensions)
 
-    implementation(libs.kotlinx.serialization.json)
+    implementation(platform(libs.bom))
+    api(libs.postgrest.kt)
+    api(libs.auth.kt)
 
+    implementation(libs.kotlinx.serialization.json)
 }
 
 sqldelight {

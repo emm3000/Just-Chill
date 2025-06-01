@@ -1,6 +1,8 @@
 package com.emm.justchill.hh.di
 
 import android.content.Context
+import com.emm.data.transaction.DefaultTransactionRepository
+import com.emm.data.transaction.DefaultTransactionUpdateRepository
 import com.emm.domain.auth.UserAuthenticator
 import com.emm.domain.auth.UserCreator
 import com.emm.domain.shared.DateAndTimeCombiner
@@ -11,13 +13,11 @@ import com.emm.justchill.R
 import com.emm.justchill.hh.account.AddAccountViewModel
 import com.emm.justchill.hh.auth.LoginViewModel
 import com.emm.justchill.hh.category.CategoryViewModel
+import com.emm.justchill.hh.fasttransaction.AccountsViewModel
 import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.HomeViewModel
-import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
 import com.emm.justchill.hh.seetransactions.SeeTransactionsViewModel
-import com.emm.data.transaction.DefaultTransactionRepository
-import com.emm.data.transaction.DefaultTransactionUpdateRepository
-import com.emm.justchill.hh.fasttransaction.AccountsViewModel
+import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
 import com.emm.justchill.hh.transaction.EditTransactionViewModel
 import com.emm.justchill.hh.transaction.TransactionViewModel
 import io.github.jan.supabase.SupabaseClient
@@ -96,9 +96,7 @@ private fun supabase(context: Context): SupabaseClient {
         supabaseUrl = context.getString(R.string.supabase_url),
         supabaseKey = context.getString(R.string.supabase_key)
     ) {
-        install(Auth) {
-            this.alwaysAutoRefresh = true
-        }
+        install(Auth)
         install(Postgrest)
         defaultSerializer = KotlinXSerializer(Json { ignoreUnknownKeys = true })
     }
