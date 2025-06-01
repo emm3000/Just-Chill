@@ -6,7 +6,7 @@ import com.emm.domain.account.AccountUpdateRepository
 import com.emm.domain.account.AccountUpsert
 import kotlinx.coroutines.flow.Flow
 
-class DefaultAccountRepository(private val localDataSource: LocalAccountDataSource) : AccountRepository, AccountUpdateRepository {
+class DefaultAccountRepository(private val localDataSource: AccountLocalDataSource) : AccountRepository, AccountUpdateRepository {
 
     override fun all(): Flow<List<Account>> {
         return localDataSource.all()

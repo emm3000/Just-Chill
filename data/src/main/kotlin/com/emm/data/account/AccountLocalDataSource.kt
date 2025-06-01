@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-class LocalAccountDataSource(
+class AccountLocalDataSource(
     private val emmDatabase: EmmDatabaseData,
     private val uniqueIdProvider: UniqueIdProvider,
 ) {

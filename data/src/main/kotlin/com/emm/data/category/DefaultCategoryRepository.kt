@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 class DefaultCategoryRepository(
-    private val localDataSource: LocalCategoryDataSource,
+    private val localDataSource: CategoryLocalDataSource,
 ) : CategoryRepository {
 
     override fun all(): Flow<List<Category>> = localDataSource.all()
