@@ -6,7 +6,7 @@ interface TransactionRepository {
 
     suspend fun create(transactionInsert: TransactionInsert)
 
-    fun findBy(transactionId: String): Flow<Transaction?>
+    fun find(transactionId: String): Flow<Transaction?>
 
     fun retrieve(): Flow<List<Transaction>>
 
@@ -16,5 +16,5 @@ interface TransactionRepository {
 
     fun difference(accountId: String): Flow<Double>
 
-   suspend fun deleteBy(transactionId: String)
+   suspend fun delete(transactionId: String)
 }

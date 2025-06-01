@@ -1,10 +1,12 @@
 package com.emm.justchill.hh.di
 
 import android.content.Context
+import com.emm.data.account.AccountLocalDataSource
+import com.emm.data.auth.DefaultAuthRepository
 import com.emm.data.category.CategoryLocalDataSource
-import com.emm.data.transaction.DefaultAuthRepository
 import com.emm.data.transaction.DefaultTransactionRepository
 import com.emm.data.transaction.DefaultTransactionUpdateRepository
+import com.emm.data.transaction.TransactionLocalDataSource
 import com.emm.domain.auth.AuthRepository
 import com.emm.domain.auth.UserAuthenticator
 import com.emm.domain.auth.UserCreator
@@ -84,23 +86,17 @@ private fun Module.viewModelsProviders() {
 
 private fun Module.dataSource() {
     factoryOf(::CategoryLocalDataSource)
+    factoryOf(::TransactionLocalDataSource)
+    factoryOf(::AccountLocalDataSource)
 }
 
 private fun Module.repositoriesProviders() {
 
-    single<TransactionRepository> {
-        DefaultTransactionRepository(
-            transactionsQueries = get(),
-        )
-    }
+    factoryOf(::DefaultTransactionRepository) bind TransactionRepository::class
 
     single<SupabaseClient> { supabase(androidApplication()) }
 
-    factory<TransactionUpdateRepository> {
-        DefaultTransactionUpdateRepository(
-            transactionQueries = get(),
-        )
-    }
+    factoryOf(::DefaultTransactionUpdateRepository) bind TransactionUpdateRepository::class
 
     factoryOf(::DefaultAuthRepository) bind  AuthRepository::class
 }

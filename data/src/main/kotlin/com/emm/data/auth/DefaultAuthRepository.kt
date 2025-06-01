@@ -1,4 +1,4 @@
-package com.emm.data.transaction
+package com.emm.data.auth
 
 import com.emm.domain.auth.AuthRepository
 import com.emm.domain.auth.Email
@@ -9,13 +9,10 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-class DefaultAuthRepository(
-    private val client: SupabaseClient,
-) : AuthRepository {
+class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository {
 
     override val sessionStatus: Flow<com.emm.domain.auth.SessionStatus>
         get() = client.auth.sessionStatus
@@ -26,7 +23,7 @@ class DefaultAuthRepository(
                     is SessionStatus.NotAuthenticated -> com.emm.domain.auth.SessionStatus.NotAuthenticated
                     else -> com.emm.domain.auth.SessionStatus.NotAuthenticated
                 }
-            }.flowOn(Dispatchers.IO)
+            }
 
     override suspend fun login(email: Email, password: Password) = withContext(Dispatchers.IO) {
         client.auth.signInWith(io.github.jan.supabase.auth.providers.builtin.Email) {

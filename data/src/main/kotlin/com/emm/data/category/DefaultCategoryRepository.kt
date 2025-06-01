@@ -15,11 +15,11 @@ class DefaultCategoryRepository(
 
     override fun find(categoryId: String): Flow<Category?> = localDataSource.find(categoryId)
 
-    override suspend fun create(categoryUpsert: CategoryUpsert) = withContext(Dispatchers.IO) {
+    override suspend fun create(categoryUpsert: CategoryUpsert) {
         localDataSource.create(categoryUpsert)
     }
 
-    override suspend fun update(categoryId: String, categoryUpsert: CategoryUpsert) = withContext(Dispatchers.IO) {
+    override suspend fun update(categoryId: String, categoryUpsert: CategoryUpsert) {
         localDataSource.update(categoryId, categoryUpsert)
     }
 
