@@ -38,7 +38,7 @@ class LoginViewModel(private val userAuthenticator: UserAuthenticator) : ViewMod
         }
     }
 
-    fun login() = viewModelScope.launch {
+    private fun login() = viewModelScope.launch {
         tryLogin()
     }
 

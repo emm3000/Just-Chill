@@ -12,6 +12,7 @@ import com.emm.domain.transaction.TransactionUpdateRepository
 import com.emm.justchill.R
 import com.emm.justchill.hh.account.AddAccountViewModel
 import com.emm.justchill.hh.auth.LoginViewModel
+import com.emm.justchill.hh.auth.SignUpViewModel
 import com.emm.justchill.hh.category.CategoryViewModel
 import com.emm.justchill.hh.fasttransaction.AccountsViewModel
 import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
@@ -72,6 +73,8 @@ private fun Module.viewModelsProviders() {
 
     viewModelOf(::FastTransactionViewModel)
     viewModelOf(::AccountsViewModel)
+
+    viewModelOf(::SignUpViewModel)
 }
 
 private fun Module.repositoriesProviders() {

@@ -37,6 +37,8 @@ import androidx.navigation.toRoute
 import com.emm.domain.account.Account
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.account.AddAccountScreen
+import com.emm.justchill.hh.auth.LoginScreen
+import com.emm.justchill.hh.auth.LoginViewModel
 import com.emm.justchill.hh.category.CategoryScreen
 import com.emm.justchill.hh.fasttransaction.AccountsScreen
 import com.emm.justchill.hh.fasttransaction.AccountsViewModel
@@ -57,7 +59,17 @@ fun Hh() {
         startDestination = Screen.Dashboard,
     ) {
         composable<Screen.Login> {
-            DashboardContent(navController)
+            val vm: LoginViewModel = koinViewModel()
+
+            LoginScreen(
+                modifier = Modifier,
+                state = vm.state,
+                onAction = vm::onAction,
+                navigateToRegister = { navController.navigate(Screen.Register) }
+            )
+        }
+        composable<Screen.Register> {
+//            DashboardContent(navController)
         }
         composable<Screen.Dashboard> {
             DashboardContent(navController)
