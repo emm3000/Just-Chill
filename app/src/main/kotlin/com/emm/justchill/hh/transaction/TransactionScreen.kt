@@ -322,19 +322,16 @@ private fun AccountSelectorContentPreview() {
                     accountId = "tantas1",
                     name = "Garrett Owen",
                     balance = 2.3,
-                    description = "mel"
                 ),
                 Account(
                     accountId = "tantas2",
                     name = "Garrett Owen",
                     balance = 2.3,
-                    description = "mel"
                 ),
                 Account(
                     accountId = "tantas3",
                     name = "Garrett Owen",
                     balance = 2.3,
-                    description = "mel"
                 )
             ),
             onAccountSelected = {},

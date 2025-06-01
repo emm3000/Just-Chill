@@ -21,7 +21,7 @@ import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
-import com.emm.justchill.hh.shared.shared.EmmTextFieldChill
+import com.emm.justchill.hh.shared.shared.EmmTextInput
 import com.emm.justchill.hh.transaction.EmmCenteredToolbar
 import org.koin.androidx.compose.koinViewModel
 
@@ -41,7 +41,7 @@ fun AddAccountScreen(
 }
 
 @Composable
-fun AddAccountScreen(
+private fun AddAccountScreen(
     state: AddAccountUiState,
     onAction: (AddAccountAction) -> Unit,
     navigateToBack: () -> Unit = {},
@@ -63,7 +63,7 @@ fun AddAccountScreen(
                 .padding(vertical = 10.dp)
                 .padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(15.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
             Text(
@@ -76,25 +76,17 @@ fun AddAccountScreen(
             )
 
             EmmAmountChill(
-                value = state.amount,
+                value = state.balance,
                 onValueChange = { onAction(AddAccountAction.OnAmountChange(it)) },
                 modifier = Modifier.fillMaxWidth()
             )
 
-            EmmTextFieldChill(
+            EmmTextInput(
                 value = state.name,
                 onChange = { onAction(AddAccountAction.OnNameChange(it)) },
                 label = "Nombre *",
                 placeholder = "Ingresa el nombre",
                 modifier = Modifier
-            )
-
-            EmmTextFieldChill(
-                value = state.description,
-                onChange = { onAction(AddAccountAction.OnDescriptionChange(it)) },
-                label = "Descripción (opcional)",
-                placeholder = "Ingresa la descripción",
-                modifier = Modifier,
             )
 
             EmmPrimaryButton(

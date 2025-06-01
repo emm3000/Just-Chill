@@ -1,7 +1,6 @@
 package com.emm.domain.account
 
 import com.emm.domain.shared.UniqueIdProvider
-import kotlinx.coroutines.flow.firstOrNull
 
 class DailyAccountCreator(
     private val repository: AccountRepository,
@@ -17,8 +16,6 @@ class DailyAccountCreator(
         val accountUpsert = AccountUpsert(
             name = "FERIA",
             balance = 0.0,
-            description = "JUST FERIA",
-            isSelected = AccountSelect.NonSelected,
         )
         repository.create(accountUpsert)
         return uniqueId

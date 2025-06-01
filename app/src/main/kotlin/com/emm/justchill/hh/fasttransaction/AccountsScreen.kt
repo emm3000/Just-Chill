@@ -113,14 +113,6 @@ private fun AccountItem(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.width(10.dp))
-                Text(
-                    text = account.description.ifBlank { "No description" },
-                    fontSize = 14.sp,
-                    fontFamily = LatoFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontStyle = FontStyle.Normal,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                )
 
             }
             Text(
@@ -144,21 +136,17 @@ private fun AccountsScreenPreview() {
                     accountId = "1",
                     name = "random name",
                     balance = 123.22,
-                    description = "random descripction",
                 ),
                 Account(
                     accountId = "2",
                     name = "lorem itsum",
                     balance = 123.22,
-                    description = "random descripction",
 
                 ),
                 Account(
                     accountId = "3",
                     name = "random name",
                     balance = 123.22,
-                    description = "random descripction",
-
                 )
             ),
             onCardClick = { },

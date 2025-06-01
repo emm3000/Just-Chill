@@ -6,8 +6,6 @@ sealed interface AddAccountAction {
 
     class OnNameChange(val value: String) : AddAccountAction
 
-    class OnDescriptionChange(val value: String) : AddAccountAction
-
     class OnAmountChange(val value: TextFieldValue) : AddAccountAction
 
     data object OnSave : AddAccountAction

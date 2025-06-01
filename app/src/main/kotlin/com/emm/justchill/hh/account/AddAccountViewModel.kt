@@ -7,10 +7,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.core.formatInputToDouble
-import com.emm.domain.account.AccountUpsert
 import com.emm.domain.account.AccountCreator
-import com.emm.domain.account.AccountSelect
+import com.emm.domain.account.AccountUpsert
+import com.emm.justchill.core.formatInputToDouble
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
@@ -22,7 +21,7 @@ class AddAccountViewModel(private val accountCreator: AccountCreator) : ViewMode
 
     init {
         combine(
-            flow = snapshotFlow { state.amount },
+            flow = snapshotFlow { state.balance },
             flow2 = snapshotFlow { state.name },
             transform = ::checkFields
         ).launchIn(viewModelScope)
@@ -30,8 +29,7 @@ class AddAccountViewModel(private val accountCreator: AccountCreator) : ViewMode
 
     fun onAction(action: AddAccountAction) {
         when (action) {
-            is AddAccountAction.OnAmountChange -> state = state.copy(amount = action.value)
-            is AddAccountAction.OnDescriptionChange -> state = state.copy(description = action.value)
+            is AddAccountAction.OnAmountChange -> state = state.copy(balance = action.value)
             is AddAccountAction.OnNameChange -> state = state.copy(name = action.value)
             AddAccountAction.OnSave -> save()
         }
@@ -45,9 +43,7 @@ class AddAccountViewModel(private val accountCreator: AccountCreator) : ViewMode
     private fun save() = viewModelScope.launch {
         val accountUpsert = AccountUpsert(
             name = state.name,
-            balance = state.amount.formatInputToDouble(),
-            description = state.description,
-            isSelected = AccountSelect.NonSelected
+            balance = state.balance.formatInputToDouble(),
         )
         accountCreator.create(accountUpsert)
     }

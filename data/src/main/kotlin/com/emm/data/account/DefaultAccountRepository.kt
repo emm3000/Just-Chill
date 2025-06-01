@@ -37,7 +37,6 @@ class DefaultAccountRepository(
                 accountId = it.accountId,
                 name = it.name,
                 balance = it.balance,
-                description = it.description.orEmpty(),
             )
         }
     }
@@ -58,7 +57,6 @@ class DefaultAccountRepository(
             accountId = accountId,
             name = account.name,
             balance = account.balance,
-            description = account.description,
         )
     }
 
@@ -70,7 +68,6 @@ class DefaultAccountRepository(
         aq.update(
             name = account.name,
             balance = account.balance,
-            description = account.description,
             accountId = accountId,
         )
     }

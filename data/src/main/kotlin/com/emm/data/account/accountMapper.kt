@@ -7,7 +7,6 @@ fun Accounts.toDomain() = Account(
     accountId = accountId,
     name = name,
     balance = balance,
-    description = description.orEmpty(),
 )
 
 fun List<Accounts>.toDomain() = map(Accounts::toDomain)
@@ -16,6 +15,5 @@ fun Account.toModel(userId: String) = AccountModel(
     accountId = accountId,
     name = name,
     balance = balance,
-    description = description,
     userId = userId
 )

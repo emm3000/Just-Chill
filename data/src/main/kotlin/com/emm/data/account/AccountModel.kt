@@ -13,8 +13,6 @@ data class AccountModel(
 
     val balance: Double,
 
-    val description: String,
-
     @SerialName("user_id")
     val userId: String = "",
 )

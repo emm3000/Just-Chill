@@ -1,15 +1,14 @@
 CREATE TABLE accounts (
     accountId TEXT NOT NULL PRIMARY KEY,
     name TEXT NOT NULL,
-    balance REAL NOT NULL,
-    description TEXT
+    balance REAL NOT NULL
 );
 
 all:
 SELECT * FROM accounts;
 
 insert:
-INSERT OR REPLACE INTO accounts VALUES(?, ?, ?, ?);
+INSERT OR REPLACE INTO accounts VALUES(?, ?, ?);
 
 delete:
 DELETE FROM accounts WHERE accountId = ?;
@@ -21,8 +20,7 @@ update:
 UPDATE accounts
 SET
     name = ?,
-    balance = ?,
-    description = ?
+    balance = ?
 WHERE
     accountId = ?;
 
