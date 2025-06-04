@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.shared
 
 import android.app.Activity
+import android.content.Context
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
@@ -108,8 +109,11 @@ fun Hh() {
         composable<Screen.Login> {
             val vm: LoginViewModel = koinViewModel()
 
+            val applicationContext: Context? = LocalActivity.current?.applicationContext
+
             LaunchedEffect(vm.state.successLogin) {
                 if (vm.state.successLogin) {
+                    applicationContext?.let(Sync::initialize)
                     navController.navigate(Screen.Dashboard) {
                         popUpTo(Screen.Login) {
                             inclusive = true

@@ -36,7 +36,7 @@ class SyncWorker(
 
             val accounts: List<Account> = accountsSynchronizer.all().firstOrNull() ?: emptyList()
             val categories: List<Category> = categoriesSynchronizer.all().firstOrNull() ?: emptyList()
-            val transactions: List<Transaction> = transactionsSynchronizer.retrieve().firstOrNull() ?: emptyList()
+            val transactions: List<Transaction> = transactionsSynchronizer.all().firstOrNull() ?: emptyList()
 
             if (accounts.isEmpty() && categories.isEmpty() && transactions.isEmpty()) {
                 pull()

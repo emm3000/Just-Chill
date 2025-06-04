@@ -30,7 +30,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
         )
     }
 
-    fun retrieve(): Flow<List<Transaction>> {
+    fun all(): Flow<List<Transaction>> {
         return tq
             .all()
             .asFlow()

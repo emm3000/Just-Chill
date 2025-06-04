@@ -16,8 +16,8 @@ class DefaultTransactionRepository(
         return localDataSource.create(transactionInsert)
     }
 
-    override fun retrieve(): Flow<List<Transaction>> {
-        return localDataSource.retrieve()
+    override fun all(): Flow<List<Transaction>> {
+        return localDataSource.all()
     }
 
     override fun sumIncome(accountId: String): Flow<Double> {

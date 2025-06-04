@@ -8,19 +8,19 @@ sealed interface Screen {
     data class EditTransaction(val transactionId: String) : Screen
 
     @Serializable
-    object Category : Screen
+    data object Category : Screen
 
     @Serializable
-    object Dashboard : Screen
+    data object Dashboard : Screen
 
     @Serializable
-    object PreLogin : Screen
+    data object PreLogin : Screen
 
     @Serializable
-    object Login : Screen
+    data object Login : Screen
 
     @Serializable
-    object Register : Screen
+    data object Register : Screen
 }
 
 
