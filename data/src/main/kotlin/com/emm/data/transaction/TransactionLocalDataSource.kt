@@ -63,11 +63,11 @@ class TransactionLocalDataSource(private val transactionsQueries: TransactionsQu
         transactionsQueries.delete(transactionId)
     }
 
-    fun find(transactionId: String): Flow<Transaction?> {
-        return transactionsQueries.find(transactionId)
-            .asFlow()
-            .mapToOneOrNull(Dispatchers.IO)
-            .map { it?.let(Transactions::toDomain) }
+    fun find(transactionId: String): Transaction? {
+        val firstOrNull: Transactions? = transactionsQueries
+            .find(transactionId)
+            .executeAsOneOrNull()
+        return firstOrNull?.toDomain()
     }
 
     suspend fun update(

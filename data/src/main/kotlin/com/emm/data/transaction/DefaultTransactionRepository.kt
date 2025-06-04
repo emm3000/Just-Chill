@@ -33,7 +33,7 @@ class DefaultTransactionRepository(
         localDataSource.delete(transactionId)
     }
 
-    override fun find(transactionId: String): Flow<Transaction?> {
+    override fun find(transactionId: String): Transaction? {
         return localDataSource.find(transactionId)
     }
 }

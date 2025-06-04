@@ -6,7 +6,7 @@ interface TransactionRepository {
 
     suspend fun create(transactionInsert: TransactionInsert)
 
-    fun find(transactionId: String): Flow<Transaction?>
+    fun find(transactionId: String): Transaction?
 
     fun retrieve(): Flow<List<Transaction>>
 

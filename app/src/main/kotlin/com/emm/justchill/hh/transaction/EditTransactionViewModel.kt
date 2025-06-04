@@ -18,7 +18,6 @@ import com.emm.domain.transaction.TransactionUpdater
 import com.emm.justchill.core.formatInputToDouble
 import com.emm.justchill.hh.transaction.DateUtils.millisToReadableFormat
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 
@@ -64,7 +63,7 @@ class EditTransactionViewModel(
     }
 
     private fun loadCurrentTransaction() = viewModelScope.launch {
-        val currentTransaction: Transaction = transactionFinder.find(transactionId).firstOrNull() ?: return@launch
+        val currentTransaction: Transaction = transactionFinder.find(transactionId) ?: return@launch
         val account: Account = accountFinder.find(currentTransaction.accountId) ?: return@launch
         state = state.copy(
             amount = TextFieldValue(currentTransaction.amountDecimalFormat),

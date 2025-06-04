@@ -19,7 +19,7 @@ class TransactionCreator(
 
         val transaction: TransactionInsert = transactionInsert.copy(
             id = transactionId,
-            date = dateAndTimeCombined
+            date = dateAndTimeCombined,
         )
 
         repository.create(transaction)
