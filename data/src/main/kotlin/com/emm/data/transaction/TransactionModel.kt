@@ -1,6 +1,5 @@
 package com.emm.data.transaction
 
-import com.emm.data.Transactions
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -26,15 +25,4 @@ data class TransactionModel(
 
     @SerialName("account_id")
     val accountId: String,
-)
-
-fun Transactions.toModel() = TransactionModel(
-    transactionId = transactionId,
-    type = type,
-    amount = amount,
-    description = description,
-    date = date,
-    updatedAt = updatedAt,
-    categoryId = categoryId,
-    accountId = accountId,
 )

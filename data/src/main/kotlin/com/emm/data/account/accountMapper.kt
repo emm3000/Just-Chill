@@ -2,6 +2,7 @@ package com.emm.data.account
 
 import com.emm.data.Accounts
 import com.emm.domain.account.Account
+import com.emm.domain.account.AccountUpsert
 
 fun Accounts.toDomain() = Account(
     accountId = accountId,
@@ -11,10 +12,17 @@ fun Accounts.toDomain() = Account(
 
 fun List<Accounts>.toDomain() = map(Accounts::toDomain)
 
-fun Account.toModel(userId: String) = AccountModel(
+fun Accounts.toAccountUpsert() = AccountUpsert(
     accountId = accountId,
     name = name,
     balance = balance,
-    userId = userId,
-    updatedAt = 0L
+    updatedAt = updatedAt,
+    isSynced = true,
+)
+
+fun Accounts.toAccountModel() = AccountModel(
+    accountId = accountId,
+    name = name,
+    balance = balance,
+    updatedAt = updatedAt,
 )

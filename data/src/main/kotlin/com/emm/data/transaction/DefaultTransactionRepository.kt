@@ -1,11 +1,9 @@
 package com.emm.data.transaction
 
 import com.emm.data.Transactions
-import com.emm.domain.account.Account
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionRepository
-import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionUpdate
 import kotlinx.coroutines.flow.Flow
 
@@ -49,26 +47,10 @@ class DefaultTransactionRepository(
     }
 
     private suspend fun updateLocal(unSyncedTransactions: List<Transactions>) {
-        val transactionUpdates: List<TransactionUpdate> = unSyncedTransactions.map(::transactionUpdate)
+        val transactionUpdates: List<TransactionUpdate> = unSyncedTransactions.map(Transactions::toTransactionUpdate)
         unSyncedTransactions.zip(transactionUpdates) { transaction, update ->
             localDataSource.update(transaction.transactionId, update)
         }
-    }
-
-    private fun transactionUpdate(transaction: Transactions): TransactionUpdate {
-        val wrapperAccount = Account(
-            accountId = transaction.accountId,
-            name = "",
-            balance = 0.0,
-        )
-        return TransactionUpdate(
-            type = TransactionType.valueOf(transaction.type),
-            amount = transaction.amount,
-            description = transaction.description,
-            account = wrapperAccount,
-            date = transaction.date,
-            isSynced = true,
-        )
     }
 
     private suspend fun updateRemote(unSyncedTransactions: List<Transactions>) {

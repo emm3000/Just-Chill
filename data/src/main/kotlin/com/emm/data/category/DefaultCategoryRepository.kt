@@ -33,7 +33,7 @@ class DefaultCategoryRepository(
         val unSynced: List<Categories> = localDataSource.unSynced()
         updatedRemoteCategories(unSynced)
 
-        val syncedCategories: List<CategoryUpsert> = unSynced.map(::toCategoryUpsert)
+        val syncedCategories: List<CategoryUpsert> = unSynced.map(Categories::toCategoryUpsert)
 
         unSynced.zip(syncedCategories) { category, categoryUpsert ->
             localDataSource.update(category.categoryId, categoryUpsert)
@@ -41,18 +41,7 @@ class DefaultCategoryRepository(
     }
 
     private suspend fun updatedRemoteCategories(unSynced: List<Categories>) {
-        val categoryModels = unSynced.map(::toCategoryModel)
+        val categoryModels = unSynced.map(Categories::toCategoryModel)
         remoteDataSource.upsert(categoryModels)
     }
-
-    private fun toCategoryUpsert(categories: Categories) = CategoryUpsert(
-        name = categories.name,
-        isSynced = true,
-    )
-
-    private fun toCategoryModel(category: Categories) = CategoryModel(
-        categoryId = category.categoryId,
-        name = category.name,
-        updatedAt = category.updatedAt,
-    )
 }

@@ -2,6 +2,7 @@ package com.emm.data.category
 
 import com.emm.data.Categories
 import com.emm.domain.category.Category
+import com.emm.domain.category.CategoryUpsert
 
 fun Categories.toDomain() = Category(
     categoryId = categoryId,
@@ -9,3 +10,14 @@ fun Categories.toDomain() = Category(
 )
 
 fun List<Categories>.toDomain() = map(Categories::toDomain)
+
+fun Categories.toCategoryModel() = CategoryModel(
+    categoryId = categoryId,
+    name = name,
+    updatedAt = updatedAt,
+)
+
+fun Categories.toCategoryUpsert() = CategoryUpsert(
+    name = name,
+    isSynced = true,
+)
