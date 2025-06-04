@@ -17,5 +17,5 @@ data class AccountModel(
     val updatedAt: Long,
 
     @SerialName("user_id")
-    val userId: String,
+    val userId: String = "",
 )

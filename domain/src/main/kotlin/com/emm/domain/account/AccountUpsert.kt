@@ -5,4 +5,5 @@ data class AccountUpsert(
     val name: String,
     val balance: Double,
     val updatedAt: Long,
+    val isSynced: Boolean = false,
 )

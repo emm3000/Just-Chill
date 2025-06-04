@@ -1,5 +1,7 @@
 package com.emm.data.account
 
+import com.emm.data.Accounts
+import com.emm.data.sync.Synchronizer
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountUpdateRepository
@@ -8,7 +10,8 @@ import kotlinx.coroutines.flow.Flow
 
 class DefaultAccountRepository(
     private val localDataSource: AccountLocalDataSource,
-) : AccountRepository, AccountUpdateRepository {
+    private val remoteDataSource: AccountRemoteDataSource,
+) : AccountRepository, AccountUpdateRepository, Synchronizer {
 
     override fun all(): Flow<List<Account>> {
         return localDataSource.all()
@@ -36,5 +39,39 @@ class DefaultAccountRepository(
 
     override suspend fun updateAmount(accountId: String, amount: Double) {
         localDataSource.updateAmount(accountId, amount)
+    }
+
+    override suspend fun sync() {
+        val unSyncedAccounts: List<Accounts> = localDataSource.unSynced()
+        updateRemote(unSyncedAccounts)
+
+        updateLocal(unSyncedAccounts)
+    }
+
+    private suspend fun updateLocal(unSyncedAccounts: List<Accounts>) {
+        val updatedAccounts: List<AccountUpsert> = unSyncedAccounts.map {
+            AccountUpsert(
+                accountId = it.accountId,
+                name = it.name,
+                balance = it.balance,
+                updatedAt = it.updatedAt,
+                isSynced = true,
+            )
+        }
+        unSyncedAccounts.zip(updatedAccounts) { account, accountUpsert ->
+            localDataSource.update(account.accountId, accountUpsert)
+        }
+    }
+
+    private suspend fun updateRemote(unSyncedAccounts: List<Accounts>) {
+        val accountModels = unSyncedAccounts.map {
+            AccountModel(
+                accountId = it.accountId,
+                name = it.name,
+                balance = it.balance,
+                updatedAt = it.updatedAt,
+            )
+        }
+        remoteDataSource.upsert(accountModels)
     }
 }
