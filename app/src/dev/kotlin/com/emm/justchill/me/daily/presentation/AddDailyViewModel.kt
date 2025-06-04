@@ -9,9 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.DailyAccountCreator
 import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.transaction.TransactionCreator
-import com.emm.domain.transaction.TransactionInsert
 import com.emm.justchill.hh.transaction.DateUtils
-import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.me.daily.domain.Daily
 import com.emm.justchill.me.daily.domain.DailyRepository
 import com.emm.justchill.me.driver.domain.Driver
@@ -22,7 +20,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.UUID
 
 class AddDailyViewModel(
     driverRepository: DriverRepository,
@@ -81,15 +79,6 @@ class AddDailyViewModel(
     }
 
     private suspend fun resolveTransactionAndAccounts() {
-        val accountId = dailyAccountCreator.create()
 
-        val transactionInsert = TransactionInsert(
-            type = TransactionType.Income,
-            amount = amount.toDouble(),
-            description = "Feria de ${currentDriver.value?.name}",
-            date = dateAndTimeCombiner.combineWithUtc(dateInLong),
-            accountId = accountId
-        )
-        transactionCreator.create(transactionInsert)
     }
 }

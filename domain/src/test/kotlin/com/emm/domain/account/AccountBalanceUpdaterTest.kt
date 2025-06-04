@@ -36,7 +36,7 @@ class AccountBalanceUpdaterTest {
         accountRepository.send(randomAccount)
 
         accountBalanceUpdater.update(
-            accountId = "2",
+            account = "2",
             transactionType = TransactionType.Income,
             amount = 10.0
         )

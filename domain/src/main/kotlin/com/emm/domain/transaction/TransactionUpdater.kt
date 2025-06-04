@@ -23,7 +23,7 @@ class TransactionUpdater(
             ),
         )
         accountBalanceUpdater.update(
-            accountId = transactionUpdate.accountId,
+            account = transactionUpdate.account,
             transactionType = transactionUpdate.type,
             amount = transactionUpdate.amount
         )

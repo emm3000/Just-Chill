@@ -82,7 +82,7 @@ class EditTransactionViewModel(
             description = state.description,
             date = dateInLong,
             amount = state.amount.formatInputToDouble(),
-            accountId = state.accountSelected?.accountId ?: throw IllegalStateException()
+            account = state.accountSelected ?: throw IllegalStateException()
         )
         transactionUpdater.update(transactionId, transactionUpdate)
     }

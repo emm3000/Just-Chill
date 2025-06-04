@@ -5,8 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.DailyAccountCreator
 import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.transaction.TransactionCreator
-import com.emm.domain.transaction.TransactionInsert
-import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.me.daily.domain.Daily
 import com.emm.justchill.me.daily.domain.DailyRepository
 import com.emm.justchill.me.daily.presentation.DailyUi
@@ -89,15 +87,6 @@ class DriverViewViewModel(
         amount: Double,
         dailyDate: Long,
     ) {
-        val accountId = dailyAccountCreator.create()
 
-        val transactionInsert = TransactionInsert(
-            type = TransactionType.Income,
-            amount = amount,
-            description = "Feria de ${currentDriver.value?.name}",
-            date = dailyDate,
-            accountId = accountId
-        )
-        transactionCreator.create(transactionInsert)
     }
 }

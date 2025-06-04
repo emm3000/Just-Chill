@@ -6,11 +6,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.justchill.core.formatInputToDouble
 import com.emm.domain.transaction.TransactionCreator
-import com.emm.domain.transaction.TransactionInsert
-import com.emm.justchill.hh.transaction.DateUtils
 import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.formatInputToDouble
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -40,13 +38,6 @@ class FastTransactionViewModel(
     }
 
     private fun addTransaction(accountId: String, type: TransactionType) = viewModelScope.launch {
-        val transactionInsert = TransactionInsert(
-            type = type,
-            amount = state.amount.formatInputToDouble(),
-            description = state.description,
-            date = DateUtils.currentDateInMillis(),
-            accountId = accountId,
-        )
-        transactionCreator.create(transactionInsert)
+
     }
 }

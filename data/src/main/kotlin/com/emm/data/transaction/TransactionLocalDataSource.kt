@@ -25,7 +25,7 @@ class TransactionLocalDataSource(private val transactionsQueries: TransactionsQu
             description = transactionInsert.description,
             date = transactionInsert.date,
             categoryId = transactionInsert.categoryId,
-            accountId = transactionInsert.accountId,
+            accountId = transactionInsert.account.accountId,
             updatedAt = currentTimeInMillis(),
         )
     }
@@ -80,7 +80,7 @@ class TransactionLocalDataSource(private val transactionsQueries: TransactionsQu
             description = transactionUpdate.description,
             date = transactionUpdate.date,
             transactionId = transactionId,
-            accountId = transactionUpdate.accountId,
+            accountId = transactionUpdate.account.accountId,
             updatedAt = currentTimeInMillis(),
         )
     }

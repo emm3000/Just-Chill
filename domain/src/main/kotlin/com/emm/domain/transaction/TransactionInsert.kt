@@ -1,5 +1,7 @@
 package com.emm.domain.transaction
 
+import com.emm.domain.account.Account
+
 data class TransactionInsert(
     val id: String? = null,
     val type: TransactionType,
@@ -7,5 +9,5 @@ data class TransactionInsert(
     val description: String,
     val categoryId: String? = null,
     val date: Long,
-    val accountId: String,
+    val account: Account,
 )

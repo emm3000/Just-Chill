@@ -54,6 +54,8 @@ dependencies {
     api(libs.auth.kt)
 
     implementation(libs.kotlinx.serialization.json)
+
+    implementation(libs.androidx.work.runtime.ktx)
 }
 
 sqldelight {

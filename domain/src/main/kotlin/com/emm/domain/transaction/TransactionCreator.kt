@@ -25,7 +25,7 @@ class TransactionCreator(
         repository.create(transaction)
 
         accountBalanceUpdater.update(
-            accountId = transactionInsert.accountId,
+            account = transactionInsert.account,
             transactionType = transactionInsert.type,
             amount = transactionInsert.amount,
         )
