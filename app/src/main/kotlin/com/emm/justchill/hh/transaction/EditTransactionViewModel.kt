@@ -45,7 +45,6 @@ class EditTransactionViewModel(
                     && description.isNotEmpty()
             state = state.copy(isEnabled = isEnabled)
         }.launchIn(viewModelScope)
-
         loadCurrentTransaction()
     }
 
@@ -65,26 +64,35 @@ class EditTransactionViewModel(
     private fun loadCurrentTransaction() = viewModelScope.launch {
         val currentTransaction: Transaction = transactionFinder.find(transactionId) ?: return@launch
         val account: Account = accountFinder.find(currentTransaction.accountId) ?: return@launch
-        state = state.copy(
-            amount = TextFieldValue(currentTransaction.amountDecimalFormat),
-            description = currentTransaction.description,
-            date = millisToReadableFormat(currentTransaction.date),
-            transactionType = TransactionType.valueOf(currentTransaction.type),
-            accountSelected = account,
-        )
+        state = configInitialState(currentTransaction, account)
         dateInLong = currentTransaction.date
     }
 
+    private fun configInitialState(
+        currentTransaction: Transaction,
+        account: Account
+    ): TransactionUiState = state.copy(
+        amount = TextFieldValue(currentTransaction.amountDecimalFormat),
+        description = currentTransaction.description,
+        date = millisToReadableFormat(currentTransaction.date),
+        transactionType = TransactionType.valueOf(currentTransaction.type),
+        oldAccount = account,
+        accountSelected = account,
+    )
+
     private fun updateTransaction() = viewModelScope.launch {
-        val transactionUpdate = TransactionUpdate(
-            type = state.transactionType,
-            description = state.description,
-            date = dateInLong,
-            amount = state.amount.formatInputToDouble(),
-            account = state.accountSelected ?: throw IllegalStateException()
-        )
+        val transactionUpdate: TransactionUpdate = createTransactionUpdate()
         transactionUpdater.update(transactionId, transactionUpdate)
     }
+
+    private fun createTransactionUpdate() = TransactionUpdate(
+        type = state.transactionType,
+        description = state.description,
+        date = dateInLong,
+        amount = state.amount.formatInputToDouble(),
+        oldAccount = state.oldAccount ?: throw IllegalStateException(),
+        account = state.accountSelected ?: throw IllegalStateException(),
+    )
 
     private fun deleteTransaction() = viewModelScope.launch {
         transactionDeleter.delete(transactionId)
