@@ -20,7 +20,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
@@ -62,6 +61,7 @@ import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.auth.LabelTextField
+import com.emm.justchill.hh.fasttransaction.AccountItem
 import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextInput
 import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
@@ -275,35 +275,12 @@ fun AccountSelectorContent(
 
         LazyColumn(
             modifier = Modifier,
-            verticalArrangement = Arrangement.spacedBy(15.dp)
+            verticalArrangement = Arrangement.spacedBy(17.dp)
         ) {
             items(accounts, key = Account::accountId) {
-                Card(
-                    modifier = Modifier
-                        .clickable {
-                            onAccountSelected(it)
-                            dismiss()
-                        }
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(
-                            text = it.name,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontFamily = LatoFontFamily,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 16.sp
-                        )
-                        Text(
-                            text = it.balance.toString(),
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontFamily = LatoFontFamily,
-                        )
-                    }
+                AccountItem(it) {
+                    onAccountSelected(it)
+                    dismiss()
                 }
             }
         }
