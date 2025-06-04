@@ -1,8 +1,6 @@
 package com.emm.justchill
 
 import android.app.Application
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import com.emm.justchill.core.coreModule
 import com.emm.justchill.experiences.readjsonfromassets.experiencesModule
 import com.emm.justchill.hh.di.accountModule
@@ -19,7 +17,6 @@ class EmmApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
         startKoin {
             androidLogger()
             androidContext(this@EmmApp)
@@ -34,16 +31,5 @@ class EmmApp : Application() {
                 dbModule,
             )
         }
-    }
-
-    private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            "backup_channel",
-            "Backup Notifications",
-            NotificationManager.IMPORTANCE_DEFAULT
-        )
-        channel.description = "Channel for backup notifications"
-        val notificationManager: NotificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager.createNotificationChannel(channel)
     }
 }

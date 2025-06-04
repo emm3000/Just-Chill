@@ -7,7 +7,7 @@ import io.github.jan.supabase.postgrest.query.PostgrestQueryBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class RemoteCategoryDataSource(
+class CategoryRemoteDataSource(
     userIdProvider: UserIdProvider,
     client: SupabaseClient,
 ): UserIdProvider by userIdProvider {

@@ -2,11 +2,14 @@ package com.emm.justchill.hh.di
 
 import android.content.Context
 import com.emm.data.account.AccountLocalDataSource
+import com.emm.data.account.AccountRemoteDataSource
 import com.emm.data.auth.DefaultAuthRepository
 import com.emm.data.category.CategoryLocalDataSource
+import com.emm.data.category.CategoryRemoteDataSource
 import com.emm.data.transaction.DefaultTransactionRepository
 import com.emm.data.transaction.DefaultTransactionUpdateRepository
 import com.emm.data.transaction.TransactionLocalDataSource
+import com.emm.data.transaction.TransactionRemoteDataSource
 import com.emm.domain.auth.AuthRepository
 import com.emm.domain.auth.UserAuthenticator
 import com.emm.domain.auth.UserCreator
@@ -34,6 +37,7 @@ import io.github.jan.supabase.serializer.KotlinXSerializer
 import kotlinx.serialization.json.Json
 import org.koin.android.ext.koin.androidApplication
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -89,11 +93,17 @@ private fun Module.dataSource() {
     factoryOf(::CategoryLocalDataSource)
     factoryOf(::TransactionLocalDataSource)
     factoryOf(::AccountLocalDataSource)
+
+    factoryOf(::TransactionRemoteDataSource)
+    factoryOf(::CategoryRemoteDataSource)
+    factoryOf(::AccountRemoteDataSource)
 }
 
 private fun Module.repositoriesProviders() {
 
-    factoryOf(::DefaultTransactionRepository) bind TransactionRepository::class
+    factoryOf(::DefaultTransactionRepository) {
+        bind<TransactionRepository>()
+    }
 
     single<SupabaseClient> { supabase(androidApplication()) }
 

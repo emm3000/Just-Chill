@@ -1,7 +1,6 @@
 package com.emm.data.transaction
 
 import com.emm.data.Transactions
-import com.emm.data.sync.Synchronizer
 import com.emm.domain.account.Account
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
@@ -13,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 class DefaultTransactionRepository(
     private val localDataSource: TransactionLocalDataSource,
     private val remoteDataSource: TransactionRemoteDataSource,
-) : TransactionRepository, Synchronizer {
+) : TransactionRepository {
 
     override suspend fun create(transactionInsert: TransactionInsert) {
         return localDataSource.create(transactionInsert)

@@ -13,4 +13,6 @@ interface AccountRepository {
     suspend fun create(account: AccountUpsert)
 
     suspend fun delete(accountId: String)
+
+    suspend fun sync()
 }

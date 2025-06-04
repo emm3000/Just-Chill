@@ -1,7 +1,6 @@
 package com.emm.data.account
 
 import com.emm.data.Accounts
-import com.emm.data.sync.Synchronizer
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountUpdateRepository
@@ -11,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 class DefaultAccountRepository(
     private val localDataSource: AccountLocalDataSource,
     private val remoteDataSource: AccountRemoteDataSource,
-) : AccountRepository, AccountUpdateRepository, Synchronizer {
+) : AccountRepository, AccountUpdateRepository {
 
     override fun all(): Flow<List<Account>> {
         return localDataSource.all()

@@ -13,4 +13,6 @@ interface CategoryRepository {
     suspend fun update(categoryId: String, categoryUpsert: CategoryUpsert)
 
     suspend fun delete(categoryId: String)
+
+    suspend fun sync()
 }

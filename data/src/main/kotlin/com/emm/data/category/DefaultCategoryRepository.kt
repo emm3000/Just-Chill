@@ -1,7 +1,6 @@
 package com.emm.data.category
 
 import com.emm.data.Categories
-import com.emm.data.sync.Synchronizer
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryUpsert
@@ -11,8 +10,8 @@ import kotlinx.coroutines.withContext
 
 class DefaultCategoryRepository(
     private val localDataSource: CategoryLocalDataSource,
-    private val remoteDataSource: RemoteCategoryDataSource,
-) : CategoryRepository, Synchronizer {
+    private val remoteDataSource: CategoryRemoteDataSource,
+) : CategoryRepository {
 
     override fun all(): Flow<List<Category>> = localDataSource.all()
 

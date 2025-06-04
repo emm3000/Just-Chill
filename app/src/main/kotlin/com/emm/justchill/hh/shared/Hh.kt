@@ -1,5 +1,7 @@
 package com.emm.justchill.hh.shared
 
+import android.app.Activity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -55,6 +57,7 @@ import com.emm.justchill.hh.seetransactions.SeeTransactionsVersionTwo
 import com.emm.justchill.hh.shared.shared.Screen
 import com.emm.justchill.hh.transaction.EditTransaction
 import com.emm.justchill.hh.transaction.TransactionScreen
+import com.emm.justchill.sync.Sync
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -70,11 +73,14 @@ fun Hh() {
         composable<Screen.PreLogin> {
             val repo: AuthRepository = koinInject()
 
+            val currentActivity: Activity? = LocalActivity.current
+
             val sessionStatus: SessionStatus by repo.sessionStatus.collectAsStateWithLifecycle(SessionStatus.Initializing)
 
             LaunchedEffect(sessionStatus) {
                 when (sessionStatus) {
                     SessionStatus.Authenticated -> {
+                        currentActivity?.applicationContext?.let(Sync::initialize)
                         navController.navigate(Screen.Dashboard) {
                             popUpTo(Screen.PreLogin) {
                                 inclusive = true
