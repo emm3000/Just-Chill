@@ -11,9 +11,15 @@ data class TransactionModel(
     val transactionId: String,
 
     val type: String,
+
     val amount: Double,
+
     val description: String,
+
     val date: Long,
+
+    @SerialName("updated_at")
+    val updatedAt: Long,
 
     @SerialName("user_id")
     val userId: String = "",
@@ -31,6 +37,7 @@ fun Transactions.toModel() = TransactionModel(
     amount = amount,
     description = description,
     date = date,
+    updatedAt = updatedAt,
     categoryId = categoryId,
-    accountId = accountId
+    accountId = accountId,
 )

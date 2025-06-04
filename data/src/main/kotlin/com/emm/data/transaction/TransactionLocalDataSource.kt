@@ -14,10 +14,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-class TransactionLocalDataSource(private val transactionsQueries: TransactionsQueries) {
+class TransactionLocalDataSource(private val tq: TransactionsQueries) {
 
     suspend fun create(transactionInsert: TransactionInsert) = withContext(Dispatchers.IO) {
-        transactionsQueries.insert(
+        tq.insert(
             transactionId = transactionInsert.id,
             type = transactionInsert.type.name,
             amount = transactionInsert.amount,
@@ -25,13 +25,13 @@ class TransactionLocalDataSource(private val transactionsQueries: TransactionsQu
             date = transactionInsert.date,
             categoryId = transactionInsert.categoryId,
             accountId = transactionInsert.account.accountId,
-            synced = false,
+            synced = transactionInsert.isSynced,
             updatedAt = currentTimeInMillis(),
         )
     }
 
     fun retrieve(): Flow<List<Transaction>> {
-        return transactionsQueries
+        return tq
             .all()
             .asFlow()
             .mapToList(Dispatchers.IO)
@@ -39,32 +39,32 @@ class TransactionLocalDataSource(private val transactionsQueries: TransactionsQu
     }
 
     fun sumIncome(accountId: String): Flow<Double> {
-        return transactionsQueries.sumAllIncomeAmounts(accountId)
+        return tq.sumAllIncomeAmounts(accountId)
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
             .map { it?.totalIncome ?: 0.0 }
     }
 
     fun sumSpend(accountId: String): Flow<Double> {
-        return transactionsQueries.sumAllSpendAmounts(accountId)
+        return tq.sumAllSpendAmounts(accountId)
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
             .map { it?.totalIncome ?: 0.0 }
     }
 
     fun difference(accountId: String): Flow<Double> {
-        return transactionsQueries.difference(accountId, accountId)
+        return tq.difference(accountId, accountId)
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
             .map { it ?: 0.0 }
     }
 
     suspend fun delete(transactionId: String) = withContext(Dispatchers.IO) {
-        transactionsQueries.delete(transactionId)
+        tq.delete(transactionId)
     }
 
     fun find(transactionId: String): Transaction? {
-        val firstOrNull: Transactions? = transactionsQueries
+        val firstOrNull: Transactions? = tq
             .find(transactionId)
             .executeAsOneOrNull()
         return firstOrNull?.toDomain()
@@ -74,15 +74,19 @@ class TransactionLocalDataSource(private val transactionsQueries: TransactionsQu
         transactionId: String,
         transactionUpdate: TransactionUpdate,
     ) = withContext(Dispatchers.IO) {
-        transactionsQueries.update(
+        tq.update(
             type = transactionUpdate.type.name,
             amount = transactionUpdate.amount,
             description = transactionUpdate.description,
             date = transactionUpdate.date,
             transactionId = transactionId,
             accountId = transactionUpdate.account.accountId,
-            synced = false,
+            synced = transactionUpdate.isSynced,
             updatedAt = currentTimeInMillis(),
         )
+    }
+
+    suspend fun unSynced(): List<Transactions> = withContext(Dispatchers.IO) {
+        tq.selectByStatus(false).executeAsList()
     }
 }

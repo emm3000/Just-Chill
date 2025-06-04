@@ -8,4 +8,5 @@ data class TransactionUpdate(
     val description: String,
     val account: Account,
     val date: Long,
+    val isSynced: Boolean = false,
 )

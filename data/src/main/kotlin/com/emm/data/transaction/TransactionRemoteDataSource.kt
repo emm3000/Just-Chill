@@ -1,14 +1,18 @@
 package com.emm.data.transaction
 
-class TransactionRemoteDataSource {
+import com.emm.data.auth.UserIdProvider
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.PostgrestQueryBuilder
 
-    suspend fun upsert(transaction: TransactionModel) {}
+class TransactionRemoteDataSource(
+    client: SupabaseClient,
+    userIdProvider: UserIdProvider,
+) : UserIdProvider by userIdProvider {
 
-    suspend fun upsert(transactions: List<TransactionModel>) {}
+    private val table: PostgrestQueryBuilder = client.from("transactions_v2")
 
-    suspend fun retrieve(): List<TransactionModel> = listOf()
+    suspend fun upsert(transactions: List<TransactionModel>) {
 
-    suspend fun delete(transactionId: String) {}
-
-    suspend fun deleteAll() {}
+    }
 }
