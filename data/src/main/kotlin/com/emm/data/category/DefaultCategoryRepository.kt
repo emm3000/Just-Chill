@@ -4,9 +4,7 @@ import com.emm.data.Categories
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryUpsert
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.withContext
 
 class DefaultCategoryRepository(
     private val localDataSource: CategoryLocalDataSource,
@@ -25,7 +23,7 @@ class DefaultCategoryRepository(
         localDataSource.update(categoryId, categoryUpsert)
     }
 
-    override suspend fun delete(categoryId: String) = withContext(Dispatchers.IO) {
+    override suspend fun delete(categoryId: String) {
         localDataSource.delete(categoryId)
     }
 
@@ -37,6 +35,14 @@ class DefaultCategoryRepository(
 
         unSynced.zip(syncedCategories) { category, categoryUpsert ->
             localDataSource.update(category.categoryId, categoryUpsert)
+        }
+    }
+
+    override suspend fun pull() {
+        val categoryModelsFromRemote: List<CategoryModel> = remoteDataSource.all()
+        val categoryUpsertList: List<CategoryUpsert> = categoryModelsFromRemote.map(CategoryModel::toCategoryUpsert)
+        categoryUpsertList.forEach {
+            localDataSource.create(it)
         }
     }
 

@@ -7,7 +7,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.category.CategoryCreator
-import com.emm.domain.category.CategoryUpsert
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -39,9 +38,6 @@ class CategoryViewModel(private val categoryCreator: CategoryCreator) : ViewMode
     }
 
     private fun saveCategory() = viewModelScope.launch {
-        val categoryUpsert = CategoryUpsert(
-            name = categoryUiState.name,
-        )
-        categoryCreator.create(categoryUpsert)
+        categoryCreator.create(categoryUiState.name)
     }
 }

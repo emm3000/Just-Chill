@@ -3,6 +3,7 @@ package com.emm.data.transaction
 import com.emm.data.Transactions
 import com.emm.domain.account.Account
 import com.emm.domain.transaction.Transaction
+import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionUpdate
 
@@ -44,3 +45,19 @@ fun Transactions.toTransactionUpdate(): TransactionUpdate {
         isSynced = true,
     )
 }
+
+fun TransactionModel.toTransactionInsert() = TransactionInsert(
+    id = transactionId,
+    type = TransactionType.valueOf(type),
+    amount = amount,
+    description = description,
+    date = date,
+    account = Account(
+        accountId = accountId,
+        name = "",
+        balance = 0.0,
+    ),
+    isSynced = true,
+    updatedAt = updatedAt,
+    categoryId = categoryId,
+)

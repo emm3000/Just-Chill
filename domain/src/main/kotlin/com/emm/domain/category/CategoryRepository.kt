@@ -15,4 +15,6 @@ interface CategoryRepository {
     suspend fun delete(categoryId: String)
 
     suspend fun sync()
+
+    suspend fun pull()
 }

@@ -19,6 +19,10 @@ class CategoryRemoteDataSource(
         table.upsert(categoryModels)
     }
 
+    suspend fun all(): List<CategoryModel> = withContext(Dispatchers.IO) {
+        table.select().decodeList<CategoryModel>()
+    }
+
     private fun attachUserIdToCategory(
         categoryModel: CategoryModel,
     ): CategoryModel = categoryModel.copy(userId = userId)

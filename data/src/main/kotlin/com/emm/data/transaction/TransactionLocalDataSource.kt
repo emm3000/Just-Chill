@@ -26,7 +26,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             categoryId = transactionInsert.categoryId,
             accountId = transactionInsert.account.accountId,
             synced = transactionInsert.isSynced,
-            updatedAt = currentTimeInMillis(),
+            updatedAt = transactionInsert.updatedAt,
         )
     }
 

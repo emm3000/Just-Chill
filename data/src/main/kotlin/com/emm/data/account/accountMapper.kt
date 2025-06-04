@@ -26,3 +26,11 @@ fun Accounts.toAccountModel() = AccountModel(
     balance = balance,
     updatedAt = updatedAt,
 )
+
+fun AccountModel.toAccountUpsert() = AccountUpsert(
+    accountId = accountId,
+    name = name,
+    balance = balance,
+    updatedAt = updatedAt,
+    isSynced = true,
+)

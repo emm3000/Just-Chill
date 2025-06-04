@@ -36,6 +36,14 @@ class DefaultTransactionRepository(
         localDataSource.delete(transactionId)
     }
 
+    override suspend fun pull() {
+        val transactionModels: List<TransactionModel> = remoteDataSource.all()
+        val transactionUpdates: List<TransactionInsert> = transactionModels.map(TransactionModel::toTransactionInsert)
+        transactionUpdates.forEach { transactionInsert ->
+            localDataSource.create(transactionInsert)
+        }
+    }
+
     override fun find(transactionId: String): Transaction? {
         return localDataSource.find(transactionId)
     }

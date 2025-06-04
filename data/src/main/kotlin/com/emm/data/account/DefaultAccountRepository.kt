@@ -40,6 +40,14 @@ class DefaultAccountRepository(
         localDataSource.updateAmount(accountId, amount)
     }
 
+    override suspend fun pull() {
+        val all: List<AccountModel> = remoteDataSource.all()
+        val accountUpsertList: List<AccountUpsert> = all.map(AccountModel::toAccountUpsert)
+        accountUpsertList.forEach {
+            localDataSource.create(it)
+        }
+    }
+
     override suspend fun sync() {
         val unSyncedAccounts: List<Accounts> = localDataSource.unSynced()
         updateRemote(unSyncedAccounts)

@@ -1,8 +1,20 @@
 package com.emm.domain.category
 
-class CategoryCreator(private val repository: CategoryRepository) {
+import com.emm.domain.shared.UniqueIdProvider
+import com.emm.domain.shared.currentTimeInMillis
 
-    suspend fun create(categoryUpsert: CategoryUpsert) {
+class CategoryCreator(
+    private val repository: CategoryRepository,
+    private val idProvider: UniqueIdProvider,
+) {
+
+    suspend fun create(name: String) {
+        val categoryUpsert = CategoryUpsert(
+            categoryId = idProvider.id,
+            name = name,
+            updatedAt = currentTimeInMillis(),
+            isSynced = false,
+        )
         repository.create(categoryUpsert)
     }
 }

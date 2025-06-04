@@ -16,7 +16,9 @@ interface TransactionRepository {
 
     fun difference(accountId: String): Flow<Double>
 
-   suspend fun delete(transactionId: String)
+    suspend fun delete(transactionId: String)
+
+    suspend fun pull()
 
     suspend fun sync()
 }

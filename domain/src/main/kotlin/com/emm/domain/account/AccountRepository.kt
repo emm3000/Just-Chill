@@ -14,5 +14,7 @@ interface AccountRepository {
 
     suspend fun delete(accountId: String)
 
+    suspend fun pull()
+
     suspend fun sync()
 }

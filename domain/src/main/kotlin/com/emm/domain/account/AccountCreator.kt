@@ -14,6 +14,7 @@ class AccountCreator(
             name = name,
             balance = balance,
             updatedAt = currentTimeInMillis(),
+            isSynced = false,
         )
         repository.create(accountUpsert)
     }

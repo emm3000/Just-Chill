@@ -63,16 +63,21 @@ class TransactionViewModel(
     }
 
     private fun addTransaction() = viewModelScope.launch {
-        val transactionInsert = TransactionInsert(
-            type = state.transactionType,
-            description = state.description,
-            date = dateInLong,
-            amount = state.amount.formatInputToDouble(),
-            categoryId = null,
-            account = state.accountSelected ?: throw IllegalStateException()
-        )
+        val transactionInsert: TransactionInsert = createTransactionInsert()
         transactionCreator.create(transactionInsert)
     }
+
+    private fun createTransactionInsert() = TransactionInsert(
+        type = state.transactionType,
+        description = state.description,
+        date = dateInLong,
+        amount = state.amount.formatInputToDouble(),
+        categoryId = null,
+        account = state.accountSelected ?: throw IllegalStateException(),
+        isSynced = false,
+        id = "",
+        updatedAt = 0L,
+    )
 
     private fun updateCurrentDate(millis: Long?) = millis?.let {
         dateInLong = it

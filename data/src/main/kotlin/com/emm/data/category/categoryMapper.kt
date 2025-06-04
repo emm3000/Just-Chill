@@ -18,6 +18,15 @@ fun Categories.toCategoryModel() = CategoryModel(
 )
 
 fun Categories.toCategoryUpsert() = CategoryUpsert(
+    categoryId = categoryId,
     name = name,
     isSynced = true,
+    updatedAt = updatedAt,
+)
+
+fun CategoryModel.toCategoryUpsert() = CategoryUpsert(
+    categoryId = categoryId,
+    name = name,
+    isSynced = true,
+    updatedAt = updatedAt,
 )
