@@ -103,7 +103,7 @@ class EditTransactionViewModel(
     )
 
     private fun deleteTransaction() = viewModelScope.launch {
-        transactionDeleter.delete(transactionId)
+        transactionDeleter.delete(oldTransaction, oldAccount)
     }
 
     private fun updateCurrentDate(millis: Long?) = millis?.let {
