@@ -1,5 +1,6 @@
 package com.emm.domain.transaction
 
+import com.emm.domain.shared.currentTimeInMillis
 import java.text.DecimalFormat
 
 data class Transaction(
@@ -17,4 +18,17 @@ data class Transaction(
             val decimalFormat = DecimalFormat("#,##0.00")
             return decimalFormat.format(amount)
         }
+
+    companion object {
+
+        val Empty = Transaction(
+            transactionId = "",
+            type = "",
+            amount = 0.0,
+            description = "",
+            date = currentTimeInMillis(),
+            accountId = "",
+            categoryId = null
+        )
+    }
 }

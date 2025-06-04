@@ -203,6 +203,22 @@ private fun TransactionScreen(
         )
     }
 
+    BottomSheetDialogForPickAccount(
+        setShowAccountPicker = setShowAccountPicker,
+        showAccountPicker = showAccountPicker,
+        accounts = state.accounts,
+        onAction = onAction,
+    )
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+fun BottomSheetDialogForPickAccount(
+    setShowAccountPicker: (Boolean) -> Unit,
+    showAccountPicker: Boolean,
+    accounts: List<Account>,
+    onAction: (AccountAction) -> Unit
+) {
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val dismiss: () -> Unit = { setShowAccountPicker(false) }
@@ -221,7 +237,7 @@ private fun TransactionScreen(
                 }
             }
             AccountSelectorContent(
-                accounts = state.accounts,
+                accounts = accounts,
                 onAccountSelected = { onAction(AccountAction.OnAccountSelected(it)) },
                 dismiss = {
                     scope.launch { sheetState.hide() }.invokeOnCompletion {

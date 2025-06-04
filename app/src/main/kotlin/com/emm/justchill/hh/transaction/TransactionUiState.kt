@@ -12,6 +12,5 @@ data class TransactionUiState(
     val transactionType: TransactionType = TransactionType.Income,
     val isEnabled: Boolean = false,
     val accounts: List<Account> = emptyList(),
-    val oldAccount: Account? = null,
     val accountSelected: Account? = null,
 )

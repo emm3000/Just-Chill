@@ -3,11 +3,11 @@ package com.emm.domain.transaction
 import com.emm.domain.account.Account
 
 data class TransactionInsert(
-    val id: String? = null,
+    val id: String = "",
     val type: TransactionType,
-    val amount: Double = 0.0,
+    val amount: Double,
     val description: String,
-    val categoryId: String? = null,
+    val categoryId: String?,
     val date: Long,
     val account: Account,
 )

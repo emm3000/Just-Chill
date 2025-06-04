@@ -17,9 +17,8 @@ import kotlinx.coroutines.withContext
 class TransactionLocalDataSource(private val transactionsQueries: TransactionsQueries) {
 
     suspend fun create(transactionInsert: TransactionInsert) = withContext(Dispatchers.IO) {
-        checkNotNull(transactionInsert.id)
         transactionsQueries.insert(
-            transactionId = transactionInsert.id!!,
+            transactionId = transactionInsert.id,
             type = transactionInsert.type.name,
             amount = transactionInsert.amount,
             description = transactionInsert.description,

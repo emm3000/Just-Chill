@@ -27,6 +27,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -78,6 +79,8 @@ private fun EditTransaction(
     val (showDeleteDialog, setShowDeleteDialog) = remember {
         mutableStateOf(false)
     }
+
+    val (showAccountPicker, setShowAccountPicker) = rememberSaveable { mutableStateOf(false) }
 
     if (showSelectDate) {
         DatePickerDialog(
@@ -187,6 +190,13 @@ private fun EditTransaction(
             )
         }
 
+        JustClickableInput(
+            value = state.accountSelected?.name.orEmpty(),
+            label = "Cuenta"
+        ) {
+            setShowAccountPicker(true)
+        }
+
         EmmTextInput(
             value = state.description,
             placeholder = "Ingresa una descripción",
@@ -210,6 +220,13 @@ private fun EditTransaction(
             modifier = Modifier.fillMaxWidth()
         )
     }
+
+    BottomSheetDialogForPickAccount(
+        setShowAccountPicker = setShowAccountPicker,
+        showAccountPicker = showAccountPicker,
+        accounts = state.accounts,
+        onAction = onAction,
+    )
 }
 
 @Preview(showBackground = true)

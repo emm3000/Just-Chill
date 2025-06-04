@@ -68,6 +68,7 @@ class TransactionViewModel(
             description = state.description,
             date = dateInLong,
             amount = state.amount.formatInputToDouble(),
+            categoryId = null,
             account = state.accountSelected ?: throw IllegalStateException()
         )
         transactionCreator.create(transactionInsert)

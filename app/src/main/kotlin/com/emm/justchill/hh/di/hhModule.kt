@@ -70,6 +70,7 @@ private fun Module.viewModelsProviders() {
             transactionUpdater = get(),
             transactionFinder = get(),
             transactionDeleter = get(),
+            accountRepository = get(),
             accountFinder = get(),
         )
     }

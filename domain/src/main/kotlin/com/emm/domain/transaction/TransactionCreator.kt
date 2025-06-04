@@ -5,7 +5,7 @@ import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.shared.UniqueIdProvider
 
 class TransactionCreator(
-    private val repository: TransactionRepository,
+    private val transactionRepository: TransactionRepository,
     private val dateAndTimeCombiner: DateAndTimeCombiner,
     private val uniqueIdProvider: UniqueIdProvider,
     private val accountBalanceUpdater: AccountBalanceUpdater,
@@ -22,7 +22,7 @@ class TransactionCreator(
             date = dateAndTimeCombined,
         )
 
-        repository.create(transaction)
+        transactionRepository.create(transaction)
 
         accountBalanceUpdater.update(
             account = transactionInsert.account,
