@@ -1,5 +1,7 @@
 package com.emm.data.category
 
+import com.emm.data.Categories
+import com.emm.data.sync.Synchronizer
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryUpsert
@@ -9,7 +11,8 @@ import kotlinx.coroutines.withContext
 
 class DefaultCategoryRepository(
     private val localDataSource: CategoryLocalDataSource,
-) : CategoryRepository {
+    private val remoteDataSource: RemoteCategoryDataSource,
+) : CategoryRepository, Synchronizer {
 
     override fun all(): Flow<List<Category>> = localDataSource.all()
 
@@ -26,4 +29,31 @@ class DefaultCategoryRepository(
     override suspend fun delete(categoryId: String) = withContext(Dispatchers.IO) {
         localDataSource.delete(categoryId)
     }
+
+    override suspend fun sync() {
+        val unSynced: List<Categories> = localDataSource.unSynced()
+        updatedRemoteCategories(unSynced)
+
+        val syncedCategories: List<CategoryUpsert> = unSynced.map(::toCategoryUpsert)
+
+        unSynced.zip(syncedCategories) { category, categoryUpsert ->
+            localDataSource.update(category.categoryId, categoryUpsert)
+        }
+    }
+
+    private suspend fun updatedRemoteCategories(unSynced: List<Categories>) {
+        val categoryModels = unSynced.map(::toCategoryModel)
+        remoteDataSource.upsert(categoryModels)
+    }
+
+    private fun toCategoryUpsert(categories: Categories) = CategoryUpsert(
+        name = categories.name,
+        isSynced = true,
+    )
+
+    private fun toCategoryModel(category: Categories) = CategoryModel(
+        categoryId = category.categoryId,
+        name = category.name,
+        updatedAt = category.updatedAt,
+    )
 }

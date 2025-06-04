@@ -1,14 +1,22 @@
 package com.emm.data.category
 
-class RemoteCategoryDataSource {
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.PostgrestQueryBuilder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-    suspend fun upsert(category: CategoryModel) {}
+class RemoteCategoryDataSource(client: SupabaseClient) {
 
-    suspend fun retrieve(): List<CategoryModel> {
-        return listOf()
+    private val table: PostgrestQueryBuilder = client.from("categories_v2")
+
+    private val userId: String = client.auth.currentUserOrNull()?.id ?: throw IllegalStateException()
+
+    suspend fun upsert(categories: List<CategoryModel>) = withContext(Dispatchers.IO) {
+        val categoryModels = categories.map(::attachUserIdToCategory)
+        table.upsert(categoryModels)
     }
 
-    suspend fun delete(categoryId: String) {}
-
-    suspend fun deleteAll() {}
+    private fun attachUserIdToCategory(categoryModel: CategoryModel) = categoryModel.copy(userId = userId)
 }

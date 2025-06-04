@@ -39,7 +39,8 @@ class CategoryLocalDataSource(
         cq.insert(
             categoryId = uniqueIdProvider.id,
             name = categoryUpsert.name,
-            updatedAt = currentTimeInMillis()
+            synced = false,
+            updatedAt = currentTimeInMillis(),
         )
     }
 
@@ -47,11 +48,16 @@ class CategoryLocalDataSource(
         cq.updateValues(
             name = categoryUpsert.name,
             categoryId = categoryId,
-            updatedAt = currentTimeInMillis()
+            synced = categoryUpsert.isSynced,
+            updatedAt = currentTimeInMillis(),
         )
     }
 
     suspend fun delete(categoryId: String) = withContext(Dispatchers.IO) {
         cq.delete(categoryId)
+    }
+
+    suspend fun unSynced(): List<Categories> = withContext(Dispatchers.IO) {
+        cq.selectByStatus(false).executeAsList()
     }
 }

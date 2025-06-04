@@ -1,3 +1,5 @@
+import kotlin.Boolean;
+
 CREATE TABLE transactions (
     transactionId TEXT NOT NULL PRIMARY KEY,
     type TEXT NOT NULL,
@@ -6,6 +8,7 @@ CREATE TABLE transactions (
     date INTEGER NOT NULL,
     categoryId TEXT,
     accountId TEXT NOT NULL,
+    synced INTEGER AS Boolean NOT NULL,
     updatedAt INTEGER NOT NULL,
     FOREIGN KEY (categoryId) REFERENCES categories(categoryId) ON DELETE SET NULL,
     FOREIGN KEY (accountId) REFERENCES accounts(accountId) ON DELETE CASCADE
@@ -18,7 +21,7 @@ allByAccount:
 SELECT * FROM transactions WHERE accountId = ? ORDER BY date DESC;
 
 insert:
-INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 find:
 SELECT * FROM transactions WHERE transactionId = ?;
@@ -34,9 +37,13 @@ SET
     description = ?,
     date = ?,
     accountId = ?,
+    synced = ?,
     updatedAt = ?
 WHERE
     transactionId = ?;
+
+selectByStatus:
+SELECT * FROM transactions WHERE synced = ?;
 
 sumAllIncomeAmounts:
 SELECT SUM(amount) AS totalIncome

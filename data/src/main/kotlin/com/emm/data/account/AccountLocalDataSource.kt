@@ -49,6 +49,7 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
             accountId = account.accountId,
             name = account.name,
             balance = account.balance,
+            synced = false,
             updatedAt = account.updatedAt,
         )
     }
@@ -61,12 +62,17 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         aq.update(
             name = account.name,
             balance = account.balance,
+            synced = false,
             updatedAt = currentTimeInMillis(),
             accountId = accountId,
         )
     }
 
     suspend fun updateAmount(accountId: String, amount: Double) = withContext(Dispatchers.IO) {
-        aq.updateBalance(amount, accountId)
+        aq.updateBalance(
+            synced = false,
+            balance = amount,
+            accountId = accountId,
+        )
     }
 }

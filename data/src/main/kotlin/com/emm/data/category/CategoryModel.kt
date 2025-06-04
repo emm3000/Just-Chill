@@ -11,6 +11,9 @@ data class CategoryModel(
 
     val name: String,
 
+    @SerialName("updated_at")
+    val updatedAt: Long,
+
     @SerialName("user_id")
-    val userId: String,
+    val userId: String = "",
 )
