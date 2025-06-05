@@ -263,7 +263,7 @@ fun AccountSelectorContent(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(20.dp)
+            .padding(horizontal = 20.dp)
     ) {
 
         Box(
@@ -293,8 +293,8 @@ fun AccountSelectorContent(
             modifier = Modifier,
             verticalArrangement = Arrangement.spacedBy(17.dp)
         ) {
-            items(accounts, key = Account::accountId) {
-                AccountItem(it) {
+            items(accounts, key = Account::accountId) { account ->
+                AccountItem(account) {
                     onAccountSelected(it)
                     dismiss()
                 }

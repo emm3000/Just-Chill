@@ -161,14 +161,11 @@ fun Hh() {
 @Composable
 private fun DashboardContent(externalNavController: NavController) {
     val navController = rememberNavController()
-    val navBackStackEntry: NavBackStackEntry? by navController.currentBackStackEntryAsState()
-    val currentDestination: NavDestination? = navBackStackEntry?.destination
-    val showNavBar = currentDestination?.route !in hhRoutes.map { it.route }
 
     Scaffold(
         bottomBar = { Csm(navController) },
         contentWindowInsets = WindowInsets.navigationBars,
-        floatingActionButton = { FabMenu(externalNavController, showNavBar) }
+        floatingActionButton = { FabMenu(externalNavController) }
     ) { paddingValues ->
         NavHost(
             navController = navController,
@@ -183,8 +180,8 @@ private fun DashboardContent(externalNavController: NavController) {
 
                 AccountsScreen(
                     accounts = accounts,
-                    onCardClick = vm::updateSelected,
                     addAccount = { externalNavController.navigate(HhRoutes.AddAccount.route) },
+                    addCategory = {  },
                     modifier = Modifier.fillMaxSize()
                 )
             }

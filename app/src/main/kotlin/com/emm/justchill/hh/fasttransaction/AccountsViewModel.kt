@@ -7,7 +7,6 @@ import com.emm.domain.account.AccountRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 class AccountsViewModel(accountRepository: AccountRepository) : ViewModel() {
 
@@ -17,8 +16,4 @@ class AccountsViewModel(accountRepository: AccountRepository) : ViewModel() {
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
-
-    fun updateSelected(account: Account) = viewModelScope.launch {
-
-    }
 }

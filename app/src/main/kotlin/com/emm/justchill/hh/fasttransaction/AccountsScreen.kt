@@ -16,12 +16,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
@@ -38,8 +44,8 @@ import com.emm.justchill.hh.transaction.EmmCenteredToolbar
 @Composable
 fun AccountsScreen(
     accounts: List<Account>,
-    onCardClick: (Account) -> Unit,
     addAccount: () -> Unit,
+    addCategory: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
 
@@ -52,28 +58,73 @@ fun AccountsScreen(
         ) {
             EmmCenteredToolbar(title = "Cuentas")
 
-            IconButton(
+            MinimalDropdownMenu(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .statusBarsPadding(),
-                onClick = addAccount
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onBackground
-                )
-            }
+                goToCreateAccount = addAccount,
+                goToCreateCategory = addCategory
+            )
+
+//            IconButton(
+//                modifier = Modifier
+//                    .align(Alignment.CenterEnd)
+//                    .statusBarsPadding(),
+//                onClick = addAccount
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Default.Add,
+//                    contentDescription = null,
+//                    tint = MaterialTheme.colorScheme.onBackground
+//                )
+//            }
         }
 
         LazyColumn(
             contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(17.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
 
             items(accounts, key = Account::accountId) {
-                AccountItem(it, onCardClick)
+                AccountItem(it, {})
             }
+        }
+    }
+}
+
+@Composable
+fun MinimalDropdownMenu(
+    modifier: Modifier,
+    goToCreateAccount: () -> Unit = {},
+    goToCreateCategory: () -> Unit = {},
+) {
+
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = modifier
+    ) {
+        IconButton(onClick = { expanded = !expanded }) {
+            Icon(Icons.Default.MoreVert, contentDescription = "More options")
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("Crear categorias") },
+                onClick = {
+                    expanded = false
+                    goToCreateCategory()
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("Crear cuenta") },
+                onClick = {
+                    expanded = false
+                    goToCreateAccount()
+                }
+            )
         }
     }
 }
@@ -88,14 +139,14 @@ fun AccountItem(
         modifier = Modifier
             .fillMaxWidth()
             .border(
-                width = 2.dp,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
                 shape = RoundedCornerShape(20)
             )
-            .padding(horizontal = 14.dp, vertical = 6.dp)
             .clickable {
                 onCardClick(account)
-            },
+            }
+            .padding(horizontal = 14.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -143,8 +194,8 @@ private fun AccountsScreenPreview() {
                     balance = 123.22,
                 )
             ),
-            onCardClick = { },
             addAccount = {},
+            addCategory = {},
             modifier = Modifier.fillMaxSize()
         )
     }

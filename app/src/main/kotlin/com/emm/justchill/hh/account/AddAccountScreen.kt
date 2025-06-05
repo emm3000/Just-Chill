@@ -13,7 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -22,7 +22,7 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextInput
-import com.emm.justchill.hh.transaction.EmmCenteredToolbar
+import com.emm.justchill.hh.transaction.EmmToolbarTitle
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -34,9 +34,7 @@ fun AddAccountScreen(
     AddAccountScreen(
         state = vm.state,
         onAction = vm::onAction,
-        navigateToBack = {
-            navController.popBackStack()
-        },
+        navigateToBack = navController::popBackStack,
     )
 }
 
@@ -50,8 +48,9 @@ private fun AddAccountScreen(
     Scaffold(
         modifier = Modifier,
         topBar = {
-            EmmCenteredToolbar(
+            EmmToolbarTitle(
                 title = "Agregar cuenta",
+                navigationIconClick = navigateToBack,
             )
         }
     ) { paddingValues ->
@@ -59,8 +58,7 @@ private fun AddAccountScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(horizontal = 20.dp)
-                .padding(vertical = 10.dp)
+                .padding(horizontal = 20.dp, vertical = 10.dp)
                 .padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -102,7 +100,7 @@ private fun AddAccountScreen(
     }
 }
 
-@PreviewLightDark
+@Preview(showBackground = true)
 @Composable
 fun AddAccountScreenPreview(modifier: Modifier = Modifier) {
     EmmTheme {
