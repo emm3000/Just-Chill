@@ -9,7 +9,7 @@ import com.emm.domain.transaction.TransactionUpdate
 
 fun Transactions.toDomain(): Transaction = Transaction(
     transactionId = transactionId,
-    type = type,
+    type = TransactionType.valueOf(type),
     amount = amount,
     description = description,
     date = date,

@@ -5,7 +5,7 @@ import java.text.DecimalFormat
 
 data class Transaction(
     val transactionId: String,
-    val type: String,
+    val type: TransactionType,
     val amount: Double,
     val description: String,
     val date: Long,
@@ -23,7 +23,7 @@ data class Transaction(
 
         val Empty = Transaction(
             transactionId = "",
-            type = "",
+            type = TransactionType.Income,
             amount = 0.0,
             description = "",
             date = currentTimeInMillis(),

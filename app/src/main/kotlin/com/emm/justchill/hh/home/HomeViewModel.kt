@@ -24,20 +24,20 @@ class HomeViewModel(
     accountRepository: AccountRepository,
 ) : ViewModel() {
 
-    val calculators: StateFlow<HomeState> = accountRepository.default()
+    val calculators: StateFlow<HomeUiState> = accountRepository.default()
         .filterNotNull()
         .flatMapLatest(::aggregateAccount)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = HomeState()
+            initialValue = HomeUiState()
         )
 
-    private fun aggregateAccount(account: Account): Flow<HomeState> = combine(
+    private fun aggregateAccount(account: Account): Flow<HomeUiState> = combine(
         flow = transactionSumIncome(account.accountId),
         flow2 = transactionSumSpend(account.accountId),
         transform = { income, spend ->
-            HomeState(
+            HomeUiState(
                 income = fromCentsToSolesWith(income),
                 spend = fromCentsToSolesWith(spend),
                 account = account,

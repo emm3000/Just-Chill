@@ -1,9 +1,8 @@
 package com.emm.justchill.hh.transaction
 
-import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionType
-import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.emm.justchill.hh.shared.fromCentsToSolesWith
 
 data class TransactionUi(
     val transactionId: String,
@@ -16,18 +15,11 @@ data class TransactionUi(
 )
 
 private fun Transaction.toUi(): TransactionUi {
-    val transactionType: TransactionType = try {
-        TransactionType.valueOf(type)
-    } catch (e: Throwable) {
-        FirebaseCrashlytics.getInstance().recordException(e)
-        TransactionType.Income
-    }
-
     val formattedNumber: String = fromCentsToSolesWith(amount)
     return TransactionUi(
         transactionId = transactionId,
-        type = transactionType,
-        amount = when (transactionType) {
+        type = type,
+        amount = when (type) {
             TransactionType.Income -> "S/ $formattedNumber"
             TransactionType.Spend -> "S/ -$formattedNumber"
         },

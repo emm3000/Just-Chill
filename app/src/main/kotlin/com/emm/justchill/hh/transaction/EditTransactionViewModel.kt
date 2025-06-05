@@ -13,7 +13,6 @@ import com.emm.domain.account.AccountRepository
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionDeleter
 import com.emm.domain.transaction.TransactionFinder
-import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.TransactionUpdater
 import com.emm.justchill.core.formatInputToDouble
@@ -84,7 +83,7 @@ class EditTransactionViewModel(
         amount = TextFieldValue(currentTransaction.amountDecimalFormat),
         description = currentTransaction.description,
         date = millisToReadableFormat(currentTransaction.date),
-        transactionType = TransactionType.valueOf(currentTransaction.type),
+        transactionType = currentTransaction.type,
         accounts = accounts,
         accountSelected = account,
     )

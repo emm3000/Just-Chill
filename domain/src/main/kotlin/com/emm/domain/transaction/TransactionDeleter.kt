@@ -19,7 +19,7 @@ class TransactionDeleter(
     private fun revertBalance(
         oldTransaction: Transaction,
         oldBalance: Double,
-    ): Double = when (TransactionType.valueOf(oldTransaction.type)) {
+    ): Double = when (oldTransaction.type) {
         TransactionType.Income -> oldBalance - oldTransaction.amount
         TransactionType.Spend -> oldBalance + oldTransaction.amount
     }
