@@ -7,6 +7,9 @@ import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 class HomeLoader(
     private val transactionRepository: TransactionRepository,
@@ -16,7 +19,7 @@ class HomeLoader(
     fun load(): Flow<HomeData> = combine(
         flow = accountRepository.all(),
         flow2 = transactionRepository.all(),
-        transform = ::computeFinancialSummary
+        transform = ::computeFinancialSummary,
     )
 
     private fun computeFinancialSummary(
@@ -24,14 +27,28 @@ class HomeLoader(
         transactions: List<Transaction>,
     ): HomeData {
 
-        val balance = accounts.sumOf { it.balance }
-        val income = transactions.filter { it.type == TransactionType.Income }.sumOf { it.amount }
-        val spend = transactions.filter { it.type == TransactionType.Spend }.sumOf { it.amount }
+        val lastTransactions = filterTransactionsByCurrentMonth(transactions)
+        val balance = accounts.sumOf(Account::balance)
+        val income = lastTransactions.filter { it.type == TransactionType.Income }.sumOf(Transaction::amount)
+        val spend = lastTransactions.filter { it.type == TransactionType.Spend }.sumOf(Transaction::amount)
+
         return HomeData(
-            lastTransactions = transactions.take(5),
+            lastTransactions = lastTransactions,
             income = income,
             spend = spend,
             balance = balance,
         )
+    }
+
+    private fun filterTransactionsByCurrentMonth(transactions: List<Transaction>): List<Transaction> {
+        val now: LocalDate = LocalDate.now()
+
+        val firstDayOfMonth: LocalDate = now.withDayOfMonth(1)
+        val lastDayOfMonth: LocalDate = now.withDayOfMonth(now.lengthOfMonth())
+
+        return transactions.filter {
+            val toLocalDate = Instant.ofEpochMilli(it.date).atZone(ZoneId.systemDefault()).toLocalDate()
+            toLocalDate in firstDayOfMonth..lastDayOfMonth
+        }
     }
 }

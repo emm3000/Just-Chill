@@ -31,37 +31,42 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.emm.domain.home.HomeData
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.seetransactions.ItemTransaction
+import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.transaction.TransactionUi
+import com.emm.justchill.hh.transaction.toUi
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun Home(homeViewModel: HomeViewModel = koinViewModel()) {
 
-    val homeUiState: HomeUiState by homeViewModel.calculators.collectAsStateWithLifecycle()
-
-    Home(homeUiState = homeUiState)
+    val homeUiState: HomeUiState by homeViewModel.state.collectAsStateWithLifecycle()
+    when (val state = homeUiState) {
+        is HomeUiState.Success -> Home(homeData = state.data)
+        HomeUiState.Loading -> {}
+    }
 }
 
 @Composable
-fun Home(homeUiState: HomeUiState) {
+fun Home(homeData: HomeData) {
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 20.dp, vertical = 20.dp)
+            .padding(horizontal = 16.dp, vertical = 20.dp)
             .statusBarsPadding()
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
 
-        TotalBalance(2000.0)
+        TotalBalance(homeData.balance)
 
-        LastMovement(1000.0, -500.0)
+        LastMovement(homeData.income, homeData.spend)
 
         LastTransactionsLabels {}
 
@@ -70,13 +75,11 @@ fun Home(homeUiState: HomeUiState) {
                 .heightIn(max = 300.dp)
         ) {
 
-            if (true) {
+            if (homeData.lastTransactions.isEmpty()) {
                 item { NoTransactions() }
             } else {
-
-                items(listOf(), TransactionUi::transactionId) {
+                items(homeData.lastTransactions.toUi(), TransactionUi::transactionId) {
                     ItemTransaction(it) {
-
                     }
                 }
             }
@@ -101,11 +104,12 @@ private fun TotalBalance(totalBalance: Double) {
                 text = "Balance Total",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
+                fontWeight = FontWeight.Bold,
                 fontFamily = LatoFontFamily,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = totalBalance.toString(),
+                text = "S/ ${fromCentsToSolesWith(totalBalance)}",
                 style = MaterialTheme.typography.displaySmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 fontFamily = LatoFontFamily,
@@ -125,6 +129,7 @@ private fun LastMovement(incomeThisMonth: Double, expensesThisMonth: Double) {
                 text = "Movimientos del Mes",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold,
                 fontFamily = LatoFontFamily,
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -136,11 +141,12 @@ private fun LastMovement(incomeThisMonth: Double, expensesThisMonth: Double) {
                     Text(
                         text = "Ingresos",
                         style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontFamily = LatoFontFamily,
                     )
                     Text(
-                        text = incomeThisMonth.toString(),
+                        text = "S/ ${fromCentsToSolesWith(incomeThisMonth)}",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.tertiary,
                         fontFamily = LatoFontFamily,
@@ -150,11 +156,12 @@ private fun LastMovement(incomeThisMonth: Double, expensesThisMonth: Double) {
                     Text(
                         text = "Gastos",
                         style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontFamily = LatoFontFamily,
                     )
                     Text(
-                        text = expensesThisMonth.toString(),
+                        text = "S/ ${fromCentsToSolesWith(expensesThisMonth)}",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.error,
                         fontFamily = LatoFontFamily,
@@ -202,7 +209,9 @@ fun NoTransactions() {
     Text(
         text = "No hay transacciones recientes.",
         style = MaterialTheme.typography.bodyMedium,
-        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
 }
@@ -212,10 +221,12 @@ fun NoTransactions() {
 fun HomePreview(modifier: Modifier = Modifier) {
     EmmTheme {
         Home(
-            homeUiState = HomeUiState(
-                income = "300.00",
-                spend = "404.00"
-            ),
+            HomeData(
+                lastTransactions = listOf(),
+                income = 6.7,
+                spend = 8.9,
+                balance = 10.11
+            )
         )
     }
 }
