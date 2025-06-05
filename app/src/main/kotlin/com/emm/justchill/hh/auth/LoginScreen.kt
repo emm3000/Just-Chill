@@ -160,7 +160,7 @@ fun LoginScreen(
                 .height(50.dp)
         ) {
             AnimatedContent(
-                targetState = false,
+                targetState = state.isLoading,
                 transitionSpec = {
                     fadeIn() + slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Start) togetherWith
                             fadeOut() + slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.End)
@@ -177,6 +177,7 @@ fun LoginScreen(
                         text = "Iniciar Sesión",
                         fontSize = 18.sp,
                         fontFamily = LatoFontFamily,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
