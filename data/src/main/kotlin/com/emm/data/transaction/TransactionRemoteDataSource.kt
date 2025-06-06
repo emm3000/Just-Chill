@@ -14,7 +14,11 @@ class TransactionRemoteDataSource(client: SupabaseClient) {
         table.upsert(transactions)
     }
 
-    suspend fun all(): List<TransactionModel> = withContext(Dispatchers.IO) {
-        table.select().decodeList<TransactionModel>()
+    suspend fun all(accounts: List<String>): List<TransactionModel> = withContext(Dispatchers.IO) {
+        table.select {
+            filter {
+                isIn("account_id", accounts)
+            }
+        }.decodeList<TransactionModel>()
     }
 }

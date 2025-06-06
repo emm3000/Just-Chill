@@ -1,6 +1,7 @@
 package com.emm.data.transaction
 
 import com.emm.data.Transactions
+import com.emm.data.account.AccountRemoteDataSource
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionRepository
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 class DefaultTransactionRepository(
     private val localDataSource: TransactionLocalDataSource,
     private val remoteDataSource: TransactionRemoteDataSource,
+    private val accountRemoteDataSource: AccountRemoteDataSource,
 ) : TransactionRepository {
 
     override suspend fun create(transactionInsert: TransactionInsert) {
@@ -25,7 +27,8 @@ class DefaultTransactionRepository(
     }
 
     override suspend fun pull() {
-        val transactionModels: List<TransactionModel> = remoteDataSource.all()
+        val accountIds: List<String> = accountRemoteDataSource.all().map { it.accountId }
+        val transactionModels: List<TransactionModel> = remoteDataSource.all(accountIds)
         val transactionUpdates: List<TransactionInsert> = transactionModels.map(TransactionModel::toTransactionInsert)
         transactionUpdates.forEach { transactionInsert ->
             localDataSource.create(transactionInsert)

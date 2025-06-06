@@ -10,7 +10,7 @@ import kotlinx.coroutines.withContext
 class CategoryRemoteDataSource(
     userIdProvider: UserIdProvider,
     client: SupabaseClient,
-): UserIdProvider by userIdProvider {
+) : UserIdProvider by userIdProvider {
 
     private val table: PostgrestQueryBuilder = client.from("categories_v2")
 
@@ -20,7 +20,11 @@ class CategoryRemoteDataSource(
     }
 
     suspend fun all(): List<CategoryModel> = withContext(Dispatchers.IO) {
-        table.select().decodeList<CategoryModel>()
+        table.select {
+            filter {
+                eq("user_id", userId)
+            }
+        }.decodeList<CategoryModel>()
     }
 
     private fun attachUserIdToCategory(

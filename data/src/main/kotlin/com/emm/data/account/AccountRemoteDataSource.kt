@@ -22,7 +22,11 @@ class AccountRemoteDataSource(
     private fun attachUserIdToCategory(accountModel: AccountModel) = accountModel.copy(userId = userId)
 
     suspend fun all(): List<AccountModel> = withContext(Dispatchers.IO) {
-        table.select().decodeList<AccountModel>()
+        table.select {
+            filter {
+                eq("user_id", userId)
+            }
+        }.decodeList<AccountModel>()
     }
 
     suspend fun delete(accountId: String) {
