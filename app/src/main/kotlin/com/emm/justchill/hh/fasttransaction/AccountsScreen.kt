@@ -65,19 +65,6 @@ fun AccountsScreen(
                 goToCreateAccount = addAccount,
                 goToCreateCategory = addCategory
             )
-
-//            IconButton(
-//                modifier = Modifier
-//                    .align(Alignment.CenterEnd)
-//                    .statusBarsPadding(),
-//                onClick = addAccount
-//            ) {
-//                Icon(
-//                    imageVector = Icons.Default.Add,
-//                    contentDescription = null,
-//                    tint = MaterialTheme.colorScheme.onBackground
-//                )
-//            }
         }
 
         LazyColumn(
