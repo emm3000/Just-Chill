@@ -20,6 +20,8 @@ data class TransactionModel(
     @SerialName("updated_at")
     val updatedAt: Long,
 
+    val deleted: Boolean,
+
     @SerialName("category_id")
     val categoryId: String?,
 

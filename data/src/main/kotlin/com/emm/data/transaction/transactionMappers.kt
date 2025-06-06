@@ -26,6 +26,7 @@ fun Transactions.toModel() = TransactionModel(
     description = description,
     date = date,
     updatedAt = updatedAt,
+    deleted = deleted,
     categoryId = categoryId,
     accountId = accountId,
 )
@@ -58,6 +59,7 @@ fun TransactionModel.toTransactionInsert() = TransactionInsert(
         balance = 0.0,
     ),
     isSynced = true,
+    deleted = deleted,
     updatedAt = updatedAt,
     categoryId = categoryId,
 )

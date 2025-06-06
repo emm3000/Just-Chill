@@ -10,6 +10,7 @@ data class TransactionInsert(
     val categoryId: String?,
     val date: Long,
     val account: Account,
+    val deleted: Boolean,
     val isSynced: Boolean,
     val updatedAt: Long,
 )

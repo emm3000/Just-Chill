@@ -154,7 +154,7 @@ fun LoginScreen(
 
         Button(
             onClick = { onAction(LoginAction.Login) },
-            enabled = state.isValidFields,
+            enabled = state.isValidFields && !state.isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)

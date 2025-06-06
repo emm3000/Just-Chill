@@ -9,25 +9,33 @@ CREATE TABLE transactions (
     categoryId TEXT,
     accountId TEXT NOT NULL,
     synced INTEGER AS Boolean NOT NULL,
+    deleted INTEGER AS Boolean NOT NULL,
     updatedAt INTEGER NOT NULL,
     FOREIGN KEY (categoryId) REFERENCES categories(categoryId) ON DELETE SET NULL,
     FOREIGN KEY (accountId) REFERENCES accounts(accountId) ON DELETE CASCADE
 );
 
-all:
-SELECT * FROM transactions ORDER BY date DESC;
+CREATE INDEX IF NOT EXISTS transactions_deleted_index ON transactions(deleted);
 
-allByAccount:
-SELECT * FROM transactions WHERE accountId = ? ORDER BY date DESC;
+all:
+SELECT * FROM transactions WHERE deleted = 0 ORDER BY date DESC;
 
 insert:
-INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 find:
 SELECT * FROM transactions WHERE transactionId = ?;
 
 delete:
 DELETE FROM transactions WHERE transactionId = ?;
+
+softDelete:
+UPDATE transactions
+SET
+    deleted = 1
+WHERE
+    transactionId = ?;
+
 
 update:
 UPDATE transactions
@@ -44,19 +52,3 @@ WHERE
 
 selectByStatus:
 SELECT * FROM transactions WHERE synced = ?;
-
-sumAllIncomeAmounts:
-SELECT SUM(amount) AS totalIncome
-FROM transactions
-WHERE type = 'Income' AND accountId = ?;
-
-sumAllSpendAmounts:
-SELECT SUM(amount) AS totalIncome
-FROM transactions
-WHERE type = 'Spend' AND accountId = ?;
-
-difference:
-SELECT (
-    COALESCE((SELECT SUM(amount) FROM transactions WHERE type = 'Income' AND accountId = ?), 0)
-    - COALESCE((SELECT SUM(amount) FROM transactions WHERE type = 'Spend' AND accountId = ?), 0)
-) AS incomeMinusSpent;

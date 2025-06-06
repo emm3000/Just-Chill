@@ -20,18 +20,6 @@ class DefaultTransactionRepository(
         return localDataSource.all()
     }
 
-    override fun sumIncome(accountId: String): Flow<Double> {
-        return localDataSource.sumIncome(accountId)
-    }
-
-    override fun sumSpend(accountId: String): Flow<Double> {
-        return localDataSource.sumSpend(accountId)
-    }
-
-    override fun difference(accountId: String): Flow<Double> {
-        return localDataSource.difference(accountId)
-    }
-
     override suspend fun delete(transactionId: String) {
         localDataSource.delete(transactionId)
     }

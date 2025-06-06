@@ -75,6 +75,7 @@ class TransactionViewModel(
         categoryId = null,
         account = state.accountSelected ?: throw IllegalStateException(),
         isSynced = false,
+        deleted = false,
         id = "",
         updatedAt = 0L,
     )
