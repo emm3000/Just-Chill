@@ -182,7 +182,8 @@ private fun DashboardContent(externalNavController: NavController) {
 
                 AccountsScreen(
                     accounts = accounts,
-                    addAccount = { externalNavController.navigate(HhRoutes.AddAccount.route) },
+                    state = vm.state,
+                    onAction = vm::onAction,
                     addCategory = { externalNavController.navigate(Screen.Category) },
                     modifier = Modifier.fillMaxSize()
                 )
