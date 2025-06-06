@@ -62,7 +62,6 @@ import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.auth.LabelTextField
 import com.emm.justchill.hh.fasttransaction.AccountItem
-import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextInput
 import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
 import kotlinx.coroutines.launch
@@ -190,17 +189,16 @@ private fun TransactionScreen(
 
         JustClickableInput(state.date, "Fecha;") { setShowSelectDate(true) }
 
-        EmmPrimaryButton(
-            text = "Guardar",
+        NewButton(
+            title = "Guardar",
             onClick = {
                 onAction(AccountAction.OnSave)
                 popBackStack()
             },
             enabled = state.isEnabled,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp)
+            modifier = Modifier.fillMaxWidth()
         )
+
     }
 
     BottomSheetDialogForPickAccount(

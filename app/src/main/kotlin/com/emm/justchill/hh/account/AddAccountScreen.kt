@@ -20,9 +20,9 @@ import androidx.navigation.NavController
 import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextInput
 import com.emm.justchill.hh.transaction.EmmToolbarTitle
+import com.emm.justchill.hh.transaction.NewButton
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -84,17 +84,17 @@ private fun AddAccountScreen(
                 onChange = { onAction(AddAccountAction.OnNameChange(it)) },
                 label = "Nombre *",
                 placeholder = "Ingresa el nombre",
-                modifier = Modifier
+                modifier = Modifier,
             )
 
-            EmmPrimaryButton(
-                text = "Guardar",
+            NewButton(
+                title = "Crear cuenta",
                 onClick = {
                     onAction(AddAccountAction.OnSave)
                     navigateToBack()
                 },
                 enabled = state.isEnabled,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

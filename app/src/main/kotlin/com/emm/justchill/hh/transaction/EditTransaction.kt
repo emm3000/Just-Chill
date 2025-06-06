@@ -42,7 +42,6 @@ import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextInput
 import com.emm.justchill.hh.shared.shared.EmmTransactionRadioButton
 import org.koin.androidx.compose.koinViewModel
@@ -209,8 +208,8 @@ private fun EditTransaction(
             setShowSelectDate(true)
         }
 
-        EmmPrimaryButton(
-            text = "Actualizar",
+        NewButton(
+            title = "Actualizar",
             onClick = {
                 keyboard?.hide()
                 onAction(AccountAction.OnSave)

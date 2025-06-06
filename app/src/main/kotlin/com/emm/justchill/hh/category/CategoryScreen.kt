@@ -20,9 +20,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
 import com.emm.justchill.hh.shared.shared.EmmTextInput
 import com.emm.justchill.hh.transaction.EmmCenteredToolbar
+import com.emm.justchill.hh.transaction.NewButton
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -79,22 +79,18 @@ private fun CategoryScreen(
                 onChange = { onAction(CategoryAction.OnNameChange(it)) }
             )
 
-            EmmPrimaryButton(
-                text = "Guardar",
+            NewButton(
+                title = "Guardar",
                 onClick = {
                     current?.hide()
                     onAction(CategoryAction.OnSave)
                     navigateToBack()
                 },
                 enabled = state.isAllFieldValidated,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 20.dp)
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
-
-
 }
 
 @Preview(showBackground = true)
