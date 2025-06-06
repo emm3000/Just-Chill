@@ -343,6 +343,17 @@ fun JustClickableInput(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
+
+        Text(
+            text = label,
+            fontWeight = FontWeight.Bold,
+            fontFamily = LatoFontFamily,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 17.sp
+        )
+
+        Spacer(modifier = Modifier.height(5.dp))
+
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
@@ -357,14 +368,13 @@ fun JustClickableInput(
                 disabledPlaceholderColor = MaterialTheme.colorScheme.onBackground,
                 focusedBorderColor = MaterialTheme.colorScheme.onBackground
             ),
-            label = {
+            placeholder = {
                 Text(
-                    text = label,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    text = "Seleccione una cuenta",
                     fontFamily = LatoFontFamily,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(bottom = 5.dp)
+                    fontWeight = FontWeight.Normal,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                    fontSize = 16.sp
                 )
             },
             textStyle = TextStyle(
