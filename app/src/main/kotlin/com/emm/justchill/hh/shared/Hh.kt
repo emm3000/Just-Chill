@@ -88,6 +88,7 @@ fun Hh() {
                             }
                         }
                     }
+
                     SessionStatus.NotAuthenticated -> {
                         navController.navigate(Screen.Login) {
                             popUpTo(Screen.PreLogin) {
@@ -95,6 +96,7 @@ fun Hh() {
                             }
                         }
                     }
+
                     else -> {}
                 }
             }
@@ -186,7 +188,17 @@ private fun DashboardContent(externalNavController: NavController) {
                 )
             }
             composable(HhRoutes.HhHome.route) {
-                Home()
+                Home(
+                    navigateToAll = {
+                        navController.navigate(HhRoutes.SeeTransaction.route) {
+                            popUpTo(HhRoutes.HhHome.route) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
             }
             composable(HhRoutes.SeeTransaction.route) {
                 SeeTransactionsVersionTwo(externalNavController)

@@ -41,17 +41,20 @@ import com.emm.justchill.hh.transaction.toUi
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun Home(homeViewModel: HomeViewModel = koinViewModel()) {
+fun Home(
+    homeViewModel: HomeViewModel = koinViewModel(),
+    navigateToAll: () -> Unit = {}
+) {
 
     val homeUiState: HomeUiState by homeViewModel.state.collectAsStateWithLifecycle()
     when (val state = homeUiState) {
-        is HomeUiState.Success -> Home(homeData = state.data)
+        is HomeUiState.Success -> Home(homeData = state.data, navigateToAll = navigateToAll)
         HomeUiState.Loading -> {}
     }
 }
 
 @Composable
-fun Home(homeData: HomeData) {
+fun Home(homeData: HomeData, navigateToAll: () -> Unit = {}) {
 
     Column(
         modifier = Modifier
@@ -68,7 +71,7 @@ fun Home(homeData: HomeData) {
 
         LastMovement(homeData.income, homeData.spend)
 
-        LastTransactionsLabels {}
+        LastTransactionsLabels { navigateToAll() }
 
         LazyColumn(
             modifier = Modifier
