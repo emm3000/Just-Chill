@@ -17,12 +17,12 @@ keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 
 android {
     namespace = "com.emm.justchill"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.emm.justchill"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 27
         versionName = "1.1.0-alpha"
 
