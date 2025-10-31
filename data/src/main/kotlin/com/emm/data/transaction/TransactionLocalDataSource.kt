@@ -28,6 +28,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             deleted = transactionInsert.deleted,
             updatedAt = transactionInsert.updatedAt,
         )
+        Unit
     }
 
     fun all(): Flow<List<Transaction>> {

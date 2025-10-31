@@ -28,6 +28,7 @@ class LocalPaymentRepository(
             amount = payment.amount,
             status = payment.status.name,
         )
+        Unit
     }
 
     override suspend fun addAll(payments: List<Payment>) = withContext(Dispatchers.IO) {
@@ -63,6 +64,7 @@ class LocalPaymentRepository(
         paymentId: String,
     ) = withContext(Dispatchers.IO) {
         pq.pay(paymentStatus.name, paymentId)
+        Unit
     }
 
     private fun toDomain(payments: List<Payments>): List<Payment> {

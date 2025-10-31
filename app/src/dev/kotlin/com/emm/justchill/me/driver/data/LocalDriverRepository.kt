@@ -20,6 +20,7 @@ class LocalDriverRepository(private val emmDatabase: EmmDatabaseData) : DriverRe
 
     override suspend fun insert(driver: Driver) = withContext(Dispatchers.IO) {
         dq.insert(driver.driverId, driver.name)
+        Unit
     }
 
     override fun all(): Flow<List<Driver>> {

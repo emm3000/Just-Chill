@@ -24,6 +24,7 @@ class LocalDailyRepository(private val emmDatabase: EmmDatabaseData) : DailyRepo
             dailyDate = daily.dailyDate,
             driverId = daily.driverId
         )
+        Unit
     }
 
     override fun all(): Flow<List<Daily>> {
@@ -42,6 +43,7 @@ class LocalDailyRepository(private val emmDatabase: EmmDatabaseData) : DailyRepo
 
     override suspend fun delete(dailyId: String) = withContext(Dispatchers.IO) {
         dq.delete(dailyId)
+        Unit
     }
 
     private fun toDomain(list: List<Dailies>): List<Daily> {

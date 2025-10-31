@@ -30,6 +30,7 @@ class LocalLoanRepository(
             status = loan.status,
             driverId = loan.driverId,
         )
+        Unit
     }
 
     override fun retrieve(loanId: String): Flow<List<Loan>> {
@@ -55,6 +56,7 @@ class LocalLoanRepository(
 
     override suspend fun delete(loanId: String) = withContext(Dispatchers.IO) {
         lq.delete(loanId)
+        Unit
     }
 
     private fun toDomain(loans: List<Loans>): List<Loan> {
