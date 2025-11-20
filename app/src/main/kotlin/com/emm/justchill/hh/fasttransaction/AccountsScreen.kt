@@ -112,8 +112,8 @@ fun AccountsScreen(
             sheetState = sheetState
         ) {
 
-            LaunchedEffect(sheetState.isVisible) {
-                if (sheetState.isVisible) focusRequester.requestFocus()
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
             }
 
             val view = LocalView.current
