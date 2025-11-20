@@ -69,7 +69,7 @@ fun Hh() {
 
     NavHost(
         navController = navController,
-        startDestination = Screen.PreLogin,
+        startDestination = Screen.Dashboard,
     ) {
         composable<Screen.PreLogin> {
             val repo: AuthRepository = koinInject()
