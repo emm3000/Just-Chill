@@ -28,7 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,14 +37,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogWindowProvider
-import androidx.core.view.WindowCompat
 import com.emm.domain.account.Account
 import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.EmmTheme
@@ -112,18 +108,6 @@ fun AccountsScreen(
             sheetState = sheetState
         ) {
 
-            LaunchedEffect(Unit) {
-                focusRequester.requestFocus()
-            }
-
-            val view = LocalView.current
-            (view.parent as? DialogWindowProvider)?.window?.let { window ->
-                SideEffect {
-                    val insetsController = WindowCompat.getInsetsController(window, view)
-                    insetsController.isAppearanceLightStatusBars = false
-                    insetsController.isAppearanceLightNavigationBars = false
-                }
-            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -174,6 +158,10 @@ fun AccountsScreen(
                     enabled = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
             }
         }
     }
