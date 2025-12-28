@@ -13,17 +13,17 @@ class HomeViewModel(homeLoader: HomeLoader) : ViewModel() {
 
     val state: StateFlow<HomeUiState> = homeLoader
         .load()
-        .map(HomeUiState::Success)
+        .map(::mapToUiState)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = HomeUiState.Loading,
+            initialValue = HomeUiState(),
         )
-}
 
-sealed interface HomeUiState {
-
-    data object Loading: HomeUiState
-
-    data class Success(val data: HomeData): HomeUiState
+    private fun mapToUiState(data: HomeData): HomeUiState = HomeUiState(
+        lastTransactions = data.lastTransactions,
+        income = data.income,
+        spend = data.spend,
+        balance = data.balance
+    )
 }

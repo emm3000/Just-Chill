@@ -31,7 +31,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.emm.domain.home.HomeData
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.seetransactions.ItemTransaction
@@ -47,14 +46,12 @@ fun Home(
 ) {
 
     val homeUiState: HomeUiState by homeViewModel.state.collectAsStateWithLifecycle()
-    when (val state = homeUiState) {
-        is HomeUiState.Success -> Home(homeData = state.data, navigateToAll = navigateToAll)
-        HomeUiState.Loading -> {}
-    }
+
+    Home(homeData = homeUiState, navigateToAll = navigateToAll)
 }
 
 @Composable
-fun Home(homeData: HomeData, navigateToAll: () -> Unit = {}) {
+fun Home(homeData: HomeUiState, navigateToAll: () -> Unit = {}) {
 
     Column(
         modifier = Modifier
@@ -221,10 +218,10 @@ fun NoTransactions() {
 
 @Preview(showBackground = true)
 @Composable
-fun HomePreview(modifier: Modifier = Modifier) {
+fun HomePreview() {
     EmmTheme {
         Home(
-            HomeData(
+            HomeUiState(
                 lastTransactions = listOf(),
                 income = 6.7,
                 spend = 8.9,
