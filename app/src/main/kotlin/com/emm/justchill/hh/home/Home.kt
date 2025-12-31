@@ -40,18 +40,18 @@ import com.emm.justchill.hh.transaction.toUi
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun Home(
+fun HomeScreen(
     homeViewModel: HomeViewModel = koinViewModel(),
     navigateToAll: () -> Unit = {}
 ) {
 
     val homeUiState: HomeUiState by homeViewModel.state.collectAsStateWithLifecycle()
 
-    Home(homeData = homeUiState, navigateToAll = navigateToAll)
+    HomeScreen(homeData = homeUiState, navigateToAll = navigateToAll)
 }
 
 @Composable
-fun Home(homeData: HomeUiState, navigateToAll: () -> Unit = {}) {
+fun HomeScreen(homeData: HomeUiState, navigateToAll: () -> Unit = {}) {
 
     Column(
         modifier = Modifier
@@ -218,9 +218,9 @@ fun NoTransactions() {
 
 @Preview(showBackground = true)
 @Composable
-fun HomePreview() {
+fun HomeScreenPreview() {
     EmmTheme {
-        Home(
+        HomeScreen(
             HomeUiState(
                 lastTransactions = listOf(),
                 income = 6.7,

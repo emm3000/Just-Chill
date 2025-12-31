@@ -22,10 +22,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.emm.domain.account.Account
 import com.emm.justchill.core.theme.LatoFontFamily
@@ -37,7 +39,7 @@ import com.emm.justchill.hh.auth.SignUpViewModel
 import com.emm.justchill.hh.category.CategoryScreen
 import com.emm.justchill.hh.fasttransaction.AccountsScreen
 import com.emm.justchill.hh.fasttransaction.AccountsViewModel
-import com.emm.justchill.hh.home.Home
+import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.seetransactions.SeeTransactionsVersionTwo
 import com.emm.justchill.hh.shared.nav.NavigationState
 import com.emm.justchill.hh.shared.nav.Navigator
@@ -62,6 +64,10 @@ fun Hh() {
     NavDisplay(
         backStack = navBackStack,
         onBack = { navBackStack.removeLastOrNull() },
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator(),
+        ),
         entryProvider = entryProvider {
             entry<LoginRoute> {
                 val vm: LoginViewModel = koinViewModel()
@@ -121,7 +127,7 @@ fun DashboardContent(externalNavBack: NavBackStack<NavKey>) {
 
     val entryProvider = entryProvider {
         entry<HomeRoute> {
-            Home(
+            HomeScreen(
                 navigateToAll = { navigator.navigate(SeeTransactionRoute) }
             )
         }
