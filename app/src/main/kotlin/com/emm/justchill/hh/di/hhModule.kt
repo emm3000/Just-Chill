@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.di
 
-import android.content.Context
 import com.emm.data.account.AccountLocalDataSource
 import com.emm.data.account.AccountRemoteDataSource
 import com.emm.data.auth.DefaultAuthRepository
@@ -17,7 +16,6 @@ import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.shared.UniqueIdProvider
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionUpdateRepository
-import com.emm.justchill.R
 import com.emm.justchill.hh.account.AddAccountViewModel
 import com.emm.justchill.hh.auth.LoginViewModel
 import com.emm.justchill.hh.auth.SignUpViewModel
@@ -29,13 +27,6 @@ import com.emm.justchill.hh.seetransactions.SeeTransactionsViewModel
 import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
 import com.emm.justchill.hh.transaction.EditTransactionViewModel
 import com.emm.justchill.hh.transaction.TransactionViewModel
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.Auth
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.serializer.KotlinXSerializer
-import kotlinx.serialization.json.Json
-import org.koin.android.ext.koin.androidApplication
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
@@ -105,20 +96,7 @@ private fun Module.repositoriesProviders() {
         bind<TransactionRepository>()
     }
 
-    single<SupabaseClient> { supabase(androidApplication()) }
-
     factoryOf(::DefaultTransactionUpdateRepository) bind TransactionUpdateRepository::class
 
     factoryOf(::DefaultAuthRepository) bind  AuthRepository::class
-}
-
-private fun supabase(context: Context): SupabaseClient {
-    return createSupabaseClient(
-        supabaseUrl = context.getString(R.string.supabase_url),
-        supabaseKey = context.getString(R.string.supabase_key)
-    ) {
-        install(Auth)
-        install(Postgrest)
-        defaultSerializer = KotlinXSerializer(Json { ignoreUnknownKeys = true })
-    }
 }

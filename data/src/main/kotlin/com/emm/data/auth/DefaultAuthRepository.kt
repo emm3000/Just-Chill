@@ -3,44 +3,23 @@ package com.emm.data.auth
 import com.emm.domain.auth.AuthRepository
 import com.emm.domain.auth.Email
 import com.emm.domain.auth.Password
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.SignOutScope
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.status.SessionStatus
-import kotlinx.coroutines.Dispatchers
+import com.emm.domain.auth.SessionStatus
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.flowOf
 
-class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository {
+class DefaultAuthRepository() : AuthRepository {
 
-    override val sessionStatus: Flow<com.emm.domain.auth.SessionStatus>
-        get() = client.auth.sessionStatus
-            .map { sessionStatus ->
-                when (sessionStatus) {
-                    is SessionStatus.Authenticated -> com.emm.domain.auth.SessionStatus.Authenticated
-                    SessionStatus.Initializing -> com.emm.domain.auth.SessionStatus.Initializing
-                    is SessionStatus.NotAuthenticated -> com.emm.domain.auth.SessionStatus.NotAuthenticated
-                    else -> com.emm.domain.auth.SessionStatus.NotAuthenticated
-                }
-            }
+    override val sessionStatus: Flow<SessionStatus>
+        get() = flowOf(SessionStatus.Initializing)
 
-    override suspend fun login(email: Email, password: Password) = withContext(Dispatchers.IO) {
-        client.auth.signInWith(io.github.jan.supabase.auth.providers.builtin.Email) {
-            this.email = email.value
-            this.password = password.value
-        }
+    override suspend fun login(email: Email, password: Password) {
+
     }
 
-    override suspend fun register(email: Email, password: Password) = withContext(Dispatchers.IO) {
-        client.auth.signUpWith(io.github.jan.supabase.auth.providers.builtin.Email) {
-            this.email = email.value
-            this.password = password.value
-        }
-        Unit
+    override suspend fun register(email: Email, password: Password) {
+
     }
 
-    override suspend fun logout() = withContext(Dispatchers.IO) {
-        client.auth.signOut(SignOutScope.GLOBAL)
+    override suspend fun logout() {
     }
 }

@@ -50,10 +50,6 @@ dependencies {
     implementation(libs.android.driver)
     api(libs.coroutines.extensions)
 
-    implementation(platform(libs.bom))
-    api(libs.postgrest.kt)
-    api(libs.auth.kt)
-
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.androidx.work.runtime.ktx)
