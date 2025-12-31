@@ -9,14 +9,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
+import com.emm.justchill.hh.shared.shared.AddTransactionRoute
 
 @Composable
-fun FabMenu(navController: NavController) {
+fun FabMenu(external: NavBackStack<NavKey>) {
 
     FloatingActionButton(
         modifier = Modifier,
-        onClick = { navController.navigate(HhRoutes.AddTransaction.route) },
+        onClick = {
+            external.add(AddTransactionRoute)
+        },
         containerColor = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
     ) {

@@ -19,10 +19,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.hh.shared.shared.Screen
+import com.emm.justchill.hh.shared.shared.EditTransactionRoute
 import com.emm.justchill.hh.transaction.EmmCenteredToolbar
 import com.emm.justchill.hh.transaction.TransactionUi
 import org.koin.androidx.compose.koinViewModel
@@ -30,7 +31,7 @@ import java.util.UUID
 
 @Composable
 fun SeeTransactionsVersionTwo(
-    navController: NavController,
+    externalNavBack: NavBackStack<NavKey>,
     vm: SeeTransactionsViewModel = koinViewModel(),
 ) {
 
@@ -39,7 +40,7 @@ fun SeeTransactionsVersionTwo(
     SeeTransactionsVersionTwo(
         transactions = collectAsState,
         navigateToEdit = {
-            navController.navigate(Screen.EditTransaction(it))
+            externalNavBack.add(EditTransactionRoute(it))
         },
     )
 }

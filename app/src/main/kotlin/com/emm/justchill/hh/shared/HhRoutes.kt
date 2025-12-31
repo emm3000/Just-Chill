@@ -1,28 +1,29 @@
 package com.emm.justchill.hh.shared
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalance
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.AddChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlaylistAddCheckCircle
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation3.runtime.NavKey
+import kotlinx.serialization.Serializable
 
-sealed class HhRoutes(
+@Serializable
+data object HomeRoute : NavKey
+
+@Serializable
+data object AccountsRoute : NavKey
+
+@Serializable
+data object SeeTransactionRoute : NavKey
+
+data class HhNavBarItem(
     val name: String,
     val route: String,
     val icon: ImageVector,
-) {
+)
 
-    data object HhHome: HhRoutes("Inicio", "home", Icons.Filled.Home)
-    data object AccountsScreen: HhRoutes("Cuentas", "cuentas", Icons.Filled.AccountBalance)
-    data object AddTransaction: HhRoutes("Transacción", "addTransaction", Icons.Filled.AddChart)
-    data object SeeTransaction: HhRoutes("Ver", "seeTransactions", Icons.Filled.PlaylistAddCheckCircle)
-    data object AddAccount: HhRoutes("Add Account", "addAccount", Icons.Filled.AccountCircle)
-}
-
-val hhRoutes = listOf(
-    HhRoutes.HhHome,
-    HhRoutes.SeeTransaction,
-    HhRoutes.AccountsScreen,
+val TOP_LEVEL_ROUTES: Map<NavKey, HhNavBarItem> = mapOf(
+    HomeRoute to HhNavBarItem(name = "Inicio", route = "class", icon = Icons.Filled.Home),
+    SeeTransactionRoute to HhNavBarItem(name = "Ver", route = "class", icon = Icons.Filled.Home),
+    AccountsRoute to HhNavBarItem(name = "Cuentas", route = "class", icon = Icons.Filled.PlaylistAddCheckCircle),
 )

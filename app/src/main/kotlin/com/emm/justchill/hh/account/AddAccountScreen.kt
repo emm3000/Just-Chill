@@ -16,7 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
@@ -27,14 +28,14 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun AddAccountScreen(
-    navController: NavController,
+    navController: NavBackStack<NavKey>,
     vm: AddAccountViewModel = koinViewModel(),
 ) {
 
     AddAccountScreen(
         state = vm.state,
         onAction = vm::onAction,
-        navigateToBack = navController::popBackStack,
+        navigateToBack = navController::removeLastOrNull,
     )
 }
 

@@ -35,6 +35,10 @@ googleCrashlyticsVersion = "3.0.6"
 workRuntimeKtx = "2.11.0"
 jetbrainsKotlinJvm = "2.3.0"
 
+# nav
+nav3Core = "1.0.0"
+lifecycleViewmodelNav3 = "2.10.0"
+
 [libraries]
 android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "androidDriver" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -84,6 +88,10 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit2-kotlinx-serialization-converter = { module = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter", version.ref = "retrofit2KotlinxSerializationConverter" }
+
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3Core" }
+androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodelNav3" }
 
 [plugins]
 

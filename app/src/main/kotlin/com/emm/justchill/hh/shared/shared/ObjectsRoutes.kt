@@ -1,26 +1,27 @@
 package com.emm.justchill.hh.shared.shared
 
+import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
-sealed interface Screen {
+@Serializable
+data class EditTransactionRoute(val transactionId: String) : NavKey
 
-    @Serializable
-    data class EditTransaction(val transactionId: String) : Screen
+@Serializable
+data object CategoryRoute : NavKey
 
-    @Serializable
-    data object Category : Screen
+@Serializable
+data object AddAccountRoute : NavKey
 
-    @Serializable
-    data object Dashboard : Screen
+@Serializable
+data object DashboardRoute : NavKey
 
-    @Serializable
-    data object PreLogin : Screen
+@Serializable
+data object LoginRoute : NavKey
 
-    @Serializable
-    data object Login : Screen
+@Serializable
+data object RegisterRoute : NavKey
 
-    @Serializable
-    data object Register : Screen
-}
+@Serializable
+data object AddTransactionRoute : NavKey
 
 

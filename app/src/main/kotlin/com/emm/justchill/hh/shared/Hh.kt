@@ -1,19 +1,11 @@
 package com.emm.justchill.hh.shared
 
-import android.app.Activity
-import android.content.Context
-import androidx.activity.compose.LocalActivity
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -23,27 +15,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavController
-import androidx.navigation.NavDestination
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
 import com.emm.domain.account.Account
-import com.emm.domain.auth.AuthRepository
-import com.emm.domain.auth.SessionStatus
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.account.AddAccountScreen
 import com.emm.justchill.hh.auth.LoginScreen
@@ -55,212 +39,157 @@ import com.emm.justchill.hh.fasttransaction.AccountsScreen
 import com.emm.justchill.hh.fasttransaction.AccountsViewModel
 import com.emm.justchill.hh.home.Home
 import com.emm.justchill.hh.seetransactions.SeeTransactionsVersionTwo
-import com.emm.justchill.hh.shared.shared.Screen
+import com.emm.justchill.hh.shared.nav.NavigationState
+import com.emm.justchill.hh.shared.nav.Navigator
+import com.emm.justchill.hh.shared.nav.rememberNavigationState
+import com.emm.justchill.hh.shared.nav.toEntries
+import com.emm.justchill.hh.shared.shared.AddAccountRoute
+import com.emm.justchill.hh.shared.shared.AddTransactionRoute
+import com.emm.justchill.hh.shared.shared.CategoryRoute
+import com.emm.justchill.hh.shared.shared.DashboardRoute
+import com.emm.justchill.hh.shared.shared.EditTransactionRoute
+import com.emm.justchill.hh.shared.shared.LoginRoute
+import com.emm.justchill.hh.shared.shared.RegisterRoute
 import com.emm.justchill.hh.transaction.EditTransaction
 import com.emm.justchill.hh.transaction.TransactionScreen
-import com.emm.justchill.sync.Sync
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 
 @Composable
 fun Hh() {
 
-    val navController = rememberNavController()
+    val navBackStack: NavBackStack<NavKey> = rememberNavBackStack(DashboardRoute)
 
-    NavHost(
-        navController = navController,
-        startDestination = Screen.Dashboard,
-    ) {
-        composable<Screen.PreLogin> {
-            val repo: AuthRepository = koinInject()
+    NavDisplay(
+        backStack = navBackStack,
+        onBack = { navBackStack.removeLastOrNull() },
+        entryProvider = entryProvider {
+            entry<LoginRoute> {
+                val vm: LoginViewModel = koinViewModel()
 
-            val currentActivity: Activity? = LocalActivity.current
-
-            val sessionStatus: SessionStatus by repo.sessionStatus.collectAsStateWithLifecycle(SessionStatus.Initializing)
-
-            LaunchedEffect(sessionStatus) {
-                when (sessionStatus) {
-                    SessionStatus.Authenticated -> {
-                        currentActivity?.applicationContext?.let(Sync::initialize)
-                        navController.navigate(Screen.Dashboard) {
-                            popUpTo(Screen.PreLogin) {
-                                inclusive = true
-                            }
-                        }
-                    }
-
-                    SessionStatus.NotAuthenticated -> {
-                        navController.navigate(Screen.Login) {
-                            popUpTo(Screen.PreLogin) {
-                                inclusive = true
-                            }
-                        }
-                    }
-
-                    else -> {}
-                }
-            }
-
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
-            }
-        }
-        composable<Screen.Login> {
-            val vm: LoginViewModel = koinViewModel()
-
-            val applicationContext: Context? = LocalActivity.current?.applicationContext
-
-            LaunchedEffect(vm.state.successLogin) {
-                if (vm.state.successLogin) {
-                    applicationContext?.let(Sync::initialize)
-                    navController.navigate(Screen.Dashboard) {
-                        popUpTo(Screen.Login) {
-                            inclusive = true
-                        }
+                LaunchedEffect(vm.state.successLogin) {
+                    if (vm.state.successLogin) {
+                        navBackStack.removeLastOrNull()
+                        navBackStack.add(DashboardRoute)
                     }
                 }
-            }
-            LoginScreen(
-                modifier = Modifier,
-                state = vm.state,
-                onAction = vm::onAction,
-                navigateToRegister = { navController.navigate(Screen.Register) }
-            )
-        }
-        composable<Screen.Register> {
-            val vm: SignUpViewModel = koinViewModel()
-
-            SignUpScreen(
-                state = vm.state,
-                onAction = vm::onAction,
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable<Screen.Dashboard> {
-            DashboardContent(navController)
-        }
-        composable(HhRoutes.AddTransaction.route) {
-            TransactionScreen(
-                popBackStack = { navController.popBackStack() }
-            )
-        }
-        composable<Screen.EditTransaction> {
-            val editTransaction: Screen.EditTransaction = it.toRoute<Screen.EditTransaction>()
-            EditTransaction(navController, editTransaction.transactionId)
-        }
-        composable(HhRoutes.AddAccount.route) {
-            AddAccountScreen(navController)
-        }
-        composable<Screen.Category> {
-            CategoryScreen(navController)
-        }
-    }
-}
-
-@Composable
-private fun DashboardContent(externalNavController: NavController) {
-    val navController = rememberNavController()
-
-    Scaffold(
-        bottomBar = { Csm(navController) },
-        contentWindowInsets = WindowInsets.navigationBars,
-        floatingActionButton = { FabMenu(externalNavController) }
-    ) { paddingValues ->
-        NavHost(
-            navController = navController,
-            startDestination = HhRoutes.HhHome.route,
-            modifier = Modifier.padding(paddingValues)
-        ) {
-
-            composable(HhRoutes.AccountsScreen.route) {
-                val vm: AccountsViewModel = koinViewModel()
-
-                val accounts: List<Account> by vm.accounts.collectAsStateWithLifecycle()
-
-                AccountsScreen(
-                    accounts = accounts,
+                LoginScreen(
+                    modifier = Modifier,
                     state = vm.state,
                     onAction = vm::onAction,
-                    addCategory = { externalNavController.navigate(Screen.Category) },
-                    modifier = Modifier.fillMaxSize()
+                    navigateToRegister = { navBackStack.add(RegisterRoute) }
                 )
             }
-            composable(HhRoutes.HhHome.route) {
-                Home(
-                    navigateToAll = {
-                        navController.navigate(HhRoutes.SeeTransaction.route) {
-                            popUpTo(HhRoutes.HhHome.route) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
+            entry<RegisterRoute> {
+                val vm: SignUpViewModel = koinViewModel()
+
+                SignUpScreen(
+                    state = vm.state,
+                    onAction = vm::onAction,
+                    onBack = { navBackStack.removeLastOrNull() }
                 )
             }
-            composable(HhRoutes.SeeTransaction.route) {
-                SeeTransactionsVersionTwo(externalNavController)
+            entry<DashboardRoute> {
+                DashboardContent(navBackStack)
             }
+            entry<AddTransactionRoute> {
+                TransactionScreen(
+                    popBackStack = { navBackStack.removeLastOrNull() }
+                )
+            }
+            entry<EditTransactionRoute> {
+                EditTransaction(navBackStack, it.transactionId)
+            }
+            entry<CategoryRoute> {
+                CategoryScreen(navBackStack)
+            }
+            entry<AddAccountRoute> {
+                AddAccountScreen(navBackStack)
+            }
+        },
+    )
+}
+
+@Composable
+fun DashboardContent(externalNavBack: NavBackStack<NavKey>) {
+
+    val navigationState: NavigationState = rememberNavigationState(
+        startRoute = HomeRoute,
+        topLevelRoutes = TOP_LEVEL_ROUTES.keys,
+    )
+
+    val navigator: Navigator = remember { Navigator(navigationState) }
+
+    val entryProvider = entryProvider {
+        entry<HomeRoute> {
+            Home(
+                navigateToAll = { navigator.navigate(SeeTransactionRoute) }
+            )
         }
+        entry<AccountsRoute> {
+            val vm: AccountsViewModel = koinViewModel()
+
+            val accounts: List<Account> by vm.accounts.collectAsStateWithLifecycle()
+
+            AccountsScreen(
+                accounts = accounts,
+                state = vm.state,
+                onAction = vm::onAction,
+                addCategory = {
+                    externalNavBack.add(CategoryRoute)
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        entry<SeeTransactionRoute> {
+            SeeTransactionsVersionTwo(externalNavBack)
+        }
+    }
+
+    Scaffold(
+        bottomBar = { Csm(navigationState, navigator) },
+        contentWindowInsets = WindowInsets.navigationBars,
+        floatingActionButton = { FabMenu(externalNavBack) }
+    ) { paddingValues ->
+        NavDisplay(
+            entries = navigationState.toEntries(entryProvider),
+            onBack = { navigator.goBack() },
+            modifier = Modifier.padding(paddingValues)
+        )
     }
 }
 
 @Composable
-private fun Csm(internalNavController: NavHostController) {
-    val navBackStackEntry: NavBackStackEntry? by internalNavController.currentBackStackEntryAsState()
-    val currentDestination: NavDestination? = navBackStackEntry?.destination
+private fun Csm(navigationState: NavigationState, navigator: Navigator) {
 
-    val showName = currentDestination?.route !in hhRoutes.map { it.route }
-
-    AnimatedVisibility(
-        visible = !showName,
-        enter = slideInVertically(initialOffsetY = { it }),
-        exit = slideOutVertically(targetOffsetY = { it })
+    BottomAppBar(
+        containerColor = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onBackground,
     ) {
-        BottomAppBar(
-            containerColor = MaterialTheme.colorScheme.background,
-            contentColor = MaterialTheme.colorScheme.onBackground,
-        ) {
-            hhRoutes.forEach { screen ->
-                NavigationBarItem(
-                    selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                    onClick = {
-                        internalNavController.navigate(screen.route) {
-                            popUpTo(internalNavController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    icon = {
-                        Icon(
-                            screen.icon,
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp),
-                            tint = LocalContentColor.current,
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = screen.name,
-                            textAlign = TextAlign.Center,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            color = LocalContentColor.current,
-                            fontFamily = LatoFontFamily,
-                            fontWeight = if (currentDestination?.hierarchy?.any { it.route == screen.route } == true) {
-                                FontWeight.Bold
-                            } else {
-                                FontWeight.Normal
-                            }
-                        )
-                    }
-                )
-            }
+        TOP_LEVEL_ROUTES.forEach { (key: NavKey, value: HhNavBarItem) ->
+            val isSelected = key == navigationState.topLevelRoute
+            NavigationBarItem(
+                selected = isSelected,
+                onClick = { navigator.navigate(key) },
+                icon = {
+                    Icon(
+                        imageVector = value.icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = LocalContentColor.current,
+                    )
+                },
+                label = {
+                    Text(
+                        text = value.name,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = LocalContentColor.current,
+                        fontFamily = LatoFontFamily,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
+            )
         }
     }
 }
