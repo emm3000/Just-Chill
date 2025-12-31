@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -105,7 +107,7 @@ fun AccountsScreen(
             onDismissRequest = {
                 setShowBottomSheet(false)
             },
-            sheetState = sheetState
+            sheetState = sheetState,
         ) {
 
             Column(
@@ -160,8 +162,13 @@ fun AccountsScreen(
                 )
             }
 
-            LaunchedEffect(Unit) {
-                focusRequester.requestFocus()
+            LaunchedEffect(sheetState) {
+                snapshotFlow { sheetState.currentValue }
+                    .collect { value ->
+                        if (value == SheetValue.Expanded) {
+                            focusRequester.requestFocus()
+                        }
+                    }
             }
         }
     }
