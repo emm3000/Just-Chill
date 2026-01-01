@@ -53,6 +53,11 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.androidx.work.runtime.ktx)
+
+    api(platform(libs.bom))
+    api(libs.supabase.postgrest.kt)
+    api(libs.supabase.auth.kt)
+    api(libs.ktor.client.okhttp)
 }
 
 sqldelight {

@@ -4,6 +4,9 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 @Serializable
+data object PreLoginRoute : NavKey
+
+@Serializable
 data class EditTransactionRoute(val transactionId: String) : NavKey
 
 @Serializable

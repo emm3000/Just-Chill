@@ -1,11 +1,14 @@
 package com.emm.justchill.hh.shared
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -16,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,6 +34,8 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.emm.domain.account.Account
+import com.emm.domain.auth.AuthRepository
+import com.emm.domain.auth.SessionStatus
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.account.AddAccountScreen
 import com.emm.justchill.hh.auth.LoginScreen
@@ -51,15 +57,17 @@ import com.emm.justchill.hh.shared.shared.CategoryRoute
 import com.emm.justchill.hh.shared.shared.DashboardRoute
 import com.emm.justchill.hh.shared.shared.EditTransactionRoute
 import com.emm.justchill.hh.shared.shared.LoginRoute
+import com.emm.justchill.hh.shared.shared.PreLoginRoute
 import com.emm.justchill.hh.shared.shared.RegisterRoute
 import com.emm.justchill.hh.transaction.EditTransaction
 import com.emm.justchill.hh.transaction.TransactionScreen
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @Composable
 fun Hh() {
 
-    val navBackStack: NavBackStack<NavKey> = rememberNavBackStack(DashboardRoute)
+    val navBackStack: NavBackStack<NavKey> = rememberNavBackStack(PreLoginRoute)
 
     NavDisplay(
         backStack = navBackStack,
@@ -69,6 +77,35 @@ fun Hh() {
             rememberViewModelStoreNavEntryDecorator(),
         ),
         entryProvider = entryProvider {
+            entry<PreLoginRoute> {
+                val authRepository: AuthRepository = koinInject<AuthRepository>()
+
+                LaunchedEffect(Unit) {
+                    authRepository.sessionStatus.collect { sessionStatus ->
+                        when (sessionStatus) {
+                            SessionStatus.NotAuthenticated -> {
+                                navBackStack.removeLastOrNull()
+                                navBackStack.add(LoginRoute)
+                            }
+                            SessionStatus.Initializing -> {}
+                            SessionStatus.Authenticated -> {
+                                navBackStack.removeLastOrNull()
+                                navBackStack.add(DashboardRoute)
+                            }
+                        }
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
+
+            }
             entry<LoginRoute> {
                 val vm: LoginViewModel = koinViewModel()
 
