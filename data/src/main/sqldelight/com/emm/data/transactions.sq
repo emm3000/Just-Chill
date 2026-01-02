@@ -35,7 +35,6 @@ SET
 WHERE
     transactionId = ?;
 
-
 update:
 UPDATE transactions
 SET

@@ -63,7 +63,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             date = transactionUpdate.date,
             transactionId = transactionId,
             accountId = transactionUpdate.account.accountId,
-            syncState = transactionUpdate.syncState.name,
+            syncState = SyncState.Pending.name,
             updatedAt = currentTimeInMillis(),
         )
     }

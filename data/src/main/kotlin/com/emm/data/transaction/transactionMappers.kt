@@ -2,7 +2,6 @@ package com.emm.data.transaction
 
 import com.emm.data.Transactions
 import com.emm.domain.account.Account
-import com.emm.domain.shared.SyncState
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
@@ -45,7 +44,6 @@ fun Transactions.toTransactionUpdate(): TransactionUpdate {
         description = description,
         account = account,
         date = date,
-        syncState = SyncState.Synced,
     )
 }
 
