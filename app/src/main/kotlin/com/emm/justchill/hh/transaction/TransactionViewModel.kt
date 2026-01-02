@@ -46,7 +46,11 @@ class TransactionViewModel(
                 && date.isNotEmpty()
                 && description.isNotEmpty()
                 && state.accountSelected != null
-        state = state.copy(isEnabled = isEnabled, accounts = accounts)
+        state = state.copy(
+            isEnabled = isEnabled,
+            accounts = accounts,
+            accountSelected = accounts.firstOrNull(),
+        )
     }
 
     fun onAction(action: AccountAction) {
