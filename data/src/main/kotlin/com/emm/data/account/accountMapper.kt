@@ -26,6 +26,8 @@ fun Accounts.toAccountModel() = AccountModel(
     balance = balance,
     updatedAt = updatedAt,
     createdAt = createdAt,
+    isDeleted = isDeleted,
+    userId = "",
 )
 
 fun AccountModel.toAccountUpsert() = AccountUpsert(

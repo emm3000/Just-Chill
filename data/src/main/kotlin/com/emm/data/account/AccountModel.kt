@@ -13,6 +13,9 @@ data class AccountModel(
 
     val balance: Double,
 
+    @SerialName("is_deleted")
+    val isDeleted: Boolean,
+
     @SerialName("updated_at")
     val updatedAt: Long,
 
@@ -20,5 +23,5 @@ data class AccountModel(
     val createdAt: Long,
 
     @SerialName("user_id")
-    val userId: String = "",
+    val userId: String,
 )

@@ -30,6 +30,7 @@ fun Transactions.toModel() = TransactionModel(
     categoryId = categoryId,
     createdAt = createdAt,
     accountId = accountId,
+    userId = "",
 )
 
 fun Transactions.toTransactionUpdate(): TransactionUpdate {
