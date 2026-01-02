@@ -55,10 +55,7 @@ class DefaultAccountRepository(
     }
 
     private suspend fun updateLocal(unSyncedAccounts: List<Accounts>) {
-        val updatedAccounts: List<AccountUpsert> = unSyncedAccounts.map(Accounts::toAccountUpsert)
-        unSyncedAccounts.zip(updatedAccounts) { account, accountUpsert ->
-            localDataSource.update(account.accountId, accountUpsert)
-        }
+        unSyncedAccounts.forEach { localDataSource.markAsSynced(it.accountId) }
     }
 
     private suspend fun updateRemote(unSyncedAccounts: List<Accounts>) {

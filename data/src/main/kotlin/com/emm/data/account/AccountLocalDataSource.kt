@@ -71,6 +71,10 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         )
     }
 
+    suspend fun markAsSynced(accountId: String) = withContext(Dispatchers.IO) {
+        aq.markAsSync(SyncState.Synced.name, accountId)
+    }
+
     suspend fun updateAmount(accountId: String, amount: Double) = withContext(Dispatchers.IO) {
         aq.updateBalance(
             syncState = SyncState.Pending.name,

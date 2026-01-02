@@ -48,5 +48,12 @@ SET
 WHERE
     transactionId = ?;
 
+markAsSync:
+UPDATE transactions
+SET
+    syncState = ?
+WHERE
+    transactionId = ?;
+
 selectByStatus:
 SELECT * FROM transactions WHERE syncState = ?;

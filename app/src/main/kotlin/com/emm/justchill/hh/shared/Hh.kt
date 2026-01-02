@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.shared
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -21,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -61,6 +63,7 @@ import com.emm.justchill.hh.shared.shared.PreLoginRoute
 import com.emm.justchill.hh.shared.shared.RegisterRoute
 import com.emm.justchill.hh.transaction.EditTransaction
 import com.emm.justchill.hh.transaction.TransactionScreen
+import com.emm.justchill.sync.Sync
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -80,6 +83,8 @@ fun Hh() {
             entry<PreLoginRoute> {
                 val authRepository: AuthRepository = koinInject<AuthRepository>()
 
+                val ctx: Context? = LocalContext.current.applicationContext
+
                 LaunchedEffect(Unit) {
                     authRepository.sessionStatus.collect { sessionStatus ->
                         when (sessionStatus) {
@@ -89,6 +94,7 @@ fun Hh() {
                             }
                             SessionStatus.Initializing -> {}
                             SessionStatus.Authenticated -> {
+                                ctx?.let(Sync::initialize)
                                 navBackStack.removeLastOrNull()
                                 navBackStack.add(DashboardRoute)
                             }

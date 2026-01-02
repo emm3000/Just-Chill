@@ -68,6 +68,10 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
         )
     }
 
+    suspend fun markAsSynced(transactionId: String) = withContext(Dispatchers.IO) {
+        tq.markAsSync(SyncState.Synced.name, transactionId)
+    }
+
     suspend fun unSynced(): List<Transactions> = withContext(Dispatchers.IO) {
         tq.selectByStatus(SyncState.Pending.name).executeAsList()
     }

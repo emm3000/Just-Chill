@@ -6,5 +6,5 @@ import io.github.jan.supabase.auth.auth
 class DefaultUserIdProvider(private val client: SupabaseClient): UserIdProvider {
 
     override val userId: String
-        get() = client.auth.currentUserOrNull()?.id ?: throw IllegalStateException()
+        get() = client.auth.currentUserOrNull()?.id ?: throw IllegalStateException("User not logged in")
 }

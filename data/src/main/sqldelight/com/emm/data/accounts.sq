@@ -32,6 +32,13 @@ SET
 WHERE
     accountId = ?;
 
+markAsSync:
+UPDATE accounts
+SET
+    syncState = ?
+WHERE
+    accountId = ?;
+
 updateBalance:
 UPDATE accounts
 SET
