@@ -50,7 +50,7 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
             accountId = account.accountId,
             name = account.name,
             balance = account.balance,
-            syncState = account.syncState.name,
+            syncState = SyncState.Pending.name,
             isDeleted = false,
             updatedAt = account.updatedAt,
             createdAt = account.createdAt,
@@ -65,7 +65,7 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         aq.update(
             name = account.name,
             balance = account.balance,
-            syncState = account.syncState.name,
+            syncState = SyncState.Pending.name,
             updatedAt = currentTimeInMillis(),
             accountId = accountId,
         )
