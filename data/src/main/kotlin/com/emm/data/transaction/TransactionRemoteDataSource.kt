@@ -26,4 +26,12 @@ class TransactionRemoteDataSource(
             }
         }.decodeList<TransactionModel>()
     }
+
+    suspend fun deleteMultipleRows(transactionIds: List<String>) = withContext(Dispatchers.IO) {
+        table.delete {
+            filter {
+                isIn("transaction_id", transactionIds)
+            }
+        }
+    }
 }

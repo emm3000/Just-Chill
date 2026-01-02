@@ -56,4 +56,4 @@ WHERE
     transactionId = ?;
 
 selectByStatus:
-SELECT * FROM transactions WHERE syncState = ?;
+SELECT * FROM transactions WHERE syncState = ? OR isDeleted = 1;

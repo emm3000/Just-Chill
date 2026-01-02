@@ -41,8 +41,12 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             .map(List<Transactions>::toDomain)
     }
 
-    suspend fun delete(transactionId: String) = withContext(Dispatchers.IO) {
+    suspend fun softDelete(transactionId: String) = withContext(Dispatchers.IO) {
         tq.softDelete(transactionId)
+    }
+
+    suspend fun hardDelete(transactionId: String) = withContext(Dispatchers.IO) {
+        tq.delete(transactionId)
     }
 
     fun find(transactionId: String): Transaction? {

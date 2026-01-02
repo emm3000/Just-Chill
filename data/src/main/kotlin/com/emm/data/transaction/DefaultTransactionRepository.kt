@@ -22,7 +22,7 @@ class DefaultTransactionRepository(
     }
 
     override suspend fun delete(transactionId: String) {
-        localDataSource.delete(transactionId)
+        localDataSource.softDelete(transactionId)
     }
 
     override suspend fun pull() {
@@ -39,9 +39,16 @@ class DefaultTransactionRepository(
     }
 
     override suspend fun sync() {
-        val unSyncedTransactions: List<Transactions> = localDataSource.unSynced()
-        updateRemote(unSyncedTransactions)
-        updateLocal(unSyncedTransactions)
+        val deletionsAndUpdates: Pair<List<Transactions>, List<Transactions>> = localDataSource
+            .unSynced()
+            .partition(Transactions::isDeleted)
+
+        val deletedTransactionIds: List<String> = deletionsAndUpdates.first.map(Transactions::transactionId)
+        remoteDataSource.deleteMultipleRows(deletedTransactionIds)
+        deletedTransactionIds.forEach { localDataSource.hardDelete(it) }
+
+        updateRemote(deletionsAndUpdates.second)
+        updateLocal(deletionsAndUpdates.second)
     }
 
     private suspend fun updateLocal(unSyncedTransactions: List<Transactions>) {
