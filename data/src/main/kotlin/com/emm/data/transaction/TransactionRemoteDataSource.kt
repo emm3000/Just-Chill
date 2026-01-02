@@ -1,9 +1,24 @@
 package com.emm.data.transaction
 
-class TransactionRemoteDataSource() {
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.PostgrestQueryBuilder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-    suspend fun upsert(transactions: List<TransactionModel>) {
+class TransactionRemoteDataSource(client: SupabaseClient) {
+
+    private val table: PostgrestQueryBuilder = client.from("transactions")
+
+    suspend fun upsert(transactions: List<TransactionModel>) = withContext(Dispatchers.IO) {
+        table.upsert(transactions)
     }
 
-    suspend fun all(accounts: List<String>): List<TransactionModel> = listOf()
+    suspend fun all(accounts: List<String>): List<TransactionModel> = withContext(Dispatchers.IO) {
+        table.select {
+            filter {
+                isIn("account_id", accounts)
+            }
+        }.decodeList<TransactionModel>()
+    }
 }
