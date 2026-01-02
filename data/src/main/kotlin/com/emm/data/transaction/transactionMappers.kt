@@ -60,8 +60,6 @@ fun TransactionModel.toTransactionInsert() = TransactionInsert(
         name = "",
         balance = 0.0,
     ),
-    syncState = SyncState.Synced,
-    isDeleted = deleted,
     updatedAt = updatedAt,
     createdAt = createdAt,
     categoryId = categoryId,

@@ -25,8 +25,8 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             date = transactionInsert.date,
             categoryId = transactionInsert.categoryId,
             accountId = transactionInsert.account.accountId,
-            syncState = transactionInsert.syncState.name,
-            isDeleted = transactionInsert.isDeleted,
+            syncState = SyncState.Pending.name,
+            isDeleted = false,
             updatedAt = transactionInsert.updatedAt,
             createdAt = transactionInsert.createdAt,
         )
