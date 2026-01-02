@@ -1,6 +1,7 @@
 package com.emm.domain.transaction
 
 import com.emm.domain.account.Account
+import com.emm.domain.shared.SyncState
 
 data class TransactionInsert(
     val id: String,
@@ -10,7 +11,8 @@ data class TransactionInsert(
     val categoryId: String?,
     val date: Long,
     val account: Account,
-    val deleted: Boolean,
-    val isSynced: Boolean,
+    val isDeleted: Boolean,
+    val syncState: SyncState,
     val updatedAt: Long,
+    val createdAt: Long,
 )

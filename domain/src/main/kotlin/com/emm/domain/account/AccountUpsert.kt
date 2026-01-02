@@ -1,9 +1,12 @@
 package com.emm.domain.account
 
+import com.emm.domain.shared.SyncState
+
 data class AccountUpsert(
     val accountId: String,
     val name: String,
     val balance: Double,
     val updatedAt: Long,
-    val isSynced: Boolean,
+    val createdAt: Long,
+    val syncState: SyncState,
 )

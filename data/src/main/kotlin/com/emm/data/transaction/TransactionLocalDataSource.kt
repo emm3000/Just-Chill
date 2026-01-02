@@ -4,6 +4,7 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.emm.data.Transactions
 import com.emm.data.TransactionsQueries
+import com.emm.domain.shared.SyncState
 import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
@@ -24,9 +25,10 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             date = transactionInsert.date,
             categoryId = transactionInsert.categoryId,
             accountId = transactionInsert.account.accountId,
-            synced = transactionInsert.isSynced,
-            deleted = transactionInsert.deleted,
+            syncState = transactionInsert.syncState.name,
+            isDeleted = transactionInsert.isDeleted,
             updatedAt = transactionInsert.updatedAt,
+            createdAt = transactionInsert.createdAt,
         )
         Unit
     }
@@ -61,12 +63,12 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             date = transactionUpdate.date,
             transactionId = transactionId,
             accountId = transactionUpdate.account.accountId,
-            synced = transactionUpdate.isSynced,
+            syncState = transactionUpdate.syncState.name,
             updatedAt = currentTimeInMillis(),
         )
     }
 
     suspend fun unSynced(): List<Transactions> = withContext(Dispatchers.IO) {
-        tq.selectByStatus(false).executeAsList()
+        tq.selectByStatus(SyncState.Pending.name).executeAsList()
     }
 }

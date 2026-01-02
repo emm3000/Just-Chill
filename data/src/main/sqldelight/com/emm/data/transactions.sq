@@ -8,20 +8,19 @@ CREATE TABLE transactions (
     date INTEGER NOT NULL,
     categoryId TEXT,
     accountId TEXT NOT NULL,
-    synced INTEGER AS Boolean NOT NULL,
-    deleted INTEGER AS Boolean NOT NULL,
-    updatedAt INTEGER NOT NULL,
-    FOREIGN KEY (categoryId) REFERENCES categories(categoryId) ON DELETE SET NULL,
-    FOREIGN KEY (accountId) REFERENCES accounts(accountId) ON DELETE CASCADE
+    syncState TEXT NOT NULL, -- PENDING | SYNCED | ERROR
+    isDeleted INTEGER AS Boolean NOT NULL,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS transactions_deleted_index ON transactions(deleted);
+CREATE INDEX IF NOT EXISTS transactions_deleted_index ON transactions(isDeleted);
 
 all:
-SELECT * FROM transactions WHERE deleted = 0 ORDER BY date DESC;
+SELECT * FROM transactions WHERE isDeleted = 0 ORDER BY date DESC;
 
 insert:
-INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 find:
 SELECT * FROM transactions WHERE transactionId = ?;
@@ -32,7 +31,7 @@ DELETE FROM transactions WHERE transactionId = ?;
 softDelete:
 UPDATE transactions
 SET
-    deleted = 1
+    isDeleted = 1
 WHERE
     transactionId = ?;
 
@@ -45,10 +44,10 @@ SET
     description = ?,
     date = ?,
     accountId = ?,
-    synced = ?,
+    syncState = ?,
     updatedAt = ?
 WHERE
     transactionId = ?;
 
 selectByStatus:
-SELECT * FROM transactions WHERE synced = ?;
+SELECT * FROM transactions WHERE syncState = ?;

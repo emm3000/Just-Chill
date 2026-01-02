@@ -4,15 +4,17 @@ CREATE TABLE accounts (
     accountId TEXT NOT NULL PRIMARY KEY,
     name TEXT NOT NULL,
     balance REAL NOT NULL,
-    synced INTEGER AS Boolean NOT NULL,
-    updatedAt INTEGER NOT NULL
+    syncState TEXT NOT NULL, -- PENDING | SYNCED | ERROR
+    isDeleted INTEGER AS Boolean NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    createdAt INTEGER NOT NULL
 );
 
 all:
 SELECT * FROM accounts;
 
 insert:
-INSERT OR REPLACE INTO accounts VALUES(?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO accounts VALUES(?, ?, ?, ?, ?, ?, ?);
 
 delete:
 DELETE FROM accounts WHERE accountId = ?;
@@ -25,7 +27,7 @@ UPDATE accounts
 SET
     name = ?,
     balance = ?,
-    synced = ?,
+    syncState = ?,
     updatedAt = ?
 WHERE
     accountId = ?;
@@ -33,10 +35,10 @@ WHERE
 updateBalance:
 UPDATE accounts
 SET
-    synced = ?,
+    syncState = ?,
     balance = ?
 WHERE
     accountId = ?;
 
 selectByStatus:
-SELECT * FROM accounts WHERE synced = ?;
+SELECT * FROM accounts WHERE syncState = ?;

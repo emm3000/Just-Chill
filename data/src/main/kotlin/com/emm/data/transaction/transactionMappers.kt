@@ -2,6 +2,7 @@ package com.emm.data.transaction
 
 import com.emm.data.Transactions
 import com.emm.domain.account.Account
+import com.emm.domain.shared.SyncState
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
@@ -26,8 +27,9 @@ fun Transactions.toModel() = TransactionModel(
     description = description,
     date = date,
     updatedAt = updatedAt,
-    deleted = deleted,
+    deleted = isDeleted,
     categoryId = categoryId,
+    createdAt = createdAt,
     accountId = accountId,
 )
 
@@ -43,7 +45,7 @@ fun Transactions.toTransactionUpdate(): TransactionUpdate {
         description = description,
         account = account,
         date = date,
-        isSynced = true,
+        syncState = SyncState.Synced,
     )
 }
 
@@ -58,8 +60,9 @@ fun TransactionModel.toTransactionInsert() = TransactionInsert(
         name = "",
         balance = 0.0,
     ),
-    isSynced = true,
-    deleted = deleted,
+    syncState = SyncState.Synced,
+    isDeleted = deleted,
     updatedAt = updatedAt,
+    createdAt = createdAt,
     categoryId = categoryId,
 )

@@ -8,6 +8,7 @@ import com.emm.data.CategoriesQueries
 import com.emm.data.EmmDatabaseData
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryUpsert
+import com.emm.domain.shared.SyncState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -34,8 +35,10 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         cq.insert(
             categoryId = categoryUpsert.categoryId,
             name = categoryUpsert.name,
-            synced = categoryUpsert.isSynced,
+            syncState = categoryUpsert.syncState.name,
             updatedAt = categoryUpsert.updatedAt,
+            isDeleted = false,
+            createdAt = categoryUpsert.createdAt,
         )
     }
 
@@ -43,7 +46,7 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         cq.updateValues(
             name = categoryUpsert.name,
             categoryId = categoryId,
-            synced = categoryUpsert.isSynced,
+            syncState = categoryUpsert.syncState.name,
             updatedAt = categoryUpsert.updatedAt,
         )
     }
@@ -53,6 +56,6 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
     }
 
     suspend fun unSynced(): List<Categories> = withContext(Dispatchers.IO) {
-        cq.selectByStatus(false).executeAsList()
+        cq.selectByStatus(SyncState.Pending.name).executeAsList()
     }
 }

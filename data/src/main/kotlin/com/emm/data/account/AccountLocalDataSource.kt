@@ -7,6 +7,7 @@ import com.emm.data.AccountsQueries
 import com.emm.data.EmmDatabaseData
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountUpsert
+import com.emm.domain.shared.SyncState
 import com.emm.domain.shared.currentTimeInMillis
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -49,8 +50,10 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
             accountId = account.accountId,
             name = account.name,
             balance = account.balance,
-            synced = account.isSynced,
+            syncState = account.syncState.name,
+            isDeleted = false,
             updatedAt = account.updatedAt,
+            createdAt = account.createdAt,
         )
     }
 
@@ -62,7 +65,7 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         aq.update(
             name = account.name,
             balance = account.balance,
-            synced = account.isSynced,
+            syncState = account.syncState.name,
             updatedAt = currentTimeInMillis(),
             accountId = accountId,
         )
@@ -70,13 +73,13 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
 
     suspend fun updateAmount(accountId: String, amount: Double) = withContext(Dispatchers.IO) {
         aq.updateBalance(
-            synced = false,
+            syncState = SyncState.Pending.name,
             balance = amount,
             accountId = accountId,
         )
     }
 
     suspend fun unSynced(): List<Accounts> = withContext(Dispatchers.IO) {
-        aq.selectByStatus(false).executeAsList()
+        aq.selectByStatus(SyncState.Pending.name).executeAsList()
     }
 }

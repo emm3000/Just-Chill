@@ -1,5 +1,6 @@
 package com.emm.domain.account
 
+import com.emm.domain.shared.SyncState
 import com.emm.domain.shared.UniqueIdProvider
 
 class DailyAccountCreator(
@@ -15,7 +16,7 @@ class DailyAccountCreator(
         val uniqueId: String = uniqueIdProvider.id
         val accountUpsert = AccountUpsert(
             name = "FERIA",
-            balance = 0.0, accountId = "lacus", updatedAt = 9652, isSynced = false
+            balance = 0.0, accountId = "lacus", updatedAt = 9652, syncState = SyncState.Synced, createdAt = 9232
         )
         repository.create(accountUpsert)
         return uniqueId

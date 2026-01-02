@@ -2,6 +2,7 @@ package com.emm.domain.transaction
 
 import com.emm.domain.account.AccountBalanceUpdater
 import com.emm.domain.shared.DateAndTimeCombiner
+import com.emm.domain.shared.SyncState
 import com.emm.domain.shared.UniqueIdProvider
 import com.emm.domain.shared.currentTimeInMillis
 
@@ -21,7 +22,7 @@ class TransactionCreator(
         val transaction: TransactionInsert = transactionInsert.copy(
             id = transactionId,
             date = dateAndTimeCombined,
-            isSynced = false,
+            syncState = SyncState.Pending,
             updatedAt = currentTimeInMillis(),
         )
 

@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
+import com.emm.domain.shared.SyncState
 import com.emm.domain.transaction.TransactionCreator
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.justchill.core.formatInputToDouble
@@ -74,10 +75,11 @@ class TransactionViewModel(
         amount = state.amount.formatInputToDouble(),
         categoryId = null,
         account = state.accountSelected ?: throw IllegalStateException(),
-        isSynced = false,
-        deleted = false,
+        syncState = SyncState.Pending,
+        isDeleted = false,
         id = "",
         updatedAt = 0L,
+        createdAt = 0L,
     )
 
     private fun updateCurrentDate(millis: Long?) = millis?.let {

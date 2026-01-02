@@ -3,6 +3,7 @@ package com.emm.data.account
 import com.emm.data.Accounts
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountUpsert
+import com.emm.domain.shared.SyncState
 
 fun Accounts.toDomain() = Account(
     accountId = accountId,
@@ -17,7 +18,8 @@ fun Accounts.toAccountUpsert() = AccountUpsert(
     name = name,
     balance = balance,
     updatedAt = updatedAt,
-    isSynced = true,
+    createdAt = createdAt,
+    syncState = SyncState.Synced,
 )
 
 fun Accounts.toAccountModel() = AccountModel(
@@ -25,6 +27,7 @@ fun Accounts.toAccountModel() = AccountModel(
     name = name,
     balance = balance,
     updatedAt = updatedAt,
+    createdAt = createdAt,
 )
 
 fun AccountModel.toAccountUpsert() = AccountUpsert(
@@ -32,5 +35,6 @@ fun AccountModel.toAccountUpsert() = AccountUpsert(
     name = name,
     balance = balance,
     updatedAt = updatedAt,
-    isSynced = true,
+    createdAt = createdAt,
+    syncState = SyncState.Synced,
 )
