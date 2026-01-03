@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.seetransactions
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -65,8 +66,9 @@ fun SeeTransactionsVersionTwo(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 3.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            contentPadding = PaddingValues(horizontal = 15.dp, vertical = 3.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
 
             if (transactions.isNotEmpty()) {
