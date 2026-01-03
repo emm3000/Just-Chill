@@ -1,7 +1,6 @@
 package com.emm.justchill.hh.fasttransaction
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -73,7 +72,7 @@ fun AccountsScreen(
     ) {
 
         Box(
-            modifier = Modifier.padding(horizontal = 10.dp),
+            modifier = Modifier.padding(horizontal = 16.dp),
         ) {
             EmmCenteredToolbar(title = "Cuentas")
 
@@ -89,9 +88,17 @@ fun AccountsScreen(
         }
 
         LazyColumn(
-            contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+
+            if (accounts.isEmpty()) {
+                item {
+                    EmptyAccountsPlaceholder(
+                        onCreateAccount = { setShowBottomSheet(true) }
+                    )
+                }
+            }
 
             items(accounts, key = Account::accountId) {
                 AccountItem(it) {}
@@ -113,17 +120,17 @@ fun AccountsScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 10.dp),
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
 
                 Text(
                     text = "Monto inicial",
                     color = MaterialTheme.colorScheme.onBackground,
                     fontFamily = LatoFontFamily,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -220,15 +227,14 @@ fun AccountItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
-                shape = RoundedCornerShape(20)
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(16)
             )
             .clickable {
                 onCardClick(account)
             }
-            .padding(horizontal = 14.dp, vertical = 6.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -236,7 +242,7 @@ fun AccountItem(
         Text(
             text = account.name,
             fontSize = 16.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.SemiBold,
             fontFamily = LatoFontFamily,
             fontStyle = FontStyle.Normal,
             color = MaterialTheme.colorScheme.onSurface
@@ -246,9 +252,36 @@ fun AccountItem(
             text = "S/ ${fromCentsToSolesWith(account.balance)}",
             fontSize = 16.sp,
             fontFamily = LatoFontFamily,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold,
             fontStyle = FontStyle.Normal,
+        )
+    }
+}
+
+@Composable
+private fun EmptyAccountsPlaceholder(
+    onCreateAccount: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "Sin cuentas todavía",
+            fontFamily = LatoFontFamily,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
+            fontSize = 16.sp,
+        )
+        NewButton(
+            title = "Crear cuenta",
+            onClick = onCreateAccount,
+            enabled = true,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
