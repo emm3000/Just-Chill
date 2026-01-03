@@ -21,10 +21,10 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.transaction.TransactionUi
 
 @Composable
@@ -45,7 +45,6 @@ fun ItemTransaction(
             .clickable {
                 navigateToEdit(transactionUi.transactionId)
             }
-            .padding(horizontal = 15.dp, vertical = 10.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),

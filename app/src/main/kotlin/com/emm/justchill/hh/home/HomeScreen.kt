@@ -27,6 +27,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.emm.domain.transaction.Transaction
+import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.seetransactions.ItemTransaction
@@ -215,7 +217,26 @@ fun HomeScreenPreview() {
     EmmTheme {
         HomeScreen(
             HomeUiState(
-                lastTransactions = listOf(),
+                lastTransactions = listOf(
+                    Transaction(
+                        transactionId = "hinc",
+                        type = TransactionType.Income,
+                        amount = 2.3,
+                        description = "alterum",
+                        date = 3693,
+                        accountId = "viris",
+                        categoryId = "bibendum"
+                    ),
+                    Transaction(
+                        transactionId = "hinc2",
+                        type = TransactionType.Income,
+                        amount = 2.3,
+                        description = "alterum",
+                        date = 3693,
+                        accountId = "viris",
+                        categoryId = "bibendum"
+                    )
+                ),
                 income = 6.7,
                 spend = 8.9,
                 balance = 10.11
