@@ -28,14 +28,14 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun AddAccountScreen(
-    navController: NavBackStack<NavKey>,
+    navBackStack: NavBackStack<NavKey>,
     vm: AddAccountViewModel = koinViewModel(),
 ) {
 
     AddAccountScreen(
         state = vm.state,
         onAction = vm::onAction,
-        navigateToBack = navController::removeLastOrNull,
+        navigateToBack = navBackStack::removeLastOrNull,
     )
 }
 
