@@ -192,6 +192,16 @@ fun DashboardContent(externalNavBack: NavBackStack<NavKey>) {
         entry<SeeTransactionRoute> {
             SeeTransactionsVersionTwo(externalNavBack)
         }
+        entry<ProfileRoute> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("Soon", fontFamily = LatoFontFamily)
+            }
+        }
     }
 
     Scaffold(
