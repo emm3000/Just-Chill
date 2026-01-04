@@ -19,7 +19,10 @@ import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.transaction.EmmCenteredToolbar
 
 @Composable
-fun ProfileScreen(modifier: Modifier = Modifier) {
+fun ProfileScreen(
+    modifier: Modifier = Modifier,
+    onLogout: () -> Unit = {},
+) {
 
     Column(
         modifier = modifier
@@ -52,7 +55,8 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
             )
 
             ProfileItem(
-                text = "Cerrar Sesion"
+                text = "Cerrar Sesion",
+                onClick = onLogout,
             )
         }
 

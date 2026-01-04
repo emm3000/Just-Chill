@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -65,6 +66,8 @@ import com.emm.justchill.hh.shared.shared.RegisterRoute
 import com.emm.justchill.hh.transaction.EditTransaction
 import com.emm.justchill.hh.transaction.TransactionScreen
 import com.emm.justchill.sync.Sync
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -194,7 +197,18 @@ fun DashboardContent(externalNavBack: NavBackStack<NavKey>) {
             SeeTransactionsVersionTwo(externalNavBack)
         }
         entry<ProfileRoute> {
-            ProfileScreen()
+            val authRepository = koinInject<AuthRepository>()
+            val scope: CoroutineScope = rememberCoroutineScope()
+
+            ProfileScreen(
+                onLogout = {
+                    scope.launch {
+                        authRepository.logout()
+                        externalNavBack.removeLastOrNull()
+                        externalNavBack.add(PreLoginRoute)
+                    }
+                }
+            )
         }
     }
 
