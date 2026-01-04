@@ -48,6 +48,7 @@ import com.emm.justchill.hh.category.CategoryScreen
 import com.emm.justchill.hh.fasttransaction.AccountsScreen
 import com.emm.justchill.hh.fasttransaction.AccountsViewModel
 import com.emm.justchill.hh.home.HomeScreen
+import com.emm.justchill.hh.profile.ProfileScreen
 import com.emm.justchill.hh.seetransactions.SeeTransactionsVersionTwo
 import com.emm.justchill.hh.shared.nav.NavigationState
 import com.emm.justchill.hh.shared.nav.Navigator
@@ -193,14 +194,7 @@ fun DashboardContent(externalNavBack: NavBackStack<NavKey>) {
             SeeTransactionsVersionTwo(externalNavBack)
         }
         entry<ProfileRoute> {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("Soon", fontFamily = LatoFontFamily)
-            }
+            ProfileScreen()
         }
     }
 
