@@ -39,6 +39,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.emm.domain.account.Account
 import com.emm.domain.auth.AuthRepository
 import com.emm.domain.auth.SessionStatus
+import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.account.AddAccountScreen
 import com.emm.justchill.hh.auth.LoginScreen
@@ -77,6 +78,9 @@ fun Hh() {
     val navBackStack: NavBackStack<NavKey> = rememberNavBackStack(PreLoginRoute)
 
     NavDisplay(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundColor),
         backStack = navBackStack,
         onBack = { navBackStack.removeLastOrNull() },
         entryDecorators = listOf(
