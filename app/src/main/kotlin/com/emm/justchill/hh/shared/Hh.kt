@@ -25,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -254,7 +253,7 @@ private fun Csm(
                         imageVector = value.icon,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
-                        tint = if (key == AddTransactionRoute) Color.Green.copy(alpha = 0.5f) else LocalContentColor.current
+                        tint = if (key == AddTransactionRoute) MaterialTheme.colorScheme.primaryContainer else LocalContentColor.current
                     )
                 },
                 label = {
@@ -263,7 +262,7 @@ private fun Csm(
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = if (key == AddTransactionRoute) Color.Green.copy(alpha = 0.5f) else LocalContentColor.current,
+                        color = if (key == AddTransactionRoute) MaterialTheme.colorScheme.primaryContainer else LocalContentColor.current,
                         fontFamily = LatoFontFamily,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                     )
