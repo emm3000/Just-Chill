@@ -27,7 +27,7 @@ class HomeLoader(
         transactions: List<Transaction>,
     ): HomeData {
 
-        val lastTransactions = filterTransactionsByCurrentMonth(transactions)
+        val lastTransactions: List<Transaction> = filterTransactionsByCurrentMonth(transactions).take(7)
         val balance = accounts.sumOf(Account::balance)
         val income = lastTransactions.filter { it.type == TransactionType.Income }.sumOf(Transaction::amount)
         val spend = lastTransactions.filter { it.type == TransactionType.Spend }.sumOf(Transaction::amount)
