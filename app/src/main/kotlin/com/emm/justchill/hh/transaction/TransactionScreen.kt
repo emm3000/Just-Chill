@@ -3,13 +3,17 @@ package com.emm.justchill.hh.transaction
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,36 +22,46 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -61,9 +75,9 @@ import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.auth.LabelTextField
-import com.emm.justchill.hh.fasttransaction.AccountItem
 import com.emm.justchill.hh.shared.EmmTextInput
 import com.emm.justchill.hh.shared.EmmTransactionRadioButton
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -73,11 +87,151 @@ fun TransactionScreen(
     popBackStack: () -> Unit,
 ) {
 
-    TransactionScreen(
+    NewAddTransaction(
         state = vm.state,
         onAction = vm::onAction,
         popBackStack = popBackStack,
     )
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun NewAddTransaction(
+    state: TransactionUiState,
+    onAction: (AccountAction) -> Unit,
+    popBackStack: () -> Unit,
+) {
+
+    val (showAccountPicker, setShowAccountPicker) = rememberSaveable { mutableStateOf(false) }
+
+    val focusManager = LocalFocusManager.current
+    val kb = LocalSoftwareKeyboardController.current
+
+    val isKeyboardOpen = WindowInsets.isImeVisible
+
+    Scaffold(
+        topBar = {
+            EmmCenteredToolbar(
+                title = "Agregar Transacción",
+                modifier = Modifier.fillMaxWidth(),
+                navigationIconClick = Icons.Rounded.Close,
+                onNavigationIconClick = popBackStack,
+                actions = {
+                    TextButton(
+                        onClick = {
+                            onAction(AccountAction.OnReset)
+                        }
+                    ) {
+                        Text(
+                            modifier = Modifier,
+                            text = "Reset",
+                            fontFamily = LatoFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            fontSize = 17.sp
+                        )
+                    }
+                }
+            )
+        },
+        bottomBar = {
+            NewButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+                    .navigationBarsPadding(),
+                enabled = state.isEnabled,
+                onClick = {
+                    onAction(AccountAction.OnSave)
+                    popBackStack()
+                },
+                title = "Guardar transacción"
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .padding(horizontal = 15.dp)
+        ) {
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            TransactionTypeToggle(
+                selectedType = state.transactionType,
+                onTypeSelected = { onAction(AccountAction.OnTransactionTypeChange(it)) }
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                modifier = Modifier.padding(bottom = 10.dp),
+                text = "Ingresa el monto",
+                fontFamily = LatoFontFamily,
+            )
+            EmmAmountChill(
+                modifier = Modifier.fillMaxWidth(),
+                value = state.amount,
+                onValueChange = {
+                    onAction(AccountAction.OnAmountChange(it))
+                }
+            )
+
+            Spacer(modifier = Modifier.height(30.dp))
+
+            TransactionField(
+                label = "Fecha",
+                value = state.date,
+                icon = Icons.Rounded.DateRange,
+                onClick = {
+                    focusManager.clearFocus()
+                }
+            )
+
+            Spacer(modifier = Modifier.height(15.dp))
+            val scope = rememberCoroutineScope()
+
+            TransactionField(
+                label = "Cuenta",
+                value = state.accountSelected?.name.orEmpty(),
+                icon = Icons.Rounded.AccountBalanceWallet,
+                onClick = {
+                    if (isKeyboardOpen) {
+                        scope.launch {
+                            focusManager.clearFocus()
+                            kb?.hide()
+                            delay(400L)
+                        }.invokeOnCompletion {
+                            setShowAccountPicker(true)
+                        }
+                    } else {
+                        setShowAccountPicker(true)
+                    }
+
+                }
+            )
+
+            Spacer(modifier = Modifier.height(15.dp))
+
+            NotesField(
+                value = state.description,
+                onValueChange = { onAction(AccountAction.OnDescriptionChange(it)) }
+            )
+        }
+    }
+
+    BottomSheetDialogForPickAccount(
+        setShowAccountPicker = setShowAccountPicker,
+        showAccountPicker = showAccountPicker,
+        accounts = state.accounts,
+        onAction = onAction,
+    )
+}
+
+@Composable
+fun keyboardAsState(): State<Boolean> {
+    val isImeVisible: Boolean = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    return rememberUpdatedState(isImeVisible)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -264,70 +418,43 @@ fun AccountSelectorContent(
             .padding(horizontal = 20.dp)
     ) {
 
-        Box(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            IconButton(onClick = dismiss) {
-                Icon(
-                    imageVector = Icons.Rounded.Close,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-
-            Text(
-                modifier = Modifier.align(Alignment.Center),
-                text = "Seleccione una cuenta",
-                color = MaterialTheme.colorScheme.onSurface,
-                fontFamily = LatoFontFamily,
-                fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                fontWeight = FontWeight.Bold,
-            )
-        }
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            text = "Seleccione una cuenta",
+            color = MaterialTheme.colorScheme.onSurface,
+            fontFamily = LatoFontFamily,
+            fontSize = MaterialTheme.typography.titleLarge.fontSize,
+            fontWeight = FontWeight.Bold,
+        )
 
         Spacer(Modifier.height(20.dp))
 
         LazyColumn(
             modifier = Modifier,
-            verticalArrangement = Arrangement.spacedBy(17.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(accounts, key = Account::accountId) { account ->
-                AccountItem(account) {
-                    onAccountSelected(it)
-                    dismiss()
+                Column {
+                    NewAccountItem(
+                        modifier = Modifier.fillMaxWidth(),
+                        accountName = account.name,
+                        balance = account.balance,
+                        accountType = account.name,
+                    ) {
+                        onAccountSelected(account)
+                        dismiss()
+                    }
+                    val width = LocalWindowInfo.current.containerDpSize.width
+                    HorizontalDivider(
+                        modifier = Modifier.requiredWidth(width),
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    )
                 }
             }
         }
 
-    }
-}
-
-@Preview
-@Composable
-private fun AccountSelectorContentPreview() {
-    EmmTheme {
-        AccountSelectorContent(
-            modifier = Modifier,
-            accounts = listOf(
-                Account(
-                    accountId = "tantas1",
-                    name = "Garrett Owen",
-                    balance = 2.3,
-                ),
-                Account(
-                    accountId = "tantas2",
-                    name = "Garrett Owen",
-                    balance = 2.3,
-                ),
-                Account(
-                    accountId = "tantas3",
-                    name = "Garrett Owen",
-                    balance = 2.3,
-                )
-            ),
-            onAccountSelected = {},
-            dismiss = {}
-        )
     }
 }
 
@@ -440,6 +567,18 @@ fun TransactionLabel(text: String) {
     )
 }
 
+@Preview
+@Composable
+private fun NewAddTransactionPreview() {
+    EmmTheme {
+        NewAddTransaction(
+            state = TransactionUiState(),
+            onAction = {},
+            popBackStack = {}
+        )
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun IncomePreview() {
@@ -448,6 +587,35 @@ fun IncomePreview() {
             state = TransactionUiState(),
             onAction = {},
             popBackStack = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun AccountSelectorContentPreview() {
+    EmmTheme {
+        AccountSelectorContent(
+            modifier = Modifier,
+            accounts = listOf(
+                Account(
+                    accountId = "tantas1",
+                    name = "Garrett Owen",
+                    balance = 2.3,
+                ),
+                Account(
+                    accountId = "tantas2",
+                    name = "Garrett Owen",
+                    balance = 2.3,
+                ),
+                Account(
+                    accountId = "tantas3",
+                    name = "Garrett Owen",
+                    balance = 2.3,
+                )
+            ),
+            onAccountSelected = {},
+            dismiss = {}
         )
     }
 }

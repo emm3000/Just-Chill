@@ -13,6 +13,8 @@ val HhDisabledTextPrimaryBackground = Color(0xFF393939)
 val HhCardBackground = Color(0xFF171717)
 val HhCardTextColor = Color(0xFFB7B7B7)
 
+val PrimaryBlue = Color(0xFF0081FA)
+val TextGray = Color(0xFF8E99A3)
 
 val BackgroundColor = Color(0xFF0E0519)
 val BackgroundLayerColor = Color(0xFF130722)

@@ -11,7 +11,9 @@ import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.transaction.TransactionCreator
 import com.emm.domain.transaction.TransactionInsert
+import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.formatInputToDouble
+import com.emm.justchill.hh.shared.Empty
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
@@ -62,6 +64,12 @@ class TransactionViewModel(
             is AccountAction.OnDateChangeInMillis -> updateCurrentDate(action.value)
             AccountAction.OnSave -> addTransaction()
             is AccountAction.OnAccountSelected -> state = state.copy(accountSelected = action.value)
+            is AccountAction.OnReset -> state = TransactionUiState(
+                amount = TextFieldValue("0.00"),
+                description = String.Empty,
+                date = DateUtils.currentDateAtReadableFormat(),
+                transactionType = TransactionType.Income,
+            )
             AccountAction.OnDelete -> {}
         }
     }

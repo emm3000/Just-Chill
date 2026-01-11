@@ -33,7 +33,6 @@ fun NewButton(
             fontWeight = FontWeight.Bold
         )
     }
-
 }
 
 @Preview

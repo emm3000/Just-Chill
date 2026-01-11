@@ -63,6 +63,7 @@ class EditTransactionViewModel(
             is AccountAction.OnDateChangeInMillis -> updateCurrentDate(action.value)
             is AccountAction.OnAccountSelected -> state = state.copy(accountSelected = action.value)
             AccountAction.OnSave -> updateTransaction()
+            AccountAction.OnReset -> {}
             AccountAction.OnDelete -> deleteTransaction()
         }
     }
