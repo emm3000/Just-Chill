@@ -49,7 +49,7 @@ fun FastTransactionScreen(
     ) {
 
         EmmCenteredToolbar(
-            title = "Agregar ${transactionType.value}"
+            title = "Agregar ${transactionType.label}"
         )
 
         EmmBoldText(

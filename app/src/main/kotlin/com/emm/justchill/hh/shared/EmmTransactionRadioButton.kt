@@ -37,7 +37,7 @@ fun EmmTransactionRadioButton(
                 onClick = { onOptionSelected(transactionType) },
                 label = {
                     Text(
-                        text = transactionType.value,
+                        text = transactionType.label,
                     )
                 }
             )
