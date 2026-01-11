@@ -200,7 +200,7 @@ fun NewAddTransaction(
                         scope.launch {
                             focusManager.clearFocus()
                             kb?.hide()
-                            delay(400L)
+                            delay(300L)
                         }.invokeOnCompletion {
                             setShowAccountPicker(true)
                         }
