@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared.nav
+package com.emm.justchill.hh.shared
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState

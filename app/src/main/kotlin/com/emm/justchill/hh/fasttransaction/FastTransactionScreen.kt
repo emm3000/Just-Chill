@@ -22,13 +22,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.hh.shared.shared.EmmPrimaryButton
+import com.emm.justchill.hh.shared.EmmPrimaryButton
 import com.emm.justchill.hh.transaction.DateUtils
 import com.emm.justchill.hh.transaction.EmmCenteredToolbar
-import com.emm.domain.transaction.TransactionType
 
 @Composable
 fun FastTransactionScreen(

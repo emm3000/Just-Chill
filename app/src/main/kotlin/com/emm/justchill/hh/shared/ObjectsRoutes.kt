@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared.shared
+package com.emm.justchill.hh.shared
 
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable

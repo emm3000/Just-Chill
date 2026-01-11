@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
-import com.emm.justchill.hh.shared.shared.AddTransactionRoute
 
 @Composable
 fun FabMenu(external: NavBackStack<NavKey>) {

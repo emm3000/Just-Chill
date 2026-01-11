@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared.nav
+package com.emm.justchill.hh.shared
 
 import androidx.navigation3.runtime.NavKey
 

@@ -52,18 +52,6 @@ import com.emm.justchill.hh.fasttransaction.AccountsViewModel
 import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.profile.ProfileScreen
 import com.emm.justchill.hh.seetransactions.SeeTransactionsVersionTwo
-import com.emm.justchill.hh.shared.nav.NavigationState
-import com.emm.justchill.hh.shared.nav.Navigator
-import com.emm.justchill.hh.shared.nav.rememberNavigationState
-import com.emm.justchill.hh.shared.nav.toEntries
-import com.emm.justchill.hh.shared.shared.AddAccountRoute
-import com.emm.justchill.hh.shared.shared.AddTransactionRoute
-import com.emm.justchill.hh.shared.shared.CategoryRoute
-import com.emm.justchill.hh.shared.shared.DashboardRoute
-import com.emm.justchill.hh.shared.shared.EditTransactionRoute
-import com.emm.justchill.hh.shared.shared.LoginRoute
-import com.emm.justchill.hh.shared.shared.PreLoginRoute
-import com.emm.justchill.hh.shared.shared.RegisterRoute
 import com.emm.justchill.hh.transaction.EditTransaction
 import com.emm.justchill.hh.transaction.TransactionScreen
 import com.emm.justchill.sync.Sync
@@ -230,7 +218,10 @@ fun DashboardContent(externalNavBack: NavBackStack<NavKey>) {
 }
 
 @Composable
-private fun Csm(navigationState: NavigationState, navigator: Navigator) {
+private fun Csm(
+    navigationState: NavigationState,
+    navigator: Navigator,
+) {
 
     BottomAppBar(
         containerColor = MaterialTheme.colorScheme.background,

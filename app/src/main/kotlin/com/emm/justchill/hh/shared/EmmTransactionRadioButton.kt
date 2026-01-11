@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared.shared
+package com.emm.justchill.hh.shared
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

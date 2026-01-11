@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.hh.shared.shared.EmmTextInput
+import com.emm.justchill.hh.shared.EmmTextInput
 import com.emm.justchill.hh.transaction.EmmCenteredToolbar
 import com.emm.justchill.hh.transaction.NewButton
 import org.koin.androidx.compose.koinViewModel

@@ -24,7 +24,7 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.hh.shared.shared.EditTransactionRoute
+import com.emm.justchill.hh.shared.EditTransactionRoute
 import com.emm.justchill.hh.transaction.EmmCenteredToolbar
 import com.emm.justchill.hh.transaction.TransactionUi
 import org.koin.androidx.compose.koinViewModel
