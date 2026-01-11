@@ -16,7 +16,7 @@ object DateUtils {
 
         val readableFormatter: DateTimeFormatter = DateTimeFormatter
             .ofLocalizedDate(formatStyle)
-            .withLocale(Locale("es"))
+            .withLocale(Locale.forLanguageTag("es"))
 
         return currentLocalDate.format(readableFormatter)
     }
@@ -29,7 +29,7 @@ object DateUtils {
 
         val readableFormatter: DateTimeFormatter = DateTimeFormatter
             .ofLocalizedDate(FormatStyle.LONG)
-            .withLocale(Locale("es"))
+            .withLocale(Locale.forLanguageTag("es"))
 
         return localDate.format(readableFormatter)
     }
@@ -43,7 +43,7 @@ object DateUtils {
 
         val readableFormatter: DateTimeFormatter = DateTimeFormatter
             .ofLocalizedDate(FormatStyle.LONG)
-            .withLocale(Locale("es"))
+            .withLocale(Locale.forLanguageTag("es"))
 
         return localDate.format(readableFormatter)
     }
