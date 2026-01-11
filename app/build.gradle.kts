@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId = "com.emm.justchill"
-        minSdk = 26
+        minSdk = 28
         targetSdk = 36
         versionCode = 33
         versionName = "1.3.0-alpha"
