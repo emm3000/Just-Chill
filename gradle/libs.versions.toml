@@ -2,7 +2,7 @@
 activityCompose = "1.12.2"
 androidDriver = "2.2.1"
 appcompat = "1.7.1"
-bom = "3.2.6"
+bom = "3.3.0"
 coilCompose = "2.7.0"
 composeBom = "2025.12.01"
 constraintlayout = "2.2.1"
@@ -63,7 +63,6 @@ androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
-auth-kt = { module = "io.github.jan-tennert.supabase:auth-kt" }
 bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "bom" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 coroutines-extensions = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "androidDriver" }
@@ -85,8 +84,6 @@ library-no-op = { module = "com.github.chuckerteam.chucker:library-no-op", versi
 logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
-realtime-kt = { module = "io.github.jan-tennert.supabase:realtime-kt" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit2-kotlinx-serialization-converter = { module = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter", version.ref = "retrofit2KotlinxSerializationConverter" }
 
