@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -23,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -88,6 +91,7 @@ fun Hh() {
                                 navBackStack.removeLastOrNull()
                                 navBackStack.add(LoginRoute)
                             }
+
                             SessionStatus.Initializing -> {}
                             SessionStatus.Authenticated -> {
                                 ctx?.let(Sync::initialize)
@@ -205,9 +209,8 @@ fun DashboardContent(externalNavBack: NavBackStack<NavKey>) {
     }
 
     Scaffold(
-        bottomBar = { Csm(navigationState, navigator) },
+        bottomBar = { Csm(navigationState, navigator, externalNavBack) },
         contentWindowInsets = WindowInsets.navigationBars,
-        floatingActionButton = { FabMenu(externalNavBack) }
     ) { paddingValues ->
         NavDisplay(
             entries = navigationState.toEntries(entryProvider),
@@ -221,23 +224,37 @@ fun DashboardContent(externalNavBack: NavBackStack<NavKey>) {
 private fun Csm(
     navigationState: NavigationState,
     navigator: Navigator,
+    externalNavBack: NavBackStack<NavKey>,
 ) {
+
+    val navItems: Map<NavKey, HhNavBarItem> = remember {
+        val newRouteItem = HhNavBarItem(name = "Agregar", route = "class", icon = Icons.Filled.Add)
+        val routesList: MutableList<Pair<NavKey, HhNavBarItem>> = TOP_LEVEL_ROUTES.toList().toMutableList()
+        routesList.add(2, Pair(AddTransactionRoute, newRouteItem))
+        routesList.toMap()
+    }
 
     BottomAppBar(
         containerColor = MaterialTheme.colorScheme.background,
         contentColor = MaterialTheme.colorScheme.onBackground,
     ) {
-        TOP_LEVEL_ROUTES.forEach { (key: NavKey, value: HhNavBarItem) ->
+        navItems.forEach { (key: NavKey, value: HhNavBarItem) ->
             val isSelected = key == navigationState.topLevelRoute
             NavigationBarItem(
                 selected = isSelected,
-                onClick = { navigator.navigate(key) },
+                onClick = {
+                    if (key == AddTransactionRoute) {
+                        externalNavBack.add(key)
+                    } else {
+                        navigator.navigate(key)
+                    }
+                },
                 icon = {
                     Icon(
                         imageVector = value.icon,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
-                        tint = LocalContentColor.current,
+                        tint = if (key == AddTransactionRoute) Color.Green.copy(alpha = 0.5f) else LocalContentColor.current
                     )
                 },
                 label = {
@@ -246,7 +263,7 @@ private fun Csm(
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = LocalContentColor.current,
+                        color = if (key == AddTransactionRoute) Color.Green.copy(alpha = 0.5f) else LocalContentColor.current,
                         fontFamily = LatoFontFamily,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                     )
