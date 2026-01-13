@@ -51,7 +51,7 @@ class TransactionViewModel(
         state = state.copy(
             isEnabled = isEnabled,
             accounts = accounts,
-            accountSelected = accounts.firstOrNull(),
+            accountSelected = if (state.accountSelected == null) accounts.firstOrNull() else state.accountSelected,
         )
     }
 
@@ -64,7 +64,7 @@ class TransactionViewModel(
             is AccountAction.OnDateChangeInMillis -> updateCurrentDate(action.value)
             AccountAction.OnSave -> addTransaction()
             is AccountAction.OnAccountSelected -> state = state.copy(accountSelected = action.value)
-            is AccountAction.OnReset -> state = TransactionUiState(
+            is AccountAction.OnReset -> state = state.copy(
                 amount = TextFieldValue("0.00"),
                 description = String.Empty,
                 date = DateUtils.currentDateAtReadableFormat(),
