@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -465,11 +465,13 @@ fun AccountSelectorContent(
 
         Spacer(Modifier.height(20.dp))
 
+        val width = LocalWindowInfo.current.containerDpSize.width
         LazyColumn(
             modifier = Modifier,
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            items(accounts, key = Account::accountId) { account ->
+
+            itemsIndexed(accounts, key = { _, account -> account.accountId }) { index, account ->
                 Column {
                     NewAccountItem(
                         modifier = Modifier.fillMaxWidth(),
@@ -480,7 +482,7 @@ fun AccountSelectorContent(
                         onAccountSelected(account)
                         dismiss()
                     }
-                    val width = LocalWindowInfo.current.containerDpSize.width
+                    if (accounts.size == index + 1) return@itemsIndexed
                     HorizontalDivider(
                         modifier = Modifier.requiredWidth(width),
                         thickness = 1.dp,
