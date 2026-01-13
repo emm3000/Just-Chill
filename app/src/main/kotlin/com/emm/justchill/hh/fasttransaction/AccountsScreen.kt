@@ -52,6 +52,7 @@ import com.emm.justchill.hh.account.AddAccountUiState
 import com.emm.justchill.hh.shared.EmmTextInput
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.transaction.EmmCenteredToolbar
+import com.emm.justchill.hh.transaction.NewAccountItem
 import com.emm.justchill.hh.transaction.NewButton
 import kotlinx.coroutines.launch
 
@@ -101,7 +102,12 @@ fun AccountsScreen(
             }
 
             items(accounts, key = Account::accountId) {
-                AccountItem(it) {}
+                NewAccountItem(
+                    modifier = Modifier.fillMaxWidth(),
+                    accountName = it.name,
+                    balance = it.balance,
+                    accountType = it.name
+                )
             }
         }
     }
