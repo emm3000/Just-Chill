@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material3.Icon
@@ -21,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.TextGray
@@ -29,6 +32,7 @@ import com.emm.justchill.core.theme.TextGray
 fun NotesField(
     modifier: Modifier = Modifier,
     value: String = "",
+    onNext: () -> Unit = {},
     onValueChange: (String) -> Unit = {}
 ) {
 
@@ -60,6 +64,14 @@ fun NotesField(
                     fontSize = 14.sp
                 )
             },
+            keyboardActions = KeyboardActions(
+                onNext = {
+                    onNext()
+                }
+            ),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next
+            ),
             modifier = Modifier
                 .fillMaxWidth(),
             colors = TextFieldDefaults.colors(

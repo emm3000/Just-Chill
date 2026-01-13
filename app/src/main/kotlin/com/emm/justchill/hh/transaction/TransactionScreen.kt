@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -43,16 +43,12 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
@@ -109,7 +105,18 @@ fun NewAddTransaction(
 
     val isKeyboardOpen = WindowInsets.isImeVisible
 
+    val datePickerState: DatePickerState = rememberDatePickerState()
+
+    val (showSelectDate, setShowSelectDate) = remember {
+        mutableStateOf(false)
+    }
+
+    val scope = rememberCoroutineScope()
+
+    val scrollState = rememberScrollState()
+
     Scaffold(
+        modifier = Modifier.imePadding(),
         topBar = {
             EmmCenteredToolbar(
                 title = "Agregar Transacción",
@@ -147,12 +154,13 @@ fun NewAddTransaction(
                 },
                 title = "Guardar transacción"
             )
-        }
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .padding(paddingValues)
                 .padding(horizontal = 15.dp)
+                .verticalScroll(scrollState)
         ) {
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -174,6 +182,10 @@ fun NewAddTransaction(
                 value = state.amount,
                 onValueChange = {
                     onAction(AccountAction.OnAmountChange(it))
+                },
+                onNext = {
+                    kb?.hide()
+                    focusManager.clearFocus()
                 }
             )
 
@@ -185,11 +197,11 @@ fun NewAddTransaction(
                 icon = Icons.Rounded.DateRange,
                 onClick = {
                     focusManager.clearFocus()
+                    setShowSelectDate(true)
                 }
             )
 
             Spacer(modifier = Modifier.height(15.dp))
-            val scope = rememberCoroutineScope()
 
             TransactionField(
                 label = "Cuenta",
@@ -207,7 +219,6 @@ fun NewAddTransaction(
                     } else {
                         setShowAccountPicker(true)
                     }
-
                 }
             )
 
@@ -215,7 +226,37 @@ fun NewAddTransaction(
 
             NotesField(
                 value = state.description,
-                onValueChange = { onAction(AccountAction.OnDescriptionChange(it)) }
+                onValueChange = { onAction(AccountAction.OnDescriptionChange(it)) },
+                onNext = {
+                    kb?.hide()
+                    focusManager.clearFocus()
+                }
+            )
+        }
+    }
+
+    if (showSelectDate) {
+        DatePickerDialog(
+            onDismissRequest = {
+                setShowSelectDate(false)
+            },
+            confirmButton = {
+                OutlinedButton(onClick = {
+                    onAction(AccountAction.OnDateChangeInMillis(datePickerState.selectedDateMillis))
+                    setShowSelectDate(false)
+                }) {
+                    Text(text = "Ok")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { setShowSelectDate(false) }) {
+                    Text(text = "Cancel")
+                }
+            }
+        ) {
+            DatePicker(
+                state = datePickerState,
+                showModeToggle = false
             )
         }
     }
@@ -226,12 +267,6 @@ fun NewAddTransaction(
         accounts = state.accounts,
         onAction = onAction,
     )
-}
-
-@Composable
-fun keyboardAsState(): State<Boolean> {
-    val isImeVisible: Boolean = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-    return rememberUpdatedState(isImeVisible)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -286,7 +321,7 @@ private fun TransactionScreen(
         verticalArrangement = Arrangement.spacedBy(25.dp)
     ) {
 
-        val screenWidthDp: Dp = LocalConfiguration.current.screenWidthDp.dp
+        val screenWidthDp: Dp = LocalWindowInfo.current.containerDpSize.width
         EmmCenteredToolbar(
             title = "Agregar Transacción",
             modifier = Modifier.requiredWidth(screenWidthDp),

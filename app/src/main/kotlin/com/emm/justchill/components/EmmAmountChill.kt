@@ -3,6 +3,7 @@ package com.emm.justchill.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -14,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -28,6 +30,7 @@ import java.text.DecimalFormat
 fun EmmAmountChill(
     value: TextFieldValue,
     onValueChange: (TextFieldValue) -> Unit,
+    onNext: () -> Unit = {},
     modifier: Modifier,
 ) {
 
@@ -36,6 +39,7 @@ fun EmmAmountChill(
         amount == BigDecimal("0.00") -> {
             MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
         }
+
         amount < BigDecimal("1.00") -> DeleteButtonColor
         amount >= BigDecimal("1.00") -> MaterialTheme.colorScheme.onBackground
         else -> MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
@@ -48,16 +52,17 @@ fun EmmAmountChill(
             onValueChange(formattedValue)
         },
         textColor = textColor,
+        onNext = onNext,
         modifier = modifier,
     )
 }
-
 
 
 @Composable
 fun AmountTextField(
     value: TextFieldValue,
     onValueChange: (TextFieldValue) -> Unit,
+    onNext: () -> Unit,
     textColor: Color,
     modifier: Modifier = Modifier,
 ) {
@@ -66,7 +71,15 @@ fun AmountTextField(
         modifier = modifier,
         value = value,
         onValueChange = onValueChange,
-        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            keyboardType = KeyboardType.Number,
+            imeAction = ImeAction.Next,
+        ),
+        keyboardActions = KeyboardActions(
+            onNext = {
+                onNext()
+            }
+        ),
         textStyle = TextStyle(
             fontSize = 40.sp,
             color = textColor,
