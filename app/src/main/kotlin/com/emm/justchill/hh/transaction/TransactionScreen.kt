@@ -122,7 +122,10 @@ fun NewAddTransaction(
                 title = "Agregar Transacción",
                 modifier = Modifier.fillMaxWidth(),
                 navigationIconClick = Icons.Rounded.Close,
-                onNavigationIconClick = popBackStack,
+                onNavigationIconClick = {
+                    kb?.hide()
+                    popBackStack()
+                },
                 actions = {
                     TextButton(
                         onClick = {
