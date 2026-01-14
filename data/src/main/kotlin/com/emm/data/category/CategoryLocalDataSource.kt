@@ -31,6 +31,10 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
             category?.let(Categories::toDomain)
         }
 
+    suspend fun countDefaults(): Long = withContext(Dispatchers.IO) {
+        cq.countDefaultCategories().executeAsOne()
+    }
+
     suspend fun create(categoryUpsert: CategoryUpsert) = withContext(Dispatchers.IO) {
         cq.insert(
             categoryId = categoryUpsert.categoryId,
@@ -39,9 +43,9 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
             color = categoryUpsert.color,
             syncState = categoryUpsert.syncState.name,
             updatedAt = categoryUpsert.updatedAt,
-            isDeleted = false,
+            isDeleted = categoryUpsert.isDeleted,
+            isDefault = categoryUpsert.isDefault,
             createdAt = categoryUpsert.createdAt,
-            isDefault = false
         )
     }
 

@@ -24,6 +24,9 @@ DELETE FROM categories WHERE categoryId = ?;
 find:
 SELECT * FROM categories WHERE categoryId = ?;
 
+countDefaultCategories:
+SELECT COUNT(*) FROM categories WHERE isDefault = 1;
+
 updateValues:
 UPDATE categories
 SET

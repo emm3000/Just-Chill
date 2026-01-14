@@ -1,12 +1,12 @@
 package com.emm.justchill.hh.category
 
-import com.emm.domain.transaction.TransactionType
+import com.emm.domain.category.CategoryType
 
 sealed interface CategoryAction {
 
     class OnNameChange(val value: String) : CategoryAction
 
-    data class OnCategoryTypeChange(val value: TransactionType) : CategoryAction
+    data class OnCategoryTypeChange(val value: CategoryType) : CategoryAction
 
     data class OnColorChange(val value: CategoryColor) : CategoryAction
 

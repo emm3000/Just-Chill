@@ -50,7 +50,6 @@ import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.shared.EmmTextInput
 import com.emm.justchill.hh.transaction.EmmCenteredToolbar
 import com.emm.justchill.hh.transaction.NewButton
-import com.emm.justchill.hh.transaction.TransactionTypeToggle
 import org.koin.androidx.compose.koinViewModel
 
 private val borderRadius = 10.dp
@@ -145,7 +144,7 @@ private fun CategoryScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            TransactionTypeToggle(
+            CategoryTypeToggle(
                 modifier = Modifier,
                 selectedType = state.categoryType,
                 onTypeSelected = { onAction(CategoryAction.OnCategoryTypeChange(it)) }
