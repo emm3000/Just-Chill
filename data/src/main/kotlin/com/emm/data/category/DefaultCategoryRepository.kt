@@ -27,6 +27,8 @@ class DefaultCategoryRepository(
         localDataSource.delete(categoryId)
     }
 
+    override suspend fun count(): Long = localDataSource.countDefaults()
+
     override suspend fun sync() {
         val unSynced: List<Categories> = localDataSource.unSynced()
         updatedRemoteCategories(unSynced)

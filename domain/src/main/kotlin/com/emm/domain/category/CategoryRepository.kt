@@ -10,6 +10,8 @@ interface CategoryRepository {
 
     suspend fun create(categoryUpsert: CategoryUpsert)
 
+    suspend fun count(): Long
+
     suspend fun update(categoryId: String, categoryUpsert: CategoryUpsert)
 
     suspend fun delete(categoryId: String)
