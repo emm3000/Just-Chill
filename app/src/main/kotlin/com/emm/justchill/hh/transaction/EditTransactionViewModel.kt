@@ -65,6 +65,7 @@ class EditTransactionViewModel(
             AddTransactionAction.OnSave -> updateTransaction()
             AddTransactionAction.OnReset -> {}
             AddTransactionAction.OnDelete -> deleteTransaction()
+            else -> {}
         }
     }
 

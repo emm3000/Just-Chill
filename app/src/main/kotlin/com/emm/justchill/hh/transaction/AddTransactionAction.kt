@@ -18,6 +18,8 @@ sealed interface AddTransactionAction {
 
     class OnAccountSelected(val value: Account) : AddTransactionAction
 
+    data class OnCategorySelected(val value: SelectableCategory) : AddTransactionAction
+
     data object OnReset : AddTransactionAction
 
     data object OnSave : AddTransactionAction

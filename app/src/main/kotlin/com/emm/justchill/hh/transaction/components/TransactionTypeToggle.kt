@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.PrimaryBlue
 import com.emm.justchill.core.theme.TextGray
 
 @Composable
@@ -37,15 +38,15 @@ fun TransactionTypeToggle(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
-                    .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (isSelected) PrimaryBlue else Color.Transparent)
                     .clickable { onTypeSelected(type) }
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = type.label,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else TextGray,
+                    color = if (isSelected) MaterialTheme.colorScheme.onBackground else TextGray,
                     fontWeight = FontWeight.Bold,
                     fontFamily = LatoFontFamily,
                 )

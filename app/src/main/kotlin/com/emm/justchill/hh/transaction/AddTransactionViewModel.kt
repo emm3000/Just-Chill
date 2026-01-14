@@ -47,7 +47,6 @@ class AddTransactionViewModel(
             state = state.copy(
                 accounts = accounts,
                 categories = categories,
-                categorySelected = categories.firstOrNull(),
                 accountSelected = accounts.firstOrNull(),
             )
         }.launchIn(viewModelScope)
@@ -74,6 +73,7 @@ class AddTransactionViewModel(
             is AddTransactionAction.OnDateChangeInMillis -> updateCurrentDate(action.value)
             AddTransactionAction.OnSave -> addTransaction()
             is AddTransactionAction.OnAccountSelected -> state = state.copy(accountSelected = action.value)
+            is AddTransactionAction.OnCategorySelected -> state = state.copy(categorySelected = action.value)
             is AddTransactionAction.OnReset -> state = state.copy(
                 amount = TextFieldValue("0.00"),
                 description = String.Empty,
@@ -94,7 +94,7 @@ class AddTransactionViewModel(
         description = state.description,
         date = dateInLong,
         amount = state.amount.formatInputToDouble(),
-        categoryId = null,
+        categoryId = state.categorySelected?.categoryId,
         account = state.accountSelected ?: throw IllegalStateException(),
     )
 
@@ -104,7 +104,7 @@ class AddTransactionViewModel(
     }
 }
 
-private fun mapToUi(categories: List<Category>): List<SelectableCategory> = categories.map {
+private fun mapToUi(categories: List<Category>): List<SelectableCategory> = categories.take(7).map {
     SelectableCategory(
         categoryId = it.categoryId,
         name = it.name,

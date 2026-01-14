@@ -1,10 +1,13 @@
 package com.emm.justchill.hh.transaction
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -16,12 +19,17 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DateRange
@@ -31,6 +39,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -49,6 +58,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
@@ -69,8 +79,11 @@ import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.PlaceholderOrLabel
+import com.emm.justchill.core.theme.PrimaryBlue
 import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.auth.LabelTextField
+import com.emm.justchill.hh.category.AppIconCatalog
+import com.emm.justchill.hh.category.allColors
 import com.emm.justchill.hh.shared.EmmTextInput
 import com.emm.justchill.hh.shared.EmmTransactionRadioButton
 import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
@@ -200,6 +213,16 @@ fun NewAddTransaction(
 
             Spacer(modifier = Modifier.height(30.dp))
 
+            CategorySelector(
+                categorySelected = state.categorySelected,
+                onCategorySelected = {
+                    onAction(AddTransactionAction.OnCategorySelected(it))
+                },
+                categories = state.categories
+            )
+
+            Spacer(modifier = Modifier.height(30.dp))
+
             TransactionField(
                 label = "Fecha",
                 value = state.date,
@@ -276,6 +299,104 @@ fun NewAddTransaction(
         accounts = state.accounts,
         onAction = onAction,
     )
+}
+
+@Composable
+fun CategorySelector(
+    categorySelected: SelectableCategory?,
+    categories: List<SelectableCategory>,
+    onCategorySelected: (SelectableCategory) -> Unit,
+) {
+
+    Text(
+        text = "Categoría",
+        fontWeight = FontWeight.Bold,
+        fontFamily = LatoFontFamily,
+        color = MaterialTheme.colorScheme.onBackground
+    )
+
+    Spacer(modifier = Modifier.height(20.dp))
+
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+        verticalArrangement = Arrangement.spacedBy(5.dp),
+        maxItemsInEachRow = 4,
+    ) {
+        categories.forEach {
+            val isSelected = it.categoryId == categorySelected?.categoryId
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(90.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .then(
+                        if (isSelected) Modifier.border(
+                            width = 1.dp,
+                            color = PrimaryBlue,
+                            shape = RoundedCornerShape(10.dp)
+                        ) else Modifier
+                    )
+                    .selectable(
+                        selected = isSelected,
+                        onClick = { onCategorySelected(it) }
+                    )
+                    .background(MaterialTheme.colorScheme.surface),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(33.dp)
+                        .clip(CircleShape)
+                        .then(
+                            if (isSelected) Modifier.background(PrimaryBlue)
+                            else Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        modifier = Modifier.size(20.dp),
+                        imageVector = it.icon.icon,
+                        contentDescription = it.name,
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+                Text(
+                    text = it.name,
+                    fontSize = 10.sp
+                )
+            }
+        }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .height(90.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(MaterialTheme.colorScheme.surface),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(33.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    modifier = Modifier.size(20.dp),
+                    imageVector = Icons.Default.MoreHoriz,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
+            }
+            Text(
+                text = "Otros",
+                fontSize = 10.sp
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -617,8 +738,24 @@ fun TransactionLabel(text: String) {
 @Composable
 private fun NewAddTransactionPreview() {
     EmmTheme {
+        val categories = remember {
+            buildList {
+                repeat(7) {
+                    add(
+                        SelectableCategory(
+                            categoryId = "$it nominavi",
+                            name = "$it Ann Chan",
+                            icon = AppIconCatalog.catalog[it],
+                            color = allColors[it]
+                        )
+                    )
+                }
+            }
+        }
         NewAddTransaction(
-            state = AddTransactionUiState(),
+            state = AddTransactionUiState(
+                categories = categories
+            ),
             onAction = {},
             popBackStack = {}
         )
