@@ -36,7 +36,7 @@ val allColors: List<CategoryColor> = listOf(
         id = "yellow",
         primary = Color(0xFFFFC107),
         container = Color(0xFFFFF6D9),
-        onPrimary = Color.Black,
+        onPrimary = Color.White,
         darkContainer = Color(0xFF4A3B00)
     ),
     CategoryColor(
@@ -64,7 +64,7 @@ val allColors: List<CategoryColor> = listOf(
         id = "gray",
         primary = Color(0xFF90A4AE),
         container = Color(0xFFF1F3F4),
-        onPrimary = Color.Black,
+        onPrimary = Color.White,
         darkContainer = Color(0xFF1E2A30)
     ),
     CategoryColor(
