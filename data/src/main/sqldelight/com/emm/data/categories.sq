@@ -6,6 +6,7 @@ CREATE TABLE categories (
     icon TEXT NOT NULL,
     color TEXT NOT NULL,
     syncState TEXT NOT NULL, -- PENDING | SYNCED | ERROR
+    isDefault INTEGER AS Boolean NOT NULL,
     isDeleted INTEGER AS Boolean NOT NULL,
     updatedAt INTEGER NOT NULL,
     createdAt INTEGER NOT NULL
@@ -15,7 +16,7 @@ all:
 SELECT * FROM categories;
 
 insert:
-INSERT OR REPLACE INTO categories VALUES(?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO categories VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 delete:
 DELETE FROM categories WHERE categoryId = ?;

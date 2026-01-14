@@ -41,6 +41,7 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
             updatedAt = categoryUpsert.updatedAt,
             isDeleted = false,
             createdAt = categoryUpsert.createdAt,
+            isDefault = false
         )
     }
 
