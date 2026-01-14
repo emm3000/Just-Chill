@@ -7,25 +7,30 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
+import com.emm.domain.category.Category
+import com.emm.domain.category.CategoryRepository
 import com.emm.domain.transaction.TransactionCreator
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.formatInputToDouble
+import com.emm.justchill.hh.category.AppIconCatalog
+import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.shared.Empty
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-class TransactionViewModel(
+class AddTransactionViewModel(
     private val transactionCreator: TransactionCreator,
     accountRepository: AccountRepository,
+    categoryRepository: CategoryRepository,
 ) : ViewModel() {
 
     private var dateInLong: Long = DateUtils.currentDateInMillis()
 
-    var state by mutableStateOf(TransactionUiState())
+    var state by mutableStateOf(AddTransactionUiState())
         private set
 
     init {
@@ -33,44 +38,49 @@ class TransactionViewModel(
             flow = snapshotFlow { state.amount },
             flow2 = snapshotFlow { state.date },
             flow3 = snapshotFlow { state.description },
-            flow4 = accountRepository.all(),
             transform = ::validateFields,
         ).launchIn(viewModelScope)
+        combine(
+            flow = accountRepository.all(),
+            flow2 = categoryRepository.all().map(::mapToUi),
+        ) { accounts, categories ->
+            state = state.copy(
+                accounts = accounts,
+                categories = categories,
+                categorySelected = categories.firstOrNull(),
+                accountSelected = accounts.firstOrNull(),
+            )
+        }.launchIn(viewModelScope)
     }
 
     private fun validateFields(
         mount: TextFieldValue,
         date: String,
         description: String,
-        accounts: List<Account>,
     ) {
         val isEnabled = mount.formatInputToDouble() >= 1.0
                 && date.isNotEmpty()
                 && description.isNotEmpty()
                 && state.accountSelected != null
-        state = state.copy(
-            isEnabled = isEnabled,
-            accounts = accounts,
-            accountSelected = if (state.accountSelected == null) accounts.firstOrNull() else state.accountSelected,
-        )
+        state = state.copy(isEnabled = isEnabled)
     }
 
-    fun onAction(action: AccountAction) {
+    fun onAction(action: AddTransactionAction) {
         when (action) {
-            is AccountAction.OnAmountChange -> state = state.copy(amount = action.value)
-            is AccountAction.OnDateChange -> state = state.copy(date = action.value)
-            is AccountAction.OnDescriptionChange -> state = state.copy(description = action.value)
-            is AccountAction.OnTransactionTypeChange -> state = state.copy(transactionType = action.value)
-            is AccountAction.OnDateChangeInMillis -> updateCurrentDate(action.value)
-            AccountAction.OnSave -> addTransaction()
-            is AccountAction.OnAccountSelected -> state = state.copy(accountSelected = action.value)
-            is AccountAction.OnReset -> state = state.copy(
+            is AddTransactionAction.OnAmountChange -> state = state.copy(amount = action.value)
+            is AddTransactionAction.OnDateChange -> state = state.copy(date = action.value)
+            is AddTransactionAction.OnDescriptionChange -> state = state.copy(description = action.value)
+            is AddTransactionAction.OnTransactionTypeChange -> state = state.copy(transactionType = action.value)
+            is AddTransactionAction.OnDateChangeInMillis -> updateCurrentDate(action.value)
+            AddTransactionAction.OnSave -> addTransaction()
+            is AddTransactionAction.OnAccountSelected -> state = state.copy(accountSelected = action.value)
+            is AddTransactionAction.OnReset -> state = state.copy(
                 amount = TextFieldValue("0.00"),
                 description = String.Empty,
                 date = DateUtils.currentDateAtReadableFormat(),
                 transactionType = TransactionType.Income,
             )
-            AccountAction.OnDelete -> {}
+            AddTransactionAction.OnDelete -> {}
         }
     }
 
@@ -92,4 +102,13 @@ class TransactionViewModel(
         dateInLong = it
         state = state.copy(date = DateUtils.millisToReadableFormatUTC(it))
     }
+}
+
+private fun mapToUi(categories: List<Category>): List<SelectableCategory> = categories.map {
+    SelectableCategory(
+        categoryId = it.categoryId,
+        name = it.name,
+        icon = AppIconCatalog.findById(it.icon),
+        color = findById(it.color)
+    )
 }

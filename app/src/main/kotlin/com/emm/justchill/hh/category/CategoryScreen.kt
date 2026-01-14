@@ -48,8 +48,8 @@ import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.shared.EmmTextInput
-import com.emm.justchill.hh.transaction.EmmCenteredToolbar
-import com.emm.justchill.hh.transaction.NewButton
+import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
+import com.emm.justchill.hh.transaction.components.NewButton
 import org.koin.androidx.compose.koinViewModel
 
 private val borderRadius = 10.dp

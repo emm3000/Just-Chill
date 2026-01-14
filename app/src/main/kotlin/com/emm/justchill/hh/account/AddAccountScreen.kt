@@ -22,8 +22,8 @@ import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.shared.EmmTextInput
-import com.emm.justchill.hh.transaction.EmmToolbarTitle
-import com.emm.justchill.hh.transaction.NewButton
+import com.emm.justchill.hh.transaction.components.EmmToolbarTitle
+import com.emm.justchill.hh.transaction.components.NewButton
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

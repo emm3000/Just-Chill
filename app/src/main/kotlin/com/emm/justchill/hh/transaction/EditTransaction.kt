@@ -45,6 +45,9 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.shared.EmmTextInput
 import com.emm.justchill.hh.shared.EmmTransactionRadioButton
+import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
+import com.emm.justchill.hh.transaction.components.EmmDeleteDialog
+import com.emm.justchill.hh.transaction.components.NewButton
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -65,8 +68,8 @@ fun EditTransaction(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditTransaction(
-    state: TransactionUiState,
-    onAction: (AccountAction) -> Unit,
+    state: AddTransactionUiState,
+    onAction: (AddTransactionAction) -> Unit,
     navigateUp: () -> Unit = {},
 ) {
 
@@ -89,7 +92,7 @@ private fun EditTransaction(
             },
             confirmButton = {
                 OutlinedButton(onClick = {
-                    onAction(AccountAction.OnDateChangeInMillis(datePickerState.selectedDateMillis))
+                    onAction(AddTransactionAction.OnDateChangeInMillis(datePickerState.selectedDateMillis))
                     setShowSelectDate(false)
                 }) {
                     Text(text = "Ok")
@@ -113,7 +116,7 @@ private fun EditTransaction(
             setShowDeleteDialog = setShowDeleteDialog,
             onConfirmButton = {
                 setShowDeleteDialog(false)
-                onAction(AccountAction.OnDelete)
+                onAction(AddTransactionAction.OnDelete)
                 navigateUp()
             }
         )
@@ -166,7 +169,7 @@ private fun EditTransaction(
 
         EmmAmountChill(
             value = state.amount,
-            onValueChange = { onAction(AccountAction.OnAmountChange(it)) },
+            onValueChange = { onAction(AddTransactionAction.OnAmountChange(it)) },
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -186,7 +189,7 @@ private fun EditTransaction(
                 modifier = Modifier
                     .fillMaxWidth(),
                 selectedOption = state.transactionType,
-                onOptionSelected = { onAction(AccountAction.OnTransactionTypeChange(it)) }
+                onOptionSelected = { onAction(AddTransactionAction.OnTransactionTypeChange(it)) }
             )
         }
 
@@ -201,7 +204,7 @@ private fun EditTransaction(
             value = state.description,
             placeholder = "Ingresa una descripción",
             label = "Descripción (opcional)",
-            onChange = { onAction(AccountAction.OnDescriptionChange(it)) },
+            onChange = { onAction(AddTransactionAction.OnDescriptionChange(it)) },
             modifier = Modifier,
         )
 
@@ -213,7 +216,7 @@ private fun EditTransaction(
             title = "Actualizar",
             onClick = {
                 keyboard?.hide()
-                onAction(AccountAction.OnSave)
+                onAction(AddTransactionAction.OnSave)
                 navigateUp()
             },
             enabled = state.isEnabled,
@@ -234,7 +237,7 @@ private fun EditTransaction(
 fun EditTransactionPreview() {
     EmmTheme {
         EditTransaction(
-            state = TransactionUiState(),
+            state = AddTransactionUiState(),
             onAction = {},
         )
     }

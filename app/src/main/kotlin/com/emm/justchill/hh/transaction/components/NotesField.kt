@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.transaction
+package com.emm.justchill.hh.transaction.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column

@@ -73,13 +73,19 @@ import com.emm.justchill.core.theme.TextColor
 import com.emm.justchill.hh.auth.LabelTextField
 import com.emm.justchill.hh.shared.EmmTextInput
 import com.emm.justchill.hh.shared.EmmTransactionRadioButton
+import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
+import com.emm.justchill.hh.transaction.components.NewAccountItem
+import com.emm.justchill.hh.transaction.components.NewButton
+import com.emm.justchill.hh.transaction.components.NotesField
+import com.emm.justchill.hh.transaction.components.TransactionField
+import com.emm.justchill.hh.transaction.components.TransactionTypeToggle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun TransactionScreen(
-    vm: TransactionViewModel = koinViewModel(),
+fun AddTransactionScreen(
+    vm: AddTransactionViewModel = koinViewModel(),
     popBackStack: () -> Unit,
 ) {
 
@@ -93,8 +99,8 @@ fun TransactionScreen(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NewAddTransaction(
-    state: TransactionUiState,
-    onAction: (AccountAction) -> Unit,
+    state: AddTransactionUiState,
+    onAction: (AddTransactionAction) -> Unit,
     popBackStack: () -> Unit,
 ) {
 
@@ -129,7 +135,7 @@ fun NewAddTransaction(
                 actions = {
                     TextButton(
                         onClick = {
-                            onAction(AccountAction.OnReset)
+                            onAction(AddTransactionAction.OnReset)
                         }
                     ) {
                         Text(
@@ -152,7 +158,7 @@ fun NewAddTransaction(
                     .navigationBarsPadding(),
                 enabled = state.isEnabled,
                 onClick = {
-                    onAction(AccountAction.OnSave)
+                    onAction(AddTransactionAction.OnSave)
                     popBackStack()
                 },
                 title = "Guardar transacción"
@@ -170,7 +176,7 @@ fun NewAddTransaction(
 
             TransactionTypeToggle(
                 selectedType = state.transactionType,
-                onTypeSelected = { onAction(AccountAction.OnTransactionTypeChange(it)) }
+                onTypeSelected = { onAction(AddTransactionAction.OnTransactionTypeChange(it)) }
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -184,7 +190,7 @@ fun NewAddTransaction(
                 modifier = Modifier.fillMaxWidth(),
                 value = state.amount,
                 onValueChange = {
-                    onAction(AccountAction.OnAmountChange(it))
+                    onAction(AddTransactionAction.OnAmountChange(it))
                 },
                 onNext = {
                     kb?.hide()
@@ -229,7 +235,7 @@ fun NewAddTransaction(
 
             NotesField(
                 value = state.description,
-                onValueChange = { onAction(AccountAction.OnDescriptionChange(it)) },
+                onValueChange = { onAction(AddTransactionAction.OnDescriptionChange(it)) },
                 onNext = {
                     kb?.hide()
                     focusManager.clearFocus()
@@ -245,7 +251,7 @@ fun NewAddTransaction(
             },
             confirmButton = {
                 OutlinedButton(onClick = {
-                    onAction(AccountAction.OnDateChangeInMillis(datePickerState.selectedDateMillis))
+                    onAction(AddTransactionAction.OnDateChangeInMillis(datePickerState.selectedDateMillis))
                     setShowSelectDate(false)
                 }) {
                     Text(text = "Ok")
@@ -274,9 +280,9 @@ fun NewAddTransaction(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TransactionScreen(
-    state: TransactionUiState,
-    onAction: (AccountAction) -> Unit,
+private fun AddTransactionScreen(
+    state: AddTransactionUiState,
+    onAction: (AddTransactionAction) -> Unit,
     popBackStack: () -> Unit,
 ) {
 
@@ -295,7 +301,7 @@ private fun TransactionScreen(
             },
             confirmButton = {
                 OutlinedButton(onClick = {
-                    onAction(AccountAction.OnDateChangeInMillis(datePickerState.selectedDateMillis))
+                    onAction(AddTransactionAction.OnDateChangeInMillis(datePickerState.selectedDateMillis))
                     setShowSelectDate(false)
                 }) {
                     Text(text = "Ok")
@@ -344,7 +350,7 @@ private fun TransactionScreen(
 
             EmmAmountChill(
                 value = state.amount,
-                onValueChange = { onAction(AccountAction.OnAmountChange(it)) },
+                onValueChange = { onAction(AddTransactionAction.OnAmountChange(it)) },
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -365,7 +371,7 @@ private fun TransactionScreen(
                 modifier = Modifier
                     .fillMaxWidth(),
                 selectedOption = state.transactionType,
-                onOptionSelected = { onAction(AccountAction.OnTransactionTypeChange(it)) }
+                onOptionSelected = { onAction(AddTransactionAction.OnTransactionTypeChange(it)) }
             )
         }
 
@@ -376,7 +382,7 @@ private fun TransactionScreen(
             label = "En que gaste",
             placeholder = "Ingresa tu gasto",
             value = state.description,
-            onChange = { onAction(AccountAction.OnDescriptionChange(it)) },
+            onChange = { onAction(AddTransactionAction.OnDescriptionChange(it)) },
         )
 
         JustClickableInput(state.date, "Fecha;") { setShowSelectDate(true) }
@@ -384,7 +390,7 @@ private fun TransactionScreen(
         NewButton(
             title = "Guardar",
             onClick = {
-                onAction(AccountAction.OnSave)
+                onAction(AddTransactionAction.OnSave)
                 popBackStack()
             },
             enabled = state.isEnabled,
@@ -407,7 +413,7 @@ fun BottomSheetDialogForPickAccount(
     setShowAccountPicker: (Boolean) -> Unit,
     showAccountPicker: Boolean,
     accounts: List<Account>,
-    onAction: (AccountAction) -> Unit
+    onAction: (AddTransactionAction) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -428,7 +434,7 @@ fun BottomSheetDialogForPickAccount(
             }
             AccountSelectorContent(
                 accounts = accounts,
-                onAccountSelected = { onAction(AccountAction.OnAccountSelected(it)) },
+                onAccountSelected = { onAction(AddTransactionAction.OnAccountSelected(it)) },
                 dismiss = {
                     scope.launch { sheetState.hide() }.invokeOnCompletion {
                         if (!sheetState.isVisible) {
@@ -612,7 +618,7 @@ fun TransactionLabel(text: String) {
 private fun NewAddTransactionPreview() {
     EmmTheme {
         NewAddTransaction(
-            state = TransactionUiState(),
+            state = AddTransactionUiState(),
             onAction = {},
             popBackStack = {}
         )
@@ -623,8 +629,8 @@ private fun NewAddTransactionPreview() {
 @Composable
 fun IncomePreview() {
     EmmTheme {
-        TransactionScreen(
-            state = TransactionUiState(),
+        AddTransactionScreen(
+            state = AddTransactionUiState(),
             onAction = {},
             popBackStack = {}
         )

@@ -16,7 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.hh.transaction.EmmCenteredToolbar
+import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
 
 @Composable
 fun ProfileScreen(

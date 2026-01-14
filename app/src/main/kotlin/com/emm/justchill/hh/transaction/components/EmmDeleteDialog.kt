@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.transaction
+package com.emm.justchill.hh.transaction.components
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme

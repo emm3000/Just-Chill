@@ -25,8 +25,8 @@ import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.HomeViewModel
 import com.emm.justchill.hh.seetransactions.SeeTransactionsViewModel
 import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
+import com.emm.justchill.hh.transaction.AddTransactionViewModel
 import com.emm.justchill.hh.transaction.EditTransactionViewModel
-import com.emm.justchill.hh.transaction.TransactionViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
@@ -50,12 +50,7 @@ val hhModule = module {
 
 private fun Module.viewModelsProviders() {
     viewModelOf(::HomeViewModel)
-    viewModel {
-        TransactionViewModel(
-            transactionCreator = get(),
-            accountRepository = get()
-        )
-    }
+    viewModelOf(::AddTransactionViewModel)
     viewModelOf(::SeeTransactionsViewModel)
     viewModelOf(::LoginViewModel)
 

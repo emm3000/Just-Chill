@@ -31,7 +31,7 @@ class EditTransactionViewModel(
     private val accountFinder: AccountFinder,
 ) : ViewModel() {
 
-    var state by mutableStateOf(TransactionUiState())
+    var state by mutableStateOf(AddTransactionUiState())
         private set
 
     private var dateInLong: Long = DateUtils.currentDateInMillis()
@@ -54,17 +54,17 @@ class EditTransactionViewModel(
         loadCurrentTransaction()
     }
 
-    fun onAction(action: AccountAction) {
+    fun onAction(action: AddTransactionAction) {
         when (action) {
-            is AccountAction.OnAmountChange -> state = state.copy(amount = action.value)
-            is AccountAction.OnDateChange -> state = state.copy(date = action.value)
-            is AccountAction.OnDescriptionChange -> state = state.copy(description = action.value)
-            is AccountAction.OnTransactionTypeChange -> state = state.copy(transactionType = action.value)
-            is AccountAction.OnDateChangeInMillis -> updateCurrentDate(action.value)
-            is AccountAction.OnAccountSelected -> state = state.copy(accountSelected = action.value)
-            AccountAction.OnSave -> updateTransaction()
-            AccountAction.OnReset -> {}
-            AccountAction.OnDelete -> deleteTransaction()
+            is AddTransactionAction.OnAmountChange -> state = state.copy(amount = action.value)
+            is AddTransactionAction.OnDateChange -> state = state.copy(date = action.value)
+            is AddTransactionAction.OnDescriptionChange -> state = state.copy(description = action.value)
+            is AddTransactionAction.OnTransactionTypeChange -> state = state.copy(transactionType = action.value)
+            is AddTransactionAction.OnDateChangeInMillis -> updateCurrentDate(action.value)
+            is AddTransactionAction.OnAccountSelected -> state = state.copy(accountSelected = action.value)
+            AddTransactionAction.OnSave -> updateTransaction()
+            AddTransactionAction.OnReset -> {}
+            AddTransactionAction.OnDelete -> deleteTransaction()
         }
     }
 
@@ -80,7 +80,7 @@ class EditTransactionViewModel(
         currentTransaction: Transaction,
         account: Account,
         accounts: List<Account>,
-    ): TransactionUiState = state.copy(
+    ): AddTransactionUiState = state.copy(
         amount = TextFieldValue(currentTransaction.amountDecimalFormat),
         description = currentTransaction.description,
         date = millisToReadableFormat(currentTransaction.date),

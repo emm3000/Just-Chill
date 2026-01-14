@@ -51,9 +51,9 @@ import com.emm.justchill.hh.account.AddAccountAction
 import com.emm.justchill.hh.account.AddAccountUiState
 import com.emm.justchill.hh.shared.EmmTextInput
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
-import com.emm.justchill.hh.transaction.EmmCenteredToolbar
-import com.emm.justchill.hh.transaction.NewAccountItem
-import com.emm.justchill.hh.transaction.NewButton
+import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
+import com.emm.justchill.hh.transaction.components.NewAccountItem
+import com.emm.justchill.hh.transaction.components.NewButton
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

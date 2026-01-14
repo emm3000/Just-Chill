@@ -8,6 +8,8 @@ import com.emm.domain.shared.SyncState
 fun Categories.toDomain() = Category(
     categoryId = categoryId,
     name = name,
+    icon = icon,
+    color = color,
 )
 
 fun List<Categories>.toDomain() = map(Categories::toDomain)
