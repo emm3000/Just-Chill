@@ -8,5 +8,6 @@ data class CategoryUiState(
     val icon: IconCatalog = AppIconCatalog.catalog.first(),
     val categoryType: CategoryType = CategoryType.Income,
     val color: CategoryColor = allColors.first(),
+    val categoryCount: Long = 0,
     val isAllFieldValidated: Boolean = false,
 )
