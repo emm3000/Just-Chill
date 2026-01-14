@@ -47,6 +47,6 @@ class CategoryViewModel(private val categoryCreator: CategoryCreator) : ViewMode
     }
 
     private fun saveCategory() = viewModelScope.launch {
-        categoryCreator.create(state.name)
+        categoryCreator.create(state.name, state.icon.id, state.color.id)
     }
 }

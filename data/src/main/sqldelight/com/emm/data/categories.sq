@@ -3,6 +3,8 @@ import kotlin.Boolean;
 CREATE TABLE categories (
     categoryId TEXT NOT NULL PRIMARY KEY,
     name TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    color TEXT NOT NULL,
     syncState TEXT NOT NULL, -- PENDING | SYNCED | ERROR
     isDeleted INTEGER AS Boolean NOT NULL,
     updatedAt INTEGER NOT NULL,
@@ -13,7 +15,7 @@ all:
 SELECT * FROM categories;
 
 insert:
-INSERT OR REPLACE INTO categories VALUES(?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO categories VALUES(?, ?, ?, ?, ?, ?, ?, ?);
 
 delete:
 DELETE FROM categories WHERE categoryId = ?;

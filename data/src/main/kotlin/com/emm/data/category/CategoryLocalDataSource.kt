@@ -35,6 +35,8 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         cq.insert(
             categoryId = categoryUpsert.categoryId,
             name = categoryUpsert.name,
+            icon = categoryUpsert.icon,
+            color = categoryUpsert.color,
             syncState = categoryUpsert.syncState.name,
             updatedAt = categoryUpsert.updatedAt,
             isDeleted = false,

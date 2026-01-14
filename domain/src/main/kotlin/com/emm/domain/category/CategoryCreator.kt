@@ -9,10 +9,16 @@ class CategoryCreator(
     private val idProvider: UniqueIdProvider,
 ) {
 
-    suspend fun create(name: String) {
+    suspend fun create(
+        name: String,
+        icon: String,
+        color: String,
+    ) {
         val categoryUpsert = CategoryUpsert(
             categoryId = idProvider.id,
             name = name,
+            icon = icon,
+            color = color,
             updatedAt = currentTimeInMillis(),
             createdAt = currentTimeInMillis(),
             syncState = SyncState.Pending,
