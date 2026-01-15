@@ -56,7 +56,7 @@ import com.emm.justchill.hh.fasttransaction.AccountsScreen
 import com.emm.justchill.hh.fasttransaction.AccountsViewModel
 import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.profile.ProfileScreen
-import com.emm.justchill.hh.seetransactions.SeeTransactionsVersionTwo
+import com.emm.justchill.hh.seetransactions.SeeTransactionsScreen
 import com.emm.justchill.hh.transaction.AddTransactionScreen
 import com.emm.justchill.hh.transaction.EditTransaction
 import com.emm.justchill.sync.Sync
@@ -211,7 +211,7 @@ fun DashboardContent(externalNavBack: NavBackStack<NavKey>) {
             )
         }
         entry<SeeTransactionRoute> {
-            SeeTransactionsVersionTwo(externalNavBack)
+            SeeTransactionsScreen(externalNavBack)
         }
         entry<ProfileRoute> {
             val authRepository = koinInject<AuthRepository>()

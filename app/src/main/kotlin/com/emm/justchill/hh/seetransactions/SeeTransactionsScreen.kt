@@ -33,14 +33,14 @@ import org.koin.androidx.compose.koinViewModel
 import java.util.UUID
 
 @Composable
-fun SeeTransactionsVersionTwo(
+fun SeeTransactionsScreen(
     externalNavBack: NavBackStack<NavKey>,
     vm: SeeTransactionsViewModel = koinViewModel(),
 ) {
 
     val collectAsState: List<TransactionUi> by vm.transactions.collectAsStateWithLifecycle()
 
-    SeeTransactionsVersionTwo(
+    SeeTransactionsScreen(
         transactions = collectAsState,
         navigateToEdit = {
             externalNavBack.add(EditTransactionRoute(it))
@@ -49,7 +49,7 @@ fun SeeTransactionsVersionTwo(
 }
 
 @Composable
-fun SeeTransactionsVersionTwo(
+fun SeeTransactionsScreen(
     transactions: List<TransactionUi> = emptyList(),
     navigateToEdit: (String) -> Unit = {},
 ) {
@@ -135,7 +135,7 @@ fun SeeTransactionsVersionTwoPreview() {
                 )
             }
         }
-        SeeTransactionsVersionTwo(
+        SeeTransactionsScreen(
             transactions = xx
         )
     }
