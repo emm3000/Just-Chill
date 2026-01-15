@@ -2,6 +2,7 @@ package com.emm.data.category
 
 import com.emm.data.Categories
 import com.emm.domain.category.Category
+import com.emm.domain.category.CategoryType
 import com.emm.domain.category.CategoryUpsert
 import com.emm.domain.shared.SyncState
 
@@ -10,6 +11,7 @@ fun Categories.toDomain() = Category(
     name = name,
     icon = icon,
     color = color,
+    categoryType = CategoryType.valueOf(categoryType),
 )
 
 fun List<Categories>.toDomain() = map(Categories::toDomain)

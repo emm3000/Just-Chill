@@ -20,6 +20,7 @@ import com.emm.justchill.hh.account.AddAccountViewModel
 import com.emm.justchill.hh.auth.LoginViewModel
 import com.emm.justchill.hh.auth.SignUpViewModel
 import com.emm.justchill.hh.category.AddCategoryViewModel
+import com.emm.justchill.hh.category.SelectCategoryViewModel
 import com.emm.justchill.hh.fasttransaction.AccountsViewModel
 import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.HomeViewModel
@@ -53,6 +54,7 @@ private fun Module.viewModelsProviders() {
     viewModelOf(::AddTransactionViewModel)
     viewModelOf(::SeeTransactionsViewModel)
     viewModelOf(::LoginViewModel)
+    viewModelOf(::SelectCategoryViewModel)
 
     viewModel { parameters ->
         EditTransactionViewModel(

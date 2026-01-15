@@ -49,6 +49,8 @@ import com.emm.justchill.hh.auth.LoginViewModel
 import com.emm.justchill.hh.auth.SignUpScreen
 import com.emm.justchill.hh.auth.SignUpViewModel
 import com.emm.justchill.hh.category.AddCategoryScreen
+import com.emm.justchill.hh.category.SelectCategoryScreen
+import com.emm.justchill.hh.category.SelectCategoryViewModel
 import com.emm.justchill.hh.fasttransaction.AccountsScreen
 import com.emm.justchill.hh.fasttransaction.AccountsViewModel
 import com.emm.justchill.hh.home.HomeScreen
@@ -141,7 +143,8 @@ fun Hh() {
             }
             entry<AddTransactionRoute> {
                 AddTransactionScreen(
-                    popBackStack = { navBackStack.removeLastOrNull() }
+                    popBackStack = { navBackStack.removeLastOrNull() },
+                    onOtherCategorySelected = { navBackStack.add(SelectCategoryRoute) }
                 )
             }
             entry<EditTransactionRoute> {
@@ -152,6 +155,14 @@ fun Hh() {
             }
             entry<AddAccountRoute> {
                 AddAccountScreen(navBackStack)
+            }
+            entry<SelectCategoryRoute> {
+                val vm: SelectCategoryViewModel = koinViewModel()
+                SelectCategoryScreen(
+                    onCategorySelected = {},
+                    income = vm.state.allIncomes,
+                    expense = vm.state.allExpenses,
+                )
             }
         },
     )

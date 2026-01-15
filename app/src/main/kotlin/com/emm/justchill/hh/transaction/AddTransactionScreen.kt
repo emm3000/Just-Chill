@@ -75,6 +75,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import com.emm.domain.account.Account
+import com.emm.domain.category.CategoryType
 import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
@@ -99,12 +100,14 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun AddTransactionScreen(
     vm: AddTransactionViewModel = koinViewModel(),
+    onOtherCategorySelected: () -> Unit,
     popBackStack: () -> Unit,
 ) {
 
     NewAddTransaction(
         state = vm.state,
         onAction = vm::onAction,
+        onOtherCategorySelected = onOtherCategorySelected,
         popBackStack = popBackStack,
     )
 }
@@ -114,6 +117,7 @@ fun AddTransactionScreen(
 fun NewAddTransaction(
     state: AddTransactionUiState,
     onAction: (AddTransactionAction) -> Unit,
+    onOtherCategorySelected: () -> Unit,
     popBackStack: () -> Unit,
 ) {
 
@@ -218,7 +222,8 @@ fun NewAddTransaction(
                 onCategorySelected = {
                     onAction(AddTransactionAction.OnCategorySelected(it))
                 },
-                categories = state.categories
+                categories = state.categories,
+                onOtherCategorySelected = onOtherCategorySelected
             )
 
             Spacer(modifier = Modifier.height(30.dp))
@@ -306,6 +311,7 @@ fun CategorySelector(
     categorySelected: SelectableCategory?,
     categories: List<SelectableCategory>,
     onCategorySelected: (SelectableCategory) -> Unit,
+    onOtherCategorySelected: () -> Unit,
 ) {
 
     Text(
@@ -373,6 +379,9 @@ fun CategorySelector(
                 .weight(1f)
                 .height(90.dp)
                 .clip(RoundedCornerShape(10.dp))
+                .clickable {
+                    onOtherCategorySelected()
+                }
                 .background(MaterialTheme.colorScheme.surface),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -746,7 +755,8 @@ private fun NewAddTransactionPreview() {
                             categoryId = "$it nominavi",
                             name = "$it Ann Chan",
                             icon = AppIconCatalog.catalog[it],
-                            color = allColors[it]
+                            color = allColors[it],
+                            categoryType = CategoryType.Income
                         )
                     )
                 }
@@ -757,7 +767,8 @@ private fun NewAddTransactionPreview() {
                 categories = categories
             ),
             onAction = {},
-            popBackStack = {}
+            popBackStack = {},
+            onOtherCategorySelected = {}
         )
     }
 }

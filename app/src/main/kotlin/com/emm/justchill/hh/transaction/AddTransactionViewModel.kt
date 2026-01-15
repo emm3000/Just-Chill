@@ -109,6 +109,7 @@ private fun mapToUi(categories: List<Category>): List<SelectableCategory> = cate
         categoryId = it.categoryId,
         name = it.name,
         icon = AppIconCatalog.findById(it.icon),
+        categoryType = it.categoryType,
         color = findById(it.color)
     )
 }
