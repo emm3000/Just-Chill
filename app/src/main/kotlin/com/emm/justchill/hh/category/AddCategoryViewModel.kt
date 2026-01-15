@@ -12,12 +12,12 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-class CategoryViewModel(
+class AddCategoryViewModel(
     private val categoryCreator: CategoryCreator,
     private val categoryRepository: CategoryRepository,
 ) : ViewModel() {
 
-    var state by mutableStateOf(CategoryUiState())
+    var state by mutableStateOf(AddCategoryUiState())
         private set
 
     init {
@@ -29,22 +29,22 @@ class CategoryViewModel(
         }
     }
 
-    fun onAction(action: CategoryAction) {
+    fun onAction(action: AddCategoryAction) {
         when (action) {
-            is CategoryAction.OnNameChange -> {
+            is AddCategoryAction.OnNameChange -> {
                 state = state.copy(name = action.value)
             }
 
-            is CategoryAction.OnCategoryTypeChange -> {
+            is AddCategoryAction.OnCategoryTypeChange -> {
                 state = state.copy(categoryType = action.value)
             }
-            is CategoryAction.OnColorChange -> {
+            is AddCategoryAction.OnColorChange -> {
                 state = state.copy(color = action.value)
             }
-            is CategoryAction.OnIconChange -> {
+            is AddCategoryAction.OnIconChange -> {
                 state = state.copy(icon = action.value)
             }
-            CategoryAction.OnSave -> saveCategory()
+            AddCategoryAction.OnSave -> saveCategory()
         }
     }
 

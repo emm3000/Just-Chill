@@ -48,7 +48,7 @@ import com.emm.justchill.hh.auth.LoginScreen
 import com.emm.justchill.hh.auth.LoginViewModel
 import com.emm.justchill.hh.auth.SignUpScreen
 import com.emm.justchill.hh.auth.SignUpViewModel
-import com.emm.justchill.hh.category.CategoryScreen
+import com.emm.justchill.hh.category.AddCategoryScreen
 import com.emm.justchill.hh.fasttransaction.AccountsScreen
 import com.emm.justchill.hh.fasttransaction.AccountsViewModel
 import com.emm.justchill.hh.home.HomeScreen
@@ -148,7 +148,7 @@ fun Hh() {
                 EditTransaction(navBackStack, it.transactionId)
             }
             entry<CategoryRoute> {
-                CategoryScreen(navBackStack)
+                AddCategoryScreen(navBackStack)
             }
             entry<AddAccountRoute> {
                 AddAccountScreen(navBackStack)

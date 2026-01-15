@@ -58,12 +58,12 @@ private val dashGap = 7f
 private val strokeWidth = 2.dp
 
 @Composable
-fun CategoryScreen(
+fun AddCategoryScreen(
     navController: NavBackStack<NavKey>,
-    vm: CategoryViewModel = koinViewModel(),
+    vm: AddCategoryViewModel = koinViewModel(),
 ) {
 
-    CategoryScreen(
+    AddCategoryScreen(
         state = vm.state,
         onAction = vm::onAction,
         navigateToBack = navController::removeLastOrNull
@@ -71,9 +71,9 @@ fun CategoryScreen(
 }
 
 @Composable
-private fun CategoryScreen(
-    state: CategoryUiState,
-    onAction: (CategoryAction) -> Unit,
+private fun AddCategoryScreen(
+    state: AddCategoryUiState,
+    onAction: (AddCategoryAction) -> Unit,
     navigateToBack: () -> Unit = {},
 ) {
 
@@ -116,7 +116,7 @@ private fun CategoryScreen(
                 enabled = state.isAllFieldValidated,
                 onClick = {
                     current?.hide()
-                    onAction(CategoryAction.OnSave)
+                    onAction(AddCategoryAction.OnSave)
                 },
                 title = "Guardar categoría",
             )
@@ -139,7 +139,7 @@ private fun CategoryScreen(
                 label = "Nombre",
                 placeholder = "Ingresa el nombre",
                 value = state.name,
-                onChange = { onAction(CategoryAction.OnNameChange(it)) }
+                onChange = { onAction(AddCategoryAction.OnNameChange(it)) }
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -147,19 +147,19 @@ private fun CategoryScreen(
             CategoryTypeToggle(
                 modifier = Modifier,
                 selectedType = state.categoryType,
-                onTypeSelected = { onAction(CategoryAction.OnCategoryTypeChange(it)) }
+                onTypeSelected = { onAction(AddCategoryAction.OnCategoryTypeChange(it)) }
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
             IconPicker(state.icon) {
-                onAction(CategoryAction.OnIconChange(it))
+                onAction(AddCategoryAction.OnIconChange(it))
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
             ColorPicker(state.color) {
-                onAction(CategoryAction.OnColorChange(it))
+                onAction(AddCategoryAction.OnColorChange(it))
             }
         }
     }
@@ -300,7 +300,7 @@ fun ColumnScope.IconPicker(
 }
 
 @Composable
-private fun PreviewSection(state: CategoryUiState) {
+private fun PreviewSection(state: AddCategoryUiState) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -361,8 +361,8 @@ private fun PreviewSection(state: CategoryUiState) {
 fun CategoryPreview() {
 
     EmmTheme {
-        CategoryScreen(
-            state = CategoryUiState(
+        AddCategoryScreen(
+            state = AddCategoryUiState(
                 name = "Groceries"
             ),
             onAction = {},
