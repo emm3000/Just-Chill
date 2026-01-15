@@ -2,6 +2,7 @@ package com.emm.justchill.hh.category
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +49,7 @@ import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.shared.EmmTextInput
+import com.emm.justchill.hh.shared.SelectIconRoute
 import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
 import com.emm.justchill.hh.transaction.components.NewButton
 import org.koin.androidx.compose.koinViewModel
@@ -65,6 +67,7 @@ fun AddCategoryScreen(
 
     AddCategoryScreen(
         state = vm.state,
+        onMoreIconsClick = { navController.add(SelectIconRoute) },
         onAction = vm::onAction,
         navigateToBack = navController::removeLastOrNull
     )
@@ -73,6 +76,7 @@ fun AddCategoryScreen(
 @Composable
 private fun AddCategoryScreen(
     state: AddCategoryUiState,
+    onMoreIconsClick: () -> Unit = {},
     onAction: (AddCategoryAction) -> Unit,
     navigateToBack: () -> Unit = {},
 ) {
@@ -153,9 +157,11 @@ private fun AddCategoryScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            IconPicker(state.icon) {
-                onAction(AddCategoryAction.OnIconChange(it))
-            }
+            IconPicker(
+                selectedIcon = state.icon,
+                onMoreIconsClick = onMoreIconsClick,
+                onIconChange = { onAction(AddCategoryAction.OnIconChange(it)) }
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -213,6 +219,7 @@ fun ColumnScope.ColorPicker(
 @Composable
 fun ColumnScope.IconPicker(
     selectedIcon: IconCatalog,
+    onMoreIconsClick: () -> Unit = {},
     onIconChange: (IconCatalog) -> Unit = {}
 ) {
     Text(
@@ -287,6 +294,9 @@ fun ColumnScope.IconPicker(
                 .weight(1f)
                 .aspectRatio(1f)
                 .clip(RoundedCornerShape(10.dp))
+                .clickable {
+                    onMoreIconsClick()
+                }
                 .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.Center,
         ) {

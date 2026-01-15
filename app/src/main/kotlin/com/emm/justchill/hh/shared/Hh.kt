@@ -51,6 +51,7 @@ import com.emm.justchill.hh.auth.SignUpViewModel
 import com.emm.justchill.hh.category.AddCategoryScreen
 import com.emm.justchill.hh.category.SelectCategoryScreen
 import com.emm.justchill.hh.category.SelectCategoryViewModel
+import com.emm.justchill.hh.category.SelectIconScreen
 import com.emm.justchill.hh.fasttransaction.AccountsScreen
 import com.emm.justchill.hh.fasttransaction.AccountsViewModel
 import com.emm.justchill.hh.home.HomeScreen
@@ -167,6 +168,11 @@ fun Hh() {
                     value = vm.state.query,
                     income = vm.state.filteredIncomes,
                     expense = vm.state.filteredExpenses,
+                )
+            }
+            entry<SelectIconRoute> {
+                SelectIconScreen(
+                    onBack = { navBackStack.removeLastOrNull() },
                 )
             }
         },

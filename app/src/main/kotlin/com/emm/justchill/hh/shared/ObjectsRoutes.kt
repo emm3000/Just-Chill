@@ -19,6 +19,9 @@ data object AddAccountRoute : NavKey
 data object SelectCategoryRoute : NavKey
 
 @Serializable
+data object SelectIconRoute : NavKey
+
+@Serializable
 data object DashboardRoute : NavKey
 
 @Serializable
