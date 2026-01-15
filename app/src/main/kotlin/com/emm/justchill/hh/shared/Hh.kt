@@ -158,10 +158,14 @@ fun Hh() {
             }
             entry<SelectCategoryRoute> {
                 val vm: SelectCategoryViewModel = koinViewModel()
+
                 SelectCategoryScreen(
                     onCategorySelected = {},
-                    income = vm.state.allIncomes,
-                    expense = vm.state.allExpenses,
+                    onBack = { navBackStack.removeLastOrNull() },
+                    onValueChange = vm::updateQuery,
+                    value = vm.state.query,
+                    income = vm.state.filteredIncomes,
+                    expense = vm.state.filteredExpenses,
                 )
             }
         },

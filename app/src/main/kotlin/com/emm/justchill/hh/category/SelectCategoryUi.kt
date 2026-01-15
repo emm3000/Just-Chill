@@ -8,5 +8,5 @@ data class SelectCategoryUi(
     val allExpenses: List<SelectableCategory> = emptyList(),
     val filteredIncomes: List<SelectableCategory> = emptyList(),
     val filteredExpenses: List<SelectableCategory> = emptyList(),
-    val query: String = String.Companion.Empty,
+    val query: String = String.Empty,
 )

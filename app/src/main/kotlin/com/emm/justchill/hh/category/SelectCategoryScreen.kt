@@ -32,7 +32,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -54,8 +53,10 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun SelectCategoryScreen(
-    modifier: Modifier = Modifier,
     onCategorySelected: (SelectableCategory) -> Unit,
+    onBack: () -> Unit,
+    onValueChange: (String) -> Unit = {},
+    value: String,
     income: List<SelectableCategory>,
     expense: List<SelectableCategory>,
 ) {
@@ -66,6 +67,7 @@ fun SelectCategoryScreen(
                 title = "Seleccionar Categoría",
                 navigationIconClick = Icons.Default.ArrowBackIosNew,
                 onNavigationIconClick = {
+                    onBack()
                 },
             )
         },
@@ -89,14 +91,12 @@ fun SelectCategoryScreen(
                 .padding(horizontal = 20.dp)
         ) {
 
-            var a = remember { mutableStateOf("") }
-
             OutlinedTextField(
                 modifier = Modifier
                     .fillMaxWidth(),
-                value = a.value,
+                value = value,
                 onValueChange = {
-                    a.value = it
+                    onValueChange(it)
                 },
                 placeholder = {
                     Text(
@@ -259,6 +259,9 @@ private fun SelectCategoryScreenPreview() {
         SelectCategoryScreen(
             income = categories,
             expense = categories,
+            onBack = {},
+            onValueChange = {},
+            value = "",
             onCategorySelected = {}
         )
     }
