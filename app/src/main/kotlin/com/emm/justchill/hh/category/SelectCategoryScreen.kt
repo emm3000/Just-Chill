@@ -62,6 +62,9 @@ fun SelectCategoryScreen(
     expense: List<SelectableCategory>,
 ) {
 
+    val pagerState = rememberPagerState(initialPage = 0) { 2 }
+    val scope = rememberCoroutineScope()
+
     Scaffold(
         topBar = {
             EmmCenteredToolbar(
@@ -120,9 +123,6 @@ fun SelectCategoryScreen(
             )
 
             Spacer(modifier = Modifier.height(20.dp))
-
-            val pagerState = rememberPagerState(initialPage = 0) { 2 }
-            val scope = rememberCoroutineScope()
 
             SecondaryScrollableTabRow(
                 selectedTabIndex = pagerState.currentPage,
