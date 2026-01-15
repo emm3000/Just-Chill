@@ -55,6 +55,7 @@ import kotlinx.coroutines.launch
 fun SelectCategoryScreen(
     onCategorySelected: (SelectableCategory) -> Unit,
     onBack: () -> Unit,
+    onNewCategory: () -> Unit = {},
     onValueChange: (String) -> Unit = {},
     value: String,
     income: List<SelectableCategory>,
@@ -78,9 +79,7 @@ fun SelectCategoryScreen(
                     .padding(horizontal = 15.dp)
                     .padding(bottom = 10.dp)
                     .navigationBarsPadding(),
-                enabled = false,
-                onClick = {
-                },
+                onClick = onNewCategory,
                 title = "Crear nueva categoría",
             )
         }

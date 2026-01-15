@@ -163,6 +163,7 @@ fun Hh() {
                     onCategorySelected = {},
                     onBack = { navBackStack.removeLastOrNull() },
                     onValueChange = vm::updateQuery,
+                    onNewCategory = { navBackStack.add(CategoryRoute) },
                     value = vm.state.query,
                     income = vm.state.filteredIncomes,
                     expense = vm.state.filteredExpenses,
