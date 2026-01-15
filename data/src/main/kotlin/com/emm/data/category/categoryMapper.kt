@@ -4,7 +4,6 @@ import com.emm.data.Categories
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryType
 import com.emm.domain.category.CategoryUpsert
-import com.emm.domain.shared.SyncState
 
 fun Categories.toDomain() = Category(
     categoryId = categoryId,
@@ -28,9 +27,7 @@ fun Categories.toCategoryUpsert() = CategoryUpsert(
     name = name,
     icon = icon,
     color = color,
-    syncState = SyncState.Synced,
-    updatedAt = updatedAt,
-    createdAt = createdAt,
+    categoryType = CategoryType.valueOf(categoryType)
 )
 
 fun CategoryModel.toCategoryUpsert() = CategoryUpsert(
@@ -38,7 +35,5 @@ fun CategoryModel.toCategoryUpsert() = CategoryUpsert(
     name = name,
     icon = "icon",
     color = "color",
-    syncState = SyncState.Synced,
-    updatedAt = updatedAt,
-    createdAt = createdAt
+    categoryType = CategoryType.Income
 )

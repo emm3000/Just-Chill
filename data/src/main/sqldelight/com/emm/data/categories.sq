@@ -17,7 +17,18 @@ all:
 SELECT * FROM categories;
 
 insert:
-INSERT OR REPLACE INTO categories VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO categories(
+    categoryId,
+    name,
+    icon,
+    color,
+    categoryType,
+    syncState,
+    isDefault,
+    isDeleted,
+    updatedAt,
+    createdAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 delete:
 DELETE FROM categories WHERE categoryId = ?;

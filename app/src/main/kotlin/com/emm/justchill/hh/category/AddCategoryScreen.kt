@@ -82,7 +82,7 @@ private fun AddCategoryScreen(
     Scaffold(
         topBar = {
             EmmCenteredToolbar(
-                title = "Agregar Categoría ${state.categoryCount}",
+                title = "Agregar Categoría",
                 navigationIconClick = Icons.Default.Close,
                 onNavigationIconClick = {
                     current?.hide()
@@ -117,6 +117,7 @@ private fun AddCategoryScreen(
                 onClick = {
                     current?.hide()
                     onAction(AddCategoryAction.OnSave)
+                    navigateToBack()
                 },
                 title = "Guardar categoría",
             )

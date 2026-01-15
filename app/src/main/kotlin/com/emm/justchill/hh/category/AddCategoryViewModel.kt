@@ -7,14 +7,12 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.category.CategoryCreator
-import com.emm.domain.category.CategoryRepository
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class AddCategoryViewModel(
     private val categoryCreator: CategoryCreator,
-    private val categoryRepository: CategoryRepository,
 ) : ViewModel() {
 
     var state by mutableStateOf(AddCategoryUiState())
@@ -24,9 +22,6 @@ class AddCategoryViewModel(
         snapshotFlow { state.name }
             .onEach(::checkFields)
             .launchIn(viewModelScope)
-        viewModelScope.launch {
-            state = state.copy(categoryCount = categoryRepository.count())
-        }
     }
 
     fun onAction(action: AddCategoryAction) {
@@ -54,6 +49,11 @@ class AddCategoryViewModel(
     }
 
     private fun saveCategory() = viewModelScope.launch {
-        categoryCreator.create(state.name, state.icon.id, state.color.id)
+        categoryCreator.create(
+            name = state.name,
+            icon = state.icon.id,
+            color = state.color.id,
+            categoryType = state.categoryType
+        )
     }
 }

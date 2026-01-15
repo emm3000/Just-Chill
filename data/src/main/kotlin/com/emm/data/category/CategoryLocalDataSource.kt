@@ -9,6 +9,7 @@ import com.emm.data.EmmDatabaseData
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryUpsert
 import com.emm.domain.shared.SyncState
+import com.emm.domain.shared.currentTimeInMillis
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -41,12 +42,12 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
             name = categoryUpsert.name,
             icon = categoryUpsert.icon,
             color = categoryUpsert.color,
-            categoryType = "",
-            syncState = categoryUpsert.syncState.name,
-            updatedAt = categoryUpsert.updatedAt,
-            isDeleted = categoryUpsert.isDeleted,
-            isDefault = categoryUpsert.isDefault,
-            createdAt = categoryUpsert.createdAt,
+            categoryType = categoryUpsert.categoryType.name,
+            syncState = SyncState.Pending.name,
+            isDeleted = false,
+            isDefault = false,
+            createdAt = currentTimeInMillis(),
+            updatedAt = currentTimeInMillis(),
         )
     }
 
@@ -54,8 +55,8 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         cq.updateValues(
             name = categoryUpsert.name,
             categoryId = categoryId,
-            syncState = categoryUpsert.syncState.name,
-            updatedAt = categoryUpsert.updatedAt,
+            syncState = SyncState.Pending.name,
+            updatedAt = currentTimeInMillis(),
         )
     }
 
