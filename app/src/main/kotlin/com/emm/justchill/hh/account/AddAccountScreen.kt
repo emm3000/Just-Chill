@@ -5,7 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -22,7 +25,7 @@ import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.shared.EmmTextInput
-import com.emm.justchill.hh.transaction.components.EmmToolbarTitle
+import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
 import com.emm.justchill.hh.transaction.components.NewButton
 import org.koin.androidx.compose.koinViewModel
 
@@ -49,21 +52,45 @@ private fun AddAccountScreen(
     Scaffold(
         modifier = Modifier,
         topBar = {
-            EmmToolbarTitle(
-                title = "Agregar cuenta",
-                navigationIconClick = navigateToBack,
+            EmmCenteredToolbar(
+                title = "Agregar Cuenta",
+                navigationIconClick = Icons.Default.Close,
+                onNavigationIconClick = {
+                },
+            )
+        },
+        bottomBar = {
+            NewButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+                    .navigationBarsPadding(),
+                enabled = state.isEnabled,
+                onClick = {
+                    onAction(AddAccountAction.OnSave)
+                    navigateToBack()
+                },
+                title = "Crear Cuenta",
             )
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
+                .padding(paddingValues)
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(horizontal = 20.dp, vertical = 10.dp)
-                .padding(paddingValues),
+                .padding(horizontal = 20.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+
+            EmmTextInput(
+                value = state.name,
+                onChange = { onAction(AddAccountAction.OnNameChange(it)) },
+                label = "Nombre del a cuenta *",
+                placeholder = "ejm. Gasto diario",
+                modifier = Modifier,
+            )
 
             Text(
                 text = "Monto inicial",
@@ -79,31 +106,13 @@ private fun AddAccountScreen(
                 onValueChange = { onAction(AddAccountAction.OnAmountChange(it)) },
                 modifier = Modifier.fillMaxWidth()
             )
-
-            EmmTextInput(
-                value = state.name,
-                onChange = { onAction(AddAccountAction.OnNameChange(it)) },
-                label = "Nombre *",
-                placeholder = "Ingresa el nombre",
-                modifier = Modifier,
-            )
-
-            NewButton(
-                title = "Crear cuenta",
-                onClick = {
-                    onAction(AddAccountAction.OnSave)
-                    navigateToBack()
-                },
-                enabled = state.isEnabled,
-                modifier = Modifier.fillMaxWidth()
-            )
         }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun AddAccountScreenPreview(modifier: Modifier = Modifier) {
+fun AddAccountScreenPreview() {
     EmmTheme {
         AddAccountScreen(
             state = AddAccountUiState(),
