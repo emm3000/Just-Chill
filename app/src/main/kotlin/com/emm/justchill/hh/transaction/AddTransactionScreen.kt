@@ -6,10 +6,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -22,8 +20,10 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -55,7 +55,6 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -229,7 +228,7 @@ fun NewAddTransaction(
                 onOtherCategorySelected = onOtherCategorySelected
             )
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             TransactionField(
                 label = "Fecha",
@@ -327,100 +326,95 @@ fun CategorySelector(
 
     Spacer(modifier = Modifier.height(20.dp))
 
-    BoxWithConstraints {
-        val columns = 4
-        val spacing = 5.dp
-        val totalSpacing = spacing * (columns - 1)
-        val itemWidth = (maxWidth - totalSpacing) / columns
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(spacing),
-            verticalArrangement = Arrangement.spacedBy(spacing),
-        ) {
-            categories.forEach {
-                key(it.categoryId) {
-                    val isSelected = it.categoryId == categorySelected?.categoryId
-                    Column(
-                        modifier = Modifier
-                            .width(itemWidth)
-                            .height(90.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .then(
-                                if (isSelected) Modifier.border(
-                                    width = 1.dp,
-                                    color = PrimaryBlue,
-                                    shape = RoundedCornerShape(10.dp)
-                                ) else Modifier
-                            )
-                            .selectable(
-                                selected = isSelected,
-                                onClick = { onCategorySelected(it) }
-                            )
-                            .background(MaterialTheme.colorScheme.surface),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(33.dp)
-                                .clip(CircleShape)
-                                .then(
-                                    if (isSelected) Modifier.background(PrimaryBlue)
-                                    else Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                modifier = Modifier.size(20.dp),
-                                imageVector = it.icon.icon,
-                                contentDescription = it.name,
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
-                        Text(
-                            text = it.name,
-                            fontSize = 10.sp
-                        )
-                    }
-                }
-
-            }
-            key("other") {
-                Column(
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(4),
+        modifier = Modifier
+            .height(200.dp)
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(5.dp),
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+    ) {
+        items(categories, key = SelectableCategory::categoryId) {
+            val isSelected = it.categoryId == categorySelected?.categoryId
+            Column(
+                modifier = Modifier
+                    .height(90.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .then(
+                        if (isSelected) Modifier.border(
+                            width = 1.dp,
+                            color = PrimaryBlue,
+                            shape = RoundedCornerShape(10.dp)
+                        ) else Modifier
+                    )
+                    .selectable(
+                        selected = isSelected,
+                        onClick = { onCategorySelected(it) }
+                    )
+                    .background(MaterialTheme.colorScheme.surface),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(
                     modifier = Modifier
-                        .width(itemWidth)
-                        .height(90.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .clickable {
-                            onOtherCategorySelected()
-                        }
-                        .background(MaterialTheme.colorScheme.surface),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                        .size(33.dp)
+                        .clip(CircleShape)
+                        .then(
+                            if (isSelected) Modifier.background(PrimaryBlue)
+                            else Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
+                        ),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(33.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            modifier = Modifier.size(20.dp),
-                            imageVector = Icons.Default.MoreHoriz,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                    Text(
-                        text = "Otros",
-                        fontSize = 10.sp
+                    Icon(
+                        modifier = Modifier.size(20.dp),
+                        imageVector = it.icon.icon,
+                        contentDescription = it.name,
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
+                Text(
+                    text = it.name,
+                    fontSize = 10.sp
+                )
+            }
+
+
+
+        }
+
+        item {
+            Column(
+                modifier = Modifier
+                    .height(90.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .clickable {
+                        onOtherCategorySelected()
+                    }
+                    .background(MaterialTheme.colorScheme.surface),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(33.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        modifier = Modifier.size(20.dp),
+                        imageVector = Icons.Default.MoreHoriz,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+                Text(
+                    text = "Otros",
+                    fontSize = 10.sp
+                )
             }
         }
     }
-
 
 }
 
