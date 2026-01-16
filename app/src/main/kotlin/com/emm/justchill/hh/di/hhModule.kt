@@ -16,13 +16,12 @@ import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.shared.UniqueIdProvider
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionUpdateRepository
+import com.emm.justchill.hh.account.AccountsViewModel
 import com.emm.justchill.hh.account.AddAccountViewModel
 import com.emm.justchill.hh.auth.LoginViewModel
 import com.emm.justchill.hh.auth.SignUpViewModel
 import com.emm.justchill.hh.category.AddCategoryViewModel
 import com.emm.justchill.hh.category.SelectCategoryViewModel
-import com.emm.justchill.hh.fasttransaction.AccountsViewModel
-import com.emm.justchill.hh.fasttransaction.FastTransactionViewModel
 import com.emm.justchill.hh.home.HomeViewModel
 import com.emm.justchill.hh.seetransactions.SeeTransactionsViewModel
 import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
@@ -70,7 +69,6 @@ private fun Module.viewModelsProviders() {
     viewModelOf(::AddCategoryViewModel)
     viewModelOf(::AddAccountViewModel)
 
-    viewModelOf(::FastTransactionViewModel)
     viewModelOf(::AccountsViewModel)
 
     viewModelOf(::SignUpViewModel)

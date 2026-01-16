@@ -43,6 +43,8 @@ import com.emm.domain.auth.AuthRepository
 import com.emm.domain.auth.SessionStatus
 import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.hh.account.AccountsScreen
+import com.emm.justchill.hh.account.AccountsViewModel
 import com.emm.justchill.hh.account.AddAccountScreen
 import com.emm.justchill.hh.auth.LoginScreen
 import com.emm.justchill.hh.auth.LoginViewModel
@@ -52,8 +54,6 @@ import com.emm.justchill.hh.category.AddCategoryScreen
 import com.emm.justchill.hh.category.SelectCategoryScreen
 import com.emm.justchill.hh.category.SelectCategoryViewModel
 import com.emm.justchill.hh.category.SelectIconScreen
-import com.emm.justchill.hh.fasttransaction.AccountsScreen
-import com.emm.justchill.hh.fasttransaction.AccountsViewModel
 import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.profile.ProfileScreen
 import com.emm.justchill.hh.seetransactions.SeeTransactionsScreen

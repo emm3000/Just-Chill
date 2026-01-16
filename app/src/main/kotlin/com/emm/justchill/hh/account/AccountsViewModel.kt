@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.fasttransaction
+package com.emm.justchill.hh.account
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

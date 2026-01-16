@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.fasttransaction
+package com.emm.justchill.hh.account
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
