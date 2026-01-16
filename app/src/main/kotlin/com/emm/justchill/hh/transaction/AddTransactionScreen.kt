@@ -1,10 +1,12 @@
 package com.emm.justchill.hh.transaction
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -20,6 +22,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -52,6 +55,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -306,6 +310,7 @@ fun NewAddTransaction(
     )
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun CategorySelector(
     categorySelected: SelectableCategory?,
@@ -323,89 +328,101 @@ fun CategorySelector(
 
     Spacer(modifier = Modifier.height(20.dp))
 
-    FlowRow(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(5.dp),
-        verticalArrangement = Arrangement.spacedBy(5.dp),
-        maxItemsInEachRow = 4,
-    ) {
-        categories.forEach {
-            val isSelected = it.categoryId == categorySelected?.categoryId
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(90.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .then(
-                        if (isSelected) Modifier.border(
-                            width = 1.dp,
-                            color = PrimaryBlue,
-                            shape = RoundedCornerShape(10.dp)
-                        ) else Modifier
-                    )
-                    .selectable(
-                        selected = isSelected,
-                        onClick = { onCategorySelected(it) }
-                    )
-                    .background(MaterialTheme.colorScheme.surface),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(33.dp)
-                        .clip(CircleShape)
-                        .then(
-                            if (isSelected) Modifier.background(PrimaryBlue)
-                            else Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        modifier = Modifier.size(20.dp),
-                        imageVector = it.icon.icon,
-                        contentDescription = it.name,
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-                Text(
-                    text = it.name,
-                    fontSize = 10.sp
-                )
-            }
-        }
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .height(90.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .clickable {
-                    onOtherCategorySelected()
-                }
-                .background(MaterialTheme.colorScheme.surface),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
+    BoxWithConstraints {
+        val columns = 4
+        val spacing = 5.dp
+        val totalSpacing = spacing * (columns - 1)
+        val itemWidth = (maxWidth - totalSpacing) / columns
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing),
+            verticalArrangement = Arrangement.spacedBy(spacing),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(33.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    modifier = Modifier.size(20.dp),
-                    imageVector = Icons.Default.MoreHoriz,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onBackground
-                )
+            categories.forEach {
+                key(it.categoryId) {
+                    val isSelected = it.categoryId == categorySelected?.categoryId
+                    Column(
+                        modifier = Modifier
+                            .width(itemWidth)
+                            .height(90.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .then(
+                                if (isSelected) Modifier.border(
+                                    width = 1.dp,
+                                    color = PrimaryBlue,
+                                    shape = RoundedCornerShape(10.dp)
+                                ) else Modifier
+                            )
+                            .selectable(
+                                selected = isSelected,
+                                onClick = { onCategorySelected(it) }
+                            )
+                            .background(MaterialTheme.colorScheme.surface),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(33.dp)
+                                .clip(CircleShape)
+                                .then(
+                                    if (isSelected) Modifier.background(PrimaryBlue)
+                                    else Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                modifier = Modifier.size(20.dp),
+                                imageVector = it.icon.icon,
+                                contentDescription = it.name,
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        Text(
+                            text = it.name,
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+
             }
-            Text(
-                text = "Otros",
-                fontSize = 10.sp
-            )
+            key("other") {
+                Column(
+                    modifier = Modifier
+                        .width(itemWidth)
+                        .height(90.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable {
+                            onOtherCategorySelected()
+                        }
+                        .background(MaterialTheme.colorScheme.surface),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(33.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(20.dp),
+                            imageVector = Icons.Default.MoreHoriz,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    Text(
+                        text = "Otros",
+                        fontSize = 10.sp
+                    )
+                }
+            }
         }
     }
+
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -749,7 +766,7 @@ private fun NewAddTransactionPreview() {
     EmmTheme {
         val categories = remember {
             buildList {
-                repeat(7) {
+                repeat(5) {
                     add(
                         SelectableCategory(
                             categoryId = "$it nominavi",

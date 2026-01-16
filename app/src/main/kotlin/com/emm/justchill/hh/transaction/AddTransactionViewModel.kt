@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
+import com.emm.domain.category.CategoryType
 import com.emm.domain.transaction.TransactionCreator
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
@@ -33,6 +34,8 @@ class AddTransactionViewModel(
     var state by mutableStateOf(AddTransactionUiState())
         private set
 
+    private val allCategories: MutableMap<CategoryType, List<SelectableCategory>> = mutableMapOf()
+
     init {
         combine(
             flow = snapshotFlow { state.amount },
@@ -44,10 +47,17 @@ class AddTransactionViewModel(
             flow = accountRepository.all(),
             flow2 = categoryRepository.all().map(::mapToUi),
         ) { accounts, categories ->
+            allCategories.clear()
+            val categoryMap = categories.groupBy(SelectableCategory::categoryType).toMutableMap()
+            val sharedCategories: List<SelectableCategory> = categoryMap[CategoryType.Both].orEmpty()
+            categoryMap[CategoryType.Spend] = categoryMap[CategoryType.Spend]?.plus(sharedCategories).orEmpty()
+            categoryMap[CategoryType.Income] = categoryMap[CategoryType.Income]?.plus(sharedCategories).orEmpty()
+            allCategories.putAll(categoryMap)
             state = state.copy(
                 accounts = accounts,
-                categories = categories,
                 accountSelected = accounts.firstOrNull(),
+                categories = allCategories[state.transactionType.categoryType]?.take(7).orEmpty(),
+                categorySelected = allCategories[state.transactionType.categoryType]?.firstOrNull(),
             )
         }.launchIn(viewModelScope)
     }
@@ -69,7 +79,13 @@ class AddTransactionViewModel(
             is AddTransactionAction.OnAmountChange -> state = state.copy(amount = action.value)
             is AddTransactionAction.OnDateChange -> state = state.copy(date = action.value)
             is AddTransactionAction.OnDescriptionChange -> state = state.copy(description = action.value)
-            is AddTransactionAction.OnTransactionTypeChange -> state = state.copy(transactionType = action.value)
+            is AddTransactionAction.OnTransactionTypeChange -> {
+                state = state.copy(
+                    transactionType = action.value,
+                    categories = allCategories[action.value.categoryType]?.take(7).orEmpty(),
+                    categorySelected = allCategories[action.value.categoryType]?.firstOrNull(),
+                )
+            }
             is AddTransactionAction.OnDateChangeInMillis -> updateCurrentDate(action.value)
             AddTransactionAction.OnSave -> addTransaction()
             is AddTransactionAction.OnAccountSelected -> state = state.copy(accountSelected = action.value)
@@ -104,7 +120,7 @@ class AddTransactionViewModel(
     }
 }
 
-private fun mapToUi(categories: List<Category>): List<SelectableCategory> = categories.take(7).map {
+private fun mapToUi(categories: List<Category>): List<SelectableCategory> = categories.map {
     SelectableCategory(
         categoryId = it.categoryId,
         name = it.name,

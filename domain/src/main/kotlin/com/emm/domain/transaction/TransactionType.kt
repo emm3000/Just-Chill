@@ -1,7 +1,9 @@
 package com.emm.domain.transaction
 
-enum class TransactionType(val label: String) {
+import com.emm.domain.category.CategoryType
 
-    Income(label = "Ingreso"),
-    Spend(label = "Gasto"),
+enum class TransactionType(val label: String, val categoryType: CategoryType) {
+
+    Income(label = "Ingreso", categoryType = CategoryType.Income),
+    Spend(label = "Gasto", categoryType = CategoryType.Spend),
 }
