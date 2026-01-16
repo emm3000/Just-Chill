@@ -200,7 +200,7 @@ fun Hh() {
 fun DashboardContent(externalNavBack: NavBackStack<NavKey>) {
 
     val navigationState: NavigationState = rememberNavigationState(
-        startRoute = HomeRoute,
+        startRoute = SeeTransactionRoute,
         topLevelRoutes = TOP_LEVEL_ROUTES.keys,
     )
 
