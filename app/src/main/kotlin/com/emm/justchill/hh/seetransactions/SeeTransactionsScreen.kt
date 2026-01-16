@@ -1,7 +1,6 @@
 package com.emm.justchill.hh.seetransactions
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -28,12 +28,14 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.shared.EditTransactionRoute
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
 import org.koin.androidx.compose.koinViewModel
+import java.time.LocalDate
 import java.util.UUID
 
 @Composable
@@ -81,19 +83,22 @@ fun SeeTransactionsScreen(
             state = listState,
             contentPadding = PaddingValues(horizontal = 15.dp, vertical = 3.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
 
             if (transactions.isNotEmpty()) {
                 transactions.forEach { dayGroup ->
                     item {
                         Text(
-                            text = dayGroup.date.toString(),
+                            modifier = Modifier.fillMaxWidth().padding(start = 10.dp),
+                            text = dayGroup.readableDate,
+                            color = MaterialTheme.colorScheme.onBackground,
                             style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = LatoFontFamily,
                         )
                     }
                     items(dayGroup.transactions, key = TransactionUi::transactionId) {
-                        ItemTransaction(it, navigateToEdit)
+                        TransactionItem(transactionUi = it)
                     }
                 }
             } else {
@@ -155,8 +160,17 @@ fun SeeTransactionsVersionTwoPreview() {
                 )
             }
         }
+        val w = remember {
+            listOf(
+                DayGroup(
+                    date = LocalDate.now(),
+                    transactions = xx
+                )
+            )
+
+        }
         SeeTransactionsScreen(
-            transactions = emptyList()
+            transactions = w
         )
     }
 }

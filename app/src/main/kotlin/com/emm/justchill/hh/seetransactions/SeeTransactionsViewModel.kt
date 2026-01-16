@@ -14,32 +14,37 @@ import kotlinx.coroutines.flow.stateIn
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 data class DayGroup(
     val date: LocalDate,
     val transactions: List<TransactionUi>,
-)
+) {
+
+    val readableDate: String
+        get() {
+            val today = LocalDate.now()
+            val yesterday = today.minusDays(1)
+
+            return when (date) {
+                today -> "HOY"
+                yesterday -> "AYER"
+                else -> {
+                    val formatter = DateTimeFormatter.ofPattern("MMMM dd", Locale.forLanguageTag("es"))
+                    date.format(formatter).uppercase()
+                }
+            }
+        }
+}
 
 class SeeTransactionsViewModel(
     transactionRepository: TransactionRepository,
 ) : ViewModel() {
 
     val transactions: StateFlow<List<DayGroup>> = transactionRepository.fetchAllWithCategory()
-        .map {
-            it.groupBy {
-                Instant.ofEpochMilli(it.date)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate()
-            }
-        }
-        .map {
-            it.map { (date, transactions: List<TransactionWithCategory>) ->
-                DayGroup(
-                    date = date,
-                    transactions = transactions.toUi()
-                )
-            }
-        }
+        .map(::groupByDate)
+        .map(::mapToDayGroup)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),
@@ -51,4 +56,21 @@ class SeeTransactionsViewModel(
         collector: FlowCollector<List<TransactionUi>>,
         throwable: Throwable,
     ) = collector.emit(emptyList())
+}
+
+private fun mapToDayGroup(
+    transactionGroups: Map<LocalDate, List<TransactionWithCategory>>,
+): List<DayGroup> = transactionGroups.map { (date, transactions: List<TransactionWithCategory>) ->
+    DayGroup(
+        date = date,
+        transactions = transactions.toUi()
+    )
+}
+
+private fun groupByDate(
+    categories: List<TransactionWithCategory>,
+): Map<LocalDate, List<TransactionWithCategory>> = categories.groupBy { transaction ->
+    Instant.ofEpochMilli(transaction.date)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
 }
