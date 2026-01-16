@@ -19,6 +19,17 @@ CREATE INDEX IF NOT EXISTS transactions_deleted_index ON transactions(isDeleted)
 all:
 SELECT * FROM transactions WHERE isDeleted = 0 ORDER BY date DESC;
 
+completeTransactions:
+SELECT
+    t.*,
+    c.name AS categoryName,
+    c.icon AS categoryIcon,
+    c.color AS categoryColor
+FROM transactions t
+LEFT JOIN categories c ON t.categoryId = c.categoryId
+WHERE t.isDeleted = 0
+ORDER BY t.date DESC;
+
 insert:
 INSERT OR REPLACE INTO transactions VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 

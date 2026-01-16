@@ -1,7 +1,13 @@
 package com.emm.justchill.hh.transaction
 
-import com.emm.domain.transaction.Transaction
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.QuestionMark
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.emm.domain.transaction.TransactionType
+import com.emm.domain.transaction.TransactionWithCategory
+import com.emm.justchill.hh.category.AppIconCatalog
+import com.emm.justchill.hh.category.CategoryColor
+import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
 
 data class TransactionUi(
@@ -12,9 +18,15 @@ data class TransactionUi(
     val date: Long,
     val readableDate: String,
     val readableTime: String,
+    val category: CategoryUi,
 )
 
-private fun Transaction.toUi(): TransactionUi {
+data class CategoryUi(
+    val categoryIcon: ImageVector,
+    val categoryColor: CategoryColor,
+)
+
+private fun TransactionWithCategory.toUi(): TransactionUi {
     val formattedNumber: String = fromCentsToSolesWith(amount)
     return TransactionUi(
         transactionId = transactionId,
@@ -26,8 +38,12 @@ private fun Transaction.toUi(): TransactionUi {
         description = description,
         date = date,
         readableDate = DateUtils.millisToReadableFormat(date),
-        readableTime = DateUtils.readableTime(date)
+        readableTime = DateUtils.readableTime(date),
+        category = CategoryUi(
+            categoryIcon = category?.icon?.let(AppIconCatalog::findById)?.icon ?: Icons.Rounded.QuestionMark,
+            categoryColor = category?.color?.let(::findById) ?: findById("gray"),
+        ),
     )
 }
 
-fun List<Transaction>.toUi() = map(Transaction::toUi)
+fun List<TransactionWithCategory>.toUi() = map(TransactionWithCategory::toUi)

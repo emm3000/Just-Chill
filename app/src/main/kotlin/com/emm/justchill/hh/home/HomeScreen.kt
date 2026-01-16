@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -27,14 +28,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.seetransactions.ItemTransaction
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
+import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
-import com.emm.justchill.hh.transaction.toUi
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -75,7 +76,7 @@ fun HomeScreen(homeData: HomeUiState, navigateToAll: () -> Unit = {}) {
         if (homeData.lastTransactions.isEmpty()) {
             item { NoTransactions() }
         } else {
-            items(homeData.lastTransactions.toUi(), TransactionUi::transactionId) {
+            items(homeData.lastTransactions, TransactionUi::transactionId) {
                 ItemTransaction(it) {
                 }
             }
@@ -218,24 +219,19 @@ fun HomeScreenPreview() {
         HomeScreen(
             HomeUiState(
                 lastTransactions = listOf(
-                    Transaction(
-                        transactionId = "hinc",
+                    TransactionUi(
+                        transactionId = "metus",
                         type = TransactionType.Income,
-                        amount = 2.3,
-                        description = "alterum",
-                        date = 3693,
-                        accountId = "viris",
-                        categoryId = "bibendum"
+                        amount = "fabellas",
+                        description = "nulla",
+                        date = 9914,
+                        readableDate = "commune",
+                        readableTime = "adolescens",
+                        category = CategoryUi(
+                            categoryIcon = Icons.Rounded.Category,
+                            categoryColor = findById("gray")
+                        )
                     ),
-                    Transaction(
-                        transactionId = "hinc2",
-                        type = TransactionType.Income,
-                        amount = 2.3,
-                        description = "alterum",
-                        date = 3693,
-                        accountId = "viris",
-                        categoryId = "bibendum"
-                    )
                 ),
                 income = 6.7,
                 spend = 8.9,

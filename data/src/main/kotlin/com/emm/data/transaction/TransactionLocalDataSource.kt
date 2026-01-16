@@ -9,6 +9,7 @@ import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionUpdate
+import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -39,6 +40,13 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             .asFlow()
             .mapToList(Dispatchers.IO)
             .map(List<Transactions>::toDomain)
+    }
+
+    fun completeTransactions(): Flow<List<TransactionWithCategory>> {
+        return tq.completeTransactions()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map(::toDomain)
     }
 
     suspend fun softDelete(transactionId: String) = withContext(Dispatchers.IO) {

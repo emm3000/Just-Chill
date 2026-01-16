@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,6 +27,8 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.hh.category.findById
+import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
 
 @Composable
@@ -99,7 +103,11 @@ private fun ItemTransactionPreview() {
                 description = "voluptatibus",
                 date = 8268,
                 readableDate = "20/20",
-                readableTime = "10 am"
+                readableTime = "10 am",
+                category = CategoryUi(
+                    categoryIcon = Icons.Rounded.Category,
+                    categoryColor = findById("gray")
+                )
             )
         ) { }
     }

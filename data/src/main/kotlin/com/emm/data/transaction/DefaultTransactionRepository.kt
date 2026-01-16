@@ -5,6 +5,7 @@ import com.emm.data.account.AccountRemoteDataSource
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
 
 class DefaultTransactionRepository(
@@ -19,6 +20,10 @@ class DefaultTransactionRepository(
 
     override fun all(): Flow<List<Transaction>> {
         return localDataSource.all()
+    }
+
+    override fun fetchAllWithCategory(): Flow<List<TransactionWithCategory>> {
+        return localDataSource.completeTransactions()
     }
 
     override suspend fun delete(transactionId: String) {

@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,7 +28,9 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.shared.EditTransactionRoute
+import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
 import org.koin.androidx.compose.koinViewModel
@@ -38,7 +42,7 @@ fun SeeTransactionsScreen(
     vm: SeeTransactionsViewModel = koinViewModel(),
 ) {
 
-    val collectAsState: List<TransactionUi> by vm.transactions.collectAsStateWithLifecycle()
+    val collectAsState: List<DayGroup> by vm.transactions.collectAsStateWithLifecycle()
 
     SeeTransactionsScreen(
         transactions = collectAsState,
@@ -50,7 +54,7 @@ fun SeeTransactionsScreen(
 
 @Composable
 fun SeeTransactionsScreen(
-    transactions: List<TransactionUi> = emptyList(),
+    transactions: List<DayGroup> = emptyList(),
     navigateToEdit: (String) -> Unit = {},
 ) {
 
@@ -81,8 +85,16 @@ fun SeeTransactionsScreen(
         ) {
 
             if (transactions.isNotEmpty()) {
-                items(transactions, key = TransactionUi::transactionId) {
-                    ItemTransaction(it, navigateToEdit)
+                transactions.forEach { dayGroup ->
+                    item {
+                        Text(
+                            text = dayGroup.date.toString(),
+                            style = MaterialTheme.typography.headlineSmall,
+                        )
+                    }
+                    items(dayGroup.transactions, key = TransactionUi::transactionId) {
+                        ItemTransaction(it, navigateToEdit)
+                    }
                 }
             } else {
                 item {
@@ -113,6 +125,10 @@ fun ItemPreviewVersionTwo() {
                 date = 0,
                 readableDate = "20 de abril",
                 readableTime = "00:00 am",
+                category = CategoryUi(
+                    categoryIcon = Icons.Rounded.Category,
+                    categoryColor = findById("gray")
+                )
             )
         ) {}
     }
@@ -122,7 +138,7 @@ fun ItemPreviewVersionTwo() {
 @Composable
 fun SeeTransactionsVersionTwoPreview() {
     EmmTheme {
-        val xx = remember {
+        val xx: List<TransactionUi> = remember {
             (0..15).map {
                 TransactionUi(
                     transactionId = UUID.randomUUID().toString(),
@@ -132,11 +148,15 @@ fun SeeTransactionsVersionTwoPreview() {
                     date = 0,
                     readableDate = "20 de abril",
                     readableTime = "00:00 am",
+                    category = CategoryUi(
+                        categoryIcon = Icons.Rounded.Category,
+                        categoryColor = findById("gray")
+                    )
                 )
             }
         }
         SeeTransactionsScreen(
-            transactions = xx
+            transactions = emptyList()
         )
     }
 }

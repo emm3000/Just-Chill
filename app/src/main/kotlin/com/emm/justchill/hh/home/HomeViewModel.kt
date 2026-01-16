@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.home.HomeData
 import com.emm.domain.home.HomeLoader
+import com.emm.justchill.hh.transaction.toUi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -21,7 +22,7 @@ class HomeViewModel(homeLoader: HomeLoader) : ViewModel() {
         )
 
     private fun mapToUiState(data: HomeData): HomeUiState = HomeUiState(
-        lastTransactions = data.lastTransactions,
+        lastTransactions = data.lastTransactions.toUi(),
         income = data.income,
         spend = data.spend,
         balance = data.balance

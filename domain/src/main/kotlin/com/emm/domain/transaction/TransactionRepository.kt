@@ -10,6 +10,8 @@ interface TransactionRepository {
 
     fun all(): Flow<List<Transaction>>
 
+    fun fetchAllWithCategory(): Flow<List<TransactionWithCategory>>
+
     suspend fun delete(transactionId: String)
 
     suspend fun pull()
