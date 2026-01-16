@@ -71,7 +71,7 @@ import org.koin.compose.koinInject
 @Composable
 fun Hh() {
 
-    val navBackStack: NavBackStack<NavKey> = rememberNavBackStack(PreLoginRoute)
+    val navBackStack: NavBackStack<NavKey> = rememberNavBackStack(DashboardRoute)
 
     val resultBus = remember { ResultEventBus() }
 
