@@ -2,6 +2,7 @@ package com.emm.justchill.hh.category
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -175,8 +176,12 @@ fun SelectCategoryScreen(
                 verticalAlignment = Alignment.Top,
             ) {
                 when (it) {
-                    0 -> CategoryItemPicker(income)
-                    1 -> CategoryItemPicker(expense)
+                    0 -> CategoryItemPicker(income) {
+                        onCategorySelected(it)
+                    }
+                    1 -> CategoryItemPicker(expense) {
+                        onCategorySelected(it)
+                    }
                 }
             }
         }
@@ -185,7 +190,8 @@ fun SelectCategoryScreen(
 
 @Composable
 fun CategoryItemPicker(
-    categories: List<SelectableCategory>
+    categories: List<SelectableCategory>,
+    onCategorySelected: (SelectableCategory) -> Unit = {},
 ) {
 
     LazyVerticalGrid(
@@ -207,6 +213,9 @@ fun CategoryItemPicker(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
                         shape = RoundedCornerShape(10.dp)
                     )
+                    .clickable {
+                        onCategorySelected(it)
+                    }
                     .padding(15.dp)
             ) {
                 Box(

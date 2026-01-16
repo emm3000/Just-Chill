@@ -97,6 +97,16 @@ class AddTransactionViewModel(
                 transactionType = TransactionType.Income,
             )
             AddTransactionAction.OnDelete -> {}
+            is AddTransactionAction.OnNewValueFromOthers -> {
+                val updatedCategories = allCategories.values.flatten()
+                    .filterNot { it.categoryId == action.value.categoryId }
+                    .toMutableList()
+                    .apply { add(0, action.value) }
+                state = state.copy(
+                    categories = updatedCategories.take(7),
+                    categorySelected = action.value
+                )
+            }
         }
     }
 

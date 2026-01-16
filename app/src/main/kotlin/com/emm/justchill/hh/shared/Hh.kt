@@ -57,8 +57,11 @@ import com.emm.justchill.hh.fasttransaction.AccountsViewModel
 import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.profile.ProfileScreen
 import com.emm.justchill.hh.seetransactions.SeeTransactionsScreen
+import com.emm.justchill.hh.transaction.AddTransactionAction
 import com.emm.justchill.hh.transaction.AddTransactionScreen
+import com.emm.justchill.hh.transaction.AddTransactionViewModel
 import com.emm.justchill.hh.transaction.EditTransaction
+import com.emm.justchill.hh.transaction.SelectableCategory
 import com.emm.justchill.sync.Sync
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -69,6 +72,8 @@ import org.koin.compose.koinInject
 fun Hh() {
 
     val navBackStack: NavBackStack<NavKey> = rememberNavBackStack(PreLoginRoute)
+
+    val resultBus = remember { ResultEventBus() }
 
     NavDisplay(
         modifier = Modifier
@@ -143,7 +148,16 @@ fun Hh() {
                 DashboardContent(navBackStack)
             }
             entry<AddTransactionRoute> {
+
+                val vm: AddTransactionViewModel = koinViewModel()
+
+                ResultEffect<SelectableCategory>(resultBus) { selectableCategory ->
+                    resultBus.removeResult<SelectableCategory>()
+                    vm.onAction(AddTransactionAction.OnNewValueFromOthers(selectableCategory))
+                }
+
                 AddTransactionScreen(
+                    vm = vm,
                     popBackStack = { navBackStack.removeLastOrNull() },
                     onOtherCategorySelected = { navBackStack.add(SelectCategoryRoute) }
                 )
@@ -161,7 +175,10 @@ fun Hh() {
                 val vm: SelectCategoryViewModel = koinViewModel()
 
                 SelectCategoryScreen(
-                    onCategorySelected = {},
+                    onCategorySelected = {
+                        resultBus.sendResult(result = it)
+                        navBackStack.removeLastOrNull()
+                    },
                     onBack = { navBackStack.removeLastOrNull() },
                     onValueChange = vm::updateQuery,
                     onNewCategory = { navBackStack.add(CategoryRoute) },

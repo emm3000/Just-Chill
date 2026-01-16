@@ -99,11 +99,10 @@ import com.emm.justchill.hh.transaction.components.TransactionField
 import com.emm.justchill.hh.transaction.components.TransactionTypeToggle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun AddTransactionScreen(
-    vm: AddTransactionViewModel = koinViewModel(),
+    vm: AddTransactionViewModel,
     onOtherCategorySelected: () -> Unit,
     popBackStack: () -> Unit,
 ) {
