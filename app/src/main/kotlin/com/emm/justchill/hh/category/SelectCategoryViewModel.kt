@@ -64,10 +64,10 @@ class SelectCategoryViewModel(
         .map(::mapToUiAndPartitionByType)
         .onEach {
             state = state.copy(
-                allIncomes = it.first,
-                allExpenses = it.second,
-                filteredIncomes = it.first,
-                filteredExpenses = it.second,
+                allIncomes = it[CategoryType.Income].orEmpty(),
+                allExpenses = it[CategoryType.Spend].orEmpty(),
+                filteredIncomes = it[CategoryType.Income].orEmpty(),
+                filteredExpenses = it[CategoryType.Spend].orEmpty(),
             )
         }
         .launchIn(viewModelScope)
@@ -79,16 +79,28 @@ class SelectCategoryViewModel(
 
 private fun mapToUiAndPartitionByType(
     categories: List<Category>,
-): Pair<List<SelectableCategory>, List<SelectableCategory>> = categories.map { category ->
-    SelectableCategory(
-        categoryId = category.categoryId,
-        name = category.name,
-        icon = AppIconCatalog.findById(category.icon),
-        color = findById(category.color),
-        categoryType = category.categoryType,
-    )
-}.filter { selectableCategory ->
-    selectableCategory.categoryType != CategoryType.Both
-}.partition { selectableCategory ->
-    selectableCategory.categoryType == CategoryType.Income
+): Map<CategoryType, List<SelectableCategory>> {
+
+    val result = mutableMapOf<CategoryType, MutableList<SelectableCategory>>()
+
+    categories.forEach { category ->
+        val ui = SelectableCategory(
+            categoryId = category.categoryId,
+            name = category.name,
+            icon = AppIconCatalog.findById(category.icon),
+            color = findById(category.color),
+            categoryType = category.categoryType,
+        )
+
+        val targets = when (ui.categoryType) {
+            CategoryType.Both -> listOf(CategoryType.Income, CategoryType.Spend)
+            else -> listOf(ui.categoryType)
+        }
+
+        targets.forEach { type ->
+            result.getOrPut(type) { mutableListOf() }.add(ui)
+        }
+    }
+
+    return result
 }
