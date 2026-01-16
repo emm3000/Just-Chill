@@ -219,10 +219,11 @@ fun DashboardContent(externalNavBack: NavBackStack<NavKey>) {
 
             AccountsScreen(
                 accounts = accounts,
-                state = vm.state,
-                onAction = vm::onAction,
                 addCategory = {
                     externalNavBack.add(CategoryRoute)
+                },
+                addAccount = {
+                    externalNavBack.add(AddAccountRoute)
                 },
                 modifier = Modifier.fillMaxSize()
             )
