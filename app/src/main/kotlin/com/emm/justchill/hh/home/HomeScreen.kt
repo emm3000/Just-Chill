@@ -97,7 +97,7 @@ private fun TotalBalance(totalBalance: Double) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Balance Total",
+                text = "Balance Total EMM",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 fontWeight = FontWeight.Bold,
