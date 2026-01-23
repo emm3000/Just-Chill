@@ -61,15 +61,15 @@ fun SelectIconScreen(
     LaunchedEffect(Unit) {
         snapshotFlow { searchQuery }
             .debounce(220L)
-            .map { it.trim().lowercase() }
+            .map { it.normalizeForSearch() }
             .distinctUntilChanged()
             .collectLatest { query ->
                 val result = if (query.isBlank()) {
                     AppIconCatalog.catalog
                 } else {
                     AppIconCatalog.catalog.filter { catalog ->
-                        catalog.keywords.any { keyword ->
-                            keyword.lowercase().contains(query)
+                        catalog.cleanKeywords.any { keyword ->
+                            keyword.contains(query)
                         }
                     }
                 }

@@ -73,13 +73,33 @@ import androidx.compose.material.icons.rounded.VolunteerActivism
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.ui.graphics.vector.ImageVector
+import java.text.Normalizer
+import java.util.regex.Pattern
 
 data class IconCatalog(
     val id: String,
     val name: String,
     val icon: ImageVector,
     val keywords: List<String>,
-)
+) {
+
+    val cleanKeywords: List<String>
+        get() = keywords.map(String::normalizeForSearch)
+}
+
+fun String.normalizeForSearch(): String {
+    // 1. Normalizar a NFD (separa la letra del acento)
+    val temp = Normalizer.normalize(this, Normalizer.Form.NFD)
+
+    // 2. Definir el patrón de bloques de marcas diacríticas (acentos)
+    val pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+")
+
+    // 3. Reemplazar los acentos por nada, pasar a minúsculas y limpiar espacios
+    return pattern.matcher(temp)
+        .replaceAll("")
+        .lowercase()
+        .trim()
+}
 
 object AppIconCatalog {
 
