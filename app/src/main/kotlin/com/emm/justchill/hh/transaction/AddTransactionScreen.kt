@@ -377,9 +377,6 @@ fun CategorySelector(
                     fontSize = 10.sp
                 )
             }
-
-
-
         }
 
         item {
