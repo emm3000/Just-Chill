@@ -60,11 +60,11 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         )
     }
 
-    suspend fun delete(categoryId: String) = withContext(Dispatchers.IO) {
-        cq.delete(categoryId)
+    suspend fun softDelete(categoryId: String) = withContext(Dispatchers.IO) {
+        cq.softDelete(currentTimeInMillis(), categoryId)
     }
 
     suspend fun unSynced(): List<Categories> = withContext(Dispatchers.IO) {
-        cq.selectByStatus(SyncState.Pending.name).executeAsList()
+        cq.selectPendingSync().executeAsList()
     }
 }

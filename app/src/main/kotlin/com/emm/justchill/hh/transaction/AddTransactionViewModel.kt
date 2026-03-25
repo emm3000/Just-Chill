@@ -49,9 +49,6 @@ class AddTransactionViewModel(
         ) { accounts, categories ->
             allCategories.clear()
             val categoryMap = categories.groupBy(SelectableCategory::categoryType).toMutableMap()
-            val sharedCategories: List<SelectableCategory> = categoryMap[CategoryType.Both].orEmpty()
-            categoryMap[CategoryType.Spend] = categoryMap[CategoryType.Spend]?.plus(sharedCategories).orEmpty()
-            categoryMap[CategoryType.Income] = categoryMap[CategoryType.Income]?.plus(sharedCategories).orEmpty()
             allCategories.putAll(categoryMap)
             state = state.copy(
                 accounts = accounts,
@@ -121,7 +118,7 @@ class AddTransactionViewModel(
         date = dateInLong,
         amount = state.amount.formatInputToDouble(),
         categoryId = state.categorySelected?.categoryId,
-        account = state.accountSelected ?: throw IllegalStateException(),
+        accountId = state.accountSelected?.accountId ?: throw IllegalStateException(),
     )
 
     private fun updateCurrentDate(millis: Long?) = millis?.let {

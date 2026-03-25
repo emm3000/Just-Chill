@@ -64,6 +64,8 @@ sqldelight {
     databases {
         create("EmmDatabaseData") {
             packageName.set("com.emm.data")
+            schemaVersion.set(7)
+            verifyMigrations.set(true)
         }
     }
 }

@@ -11,8 +11,6 @@ data class AccountModel(
 
     val name: String,
 
-    val balance: Double,
-
     @SerialName("is_deleted")
     val isDeleted: Boolean,
 

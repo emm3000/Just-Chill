@@ -32,7 +32,6 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
             Account(
                 accountId = it.accountId,
                 name = it.name,
-                balance = it.balance,
             )
         }
     }
@@ -49,7 +48,6 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         aq.insert(
             accountId = account.accountId,
             name = account.name,
-            balance = account.balance,
             syncState = SyncState.Pending.name,
             isDeleted = false,
             updatedAt = account.updatedAt,
@@ -57,14 +55,13 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         )
     }
 
-    suspend fun delete(accountId: String) = withContext(Dispatchers.IO) {
-        aq.delete(accountId)
+    suspend fun softDelete(accountId: String) = withContext(Dispatchers.IO) {
+        aq.softDelete(currentTimeInMillis(), accountId)
     }
 
     suspend fun update(accountId: String, account: AccountUpsert) = withContext(Dispatchers.IO) {
         aq.update(
             name = account.name,
-            balance = account.balance,
             syncState = SyncState.Pending.name,
             updatedAt = currentTimeInMillis(),
             accountId = accountId,
@@ -75,15 +72,11 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         aq.markAsSync(SyncState.Synced.name, accountId)
     }
 
-    suspend fun updateAmount(accountId: String, amount: Double) = withContext(Dispatchers.IO) {
-        aq.updateBalance(
-            syncState = SyncState.Pending.name,
-            balance = amount,
-            accountId = accountId,
-        )
+    suspend fun getBalance(accountId: String): Double = withContext(Dispatchers.IO) {
+        emmDatabase.transactionsQueries.getAccountBalance(accountId).executeAsOne()
     }
 
     suspend fun unSynced(): List<Accounts> = withContext(Dispatchers.IO) {
-        aq.selectByStatus(SyncState.Pending.name).executeAsList()
+        aq.selectPendingSync().executeAsList()
     }
 }

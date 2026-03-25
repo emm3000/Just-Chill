@@ -92,10 +92,7 @@ private fun mapToUiAndPartitionByType(
             categoryType = category.categoryType,
         )
 
-        val targets = when (ui.categoryType) {
-            CategoryType.Both -> listOf(CategoryType.Income, CategoryType.Spend)
-            else -> listOf(ui.categoryType)
-        }
+        val targets = listOf(ui.categoryType)
 
         targets.forEach { type ->
             result.getOrPut(type) { mutableListOf() }.add(ui)

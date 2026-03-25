@@ -11,23 +11,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
-import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.shared.EmmTextInput
 import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
 import com.emm.justchill.hh.transaction.components.NewButton
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.runtime.Composable
 
 @Composable
 fun AddAccountScreen(
@@ -87,24 +82,9 @@ private fun AddAccountScreen(
             EmmTextInput(
                 value = state.name,
                 onChange = { onAction(AddAccountAction.OnNameChange(it)) },
-                label = "Nombre del a cuenta *",
+                label = "Nombre de la cuenta *",
                 placeholder = "ejm. Gasto diario",
                 modifier = Modifier,
-            )
-
-            Text(
-                text = "Monto inicial",
-                color = MaterialTheme.colorScheme.onBackground,
-                fontFamily = LatoFontFamily,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 16.sp,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            EmmAmountChill(
-                value = state.balance,
-                onValueChange = { onAction(AddAccountAction.OnAmountChange(it)) },
-                modifier = Modifier.fillMaxWidth()
             )
         }
     }

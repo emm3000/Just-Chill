@@ -7,7 +7,6 @@ import com.emm.domain.account.AccountUpsert
 fun Accounts.toDomain() = Account(
     accountId = accountId,
     name = name,
-    balance = balance,
 )
 
 fun List<Accounts>.toDomain() = map(Accounts::toDomain)
@@ -15,7 +14,6 @@ fun List<Accounts>.toDomain() = map(Accounts::toDomain)
 fun Accounts.toAccountUpsert() = AccountUpsert(
     accountId = accountId,
     name = name,
-    balance = balance,
     updatedAt = updatedAt,
     createdAt = createdAt,
 )
@@ -23,7 +21,6 @@ fun Accounts.toAccountUpsert() = AccountUpsert(
 fun Accounts.toAccountModel() = AccountModel(
     accountId = accountId,
     name = name,
-    balance = balance,
     updatedAt = updatedAt,
     createdAt = createdAt,
     isDeleted = isDeleted,
@@ -33,7 +30,6 @@ fun Accounts.toAccountModel() = AccountModel(
 fun AccountModel.toAccountUpsert() = AccountUpsert(
     accountId = accountId,
     name = name,
-    balance = balance,
     updatedAt = updatedAt,
     createdAt = createdAt,
 )

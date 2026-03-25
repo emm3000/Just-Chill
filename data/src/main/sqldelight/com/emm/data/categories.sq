@@ -1,52 +1,40 @@
 import kotlin.Boolean;
 
 CREATE TABLE categories (
-    categoryId TEXT NOT NULL PRIMARY KEY,
-    name TEXT NOT NULL,
-    icon TEXT NOT NULL,
-    color TEXT NOT NULL,
-    categoryType TEXT NOT NULL,
-    syncState TEXT NOT NULL, -- PENDING | SYNCED | ERROR
-    isDefault INTEGER AS Boolean NOT NULL,
-    isDeleted INTEGER AS Boolean NOT NULL,
-    updatedAt INTEGER NOT NULL,
-    createdAt INTEGER NOT NULL
+    categoryId    TEXT NOT NULL PRIMARY KEY,
+    name          TEXT NOT NULL,
+    icon          TEXT NOT NULL,
+    color         TEXT NOT NULL,
+    categoryType  TEXT NOT NULL,
+    syncState     TEXT NOT NULL DEFAULT 'PENDING',
+    isDefault     INTEGER AS Boolean NOT NULL DEFAULT 0,
+    isDeleted     INTEGER AS Boolean NOT NULL DEFAULT 0,
+    updatedAt     INTEGER NOT NULL,
+    createdAt     INTEGER NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS categories_type_idx ON categories(categoryType) WHERE isDeleted = 0;
+
 all:
-SELECT * FROM categories;
+SELECT * FROM categories WHERE isDeleted = 0;
 
 insert:
-INSERT OR REPLACE INTO categories(
-    categoryId,
-    name,
-    icon,
-    color,
-    categoryType,
-    syncState,
-    isDefault,
-    isDeleted,
-    updatedAt,
-    createdAt
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO categories(categoryId, name, icon, color, categoryType, syncState, isDefault, isDeleted, updatedAt, createdAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
-delete:
-DELETE FROM categories WHERE categoryId = ?;
+softDelete:
+UPDATE categories SET isDeleted = 1, updatedAt = ? WHERE categoryId = ?;
 
 find:
-SELECT * FROM categories WHERE categoryId = ?;
+SELECT * FROM categories WHERE categoryId = ? AND isDeleted = 0;
 
 countDefaultCategories:
-SELECT COUNT(*) FROM categories WHERE isDefault = 1;
+SELECT COUNT(*) FROM categories WHERE isDefault = 1 AND isDeleted = 0;
 
 updateValues:
 UPDATE categories
-SET
-    name = ?,
-    syncState = ?,
-    updatedAt = ?
-WHERE
-    categoryId = ?;
+SET name = ?, syncState = ?, updatedAt = ?
+WHERE categoryId = ?;
 
-selectByStatus:
-SELECT * FROM categories WHERE syncState = ?;
+selectPendingSync:
+SELECT * FROM categories WHERE syncState = 'PENDING' OR isDeleted = 1;

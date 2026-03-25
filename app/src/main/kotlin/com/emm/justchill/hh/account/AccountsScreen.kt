@@ -82,7 +82,7 @@ fun AccountsScreen(
                 NewAccountItem(
                     modifier = Modifier.fillMaxWidth(),
                     accountName = it.name,
-                    balance = it.balance,
+                    balance = 0.0,
                     accountType = it.name
                 )
             }
@@ -163,18 +163,14 @@ private fun AccountsScreenPreview() {
                 Account(
                     accountId = "1",
                     name = "random nameww",
-                    balance = 12223.22,
                 ),
                 Account(
                     accountId = "2",
                     name = "lorem itsum",
-                    balance = 123.22,
-
-                    ),
+                ),
                 Account(
                     accountId = "3",
                     name = "random name",
-                    balance = 123.22,
                 )
             ),
             addCategory = {},

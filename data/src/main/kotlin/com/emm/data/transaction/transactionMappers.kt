@@ -1,7 +1,6 @@
 package com.emm.data.transaction
 
 import com.emm.data.Transactions
-import com.emm.domain.account.Account
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
@@ -34,16 +33,12 @@ fun Transactions.toModel() = TransactionModel(
 )
 
 fun Transactions.toTransactionUpdate(): TransactionUpdate {
-    val account = Account(
-        accountId = accountId,
-        name = "",
-        balance = 0.0,
-    )
     return TransactionUpdate(
         type = TransactionType.valueOf(type),
         amount = amount,
         description = description,
-        account = account,
+        accountId = accountId,
+        categoryId = categoryId,
         date = date,
     )
 }
@@ -54,11 +49,7 @@ fun TransactionModel.toTransactionInsert() = TransactionInsert(
     amount = amount,
     description = description,
     date = date,
-    account = Account(
-        accountId = accountId,
-        name = "",
-        balance = 0.0,
-    ),
+    accountId = accountId,
     updatedAt = updatedAt,
     createdAt = createdAt,
     categoryId = categoryId,

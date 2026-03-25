@@ -1,6 +1,5 @@
 package com.emm.domain.home
 
-import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionType
@@ -19,18 +18,19 @@ class HomeLoader(
     fun load(): Flow<HomeData> = combine(
         flow = accountRepository.all(),
         flow2 = transactionRepository.fetchAllWithCategory(),
-        transform = ::computeFinancialSummary,
+        transform = { _, transactions -> computeFinancialSummary(transactions) },
     )
 
     private fun computeFinancialSummary(
-        accounts: List<Account>,
         transactions: List<TransactionWithCategory>,
     ): HomeData {
 
         val lastTransactions: List<TransactionWithCategory> = filterTransactionsByCurrentMonth(transactions).take(7)
-        val balance = accounts.sumOf(Account::balance)
         val income = lastTransactions.filter { it.type == TransactionType.Income }.sumOf(TransactionWithCategory::amount)
         val spend = lastTransactions.filter { it.type == TransactionType.Spend }.sumOf(TransactionWithCategory::amount)
+        val balance = transactions.sumOf { t ->
+            if (t.type == TransactionType.Income) t.amount else -t.amount
+        }
 
         return HomeData(
             lastTransactions = lastTransactions,

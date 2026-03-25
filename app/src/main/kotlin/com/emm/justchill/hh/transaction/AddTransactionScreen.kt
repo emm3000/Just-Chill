@@ -622,7 +622,7 @@ fun AccountSelectorContent(
                     NewAccountItem(
                         modifier = Modifier.fillMaxWidth(),
                         accountName = account.name,
-                        balance = account.balance,
+                        balance = 0.0,
                         accountType = account.name,
                     ) {
                         onAccountSelected(account)
@@ -802,17 +802,14 @@ private fun AccountSelectorContentPreview() {
                 Account(
                     accountId = "tantas1",
                     name = "Garrett Owen",
-                    balance = 2.3,
                 ),
                 Account(
                     accountId = "tantas2",
                     name = "Garrett Owen",
-                    balance = 2.3,
                 ),
                 Account(
                     accountId = "tantas3",
                     name = "Garrett Owen",
-                    balance = 2.3,
                 )
             ),
             onAccountSelected = {},

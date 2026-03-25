@@ -29,15 +29,11 @@ class DefaultAccountRepository(
     }
 
     override suspend fun delete(accountId: String) {
-        localDataSource.delete(accountId)
+        localDataSource.softDelete(accountId)
     }
 
     override suspend fun update(accountId: String, account: AccountUpsert) {
         localDataSource.update(accountId, account)
-    }
-
-    override suspend fun updateAmount(accountId: String, amount: Double) {
-        localDataSource.updateAmount(accountId, amount)
     }
 
     override suspend fun pull() {

@@ -25,7 +25,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             description = transactionInsert.description,
             date = transactionInsert.date,
             categoryId = transactionInsert.categoryId,
-            accountId = transactionInsert.account.accountId,
+            accountId = transactionInsert.accountId,
             syncState = SyncState.Pending.name,
             isDeleted = false,
             updatedAt = transactionInsert.updatedAt,
@@ -50,7 +50,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
     }
 
     suspend fun softDelete(transactionId: String) = withContext(Dispatchers.IO) {
-        tq.softDelete(transactionId)
+        tq.softDelete(currentTimeInMillis(), transactionId)
     }
 
     suspend fun hardDelete(transactionId: String) = withContext(Dispatchers.IO) {
@@ -74,7 +74,8 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             description = transactionUpdate.description,
             date = transactionUpdate.date,
             transactionId = transactionId,
-            accountId = transactionUpdate.account.accountId,
+            accountId = transactionUpdate.accountId,
+            categoryId = transactionUpdate.categoryId,
             syncState = SyncState.Pending.name,
             updatedAt = currentTimeInMillis(),
         )
@@ -85,6 +86,6 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
     }
 
     suspend fun unSynced(): List<Transactions> = withContext(Dispatchers.IO) {
-        tq.selectByStatus(SyncState.Pending.name).executeAsList()
+        tq.selectPendingSync().executeAsList()
     }
 }

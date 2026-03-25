@@ -24,7 +24,7 @@ class DefaultCategoryRepository(
     }
 
     override suspend fun delete(categoryId: String) {
-        localDataSource.delete(categoryId)
+        localDataSource.softDelete(categoryId)
     }
 
     override suspend fun count(): Long = localDataSource.countDefaults()

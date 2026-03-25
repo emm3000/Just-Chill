@@ -1,9 +1,11 @@
 package com.emm.domain.account
 
+import com.emm.domain.shared.UniqueIdProvider
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.confirmVerified
+import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -12,22 +14,17 @@ import org.junit.Test
 class AccountCreatorTest {
 
     private val repository = mockk<AccountRepository>()
-    private val accountCreator = AccountCreator(repository)
+    private val uniqueIdProvider = mockk<UniqueIdProvider>()
+    private val accountCreator = AccountCreator(repository, uniqueIdProvider)
 
     @Test
     fun `create should call repository create with correct accountUpsert`() = runTest {
-        val testAccount = AccountUpsert(
-            name = "Test Account",
-            balance = 100.0,
-            description = "Test description",
-            isSelected = AccountSelect.NonSelected,
-        )
+        every { uniqueIdProvider.id } returns "test-id"
+        coEvery { repository.create(any()) } just Runs
 
-        coEvery { repository.create(testAccount) } just Runs
+        accountCreator.create(name = "Test Account")
 
-        accountCreator.create(testAccount)
-
-        coVerify(exactly = 1) { repository.create(testAccount) }
+        coVerify(exactly = 1) { repository.create(any()) }
 
         confirmVerified(repository)
     }

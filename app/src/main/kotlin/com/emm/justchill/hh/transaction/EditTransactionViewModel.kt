@@ -92,7 +92,7 @@ class EditTransactionViewModel(
 
     private fun updateTransaction() = viewModelScope.launch {
         val transactionUpdate: TransactionUpdate = createTransactionUpdate()
-        transactionUpdater.update(oldTransaction, oldAccount, transactionUpdate)
+        transactionUpdater.update(oldTransaction, transactionUpdate)
     }
 
     private fun createTransactionUpdate() = TransactionUpdate(
@@ -100,11 +100,12 @@ class EditTransactionViewModel(
         description = state.description,
         date = dateInLong,
         amount = state.amount.formatInputToDouble(),
-        account = state.accountSelected ?: throw IllegalStateException(),
+        accountId = state.accountSelected?.accountId ?: throw IllegalStateException(),
+        categoryId = null,
     )
 
     private fun deleteTransaction() = viewModelScope.launch {
-        transactionDeleter.delete(oldTransaction, oldAccount)
+        transactionDeleter.delete(oldTransaction.transactionId)
     }
 
     private fun updateCurrentDate(millis: Long?) = millis?.let {

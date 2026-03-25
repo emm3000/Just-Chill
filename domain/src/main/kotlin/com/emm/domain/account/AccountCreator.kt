@@ -7,11 +7,10 @@ class AccountCreator(
     private val uniqueIdProvider: UniqueIdProvider,
 ) {
 
-    suspend fun create(name: String, balance: Double) {
+    suspend fun create(name: String) {
         val accountUpsert = AccountUpsert(
             accountId = uniqueIdProvider.id,
             name = name,
-            balance = balance,
         )
         repository.create(accountUpsert)
     }

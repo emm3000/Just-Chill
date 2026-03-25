@@ -19,10 +19,8 @@ class AccountUpdaterTest {
         coEvery { repository.update(any(), any()) } just Runs
 
         val account = AccountUpsert(
+            accountId = "123",
             name = "Test Account",
-            balance = 100.0,
-            description = "Test description",
-            isSelected = AccountSelect.NonSelected,
         )
         accountUpdater.update("123", account)
 

@@ -1,51 +1,39 @@
 import kotlin.Boolean;
 
 CREATE TABLE accounts (
-    accountId TEXT NOT NULL PRIMARY KEY,
-    name TEXT NOT NULL,
-    balance REAL NOT NULL,
-    syncState TEXT NOT NULL, -- PENDING | SYNCED | ERROR
-    isDeleted INTEGER AS Boolean NOT NULL,
-    updatedAt INTEGER NOT NULL,
-    createdAt INTEGER NOT NULL
+    accountId  TEXT NOT NULL PRIMARY KEY,
+    name       TEXT NOT NULL,
+    syncState  TEXT NOT NULL, -- PENDING | SYNCED | ERROR
+    isDeleted  INTEGER AS Boolean NOT NULL DEFAULT 0,
+    updatedAt  INTEGER NOT NULL,
+    createdAt  INTEGER NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS accounts_sync_idx ON accounts(syncState) WHERE isDeleted = 0;
+
 all:
-SELECT * FROM accounts;
+SELECT * FROM accounts WHERE isDeleted = 0;
 
 insert:
-INSERT OR REPLACE INTO accounts VALUES(?, ?, ?, ?, ?, ?, ?);
-
-delete:
-DELETE FROM accounts WHERE accountId = ?;
+INSERT OR REPLACE INTO accounts(accountId, name, syncState, isDeleted, updatedAt, createdAt)
+VALUES (?, ?, ?, ?, ?, ?);
 
 find:
-SELECT * FROM accounts WHERE accountId = ?;
+SELECT * FROM accounts WHERE accountId = ? AND isDeleted = 0;
+
+softDelete:
+UPDATE accounts SET isDeleted = 1, updatedAt = ? WHERE accountId = ?;
 
 update:
 UPDATE accounts
-SET
-    name = ?,
-    balance = ?,
-    syncState = ?,
-    updatedAt = ?
-WHERE
-    accountId = ?;
+SET name = ?, syncState = ?, updatedAt = ?
+WHERE accountId = ?;
 
 markAsSync:
-UPDATE accounts
-SET
-    syncState = ?
-WHERE
-    accountId = ?;
-
-updateBalance:
-UPDATE accounts
-SET
-    syncState = ?,
-    balance = ?
-WHERE
-    accountId = ?;
+UPDATE accounts SET syncState = ? WHERE accountId = ?;
 
 selectByStatus:
-SELECT * FROM accounts WHERE syncState = ?;
+SELECT * FROM accounts WHERE syncState = ? AND isDeleted = 0;
+
+selectPendingSync:
+SELECT * FROM accounts WHERE syncState = 'PENDING' OR isDeleted = 1;
