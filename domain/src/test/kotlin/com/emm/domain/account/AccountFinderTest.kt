@@ -10,14 +10,14 @@ import kotlin.test.assertNull
 class AccountFinderTest {
 
     private val repository = mockk<AccountRepository>()
-    private val accountFinder = AccountFinder(repository)
+    private val accountFinder = FindAccountUseCase(repository)
 
     @Test
     fun `find should call repository findBy with correct accountId`() = runTest {
 
         coEvery { repository.find(any()) } returns null
 
-        val find: Account? = accountFinder.find("1234")
+        val find: Account? = accountFinder("1234")
 
         assertNull(find)
 

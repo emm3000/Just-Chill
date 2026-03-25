@@ -6,12 +6,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.domain.account.AccountCreator
+import com.emm.domain.account.CreateAccountUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-class AddAccountViewModel(private val accountCreator: AccountCreator) : ViewModel() {
+class AddAccountViewModel(private val accountCreator: CreateAccountUseCase) : ViewModel() {
 
     var state by mutableStateOf(AddAccountUiState())
         private set
@@ -32,6 +32,6 @@ class AddAccountViewModel(private val accountCreator: AccountCreator) : ViewMode
     }
 
     private fun save() = viewModelScope.launch {
-        accountCreator.create(name = state.name)
+        accountCreator(name = state.name)
     }
 }

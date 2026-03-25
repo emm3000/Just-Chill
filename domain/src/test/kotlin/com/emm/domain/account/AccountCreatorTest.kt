@@ -15,14 +15,14 @@ class AccountCreatorTest {
 
     private val repository = mockk<AccountRepository>()
     private val uniqueIdProvider = mockk<UniqueIdProvider>()
-    private val accountCreator = AccountCreator(repository, uniqueIdProvider)
+    private val accountCreator = CreateAccountUseCase(repository, uniqueIdProvider)
 
     @Test
     fun `create should call repository create with correct accountUpsert`() = runTest {
         every { uniqueIdProvider.id } returns "test-id"
         coEvery { repository.create(any()) } just Runs
 
-        accountCreator.create(name = "Test Account")
+        accountCreator(name = "Test Account")
 
         coVerify(exactly = 1) { repository.create(any()) }
 

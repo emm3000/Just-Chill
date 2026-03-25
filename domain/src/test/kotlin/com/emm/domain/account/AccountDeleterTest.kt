@@ -11,14 +11,14 @@ import org.junit.Test
 class AccountDeleterTest {
 
     private val repository = mockk<AccountRepository>()
-    private val accountDeleter = AccountDeleter(repository)
+    private val accountDeleter = DeleteAccountUseCase(repository)
 
     @Test
     fun `delete should call repository deleteBy with correct accountId`() = runTest {
 
         coEvery { repository.delete(any()) } just Runs
 
-        accountDeleter.delete("1234")
+        accountDeleter("1234")
 
         coVerify(exactly = 1) { repository.delete("1234") }
 

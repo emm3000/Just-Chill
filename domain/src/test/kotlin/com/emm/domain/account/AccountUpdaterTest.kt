@@ -11,7 +11,7 @@ import org.junit.Test
 class AccountUpdaterTest {
 
     private val repository = mockk<AccountUpdateRepository>()
-    private val accountUpdater = AccountUpdater(repository)
+    private val accountUpdater = UpdateAccountUseCase(repository)
 
     @Test
     fun `update should call repository update with correct accountId and accountUpsert`() = runTest {
@@ -22,7 +22,7 @@ class AccountUpdaterTest {
             accountId = "123",
             name = "Test Account",
         )
-        accountUpdater.update("123", account)
+        accountUpdater("123", account)
 
         coVerify(exactly = 1) { repository.update("123", account) }
     }

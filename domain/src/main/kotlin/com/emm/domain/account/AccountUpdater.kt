@@ -1,8 +1,8 @@
 package com.emm.domain.account
 
-class AccountUpdater(private val repository: AccountUpdateRepository) {
+class UpdateAccountUseCase(private val repository: AccountUpdateRepository) {
 
-    suspend fun update(accountId: String, account: AccountUpsert) {
+    suspend operator fun invoke(accountId: String, account: AccountUpsert) {
         repository.update(accountId, account)
     }
 }
