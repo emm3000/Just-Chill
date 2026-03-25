@@ -17,3 +17,8 @@ local.properties
 /key
 /keystore.properties
 .kotlin
+
+# Claude Code
+CLAUDE.md
+.atl/
+docs/
