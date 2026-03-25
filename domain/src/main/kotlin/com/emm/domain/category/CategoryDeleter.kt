@@ -1,8 +1,8 @@
 package com.emm.domain.category
 
-class CategoryDeleter(private val repository: CategoryRepository) {
+class DeleteCategoryUseCase(private val repository: CategoryRepository) {
 
-    suspend fun delete(categoryId: String) {
+    suspend operator fun invoke(categoryId: String) {
         repository.delete(categoryId)
     }
 }

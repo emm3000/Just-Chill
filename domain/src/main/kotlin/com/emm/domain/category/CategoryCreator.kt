@@ -2,12 +2,12 @@ package com.emm.domain.category
 
 import com.emm.domain.shared.UniqueIdProvider
 
-class CategoryCreator(
+class CreateCategoryUseCase(
     private val repository: CategoryRepository,
     private val idProvider: UniqueIdProvider,
 ) {
 
-    suspend fun create(
+    suspend operator fun invoke(
         name: String,
         icon: String,
         color: String,

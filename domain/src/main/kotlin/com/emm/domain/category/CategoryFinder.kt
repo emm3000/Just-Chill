@@ -2,9 +2,9 @@ package com.emm.domain.category
 
 import kotlinx.coroutines.flow.firstOrNull
 
-class CategoryFinder(private val repository: CategoryRepository) {
+class FindCategoryUseCase(private val repository: CategoryRepository) {
 
-    suspend fun find(categoryId: String): Category? {
+    suspend operator fun invoke(categoryId: String): Category? {
         return repository.find(categoryId).firstOrNull()
     }
 }

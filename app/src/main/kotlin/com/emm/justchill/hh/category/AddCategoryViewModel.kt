@@ -6,13 +6,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.emm.domain.category.CategoryCreator
+import com.emm.domain.category.CreateCategoryUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class AddCategoryViewModel(
-    private val categoryCreator: CategoryCreator,
+    private val categoryCreator: CreateCategoryUseCase,
 ) : ViewModel() {
 
     var state by mutableStateOf(AddCategoryUiState())
@@ -49,7 +49,7 @@ class AddCategoryViewModel(
     }
 
     private fun saveCategory() = viewModelScope.launch {
-        categoryCreator.create(
+        categoryCreator(
             name = state.name,
             icon = state.icon.id,
             color = state.color.id,

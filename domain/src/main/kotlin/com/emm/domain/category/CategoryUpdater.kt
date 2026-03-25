@@ -1,8 +1,8 @@
 package com.emm.domain.category
 
-class CategoryUpdater(private val repository: CategoryRepository) {
+class UpdateCategoryUseCase(private val repository: CategoryRepository) {
 
-    suspend fun update(categoryId: String, categoryUpsert: CategoryUpsert) {
+    suspend operator fun invoke(categoryId: String, categoryUpsert: CategoryUpsert) {
         repository.update(categoryId, categoryUpsert)
     }
 }
