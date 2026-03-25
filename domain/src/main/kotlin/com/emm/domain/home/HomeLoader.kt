@@ -10,12 +10,12 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-class HomeLoader(
+class GetHomeDataUseCase(
     private val transactionRepository: TransactionRepository,
     private val accountRepository: AccountRepository,
 ) {
 
-    fun load(): Flow<HomeData> = combine(
+    operator fun invoke(): Flow<HomeData> = combine(
         flow = accountRepository.all(),
         flow2 = transactionRepository.fetchAllWithCategory(),
         transform = { _, transactions -> computeFinancialSummary(transactions) },
