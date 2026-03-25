@@ -10,13 +10,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.auth.Email
 import com.emm.domain.auth.Password
-import com.emm.domain.auth.UserCreator
+import com.emm.domain.auth.CreateUserUseCase
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 
-class SignUpViewModel(private val userCreator: UserCreator) : ViewModel() {
+class SignUpViewModel(private val userCreator: CreateUserUseCase) : ViewModel() {
 
     var state by mutableStateOf(SignUpUiState())
         private set
@@ -46,7 +46,7 @@ class SignUpViewModel(private val userCreator: UserCreator) : ViewModel() {
     private fun executeSignUp() = viewModelScope.launch {
         try {
             state = state.copy(isLoading = true)
-            userCreator.create(
+            userCreator(
                 email = Email(state.email),
                 password = Password(state.password),
             )

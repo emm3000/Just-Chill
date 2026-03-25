@@ -1,8 +1,8 @@
 package com.emm.domain.auth
 
-class UserCreator(private val repository: AuthRepository) {
+class CreateUserUseCase(private val repository: AuthRepository) {
 
-    suspend fun create(email: Email, password: Password) {
+    suspend operator fun invoke(email: Email, password: Password) {
         repository.register(email, password)
     }
 }

@@ -10,8 +10,8 @@ import com.emm.data.transaction.DefaultTransactionUpdateRepository
 import com.emm.data.transaction.TransactionLocalDataSource
 import com.emm.data.transaction.TransactionRemoteDataSource
 import com.emm.domain.auth.AuthRepository
-import com.emm.domain.auth.UserAuthenticator
-import com.emm.domain.auth.UserCreator
+import com.emm.domain.auth.AuthenticateUserUseCase
+import com.emm.domain.auth.CreateUserUseCase
 import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.shared.UniqueIdProvider
 import com.emm.domain.transaction.TransactionRepository
@@ -38,8 +38,8 @@ import org.koin.dsl.module
 val hhModule = module {
 
     repositoriesProviders()
-    factoryOf(::UserAuthenticator)
-    factoryOf(::UserCreator)
+    factoryOf(::AuthenticateUserUseCase)
+    factoryOf(::CreateUserUseCase)
 
     factory { DateAndTimeCombiner() }
     factory { DefaultUniqueIdProvider } bind UniqueIdProvider::class
