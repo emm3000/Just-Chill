@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AccountModel(
+data class NetworkAccount(
 
     @SerialName("account_id")
     val accountId: String,

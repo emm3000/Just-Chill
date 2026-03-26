@@ -4,9 +4,26 @@ import com.emm.data.Transactions
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
-import com.emm.domain.transaction.TransactionUpdate
 
-fun Transactions.toDomain(): Transaction = Transaction(
+// SQLDelight -> Entity (internal, stays within data source)
+fun Transactions.asEntity() = TransactionEntity(
+    transactionId = transactionId,
+    type = type,
+    amount = amount,
+    description = description,
+    date = date,
+    categoryId = categoryId,
+    accountId = accountId,
+    syncState = syncState,
+    isDeleted = isDeleted,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+)
+
+fun List<Transactions>.asEntity() = map(Transactions::asEntity)
+
+// Entity -> Domain
+fun TransactionEntity.asExternalModel() = Transaction(
     transactionId = transactionId,
     type = TransactionType.valueOf(type),
     amount = amount,
@@ -16,41 +33,49 @@ fun Transactions.toDomain(): Transaction = Transaction(
     accountId = accountId,
 )
 
-fun List<Transactions>.toDomain(): List<Transaction> = map(Transactions::toDomain)
+fun List<TransactionEntity>.asExternalModel() = map(TransactionEntity::asExternalModel)
 
-fun Transactions.toModel() = TransactionModel(
+// Domain insert -> Entity
+fun TransactionInsert.asEntity() = TransactionEntity(
+    transactionId = id,
+    type = type.name,
+    amount = amount,
+    description = description,
+    date = date,
+    categoryId = categoryId,
+    accountId = accountId,
+    syncState = "",
+    isDeleted = false,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+)
+
+// Network -> Entity
+fun NetworkTransaction.asEntity() = TransactionEntity(
+    transactionId = transactionId,
+    type = type,
+    amount = amount,
+    description = description,
+    date = date,
+    categoryId = categoryId,
+    accountId = accountId,
+    syncState = "",
+    isDeleted = deleted,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+)
+
+// Entity -> Network
+fun TransactionEntity.asNetworkModel(userId: String) = NetworkTransaction(
     transactionId = transactionId,
     type = type,
     amount = amount,
     description = description,
     date = date,
     updatedAt = updatedAt,
+    createdAt = createdAt,
     deleted = isDeleted,
     categoryId = categoryId,
-    createdAt = createdAt,
     accountId = accountId,
-    userId = "",
-)
-
-fun Transactions.toTransactionUpdate(): TransactionUpdate {
-    return TransactionUpdate(
-        type = TransactionType.valueOf(type),
-        amount = amount,
-        description = description,
-        accountId = accountId,
-        categoryId = categoryId,
-        date = date,
-    )
-}
-
-fun TransactionModel.toTransactionInsert() = TransactionInsert(
-    id = transactionId,
-    type = TransactionType.valueOf(type),
-    amount = amount,
-    description = description,
-    date = date,
-    accountId = accountId,
-    updatedAt = updatedAt,
-    createdAt = createdAt,
-    categoryId = categoryId,
+    userId = userId,
 )

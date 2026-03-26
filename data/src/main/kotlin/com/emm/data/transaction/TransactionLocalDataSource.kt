@@ -2,7 +2,6 @@ package com.emm.data.transaction
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import com.emm.data.Transactions
 import com.emm.data.TransactionsQueries
 import com.emm.domain.shared.SyncState
 import com.emm.domain.shared.currentTimeInMillis
@@ -39,7 +38,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             .all()
             .asFlow()
             .mapToList(Dispatchers.IO)
-            .map(List<Transactions>::toDomain)
+            .map { list -> list.asEntity().asExternalModel() }
     }
 
     fun completeTransactions(): Flow<List<TransactionWithCategory>> {
@@ -58,10 +57,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
     }
 
     fun find(transactionId: String): Transaction? {
-        val firstOrNull: Transactions? = tq
-            .find(transactionId)
-            .executeAsOneOrNull()
-        return firstOrNull?.toDomain()
+        return tq.find(transactionId).executeAsOneOrNull()?.asEntity()?.asExternalModel()
     }
 
     suspend fun update(
@@ -85,7 +81,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
         tq.markAsSync(SyncState.Synced.name, transactionId)
     }
 
-    suspend fun unSynced(): List<Transactions> = withContext(Dispatchers.IO) {
-        tq.selectPendingSync().executeAsList()
+    suspend fun unSynced(): List<TransactionEntity> = withContext(Dispatchers.IO) {
+        tq.selectPendingSync().executeAsList().asEntity()
     }
 }

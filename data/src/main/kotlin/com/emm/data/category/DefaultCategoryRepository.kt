@@ -1,6 +1,5 @@
 package com.emm.data.category
 
-import com.emm.data.Categories
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryUpsert
@@ -30,26 +29,42 @@ class DefaultCategoryRepository(
     override suspend fun count(): Long = localDataSource.countDefaults()
 
     override suspend fun sync() {
-        val unSynced: List<Categories> = localDataSource.unSynced()
+        val unSynced: List<CategoryEntity> = localDataSource.unSynced()
         updatedRemoteCategories(unSynced)
 
-        val syncedCategories: List<CategoryUpsert> = unSynced.map(Categories::toCategoryUpsert)
+        val syncedCategoryUpserts: List<CategoryUpsert> = unSynced.map { entity ->
+            CategoryUpsert(
+                categoryId = entity.categoryId,
+                name = entity.name,
+                icon = entity.icon,
+                color = entity.color,
+                categoryType = enumValueOf(entity.categoryType),
+            )
+        }
 
-        unSynced.zip(syncedCategories) { category, categoryUpsert ->
-            localDataSource.update(category.categoryId, categoryUpsert)
+        unSynced.zip(syncedCategoryUpserts) { entity, categoryUpsert ->
+            localDataSource.update(entity.categoryId, categoryUpsert)
         }
     }
 
     override suspend fun pull() {
-        val categoryModelsFromRemote: List<CategoryModel> = remoteDataSource.all()
-        val categoryUpsertList: List<CategoryUpsert> = categoryModelsFromRemote.map(CategoryModel::toCategoryUpsert)
+        val networkCategories: List<NetworkCategory> = remoteDataSource.all()
+        val categoryUpsertList: List<CategoryUpsert> = networkCategories.map { network ->
+            CategoryUpsert(
+                categoryId = network.categoryId,
+                name = network.name,
+                icon = "icon",
+                color = "color",
+                categoryType = enumValueOf("Income"),
+            )
+        }
         categoryUpsertList.forEach {
             localDataSource.create(it)
         }
     }
 
-    private suspend fun updatedRemoteCategories(unSynced: List<Categories>) {
-        val categoryModels = unSynced.map(Categories::toCategoryModel)
-        remoteDataSource.upsert(categoryModels)
+    private suspend fun updatedRemoteCategories(unSynced: List<CategoryEntity>) {
+        val networkCategories = unSynced.map { it.asNetworkModel(userId = "") }
+        remoteDataSource.upsert(networkCategories)
     }
 }

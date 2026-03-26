@@ -14,19 +14,17 @@ class AccountRemoteDataSource(
 
     private val table: PostgrestQueryBuilder = client.from("accounts")
 
-    suspend fun upsert(accounts: List<AccountModel>) = withContext(Dispatchers.IO) {
-        val accountModels = accounts.map(::withUserId)
-        table.upsert(accountModels)
+    suspend fun upsert(accounts: List<NetworkAccount>) = withContext(Dispatchers.IO) {
+        val networkAccounts = accounts.map { it.copy(userId = userId) }
+        table.upsert(networkAccounts)
     }
 
-    private fun withUserId(accountModel: AccountModel) = accountModel.copy(userId = userId)
-
-    suspend fun all(): List<AccountModel> = withContext(Dispatchers.IO) {
+    suspend fun all(): List<NetworkAccount> = withContext(Dispatchers.IO) {
         table.select {
             filter {
                 eq("user_id", userId)
             }
-        }.decodeList<AccountModel>()
+        }.decodeList<NetworkAccount>()
     }
 
     suspend fun delete(accountId: String) {

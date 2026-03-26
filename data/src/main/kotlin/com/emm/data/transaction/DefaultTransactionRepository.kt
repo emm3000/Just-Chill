@@ -1,6 +1,5 @@
 package com.emm.data.transaction
 
-import com.emm.data.Transactions
 import com.emm.data.account.AccountRemoteDataSource
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
@@ -32,9 +31,23 @@ class DefaultTransactionRepository(
 
     override suspend fun pull() {
         val accountIds: List<String> = accountRemoteDataSource.all().map { it.accountId }
-        val transactionModels: List<TransactionModel> = remoteDataSource.all(accountIds)
-        val transactionUpdates: List<TransactionInsert> = transactionModels.map(TransactionModel::toTransactionInsert)
-        transactionUpdates.forEach { transactionInsert ->
+        val networkTransactions: List<NetworkTransaction> = remoteDataSource.all(accountIds)
+        val transactionInserts: List<TransactionInsert> = networkTransactions.map { network ->
+            network.asEntity().let { entity ->
+                TransactionInsert(
+                    id = entity.transactionId,
+                    type = enumValueOf(entity.type),
+                    amount = entity.amount,
+                    description = entity.description,
+                    date = entity.date,
+                    accountId = entity.accountId,
+                    updatedAt = entity.updatedAt,
+                    createdAt = entity.createdAt,
+                    categoryId = entity.categoryId,
+                )
+            }
+        }
+        transactionInserts.forEach { transactionInsert ->
             localDataSource.create(transactionInsert)
         }
     }
@@ -44,11 +57,12 @@ class DefaultTransactionRepository(
     }
 
     override suspend fun sync() {
-        val deletionsAndUpdates: Pair<List<Transactions>, List<Transactions>> = localDataSource
-            .unSynced()
-            .partition(Transactions::isDeleted)
+        val unSynced: List<TransactionEntity> = localDataSource.unSynced()
 
-        val deletedTransactionIds: List<String> = deletionsAndUpdates.first.map(Transactions::transactionId)
+        val deletionsAndUpdates: Pair<List<TransactionEntity>, List<TransactionEntity>> =
+            unSynced.partition { it.isDeleted }
+
+        val deletedTransactionIds: List<String> = deletionsAndUpdates.first.map { it.transactionId }
         remoteDataSource.deleteMultipleRows(deletedTransactionIds)
         deletedTransactionIds.forEach { localDataSource.hardDelete(it) }
 
@@ -56,12 +70,12 @@ class DefaultTransactionRepository(
         updateLocal(deletionsAndUpdates.second)
     }
 
-    private suspend fun updateLocal(unSyncedTransactions: List<Transactions>) {
+    private suspend fun updateLocal(unSyncedTransactions: List<TransactionEntity>) {
         unSyncedTransactions.forEach { localDataSource.markAsSynced(it.transactionId) }
     }
 
-    private suspend fun updateRemote(unSyncedTransactions: List<Transactions>) {
-        val transactionModels: List<TransactionModel> = unSyncedTransactions.map(Transactions::toModel)
-        remoteDataSource.upsert(transactionModels)
+    private suspend fun updateRemote(unSyncedTransactions: List<TransactionEntity>) {
+        val networkTransactions: List<NetworkTransaction> = unSyncedTransactions.map { it.asNetworkModel(userId = "") }
+        remoteDataSource.upsert(networkTransactions)
     }
 }

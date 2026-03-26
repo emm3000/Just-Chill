@@ -2,7 +2,6 @@ package com.emm.data.account
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import com.emm.data.Accounts
 import com.emm.data.AccountsQueries
 import com.emm.data.EmmDatabaseData
 import com.emm.domain.account.Account
@@ -23,25 +22,19 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         return aq.all()
             .asFlow()
             .mapToList(Dispatchers.IO)
-            .map(List<Accounts>::toDomain)
+            .map { list -> list.asEntity().asExternalModel() }
     }
 
     suspend fun find(accountId: String): Account? = withContext(Dispatchers.IO) {
-        val accountResult: Accounts? = aq.find(accountId).executeAsOneOrNull()
-        return@withContext accountResult?.let {
-            Account(
-                accountId = it.accountId,
-                name = it.name,
-            )
-        }
+        aq.find(accountId).executeAsOneOrNull()?.asEntity()?.asExternalModel()
     }
 
     fun default(): Flow<Account?> = aq
         .all()
         .asFlow()
         .mapToList(Dispatchers.IO)
-        .map {
-            it.firstOrNull()?.let(Accounts::toDomain)
+        .map { list ->
+            list.firstOrNull()?.asEntity()?.asExternalModel()
         }
 
     suspend fun create(account: AccountUpsert) = withContext(Dispatchers.IO) {
@@ -76,7 +69,7 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         emmDatabase.transactionsQueries.getAccountBalance(accountId).executeAsOne()
     }
 
-    suspend fun unSynced(): List<Accounts> = withContext(Dispatchers.IO) {
-        aq.selectPendingSync().executeAsList()
+    suspend fun unSynced(): List<AccountEntity> = withContext(Dispatchers.IO) {
+        aq.selectPendingSync().executeAsList().asEntity()
     }
 }

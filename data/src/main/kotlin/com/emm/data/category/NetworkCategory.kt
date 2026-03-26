@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CategoryModel(
+data class NetworkCategory(
 
     @SerialName("category_id")
     val categoryId: String,

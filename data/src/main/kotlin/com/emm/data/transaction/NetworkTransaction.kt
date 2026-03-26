@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TransactionModel(
+data class NetworkTransaction(
 
     @SerialName("transaction_id")
     val transactionId: String,

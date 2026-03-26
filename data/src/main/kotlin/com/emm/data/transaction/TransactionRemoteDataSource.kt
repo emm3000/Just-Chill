@@ -14,17 +14,17 @@ class TransactionRemoteDataSource(
 
     private val table: PostgrestQueryBuilder = client.from("transactions")
 
-    suspend fun upsert(transactions: List<TransactionModel>) = withContext(Dispatchers.IO) {
-        val transactionModels: List<TransactionModel> = transactions.map { it.copy(userId = userIdProvider.userId) }
-        table.upsert(transactionModels)
+    suspend fun upsert(transactions: List<NetworkTransaction>) = withContext(Dispatchers.IO) {
+        val networkTransactions: List<NetworkTransaction> = transactions.map { it.copy(userId = userIdProvider.userId) }
+        table.upsert(networkTransactions)
     }
 
-    suspend fun all(accounts: List<String>): List<TransactionModel> = withContext(Dispatchers.IO) {
+    suspend fun all(accounts: List<String>): List<NetworkTransaction> = withContext(Dispatchers.IO) {
         table.select {
             filter {
                 isIn("account_id", accounts)
             }
-        }.decodeList<TransactionModel>()
+        }.decodeList<NetworkTransaction>()
     }
 
     suspend fun deleteMultipleRows(transactionIds: List<String>) = withContext(Dispatchers.IO) {

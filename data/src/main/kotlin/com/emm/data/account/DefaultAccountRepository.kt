@@ -1,6 +1,5 @@
 package com.emm.data.account
 
-import com.emm.data.Accounts
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountUpdateRepository
@@ -37,25 +36,32 @@ class DefaultAccountRepository(
     }
 
     override suspend fun pull() {
-        val all: List<AccountModel> = remoteDataSource.all()
-        val accountUpsertList: List<AccountUpsert> = all.map(AccountModel::toAccountUpsert)
+        val all: List<NetworkAccount> = remoteDataSource.all()
+        val accountUpsertList: List<AccountUpsert> = all.map { networkAccount ->
+            AccountUpsert(
+                accountId = networkAccount.accountId,
+                name = networkAccount.name,
+                updatedAt = networkAccount.updatedAt,
+                createdAt = networkAccount.createdAt,
+            )
+        }
         accountUpsertList.forEach {
             localDataSource.create(it)
         }
     }
 
     override suspend fun sync() {
-        val unSyncedAccounts: List<Accounts> = localDataSource.unSynced()
+        val unSyncedAccounts: List<AccountEntity> = localDataSource.unSynced()
         updateRemote(unSyncedAccounts)
         updateLocal(unSyncedAccounts)
     }
 
-    private suspend fun updateLocal(unSyncedAccounts: List<Accounts>) {
+    private suspend fun updateLocal(unSyncedAccounts: List<AccountEntity>) {
         unSyncedAccounts.forEach { localDataSource.markAsSynced(it.accountId) }
     }
 
-    private suspend fun updateRemote(unSyncedAccounts: List<Accounts>) {
-        val accountModels = unSyncedAccounts.map(Accounts::toAccountModel)
-        remoteDataSource.upsert(accountModels)
+    private suspend fun updateRemote(unSyncedAccounts: List<AccountEntity>) {
+        val networkAccounts = unSyncedAccounts.map { it.asNetworkModel(userId = "") }
+        remoteDataSource.upsert(networkAccounts)
     }
 }

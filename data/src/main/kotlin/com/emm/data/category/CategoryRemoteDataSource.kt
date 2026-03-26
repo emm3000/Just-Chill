@@ -8,8 +8,8 @@ class CategoryRemoteDataSource(
     userIdProvider: UserIdProvider,
 ) : UserIdProvider by userIdProvider {
 
-    suspend fun upsert(categories: List<CategoryModel>) = withContext(Dispatchers.IO) {
+    suspend fun upsert(categories: List<NetworkCategory>) = withContext(Dispatchers.IO) {
     }
 
-    suspend fun all(): List<CategoryModel> = listOf()
+    suspend fun all(): List<NetworkCategory> = listOf()
 }

@@ -3,7 +3,6 @@ package com.emm.data.category
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import com.emm.data.Categories
 import com.emm.data.CategoriesQueries
 import com.emm.data.EmmDatabaseData
 import com.emm.domain.category.Category
@@ -23,13 +22,13 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
     fun all(): Flow<List<Category>> = cq.all()
         .asFlow()
         .mapToList(Dispatchers.IO)
-        .map(List<Categories>::toDomain)
+        .map { list -> list.asEntity().asExternalModel() }
 
     fun find(categoryId: String): Flow<Category?> = cq.find(categoryId)
         .asFlow()
         .mapToOneOrNull(Dispatchers.IO)
         .map { category ->
-            category?.let(Categories::toDomain)
+            category?.asEntity()?.asExternalModel()
         }
 
     suspend fun countDefaults(): Long = withContext(Dispatchers.IO) {
@@ -64,7 +63,7 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         cq.softDelete(currentTimeInMillis(), categoryId)
     }
 
-    suspend fun unSynced(): List<Categories> = withContext(Dispatchers.IO) {
-        cq.selectPendingSync().executeAsList()
+    suspend fun unSynced(): List<CategoryEntity> = withContext(Dispatchers.IO) {
+        cq.selectPendingSync().executeAsList().asEntity()
     }
 }
