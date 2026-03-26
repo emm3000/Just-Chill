@@ -11,7 +11,7 @@ import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryType
-import com.emm.domain.transaction.TransactionCreator
+import com.emm.domain.transaction.CreateTransactionUseCase
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.formatInputToDouble
@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class AddTransactionViewModel(
-    private val transactionCreator: TransactionCreator,
+    private val transactionCreator: CreateTransactionUseCase,
     accountRepository: AccountRepository,
     categoryRepository: CategoryRepository,
 ) : ViewModel() {
@@ -109,7 +109,7 @@ class AddTransactionViewModel(
 
     private fun addTransaction() = viewModelScope.launch {
         val transactionInsert: TransactionInsert = createTransactionInsert()
-        transactionCreator.create(transactionInsert)
+        transactionCreator(transactionInsert)
     }
 
     private fun createTransactionInsert() = TransactionInsert(

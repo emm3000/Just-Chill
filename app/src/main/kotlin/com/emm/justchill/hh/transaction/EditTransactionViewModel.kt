@@ -8,13 +8,13 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.Account
-import com.emm.domain.account.AccountFinder
+import com.emm.domain.account.FindAccountUseCase
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.transaction.Transaction
-import com.emm.domain.transaction.TransactionDeleter
-import com.emm.domain.transaction.TransactionFinder
+import com.emm.domain.transaction.DeleteTransactionUseCase
+import com.emm.domain.transaction.FindTransactionUseCase
 import com.emm.domain.transaction.TransactionUpdate
-import com.emm.domain.transaction.TransactionUpdater
+import com.emm.domain.transaction.UpdateTransactionUseCase
 import com.emm.justchill.core.formatInputToDouble
 import com.emm.justchill.hh.transaction.DateUtils.millisToReadableFormat
 import kotlinx.coroutines.flow.combine
@@ -25,10 +25,10 @@ import kotlinx.coroutines.launch
 class EditTransactionViewModel(
     private val transactionId: String,
     private val accountRepository: AccountRepository,
-    private val transactionUpdater: TransactionUpdater,
-    private val transactionFinder: TransactionFinder,
-    private val transactionDeleter: TransactionDeleter,
-    private val accountFinder: AccountFinder,
+    private val transactionUpdater: UpdateTransactionUseCase,
+    private val transactionFinder: FindTransactionUseCase,
+    private val transactionDeleter: DeleteTransactionUseCase,
+    private val accountFinder: FindAccountUseCase,
 ) : ViewModel() {
 
     var state by mutableStateOf(AddTransactionUiState())
@@ -71,8 +71,8 @@ class EditTransactionViewModel(
 
     private fun loadCurrentTransaction() = viewModelScope.launch {
         val accounts: List<Account> = accountRepository.all().firstOrNull() ?: emptyList()
-        oldTransaction = transactionFinder.find(transactionId) ?: return@launch
-        oldAccount = accountFinder.find(oldTransaction.accountId) ?: return@launch
+        oldTransaction = transactionFinder(transactionId) ?: return@launch
+        oldAccount = accountFinder(oldTransaction.accountId) ?: return@launch
         state = configInitialState(oldTransaction, oldAccount, accounts)
         dateInLong = oldTransaction.date
     }
@@ -92,7 +92,7 @@ class EditTransactionViewModel(
 
     private fun updateTransaction() = viewModelScope.launch {
         val transactionUpdate: TransactionUpdate = createTransactionUpdate()
-        transactionUpdater.update(oldTransaction, transactionUpdate)
+        transactionUpdater(oldTransaction, transactionUpdate)
     }
 
     private fun createTransactionUpdate() = TransactionUpdate(
@@ -105,7 +105,7 @@ class EditTransactionViewModel(
     )
 
     private fun deleteTransaction() = viewModelScope.launch {
-        transactionDeleter.delete(oldTransaction.transactionId)
+        transactionDeleter(oldTransaction.transactionId)
     }
 
     private fun updateCurrentDate(millis: Long?) = millis?.let {

@@ -2,9 +2,9 @@ package com.emm.domain.transaction
 
 import kotlinx.coroutines.flow.Flow
 
-class TransactionLoader(private val repository: TransactionRepository) {
+class GetTransactionsUseCase(private val repository: TransactionRepository) {
 
-    fun load(): Flow<List<Transaction>> {
+    operator fun invoke(): Flow<List<Transaction>> {
         return repository.all()
     }
 }

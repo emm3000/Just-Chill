@@ -1,10 +1,10 @@
 package com.emm.domain.transaction
 
-class TransactionDeleter(
+class DeleteTransactionUseCase(
     private val updateRepository: TransactionRepository,
 ) {
 
-    suspend fun delete(transactionId: String) {
+    suspend operator fun invoke(transactionId: String) {
         updateRepository.delete(transactionId)
     }
 }

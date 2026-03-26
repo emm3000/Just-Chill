@@ -1,8 +1,8 @@
 package com.emm.domain.transaction
 
-class TransactionFinder(private val repository: TransactionRepository) {
+class FindTransactionUseCase(private val repository: TransactionRepository) {
 
-    fun find(transactionId: String): Transaction? {
+    operator fun invoke(transactionId: String): Transaction? {
         return repository.find(transactionId)
     }
 }

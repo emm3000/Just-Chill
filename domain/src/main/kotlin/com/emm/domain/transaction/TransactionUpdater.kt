@@ -2,12 +2,12 @@ package com.emm.domain.transaction
 
 import com.emm.domain.shared.DateAndTimeCombiner
 
-class TransactionUpdater(
+class UpdateTransactionUseCase(
     private val repository: TransactionUpdateRepository,
     private val dateAndTimeCombiner: DateAndTimeCombiner,
 ) {
 
-    suspend fun update(
+    suspend operator fun invoke(
         oldTransaction: Transaction,
         transactionUpdate: TransactionUpdate,
     ) {
