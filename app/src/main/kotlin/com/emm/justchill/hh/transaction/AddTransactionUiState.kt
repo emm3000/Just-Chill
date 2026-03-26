@@ -15,4 +15,5 @@ data class AddTransactionUiState(
     val accountSelected: Account? = null,
     val categories: List<SelectableCategory> = emptyList(),
     val categorySelected: SelectableCategory? = null,
+    val userMessage: String? = null,
 )

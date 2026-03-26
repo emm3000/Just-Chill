@@ -8,6 +8,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkerParameters
 import com.emm.domain.account.AccountRepository
+import com.emm.domain.shared.error.DomainException
 import com.emm.domain.transaction.TransactionRepository
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +31,9 @@ class SyncWorker(
             transactionsSynchronizer.sync()
 
             Result.success()
+        } catch (e: DomainException) {
+            FirebaseCrashlytics.getInstance().recordException(e)
+            Result.failure()
         } catch (e: Exception) {
             FirebaseCrashlytics.getInstance().recordException(e)
             Result.failure()

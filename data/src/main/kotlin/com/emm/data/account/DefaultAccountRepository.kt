@@ -1,5 +1,8 @@
 package com.emm.data.account
 
+import com.emm.data.shared.catchAsDomainException
+import com.emm.data.shared.safeApiCall
+import com.emm.data.shared.safeDbCall
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountUpdateRepository
@@ -12,30 +15,33 @@ class DefaultAccountRepository(
 ) : AccountRepository, AccountUpdateRepository {
 
     override fun all(): Flow<List<Account>> {
-        return localDataSource.all()
+        return localDataSource.all().catchAsDomainException()
     }
 
-    override suspend fun find(accountId: String): Account? {
-        return localDataSource.find(accountId)
+    override suspend fun find(accountId: String): Account? = safeDbCall {
+        localDataSource.find(accountId)
     }
 
     override fun default(): Flow<Account?> {
-        return localDataSource.default()
+        return localDataSource.default().catchAsDomainException()
     }
 
-    override suspend fun create(account: AccountUpsert) {
+    override suspend fun create(account: AccountUpsert): Unit = safeDbCall {
         localDataSource.create(account)
+        Unit
     }
 
-    override suspend fun delete(accountId: String) {
+    override suspend fun delete(accountId: String): Unit = safeDbCall {
         localDataSource.softDelete(accountId)
+        Unit
     }
 
-    override suspend fun update(accountId: String, account: AccountUpsert) {
+    override suspend fun update(accountId: String, account: AccountUpsert): Unit = safeDbCall {
         localDataSource.update(accountId, account)
+        Unit
     }
 
-    override suspend fun pull() {
+    override suspend fun pull() = safeApiCall {
         val all: List<NetworkAccount> = remoteDataSource.all()
         val accountUpsertList: List<AccountUpsert> = all.map { networkAccount ->
             AccountUpsert(
@@ -50,7 +56,7 @@ class DefaultAccountRepository(
         }
     }
 
-    override suspend fun sync() {
+    override suspend fun sync() = safeApiCall {
         val unSyncedAccounts: List<AccountEntity> = localDataSource.unSynced()
         updateRemote(unSyncedAccounts)
         updateLocal(unSyncedAccounts)

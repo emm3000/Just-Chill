@@ -9,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import com.emm.domain.auth.Email
 import com.emm.domain.auth.Password
 import com.emm.domain.auth.AuthenticateUserUseCase
+import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.error.toUserMessage
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
@@ -48,12 +50,11 @@ class LoginViewModel(private val userAuthenticator: AuthenticateUserUseCase) : V
         val password = Password(state.password)
         userAuthenticator(email, password)
         state = state.copy(successLogin = true)
-    } catch (e: Throwable) {
+    } catch (e: DomainException) {
         FirebaseCrashlytics.getInstance().recordException(e)
-        errorState(e)
-    }
-
-    private fun errorState(e: Throwable) {
-        state = state.copy(isLoading = false, errorMsg = e.message)
+        state = state.copy(isLoading = false, errorMsg = e.toUserMessage())
+    } catch (e: Exception) {
+        FirebaseCrashlytics.getInstance().recordException(e)
+        state = state.copy(isLoading = false, errorMsg = DomainException.Unknown(e).toUserMessage())
     }
 }

@@ -1,5 +1,8 @@
 package com.emm.data.category
 
+import com.emm.data.shared.catchAsDomainException
+import com.emm.data.shared.safeApiCall
+import com.emm.data.shared.safeDbCall
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryUpsert
@@ -10,25 +13,30 @@ class DefaultCategoryRepository(
     private val remoteDataSource: CategoryRemoteDataSource,
 ) : CategoryRepository {
 
-    override fun all(): Flow<List<Category>> = localDataSource.all()
+    override fun all(): Flow<List<Category>> = localDataSource.all().catchAsDomainException()
 
-    override fun find(categoryId: String): Flow<Category?> = localDataSource.find(categoryId)
+    override fun find(categoryId: String): Flow<Category?> = localDataSource.find(categoryId).catchAsDomainException()
 
-    override suspend fun create(categoryUpsert: CategoryUpsert) {
+    override suspend fun create(categoryUpsert: CategoryUpsert): Unit = safeDbCall {
         localDataSource.create(categoryUpsert)
+        Unit
     }
 
-    override suspend fun update(categoryId: String, categoryUpsert: CategoryUpsert) {
+    override suspend fun update(categoryId: String, categoryUpsert: CategoryUpsert): Unit = safeDbCall {
         localDataSource.update(categoryId, categoryUpsert)
+        Unit
     }
 
-    override suspend fun delete(categoryId: String) {
+    override suspend fun delete(categoryId: String): Unit = safeDbCall {
         localDataSource.softDelete(categoryId)
+        Unit
     }
 
-    override suspend fun count(): Long = localDataSource.countDefaults()
+    override suspend fun count(): Long = safeDbCall {
+        localDataSource.countDefaults()
+    }
 
-    override suspend fun sync() {
+    override suspend fun sync(): Unit = safeApiCall {
         val unSynced: List<CategoryEntity> = localDataSource.unSynced()
         updatedRemoteCategories(unSynced)
 
@@ -45,9 +53,10 @@ class DefaultCategoryRepository(
         unSynced.zip(syncedCategoryUpserts) { entity, categoryUpsert ->
             localDataSource.update(entity.categoryId, categoryUpsert)
         }
+        Unit
     }
 
-    override suspend fun pull() {
+    override suspend fun pull() = safeApiCall {
         val networkCategories: List<NetworkCategory> = remoteDataSource.all()
         val categoryUpsertList: List<CategoryUpsert> = networkCategories.map { network ->
             CategoryUpsert(

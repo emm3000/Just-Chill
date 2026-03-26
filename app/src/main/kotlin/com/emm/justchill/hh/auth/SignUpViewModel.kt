@@ -11,6 +11,8 @@ import androidx.lifecycle.viewModelScope
 import com.emm.domain.auth.Email
 import com.emm.domain.auth.Password
 import com.emm.domain.auth.CreateUserUseCase
+import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.error.toUserMessage
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
@@ -51,8 +53,10 @@ class SignUpViewModel(private val userCreator: CreateUserUseCase) : ViewModel() 
                 password = Password(state.password),
             )
             state = state.copy(success = true)
+        } catch (e: DomainException) {
+            state = state.copy(error = e.toUserMessage(), isLoading = false)
         } catch (e: Exception) {
-            state = state.copy(error = e.stackTraceToString(), isLoading = false)
+            state = state.copy(error = DomainException.Unknown(e).toUserMessage(), isLoading = false)
         }
     }
 

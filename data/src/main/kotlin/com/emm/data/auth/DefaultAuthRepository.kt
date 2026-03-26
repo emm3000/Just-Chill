@@ -1,5 +1,7 @@
 package com.emm.data.auth
 
+import com.emm.data.shared.catchAsDomainException
+import com.emm.data.shared.safeApiCall
 import com.emm.domain.auth.AuthRepository
 import com.emm.domain.auth.Email
 import com.emm.domain.auth.Password
@@ -24,23 +26,30 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
                     else -> SessionStatus.NotAuthenticated
                 }
             }.flowOn(Dispatchers.IO)
+            .catchAsDomainException()
 
-    override suspend fun login(email: Email, password: Password) = withContext(Dispatchers.IO) {
-        client.auth.signInWith(io.github.jan.supabase.auth.providers.builtin.Email) {
-            this.email = email.value
-            this.password = password.value
+    override suspend fun login(email: Email, password: Password) = safeApiCall {
+        withContext(Dispatchers.IO) {
+            client.auth.signInWith(io.github.jan.supabase.auth.providers.builtin.Email) {
+                this.email = email.value
+                this.password = password.value
+            }
         }
     }
 
-    override suspend fun register(email: Email, password: Password) = withContext(Dispatchers.IO) {
-        client.auth.signUpWith(io.github.jan.supabase.auth.providers.builtin.Email) {
-            this.email = email.value
-            this.password = password.value
+    override suspend fun register(email: Email, password: Password) = safeApiCall {
+        withContext(Dispatchers.IO) {
+            client.auth.signUpWith(io.github.jan.supabase.auth.providers.builtin.Email) {
+                this.email = email.value
+                this.password = password.value
+            }
+            Unit
         }
-        Unit
     }
 
-    override suspend fun logout() = withContext(Dispatchers.IO) {
-        client.auth.signOut()
+    override suspend fun logout() = safeApiCall {
+        withContext(Dispatchers.IO) {
+            client.auth.signOut()
+        }
     }
 }

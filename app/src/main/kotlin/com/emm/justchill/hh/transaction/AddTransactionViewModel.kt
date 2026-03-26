@@ -14,6 +14,8 @@ import com.emm.domain.category.CategoryType
 import com.emm.domain.transaction.CreateTransactionUseCase
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
+import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.formatInputToDouble
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.findById
@@ -108,8 +110,14 @@ class AddTransactionViewModel(
     }
 
     private fun addTransaction() = viewModelScope.launch {
-        val transactionInsert: TransactionInsert = createTransactionInsert()
-        transactionCreator(transactionInsert)
+        try {
+            val transactionInsert: TransactionInsert = createTransactionInsert()
+            transactionCreator(transactionInsert)
+        } catch (e: DomainException) {
+            state = state.copy(userMessage = e.toUserMessage())
+        } catch (e: Exception) {
+            state = state.copy(userMessage = DomainException.Unknown(e).toUserMessage())
+        }
     }
 
     private fun createTransactionInsert() = TransactionInsert(

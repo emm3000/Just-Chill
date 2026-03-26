@@ -7,6 +7,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.CreateAccountUseCase
+import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.error.toUserMessage
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -32,6 +34,12 @@ class AddAccountViewModel(private val accountCreator: CreateAccountUseCase) : Vi
     }
 
     private fun save() = viewModelScope.launch {
-        accountCreator(name = state.name)
+        try {
+            accountCreator(name = state.name)
+        } catch (e: DomainException) {
+            state = state.copy(userMessage = e.toUserMessage())
+        } catch (e: Exception) {
+            state = state.copy(userMessage = DomainException.Unknown(e).toUserMessage())
+        }
     }
 }
