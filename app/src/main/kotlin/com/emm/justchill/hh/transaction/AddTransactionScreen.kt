@@ -25,9 +25,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -38,6 +35,7 @@ import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -53,21 +51,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
-import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.account.Account
 import com.emm.domain.category.CategoryType
@@ -83,8 +75,6 @@ import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.allColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
-import java.text.DecimalFormat
 
 @Composable
 fun AddTransactionScreen(
@@ -324,128 +314,6 @@ private fun ScreenTopBar(
 }
 
 @Composable
-private fun TypeToggle(
-    selected: TransactionType,
-    onSelect: (TransactionType) -> Unit,
-) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(spacing.s6),
-    ) {
-        TypeOption(
-            label = "INGRESO",
-            isSelected = selected == TransactionType.Income,
-            onClick = { onSelect(TransactionType.Income) },
-            colors = colors,
-            type = type,
-        )
-        TypeOption(
-            label = "GASTO",
-            isSelected = selected == TransactionType.Spend,
-            onClick = { onSelect(TransactionType.Spend) },
-            colors = colors,
-            type = type,
-        )
-    }
-}
-
-@Composable
-private fun TypeOption(
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    colors: com.emm.justchill.core.theme.EmmColors,
-    type: com.emm.justchill.core.theme.EmmType,
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val underlineColor = if (isSelected) colors.accentFocus else colors.border
-    val labelColor = if (isSelected) colors.textPrimary else colors.textTertiary
-
-    Box(
-        modifier = Modifier
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-            )
-            .padding(vertical = LocalEmmSpacing.current.s2)
-            .drawBehind {
-                val stroke = if (isSelected) 2f else 1f
-                drawLine(
-                    color = underlineColor,
-                    start = Offset(0f, size.height),
-                    end = Offset(size.width, size.height),
-                    strokeWidth = stroke,
-                )
-            }
-            .padding(bottom = LocalEmmSpacing.current.s2),
-    ) {
-        Text(
-            text = label,
-            style = type.labelL,
-            color = labelColor,
-        )
-    }
-}
-
-@Composable
-private fun AmountHeroInput(
-    value: TextFieldValue,
-    onValueChange: (TextFieldValue) -> Unit,
-    type: TransactionType,
-    focusRequester: FocusRequester,
-    onNext: () -> Unit,
-) {
-    val colors = LocalEmmColors.current
-    val emmType = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
-
-    val amount = value.text.replace(",", "").toBigDecimalOrNull() ?: BigDecimal.ZERO
-    val isZero = amount == BigDecimal("0.00")
-    val sign = if (type == TransactionType.Income) "+" else "−"
-    val numberColor = if (isZero) colors.textTertiary else colors.textPrimary
-    val prefixColor = if (isZero) colors.textTertiary else colors.textSecondary
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(spacing.s2),
-    ) {
-        Text(
-            text = "MONTO",
-            style = emmType.labelM,
-            color = colors.textTertiary,
-        )
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(
-                text = "${sign}S/",
-                style = emmType.amountL,
-                color = prefixColor,
-                modifier = Modifier.padding(end = spacing.s2, bottom = 4.dp),
-            )
-            BasicTextField(
-                modifier = Modifier
-                    .weight(1f)
-                    .focusRequester(focusRequester),
-                value = value,
-                onValueChange = { newValue -> onValueChange(formatInputToAmount(newValue)) },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Next,
-                ),
-                keyboardActions = KeyboardActions(onNext = { onNext() }),
-                textStyle = emmType.amountHero.copy(color = numberColor),
-                cursorBrush = SolidColor(colors.accentFocus),
-                singleLine = true,
-            )
-        }
-    }
-}
-
-@Composable
 private fun SectionLabel(text: String) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -454,47 +322,6 @@ private fun SectionLabel(text: String) {
         style = type.labelM,
         color = colors.textTertiary,
     )
-}
-
-@Composable
-private fun ClickableRow(
-    label: String,
-    value: String,
-    onClick: () -> Unit,
-    emphasized: Boolean = true,
-) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
-
-    val interactionSource = remember { MutableInteractionSource() }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-            )
-            .padding(vertical = spacing.s3)
-            .drawBehind {
-                drawLine(
-                    color = colors.border,
-                    start = Offset(0f, size.height),
-                    end = Offset(size.width, size.height),
-                    strokeWidth = 1f,
-                )
-            },
-    ) {
-        Text(text = label, style = type.labelM, color = colors.textTertiary)
-        Spacer(Modifier.height(spacing.s1))
-        Text(
-            text = value,
-            style = type.bodyL,
-            color = if (emphasized) colors.textPrimary else colors.textTertiary,
-        )
-    }
 }
 
 @Composable
@@ -713,16 +540,6 @@ private fun AccountSelectorContent(
     }
 }
 
-/**
- * Filters digits and reformats with thousand separators + two decimals.
- * Shared with EmmAmountChill but inlined here to keep this screen self-contained.
- */
-private fun formatInputToAmount(input: TextFieldValue): TextFieldValue {
-    val filteredText: String = input.text.filter { it.isDigit() }
-    val amount: Long = if (filteredText.isEmpty()) 0 else filteredText.toLong()
-    val formatted = DecimalFormat("#,##0.00").format(amount / 100.0)
-    return input.copy(text = formatted, selection = TextRange(formatted.length))
-}
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 900)
 @Composable
