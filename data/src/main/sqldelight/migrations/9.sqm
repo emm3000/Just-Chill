@@ -1,3 +1,0 @@
--- Migration 9: Add type and currency columns to accounts
-ALTER TABLE accounts ADD COLUMN type TEXT NOT NULL DEFAULT 'Bank';
-ALTER TABLE accounts ADD COLUMN currency TEXT NOT NULL DEFAULT 'ARS';

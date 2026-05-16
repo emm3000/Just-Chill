@@ -36,10 +36,4 @@ class FakeAccountRepository : AccountRepository {
 
     override suspend fun delete(accountId: AccountId) {
     }
-
-    override suspend fun pull() {
-    }
-
-    override suspend fun sync() {
-    }
 }

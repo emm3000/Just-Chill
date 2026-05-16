@@ -16,8 +16,4 @@ interface TransactionRepository {
     suspend fun update(transactionId: TransactionId, transactionUpdate: TransactionUpdate)
 
     suspend fun delete(transactionId: TransactionId)
-
-    suspend fun pull()
-
-    suspend fun sync()
 }

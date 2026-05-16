@@ -342,7 +342,7 @@ private fun CategoryGrid(
         verticalArrangement = Arrangement.spacedBy(spacing.s2),
         horizontalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
-        items(categories, key = SelectableCategory::categoryId) { category ->
+        items(categories, key = { it.categoryId.value }) { category ->
             CategoryTile(
                 category = category,
                 isSelected = category.categoryId == selected?.categoryId,
@@ -510,7 +510,7 @@ private fun AccountSelectorContent(
         Spacer(Modifier.height(spacing.s2))
 
         LazyColumn(modifier = Modifier.fillMaxWidth()) {
-            items(accounts, key = Account::accountId) { account ->
+            items(accounts, key = { it.accountId.value }) { account ->
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()

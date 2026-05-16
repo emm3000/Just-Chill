@@ -6,9 +6,7 @@ data class CategoryEntity(
     val icon: String,
     val color: String,
     val categoryType: String,
-    val syncState: String,
     val isDefault: Boolean,
-    val isDeleted: Boolean,
     val updatedAt: Long,
     val createdAt: Long,
 )

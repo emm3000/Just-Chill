@@ -7,7 +7,6 @@ import com.emm.justchill.hh.di.accountModule
 import com.emm.justchill.hh.di.categoryModule
 import com.emm.justchill.hh.di.dbModule
 import com.emm.justchill.hh.di.hhModule
-import com.emm.justchill.hh.di.supabaseModule
 import com.emm.justchill.hh.di.transactionModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -28,7 +27,6 @@ class EmmApp : Application() {
                 accountModule,
                 transactionModule,
                 dbModule,
-                supabaseModule,
             )
         }
     }

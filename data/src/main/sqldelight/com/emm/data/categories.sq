@@ -6,38 +6,30 @@ CREATE TABLE categories (
     icon          TEXT NOT NULL,
     color         TEXT NOT NULL,
     categoryType  TEXT NOT NULL,
-    syncState     TEXT NOT NULL DEFAULT 'PENDING',
     isDefault     INTEGER AS Boolean NOT NULL DEFAULT 0,
-    isDeleted     INTEGER AS Boolean NOT NULL DEFAULT 0,
     updatedAt     INTEGER NOT NULL,
     createdAt     INTEGER NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS categories_type_idx  ON categories(categoryType) WHERE isDeleted = 0;
-CREATE INDEX IF NOT EXISTS categories_sync_idx  ON categories(syncState, isDeleted);
+CREATE INDEX IF NOT EXISTS categories_type_idx ON categories(categoryType);
 
 all:
-SELECT * FROM categories WHERE isDeleted = 0;
+SELECT * FROM categories;
 
 insert:
-INSERT OR REPLACE INTO categories(categoryId, name, icon, color, categoryType, syncState, isDefault, isDeleted, updatedAt, createdAt)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
-softDelete:
-UPDATE categories SET isDeleted = 1, updatedAt = ? WHERE categoryId = ?;
+delete:
+DELETE FROM categories WHERE categoryId = ?;
 
 find:
-SELECT * FROM categories WHERE categoryId = ? AND isDeleted = 0;
+SELECT * FROM categories WHERE categoryId = ?;
 
 countDefaultCategories:
-SELECT COUNT(*) FROM categories WHERE isDefault = 1 AND isDeleted = 0;
+SELECT COUNT(*) FROM categories WHERE isDefault = 1;
 
 updateValues:
 UPDATE categories
-SET name = ?, syncState = ?, updatedAt = ?
+SET name = ?, updatedAt = ?
 WHERE categoryId = ?;
-
-selectPendingSync:
-SELECT * FROM categories
-WHERE syncState = 'PENDING' OR isDeleted = 1
-ORDER BY updatedAt ASC;

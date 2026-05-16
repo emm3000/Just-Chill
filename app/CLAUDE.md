@@ -2,17 +2,15 @@
 
 Android application module. Compose UI, ViewModels, Koin DI wiring.
 
-Root package: `com.emm.justchill.{hh.<feature>, core, components, sync}`. `minSdk = 28`.
+Root package: `com.emm.justchill.{hh.<feature>, core, components}`. `minSdk = 28`.
 
 Depends on: `:domain`, `:data`.
 
 ## Product flavors
 
 Dimension `tier`:
-- `dev` — `applicationIdSuffix = ".dev"`, ships JavaFaker (`devDebugImplementation` only) and Chucker (debug only; release uses `library-no-op`).
+- `dev` — `applicationIdSuffix = ".dev"`.
 - `prod` — release signing via `keystore.properties`, Firebase Analytics + Crashlytics.
-
-Supabase URL/key are injected per-flavor via `resValue` from `keystore.properties` (not committed).
 
 ## Layer conventions
 
@@ -21,20 +19,19 @@ Supabase URL/key are injected per-flavor via `resValue` from `keystore.propertie
 | ViewModel | `{Feature}ViewModel` | `hh/<feature>/` |
 | UI state | `{Feature}UiState` | `hh/<feature>/` |
 
-Existing features under `hh/`: `account`, `auth`, `category`, `home`, `profile`, `seetransactions`, `shared`, `transaction`, plus `di/`.
+Existing features under `hh/`: `account`, `category`, `home`, `profile`, `seetransactions`, `shared`, `transaction`, plus `di/`.
 
 ## Data flow
 
 `Screen` collects `StateFlow<UiState>` from `ViewModel` → `ViewModel` calls a domain use case → use case calls a `Repository` interface (impl lives in `:data`).
 
-ViewModels should **never** depend on Supabase/SQLDelight types directly — go through domain interfaces.
+ViewModels should **never** depend on SQLDelight types directly — go through domain interfaces.
 
 ## DI (Koin)
 
 Modules live in `hh/di/`:
 
 - `dbModule` — SQLDelight driver + `EmmDatabaseData`
-- `supabaseModule` — Supabase client + auth
 - `accountModule`, `categoryModule`, `transactionModule` — feature wiring (data sources, repository impls, use cases, ViewModels)
 - `hhModule` — top-level aggregator
 

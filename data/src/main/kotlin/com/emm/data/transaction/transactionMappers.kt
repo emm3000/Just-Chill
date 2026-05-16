@@ -21,8 +21,6 @@ fun Transactions.asEntity() = TransactionEntity(
     date = date,
     categoryId = categoryId,
     accountId = accountId,
-    syncState = syncState,
-    isDeleted = isDeleted,
     createdAt = createdAt,
     updatedAt = updatedAt,
 )
@@ -51,23 +49,6 @@ fun TransactionInsert.asEntity() = TransactionEntity(
     date = date,
     categoryId = categoryId?.value,
     accountId = accountId.value,
-    syncState = "",
-    isDeleted = false,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-)
-
-// Network -> Entity
-fun NetworkTransaction.asEntity() = TransactionEntity(
-    transactionId = transactionId,
-    type = type,
-    amount = amount,
-    description = description,
-    date = date,
-    categoryId = categoryId,
-    accountId = accountId,
-    syncState = "",
-    isDeleted = deleted,
     createdAt = createdAt,
     updatedAt = updatedAt,
 )
@@ -107,18 +88,3 @@ fun TransactionWithCategoryEntity.toDomain() = TransactionWithCategory(
 )
 
 fun List<TransactionWithCategoryEntity>.toDomain() = map(TransactionWithCategoryEntity::toDomain)
-
-// Entity -> Network
-fun TransactionEntity.asNetworkModel(userId: String) = NetworkTransaction(
-    transactionId = transactionId,
-    type = type,
-    amount = amount,
-    description = description,
-    date = date,
-    updatedAt = updatedAt,
-    createdAt = createdAt,
-    deleted = isDeleted,
-    categoryId = categoryId,
-    accountId = accountId,
-    userId = userId,
-)

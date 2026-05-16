@@ -16,7 +16,7 @@ abstract class MviViewModel<S : UiState, I : UiIntent, E : UiEffect> : ViewModel
     protected abstract val initialState: S
 
     private val _state: MutableStateFlow<S> by lazy { MutableStateFlow(initialState) }
-    val state: StateFlow<S> = _state.asStateFlow()
+    val state: StateFlow<S> by lazy { _state.asStateFlow() }
 
     private val _effect: Channel<E> = Channel(Channel.BUFFERED)
     val effect: Flow<E> = _effect.receiveAsFlow()

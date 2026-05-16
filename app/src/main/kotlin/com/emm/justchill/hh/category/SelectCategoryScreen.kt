@@ -173,7 +173,7 @@ private fun CategoryList(
     val spacing = LocalEmmSpacing.current
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(categories, key = SelectableCategory::categoryId) { category ->
+        items(categories, key = { it.categoryId.value }) { category ->
             val interactionSource = remember { MutableInteractionSource() }
             Row(
                 modifier = Modifier

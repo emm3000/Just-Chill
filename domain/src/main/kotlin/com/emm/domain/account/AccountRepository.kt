@@ -16,8 +16,4 @@ interface AccountRepository {
     suspend fun update(accountId: AccountId, account: AccountUpsert)
 
     suspend fun delete(accountId: AccountId)
-
-    suspend fun pull()
-
-    suspend fun sync()
 }

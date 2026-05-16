@@ -1,5 +1,3 @@
-import kotlin.Boolean;
-
 CREATE TABLE transactions (
     transactionId  TEXT NOT NULL PRIMARY KEY,
     type           TEXT NOT NULL,
@@ -8,20 +6,16 @@ CREATE TABLE transactions (
     date           INTEGER NOT NULL,
     categoryId     TEXT REFERENCES categories(categoryId) ON DELETE SET NULL,
     accountId      TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
-    syncState      TEXT NOT NULL DEFAULT 'PENDING',
-    isDeleted      INTEGER AS Boolean NOT NULL DEFAULT 0,
     createdAt      INTEGER NOT NULL,
     updatedAt      INTEGER NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS transactions_account_idx  ON transactions(accountId)  WHERE isDeleted = 0;
-CREATE INDEX IF NOT EXISTS transactions_date_idx     ON transactions(date)        WHERE isDeleted = 0;
-CREATE INDEX IF NOT EXISTS transactions_category_idx ON transactions(categoryId)  WHERE isDeleted = 0;
-CREATE INDEX IF NOT EXISTS transactions_deleted_idx  ON transactions(isDeleted);
-CREATE INDEX IF NOT EXISTS transactions_sync_idx     ON transactions(syncState, isDeleted);
+CREATE INDEX IF NOT EXISTS transactions_account_idx  ON transactions(accountId);
+CREATE INDEX IF NOT EXISTS transactions_date_idx     ON transactions(date);
+CREATE INDEX IF NOT EXISTS transactions_category_idx ON transactions(categoryId);
 
 all:
-SELECT * FROM transactions WHERE isDeleted = 0 ORDER BY date DESC;
+SELECT * FROM transactions ORDER BY date DESC;
 
 completeTransactions:
 SELECT
@@ -32,7 +26,6 @@ SELECT
     c.categoryType AS categoryType_
 FROM transactions t
 LEFT JOIN categories c ON t.categoryId = c.categoryId
-WHERE t.isDeleted = 0
 ORDER BY t.date DESC;
 
 completeTransactionsByDateRange:
@@ -44,8 +37,7 @@ SELECT
     c.categoryType AS categoryType_
 FROM transactions t
 LEFT JOIN categories c ON t.categoryId = c.categoryId
-WHERE t.isDeleted = 0
-  AND t.date >= :startOfMonth
+WHERE t.date >= :startOfMonth
   AND t.date < :startOfNextMonth
 ORDER BY t.date DESC;
 
@@ -54,30 +46,19 @@ SELECT COALESCE(
     SUM(CASE WHEN type = 'Income' THEN amount ELSE -amount END), 0.0
 )
 FROM transactions
-WHERE accountId = :accountId AND isDeleted = 0;
+WHERE accountId = :accountId;
 
 insert:
-INSERT OR REPLACE INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, syncState, isDeleted, createdAt, updatedAt)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 find:
-SELECT * FROM transactions WHERE transactionId = ? AND isDeleted = 0;
-
-softDelete:
-UPDATE transactions SET isDeleted = 1, updatedAt = ? WHERE transactionId = ?;
+SELECT * FROM transactions WHERE transactionId = ?;
 
 update:
 UPDATE transactions
-SET type = ?, amount = ?, description = ?, date = ?, accountId = ?, categoryId = ?, syncState = ?, updatedAt = ?
+SET type = ?, amount = ?, description = ?, date = ?, accountId = ?, categoryId = ?, updatedAt = ?
 WHERE transactionId = ?;
-
-markAsSync:
-UPDATE transactions SET syncState = ? WHERE transactionId = ?;
 
 delete:
 DELETE FROM transactions WHERE transactionId = ?;
-
-selectPendingSync:
-SELECT * FROM transactions
-WHERE syncState = 'PENDING' OR isDeleted = 1
-ORDER BY updatedAt ASC;

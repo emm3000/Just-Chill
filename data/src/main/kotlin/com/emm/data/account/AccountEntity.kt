@@ -5,8 +5,6 @@ data class AccountEntity(
     val name: String,
     val type: String,
     val currency: String,
-    val syncState: String,
-    val isDeleted: Boolean,
     val updatedAt: Long,
     val createdAt: Long,
 )

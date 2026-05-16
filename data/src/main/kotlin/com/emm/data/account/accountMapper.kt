@@ -13,8 +13,6 @@ fun Accounts.asEntity() = AccountEntity(
     name = name,
     type = type,
     currency = currency,
-    syncState = syncState,
-    isDeleted = isDeleted,
     updatedAt = updatedAt,
     createdAt = createdAt,
 )
@@ -37,32 +35,6 @@ fun AccountUpsert.asEntity() = AccountEntity(
     name = name,
     type = type.name,
     currency = currency.name,
-    syncState = "",
-    isDeleted = false,
     updatedAt = updatedAt,
     createdAt = createdAt,
-)
-
-// Network -> Entity
-fun NetworkAccount.asEntity() = AccountEntity(
-    accountId = accountId,
-    name = name,
-    type = type,
-    currency = currency,
-    syncState = "",
-    isDeleted = isDeleted,
-    updatedAt = updatedAt,
-    createdAt = createdAt,
-)
-
-// Entity -> Network
-fun AccountEntity.asNetworkModel(userId: String) = NetworkAccount(
-    accountId = accountId,
-    name = name,
-    type = type,
-    currency = currency,
-    isDeleted = isDeleted,
-    updatedAt = updatedAt,
-    createdAt = createdAt,
-    userId = userId,
 )

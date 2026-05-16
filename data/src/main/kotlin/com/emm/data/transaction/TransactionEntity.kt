@@ -8,8 +8,6 @@ data class TransactionEntity(
     val date: Long,
     val categoryId: String?,
     val accountId: String,
-    val syncState: String,
-    val isDeleted: Boolean,
     val createdAt: Long,
     val updatedAt: Long,
 )

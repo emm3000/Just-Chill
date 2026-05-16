@@ -4,7 +4,6 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.emm.data.CompleteTransactions
 import com.emm.data.TransactionsQueries
-import com.emm.domain.shared.SyncState
 import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
@@ -25,8 +24,6 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             date = transactionInsert.date,
             categoryId = transactionInsert.categoryId?.value,
             accountId = transactionInsert.accountId.value,
-            syncState = SyncState.Pending.name,
-            isDeleted = false,
             updatedAt = transactionInsert.updatedAt,
             createdAt = transactionInsert.createdAt,
         )
@@ -48,37 +45,12 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             .map { list -> list.map(CompleteTransactions::asEntity) }
     }
 
-    suspend fun softDelete(transactionId: String) = withContext(Dispatchers.IO) {
-        tq.softDelete(currentTimeInMillis(), transactionId)
-    }
-
-    suspend fun hardDelete(transactionId: String) = withContext(Dispatchers.IO) {
+    suspend fun delete(transactionId: String) = withContext(Dispatchers.IO) {
         tq.delete(transactionId)
     }
 
     fun find(transactionId: String): Transaction? {
         return tq.find(transactionId).executeAsOneOrNull()?.asEntity()?.asExternalModel()
-    }
-
-    fun findEntity(transactionId: String): TransactionEntity? {
-        return tq.find(transactionId).executeAsOneOrNull()?.asEntity()
-    }
-
-    suspend fun insertSynced(entity: TransactionEntity) = withContext(Dispatchers.IO) {
-        tq.insert(
-            transactionId = entity.transactionId,
-            type = entity.type,
-            amount = entity.amount,
-            description = entity.description,
-            date = entity.date,
-            categoryId = entity.categoryId,
-            accountId = entity.accountId,
-            syncState = SyncState.Synced.name,
-            isDeleted = entity.isDeleted,
-            updatedAt = entity.updatedAt,
-            createdAt = entity.createdAt,
-        )
-        Unit
     }
 
     suspend fun update(
@@ -93,16 +65,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             transactionId = transactionId,
             accountId = transactionUpdate.accountId.value,
             categoryId = transactionUpdate.categoryId?.value,
-            syncState = SyncState.Pending.name,
             updatedAt = currentTimeInMillis(),
         )
-    }
-
-    suspend fun markAsSynced(transactionId: String) = withContext(Dispatchers.IO) {
-        tq.markAsSync(SyncState.Synced.name, transactionId)
-    }
-
-    suspend fun unSynced(): List<TransactionEntity> = withContext(Dispatchers.IO) {
-        tq.selectPendingSync().executeAsList().asEntity()
     }
 }

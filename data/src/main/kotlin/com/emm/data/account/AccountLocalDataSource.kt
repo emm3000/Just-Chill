@@ -6,7 +6,6 @@ import com.emm.data.AccountsQueries
 import com.emm.data.EmmDatabaseData
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountUpsert
-import com.emm.domain.shared.SyncState
 import com.emm.domain.shared.currentTimeInMillis
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -29,23 +28,6 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         aq.find(accountId).executeAsOneOrNull()?.asEntity()?.asExternalModel()
     }
 
-    suspend fun findEntity(accountId: String): AccountEntity? = withContext(Dispatchers.IO) {
-        aq.find(accountId).executeAsOneOrNull()?.asEntity()
-    }
-
-    suspend fun insertSynced(entity: AccountEntity) = withContext(Dispatchers.IO) {
-        aq.insert(
-            accountId = entity.accountId,
-            name = entity.name,
-            type = entity.type,
-            currency = entity.currency,
-            syncState = SyncState.Synced.name,
-            isDeleted = entity.isDeleted,
-            updatedAt = entity.updatedAt,
-            createdAt = entity.createdAt,
-        )
-    }
-
     fun default(): Flow<Account?> = aq
         .all()
         .asFlow()
@@ -60,15 +42,13 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
             name = account.name,
             type = account.type.name,
             currency = account.currency.name,
-            syncState = SyncState.Pending.name,
-            isDeleted = false,
             updatedAt = account.updatedAt,
             createdAt = account.createdAt,
         )
     }
 
-    suspend fun softDelete(accountId: String) = withContext(Dispatchers.IO) {
-        aq.softDelete(currentTimeInMillis(), accountId)
+    suspend fun delete(accountId: String) = withContext(Dispatchers.IO) {
+        aq.delete(accountId)
     }
 
     suspend fun update(accountId: String, account: AccountUpsert) = withContext(Dispatchers.IO) {
@@ -76,21 +56,12 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
             name = account.name,
             type = account.type.name,
             currency = account.currency.name,
-            syncState = SyncState.Pending.name,
             updatedAt = currentTimeInMillis(),
             accountId = accountId,
         )
     }
 
-    suspend fun markAsSynced(accountId: String) = withContext(Dispatchers.IO) {
-        aq.markAsSync(SyncState.Synced.name, accountId)
-    }
-
     suspend fun getBalance(accountId: String): Double = withContext(Dispatchers.IO) {
         emmDatabase.transactionsQueries.getAccountBalance(accountId).executeAsOne()
-    }
-
-    suspend fun unSynced(): List<AccountEntity> = withContext(Dispatchers.IO) {
-        aq.selectPendingSync().executeAsList().asEntity()
     }
 }

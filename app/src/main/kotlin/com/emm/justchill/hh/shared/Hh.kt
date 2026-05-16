@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.shared
 
-import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -36,7 +35,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,19 +49,11 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.emm.domain.account.Account
-import com.emm.domain.auth.AuthRepository
-import com.emm.domain.auth.SessionStatus
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.hh.account.AccountsScreen
 import com.emm.justchill.hh.account.AccountsViewModel
 import com.emm.justchill.hh.account.AddAccountScreen
-import com.emm.justchill.hh.auth.LoginEffect
-import com.emm.justchill.hh.auth.LoginScreen
-import com.emm.justchill.hh.auth.LoginViewModel
-import com.emm.justchill.hh.auth.SignUpEffect
-import com.emm.justchill.hh.auth.SignUpScreen
-import com.emm.justchill.hh.auth.SignUpViewModel
 import com.emm.justchill.hh.category.AddCategoryScreen
 import com.emm.justchill.hh.category.SelectCategoryIntent
 import com.emm.justchill.hh.category.SelectCategoryScreen
@@ -77,7 +67,6 @@ import com.emm.justchill.hh.transaction.AddTransactionScreen
 import com.emm.justchill.hh.transaction.AddTransactionViewModel
 import com.emm.justchill.hh.transaction.EditTransaction
 import com.emm.justchill.hh.transaction.SelectableCategory
-import com.emm.justchill.sync.Sync
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -127,74 +116,6 @@ fun Hh() {
                 rememberViewModelStoreNavEntryDecorator(),
             ),
             entryProvider = entryProvider {
-                entry<PreLoginRoute> {
-                    val authRepository = koinInject<AuthRepository>()
-                    val ctx: Context? = LocalContext.current.applicationContext
-
-                    LaunchedEffect(Unit) {
-                        authRepository.sessionStatus.collect { status ->
-                            when (status) {
-                                SessionStatus.NotAuthenticated -> backStack.replaceAll(LoginRoute)
-                                SessionStatus.Authenticated -> {
-                                    ctx?.let(Sync::initialize)
-                                    backStack.replaceAll(START_TAB)
-                                }
-                                SessionStatus.Initializing -> Unit
-                            }
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.background),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-
-                entry<LoginRoute> {
-                    val vm: LoginViewModel = koinViewModel()
-                    val state by vm.state.collectAsStateWithLifecycle()
-
-                    LaunchedEffect(vm) {
-                        vm.effect.collect { effect ->
-                            when (effect) {
-                                LoginEffect.NavigateToHome -> backStack.replaceAll(START_TAB)
-                                is LoginEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
-                            }
-                        }
-                    }
-
-                    LoginScreen(
-                        modifier = Modifier,
-                        state = state,
-                        onIntent = vm::onIntent,
-                        navigateToRegister = { backStack.add(RegisterRoute) },
-                    )
-                }
-
-                entry<RegisterRoute> {
-                    val vm: SignUpViewModel = koinViewModel()
-                    val state by vm.state.collectAsStateWithLifecycle()
-
-                    LaunchedEffect(vm) {
-                        vm.effect.collect { effect ->
-                            when (effect) {
-                                SignUpEffect.NavigateBack -> backStack.removeLastOrNull()
-                                is SignUpEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
-                            }
-                        }
-                    }
-
-                    SignUpScreen(
-                        state = state,
-                        onIntent = vm::onIntent,
-                        onBack = { backStack.removeLastOrNull() },
-                    )
-                }
-
                 entry<HomeRoute> {
                     HomeScreen(
                         navigateToAll = dropUnlessResumed {
@@ -224,16 +145,8 @@ fun Hh() {
                 }
 
                 entry<ProfileRoute> {
-                    val authRepository = koinInject<AuthRepository>()
-                    val scope: CoroutineScope = rememberCoroutineScope()
-
                     ProfileScreen(
-                        onLogout = {
-                            scope.launch {
-                                authRepository.logout()
-                                backStack.replaceAll(PreLoginRoute)
-                            }
-                        },
+                        onLogout = {},
                     )
                 }
 

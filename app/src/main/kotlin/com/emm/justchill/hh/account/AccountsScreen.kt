@@ -89,7 +89,7 @@ fun AccountsScreen(
         }
 
         LazyColumn(contentPadding = PaddingValues(bottom = spacing.s8)) {
-            items(accounts, key = Account::accountId) { account ->
+            items(accounts, key = { it.accountId.value }) { account ->
                 AccountRow(account = account)
             }
         }

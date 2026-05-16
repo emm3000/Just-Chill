@@ -13,9 +13,7 @@ fun Categories.asEntity() = CategoryEntity(
     icon = icon,
     color = color,
     categoryType = categoryType,
-    syncState = syncState,
     isDefault = isDefault,
-    isDeleted = isDeleted,
     updatedAt = updatedAt,
     createdAt = createdAt,
 )
@@ -40,32 +38,7 @@ fun CategoryUpsert.asEntity() = CategoryEntity(
     icon = icon,
     color = color,
     categoryType = categoryType.name,
-    syncState = "",
     isDefault = false,
-    isDeleted = false,
     updatedAt = 0L,
     createdAt = 0L,
-)
-
-// Network -> Entity
-fun NetworkCategory.asEntity() = CategoryEntity(
-    categoryId = categoryId,
-    name = name,
-    icon = "icon",
-    color = "color",
-    categoryType = CategoryType.Income.name,
-    syncState = "",
-    isDefault = false,
-    isDeleted = false,
-    updatedAt = updatedAt,
-    createdAt = createdAt,
-)
-
-// Entity -> Network
-fun CategoryEntity.asNetworkModel(userId: String) = NetworkCategory(
-    categoryId = categoryId,
-    name = name,
-    updatedAt = updatedAt,
-    createdAt = createdAt,
-    userId = userId,
 )
