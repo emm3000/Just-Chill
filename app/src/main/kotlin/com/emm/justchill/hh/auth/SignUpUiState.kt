@@ -1,7 +1,9 @@
 package com.emm.justchill.hh.auth
 
+import androidx.compose.runtime.Immutable
 import com.emm.justchill.core.mvi.UiState
 
+@Immutable
 data class SignUpUiState(
     val email: String = "",
     val emailError: String? = null,
