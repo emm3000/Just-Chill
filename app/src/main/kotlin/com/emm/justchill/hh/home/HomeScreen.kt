@@ -142,12 +142,12 @@ private fun MonthSummary(income: Double, expense: Double) {
     ) {
         SummaryColumn(
             label = "INGRESOS",
-            amount = formatIncome(fromCentsToSolesWith(income)),
+            amount = formatNeutral(fromCentsToSolesWith(income)),
             modifier = Modifier.weight(1f),
         )
         SummaryColumn(
             label = "GASTOS",
-            amount = formatExpense(fromCentsToSolesWith(expense)),
+            amount = formatNeutral(fromCentsToSolesWith(expense)),
             modifier = Modifier.weight(1f),
         )
     }

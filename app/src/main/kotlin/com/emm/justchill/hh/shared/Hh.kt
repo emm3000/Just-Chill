@@ -289,7 +289,7 @@ private fun RowScope.AddBottomBarItem(onClick: () -> Unit) {
                 imageVector = Icons.Filled.Add,
                 contentDescription = "Agregar",
                 modifier = Modifier.size(24.dp),
-                tint = MaterialTheme.colorScheme.primaryContainer,
+                tint = MaterialTheme.colorScheme.primary,
             )
         },
         label = {
@@ -298,7 +298,7 @@ private fun RowScope.AddBottomBarItem(onClick: () -> Unit) {
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.primaryContainer,
+                color = MaterialTheme.colorScheme.primary,
                 fontFamily = LatoFontFamily,
                 fontWeight = FontWeight.Bold,
             )

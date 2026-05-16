@@ -352,17 +352,15 @@ private fun ColorSection(
         Text(text = "COLOR", style = type.labelM, color = colors.textTertiary)
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
-            verticalArrangement = Arrangement.spacedBy(spacing.s2),
-            maxItemsInEachRow = 8,
+            horizontalArrangement = Arrangement.spacedBy(spacing.s3),
+            verticalArrangement = Arrangement.spacedBy(spacing.s3),
         ) {
             allColors.forEach { color ->
                 val isSelected = color == selected
                 val interactionSource = remember { MutableInteractionSource() }
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .aspectRatio(1f)
+                        .size(36.dp)
                         .clip(CircleShape)
                         .background(color.primary)
                         .then(
