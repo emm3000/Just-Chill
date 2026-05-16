@@ -18,14 +18,17 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.dropUnlessResumed
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.components.EmmButton
 import com.emm.justchill.components.EmmTextInput
 import com.emm.justchill.core.theme.EmmTheme
@@ -37,19 +40,31 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun AddAccountScreen(
     onBack: () -> Unit,
+    snackbarHostState: SnackbarHostState,
     vm: AddAccountViewModel = koinViewModel(),
 ) {
-    AddAccountScreen(
-        state = vm.state,
-        onAction = vm::onAction,
+    val state by vm.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(vm) {
+        vm.effect.collect { effect ->
+            when (effect) {
+                AddAccountEffect.AccountSaved -> onBack()
+                is AddAccountEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
+            }
+        }
+    }
+
+    AddAccountContent(
+        state = state,
+        onIntent = vm::onIntent,
         onBack = onBack,
     )
 }
 
 @Composable
-private fun AddAccountScreen(
+private fun AddAccountContent(
     state: AddAccountUiState,
-    onAction: (AddAccountAction) -> Unit,
+    onIntent: (AddAccountIntent) -> Unit,
     onBack: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
@@ -85,7 +100,7 @@ private fun AddAccountScreen(
 
             EmmTextInput(
                 value = state.name,
-                onValueChange = { onAction(AddAccountAction.OnNameChange(it)) },
+                onValueChange = { onIntent(AddAccountIntent.OnNameChange(it)) },
                 label = "NOMBRE",
                 placeholder = "ejm. Gasto diario",
                 modifier = Modifier.fillMaxWidth(),
@@ -94,10 +109,7 @@ private fun AddAccountScreen(
 
         EmmButton(
             text = "Crear cuenta",
-            onClick = dropUnlessResumed {
-                onAction(AddAccountAction.OnSave)
-                onBack()
-            },
+            onClick = { onIntent(AddAccountIntent.OnSave) },
             enabled = state.isEnabled,
             modifier = Modifier
                 .fillMaxWidth()
@@ -150,9 +162,9 @@ private fun TopBar(title: String, onClose: () -> Unit) {
 @Composable
 private fun AddAccountScreenPreview() {
     EmmTheme {
-        AddAccountScreen(
+        AddAccountContent(
             state = AddAccountUiState(name = "Gasto diario", isEnabled = true),
-            onAction = {},
+            onIntent = {},
         )
     }
 }

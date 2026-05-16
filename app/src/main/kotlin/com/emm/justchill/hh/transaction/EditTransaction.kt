@@ -33,10 +33,12 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -55,7 +57,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.dropUnlessResumed
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.components.EmmButton
 import com.emm.justchill.components.EmmButtonVariant
@@ -75,11 +77,24 @@ import java.text.DecimalFormat
 fun EditTransaction(
     transactionId: String,
     onBack: () -> Unit,
+    snackbarHostState: SnackbarHostState,
     vm: EditTransactionViewModel = koinViewModel(parameters = { parametersOf(transactionId) }),
 ) {
+    val state by vm.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(vm) {
+        vm.effect.collect { effect ->
+            when (effect) {
+                EditTransactionEffect.TransactionUpdated -> onBack()
+                EditTransactionEffect.TransactionDeleted -> onBack()
+                is EditTransactionEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
+            }
+        }
+    }
+
     EditTransactionContent(
-        state = vm.state,
-        onAction = vm::onAction,
+        state = state,
+        onIntent = vm::onIntent,
         onBack = onBack,
     )
 }
@@ -87,8 +102,8 @@ fun EditTransaction(
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun EditTransactionContent(
-    state: AddTransactionUiState,
-    onAction: (AddTransactionAction) -> Unit,
+    state: EditTransactionUiState,
+    onIntent: (EditTransactionIntent) -> Unit,
     onBack: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
@@ -141,12 +156,12 @@ private fun EditTransactionContent(
 
             TypeToggle(
                 selected = state.transactionType,
-                onSelect = { onAction(AddTransactionAction.OnTransactionTypeChange(it)) },
+                onSelect = { onIntent(EditTransactionIntent.OnTransactionTypeChange(it)) },
             )
 
             AmountHeroInput(
                 value = state.amount,
-                onValueChange = { onAction(AddTransactionAction.OnAmountChange(it)) },
+                onValueChange = { onIntent(EditTransactionIntent.OnAmountChange(it)) },
                 type = state.transactionType,
                 focusRequester = amountFocus,
                 onNext = {
@@ -183,7 +198,7 @@ private fun EditTransactionContent(
 
             EmmTextInput(
                 value = state.description,
-                onValueChange = { onAction(AddTransactionAction.OnDescriptionChange(it)) },
+                onValueChange = { onIntent(EditTransactionIntent.OnDescriptionChange(it)) },
                 label = "DESCRIPCIÓN",
                 placeholder = "Opcional",
                 singleLine = false,
@@ -194,10 +209,7 @@ private fun EditTransactionContent(
 
         EmmButton(
             text = "Actualizar",
-            onClick = dropUnlessResumed {
-                onAction(AddTransactionAction.OnSave)
-                onBack()
-            },
+            onClick = { onIntent(EditTransactionIntent.OnSave) },
             enabled = state.isEnabled,
             modifier = Modifier
                 .fillMaxWidth()
@@ -211,7 +223,7 @@ private fun EditTransactionContent(
             onDismissRequest = { setShowSelectDate(false) },
             confirmButton = {
                 EmmButton("Ok", onClick = {
-                    onAction(AddTransactionAction.OnDateChangeInMillis(datePickerState.selectedDateMillis))
+                    onIntent(EditTransactionIntent.OnDateChangeInMillis(datePickerState.selectedDateMillis))
                     setShowSelectDate(false)
                 })
             },
@@ -233,8 +245,7 @@ private fun EditTransactionContent(
                     "Eliminar",
                     onClick = {
                         setShowDeleteDialog(false)
-                        onAction(AddTransactionAction.OnDelete)
-                        onBack()
+                        onIntent(EditTransactionIntent.OnDelete)
                     },
                     variant = EmmButtonVariant.Destructive,
                 )
@@ -254,7 +265,7 @@ private fun EditTransactionContent(
         setShowAccountPicker = setShowAccountPicker,
         showAccountPicker = showAccountPicker,
         accounts = state.accounts,
-        onAction = onAction,
+        onAccountSelected = { onIntent(EditTransactionIntent.OnAccountSelected(it)) },
     )
 }
 
@@ -381,7 +392,9 @@ private fun AmountHeroInput(
                 modifier = Modifier.padding(end = spacing.s2, bottom = 4.dp),
             )
             BasicTextField(
-                modifier = Modifier.weight(1f).focusRequester(focusRequester),
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester),
                 value = value,
                 onValueChange = { onValueChange(formatInputToAmount(it)) },
                 keyboardOptions = KeyboardOptions.Default.copy(
@@ -448,8 +461,8 @@ private fun formatInputToAmount(input: TextFieldValue): TextFieldValue {
 private fun EditTransactionPreview() {
     EmmTheme {
         EditTransactionContent(
-            state = AddTransactionUiState(),
-            onAction = {},
+            state = EditTransactionUiState(),
+            onIntent = {},
             onBack = {},
         )
     }

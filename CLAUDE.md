@@ -57,6 +57,23 @@ Clean Architecture, three modules:
 
 `Screen` collects `StateFlow<UiState>` from `ViewModel` → `ViewModel` calls a domain use case → use case calls a `Repository` interface → `Default{Entity}Repository` coordinates `LocalDataSource` (SQLDelight) and `RemoteDataSource` (Supabase).
 
+### MVI pattern (`app/core/mvi/`)
+
+All ViewModels extend `MviViewModel<S : UiState, I : UiIntent, E : UiEffect>` from `app/core/mvi/`. The base class provides:
+
+- `state: StateFlow<S>` — collected in the Screen with `collectAsStateWithLifecycle()`
+- `effect: Flow<E>` — one-shot side-effects (navigation, snackbars) collected in `LaunchedEffect(vm) { vm.effect.collect { } }`
+- `updateState(reducer: S.() -> S)` — atomic state update
+- `sendEffect(effect: E)` — fires a one-shot effect
+- `abstract fun onIntent(intent: I)` — single entry point for user actions
+
+Per feature, create three files alongside the ViewModel:
+- `XxxUiState.kt` — `data class` implementing `UiState`, no navigation flags or message strings
+- `XxxIntent.kt` — `sealed interface` implementing `UiIntent`
+- `XxxEffect.kt` — `sealed interface` implementing `UiEffect` (navigation targets, `ShowError`)
+
+`SnackbarHostState` lives in the root `Scaffold` in `Hh.kt` and is passed down to each Screen that needs it.
+
 ### Error model (cross-module)
 
 - Sealed `DomainException` in `:domain/shared/error/` with subtypes: `NotFound`, `ValidationError`, `NetworkUnavailable`, `DatabaseError`, `Unauthorized`, `Unknown`.
@@ -80,4 +97,9 @@ When adding a new failure mode, prefer extending `DomainException` (and `toUserM
 
 ## Ongoing Refactor
 
-`docs/PLAN_DE_ACCION.md` tracks a planned migration to MVI/UDF + the official Android Architecture naming (`Verb+NounUseCase`, e.g. `CreateTransactionUseCase`). Until those tasks land, **follow the current `{Entity}{Action}` naming** — do not preemptively rename existing use cases.
+`docs/PLAN_DE_ACCION.md` tracks a planned migration. Status:
+
+- **Fases 4 + 5 (MVI) — DONE**: All ViewModels use `MviViewModel`. Use `XxxIntent` (not `XxxAction`). See `app/core/mvi/` for the base classes.
+- **Fases 0–3, 6–7 — pending**: Domain schema redesign, use-case renaming (`Verb+NounUseCase`), Compose performance, SOLID audit.
+
+Until the use-case rename lands (Fase 1), **follow the current `{Entity}{Action}` naming for use cases** — do not preemptively rename them.

@@ -1,14 +1,10 @@
 package com.emm.justchill.hh.category
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryType
+import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.transaction.SelectableCategory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,68 +17,64 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class SelectCategoryViewModel(
     private val categoryRepository: CategoryRepository,
-) : ViewModel() {
+) : MviViewModel<SelectCategoryUi, SelectCategoryIntent, SelectCategoryEffect>(SelectCategoryUi()) {
 
-    var state by mutableStateOf(SelectCategoryUi())
-        private set
+    private val queryFlow = MutableStateFlow("")
 
     init {
-        snapshotFlow { state.query }
+        queryFlow
             .debounce(220L)
             .distinctUntilChanged()
             .flatMapLatest { searchQuery ->
                 flow {
                     if (searchQuery.isBlank()) {
-                        emit(Pair(state.allIncomes, state.allExpenses))
+                        emit(Pair(currentState.allIncomes, currentState.allExpenses))
                         return@flow
                     }
-                    val filteredIncomes = state.allIncomes.filter { category ->
-                        category.name.contains(searchQuery, ignoreCase = true)
-                    }
-                    val filteredExpenses = state.allExpenses.filter { category ->
-                        category.name.contains(searchQuery, ignoreCase = true)
-                    }
+                    val filteredIncomes = currentState.allIncomes.filter { it.name.contains(searchQuery, ignoreCase = true) }
+                    val filteredExpenses = currentState.allExpenses.filter { it.name.contains(searchQuery, ignoreCase = true) }
                     emit(Pair(filteredIncomes, filteredExpenses))
-
                 }.flowOn(Dispatchers.Default)
             }
-            .onEach {
-                state = state.copy(
-                    filteredIncomes = it.first,
-                    filteredExpenses = it.second,
-                )
+            .onEach { (incomes, expenses) ->
+                updateState { copy(filteredIncomes = incomes, filteredExpenses = expenses) }
             }
             .launchIn(viewModelScope)
-        fetchAll()
+
+        categoryRepository.all()
+            .map(::mapToUiAndPartitionByType)
+            .onEach { map ->
+                updateState {
+                    copy(
+                        allIncomes = map[CategoryType.Income].orEmpty(),
+                        allExpenses = map[CategoryType.Spend].orEmpty(),
+                        filteredIncomes = map[CategoryType.Income].orEmpty(),
+                        filteredExpenses = map[CategoryType.Spend].orEmpty(),
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
-    fun fetchAll() = categoryRepository.all()
-        .map(::mapToUiAndPartitionByType)
-        .onEach {
-            state = state.copy(
-                allIncomes = it[CategoryType.Income].orEmpty(),
-                allExpenses = it[CategoryType.Spend].orEmpty(),
-                filteredIncomes = it[CategoryType.Income].orEmpty(),
-                filteredExpenses = it[CategoryType.Spend].orEmpty(),
-            )
+    override fun onIntent(intent: SelectCategoryIntent) {
+        when (intent) {
+            is SelectCategoryIntent.UpdateQuery -> {
+                updateState { copy(query = intent.value) }
+                queryFlow.value = intent.value
+            }
         }
-        .launchIn(viewModelScope)
-
-    fun updateQuery(newQuery: String) {
-        state = state.copy(query = newQuery)
     }
 }
 
 private fun mapToUiAndPartitionByType(
     categories: List<Category>,
 ): Map<CategoryType, List<SelectableCategory>> {
-
     val result = mutableMapOf<CategoryType, MutableList<SelectableCategory>>()
-
     categories.forEach { category ->
         val ui = SelectableCategory(
             categoryId = category.categoryId,
@@ -91,13 +83,7 @@ private fun mapToUiAndPartitionByType(
             color = findById(category.color),
             categoryType = category.categoryType,
         )
-
-        val targets = listOf(ui.categoryType)
-
-        targets.forEach { type ->
-            result.getOrPut(type) { mutableListOf() }.add(ui)
-        }
+        result.getOrPut(ui.categoryType) { mutableListOf() }.add(ui)
     }
-
     return result
 }

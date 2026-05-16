@@ -1,16 +1,15 @@
 package com.emm.justchill.hh.seetransactions
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionWithCategory
+import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.toUi
-import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.onEach
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -40,31 +39,24 @@ data class DayGroup(
 
 class SeeTransactionsViewModel(
     transactionRepository: TransactionRepository,
-) : ViewModel() {
+) : MviViewModel<SeeTransactionsUiState, SeeTransactionsIntent, SeeTransactionsEffect>(SeeTransactionsUiState()) {
 
-    val transactions: StateFlow<List<DayGroup>> = transactionRepository.fetchAllWithCategory()
-        .map(::groupByDate)
-        .map(::mapToDayGroup)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = emptyList()
-        )
+    init {
+        transactionRepository.fetchAllWithCategory()
+            .map(::groupByDate)
+            .map(::mapToDayGroup)
+            .catch { emit(emptyList()) }
+            .onEach { days -> updateState { copy(days = days) } }
+            .launchIn(viewModelScope)
+    }
 
-    @Suppress("UNUSED_PARAMETER")
-    private suspend fun catchThrowable(
-        collector: FlowCollector<List<TransactionUi>>,
-        throwable: Throwable,
-    ) = collector.emit(emptyList())
+    override fun onIntent(intent: SeeTransactionsIntent) = Unit
 }
 
 private fun mapToDayGroup(
     transactionGroups: Map<LocalDate, List<TransactionWithCategory>>,
-): List<DayGroup> = transactionGroups.map { (date, transactions: List<TransactionWithCategory>) ->
-    DayGroup(
-        date = date,
-        transactions = transactions.toUi()
-    )
+): List<DayGroup> = transactionGroups.map { (date, transactions) ->
+    DayGroup(date = date, transactions = transactions.toUi())
 }
 
 private fun groupByDate(

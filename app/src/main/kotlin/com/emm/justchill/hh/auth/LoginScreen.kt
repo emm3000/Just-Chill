@@ -45,7 +45,7 @@ import com.emm.justchill.core.theme.LocalEmmType
 @Composable
 fun LoginScreen(
     state: LoginUiState,
-    onAction: (LoginAction) -> Unit,
+    onIntent: (LoginIntent) -> Unit,
     modifier: Modifier = Modifier,
     navigateToRegister: () -> Unit = {},
 ) {
@@ -84,7 +84,7 @@ fun LoginScreen(
 
         EmmTextInput(
             value = state.email,
-            onValueChange = { onAction(LoginAction.UpdateEmail(it)) },
+            onValueChange = { onIntent(LoginIntent.UpdateEmail(it)) },
             label = "CORREO",
             placeholder = "tu@correo.com",
             keyboardType = KeyboardType.Email,
@@ -95,7 +95,7 @@ fun LoginScreen(
 
         EmmTextInput(
             value = state.password,
-            onValueChange = { onAction(LoginAction.UpdatePassword(it)) },
+            onValueChange = { onIntent(LoginIntent.UpdatePassword(it)) },
             label = "CONTRASEÑA",
             placeholder = "••••••••",
             keyboardType = KeyboardType.Password,
@@ -120,21 +120,11 @@ fun LoginScreen(
 
         EmmButton(
             text = "Iniciar sesión",
-            onClick = { onAction(LoginAction.Login) },
+            onClick = { onIntent(LoginIntent.Submit) },
             enabled = state.isValidFields,
             isLoading = state.isLoading,
             modifier = Modifier.fillMaxWidth(),
         )
-
-        if (state.errorMsg != null) {
-            Spacer(Modifier.height(spacing.s3))
-            Text(
-                text = state.errorMsg,
-                style = type.bodyM,
-                color = colors.danger,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
 
         Spacer(Modifier.height(spacing.s8))
 
@@ -233,7 +223,7 @@ private fun LoginScreenPreview() {
                 isLoading = false,
                 isValidFields = true,
             ),
-            onAction = {},
+            onIntent = {},
         )
     }
 }
@@ -249,23 +239,7 @@ private fun LoginScreenLoadingPreview() {
                 isLoading = true,
                 isValidFields = true,
             ),
-            onAction = {},
-        )
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 800)
-@Composable
-private fun LoginScreenErrorPreview() {
-    EmmTheme {
-        LoginScreen(
-            state = LoginUiState(
-                email = "allen.waller@example.com",
-                password = "wrong",
-                isValidFields = true,
-                errorMsg = "Credenciales inválidas. Intenta de nuevo.",
-            ),
-            onAction = {},
+            onIntent = {},
         )
     }
 }

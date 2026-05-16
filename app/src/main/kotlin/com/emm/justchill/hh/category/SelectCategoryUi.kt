@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.category
 
+import com.emm.justchill.core.mvi.UiState
 import com.emm.justchill.hh.shared.Empty
 import com.emm.justchill.hh.transaction.SelectableCategory
 
@@ -9,4 +10,4 @@ data class SelectCategoryUi(
     val filteredIncomes: List<SelectableCategory> = emptyList(),
     val filteredExpenses: List<SelectableCategory> = emptyList(),
     val query: String = String.Empty,
-)
+) : UiState

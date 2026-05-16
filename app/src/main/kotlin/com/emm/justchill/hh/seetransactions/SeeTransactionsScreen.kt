@@ -47,10 +47,10 @@ fun SeeTransactionsScreen(
     vm: SeeTransactionsViewModel = koinViewModel(),
 ) {
 
-    val transactions: List<DayGroup> by vm.transactions.collectAsStateWithLifecycle()
+    val state by vm.state.collectAsStateWithLifecycle()
 
     SeeTransactionsScreen(
-        transactions = transactions,
+        transactions = state.days,
         navigateToEdit = onEditTransaction,
     )
 }

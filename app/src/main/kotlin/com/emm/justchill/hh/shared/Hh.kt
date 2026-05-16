@@ -24,6 +24,8 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,18 +56,21 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.hh.account.AccountsScreen
 import com.emm.justchill.hh.account.AccountsViewModel
 import com.emm.justchill.hh.account.AddAccountScreen
+import com.emm.justchill.hh.auth.LoginEffect
 import com.emm.justchill.hh.auth.LoginScreen
 import com.emm.justchill.hh.auth.LoginViewModel
+import com.emm.justchill.hh.auth.SignUpEffect
 import com.emm.justchill.hh.auth.SignUpScreen
 import com.emm.justchill.hh.auth.SignUpViewModel
 import com.emm.justchill.hh.category.AddCategoryScreen
+import com.emm.justchill.hh.category.SelectCategoryIntent
 import com.emm.justchill.hh.category.SelectCategoryScreen
 import com.emm.justchill.hh.category.SelectCategoryViewModel
 import com.emm.justchill.hh.category.SelectIconScreen
 import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.profile.ProfileScreen
 import com.emm.justchill.hh.seetransactions.SeeTransactionsScreen
-import com.emm.justchill.hh.transaction.AddTransactionAction
+import com.emm.justchill.hh.transaction.AddTransactionIntent
 import com.emm.justchill.hh.transaction.AddTransactionScreen
 import com.emm.justchill.hh.transaction.AddTransactionViewModel
 import com.emm.justchill.hh.transaction.EditTransaction
@@ -84,12 +89,14 @@ fun Hh() {
     val colors = LocalEmmColors.current
     val backStack: NavBackStack<NavKey> = rememberNavBackStack(START_TAB)
     val resultBus = remember { ResultEventBus() }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val currentRoute: NavKey? = backStack.lastOrNull()
     val showBottomBar: Boolean = currentRoute is BottomBarRoute
 
     Scaffold(
         modifier = Modifier.background(colors.bg),
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             AnimatedVisibility(
                 visible = showBottomBar,
@@ -147,26 +154,41 @@ fun Hh() {
 
                 entry<LoginRoute> {
                     val vm: LoginViewModel = koinViewModel()
+                    val state by vm.state.collectAsStateWithLifecycle()
 
-                    LaunchedEffect(vm.state.successLogin) {
-                        if (vm.state.successLogin) {
-                            backStack.replaceAll(START_TAB)
+                    LaunchedEffect(vm) {
+                        vm.effect.collect { effect ->
+                            when (effect) {
+                                LoginEffect.NavigateToHome -> backStack.replaceAll(START_TAB)
+                                is LoginEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
+                            }
                         }
                     }
 
                     LoginScreen(
                         modifier = Modifier,
-                        state = vm.state,
-                        onAction = vm::onAction,
+                        state = state,
+                        onIntent = vm::onIntent,
                         navigateToRegister = { backStack.add(RegisterRoute) },
                     )
                 }
 
                 entry<RegisterRoute> {
                     val vm: SignUpViewModel = koinViewModel()
+                    val state by vm.state.collectAsStateWithLifecycle()
+
+                    LaunchedEffect(vm) {
+                        vm.effect.collect { effect ->
+                            when (effect) {
+                                SignUpEffect.NavigateBack -> backStack.removeLastOrNull()
+                                is SignUpEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
+                            }
+                        }
+                    }
+
                     SignUpScreen(
-                        state = vm.state,
-                        onAction = vm::onAction,
+                        state = state,
+                        onIntent = vm::onIntent,
                         onBack = { backStack.removeLastOrNull() },
                     )
                 }
@@ -189,10 +211,10 @@ fun Hh() {
 
                 entry<AccountsRoute> {
                     val vm: AccountsViewModel = koinViewModel()
-                    val accounts: List<Account> by vm.accounts.collectAsStateWithLifecycle()
+                    val accountsState by vm.state.collectAsStateWithLifecycle()
 
                     AccountsScreen(
-                        accounts = accounts,
+                        accounts = accountsState.accounts,
                         addCategory = { backStack.add(CategoryRoute) },
                         addAccount = { backStack.add(AddAccountRoute) },
                         modifier = Modifier.fillMaxSize(),
@@ -218,13 +240,14 @@ fun Hh() {
 
                     ResultEffect<SelectableCategory>(resultBus) { selectableCategory ->
                         resultBus.removeResult<SelectableCategory>()
-                        vm.onAction(AddTransactionAction.OnNewValueFromOthers(selectableCategory))
+                        vm.onIntent(AddTransactionIntent.OnNewValueFromOthers(selectableCategory))
                     }
 
                     AddTransactionScreen(
                         vm = vm,
                         popBackStack = { backStack.removeLastOrNull() },
                         onOtherCategorySelected = { backStack.add(SelectCategoryRoute) },
+                        snackbarHostState = snackbarHostState,
                     )
                 }
 
@@ -232,6 +255,7 @@ fun Hh() {
                     EditTransaction(
                         transactionId = key.transactionId,
                         onBack = { backStack.removeLastOrNull() },
+                        snackbarHostState = snackbarHostState,
                     )
                 }
 
@@ -239,28 +263,31 @@ fun Hh() {
                     AddCategoryScreen(
                         onBack = { backStack.removeLastOrNull() },
                         onSelectIcon = { backStack.add(SelectIconRoute) },
+                        snackbarHostState = snackbarHostState,
                     )
                 }
 
                 entry<AddAccountRoute> {
                     AddAccountScreen(
                         onBack = { backStack.removeLastOrNull() },
+                        snackbarHostState = snackbarHostState,
                     )
                 }
 
                 entry<SelectCategoryRoute> {
                     val vm: SelectCategoryViewModel = koinViewModel()
+                    val selectState by vm.state.collectAsStateWithLifecycle()
                     SelectCategoryScreen(
                         onCategorySelected = {
                             resultBus.sendResult(result = it)
                             backStack.removeLastOrNull()
                         },
                         onBack = { backStack.removeLastOrNull() },
-                        onValueChange = vm::updateQuery,
+                        onValueChange = { vm.onIntent(SelectCategoryIntent.UpdateQuery(it)) },
                         onNewCategory = { backStack.add(CategoryRoute) },
-                        value = vm.state.query,
-                        income = vm.state.filteredIncomes,
-                        expense = vm.state.filteredExpenses,
+                        value = selectState.query,
+                        income = selectState.filteredIncomes,
+                        expense = selectState.filteredExpenses,
                     )
                 }
 

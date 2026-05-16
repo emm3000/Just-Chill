@@ -6,7 +6,7 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.mvi.UiState
 import com.emm.justchill.hh.shared.Empty
 
-data class AddTransactionUiState(
+data class EditTransactionUiState(
     val amount: TextFieldValue = TextFieldValue("0.00"),
     val description: String = String.Empty,
     val date: String = DateUtils.currentDateAtReadableFormat(),
@@ -14,6 +14,4 @@ data class AddTransactionUiState(
     val isEnabled: Boolean = false,
     val accounts: List<Account> = emptyList(),
     val accountSelected: Account? = null,
-    val categories: List<SelectableCategory> = emptyList(),
-    val categorySelected: SelectableCategory? = null,
 ) : UiState

@@ -1,45 +1,33 @@
 package com.emm.justchill.hh.account
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.CreateAccountUseCase
 import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.core.error.toUserMessage
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import com.emm.justchill.core.mvi.MviViewModel
 import kotlinx.coroutines.launch
 
-class AddAccountViewModel(private val accountCreator: CreateAccountUseCase) : ViewModel() {
+class AddAccountViewModel(
+    private val accountCreator: CreateAccountUseCase,
+) : MviViewModel<AddAccountUiState, AddAccountIntent, AddAccountEffect>(AddAccountUiState()) {
 
-    var state by mutableStateOf(AddAccountUiState())
-        private set
-
-    init {
-        snapshotFlow { state.name }
-            .onEach { name ->
-                state = state.copy(isEnabled = name.isNotEmpty())
+    override fun onIntent(intent: AddAccountIntent) {
+        when (intent) {
+            is AddAccountIntent.OnNameChange -> updateState {
+                copy(name = intent.value, isEnabled = intent.value.isNotEmpty())
             }
-            .launchIn(viewModelScope)
-    }
-
-    fun onAction(action: AddAccountAction) {
-        when (action) {
-            is AddAccountAction.OnNameChange -> state = state.copy(name = action.value)
-            AddAccountAction.OnSave -> save()
+            AddAccountIntent.OnSave -> save()
         }
     }
 
     private fun save() = viewModelScope.launch {
         try {
-            accountCreator(name = state.name)
+            accountCreator(name = currentState.name)
+            sendEffect(AddAccountEffect.AccountSaved)
         } catch (e: DomainException) {
-            state = state.copy(userMessage = e.toUserMessage())
+            sendEffect(AddAccountEffect.ShowError(e.toUserMessage()))
         } catch (e: Exception) {
-            state = state.copy(userMessage = DomainException.Unknown(e).toUserMessage())
+            sendEffect(AddAccountEffect.ShowError(DomainException.Unknown(e).toUserMessage()))
         }
     }
 }

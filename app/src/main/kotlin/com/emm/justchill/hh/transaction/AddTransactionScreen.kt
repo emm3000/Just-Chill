@@ -44,6 +44,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -66,7 +67,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.compose.dropUnlessResumed
+import androidx.compose.material3.SnackbarHostState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.account.Account
 import com.emm.domain.category.CategoryType
 import com.emm.domain.transaction.TransactionType
@@ -89,10 +91,22 @@ fun AddTransactionScreen(
     vm: AddTransactionViewModel,
     onOtherCategorySelected: () -> Unit,
     popBackStack: () -> Unit,
+    snackbarHostState: SnackbarHostState,
 ) {
+    val state by vm.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(vm) {
+        vm.effect.collect { effect ->
+            when (effect) {
+                AddTransactionEffect.TransactionSaved -> popBackStack()
+                is AddTransactionEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
+            }
+        }
+    }
+
     AddTransactionScreenContent(
-        state = vm.state,
-        onAction = vm::onAction,
+        state = state,
+        onIntent = vm::onIntent,
         onOtherCategorySelected = onOtherCategorySelected,
         popBackStack = popBackStack,
     )
@@ -102,7 +116,7 @@ fun AddTransactionScreen(
 @Composable
 private fun AddTransactionScreenContent(
     state: AddTransactionUiState,
-    onAction: (AddTransactionAction) -> Unit,
+    onIntent: (AddTransactionIntent) -> Unit,
     onOtherCategorySelected: () -> Unit,
     popBackStack: () -> Unit,
 ) {
@@ -134,7 +148,7 @@ private fun AddTransactionScreenContent(
                 keyboard?.hide()
                 popBackStack()
             },
-            onReset = { onAction(AddTransactionAction.OnReset) },
+            onReset = { onIntent(AddTransactionIntent.OnReset) },
         )
 
         Column(
@@ -150,12 +164,12 @@ private fun AddTransactionScreenContent(
 
             TypeToggle(
                 selected = state.transactionType,
-                onSelect = { onAction(AddTransactionAction.OnTransactionTypeChange(it)) },
+                onSelect = { onIntent(AddTransactionIntent.OnTransactionTypeChange(it)) },
             )
 
             AmountHeroInput(
                 value = state.amount,
-                onValueChange = { onAction(AddTransactionAction.OnAmountChange(it)) },
+                onValueChange = { onIntent(AddTransactionIntent.OnAmountChange(it)) },
                 type = state.transactionType,
                 focusRequester = amountFocus,
                 onNext = {
@@ -168,7 +182,7 @@ private fun AddTransactionScreenContent(
             CategoryGrid(
                 selected = state.categorySelected,
                 categories = state.categories,
-                onSelect = { onAction(AddTransactionAction.OnCategorySelected(it)) },
+                onSelect = { onIntent(AddTransactionIntent.OnCategorySelected(it)) },
                 onMore = onOtherCategorySelected,
             )
 
@@ -200,7 +214,7 @@ private fun AddTransactionScreenContent(
 
             EmmTextInput(
                 value = state.description,
-                onValueChange = { onAction(AddTransactionAction.OnDescriptionChange(it)) },
+                onValueChange = { onIntent(AddTransactionIntent.OnDescriptionChange(it)) },
                 label = "DESCRIPCIÓN",
                 placeholder = "Opcional",
                 singleLine = false,
@@ -211,10 +225,7 @@ private fun AddTransactionScreenContent(
 
         EmmButton(
             text = "Guardar transacción",
-            onClick = dropUnlessResumed {
-                onAction(AddTransactionAction.OnSave)
-                popBackStack()
-            },
+            onClick = { onIntent(AddTransactionIntent.OnSave) },
             enabled = state.isEnabled,
             modifier = Modifier
                 .fillMaxWidth()
@@ -230,7 +241,7 @@ private fun AddTransactionScreenContent(
                 EmmButton(
                     text = "Ok",
                     onClick = {
-                        onAction(AddTransactionAction.OnDateChangeInMillis(datePickerState.selectedDateMillis))
+                        onIntent(AddTransactionIntent.OnDateChangeInMillis(datePickerState.selectedDateMillis))
                         setShowSelectDate(false)
                     },
                 )
@@ -251,7 +262,7 @@ private fun AddTransactionScreenContent(
         setShowAccountPicker = setShowAccountPicker,
         showAccountPicker = showAccountPicker,
         accounts = state.accounts,
-        onAction = onAction,
+        onAccountSelected = { onIntent(AddTransactionIntent.OnAccountSelected(it)) },
     )
 }
 
@@ -591,7 +602,7 @@ fun BottomSheetDialogForPickAccount(
     setShowAccountPicker: (Boolean) -> Unit,
     showAccountPicker: Boolean,
     accounts: List<Account>,
-    onAction: (AddTransactionAction) -> Unit,
+    onAccountSelected: (Account) -> Unit,
 ) {
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -615,7 +626,7 @@ fun BottomSheetDialogForPickAccount(
             }
             AccountSelectorContent(
                 accounts = accounts,
-                onAccountSelected = { onAction(AddTransactionAction.OnAccountSelected(it)) },
+                onAccountSelected = { onAccountSelected(it) },
                 dismiss = {
                     scope.launch { sheetState.hide() }.invokeOnCompletion {
                         if (!sheetState.isVisible) dismiss()
@@ -734,7 +745,7 @@ private fun AddTransactionPreview() {
         }
         AddTransactionScreenContent(
             state = AddTransactionUiState(categories = categories),
-            onAction = {},
+            onIntent = {},
             popBackStack = {},
             onOtherCategorySelected = {},
         )

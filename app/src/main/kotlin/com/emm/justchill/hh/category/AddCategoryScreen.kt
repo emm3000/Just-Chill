@@ -36,7 +36,10 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.dropUnlessResumed
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.material3.SnackbarHostState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.category.CategoryType
 import com.emm.justchill.components.EmmButton
 import com.emm.justchill.components.EmmTextInput
@@ -51,21 +54,33 @@ import org.koin.androidx.compose.koinViewModel
 fun AddCategoryScreen(
     onBack: () -> Unit,
     onSelectIcon: () -> Unit,
+    snackbarHostState: SnackbarHostState,
     vm: AddCategoryViewModel = koinViewModel(),
 ) {
-    AddCategoryScreen(
-        state = vm.state,
+    val state by vm.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(vm) {
+        vm.effect.collect { effect ->
+            when (effect) {
+                AddCategoryEffect.CategorySaved -> onBack()
+                is AddCategoryEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
+            }
+        }
+    }
+
+    AddCategoryContent(
+        state = state,
         onMoreIconsClick = onSelectIcon,
-        onAction = vm::onAction,
+        onIntent = vm::onIntent,
         navigateToBack = onBack,
     )
 }
 
 @Composable
-private fun AddCategoryScreen(
+private fun AddCategoryContent(
     state: AddCategoryUiState,
     onMoreIconsClick: () -> Unit = {},
-    onAction: (AddCategoryAction) -> Unit,
+    onIntent: (AddCategoryIntent) -> Unit,
     navigateToBack: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
@@ -96,7 +111,7 @@ private fun AddCategoryScreen(
 
             EmmTextInput(
                 value = state.name,
-                onValueChange = { onAction(AddCategoryAction.OnNameChange(it)) },
+                onValueChange = { onIntent(AddCategoryIntent.OnNameChange(it)) },
                 label = "NOMBRE",
                 placeholder = "ejm. Comida",
                 modifier = Modifier.fillMaxWidth(),
@@ -104,18 +119,18 @@ private fun AddCategoryScreen(
 
             TypeSection(
                 selected = state.categoryType,
-                onSelect = { onAction(AddCategoryAction.OnCategoryTypeChange(it)) },
+                onSelect = { onIntent(AddCategoryIntent.OnCategoryTypeChange(it)) },
             )
 
             IconSection(
                 selected = state.icon,
-                onSelect = { onAction(AddCategoryAction.OnIconChange(it)) },
+                onSelect = { onIntent(AddCategoryIntent.OnIconChange(it)) },
                 onMore = onMoreIconsClick,
             )
 
             ColorSection(
                 selected = state.color,
-                onSelect = { onAction(AddCategoryAction.OnColorChange(it)) },
+                onSelect = { onIntent(AddCategoryIntent.OnColorChange(it)) },
             )
 
             Spacer(Modifier.height(spacing.s4))
@@ -123,10 +138,7 @@ private fun AddCategoryScreen(
 
         EmmButton(
             text = "Guardar categoría",
-            onClick = dropUnlessResumed {
-                onAction(AddCategoryAction.OnSave)
-                navigateToBack()
-            },
+            onClick = { onIntent(AddCategoryIntent.OnSave) },
             enabled = state.isAllFieldValidated,
             modifier = Modifier
                 .fillMaxWidth()
@@ -375,9 +387,9 @@ private fun ColorSection(
 @Composable
 private fun AddCategoryScreenPreview() {
     EmmTheme {
-        AddCategoryScreen(
+        AddCategoryContent(
             state = AddCategoryUiState(name = "Comida"),
-            onAction = {},
+            onIntent = {},
         )
     }
 }

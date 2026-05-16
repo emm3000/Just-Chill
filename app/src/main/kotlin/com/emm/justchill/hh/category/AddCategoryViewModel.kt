@@ -1,59 +1,42 @@
 package com.emm.justchill.hh.category
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.category.CreateCategoryUseCase
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.error.toUserMessage
+import com.emm.justchill.core.mvi.MviViewModel
 import kotlinx.coroutines.launch
 
 class AddCategoryViewModel(
     private val categoryCreator: CreateCategoryUseCase,
-) : ViewModel() {
+) : MviViewModel<AddCategoryUiState, AddCategoryIntent, AddCategoryEffect>(AddCategoryUiState()) {
 
-    var state by mutableStateOf(AddCategoryUiState())
-        private set
-
-    init {
-        snapshotFlow { state.name }
-            .onEach(::checkFields)
-            .launchIn(viewModelScope)
-    }
-
-    fun onAction(action: AddCategoryAction) {
-        when (action) {
-            is AddCategoryAction.OnNameChange -> {
-                state = state.copy(name = action.value)
+    override fun onIntent(intent: AddCategoryIntent) {
+        when (intent) {
+            is AddCategoryIntent.OnNameChange -> updateState {
+                val isEnabled = intent.value.isNotEmpty() && intent.value.length >= 4
+                copy(name = intent.value, isAllFieldValidated = isEnabled)
             }
-
-            is AddCategoryAction.OnCategoryTypeChange -> {
-                state = state.copy(categoryType = action.value)
-            }
-            is AddCategoryAction.OnColorChange -> {
-                state = state.copy(color = action.value)
-            }
-            is AddCategoryAction.OnIconChange -> {
-                state = state.copy(icon = action.value)
-            }
-            AddCategoryAction.OnSave -> saveCategory()
+            is AddCategoryIntent.OnCategoryTypeChange -> updateState { copy(categoryType = intent.value) }
+            is AddCategoryIntent.OnColorChange -> updateState { copy(color = intent.value) }
+            is AddCategoryIntent.OnIconChange -> updateState { copy(icon = intent.value) }
+            AddCategoryIntent.OnSave -> saveCategory()
         }
     }
 
-    private fun checkFields(it: String) {
-        val isEnabled: Boolean = it.isNotEmpty() && it.length >= 4
-        state = state.copy(isAllFieldValidated = isEnabled)
-    }
-
     private fun saveCategory() = viewModelScope.launch {
-        categoryCreator(
-            name = state.name,
-            icon = state.icon.id,
-            color = state.color.id,
-            categoryType = state.categoryType
-        )
+        try {
+            categoryCreator(
+                name = currentState.name,
+                icon = currentState.icon.id,
+                color = currentState.color.id,
+                categoryType = currentState.categoryType,
+            )
+            sendEffect(AddCategoryEffect.CategorySaved)
+        } catch (e: DomainException) {
+            sendEffect(AddCategoryEffect.ShowError(e.toUserMessage()))
+        } catch (e: Exception) {
+            sendEffect(AddCategoryEffect.ShowError(DomainException.Unknown(e).toUserMessage()))
+        }
     }
 }

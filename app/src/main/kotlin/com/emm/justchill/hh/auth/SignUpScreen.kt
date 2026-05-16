@@ -50,7 +50,7 @@ import com.emm.justchill.core.theme.LocalEmmType
 @Composable
 fun SignUpScreen(
     state: SignUpUiState = SignUpUiState(),
-    onAction: (SignUpAction) -> Unit = {},
+    onIntent: (SignUpIntent) -> Unit = {},
     onBack: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
@@ -94,7 +94,7 @@ fun SignUpScreen(
 
         EmmTextInput(
             value = state.email,
-            onValueChange = { onAction(SignUpAction.OnEmailChange(it)) },
+            onValueChange = { onIntent(SignUpIntent.OnEmailChange(it)) },
             label = "CORREO",
             placeholder = "tu@correo.com",
             keyboardType = KeyboardType.Email,
@@ -107,7 +107,7 @@ fun SignUpScreen(
 
         EmmTextInput(
             value = state.password,
-            onValueChange = { onAction(SignUpAction.OnPasswordChange(it)) },
+            onValueChange = { onIntent(SignUpIntent.OnPasswordChange(it)) },
             label = "CONTRASEÑA",
             placeholder = "••••••••",
             keyboardType = KeyboardType.Password,
@@ -124,7 +124,7 @@ fun SignUpScreen(
 
         EmmTextInput(
             value = state.confirmPassword,
-            onValueChange = { onAction(SignUpAction.OnConfirmPasswordChange(it)) },
+            onValueChange = { onIntent(SignUpIntent.OnConfirmPasswordChange(it)) },
             label = "REPITE LA CONTRASEÑA",
             placeholder = "••••••••",
             keyboardType = KeyboardType.Password,
@@ -139,7 +139,7 @@ fun SignUpScreen(
 
         TermsCheckbox(
             isChecked = state.isChecked,
-            onToggle = { onAction(SignUpAction.OnCheckedChange(!state.isChecked)) },
+            onToggle = { onIntent(SignUpIntent.OnCheckedChange(!state.isChecked)) },
         )
 
         Spacer(Modifier.height(spacing.s6))
@@ -148,22 +148,12 @@ fun SignUpScreen(
             text = "Crear cuenta",
             onClick = {
                 keyboard?.hide()
-                onAction(SignUpAction.SignUp)
+                onIntent(SignUpIntent.SignUp)
             },
             enabled = state.isValidFields,
             isLoading = state.isLoading,
             modifier = Modifier.fillMaxWidth(),
         )
-
-        if (state.error != null) {
-            Spacer(Modifier.height(spacing.s3))
-            Text(
-                text = state.error,
-                style = type.bodyM,
-                color = colors.danger,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
 
         Spacer(Modifier.height(spacing.s8))
 

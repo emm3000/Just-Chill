@@ -2,73 +2,71 @@
 
 package com.emm.justchill.hh.auth
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.emm.domain.auth.CreateUserUseCase
 import com.emm.domain.auth.Email
 import com.emm.domain.auth.Password
-import com.emm.domain.auth.CreateUserUseCase
 import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.core.error.toUserMessage
-import kotlinx.coroutines.flow.combine
+import com.emm.justchill.core.mvi.MviViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-class SignUpViewModel(private val userCreator: CreateUserUseCase) : ViewModel() {
+class SignUpViewModel(
+    private val userCreator: CreateUserUseCase,
+) : MviViewModel<SignUpUiState, SignUpIntent, SignUpEffect>(SignUpUiState()) {
 
-    var state by mutableStateOf(SignUpUiState())
-        private set
+    private val validationTrigger = MutableStateFlow(SignUpUiState())
 
     init {
-        combine(
-            flow = snapshotFlow { state.email },
-            flow2 = snapshotFlow { state.password },
-            flow3 = snapshotFlow { state.confirmPassword },
-            flow4 = snapshotFlow { state.isChecked },
-            transform = ::validateSignUpFields,
-        )
+        validationTrigger
             .debounce(300L)
+            .onEach { s ->
+                val isValidPassword = s.password.length >= 6
+                val isValidConfirmPassword = s.password == s.confirmPassword
+                val isValidFields = isValidPassword && isValidConfirmPassword && s.isChecked
+                updateState {
+                    copy(
+                        isValidFields = isValidFields,
+                        emailError = null,
+                        passwordError = if (isValidPassword) null else "Ingrese al menos 6 caracteres",
+                    )
+                }
+            }
             .launchIn(viewModelScope)
     }
 
-    fun onAction(action: SignUpAction) {
-        when (action) {
-            is SignUpAction.OnEmailChange -> state = state.copy(email = action.value)
-            is SignUpAction.OnPasswordChange -> state = state.copy(password = action.value)
-            is SignUpAction.OnConfirmPasswordChange -> state = state.copy(confirmPassword = action.value)
-            is SignUpAction.OnCheckedChange -> state = state.copy(isChecked = action.value)
-            SignUpAction.SignUp -> executeSignUp()
+    override fun onIntent(intent: SignUpIntent) {
+        when (intent) {
+            is SignUpIntent.OnEmailChange -> updateState { copy(email = intent.value) }.also { triggerValidation() }
+            is SignUpIntent.OnPasswordChange -> updateState { copy(password = intent.value) }.also { triggerValidation() }
+            is SignUpIntent.OnConfirmPasswordChange -> updateState { copy(confirmPassword = intent.value) }.also { triggerValidation() }
+            is SignUpIntent.OnCheckedChange -> updateState { copy(isChecked = intent.value) }.also { triggerValidation() }
+            SignUpIntent.SignUp -> executeSignUp()
         }
+    }
+
+    private fun triggerValidation() {
+        validationTrigger.value = currentState
     }
 
     private fun executeSignUp() = viewModelScope.launch {
+        updateState { copy(isLoading = true) }
         try {
-            state = state.copy(isLoading = true)
             userCreator(
-                email = Email(state.email),
-                password = Password(state.password),
+                email = Email(currentState.email),
+                password = Password(currentState.password),
             )
-            state = state.copy(success = true)
+            sendEffect(SignUpEffect.NavigateBack)
         } catch (e: DomainException) {
-            state = state.copy(error = e.toUserMessage(), isLoading = false)
+            updateState { copy(isLoading = false) }
+            sendEffect(SignUpEffect.ShowError(e.toUserMessage()))
         } catch (e: Exception) {
-            state = state.copy(error = DomainException.Unknown(e).toUserMessage(), isLoading = false)
+            updateState { copy(isLoading = false) }
+            sendEffect(SignUpEffect.ShowError(DomainException.Unknown(e).toUserMessage()))
         }
-    }
-
-    private fun validateSignUpFields(email: String, password: String, confirmPassword: String, isChecked: Boolean) {
-        val isValidPassword = password.length >= 6
-        val isValidConfirmPassword = password == confirmPassword
-        val isValidFields: Boolean = isValidPassword && isValidConfirmPassword && isChecked
-        val passwordError = if (isValidPassword.not()) "Ingrese al menos 6 caracteres" else null
-        state = state.copy(
-            isValidFields = isValidFields,
-            emailError = null,
-            passwordError = passwordError,
-        )
     }
 }
