@@ -13,6 +13,7 @@ import com.emm.domain.shared.error.DomainException
 import com.emm.domain.transaction.TransactionRepository
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -27,12 +28,15 @@ class SyncWorker(
 
     private val accountsSynchronizer: AccountRepository by inject()
     private val transactionsSynchronizer: TransactionRepository by inject()
+    private val syncMutex: SyncMutex by inject()
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         FirebaseCrashlytics.getInstance().log("SyncWorker attempt #$runAttemptCount")
         try {
-            accountsSynchronizer.sync()
-            transactionsSynchronizer.sync()
+            syncMutex.mutex.withLock {
+                accountsSynchronizer.sync()
+                transactionsSynchronizer.sync()
+            }
             Result.success()
         } catch (e: DomainException.Unauthorized) {
             FirebaseCrashlytics.getInstance().recordException(e)
