@@ -97,10 +97,20 @@ When adding a new failure mode, prefer extending `DomainException` (and `toUserM
 
 ## Ongoing Refactor
 
-`docs/PLAN_DE_ACCION.md` tracks a planned migration. Status:
+Two plans drive this work: `docs/PLAN_DE_ACCION.md` (the original 7-phase roadmap) and `docs/PLAN_SONNET.md` (an atomic execution plan with phases A–G that was run end-to-end). Status:
 
-- **Fases 4 + 5 (MVI) — DONE**: All ViewModels use `MviViewModel`. Use `XxxIntent` (not `XxxAction`). See `app/core/mvi/` for the base classes.
-- **Fase 1 (use-case rename) — DONE**: All use cases now follow `[Verb][Noun]UseCase` naming. See `domain/CLAUDE.md`.
-- **Fases 0, 2–3, 6–7 — pending**: Domain schema redesign, model/mapper cleanup, Compose performance, SOLID audit.
+**Done:**
+- **Fase 1 (use-case rename)**: All use cases follow `[Verb][Noun]UseCase` (e.g. `CreateTransactionUseCase`, `DeleteCategoryUseCase`). See `domain/CLAUDE.md`.
+- **Fase 3 (typed errors)**: `domain/shared/error/DomainException.kt`, `data/shared/SafeCall.kt`, `app/core/error/DomainExceptionExt.kt` (`toUserMessage()`).
+- **Fases 4 + 5 (MVI)**: All ViewModels extend `MviViewModel<S, I, E>`. Use `XxxIntent` (not `XxxAction`). See `app/core/mvi/`.
+- **PLAN_SONNET A–G**: sync robustness (retry + conflict resolution + mutex), repo merge (no more `*UpdateRepository`), `TransactionWithCategoryEntity` confined to `:data`, `Account.type`/`Account.currency`, Compose `@Stable`/`@Immutable` + shared transaction form components + Compiler Metrics, and type-safe IDs (`AccountId`, `TransactionId`, `CategoryId`).
+
+**Partial:**
+- **Fase 2 (data models)**: mappers are clean (`asExternalModel()`/`asEntity()`) and SQLDelight types stay in data sources, but `*Entity` / `Network*` data classes are not formally declared.
+- **Fase 6 (Compose perf)**: `@Stable`/`@Immutable` and shared form components done; pending `derivedStateOf`, `remember`-ed lambdas, `contentType`, Layout Inspector audit.
+- **Fase 7 (SOLID/cleanup)**: DI per feature exists (`accountModule`, `categoryModule`, `transactionModule`); pending OCP audit and final naming sweep.
+
+**Pending:**
+- **Fase 0 (schema redesign)**: FK constraints on `transactions(accountId, categoryId)`, decide balance derived vs. stored, resolve legacy tables (`drivers`, `dailies`, `loans`, `payments`).
 
 Use case naming convention: **`[Verb][Noun]UseCase`** (e.g. `CreateTransactionUseCase`, `DeleteCategoryUseCase`).
