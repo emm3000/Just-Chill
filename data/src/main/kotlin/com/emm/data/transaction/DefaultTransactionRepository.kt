@@ -4,6 +4,7 @@ import com.emm.data.account.AccountRemoteDataSource
 import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.safeApiCall
 import com.emm.data.shared.safeDbCall
+import com.emm.domain.shared.SyncState
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionRepository
@@ -36,23 +37,15 @@ class DefaultTransactionRepository(
     override suspend fun pull() = safeApiCall {
         val accountIds: List<String> = accountRemoteDataSource.all().map { it.accountId }
         val networkTransactions: List<NetworkTransaction> = remoteDataSource.all(accountIds)
-        val transactionInserts: List<TransactionInsert> = networkTransactions.map { network ->
-            network.asEntity().let { entity ->
-                TransactionInsert(
-                    id = entity.transactionId,
-                    type = enumValueOf(entity.type),
-                    amount = entity.amount,
-                    description = entity.description,
-                    date = entity.date,
-                    accountId = entity.accountId,
-                    updatedAt = entity.updatedAt,
-                    createdAt = entity.createdAt,
-                    categoryId = entity.categoryId,
-                )
+        networkTransactions.forEach { network ->
+            val remoteEntity = network.asEntity()
+            val localEntity = localDataSource.findEntity(remoteEntity.transactionId)
+            when {
+                localEntity == null -> localDataSource.insertSynced(remoteEntity)
+                localEntity.syncState == SyncState.Pending.name -> Unit // local wins; sync() will push it
+                remoteEntity.updatedAt > localEntity.updatedAt -> localDataSource.insertSynced(remoteEntity)
+                // else remote is same age or older and local is synced: nothing to do
             }
-        }
-        transactionInserts.forEach { transactionInsert ->
-            localDataSource.create(transactionInsert)
         }
     }
 

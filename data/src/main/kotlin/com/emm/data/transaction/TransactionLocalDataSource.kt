@@ -60,6 +60,27 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
         return tq.find(transactionId).executeAsOneOrNull()?.asEntity()?.asExternalModel()
     }
 
+    fun findEntity(transactionId: String): TransactionEntity? {
+        return tq.find(transactionId).executeAsOneOrNull()?.asEntity()
+    }
+
+    suspend fun insertSynced(entity: TransactionEntity) = withContext(Dispatchers.IO) {
+        tq.insert(
+            transactionId = entity.transactionId,
+            type = entity.type,
+            amount = entity.amount,
+            description = entity.description,
+            date = entity.date,
+            categoryId = entity.categoryId,
+            accountId = entity.accountId,
+            syncState = SyncState.Synced.name,
+            isDeleted = entity.isDeleted,
+            updatedAt = entity.updatedAt,
+            createdAt = entity.createdAt,
+        )
+        Unit
+    }
+
     suspend fun update(
         transactionId: String,
         transactionUpdate: TransactionUpdate,
