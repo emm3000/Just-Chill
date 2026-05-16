@@ -66,4 +66,32 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
     suspend fun unSynced(): List<CategoryEntity> = withContext(Dispatchers.IO) {
         cq.selectPendingSync().executeAsList().asEntity()
     }
+
+    suspend fun findEntity(categoryId: String): CategoryEntity? = withContext(Dispatchers.IO) {
+        cq.find(categoryId).executeAsOneOrNull()?.asEntity()
+    }
+
+    suspend fun insertSynced(entity: CategoryEntity) = withContext(Dispatchers.IO) {
+        cq.insert(
+            categoryId = entity.categoryId,
+            name = entity.name,
+            icon = entity.icon,
+            color = entity.color,
+            categoryType = entity.categoryType,
+            syncState = SyncState.Synced.name,
+            isDefault = entity.isDefault,
+            isDeleted = entity.isDeleted,
+            updatedAt = entity.updatedAt,
+            createdAt = entity.createdAt,
+        )
+    }
+
+    suspend fun updateNameFromRemote(categoryId: String, name: String, updatedAt: Long) = withContext(Dispatchers.IO) {
+        cq.updateValues(
+            name = name,
+            syncState = SyncState.Synced.name,
+            updatedAt = updatedAt,
+            categoryId = categoryId,
+        )
+    }
 }

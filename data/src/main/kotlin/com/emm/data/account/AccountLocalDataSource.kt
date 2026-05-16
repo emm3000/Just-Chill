@@ -29,6 +29,21 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         aq.find(accountId).executeAsOneOrNull()?.asEntity()?.asExternalModel()
     }
 
+    suspend fun findEntity(accountId: String): AccountEntity? = withContext(Dispatchers.IO) {
+        aq.find(accountId).executeAsOneOrNull()?.asEntity()
+    }
+
+    suspend fun insertSynced(entity: AccountEntity) = withContext(Dispatchers.IO) {
+        aq.insert(
+            accountId = entity.accountId,
+            name = entity.name,
+            syncState = SyncState.Synced.name,
+            isDeleted = entity.isDeleted,
+            updatedAt = entity.updatedAt,
+            createdAt = entity.createdAt,
+        )
+    }
+
     fun default(): Flow<Account?> = aq
         .all()
         .asFlow()

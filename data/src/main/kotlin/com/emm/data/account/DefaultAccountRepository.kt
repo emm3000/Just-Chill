@@ -7,6 +7,7 @@ import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountUpdateRepository
 import com.emm.domain.account.AccountUpsert
+import com.emm.domain.shared.SyncState
 import kotlinx.coroutines.flow.Flow
 
 class DefaultAccountRepository(
@@ -42,17 +43,16 @@ class DefaultAccountRepository(
     }
 
     override suspend fun pull() = safeApiCall {
-        val all: List<NetworkAccount> = remoteDataSource.all()
-        val accountUpsertList: List<AccountUpsert> = all.map { networkAccount ->
-            AccountUpsert(
-                accountId = networkAccount.accountId,
-                name = networkAccount.name,
-                updatedAt = networkAccount.updatedAt,
-                createdAt = networkAccount.createdAt,
-            )
-        }
-        accountUpsertList.forEach {
-            localDataSource.create(it)
+        val networkAccounts: List<NetworkAccount> = remoteDataSource.all()
+        networkAccounts.forEach { network ->
+            val remoteEntity = network.asEntity()
+            val localEntity = localDataSource.findEntity(remoteEntity.accountId)
+            when {
+                localEntity == null -> localDataSource.insertSynced(remoteEntity)
+                localEntity.syncState == SyncState.Pending.name -> Unit // local wins; sync() will push it
+                remoteEntity.updatedAt > localEntity.updatedAt -> localDataSource.insertSynced(remoteEntity)
+                // else remote is same age or older and local is synced: nothing to do
+            }
         }
     }
 

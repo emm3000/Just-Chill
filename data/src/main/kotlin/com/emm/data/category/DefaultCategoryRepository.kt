@@ -6,6 +6,7 @@ import com.emm.data.shared.safeDbCall
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryUpsert
+import com.emm.domain.shared.SyncState
 import kotlinx.coroutines.flow.Flow
 
 class DefaultCategoryRepository(
@@ -58,17 +59,20 @@ class DefaultCategoryRepository(
 
     override suspend fun pull() = safeApiCall {
         val networkCategories: List<NetworkCategory> = remoteDataSource.all()
-        val categoryUpsertList: List<CategoryUpsert> = networkCategories.map { network ->
-            CategoryUpsert(
-                categoryId = network.categoryId,
-                name = network.name,
-                icon = "icon",
-                color = "color",
-                categoryType = enumValueOf("Income"),
-            )
-        }
-        categoryUpsertList.forEach {
-            localDataSource.create(it)
+        networkCategories.forEach { network ->
+            val localEntity = localDataSource.findEntity(network.categoryId)
+            when {
+                localEntity == null -> {
+                    // New from remote: insert with placeholder icon/color/type (remote schema limitation)
+                    localDataSource.insertSynced(network.asEntity())
+                }
+                localEntity.syncState == SyncState.Pending.name -> Unit // local wins; sync() will push it
+                network.updatedAt > localEntity.updatedAt -> {
+                    // Remote name is newer; preserve local icon/color/type
+                    localDataSource.updateNameFromRemote(network.categoryId, network.name, network.updatedAt)
+                }
+                // else remote is same age or older and local is synced: nothing to do
+            }
         }
     }
 
