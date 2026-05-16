@@ -1,5 +1,5 @@
 name: Setup Android Build Environment
-description: Checkout, decode secrets, configure JDK 17 and Gradle with caching
+description: Decode secrets, configure JDK 17 and Gradle with caching. Caller must checkout first.
 
 inputs:
   keystore-properties:
@@ -16,9 +16,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Checkout the code
-      uses: actions/checkout@v6
-
     - name: Create keystore.properties file
       shell: bash
       run: echo "${{ inputs.keystore-properties }}" > keystore.properties
