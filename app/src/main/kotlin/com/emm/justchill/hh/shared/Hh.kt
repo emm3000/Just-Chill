@@ -30,8 +30,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -88,7 +90,7 @@ fun Hh() {
 
     val colors = LocalEmmColors.current
     val backStack: NavBackStack<NavKey> = rememberNavBackStack(START_TAB)
-    val resultBus = remember { ResultEventBus() }
+    var pendingCategory by remember { mutableStateOf<SelectableCategory?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     val currentRoute: NavKey? = backStack.lastOrNull()
@@ -238,9 +240,11 @@ fun Hh() {
                 entry<AddTransactionRoute> {
                     val vm: AddTransactionViewModel = koinViewModel()
 
-                    ResultEffect<SelectableCategory>(resultBus) { selectableCategory ->
-                        resultBus.removeResult<SelectableCategory>()
-                        vm.onIntent(AddTransactionIntent.OnNewValueFromOthers(selectableCategory))
+                    LaunchedEffect(pendingCategory) {
+                        pendingCategory?.let { selectableCategory ->
+                            vm.onIntent(AddTransactionIntent.OnNewValueFromOthers(selectableCategory))
+                            pendingCategory = null
+                        }
                     }
 
                     AddTransactionScreen(
@@ -279,7 +283,7 @@ fun Hh() {
                     val selectState by vm.state.collectAsStateWithLifecycle()
                     SelectCategoryScreen(
                         onCategorySelected = {
-                            resultBus.sendResult(result = it)
+                            pendingCategory = it
                             backStack.removeLastOrNull()
                         },
                         onBack = { backStack.removeLastOrNull() },
