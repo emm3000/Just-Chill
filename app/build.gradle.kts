@@ -92,6 +92,11 @@ android {
     }
 }
 
+composeCompiler {
+    metricsDestination = layout.buildDirectory.dir("compose_metrics")
+    reportsDestination = layout.buildDirectory.dir("compose_reports")
+}
+
 val devDebugImplementation: Configuration by configurations.creating
 
 dependencies {
