@@ -7,87 +7,69 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/trunk' }}
+
+permissions:
+  contents: read
 
 jobs:
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Checkout the code
-        uses: actions/checkout@v4
-
-      - name: Create keystore.properties file
-        run: echo "${{ secrets.JUST_VERONICA }}" > keystore.properties
-
-      - name: Set Up JDK
-        uses: actions/setup-java@v4
+      - uses: ./.github/actions/setup-android
         with:
-          distribution: 'zulu'
-          java-version: 17
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+          keystore-properties: ${{ secrets.JUST_VERONICA }}
+          signing-key-base64: ${{ secrets.JUST_CHILL }}
+          cache-read-only: 'true'
 
       - name: Run Lint
-        run: ./gradlew lint
+        run: ./gradlew lintDevDebug
 
-      - name: Upload html test report
-        uses: actions/upload-artifact@v4
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v7
         with:
-          name: lint.html
-          path: app/build/reports/lint-results-debug.html
+          name: lint-report
+          path: app/build/reports/lint-results-devDebug.html
+          retention-days: 7
 
   unit-test:
     needs: [ lint ]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Checkout the code
-        uses: actions/checkout@v4
-
-      - name: Create keystore.properties file
-        run: echo "${{ secrets.JUST_VERONICA }}" > keystore.properties
-
-      - name: Set Up JDK
-        uses: actions/setup-java@v4
+      - uses: ./.github/actions/setup-android
         with:
-          distribution: 'zulu'
-          java-version: 17
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+          keystore-properties: ${{ secrets.JUST_VERONICA }}
+          signing-key-base64: ${{ secrets.JUST_CHILL }}
+          cache-read-only: 'true'
 
       - name: Run tests
-        run: ./gradlew test
+        run: ./gradlew :domain:test :data:testDebugUnitTest :app:testDevDebugUnitTest
 
       - name: Upload test report
-        uses: actions/upload-artifact@v2
+        if: always()
+        uses: actions/upload-artifact@v7
         with:
-          name: unit_test_report
-          path: app/build/reports/tests/testDebugUnitTest/
+          name: unit-test-report
+          path: |
+            domain/build/reports/tests/test/
+            data/build/reports/tests/testDebugUnitTest/
+            app/build/reports/tests/testDevDebugUnitTest/
+          retention-days: 7
 
   build:
+    needs: [ unit-test ]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Checkout the code
-        uses: actions/checkout@v4
-
-      - name: Create keystore.properties file
-        run: echo "${{ secrets.JUST_VERONICA }}" > keystore.properties
-
-      - name: JUST CHILL
-        run: |
-          mkdir -p key
-          echo "${{ secrets.JUST_CHILL }}" | base64 --decode > key/just_chill_key.p12
-
-      - name: Set Up JDK
-        uses: actions/setup-java@v4
+      - uses: ./.github/actions/setup-android
         with:
-          distribution: 'zulu'
-          java-version: 17
+          keystore-properties: ${{ secrets.JUST_VERONICA }}
+          signing-key-base64: ${{ secrets.JUST_CHILL }}
+          cache-read-only: 'true'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Build Project
-        run: ./gradlew build
+      - name: Build Dev Debug + Prod Release
+        run: ./gradlew assembleDevDebug assembleProdRelease

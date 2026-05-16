@@ -1,0 +1,41 @@
+name: Setup Android Build Environment
+description: Checkout, decode secrets, configure JDK 17 and Gradle with caching
+
+inputs:
+  keystore-properties:
+    description: Contents of keystore.properties (passed from secrets)
+    required: true
+  signing-key-base64:
+    description: Base64-encoded signing key .p12 file
+    required: true
+  cache-read-only:
+    description: When true, Gradle cache is read-only (use for PRs to avoid pollution)
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout the code
+      uses: actions/checkout@v6
+
+    - name: Create keystore.properties file
+      shell: bash
+      run: echo "${{ inputs.keystore-properties }}" > keystore.properties
+
+    - name: Decode signing key
+      shell: bash
+      run: |
+        mkdir -p key
+        echo "${{ inputs.signing-key-base64 }}" | base64 --decode > key/just_chill_key.p12
+
+    - name: Set Up JDK
+      uses: actions/setup-java@v5
+      with:
+        distribution: zulu
+        java-version: '17'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v6
+      with:
+        cache-read-only: ${{ inputs.cache-read-only }}

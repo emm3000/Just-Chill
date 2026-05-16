@@ -6,39 +6,41 @@ on:
       - '*'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  upload_to_playstore:
+  verify:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 30
     steps:
-      - name: Checkout the code
-        uses: actions/checkout@v4
-
-      - name: Create keystore.properties file
-        run: echo "${{ secrets.JUST_VERONICA }}" > keystore.properties
-
-      - name: JUST CHILL
-        run: |
-          mkdir -p key
-          echo "${{ secrets.JUST_CHILL }}" | base64 --decode > key/just_chill_key.p12
-
-      - name: Set Up JDK
-        uses: actions/setup-java@v4
+      - uses: ./.github/actions/setup-android
         with:
-          distribution: 'zulu'
-          java-version: 17
+          keystore-properties: ${{ secrets.JUST_VERONICA }}
+          signing-key-base64: ${{ secrets.JUST_CHILL }}
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: Run tests + lint
+        run: ./gradlew :domain:test :data:testDebugUnitTest :app:testDevDebugUnitTest lintProdRelease
 
-      - name: Build Release
+  publish:
+    needs: [ verify ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: ./.github/actions/setup-android
+        with:
+          keystore-properties: ${{ secrets.JUST_VERONICA }}
+          signing-key-base64: ${{ secrets.JUST_CHILL }}
+
+      - name: Build Prod Release Bundle
         run: ./gradlew bundleProdRelease
 
-      - name: Upload AAB Prod Release
-        uses: actions/upload-artifact@v4
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v7
         with:
-          name: AAB(s) prod release
+          name: prod-release-aab-${{ github.ref_name }}
           path: app/build/outputs/bundle/prodRelease/
+          retention-days: 90
 
       - name: Publish to Play Store
         uses: r0adkll/upload-google-play@v1
@@ -48,3 +50,4 @@ jobs:
           releaseFiles: app/build/outputs/bundle/prodRelease/app-prod-release.aab
           status: completed
           track: alpha
+          releaseName: ${{ github.ref_name }}

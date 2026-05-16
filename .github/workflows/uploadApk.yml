@@ -7,74 +7,73 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/trunk' }}
 
-jobs:
-  upload_dev_apk:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the code
-        uses: actions/checkout@v6
+permissions:
+  contents: read
 
-      - name: Set current date as env variable
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: ./.github/actions/setup-android
+        with:
+          keystore-properties: ${{ secrets.JUST_VERONICA }}
+          signing-key-base64: ${{ secrets.JUST_CHILL }}
+
+      - name: Run tests
+        run: ./gradlew :domain:test :data:testDebugUnitTest :app:testDevDebugUnitTest
+
+  upload:
+    needs: [ test ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: ./.github/actions/setup-android
+        with:
+          keystore-properties: ${{ secrets.JUST_VERONICA }}
+          signing-key-base64: ${{ secrets.JUST_CHILL }}
+
+      - name: Set current date
         run: echo "date_today=$(date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_ENV
 
-      - name: Create keystore.properties file
-        run: echo "${{ secrets.JUST_VERONICA }}" > keystore.properties
+      - name: Build Dev Debug + Prod Release
+        run: ./gradlew assembleDevDebug assembleProdRelease
 
-      - name: JUST CHILL
+      - name: Resolve APK paths
+        id: paths
         run: |
-          mkdir -p key
-          echo "${{ secrets.JUST_CHILL }}" | base64 --decode > key/just_chill_key.p12
+          echo "devDebug=$(find app/build/outputs/apk/dev/debug -name '*.apk' | head -n1)" >> $GITHUB_OUTPUT
+          echo "prodRelease=$(find app/build/outputs/apk/prod/release -name '*.apk' | head -n1)" >> $GITHUB_OUTPUT
 
-      - name: Set Up JDK
-        uses: actions/setup-java@v5
-        with:
-          distribution: 'zulu'
-          java-version: 17
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
-
-      - name: Build Dev Debug (assembleDevDebug)
-        run: ./gradlew assembleDevDebug
-
-      - name: Build Prod Debug (assembleProdDebug)
-        run: ./gradlew assembleProdRelease
-
-      - name: Get Dev Debug APK path
-        id: devDebugPath
-        run: echo "devDebug=$(find app/build/outputs/apk/dev/debug/*.apk)" >> $GITHUB_OUTPUT
-
-      - name: Get Prod Debug APK path
-        id: prodDebugPath
-        run: echo "prodDebug=$(find app/build/outputs/apk/prod/release/*.apk)" >> $GITHUB_OUTPUT
-
-      - name: upload DEV DEBUG (APP DISTRIBUTION)
+      - name: Distribute Dev Debug to Firebase
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
-          appId: ${{secrets.FIREBASE_DEV_APP_ID}}
+          appId: ${{ secrets.FIREBASE_DEV_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
           groups: EMM
-          file: ${{ steps.devDebugPath.outputs.devDebug }}
+          file: ${{ steps.paths.outputs.devDebug }}
 
-      - name: upload PROD DEBUG (APP DISTRIBUTION)
+      - name: Distribute Prod Release to Firebase
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
-          appId: ${{secrets.FIREBASE_PROD_APP_ID}}
+          appId: ${{ secrets.FIREBASE_PROD_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
           groups: EMM
-          file: ${{ steps.prodDebugPath.outputs.prodDebug }}
+          file: ${{ steps.paths.outputs.prodRelease }}
 
-      - name: Upload APK Dev Debug
-        uses: actions/upload-artifact@v5
+      - name: Upload Dev Debug APK artifact
+        uses: actions/upload-artifact@v7
         with:
-          name: ${{ env.date_today }} - APK(s) dev debug generated
+          name: ${{ env.date_today }}-dev-debug-apk
           path: app/build/outputs/apk/dev/debug/
+          retention-days: 14
 
-      - name: Upload APK Prod Debug
-        uses: actions/upload-artifact@v5
+      - name: Upload Prod Release APK artifact
+        uses: actions/upload-artifact@v7
         with:
-          name: ${{ env.date_today }} - APK(s) prod debug generated
+          name: ${{ env.date_today }}-prod-release-apk
           path: app/build/outputs/apk/prod/release/
+          retention-days: 14
