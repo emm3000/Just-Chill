@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -37,6 +39,7 @@ fun EmmButton(
     modifier: Modifier = Modifier,
     variant: EmmButtonVariant = EmmButtonVariant.Primary,
     enabled: Boolean = true,
+    isLoading: Boolean = false,
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -76,7 +79,7 @@ fun EmmButton(
             .then(border?.let { Modifier.border(it, radii.rS) } ?: Modifier)
             .background(pressOverlay)
             .clickable(
-                enabled = enabled,
+                enabled = enabled && !isLoading,
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
@@ -87,11 +90,19 @@ fun EmmButton(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Text(
-                text = text,
-                style = type.labelL,
-                color = textColor,
-            )
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = textColor,
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Text(
+                    text = text,
+                    style = type.labelL,
+                    color = textColor,
+                )
+            }
         }
     }
 }

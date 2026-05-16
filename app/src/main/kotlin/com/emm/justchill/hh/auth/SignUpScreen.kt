@@ -1,55 +1,51 @@
 package com.emm.justchill.hh.auth
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.ClickableText
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.emm.justchill.components.EmmButton
+import com.emm.justchill.components.EmmTextInput
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.theme.LocalEmmSpacing
+import com.emm.justchill.core.theme.LocalEmmType
 
 @Composable
 fun SignUpScreen(
@@ -57,285 +53,279 @@ fun SignUpScreen(
     onAction: (SignUpAction) -> Unit = {},
     onBack: () -> Unit = {},
 ) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+    val keyboard = LocalSoftwareKeyboardController.current
+
+    var showPassword by rememberSaveable { mutableStateOf(false) }
+    var showConfirm by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 24.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+            .background(colors.bg)
+            .statusBarsPadding()
+            .imePadding()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = spacing.s4),
     ) {
-        Spacer(modifier = Modifier.weight(0.5f))
 
-        Header()
+        Spacer(Modifier.height(spacing.s4))
 
-        EmailField(state, onAction)
+        BackChevron(onBack = onBack)
 
-        FirstPassword(state, onAction)
+        Spacer(Modifier.height(spacing.s8))
 
-        SecondPassword(state, onAction)
+        Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
+            Text(
+                text = "Crea tu cuenta",
+                style = type.display,
+                color = colors.textPrimary,
+            )
+            Text(
+                text = "Únete a JustChill",
+                style = type.bodyM,
+                color = colors.textSecondary,
+            )
+        }
 
-        CheckTermsAndConditions(state, onAction)
+        Spacer(Modifier.height(spacing.s8))
 
-        SignUpButton(onAction, state)
+        EmmTextInput(
+            value = state.email,
+            onValueChange = { onAction(SignUpAction.OnEmailChange(it)) },
+            label = "CORREO",
+            placeholder = "tu@correo.com",
+            keyboardType = KeyboardType.Email,
+            isError = state.emailError != null,
+            helper = state.emailError,
+            modifier = Modifier.fillMaxWidth(),
+        )
 
-        ErrorMessage(state)
+        Spacer(Modifier.height(spacing.s5))
 
-        Footer(onBack)
+        EmmTextInput(
+            value = state.password,
+            onValueChange = { onAction(SignUpAction.OnPasswordChange(it)) },
+            label = "CONTRASEÑA",
+            placeholder = "••••••••",
+            keyboardType = KeyboardType.Password,
+            visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+            isError = state.passwordError != null,
+            helper = state.passwordError,
+            trailingContent = {
+                VisibilityToggle(showing = showPassword) { showPassword = !showPassword }
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
 
-        Spacer(modifier = Modifier.weight(0.5f))
+        Spacer(Modifier.height(spacing.s5))
+
+        EmmTextInput(
+            value = state.confirmPassword,
+            onValueChange = { onAction(SignUpAction.OnConfirmPasswordChange(it)) },
+            label = "REPITE LA CONTRASEÑA",
+            placeholder = "••••••••",
+            keyboardType = KeyboardType.Password,
+            visualTransformation = if (showConfirm) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingContent = {
+                VisibilityToggle(showing = showConfirm) { showConfirm = !showConfirm }
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Spacer(Modifier.height(spacing.s6))
+
+        TermsCheckbox(
+            isChecked = state.isChecked,
+            onToggle = { onAction(SignUpAction.OnCheckedChange(!state.isChecked)) },
+        )
+
+        Spacer(Modifier.height(spacing.s6))
+
+        EmmButton(
+            text = "Crear cuenta",
+            onClick = {
+                keyboard?.hide()
+                onAction(SignUpAction.SignUp)
+            },
+            enabled = state.isValidFields,
+            isLoading = state.isLoading,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        if (state.error != null) {
+            Spacer(Modifier.height(spacing.s3))
+            Text(
+                text = state.error,
+                style = type.bodyM,
+                color = colors.danger,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        Spacer(Modifier.height(spacing.s8))
+
+        Footer(onBack = onBack)
+
+        Spacer(Modifier.height(spacing.s8))
+    }
+}
+
+@Composable
+private fun BackChevron(onBack: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onBack,
+            ),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.ArrowBack,
+            contentDescription = "Atrás",
+            tint = colors.textPrimary,
+            modifier = Modifier.size(24.dp),
+        )
+    }
+}
+
+@Composable
+private fun VisibilityToggle(showing: Boolean, onToggle: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onToggle,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = if (showing) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+            contentDescription = if (showing) "Ocultar contraseña" else "Mostrar contraseña",
+            tint = colors.textTertiary,
+            modifier = Modifier.size(20.dp),
+        )
+    }
+}
+
+@Composable
+private fun TermsCheckbox(isChecked: Boolean, onToggle: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val radii = LocalEmmRadii.current
+    val spacing = LocalEmmSpacing.current
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onToggle,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spacing.s3),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(20.dp)
+                .background(
+                    if (isChecked) colors.accent else colors.bg,
+                    radii.rS,
+                )
+                .border(1.dp, if (isChecked) colors.accent else colors.border, radii.rS),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (isChecked) {
+                Icon(
+                    imageVector = Icons.Outlined.Check,
+                    contentDescription = null,
+                    tint = colors.textOnAccent,
+                    modifier = Modifier.size(14.dp),
+                )
+            }
+        }
+
+        Text(
+            text = "Acepto los términos y condiciones",
+            style = type.bodyM,
+            color = colors.textSecondary,
+        )
     }
 }
 
 @Composable
 private fun Footer(onBack: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+    val interactionSource = remember { MutableInteractionSource() }
+
     Row(
-        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text("¿Ya tienes una cuenta?", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
-        TextButton(onClick = { onBack() }) {
-            Text("Inicia Sesión")
-        }
-    }
-}
-
-@Composable
-private fun ErrorMessage(state: SignUpUiState) {
-    state.error?.let { message ->
-        Text(
-            text = message,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-@Composable
-private fun SignUpButton(onAction: (SignUpAction) -> Unit, state: SignUpUiState) {
-    val current = LocalSoftwareKeyboardController.current
-
-    Button(
-        onClick = {
-            current?.hide()
-            onAction(SignUpAction.SignUp)
-        },
-        enabled = state.isValidFields,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp)
-    ) {
-        AnimatedVisibility(
-            visible = state.isLoading,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(24.dp),
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-        }
-        AnimatedVisibility(
-            visible = state.isLoading.not(),
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Text(
-                text = "Registrarse",
-                fontSize = 18.sp
-            )
-        }
-    }
-}
-
-@Composable
-private fun CheckTermsAndConditions(state: SignUpUiState, onAction: (SignUpAction) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start
     ) {
-        Checkbox(
-            checked = state.isChecked,
-            onCheckedChange = { onAction(SignUpAction.OnCheckedChange(it)) },
-            colors = CheckboxDefaults.colors(
-                checkedColor = MaterialTheme.colorScheme.primary,
-                uncheckedColor = if (state.isChecked) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        Text(
+            text = "¿Ya tienes una cuenta? ",
+            style = type.bodyM,
+            color = colors.textSecondary,
         )
-        val annotatedString = buildAnnotatedString {
-            append("Acepto los ")
-            pushStringAnnotation(tag = "terms", annotation = "https://your-app.com/terms")
-            withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
-                append("Términos y Condiciones")
-            }
-            pop()
-        }
-        ClickableText(
-            text = annotatedString,
-            onClick = { offset ->
-                annotatedString.getStringAnnotations(tag = "terms", start = offset, end = offset)
-                    .firstOrNull()?.let {
-                        println("Click en términos: ${it.item}")
-                    }
-            },
-            style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
-            modifier = Modifier.fillMaxWidth(0.9f)
+        Text(
+            text = "Inicia sesión",
+            style = type.labelL,
+            color = colors.textPrimary,
+            modifier = Modifier
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onBack,
+                )
+                .padding(spacing.s1),
         )
     }
 }
 
-@Composable
-private fun SecondPassword(state: SignUpUiState, onAction: (SignUpAction) -> Unit) {
-    val (showSecondPassword, setShowSecondPassword) = remember { mutableStateOf(false) }
-    OutlinedTextField(
-        value = state.confirmPassword,
-        onValueChange = { onAction(SignUpAction.OnConfirmPasswordChange(it)) },
-        label = {
-            Text(
-                text = "Confirmar Contraseña",
-                color = MaterialTheme.colorScheme.onBackground,
-                fontFamily = LatoFontFamily,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 16.sp,
-                modifier = Modifier.padding(bottom = 5.dp)
-            )
-        },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-        visualTransformation = if (showSecondPassword) VisualTransformation.None else PasswordVisualTransformation(),
-        trailingIcon = {
-            val image = if (showSecondPassword) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-            val description = if (showSecondPassword) "Ocultar contraseña" else "Mostrar contraseña"
-            IconButton(onClick = { setShowSecondPassword(!showSecondPassword) }) {
-                Icon(imageVector = image, contentDescription = description)
-            }
-        },
-        isError = false,
-        supportingText = {
-            if (state.passwordError != null) {
-                Text(text = state.passwordError)
-            }
-        },
-        modifier = Modifier.fillMaxWidth(),
-        textStyle = TextStyle(
-            fontFamily = LatoFontFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 18.sp,
-        )
-    )
-}
-
-@Composable
-private fun FirstPassword(state: SignUpUiState, onAction: (SignUpAction) -> Unit) {
-    val (showFirstPassword, setShowFirstPassword) = remember { mutableStateOf(false) }
-    OutlinedTextField(
-        value = state.password,
-        onValueChange = { onAction(SignUpAction.OnPasswordChange(it)) },
-        label = {
-            Text(
-                text = "Contraseña",
-                color = MaterialTheme.colorScheme.onBackground,
-                fontFamily = LatoFontFamily,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 16.sp,
-                modifier = Modifier.padding(bottom = 5.dp)
-            )
-        },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-        visualTransformation = if (showFirstPassword) VisualTransformation.None else PasswordVisualTransformation(),
-        trailingIcon = {
-            val image = if (showFirstPassword) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-            val description = if (showFirstPassword) "Ocultar contraseña" else "Mostrar contraseña"
-            IconButton(onClick = { setShowFirstPassword(!showFirstPassword) }) {
-                Icon(imageVector = image, contentDescription = description)
-            }
-        },
-        isError = false,
-        supportingText = {
-            if (state.passwordError != null) {
-                Text(text = state.passwordError)
-            }
-        },
-        modifier = Modifier.fillMaxWidth(),
-        textStyle = TextStyle(
-            fontFamily = LatoFontFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 18.sp,
-        )
-    )
-}
-
-@Composable
-private fun EmailField(state: SignUpUiState, onAction: (SignUpAction) -> Unit) {
-    OutlinedTextField(
-        value = state.email,
-        onValueChange = { onAction(SignUpAction.OnEmailChange(it)) },
-        label = {
-            Text(
-                text = "Correo electronico",
-                color = MaterialTheme.colorScheme.onBackground,
-                fontFamily = LatoFontFamily,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 16.sp,
-                modifier = Modifier.padding(bottom = 5.dp)
-            )
-        },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-        isError = false,
-        supportingText = {
-            if (state.emailError != null) {
-                Text(text = state.emailError)
-            }
-        },
-        modifier = Modifier.fillMaxWidth(),
-        textStyle = TextStyle(
-            fontFamily = LatoFontFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 18.sp,
-        )
-    )
-}
-
-@Composable
-private fun Header() {
-    Text(
-        text = "Crea tu cuenta",
-        style = MaterialTheme.typography.headlineMedium.copy(fontSize = 28.sp),
-        color = MaterialTheme.colorScheme.onBackground
-    )
-    Text(
-        text = "Únete a nuestra comunidad",
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-    )
-}
-
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 1000)
 @Composable
 private fun SignUpScreenPreview() {
     EmmTheme {
         SignUpScreen(
             state = SignUpUiState(
                 email = "luke.trevino@example.com",
-                emailError = null,
-                password = "commune",
-                passwordError = null,
-                confirmPassword = "sadipscing",
-                isValidFields = false,
-                isChecked = false,
-                success = false,
-                isLoading = false,
-                error = null
-            ), onAction = {}, onBack = {}
+                password = "123456",
+                confirmPassword = "123456",
+                isValidFields = true,
+                isChecked = true,
+            ),
+        )
+    }
+}
 
+@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 1000)
+@Composable
+private fun SignUpScreenErrorPreview() {
+    EmmTheme {
+        SignUpScreen(
+            state = SignUpUiState(
+                email = "luke",
+                emailError = "Correo no válido",
+                password = "123",
+                passwordError = "Mínimo 6 caracteres",
+                confirmPassword = "1234",
+            ),
         )
     }
 }
