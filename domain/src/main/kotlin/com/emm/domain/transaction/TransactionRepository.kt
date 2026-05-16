@@ -12,6 +12,8 @@ interface TransactionRepository {
 
     fun fetchAllWithCategory(): Flow<List<TransactionWithCategory>>
 
+    suspend fun update(transactionId: String, transactionUpdate: TransactionUpdate)
+
     suspend fun delete(transactionId: String)
 
     suspend fun pull()

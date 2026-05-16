@@ -3,7 +3,7 @@ package com.emm.domain.transaction
 import com.emm.domain.shared.DateAndTimeCombiner
 
 class UpdateTransactionUseCase(
-    private val repository: TransactionUpdateRepository,
+    private val repository: TransactionRepository,
     private val dateAndTimeCombiner: DateAndTimeCombiner,
 ) {
 

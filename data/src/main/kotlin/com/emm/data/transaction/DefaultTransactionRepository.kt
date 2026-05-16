@@ -8,6 +8,7 @@ import com.emm.domain.shared.SyncState
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
 
@@ -27,6 +28,11 @@ class DefaultTransactionRepository(
 
     override fun fetchAllWithCategory(): Flow<List<TransactionWithCategory>> {
         return localDataSource.completeTransactions().catchAsDomainException()
+    }
+
+    override suspend fun update(transactionId: String, transactionUpdate: TransactionUpdate): Unit = safeDbCall {
+        localDataSource.update(transactionId, transactionUpdate)
+        Unit
     }
 
     override suspend fun delete(transactionId: String): Unit = safeDbCall {
