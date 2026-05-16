@@ -9,27 +9,32 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
-@Serializable
-data object HomeRoute : NavKey
+/**
+ * Marker for routes that should display the bottom navigation bar.
+ * Routes that don't implement this trigger an AnimatedVisibility slide-down.
+ */
+sealed interface BottomBarRoute : NavKey
 
 @Serializable
-data object AccountsRoute : NavKey
+data object HomeRoute : BottomBarRoute
 
 @Serializable
-data object SeeTransactionRoute : NavKey
+data object SeeTransactionRoute : BottomBarRoute
 
 @Serializable
-data object ProfileRoute : NavKey
+data object AccountsRoute : BottomBarRoute
+
+@Serializable
+data object ProfileRoute : BottomBarRoute
 
 data class HhNavBarItem(
     val name: String,
-    val route: String,
     val icon: ImageVector,
 )
 
-val TOP_LEVEL_ROUTES: Map<NavKey, HhNavBarItem> = mapOf(
-    HomeRoute to HhNavBarItem(name = "Inicio", route = "class", icon = Icons.Filled.Home),
-    SeeTransactionRoute to HhNavBarItem(name = "Ver", route = "class", icon = Icons.Filled.AttachMoney),
-    AccountsRoute to HhNavBarItem(name = "Cuentas", route = "class", icon = Icons.Filled.PlaylistAddCheckCircle),
-    ProfileRoute to HhNavBarItem(name = "Profile", route = "class", icon = Icons.Filled.Person),
+val TOP_LEVEL_ROUTES: Map<BottomBarRoute, HhNavBarItem> = mapOf(
+    HomeRoute to HhNavBarItem(name = "Inicio", icon = Icons.Filled.Home),
+    SeeTransactionRoute to HhNavBarItem(name = "Ver", icon = Icons.Filled.AttachMoney),
+    AccountsRoute to HhNavBarItem(name = "Cuentas", icon = Icons.Filled.PlaylistAddCheckCircle),
+    ProfileRoute to HhNavBarItem(name = "Profile", icon = Icons.Filled.Person),
 )

@@ -44,12 +44,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation3.runtime.NavBackStack
-import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.shared.EmmTextInput
-import com.emm.justchill.hh.shared.SelectIconRoute
 import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
 import com.emm.justchill.hh.transaction.components.NewButton
 import org.koin.androidx.compose.koinViewModel
@@ -61,15 +58,16 @@ private val strokeWidth = 2.dp
 
 @Composable
 fun AddCategoryScreen(
-    navController: NavBackStack<NavKey>,
+    onBack: () -> Unit,
+    onSelectIcon: () -> Unit,
     vm: AddCategoryViewModel = koinViewModel(),
 ) {
 
     AddCategoryScreen(
         state = vm.state,
-        onMoreIconsClick = { navController.add(SelectIconRoute) },
+        onMoreIconsClick = onSelectIcon,
         onAction = vm::onAction,
-        navigateToBack = navController::removeLastOrNull
+        navigateToBack = onBack,
     )
 }
 

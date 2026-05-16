@@ -24,13 +24,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation3.runtime.NavBackStack
-import androidx.navigation3.runtime.NavKey
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.hh.category.findById
-import com.emm.justchill.hh.shared.EditTransactionRoute
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
@@ -40,7 +37,7 @@ import java.util.UUID
 
 @Composable
 fun SeeTransactionsScreen(
-    externalNavBack: NavBackStack<NavKey>,
+    onEditTransaction: (String) -> Unit,
     vm: SeeTransactionsViewModel = koinViewModel(),
 ) {
 
@@ -48,9 +45,7 @@ fun SeeTransactionsScreen(
 
     SeeTransactionsScreen(
         transactions = collectAsState,
-        navigateToEdit = {
-            externalNavBack.add(EditTransactionRoute(it))
-        },
+        navigateToEdit = onEditTransaction,
     )
 }
 

@@ -1,8 +1,15 @@
 package com.emm.justchill.hh.shared
 
 import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
@@ -31,6 +38,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -68,246 +76,287 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
+private val START_TAB: BottomBarRoute = SeeTransactionRoute
+
 @Composable
 fun Hh() {
 
-    val navBackStack: NavBackStack<NavKey> = rememberNavBackStack(DashboardRoute)
-
+    val backStack: NavBackStack<NavKey> = rememberNavBackStack(START_TAB)
     val resultBus = remember { ResultEventBus() }
 
-    NavDisplay(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundColor),
-        backStack = navBackStack,
-        onBack = { navBackStack.removeLastOrNull() },
-        entryDecorators = listOf(
-            rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator(),
-        ),
-        entryProvider = entryProvider {
-            entry<PreLoginRoute> {
-                val authRepository: AuthRepository = koinInject<AuthRepository>()
+    val currentRoute: NavKey? = backStack.lastOrNull()
+    val showBottomBar: Boolean = currentRoute is BottomBarRoute
 
-                val ctx: Context? = LocalContext.current.applicationContext
-
-                LaunchedEffect(Unit) {
-                    authRepository.sessionStatus.collect { sessionStatus ->
-                        when (sessionStatus) {
-                            SessionStatus.NotAuthenticated -> {
-                                navBackStack.removeLastOrNull()
-                                navBackStack.add(LoginRoute)
-                            }
-
-                            SessionStatus.Initializing -> {}
-                            SessionStatus.Authenticated -> {
-                                ctx?.let(Sync::initialize)
-                                navBackStack.removeLastOrNull()
-                                navBackStack.add(DashboardRoute)
-                            }
-                        }
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
-
-            }
-            entry<LoginRoute> {
-                val vm: LoginViewModel = koinViewModel()
-
-                LaunchedEffect(vm.state.successLogin) {
-                    if (vm.state.successLogin) {
-                        navBackStack.removeLastOrNull()
-                        navBackStack.add(DashboardRoute)
-                    }
-                }
-                LoginScreen(
-                    modifier = Modifier,
-                    state = vm.state,
-                    onAction = vm::onAction,
-                    navigateToRegister = { navBackStack.add(RegisterRoute) }
-                )
-            }
-            entry<RegisterRoute> {
-                val vm: SignUpViewModel = koinViewModel()
-
-                SignUpScreen(
-                    state = vm.state,
-                    onAction = vm::onAction,
-                    onBack = { navBackStack.removeLastOrNull() }
-                )
-            }
-            entry<DashboardRoute> {
-                DashboardContent(navBackStack)
-            }
-            entry<AddTransactionRoute> {
-
-                val vm: AddTransactionViewModel = koinViewModel()
-
-                ResultEffect<SelectableCategory>(resultBus) { selectableCategory ->
-                    resultBus.removeResult<SelectableCategory>()
-                    vm.onAction(AddTransactionAction.OnNewValueFromOthers(selectableCategory))
-                }
-
-                AddTransactionScreen(
-                    vm = vm,
-                    popBackStack = { navBackStack.removeLastOrNull() },
-                    onOtherCategorySelected = { navBackStack.add(SelectCategoryRoute) }
-                )
-            }
-            entry<EditTransactionRoute> {
-                EditTransaction(navBackStack, it.transactionId)
-            }
-            entry<CategoryRoute> {
-                AddCategoryScreen(navBackStack)
-            }
-            entry<AddAccountRoute> {
-                AddAccountScreen(navBackStack)
-            }
-            entry<SelectCategoryRoute> {
-                val vm: SelectCategoryViewModel = koinViewModel()
-
-                SelectCategoryScreen(
-                    onCategorySelected = {
-                        resultBus.sendResult(result = it)
-                        navBackStack.removeLastOrNull()
-                    },
-                    onBack = { navBackStack.removeLastOrNull() },
-                    onValueChange = vm::updateQuery,
-                    onNewCategory = { navBackStack.add(CategoryRoute) },
-                    value = vm.state.query,
-                    income = vm.state.filteredIncomes,
-                    expense = vm.state.filteredExpenses,
-                )
-            }
-            entry<SelectIconRoute> {
-                SelectIconScreen(
-                    onBack = { navBackStack.removeLastOrNull() },
+    Scaffold(
+        modifier = Modifier.background(BackgroundColor),
+        bottomBar = {
+            AnimatedVisibility(
+                visible = showBottomBar,
+                enter = slideInVertically(tween(300)) { it } + fadeIn(tween(300)),
+                exit = slideOutVertically(tween(250)) { it } + fadeOut(tween(200)),
+            ) {
+                HhBottomBar(
+                    current = currentRoute as? BottomBarRoute,
+                    onTabClick = { tab -> backStack.switchTab(tab) },
+                    onAddClick = { backStack.add(AddTransactionRoute) },
                 )
             }
         },
-    )
-}
+        contentWindowInsets = WindowInsets.navigationBars,
+    ) { padding ->
 
-@Composable
-fun DashboardContent(externalNavBack: NavBackStack<NavKey>) {
+        NavDisplay(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BackgroundColor)
+                .padding(padding),
+            backStack = backStack,
+            onBack = { backStack.removeLastOrNull() },
+            entryDecorators = listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator(),
+            ),
+            entryProvider = entryProvider {
+                entry<PreLoginRoute> {
+                    val authRepository = koinInject<AuthRepository>()
+                    val ctx: Context? = LocalContext.current.applicationContext
 
-    val navigationState: NavigationState = rememberNavigationState(
-        startRoute = SeeTransactionRoute,
-        topLevelRoutes = TOP_LEVEL_ROUTES.keys,
-    )
+                    LaunchedEffect(Unit) {
+                        authRepository.sessionStatus.collect { status ->
+                            when (status) {
+                                SessionStatus.NotAuthenticated -> backStack.replaceAll(LoginRoute)
+                                SessionStatus.Authenticated -> {
+                                    ctx?.let(Sync::initialize)
+                                    backStack.replaceAll(START_TAB)
+                                }
+                                SessionStatus.Initializing -> Unit
+                            }
+                        }
+                    }
 
-    val navigator: Navigator = remember { Navigator(navigationState) }
-
-    val entryProvider = entryProvider {
-        entry<HomeRoute> {
-            HomeScreen(
-                navigateToAll = { navigator.navigate(SeeTransactionRoute) }
-            )
-        }
-        entry<AccountsRoute> {
-            val vm: AccountsViewModel = koinViewModel()
-
-            val accounts: List<Account> by vm.accounts.collectAsStateWithLifecycle()
-
-            AccountsScreen(
-                accounts = accounts,
-                addCategory = {
-                    externalNavBack.add(CategoryRoute)
-                },
-                addAccount = {
-                    externalNavBack.add(AddAccountRoute)
-                },
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-        entry<SeeTransactionRoute> {
-            SeeTransactionsScreen(externalNavBack)
-        }
-        entry<ProfileRoute> {
-            val authRepository = koinInject<AuthRepository>()
-            val scope: CoroutineScope = rememberCoroutineScope()
-
-            ProfileScreen(
-                onLogout = {
-                    scope.launch {
-                        authRepository.logout()
-                        externalNavBack.removeLastOrNull()
-                        externalNavBack.add(PreLoginRoute)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator()
                     }
                 }
-            )
-        }
-    }
 
-    Scaffold(
-        bottomBar = { Csm(navigationState, navigator, externalNavBack) },
-        contentWindowInsets = WindowInsets.navigationBars,
-    ) { paddingValues ->
-        NavDisplay(
-            entries = navigationState.toEntries(entryProvider),
-            onBack = { navigator.goBack() },
-            modifier = Modifier.padding(paddingValues)
+                entry<LoginRoute> {
+                    val vm: LoginViewModel = koinViewModel()
+
+                    LaunchedEffect(vm.state.successLogin) {
+                        if (vm.state.successLogin) {
+                            backStack.replaceAll(START_TAB)
+                        }
+                    }
+
+                    LoginScreen(
+                        modifier = Modifier,
+                        state = vm.state,
+                        onAction = vm::onAction,
+                        navigateToRegister = { backStack.add(RegisterRoute) },
+                    )
+                }
+
+                entry<RegisterRoute> {
+                    val vm: SignUpViewModel = koinViewModel()
+                    SignUpScreen(
+                        state = vm.state,
+                        onAction = vm::onAction,
+                        onBack = { backStack.removeLastOrNull() },
+                    )
+                }
+
+                entry<HomeRoute> {
+                    HomeScreen(
+                        navigateToAll = dropUnlessResumed {
+                            backStack.switchTab(SeeTransactionRoute)
+                        },
+                    )
+                }
+
+                entry<SeeTransactionRoute> {
+                    SeeTransactionsScreen(
+                        onEditTransaction = { id ->
+                            backStack.add(EditTransactionRoute(id))
+                        },
+                    )
+                }
+
+                entry<AccountsRoute> {
+                    val vm: AccountsViewModel = koinViewModel()
+                    val accounts: List<Account> by vm.accounts.collectAsStateWithLifecycle()
+
+                    AccountsScreen(
+                        accounts = accounts,
+                        addCategory = { backStack.add(CategoryRoute) },
+                        addAccount = { backStack.add(AddAccountRoute) },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+
+                entry<ProfileRoute> {
+                    val authRepository = koinInject<AuthRepository>()
+                    val scope: CoroutineScope = rememberCoroutineScope()
+
+                    ProfileScreen(
+                        onLogout = {
+                            scope.launch {
+                                authRepository.logout()
+                                backStack.replaceAll(PreLoginRoute)
+                            }
+                        },
+                    )
+                }
+
+                entry<AddTransactionRoute> {
+                    val vm: AddTransactionViewModel = koinViewModel()
+
+                    ResultEffect<SelectableCategory>(resultBus) { selectableCategory ->
+                        resultBus.removeResult<SelectableCategory>()
+                        vm.onAction(AddTransactionAction.OnNewValueFromOthers(selectableCategory))
+                    }
+
+                    AddTransactionScreen(
+                        vm = vm,
+                        popBackStack = { backStack.removeLastOrNull() },
+                        onOtherCategorySelected = { backStack.add(SelectCategoryRoute) },
+                    )
+                }
+
+                entry<EditTransactionRoute> { key ->
+                    EditTransaction(
+                        transactionId = key.transactionId,
+                        onBack = { backStack.removeLastOrNull() },
+                    )
+                }
+
+                entry<CategoryRoute> {
+                    AddCategoryScreen(
+                        onBack = { backStack.removeLastOrNull() },
+                        onSelectIcon = { backStack.add(SelectIconRoute) },
+                    )
+                }
+
+                entry<AddAccountRoute> {
+                    AddAccountScreen(
+                        onBack = { backStack.removeLastOrNull() },
+                    )
+                }
+
+                entry<SelectCategoryRoute> {
+                    val vm: SelectCategoryViewModel = koinViewModel()
+                    SelectCategoryScreen(
+                        onCategorySelected = {
+                            resultBus.sendResult(result = it)
+                            backStack.removeLastOrNull()
+                        },
+                        onBack = { backStack.removeLastOrNull() },
+                        onValueChange = vm::updateQuery,
+                        onNewCategory = { backStack.add(CategoryRoute) },
+                        value = vm.state.query,
+                        income = vm.state.filteredIncomes,
+                        expense = vm.state.filteredExpenses,
+                    )
+                }
+
+                entry<SelectIconRoute> {
+                    SelectIconScreen(
+                        onBack = { backStack.removeLastOrNull() },
+                    )
+                }
+            },
         )
     }
 }
 
+/**
+ * Replaces the entire back stack with [route]. Used for auth transitions and logout.
+ */
+private fun NavBackStack<NavKey>.replaceAll(route: NavKey) {
+    clear()
+    add(route)
+}
+
+/**
+ * Switches to a bottom-bar tab using the "exit through home" pattern:
+ * back stack always starts at [START_TAB], with the selected tab on top (if different).
+ */
+private fun NavBackStack<NavKey>.switchTab(target: BottomBarRoute) {
+    clear()
+    add(START_TAB)
+    if (target != START_TAB) add(target)
+}
+
 @Composable
-private fun Csm(
-    navigationState: NavigationState,
-    navigator: Navigator,
-    externalNavBack: NavBackStack<NavKey>,
+private fun HhBottomBar(
+    current: BottomBarRoute?,
+    onTabClick: (BottomBarRoute) -> Unit,
+    onAddClick: () -> Unit,
 ) {
-
-    val navItems: Map<NavKey, HhNavBarItem> = remember {
-        val newRouteItem = HhNavBarItem(name = "Agregar", route = "class", icon = Icons.Filled.Add)
-        val routesList: MutableList<Pair<NavKey, HhNavBarItem>> = TOP_LEVEL_ROUTES.toList().toMutableList()
-        routesList.add(2, Pair(AddTransactionRoute, newRouteItem))
-        routesList.toMap()
-    }
-
     BottomAppBar(
         containerColor = MaterialTheme.colorScheme.background,
         contentColor = MaterialTheme.colorScheme.onBackground,
     ) {
-        navItems.forEach { (key: NavKey, value: HhNavBarItem) ->
-            val isSelected = key == navigationState.topLevelRoute
+        val entries = TOP_LEVEL_ROUTES.entries.toList()
+        // Insert the "Add" pseudo-item between SeeTransactionRoute and AccountsRoute (position 2)
+        entries.forEachIndexed { index, (route, item) ->
+            if (index == 2) {
+                AddBottomBarItem(onClick = onAddClick)
+            }
+            val isSelected = route == current
             NavigationBarItem(
                 selected = isSelected,
-                onClick = {
-                    if (key == AddTransactionRoute) {
-                        externalNavBack.add(key)
-                    } else {
-                        navigator.navigate(key)
-                    }
-                },
+                onClick = dropUnlessResumed { onTabClick(route) },
                 icon = {
                     Icon(
-                        imageVector = value.icon,
+                        imageVector = item.icon,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
-                        tint = if (key == AddTransactionRoute) MaterialTheme.colorScheme.primaryContainer else LocalContentColor.current
                     )
                 },
                 label = {
                     Text(
-                        text = value.name,
+                        text = item.name,
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = if (key == AddTransactionRoute) MaterialTheme.colorScheme.primaryContainer else LocalContentColor.current,
+                        color = LocalContentColor.current,
                         fontFamily = LatoFontFamily,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     )
-                }
+                },
             )
         }
     }
+}
+
+@Composable
+private fun RowScope.AddBottomBarItem(onClick: () -> Unit) {
+    NavigationBarItem(
+        selected = false,
+        onClick = dropUnlessResumed(block = onClick),
+        icon = {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = "Agregar",
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.primaryContainer,
+            )
+        },
+        label = {
+            Text(
+                text = "Agregar",
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                fontFamily = LatoFontFamily,
+                fontWeight = FontWeight.Bold,
+            )
+        },
+    )
 }

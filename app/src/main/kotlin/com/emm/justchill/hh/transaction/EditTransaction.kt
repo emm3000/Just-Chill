@@ -37,8 +37,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation3.runtime.NavBackStack
-import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
@@ -53,15 +51,15 @@ import org.koin.core.parameter.parametersOf
 
 @Composable
 fun EditTransaction(
-    navBackStack: NavBackStack<NavKey>,
     transactionId: String,
+    onBack: () -> Unit,
     vm: EditTransactionViewModel = koinViewModel(parameters = { parametersOf(transactionId) }),
 ) {
 
     EditTransaction(
         state = vm.state,
         onAction = vm::onAction,
-        navigateUp = { navBackStack.removeLastOrNull() },
+        navigateUp = onBack,
     )
 }
 

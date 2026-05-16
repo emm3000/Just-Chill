@@ -15,8 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation3.runtime.NavBackStack
-import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.hh.shared.EmmTextInput
 import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
@@ -26,14 +24,14 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun AddAccountScreen(
-    navBackStack: NavBackStack<NavKey>,
+    onBack: () -> Unit,
     vm: AddAccountViewModel = koinViewModel(),
 ) {
 
     AddAccountScreen(
         state = vm.state,
         onAction = vm::onAction,
-        navigateToBack = navBackStack::removeLastOrNull,
+        navigateToBack = onBack,
     )
 }
 
