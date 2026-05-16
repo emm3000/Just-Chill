@@ -2,13 +2,13 @@ package com.emm.data.transaction
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import com.emm.data.CompleteTransactions
 import com.emm.data.TransactionsQueries
 import com.emm.domain.shared.SyncState
 import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionUpdate
-import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -41,11 +41,11 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             .map { list -> list.asEntity().asExternalModel() }
     }
 
-    fun completeTransactions(): Flow<List<TransactionWithCategory>> {
+    fun completeTransactions(): Flow<List<TransactionWithCategoryEntity>> {
         return tq.completeTransactions()
             .asFlow()
             .mapToList(Dispatchers.IO)
-            .map(::toDomain)
+            .map { list -> list.map(CompleteTransactions::asEntity) }
     }
 
     suspend fun softDelete(transactionId: String) = withContext(Dispatchers.IO) {

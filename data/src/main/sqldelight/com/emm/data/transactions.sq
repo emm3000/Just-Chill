@@ -28,7 +28,8 @@ SELECT
     t.*,
     c.name AS categoryName,
     c.icon AS categoryIcon,
-    c.color AS categoryColor
+    c.color AS categoryColor,
+    c.categoryType AS categoryType_
 FROM transactions t
 LEFT JOIN categories c ON t.categoryId = c.categoryId
 WHERE t.isDeleted = 0
@@ -39,7 +40,8 @@ SELECT
     t.*,
     c.name AS categoryName,
     c.icon AS categoryIcon,
-    c.color AS categoryColor
+    c.color AS categoryColor,
+    c.categoryType AS categoryType_
 FROM transactions t
 LEFT JOIN categories c ON t.categoryId = c.categoryId
 WHERE t.isDeleted = 0

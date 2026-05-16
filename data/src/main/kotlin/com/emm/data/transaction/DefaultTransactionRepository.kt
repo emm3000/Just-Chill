@@ -11,6 +11,7 @@ import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class DefaultTransactionRepository(
     private val localDataSource: TransactionLocalDataSource,
@@ -27,7 +28,9 @@ class DefaultTransactionRepository(
     }
 
     override fun fetchAllWithCategory(): Flow<List<TransactionWithCategory>> {
-        return localDataSource.completeTransactions().catchAsDomainException()
+        return localDataSource.completeTransactions()
+            .map { it.toDomain() }
+            .catchAsDomainException()
     }
 
     override suspend fun update(transactionId: String, transactionUpdate: TransactionUpdate): Unit = safeDbCall {
