@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.transaction
 
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.Category
@@ -10,7 +9,6 @@ import com.emm.domain.transaction.CreateTransactionUseCase
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
-import com.emm.justchill.core.formatInputToDouble
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.findById
@@ -67,7 +65,7 @@ class AddTransactionViewModel(
             is AddTransactionIntent.OnCategorySelected -> updateState { copy(categorySelected = intent.value) }
             AddTransactionIntent.OnReset -> updateState {
                 copy(
-                    amount = TextFieldValue("0.00"),
+                    amount = "",
                     description = String.Empty,
                     date = DateUtils.currentDateAtReadableFormat(),
                     transactionType = TransactionType.Income,
@@ -89,7 +87,7 @@ class AddTransactionViewModel(
     }
 
     private fun AddTransactionUiState.recomputeValidity(): AddTransactionUiState =
-        copy(isEnabled = amount.formatInputToDouble() >= 1.0 && date.isNotEmpty() && description.isNotEmpty() && accountSelected != null)
+        copy(isEnabled = centsToSoles(amount) >= 1.0 && date.isNotEmpty() && description.isNotEmpty() && accountSelected != null)
 
     private fun addTransaction() = launchSafe(
         onError = { AddTransactionEffect.ShowError(it.toUserMessage()) },
@@ -102,7 +100,7 @@ class AddTransactionViewModel(
         type = currentState.transactionType,
         description = currentState.description,
         date = dateInLong,
-        amount = currentState.amount.formatInputToDouble(),
+        amount = centsToSoles(currentState.amount),
         categoryId = currentState.categorySelected?.categoryId,
         accountId = currentState.accountSelected?.accountId ?: throw IllegalStateException(),
     )

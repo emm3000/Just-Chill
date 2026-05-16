@@ -33,7 +33,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindowProvider
@@ -55,9 +54,9 @@ import kotlinx.coroutines.launch
 
 @Composable
 internal fun AmountInputSection(
-    amount: TextFieldValue,
+    amount: String,
     transactionType: TransactionType,
-    onAmountChange: (TextFieldValue) -> Unit,
+    onAmountChange: (String) -> Unit,
     onTypeChange: (TransactionType) -> Unit,
     focusRequester: FocusRequester,
     onNext: () -> Unit,
@@ -66,8 +65,8 @@ internal fun AmountInputSection(
     Column(verticalArrangement = Arrangement.spacedBy(spacing.s6)) {
         TypeToggle(selected = transactionType, onSelect = onTypeChange)
         AmountHeroInput(
-            value = amount,
-            onValueChange = onAmountChange,
+            rawCents = amount,
+            onRawCentsChange = onAmountChange,
             type = transactionType,
             focusRequester = focusRequester,
             onNext = onNext,
@@ -349,7 +348,7 @@ private fun AccountSelectorContent(
 private fun AmountInputSectionPreview() {
     EmmTheme {
         AmountInputSection(
-            amount = TextFieldValue("0.00"),
+            amount = "",
             transactionType = TransactionType.Income,
             onAmountChange = {},
             onTypeChange = {},

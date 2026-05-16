@@ -1,13 +1,12 @@
 package com.emm.justchill.hh.transaction
 
-import androidx.compose.ui.text.input.TextFieldValue
 import com.emm.domain.account.Account
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.mvi.UiIntent
 
 sealed interface AddTransactionIntent : UiIntent {
 
-    data class OnAmountChange(val value: TextFieldValue) : AddTransactionIntent
+    data class OnAmountChange(val value: String) : AddTransactionIntent
 
     data class OnDescriptionChange(val value: String) : AddTransactionIntent
 

@@ -1,7 +1,6 @@
 package com.emm.justchill.hh.transaction
 
 import androidx.compose.runtime.Stable
-import androidx.compose.ui.text.input.TextFieldValue
 import com.emm.domain.account.Account
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.mvi.UiState
@@ -9,7 +8,7 @@ import com.emm.justchill.hh.shared.Empty
 
 @Stable
 data class EditTransactionUiState(
-    val amount: TextFieldValue = TextFieldValue("0.00"),
+    val amount: String = "",
     val description: String = String.Empty,
     val date: String = DateUtils.currentDateAtReadableFormat(),
     val transactionType: TransactionType = TransactionType.Income,

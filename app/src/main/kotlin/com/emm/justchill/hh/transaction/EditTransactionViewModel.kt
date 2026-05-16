@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.transaction
 
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
@@ -13,7 +12,6 @@ import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.UpdateTransactionUseCase
 import com.emm.justchill.core.error.toUserMessage
-import com.emm.justchill.core.formatInputToDouble
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.transaction.DateUtils.millisToReadableFormat
 import kotlinx.coroutines.flow.firstOrNull
@@ -52,7 +50,7 @@ class EditTransactionViewModel(
     }
 
     private fun EditTransactionUiState.recomputeValidity(): EditTransactionUiState =
-        copy(isEnabled = amount.formatInputToDouble() >= 1 && date.isNotEmpty() && description.isNotEmpty())
+        copy(isEnabled = centsToSoles(amount) >= 1.0 && date.isNotEmpty() && description.isNotEmpty())
 
     private fun loadCurrentTransaction() = viewModelScope.launch {
         val accounts: List<Account> = accountRepository.all().firstOrNull() ?: emptyList()
@@ -61,7 +59,7 @@ class EditTransactionViewModel(
         dateInLong = oldTransaction.date
         updateState {
             copy(
-                amount = TextFieldValue(oldTransaction.amountDecimalFormat),
+                amount = solesToCentsString(oldTransaction.amount),
                 description = oldTransaction.description,
                 date = millisToReadableFormat(oldTransaction.date),
                 transactionType = oldTransaction.type,
@@ -82,7 +80,7 @@ class EditTransactionViewModel(
         type = currentState.transactionType,
         description = currentState.description,
         date = dateInLong,
-        amount = currentState.amount.formatInputToDouble(),
+        amount = centsToSoles(currentState.amount),
         accountId = currentState.accountSelected?.accountId ?: throw IllegalStateException(),
         categoryId = null,
     )

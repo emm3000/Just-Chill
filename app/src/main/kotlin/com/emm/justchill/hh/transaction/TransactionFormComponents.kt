@@ -15,24 +15,22 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
-import java.math.BigDecimal
-import java.text.DecimalFormat
 
 @Composable
 internal fun TypeToggle(
@@ -80,8 +78,8 @@ private fun TypeOption(label: String, isSelected: Boolean, onClick: () -> Unit) 
 
 @Composable
 internal fun AmountHeroInput(
-    value: TextFieldValue,
-    onValueChange: (TextFieldValue) -> Unit,
+    rawCents: String,
+    onRawCentsChange: (String) -> Unit,
     type: TransactionType,
     focusRequester: FocusRequester,
     onNext: () -> Unit,
@@ -90,41 +88,72 @@ internal fun AmountHeroInput(
     val emmType = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
 
-    val amount = value.text.replace(",", "").toBigDecimalOrNull() ?: BigDecimal.ZERO
-    val isZero = amount == BigDecimal("0.00")
+    val isZero = rawCents.isEmpty() || rawCents.all { it == '0' }
     val sign = if (type == TransactionType.Income) "+" else "−"
     val numberColor = if (isZero) colors.textTertiary else colors.textPrimary
     val prefixColor = if (isZero) colors.textTertiary else colors.textSecondary
+
+    val cursorBrush = remember(colors.accentFocus) { SolidColor(colors.accentFocus) }
+    val visualTransformation = remember { CentsVisualTransformation() }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
         Text(text = "MONTO", style = emmType.labelM, color = colors.textTertiary)
-        Row(verticalAlignment = Alignment.Bottom) {
+        Row {
             Text(
                 text = "${sign}S/",
                 style = emmType.amountL,
                 color = prefixColor,
-                modifier = Modifier.padding(end = spacing.s2, bottom = 4.dp),
+                modifier = Modifier
+                    .alignByBaseline()
+                    .padding(end = spacing.s2),
             )
             BasicTextField(
                 modifier = Modifier
+                    .alignByBaseline()
                     .weight(1f)
                     .focusRequester(focusRequester),
-                value = value,
-                onValueChange = { onValueChange(formatInputToAmount(it)) },
+                value = rawCents,
+                onValueChange = { newRaw ->
+                    val sanitized = sanitizeCentsInput(newRaw)
+                    if (sanitized != rawCents) onRawCentsChange(sanitized)
+                },
+                visualTransformation = visualTransformation,
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Next,
                 ),
                 keyboardActions = KeyboardActions(onNext = { onNext() }),
                 textStyle = emmType.amountHero.copy(color = numberColor),
-                cursorBrush = SolidColor(colors.accentFocus),
+                cursorBrush = cursorBrush,
                 singleLine = true,
             )
         }
     }
+}
+
+private class CentsVisualTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val raw = text.text
+        val display = formatCentsForDisplay(raw)
+        return TransformedText(
+            text = AnnotatedString(display),
+            offsetMapping = EndAnchorOffsetMapping(
+                visualLength = display.length,
+                rawLength = raw.length,
+            ),
+        )
+    }
+}
+
+private class EndAnchorOffsetMapping(
+    private val visualLength: Int,
+    private val rawLength: Int,
+) : OffsetMapping {
+    override fun originalToTransformed(offset: Int): Int = visualLength
+    override fun transformedToOriginal(offset: Int): Int = rawLength
 }
 
 @Composable
@@ -161,11 +190,4 @@ internal fun ClickableRow(
             color = if (emphasized) colors.textPrimary else colors.textTertiary,
         )
     }
-}
-
-internal fun formatInputToAmount(input: TextFieldValue): TextFieldValue {
-    val filtered = input.text.filter { it.isDigit() }
-    val amount: Long = if (filtered.isEmpty()) 0 else filtered.toLong()
-    val formatted = DecimalFormat("#,##0.00").format(amount / 100.0)
-    return input.copy(text = formatted, selection = TextRange(formatted.length))
 }
