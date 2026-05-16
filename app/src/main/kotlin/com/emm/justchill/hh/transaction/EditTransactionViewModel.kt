@@ -7,7 +7,6 @@ import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.FindAccountUseCase
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.TransactionId
-import com.emm.domain.shared.error.DomainException
 import com.emm.domain.transaction.DeleteTransactionUseCase
 import com.emm.domain.transaction.FindTransactionUseCase
 import com.emm.domain.transaction.Transaction
@@ -23,10 +22,10 @@ import kotlinx.coroutines.launch
 class EditTransactionViewModel(
     private val transactionId: String,
     private val accountRepository: AccountRepository,
-    private val transactionUpdater: UpdateTransactionUseCase,
-    private val transactionFinder: FindTransactionUseCase,
-    private val transactionDeleter: DeleteTransactionUseCase,
-    private val accountFinder: FindAccountUseCase,
+    private val updateTransaction: UpdateTransactionUseCase,
+    private val findTransaction: FindTransactionUseCase,
+    private val deleteTransaction: DeleteTransactionUseCase,
+    private val findAccount: FindAccountUseCase,
 ) : MviViewModel<EditTransactionUiState, EditTransactionIntent, EditTransactionEffect>() {
 
     override val initialState = EditTransactionUiState()
@@ -57,8 +56,8 @@ class EditTransactionViewModel(
 
     private fun loadCurrentTransaction() = viewModelScope.launch {
         val accounts: List<Account> = accountRepository.all().firstOrNull() ?: emptyList()
-        oldTransaction = transactionFinder(TransactionId(transactionId)) ?: return@launch
-        oldAccount = accountFinder(oldTransaction.accountId) ?: return@launch
+        oldTransaction = findTransaction(TransactionId(transactionId)) ?: return@launch
+        oldAccount = findAccount(oldTransaction.accountId) ?: return@launch
         dateInLong = oldTransaction.date
         updateState {
             copy(
@@ -72,15 +71,11 @@ class EditTransactionViewModel(
         }
     }
 
-    private fun updateTransaction() = viewModelScope.launch {
-        try {
-            transactionUpdater(oldTransaction, createTransactionUpdate())
-            sendEffect(EditTransactionEffect.TransactionUpdated)
-        } catch (e: DomainException) {
-            sendEffect(EditTransactionEffect.ShowError(e.toUserMessage()))
-        } catch (e: Exception) {
-            sendEffect(EditTransactionEffect.ShowError(DomainException.Unknown(e).toUserMessage()))
-        }
+    private fun updateTransaction() = launchSafe(
+        onError = { EditTransactionEffect.ShowError(it.toUserMessage()) },
+    ) {
+        updateTransaction(oldTransaction, createTransactionUpdate())
+        sendEffect(EditTransactionEffect.TransactionUpdated)
     }
 
     private fun createTransactionUpdate(): TransactionUpdate = TransactionUpdate(
@@ -92,15 +87,11 @@ class EditTransactionViewModel(
         categoryId = null,
     )
 
-    private fun deleteTransaction() = viewModelScope.launch {
-        try {
-            transactionDeleter(oldTransaction.transactionId)
-            sendEffect(EditTransactionEffect.TransactionDeleted)
-        } catch (e: DomainException) {
-            sendEffect(EditTransactionEffect.ShowError(e.toUserMessage()))
-        } catch (e: Exception) {
-            sendEffect(EditTransactionEffect.ShowError(DomainException.Unknown(e).toUserMessage()))
-        }
+    private fun deleteTransaction() = launchSafe(
+        onError = { EditTransactionEffect.ShowError(it.toUserMessage()) },
+    ) {
+        deleteTransaction(oldTransaction.transactionId)
+        sendEffect(EditTransactionEffect.TransactionDeleted)
     }
 
     private fun updateCurrentDate(millis: Long?) = millis?.let {

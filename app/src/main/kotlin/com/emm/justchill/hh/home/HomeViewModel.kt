@@ -10,13 +10,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
 class HomeViewModel(
-    homeLoader: GetHomeDataUseCase,
+    getHomeData: GetHomeDataUseCase,
 ) : MviViewModel<HomeUiState, HomeIntent, HomeEffect>() {
 
     override val initialState = HomeUiState()
 
     init {
-        homeLoader()
+        getHomeData()
             .map(::mapToUiState)
             .onEach { newState -> updateState { newState } }
             .launchIn(viewModelScope)

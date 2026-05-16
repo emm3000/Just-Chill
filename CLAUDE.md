@@ -98,13 +98,14 @@ When adding a new failure mode, prefer extending `DomainException` (and `toUserM
 
 ## Ongoing Refactor
 
-The app was migrated to **local-only** via `docs/PLAN_LOCAL.md` (auth, Supabase, Ktor, sync, WorkManager all removed). `docs/PLAN_DE_ACCION.md` and `docs/PLAN_SONNET.md` are retained for historical context; their sync-related phases are N/A.
+The app was migrated to **local-only** via `docs/PLAN_LOCAL.md` (auth, Supabase, Ktor, sync, WorkManager all removed) and then cleaned up via `docs/PLAN_CLEANUP.md` (dead deps, `launchSafe`, SQL month filter, screen decomposition, domain tests). `docs/PLAN_DE_ACCION.md` and `docs/PLAN_SONNET.md` are retained for historical context; their sync-related phases are N/A.
 
 **Done:**
 - **Fase 1 (use-case rename)**: All use cases follow `[Verb][Noun]UseCase`. See `domain/CLAUDE.md`.
 - **Fase 3 (typed errors)**: `DomainException` + `SafeCall` + `toUserMessage()`.
-- **Fases 4 + 5 (MVI)**: All ViewModels extend `MviViewModel<S, I, E>`.
+- **Fases 4 + 5 (MVI)**: All ViewModels extend `MviViewModel<S, I, E>`. `launchSafe { }` helper covers the try/catch boilerplate in the base class.
 - **Local-only migration (PLAN_LOCAL)**: removed auth/Supabase/Ktor/WorkManager; SQLDelight schema reset (no `syncState`/`isDeleted`/`userId`); hard-delete with `ON DELETE` foreign keys.
+- **Cleanup (PLAN_CLEANUP)**: dropped dead Retrofit/parcelize/viewBinding; `@Immutable` on `TransactionUi`/`CategoryUi`; current-month filtering pushed to SQL (`completeTransactionsByDateRange`); `AddTransactionScreen`/`EditTransaction` decomposed into shared `TransactionFormSections.kt`; unit tests for all transaction, category and home use cases.
 
 **Partial / Pending:**
 - **Fase 2 (data models)**: mappers are clean, `*Entity` data classes exist.

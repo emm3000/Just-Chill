@@ -3,6 +3,7 @@ package com.emm.data.transaction
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.emm.data.CompleteTransactions
+import com.emm.data.CompleteTransactionsByDateRange
 import com.emm.data.TransactionsQueries
 import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.transaction.Transaction
@@ -43,6 +44,16 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             .asFlow()
             .mapToList(Dispatchers.IO)
             .map { list -> list.map(CompleteTransactions::asEntity) }
+    }
+
+    fun completeTransactionsByDateRange(
+        startInclusive: Long,
+        endExclusive: Long,
+    ): Flow<List<TransactionWithCategoryEntity>> {
+        return tq.completeTransactionsByDateRange(startInclusive, endExclusive)
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { list -> list.map(CompleteTransactionsByDateRange::asEntity) }
     }
 
     suspend fun delete(transactionId: String) = withContext(Dispatchers.IO) {

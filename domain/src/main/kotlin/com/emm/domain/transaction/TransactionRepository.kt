@@ -13,6 +13,11 @@ interface TransactionRepository {
 
     fun fetchAllWithCategory(): Flow<List<TransactionWithCategory>>
 
+    fun fetchAllWithCategoryInRange(
+        startInclusive: Long,
+        endExclusive: Long,
+    ): Flow<List<TransactionWithCategory>>
+
     suspend fun update(transactionId: TransactionId, transactionUpdate: TransactionUpdate)
 
     suspend fun delete(transactionId: TransactionId)

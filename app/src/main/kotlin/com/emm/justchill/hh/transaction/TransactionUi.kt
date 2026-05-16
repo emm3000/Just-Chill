@@ -2,6 +2,7 @@ package com.emm.justchill.hh.transaction
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.QuestionMark
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
@@ -10,6 +11,7 @@ import com.emm.justchill.hh.category.CategoryColor
 import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
 
+@Immutable
 data class TransactionUi(
     val transactionId: String,
     val type: TransactionType,
@@ -21,6 +23,7 @@ data class TransactionUi(
     val category: CategoryUi,
 )
 
+@Immutable
 data class CategoryUi(
     val categoryIcon: ImageVector,
     val categoryColor: CategoryColor,

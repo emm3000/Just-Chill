@@ -3,7 +3,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    id("kotlin-parcelize")
     kotlin("plugin.serialization") version libs.versions.kotlinVersion
     alias(libs.plugins.google.services)
     alias(libs.plugins.google.crashlytics)
@@ -76,7 +75,6 @@ android {
     }
 
     buildFeatures {
-        viewBinding = true
         compose = true
         buildConfig = true
     }
@@ -124,11 +122,8 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
-    implementation(libs.retrofit)
-    implementation(libs.logging.interceptor)
 
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.retrofit2.kotlinx.serialization.converter)
 
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(kotlin("test"))

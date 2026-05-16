@@ -6,7 +6,6 @@ import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryType
-import com.emm.domain.shared.error.DomainException
 import com.emm.domain.transaction.CreateTransactionUseCase
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
@@ -19,10 +18,9 @@ import com.emm.justchill.hh.shared.Empty
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 
 class AddTransactionViewModel(
-    private val transactionCreator: CreateTransactionUseCase,
+    private val createTransaction: CreateTransactionUseCase,
     accountRepository: AccountRepository,
     categoryRepository: CategoryRepository,
 ) : MviViewModel<AddTransactionUiState, AddTransactionIntent, AddTransactionEffect>() {
@@ -93,15 +91,11 @@ class AddTransactionViewModel(
     private fun AddTransactionUiState.recomputeValidity(): AddTransactionUiState =
         copy(isEnabled = amount.formatInputToDouble() >= 1.0 && date.isNotEmpty() && description.isNotEmpty() && accountSelected != null)
 
-    private fun addTransaction() = viewModelScope.launch {
-        try {
-            transactionCreator(createTransactionInsert())
-            sendEffect(AddTransactionEffect.TransactionSaved)
-        } catch (e: DomainException) {
-            sendEffect(AddTransactionEffect.ShowError(e.toUserMessage()))
-        } catch (e: Exception) {
-            sendEffect(AddTransactionEffect.ShowError(DomainException.Unknown(e).toUserMessage()))
-        }
+    private fun addTransaction() = launchSafe(
+        onError = { AddTransactionEffect.ShowError(it.toUserMessage()) },
+    ) {
+        createTransaction(createTransactionInsert())
+        sendEffect(AddTransactionEffect.TransactionSaved)
     }
 
     private fun createTransactionInsert(): TransactionInsert = TransactionInsert(

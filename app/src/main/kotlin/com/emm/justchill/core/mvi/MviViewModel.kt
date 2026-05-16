@@ -2,6 +2,7 @@ package com.emm.justchill.core.mvi
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.emm.domain.shared.error.DomainException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +30,19 @@ abstract class MviViewModel<S : UiState, I : UiIntent, E : UiEffect> : ViewModel
 
     protected fun sendEffect(effect: E) {
         viewModelScope.launch { _effect.send(effect) }
+    }
+
+    protected fun launchSafe(
+        onError: (DomainException) -> E,
+        block: suspend () -> Unit,
+    ) = viewModelScope.launch {
+        try {
+            block()
+        } catch (e: DomainException) {
+            sendEffect(onError(e))
+        } catch (e: Exception) {
+            sendEffect(onError(DomainException.Unknown(e)))
+        }
     }
 
     abstract fun onIntent(intent: I)

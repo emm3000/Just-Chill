@@ -44,14 +44,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.components.EmmButton
 import com.emm.justchill.components.EmmButtonVariant
-import com.emm.justchill.components.EmmTextInput
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
@@ -118,8 +115,7 @@ private fun EditTransactionContent(
             .statusBarsPadding()
             .imePadding(),
     ) {
-
-        TopBar(
+        EditTopBar(
             title = "Editar",
             onClose = {
                 keyboard?.hide()
@@ -139,18 +135,13 @@ private fun EditTransactionContent(
                 .padding(horizontal = spacing.s4),
             verticalArrangement = Arrangement.spacedBy(spacing.s6),
         ) {
-
             Spacer(Modifier.height(spacing.s2))
 
-            TypeToggle(
-                selected = state.transactionType,
-                onSelect = { onIntent(EditTransactionIntent.OnTransactionTypeChange(it)) },
-            )
-
-            AmountHeroInput(
-                value = state.amount,
-                onValueChange = { onIntent(EditTransactionIntent.OnAmountChange(it)) },
-                type = state.transactionType,
+            AmountInputSection(
+                amount = state.amount,
+                transactionType = state.transactionType,
+                onAmountChange = { onIntent(EditTransactionIntent.OnAmountChange(it)) },
+                onTypeChange = { onIntent(EditTransactionIntent.OnTransactionTypeChange(it)) },
                 focusRequester = amountFocus,
                 onNext = {
                     keyboard?.hide()
@@ -158,19 +149,16 @@ private fun EditTransactionContent(
                 },
             )
 
-            ClickableRow(
-                label = "FECHA",
-                value = state.date,
+            DateTimeSection(
+                date = state.date,
                 onClick = {
                     focusManager.clearFocus()
                     setShowSelectDate(true)
                 },
             )
 
-            ClickableRow(
-                label = "CUENTA",
-                value = state.accountSelected?.name ?: "Selecciona una cuenta",
-                emphasized = state.accountSelected != null,
+            AccountSelectorSection(
+                accountName = state.accountSelected?.name,
                 onClick = {
                     if (isKeyboardOpen) {
                         scope.launch {
@@ -184,12 +172,9 @@ private fun EditTransactionContent(
                 },
             )
 
-            EmmTextInput(
-                value = state.description,
+            DescriptionSection(
+                description = state.description,
                 onValueChange = { onIntent(EditTransactionIntent.OnDescriptionChange(it)) },
-                label = "DESCRIPCIÓN",
-                placeholder = "Opcional",
-                singleLine = false,
             )
 
             Spacer(Modifier.height(spacing.s4))
@@ -249,16 +234,16 @@ private fun EditTransactionContent(
         )
     }
 
-    BottomSheetDialogForPickAccount(
-        setShowAccountPicker = setShowAccountPicker,
-        showAccountPicker = showAccountPicker,
+    AccountPickerBottomSheet(
+        show = showAccountPicker,
         accounts = state.accounts,
         onAccountSelected = { onIntent(EditTransactionIntent.OnAccountSelected(it)) },
+        onDismiss = { setShowAccountPicker(false) },
     )
 }
 
 @Composable
-private fun TopBar(title: String, onClose: () -> Unit, onDelete: () -> Unit) {
+private fun EditTopBar(title: String, onClose: () -> Unit, onDelete: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
@@ -313,7 +298,6 @@ private fun TopBar(title: String, onClose: () -> Unit, onDelete: () -> Unit) {
         }
     }
 }
-
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 900)
 @Composable

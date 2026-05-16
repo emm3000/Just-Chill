@@ -44,11 +44,11 @@ private fun Module.viewModelsProviders() {
     viewModel { parameters ->
         EditTransactionViewModel(
             transactionId = parameters.get(),
-            transactionUpdater = get(),
-            transactionFinder = get(),
-            transactionDeleter = get(),
+            updateTransaction = get(),
+            findTransaction = get(),
+            deleteTransaction = get(),
             accountRepository = get(),
-            accountFinder = get(),
+            findAccount = get(),
         )
     }
 

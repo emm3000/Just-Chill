@@ -29,6 +29,15 @@ class DefaultTransactionRepository(
             .catchAsDomainException()
     }
 
+    override fun fetchAllWithCategoryInRange(
+        startInclusive: Long,
+        endExclusive: Long,
+    ): Flow<List<TransactionWithCategory>> {
+        return localDataSource.completeTransactionsByDateRange(startInclusive, endExclusive)
+            .map { it.toDomain() }
+            .catchAsDomainException()
+    }
+
     override suspend fun update(transactionId: TransactionId, transactionUpdate: TransactionUpdate): Unit = safeDbCall {
         localDataSource.update(transactionId.value, transactionUpdate)
         Unit

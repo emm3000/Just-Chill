@@ -1,14 +1,11 @@
 package com.emm.justchill.hh.account
 
-import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.CreateAccountUseCase
-import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
-import kotlinx.coroutines.launch
 
 class AddAccountViewModel(
-    private val accountCreator: CreateAccountUseCase,
+    private val createAccount: CreateAccountUseCase,
 ) : MviViewModel<AddAccountUiState, AddAccountIntent, AddAccountEffect>() {
 
     override val initialState = AddAccountUiState()
@@ -24,18 +21,14 @@ class AddAccountViewModel(
         }
     }
 
-    private fun save() = viewModelScope.launch {
-        try {
-            accountCreator(
-                name = currentState.name,
-                type = currentState.selectedType,
-                currency = currentState.selectedCurrency,
-            )
-            sendEffect(AddAccountEffect.AccountSaved)
-        } catch (e: DomainException) {
-            sendEffect(AddAccountEffect.ShowError(e.toUserMessage()))
-        } catch (e: Exception) {
-            sendEffect(AddAccountEffect.ShowError(DomainException.Unknown(e).toUserMessage()))
-        }
+    private fun save() = launchSafe(
+        onError = { AddAccountEffect.ShowError(it.toUserMessage()) },
+    ) {
+        createAccount(
+            name = currentState.name,
+            type = currentState.selectedType,
+            currency = currentState.selectedCurrency,
+        )
+        sendEffect(AddAccountEffect.AccountSaved)
     }
 }
