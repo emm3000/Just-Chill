@@ -11,6 +11,10 @@ data class NetworkAccount(
 
     val name: String,
 
+    val type: String = "Bank",
+
+    val currency: String = "ARS",
+
     @SerialName("is_deleted")
     val isDeleted: Boolean,
 

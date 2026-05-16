@@ -37,6 +37,8 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         aq.insert(
             accountId = entity.accountId,
             name = entity.name,
+            type = entity.type,
+            currency = entity.currency,
             syncState = SyncState.Synced.name,
             isDeleted = entity.isDeleted,
             updatedAt = entity.updatedAt,
@@ -56,6 +58,8 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         aq.insert(
             accountId = account.accountId,
             name = account.name,
+            type = account.type.name,
+            currency = account.currency.name,
             syncState = SyncState.Pending.name,
             isDeleted = false,
             updatedAt = account.updatedAt,
@@ -70,6 +74,8 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
     suspend fun update(accountId: String, account: AccountUpsert) = withContext(Dispatchers.IO) {
         aq.update(
             name = account.name,
+            type = account.type.name,
+            currency = account.currency.name,
             syncState = SyncState.Pending.name,
             updatedAt = currentTimeInMillis(),
             accountId = accountId,
