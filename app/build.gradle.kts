@@ -13,6 +13,18 @@ val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
 keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 
+fun gitCommitCount(): Int = runCatching {
+    providers.exec {
+        commandLine("git", "rev-list", "--count", "HEAD")
+    }.standardOutput.asText.get().trim().toInt()
+}.getOrDefault(1)
+
+fun gitLatestTag(): String = runCatching {
+    providers.exec {
+        commandLine("git", "describe", "--tags", "--abbrev=0")
+    }.standardOutput.asText.get().trim().removePrefix("v")
+}.getOrDefault("0.0.0-dev")
+
 android {
     namespace = "com.emm.justchill"
     compileSdk = 36
@@ -21,8 +33,8 @@ android {
         applicationId = "com.emm.justchill"
         minSdk = 28
         targetSdk = 36
-        versionCode = 35
-        versionName = "1.5.0-alpha"
+        versionCode = gitCommitCount()
+        versionName = gitLatestTag()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
