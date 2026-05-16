@@ -3,7 +3,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin)
     id("kotlin-parcelize")
     kotlin("plugin.serialization") version libs.versions.kotlinVersion
     alias(libs.plugins.google.services)

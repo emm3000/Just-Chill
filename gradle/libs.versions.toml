@@ -28,7 +28,7 @@ navigationFragmentKtx = "2.9.8"
 navigationUiKtx = "2.9.8"
 retrofit = "3.0.0"
 retrofit2KotlinxSerializationConverter = "1.0.0"
-androidApplication = "8.13.2"
+androidApplication = "9.2.1"
 kotlinVersion = "2.3.21"
 googleServicesVersion = "4.4.4"
 googleCrashlyticsVersion = "3.0.7"
@@ -96,7 +96,6 @@ supabase-postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt"
 [plugins]
 
 android-application = { id = "com.android.application", version.ref = "androidApplication" }
-kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinVersion" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServicesVersion" }
 google-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleCrashlyticsVersion" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinVersion" }
