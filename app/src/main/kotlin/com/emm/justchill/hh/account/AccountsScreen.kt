@@ -1,23 +1,29 @@
 package com.emm.justchill.hh.account
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Category
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,16 +32,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.domain.account.Account
+import com.emm.justchill.components.EmmButton
+import com.emm.justchill.components.EmmButtonVariant
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
-import com.emm.justchill.hh.transaction.components.NewAccountItem
-import com.emm.justchill.hh.transaction.components.NewButton
+import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
+import com.emm.justchill.core.theme.LocalEmmType
 
 @Composable
 fun AccountsScreen(
@@ -44,138 +52,209 @@ fun AccountsScreen(
     addAccount: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
 
-    Column(
-        modifier = modifier.background(MaterialTheme.colorScheme.background)
-    ) {
+    Column(modifier = modifier.background(colors.bg)) {
 
-        Box(
-            modifier = Modifier.padding(horizontal = 16.dp),
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = spacing.s4,
+                    end = spacing.s4,
+                    top = spacing.s6,
+                    bottom = spacing.s4,
+                ),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            EmmCenteredToolbar(title = "Cuentas")
-
-            MinimalDropdownMenu(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .statusBarsPadding(),
-                goToCreateAccount = addAccount,
-                goToCreateCategory = addCategory
+            Text(
+                text = "Cuentas",
+                style = type.headlineL,
+                color = colors.textPrimary,
+                modifier = Modifier.weight(1f),
+            )
+            AddMenu(
+                onAddAccount = addAccount,
+                onAddCategory = addCategory,
             )
         }
 
-        LazyColumn(
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        if (accounts.isEmpty()) {
+            EmptyState(onCreate = addAccount, modifier = Modifier.fillMaxSize())
+            return@Column
+        }
 
-            if (accounts.isEmpty()) {
-                item {
-                    EmptyAccountsPlaceholder(
-                        onCreateAccount = {
-                            addAccount()
-                        }
-                    )
-                }
-            }
-
-            items(accounts, key = Account::accountId) {
-                NewAccountItem(
-                    modifier = Modifier.fillMaxWidth(),
-                    accountName = it.name,
-                    balance = 0.0,
-                    accountType = it.name
-                )
+        LazyColumn(contentPadding = PaddingValues(bottom = spacing.s8)) {
+            items(accounts, key = Account::accountId) { account ->
+                AccountRow(account = account)
             }
         }
     }
 }
 
 @Composable
-fun MinimalDropdownMenu(
-    modifier: Modifier,
-    goToCreateAccount: () -> Unit = {},
-    goToCreateCategory: () -> Unit = {},
-) {
+private fun AccountRow(account: Account) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
 
-    var expanded by remember { mutableStateOf(false) }
-
-    Box(
-        modifier = modifier
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.s4, vertical = spacing.s4)
+            .drawBehind {
+                drawLine(
+                    color = colors.border,
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = 1f,
+                )
+            },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spacing.s4),
     ) {
-        IconButton(onClick = { expanded = !expanded }) {
-            Icon(Icons.Default.MoreVert, contentDescription = "More options")
+        Icon(
+            imageVector = Icons.Outlined.AccountBalanceWallet,
+            contentDescription = null,
+            tint = colors.textPrimary,
+            modifier = Modifier.size(24.dp),
+        )
+        Text(
+            text = account.name,
+            style = type.bodyL,
+            color = colors.textPrimary,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun AddMenu(onAddAccount: () -> Unit, onAddCategory: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    var expanded by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Box {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = { expanded = !expanded },
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.MoreVert,
+                contentDescription = "Más opciones",
+                tint = colors.textPrimary,
+                modifier = Modifier.size(22.dp),
+            )
         }
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            containerColor = colors.surface2,
         ) {
             DropdownMenuItem(
-                text = { Text("Crear categorias") },
+                text = { Text("Nueva cuenta", style = type.bodyL, color = colors.textPrimary) },
+                leadingIcon = { MenuIcon(Icons.Outlined.Add) },
                 onClick = {
                     expanded = false
-                    goToCreateCategory()
-                }
+                    onAddAccount()
+                },
             )
             DropdownMenuItem(
-                text = { Text("Crear cuenta") },
+                text = { Text("Nueva categoría", style = type.bodyL, color = colors.textPrimary) },
+                leadingIcon = { MenuIcon(Icons.Outlined.Category) },
                 onClick = {
                     expanded = false
-                    goToCreateAccount()
-                }
+                    onAddCategory()
+                },
             )
         }
     }
 }
 
 @Composable
-private fun EmptyAccountsPlaceholder(
-    onCreateAccount: () -> Unit,
-) {
+private fun MenuIcon(icon: ImageVector) {
+    val colors = LocalEmmColors.current
+    Icon(
+        imageVector = icon,
+        contentDescription = null,
+        tint = colors.textSecondary,
+        modifier = Modifier.size(20.dp),
+    )
+}
+
+@Composable
+private fun EmptyState(onCreate: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 40.dp),
+        modifier = modifier.padding(horizontal = spacing.s4),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.Center,
     ) {
-        Text(
-            text = "Sin cuentas todavía",
-            fontFamily = LatoFontFamily,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
-            fontSize = 16.sp,
+        Icon(
+            imageVector = Icons.Outlined.AccountBalanceWallet,
+            contentDescription = null,
+            tint = colors.textTertiary,
+            modifier = Modifier.size(48.dp),
         )
-        NewButton(
-            title = "Crear cuenta",
-            onClick = onCreateAccount,
-            enabled = true,
-            modifier = Modifier.fillMaxWidth()
+        Spacer(Modifier.height(spacing.s4))
+        Text(
+            text = "Aún sin cuentas",
+            style = type.headlineM,
+            color = colors.textPrimary,
+        )
+        Spacer(Modifier.height(spacing.s2))
+        Text(
+            text = "Crea una para empezar a registrar movimientos",
+            style = type.bodyM,
+            color = colors.textSecondary,
+        )
+        Spacer(Modifier.height(spacing.s6))
+        EmmButton(
+            text = "Crear cuenta",
+            onClick = onCreate,
+            variant = EmmButtonVariant.Secondary,
         )
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 800)
 @Composable
 private fun AccountsScreenPreview() {
     EmmTheme {
         AccountsScreen(
             accounts = listOf(
-                Account(
-                    accountId = "1",
-                    name = "random nameww",
-                ),
-                Account(
-                    accountId = "2",
-                    name = "lorem itsum",
-                ),
-                Account(
-                    accountId = "3",
-                    name = "random name",
-                )
+                Account(accountId = "1", name = "Cuenta principal"),
+                Account(accountId = "2", name = "Ahorros"),
+                Account(accountId = "3", name = "Tarjeta de crédito"),
             ),
             addCategory = {},
-            modifier = Modifier.fillMaxSize(),
             addAccount = {},
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 800)
+@Composable
+private fun AccountsScreenEmptyPreview() {
+    EmmTheme {
+        AccountsScreen(
+            accounts = emptyList(),
+            addCategory = {},
+            addAccount = {},
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }

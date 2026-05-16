@@ -1,47 +1,48 @@
 package com.emm.justchill.hh.category
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.components.EmmTextInput
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
+import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.theme.LocalEmmSpacing
+import com.emm.justchill.core.theme.LocalEmmType
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -50,13 +51,12 @@ import kotlinx.coroutines.flow.map
 
 @OptIn(FlowPreview::class)
 @Composable
-fun SelectIconScreen(
-    onBack: () -> Unit = {},
-) {
+fun SelectIconScreen(onBack: () -> Unit = {}) {
+    val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
 
     var searchQuery: String by remember { mutableStateOf("") }
-
-    val catalogsState: SnapshotStateList<IconCatalog> = remember { mutableStateListOf(*AppIconCatalog.catalog.toTypedArray()) }
+    val catalogs: SnapshotStateList<IconCatalog> = remember { mutableStateListOf(*AppIconCatalog.catalog.toTypedArray()) }
 
     LaunchedEffect(Unit) {
         snapshotFlow { searchQuery }
@@ -68,102 +68,122 @@ fun SelectIconScreen(
                     AppIconCatalog.catalog
                 } else {
                     AppIconCatalog.catalog.filter { catalog ->
-                        catalog.cleanKeywords.any { keyword ->
-                            keyword.contains(query)
-                        }
+                        catalog.cleanKeywords.any { it.contains(query) }
                     }
                 }
-                catalogsState.clear()
-                catalogsState.addAll(result)
+                catalogs.clear()
+                catalogs.addAll(result)
             }
     }
 
-    Scaffold(
-        topBar = {
-            EmmCenteredToolbar(
-                title = "Seleccionar Categoría",
-                navigationIconClick = Icons.Default.ArrowBackIosNew,
-                onNavigationIconClick = onBack,
-            )
-        },
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.bg)
+            .statusBarsPadding()
+            .imePadding(),
     ) {
-        Column(
-            modifier = Modifier
-                .padding(it)
-                .padding(horizontal = 20.dp)
-        ) {
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth(),
+
+        TopBar(title = "Selecciona un icono", onBack = onBack)
+
+        Column(modifier = Modifier.padding(horizontal = spacing.s4)) {
+            EmmTextInput(
                 value = searchQuery,
-                onValueChange = { query ->
-                    searchQuery = query
-                },
-                placeholder = {
-                    Text(
-                        text = "Search icon . . .",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                ),
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search icon",
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
-                },
-                shape = RoundedCornerShape(10.dp)
+                onValueChange = { searchQuery = it },
+                placeholder = "Buscar iconos...",
+                keyboardType = KeyboardType.Text,
+                modifier = Modifier.fillMaxWidth(),
             )
 
+            Spacer(Modifier.height(spacing.s4))
+
             LazyVerticalGrid(
-                modifier = Modifier.padding(vertical = 10.dp),
                 columns = GridCells.Fixed(4),
-                verticalArrangement = Arrangement.spacedBy(5.dp),
-                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalArrangement = Arrangement.spacedBy(spacing.s2),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             ) {
-                items(catalogsState, key = IconCatalog::id) { catalog ->
-                    Column(
-                        modifier = Modifier
-                            .padding(5.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(50.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surface),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = catalog.icon,
-                                contentDescription = catalog.name,
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = catalog.name,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                            fontFamily = LatoFontFamily,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                items(catalogs, key = IconCatalog::id) { catalog ->
+                    IconTile(catalog)
                 }
             }
         }
     }
 }
 
-@Preview
+@Composable
+private fun IconTile(catalog: IconCatalog) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+    val radii = LocalEmmRadii.current
+
+    Column(
+        modifier = Modifier
+            .background(colors.surface1, radii.rS)
+            .padding(spacing.s2),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier = Modifier.size(40.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = catalog.icon,
+                contentDescription = catalog.name,
+                tint = colors.textPrimary,
+            )
+        }
+        Spacer(Modifier.height(spacing.s1))
+        Text(
+            text = catalog.name,
+            style = type.caption,
+            color = colors.textSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Composable
+private fun TopBar(title: String, onBack: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.s4, vertical = spacing.s3),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val interactionSource = remember { MutableInteractionSource() }
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onBack,
+                ),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.ArrowBack,
+                contentDescription = "Atrás",
+                tint = colors.textPrimary,
+                modifier = Modifier.size(24.dp),
+            )
+        }
+        Text(
+            text = title,
+            style = type.titleL,
+            color = colors.textPrimary,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 800)
 @Composable
 private fun SelectIconScreenPreview() {
     EmmTheme {

@@ -1,55 +1,49 @@
 package com.emm.justchill.hh.category
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SecondaryScrollableTabRow
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.domain.category.CategoryType
+import com.emm.justchill.components.EmmButton
+import com.emm.justchill.components.EmmButtonVariant
+import com.emm.justchill.components.EmmTextInput
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
+import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.hh.transaction.SelectableCategory
-import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
-import com.emm.justchill.hh.transaction.components.NewButton
 import kotlinx.coroutines.launch
 
 @Composable
@@ -62,181 +56,154 @@ fun SelectCategoryScreen(
     income: List<SelectableCategory>,
     expense: List<SelectableCategory>,
 ) {
+    val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
 
     val pagerState = rememberPagerState(initialPage = 0) { 2 }
     val scope = rememberCoroutineScope()
 
-    Scaffold(
-        topBar = {
-            EmmCenteredToolbar(
-                title = "Seleccionar Categoría",
-                navigationIconClick = Icons.Default.ArrowBackIosNew,
-                onNavigationIconClick = {
-                    onBack()
-                },
-            )
-        },
-        bottomBar = {
-            NewButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 15.dp)
-                    .padding(bottom = 10.dp)
-                    .navigationBarsPadding(),
-                onClick = onNewCategory,
-                title = "Crear nueva categoría",
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .padding(horizontal = 20.dp)
-        ) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.bg)
+            .statusBarsPadding()
+            .imePadding(),
+    ) {
 
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth(),
+        TopBar(title = "Selecciona categoría", onBack = onBack)
+
+        Column(modifier = Modifier.padding(horizontal = spacing.s4)) {
+            EmmTextInput(
                 value = value,
-                onValueChange = {
-                    onValueChange(it)
-                },
-                placeholder = {
-                    Text(
-                        text = "Search categories . . .",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                ),
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search icon",
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
-                },
-                shape = RoundedCornerShape(10.dp)
+                onValueChange = onValueChange,
+                placeholder = "Buscar categorías...",
+                keyboardType = KeyboardType.Text,
+                modifier = Modifier.fillMaxWidth(),
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(Modifier.height(spacing.s4))
 
-            SecondaryScrollableTabRow(
-                selectedTabIndex = pagerState.currentPage,
-                modifier = Modifier,
-                containerColor = Color.Transparent,
-                edgePadding = 1.dp,
-                indicator = {
-                    TabRowDefaults.SecondaryIndicator(
-                        modifier = Modifier.tabIndicatorOffset(pagerState.currentPage),
-                        height = 3.dp,
-                        color = Color(0xFF00A3FF)
-                    )
-                }
-            ) {
-                Tab(
-                    modifier = Modifier.height(50.dp),
-                    selected = pagerState.currentPage == 0,
-                    onClick = {
-                        scope.launch { pagerState.animateScrollToPage(0) }
-                    },
-                ) {
-                    Text(
-                        text = "Income",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        fontFamily = LatoFontFamily
-                    )
-                }
-                Tab(
-                    modifier = Modifier.height(50.dp),
-                    selected = pagerState.currentPage == 0,
-                    onClick = {
-                        scope.launch { pagerState.animateScrollToPage(1) }
-                    },
-                ) {
-                    Text(
-                        text = "Expense",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        fontFamily = LatoFontFamily
-                    )
-                }
-            }
-
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.Top,
-            ) {
-                when (it) {
-                    0 -> CategoryItemPicker(income) {
-                        onCategorySelected(it)
-                    }
-                    1 -> CategoryItemPicker(expense) {
-                        onCategorySelected(it)
-                    }
-                }
-            }
+            TabHeader(
+                currentPage = pagerState.currentPage,
+                onSelectIncome = { scope.launch { pagerState.animateScrollToPage(0) } },
+                onSelectExpense = { scope.launch { pagerState.animateScrollToPage(1) } },
+            )
         }
+
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
+        ) { page ->
+            val list = if (page == 0) income else expense
+            CategoryList(list, onCategorySelected)
+        }
+
+        EmmButton(
+            text = "Crear nueva categoría",
+            onClick = onNewCategory,
+            variant = EmmButtonVariant.Secondary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(spacing.s4)
+                .navigationBarsPadding(),
+        )
     }
 }
 
 @Composable
-fun CategoryItemPicker(
-    categories: List<SelectableCategory>,
-    onCategorySelected: (SelectableCategory) -> Unit = {},
+private fun TabHeader(
+    currentPage: Int,
+    onSelectIncome: () -> Unit,
+    onSelectExpense: () -> Unit,
 ) {
-
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        contentPadding = PaddingValues(vertical = 10.dp)
+    val spacing = LocalEmmSpacing.current
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s6),
     ) {
+        TabOption(label = "INGRESO", isSelected = currentPage == 0, onClick = onSelectIncome)
+        TabOption(label = "GASTO", isSelected = currentPage == 1, onClick = onSelectExpense)
+    }
+}
 
-        items(categories, key = SelectableCategory::categoryId) {
-            Column(
+@Composable
+private fun TabOption(label: String, isSelected: Boolean, onClick: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+    val interactionSource = remember { MutableInteractionSource() }
+
+    val underlineColor = if (isSelected) colors.accentFocus else colors.border
+    val labelColor = if (isSelected) colors.textPrimary else colors.textTertiary
+
+    Box(
+        modifier = Modifier
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(vertical = spacing.s2)
+            .drawBehind {
+                val stroke = if (isSelected) 2f else 1f
+                drawLine(
+                    color = underlineColor,
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = stroke,
+                )
+            }
+            .padding(bottom = spacing.s2),
+    ) {
+        Text(text = label, style = type.labelL, color = labelColor)
+    }
+}
+
+@Composable
+private fun CategoryList(
+    categories: List<SelectableCategory>,
+    onSelect: (SelectableCategory) -> Unit,
+) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        items(categories, key = SelectableCategory::categoryId) { category ->
+            val interactionSource = remember { MutableInteractionSource() }
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .border(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(10.dp)
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = { onSelect(category) },
                     )
-                    .clickable {
-                        onCategorySelected(it)
-                    }
-                    .padding(15.dp)
+                    .padding(horizontal = spacing.s4, vertical = spacing.s4)
+                    .drawBehind {
+                        drawLine(
+                            color = colors.border,
+                            start = Offset(0f, size.height),
+                            end = Offset(size.width, size.height),
+                            strokeWidth = 1f,
+                        )
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(spacing.s4),
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(it.color.container),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = it.icon.icon,
-                        contentDescription = it.name,
-                        tint = it.color.primary,
-                    )
-                }
-                Spacer(modifier = Modifier.height(10.dp))
+                Icon(
+                    imageVector = category.icon.icon,
+                    contentDescription = null,
+                    tint = category.color.primary,
+                    modifier = Modifier.size(24.dp),
+                )
                 Text(
-                    text = it.name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    fontFamily = LatoFontFamily,
+                    text = category.name,
+                    style = type.bodyL,
+                    color = colors.textPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -245,20 +212,59 @@ fun CategoryItemPicker(
     }
 }
 
-@Preview
+@Composable
+private fun TopBar(title: String, onBack: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.s4, vertical = spacing.s3),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val interactionSource = remember { MutableInteractionSource() }
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onBack,
+                ),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.ArrowBack,
+                contentDescription = "Atrás",
+                tint = colors.textPrimary,
+                modifier = Modifier.size(24.dp),
+            )
+        }
+        Text(
+            text = title,
+            style = type.titleL,
+            color = colors.textPrimary,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 900)
 @Composable
 private fun SelectCategoryScreenPreview() {
     EmmTheme {
         val categories = remember {
             buildList {
-                repeat(7) {
+                repeat(6) {
                     add(
                         SelectableCategory(
-                            categoryId = "$it nominavi",
-                            name = "$it Ann Chan",
+                            categoryId = "$it",
+                            name = "Categoría $it",
                             icon = AppIconCatalog.catalog[it],
                             categoryType = CategoryType.Income,
-                            color = allColors[it]
+                            color = allColors[it],
                         )
                     )
                 }
@@ -270,7 +276,7 @@ private fun SelectCategoryScreenPreview() {
             onBack = {},
             onValueChange = {},
             value = "",
-            onCategorySelected = {}
+            onCategorySelected = {},
         )
     }
 }
