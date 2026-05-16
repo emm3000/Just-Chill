@@ -38,4 +38,6 @@ SET name = ?, syncState = ?, updatedAt = ?
 WHERE categoryId = ?;
 
 selectPendingSync:
-SELECT * FROM categories WHERE syncState = 'PENDING' OR isDeleted = 1;
+SELECT * FROM categories
+WHERE syncState = 'PENDING' OR isDeleted = 1
+ORDER BY updatedAt ASC;

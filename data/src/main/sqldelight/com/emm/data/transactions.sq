@@ -76,4 +76,6 @@ delete:
 DELETE FROM transactions WHERE transactionId = ?;
 
 selectPendingSync:
-SELECT * FROM transactions WHERE syncState = 'PENDING' OR isDeleted = 1;
+SELECT * FROM transactions
+WHERE syncState = 'PENDING' OR isDeleted = 1
+ORDER BY updatedAt ASC;

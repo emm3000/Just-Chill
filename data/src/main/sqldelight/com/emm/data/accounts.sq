@@ -36,4 +36,6 @@ selectByStatus:
 SELECT * FROM accounts WHERE syncState = ? AND isDeleted = 0;
 
 selectPendingSync:
-SELECT * FROM accounts WHERE syncState = 'PENDING' OR isDeleted = 1;
+SELECT * FROM accounts
+WHERE syncState = 'PENDING' OR isDeleted = 1
+ORDER BY updatedAt ASC;
