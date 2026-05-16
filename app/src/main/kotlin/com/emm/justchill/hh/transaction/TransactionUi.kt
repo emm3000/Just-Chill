@@ -32,8 +32,8 @@ private fun TransactionWithCategory.toUi(): TransactionUi {
         transactionId = transactionId,
         type = type,
         amount = when (type) {
-            TransactionType.Income -> "S/ $formattedNumber"
-            TransactionType.Spend -> "S/ -$formattedNumber"
+            TransactionType.Income -> "+S/ $formattedNumber"
+            TransactionType.Spend -> "−S/ $formattedNumber"
         },
         description = description,
         date = date,

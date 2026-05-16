@@ -28,6 +28,7 @@ navigationFragmentKtx = "2.9.8"
 navigationUiKtx = "2.9.8"
 retrofit = "3.0.0"
 retrofit2KotlinxSerializationConverter = "1.0.0"
+uiTextGoogleFonts = "1.10.0"
 androidApplication = "9.2.1"
 kotlinVersion = "2.3.21"
 googleServicesVersion = "4.4.4"
@@ -58,6 +59,7 @@ androidx-navigation-fragment-ktx = { module = "androidx.navigation:navigation-fr
 androidx-navigation-ui-ktx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "navigationUiKtx" }
 androidx-ui = { module = "androidx.compose.ui:ui" }
 androidx-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
+androidx-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 androidx-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
