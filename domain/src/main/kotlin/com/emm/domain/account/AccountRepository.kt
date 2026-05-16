@@ -12,6 +12,8 @@ interface AccountRepository {
 
     suspend fun create(account: AccountUpsert)
 
+    suspend fun update(accountId: String, account: AccountUpsert)
+
     suspend fun delete(accountId: String)
 
     suspend fun pull()

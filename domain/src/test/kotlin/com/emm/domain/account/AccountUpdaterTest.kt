@@ -10,7 +10,7 @@ import org.junit.Test
 
 class AccountUpdaterTest {
 
-    private val repository = mockk<AccountUpdateRepository>()
+    private val repository = mockk<AccountRepository>()
     private val accountUpdater = UpdateAccountUseCase(repository)
 
     @Test

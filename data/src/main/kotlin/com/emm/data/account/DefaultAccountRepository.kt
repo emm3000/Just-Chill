@@ -5,7 +5,6 @@ import com.emm.data.shared.safeApiCall
 import com.emm.data.shared.safeDbCall
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
-import com.emm.domain.account.AccountUpdateRepository
 import com.emm.domain.account.AccountUpsert
 import com.emm.domain.shared.SyncState
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 class DefaultAccountRepository(
     private val localDataSource: AccountLocalDataSource,
     private val remoteDataSource: AccountRemoteDataSource,
-) : AccountRepository, AccountUpdateRepository {
+) : AccountRepository {
 
     override fun all(): Flow<List<Account>> {
         return localDataSource.all().catchAsDomainException()

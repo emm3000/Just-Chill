@@ -30,6 +30,9 @@ class FakeAccountRepository : AccountRepository {
     override suspend fun create(account: AccountUpsert) {
     }
 
+    override suspend fun update(accountId: String, account: AccountUpsert) {
+    }
+
     override suspend fun delete(accountId: String) {
     }
 
