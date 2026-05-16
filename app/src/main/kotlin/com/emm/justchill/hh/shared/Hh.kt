@@ -49,8 +49,8 @@ import androidx.navigation3.ui.NavDisplay
 import com.emm.domain.account.Account
 import com.emm.domain.auth.AuthRepository
 import com.emm.domain.auth.SessionStatus
-import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.hh.account.AccountsScreen
 import com.emm.justchill.hh.account.AccountsViewModel
 import com.emm.justchill.hh.account.AddAccountScreen
@@ -81,6 +81,7 @@ private val START_TAB: BottomBarRoute = SeeTransactionRoute
 @Composable
 fun Hh() {
 
+    val colors = LocalEmmColors.current
     val backStack: NavBackStack<NavKey> = rememberNavBackStack(START_TAB)
     val resultBus = remember { ResultEventBus() }
 
@@ -88,7 +89,7 @@ fun Hh() {
     val showBottomBar: Boolean = currentRoute is BottomBarRoute
 
     Scaffold(
-        modifier = Modifier.background(BackgroundColor),
+        modifier = Modifier.background(colors.bg),
         bottomBar = {
             AnimatedVisibility(
                 visible = showBottomBar,
@@ -108,7 +109,7 @@ fun Hh() {
         NavDisplay(
             modifier = Modifier
                 .fillMaxSize()
-                .background(BackgroundColor)
+                .background(colors.bg)
                 .padding(padding),
             backStack = backStack,
             onBack = { backStack.removeLastOrNull() },
