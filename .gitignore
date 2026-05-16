@@ -19,6 +19,6 @@ local.properties
 .kotlin
 
 # Claude Code
-CLAUDE.md
+.claude/settings.local.json
 .atl/
 docs/
