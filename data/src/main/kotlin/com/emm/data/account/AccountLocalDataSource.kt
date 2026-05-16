@@ -56,7 +56,7 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
 
     suspend fun create(account: AccountUpsert) = withContext(Dispatchers.IO) {
         aq.insert(
-            accountId = account.accountId,
+            accountId = account.accountId.value,
             name = account.name,
             type = account.type.name,
             currency = account.currency.name,

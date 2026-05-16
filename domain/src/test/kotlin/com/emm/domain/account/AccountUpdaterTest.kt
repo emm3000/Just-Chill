@@ -1,5 +1,6 @@
 package com.emm.domain.account
 
+import com.emm.domain.shared.AccountId
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -19,11 +20,11 @@ class AccountUpdaterTest {
         coEvery { repository.update(any(), any()) } just Runs
 
         val account = AccountUpsert(
-            accountId = "123",
+            accountId = AccountId("123"),
             name = "Test Account",
         )
-        accountUpdater("123", account)
+        accountUpdater(AccountId("123"), account)
 
-        coVerify(exactly = 1) { repository.update("123", account) }
+        coVerify(exactly = 1) { repository.update(AccountId("123"), account) }
     }
 }

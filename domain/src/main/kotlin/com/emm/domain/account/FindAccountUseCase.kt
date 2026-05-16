@@ -1,8 +1,10 @@
 package com.emm.domain.account
 
+import com.emm.domain.shared.AccountId
+
 class FindAccountUseCase(private val repository: AccountRepository) {
 
-    suspend operator fun invoke(accountId: String): Account? {
+    suspend operator fun invoke(accountId: AccountId): Account? {
         return repository.find(accountId)
     }
 }

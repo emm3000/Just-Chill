@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.FindAccountUseCase
+import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.transaction.DeleteTransactionUseCase
 import com.emm.domain.transaction.FindTransactionUseCase
@@ -56,7 +57,7 @@ class EditTransactionViewModel(
     private fun loadCurrentTransaction() = viewModelScope.launch {
         val accounts: List<Account> = accountRepository.all().firstOrNull() ?: emptyList()
         oldTransaction = transactionFinder(transactionId) ?: return@launch
-        oldAccount = accountFinder(oldTransaction.accountId) ?: return@launch
+        oldAccount = accountFinder(AccountId(oldTransaction.accountId)) ?: return@launch
         dateInLong = oldTransaction.date
         updateState {
             copy(
@@ -86,7 +87,7 @@ class EditTransactionViewModel(
         description = currentState.description,
         date = dateInLong,
         amount = currentState.amount.formatInputToDouble(),
-        accountId = currentState.accountSelected?.accountId ?: throw IllegalStateException(),
+        accountId = currentState.accountSelected?.accountId?.value ?: throw IllegalStateException(),
         categoryId = null,
     )
 

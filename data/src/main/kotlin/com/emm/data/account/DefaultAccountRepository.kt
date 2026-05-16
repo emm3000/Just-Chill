@@ -6,6 +6,7 @@ import com.emm.data.shared.safeDbCall
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountUpsert
+import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.SyncState
 import kotlinx.coroutines.flow.Flow
 
@@ -18,8 +19,8 @@ class DefaultAccountRepository(
         return localDataSource.all().catchAsDomainException()
     }
 
-    override suspend fun find(accountId: String): Account? = safeDbCall {
-        localDataSource.find(accountId)
+    override suspend fun find(accountId: AccountId): Account? = safeDbCall {
+        localDataSource.find(accountId.value)
     }
 
     override fun default(): Flow<Account?> {
@@ -31,13 +32,13 @@ class DefaultAccountRepository(
         Unit
     }
 
-    override suspend fun delete(accountId: String): Unit = safeDbCall {
-        localDataSource.softDelete(accountId)
+    override suspend fun delete(accountId: AccountId): Unit = safeDbCall {
+        localDataSource.softDelete(accountId.value)
         Unit
     }
 
-    override suspend fun update(accountId: String, account: AccountUpsert): Unit = safeDbCall {
-        localDataSource.update(accountId, account)
+    override suspend fun update(accountId: AccountId, account: AccountUpsert): Unit = safeDbCall {
+        localDataSource.update(accountId.value, account)
         Unit
     }
 

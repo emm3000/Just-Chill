@@ -1,5 +1,6 @@
 package com.emm.domain.account
 
+import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.UniqueIdProvider
 
 class CreateAccountUseCase(
@@ -13,7 +14,7 @@ class CreateAccountUseCase(
         currency: Currency = Currency.ARS,
     ) {
         val accountUpsert = AccountUpsert(
-            accountId = uniqueIdProvider.id,
+            accountId = AccountId(uniqueIdProvider.id),
             name = name,
             type = type,
             currency = currency,

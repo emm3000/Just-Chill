@@ -110,7 +110,7 @@ class AddTransactionViewModel(
         date = dateInLong,
         amount = currentState.amount.formatInputToDouble(),
         categoryId = currentState.categorySelected?.categoryId,
-        accountId = currentState.accountSelected?.accountId ?: throw IllegalStateException(),
+        accountId = currentState.accountSelected?.accountId?.value ?: throw IllegalStateException(),
     )
 
     private fun updateCurrentDate(millis: Long?) = millis?.let {

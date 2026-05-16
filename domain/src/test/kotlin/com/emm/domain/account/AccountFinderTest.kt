@@ -1,5 +1,6 @@
 package com.emm.domain.account
 
+import com.emm.domain.shared.AccountId
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -17,10 +18,10 @@ class AccountFinderTest {
 
         coEvery { repository.find(any()) } returns null
 
-        val find: Account? = accountFinder("1234")
+        val find: Account? = accountFinder(AccountId("1234"))
 
         assertNull(find)
 
-        coVerify(exactly = 1) { repository.find("1234") }
+        coVerify(exactly = 1) { repository.find(AccountId("1234")) }
     }
 }

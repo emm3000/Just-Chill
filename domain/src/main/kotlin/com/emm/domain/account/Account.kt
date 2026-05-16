@@ -1,7 +1,9 @@
 package com.emm.domain.account
 
+import com.emm.domain.shared.AccountId
+
 data class Account(
-    val accountId: String,
+    val accountId: AccountId,
     val name: String,
     val type: AccountType = AccountType.Bank,
     val currency: Currency = Currency.ARS,
@@ -12,7 +14,7 @@ data class Account(
     companion object {
 
         val Empty = Account(
-            accountId = "",
+            accountId = AccountId(""),
             name = "",
         )
     }

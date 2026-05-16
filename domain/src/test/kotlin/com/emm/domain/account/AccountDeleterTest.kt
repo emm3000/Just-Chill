@@ -1,5 +1,6 @@
 package com.emm.domain.account
 
+import com.emm.domain.shared.AccountId
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -18,9 +19,9 @@ class AccountDeleterTest {
 
         coEvery { repository.delete(any()) } just Runs
 
-        accountDeleter("1234")
+        accountDeleter(AccountId("1234"))
 
-        coVerify(exactly = 1) { repository.delete("1234") }
+        coVerify(exactly = 1) { repository.delete(AccountId("1234")) }
 
     }
 

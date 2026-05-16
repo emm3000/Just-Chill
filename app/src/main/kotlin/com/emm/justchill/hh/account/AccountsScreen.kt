@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.domain.account.Account
+import com.emm.domain.shared.AccountId
 import com.emm.justchill.components.EmmButton
 import com.emm.justchill.components.EmmButtonVariant
 import com.emm.justchill.core.theme.EmmTheme
@@ -236,9 +237,9 @@ private fun AccountsScreenPreview() {
     EmmTheme {
         AccountsScreen(
             accounts = listOf(
-                Account(accountId = "1", name = "Cuenta principal"),
-                Account(accountId = "2", name = "Ahorros"),
-                Account(accountId = "3", name = "Tarjeta de crédito"),
+                Account(accountId = AccountId("1"), name = "Cuenta principal"),
+                Account(accountId = AccountId("2"), name = "Ahorros"),
+                Account(accountId = AccountId("3"), name = "Tarjeta de crédito"),
             ),
             addCategory = {},
             addAccount = {},
