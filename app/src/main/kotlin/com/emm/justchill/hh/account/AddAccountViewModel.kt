@@ -18,13 +18,19 @@ class AddAccountViewModel(
             is AddAccountIntent.OnNameChange -> updateState {
                 copy(name = intent.value, isEnabled = intent.value.isNotEmpty())
             }
+            is AddAccountIntent.OnTypeChange -> updateState { copy(selectedType = intent.value) }
+            is AddAccountIntent.OnCurrencyChange -> updateState { copy(selectedCurrency = intent.value) }
             AddAccountIntent.OnSave -> save()
         }
     }
 
     private fun save() = viewModelScope.launch {
         try {
-            accountCreator(name = currentState.name)
+            accountCreator(
+                name = currentState.name,
+                type = currentState.selectedType,
+                currency = currentState.selectedCurrency,
+            )
             sendEffect(AddAccountEffect.AccountSaved)
         } catch (e: DomainException) {
             sendEffect(AddAccountEffect.ShowError(e.toUserMessage()))

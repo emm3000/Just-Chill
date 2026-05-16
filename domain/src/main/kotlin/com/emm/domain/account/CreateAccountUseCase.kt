@@ -7,10 +7,16 @@ class CreateAccountUseCase(
     private val uniqueIdProvider: UniqueIdProvider,
 ) {
 
-    suspend operator fun invoke(name: String) {
+    suspend operator fun invoke(
+        name: String,
+        type: AccountType = AccountType.Bank,
+        currency: Currency = Currency.ARS,
+    ) {
         val accountUpsert = AccountUpsert(
             accountId = uniqueIdProvider.id,
             name = name,
+            type = type,
+            currency = currency,
         )
         repository.create(accountUpsert)
     }
