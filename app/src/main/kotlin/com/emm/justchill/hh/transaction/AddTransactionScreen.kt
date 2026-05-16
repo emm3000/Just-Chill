@@ -1,13 +1,12 @@
 package com.emm.justchill.hh.transaction
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -18,42 +17,32 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.rounded.AccountBalanceWallet
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.DateRange
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,43 +50,39 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.compose.dropUnlessResumed
 import com.emm.domain.account.Account
 import com.emm.domain.category.CategoryType
-import com.emm.justchill.components.EmmAmountChill
+import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.components.EmmButton
+import com.emm.justchill.components.EmmTextInput
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LatoFontFamily
-import com.emm.justchill.core.theme.PlaceholderOrLabel
-import com.emm.justchill.core.theme.PrimaryBlue
-import com.emm.justchill.core.theme.TextColor
-import com.emm.justchill.hh.auth.LabelTextField
+import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.theme.LocalEmmSpacing
+import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.allColors
-import com.emm.justchill.hh.shared.EmmTextInput
-import com.emm.justchill.hh.shared.EmmTransactionRadioButton
-import com.emm.justchill.hh.transaction.components.EmmCenteredToolbar
-import com.emm.justchill.hh.transaction.components.NewAccountItem
-import com.emm.justchill.hh.transaction.components.NewButton
-import com.emm.justchill.hh.transaction.components.NotesField
-import com.emm.justchill.hh.transaction.components.TransactionField
-import com.emm.justchill.hh.transaction.components.TransactionTypeToggle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
+import java.text.DecimalFormat
 
 @Composable
 fun AddTransactionScreen(
@@ -105,8 +90,7 @@ fun AddTransactionScreen(
     onOtherCategorySelected: () -> Unit,
     popBackStack: () -> Unit,
 ) {
-
-    NewAddTransaction(
+    AddTransactionScreenContent(
         state = vm.state,
         onAction = vm::onAction,
         onOtherCategorySelected = onOtherCategorySelected,
@@ -114,426 +98,153 @@ fun AddTransactionScreen(
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-fun NewAddTransaction(
+private fun AddTransactionScreenContent(
     state: AddTransactionUiState,
     onAction: (AddTransactionAction) -> Unit,
     onOtherCategorySelected: () -> Unit,
     popBackStack: () -> Unit,
 ) {
-
-    val (showAccountPicker, setShowAccountPicker) = rememberSaveable { mutableStateOf(false) }
+    val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
 
     val focusManager = LocalFocusManager.current
-    val kb = LocalSoftwareKeyboardController.current
-
+    val keyboard = LocalSoftwareKeyboardController.current
     val isKeyboardOpen = WindowInsets.isImeVisible
-
-    val datePickerState: DatePickerState = rememberDatePickerState()
-
-    val (showSelectDate, setShowSelectDate) = remember {
-        mutableStateOf(false)
-    }
-
     val scope = rememberCoroutineScope()
-
     val scrollState = rememberScrollState()
 
-    Scaffold(
-        modifier = Modifier.imePadding(),
-        topBar = {
-            EmmCenteredToolbar(
-                title = "Agregar Transacción",
-                modifier = Modifier.fillMaxWidth(),
-                navigationIconClick = Icons.Rounded.Close,
-                onNavigationIconClick = {
-                    kb?.hide()
-                    popBackStack()
-                },
-                actions = {
-                    TextButton(
-                        onClick = {
-                            onAction(AddTransactionAction.OnReset)
-                        }
-                    ) {
-                        Text(
-                            modifier = Modifier,
-                            text = "Reset",
-                            fontFamily = LatoFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontSize = 17.sp
-                        )
-                    }
-                }
-            )
-        },
-        bottomBar = {
-            NewButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp)
-                    .navigationBarsPadding(),
-                enabled = state.isEnabled,
-                onClick = {
-                    onAction(AddTransactionAction.OnSave)
-                    popBackStack()
-                },
-                title = "Guardar transacción"
-            )
-        },
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .padding(horizontal = 15.dp)
-                .verticalScroll(scrollState)
-        ) {
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            TransactionTypeToggle(
-                selectedType = state.transactionType,
-                onTypeSelected = { onAction(AddTransactionAction.OnTransactionTypeChange(it)) }
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text(
-                modifier = Modifier.padding(bottom = 10.dp),
-                text = "Ingresa el monto",
-                fontFamily = LatoFontFamily,
-            )
-            EmmAmountChill(
-                modifier = Modifier.fillMaxWidth(),
-                value = state.amount,
-                onValueChange = {
-                    onAction(AddTransactionAction.OnAmountChange(it))
-                },
-                onNext = {
-                    kb?.hide()
-                    focusManager.clearFocus()
-                }
-            )
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            CategorySelector(
-                categorySelected = state.categorySelected,
-                onCategorySelected = {
-                    onAction(AddTransactionAction.OnCategorySelected(it))
-                },
-                categories = state.categories,
-                onOtherCategorySelected = onOtherCategorySelected
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            TransactionField(
-                label = "Fecha",
-                value = state.date,
-                icon = Icons.Rounded.DateRange,
-                onClick = {
-                    focusManager.clearFocus()
-                    setShowSelectDate(true)
-                }
-            )
-
-            Spacer(modifier = Modifier.height(15.dp))
-
-            TransactionField(
-                label = "Cuenta",
-                value = state.accountSelected?.name.orEmpty(),
-                icon = Icons.Rounded.AccountBalanceWallet,
-                onClick = {
-                    if (isKeyboardOpen) {
-                        scope.launch {
-                            focusManager.clearFocus()
-                            kb?.hide()
-                            delay(300L)
-                        }.invokeOnCompletion {
-                            setShowAccountPicker(true)
-                        }
-                    } else {
-                        setShowAccountPicker(true)
-                    }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(15.dp))
-
-            NotesField(
-                value = state.description,
-                onValueChange = { onAction(AddTransactionAction.OnDescriptionChange(it)) },
-                onNext = {
-                    kb?.hide()
-                    focusManager.clearFocus()
-                }
-            )
-        }
-    }
-
-    if (showSelectDate) {
-        DatePickerDialog(
-            onDismissRequest = {
-                setShowSelectDate(false)
-            },
-            confirmButton = {
-                OutlinedButton(onClick = {
-                    onAction(AddTransactionAction.OnDateChangeInMillis(datePickerState.selectedDateMillis))
-                    setShowSelectDate(false)
-                }) {
-                    Text(text = "Ok")
-                }
-            },
-            dismissButton = {
-                Button(onClick = { setShowSelectDate(false) }) {
-                    Text(text = "Cancel")
-                }
-            }
-        ) {
-            DatePicker(
-                state = datePickerState,
-                showModeToggle = false
-            )
-        }
-    }
-
-    BottomSheetDialogForPickAccount(
-        setShowAccountPicker = setShowAccountPicker,
-        showAccountPicker = showAccountPicker,
-        accounts = state.accounts,
-        onAction = onAction,
-    )
-}
-
-@SuppressLint("UnusedBoxWithConstraintsScope")
-@Composable
-fun CategorySelector(
-    categorySelected: SelectableCategory?,
-    categories: List<SelectableCategory>,
-    onCategorySelected: (SelectableCategory) -> Unit,
-    onOtherCategorySelected: () -> Unit,
-) {
-
-    Text(
-        text = "Categoría",
-        fontWeight = FontWeight.Bold,
-        fontFamily = LatoFontFamily,
-        color = MaterialTheme.colorScheme.onBackground
-    )
-
-    Spacer(modifier = Modifier.height(20.dp))
-
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(4),
-        modifier = Modifier
-            .height(200.dp)
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(5.dp),
-        horizontalArrangement = Arrangement.spacedBy(5.dp),
-    ) {
-        items(categories, key = SelectableCategory::categoryId) {
-            val isSelected = it.categoryId == categorySelected?.categoryId
-            Column(
-                modifier = Modifier
-                    .height(90.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .then(
-                        if (isSelected) Modifier.border(
-                            width = 1.dp,
-                            color = PrimaryBlue,
-                            shape = RoundedCornerShape(10.dp)
-                        ) else Modifier
-                    )
-                    .selectable(
-                        selected = isSelected,
-                        onClick = { onCategorySelected(it) }
-                    )
-                    .background(MaterialTheme.colorScheme.surface),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(33.dp)
-                        .clip(CircleShape)
-                        .then(
-                            if (isSelected) Modifier.background(PrimaryBlue)
-                            else Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        modifier = Modifier.size(20.dp),
-                        imageVector = it.icon.icon,
-                        contentDescription = it.name,
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-                Text(
-                    text = it.name,
-                    fontSize = 10.sp
-                )
-            }
-        }
-
-        item {
-            Column(
-                modifier = Modifier
-                    .height(90.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .clickable {
-                        onOtherCategorySelected()
-                    }
-                    .background(MaterialTheme.colorScheme.surface),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(33.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        modifier = Modifier.size(20.dp),
-                        imageVector = Icons.Default.MoreHoriz,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-                Text(
-                    text = "Otros",
-                    fontSize = 10.sp
-                )
-            }
-        }
-    }
-
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AddTransactionScreen(
-    state: AddTransactionUiState,
-    onAction: (AddTransactionAction) -> Unit,
-    popBackStack: () -> Unit,
-) {
-
-    val datePickerState: DatePickerState = rememberDatePickerState()
-
-    val (showSelectDate, setShowSelectDate) = remember {
-        mutableStateOf(false)
-    }
-
+    val (showSelectDate, setShowSelectDate) = remember { mutableStateOf(false) }
     val (showAccountPicker, setShowAccountPicker) = rememberSaveable { mutableStateOf(false) }
+    val datePickerState: DatePickerState = rememberDatePickerState()
+    val amountFocus = remember { FocusRequester() }
 
-    if (showSelectDate) {
-        DatePickerDialog(
-            onDismissRequest = {
-                setShowSelectDate(false)
-            },
-            confirmButton = {
-                OutlinedButton(onClick = {
-                    onAction(AddTransactionAction.OnDateChangeInMillis(datePickerState.selectedDateMillis))
-                    setShowSelectDate(false)
-                }) {
-                    Text(text = "Ok")
-                }
-            },
-            dismissButton = {
-                Button(onClick = { setShowSelectDate(false) }) {
-                    Text(text = "Cancel")
-                }
-            }
-        ) {
-            DatePicker(
-                state = datePickerState,
-                showModeToggle = false
-            )
-        }
-    }
+    LaunchedEffect(Unit) { amountFocus.requestFocus() }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(25.dp)
+            .background(colors.bg)
+            .statusBarsPadding()
+            .imePadding(),
     ) {
-
-        val screenWidthDp: Dp = LocalWindowInfo.current.containerDpSize.width
-        EmmCenteredToolbar(
-            title = "Agregar Transacción",
-            modifier = Modifier.requiredWidth(screenWidthDp),
-            navigationIconClick = Icons.Rounded.Close,
-            onNavigationIconClick = { popBackStack() }
+        ScreenTopBar(
+            onClose = {
+                keyboard?.hide()
+                popBackStack()
+            },
+            onReset = { onAction(AddTransactionAction.OnReset) },
         )
 
-        Column {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = "Monto",
-                fontWeight = FontWeight.Bold,
-                fontFamily = LatoFontFamily,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontSize = 17.sp
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .verticalScroll(scrollState)
+                .padding(horizontal = spacing.s4),
+            verticalArrangement = Arrangement.spacedBy(spacing.s6),
+        ) {
+
+            Spacer(Modifier.height(spacing.s2))
+
+            TypeToggle(
+                selected = state.transactionType,
+                onSelect = { onAction(AddTransactionAction.OnTransactionTypeChange(it)) },
             )
 
-            EmmAmountChill(
+            AmountHeroInput(
                 value = state.amount,
                 onValueChange = { onAction(AddTransactionAction.OnAmountChange(it)) },
-                modifier = Modifier.fillMaxWidth()
+                type = state.transactionType,
+                focusRequester = amountFocus,
+                onNext = {
+                    keyboard?.hide()
+                    focusManager.clearFocus()
+                },
             )
+
+            SectionLabel("CATEGORÍA")
+            CategoryGrid(
+                selected = state.categorySelected,
+                categories = state.categories,
+                onSelect = { onAction(AddTransactionAction.OnCategorySelected(it)) },
+                onMore = onOtherCategorySelected,
+            )
+
+            ClickableRow(
+                label = "FECHA",
+                value = state.date,
+                onClick = {
+                    focusManager.clearFocus()
+                    setShowSelectDate(true)
+                },
+            )
+
+            ClickableRow(
+                label = "CUENTA",
+                value = state.accountSelected?.name ?: "Selecciona una cuenta",
+                emphasized = state.accountSelected != null,
+                onClick = {
+                    if (isKeyboardOpen) {
+                        scope.launch {
+                            focusManager.clearFocus()
+                            keyboard?.hide()
+                            delay(300L)
+                        }.invokeOnCompletion { setShowAccountPicker(true) }
+                    } else {
+                        setShowAccountPicker(true)
+                    }
+                },
+            )
+
+            EmmTextInput(
+                value = state.description,
+                onValueChange = { onAction(AddTransactionAction.OnDescriptionChange(it)) },
+                label = "DESCRIPCIÓN",
+                placeholder = "Opcional",
+                singleLine = false,
+            )
+
+            Spacer(Modifier.height(spacing.s4))
         }
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Text(
-                text = "Tipo: ",
-                fontWeight = FontWeight.Bold,
-                fontFamily = LatoFontFamily,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontSize = 17.sp
-
-            )
-            EmmTransactionRadioButton(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                selectedOption = state.transactionType,
-                onOptionSelected = { onAction(AddTransactionAction.OnTransactionTypeChange(it)) }
-            )
-        }
-
-        JustClickableInput(state.accountSelected?.name.orEmpty(), "Cuenta") { setShowAccountPicker(true) }
-
-        EmmTextInput(
-            modifier = Modifier,
-            label = "En que gaste",
-            placeholder = "Ingresa tu gasto",
-            value = state.description,
-            onChange = { onAction(AddTransactionAction.OnDescriptionChange(it)) },
-        )
-
-        JustClickableInput(state.date, "Fecha;") { setShowSelectDate(true) }
-
-        NewButton(
-            title = "Guardar",
-            onClick = {
+        EmmButton(
+            text = "Guardar transacción",
+            onClick = dropUnlessResumed {
                 onAction(AddTransactionAction.OnSave)
                 popBackStack()
             },
             enabled = state.isEnabled,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(spacing.s4)
+                .navigationBarsPadding(),
         )
+    }
 
+    if (showSelectDate) {
+        DatePickerDialog(
+            onDismissRequest = { setShowSelectDate(false) },
+            confirmButton = {
+                EmmButton(
+                    text = "Ok",
+                    onClick = {
+                        onAction(AddTransactionAction.OnDateChangeInMillis(datePickerState.selectedDateMillis))
+                        setShowSelectDate(false)
+                    },
+                )
+            },
+            dismissButton = {
+                EmmButton(
+                    text = "Cancelar",
+                    onClick = { setShowSelectDate(false) },
+                    variant = com.emm.justchill.components.EmmButtonVariant.Ghost,
+                )
+            },
+        ) {
+            DatePicker(state = datePickerState, showModeToggle = false)
+        }
     }
 
     BottomSheetDialogForPickAccount(
@@ -545,28 +256,361 @@ private fun AddTransactionScreen(
 }
 
 @Composable
+private fun ScreenTopBar(
+    onClose: () -> Unit,
+    onReset: () -> Unit,
+) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.s4, vertical = spacing.s3),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val closeInteraction = remember { MutableInteractionSource() }
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clickable(
+                    interactionSource = closeInteraction,
+                    indication = null,
+                    onClick = onClose,
+                ),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Close,
+                contentDescription = "Cerrar",
+                tint = colors.textPrimary,
+                modifier = Modifier.size(24.dp),
+            )
+        }
+
+        Text(
+            text = "Agregar",
+            style = type.titleL,
+            color = colors.textPrimary,
+            modifier = Modifier.weight(1f),
+        )
+
+        val resetInteraction = remember { MutableInteractionSource() }
+        Text(
+            text = "Reset",
+            style = type.labelL,
+            color = colors.textSecondary,
+            modifier = Modifier
+                .clickable(
+                    interactionSource = resetInteraction,
+                    indication = null,
+                    onClick = onReset,
+                )
+                .padding(spacing.s2),
+        )
+    }
+}
+
+@Composable
+private fun TypeToggle(
+    selected: TransactionType,
+    onSelect: (TransactionType) -> Unit,
+) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s6),
+    ) {
+        TypeOption(
+            label = "INGRESO",
+            isSelected = selected == TransactionType.Income,
+            onClick = { onSelect(TransactionType.Income) },
+            colors = colors,
+            type = type,
+        )
+        TypeOption(
+            label = "GASTO",
+            isSelected = selected == TransactionType.Spend,
+            onClick = { onSelect(TransactionType.Spend) },
+            colors = colors,
+            type = type,
+        )
+    }
+}
+
+@Composable
+private fun TypeOption(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    colors: com.emm.justchill.core.theme.EmmColors,
+    type: com.emm.justchill.core.theme.EmmType,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val underlineColor = if (isSelected) colors.accentFocus else colors.border
+    val labelColor = if (isSelected) colors.textPrimary else colors.textTertiary
+
+    Box(
+        modifier = Modifier
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(vertical = LocalEmmSpacing.current.s2)
+            .drawBehind {
+                val stroke = if (isSelected) 2f else 1f
+                drawLine(
+                    color = underlineColor,
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = stroke,
+                )
+            }
+            .padding(bottom = LocalEmmSpacing.current.s2),
+    ) {
+        Text(
+            text = label,
+            style = type.labelL,
+            color = labelColor,
+        )
+    }
+}
+
+@Composable
+private fun AmountHeroInput(
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
+    type: TransactionType,
+    focusRequester: FocusRequester,
+    onNext: () -> Unit,
+) {
+    val colors = LocalEmmColors.current
+    val emmType = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+
+    val amount = value.text.replace(",", "").toBigDecimalOrNull() ?: BigDecimal.ZERO
+    val isZero = amount == BigDecimal("0.00")
+    val sign = if (type == TransactionType.Income) "+" else "−"
+    val numberColor = if (isZero) colors.textTertiary else colors.textPrimary
+    val prefixColor = if (isZero) colors.textTertiary else colors.textSecondary
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(spacing.s2),
+    ) {
+        Text(
+            text = "MONTO",
+            style = emmType.labelM,
+            color = colors.textTertiary,
+        )
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = "${sign}S/",
+                style = emmType.amountL,
+                color = prefixColor,
+                modifier = Modifier.padding(end = spacing.s2, bottom = 4.dp),
+            )
+            BasicTextField(
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester),
+                value = value,
+                onValueChange = { newValue -> onValueChange(formatInputToAmount(newValue)) },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next,
+                ),
+                keyboardActions = KeyboardActions(onNext = { onNext() }),
+                textStyle = emmType.amountHero.copy(color = numberColor),
+                cursorBrush = SolidColor(colors.accentFocus),
+                singleLine = true,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    Text(
+        text = text,
+        style = type.labelM,
+        color = colors.textTertiary,
+    )
+}
+
+@Composable
+private fun ClickableRow(
+    label: String,
+    value: String,
+    onClick: () -> Unit,
+    emphasized: Boolean = true,
+) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(vertical = spacing.s3)
+            .drawBehind {
+                drawLine(
+                    color = colors.border,
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = 1f,
+                )
+            },
+    ) {
+        Text(text = label, style = type.labelM, color = colors.textTertiary)
+        Spacer(Modifier.height(spacing.s1))
+        Text(
+            text = value,
+            style = type.bodyL,
+            color = if (emphasized) colors.textPrimary else colors.textTertiary,
+        )
+    }
+}
+
+@Composable
+private fun CategoryGrid(
+    selected: SelectableCategory?,
+    categories: List<SelectableCategory>,
+    onSelect: (SelectableCategory) -> Unit,
+    onMore: () -> Unit,
+) {
+    val spacing = LocalEmmSpacing.current
+
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(4),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp),
+        verticalArrangement = Arrangement.spacedBy(spacing.s2),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+    ) {
+        items(categories, key = SelectableCategory::categoryId) { category ->
+            CategoryTile(
+                category = category,
+                isSelected = category.categoryId == selected?.categoryId,
+                onClick = { onSelect(category) },
+            )
+        }
+        item { CategoryMoreTile(onClick = onMore) }
+    }
+}
+
+@Composable
+private fun CategoryTile(
+    category: SelectableCategory,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val radii = LocalEmmRadii.current
+    val spacing = LocalEmmSpacing.current
+
+    val borderColor = if (isSelected) colors.accentFocus else colors.border
+
+    Column(
+        modifier = Modifier
+            .height(90.dp)
+            .background(colors.surface1, radii.rS)
+            .border(if (isSelected) 1.5.dp else 1.dp, borderColor, radii.rS)
+            .clickable(onClick = onClick)
+            .padding(spacing.s2),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            imageVector = category.icon.icon,
+            contentDescription = category.name,
+            tint = colors.textPrimary,
+            modifier = Modifier.size(22.dp),
+        )
+        Spacer(Modifier.height(spacing.s1))
+        Text(
+            text = category.name,
+            style = type.labelM,
+            color = colors.textSecondary,
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun CategoryMoreTile(onClick: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val radii = LocalEmmRadii.current
+    val spacing = LocalEmmSpacing.current
+
+    Column(
+        modifier = Modifier
+            .height(90.dp)
+            .background(colors.surface1, radii.rS)
+            .border(1.dp, colors.border, radii.rS)
+            .clickable(onClick = onClick)
+            .padding(spacing.s2),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.MoreHoriz,
+            contentDescription = "Más categorías",
+            tint = colors.textPrimary,
+            modifier = Modifier.size(22.dp),
+        )
+        Spacer(Modifier.height(spacing.s1))
+        Text(
+            text = "Más",
+            style = type.labelM,
+            color = colors.textSecondary,
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun BottomSheetDialogForPickAccount(
     setShowAccountPicker: (Boolean) -> Unit,
     showAccountPicker: Boolean,
     accounts: List<Account>,
-    onAction: (AddTransactionAction) -> Unit
+    onAction: (AddTransactionAction) -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
+    val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
     val dismiss: () -> Unit = { setShowAccountPicker(false) }
 
     if (showAccountPicker) {
         ModalBottomSheet(
             onDismissRequest = dismiss,
             sheetState = sheetState,
+            containerColor = colors.surface1,
+            dragHandle = { SheetDragHandle() },
         ) {
             val view = LocalView.current
             (view.parent as? DialogWindowProvider)?.window?.let { window ->
                 SideEffect {
-                    val insetsController = WindowCompat.getInsetsController(window, view)
-                    insetsController.isAppearanceLightStatusBars = false
-                    insetsController.isAppearanceLightNavigationBars = false
+                    val controller = WindowCompat.getInsetsController(window, view)
+                    controller.isAppearanceLightStatusBars = false
+                    controller.isAppearanceLightNavigationBars = false
                 }
             }
             AccountSelectorContent(
@@ -574,246 +618,125 @@ fun BottomSheetDialogForPickAccount(
                 onAccountSelected = { onAction(AddTransactionAction.OnAccountSelected(it)) },
                 dismiss = {
                     scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            dismiss()
-                        }
+                        if (!sheetState.isVisible) dismiss()
                     }
-                }
+                },
             )
         }
-
     }
 }
 
 @Composable
-fun AccountSelectorContent(
-    modifier: Modifier = Modifier,
+private fun SheetDragHandle() {
+    val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
+    val radii = LocalEmmRadii.current
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = spacing.s3, bottom = spacing.s3),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 32.dp, height = 4.dp)
+                .background(colors.textTertiary, radii.rFull),
+        )
+    }
+}
+
+@Composable
+private fun AccountSelectorContent(
     accounts: List<Account>,
     onAccountSelected: (Account) -> Unit,
     dismiss: () -> Unit,
 ) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
 
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = spacing.s4),
     ) {
-
         Text(
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            text = "Seleccione una cuenta",
-            color = MaterialTheme.colorScheme.onSurface,
-            fontFamily = LatoFontFamily,
-            fontSize = MaterialTheme.typography.titleLarge.fontSize,
-            fontWeight = FontWeight.Bold,
+            text = "Selecciona una cuenta",
+            style = type.titleL,
+            color = colors.textPrimary,
+            modifier = Modifier.padding(vertical = spacing.s2),
         )
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(spacing.s2))
 
-        val width = LocalWindowInfo.current.containerDpSize.width
-        LazyColumn(
-            modifier = Modifier,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-
-            itemsIndexed(accounts, key = { _, account -> account.accountId }) { index, account ->
-                Column {
-                    NewAccountItem(
-                        modifier = Modifier.fillMaxWidth(),
-                        accountName = account.name,
-                        balance = 0.0,
-                        accountType = account.name,
-                    ) {
-                        onAccountSelected(account)
-                        dismiss()
-                    }
-                    if (accounts.size == index + 1) return@itemsIndexed
-                    HorizontalDivider(
-                        modifier = Modifier.requiredWidth(width),
-                        thickness = 1.dp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+            items(accounts, key = Account::accountId) { account ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            onAccountSelected(account)
+                            dismiss()
+                        }
+                        .padding(vertical = spacing.s4)
+                        .drawBehind {
+                            drawLine(
+                                color = colors.border,
+                                start = Offset(0f, size.height),
+                                end = Offset(size.width, size.height),
+                                strokeWidth = 1f,
+                            )
+                        },
+                ) {
+                    Text(
+                        text = account.name,
+                        style = type.bodyL,
+                        color = colors.textPrimary,
                     )
                 }
             }
         }
 
+        Spacer(Modifier.height(spacing.s4))
     }
 }
 
-@Composable
-fun JustClickableInput(
-    value: String,
-    label: String,
-    onClick: () -> Unit,
-) {
-
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-
-        Text(
-            text = label,
-            fontWeight = FontWeight.Bold,
-            fontFamily = LatoFontFamily,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontSize = 17.sp
-        )
-
-        Spacer(modifier = Modifier.height(5.dp))
-
-        OutlinedTextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onClick() },
-            value = value,
-            onValueChange = {},
-            readOnly = true,
-            enabled = false,
-            colors = OutlinedTextFieldDefaults.colors(
-                disabledTextColor = MaterialTheme.colorScheme.onBackground,
-                disabledBorderColor = MaterialTheme.colorScheme.onBackground,
-                disabledPlaceholderColor = MaterialTheme.colorScheme.onBackground,
-                focusedBorderColor = MaterialTheme.colorScheme.onBackground
-            ),
-            placeholder = {
-                Text(
-                    text = "Seleccione una cuenta",
-                    fontFamily = LatoFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                    fontSize = 16.sp
-                )
-            },
-            textStyle = TextStyle(
-                fontFamily = LatoFontFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 18.sp,
-            )
-        )
-    }
+/**
+ * Filters digits and reformats with thousand separators + two decimals.
+ * Shared with EmmAmountChill but inlined here to keep this screen self-contained.
+ */
+private fun formatInputToAmount(input: TextFieldValue): TextFieldValue {
+    val filteredText: String = input.text.filter { it.isDigit() }
+    val amount: Long = if (filteredText.isEmpty()) 0 else filteredText.toLong()
+    val formatted = DecimalFormat("#,##0.00").format(amount / 100.0)
+    return input.copy(text = formatted, selection = TextRange(formatted.length))
 }
 
+@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 900)
 @Composable
-fun Amount(mountValue: String, onMountChange: (String) -> Unit) {
-
-    Column(Modifier.fillMaxWidth()) {
-
-        TransactionLabel("Cantidad:")
-
-        Spacer(modifier = Modifier.height(5.dp))
-
-        OutlinedTextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = mountValue,
-            onValueChange = { value ->
-                val filter: String = value.filter { it.isDigit() || it == '.' }
-                onMountChange(filter)
-            },
-            placeholder = {
-                LabelTextField("Cantidad")
-            },
-            prefix = {
-                Text(
-                    text = "S/ ",
-                    fontWeight = FontWeight.Normal,
-                    fontFamily = LatoFontFamily,
-                    color = PlaceholderOrLabel,
-                    fontSize = 18.sp
-                )
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Decimal,
-                imeAction = ImeAction.Next
-            ),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.onBackground
-            ),
-            textStyle = TextStyle(
-                color = TextColor,
-                fontFamily = LatoFontFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 18.sp
-            )
-        )
-    }
-}
-
-@Composable
-fun TransactionLabel(text: String) {
-    Text(
-        text = text,
-        fontWeight = FontWeight.Normal,
-        fontFamily = LatoFontFamily,
-        color = PlaceholderOrLabel,
-        fontSize = 17.sp
-    )
-}
-
-@Preview
-@Composable
-private fun NewAddTransactionPreview() {
+private fun AddTransactionPreview() {
     EmmTheme {
         val categories = remember {
             buildList {
                 repeat(5) {
                     add(
                         SelectableCategory(
-                            categoryId = "$it nominavi",
-                            name = "$it Ann Chan",
+                            categoryId = "$it",
+                            name = "Categoría $it",
                             icon = AppIconCatalog.catalog[it],
                             color = allColors[it],
-                            categoryType = CategoryType.Income
+                            categoryType = CategoryType.Income,
                         )
                     )
                 }
             }
         }
-        NewAddTransaction(
-            state = AddTransactionUiState(
-                categories = categories
-            ),
+        AddTransactionScreenContent(
+            state = AddTransactionUiState(categories = categories),
             onAction = {},
             popBackStack = {},
-            onOtherCategorySelected = {}
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun IncomePreview() {
-    EmmTheme {
-        AddTransactionScreen(
-            state = AddTransactionUiState(),
-            onAction = {},
-            popBackStack = {}
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun AccountSelectorContentPreview() {
-    EmmTheme {
-        AccountSelectorContent(
-            modifier = Modifier,
-            accounts = listOf(
-                Account(
-                    accountId = "tantas1",
-                    name = "Garrett Owen",
-                ),
-                Account(
-                    accountId = "tantas2",
-                    name = "Garrett Owen",
-                ),
-                Account(
-                    accountId = "tantas3",
-                    name = "Garrett Owen",
-                )
-            ),
-            onAccountSelected = {},
-            dismiss = {}
+            onOtherCategorySelected = {},
         )
     }
 }
