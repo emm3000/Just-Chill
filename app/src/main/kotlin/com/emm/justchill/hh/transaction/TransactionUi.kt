@@ -9,6 +9,8 @@ import com.emm.domain.transaction.TransactionWithCategory
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.CategoryColor
 import com.emm.justchill.hh.category.findById
+import com.emm.justchill.hh.shared.formatExpense
+import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
 
 @Immutable
@@ -35,8 +37,8 @@ private fun TransactionWithCategory.toUi(): TransactionUi {
         transactionId = transactionId.value,
         type = type,
         amount = when (type) {
-            TransactionType.Income -> "+S/ $formattedNumber"
-            TransactionType.Spend -> "−S/ $formattedNumber"
+            TransactionType.Income -> formatIncome(formattedNumber)
+            TransactionType.Spend -> formatExpense(formattedNumber)
         },
         description = description,
         date = date,

@@ -50,6 +50,7 @@ import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.allColors
+import com.emm.justchill.hh.shared.UiStrings
 import kotlinx.coroutines.launch
 
 @Composable
@@ -111,7 +112,7 @@ internal fun AccountSelectorSection(
 ) {
     ClickableRow(
         label = "CUENTA",
-        value = accountName ?: "Selecciona una cuenta",
+        value = accountName ?: UiStrings.PICK_ACCOUNT,
         emphasized = accountName != null,
         onClick = onClick,
     )
@@ -301,7 +302,7 @@ private fun AccountSelectorContent(
             .padding(horizontal = spacing.s4),
     ) {
         Text(
-            text = "Selecciona una cuenta",
+            text = UiStrings.PICK_ACCOUNT,
             style = type.titleL,
             color = colors.textPrimary,
             modifier = Modifier.padding(vertical = spacing.s2),

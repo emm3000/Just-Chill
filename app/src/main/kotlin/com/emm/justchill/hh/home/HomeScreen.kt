@@ -37,6 +37,9 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.hh.category.findById
+import com.emm.justchill.hh.shared.formatExpense
+import com.emm.justchill.hh.shared.formatIncome
+import com.emm.justchill.hh.shared.formatNeutral
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
@@ -122,7 +125,7 @@ private fun BalanceHero(balance: Double) {
             color = colors.textTertiary,
         )
         Text(
-            text = "S/ ${fromCentsToSolesWith(balance)}",
+            text = formatNeutral(fromCentsToSolesWith(balance)),
             style = type.amountHero,
             color = colors.textPrimary,
         )
@@ -139,12 +142,12 @@ private fun MonthSummary(income: Double, expense: Double) {
     ) {
         SummaryColumn(
             label = "INGRESOS",
-            amount = "+S/ ${fromCentsToSolesWith(income)}",
+            amount = formatIncome(fromCentsToSolesWith(income)),
             modifier = Modifier.weight(1f),
         )
         SummaryColumn(
             label = "GASTOS",
-            amount = "−S/ ${fromCentsToSolesWith(expense)}",
+            amount = formatExpense(fromCentsToSolesWith(expense)),
             modifier = Modifier.weight(1f),
         )
     }
@@ -250,7 +253,7 @@ private fun HomeScreenPreview() {
                     TransactionUi(
                         transactionId = "1",
                         type = TransactionType.Spend,
-                        amount = "−S/ 84.20",
+                        amount = formatExpense("84.20"),
                         description = "Mercado",
                         date = 0,
                         readableDate = "HOY",
@@ -260,7 +263,7 @@ private fun HomeScreenPreview() {
                     TransactionUi(
                         transactionId = "2",
                         type = TransactionType.Income,
-                        amount = "+S/ 3,200.00",
+                        amount = formatIncome("3,200.00"),
                         description = "Sueldo",
                         date = 0,
                         readableDate = "HOY",
@@ -270,7 +273,7 @@ private fun HomeScreenPreview() {
                     TransactionUi(
                         transactionId = "3",
                         type = TransactionType.Spend,
-                        amount = "−S/ 12.00",
+                        amount = formatExpense("12.00"),
                         description = "Café con Sofía",
                         date = 0,
                         readableDate = "AYER",

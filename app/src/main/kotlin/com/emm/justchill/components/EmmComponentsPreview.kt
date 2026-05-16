@@ -28,6 +28,7 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
+import com.emm.justchill.hh.shared.formatNeutral
 import com.emm.justchill.core.theme.LocalEmmType
 
 /**
@@ -53,7 +54,7 @@ private fun EmmComponentsGallery() {
 
             SectionTitle("Type · amounts")
             Text("+1,234.56", style = type.amountHero, color = colors.textPrimary)
-            Text("S/ 4,820.00", style = type.amountL, color = colors.textPrimary)
+            Text(formatNeutral("4,820.00"), style = type.amountL, color = colors.textPrimary)
             Text("−12.50", style = type.amountM, color = colors.textPrimary)
             Text("−2.40", style = type.amountS, color = colors.textPrimary)
 
@@ -136,7 +137,7 @@ private fun EmmComponentsGallery() {
             EmmCard(modifier = Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
                     Text("Cuenta principal", style = type.titleM, color = colors.textSecondary)
-                    Text("S/ 4,820.00", style = type.amountL, color = colors.textPrimary)
+                    Text(formatNeutral("4,820.00"), style = type.amountL, color = colors.textPrimary)
                     Text("Última actualización · hace 5 min", style = type.caption, color = colors.textTertiary)
                 }
             }
