@@ -13,7 +13,8 @@ CREATE TABLE categories (
     createdAt     INTEGER NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS categories_type_idx ON categories(categoryType) WHERE isDeleted = 0;
+CREATE INDEX IF NOT EXISTS categories_type_idx  ON categories(categoryType) WHERE isDeleted = 0;
+CREATE INDEX IF NOT EXISTS categories_sync_idx  ON categories(syncState, isDeleted);
 
 all:
 SELECT * FROM categories WHERE isDeleted = 0;

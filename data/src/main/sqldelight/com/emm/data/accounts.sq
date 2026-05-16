@@ -9,7 +9,7 @@ CREATE TABLE accounts (
     createdAt  INTEGER NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS accounts_sync_idx ON accounts(syncState) WHERE isDeleted = 0;
+CREATE INDEX IF NOT EXISTS accounts_sync_idx ON accounts(syncState, isDeleted);
 
 all:
 SELECT * FROM accounts WHERE isDeleted = 0;

@@ -18,6 +18,7 @@ CREATE INDEX IF NOT EXISTS transactions_account_idx  ON transactions(accountId) 
 CREATE INDEX IF NOT EXISTS transactions_date_idx     ON transactions(date)        WHERE isDeleted = 0;
 CREATE INDEX IF NOT EXISTS transactions_category_idx ON transactions(categoryId)  WHERE isDeleted = 0;
 CREATE INDEX IF NOT EXISTS transactions_deleted_idx  ON transactions(isDeleted);
+CREATE INDEX IF NOT EXISTS transactions_sync_idx     ON transactions(syncState, isDeleted);
 
 all:
 SELECT * FROM transactions WHERE isDeleted = 0 ORDER BY date DESC;

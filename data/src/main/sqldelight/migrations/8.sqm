@@ -1,0 +1,5 @@
+-- Migration 8: Add composite (syncState, isDeleted) indices for pending sync queries
+DROP INDEX IF EXISTS accounts_sync_idx;
+CREATE INDEX IF NOT EXISTS accounts_sync_idx     ON accounts(syncState, isDeleted);
+CREATE INDEX IF NOT EXISTS categories_sync_idx   ON categories(syncState, isDeleted);
+CREATE INDEX IF NOT EXISTS transactions_sync_idx ON transactions(syncState, isDeleted);
