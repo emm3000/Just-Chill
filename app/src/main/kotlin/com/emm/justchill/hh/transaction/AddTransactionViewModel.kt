@@ -25,7 +25,9 @@ class AddTransactionViewModel(
     private val transactionCreator: CreateTransactionUseCase,
     accountRepository: AccountRepository,
     categoryRepository: CategoryRepository,
-) : MviViewModel<AddTransactionUiState, AddTransactionIntent, AddTransactionEffect>(AddTransactionUiState()) {
+) : MviViewModel<AddTransactionUiState, AddTransactionIntent, AddTransactionEffect>() {
+
+    override val initialState = AddTransactionUiState()
 
     private var dateInLong: Long = DateUtils.currentDateInMillis()
     private val allCategories: MutableMap<CategoryType, List<SelectableCategory>> = mutableMapOf()

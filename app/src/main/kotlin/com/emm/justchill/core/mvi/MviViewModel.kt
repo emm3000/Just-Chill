@@ -11,11 +11,11 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-abstract class MviViewModel<S : UiState, I : UiIntent, E : UiEffect>(
-    initialState: S,
-) : ViewModel() {
+abstract class MviViewModel<S : UiState, I : UiIntent, E : UiEffect> : ViewModel() {
 
-    private val _state: MutableStateFlow<S> = MutableStateFlow(initialState)
+    protected abstract val initialState: S
+
+    private val _state: MutableStateFlow<S> by lazy { MutableStateFlow(initialState) }
     val state: StateFlow<S> = _state.asStateFlow()
 
     private val _effect: Channel<E> = Channel(Channel.BUFFERED)

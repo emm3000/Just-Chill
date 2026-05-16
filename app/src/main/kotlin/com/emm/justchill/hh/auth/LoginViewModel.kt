@@ -12,7 +12,9 @@ import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val authenticateUser: AuthenticateUserUseCase,
-) : MviViewModel<LoginUiState, LoginIntent, LoginEffect>(LoginUiState()) {
+) : MviViewModel<LoginUiState, LoginIntent, LoginEffect>() {
+
+    override val initialState = LoginUiState()
 
     override fun onIntent(intent: LoginIntent) {
         when (intent) {

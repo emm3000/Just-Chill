@@ -9,7 +9,9 @@ import kotlinx.coroutines.launch
 
 class AddAccountViewModel(
     private val accountCreator: CreateAccountUseCase,
-) : MviViewModel<AddAccountUiState, AddAccountIntent, AddAccountEffect>(AddAccountUiState()) {
+) : MviViewModel<AddAccountUiState, AddAccountIntent, AddAccountEffect>() {
+
+    override val initialState = AddAccountUiState()
 
     override fun onIntent(intent: AddAccountIntent) {
         when (intent) {

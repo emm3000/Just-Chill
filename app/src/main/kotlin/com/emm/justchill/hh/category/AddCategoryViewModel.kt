@@ -9,7 +9,9 @@ import kotlinx.coroutines.launch
 
 class AddCategoryViewModel(
     private val categoryCreator: CreateCategoryUseCase,
-) : MviViewModel<AddCategoryUiState, AddCategoryIntent, AddCategoryEffect>(AddCategoryUiState()) {
+) : MviViewModel<AddCategoryUiState, AddCategoryIntent, AddCategoryEffect>() {
+
+    override val initialState = AddCategoryUiState()
 
     override fun onIntent(intent: AddCategoryIntent) {
         when (intent) {

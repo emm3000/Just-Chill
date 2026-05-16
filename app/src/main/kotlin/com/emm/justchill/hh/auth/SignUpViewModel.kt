@@ -17,7 +17,9 @@ import kotlinx.coroutines.launch
 
 class SignUpViewModel(
     private val userCreator: CreateUserUseCase,
-) : MviViewModel<SignUpUiState, SignUpIntent, SignUpEffect>(SignUpUiState()) {
+) : MviViewModel<SignUpUiState, SignUpIntent, SignUpEffect>() {
+
+    override val initialState = SignUpUiState()
 
     private val validationTrigger = MutableStateFlow(SignUpUiState())
 

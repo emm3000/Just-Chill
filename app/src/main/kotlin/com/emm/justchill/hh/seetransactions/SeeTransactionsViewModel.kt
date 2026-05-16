@@ -39,7 +39,9 @@ data class DayGroup(
 
 class SeeTransactionsViewModel(
     transactionRepository: TransactionRepository,
-) : MviViewModel<SeeTransactionsUiState, SeeTransactionsIntent, SeeTransactionsEffect>(SeeTransactionsUiState()) {
+) : MviViewModel<SeeTransactionsUiState, SeeTransactionsIntent, SeeTransactionsEffect>() {
+
+    override val initialState = SeeTransactionsUiState()
 
     init {
         transactionRepository.fetchAllWithCategory()

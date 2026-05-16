@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.onEach
 
 class AccountsViewModel(
     accountRepository: AccountRepository,
-) : MviViewModel<AccountsUiState, AccountsIntent, AccountsEffect>(AccountsUiState()) {
+) : MviViewModel<AccountsUiState, AccountsIntent, AccountsEffect>() {
+
+    override val initialState = AccountsUiState()
 
     init {
         accountRepository.all()

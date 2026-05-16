@@ -11,7 +11,9 @@ import kotlinx.coroutines.flow.onEach
 
 class HomeViewModel(
     homeLoader: GetHomeDataUseCase,
-) : MviViewModel<HomeUiState, HomeIntent, HomeEffect>(HomeUiState()) {
+) : MviViewModel<HomeUiState, HomeIntent, HomeEffect>() {
+
+    override val initialState = HomeUiState()
 
     init {
         homeLoader()

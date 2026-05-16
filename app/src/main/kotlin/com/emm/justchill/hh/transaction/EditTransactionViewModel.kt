@@ -25,7 +25,9 @@ class EditTransactionViewModel(
     private val transactionFinder: FindTransactionUseCase,
     private val transactionDeleter: DeleteTransactionUseCase,
     private val accountFinder: FindAccountUseCase,
-) : MviViewModel<EditTransactionUiState, EditTransactionIntent, EditTransactionEffect>(EditTransactionUiState()) {
+) : MviViewModel<EditTransactionUiState, EditTransactionIntent, EditTransactionEffect>() {
+
+    override val initialState = EditTransactionUiState()
 
     private var oldAccount: Account = Account.Empty
     private var oldTransaction: Transaction = Transaction.Empty

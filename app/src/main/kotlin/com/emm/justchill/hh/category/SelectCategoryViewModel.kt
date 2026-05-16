@@ -22,7 +22,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class SelectCategoryViewModel(
     private val categoryRepository: CategoryRepository,
-) : MviViewModel<SelectCategoryUi, SelectCategoryIntent, SelectCategoryEffect>(SelectCategoryUi()) {
+) : MviViewModel<SelectCategoryUi, SelectCategoryIntent, SelectCategoryEffect>() {
+
+    override val initialState = SelectCategoryUi()
 
     private val queryFlow = MutableStateFlow("")
 
