@@ -1,6 +1,7 @@
 package com.emm.justchill.sync
 
 import android.content.Context
+import androidx.work.BackoffPolicy
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.OneTimeWorkRequest
@@ -15,6 +16,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.util.concurrent.TimeUnit
+
+private const val MAX_RETRY_ATTEMPTS = 5
 
 class SyncWorker(
     private val appContext: Context,
@@ -25,12 +29,23 @@ class SyncWorker(
     private val transactionsSynchronizer: TransactionRepository by inject()
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        FirebaseCrashlytics.getInstance().log("SyncWorker attempt #$runAttemptCount")
         try {
-
             accountsSynchronizer.sync()
             transactionsSynchronizer.sync()
-
             Result.success()
+        } catch (e: DomainException.Unauthorized) {
+            FirebaseCrashlytics.getInstance().recordException(e)
+            Result.failure()
+        } catch (e: DomainException.NetworkUnavailable) {
+            FirebaseCrashlytics.getInstance().recordException(e)
+            retryOrFail()
+        } catch (e: DomainException.DatabaseError) {
+            FirebaseCrashlytics.getInstance().recordException(e)
+            retryOrFail()
+        } catch (e: DomainException.Unknown) {
+            FirebaseCrashlytics.getInstance().recordException(e)
+            retryOrFail()
         } catch (e: DomainException) {
             FirebaseCrashlytics.getInstance().recordException(e)
             Result.failure()
@@ -40,6 +55,9 @@ class SyncWorker(
         }
     }
 
+    private fun retryOrFail(): Result =
+        if (runAttemptCount < MAX_RETRY_ATTEMPTS) Result.retry() else Result.failure()
+
     override suspend fun getForegroundInfo(): ForegroundInfo = appContext.syncForegroundInfo()
 
     companion object {
@@ -47,6 +65,7 @@ class SyncWorker(
         fun startUpSyncWork(): OneTimeWorkRequest = OneTimeWorkRequestBuilder<SyncWorker>()
             .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .setConstraints(SyncConstraints)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .build()
     }
 }
