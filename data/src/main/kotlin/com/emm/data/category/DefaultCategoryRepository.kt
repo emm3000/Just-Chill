@@ -6,6 +6,7 @@ import com.emm.data.shared.safeDbCall
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryUpsert
+import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.SyncState
 import kotlinx.coroutines.flow.Flow
 
@@ -16,20 +17,20 @@ class DefaultCategoryRepository(
 
     override fun all(): Flow<List<Category>> = localDataSource.all().catchAsDomainException()
 
-    override fun find(categoryId: String): Flow<Category?> = localDataSource.find(categoryId).catchAsDomainException()
+    override fun find(categoryId: CategoryId): Flow<Category?> = localDataSource.find(categoryId.value).catchAsDomainException()
 
     override suspend fun create(categoryUpsert: CategoryUpsert): Unit = safeDbCall {
         localDataSource.create(categoryUpsert)
         Unit
     }
 
-    override suspend fun update(categoryId: String, categoryUpsert: CategoryUpsert): Unit = safeDbCall {
-        localDataSource.update(categoryId, categoryUpsert)
+    override suspend fun update(categoryId: CategoryId, categoryUpsert: CategoryUpsert): Unit = safeDbCall {
+        localDataSource.update(categoryId.value, categoryUpsert)
         Unit
     }
 
-    override suspend fun delete(categoryId: String): Unit = safeDbCall {
-        localDataSource.softDelete(categoryId)
+    override suspend fun delete(categoryId: CategoryId): Unit = safeDbCall {
+        localDataSource.softDelete(categoryId.value)
         Unit
     }
 
@@ -43,7 +44,7 @@ class DefaultCategoryRepository(
 
         val syncedCategoryUpserts: List<CategoryUpsert> = unSynced.map { entity ->
             CategoryUpsert(
-                categoryId = entity.categoryId,
+                categoryId = CategoryId(entity.categoryId),
                 name = entity.name,
                 icon = entity.icon,
                 color = entity.color,

@@ -29,7 +29,7 @@ data class CategoryUi(
 private fun TransactionWithCategory.toUi(): TransactionUi {
     val formattedNumber: String = fromCentsToSolesWith(amount)
     return TransactionUi(
-        transactionId = transactionId,
+        transactionId = transactionId.value,
         type = type,
         amount = when (type) {
             TransactionType.Income -> "+S/ $formattedNumber"

@@ -37,7 +37,7 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
 
     suspend fun create(categoryUpsert: CategoryUpsert) = withContext(Dispatchers.IO) {
         cq.insert(
-            categoryId = categoryUpsert.categoryId,
+            categoryId = categoryUpsert.categoryId.value,
             name = categoryUpsert.name,
             icon = categoryUpsert.icon,
             color = categoryUpsert.color,

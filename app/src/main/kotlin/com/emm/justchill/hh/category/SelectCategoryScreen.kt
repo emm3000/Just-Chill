@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.domain.category.CategoryType
+import com.emm.domain.shared.CategoryId
 import com.emm.justchill.components.EmmButton
 import com.emm.justchill.components.EmmButtonVariant
 import com.emm.justchill.components.EmmTextInput
@@ -260,7 +261,7 @@ private fun SelectCategoryScreenPreview() {
                 repeat(6) {
                     add(
                         SelectableCategory(
-                            categoryId = "$it",
+                            categoryId = CategoryId("$it"),
                             name = "Categoría $it",
                             icon = AppIconCatalog.catalog[it],
                             categoryType = CategoryType.Income,

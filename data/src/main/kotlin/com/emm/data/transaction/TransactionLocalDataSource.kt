@@ -18,13 +18,13 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
 
     suspend fun create(transactionInsert: TransactionInsert) = withContext(Dispatchers.IO) {
         tq.insert(
-            transactionId = transactionInsert.id,
+            transactionId = transactionInsert.id.value,
             type = transactionInsert.type.name,
             amount = transactionInsert.amount,
             description = transactionInsert.description,
             date = transactionInsert.date,
-            categoryId = transactionInsert.categoryId,
-            accountId = transactionInsert.accountId,
+            categoryId = transactionInsert.categoryId?.value,
+            accountId = transactionInsert.accountId.value,
             syncState = SyncState.Pending.name,
             isDeleted = false,
             updatedAt = transactionInsert.updatedAt,
@@ -91,8 +91,8 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             description = transactionUpdate.description,
             date = transactionUpdate.date,
             transactionId = transactionId,
-            accountId = transactionUpdate.accountId,
-            categoryId = transactionUpdate.categoryId,
+            accountId = transactionUpdate.accountId.value,
+            categoryId = transactionUpdate.categoryId?.value,
             syncState = SyncState.Pending.name,
             updatedAt = currentTimeInMillis(),
         )

@@ -63,6 +63,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.account.Account
 import com.emm.domain.category.CategoryType
+import com.emm.domain.shared.CategoryId
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.components.EmmButton
 import com.emm.justchill.components.EmmTextInput
@@ -550,7 +551,7 @@ private fun AddTransactionPreview() {
                 repeat(5) {
                     add(
                         SelectableCategory(
-                            categoryId = "$it",
+                            categoryId = CategoryId("$it"),
                             name = "Categoría $it",
                             icon = AppIconCatalog.catalog[it],
                             color = allColors[it],

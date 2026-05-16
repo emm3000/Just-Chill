@@ -4,6 +4,9 @@ import com.emm.data.CompleteTransactions
 import com.emm.data.Transactions
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryType
+import com.emm.domain.shared.AccountId
+import com.emm.domain.shared.CategoryId
+import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
@@ -28,26 +31,26 @@ fun List<Transactions>.asEntity() = map(Transactions::asEntity)
 
 // Entity -> Domain
 fun TransactionEntity.asExternalModel() = Transaction(
-    transactionId = transactionId,
+    transactionId = TransactionId(transactionId),
     type = TransactionType.valueOf(type),
     amount = amount,
     description = description,
     date = date,
-    categoryId = categoryId,
-    accountId = accountId,
+    categoryId = categoryId?.let(::CategoryId),
+    accountId = AccountId(accountId),
 )
 
 fun List<TransactionEntity>.asExternalModel() = map(TransactionEntity::asExternalModel)
 
 // Domain insert -> Entity
 fun TransactionInsert.asEntity() = TransactionEntity(
-    transactionId = id,
+    transactionId = id.value,
     type = type.name,
     amount = amount,
     description = description,
     date = date,
-    categoryId = categoryId,
-    accountId = accountId,
+    categoryId = categoryId?.value,
+    accountId = accountId.value,
     syncState = "",
     isDeleted = false,
     createdAt = createdAt,
@@ -86,15 +89,15 @@ fun CompleteTransactions.asEntity() = TransactionWithCategoryEntity(
 
 // TransactionWithCategoryEntity -> Domain
 fun TransactionWithCategoryEntity.toDomain() = TransactionWithCategory(
-    transactionId = transactionId,
+    transactionId = TransactionId(transactionId),
     type = TransactionType.valueOf(type),
     amount = amount,
     description = description,
     date = date,
-    accountId = accountId,
+    accountId = AccountId(accountId),
     category = if (categoryId != null && categoryName != null && categoryIcon != null && categoryColor != null && categoryType != null) {
         Category(
-            categoryId = categoryId,
+            categoryId = CategoryId(categoryId),
             name = categoryName,
             icon = categoryIcon,
             color = categoryColor,

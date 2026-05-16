@@ -5,6 +5,7 @@ import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.safeApiCall
 import com.emm.data.shared.safeDbCall
 import com.emm.domain.shared.SyncState
+import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionRepository
@@ -33,13 +34,13 @@ class DefaultTransactionRepository(
             .catchAsDomainException()
     }
 
-    override suspend fun update(transactionId: String, transactionUpdate: TransactionUpdate): Unit = safeDbCall {
-        localDataSource.update(transactionId, transactionUpdate)
+    override suspend fun update(transactionId: TransactionId, transactionUpdate: TransactionUpdate): Unit = safeDbCall {
+        localDataSource.update(transactionId.value, transactionUpdate)
         Unit
     }
 
-    override suspend fun delete(transactionId: String): Unit = safeDbCall {
-        localDataSource.softDelete(transactionId)
+    override suspend fun delete(transactionId: TransactionId): Unit = safeDbCall {
+        localDataSource.softDelete(transactionId.value)
         Unit
     }
 
@@ -58,8 +59,8 @@ class DefaultTransactionRepository(
         }
     }
 
-    override fun find(transactionId: String): Transaction? {
-        return localDataSource.find(transactionId)
+    override fun find(transactionId: TransactionId): Transaction? {
+        return localDataSource.find(transactionId.value)
     }
 
     override suspend fun sync() = safeApiCall {

@@ -4,6 +4,7 @@ import com.emm.data.Categories
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryType
 import com.emm.domain.category.CategoryUpsert
+import com.emm.domain.shared.CategoryId
 
 // SQLDelight -> Entity (internal, stays within data source)
 fun Categories.asEntity() = CategoryEntity(
@@ -23,7 +24,7 @@ fun List<Categories>.asEntity() = map(Categories::asEntity)
 
 // Entity -> Domain
 fun CategoryEntity.asExternalModel() = Category(
-    categoryId = categoryId,
+    categoryId = CategoryId(categoryId),
     name = name,
     icon = icon,
     color = color,
@@ -34,7 +35,7 @@ fun List<CategoryEntity>.asExternalModel() = map(CategoryEntity::asExternalModel
 
 // Domain upsert -> Entity
 fun CategoryUpsert.asEntity() = CategoryEntity(
-    categoryId = categoryId,
+    categoryId = categoryId.value,
     name = name,
     icon = icon,
     color = color,
