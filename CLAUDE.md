@@ -100,6 +100,7 @@ When adding a new failure mode, prefer extending `DomainException` (and `toUserM
 `docs/PLAN_DE_ACCION.md` tracks a planned migration. Status:
 
 - **Fases 4 + 5 (MVI) — DONE**: All ViewModels use `MviViewModel`. Use `XxxIntent` (not `XxxAction`). See `app/core/mvi/` for the base classes.
-- **Fases 0–3, 6–7 — pending**: Domain schema redesign, use-case renaming (`Verb+NounUseCase`), Compose performance, SOLID audit.
+- **Fase 1 (use-case rename) — DONE**: All use cases now follow `[Verb][Noun]UseCase` naming. See `domain/CLAUDE.md`.
+- **Fases 0, 2–3, 6–7 — pending**: Domain schema redesign, model/mapper cleanup, Compose performance, SOLID audit.
 
-Until the use-case rename lands (Fase 1), **follow the current `{Entity}{Action}` naming for use cases** — do not preemptively rename them.
+Use case naming convention: **`[Verb][Noun]UseCase`** (e.g. `CreateTransactionUseCase`, `DeleteCategoryUseCase`).

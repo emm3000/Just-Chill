@@ -8,11 +8,9 @@ Root package: `com.emm.domain.<entity>`
 
 | Concept | Naming | Location |
 |---|---|---|
-| Use case | `{Entity}{Action}` (e.g. `TransactionCreator`, `CategoryDeleter`) | `:domain/<entity>/` |
+| Use case | `[Verb][Noun]UseCase` (e.g. `CreateTransactionUseCase`, `DeleteCategoryUseCase`) | `:domain/<entity>/` |
 | Entity / value | `{Entity}` (no suffix) | `:domain/<entity>/` |
 | Repository interface | `{Entity}Repository` | `:domain/<entity>/` |
-
-> Naming follows `{Entity}{Action}`, not `Verb+NounUseCase`. The refactor to the latter is tracked in `docs/PLAN_DE_ACCION.md` but **do not preemptively rename**.
 
 ## Error model
 
@@ -30,4 +28,4 @@ Repository interfaces declared here must not reference Supabase/Ktor/SQLDelight.
 - JUnit4 + MockK + `kotlinx-coroutines-test`.
 - Use `runTest`, `mockk()`, `coEvery`, `coVerify`.
 - Run: `./gradlew :domain:test`
-- Single test: `./gradlew :domain:test --tests "com.emm.domain.transaction.TransactionCreatorTest"`
+- Single test: `./gradlew :domain:test --tests "com.emm.domain.transaction.CreateTransactionUseCaseTest"`
