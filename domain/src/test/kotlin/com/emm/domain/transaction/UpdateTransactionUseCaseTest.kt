@@ -2,6 +2,7 @@ package com.emm.domain.transaction
 
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.DateAndTimeCombiner
+import com.emm.domain.shared.Money
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.shared.error.DomainException
 import io.mockk.Runs
@@ -23,7 +24,7 @@ class UpdateTransactionUseCaseTest {
     private val oldTransaction = Transaction.Empty.copy(transactionId = TransactionId("tx-1"))
     private val anyUpdate = TransactionUpdate(
         type = TransactionType.Spend,
-        amount = 50.0,
+        amount = Money(5000L),
         description = "updated",
         accountId = AccountId("acc-1"),
         categoryId = null,
@@ -77,7 +78,7 @@ class UpdateTransactionUseCaseTest {
     @Test
     fun `update should throw ValidationError when amount is zero`() = runTest {
         assertFailsWith<DomainException.ValidationError> {
-            useCase(oldTransaction, anyUpdate.copy(amount = 0.0))
+            useCase(oldTransaction, anyUpdate.copy(amount = Money(0L)))
         }
         coVerify(exactly = 0) { repository.update(any(), any()) }
     }
@@ -85,7 +86,7 @@ class UpdateTransactionUseCaseTest {
     @Test
     fun `update should throw ValidationError when amount is negative`() = runTest {
         assertFailsWith<DomainException.ValidationError> {
-            useCase(oldTransaction, anyUpdate.copy(amount = -1.0))
+            useCase(oldTransaction, anyUpdate.copy(amount = Money(-100L)))
         }
         coVerify(exactly = 0) { repository.update(any(), any()) }
     }

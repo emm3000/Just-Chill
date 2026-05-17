@@ -1,15 +1,9 @@
 package com.emm.justchill.hh.shared
 
-import java.text.NumberFormat
-import java.util.*
+import com.emm.domain.shared.Money
+import com.emm.justchill.core.format.format
 
-fun fromCentsToSolesWith(cents: Double): String {
-    val formatter = NumberFormat.getNumberInstance(Locale("es", "PE")).apply {
-        minimumFractionDigits = 2
-        maximumFractionDigits = 2
-    }
-    return formatter.format(cents)
-}
+fun fromCentsToSolesWith(money: Money): String = money.format()
 
 private val EmptyString: String = String()
 

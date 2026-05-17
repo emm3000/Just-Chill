@@ -12,7 +12,7 @@ class CreateTransactionUseCase(
 ) {
 
     suspend operator fun invoke(transactionInsert: TransactionInsert) {
-        if (transactionInsert.amount <= 0) {
+        if (transactionInsert.amount.cents <= 0) {
             throw DomainException.ValidationError("El monto debe ser mayor a cero")
         }
         val dateAndTimeCombined: Long = dateAndTimeCombiner.combineWithUtc(transactionInsert.date)

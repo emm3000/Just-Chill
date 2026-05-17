@@ -100,7 +100,7 @@ class AddTransactionViewModel(
         type = currentState.transactionType,
         description = currentState.description,
         date = dateInLong,
-        amount = centsToSoles(currentState.amount),
+        amount = centsToMoney(currentState.amount),
         categoryId = currentState.categorySelected?.categoryId,
         accountId = currentState.accountSelected?.accountId ?: throw IllegalStateException(),
     )

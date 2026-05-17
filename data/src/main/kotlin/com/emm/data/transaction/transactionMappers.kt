@@ -7,6 +7,7 @@ import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryType
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.CategoryId
+import com.emm.domain.shared.Money
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
@@ -28,11 +29,11 @@ fun Transactions.asEntity() = TransactionEntity(
 
 fun List<Transactions>.asEntity() = map(Transactions::asEntity)
 
-// Entity -> Domain
+// Entity -> Domain (Long cents → Money)
 fun TransactionEntity.asExternalModel() = Transaction(
     transactionId = TransactionId(transactionId),
     type = TransactionType.valueOf(type),
-    amount = amount,
+    amount = Money(cents = amount),
     description = description,
     date = date,
     categoryId = categoryId?.let(::CategoryId),
@@ -41,11 +42,11 @@ fun TransactionEntity.asExternalModel() = Transaction(
 
 fun List<TransactionEntity>.asExternalModel() = map(TransactionEntity::asExternalModel)
 
-// Domain insert -> Entity
+// Domain insert -> Entity (Money → Long cents)
 fun TransactionInsert.asEntity() = TransactionEntity(
     transactionId = id.value,
     type = type.name,
-    amount = amount,
+    amount = amount.cents,
     description = description,
     date = date,
     categoryId = categoryId?.value,
@@ -84,11 +85,11 @@ fun CompleteTransactionsByDateRange.asEntity() = TransactionWithCategoryEntity(
     categoryType = categoryType_,
 )
 
-// TransactionWithCategoryEntity -> Domain
+// TransactionWithCategoryEntity -> Domain (Long cents → Money)
 fun TransactionWithCategoryEntity.toDomain() = TransactionWithCategory(
     transactionId = TransactionId(transactionId),
     type = TransactionType.valueOf(type),
-    amount = amount,
+    amount = Money(cents = amount),
     description = description,
     date = date,
     accountId = AccountId(accountId),

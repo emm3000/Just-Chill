@@ -1,7 +1,7 @@
 CREATE TABLE transactions (
     transactionId  TEXT NOT NULL PRIMARY KEY,
     type           TEXT NOT NULL,
-    amount         REAL NOT NULL,
+    amount         INTEGER NOT NULL,
     description    TEXT NOT NULL DEFAULT '',
     date           INTEGER NOT NULL,
     categoryId     TEXT REFERENCES categories(categoryId) ON DELETE SET NULL,
@@ -43,7 +43,7 @@ ORDER BY t.date DESC;
 
 getAccountBalance:
 SELECT COALESCE(
-    SUM(CASE WHEN type = 'Income' THEN amount ELSE -amount END), 0.0
+    SUM(CASE WHEN type = 'Income' THEN amount ELSE -amount END), 0
 )
 FROM transactions
 WHERE accountId = :accountId;

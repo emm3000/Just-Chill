@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
+import com.emm.domain.shared.Money
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.components.EmmListItem
 import com.emm.justchill.core.theme.EmmTheme
@@ -113,7 +114,7 @@ fun HomeScreen(homeData: HomeUiState, navigateToAll: () -> Unit = {}) {
 }
 
 @Composable
-private fun BalanceHero(balance: Double) {
+private fun BalanceHero(balance: Money) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
@@ -133,7 +134,7 @@ private fun BalanceHero(balance: Double) {
 }
 
 @Composable
-private fun MonthSummary(income: Double, expense: Double) {
+private fun MonthSummary(income: Money, expense: Money) {
     val spacing = LocalEmmSpacing.current
 
     Row(
@@ -246,9 +247,9 @@ private fun HomeScreenPreview() {
     EmmTheme {
         HomeScreen(
             HomeUiState(
-                balance = 482000.0,
-                income = 320000.0,
-                spend = 84000.0,
+                balance = Money(48200000L),
+                income = Money(32000000L),
+                spend = Money(8400000L),
                 lastTransactions = listOf(
                     TransactionUi(
                         transactionId = "1",
@@ -290,6 +291,6 @@ private fun HomeScreenPreview() {
 @Composable
 private fun HomeScreenEmptyPreview() {
     EmmTheme {
-        HomeScreen(HomeUiState(balance = 0.0, income = 0.0, spend = 0.0))
+        HomeScreen(HomeUiState())
     }
 }

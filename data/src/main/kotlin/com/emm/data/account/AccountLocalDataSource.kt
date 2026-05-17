@@ -61,7 +61,7 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         )
     }
 
-    suspend fun getBalance(accountId: String): Double = withContext(Dispatchers.IO) {
+    suspend fun getBalance(accountId: String): Long = withContext(Dispatchers.IO) {
         emmDatabase.transactionsQueries.getAccountBalance(accountId).executeAsOne()
     }
 }

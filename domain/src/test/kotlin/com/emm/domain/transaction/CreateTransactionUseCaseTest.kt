@@ -2,6 +2,7 @@ package com.emm.domain.transaction
 
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.DateAndTimeCombiner
+import com.emm.domain.shared.Money
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.shared.UniqueIdProvider
 import com.emm.domain.shared.error.DomainException
@@ -25,7 +26,7 @@ class CreateTransactionUseCaseTest {
 
     private val anyInsert = TransactionInsert(
         type = TransactionType.Income,
-        amount = 100.0,
+        amount = Money(10000L),
         description = "desc",
         categoryId = null,
         date = 1_000L,
@@ -73,7 +74,7 @@ class CreateTransactionUseCaseTest {
     @Test
     fun `create should throw ValidationError when amount is zero`() = runTest {
         assertFailsWith<DomainException.ValidationError> {
-            useCase(anyInsert.copy(amount = 0.0))
+            useCase(anyInsert.copy(amount = Money(0L)))
         }
         coVerify(exactly = 0) { repository.create(any()) }
     }
@@ -81,7 +82,7 @@ class CreateTransactionUseCaseTest {
     @Test
     fun `create should throw ValidationError when amount is negative`() = runTest {
         assertFailsWith<DomainException.ValidationError> {
-            useCase(anyInsert.copy(amount = -1.0))
+            useCase(anyInsert.copy(amount = Money(-100L)))
         }
         coVerify(exactly = 0) { repository.create(any()) }
     }

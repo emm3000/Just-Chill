@@ -20,7 +20,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
         tq.insert(
             transactionId = transactionInsert.id.value,
             type = transactionInsert.type.name,
-            amount = transactionInsert.amount,
+            amount = transactionInsert.amount.cents,
             description = transactionInsert.description,
             date = transactionInsert.date,
             categoryId = transactionInsert.categoryId?.value,
@@ -74,7 +74,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
     ) = withContext(Dispatchers.IO) {
         tq.update(
             type = transactionUpdate.type.name,
-            amount = transactionUpdate.amount,
+            amount = transactionUpdate.amount.cents,
             description = transactionUpdate.description,
             date = transactionUpdate.date,
             transactionId = transactionId,

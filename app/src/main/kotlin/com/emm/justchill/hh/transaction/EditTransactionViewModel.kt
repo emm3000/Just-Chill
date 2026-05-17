@@ -59,7 +59,7 @@ class EditTransactionViewModel(
         dateInLong = oldTransaction.date
         updateState {
             copy(
-                amount = solesToCentsString(oldTransaction.amount),
+                amount = moneyCentsString(oldTransaction.amount),
                 description = oldTransaction.description,
                 date = millisToReadableFormat(oldTransaction.date),
                 transactionType = oldTransaction.type,
@@ -80,7 +80,7 @@ class EditTransactionViewModel(
         type = currentState.transactionType,
         description = currentState.description,
         date = dateInLong,
-        amount = centsToSoles(currentState.amount),
+        amount = centsToMoney(currentState.amount),
         accountId = currentState.accountSelected?.accountId ?: throw IllegalStateException(),
         categoryId = null,
     )

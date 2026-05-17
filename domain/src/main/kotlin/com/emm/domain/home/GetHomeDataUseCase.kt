@@ -1,5 +1,6 @@
 package com.emm.domain.home
 
+import com.emm.domain.shared.Money
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
@@ -29,10 +30,14 @@ class GetHomeDataUseCase(
     ): HomeData {
 
         val lastTransactions: List<TransactionWithCategory> = currentMonthTransactions.take(7)
-        val income = lastTransactions.filter { it.type == TransactionType.Income }.sumOf(TransactionWithCategory::amount)
-        val spend = lastTransactions.filter { it.type == TransactionType.Spend }.sumOf(TransactionWithCategory::amount)
-        val balance = allTransactions.sumOf { t ->
-            if (t.type == TransactionType.Income) t.amount else -t.amount
+        val income: Money = lastTransactions
+            .filter { it.type == TransactionType.Income }
+            .fold(Money.Zero) { acc, t -> acc + t.amount }
+        val spend: Money = lastTransactions
+            .filter { it.type == TransactionType.Spend }
+            .fold(Money.Zero) { acc, t -> acc + t.amount }
+        val balance: Money = allTransactions.fold(Money.Zero) { acc, t ->
+            if (t.type == TransactionType.Income) acc + t.amount else acc + (-t.amount)
         }
 
         return HomeData(
