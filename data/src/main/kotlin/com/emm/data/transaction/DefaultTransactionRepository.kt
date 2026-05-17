@@ -2,6 +2,7 @@ package com.emm.data.transaction
 
 import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.safeDbCall
+import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
@@ -41,6 +42,10 @@ class DefaultTransactionRepository(
     override suspend fun update(transactionId: TransactionId, transactionUpdate: TransactionUpdate): Unit = safeDbCall {
         localDataSource.update(transactionId.value, transactionUpdate)
         Unit
+    }
+
+    override suspend fun countByAccount(accountId: AccountId): Long = safeDbCall {
+        localDataSource.countByAccount(accountId.value)
     }
 
     override suspend fun delete(transactionId: TransactionId): Unit = safeDbCall {

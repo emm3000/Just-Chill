@@ -1,5 +1,6 @@
 package com.emm.domain.transaction
 
+import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.TransactionId
 import kotlinx.coroutines.flow.Flow
 
@@ -19,6 +20,8 @@ interface TransactionRepository {
     ): Flow<List<TransactionWithCategory>>
 
     suspend fun update(transactionId: TransactionId, transactionUpdate: TransactionUpdate)
+
+    suspend fun countByAccount(accountId: AccountId): Long
 
     suspend fun delete(transactionId: TransactionId)
 }
