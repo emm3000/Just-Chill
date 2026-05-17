@@ -38,8 +38,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -94,9 +96,7 @@ private fun AddCategoryContent(
 ) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
-
-    val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    val focusManager = LocalFocusManager.current
 
     Column(
         modifier = Modifier
@@ -122,7 +122,8 @@ private fun AddCategoryContent(
                 label = "NOMBRE",
                 placeholder = "ej. Comida",
                 modifier = Modifier.fillMaxWidth(),
-                focusRequester = focusRequester,
+                imeAction = ImeAction.Done,
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
             )
 
             TypeSegmented(
