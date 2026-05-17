@@ -63,10 +63,7 @@ fun AddCategoryScreen(
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
             when (effect) {
-                AddCategoryEffect.CategorySaved -> {
-                    snackbarHostState.showSnackbar("Categoría creada")
-                    onBack()
-                }
+                AddCategoryEffect.CategorySaved -> onBack()
                 is AddCategoryEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
             }
         }
