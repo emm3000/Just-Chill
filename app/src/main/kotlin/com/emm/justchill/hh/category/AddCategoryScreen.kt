@@ -14,11 +14,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -48,6 +45,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.modalScreenInsets
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -90,8 +88,7 @@ private fun AddCategoryContent(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg)
-            .statusBarsPadding()
-            .imePadding(),
+            .modalScreenInsets(),
     ) {
 
         TopBar(title = "Nueva categoría", onClose = navigateToBack)
@@ -142,8 +139,7 @@ private fun AddCategoryContent(
             enabled = state.isAllFieldValidated,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(spacing.s4)
-                .navigationBarsPadding(),
+                .padding(spacing.s4),
         )
     }
 }

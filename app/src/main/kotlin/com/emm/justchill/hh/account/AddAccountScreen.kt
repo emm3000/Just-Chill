@@ -1,33 +1,26 @@
 package com.emm.justchill.hh.account
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +31,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -49,6 +45,7 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.modalScreenInsets
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -89,14 +86,13 @@ private fun AddAccountContent(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg)
-            .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.ime)),
+            .modalScreenInsets(),
     ) {
 
         TopBar(title = "Nueva cuenta", onClose = onBack)
 
         Column(
             modifier = Modifier
-                .weight(1f)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = spacing.s4),
@@ -135,16 +131,18 @@ private fun AddAccountContent(
                 onSelect = { onIntent(AddAccountIntent.OnCurrencyChange(it)) },
                 modifier = Modifier.fillMaxWidth(),
             )
-        }
 
-        EmmButton(
-            text = "Crear cuenta",
-            onClick = { onIntent(AddAccountIntent.OnSave) },
-            enabled = state.isEnabled,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = spacing.s4, vertical = spacing.s3),
-        )
+            Spacer(Modifier.height(spacing.s8))
+
+            EmmButton(
+                text = "Crear cuenta",
+                onClick = { onIntent(AddAccountIntent.OnSave) },
+                enabled = state.isEnabled,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Spacer(Modifier.height(spacing.s4))
+        }
     }
 }
 
@@ -157,20 +155,10 @@ private fun TopBar(title: String, onClose: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = spacing.s4, vertical = spacing.s3),
+            .padding(horizontal = spacing.s2, vertical = spacing.s2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val interactionSource = remember { MutableInteractionSource() }
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = onClose,
-                ),
-            contentAlignment = Alignment.CenterStart,
-        ) {
+        IconButton(onClick = onClose) {
             Icon(
                 imageVector = Icons.Outlined.Close,
                 contentDescription = "Cerrar",
@@ -187,65 +175,128 @@ private fun TopBar(title: String, onClose: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AccountTypeDropdown(
     selected: AccountType,
     onSelect: (AccountType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    val label = when (selected) {
-        AccountType.Bank -> "Banco"
-        AccountType.Cash -> "Efectivo"
-        AccountType.CreditCard -> "Tarjeta de crédito"
-        AccountType.Investment -> "Inversión"
-    }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = modifier) {
-        OutlinedTextField(
-            value = label,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("TIPO DE CUENTA") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-        )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            AccountType.entries.forEach { type ->
-                val name = when (type) {
-                    AccountType.Bank -> "Banco"
-                    AccountType.Cash -> "Efectivo"
-                    AccountType.CreditCard -> "Tarjeta de crédito"
-                    AccountType.Investment -> "Inversión"
-                }
-                DropdownMenuItem(text = { Text(name) }, onClick = { onSelect(type); expanded = false })
-            }
-        }
-    }
+    val entries = AccountType.entries
+    DropdownField(
+        label = "TIPO DE CUENTA",
+        value = selected.displayName(),
+        options = entries.map { it.displayName() },
+        onSelect = { onSelect(entries[it]) },
+        modifier = modifier,
+    )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CurrencyDropdown(
     selected: Currency,
     onSelect: (Currency) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val entries = Currency.entries
+    DropdownField(
+        label = "MONEDA",
+        value = "${selected.name} (${selected.symbol})",
+        options = entries.map { "${it.name} (${it.symbol})" },
+        onSelect = { onSelect(entries[it]) },
+        modifier = modifier,
+    )
+}
+
+private fun AccountType.displayName(): String = when (this) {
+    AccountType.Bank -> "Banco"
+    AccountType.Cash -> "Efectivo"
+    AccountType.CreditCard -> "Tarjeta de crédito"
+    AccountType.Investment -> "Inversión"
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DropdownField(
+    label: String,
+    value: String,
+    options: List<String>,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
     var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = modifier) {
-        OutlinedTextField(
-            value = "${selected.name} (${selected.symbol})",
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("MONEDA") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-        )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            Currency.entries.forEach { currency ->
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        label = "chevron",
+    )
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = modifier,
+    ) {
+        Column(
+            modifier = Modifier
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth(),
+        ) {
+            Text(
+                text = label,
+                style = type.labelM,
+                color = colors.textSecondary,
+            )
+            Spacer(Modifier.height(spacing.s2))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .drawBehind {
+                        drawLine(
+                            color = colors.border,
+                            start = Offset(0f, size.height),
+                            end = Offset(size.width, size.height),
+                            strokeWidth = 1f,
+                        )
+                    }
+                    .padding(vertical = spacing.s3),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = value,
+                    style = type.bodyL,
+                    color = colors.textPrimary,
+                    modifier = Modifier.weight(1f),
+                )
+                Icon(
+                    imageVector = Icons.Outlined.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = colors.textSecondary,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .rotate(chevronRotation),
+                )
+            }
+        }
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            containerColor = colors.surface2,
+        ) {
+            options.forEachIndexed { index, optionText ->
                 DropdownMenuItem(
-                    text = { Text("${currency.name} (${currency.symbol})") },
-                    onClick = { onSelect(currency); expanded = false },
+                    text = {
+                        Text(
+                            text = optionText,
+                            style = type.bodyL,
+                            color = colors.textPrimary,
+                        )
+                    },
+                    onClick = {
+                        onSelect(index)
+                        expanded = false
+                    },
                 )
             }
         }

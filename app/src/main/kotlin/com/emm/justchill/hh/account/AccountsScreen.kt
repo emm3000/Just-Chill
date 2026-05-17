@@ -1,8 +1,6 @@
 package com.emm.justchill.hh.account
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +23,7 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -137,19 +136,9 @@ private fun AddMenu(onAddAccount: () -> Unit, onAddCategory: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     var expanded by remember { mutableStateOf(false) }
-    val interactionSource = remember { MutableInteractionSource() }
 
     Box {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = { expanded = !expanded },
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
+        IconButton(onClick = { expanded = !expanded }) {
             Icon(
                 imageVector = Icons.Outlined.MoreVert,
                 contentDescription = "Más opciones",

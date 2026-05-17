@@ -11,11 +11,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -44,6 +41,7 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.modalScreenInsets
 import com.emm.justchill.hh.transaction.SelectableCategory
 import kotlinx.coroutines.launch
 
@@ -67,8 +65,7 @@ fun SelectCategoryScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg)
-            .statusBarsPadding()
-            .imePadding(),
+            .modalScreenInsets(),
     ) {
 
         TopBar(title = "Selecciona categoría", onBack = onBack)
@@ -108,8 +105,7 @@ fun SelectCategoryScreen(
             variant = EmmButtonVariant.Secondary,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(spacing.s4)
-                .navigationBarsPadding(),
+                .padding(spacing.s4),
         )
     }
 }
