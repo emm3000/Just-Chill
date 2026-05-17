@@ -1,14 +1,18 @@
 package com.emm.justchill.hh.category
 
+import com.emm.domain.category.CategoryType
 import com.emm.domain.category.CreateCategoryUseCase
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 
 class AddCategoryViewModel(
     private val createCategory: CreateCategoryUseCase,
+    initialType: String,
 ) : MviViewModel<AddCategoryUiState, AddCategoryIntent, AddCategoryEffect>() {
 
-    override val initialState = AddCategoryUiState()
+    override val initialState = AddCategoryUiState(
+        categoryType = runCatching { CategoryType.valueOf(initialType) }.getOrDefault(CategoryType.Spend),
+    )
 
     override fun onIntent(intent: AddCategoryIntent) {
         when (intent) {

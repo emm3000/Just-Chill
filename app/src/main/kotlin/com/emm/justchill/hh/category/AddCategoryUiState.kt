@@ -9,7 +9,7 @@ import com.emm.justchill.hh.shared.Empty
 data class AddCategoryUiState(
     val name: String = String.Empty,
     val icon: IconCatalog = AppIconCatalog.catalog.first(),
-    val categoryType: CategoryType = CategoryType.Income,
+    val categoryType: CategoryType = CategoryType.Spend,
     val color: CategoryColor = allColors.first(),
     val isAllFieldValidated: Boolean = false,
 ) : UiState

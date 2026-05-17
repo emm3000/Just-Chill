@@ -69,6 +69,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
 
 private val START_TAB: BottomBarRoute = SeeTransactionRoute
 
@@ -136,7 +137,7 @@ fun Hh() {
 
                     AccountsScreen(
                         accounts = accountsState.accounts,
-                        addCategory = { backStack.add(CategoryRoute) },
+                        addCategory = { backStack.add(CategoryRoute()) },
                         addAccount = { backStack.add(AddAccountRoute) },
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -174,10 +175,11 @@ fun Hh() {
                     )
                 }
 
-                entry<CategoryRoute> {
+                entry<CategoryRoute> { key ->
                     AddCategoryScreen(
                         onBack = { backStack.removeLastOrNull() },
                         snackbarHostState = snackbarHostState,
+                        vm = koinViewModel(parameters = { parametersOf(key.initialType) }),
                     )
                 }
 
@@ -198,7 +200,7 @@ fun Hh() {
                         },
                         onBack = { backStack.removeLastOrNull() },
                         onValueChange = { vm.onIntent(SelectCategoryIntent.UpdateQuery(it)) },
-                        onNewCategory = { backStack.add(CategoryRoute) },
+                        onNewCategory = { backStack.add(CategoryRoute()) },
                         value = selectState.query,
                         income = selectState.filteredIncomes,
                         expense = selectState.filteredExpenses,

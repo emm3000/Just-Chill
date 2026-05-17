@@ -52,7 +52,12 @@ private fun Module.viewModelsProviders() {
         )
     }
 
-    viewModelOf(::AddCategoryViewModel)
+    viewModel { parameters ->
+        AddCategoryViewModel(
+            createCategory = get(),
+            initialType = parameters.get(),
+        )
+    }
     viewModelOf(::AddAccountViewModel)
 
     viewModelOf(::AccountsViewModel)
