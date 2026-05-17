@@ -1,11 +1,5 @@
 package com.emm.justchill.hh.shared
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
@@ -92,11 +86,7 @@ fun Hh() {
         modifier = Modifier.background(colors.bg),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
-            AnimatedVisibility(
-                visible = showBottomBar,
-                enter = slideInVertically(tween(300)) { it } + fadeIn(tween(300)),
-                exit = slideOutVertically(tween(250)) { it } + fadeOut(tween(200)),
-            ) {
+            if (showBottomBar) {
                 HhBottomBar(
                     current = currentRoute as? BottomBarRoute,
                     onTabClick = { tab -> backStack.switchTab(tab) },
