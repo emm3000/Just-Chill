@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.emm.justchill.hh.category
 
 import androidx.compose.foundation.background
@@ -7,41 +9,44 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.category.CategoryType
 import com.emm.justchill.components.EmmButton
 import com.emm.justchill.components.EmmTextInput
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.modalScreenInsets
@@ -58,7 +63,10 @@ fun AddCategoryScreen(
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
             when (effect) {
-                AddCategoryEffect.CategorySaved -> onBack()
+                AddCategoryEffect.CategorySaved -> {
+                    snackbarHostState.showSnackbar("Categoría creada")
+                    onBack()
+                }
                 is AddCategoryEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
             }
         }
@@ -67,7 +75,7 @@ fun AddCategoryScreen(
     AddCategoryContent(
         state = state,
         onIntent = vm::onIntent,
-        navigateToBack = onBack,
+        onBack = onBack,
     )
 }
 
@@ -75,10 +83,13 @@ fun AddCategoryScreen(
 private fun AddCategoryContent(
     state: AddCategoryUiState,
     onIntent: (AddCategoryIntent) -> Unit,
-    navigateToBack: () -> Unit = {},
+    onBack: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
+
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
     Column(
         modifier = Modifier
@@ -86,8 +97,7 @@ private fun AddCategoryContent(
             .background(colors.bg)
             .modalScreenInsets(),
     ) {
-
-        TopBar(title = "Nueva categoría", onClose = navigateToBack)
+        TopBar(title = "Nueva categoría", onBack = onBack)
 
         Column(
             modifier = Modifier
@@ -97,30 +107,28 @@ private fun AddCategoryContent(
                 .padding(horizontal = spacing.s4),
             verticalArrangement = Arrangement.spacedBy(spacing.s6),
         ) {
-
-            Spacer(Modifier.height(spacing.s2))
-
-            CategoryPreview(state)
+            Spacer(Modifier.height(spacing.s4))
 
             EmmTextInput(
                 value = state.name,
                 onValueChange = { onIntent(AddCategoryIntent.OnNameChange(it)) },
                 label = "NOMBRE",
-                placeholder = "ejm. Comida",
+                placeholder = "ej. Comida",
                 modifier = Modifier.fillMaxWidth(),
+                focusRequester = focusRequester,
             )
 
-            TypeSection(
+            TypeSegmented(
                 selected = state.categoryType,
                 onSelect = { onIntent(AddCategoryIntent.OnCategoryTypeChange(it)) },
             )
 
-            IconSection(
+            IconRow(
                 selected = state.icon,
                 onSelect = { onIntent(AddCategoryIntent.OnIconChange(it)) },
             )
 
-            ColorSection(
+            ColorRow(
                 selected = state.color,
                 onSelect = { onIntent(AddCategoryIntent.OnColorChange(it)) },
             )
@@ -129,7 +137,7 @@ private fun AddCategoryContent(
         }
 
         EmmButton(
-            text = "Guardar categoría",
+            text = "Crear",
             onClick = { onIntent(AddCategoryIntent.OnSave) },
             enabled = state.isAllFieldValidated,
             modifier = Modifier
@@ -140,7 +148,7 @@ private fun AddCategoryContent(
 }
 
 @Composable
-private fun TopBar(title: String, onClose: () -> Unit) {
+private fun TopBar(title: String, onBack: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
@@ -158,13 +166,13 @@ private fun TopBar(title: String, onClose: () -> Unit) {
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
-                    onClick = onClose,
+                    onClick = onBack,
                 ),
             contentAlignment = Alignment.CenterStart,
         ) {
             Icon(
-                imageVector = Icons.Outlined.Close,
-                contentDescription = "Cerrar",
+                imageVector = Icons.Outlined.ArrowBack,
+                contentDescription = "Atrás",
                 tint = colors.textPrimary,
                 modifier = Modifier.size(24.dp),
             )
@@ -179,133 +187,63 @@ private fun TopBar(title: String, onClose: () -> Unit) {
 }
 
 @Composable
-private fun CategoryPreview(state: AddCategoryUiState) {
-    val colors = LocalEmmColors.current
+private fun TypeSegmented(
+    selected: CategoryType,
+    onSelect: (CategoryType) -> Unit,
+) {
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
-    val radii = LocalEmmRadii.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colors.surface1, radii.rM)
-            .border(1.dp, colors.border, radii.rM)
-            .padding(spacing.s6),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(56.dp)
-                .clip(CircleShape)
-                .background(colors.surface2),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = state.icon.icon,
-                contentDescription = null,
-                tint = state.color.primary,
-                modifier = Modifier.size(28.dp),
-            )
-        }
-        Spacer(Modifier.height(spacing.s3))
-        Text(
-            text = state.name.ifBlank { "Tu categoría" },
-            style = type.titleL,
-            color = colors.textPrimary,
-        )
-        Text(
-            text = state.categoryType.label,
-            style = type.caption,
-            color = colors.textTertiary,
-        )
-    }
-}
-
-@Composable
-private fun TypeSection(selected: CategoryType, onSelect: (CategoryType) -> Unit) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
+    val options = listOf(CategoryType.Income to "Ingreso", CategoryType.Spend to "Gasto")
 
     Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
-        Text(text = "TIPO", style = type.labelM, color = colors.textTertiary)
-        Row(horizontalArrangement = Arrangement.spacedBy(spacing.s6)) {
-            TypePill(label = "INGRESO", isSelected = selected == CategoryType.Income) {
-                onSelect(CategoryType.Income)
-            }
-            TypePill(label = "GASTO", isSelected = selected == CategoryType.Spend) {
-                onSelect(CategoryType.Spend)
+        Text(text = "TIPO", style = type.labelM, color = LocalEmmColors.current.textTertiary)
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            options.forEachIndexed { index, (categoryType, label) ->
+                SegmentedButton(
+                    selected = selected == categoryType,
+                    onClick = { onSelect(categoryType) },
+                    shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                    label = { Text(text = label, style = type.labelL) },
+                )
             }
         }
     }
 }
 
 @Composable
-private fun TypePill(label: String, isSelected: Boolean, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
-    val interactionSource = remember { MutableInteractionSource() }
-
-    val underlineColor = if (isSelected) colors.accentFocus else colors.border
-    val labelColor = if (isSelected) colors.textPrimary else colors.textTertiary
-
-    Box(
-        modifier = Modifier
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-            )
-            .padding(vertical = spacing.s2)
-            .drawBehind {
-                val stroke = if (isSelected) 2f else 1f
-                drawLine(
-                    color = underlineColor,
-                    start = Offset(0f, size.height),
-                    end = Offset(size.width, size.height),
-                    strokeWidth = stroke,
-                )
-            }
-            .padding(bottom = spacing.s2),
-    ) {
-        Text(text = label, style = type.labelL, color = labelColor)
-    }
-}
-
-@Composable
-private fun IconSection(
+private fun IconRow(
     selected: IconCatalog,
     onSelect: (IconCatalog) -> Unit,
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
-    val radii = LocalEmmRadii.current
 
     Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
         Text(text = "ICONO", style = type.labelM, color = colors.textTertiary)
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
+        LazyRow(
             horizontalArrangement = Arrangement.spacedBy(spacing.s2),
-            verticalArrangement = Arrangement.spacedBy(spacing.s2),
-            maxItemsInEachRow = 6,
+            contentPadding = PaddingValues(horizontal = spacing.s1),
         ) {
-            AppIconCatalog.catalog.take(11).forEach { icon ->
+            items(AppIconCatalog.catalog, key = IconCatalog::id) { icon ->
                 val isSelected = icon == selected
-                val borderColor = if (isSelected) colors.accentFocus else colors.border
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .aspectRatio(1f)
-                        .background(colors.surface1, radii.rS)
-                        .border(if (isSelected) 1.5.dp else 1.dp, borderColor, radii.rS)
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(if (isSelected) colors.surface2 else colors.surface1)
+                        .border(
+                            width = if (isSelected) 2.dp else 1.dp,
+                            color = if (isSelected) colors.accentFocus else colors.border,
+                            shape = CircleShape,
+                        )
                         .clickable { onSelect(icon) },
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = icon.icon,
-                        contentDescription = null,
+                        contentDescription = icon.name,
                         tint = colors.textPrimary,
                     )
                 }
@@ -315,7 +253,7 @@ private fun IconSection(
 }
 
 @Composable
-private fun ColorSection(
+private fun ColorRow(
     selected: CategoryColor,
     onSelect: (CategoryColor) -> Unit,
 ) {
@@ -325,12 +263,11 @@ private fun ColorSection(
 
     Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
         Text(text = "COLOR", style = type.labelM, color = colors.textTertiary)
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
+        LazyRow(
             horizontalArrangement = Arrangement.spacedBy(spacing.s3),
-            verticalArrangement = Arrangement.spacedBy(spacing.s3),
+            contentPadding = PaddingValues(horizontal = spacing.s1),
         ) {
-            allColors.forEach { color ->
+            items(allColors, key = CategoryColor::id) { color ->
                 val isSelected = color == selected
                 val interactionSource = remember { MutableInteractionSource() }
                 Box(
@@ -356,7 +293,7 @@ private fun ColorSection(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 1000)
+@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 900)
 @Composable
 private fun AddCategoryScreenPreview() {
     EmmTheme {

@@ -19,6 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.KeyboardType
@@ -48,6 +50,7 @@ fun EmmTextInput(
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     trailingContent: @Composable (() -> Unit)? = null,
+    focusRequester: FocusRequester? = null,
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -101,7 +104,11 @@ fun EmmTextInput(
                     interactionSource = interactionSource,
                     keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
                     visualTransformation = visualTransformation,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = if (focusRequester != null) {
+                        Modifier.fillMaxWidth().focusRequester(focusRequester)
+                    } else {
+                        Modifier.fillMaxWidth()
+                    },
                     decorationBox = { inner ->
                         if (value.isEmpty() && placeholder != null) {
                             Text(

@@ -13,8 +13,7 @@ class AddCategoryViewModel(
     override fun onIntent(intent: AddCategoryIntent) {
         when (intent) {
             is AddCategoryIntent.OnNameChange -> updateState {
-                val isEnabled = intent.value.isNotEmpty() && intent.value.length >= 4
-                copy(name = intent.value, isAllFieldValidated = isEnabled)
+                copy(name = intent.value, isAllFieldValidated = intent.value.isNotBlank())
             }
             is AddCategoryIntent.OnCategoryTypeChange -> updateState { copy(categoryType = intent.value) }
             is AddCategoryIntent.OnColorChange -> updateState { copy(color = intent.value) }
