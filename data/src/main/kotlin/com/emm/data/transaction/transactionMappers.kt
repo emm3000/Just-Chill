@@ -2,6 +2,7 @@ package com.emm.data.transaction
 
 import com.emm.data.CompleteTransactions
 import com.emm.data.CompleteTransactionsByDateRange
+import com.emm.data.SearchTransactions
 import com.emm.data.Transactions
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryType
@@ -72,6 +73,21 @@ fun CompleteTransactions.asEntity() = TransactionWithCategoryEntity(
 
 // SQLDelight CompleteTransactionsByDateRange -> Entity
 fun CompleteTransactionsByDateRange.asEntity() = TransactionWithCategoryEntity(
+    transactionId = transactionId,
+    type = type,
+    amount = amount,
+    description = description,
+    date = date,
+    accountId = accountId,
+    categoryId = categoryId,
+    categoryName = categoryName,
+    categoryIcon = categoryIcon,
+    categoryColor = categoryColor,
+    categoryType = categoryType_,
+)
+
+// SQLDelight SearchTransactions -> Entity
+fun SearchTransactions.asEntity() = TransactionWithCategoryEntity(
     transactionId = transactionId,
     type = type,
     amount = amount,

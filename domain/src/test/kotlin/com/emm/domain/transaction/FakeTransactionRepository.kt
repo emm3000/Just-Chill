@@ -14,6 +14,7 @@ class FakeTransactionRepository : TransactionRepository {
     var transactionToReturn: Transaction? = null
     var allWithCategory: List<TransactionWithCategory> = emptyList()
     var rangeWithCategory: List<TransactionWithCategory> = emptyList()
+    var searchWithCategoryToReturn: List<TransactionWithCategory> = emptyList()
     var countByAccountToReturn: Long = 0L
 
     override suspend fun create(transactionInsert: TransactionInsert) {
@@ -42,4 +43,7 @@ class FakeTransactionRepository : TransactionRepository {
     override suspend fun delete(transactionId: TransactionId) {
         lastDeleted = transactionId
     }
+
+    override fun searchWithCategory(filter: TransactionFilter): Flow<List<TransactionWithCategory>> =
+        flowOf(searchWithCategoryToReturn)
 }

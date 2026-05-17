@@ -4,6 +4,7 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.emm.data.CompleteTransactions
 import com.emm.data.CompleteTransactionsByDateRange
+import com.emm.data.SearchTransactions
 import com.emm.data.TransactionsQueries
 import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.transaction.Transaction
@@ -54,6 +55,26 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             .asFlow()
             .mapToList(Dispatchers.IO)
             .map { list -> list.map(CompleteTransactionsByDateRange::asEntity) }
+    }
+
+    fun searchTransactions(
+        query: String,
+        categoryIds: Set<String>,
+    ): Flow<List<TransactionWithCategoryEntity>> {
+        val queryEmpty: Long = if (query.isBlank()) 1L else 0L
+        val categoryFilterEmpty: Long = if (categoryIds.isEmpty()) 1L else 0L
+        val safeCategoryIds: Collection<String> =
+            if (categoryIds.isEmpty()) listOf("") else categoryIds
+
+        return tq.searchTransactions(
+            queryEmpty = queryEmpty,
+            query = query.trim(),
+            categoryFilterEmpty = categoryFilterEmpty,
+            categoryIds = safeCategoryIds,
+        )
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { list -> list.map(SearchTransactions::asEntity) }
     }
 
     suspend fun countByAccount(accountId: String): Long = withContext(Dispatchers.IO) {

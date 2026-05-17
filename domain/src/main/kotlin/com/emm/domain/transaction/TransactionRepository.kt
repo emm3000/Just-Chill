@@ -24,4 +24,6 @@ interface TransactionRepository {
     suspend fun countByAccount(accountId: AccountId): Long
 
     suspend fun delete(transactionId: TransactionId)
+
+    fun searchWithCategory(filter: TransactionFilter): Flow<List<TransactionWithCategory>>
 }

@@ -63,5 +63,18 @@ WHERE transactionId = ?;
 countByAccount:
 SELECT COUNT(*) FROM transactions WHERE accountId = :accountId;
 
+searchTransactions:
+SELECT
+    t.*,
+    c.name AS categoryName,
+    c.icon AS categoryIcon,
+    c.color AS categoryColor,
+    c.categoryType AS categoryType_
+FROM transactions t
+LEFT JOIN categories c ON t.categoryId = c.categoryId
+WHERE (:queryEmpty = 1 OR LOWER(t.description) LIKE '%' || LOWER(:query) || '%')
+  AND (:categoryFilterEmpty = 1 OR t.categoryId IN :categoryIds)
+ORDER BY t.date DESC;
+
 delete:
 DELETE FROM transactions WHERE transactionId = ?;

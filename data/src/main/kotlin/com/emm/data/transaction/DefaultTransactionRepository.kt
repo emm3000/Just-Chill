@@ -5,6 +5,7 @@ import com.emm.data.shared.safeDbCall
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.Transaction
+import com.emm.domain.transaction.TransactionFilter
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionUpdate
@@ -55,5 +56,14 @@ class DefaultTransactionRepository(
 
     override suspend fun find(transactionId: TransactionId): Transaction? = safeDbCall {
         localDataSource.find(transactionId.value)
+    }
+
+    override fun searchWithCategory(filter: TransactionFilter): Flow<List<TransactionWithCategory>> {
+        return localDataSource.searchTransactions(
+            query = filter.query,
+            categoryIds = filter.categoryIds.map { it.value }.toSet(),
+        )
+            .map { it.toDomain() }
+            .catchAsDomainException()
     }
 }
