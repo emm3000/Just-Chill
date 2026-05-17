@@ -48,7 +48,7 @@ class DefaultTransactionRepository(
         Unit
     }
 
-    override fun find(transactionId: TransactionId): Transaction? {
-        return localDataSource.find(transactionId.value)
+    override suspend fun find(transactionId: TransactionId): Transaction? = safeDbCall {
+        localDataSource.find(transactionId.value)
     }
 }

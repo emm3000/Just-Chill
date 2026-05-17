@@ -7,6 +7,7 @@ import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryUpsert
 import com.emm.domain.shared.CategoryId
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 
 class DefaultCategoryRepository(
     private val localDataSource: CategoryLocalDataSource,
@@ -14,7 +15,9 @@ class DefaultCategoryRepository(
 
     override fun all(): Flow<List<Category>> = localDataSource.all().catchAsDomainException()
 
-    override fun find(categoryId: CategoryId): Flow<Category?> = localDataSource.find(categoryId.value).catchAsDomainException()
+    override suspend fun find(categoryId: CategoryId): Category? = safeDbCall {
+        localDataSource.find(categoryId.value).firstOrNull()
+    }
 
     override suspend fun create(categoryUpsert: CategoryUpsert): Unit = safeDbCall {
         localDataSource.create(categoryUpsert)

@@ -18,7 +18,7 @@ class FakeTransactionRepository : TransactionRepository {
         lastCreated = transactionInsert
     }
 
-    override fun find(transactionId: TransactionId): Transaction? = transactionToReturn
+    override suspend fun find(transactionId: TransactionId): Transaction? = transactionToReturn
 
     override fun all(): Flow<List<Transaction>> = flowOf(emptyList())
 

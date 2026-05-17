@@ -7,7 +7,7 @@ interface CategoryRepository {
 
     fun all(): Flow<List<Category>>
 
-    fun find(categoryId: CategoryId): Flow<Category?>
+    suspend fun find(categoryId: CategoryId): Category?
 
     suspend fun create(categoryUpsert: CategoryUpsert)
 

@@ -4,7 +4,7 @@ import com.emm.domain.shared.TransactionId
 
 class FindTransactionUseCase(private val repository: TransactionRepository) {
 
-    operator fun invoke(transactionId: TransactionId): Transaction? {
+    suspend operator fun invoke(transactionId: TransactionId): Transaction? {
         return repository.find(transactionId)
     }
 }
