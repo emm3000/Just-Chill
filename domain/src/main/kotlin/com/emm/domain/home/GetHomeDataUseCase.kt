@@ -6,8 +6,13 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import java.time.LocalDate
-import java.time.ZoneId
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 
 class GetHomeDataUseCase(
     private val transactionRepository: TransactionRepository,
@@ -49,13 +54,13 @@ class GetHomeDataUseCase(
     }
 
     private fun currentMonthRange(): Pair<Long, Long> {
-        val zone: ZoneId = ZoneId.systemDefault()
-        val today: LocalDate = LocalDate.now(zone)
-        val firstDayOfMonth: LocalDate = today.withDayOfMonth(1)
-        val firstDayOfNextMonth: LocalDate = firstDayOfMonth.plusMonths(1)
+        val zone: TimeZone = TimeZone.currentSystemDefault()
+        val today = Clock.System.todayIn(zone)
+        val firstDayOfMonth = LocalDate(today.year, today.month, 1)
+        val firstDayOfNextMonth = firstDayOfMonth.plus(DatePeriod(months = 1))
 
-        val startOfMonth: Long = firstDayOfMonth.atStartOfDay(zone).toInstant().toEpochMilli()
-        val startOfNextMonth: Long = firstDayOfNextMonth.atStartOfDay(zone).toInstant().toEpochMilli()
+        val startOfMonth: Long = firstDayOfMonth.atStartOfDayIn(zone).toEpochMilliseconds()
+        val startOfNextMonth: Long = firstDayOfNextMonth.atStartOfDayIn(zone).toEpochMilliseconds()
         return startOfMonth to startOfNextMonth
     }
 }

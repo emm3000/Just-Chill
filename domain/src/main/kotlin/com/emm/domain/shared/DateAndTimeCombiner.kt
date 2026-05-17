@@ -1,30 +1,25 @@
 package com.emm.domain.shared
 
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneId
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 
 class DateAndTimeCombiner {
 
     fun combineWithUtc(dateInMillis: Long): Long {
+        val selectedDateTime: kotlinx.datetime.LocalDateTime = Instant
+            .fromEpochMilliseconds(dateInMillis)
+            .toLocalDateTime(TimeZone.UTC)
 
-        val selectedDateTime: LocalDateTime = LocalDateTime
-            .ofInstant(
-                Instant.ofEpochMilli(dateInMillis),
-                ZoneId.of("UTC")
-            )
+        val systemZone: TimeZone = TimeZone.currentSystemDefault()
+        val currentTime = Clock.System.now().toLocalDateTime(systemZone).time
 
-        val currentTime: LocalTime = LocalTime.now(ZoneId.systemDefault())
+        val combinedDateTime = LocalDateTime(selectedDateTime.date, currentTime)
 
-        val combinedDateTime: LocalDateTime = selectedDateTime.with(currentTime)
-
-        val combinedDateTimeInMillis: Long = combinedDateTime
-            .atZone(ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli()
-
-        return combinedDateTimeInMillis
+        return combinedDateTime.toInstant(systemZone).toEpochMilliseconds()
     }
 
 }

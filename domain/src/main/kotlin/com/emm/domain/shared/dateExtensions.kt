@@ -1,5 +1,5 @@
 package com.emm.domain.shared
 
-import java.time.Instant
+import kotlinx.datetime.Clock
 
-fun currentTimeInMillis(): Long = Instant.now().toEpochMilli()
+fun currentTimeInMillis(): Long = Clock.System.now().toEpochMilliseconds()
