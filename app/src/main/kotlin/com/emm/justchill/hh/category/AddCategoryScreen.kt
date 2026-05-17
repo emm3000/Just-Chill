@@ -56,6 +56,7 @@ import org.koin.androidx.compose.koinViewModel
 fun AddCategoryScreen(
     onBack: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    showSuccessMessage: (String) -> Unit = {},
     vm: AddCategoryViewModel = koinViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -63,7 +64,10 @@ fun AddCategoryScreen(
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
             when (effect) {
-                AddCategoryEffect.CategorySaved -> onBack()
+                AddCategoryEffect.CategorySaved -> {
+                    showSuccessMessage("Categoría creada")
+                    onBack()
+                }
                 is AddCategoryEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
             }
         }

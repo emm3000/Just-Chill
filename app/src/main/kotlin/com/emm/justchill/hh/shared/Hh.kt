@@ -80,6 +80,10 @@ fun Hh() {
     val backStack: NavBackStack<NavKey> = rememberNavBackStack(START_TAB)
     var pendingCategory by remember { mutableStateOf<SelectableCategory?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val rootScope = rememberCoroutineScope()
+    val showRootMessage: (String) -> Unit = { message ->
+        rootScope.launch { snackbarHostState.showSnackbar(message) }
+    }
 
     val currentRoute: NavKey? = backStack.lastOrNull()
     val showBottomBar: Boolean = currentRoute is BottomBarRoute
@@ -179,6 +183,7 @@ fun Hh() {
                     AddCategoryScreen(
                         onBack = { backStack.removeLastOrNull() },
                         snackbarHostState = snackbarHostState,
+                        showSuccessMessage = showRootMessage,
                         vm = koinViewModel(parameters = { parametersOf(key.initialType) }),
                     )
                 }
