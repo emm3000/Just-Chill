@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -62,9 +63,9 @@ fun AddCategoryScreen(
     vm: AddCategoryViewModel = koinViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     val dismissAndBack = {
-        focusManager.clearFocus(force = true)
+        keyboard?.hide()
         onBack()
     }
 
