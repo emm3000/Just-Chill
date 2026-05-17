@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -60,13 +61,18 @@ fun AddCategoryScreen(
     vm: AddCategoryViewModel = koinViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val keyboard = LocalSoftwareKeyboardController.current
+    val dismissAndBack = {
+        keyboard?.hide()
+        onBack()
+    }
 
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
             when (effect) {
                 AddCategoryEffect.CategorySaved -> {
                     showSuccessMessage("Categoría creada")
-                    onBack()
+                    dismissAndBack()
                 }
                 is AddCategoryEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
             }
@@ -76,7 +82,7 @@ fun AddCategoryScreen(
     AddCategoryContent(
         state = state,
         onIntent = vm::onIntent,
-        onBack = onBack,
+        onBack = dismissAndBack,
     )
 }
 
