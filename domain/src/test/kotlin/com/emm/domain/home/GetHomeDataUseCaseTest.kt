@@ -8,9 +8,15 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -97,5 +103,29 @@ class GetHomeDataUseCaseTest {
         val data = useCase().first()
 
         assertEquals(Money(99L), data.income)
+    }
+
+    @Test
+    fun `currentMonthRange uses injected clock to compute start of month`() = runTest {
+        val fixedClock = fixedClock("2026-05-16T12:34:56Z")
+        val repo = mockk<TransactionRepository>()
+        val startSlot = slot<Long>()
+        val endSlot = slot<Long>()
+
+        every { repo.fetchAllWithCategory() } returns flowOf(emptyList())
+        every { repo.fetchAllWithCategoryInRange(capture(startSlot), capture(endSlot)) } returns flowOf(emptyList())
+
+        GetHomeDataUseCase(repo, fixedClock).invoke().first()
+
+        val zone = TimeZone.currentSystemDefault()
+        val expectedStart = LocalDate(2026, 5, 1).atStartOfDayIn(zone).toEpochMilliseconds()
+        val expectedEnd = LocalDate(2026, 6, 1).atStartOfDayIn(zone).toEpochMilliseconds()
+
+        assertEquals(expectedStart, startSlot.captured)
+        assertEquals(expectedEnd, endSlot.captured)
+    }
+
+    private fun fixedClock(at: String): Clock = object : Clock {
+        override fun now(): Instant = Instant.parse(at)
     }
 }

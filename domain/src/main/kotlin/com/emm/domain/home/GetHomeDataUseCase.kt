@@ -16,6 +16,7 @@ import kotlinx.datetime.todayIn
 
 class GetHomeDataUseCase(
     private val transactionRepository: TransactionRepository,
+    private val clock: Clock = Clock.System,
 ) {
 
     operator fun invoke(): Flow<HomeData> {
@@ -55,7 +56,7 @@ class GetHomeDataUseCase(
 
     private fun currentMonthRange(): Pair<Long, Long> {
         val zone: TimeZone = TimeZone.currentSystemDefault()
-        val today = Clock.System.todayIn(zone)
+        val today = clock.todayIn(zone)
         val firstDayOfMonth = LocalDate(today.year, today.month, 1)
         val firstDayOfNextMonth = firstDayOfMonth.plus(DatePeriod(months = 1))
 

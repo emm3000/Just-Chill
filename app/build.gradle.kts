@@ -136,6 +136,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.livedata.ktx)
 
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.datetime)
 
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(kotlin("test"))
