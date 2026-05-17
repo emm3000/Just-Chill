@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.DropdownMenuItem
@@ -95,6 +97,7 @@ private fun AddAccountContent(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = spacing.s4),
         ) {
 
@@ -139,8 +142,8 @@ private fun AddAccountContent(
             enabled = state.isEnabled,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(spacing.s4)
-                .navigationBarsPadding(),
+                .navigationBarsPadding()
+                .padding(horizontal = spacing.s4, vertical = spacing.s3),
         )
     }
 }
