@@ -7,14 +7,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -87,8 +89,7 @@ private fun AddAccountContent(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg)
-            .statusBarsPadding()
-            .imePadding(),
+            .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.ime)),
     ) {
 
         TopBar(title = "Nueva cuenta", onClose = onBack)
@@ -142,7 +143,6 @@ private fun AddAccountContent(
             enabled = state.isEnabled,
             modifier = Modifier
                 .fillMaxWidth()
-                .navigationBarsPadding()
                 .padding(horizontal = spacing.s4, vertical = spacing.s3),
         )
     }
