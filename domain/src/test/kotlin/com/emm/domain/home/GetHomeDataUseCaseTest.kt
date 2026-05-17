@@ -1,6 +1,5 @@
 package com.emm.domain.home
 
-import com.emm.domain.account.AccountRepository
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.TransactionRepository
@@ -18,8 +17,7 @@ import kotlin.test.assertTrue
 class GetHomeDataUseCaseTest {
 
     private val transactionRepository = mockk<TransactionRepository>()
-    private val accountRepository = mockk<AccountRepository>()
-    private val useCase = GetHomeDataUseCase(transactionRepository, accountRepository)
+    private val useCase = GetHomeDataUseCase(transactionRepository)
 
     private fun tx(
         id: String,
@@ -47,7 +45,6 @@ class GetHomeDataUseCaseTest {
             // previous month leftover that should only affect balance
             tx("legacy", TransactionType.Spend, 200.0),
         )
-        every { accountRepository.all() } returns flowOf(emptyList())
         every { transactionRepository.fetchAllWithCategory() } returns flowOf(allTransactions)
         every { transactionRepository.fetchAllWithCategoryInRange(any(), any()) } returns flowOf(currentMonth)
 
@@ -63,7 +60,6 @@ class GetHomeDataUseCaseTest {
     @Test
     fun `invoke should take only the first seven transactions in lastTransactions`() = runTest {
         val currentMonth = (1..10).map { tx(it.toString(), TransactionType.Income, 1.0) }
-        every { accountRepository.all() } returns flowOf(emptyList())
         every { transactionRepository.fetchAllWithCategory() } returns flowOf(currentMonth)
         every { transactionRepository.fetchAllWithCategoryInRange(any(), any()) } returns flowOf(currentMonth)
 
@@ -75,7 +71,6 @@ class GetHomeDataUseCaseTest {
 
     @Test
     fun `invoke should return zeros when nothing is in the current month`() = runTest {
-        every { accountRepository.all() } returns flowOf(emptyList())
         every { transactionRepository.fetchAllWithCategory() } returns flowOf(emptyList())
         every { transactionRepository.fetchAllWithCategoryInRange(any(), any()) } returns flowOf(emptyList())
 

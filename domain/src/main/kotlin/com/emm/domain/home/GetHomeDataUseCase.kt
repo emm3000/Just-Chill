@@ -1,6 +1,5 @@
 package com.emm.domain.home
 
-import com.emm.domain.account.AccountRepository
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
@@ -11,16 +10,14 @@ import java.time.ZoneId
 
 class GetHomeDataUseCase(
     private val transactionRepository: TransactionRepository,
-    private val accountRepository: AccountRepository,
 ) {
 
     operator fun invoke(): Flow<HomeData> {
         val (startOfMonth, startOfNextMonth) = currentMonthRange()
         return combine(
-            flow = accountRepository.all(),
-            flow2 = transactionRepository.fetchAllWithCategory(),
-            flow3 = transactionRepository.fetchAllWithCategoryInRange(startOfMonth, startOfNextMonth),
-            transform = { _, allTransactions, currentMonth ->
+            flow = transactionRepository.fetchAllWithCategory(),
+            flow2 = transactionRepository.fetchAllWithCategoryInRange(startOfMonth, startOfNextMonth),
+            transform = { allTransactions, currentMonth ->
                 computeFinancialSummary(allTransactions, currentMonth)
             },
         )
