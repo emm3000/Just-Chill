@@ -6,7 +6,7 @@ data class Account(
     val accountId: AccountId,
     val name: String,
     val type: AccountType = AccountType.Bank,
-    val currency: Currency = Currency.ARS,
+    val currency: Currency = Currency.PEN,
 ) {
 
     override fun toString(): String = name

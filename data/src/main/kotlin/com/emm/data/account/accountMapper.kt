@@ -24,7 +24,7 @@ fun AccountEntity.asExternalModel() = Account(
     accountId = AccountId(accountId),
     name = name,
     type = runCatching { AccountType.valueOf(type) }.getOrDefault(AccountType.Bank),
-    currency = runCatching { Currency.valueOf(currency) }.getOrDefault(Currency.ARS),
+    currency = runCatching { Currency.valueOf(currency) }.getOrDefault(Currency.PEN),
 )
 
 fun List<AccountEntity>.asExternalModel() = map(AccountEntity::asExternalModel)

@@ -10,6 +10,6 @@ import com.emm.justchill.hh.shared.Empty
 data class AddAccountUiState(
     val name: String = String.Empty,
     val selectedType: AccountType = AccountType.Bank,
-    val selectedCurrency: Currency = Currency.ARS,
+    val selectedCurrency: Currency = Currency.PEN,
     val isEnabled: Boolean = false,
 ) : UiState

@@ -11,7 +11,7 @@ class CreateAccountUseCase(
     suspend operator fun invoke(
         name: String,
         type: AccountType = AccountType.Bank,
-        currency: Currency = Currency.ARS,
+        currency: Currency = Currency.PEN,
     ) {
         val accountUpsert = AccountUpsert(
             accountId = AccountId(uniqueIdProvider.id),
