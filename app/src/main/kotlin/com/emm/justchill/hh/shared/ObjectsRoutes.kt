@@ -1,13 +1,14 @@
 package com.emm.justchill.hh.shared
 
 import androidx.navigation3.runtime.NavKey
+import com.emm.domain.category.CategoryType
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class EditTransactionRoute(val transactionId: String) : NavKey
 
 @Serializable
-data class CategoryRoute(val initialType: String = "Spend") : NavKey
+data class CategoryRoute(val initialType: CategoryType = CategoryType.Spend) : NavKey
 
 @Serializable
 data object AddAccountRoute : NavKey
