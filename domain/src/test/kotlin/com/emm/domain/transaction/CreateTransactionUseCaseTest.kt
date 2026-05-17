@@ -69,4 +69,20 @@ class CreateTransactionUseCaseTest {
         val ex = assertFailsWith<DomainException.DatabaseError> { useCase(anyInsert) }
         assertEquals("boom", ex.message)
     }
+
+    @Test
+    fun `create should throw ValidationError when amount is zero`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase(anyInsert.copy(amount = 0.0))
+        }
+        coVerify(exactly = 0) { repository.create(any()) }
+    }
+
+    @Test
+    fun `create should throw ValidationError when amount is negative`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase(anyInsert.copy(amount = -1.0))
+        }
+        coVerify(exactly = 0) { repository.create(any()) }
+    }
 }

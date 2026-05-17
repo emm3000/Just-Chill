@@ -39,4 +39,20 @@ class UpdateCategoryUseCaseTest {
 
         assertFailsWith<DomainException.NotFound> { useCase(CategoryId("cat-1"), anyUpsert) }
     }
+
+    @Test
+    fun `update should throw ValidationError when name is empty`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase(CategoryId("cat-1"), anyUpsert.copy(name = ""))
+        }
+        coVerify(exactly = 0) { repository.update(any(), any()) }
+    }
+
+    @Test
+    fun `update should throw ValidationError when name is blank`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase(CategoryId("cat-1"), anyUpsert.copy(name = "   "))
+        }
+        coVerify(exactly = 0) { repository.update(any(), any()) }
+    }
 }

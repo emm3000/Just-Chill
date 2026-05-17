@@ -2,6 +2,7 @@ package com.emm.domain.category
 
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.UniqueIdProvider
+import com.emm.domain.shared.error.DomainException
 
 class CreateCategoryUseCase(
     private val repository: CategoryRepository,
@@ -14,6 +15,9 @@ class CreateCategoryUseCase(
         color: String,
         categoryType: CategoryType,
     ) {
+        if (name.isBlank()) {
+            throw DomainException.ValidationError("El nombre no puede estar vacío")
+        }
         val categoryUpsert = CategoryUpsert(
             categoryId = CategoryId(idProvider.id),
             name = name,

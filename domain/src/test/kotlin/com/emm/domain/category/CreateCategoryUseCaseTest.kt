@@ -65,4 +65,20 @@ class CreateCategoryUseCaseTest {
             useCase(name = "n", icon = "i", color = "c", categoryType = CategoryType.Income)
         }
     }
+
+    @Test
+    fun `create should throw ValidationError when name is empty`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase(name = "", icon = "i", color = "c", categoryType = CategoryType.Income)
+        }
+        coVerify(exactly = 0) { repository.create(any()) }
+    }
+
+    @Test
+    fun `create should throw ValidationError when name is blank`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase(name = "   ", icon = "i", color = "c", categoryType = CategoryType.Income)
+        }
+        coVerify(exactly = 0) { repository.create(any()) }
+    }
 }

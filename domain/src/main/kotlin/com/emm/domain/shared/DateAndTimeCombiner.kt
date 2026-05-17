@@ -27,21 +27,4 @@ class DateAndTimeCombiner {
         return combinedDateTimeInMillis
     }
 
-    fun combineDefaultZone(dateInMillis: Long): Long {
-
-        val selectedDateTime: LocalDateTime = LocalDateTime
-            .ofInstant(
-                Instant.ofEpochMilli(dateInMillis),
-                ZoneId.systemDefault(),
-            )
-
-        val currentTime: LocalTime = LocalTime.now(ZoneId.systemDefault())
-
-        val combinedDateTime: LocalDateTime = selectedDateTime.with(currentTime)
-
-        return combinedDateTime
-            .atZone(ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli()
-    }
 }

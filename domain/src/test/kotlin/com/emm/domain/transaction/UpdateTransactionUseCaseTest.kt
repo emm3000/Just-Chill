@@ -73,4 +73,20 @@ class UpdateTransactionUseCaseTest {
 
         assertFailsWith<DomainException.NotFound> { useCase(oldTransaction, anyUpdate) }
     }
+
+    @Test
+    fun `update should throw ValidationError when amount is zero`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase(oldTransaction, anyUpdate.copy(amount = 0.0))
+        }
+        coVerify(exactly = 0) { repository.update(any(), any()) }
+    }
+
+    @Test
+    fun `update should throw ValidationError when amount is negative`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase(oldTransaction, anyUpdate.copy(amount = -1.0))
+        }
+        coVerify(exactly = 0) { repository.update(any(), any()) }
+    }
 }
