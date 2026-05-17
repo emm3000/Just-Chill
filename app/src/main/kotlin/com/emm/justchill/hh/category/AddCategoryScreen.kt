@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,7 +50,6 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun AddCategoryScreen(
     onBack: () -> Unit,
-    onSelectIcon: () -> Unit,
     snackbarHostState: SnackbarHostState,
     vm: AddCategoryViewModel = koinViewModel(),
 ) {
@@ -68,7 +66,6 @@ fun AddCategoryScreen(
 
     AddCategoryContent(
         state = state,
-        onMoreIconsClick = onSelectIcon,
         onIntent = vm::onIntent,
         navigateToBack = onBack,
     )
@@ -77,7 +74,6 @@ fun AddCategoryScreen(
 @Composable
 private fun AddCategoryContent(
     state: AddCategoryUiState,
-    onMoreIconsClick: () -> Unit = {},
     onIntent: (AddCategoryIntent) -> Unit,
     navigateToBack: () -> Unit = {},
 ) {
@@ -122,7 +118,6 @@ private fun AddCategoryContent(
             IconSection(
                 selected = state.icon,
                 onSelect = { onIntent(AddCategoryIntent.OnIconChange(it)) },
-                onMore = onMoreIconsClick,
             )
 
             ColorSection(
@@ -282,7 +277,6 @@ private fun TypePill(label: String, isSelected: Boolean, onClick: () -> Unit) {
 private fun IconSection(
     selected: IconCatalog,
     onSelect: (IconCatalog) -> Unit,
-    onMore: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -315,21 +309,6 @@ private fun IconSection(
                         tint = colors.textPrimary,
                     )
                 }
-            }
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .aspectRatio(1f)
-                    .background(colors.surface1, radii.rS)
-                    .border(1.dp, colors.border, radii.rS)
-                    .clickable { onMore() },
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.MoreHoriz,
-                    contentDescription = "Más iconos",
-                    tint = colors.textPrimary,
-                )
             }
         }
     }

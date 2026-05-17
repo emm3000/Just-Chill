@@ -57,7 +57,6 @@ import com.emm.justchill.hh.category.AddCategoryScreen
 import com.emm.justchill.hh.category.SelectCategoryIntent
 import com.emm.justchill.hh.category.SelectCategoryScreen
 import com.emm.justchill.hh.category.SelectCategoryViewModel
-import com.emm.justchill.hh.category.SelectIconScreen
 import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.profile.ProfileScreen
 import com.emm.justchill.hh.seetransactions.SeeTransactionsScreen
@@ -178,7 +177,6 @@ fun Hh() {
                 entry<CategoryRoute> {
                     AddCategoryScreen(
                         onBack = { backStack.removeLastOrNull() },
-                        onSelectIcon = { backStack.add(SelectIconRoute) },
                         snackbarHostState = snackbarHostState,
                     )
                 }
@@ -207,11 +205,6 @@ fun Hh() {
                     )
                 }
 
-                entry<SelectIconRoute> {
-                    SelectIconScreen(
-                        onBack = { backStack.removeLastOrNull() },
-                    )
-                }
             },
         )
     }
