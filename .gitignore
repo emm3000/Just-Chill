@@ -27,3 +27,4 @@ docs/*
 !docs/ARCHITECTURE_REVIEW.md
 !docs/ROADMAP_V1.md
 !docs/POST_V1_PLAN.md
+!docs/DESIGN_SYSTEM.md
