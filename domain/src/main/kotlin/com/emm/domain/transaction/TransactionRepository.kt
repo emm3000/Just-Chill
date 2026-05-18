@@ -1,5 +1,6 @@
 package com.emm.domain.transaction
 
+import com.emm.domain.report.CategoryAmount
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.TransactionId
 import kotlinx.coroutines.flow.Flow
@@ -26,4 +27,10 @@ interface TransactionRepository {
     suspend fun delete(transactionId: TransactionId)
 
     fun searchWithCategory(filter: TransactionFilter): Flow<List<TransactionWithCategory>>
+
+    suspend fun monthlyAmountByCategory(
+        type: TransactionType,
+        startInclusive: Long,
+        endExclusive: Long,
+    ): List<CategoryAmount>
 }

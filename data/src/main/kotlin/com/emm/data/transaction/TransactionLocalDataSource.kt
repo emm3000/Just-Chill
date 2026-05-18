@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import com.emm.domain.transaction.TransactionType
 
 class TransactionLocalDataSource(private val tq: TransactionsQueries) {
 
@@ -103,5 +104,17 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             categoryId = transactionUpdate.categoryId?.value,
             updatedAt = currentTimeInMillis(),
         )
+    }
+
+    suspend fun monthlyAmountByCategory(
+        type: TransactionType,
+        startInclusive: Long,
+        endExclusive: Long,
+    ): List<MonthlyAmountByCategoryEntity> = withContext(Dispatchers.IO) {
+        tq.monthlyAmountByCategory(
+            type = type.name,
+            startInclusive = startInclusive,
+            endExclusive = endExclusive,
+        ).executeAsList().map { it.asEntity() }
     }
 }

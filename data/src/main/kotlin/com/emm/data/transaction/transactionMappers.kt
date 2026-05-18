@@ -2,10 +2,12 @@ package com.emm.data.transaction
 
 import com.emm.data.CompleteTransactions
 import com.emm.data.CompleteTransactionsByDateRange
+import com.emm.data.MonthlyAmountByCategory
 import com.emm.data.SearchTransactions
 import com.emm.data.Transactions
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryType
+import com.emm.domain.report.CategoryAmount
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
@@ -121,3 +123,22 @@ fun TransactionWithCategoryEntity.toDomain() = TransactionWithCategory(
 )
 
 fun List<TransactionWithCategoryEntity>.toDomain() = map(TransactionWithCategoryEntity::toDomain)
+
+// SQLDelight MonthlyAmountByCategory -> Entity
+// totalAmount is Long? from SQLDelight (SUM is nullable), default to 0 if null
+fun MonthlyAmountByCategory.asEntity() = MonthlyAmountByCategoryEntity(
+    categoryId = categoryId,
+    categoryName = categoryName,
+    categoryIcon = categoryIcon,
+    categoryColor = categoryColor,
+    totalAmount = totalAmount ?: 0L,
+)
+
+// MonthlyAmountByCategoryEntity -> Domain
+fun MonthlyAmountByCategoryEntity.toDomain() = CategoryAmount(
+    categoryId = CategoryId(categoryId),
+    categoryName = categoryName,
+    categoryIcon = categoryIcon,
+    categoryColor = categoryColor,
+    amount = Money(cents = totalAmount),
+)

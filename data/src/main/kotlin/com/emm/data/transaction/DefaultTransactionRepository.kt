@@ -2,12 +2,14 @@ package com.emm.data.transaction
 
 import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.safeDbCall
+import com.emm.domain.report.CategoryAmount
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionFilter
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
@@ -65,5 +67,14 @@ class DefaultTransactionRepository(
         )
             .map { it.toDomain() }
             .catchAsDomainException()
+    }
+
+    override suspend fun monthlyAmountByCategory(
+        type: TransactionType,
+        startInclusive: Long,
+        endExclusive: Long,
+    ): List<CategoryAmount> = safeDbCall {
+        localDataSource.monthlyAmountByCategory(type, startInclusive, endExclusive)
+            .map { it.toDomain() }
     }
 }
