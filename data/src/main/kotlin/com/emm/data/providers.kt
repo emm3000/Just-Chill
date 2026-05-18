@@ -57,6 +57,9 @@ private fun seedDefaultCategories(db: SupportSQLiteDatabase) {
         ('f3a4b5c6-7d8e-4a9b-e1f2-a3b4c5d602', 'Freelance', 'freelance', 'blue', 'Income', 1, 1736800000000, 1736800000000),
         ('a4b5c6d7-8e9f-4b1c-f2a3-b4c5d6e703', 'Inversiones', 'investment', 'purple', 'Income', 1, 1736800000000, 1736800000000),
         ('b5c6d7e8-9f1a-4c2d-a3b4-c5d6e7f804', 'Ahorros', 'savings', 'teal', 'Income', 1, 1736800000000, 1736800000000),
+        ('08aa808c-0165-4bdc-a15d-8b49a073dee0', 'Ventas', 'shopping', 'blue', 'Income', 1, 1736800000000, 1736800000000),
+        ('b9625963-dbb7-4c76-8393-e0bd15f12b3c', 'Propinas', 'tips', 'yellow', 'Income', 1, 1736800000000, 1736800000000),
+        ('ee8698c7-5c11-419d-a6bb-0242e931c6b0', 'Otros', 'wallet', 'gray', 'Income', 1, 1736800000000, 1736800000000),
         ('c6d7e8f9-1a2b-4d3e-b4c5-d6e7f8a905', 'Tarjeta de crédito', 'credit_card', 'red', 'Spend', 1, 1736800000000, 1736800000000);
     """.trimIndent())
 }
