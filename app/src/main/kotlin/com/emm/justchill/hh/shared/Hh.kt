@@ -148,7 +148,10 @@ fun Hh() {
                 }
 
                 entry<ProfileRoute> {
-                    ProfileScreen()
+                    ProfileScreen(
+                        onCategoriesClick = { backStack.add(CategoryRoute()) },
+                        onAccountsClick = { backStack.add(AccountsRoute) },
+                    )
                 }
 
                 entry<AddTransactionRoute> {

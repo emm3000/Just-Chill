@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
@@ -38,6 +39,8 @@ import com.emm.justchill.core.theme.LocalEmmType
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
+    onCategoriesClick: () -> Unit = {},
+    onAccountsClick: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -63,7 +66,30 @@ fun ProfileScreen(
         )
 
         Text(
-            text = "DATOS",
+            text = "GESTIONAR",
+            style = type.labelM,
+            color = colors.textTertiary,
+            modifier = Modifier.padding(
+                horizontal = spacing.s4,
+                vertical = spacing.s2,
+            ),
+        )
+
+        ProfileRow(
+            icon = Icons.Outlined.Category,
+            label = "Categorías",
+            onClick = onCategoriesClick,
+        )
+        ProfileRow(
+            icon = Icons.Outlined.AccountBalanceWallet,
+            label = "Cuentas",
+            onClick = onAccountsClick,
+        )
+
+        Spacer(Modifier.height(spacing.s2))
+
+        Text(
+            text = "RESPALDO",
             style = type.labelM,
             color = colors.textTertiary,
             modifier = Modifier.padding(
@@ -80,24 +106,6 @@ fun ProfileScreen(
         ProfileRow(
             icon = Icons.Outlined.FileUpload,
             label = "Importar",
-            onClick = {},
-        )
-
-        Spacer(Modifier.height(spacing.s2))
-
-        Text(
-            text = "PREFERENCIAS",
-            style = type.labelM,
-            color = colors.textTertiary,
-            modifier = Modifier.padding(
-                horizontal = spacing.s4,
-                vertical = spacing.s2,
-            ),
-        )
-
-        ProfileRow(
-            icon = Icons.Outlined.AccountBalanceWallet,
-            label = "Cuenta por defecto",
             onClick = {},
         )
     }
