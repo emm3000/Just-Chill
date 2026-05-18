@@ -159,6 +159,7 @@ fun Hh() {
                 entry<ReportRoute> {
                     ReportScreen(
                         onBack = { backStack.removeLastOrNull() },
+                        onAddTransaction = { backStack.add(AddTransactionRoute) },
                     )
                 }
 

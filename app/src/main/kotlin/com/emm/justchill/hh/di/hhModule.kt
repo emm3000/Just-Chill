@@ -12,6 +12,7 @@ import com.emm.justchill.hh.account.AddAccountViewModel
 import com.emm.justchill.hh.category.AddCategoryViewModel
 import com.emm.justchill.hh.category.SelectCategoryViewModel
 import com.emm.justchill.hh.home.HomeViewModel
+import com.emm.justchill.hh.report.ReportViewModel
 import com.emm.justchill.hh.seetransactions.SeeTransactionsViewModel
 import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
 import com.emm.justchill.hh.transaction.AddTransactionViewModel
@@ -61,6 +62,7 @@ private fun Module.viewModelsProviders() {
     viewModelOf(::AddAccountViewModel)
 
     viewModelOf(::AccountsViewModel)
+    viewModelOf(::ReportViewModel)
 }
 
 
