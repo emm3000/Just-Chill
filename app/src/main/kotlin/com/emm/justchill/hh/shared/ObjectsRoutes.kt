@@ -22,4 +22,7 @@ data object DashboardRoute : NavKey
 @Serializable
 data object AddTransactionRoute : NavKey
 
+@Serializable
+data object ReportRoute : NavKey
+
 

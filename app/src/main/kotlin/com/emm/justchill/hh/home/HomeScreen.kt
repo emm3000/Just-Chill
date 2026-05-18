@@ -16,7 +16,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ShowChart
+import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material3.Icon
@@ -50,13 +54,22 @@ import org.koin.androidx.compose.koinViewModel
 fun HomeScreen(
     homeViewModel: HomeViewModel = koinViewModel(),
     navigateToAll: () -> Unit = {},
+    navigateToReport: () -> Unit = {},
 ) {
     val state: HomeUiState by homeViewModel.state.collectAsStateWithLifecycle()
-    HomeScreen(homeData = state, navigateToAll = navigateToAll)
+    HomeScreen(
+        homeData = state,
+        navigateToAll = navigateToAll,
+        navigateToReport = navigateToReport,
+    )
 }
 
 @Composable
-fun HomeScreen(homeData: HomeUiState, navigateToAll: () -> Unit = {}) {
+fun HomeScreen(
+    homeData: HomeUiState,
+    navigateToAll: () -> Unit = {},
+    navigateToReport: () -> Unit = {},
+) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
 
@@ -78,6 +91,7 @@ fun HomeScreen(homeData: HomeUiState, navigateToAll: () -> Unit = {}) {
             ) {
                 BalanceHero(homeData.balance)
                 MonthSummary(income = homeData.income, expense = homeData.spend)
+                ViewReportButton(onClick = navigateToReport)
             }
         }
 
@@ -177,6 +191,56 @@ private fun SummaryColumn(
             text = amount,
             style = type.amountL,
             color = colors.textPrimary,
+        )
+    }
+}
+
+@Composable
+private fun ViewReportButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .border(
+                width = 1.dp,
+                color = colors.border,
+                shape = RoundedCornerShape(6.dp),
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(horizontal = spacing.s5),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spacing.s3),
+    ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Outlined.ShowChart,
+            contentDescription = null,
+            tint = colors.textPrimary,
+            modifier = Modifier.size(20.dp),
+        )
+        Text(
+            text = "Ver reporte completo",
+            style = type.labelL,
+            color = colors.textPrimary,
+            modifier = Modifier.weight(1f),
+        )
+        Icon(
+            imageVector = Icons.Outlined.ChevronRight,
+            contentDescription = null,
+            tint = colors.textTertiary,
+            modifier = Modifier.size(20.dp),
         )
     }
 }

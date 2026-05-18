@@ -59,6 +59,7 @@ import com.emm.justchill.hh.category.SelectCategoryScreen
 import com.emm.justchill.hh.category.SelectCategoryViewModel
 import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.profile.ProfileScreen
+import com.emm.justchill.hh.report.ReportScreen
 import com.emm.justchill.hh.seetransactions.SeeTransactionsScreen
 import com.emm.justchill.hh.transaction.AddTransactionIntent
 import com.emm.justchill.hh.transaction.AddTransactionScreen
@@ -124,6 +125,7 @@ fun Hh() {
                         navigateToAll = dropUnlessResumed {
                             backStack.switchTab(SeeTransactionRoute)
                         },
+                        navigateToReport = { backStack.add(ReportRoute) },
                     )
                 }
 
@@ -151,6 +153,12 @@ fun Hh() {
                     ProfileScreen(
                         onCategoriesClick = { backStack.add(CategoryRoute()) },
                         onAccountsClick = { backStack.add(AccountsRoute) },
+                    )
+                }
+
+                entry<ReportRoute> {
+                    ReportScreen(
+                        onBack = { backStack.removeLastOrNull() },
                     )
                 }
 
