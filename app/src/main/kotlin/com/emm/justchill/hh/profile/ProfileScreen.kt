@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.FileDownload
@@ -39,7 +38,6 @@ import com.emm.justchill.core.theme.LocalEmmType
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
-    onLogout: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -101,25 +99,6 @@ fun ProfileScreen(
             icon = Icons.Outlined.AccountBalanceWallet,
             label = "Cuenta por defecto",
             onClick = {},
-        )
-
-        Spacer(Modifier.height(spacing.s2))
-
-        Text(
-            text = "SESIÓN",
-            style = type.labelM,
-            color = colors.textTertiary,
-            modifier = Modifier.padding(
-                horizontal = spacing.s4,
-                vertical = spacing.s2,
-            ),
-        )
-
-        ProfileRow(
-            icon = Icons.AutoMirrored.Outlined.Logout,
-            label = "Cerrar sesión",
-            destructive = true,
-            onClick = onLogout,
         )
     }
 }

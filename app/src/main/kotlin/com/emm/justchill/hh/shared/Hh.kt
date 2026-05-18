@@ -148,9 +148,7 @@ fun Hh() {
                 }
 
                 entry<ProfileRoute> {
-                    ProfileScreen(
-                        onLogout = {},
-                    )
+                    ProfileScreen()
                 }
 
                 entry<AddTransactionRoute> {
