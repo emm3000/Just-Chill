@@ -73,7 +73,8 @@ class GetHomeDataUseCaseTest {
         val data = useCase().first()
 
         assertEquals(7, data.lastTransactions.size)
-        assertEquals(Money(700L), data.income)
+        // income is summed from all current-month transactions, not just the display slice
+        assertEquals(Money(1000L), data.income)
     }
 
     @Test

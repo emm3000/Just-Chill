@@ -4,6 +4,8 @@ import com.emm.data.account.AccountLocalDataSource
 import com.emm.data.category.CategoryLocalDataSource
 import com.emm.data.transaction.DefaultTransactionRepository
 import com.emm.data.transaction.TransactionLocalDataSource
+import com.emm.domain.report.GetMonthlyAmountByCategoryUseCase
+import com.emm.domain.report.GetMonthlyComparisonUseCase
 import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.shared.UniqueIdProvider
 import com.emm.domain.transaction.TransactionRepository
@@ -77,4 +79,7 @@ private fun Module.repositoriesProviders() {
     factoryOf(::DefaultTransactionRepository) {
         bind<TransactionRepository>()
     }
+
+    factoryOf(::GetMonthlyAmountByCategoryUseCase)
+    factoryOf(::GetMonthlyComparisonUseCase)
 }

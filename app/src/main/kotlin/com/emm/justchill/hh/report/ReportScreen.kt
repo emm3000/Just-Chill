@@ -38,6 +38,7 @@ import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.hh.report.components.IncomeByCategoryBars
 import com.emm.justchill.hh.report.components.MonthSelector
 import com.emm.justchill.hh.report.components.ToggleIncomeExpense
+import com.emm.justchill.hh.shared.fullLabel
 import kotlinx.datetime.Month
 import org.koin.androidx.compose.koinViewModel
 

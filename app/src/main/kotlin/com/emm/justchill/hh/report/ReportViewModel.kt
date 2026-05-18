@@ -1,150 +1,111 @@
 package com.emm.justchill.hh.report
 
 import androidx.compose.ui.graphics.Color
+import com.emm.domain.report.CategoryAmount
+import com.emm.domain.report.GetMonthlyAmountByCategoryUseCase
+import com.emm.domain.report.GetMonthlyComparisonUseCase
+import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.core.theme.emmDarkColors
-import kotlinx.datetime.Month
+import com.emm.justchill.hh.shared.shortLabel
 import java.text.NumberFormat
 import java.util.Locale
 
-/**
- * S1 implementation. Mock data hardcoded by (year, month, type).
- *
- * Replaces with real `GetMonthlyAmountByCategoryUseCase` +
- * `GetMonthlyComparisonUseCase` in S1 week 2-3 (slice vertical).
- *
- * For now: a deterministic mock keeps the UI honest while the
- * backend lands. Numbers vary per (year, month) so navigation
- * feels real.
- */
-class ReportViewModel : MviViewModel<ReportUiState, ReportIntent, ReportEffect>() {
+class ReportViewModel(
+    private val getMonthlyAmountByCategory: GetMonthlyAmountByCategoryUseCase,
+    private val getMonthlyComparison: GetMonthlyComparisonUseCase,
+) : MviViewModel<ReportUiState, ReportIntent, ReportEffect>() {
 
     override val initialState: ReportUiState =
-        buildState(month = YearMonth.current(), type = TransactionType.Income)
+        ReportUiState(month = YearMonth.current(), selectedType = TransactionType.Income)
+
+    init {
+        loadReport()
+    }
 
     override fun onIntent(intent: ReportIntent) {
         when (intent) {
-            ReportIntent.PreviousMonth -> updateState {
-                buildState(month = month.previous(), type = selectedType)
+            ReportIntent.PreviousMonth -> {
+                updateState { copy(month = month.previous()) }
+                loadReport()
             }
-            ReportIntent.NextMonth -> updateState {
-                buildState(month = month.next(), type = selectedType)
+            ReportIntent.NextMonth -> {
+                updateState { copy(month = month.next()) }
+                loadReport()
             }
-            is ReportIntent.SelectType -> updateState {
-                buildState(month = month, type = intent.type)
+            is ReportIntent.SelectType -> {
+                updateState { copy(selectedType = intent.type) }
+                loadReport()
             }
         }
     }
 
-    private fun buildState(month: YearMonth, type: TransactionType): ReportUiState {
-        val shares = mockShares(month = month, type = type)
-        val total = shares.sumOf { it.percentage * 100L } // pseudo-total in cents
-        val realTotal = totalFor(month, type)
-        val comparison = comparisonFor(month, type)
+    private fun loadReport() {
+        val month = currentState.month
+        val type = currentState.selectedType
+        launchSafe(onError = { e -> ReportEffect.ShowError(e.toUserMessage()) }) {
+            val amounts: List<CategoryAmount> = getMonthlyAmountByCategory(month, type)
+            val comparison = getMonthlyComparison(month, type)
 
-        return ReportUiState(
-            month = month,
-            selectedType = type,
-            totalFormatted = formatSoles(realTotal),
-            comparisonText = comparison?.let { (deltaPct, prevMonthLabel) ->
-                val sign = if (deltaPct >= 0) "+" else ""
-                "$sign$deltaPct% vs $prevMonthLabel"
-            },
-            comparisonIsPositive = comparison?.let { it.first >= 0 },
-            shares = shares,
-            isEmpty = shares.isEmpty() || realTotal == 0L,
-        )
-    }
+            val total: Money = amounts.fold(Money.Zero) { acc, item -> acc + item.amount }
 
-    // ----------------- Mock data builders -----------------
+            val comparisonText = comparison?.let { mc ->
+                val sign = if (mc.deltaPercent >= 0) "+" else ""
+                "$sign${mc.deltaPercent}% vs ${month.previous().shortLabel()}"
+            }
 
-    private fun mockShares(month: YearMonth, type: TransactionType): List<CategoryShare> {
-        val seed = month.year * 12 + (month.month.ordinal + 1)
-        // Stable variation so navigation feels real, but no rng.
-        val drift = (seed % 5) - 2 // -2 .. 2
+            val shares = buildShares(amounts, total)
 
-        return if (type == TransactionType.Income) {
-            listOf(
-                share("sueldo", "Sueldo", 4500 + drift * 50, 60 - drift, emmDarkColors.catSlate),
-                share("freelance", "Freelance", 1200 + drift * 40, 19 + drift, emmDarkColors.catSage),
-                share("ventas", "Ventas", 400 + drift * 20, 6, emmDarkColors.catTerracotta),
-                share("propinas", "Propinas", 80, 1, emmDarkColors.catOchre),
-                share("otros", "Otros", 20, 0, emmDarkColors.catGraphite),
-            )
-        } else {
-            listOf(
-                share("alquiler", "Alquiler", 1200, 50, emmDarkColors.catSlate),
-                share("comida", "Comida", 600 + drift * 30, 25, emmDarkColors.catTerracotta),
-                share("transporte", "Transporte", 300, 12, emmDarkColors.catSage),
-                share("entretenimiento", "Entretenimiento", 200, 8, emmDarkColors.catMauve),
-                share("servicios", "Servicios", 100, 5, emmDarkColors.catOchre),
-            )
+            updateState {
+                copy(
+                    totalFormatted = formatSoles(total.cents),
+                    comparisonText = comparisonText,
+                    comparisonIsPositive = comparison?.let { it.deltaPercent >= 0 },
+                    shares = shares,
+                    isEmpty = amounts.isEmpty(),
+                )
+            }
         }
     }
 
-    private fun share(
-        id: String,
-        name: String,
-        amountSoles: Int,
-        percentage: Int,
-        tint: Color,
-    ): CategoryShare = CategoryShare(
-        categoryId = id,
-        name = name,
-        amountFormatted = formatSoles(amountSoles.toLong()),
-        percentage = percentage.coerceAtLeast(0),
-        tint = tint,
+    private fun buildShares(amounts: List<CategoryAmount>, total: Money): List<CategoryShare> {
+        if (total.cents == 0L) return amounts.map { it.toCategoryShare(percentage = 0) }
+        return amounts.map { item ->
+            val pct = ((item.amount.cents.toDouble() / total.cents.toDouble()) * 100).toInt()
+            item.toCategoryShare(percentage = pct)
+        }
+    }
+
+    private fun CategoryAmount.toCategoryShare(percentage: Int) = CategoryShare(
+        categoryId = categoryId.value,
+        name = categoryName,
+        amountFormatted = formatSoles(amount.cents),
+        percentage = percentage,
+        tint = domainColorToUi(categoryColor),
     )
 
-    private fun totalFor(month: YearMonth, type: TransactionType): Long {
-        val seed = month.year * 12 + (month.month.ordinal + 1)
-        val drift = (seed % 5) - 2
-        return if (type == TransactionType.Income) (6200L + drift * 110)
-        else (2400L + drift * 60)
-    }
-
-    private fun comparisonFor(
-        month: YearMonth,
-        type: TransactionType,
-    ): Pair<Int, String>? {
-        val current = totalFor(month, type)
-        val previous = totalFor(month.previous(), type)
-        if (previous == 0L) return null
-        val delta = (((current - previous).toDouble() / previous) * 100).toInt()
-        return delta to month.previous().shortLabel()
-    }
-
-    // ----------------- Format helpers -----------------
-
-    private fun formatSoles(amount: Long): String {
+    private fun formatSoles(cents: Long): String {
+        val soles = cents.toDouble() / 100.0
         val nf = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-PE"))
         nf.minimumFractionDigits = 0
         nf.maximumFractionDigits = 0
-        return "S/ ${nf.format(amount)}"
+        return "S/ ${nf.format(soles)}"
     }
-}
 
-// ----------------- Extension on YearMonth for labels -----------------
-// Lives in the same file for now — promote to shared utility if Home
-// needs the same formatting.
-
-fun YearMonth.fullLabel(): String = "${month.spanish()} $year"
-
-fun YearMonth.shortLabel(): String = month.spanish()
-
-private fun Month.spanish(): String = when (this) {
-    Month.JANUARY -> "Enero"
-    Month.FEBRUARY -> "Febrero"
-    Month.MARCH -> "Marzo"
-    Month.APRIL -> "Abril"
-    Month.MAY -> "Mayo"
-    Month.JUNE -> "Junio"
-    Month.JULY -> "Julio"
-    Month.AUGUST -> "Agosto"
-    Month.SEPTEMBER -> "Setiembre"
-    Month.OCTOBER -> "Octubre"
-    Month.NOVEMBER -> "Noviembre"
-    Month.DECEMBER -> "Diciembre"
+    private fun domainColorToUi(color: String): Color = when (color) {
+        "green" -> emmDarkColors.catSage
+        "blue" -> emmDarkColors.catSlate
+        "purple" -> emmDarkColors.catMauve
+        "orange" -> emmDarkColors.catOchre
+        "red" -> emmDarkColors.catTerracotta
+        "brown" -> emmDarkColors.catTerracotta
+        "yellow" -> emmDarkColors.catOchre
+        "teal" -> emmDarkColors.catSage
+        "pink" -> emmDarkColors.catMauve
+        "gray" -> emmDarkColors.catGraphite
+        else -> emmDarkColors.catGraphite
+    }
 }

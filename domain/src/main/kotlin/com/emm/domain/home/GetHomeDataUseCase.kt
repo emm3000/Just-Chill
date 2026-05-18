@@ -1,26 +1,24 @@
 package com.emm.domain.home
 
 import com.emm.domain.shared.Money
+import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.datetime.Clock
-import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
-import kotlinx.datetime.plus
-import kotlinx.datetime.todayIn
 
 class GetHomeDataUseCase(
     private val transactionRepository: TransactionRepository,
     private val clock: Clock = Clock.System,
 ) {
 
-    operator fun invoke(): Flow<HomeData> {
-        val (startOfMonth, startOfNextMonth) = currentMonthRange()
+    operator fun invoke(
+        yearMonth: YearMonth = YearMonth.current(clock),
+    ): Flow<HomeData> {
+        val startOfMonth = yearMonth.startInclusiveMillis()
+        val startOfNextMonth = yearMonth.endExclusiveMillis()
         return combine(
             flow = transactionRepository.fetchAllWithCategory(),
             flow2 = transactionRepository.fetchAllWithCategoryInRange(startOfMonth, startOfNextMonth),
@@ -36,10 +34,10 @@ class GetHomeDataUseCase(
     ): HomeData {
 
         val lastTransactions: List<TransactionWithCategory> = currentMonthTransactions.take(7)
-        val income: Money = lastTransactions
+        val income: Money = currentMonthTransactions
             .filter { it.type == TransactionType.Income }
             .fold(Money.Zero) { acc, t -> acc + t.amount }
-        val spend: Money = lastTransactions
+        val spend: Money = currentMonthTransactions
             .filter { it.type == TransactionType.Spend }
             .fold(Money.Zero) { acc, t -> acc + t.amount }
         val balance: Money = allTransactions.fold(Money.Zero) { acc, t ->
@@ -52,16 +50,5 @@ class GetHomeDataUseCase(
             spend = spend,
             balance = balance,
         )
-    }
-
-    private fun currentMonthRange(): Pair<Long, Long> {
-        val zone: TimeZone = TimeZone.currentSystemDefault()
-        val today = clock.todayIn(zone)
-        val firstDayOfMonth = LocalDate(today.year, today.month, 1)
-        val firstDayOfNextMonth = firstDayOfMonth.plus(DatePeriod(months = 1))
-
-        val startOfMonth: Long = firstDayOfMonth.atStartOfDayIn(zone).toEpochMilliseconds()
-        val startOfNextMonth: Long = firstDayOfNextMonth.atStartOfDayIn(zone).toEpochMilliseconds()
-        return startOfMonth to startOfNextMonth
     }
 }
