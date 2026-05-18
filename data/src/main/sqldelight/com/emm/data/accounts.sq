@@ -2,7 +2,7 @@ CREATE TABLE accounts (
     accountId  TEXT NOT NULL PRIMARY KEY,
     name       TEXT NOT NULL,
     type       TEXT NOT NULL DEFAULT 'Bank',
-    currency   TEXT NOT NULL DEFAULT 'ARS',
+    currency   TEXT NOT NULL DEFAULT 'PEN',
     updatedAt  INTEGER NOT NULL,
     createdAt  INTEGER NOT NULL
 );
