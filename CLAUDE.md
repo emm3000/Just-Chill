@@ -112,9 +112,12 @@ The app was migrated to **local-only** via `docs/PLAN_LOCAL.md` (auth, Supabase,
 - **Fase 6 (Compose perf)**: pending `derivedStateOf`, `remember`-ed lambdas, `contentType`, Layout Inspector audit.
 - **Fase 7 (SOLID/cleanup)**: DI per feature in place; pending OCP audit and final naming sweep.
 
-## Product definition (Fases 1-5)
+## Product definition (Fases 1-5) + execution status
 
-The current execution plan lives in `docs/`:
+> **Read `docs/PROGRESS.md` first** if you're resuming this project
+> after a context reset. It's the canonical "where are we now" doc.
+
+The product definition (Fases 1-5) lives in `docs/`:
 
 - `PRODUCT_DISCOVERY.md` — persona, manifesto, positioning, competence map.
 - `PRODUCT_REQUIREMENTS.md` — 15 Must / 12 Won't user stories with acceptance criteria.
@@ -122,7 +125,9 @@ The current execution plan lives in `docs/`:
 - `ROADMAP_V1.md` — 8 sprints to Play Store alpha.
 - `POST_V1_PLAN.md` — 12-month funnel, monetization paths, pivot triggers.
 - `DESIGN_SYSTEM.md` — tokens, components, screen specs.
+- `PROGRESS.md` — current execution state, rollback points, next concrete step.
 
-Rollback point: tag `pre-s0` marks the state before Sprint 0 begins.
+Rollback tags: `pre-s0` (before execution started), `post-s0` (after
+9 quick wins). Next expected: `post-s1` after manual device verification.
 
 Use case naming convention: **`[Verb][Noun]UseCase`** (e.g. `CreateTransactionUseCase`, `DeleteCategoryUseCase`).
