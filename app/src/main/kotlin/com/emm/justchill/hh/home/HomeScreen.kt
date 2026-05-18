@@ -42,10 +42,12 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.hh.category.findById
+import com.emm.justchill.hh.report.components.MonthSelector
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.shared.formatNeutral
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
+import com.emm.justchill.hh.shared.fullLabel
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
 import org.koin.androidx.compose.koinViewModel
@@ -61,6 +63,8 @@ fun HomeScreen(
         homeData = state,
         navigateToAll = navigateToAll,
         navigateToReport = navigateToReport,
+        onPreviousMonth = { homeViewModel.onIntent(HomeIntent.PreviousMonth) },
+        onNextMonth = { homeViewModel.onIntent(HomeIntent.NextMonth) },
     )
 }
 
@@ -69,6 +73,8 @@ fun HomeScreen(
     homeData: HomeUiState,
     navigateToAll: () -> Unit = {},
     navigateToReport: () -> Unit = {},
+    onPreviousMonth: () -> Unit = {},
+    onNextMonth: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
@@ -89,6 +95,11 @@ fun HomeScreen(
                     ),
                 verticalArrangement = Arrangement.spacedBy(spacing.s10),
             ) {
+                MonthSelector(
+                    label = homeData.month.fullLabel(),
+                    onPrevious = onPreviousMonth,
+                    onNext = onNextMonth,
+                )
                 BalanceHero(homeData.balance)
                 MonthSummary(income = homeData.income, expense = homeData.spend)
                 ViewReportButton(onClick = navigateToReport)
