@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -31,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.BuildConfig
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
@@ -107,6 +109,17 @@ fun ProfileScreen(
             icon = Icons.Outlined.FileUpload,
             label = "Importar",
             onClick = {},
+        )
+
+        Spacer(Modifier.weight(1f))
+
+        Text(
+            text = "Versión ${BuildConfig.VERSION_NAME}",
+            style = type.caption,
+            color = colors.textTertiary,
+            modifier = Modifier
+                .padding(horizontal = spacing.s4, vertical = spacing.s4)
+                .navigationBarsPadding(),
         )
     }
 }
