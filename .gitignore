@@ -21,4 +21,9 @@ local.properties
 # Claude Code
 .claude/settings.local.json
 .atl/
-docs/
+docs/*
+!docs/PRODUCT_DISCOVERY.md
+!docs/PRODUCT_REQUIREMENTS.md
+!docs/ARCHITECTURE_REVIEW.md
+!docs/ROADMAP_V1.md
+!docs/POST_V1_PLAN.md
