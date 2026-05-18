@@ -94,7 +94,7 @@ When adding a new failure mode, prefer extending `DomainException` (and `toUserM
 - Kotlin `2.3.21` (Compose plugin matches).
 - AGP `9.2.1` (built-in Kotlin).
 - Gradle wrapper `9.5.1`.
-- Koin `4.2.x` (via BOM), SQLDelight `2.3.2`, Retrofit `3.0.0`, Compose BOM `2026.05.x`.
+- Koin `4.2.x` (via BOM), SQLDelight `2.3.2`, Compose BOM `2026.05.x`.
 
 ## Ongoing Refactor
 
@@ -111,6 +111,18 @@ The app was migrated to **local-only** via `docs/PLAN_LOCAL.md` (auth, Supabase,
 - **Fase 2 (data models)**: mappers are clean, `*Entity` data classes exist.
 - **Fase 6 (Compose perf)**: pending `derivedStateOf`, `remember`-ed lambdas, `contentType`, Layout Inspector audit.
 - **Fase 7 (SOLID/cleanup)**: DI per feature in place; pending OCP audit and final naming sweep.
-- **Legacy tables**: `drivers`, `dailies`, `loans`, `payments` still need to be resolved.
+
+## Product definition (Fases 1-5)
+
+The current execution plan lives in `docs/`:
+
+- `PRODUCT_DISCOVERY.md` — persona, manifesto, positioning, competence map.
+- `PRODUCT_REQUIREMENTS.md` — 15 Must / 12 Won't user stories with acceptance criteria.
+- `ARCHITECTURE_REVIEW.md` — gap analysis (code vs requirements), 9 quick wins, 5 big rocks.
+- `ROADMAP_V1.md` — 8 sprints to Play Store alpha.
+- `POST_V1_PLAN.md` — 12-month funnel, monetization paths, pivot triggers.
+- `DESIGN_SYSTEM.md` — tokens, components, screen specs.
+
+Rollback point: tag `pre-s0` marks the state before Sprint 0 begins.
 
 Use case naming convention: **`[Verb][Noun]UseCase`** (e.g. `CreateTransactionUseCase`, `DeleteCategoryUseCase`).
