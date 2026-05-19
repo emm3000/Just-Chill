@@ -54,7 +54,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.emm.domain.account.Account
 import com.emm.justchill.core.preferences.AppPreferences
-import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.hh.account.AccountsEffect
 import com.emm.justchill.hh.account.AccountsScreen
@@ -449,7 +449,7 @@ private fun HhBottomBar(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = LocalContentColor.current,
-                        fontFamily = LatoFontFamily,
+                        fontFamily = InterFontFamily,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     )
                 },
@@ -478,7 +478,7 @@ private fun RowScope.AddBottomBarItem(onClick: () -> Unit) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 color = MaterialTheme.colorScheme.primary,
-                fontFamily = LatoFontFamily,
+                fontFamily = InterFontFamily,
                 fontWeight = FontWeight.Bold,
             )
         },

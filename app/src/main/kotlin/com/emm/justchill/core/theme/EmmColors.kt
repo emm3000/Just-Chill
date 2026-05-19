@@ -5,7 +5,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
- * Design system color tokens. Mirrors `docs/DESIGN_SYSTEM.md §2`.
+ * Design system color tokens — Notion-dark palette (SR-1).
  *
  * Read via `LocalEmmColors.current.<token>` inside any composable wrapped by `EmmTheme`.
  */
@@ -26,7 +26,7 @@ data class EmmColors(
     val textDisabled: Color,
     val textOnAccent: Color,
 
-    // Accent (single)
+    // Accent (terracotta)
     val accent: Color,
     val accentMuted: Color,
     val accentFocus: Color,
@@ -36,6 +36,10 @@ data class EmmColors(
     val warning: Color,
     val danger: Color,
     val info: Color,
+
+    // Muted semantic (alpha overlays)
+    val posMuted: Color,
+    val negMuted: Color,
 
     // Category palette
     val catSlate: Color,
@@ -47,34 +51,37 @@ data class EmmColors(
 )
 
 internal val emmDarkColors: EmmColors = EmmColors(
-    bg = Color(0xFF000000),
-    surface1 = Color(0xFF0E0E0E),
-    surface2 = Color(0xFF171717),
-    surface3 = Color(0xFF1F1F1F),
-    border = Color(0xFF262626),
-    borderFocus = Color(0xFF3D3D3D),
+    bg = Color(0xFF191919),
+    surface1 = Color(0xFF202020),
+    surface2 = Color(0xFF262626),
+    surface3 = Color(0xFF2D2D2D),
+    border = Color(0xFF2E2E2E),
+    borderFocus = Color(0xFF383838),
 
-    textPrimary = Color(0xFFFAFAFA),
-    textSecondary = Color(0xFFA3A3A3),
-    textTertiary = Color(0xFF6B6B6B),
-    textDisabled = Color(0xFF404040),
-    textOnAccent = Color(0xFF0A0A0A),
+    textPrimary = Color(0xFFE6E6E6),
+    textSecondary = Color(0xFFA8A8A8),
+    textTertiary = Color(0xFF6E6E6E),
+    textDisabled = Color(0xFF4A4A4A),
+    textOnAccent = Color(0xFFFFFFFF),
 
-    accent = Color(0xFFE8E8E8),
-    accentMuted = Color(0xFF737373),
-    accentFocus = Color(0xFFFFFFFF),
+    accent = Color(0xFFE07856),       // terracotta
+    accentMuted = Color(0x24E07856),  // alpha ~14%
+    accentFocus = Color(0xFFEA8E70),  // slightly lighter
 
-    success = Color(0xFF7BB47B),
-    warning = Color(0xFFD9A95C),
-    danger = Color(0xFFC57070),
-    info = Color(0xFF7B9EC5),
+    success = Color(0xFF6FA876),      // sage green (pos income)
+    warning = Color(0xFFB3935A),      // ochre
+    danger = Color(0xFFCB6A5C),       // neg expense
+    info = Color(0xFF7C8B99),         // slate
 
-    catSlate = Color(0xFF5A6B7A),
-    catSage = Color(0xFF6B8268),
-    catTerracotta = Color(0xFFA87060),
-    catMauve = Color(0xFF8A6F8C),
-    catOchre = Color(0xFFB89A5F),
-    catGraphite = Color(0xFF6E6E6E),
+    posMuted = Color(0x246FA876),     // alpha ~14% sage
+    negMuted = Color(0x24CB6A5C),     // alpha ~14% neg
+
+    catSlate = Color(0xFF7C8B99),
+    catSage = Color(0xFF7FA075),
+    catTerracotta = Color(0xFFC97A5C),
+    catMauve = Color(0xFF9C7A95),
+    catOchre = Color(0xFFB3935A),
+    catGraphite = Color(0xFF7A7A7A),
 )
 
 val LocalEmmColors = staticCompositionLocalOf<EmmColors> {

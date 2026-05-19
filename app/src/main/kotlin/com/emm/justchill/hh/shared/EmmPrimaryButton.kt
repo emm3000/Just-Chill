@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.InterFontFamily
 
 @Composable
 fun EmmPrimaryButton(
@@ -40,7 +40,7 @@ fun EmmPrimaryButton(
     ) {
         Text(
             text = text,
-            fontFamily = LatoFontFamily,
+            fontFamily = InterFontFamily,
             fontSize = 18.sp,
             fontWeight = FontWeight.Black,
         )

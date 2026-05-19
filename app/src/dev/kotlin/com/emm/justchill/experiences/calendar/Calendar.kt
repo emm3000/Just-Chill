@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.PrimaryButtonColor
 import com.emm.justchill.core.theme.TextColor
 import java.time.LocalDate
@@ -60,7 +60,7 @@ fun Calendar(
                     .uppercase() + " " + displayedMonth.year,
                 style = MaterialTheme.typography.headlineMedium,
                 color = TextColor,
-                fontFamily = LatoFontFamily,
+                fontFamily = InterFontFamily,
                 fontWeight = FontWeight.Bold,
             )
 
@@ -97,7 +97,7 @@ fun CalendarView(
                     style = MaterialTheme.typography.bodySmall,
                     color = TextColor,
                     fontSize = 16.sp,
-                    fontFamily = LatoFontFamily,
+                    fontFamily = InterFontFamily,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                 )
@@ -129,7 +129,7 @@ fun CalendarView(
                             Text(
                                 text = day.dayOfMonth.toString(),
                                 color = TextColor,
-                                fontFamily = LatoFontFamily,
+                                fontFamily = InterFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp
                             )

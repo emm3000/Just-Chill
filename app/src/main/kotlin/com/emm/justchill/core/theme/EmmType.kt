@@ -3,25 +3,36 @@ package com.emm.justchill.core.theme
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.R
 
 /**
- * Design system typography. Mirrors `docs/DESIGN_SYSTEM.md §3`.
+ * Design system typography — SR-1.
  *
- * TODO: replace [InterFontFamily] with the real Inter family once the `.ttf`
- * files land in `res/font/` (bundled) OR Google Fonts downloadable is wired up.
- * For now we fall back to the system sans (Roboto on AOSP) — visually close to
- * Inter and supports `tnum` for tabular figures.
+ * Inter (bundled) for all UI text, IBM Plex Mono (bundled) for amounts.
+ * Use [LocalEmmType.current] inside composables wrapped by [EmmTheme].
  */
-val InterFontFamily: FontFamily = FontFamily.SansSerif
+val InterFontFamily: FontFamily = FontFamily(
+    Font(R.font.inter_regular, FontWeight.Normal),
+    Font(R.font.inter_medium, FontWeight.Medium),
+    Font(R.font.inter_semibold, FontWeight.SemiBold),
+    Font(R.font.inter_bold, FontWeight.Bold),
+)
+
+val PlexMonoFontFamily: FontFamily = FontFamily(
+    Font(R.font.ibm_plex_mono_regular, FontWeight.Normal),
+    Font(R.font.ibm_plex_mono_medium, FontWeight.Medium),
+    Font(R.font.ibm_plex_mono_semibold, FontWeight.SemiBold),
+)
 
 private const val TABULAR = "tnum"
 
 @Immutable
 data class EmmType(
-    // Amounts (the hero)
+    // Amounts (mono + tnum)
     val amountHero: TextStyle,
     val amountL: TextStyle,
     val amountM: TextStyle,
@@ -46,37 +57,40 @@ data class EmmType(
 
     // Caption
     val caption: TextStyle,
+
+    // Eyebrow (new in SR-1)
+    val eyebrow: TextStyle,
 )
 
 internal val emmType: EmmType = EmmType(
     amountHero = TextStyle(
-        fontFamily = InterFontFamily,
+        fontFamily = PlexMonoFontFamily,
         fontSize = 48.sp,
-        lineHeight = 56.sp,
+        lineHeight = 48.sp,     // lineHeight = 1.0 × fontSize
         fontWeight = FontWeight.W500,
-        letterSpacing = (-0.5).sp,
+        letterSpacing = (-1.9).sp,  // ≈ -0.04em × 48sp
         fontFeatureSettings = TABULAR,
     ),
     amountL = TextStyle(
-        fontFamily = InterFontFamily,
-        fontSize = 28.sp,
-        lineHeight = 36.sp,
+        fontFamily = PlexMonoFontFamily,
+        fontSize = 52.sp,
+        lineHeight = 52.sp,     // lineHeight = 1.0 × fontSize
         fontWeight = FontWeight.W500,
-        letterSpacing = (-0.25).sp,
+        letterSpacing = (-2.08).sp, // ≈ -0.04em × 52sp
         fontFeatureSettings = TABULAR,
     ),
     amountM = TextStyle(
-        fontFamily = InterFontFamily,
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
+        fontFamily = PlexMonoFontFamily,
+        fontSize = 15.sp,
+        lineHeight = 20.sp,
         fontWeight = FontWeight.W500,
-        letterSpacing = 0.sp,
+        letterSpacing = (-0.3).sp,  // ≈ -0.02em × 15sp
         fontFeatureSettings = TABULAR,
     ),
     amountS = TextStyle(
-        fontFamily = InterFontFamily,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
+        fontFamily = PlexMonoFontFamily,
+        fontSize = 13.sp,
+        lineHeight = 18.sp,
         fontWeight = FontWeight.W500,
         letterSpacing = 0.sp,
         fontFeatureSettings = TABULAR,
@@ -155,6 +169,14 @@ internal val emmType: EmmType = EmmType(
         lineHeight = 16.sp,
         fontWeight = FontWeight.W400,
         letterSpacing = 0.5.sp,
+    ),
+
+    eyebrow = TextStyle(
+        fontFamily = InterFontFamily,
+        fontSize = 10.sp,
+        lineHeight = 14.sp,
+        fontWeight = FontWeight.W500,
+        letterSpacing = 1.6.sp,  // ≈ 0.16em × 10sp
     ),
 )
 

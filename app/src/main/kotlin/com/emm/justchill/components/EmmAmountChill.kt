@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.DeleteButtonColor
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.InterFontFamily
 import java.math.BigDecimal
 import java.text.DecimalFormat
 
@@ -83,7 +83,7 @@ fun AmountTextField(
         textStyle = TextStyle(
             fontSize = 40.sp,
             color = textColor,
-            fontFamily = LatoFontFamily,
+            fontFamily = InterFontFamily,
         ),
         decorationBox = { innerTextField ->
             Row(
@@ -93,7 +93,7 @@ fun AmountTextField(
             ) {
                 Text(
                     text = "S/  ",
-                    fontFamily = LatoFontFamily,
+                    fontFamily = InterFontFamily,
                     fontSize = 40.sp,
                     color = textColor
                 )

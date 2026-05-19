@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LatoFontFamily
+import com.emm.justchill.core.theme.InterFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +80,7 @@ fun <T> EmmDropDown(
                     LabelTextField(textPlaceholder)
                 },
                 textStyle = TextStyle(
-                    fontFamily = LatoFontFamily,
+                    fontFamily = InterFontFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 18.sp,
                     color = MaterialTheme.colorScheme.onBackground
@@ -101,7 +101,7 @@ fun <T> EmmDropDown(
                     Text(
                         text = textLabel,
                         color = MaterialTheme.colorScheme.onBackground,
-                        fontFamily = LatoFontFamily,
+                        fontFamily = InterFontFamily,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 16.sp,
                         modifier = Modifier.padding(bottom = 5.dp)
@@ -126,7 +126,7 @@ fun <T> EmmDropDown(
                         text = {
                             Text(
                                 text = item.toString(),
-                                fontFamily = LatoFontFamily,
+                                fontFamily = InterFontFamily,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Normal,
                                 color = MaterialTheme.colorScheme.onSurface
