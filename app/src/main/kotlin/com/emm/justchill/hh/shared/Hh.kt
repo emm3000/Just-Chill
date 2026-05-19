@@ -65,6 +65,7 @@ import com.emm.justchill.hh.category.SelectCategoryScreen
 import com.emm.justchill.hh.category.SelectCategoryViewModel
 import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.onboarding.ManifestoScreen
+import com.emm.justchill.hh.profile.PrivacyPolicyScreen
 import com.emm.justchill.hh.profile.ProfileEffect
 import com.emm.justchill.hh.profile.ProfileIntent
 import com.emm.justchill.hh.profile.ProfileScreen
@@ -147,6 +148,12 @@ fun Hh() {
                                 backStack.replaceAll(START_TAB)
                             }
                         },
+                    )
+                }
+
+                entry<PrivacyPolicyRoute> {
+                    PrivacyPolicyScreen(
+                        onBack = { backStack.removeLastOrNull() },
                     )
                 }
 
@@ -247,6 +254,7 @@ fun Hh() {
                         onAboutClick = { backStack.add(ManifestoRoute(isRevisit = true)) },
                         onExportClick = { exportLauncher.launch(suggestedExportFilename()) },
                         onImportClick = { importLauncher.launch(arrayOf("application/json")) },
+                        onPrivacyClick = { backStack.add(PrivacyPolicyRoute) },
                     )
                 }
 

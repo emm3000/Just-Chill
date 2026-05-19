@@ -19,6 +19,9 @@ sealed interface BottomBarRoute : NavKey
 data class ManifestoRoute(val isRevisit: Boolean = false) : NavKey
 
 @Serializable
+data object PrivacyPolicyRoute : NavKey
+
+@Serializable
 data object HomeRoute : BottomBarRoute
 
 @Serializable

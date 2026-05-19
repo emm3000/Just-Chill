@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,6 +48,7 @@ fun ProfileScreen(
     onAboutClick: () -> Unit = {},
     onExportClick: () -> Unit = {},
     onImportClick: () -> Unit = {},
+    onPrivacyClick: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -131,6 +133,11 @@ fun ProfileScreen(
             icon = Icons.Outlined.Info,
             label = "Acerca de",
             onClick = onAboutClick,
+        )
+        ProfileRow(
+            icon = Icons.Outlined.Shield,
+            label = "Privacidad",
+            onClick = onPrivacyClick,
         )
 
         Spacer(Modifier.weight(1f))
