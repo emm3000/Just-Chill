@@ -8,9 +8,14 @@ import com.emm.justchill.core.mvi.MviViewModel
 class AddCategoryViewModel(
     private val createCategory: CreateCategoryUseCase,
     initialType: CategoryType,
+    initialName: String,
 ) : MviViewModel<AddCategoryUiState, AddCategoryIntent, AddCategoryEffect>() {
 
-    override val initialState = AddCategoryUiState(categoryType = initialType)
+    override val initialState = AddCategoryUiState(
+        categoryType = initialType,
+        name = initialName,
+        isAllFieldValidated = initialName.isNotBlank(),
+    )
 
     override fun onIntent(intent: AddCategoryIntent) {
         when (intent) {
@@ -27,12 +32,12 @@ class AddCategoryViewModel(
     private fun saveCategory() = launchSafe(
         onError = { AddCategoryEffect.ShowError(it.toUserMessage()) },
     ) {
-        createCategory(
+        val created = createCategory(
             name = currentState.name,
             icon = currentState.icon.id,
             color = currentState.color.id,
             categoryType = currentState.categoryType,
         )
-        sendEffect(AddCategoryEffect.CategorySaved)
+        sendEffect(AddCategoryEffect.CategorySaved(created))
     }
 }

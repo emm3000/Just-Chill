@@ -14,17 +14,27 @@ class CreateCategoryUseCase(
         icon: String,
         color: String,
         categoryType: CategoryType,
-    ) {
-        if (name.isBlank()) {
+    ): Category {
+        val trimmed = name.trim()
+        if (trimmed.isBlank()) {
             throw DomainException.ValidationError("El nombre no puede estar vacío")
         }
-        val categoryUpsert = CategoryUpsert(
-            categoryId = CategoryId(idProvider.id),
-            name = name,
+        val categoryId = CategoryId(idProvider.id)
+        repository.create(
+            CategoryUpsert(
+                categoryId = categoryId,
+                name = trimmed,
+                icon = icon,
+                color = color,
+                categoryType = categoryType,
+            ),
+        )
+        return Category(
+            categoryId = categoryId,
+            name = trimmed,
             icon = icon,
             color = color,
             categoryType = categoryType,
         )
-        repository.create(categoryUpsert)
     }
 }

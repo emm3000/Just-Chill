@@ -6,57 +6,23 @@ import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryType
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.transaction.SelectableCategory
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.MutableStateFlow
 
-@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class SelectCategoryViewModel(
-    private val categoryRepository: CategoryRepository,
+    categoryRepository: CategoryRepository,
 ) : MviViewModel<SelectCategoryUi, SelectCategoryIntent, SelectCategoryEffect>() {
 
     override val initialState = SelectCategoryUi()
 
-    private val queryFlow = MutableStateFlow("")
-
     init {
-        queryFlow
-            .debounce(220L)
-            .distinctUntilChanged()
-            .flatMapLatest { searchQuery ->
-                flow {
-                    if (searchQuery.isBlank()) {
-                        emit(Pair(currentState.allIncomes, currentState.allExpenses))
-                        return@flow
-                    }
-                    val filteredIncomes = currentState.allIncomes.filter { it.name.contains(searchQuery, ignoreCase = true) }
-                    val filteredExpenses = currentState.allExpenses.filter { it.name.contains(searchQuery, ignoreCase = true) }
-                    emit(Pair(filteredIncomes, filteredExpenses))
-                }.flowOn(Dispatchers.Default)
-            }
-            .onEach { (incomes, expenses) ->
-                updateState { copy(filteredIncomes = incomes, filteredExpenses = expenses) }
-            }
-            .launchIn(viewModelScope)
-
         categoryRepository.all()
-            .map(::mapToUiAndPartitionByType)
-            .onEach { map ->
+            .onEach { categories ->
+                val grouped = categories.groupBy { it.categoryType }
                 updateState {
                     copy(
-                        allIncomes = map[CategoryType.Income].orEmpty(),
-                        allExpenses = map[CategoryType.Spend].orEmpty(),
-                        filteredIncomes = map[CategoryType.Income].orEmpty(),
-                        filteredExpenses = map[CategoryType.Spend].orEmpty(),
+                        allIncomes = grouped[CategoryType.Income].orEmpty().map(::toSelectable),
+                        allExpenses = grouped[CategoryType.Spend].orEmpty().map(::toSelectable),
                     )
                 }
             }
@@ -65,27 +31,16 @@ class SelectCategoryViewModel(
 
     override fun onIntent(intent: SelectCategoryIntent) {
         when (intent) {
-            is SelectCategoryIntent.UpdateQuery -> {
-                updateState { copy(query = intent.value) }
-                queryFlow.value = intent.value
-            }
+            is SelectCategoryIntent.UpdateQuery -> updateState { copy(query = intent.value) }
+            is SelectCategoryIntent.SelectType -> updateState { copy(selectedType = intent.value) }
         }
     }
 }
 
-private fun mapToUiAndPartitionByType(
-    categories: List<Category>,
-): Map<CategoryType, List<SelectableCategory>> {
-    val result = mutableMapOf<CategoryType, MutableList<SelectableCategory>>()
-    categories.forEach { category ->
-        val ui = SelectableCategory(
-            categoryId = category.categoryId,
-            name = category.name,
-            icon = AppIconCatalog.findById(category.icon),
-            color = findById(category.color),
-            categoryType = category.categoryType,
-        )
-        result.getOrPut(ui.categoryType) { mutableListOf() }.add(ui)
-    }
-    return result
-}
+private fun toSelectable(category: Category): SelectableCategory = SelectableCategory(
+    categoryId = category.categoryId,
+    name = category.name,
+    icon = AppIconCatalog.findById(category.icon),
+    color = findById(category.color),
+    categoryType = category.categoryType,
+)

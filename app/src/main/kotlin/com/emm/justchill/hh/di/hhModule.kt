@@ -65,6 +65,7 @@ private fun Module.viewModelsProviders() {
         AddCategoryViewModel(
             createCategory = get(),
             initialType = parameters.get(),
+            initialName = parameters.get(),
         )
     }
     viewModelOf(::CategoriesViewModel)

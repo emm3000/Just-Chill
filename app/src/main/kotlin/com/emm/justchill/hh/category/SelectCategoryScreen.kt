@@ -15,19 +15,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,23 +43,22 @@ import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.modalScreenInsets
 import com.emm.justchill.hh.transaction.SelectableCategory
-import kotlinx.coroutines.launch
+import com.emm.justchill.hh.transaction.SignChip
 
 @Composable
 fun SelectCategoryScreen(
     onCategorySelected: (SelectableCategory) -> Unit,
     onBack: () -> Unit,
-    onNewCategory: () -> Unit = {},
-    onValueChange: (String) -> Unit = {},
+    onNewCategory: (CategoryType, String) -> Unit,
+    onValueChange: (String) -> Unit,
+    onTypeChange: (CategoryType) -> Unit,
     value: String,
-    income: List<SelectableCategory>,
-    expense: List<SelectableCategory>,
+    selectedType: CategoryType,
+    activeList: List<SelectableCategory>,
+    activeCountTotal: Int,
 ) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
-
-    val pagerState = rememberPagerState(initialPage = 0) { 2 }
-    val scope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -67,41 +66,51 @@ fun SelectCategoryScreen(
             .background(colors.bg)
             .modalScreenInsets(),
     ) {
-
         TopBar(title = "Selecciona categoría", onBack = onBack)
 
-        Column(modifier = Modifier.padding(horizontal = spacing.s4)) {
-            EmmTextInput(
+        Column(
+            modifier = Modifier
+                .padding(horizontal = spacing.s4)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(spacing.s4),
+        ) {
+            SearchInput(
                 value = value,
                 onValueChange = onValueChange,
-                placeholder = "Buscar categorías...",
-                keyboardType = KeyboardType.Text,
-                modifier = Modifier.fillMaxWidth(),
+                onClear = { onValueChange("") },
             )
 
-            Spacer(Modifier.height(spacing.s4))
-
-            TabHeader(
-                currentPage = pagerState.currentPage,
-                onSelectIncome = { scope.launch { pagerState.animateScrollToPage(0) } },
-                onSelectExpense = { scope.launch { pagerState.animateScrollToPage(1) } },
+            TypeRow(
+                selectedType = selectedType,
+                countTotal = activeCountTotal,
+                onFlip = {
+                    onTypeChange(
+                        when (selectedType) {
+                            CategoryType.Income -> CategoryType.Spend
+                            CategoryType.Spend -> CategoryType.Income
+                        }
+                    )
+                },
             )
         }
 
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.Top,
-        ) { page ->
-            val list = if (page == 0) income else expense
-            CategoryList(list, onCategorySelected)
+        Spacer(Modifier.height(spacing.s4))
+
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            if (activeList.isEmpty()) {
+                EmptyState(
+                    query = value,
+                    selectedType = selectedType,
+                    onCreate = { onNewCategory(selectedType, value.trim()) },
+                )
+            } else {
+                CategoryList(activeList, onCategorySelected)
+            }
         }
 
         EmmButton(
-            text = "Crear nueva categoría",
-            onClick = onNewCategory,
+            text = "+ Nueva categoría",
+            onClick = { onNewCategory(selectedType, "") },
             variant = EmmButtonVariant.Secondary,
             modifier = Modifier
                 .fillMaxWidth()
@@ -111,51 +120,79 @@ fun SelectCategoryScreen(
 }
 
 @Composable
-private fun TabHeader(
-    currentPage: Int,
-    onSelectIncome: () -> Unit,
-    onSelectExpense: () -> Unit,
+private fun SearchInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onClear: () -> Unit,
 ) {
-    val spacing = LocalEmmSpacing.current
-    Row(
+    val colors = LocalEmmColors.current
+    EmmTextInput(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = "Buscar…",
+        keyboardType = KeyboardType.Text,
+        imeAction = ImeAction.Search,
+        singleLine = true,
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(spacing.s6),
-    ) {
-        TabOption(label = "INGRESO", isSelected = currentPage == 0, onClick = onSelectIncome)
-        TabOption(label = "GASTO", isSelected = currentPage == 1, onClick = onSelectExpense)
-    }
+        leadingContent = {
+            Icon(
+                imageVector = Icons.Outlined.Search,
+                contentDescription = null,
+                tint = colors.textTertiary,
+                modifier = Modifier.size(20.dp),
+            )
+        },
+        trailingContent = if (value.isNotEmpty()) {
+            {
+                val interaction = remember { MutableInteractionSource() }
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable(
+                            interactionSource = interaction,
+                            indication = null,
+                            onClick = onClear,
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = "Limpiar búsqueda",
+                        tint = colors.textTertiary,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
+        } else null,
+    )
 }
 
 @Composable
-private fun TabOption(label: String, isSelected: Boolean, onClick: () -> Unit) {
+private fun TypeRow(
+    selectedType: CategoryType,
+    countTotal: Int,
+    onFlip: () -> Unit,
+) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
-    val interactionSource = remember { MutableInteractionSource() }
 
-    val underlineColor = if (isSelected) colors.accentFocus else colors.border
-    val labelColor = if (isSelected) colors.textPrimary else colors.textTertiary
+    val sign = if (selectedType == CategoryType.Income) "+" else "−"
+    val label = if (selectedType == CategoryType.Income) "Ingresos" else "Gastos"
 
-    Box(
-        modifier = Modifier
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-            )
-            .padding(vertical = spacing.s2)
-            .drawBehind {
-                val stroke = if (isSelected) 2f else 1f
-                drawLine(
-                    color = underlineColor,
-                    start = Offset(0f, size.height),
-                    end = Offset(size.width, size.height),
-                    strokeWidth = stroke,
-                )
-            }
-            .padding(bottom = spacing.s2),
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spacing.s3),
     ) {
-        Text(text = label, style = type.labelL, color = labelColor)
+        SignChip(sign = sign, onClick = onFlip)
+        Column {
+            Text(text = label, style = type.titleL, color = colors.textPrimary)
+            Text(
+                text = "$countTotal categoría${if (countTotal == 1) "" else "s"}",
+                style = type.caption,
+                color = colors.textTertiary,
+            )
+        }
     }
 }
 
@@ -210,6 +247,40 @@ private fun CategoryList(
 }
 
 @Composable
+private fun EmptyState(
+    query: String,
+    selectedType: CategoryType,
+    onCreate: () -> Unit,
+) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+    val hasQuery = query.isNotBlank()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = spacing.s4),
+        verticalArrangement = Arrangement.spacedBy(spacing.s4, alignment = Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = if (hasQuery) "Sin resultados para «${query.trim()}»"
+            else "No tienes categorías de ${if (selectedType == CategoryType.Income) "ingreso" else "gasto"}",
+            style = type.bodyL,
+            color = colors.textSecondary,
+        )
+        if (hasQuery) {
+            EmmButton(
+                text = "+ Crear «${query.trim()}»",
+                onClick = onCreate,
+                variant = EmmButtonVariant.Secondary,
+            )
+        }
+    }
+}
+
+@Composable
 private fun TopBar(title: String, onBack: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -233,7 +304,7 @@ private fun TopBar(title: String, onBack: () -> Unit) {
             contentAlignment = Alignment.CenterStart,
         ) {
             Icon(
-                imageVector = Icons.Outlined.ArrowBack,
+                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                 contentDescription = "Volver",
                 tint = colors.textPrimary,
                 modifier = Modifier.size(24.dp),
@@ -268,10 +339,13 @@ private fun SelectCategoryScreenPreview() {
             }
         }
         SelectCategoryScreen(
-            income = categories,
-            expense = categories,
+            activeList = categories,
+            activeCountTotal = categories.size,
+            selectedType = CategoryType.Income,
             onBack = {},
             onValueChange = {},
+            onTypeChange = {},
+            onNewCategory = { _, _ -> },
             value = "",
             onCategorySelected = {},
         )

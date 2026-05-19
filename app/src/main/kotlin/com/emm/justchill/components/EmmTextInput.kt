@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -53,6 +54,7 @@ fun EmmTextInput(
     imeAction: ImeAction = ImeAction.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    leadingContent: @Composable (() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null,
     focusRequester: FocusRequester? = null,
 ) {
@@ -97,6 +99,10 @@ fun EmmTextInput(
                 .padding(vertical = spacing.s3),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            if (leadingContent != null) {
+                leadingContent()
+                Spacer(Modifier.width(spacing.s2))
+            }
             Box(modifier = Modifier.weight(1f)) {
                 BasicTextField(
                     value = value,

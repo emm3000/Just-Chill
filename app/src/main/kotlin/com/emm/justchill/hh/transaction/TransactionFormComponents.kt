@@ -104,7 +104,7 @@ internal fun AmountHeroInput(
 }
 
 @Composable
-private fun SignChip(sign: String, onClick: () -> Unit) {
+internal fun SignChip(sign: String, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
 

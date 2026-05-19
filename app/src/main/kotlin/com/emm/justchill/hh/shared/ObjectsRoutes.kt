@@ -8,7 +8,11 @@ import kotlinx.serialization.Serializable
 data class EditTransactionRoute(val transactionId: String) : NavKey
 
 @Serializable
-data class CategoryRoute(val initialType: CategoryType = CategoryType.Spend) : NavKey
+data class CategoryRoute(
+    val initialType: CategoryType = CategoryType.Spend,
+    val initialName: String = "",
+    val propagateToTransaction: Boolean = false,
+) : NavKey
 
 @Serializable
 data object CategoriesListRoute : NavKey

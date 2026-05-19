@@ -61,12 +61,14 @@ import com.emm.justchill.hh.account.AccountsScreen
 import com.emm.justchill.hh.account.AccountsViewModel
 import com.emm.justchill.hh.account.AddAccountScreen
 import com.emm.justchill.hh.category.AddCategoryScreen
+import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.CategoriesEffect
 import com.emm.justchill.hh.category.CategoriesScreen
 import com.emm.justchill.hh.category.CategoriesViewModel
 import com.emm.justchill.hh.category.SelectCategoryIntent
 import com.emm.justchill.hh.category.SelectCategoryScreen
 import com.emm.justchill.hh.category.SelectCategoryViewModel
+import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.onboarding.ManifestoScreen
 import com.emm.justchill.hh.profile.PrivacyPolicyScreen
@@ -329,8 +331,25 @@ fun Hh() {
                     AddCategoryScreen(
                         onBack = { backStack.removeLastOrNull() },
                         snackbarHostState = snackbarHostState,
-                        showSuccessMessage = showRootMessage,
-                        vm = koinViewModel(parameters = { parametersOf(key.initialType) }),
+                        onCategorySaved = { created ->
+                            if (key.propagateToTransaction) {
+                                pendingCategory = SelectableCategory(
+                                    categoryId = created.categoryId,
+                                    name = created.name,
+                                    icon = AppIconCatalog.findById(created.icon),
+                                    color = findById(created.color),
+                                    categoryType = created.categoryType,
+                                )
+                                backStack.removeLastOrNull() // AddCategory
+                                backStack.removeLastOrNull() // SelectCategory
+                            } else {
+                                showRootMessage("Categoría creada")
+                                backStack.removeLastOrNull()
+                            }
+                        },
+                        vm = koinViewModel(
+                            parameters = { parametersOf(key.initialType, key.initialName) },
+                        ),
                     )
                 }
 
@@ -351,10 +370,20 @@ fun Hh() {
                         },
                         onBack = { backStack.removeLastOrNull() },
                         onValueChange = { vm.onIntent(SelectCategoryIntent.UpdateQuery(it)) },
-                        onNewCategory = { backStack.add(CategoryRoute()) },
+                        onTypeChange = { vm.onIntent(SelectCategoryIntent.SelectType(it)) },
+                        onNewCategory = { type, prefilledName ->
+                            backStack.add(
+                                CategoryRoute(
+                                    initialType = type,
+                                    initialName = prefilledName,
+                                    propagateToTransaction = true,
+                                ),
+                            )
+                        },
                         value = selectState.query,
-                        income = selectState.filteredIncomes,
-                        expense = selectState.filteredExpenses,
+                        selectedType = selectState.selectedType,
+                        activeList = selectState.filteredActive,
+                        activeCountTotal = selectState.activeList.size,
                     )
                 }
 
