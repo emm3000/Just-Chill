@@ -19,6 +19,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -43,6 +45,8 @@ fun ProfileScreen(
     onCategoriesClick: () -> Unit = {},
     onAccountsClick: () -> Unit = {},
     onAboutClick: () -> Unit = {},
+    onExportClick: () -> Unit = {},
+    onImportClick: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -86,6 +90,29 @@ fun ProfileScreen(
             icon = Icons.Outlined.AccountBalanceWallet,
             label = "Cuentas",
             onClick = onAccountsClick,
+        )
+
+        Spacer(Modifier.height(spacing.s2))
+
+        Text(
+            text = "RESPALDO",
+            style = type.labelM,
+            color = colors.textTertiary,
+            modifier = Modifier.padding(
+                horizontal = spacing.s4,
+                vertical = spacing.s2,
+            ),
+        )
+
+        ProfileRow(
+            icon = Icons.Outlined.FileDownload,
+            label = "Exportar",
+            onClick = onExportClick,
+        )
+        ProfileRow(
+            icon = Icons.Outlined.FileUpload,
+            label = "Importar",
+            onClick = onImportClick,
         )
 
         Spacer(Modifier.height(spacing.s2))

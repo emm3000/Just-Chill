@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.di
 
 import com.emm.data.account.AccountLocalDataSource
+import com.emm.data.backup.DefaultBackupRepository
 import com.emm.data.category.CategoryLocalDataSource
 import com.emm.data.transaction.DefaultTransactionRepository
 import com.emm.data.transaction.TransactionLocalDataSource
@@ -8,12 +9,16 @@ import com.emm.domain.report.GetMonthlyAmountByCategoryUseCase
 import com.emm.domain.report.GetMonthlyComparisonUseCase
 import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.shared.UniqueIdProvider
+import com.emm.domain.shared.backup.BackupRepository
+import com.emm.domain.shared.backup.ExportDataUseCase
+import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.justchill.hh.account.AccountsViewModel
 import com.emm.justchill.hh.account.AddAccountViewModel
 import com.emm.justchill.hh.category.AddCategoryViewModel
 import com.emm.justchill.hh.category.SelectCategoryViewModel
 import com.emm.justchill.hh.home.HomeViewModel
+import com.emm.justchill.hh.profile.ProfileViewModel
 import com.emm.justchill.hh.report.ReportViewModel
 import com.emm.justchill.hh.seetransactions.SeeTransactionsViewModel
 import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
@@ -65,6 +70,7 @@ private fun Module.viewModelsProviders() {
 
     viewModelOf(::AccountsViewModel)
     viewModelOf(::ReportViewModel)
+    viewModelOf(::ProfileViewModel)
 }
 
 
@@ -80,6 +86,10 @@ private fun Module.repositoriesProviders() {
         bind<TransactionRepository>()
     }
 
+    factoryOf(::DefaultBackupRepository) { bind<BackupRepository>() }
+
     factoryOf(::GetMonthlyAmountByCategoryUseCase)
     factoryOf(::GetMonthlyComparisonUseCase)
+    factoryOf(::ExportDataUseCase)
+    factoryOf(::ImportDataUseCase)
 }

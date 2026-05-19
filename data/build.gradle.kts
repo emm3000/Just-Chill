@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     id("app.cash.sqldelight") version "2.3.2"
+    kotlin("plugin.serialization") version libs.versions.kotlinVersion
 }
 
 android {
@@ -47,6 +48,13 @@ dependencies {
 
     implementation(libs.android.driver)
     api(libs.coroutines.extensions)
+
+    implementation(libs.kotlinx.serialization.json)
+
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(kotlin("test"))
+    testImplementation(libs.sqlite.driver)
 }
 
 sqldelight {

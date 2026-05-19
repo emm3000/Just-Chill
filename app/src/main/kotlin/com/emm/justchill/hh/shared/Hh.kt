@@ -1,5 +1,7 @@
 package com.emm.justchill.hh.shared
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -25,6 +28,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,6 +38,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -60,7 +65,10 @@ import com.emm.justchill.hh.category.SelectCategoryScreen
 import com.emm.justchill.hh.category.SelectCategoryViewModel
 import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.onboarding.ManifestoScreen
+import com.emm.justchill.hh.profile.ProfileEffect
+import com.emm.justchill.hh.profile.ProfileIntent
 import com.emm.justchill.hh.profile.ProfileScreen
+import com.emm.justchill.hh.profile.ProfileViewModel
 import com.emm.justchill.hh.report.ReportScreen
 import com.emm.justchill.hh.seetransactions.SeeTransactionsScreen
 import com.emm.justchill.hh.transaction.AddTransactionIntent
@@ -73,6 +81,8 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 private val START_TAB: BottomBarRoute = SeeTransactionRoute
 
@@ -170,10 +180,73 @@ fun Hh() {
                 }
 
                 entry<ProfileRoute> {
+                    val vm: ProfileViewModel = koinViewModel()
+                    val context = LocalContext.current
+                    var pendingImportJson by remember { mutableStateOf<String?>(null) }
+
+                    val exportLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.CreateDocument("application/json"),
+                    ) { uri ->
+                        if (uri != null) {
+                            // Raw stream, not wrapped in `use` — the VM closes it inside its coroutine.
+                            // Closing here would shut the stream before the async write runs.
+                            val stream = context.contentResolver.openOutputStream(uri)
+                            if (stream != null) vm.onIntent(ProfileIntent.ExportToStream(stream))
+                        }
+                    }
+
+                    val importLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.OpenDocument(),
+                    ) { uri ->
+                        if (uri != null) {
+                            val text = context.contentResolver.openInputStream(uri)
+                                ?.bufferedReader()
+                                ?.use { it.readText() }
+                            if (text != null) pendingImportJson = text
+                        }
+                    }
+
+                    LaunchedEffect(vm) {
+                        vm.effect.collect { effect ->
+                            when (effect) {
+                                is ProfileEffect.ShowMessage -> showRootMessage(effect.text)
+                            }
+                        }
+                    }
+
+                    pendingImportJson?.let { json ->
+                        val colors = LocalEmmColors.current
+                        AlertDialog(
+                            onDismissRequest = { pendingImportJson = null },
+                            title = { Text("¿Reemplazar tu data?") },
+                            text = { Text("Esto va a borrar todo lo que tengas hoy y poner lo del archivo.") },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        vm.onIntent(ProfileIntent.ImportJson(json))
+                                        pendingImportJson = null
+                                    },
+                                ) {
+                                    Text(
+                                        text = "Reemplazar todo",
+                                        color = colors.danger,
+                                    )
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { pendingImportJson = null }) {
+                                    Text("Cancelar")
+                                }
+                            },
+                        )
+                    }
+
                     ProfileScreen(
                         onCategoriesClick = { backStack.add(CategoryRoute()) },
                         onAccountsClick = { backStack.add(AccountsRoute) },
                         onAboutClick = { backStack.add(ManifestoRoute(isRevisit = true)) },
+                        onExportClick = { exportLauncher.launch(suggestedExportFilename()) },
+                        onImportClick = { importLauncher.launch(arrayOf("application/json")) },
                     )
                 }
 
@@ -246,6 +319,11 @@ fun Hh() {
             },
         )
     }
+}
+
+private fun suggestedExportFilename(): String {
+    val date = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+    return "justchill-backup-$date.json"
 }
 
 /**

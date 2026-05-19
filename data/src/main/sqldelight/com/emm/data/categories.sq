@@ -23,6 +23,9 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 delete:
 DELETE FROM categories WHERE categoryId = ?;
 
+deleteAll:
+DELETE FROM categories;
+
 find:
 SELECT * FROM categories WHERE categoryId = ?;
 

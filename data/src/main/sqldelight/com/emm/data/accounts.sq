@@ -20,6 +20,9 @@ SELECT * FROM accounts WHERE accountId = ?;
 delete:
 DELETE FROM accounts WHERE accountId = ?;
 
+deleteAll:
+DELETE FROM accounts;
+
 update:
 UPDATE accounts
 SET name = ?, type = ?, currency = ?, updatedAt = ?

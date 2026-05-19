@@ -3,19 +3,21 @@
 > Estado del proyecto a fecha del último update. Punto de re-entrada
 > para retomar después de cerrar/limpiar el contexto.
 >
-> **Última actualización**: 2026-05-18.
+> **Última actualización**: 2026-05-18 (S3 code listo).
 
 ---
 
 ## TL;DR — dónde estamos ahora
 
 - **Proceso de definición**: ✅ Fases 1-5 firmadas y versionadas.
-- **Ejecución**: Sprint 0 (quick wins) cerrado. Sprint 1 (Reporte de
-  ingresos) con código listo + tests verdes; **falta verificación
-  manual en device** antes de cerrar y tagear `post-s1`.
+- **Ejecución**: Sprint 0 cerrado. Sprints 1 (Reporte), 2 (Onboarding +
+  manifesto) y 3 (Export/Import JSON) con código listo + tests verdes;
+  **falta verificación manual en device acumulada** antes de tagear
+  `post-s1`, `post-s2` y `post-s3`.
 - **Próximo paso concreto**: instalar `./gradlew installDevDebug`,
-  validar los 5 checks de la sección "Verificación manual S1" abajo,
-  y si todo va — tagear `post-s1` y arrancar Sprint 2 (Onboarding).
+  correr los checks "Verificación manual S1/S2/S3" de abajo en una sola
+  pasada, y si todo va — tagear los tres y arrancar Sprint 4
+  (ProfileScreen completo / US-21).
 
 ---
 
@@ -56,8 +58,8 @@ Decisiones bloqueadas (no se renegocian sin volver a Fase 1):
 |---|---|---|---|
 | **S0** | 9 quick wins (cleanup) | ✅ Completo | `post-s0` |
 | **S1** | Reporte ingresos + nav meses (US-11, US-09) | ⚠️ Code listo, falta verif device | — |
-| **S2** | Onboarding + manifiesto (US-01, US-02) | ⏳ Pendiente | — |
-| **S3** | Export/Import JSON (US-18, US-19) | ⏳ Pendiente | — |
+| **S2** | Onboarding + manifiesto (US-01, US-02) | ⚠️ Code listo, falta verif device | — |
+| **S3** | Export/Import JSON (US-18, US-19) | ⚠️ Code listo, falta verif device | — |
 | **S4** | ProfileScreen completo (US-21) | ⏳ Pendiente | — |
 | **S5** | Polish + accesibilidad + screenshots | ⏳ Pendiente | — |
 | **S6** | Dogfooding propio intensivo | ⏳ Pendiente | — |
@@ -127,6 +129,112 @@ Instalar con `./gradlew installDevDebug` y validar:
 
 ---
 
+## Sprint 2 — en curso (código listo)
+
+Commits desde `5bcebac` (US-09 nav):
+- Onboarding feature completo: `AppPreferences` sobre el
+  `SharedPreferences` ya existente (no se sumó DataStore — sync read
+  evita el flicker que el ROADMAP marcaba como riesgo), `ManifestoScreen`
+  composable stateless (sin VM porque es UI pura: 4 estrofas + 1
+  botón), `ManifestoRoute(isRevisit)` en `HhRoutes`, gate de start
+  destination en `Hh.kt`, "Acerca de" en `ProfileScreen`.
+
+### Lo que ya funciona (build + tests verdes)
+- Al primer launch (flag `first_launch_seen = false`), `Hh` arranca
+  con `ManifestoRoute()` en vez de `START_TAB`. Sin bottom bar
+  (la ruta no es `BottomBarRoute`).
+- Botón "Empezar" → flag a `true` + `replaceAll(START_TAB)`.
+- Desde `ProfileScreen → Acerca de` se reabre con `isRevisit=true`,
+  botón cambia a "Volver", NO se reescribe el flag.
+
+### Caveat resuelto durante S3
+- `ProfileRoute` se agregó a `TOP_LEVEL_ROUTES` con icono `Icons.Filled.Person`
+  para wirear Export/Import. El "Acerca de" pasó a ser navegable automáticamente.
+  Sprint 4 (US-21 ProfileScreen completo) solo va a sumar contenido/polish
+  encima de la base ya enganchada.
+
+### Verificación manual S2 — pendiente (antes de tag `post-s2`)
+
+1. **Primer launch**: instalar build limpio (`adb uninstall com.emm.justchill.dev`
+   antes) → abrir → se ve manifesto, no bottom bar, botón "Empezar".
+2. **Persistencia**: tap "Empezar" → va a Home. Cerrar app, volver a
+   abrir → va directo a Home, NO se ve manifesto.
+3. **Cold start**: `adb shell am start -W com.emm.justchill.dev/.MainActivity`
+   → total time < 3s.
+4. **Re-visit desde Profile** (solo cuando Profile esté navegable en
+   S4): "Acerca de" abre manifesto con botón "Volver", al tap vuelve a
+   Profile sin tocar el flag.
+
+### Pendiente NO bloqueante para S2
+- Compose UI test del `ManifestoScreen` (renderiza textos + botón).
+  Cae bien en S5 polish junto con otros tests de UI.
+
+---
+
+## Sprint 3 — en curso (código listo)
+
+Entregado en 3 chunks delegados a Sonnet (uno por sesión):
+
+- **Chunk 1 — Export domain**: `BackupRepository` interface en
+  `:domain/shared/backup/`, `ExportDataUseCase` (1-line delegate). DTOs
+  + `kotlinx-serialization` viven en `:data/backup/` (NO en `:domain`,
+  porque la regla de Clean dice que el dominio se mantiene puro JVM —
+  ver `domain/CLAUDE.md`).
+- **Chunk 2 — Export Android wiring**: `ProfileViewModel.exportToStream`,
+  launcher `ActivityResultContracts.CreateDocument("application/json")`,
+  helper `suggestedExportFilename()` con fecha. `BufferedWriter` se
+  cierra **antes** que el `OutputStream` para flushear el buffer; cerrar
+  el stream primero corrompe el archivo silenciosamente.
+- **Chunk 3 — Import full flow**: `BackupRepository.importFromJson`,
+  `ImportDataUseCase`, `ImportStats(accounts, categories, transactions)`,
+  queries `deleteAll:` en las tres `.sq`. Transacción atómica vía
+  `EmmDatabaseData.transaction { }`. Orden de delete por FK constraints
+  (`ON DELETE RESTRICT`): transactions → categories → accounts; insert
+  al revés. Validación `schemaVersion == 1` → `ValidationError` si no.
+  `AlertDialog` de confirmación con copy *"¿Reemplazar tu data?"* /
+  *"Reemplazar todo"* tinted en `colors.danger`. `pendingImportJson`
+  vive en Compose (no en VM).
+
+### Lo que ya funciona (build + tests verdes tras limpiar cache corrupto)
+- `Perfil → Exportar` → file picker → escribe JSON con accounts +
+  categories + transactions + metadata (`schemaVersion=1`, `exportedAt`,
+  `appVersion`). Snackbar: *"Listo, tu data está guardada."*
+- `Perfil → Importar` → file picker → AlertDialog confirmación →
+  *"Reemplazar todo"* → wipe + insert atómico. Snackbar con count de
+  movimientos importados. Errores: archivo corrupto / versión incorrecta
+  / IO → mensajes en castellano peruano sin "Por favor".
+
+### Decisiones de diseño que vale recordar
+- **`schemaVersion=1` sin migración**: cualquier otro valor lanza
+  `ValidationError`. Cuando aparezca `v2`, agregar un branch acá, no
+  un sistema de migración upfront.
+- **Empty payload válido = wipe vía import**: importar un JSON con
+  arrays vacíos es legal y limpia toda la data (caso cubierto en tests).
+- **`OutputStream`/`String` en la VM, no `Uri`/`Context`**: mantiene la
+  VM Android-free y unit-testable. La conversión Uri↔Stream vive en
+  `Hh.kt` con los launchers.
+
+### Verificación manual S3 — pendiente (antes de tag `post-s3`)
+
+1. **Export**: registrar 1-2 movimientos → `Perfil → Exportar` →
+   guardar JSON en Files → abrir el JSON desde Files y verificar que
+   tiene los movimientos + `schemaVersion: 1`.
+2. **Import happy path**: borrar app o agregar más data → `Perfil →
+   Importar` → seleccionar el JSON anterior → AlertDialog → "Reemplazar
+   todo" → snackbar con count → verificar en Home que la data quedó
+   reemplazada (no sumada).
+3. **Import archivo inválido**: importar un `.json` cualquiera (ej. un
+   `package.json`) → snackbar *"No pude importar el archivo — capaz
+   está dañado."*, data NO se toca.
+4. **Cancel del AlertDialog**: importar JSON válido → AlertDialog →
+   "Cancelar" → no pasa nada, data intacta.
+
+### Pendiente NO bloqueante para S3
+- Compose UI test de `AlertDialog` (cancel vs confirm).
+- E2E test de export → import roundtrip en `:data/src/androidTest/`.
+
+---
+
 ## Rollback points (tags git)
 
 | Tag | Cuándo | Comando para volver |
@@ -134,7 +242,8 @@ Instalar con `./gradlew installDevDebug` y validar:
 | `pre-s0` | Antes de ejecutar — Fases 1-5 firmadas + DESIGN_SYSTEM alineado | `git reset --hard pre-s0` |
 | `post-s0` | 9 quick wins completados, repo limpio | `git reset --hard post-s0` |
 
-**Próximo tag esperado**: `post-s1` (después de verificación manual).
+**Próximos tags esperados**: `post-s1`, `post-s2` y `post-s3` (los tres
+tras una sola pasada de verificación manual en device).
 
 ---
 
