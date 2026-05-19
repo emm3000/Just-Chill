@@ -48,6 +48,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.emm.domain.account.Account
+import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.hh.account.AccountsScreen
@@ -58,6 +59,7 @@ import com.emm.justchill.hh.category.SelectCategoryIntent
 import com.emm.justchill.hh.category.SelectCategoryScreen
 import com.emm.justchill.hh.category.SelectCategoryViewModel
 import com.emm.justchill.hh.home.HomeScreen
+import com.emm.justchill.hh.onboarding.ManifestoScreen
 import com.emm.justchill.hh.profile.ProfileScreen
 import com.emm.justchill.hh.report.ReportScreen
 import com.emm.justchill.hh.seetransactions.SeeTransactionsScreen
@@ -78,7 +80,11 @@ private val START_TAB: BottomBarRoute = SeeTransactionRoute
 fun Hh() {
 
     val colors = LocalEmmColors.current
-    val backStack: NavBackStack<NavKey> = rememberNavBackStack(START_TAB)
+    val appPrefs: AppPreferences = koinInject()
+    val startRoute: NavKey = remember {
+        if (appPrefs.firstLaunchSeen) START_TAB else ManifestoRoute()
+    }
+    val backStack: NavBackStack<NavKey> = rememberNavBackStack(startRoute)
     var pendingCategory by remember { mutableStateOf<SelectableCategory?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val rootScope = rememberCoroutineScope()
@@ -120,6 +126,20 @@ fun Hh() {
                 rememberViewModelStoreNavEntryDecorator(),
             ),
             entryProvider = entryProvider {
+                entry<ManifestoRoute> { key ->
+                    ManifestoScreen(
+                        isRevisit = key.isRevisit,
+                        onStart = {
+                            if (key.isRevisit) {
+                                backStack.removeLastOrNull()
+                            } else {
+                                appPrefs.firstLaunchSeen = true
+                                backStack.replaceAll(START_TAB)
+                            }
+                        },
+                    )
+                }
+
                 entry<HomeRoute> {
                     HomeScreen(
                         navigateToAll = dropUnlessResumed {
@@ -153,6 +173,7 @@ fun Hh() {
                     ProfileScreen(
                         onCategoriesClick = { backStack.add(CategoryRoute()) },
                         onAccountsClick = { backStack.add(AccountsRoute) },
+                        onAboutClick = { backStack.add(ManifestoRoute(isRevisit = true)) },
                     )
                 }
 

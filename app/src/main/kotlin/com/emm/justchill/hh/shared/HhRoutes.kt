@@ -15,6 +15,9 @@ import kotlinx.serialization.Serializable
 sealed interface BottomBarRoute : NavKey
 
 @Serializable
+data class ManifestoRoute(val isRevisit: Boolean = false) : NavKey
+
+@Serializable
 data object HomeRoute : BottomBarRoute
 
 @Serializable
