@@ -21,14 +21,18 @@ import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.CreditCard
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.TrendingUp
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +50,7 @@ import com.emm.domain.account.AccountType
 import com.emm.domain.shared.AccountId
 import com.emm.justchill.components.EmmButton
 import com.emm.justchill.components.EmmButtonVariant
+import com.emm.justchill.components.EmmTextInput
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
@@ -53,7 +58,8 @@ import com.emm.justchill.core.theme.LocalEmmType
 
 @Composable
 fun AccountsScreen(
-    accounts: List<Account>,
+    state: AccountsUiState,
+    onIntent: (AccountsIntent) -> Unit,
     addCategory: () -> Unit,
     addAccount: () -> Unit,
     modifier: Modifier = Modifier,
@@ -87,21 +93,46 @@ fun AccountsScreen(
             )
         }
 
-        if (accounts.isEmpty()) {
+        if (state.accounts.isEmpty()) {
             EmptyState(onCreate = addAccount, modifier = Modifier.fillMaxSize())
             return@Column
         }
 
         LazyColumn(contentPadding = PaddingValues(bottom = spacing.s8)) {
-            items(accounts, key = { it.accountId.value }) { account ->
-                AccountRow(account = account)
+            items(state.accounts, key = { it.accountId.value }) { account ->
+                AccountRow(
+                    account = account,
+                    onEdit = { onIntent(AccountsIntent.OnEditClick(account)) },
+                    onDelete = { onIntent(AccountsIntent.OnDeleteClick(account)) },
+                )
             }
         }
+    }
+
+    state.pendingEdit?.let {
+        EditAccountDialog(
+            name = state.editName,
+            onNameChange = { onIntent(AccountsIntent.OnEditNameChange(it)) },
+            onConfirm = { onIntent(AccountsIntent.OnEditConfirm) },
+            onDismiss = { onIntent(AccountsIntent.OnEditDismiss) },
+        )
+    }
+
+    state.pendingDelete?.let { account ->
+        DeleteAccountDialog(
+            accountName = account.name,
+            onConfirm = { onIntent(AccountsIntent.OnDeleteConfirm) },
+            onDismiss = { onIntent(AccountsIntent.OnDeleteDismiss) },
+        )
     }
 }
 
 @Composable
-private fun AccountRow(account: Account) {
+private fun AccountRow(
+    account: Account,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
@@ -133,7 +164,111 @@ private fun AccountRow(account: Account) {
             color = colors.textPrimary,
             modifier = Modifier.weight(1f),
         )
+        AccountRowMenu(onEdit = onEdit, onDelete = onDelete)
     }
+}
+
+@Composable
+private fun AccountRowMenu(onEdit: () -> Unit, onDelete: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        IconButton(onClick = { expanded = !expanded }) {
+            Icon(
+                imageVector = Icons.Outlined.MoreVert,
+                contentDescription = "Opciones de cuenta",
+                tint = colors.textPrimary,
+                modifier = Modifier.size(22.dp),
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            containerColor = colors.surface2,
+        ) {
+            DropdownMenuItem(
+                text = { Text("Editar", style = type.bodyL, color = colors.textPrimary) },
+                leadingIcon = { MenuIcon(Icons.Outlined.Edit) },
+                onClick = {
+                    expanded = false
+                    onEdit()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text("Borrar", style = type.bodyL, color = colors.danger) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = null,
+                        tint = colors.danger,
+                        modifier = Modifier.size(20.dp),
+                    )
+                },
+                onClick = {
+                    expanded = false
+                    onDelete()
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun EditAccountDialog(
+    name: String,
+    onNameChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar cuenta") },
+        text = {
+            EmmTextInput(
+                value = name,
+                onValueChange = onNameChange,
+                label = "NOMBRE",
+                placeholder = "ejm. Gasto diario",
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Guardar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        },
+    )
+}
+
+@Composable
+private fun DeleteAccountDialog(
+    accountName: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val colors = LocalEmmColors.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("¿Borrar «$accountName»?") },
+        text = { Text("Si tiene movimientos asociados, no se puede borrar.") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = "Borrar", color = colors.danger)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        },
+    )
 }
 
 @Composable
@@ -230,11 +365,14 @@ private fun EmptyState(onCreate: () -> Unit, modifier: Modifier = Modifier) {
 private fun AccountsScreenPreview() {
     EmmTheme {
         AccountsScreen(
-            accounts = listOf(
-                Account(accountId = AccountId("1"), name = "Cuenta principal"),
-                Account(accountId = AccountId("2"), name = "Ahorros"),
-                Account(accountId = AccountId("3"), name = "Tarjeta de crédito"),
+            state = AccountsUiState(
+                accounts = listOf(
+                    Account(accountId = AccountId("1"), name = "Cuenta principal"),
+                    Account(accountId = AccountId("2"), name = "Ahorros"),
+                    Account(accountId = AccountId("3"), name = "Tarjeta de crédito"),
+                ),
             ),
+            onIntent = {},
             addCategory = {},
             addAccount = {},
             modifier = Modifier.fillMaxSize(),
@@ -247,7 +385,8 @@ private fun AccountsScreenPreview() {
 private fun AccountsScreenEmptyPreview() {
     EmmTheme {
         AccountsScreen(
-            accounts = emptyList(),
+            state = AccountsUiState(),
+            onIntent = {},
             addCategory = {},
             addAccount = {},
             modifier = Modifier.fillMaxSize(),

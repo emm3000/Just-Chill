@@ -7,4 +7,7 @@ import com.emm.justchill.core.mvi.UiState
 @Stable
 data class AccountsUiState(
     val accounts: List<Account> = emptyList(),
+    val pendingEdit: Account? = null,
+    val editName: String = "",
+    val pendingDelete: Account? = null,
 ) : UiState

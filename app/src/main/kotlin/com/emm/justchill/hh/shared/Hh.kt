@@ -56,6 +56,7 @@ import com.emm.domain.account.Account
 import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.theme.LatoFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.hh.account.AccountsEffect
 import com.emm.justchill.hh.account.AccountsScreen
 import com.emm.justchill.hh.account.AccountsViewModel
 import com.emm.justchill.hh.account.AddAccountScreen
@@ -178,8 +179,17 @@ fun Hh() {
                     val vm: AccountsViewModel = koinViewModel()
                     val accountsState by vm.state.collectAsStateWithLifecycle()
 
+                    LaunchedEffect(vm) {
+                        vm.effect.collect { effect ->
+                            when (effect) {
+                                is AccountsEffect.ShowMessage -> showRootMessage(effect.text)
+                            }
+                        }
+                    }
+
                     AccountsScreen(
-                        accounts = accountsState.accounts,
+                        state = accountsState,
+                        onIntent = vm::onIntent,
                         addCategory = { backStack.add(CategoryRoute()) },
                         addAccount = { backStack.add(AddAccountRoute) },
                         modifier = Modifier.fillMaxSize(),
