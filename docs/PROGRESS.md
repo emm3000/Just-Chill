@@ -3,7 +3,7 @@
 > Estado del proyecto a fecha del último update. Punto de re-entrada
 > para retomar después de cerrar/limpiar el contexto.
 >
-> **Última actualización**: 2026-05-18 (mini-S6.5 cierra gate gaps).
+> **Última actualización**: 2026-05-19 (S7 prep — AAB 2.0.0-alpha + listing/privacy drafts).
 
 ---
 
@@ -17,9 +17,11 @@
   (US-17 es además Should, no Must). Más grave: US-14 (categorías)
   no tenía pantalla de gestión, y US-15 (cuentas) no tenía UI de
   edit/delete. Mini-S6.5 cerró los 3 gaps reales del gate.
-- **Próximo paso concreto**: arrancar S7 (Play Store alpha). Falta
-  draftear listing del Store (título/descripción/screenshots), URL
-  pública para política de privacidad, AAB firmado, lista de testers.
+- **Próximo paso concreto**: subir AAB `2.0.0-alpha` a Play Console
+  (alpha cerrada). Listing y privacidad ya redactados en
+  `docs/PLAY_STORE_LISTING.md` + `docs/PRIVACY_POLICY.md`. Falta:
+  hostear Gist público de privacidad, screenshots, reclutar testers,
+  setup WhatsApp grupal.
 
 ---
 
@@ -65,7 +67,7 @@ Decisiones bloqueadas (no se renegocian sin volver a Fase 1):
 | **S4** | ProfileScreen completo (US-21) | ✅ Completo | `post-s4` |
 | **S5** | Polish + accesibilidad + screenshots | ✅ Completo | `post-s5` |
 | **S6** | Dogfooding propio intensivo | ⚠️ Fast-tracked + mini-S6.5 cierra gate | — |
-| **S7** | Testers externos + publicación alpha | ⏳ Pendiente | — |
+| **S7** | Testers externos + publicación alpha | 🟢 AAB listo, esperando upload Console | `2.0.0-alpha` |
 
 ---
 
@@ -248,10 +250,11 @@ Entregado en 3 chunks delegados a Sonnet (uno por sesión):
 | `post-s3` | Export/Import JSON (US-18, US-19) | `git reset --hard post-s3` |
 | `post-s4` | ProfileScreen completo + Privacidad (US-21) | `git reset --hard post-s4` |
 | `post-s5` | Polish: a11y + copy peruano + US-17 íconos por tipo | `git reset --hard post-s5` |
+| `2.0.0-alpha` | AAB release-firmable. Rewrite local-only completo. | `git reset --hard 2.0.0-alpha` |
 
-**Próximo tag esperado**: `post-s6` (o `post-s7`) cuando S7 cierre.
-Mini-S6.5 dejó 3 commits sin tag intencionalmente — son parte del
-camino a S7, no un sprint propio.
+**Próximo tag esperado**: `post-s7` cuando el alpha esté en manos de
+testers + primeras 24h sin crashes. Hot-fix patches dentro del ciclo
+S7 irían como `2.0.1-alpha`, `2.0.2-alpha`.
 
 ### Mini-S6.5 — cierre del pre-alpha gate
 
