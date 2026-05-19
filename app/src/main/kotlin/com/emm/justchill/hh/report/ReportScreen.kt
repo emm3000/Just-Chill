@@ -228,8 +228,8 @@ private fun EmptyState(
         TransactionType.Spend -> "Aún no registraste gastos este mes"
     }
     val subtitle = when (type) {
-        TransactionType.Income -> "Anotá el primero y volvé al final del mes"
-        TransactionType.Spend -> "Anotá el primero y volvé al final del mes"
+        TransactionType.Income -> "Anota el primero y vuelve al final del mes"
+        TransactionType.Spend -> "Anota el primero y vuelve al final del mes"
     }
     val cta = when (type) {
         TransactionType.Income -> "Anotar ingreso"

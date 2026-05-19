@@ -62,7 +62,7 @@ fun ManifestoScreen(
                 color = colors.textPrimary,
             )
             Text(
-                text = "Solo vos, tu plata,\ny la verdad.",
+                text = "Solo tú, tu plata,\ny la verdad.",
                 style = type.display,
                 color = colors.textSecondary,
             )
