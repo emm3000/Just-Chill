@@ -16,10 +16,14 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Category
+import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -38,6 +42,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.domain.account.Account
+import com.emm.domain.account.AccountType
 import com.emm.domain.shared.AccountId
 import com.emm.justchill.components.EmmButton
 import com.emm.justchill.components.EmmButtonVariant
@@ -117,7 +122,7 @@ private fun AccountRow(account: Account) {
         horizontalArrangement = Arrangement.spacedBy(spacing.s4),
     ) {
         Icon(
-            imageVector = Icons.Outlined.AccountBalanceWallet,
+            imageVector = account.type.toIcon(),
             contentDescription = null,
             tint = colors.textPrimary,
             modifier = Modifier.size(24.dp),
@@ -248,4 +253,11 @@ private fun AccountsScreenEmptyPreview() {
             modifier = Modifier.fillMaxSize(),
         )
     }
+}
+
+private fun AccountType.toIcon(): ImageVector = when (this) {
+    AccountType.Bank -> Icons.Outlined.AccountBalance
+    AccountType.Cash -> Icons.Outlined.Payments
+    AccountType.CreditCard -> Icons.Outlined.CreditCard
+    AccountType.Investment -> Icons.Outlined.TrendingUp
 }
