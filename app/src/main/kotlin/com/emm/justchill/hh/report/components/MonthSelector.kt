@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -28,37 +30,56 @@ import com.emm.justchill.core.theme.LocalEmmType
  *
  * Compartido entre Home y Report (PLAN_S1_REPORT.md §1 D3).
  * Pattern: Mint, Apple Health — chevrons + label.
+ *
+ * Optional "Volver a hoy" shortcut shown below the row when
+ * [onJumpToCurrent] is non-null. The caller decides visibility by
+ * comparing the displayed month with `YearMonth.current()`.
  */
 @Composable
 fun MonthSelector(
     label: String,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
+    onJumpToCurrent: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
 
-    Row(
+    Column(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        ChevronButton(
-            icon = Icons.Outlined.ChevronLeft,
-            contentDescription = "Mes anterior",
-            onClick = onPrevious,
-        )
-        Text(
-            text = label,
-            style = type.titleL,
-            color = colors.textPrimary,
-        )
-        ChevronButton(
-            icon = Icons.Outlined.ChevronRight,
-            contentDescription = "Mes siguiente",
-            onClick = onNext,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ChevronButton(
+                icon = Icons.Outlined.ChevronLeft,
+                contentDescription = "Mes anterior",
+                onClick = onPrevious,
+            )
+            Text(
+                text = label,
+                style = type.titleL,
+                color = colors.textPrimary,
+            )
+            ChevronButton(
+                icon = Icons.Outlined.ChevronRight,
+                contentDescription = "Mes siguiente",
+                onClick = onNext,
+            )
+        }
+        if (onJumpToCurrent != null) {
+            TextButton(onClick = onJumpToCurrent) {
+                Text(
+                    text = "Volver a hoy",
+                    style = type.labelM,
+                    color = colors.accent,
+                )
+            }
+        }
     }
 }
 
@@ -103,6 +124,25 @@ private fun MonthSelectorPreview() {
                 label = "Mayo 2026",
                 onPrevious = {},
                 onNext = {},
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun MonthSelectorWithJumpPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg),
+        ) {
+            MonthSelector(
+                label = "Marzo 2026",
+                onPrevious = {},
+                onNext = {},
+                onJumpToCurrent = {},
             )
         }
     }

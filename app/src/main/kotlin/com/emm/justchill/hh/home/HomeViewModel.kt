@@ -32,7 +32,7 @@ class HomeViewModel(
         when (intent) {
             HomeIntent.PreviousMonth -> selectedMonth.value = selectedMonth.value.previous()
             HomeIntent.NextMonth -> selectedMonth.value = selectedMonth.value.next()
-            HomeIntent.JumpToToday -> selectedMonth.value = YearMonth.current()
+            HomeIntent.JumpToCurrent -> selectedMonth.value = YearMonth.current()
         }
     }
 

@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.emm.domain.shared.Money
+import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.components.EmmListItem
 import com.emm.justchill.core.theme.EmmTheme
@@ -65,6 +66,7 @@ fun HomeScreen(
         navigateToReport = navigateToReport,
         onPreviousMonth = { homeViewModel.onIntent(HomeIntent.PreviousMonth) },
         onNextMonth = { homeViewModel.onIntent(HomeIntent.NextMonth) },
+        onJumpToCurrent = { homeViewModel.onIntent(HomeIntent.JumpToCurrent) },
     )
 }
 
@@ -75,6 +77,7 @@ fun HomeScreen(
     navigateToReport: () -> Unit = {},
     onPreviousMonth: () -> Unit = {},
     onNextMonth: () -> Unit = {},
+    onJumpToCurrent: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
@@ -99,6 +102,7 @@ fun HomeScreen(
                     label = homeData.month.fullLabel(),
                     onPrevious = onPreviousMonth,
                     onNext = onNextMonth,
+                    onJumpToCurrent = if (homeData.month != YearMonth.current()) onJumpToCurrent else null,
                 )
                 BalanceHero(homeData.balance)
                 MonthSummary(income = homeData.income, expense = homeData.spend)

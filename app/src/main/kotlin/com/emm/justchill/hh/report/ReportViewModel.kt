@@ -36,6 +36,10 @@ class ReportViewModel(
                 updateState { copy(month = month.next()) }
                 loadReport()
             }
+            ReportIntent.JumpToCurrent -> {
+                updateState { copy(month = YearMonth.current()) }
+                loadReport()
+            }
             is ReportIntent.SelectType -> {
                 updateState { copy(selectedType = intent.type) }
                 loadReport()

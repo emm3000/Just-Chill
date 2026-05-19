@@ -56,6 +56,7 @@ fun ReportScreen(
         onAddTransaction = onAddTransaction,
         onPreviousMonth = { vm.onIntent(ReportIntent.PreviousMonth) },
         onNextMonth = { vm.onIntent(ReportIntent.NextMonth) },
+        onJumpToCurrent = { vm.onIntent(ReportIntent.JumpToCurrent) },
         onTypeSelected = { vm.onIntent(ReportIntent.SelectType(it)) },
         modifier = modifier,
     )
@@ -68,6 +69,7 @@ private fun ReportScreen(
     onAddTransaction: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
+    onJumpToCurrent: () -> Unit,
     onTypeSelected: (TransactionType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -95,6 +97,7 @@ private fun ReportScreen(
                 label = state.month.fullLabel(),
                 onPrevious = onPreviousMonth,
                 onNext = onNextMonth,
+                onJumpToCurrent = if (state.month != YearMonth.current()) onJumpToCurrent else null,
             )
 
             ToggleIncomeExpense(
@@ -305,6 +308,7 @@ private fun ReportScreenPreview() {
             onAddTransaction = {},
             onPreviousMonth = {},
             onNextMonth = {},
+            onJumpToCurrent = {},
             onTypeSelected = {},
         )
     }
@@ -325,6 +329,7 @@ private fun ReportScreenEmptyPreview() {
             onAddTransaction = {},
             onPreviousMonth = {},
             onNextMonth = {},
+            onJumpToCurrent = {},
             onTypeSelected = {},
         )
     }
