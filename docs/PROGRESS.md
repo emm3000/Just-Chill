@@ -3,19 +3,23 @@
 > Estado del proyecto a fecha del último update. Punto de re-entrada
 > para retomar después de cerrar/limpiar el contexto.
 >
-> **Última actualización**: 2026-05-18 (S5 cerrado, tag `post-s5`).
+> **Última actualización**: 2026-05-18 (mini-S6.5 cierra gate gaps).
 
 ---
 
 ## TL;DR — dónde estamos ahora
 
 - **Proceso de definición**: ✅ Fases 1-5 firmadas y versionadas.
-- **Ejecución**: Sprints 0-5 cerrados y tageados (`post-s0` … `post-s5`).
-  S5 entregó 3 commits code-only (a11y, copy, US-17) + verificación
-  device (a11y manual, cold start, frame stats, TalkBack, layout
-  inspector) confirmada por user.
-- **Próximo paso concreto**: arrancar Sprint 6 (Dogfooding propio
-  intensivo, ~5-7 días de uso real registrando bugs/frictions).
+- **Ejecución**: Sprints 0-5 + mini-S6.5 cerrados (tags `post-s0` …
+  `post-s5`, mini-S6.5 sin tag aún). Pre-alpha audit (Sonnet) descubrió
+  que ROADMAP §7 (S4) había **interpretado mal** US-17 — el roadmap
+  decía "íconos por banco" pero PRD §4 dice "cuentas preset peruanas"
+  (US-17 es además Should, no Must). Más grave: US-14 (categorías)
+  no tenía pantalla de gestión, y US-15 (cuentas) no tenía UI de
+  edit/delete. Mini-S6.5 cerró los 3 gaps reales del gate.
+- **Próximo paso concreto**: arrancar S7 (Play Store alpha). Falta
+  draftear listing del Store (título/descripción/screenshots), URL
+  pública para política de privacidad, AAB firmado, lista de testers.
 
 ---
 
@@ -60,7 +64,7 @@ Decisiones bloqueadas (no se renegocian sin volver a Fase 1):
 | **S3** | Export/Import JSON (US-18, US-19) | ✅ Completo | `post-s3` |
 | **S4** | ProfileScreen completo (US-21) | ✅ Completo | `post-s4` |
 | **S5** | Polish + accesibilidad + screenshots | ✅ Completo | `post-s5` |
-| **S6** | Dogfooding propio intensivo | ⏳ Pendiente | — |
+| **S6** | Dogfooding propio intensivo | ⚠️ Fast-tracked + mini-S6.5 cierra gate | — |
 | **S7** | Testers externos + publicación alpha | ⏳ Pendiente | — |
 
 ---
@@ -245,8 +249,38 @@ Entregado en 3 chunks delegados a Sonnet (uno por sesión):
 | `post-s4` | ProfileScreen completo + Privacidad (US-21) | `git reset --hard post-s4` |
 | `post-s5` | Polish: a11y + copy peruano + US-17 íconos por tipo | `git reset --hard post-s5` |
 
-**Próximo tag esperado**: `post-s6` tras semana de dogfooding y fix de
-bugs encontrados.
+**Próximo tag esperado**: `post-s6` (o `post-s7`) cuando S7 cierre.
+Mini-S6.5 dejó 3 commits sin tag intencionalmente — son parte del
+camino a S7, no un sprint propio.
+
+### Mini-S6.5 — cierre del pre-alpha gate
+
+Sonnet corrió un audit formal de las 15 Must vs código (commit
+ae1a204 + secuencia). Encontró 3 gaps reales más 1 PARTIAL:
+
+- **US-14** (categorías) — no había pantalla de gestión; "Categorías"
+  desde Profile iba directo a AddCategoryScreen. Fix `82b57dd`:
+  nueva `CategoriesScreen` con secciones INGRESOS/GASTOS, per-row
+  MoreVert → Editar/Borrar, AlertDialog advertencia ("los
+  movimientos pasan a Sin categoría" — coherente con FK SET NULL).
+- **US-15** (cuentas) — pantalla mostraba lista pero sin edit/delete.
+  Fix `6625d9f`: same patrón que B, refactor a MVI standard.
+  `DeleteAccountUseCase` ya validaba "no puedes borrar con
+  transacciones" — el VM surfacea el ValidationError vía snackbar.
+- **US-09** (mes nav) — botón "Volver a hoy" faltaba. Fix `c0d920d`:
+  TextButton condicional bajo MonthSelector, visible solo si
+  `state.month != YearMonth.current()`. Wired en Home y Report.
+- **US-17** (cuentas preset peruanas) — Sonnet flagueó como Must
+  blocker pero PRD §10 lo lista como Should ("si llega"). NO se
+  arregla en este mini-sprint — diferido a v2 o nice-to-have.
+
+Cleanups menores anotados (no blocker):
+- `CategoriesListRoute` está en `HhRoutes.kt` pero `CategoryRoute`
+  está en `ObjectsRoutes.kt` — co-localizar en futuro pase.
+- `CategoriesViewModel` registrado en `categoryModule.kt` mientras
+  los otros category VMs viven en `hhModule.kt` — consolidar.
+- `libs.versions.toml` aún declara Ktor/Retrofit/Supabase/WorkManager
+  sin uso real — orphans de la migración local-only.
 
 ### S5 — notas
 
