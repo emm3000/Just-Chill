@@ -3,19 +3,19 @@
 > Estado del proyecto a fecha del último update. Punto de re-entrada
 > para retomar después de cerrar/limpiar el contexto.
 >
-> **Última actualización**: 2026-05-18 (S4 cerrado, tag `post-s4`).
+> **Última actualización**: 2026-05-18 (S5 cerrado, tag `post-s5`).
 
 ---
 
 ## TL;DR — dónde estamos ahora
 
 - **Proceso de definición**: ✅ Fases 1-5 firmadas y versionadas.
-- **Ejecución**: Sprints 0-4 cerrados y tageados (`post-s0` … `post-s4`).
-  S4 fue mini-scope (6/7 ítems de US-21 ya estaban hechos en S0/S2/S3;
-  solo faltaba Política de privacidad).
-- **Próximo paso concreto**: arrancar Sprint 5 (Polish + accesibilidad
-  + screenshots para Play Store). Antes, opcional: push de `trunk` al
-  remoto para backup off-device.
+- **Ejecución**: Sprints 0-5 cerrados y tageados (`post-s0` … `post-s5`).
+  S5 entregó 3 commits code-only (a11y, copy, US-17) + verificación
+  device (a11y manual, cold start, frame stats, TalkBack, layout
+  inspector) confirmada por user.
+- **Próximo paso concreto**: arrancar Sprint 6 (Dogfooding propio
+  intensivo, ~5-7 días de uso real registrando bugs/frictions).
 
 ---
 
@@ -59,7 +59,7 @@ Decisiones bloqueadas (no se renegocian sin volver a Fase 1):
 | **S2** | Onboarding + manifiesto (US-01, US-02) | ✅ Completo | `post-s2` |
 | **S3** | Export/Import JSON (US-18, US-19) | ✅ Completo | `post-s3` |
 | **S4** | ProfileScreen completo (US-21) | ✅ Completo | `post-s4` |
-| **S5** | Polish + accesibilidad + screenshots | ⏳ Pendiente | — |
+| **S5** | Polish + accesibilidad + screenshots | ✅ Completo | `post-s5` |
 | **S6** | Dogfooding propio intensivo | ⏳ Pendiente | — |
 | **S7** | Testers externos + publicación alpha | ⏳ Pendiente | — |
 
@@ -243,8 +243,33 @@ Entregado en 3 chunks delegados a Sonnet (uno por sesión):
 | `post-s2` | Onboarding + manifesto (US-01, US-02) | `git reset --hard post-s2` |
 | `post-s3` | Export/Import JSON (US-18, US-19) | `git reset --hard post-s3` |
 | `post-s4` | ProfileScreen completo + Privacidad (US-21) | `git reset --hard post-s4` |
+| `post-s5` | Polish: a11y + copy peruano + US-17 íconos por tipo | `git reset --hard post-s5` |
 
-**Próximo tag esperado**: `post-s5` tras polish + screenshots.
+**Próximo tag esperado**: `post-s6` tras semana de dogfooding y fix de
+bugs encontrados.
+
+### S5 — notas
+
+3 commits code-only delegados a Sonnet, todos build-green:
+- `5dd6f17` a11y: audit per-callsite de `contentDescription`. Resultado
+  sorpresa: la app ya tenía buen a11y. Solo 2 fixes ("Atrás" → "Volver"
+  para normalizar). Los 24 callsites `null` restantes son genuinamente
+  decorativos (icono pareado con Text — agregar description ahí solo
+  ensucia TalkBack).
+- `a4f5898` copy: 6 mensajes de `DomainExceptionExt` rewriteados a
+  peruano coloquial, manifesto "vos" → "tú", ReportScreen
+  "Anotá/volvé" → "Anota/vuelve". `DomainException.Unauthorized` no
+  dispara hoy (app local-only sin auth) — el tipo queda en la sealed
+  hierarchy con copy neutral, TODO en S6 evaluar si se puede borrar.
+- `a0b50e9` US-17: ícono por `AccountType` en AccountsScreen
+  (Bank → AccountBalance, Cash → Payments, CreditCard → CreditCard,
+  Investment → TrendingUp). Extension privada en el screen — sin
+  leak a `:domain` (que sigue puro JVM, sin íconos de Compose).
+
+Device verification (user-confirmed): a11y manual OK, cold start <3s,
+frame stats sin spikes evidentes, TalkBack usable, Layout Inspector
+sin overdraw rojo. Screenshots de Play Store quedan para cuando se
+publique en S7 (no son blocker hasta entonces).
 
 ### S4 — notas (mini scope)
 - 6 de 7 ítems de US-21 ya estaban hechos en S0/S2/S3 — solo faltó
