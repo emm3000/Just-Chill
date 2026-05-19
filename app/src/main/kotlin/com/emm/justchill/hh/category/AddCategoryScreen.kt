@@ -180,7 +180,7 @@ private fun TopBar(title: String, onBack: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.Outlined.ArrowBack,
-                contentDescription = "Atrás",
+                contentDescription = "Volver",
                 tint = colors.textPrimary,
                 modifier = Modifier.size(24.dp),
             )
