@@ -64,7 +64,7 @@ class ProfileViewModelTest {
         vm.onIntent(ProfileIntent.ExportToStream(outputStream))
         advanceUntilIdle()
 
-        assertTrue(effects.any { it is ProfileEffect.ShowMessage && it.text == "Error al acceder a los datos" })
+        assertTrue(effects.any { it is ProfileEffect.ShowMessage && it.text == "Hubo un problema guardando tu data" })
         assertEquals(false, vm.state.value.isExporting)
 
         job.cancel()
