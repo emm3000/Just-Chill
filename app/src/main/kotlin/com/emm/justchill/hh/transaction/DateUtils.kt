@@ -8,6 +8,9 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 
+private val SPANISH = Locale.forLanguageTag("es")
+private val SHORT_DATE = DateTimeFormatter.ofPattern("EEE d MMM", SPANISH)
+
 object DateUtils {
 
     fun currentDateAtReadableFormat(formatStyle: FormatStyle = FormatStyle.LONG): String {
@@ -56,6 +59,19 @@ object DateUtils {
             .toInstant()
             .toEpochMilli()
     }
+
+    fun friendlyDate(millis: Long, zone: ZoneId = ZoneId.systemDefault()): String {
+        val date: LocalDate = Instant.ofEpochMilli(millis).atZone(zone).toLocalDate()
+        val today: LocalDate = LocalDate.now(zone)
+        return when (date) {
+            today -> "Hoy"
+            today.minusDays(1) -> "Ayer"
+            today.plusDays(1) -> "Mañana"
+            else -> date.format(SHORT_DATE).replaceFirstChar { it.titlecase(SPANISH) }
+        }
+    }
+
+    fun friendlyDateUTC(millis: Long): String = friendlyDate(millis, ZoneOffset.UTC)
 
     fun readableTime(millis: Long): String {
         val toLocalTime = Instant.ofEpochMilli(millis)

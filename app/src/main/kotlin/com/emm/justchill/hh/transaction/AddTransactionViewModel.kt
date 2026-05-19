@@ -39,37 +39,46 @@ class AddTransactionViewModel(
             updateState {
                 copy(
                     accounts = accounts,
-                    accountSelected = accounts.firstOrNull(),
+                    accountSelected = accountSelected ?: accounts.firstOrNull(),
                     categories = allCategories[transactionType.categoryType]?.take(7).orEmpty(),
-                    categorySelected = allCategories[transactionType.categoryType]?.firstOrNull(),
-                )
+                    categorySelected = categorySelected ?: allCategories[transactionType.categoryType]?.firstOrNull(),
+                ).validate()
             }
         }.launchIn(viewModelScope)
     }
 
     override fun onIntent(intent: AddTransactionIntent) {
         when (intent) {
-            is AddTransactionIntent.OnAmountChange -> updateState { copy(amount = intent.value).recomputeValidity() }
-            is AddTransactionIntent.OnDateChange -> updateState { copy(date = intent.value).recomputeValidity() }
-            is AddTransactionIntent.OnDescriptionChange -> updateState { copy(description = intent.value).recomputeValidity() }
+            is AddTransactionIntent.OnAmountChange -> updateState { copy(amount = intent.value).touched() }
+            is AddTransactionIntent.OnDateChange -> updateState { copy(date = intent.value).touched() }
+            is AddTransactionIntent.OnDescriptionChange -> updateState { copy(description = intent.value).touched() }
             is AddTransactionIntent.OnTransactionTypeChange -> updateState {
                 copy(
                     transactionType = intent.value,
                     categories = allCategories[intent.value.categoryType]?.take(7).orEmpty(),
                     categorySelected = allCategories[intent.value.categoryType]?.firstOrNull(),
-                )
+                ).touched()
             }
             is AddTransactionIntent.OnDateChangeInMillis -> updateCurrentDate(intent.value)
             AddTransactionIntent.OnSave -> addTransaction()
-            is AddTransactionIntent.OnAccountSelected -> updateState { copy(accountSelected = intent.value) }
-            is AddTransactionIntent.OnCategorySelected -> updateState { copy(categorySelected = intent.value) }
-            AddTransactionIntent.OnReset -> updateState {
-                copy(
-                    amount = "",
-                    description = String.Empty,
-                    date = DateUtils.currentDateAtReadableFormat(),
-                    transactionType = TransactionType.Income,
-                )
+            is AddTransactionIntent.OnAccountSelected -> updateState { copy(accountSelected = intent.value).touched() }
+            is AddTransactionIntent.OnCategorySelected -> updateState { copy(categorySelected = intent.value).touched() }
+            AddTransactionIntent.OnReset -> {
+                dateInLong = DateUtils.currentDateInMillis()
+                updateState {
+                    val defaultType = TransactionType.Income
+                    copy(
+                        amount = "",
+                        description = String.Empty,
+                        date = DateUtils.friendlyDate(dateInLong),
+                        transactionType = defaultType,
+                        categories = allCategories[defaultType.categoryType]?.take(7).orEmpty(),
+                        categorySelected = allCategories[defaultType.categoryType]?.firstOrNull(),
+                        accountSelected = accounts.firstOrNull(),
+                        isEnabled = false,
+                        hasChanges = false,
+                    )
+                }
             }
             is AddTransactionIntent.OnNewValueFromOthers -> {
                 val updatedCategories = allCategories.values.flatten()
@@ -80,14 +89,17 @@ class AddTransactionViewModel(
                     copy(
                         categories = updatedCategories.take(7),
                         categorySelected = intent.value,
-                    )
+                    ).touched()
                 }
             }
         }
     }
 
-    private fun AddTransactionUiState.recomputeValidity(): AddTransactionUiState =
-        copy(isEnabled = centsToSoles(amount) >= 1.0 && date.isNotEmpty() && description.isNotEmpty() && accountSelected != null)
+    private fun AddTransactionUiState.validate(): AddTransactionUiState =
+        copy(isEnabled = missingField == null)
+
+    private fun AddTransactionUiState.touched(): AddTransactionUiState =
+        validate().copy(hasChanges = true)
 
     private fun addTransaction() = launchSafe(
         onError = { AddTransactionEffect.ShowError(it.toUserMessage()) },
@@ -107,7 +119,7 @@ class AddTransactionViewModel(
 
     private fun updateCurrentDate(millis: Long?) = millis?.let {
         dateInLong = it
-        updateState { copy(date = DateUtils.millisToReadableFormatUTC(it)) }
+        updateState { copy(date = DateUtils.friendlyDateUTC(it)).touched() }
     }
 }
 

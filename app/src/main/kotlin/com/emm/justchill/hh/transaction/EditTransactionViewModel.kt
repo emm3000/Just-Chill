@@ -13,7 +13,6 @@ import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.UpdateTransactionUseCase
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
-import com.emm.justchill.hh.transaction.DateUtils.millisToReadableFormat
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
@@ -43,14 +42,14 @@ class EditTransactionViewModel(
             is EditTransactionIntent.OnDescriptionChange -> updateState { copy(description = intent.value).recomputeValidity() }
             is EditTransactionIntent.OnTransactionTypeChange -> updateState { copy(transactionType = intent.value) }
             is EditTransactionIntent.OnDateChangeInMillis -> updateCurrentDate(intent.value)
-            is EditTransactionIntent.OnAccountSelected -> updateState { copy(accountSelected = intent.value) }
+            is EditTransactionIntent.OnAccountSelected -> updateState { copy(accountSelected = intent.value).recomputeValidity() }
             EditTransactionIntent.OnSave -> updateTransaction()
             EditTransactionIntent.OnDelete -> deleteTransaction()
         }
     }
 
     private fun EditTransactionUiState.recomputeValidity(): EditTransactionUiState =
-        copy(isEnabled = centsToSoles(amount) >= 1.0 && date.isNotEmpty() && description.isNotEmpty())
+        copy(isEnabled = centsToSoles(amount) > 0.0 && date.isNotEmpty() && accountSelected != null)
 
     private fun loadCurrentTransaction() = viewModelScope.launch {
         val accounts: List<Account> = accountRepository.all().firstOrNull() ?: emptyList()
@@ -61,7 +60,7 @@ class EditTransactionViewModel(
             copy(
                 amount = moneyCentsString(oldTransaction.amount),
                 description = oldTransaction.description,
-                date = millisToReadableFormat(oldTransaction.date),
+                date = DateUtils.friendlyDate(oldTransaction.date),
                 transactionType = oldTransaction.type,
                 accounts = accounts,
                 accountSelected = oldAccount,
@@ -94,6 +93,6 @@ class EditTransactionViewModel(
 
     private fun updateCurrentDate(millis: Long?) = millis?.let {
         dateInLong = it
-        updateState { copy(date = DateUtils.millisToReadableFormatUTC(it)) }
+        updateState { copy(date = DateUtils.friendlyDateUTC(it)) }
     }
 }

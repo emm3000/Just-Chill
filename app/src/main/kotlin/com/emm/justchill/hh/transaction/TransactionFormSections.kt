@@ -3,18 +3,20 @@ package com.emm.justchill.hh.transaction
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreHoriz
@@ -25,8 +27,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -61,17 +67,21 @@ internal fun AmountInputSection(
     focusRequester: FocusRequester,
     onNext: () -> Unit,
 ) {
-    val spacing = LocalEmmSpacing.current
-    Column(verticalArrangement = Arrangement.spacedBy(spacing.s6)) {
-        TypeToggle(selected = transactionType, onSelect = onTypeChange)
-        AmountHeroInput(
-            rawCents = amount,
-            onRawCentsChange = onAmountChange,
-            type = transactionType,
-            focusRequester = focusRequester,
-            onNext = onNext,
-        )
-    }
+    AmountHeroInput(
+        rawCents = amount,
+        onRawCentsChange = onAmountChange,
+        type = transactionType,
+        focusRequester = focusRequester,
+        onNext = onNext,
+        onTypeFlip = {
+            onTypeChange(
+                when (transactionType) {
+                    TransactionType.Income -> TransactionType.Spend
+                    TransactionType.Spend -> TransactionType.Income
+                }
+            )
+        },
+    )
 }
 
 @Composable
@@ -80,66 +90,64 @@ internal fun CategorySelectorSection(
     selected: SelectableCategory?,
     onSelect: (SelectableCategory) -> Unit,
     onMore: () -> Unit,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val spacing = LocalEmmSpacing.current
     Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
-        SectionLabel("CATEGORÍA")
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(4),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp),
-            verticalArrangement = Arrangement.spacedBy(spacing.s2),
+        SectionLabel(text = "CATEGORÍA", modifier = Modifier.padding(contentPadding))
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+            contentPadding = contentPadding,
         ) {
             items(categories, key = { it.categoryId.value }) { category ->
-                CategoryTile(
+                CategoryChip(
                     category = category,
                     isSelected = category.categoryId == selected?.categoryId,
                     onClick = { onSelect(category) },
                 )
             }
-            item { CategoryMoreTile(onClick = onMore) }
+            item { CategoryMoreChip(onClick = onMore) }
         }
     }
 }
 
 @Composable
-internal fun AccountSelectorSection(
-    accountName: String?,
-    onClick: () -> Unit,
-) {
-    ClickableRow(
-        label = "CUENTA",
-        value = accountName ?: UiStrings.PICK_ACCOUNT,
-        emphasized = accountName != null,
-        onClick = onClick,
-    )
-}
-
-@Composable
-internal fun DateTimeSection(
-    date: String,
-    onClick: () -> Unit,
-) {
-    ClickableRow(
-        label = "FECHA",
-        value = date,
-        onClick = onClick,
-    )
-}
-
-@Composable
-internal fun DescriptionSection(
+internal fun NoteSection(
     description: String,
     onValueChange: (String) -> Unit,
 ) {
-    EmmTextInput(
-        value = description,
-        onValueChange = onValueChange,
-        label = "DESCRIPCIÓN",
-        placeholder = "Opcional",
-        singleLine = false,
+    var open by rememberSaveable(description.isNotEmpty()) { mutableStateOf(description.isNotEmpty()) }
+    if (open) {
+        EmmTextInput(
+            value = description,
+            onValueChange = onValueChange,
+            label = "NOTA",
+            placeholder = "Opcional",
+            singleLine = false,
+        )
+    } else {
+        NoteToggleLink(onClick = { open = true })
+    }
+}
+
+@Composable
+private fun NoteToggleLink(onClick: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+    val interactionSource = remember { MutableInteractionSource() }
+    Text(
+        text = "+ Agregar nota",
+        style = type.labelL,
+        color = colors.textSecondary,
+        modifier = Modifier
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(vertical = spacing.s2),
     )
 }
 
@@ -184,18 +192,19 @@ internal fun AccountPickerBottomSheet(
 }
 
 @Composable
-private fun SectionLabel(text: String) {
+private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     Text(
         text = text,
         style = type.labelM,
         color = colors.textTertiary,
+        modifier = modifier,
     )
 }
 
 @Composable
-private fun CategoryTile(
+private fun CategoryChip(
     category: SelectableCategory,
     isSelected: Boolean,
     onClick: () -> Unit,
@@ -206,60 +215,59 @@ private fun CategoryTile(
     val spacing = LocalEmmSpacing.current
 
     val borderColor = if (isSelected) colors.accentFocus else colors.border
+    val bgColor = if (isSelected) colors.surface2 else colors.surface1
 
-    Column(
+    Row(
         modifier = Modifier
-            .height(90.dp)
-            .background(colors.surface1, radii.rS)
-            .border(if (isSelected) 1.5.dp else 1.dp, borderColor, radii.rS)
+            .heightIn(min = 48.dp)
+            .background(bgColor, radii.rFull)
+            .border(if (isSelected) 1.5.dp else 1.dp, borderColor, radii.rFull)
             .clickable(onClick = onClick)
-            .padding(spacing.s2),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(horizontal = spacing.s4, vertical = spacing.s2),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
         Icon(
             imageVector = category.icon.icon,
-            contentDescription = category.name,
+            contentDescription = null,
             tint = colors.textPrimary,
-            modifier = Modifier.size(22.dp),
+            modifier = Modifier.size(18.dp),
         )
-        Spacer(Modifier.height(spacing.s1))
         Text(
             text = category.name,
-            style = type.labelM,
-            color = colors.textSecondary,
+            style = type.labelL,
+            color = if (isSelected) colors.textPrimary else colors.textSecondary,
             maxLines = 1,
         )
     }
 }
 
 @Composable
-private fun CategoryMoreTile(onClick: () -> Unit) {
+private fun CategoryMoreChip(onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val radii = LocalEmmRadii.current
     val spacing = LocalEmmSpacing.current
 
-    Column(
+    Row(
         modifier = Modifier
-            .height(90.dp)
-            .background(colors.surface1, radii.rS)
-            .border(1.dp, colors.border, radii.rS)
+            .heightIn(min = 48.dp)
+            .background(colors.surface1, radii.rFull)
+            .border(1.dp, colors.border, radii.rFull)
             .clickable(onClick = onClick)
-            .padding(spacing.s2),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(horizontal = spacing.s4, vertical = spacing.s2),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
         Icon(
             imageVector = Icons.Outlined.MoreHoriz,
             contentDescription = "Más categorías",
             tint = colors.textPrimary,
-            modifier = Modifier.size(22.dp),
+            modifier = Modifier.size(18.dp),
         )
-        Spacer(Modifier.height(spacing.s1))
         Text(
             text = "Más",
-            style = type.labelM,
+            style = type.labelL,
             color = colors.textSecondary,
         )
     }
@@ -388,24 +396,12 @@ private fun CategorySelectorSectionPreview() {
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
-private fun AccountSelectorSectionPreview() {
-    EmmTheme {
-        AccountSelectorSection(accountName = "Banco BCP", onClick = {})
-    }
+private fun NoteSectionCollapsedPreview() {
+    EmmTheme { NoteSection(description = "", onValueChange = {}) }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
-private fun DateTimeSectionPreview() {
-    EmmTheme {
-        DateTimeSection(date = "01/05/2026", onClick = {})
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF000000)
-@Composable
-private fun DescriptionSectionPreview() {
-    EmmTheme {
-        DescriptionSection(description = "Compra del super", onValueChange = {})
-    }
+private fun NoteSectionOpenPreview() {
+    EmmTheme { NoteSection(description = "Compra del super", onValueChange = {}) }
 }

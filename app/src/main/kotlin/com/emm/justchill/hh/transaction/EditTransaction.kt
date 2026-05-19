@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,6 +52,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.modalScreenInsets
+import com.emm.justchill.hh.shared.UiStrings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -113,7 +115,7 @@ private fun EditTransactionContent(
             .modalScreenInsets(),
     ) {
         EditTopBar(
-            title = "Editar",
+            title = "Editar movimiento",
             onClose = {
                 keyboard?.hide()
                 onBack()
@@ -124,61 +126,76 @@ private fun EditTransactionContent(
             },
         )
 
+        val sidePadding = Modifier.padding(horizontal = spacing.s4)
+        val openAccountPicker: () -> Unit = {
+            if (isKeyboardOpen) {
+                scope.launch {
+                    focusManager.clearFocus()
+                    keyboard?.hide()
+                    delay(300L)
+                }.invokeOnCompletion { setShowAccountPicker(true) }
+            } else {
+                setShowAccountPicker(true)
+            }
+        }
+
         Column(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = spacing.s4),
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(spacing.s6),
         ) {
             Spacer(Modifier.height(spacing.s2))
 
-            AmountInputSection(
-                amount = state.amount,
-                transactionType = state.transactionType,
-                onAmountChange = { onIntent(EditTransactionIntent.OnAmountChange(it)) },
-                onTypeChange = { onIntent(EditTransactionIntent.OnTransactionTypeChange(it)) },
-                focusRequester = amountFocus,
-                onNext = {
-                    keyboard?.hide()
-                    focusManager.clearFocus()
-                },
-            )
+            Box(modifier = sidePadding) {
+                AmountInputSection(
+                    amount = state.amount,
+                    transactionType = state.transactionType,
+                    onAmountChange = { onIntent(EditTransactionIntent.OnAmountChange(it)) },
+                    onTypeChange = { onIntent(EditTransactionIntent.OnTransactionTypeChange(it)) },
+                    focusRequester = amountFocus,
+                    onNext = {
+                        keyboard?.hide()
+                        focusManager.clearFocus()
+                    },
+                )
+            }
 
-            DateTimeSection(
-                date = state.date,
-                onClick = {
-                    focusManager.clearFocus()
-                    setShowSelectDate(true)
-                },
-            )
+            Row(
+                modifier = sidePadding.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+            ) {
+                MetaChip(
+                    label = "FECHA",
+                    value = state.date,
+                    onClick = {
+                        focusManager.clearFocus()
+                        setShowSelectDate(true)
+                    },
+                    modifier = Modifier.weight(1f),
+                )
+                MetaChip(
+                    label = "CUENTA",
+                    value = state.accountSelected?.name ?: UiStrings.PICK_ACCOUNT,
+                    emphasized = state.accountSelected != null,
+                    onClick = openAccountPicker,
+                    modifier = Modifier.weight(1f),
+                )
+            }
 
-            AccountSelectorSection(
-                accountName = state.accountSelected?.name,
-                onClick = {
-                    if (isKeyboardOpen) {
-                        scope.launch {
-                            focusManager.clearFocus()
-                            keyboard?.hide()
-                            delay(300L)
-                        }.invokeOnCompletion { setShowAccountPicker(true) }
-                    } else {
-                        setShowAccountPicker(true)
-                    }
-                },
-            )
-
-            DescriptionSection(
-                description = state.description,
-                onValueChange = { onIntent(EditTransactionIntent.OnDescriptionChange(it)) },
-            )
+            Box(modifier = sidePadding) {
+                NoteSection(
+                    description = state.description,
+                    onValueChange = { onIntent(EditTransactionIntent.OnDescriptionChange(it)) },
+                )
+            }
 
             Spacer(Modifier.height(spacing.s4))
         }
 
         EmmButton(
-            text = "Actualizar",
+            text = "Guardar cambios",
             onClick = { onIntent(EditTransactionIntent.OnSave) },
             enabled = state.isEnabled,
             modifier = Modifier

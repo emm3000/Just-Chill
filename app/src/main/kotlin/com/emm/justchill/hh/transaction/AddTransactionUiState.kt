@@ -10,11 +10,20 @@ import com.emm.justchill.hh.shared.Empty
 data class AddTransactionUiState(
     val amount: String = "",
     val description: String = String.Empty,
-    val date: String = DateUtils.currentDateAtReadableFormat(),
+    val date: String = DateUtils.friendlyDate(DateUtils.currentDateInMillis()),
     val transactionType: TransactionType = TransactionType.Income,
     val isEnabled: Boolean = false,
+    val hasChanges: Boolean = false,
     val accounts: List<Account> = emptyList(),
     val accountSelected: Account? = null,
     val categories: List<SelectableCategory> = emptyList(),
     val categorySelected: SelectableCategory? = null,
-) : UiState
+) : UiState {
+    val missingField: MissingField? get() = when {
+        centsToSoles(amount) <= 0.0 -> MissingField.Amount
+        accountSelected == null -> MissingField.Account
+        else -> null
+    }
+}
+
+enum class MissingField { Amount, Account }

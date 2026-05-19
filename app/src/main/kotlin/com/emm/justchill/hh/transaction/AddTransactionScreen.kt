@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -54,6 +55,7 @@ import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.modalScreenInsets
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.allColors
+import com.emm.justchill.hh.shared.UiStrings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -114,6 +116,11 @@ private fun AddTransactionScreenContent(
             .modalScreenInsets(),
     ) {
         AddScreenTopBar(
+            title = when (state.transactionType) {
+                TransactionType.Income -> "Nuevo ingreso"
+                TransactionType.Spend -> "Nuevo gasto"
+            },
+            showReset = state.hasChanges,
             onClose = {
                 keyboard?.hide()
                 popBackStack()
@@ -121,68 +128,84 @@ private fun AddTransactionScreenContent(
             onReset = { onIntent(AddTransactionIntent.OnReset) },
         )
 
+        val sidePadding = Modifier.padding(horizontal = spacing.s4)
+        val openAccountPicker: () -> Unit = {
+            if (isKeyboardOpen) {
+                scope.launch {
+                    focusManager.clearFocus()
+                    keyboard?.hide()
+                    delay(300L)
+                }.invokeOnCompletion { setShowAccountPicker(true) }
+            } else {
+                setShowAccountPicker(true)
+            }
+        }
+
         Column(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .verticalScroll(scrollState)
-                .padding(horizontal = spacing.s4),
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(spacing.s6),
         ) {
             Spacer(Modifier.height(spacing.s2))
 
-            AmountInputSection(
-                amount = state.amount,
-                transactionType = state.transactionType,
-                onAmountChange = { onIntent(AddTransactionIntent.OnAmountChange(it)) },
-                onTypeChange = { onIntent(AddTransactionIntent.OnTransactionTypeChange(it)) },
-                focusRequester = amountFocus,
-                onNext = {
-                    keyboard?.hide()
-                    focusManager.clearFocus()
-                },
-            )
+            Box(modifier = sidePadding) {
+                AmountInputSection(
+                    amount = state.amount,
+                    transactionType = state.transactionType,
+                    onAmountChange = { onIntent(AddTransactionIntent.OnAmountChange(it)) },
+                    onTypeChange = { onIntent(AddTransactionIntent.OnTransactionTypeChange(it)) },
+                    focusRequester = amountFocus,
+                    onNext = {
+                        keyboard?.hide()
+                        focusManager.clearFocus()
+                    },
+                )
+            }
 
             CategorySelectorSection(
                 categories = state.categories,
                 selected = state.categorySelected,
                 onSelect = { onIntent(AddTransactionIntent.OnCategorySelected(it)) },
                 onMore = onOtherCategorySelected,
+                contentPadding = PaddingValues(horizontal = spacing.s4),
             )
 
-            DateTimeSection(
-                date = state.date,
-                onClick = {
-                    focusManager.clearFocus()
-                    setShowSelectDate(true)
-                },
-            )
+            Row(
+                modifier = sidePadding.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+            ) {
+                MetaChip(
+                    label = "FECHA",
+                    value = state.date,
+                    onClick = {
+                        focusManager.clearFocus()
+                        setShowSelectDate(true)
+                    },
+                    modifier = Modifier.weight(1f),
+                )
+                MetaChip(
+                    label = "CUENTA",
+                    value = state.accountSelected?.name ?: UiStrings.PICK_ACCOUNT,
+                    emphasized = state.accountSelected != null,
+                    onClick = openAccountPicker,
+                    modifier = Modifier.weight(1f),
+                )
+            }
 
-            AccountSelectorSection(
-                accountName = state.accountSelected?.name,
-                onClick = {
-                    if (isKeyboardOpen) {
-                        scope.launch {
-                            focusManager.clearFocus()
-                            keyboard?.hide()
-                            delay(300L)
-                        }.invokeOnCompletion { setShowAccountPicker(true) }
-                    } else {
-                        setShowAccountPicker(true)
-                    }
-                },
-            )
-
-            DescriptionSection(
-                description = state.description,
-                onValueChange = { onIntent(AddTransactionIntent.OnDescriptionChange(it)) },
-            )
+            Box(modifier = sidePadding) {
+                NoteSection(
+                    description = state.description,
+                    onValueChange = { onIntent(AddTransactionIntent.OnDescriptionChange(it)) },
+                )
+            }
 
             Spacer(Modifier.height(spacing.s4))
         }
 
         EmmButton(
-            text = "Guardar transacción",
+            text = saveButtonLabel(state),
             onClick = { onIntent(AddTransactionIntent.OnSave) },
             enabled = state.isEnabled,
             modifier = Modifier
@@ -225,6 +248,8 @@ private fun AddTransactionScreenContent(
 
 @Composable
 private fun AddScreenTopBar(
+    title: String,
+    showReset: Boolean,
     onClose: () -> Unit,
     onReset: () -> Unit,
 ) {
@@ -258,25 +283,36 @@ private fun AddScreenTopBar(
         }
 
         Text(
-            text = "Agregar",
+            text = title,
             style = type.titleL,
             color = colors.textPrimary,
             modifier = Modifier.weight(1f),
         )
 
-        val resetInteraction = remember { MutableInteractionSource() }
-        Text(
-            text = "Reset",
-            style = type.labelL,
-            color = colors.textSecondary,
-            modifier = Modifier
-                .clickable(
-                    interactionSource = resetInteraction,
-                    indication = null,
-                    onClick = onReset,
-                )
-                .padding(spacing.s2),
-        )
+        if (showReset) {
+            val resetInteraction = remember { MutableInteractionSource() }
+            Text(
+                text = "Limpiar",
+                style = type.labelL,
+                color = colors.textSecondary,
+                modifier = Modifier
+                    .clickable(
+                        interactionSource = resetInteraction,
+                        indication = null,
+                        onClick = onReset,
+                    )
+                    .padding(spacing.s2),
+            )
+        }
+    }
+}
+
+private fun saveButtonLabel(state: AddTransactionUiState): String = when (state.missingField) {
+    MissingField.Amount -> "Ingresa un monto"
+    MissingField.Account -> "Elige una cuenta"
+    null -> when (state.transactionType) {
+        TransactionType.Income -> "Anotar ingreso"
+        TransactionType.Spend -> "Anotar gasto"
     }
 }
 
