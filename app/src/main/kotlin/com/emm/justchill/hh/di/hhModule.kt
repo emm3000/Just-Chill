@@ -16,6 +16,7 @@ import com.emm.domain.transaction.TransactionRepository
 import com.emm.justchill.hh.account.AccountsViewModel
 import com.emm.justchill.hh.account.AddAccountViewModel
 import com.emm.justchill.hh.category.AddCategoryViewModel
+import com.emm.justchill.hh.category.CategoriesViewModel
 import com.emm.justchill.hh.category.SelectCategoryViewModel
 import com.emm.justchill.hh.home.HomeViewModel
 import com.emm.justchill.hh.profile.ProfileViewModel
@@ -66,6 +67,7 @@ private fun Module.viewModelsProviders() {
             initialType = parameters.get(),
         )
     }
+    viewModelOf(::CategoriesViewModel)
     viewModelOf(::AddAccountViewModel)
 
     viewModelOf(::AccountsViewModel)

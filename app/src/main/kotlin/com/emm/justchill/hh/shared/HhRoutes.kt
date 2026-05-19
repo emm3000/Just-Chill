@@ -31,9 +31,6 @@ data object SeeTransactionRoute : BottomBarRoute
 data object AccountsRoute : BottomBarRoute
 
 @Serializable
-data object CategoriesListRoute : NavKey
-
-@Serializable
 data object ProfileRoute : BottomBarRoute
 
 data class HhNavBarItem(

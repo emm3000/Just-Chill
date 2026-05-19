@@ -14,7 +14,7 @@ Root package: `com.emm.domain.<entity>`
 
 ## Error model
 
-Sealed `DomainException` in `shared/error/` is the canonical failure type for all repositories and use cases. Subtypes: `NotFound`, `ValidationError`, `NetworkUnavailable`, `DatabaseError`, `Unknown`.
+Sealed `DomainException` in `shared/error/` is the canonical failure type for all repositories and use cases. Subtypes: `NotFound`, `ValidationError`, `DatabaseError`, `Unknown`.
 
 When adding a new failure mode, extend `DomainException` instead of introducing a new exception type. Don't leak Android or SQLDelight types into this module — those translations happen in `:data`.
 

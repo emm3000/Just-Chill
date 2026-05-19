@@ -11,6 +11,9 @@ data class EditTransactionRoute(val transactionId: String) : NavKey
 data class CategoryRoute(val initialType: CategoryType = CategoryType.Spend) : NavKey
 
 @Serializable
+data object CategoriesListRoute : NavKey
+
+@Serializable
 data object AddAccountRoute : NavKey
 
 @Serializable
