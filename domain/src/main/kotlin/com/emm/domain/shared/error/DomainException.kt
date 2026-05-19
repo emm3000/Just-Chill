@@ -10,7 +10,5 @@ sealed class DomainException(message: String, cause: Throwable? = null) : Except
 
     class DatabaseError(cause: Throwable) : DomainException(cause.message ?: "Database error", cause)
 
-    class Unauthorized : DomainException("User not authenticated")
-
     class Unknown(cause: Throwable) : DomainException(cause.message ?: "Unknown error", cause)
 }

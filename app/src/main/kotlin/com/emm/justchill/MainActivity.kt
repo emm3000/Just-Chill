@@ -1,16 +1,16 @@
 package com.emm.justchill
 
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.graphics.toArgb
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.backgroundDarkHighContrast
 import com.emm.justchill.hh.shared.Hh
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

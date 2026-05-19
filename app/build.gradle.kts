@@ -96,6 +96,12 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    lint {
+        // Pin known false positives so the rule keeps catching real bugs.
+        // To refresh: ./gradlew :app:updateLintBaselineProdRelease
+        baseline = file("lint-baseline.xml")
+    }
 }
 
 composeCompiler {

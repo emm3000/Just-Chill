@@ -7,6 +7,5 @@ fun DomainException.toUserMessage(): String = when (this) {
     is DomainException.ValidationError -> message ?: "Algo no cuadra con los datos"
     is DomainException.NetworkUnavailable -> "Sin conexión"
     is DomainException.DatabaseError -> "Hubo un problema guardando tu data"
-    is DomainException.Unauthorized -> "No tienes permiso para eso"
     is DomainException.Unknown -> "Algo se rompió — capaz reinicia la app?"
 }
