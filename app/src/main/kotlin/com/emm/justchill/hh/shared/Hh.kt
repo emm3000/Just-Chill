@@ -61,6 +61,9 @@ import com.emm.justchill.hh.account.AccountsScreen
 import com.emm.justchill.hh.account.AccountsViewModel
 import com.emm.justchill.hh.account.AddAccountScreen
 import com.emm.justchill.hh.category.AddCategoryScreen
+import com.emm.justchill.hh.category.CategoriesEffect
+import com.emm.justchill.hh.category.CategoriesScreen
+import com.emm.justchill.hh.category.CategoriesViewModel
 import com.emm.justchill.hh.category.SelectCategoryIntent
 import com.emm.justchill.hh.category.SelectCategoryScreen
 import com.emm.justchill.hh.category.SelectCategoryViewModel
@@ -196,6 +199,27 @@ fun Hh() {
                     )
                 }
 
+                entry<CategoriesListRoute> {
+                    val vm: CategoriesViewModel = koinViewModel()
+                    val categoriesState by vm.state.collectAsStateWithLifecycle()
+
+                    LaunchedEffect(vm) {
+                        vm.effect.collect { effect ->
+                            when (effect) {
+                                is CategoriesEffect.ShowMessage -> showRootMessage(effect.text)
+                            }
+                        }
+                    }
+
+                    CategoriesScreen(
+                        state = categoriesState,
+                        onIntent = vm::onIntent,
+                        onAddCategory = { backStack.add(CategoryRoute()) },
+                        onBack = { backStack.removeLastOrNull() },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+
                 entry<ProfileRoute> {
                     val vm: ProfileViewModel = koinViewModel()
                     val context = LocalContext.current
@@ -259,7 +283,7 @@ fun Hh() {
                     }
 
                     ProfileScreen(
-                        onCategoriesClick = { backStack.add(CategoryRoute()) },
+                        onCategoriesClick = { backStack.add(CategoriesListRoute) },
                         onAccountsClick = { backStack.add(AccountsRoute) },
                         onAboutClick = { backStack.add(ManifestoRoute(isRevisit = true)) },
                         onExportClick = { exportLauncher.launch(suggestedExportFilename()) },
