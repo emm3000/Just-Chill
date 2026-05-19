@@ -3,21 +3,19 @@
 > Estado del proyecto a fecha del último update. Punto de re-entrada
 > para retomar después de cerrar/limpiar el contexto.
 >
-> **Última actualización**: 2026-05-18 (S3 code listo).
+> **Última actualización**: 2026-05-18 (S4 cerrado, tag `post-s4`).
 
 ---
 
 ## TL;DR — dónde estamos ahora
 
 - **Proceso de definición**: ✅ Fases 1-5 firmadas y versionadas.
-- **Ejecución**: Sprint 0 cerrado. Sprints 1 (Reporte), 2 (Onboarding +
-  manifesto) y 3 (Export/Import JSON) con código listo + tests verdes;
-  **falta verificación manual en device acumulada** antes de tagear
-  `post-s1`, `post-s2` y `post-s3`.
-- **Próximo paso concreto**: instalar `./gradlew installDevDebug`,
-  correr los checks "Verificación manual S1/S2/S3" de abajo en una sola
-  pasada, y si todo va — tagear los tres y arrancar Sprint 4
-  (ProfileScreen completo / US-21).
+- **Ejecución**: Sprints 0-4 cerrados y tageados (`post-s0` … `post-s4`).
+  S4 fue mini-scope (6/7 ítems de US-21 ya estaban hechos en S0/S2/S3;
+  solo faltaba Política de privacidad).
+- **Próximo paso concreto**: arrancar Sprint 5 (Polish + accesibilidad
+  + screenshots para Play Store). Antes, opcional: push de `trunk` al
+  remoto para backup off-device.
 
 ---
 
@@ -57,10 +55,10 @@ Decisiones bloqueadas (no se renegocian sin volver a Fase 1):
 | Sprint | Foco | Estado | Tag |
 |---|---|---|---|
 | **S0** | 9 quick wins (cleanup) | ✅ Completo | `post-s0` |
-| **S1** | Reporte ingresos + nav meses (US-11, US-09) | ⚠️ Code listo, falta verif device | — |
-| **S2** | Onboarding + manifiesto (US-01, US-02) | ⚠️ Code listo, falta verif device | — |
-| **S3** | Export/Import JSON (US-18, US-19) | ⚠️ Code listo, falta verif device | — |
-| **S4** | ProfileScreen completo (US-21) | ⏳ Pendiente | — |
+| **S1** | Reporte ingresos + nav meses (US-11, US-09) | ✅ Completo | `post-s1` |
+| **S2** | Onboarding + manifiesto (US-01, US-02) | ✅ Completo | `post-s2` |
+| **S3** | Export/Import JSON (US-18, US-19) | ✅ Completo | `post-s3` |
+| **S4** | ProfileScreen completo (US-21) | ✅ Completo | `post-s4` |
 | **S5** | Polish + accesibilidad + screenshots | ⏳ Pendiente | — |
 | **S6** | Dogfooding propio intensivo | ⏳ Pendiente | — |
 | **S7** | Testers externos + publicación alpha | ⏳ Pendiente | — |
@@ -241,9 +239,25 @@ Entregado en 3 chunks delegados a Sonnet (uno por sesión):
 |---|---|---|
 | `pre-s0` | Antes de ejecutar — Fases 1-5 firmadas + DESIGN_SYSTEM alineado | `git reset --hard pre-s0` |
 | `post-s0` | 9 quick wins completados, repo limpio | `git reset --hard post-s0` |
+| `post-s1` | Reporte + nav meses (US-11, US-09) verificado en device | `git reset --hard post-s1` |
+| `post-s2` | Onboarding + manifesto (US-01, US-02) | `git reset --hard post-s2` |
+| `post-s3` | Export/Import JSON (US-18, US-19) | `git reset --hard post-s3` |
+| `post-s4` | ProfileScreen completo + Privacidad (US-21) | `git reset --hard post-s4` |
 
-**Próximos tags esperados**: `post-s1`, `post-s2` y `post-s3` (los tres
-tras una sola pasada de verificación manual en device).
+**Próximo tag esperado**: `post-s5` tras polish + screenshots.
+
+### S4 — notas (mini scope)
+- 6 de 7 ítems de US-21 ya estaban hechos en S0/S2/S3 — solo faltó
+  Política de privacidad.
+- `PrivacyPolicyScreen.kt` stateless (sin VM), copy de 71 palabras
+  drafteada por Opus, aprobada por user. Voz peruana: "tú", no "vos".
+- Pendiente para S5: el manifesto sigue usando "vos" (rioplatense).
+  Bug de voz que pillamos durante S4 — corregir cuando se haga el
+  pase visual + copy de S5.
+- US-12 (gastos por categoría en Report) ya funciona end-to-end:
+  `ToggleIncomeExpense` + `ReportViewModel.loadReport(selectedType)`
+  recompone con data real al tap del toggle.
+- US-17 (íconos genéricos por banco en AccountsScreen) diferido a S5.
 
 ---
 
