@@ -9,21 +9,28 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.outlined.List
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -38,11 +45,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -52,7 +61,6 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.emm.domain.account.Account
 import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
@@ -83,7 +91,6 @@ import com.emm.justchill.hh.transaction.AddTransactionScreen
 import com.emm.justchill.hh.transaction.AddTransactionViewModel
 import com.emm.justchill.hh.transaction.EditTransaction
 import com.emm.justchill.hh.transaction.SelectableCategory
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -169,6 +176,7 @@ fun Hh() {
                             backStack.switchTab(SeeTransactionRoute)
                         },
                         navigateToReport = { backStack.add(ReportRoute) },
+                        navigateToAdd = { backStack.add(AddTransactionRoute) },
                     )
                 }
 
@@ -415,72 +423,157 @@ private fun NavBackStack<NavKey>.switchTab(target: BottomBarRoute) {
     if (target != START_TAB) add(target)
 }
 
+private data class BottomTab(
+    val route: BottomBarRoute?,  // null = add pseudo-tab
+    val label: String,
+    val icon: ImageVector,
+    val isAdd: Boolean = false,
+)
+
+private val BOTTOM_TABS = listOf(
+    BottomTab(HomeRoute,          "Inicio",   Icons.Outlined.Home),
+    BottomTab(SeeTransactionRoute,"Ver",      Icons.AutoMirrored.Outlined.List),
+    BottomTab(null,               "Agregar",  Icons.Outlined.Add, isAdd = true),
+    BottomTab(AccountsRoute,      "Cuentas",  Icons.Outlined.AccountBalanceWallet),
+    BottomTab(ProfileRoute,       "Perfil",   Icons.Outlined.Person),
+)
+
 @Composable
 private fun HhBottomBar(
     current: BottomBarRoute?,
     onTabClick: (BottomBarRoute) -> Unit,
     onAddClick: () -> Unit,
 ) {
-    BottomAppBar(
-        containerColor = MaterialTheme.colorScheme.background,
-        contentColor = MaterialTheme.colorScheme.onBackground,
+    val colors = LocalEmmColors.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(colors.bg)
+            .navigationBarsPadding(),
     ) {
-        val entries = TOP_LEVEL_ROUTES.entries.toList()
-        // Insert the "Add" pseudo-item between SeeTransactionRoute and AccountsRoute (position 2)
-        entries.forEachIndexed { index, (route, item) ->
-            if (index == 2) {
-                AddBottomBarItem(onClick = onAddClick)
+        // 1dp top border (hairline)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .size(1.dp)
+                .background(colors.border),
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            BOTTOM_TABS.forEach { tab ->
+                if (tab.isAdd) {
+                    AddBottomBarItem(
+                        label = tab.label,
+                        onClick = dropUnlessResumed(block = onAddClick),
+                        modifier = Modifier.weight(1f),
+                    )
+                } else {
+                    val isActive = tab.route == current
+                    RegularBottomBarItem(
+                        label = tab.label,
+                        icon = tab.icon,
+                        isActive = isActive,
+                        onClick = dropUnlessResumed { tab.route?.let(onTabClick) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
-            val isSelected = route == current
-            NavigationBarItem(
-                selected = isSelected,
-                onClick = dropUnlessResumed { onTabClick(route) },
-                icon = {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                    )
-                },
-                label = {
-                    Text(
-                        text = item.name,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = LocalContentColor.current,
-                        fontFamily = InterFontFamily,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    )
-                },
-            )
         }
     }
 }
 
 @Composable
-private fun RowScope.AddBottomBarItem(onClick: () -> Unit) {
-    NavigationBarItem(
-        selected = false,
-        onClick = dropUnlessResumed(block = onClick),
-        icon = {
+private fun RegularBottomBarItem(
+    label: String,
+    icon: ImageVector,
+    isActive: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalEmmColors.current
+    val tint = if (isActive) colors.textPrimary else colors.textDisabled
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Column(
+        modifier = modifier
+            .heightIn(min = 56.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(top = 6.dp, bottom = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = tint,
+            modifier = Modifier.size(18.dp),
+        )
+        androidx.compose.foundation.layout.Spacer(Modifier.size(3.dp))
+        Text(
+            text = label,
+            color = tint,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.W500,
+            fontFamily = InterFontFamily,
+            letterSpacing = 0.1.sp,
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun AddBottomBarItem(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalEmmColors.current
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Column(
+        modifier = modifier
+            .heightIn(min = 56.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(top = 6.dp, bottom = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(28.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(colors.accent),
+        ) {
             Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = "Agregar",
-                modifier = Modifier.size(24.dp),
-                tint = MaterialTheme.colorScheme.primary,
+                imageVector = Icons.Outlined.Add,
+                contentDescription = label,
+                tint = Color.White,
+                modifier = Modifier.size(14.dp),
             )
-        },
-        label = {
-            Text(
-                text = "Agregar",
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.primary,
-                fontFamily = InterFontFamily,
-                fontWeight = FontWeight.Bold,
-            )
-        },
-    )
+        }
+        androidx.compose.foundation.layout.Spacer(Modifier.size(3.dp))
+        Text(
+            text = label,
+            color = colors.accent,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.W600,
+            fontFamily = InterFontFamily,
+            letterSpacing = 0.1.sp,
+            maxLines = 1,
+        )
+    }
 }
