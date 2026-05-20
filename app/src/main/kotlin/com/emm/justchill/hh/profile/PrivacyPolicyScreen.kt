@@ -61,17 +61,20 @@ fun PrivacyPolicyScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 color = colors.textPrimary,
             )
             Text(
-                text = "Si exportas tu data a un archivo, tú decides qué hacer con él — guardarlo, mandarlo o borrarlo.",
+                text = "Si exportas tu data a un archivo, tú decides qué hacer con él — " +
+                    "guardarlo, mandarlo o borrarlo.",
                 style = type.bodyL,
                 color = colors.textPrimary,
             )
             Text(
-                text = "No usamos analytics. No usamos cookies. No tenemos manera de saber qué cuentas o categorías creaste.",
+                text = "No usamos analytics. No usamos cookies. " +
+                    "No tenemos manera de saber qué cuentas o categorías creaste.",
                 style = type.bodyL,
                 color = colors.textPrimary,
             )
             Text(
-                text = "Si reinstalas la app o cambias de celular sin exportar primero, la data se pierde. Es el precio de no tener servidor — y nos parece justo.",
+                text = "Si reinstalas la app o cambias de celular sin exportar primero, " +
+                    "la data se pierde. Es el precio de no tener servidor — y nos parece justo.",
                 style = type.bodyL,
                 color = colors.textPrimary,
             )

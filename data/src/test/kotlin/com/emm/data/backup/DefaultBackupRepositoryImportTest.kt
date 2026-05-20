@@ -106,7 +106,8 @@ class DefaultBackupRepositoryImportTest {
         // Seed some data first
         repository.importFromJson(buildPayloadJson(accounts = 1, categories = 1, transactions = 1))
 
-        val emptyJson = """{"schemaVersion":1,"exportedAt":0,"appVersion":"1.0.0","accounts":[],"categories":[],"transactions":[]}"""
+        val emptyJson = """{"schemaVersion":1,"exportedAt":0,"appVersion":"1.0.0",""" +
+            """"accounts":[],"categories":[],"transactions":[]}"""
         val stats = repository.importFromJson(emptyJson)
 
         assertEquals(ImportStats(accounts = 0, categories = 0, transactions = 0), stats)
@@ -128,7 +129,8 @@ class DefaultBackupRepositoryImportTest {
 
     @Test
     fun `wrong schemaVersion throws ValidationError and DB is untouched`() = runTest {
-        val json = """{"schemaVersion":99,"exportedAt":0,"appVersion":"1.0.0","accounts":[],"categories":[],"transactions":[]}"""
+        val json = """{"schemaVersion":99,"exportedAt":0,"appVersion":"1.0.0",""" +
+            """"accounts":[],"categories":[],"transactions":[]}"""
         val beforeAccounts = db.accountsQueries.all().executeAsList().size
 
         assertFailsWith<DomainException.ValidationError> {
@@ -152,7 +154,8 @@ class DefaultBackupRepositoryImportTest {
             """{"categoryId":"cat-$i","name":"Cat $i","icon":"icon","color":"#000","categoryType":"Spend"}"""
         }
         val transactionsJson = (1..transactions).joinToString(",") { i ->
-            """{"transactionId":"tx-$i","type":"Spend","amountCents":1000,"description":"Tx $i","date":0,"accountId":"acc-1","categoryId":null}"""
+            """{"transactionId":"tx-$i","type":"Spend","amountCents":1000,""" +
+                """"description":"Tx $i","date":0,"accountId":"acc-1","categoryId":null}"""
         }
         return """
             {
