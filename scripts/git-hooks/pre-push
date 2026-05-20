@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Pre-push: run detekt across all modules. Fails the push if any new finding
+# (not in `config/detekt/baseline-*.xml`) is introduced.
+#
+# Skip with: git push --no-verify
+
+set -e
+
+# Drain stdin (git feeds ref info — we don't use it but some shells trip without consuming).
+cat > /dev/null
+
+echo "→ detekt…"
+./gradlew detekt --quiet --console=plain
+echo "✓ detekt clean"
