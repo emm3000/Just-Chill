@@ -1,5 +1,5 @@
 package com.emm.domain.shared
 
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 fun currentTimeInMillis(): Long = Clock.System.now().toEpochMilliseconds()

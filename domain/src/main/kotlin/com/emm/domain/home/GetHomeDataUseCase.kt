@@ -7,7 +7,7 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 class GetHomeDataUseCase(
     private val transactionRepository: TransactionRepository,
