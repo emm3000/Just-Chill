@@ -345,6 +345,7 @@ fun Hh() {
                         transactionId = key.transactionId,
                         onBack = { backStack.removeLastOrNull() },
                         snackbarHostState = snackbarHostState,
+                        onAddNewAccount = { backStack.add(AddAccountRoute) },
                     )
                 }
 

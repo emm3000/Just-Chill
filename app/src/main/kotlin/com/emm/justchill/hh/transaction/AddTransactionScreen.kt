@@ -238,6 +238,7 @@ private fun AddTransactionScreenContent(
             selectedAccountId = state.accountSelected?.accountId?.value,
             onSelected = { onIntent(AddTransactionIntent.OnAccountSelected(it)) },
             onDismiss = { showAccountSheet = false },
+            onAddNew = { onAddNewAccount() },
         )
     }
 

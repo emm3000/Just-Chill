@@ -56,6 +56,7 @@ fun EditTransaction(
     transactionId: String,
     onBack: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    onAddNewAccount: () -> Unit = {},
     vm: EditTransactionViewModel = koinViewModel(parameters = { parametersOf(transactionId) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -74,6 +75,7 @@ fun EditTransaction(
         state = state,
         onIntent = vm::onIntent,
         onBack = onBack,
+        onAddNewAccount = onAddNewAccount,
     )
 }
 
@@ -82,6 +84,7 @@ private fun EditTransactionContent(
     state: EditTransactionUiState,
     onIntent: (EditTransactionIntent) -> Unit,
     onBack: () -> Unit,
+    onAddNewAccount: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
 
@@ -217,6 +220,7 @@ private fun EditTransactionContent(
             selectedAccountId = state.accountSelected?.accountId?.value,
             onSelected = { onIntent(EditTransactionIntent.OnAccountSelected(it)) },
             onDismiss = { showAccountSheet = false },
+            onAddNew = { onAddNewAccount() },
         )
     }
 

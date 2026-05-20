@@ -31,6 +31,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountType
 import com.emm.justchill.core.theme.InterFontFamily
@@ -68,6 +70,7 @@ fun AccountPickerSheet(
 ) {
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -152,6 +155,7 @@ fun AccountPickerSheet(
 
         // "+ Nueva cuenta" dashed button
         if (onAddNew != null) {
+            val onAdd: () -> Unit = onAddNew
             val dashedShape = RoundedCornerShape(12.dp)
             Row(
                 modifier = Modifier
@@ -162,7 +166,15 @@ fun AccountPickerSheet(
                     // Dashed border approximated with a solid borderFocus — true dashed not
                     // natively supported in Compose without Canvas; close enough for SR-3.
                     .border(1.dp, colors.borderFocus, dashedShape)
-                    .clickable(onClick = onAddNew),
+                    // Animate the sheet hide first so it slides out cleanly; THEN navigate.
+                    // hide() does not trigger onDismissRequest, so the parent's showAccountSheet
+                    // stays true and the sheet auto-re-opens when the user returns.
+                    .clickable {
+                        scope.launch {
+                            sheetState.hide()
+                            onAdd()
+                        }
+                    },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
             ) {
