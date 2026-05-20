@@ -51,9 +51,6 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
-import com.emm.justchill.core.ui.atoms.IconTile
-import com.emm.justchill.core.ui.atoms.IconTileSize
-import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.MoneyInline
 import com.emm.justchill.core.ui.atoms.MonthSelector
 import com.emm.justchill.hh.category.findById
@@ -63,6 +60,7 @@ import com.emm.justchill.hh.shared.fullLabel
 import com.emm.justchill.hh.shared.shortLabel
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
+import com.emm.justchill.hh.transaction.components.TransactionRow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -70,12 +68,14 @@ fun HomeScreen(
     homeViewModel: HomeViewModel = koinViewModel(),
     navigateToAll: () -> Unit = {},
     navigateToAdd: () -> Unit = {},
+    navigateToEdit: (String) -> Unit = {},
 ) {
     val state: HomeUiState by homeViewModel.state.collectAsStateWithLifecycle()
     HomeScreen(
         homeData = state,
         navigateToAll = navigateToAll,
         navigateToAdd = navigateToAdd,
+        navigateToEdit = navigateToEdit,
         onPreviousMonth = { homeViewModel.onIntent(HomeIntent.PreviousMonth) },
         onNextMonth = { homeViewModel.onIntent(HomeIntent.NextMonth) },
     )
@@ -86,6 +86,7 @@ fun HomeScreen(
     homeData: HomeUiState,
     navigateToAll: () -> Unit = {},
     navigateToAdd: () -> Unit = {},
+    navigateToEdit: (String) -> Unit = {},
     onPreviousMonth: () -> Unit = {},
     onNextMonth: () -> Unit = {},
 ) {
@@ -102,6 +103,7 @@ fun HomeScreen(
         else -> HomeWithData(
             homeData = homeData,
             navigateToAll = navigateToAll,
+            navigateToEdit = navigateToEdit,
             onPreviousMonth = onPreviousMonth,
             onNextMonth = onNextMonth,
         )
@@ -112,6 +114,7 @@ fun HomeScreen(
 private fun HomeWithData(
     homeData: HomeUiState,
     navigateToAll: () -> Unit,
+    navigateToEdit: (String) -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
 ) {
@@ -148,7 +151,11 @@ private fun HomeWithData(
             )
         }
         items(homeData.lastTransactions, TransactionUi::transactionId) { tx ->
-            TransactionRow(tx = tx)
+            TransactionRow(
+                tx = tx,
+                showDate = true,
+                onClick = dropUnlessResumed { navigateToEdit(tx.transactionId) },
+            )
         }
         item { Spacer(Modifier.height(16.dp)) }
     }
@@ -233,68 +240,6 @@ private fun RecentsHeader(onViewAll: () -> Unit, modifier: Modifier = Modifier) 
                 color = colors.textSecondary,
             )
         }
-    }
-}
-
-@Composable
-private fun TransactionRow(tx: TransactionUi) {
-    val colors = LocalEmmColors.current
-
-    val amountColor = if (tx.type == TransactionType.Income) colors.success else colors.textPrimary
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        IconTile(
-            icon = tx.category.categoryIcon,
-            size = IconTileSize.Sm,
-            tone = IconTileTone.Swatch,
-            swatch = tx.category.categoryColor.primary,
-        )
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = tx.description.ifBlank { "Sin descripción" },
-                style = TextStyle(
-                    fontFamily = InterFontFamily,
-                    fontSize = 15.sp,
-                    lineHeight = 20.sp,
-                    fontWeight = FontWeight.W500,
-                    letterSpacing = (-0.15).sp,
-                ),
-                color = colors.textPrimary,
-                maxLines = 1,
-            )
-            Text(
-                text = "${tx.readableDate} · ${tx.readableTime}",
-                style = TextStyle(
-                    fontFamily = InterFontFamily,
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
-                    fontWeight = FontWeight.W400,
-                    letterSpacing = 0.sp,
-                ),
-                color = colors.textSecondary,
-                maxLines = 1,
-            )
-        }
-
-        Text(
-            text = tx.amount,
-            style = TextStyle(
-                fontFamily = InterFontFamily,
-                fontSize = 15.sp,
-                lineHeight = 20.sp,
-                fontWeight = FontWeight.W600,
-                letterSpacing = (-0.15).sp,
-                fontFeatureSettings = "tnum",
-            ),
-            color = amountColor,
-        )
     }
 }
 
@@ -539,7 +484,7 @@ private fun HomeScreenPreview() {
                         amount = formatExpense("84.20"),
                         description = "Mercado",
                         date = 0,
-                        readableDate = "HOY",
+                        readableDate = "Hoy",
                         readableTime = "14:30",
                         category = CategoryUi(Icons.Rounded.Category, findById("green")),
                     ),
@@ -549,7 +494,7 @@ private fun HomeScreenPreview() {
                         amount = formatIncome("3,200.00"),
                         description = "Sueldo",
                         date = 0,
-                        readableDate = "HOY",
+                        readableDate = "Hoy",
                         readableTime = "09:00",
                         category = CategoryUi(Icons.Rounded.Category, findById("gray")),
                     ),
@@ -559,7 +504,7 @@ private fun HomeScreenPreview() {
                         amount = formatExpense("12.00"),
                         description = "Café con Sofía",
                         date = 0,
-                        readableDate = "AYER",
+                        readableDate = "Ayer",
                         readableTime = "16:48",
                         category = CategoryUi(Icons.Rounded.Category, findById("pink")),
                     ),

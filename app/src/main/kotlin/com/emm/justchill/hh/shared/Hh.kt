@@ -175,6 +175,7 @@ fun Hh(modifier: Modifier = Modifier) {
                             backStack.switchTab(SeeTransactionRoute)
                         },
                         navigateToAdd = { backStack.add(AddTransactionRoute) },
+                        navigateToEdit = { id -> backStack.add(EditTransactionRoute(id)) },
                     )
                 }
 

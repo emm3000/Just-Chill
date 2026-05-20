@@ -34,7 +34,7 @@ private fun TransactionWithCategory.toUi(): TransactionUi {
         },
         description = description,
         date = date,
-        readableDate = DateUtils.millisToReadableFormat(date),
+        readableDate = DateUtils.friendlyDate(date),
         readableTime = DateUtils.readableTime(date),
         category = CategoryUi(
             categoryIcon = category?.icon?.let(AppIconCatalog::findById)?.icon ?: Icons.Rounded.QuestionMark,

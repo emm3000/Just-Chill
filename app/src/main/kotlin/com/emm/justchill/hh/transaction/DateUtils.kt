@@ -9,7 +9,7 @@ import java.time.format.FormatStyle
 import java.util.Locale
 
 private val SPANISH = Locale.forLanguageTag("es")
-private val SHORT_DATE = DateTimeFormatter.ofPattern("EEE d MMM", SPANISH)
+private val SHORT_DATE = DateTimeFormatter.ofPattern("d MMM", SPANISH)
 
 object DateUtils {
 
@@ -21,18 +21,6 @@ object DateUtils {
             .withLocale(Locale.forLanguageTag("es"))
 
         return currentLocalDate.format(readableFormatter)
-    }
-
-    fun millisToReadableFormat(millis: Long): String {
-        val localDate: LocalDate = Instant.ofEpochMilli(millis)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate()
-
-        val readableFormatter: DateTimeFormatter = DateTimeFormatter
-            .ofLocalizedDate(FormatStyle.LONG)
-            .withLocale(Locale.forLanguageTag("es"))
-
-        return localDate.format(readableFormatter)
     }
 
     fun millisToReadableFormatUTC(millis: Long): String {
@@ -73,7 +61,7 @@ object DateUtils {
         val toLocalTime = Instant.ofEpochMilli(millis)
             .atZone(ZoneId.systemDefault())
             .toLocalTime()
-        val formatter = DateTimeFormatter.ofPattern("hh:mm a")
+        val formatter = DateTimeFormatter.ofPattern("h:mm a", SPANISH)
         return toLocalTime.format(formatter)
     }
 }

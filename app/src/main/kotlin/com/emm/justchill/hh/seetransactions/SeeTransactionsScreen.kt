@@ -65,14 +65,12 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
-import com.emm.justchill.core.ui.atoms.IconTile
-import com.emm.justchill.core.ui.atoms.IconTileSize
-import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
+import com.emm.justchill.hh.transaction.components.TransactionRow
 import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDate
 import java.util.UUID
@@ -486,68 +484,13 @@ private fun DayGroupedList(days: List<DayGroup>, onItemClick: (String) -> Unit) 
             }
 
             items(dayGroup.transactions, key = TransactionUi::transactionId) { tx ->
-                TxRow(tx = tx, onClick = { onItemClick(tx.transactionId) })
+                TransactionRow(
+                    tx = tx,
+                    showDate = false,
+                    onClick = { onItemClick(tx.transactionId) },
+                )
             }
         }
-    }
-}
-
-@Composable
-private fun TxRow(tx: TransactionUi, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-
-    val amountColor = if (tx.type == TransactionType.Income) colors.success else colors.textPrimary
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 12.dp, horizontal = 24.dp),
-    ) {
-        IconTile(
-            icon = tx.category.categoryIcon,
-            size = IconTileSize.Sm,
-            tone = IconTileTone.Swatch,
-            swatch = tx.category.categoryColor.primary,
-        )
-        Spacer(Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = tx.description.ifBlank { "Sin descripción" },
-                style = TextStyle(
-                    fontFamily = InterFontFamily,
-                    fontSize = 15.sp,
-                    lineHeight = 20.sp,
-                    fontWeight = FontWeight.W500,
-                    letterSpacing = (-0.15).sp,
-                ),
-                color = colors.textPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = tx.readableTime,
-                style = type.caption.copy(fontSize = 11.sp, letterSpacing = 0.11.sp),
-                color = colors.textTertiary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = tx.amount,
-            style = TextStyle(
-                fontFamily = InterFontFamily,
-                fontSize = 15.sp,
-                lineHeight = 20.sp,
-                fontWeight = FontWeight.W600,
-                letterSpacing = (-0.15).sp,
-                fontFeatureSettings = "tnum",
-            ),
-            color = amountColor,
-        )
     }
 }
 
