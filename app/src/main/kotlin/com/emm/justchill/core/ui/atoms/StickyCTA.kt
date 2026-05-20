@@ -1,26 +1,27 @@
 package com.emm.justchill.core.ui.atoms
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.theme.PlexMonoFontFamily
 
 enum class CtaTone {
     Accent,   // bg = accent, fg = white
@@ -54,31 +55,30 @@ fun StickyCTA(
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
 
-    val ctaColors = when (tone) {
-        CtaTone.Accent -> colors.accent to colors.textOnAccent
-        CtaTone.Pos -> colors.success to colors.textOnAccent
-        CtaTone.Neutral -> colors.textPrimary to colors.bg
+    // Disabled state matches the design: bg → surface1 (panel), fg → textTertiary.
+    val (bgColor, fgColor) = when {
+        !enabled -> colors.surface1 to colors.textTertiary
+        tone == CtaTone.Accent -> colors.accent to colors.textOnAccent
+        tone == CtaTone.Pos -> colors.success to colors.textOnAccent
+        else -> colors.textPrimary to colors.bg
     }
-    val (bgColor, fgColor) = ctaColors
 
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Hairline()
 
-        Surface(
-            color = bgColor,
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
                 .padding(top = 12.dp, bottom = 16.dp)
                 .height(52.dp)
                 .clip(radii.rL)
-                .alpha(if (enabled) 1f else 0.4f)
+                .background(bgColor)
                 .then(
                     if (enabled) Modifier.clickable(onClick = onClick)
                     else Modifier
                 ),
+            contentAlignment = Alignment.Center,
         ) {
             if (inlineSublabel && sublabel != null) {
                 Row(
@@ -105,7 +105,7 @@ fun StickyCTA(
                         color = fgColor.copy(alpha = 0.9f),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.W500,
-                        fontFamily = com.emm.justchill.core.theme.PlexMonoFontFamily,
+                        fontFamily = PlexMonoFontFamily,
                         letterSpacing = 0.sp,
                     )
                 }

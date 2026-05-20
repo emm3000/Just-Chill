@@ -1,6 +1,7 @@
 package com.emm.justchill.core.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -85,8 +86,8 @@ fun Numpad(
                             .weight(1f)
                             .height(52.dp)
                             .clip(shape)
+                            .background(bgColor)
                             .border(BorderStroke(1.dp, borderColor), shape)
-                            .then(if (isAccent) Modifier else Modifier)
                             .clickable {
                                 when (key) {
                                     is NumKey.Digit -> onDigit(key.ch)
