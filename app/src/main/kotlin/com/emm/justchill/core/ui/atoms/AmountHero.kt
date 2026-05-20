@@ -1,17 +1,18 @@
 package com.emm.justchill.core.ui.atoms
 
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,14 +33,8 @@ enum class AmountTone {
 /**
  * Hero amount display in IBM Plex Mono with tabular figures.
  *
- * Renders: [prefix] at 40% of [size] in textTertiary, then the integer part + optional decimals.
- * Decimal part is rendered at 0.55 opacity for visual hierarchy.
- *
- * @param value        Numeric value (sign determines tone when [tone] is auto).
- * @param size         Base font size; defaults to 56sp. Use 48sp for detail screens.
- * @param tone         Color tone for the main number.
- * @param withDecimals If true, renders ".XX" decimals (0.55 opacity).
- * @param prefix       Currency prefix, e.g. "S/".
+ * Renders the prefix at 40% of [size] in textTertiary, baseline-aligned with the integer.
+ * The decimal part is rendered at the same [size] but at 0.55 alpha for visual hierarchy.
  */
 @Composable
 fun AmountHero(
@@ -64,7 +59,7 @@ fun AmountHero(
         val formatter = NumberFormat.getIntegerInstance(Locale("es", "PE"))
         formatter.format(absValue.toLong())
     }
-    val decPart = remember(absValue, withDecimals) {
+    val decPart: String? = remember(absValue, withDecimals) {
         if (withDecimals) {
             val formatter = DecimalFormat("00")
             formatter.format(((absValue - absValue.toLong()) * 100).toLong())
@@ -72,43 +67,46 @@ fun AmountHero(
     }
 
     val prefixSize = (size.value * 0.40f).sp
-    val monoStyle = TextStyle(
+    val tightLetterSpacing = (-0.04 * size.value).sp
+
+    // Prefix style — no tnum (S/ is not a digit; tnum widens non-digits in Plex Mono)
+    val prefixStyle = TextStyle(
+        fontFamily = PlexMonoFontFamily,
+        fontWeight = FontWeight.W400,
+        fontSize = prefixSize,
+    )
+
+    // Number style — full size with tnum + tight letter spacing
+    val numberStyle = TextStyle(
         fontFamily = PlexMonoFontFamily,
         fontWeight = FontWeight.W500,
         fontFeatureSettings = "tnum",
-        letterSpacing = (-0.04 * size.value).sp,
+        fontSize = size,
+        letterSpacing = tightLetterSpacing,
     )
 
-    Row(
-        verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        // Prefix "S/" — 40% size, textTertiary
-        Text(
-            text = prefix,
-            style = monoStyle.copy(
-                fontSize = prefixSize,
-                fontWeight = FontWeight.W400,
-                letterSpacing = 0.sp,
-            ),
-            color = colors.textTertiary,
-        )
-
-        // Integer + decimals — same size, decimals at 0.55 alpha
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(
-                text = if (isNegative) "−$intPart" else intPart,
-                style = monoStyle.copy(fontSize = size),
-                color = mainColor,
-            )
-            if (decPart != null) {
-                Text(
-                    text = ".$decPart",
-                    style = monoStyle.copy(fontSize = size),
-                    color = mainColor,
-                    modifier = Modifier.alpha(0.55f),
-                )
+    val numberText: AnnotatedString = buildAnnotatedString {
+        if (isNegative) append("−")
+        append(intPart)
+        if (decPart != null) {
+            withStyle(SpanStyle(color = mainColor.copy(alpha = 0.55f))) {
+                append(".$decPart")
             }
         }
+    }
+
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            text = prefix,
+            style = prefixStyle,
+            color = colors.textTertiary,
+            modifier = Modifier.alignByBaseline(),
+        )
+        Text(
+            text = numberText,
+            style = numberStyle,
+            color = mainColor,
+            modifier = Modifier.alignByBaseline(),
+        )
     }
 }
