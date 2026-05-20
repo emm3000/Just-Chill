@@ -107,7 +107,6 @@
       "Bash(git commit * --no-verify *)",
       "Bash(git commit -n:*)",
       "Bash(git commit --amend:*)",
-      "Bash(git rebase:*)",
       "Bash(git filter-branch:*)",
       "Bash(git filter-repo:*)",
       "Bash(git reflog expire:*)",
