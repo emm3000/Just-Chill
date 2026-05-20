@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:TransactionMappers.kt:categoryId != null &amp;&amp; categoryName != null &amp;&amp; categoryIcon != null &amp;&amp; categoryColor != null &amp;&amp; categoryType != null</ID>
+    <ID>ThrowsCount:DefaultBackupRepository.kt:DefaultBackupRepository$override suspend fun importFromJson: ImportStats</ID>
+    <ID>TooManyFunctions:TransactionMappers.kt:com.emm.data.transaction.TransactionMappers.kt</ID>
+  </CurrentIssues>
+</SmellBaseline>
