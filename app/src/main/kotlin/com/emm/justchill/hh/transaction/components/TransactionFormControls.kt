@@ -279,7 +279,7 @@ private fun NoteFilledCard(note: String, onClick: () -> Unit, modifier: Modifier
         ) {
             Text(
                 text = "NOTA",
-                fontSize = 9.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.W500,
                 fontFamily = InterFontFamily,
                 color = colors.textTertiary,

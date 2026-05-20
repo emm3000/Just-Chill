@@ -47,7 +47,9 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
@@ -58,9 +60,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.category.CategoryType
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
-import com.emm.justchill.core.theme.PlexMonoFontFamily
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconTile
@@ -350,7 +352,6 @@ private fun MoreChip(count: Int, onClick: () -> Unit) {
             style = type.labelM.copy(
                 fontSize = 12.sp,
                 letterSpacing = 0.sp,
-                fontFamily = PlexMonoFontFamily,
             ),
             color = colors.textTertiary,
         )
@@ -369,13 +370,13 @@ private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: ()
 
     val displayText = buildAnnotatedString {
         append("Filtrando por «")
-        withStyle(SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.W600)) {
+        withStyle(SpanStyle(fontWeight = FontWeight.W600)) {
             append(categoryName)
         }
         append("»")
         if (query != null) {
             append(" + \"")
-            withStyle(SpanStyle(fontFamily = PlexMonoFontFamily)) { append(query) }
+            withStyle(SpanStyle(fontFamily = InterFontFamily)) { append(query) }
             append("\"")
         }
     }
@@ -403,7 +404,7 @@ private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: ()
             style = type.labelM.copy(
                 fontSize = 12.sp,
                 letterSpacing = 0.sp,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.W500,
+                fontWeight = FontWeight.W500,
             ),
             color = colors.accent,
             modifier = Modifier.weight(1f),
@@ -423,7 +424,7 @@ private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: ()
                 style = type.labelM.copy(
                     fontSize = 12.sp,
                     letterSpacing = 0.sp,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.W500,
+                    fontWeight = FontWeight.W500,
                 ),
                 color = colors.accent,
             )
@@ -498,7 +499,7 @@ private fun DayGroupedList(days: List<DayGroup>, onItemClick: (String) -> Unit) 
                     Eyebrow(text = dayLabel)
                     Text(
                         text = dateCaption,
-                        style = type.eyebrow.copy(fontSize = 10.sp, letterSpacing = 0.4.sp),
+                        style = type.eyebrow.copy(fontSize = 11.sp, letterSpacing = 1.0.sp),
                         color = colors.textDisabled,
                     )
                 }
@@ -516,7 +517,7 @@ private fun TxRow(tx: TransactionUi, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
 
-    val amountColor = if (tx.type == TransactionType.Income) colors.success else colors.textSecondary
+    val amountColor = if (tx.type == TransactionType.Income) colors.success else colors.textPrimary
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -535,7 +536,13 @@ private fun TxRow(tx: TransactionUi, onClick: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = tx.description.ifBlank { "Sin descripción" },
-                style = type.labelM.copy(fontSize = 13.sp, letterSpacing = (-0.065).sp),
+                style = TextStyle(
+                    fontFamily = InterFontFamily,
+                    fontSize = 15.sp,
+                    lineHeight = 20.sp,
+                    fontWeight = FontWeight.W500,
+                    letterSpacing = (-0.15).sp,
+                ),
                 color = colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -551,7 +558,14 @@ private fun TxRow(tx: TransactionUi, onClick: () -> Unit) {
         Spacer(Modifier.width(8.dp))
         Text(
             text = tx.amount,
-            style = type.amountS,
+            style = TextStyle(
+                fontFamily = InterFontFamily,
+                fontSize = 15.sp,
+                lineHeight = 20.sp,
+                fontWeight = FontWeight.W600,
+                letterSpacing = (-0.15).sp,
+                fontFeatureSettings = "tnum",
+            ),
             color = amountColor,
         )
     }
@@ -618,10 +632,10 @@ private fun EmptyFilteredNoResults(
         withStyle(
             SpanStyle(
                 color = colors.textPrimary,
-                fontSize = 14.sp,
+                fontSize = 15.sp,
                 fontFamily = type.labelM.fontFamily,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.W600,
-                letterSpacing = (-0.07).sp,
+                fontWeight = FontWeight.W600,
+                letterSpacing = (-0.15).sp,
             ),
         ) { append("Sin resultados para ") }
 
@@ -630,16 +644,19 @@ private fun EmptyFilteredNoResults(
                 SpanStyle(
                     color = colors.accent,
                     fontFamily = type.labelM.fontFamily,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.W600,
-                    fontSize = 14.sp,
+                    fontWeight = FontWeight.W600,
+                    fontSize = 15.sp,
+                    letterSpacing = (-0.15).sp,
                 ),
             ) { append("«$activeCategoryName»") }
 
             query.isNotEmpty() -> withStyle(
                 SpanStyle(
                     color = colors.accent,
-                    fontFamily = PlexMonoFontFamily,
-                    fontSize = 14.sp,
+                    fontFamily = type.labelM.fontFamily,
+                    fontWeight = FontWeight.W600,
+                    fontSize = 15.sp,
+                    letterSpacing = (-0.15).sp,
                 ),
             ) { append("«$query»") }
         }
@@ -655,7 +672,7 @@ private fun EmptyFilteredNoResults(
         } else {
             Text(
                 text = "Sin movimientos con esos filtros",
-                style = type.labelM.copy(fontSize = 14.sp, letterSpacing = (-0.07).sp),
+                style = type.labelM.copy(fontSize = 15.sp, letterSpacing = (-0.15).sp),
                 color = colors.textPrimary,
                 textAlign = TextAlign.Center,
             )

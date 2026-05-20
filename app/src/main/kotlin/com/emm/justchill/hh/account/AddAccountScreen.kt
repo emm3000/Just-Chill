@@ -372,10 +372,11 @@ private fun TypeCell(
         )
         Text(
             text = label,
-            fontSize = 14.sp,
+            fontSize = 15.sp,
             fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
             fontFamily = InterFontFamily,
             color = tint,
+            letterSpacing = (-0.15).sp,
         )
     }
 }
@@ -448,10 +449,11 @@ private fun CurrencyCell(
         Spacer(Modifier.size(6.dp))
         Text(
             text = label,
-            fontSize = 14.sp,
+            fontSize = 15.sp,
             fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
             fontFamily = InterFontFamily,
             color = fgColor,
+            letterSpacing = (-0.15).sp,
         )
     }
 }

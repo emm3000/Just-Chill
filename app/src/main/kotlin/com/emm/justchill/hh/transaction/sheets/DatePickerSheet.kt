@@ -180,10 +180,11 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
             }
             Text(
                 text = monthLabel,
-                fontSize = 14.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.W600,
                 fontFamily = InterFontFamily,
                 color = colors.textPrimary,
+                letterSpacing = (-0.15).sp,
             )
             IconBtn(
                 icon = Icons.Outlined.ChevronRight,
@@ -281,10 +282,11 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
         ) {
             Text(
                 text = "Confirmar · $confirmLabel",
-                fontSize = 13.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.W600,
                 fontFamily = InterFontFamily,
                 color = colors.bg,
+                letterSpacing = (-0.15).sp,
             )
         }
     }

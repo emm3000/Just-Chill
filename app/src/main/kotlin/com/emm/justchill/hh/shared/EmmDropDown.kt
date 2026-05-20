@@ -126,7 +126,8 @@ fun <T> EmmDropDown(
                                 text = item.toString(),
                                 fontFamily = InterFontFamily,
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.Normal,
+                                fontWeight = FontWeight.W500,
+                                letterSpacing = (-0.15).sp,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                         },

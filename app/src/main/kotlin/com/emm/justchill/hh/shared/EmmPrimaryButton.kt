@@ -35,8 +35,9 @@ fun EmmPrimaryButton(text: String, onClick: () -> Unit, enabled: Boolean, modifi
         Text(
             text = text,
             fontFamily = InterFontFamily,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Black,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.W600,
+            letterSpacing = (-0.15).sp,
         )
     }
 }

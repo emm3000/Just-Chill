@@ -336,10 +336,11 @@ private fun SheetCategoryRow(item: CategorySheetItem, onClick: () -> Unit) {
 
         Text(
             text = item.name,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.W600,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.W500,
             fontFamily = InterFontFamily,
             color = colors.textPrimary,
+            letterSpacing = (-0.15).sp,
             modifier = Modifier.weight(1f),
         )
 

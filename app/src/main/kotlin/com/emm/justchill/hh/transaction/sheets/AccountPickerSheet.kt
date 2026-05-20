@@ -245,16 +245,17 @@ private fun AccountRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = account.name,
-                fontSize = 14.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.W500,
                 fontFamily = InterFontFamily,
                 color = textPrimary,
-                letterSpacing = (-0.07).sp,
+                letterSpacing = (-0.15).sp,
             )
             Text(
                 text = typeLabel,
                 fontSize = 11.sp,
                 fontFamily = InterFontFamily,
+                fontWeight = FontWeight.W500,
                 color = textTertiary,
             )
         }

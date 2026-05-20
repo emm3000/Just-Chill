@@ -269,7 +269,7 @@ private fun PreviewChip(
             fontWeight = FontWeight.W600,
             fontFamily = InterFontFamily,
             color = nameColor,
-            letterSpacing = (-0.075).sp,
+            letterSpacing = (-0.15).sp,
         )
         TypeBadge(type = type)
     }

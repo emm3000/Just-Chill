@@ -14,13 +14,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
-import com.emm.justchill.core.theme.PlexMonoFontFamily
 
 /**
  * Full-width sticky CTA button, typically pinned to the bottom of a screen.
@@ -85,25 +85,28 @@ fun StickyCTA(
                     Text(
                         text = label,
                         color = fgColor,
-                        fontSize = 14.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.W600,
                         fontFamily = InterFontFamily,
-                        letterSpacing = (-0.07).sp,
+                        letterSpacing = (-0.15).sp,
                     )
                     Text(
                         text = "·",
                         color = fgColor.copy(alpha = 0.6f),
-                        fontSize = 14.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.W600,
                         fontFamily = InterFontFamily,
                     )
                     Text(
                         text = sublabel,
                         color = fgColor.copy(alpha = 0.9f),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.W500,
-                        fontFamily = PlexMonoFontFamily,
-                        letterSpacing = 0.sp,
+                        style = TextStyle(
+                            fontFamily = InterFontFamily,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.W600,
+                            letterSpacing = (-0.15).sp,
+                            fontFeatureSettings = "tnum",
+                        ),
                     )
                 }
             } else {

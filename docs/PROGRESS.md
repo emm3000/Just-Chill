@@ -3,7 +3,32 @@
 > Estado del proyecto a fecha del último update. Punto de re-entrada
 > para retomar después de cerrar/limpiar el contexto.
 >
-> **Última actualización**: 2026-05-20 (post-redesign + detekt pipeline).
+> **Última actualización**: 2026-05-20 (post-redesign + detekt pipeline + typography sweep).
+
+---
+
+## ⚠️ Rollback disponible — Notion-style typography sweep (2026-05-20)
+
+Se aplicó una barrida tipográfica Notion-style sobre 17 archivos del módulo `:app`:
+sube body de 13-14sp → 15sp con `letterSpacing = -0.15sp`, switch de
+IBM Plex Mono → Inter+tnum en montos inline, fix crítico de `fontSize = 9.sp`
+en `TransactionFormControls.kt`, y construcción de jerarquía por **color/peso**
+en vez de por tamaño (filosofía Notion).
+
+El cambio compiló y pasó detekt, pero **no fue validado en dispositivos reales
+de gama baja** al momento del commit. Si aparecen regresiones visuales
+(textos cortados, overflow en pantallas <360dp, descuadres en filas):
+
+```bash
+git log --oneline | grep "typography sweep"   # encontrar el SHA
+git revert <sha>                              # revertir el sweep entero
+```
+
+El commit es atómico y autocontenido — `git revert` lo deshace sin tocar
+el resto del trabajo. El fix de layout en `ProfileScreen.ProfileRow`
+(stacked label+meta) va en commit separado y **no debe revertirse**
+aunque se revierta el sweep — es un fix de bug independiente que aplica
+con cualquier tamaño de letra.
 
 ---
 

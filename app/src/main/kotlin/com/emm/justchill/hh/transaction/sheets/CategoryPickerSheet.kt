@@ -264,11 +264,11 @@ private fun CategoryRow(
 
         Text(
             text = category.name,
-            fontSize = 14.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.W500,
             fontFamily = InterFontFamily,
             color = textPrimary,
-            letterSpacing = (-0.07).sp,
+            letterSpacing = (-0.15).sp,
             modifier = Modifier.weight(1f),
         )
 

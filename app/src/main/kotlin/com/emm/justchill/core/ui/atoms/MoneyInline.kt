@@ -8,28 +8,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.PlexMonoFontFamily
 import java.text.DecimalFormat
 import kotlin.math.abs
 
 /**
- * Inline monetary amount — 15sp IBM Plex Mono w500, tabular figures.
+ * Inline monetary amount — 15sp Inter W600 tnum, tabular figures.
  *
  * Negative values are prefixed with a minus sign (−).
  * Format: "S/ 1,234.56" or "− S/ 1,234.56"
  *
  * @param value   Numeric amount. Sign is retained in the rendered string.
  * @param color   Override text color; defaults to [EmmColors.textPrimary].
- * @param weight  Font weight; defaults to [FontWeight.Medium].
  */
 @Composable
-fun MoneyInline(
-    value: Double,
-    modifier: Modifier = Modifier,
-    color: Color? = null,
-    weight: FontWeight = FontWeight.Medium,
-) {
+fun MoneyInline(value: Double, modifier: Modifier = Modifier, color: Color? = null) {
     val colors = LocalEmmColors.current
 
     val formatted = remember(value) {
@@ -42,9 +36,11 @@ fun MoneyInline(
         text = formatted,
         style = TextStyle(
             color = color ?: colors.textPrimary,
+            fontFamily = InterFontFamily,
             fontSize = 15.sp,
-            fontWeight = weight,
-            fontFamily = PlexMonoFontFamily,
+            lineHeight = 20.sp,
+            fontWeight = FontWeight.W600,
+            letterSpacing = (-0.15).sp,
             fontFeatureSettings = "tnum",
         ),
         modifier = modifier,

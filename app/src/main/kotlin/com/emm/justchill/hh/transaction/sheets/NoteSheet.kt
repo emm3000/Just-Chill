@@ -42,7 +42,6 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
-import com.emm.justchill.core.theme.PlexMonoFontFamily
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 
 private const val NOTE_MAX_CHARS = 120
@@ -171,7 +170,7 @@ fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Un
                     text = "${draft.text.length} / $NOTE_MAX_CHARS",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.W500,
-                    fontFamily = PlexMonoFontFamily,
+                    fontFamily = InterFontFamily,
                     color = if (draft.text.length >= NOTE_MAX_CHARS) colors.danger else colors.textTertiary,
                 )
             }
@@ -223,10 +222,11 @@ private fun SheetButton(label: String, primary: Boolean, onClick: () -> Unit, mo
     ) {
         Text(
             text = label,
-            fontSize = 13.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.W600,
             fontFamily = InterFontFamily,
             color = fg,
+            letterSpacing = (-0.15).sp,
             textAlign = TextAlign.Center,
         )
     }

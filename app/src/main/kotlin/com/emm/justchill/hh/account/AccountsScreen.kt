@@ -205,7 +205,7 @@ private fun AccountRow(account: Account, movementCount: Int, onEdit: () -> Unit,
                     fontWeight = FontWeight.W600,
                     fontFamily = InterFontFamily,
                     color = colors.textPrimary,
-                    letterSpacing = (-0.1).sp,
+                    letterSpacing = (-0.15).sp,
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
@@ -283,9 +283,11 @@ private fun AccountRowMenu(onEdit: () -> Unit, onDelete: () -> Unit) {
                 text = {
                     Text(
                         text = "Editar",
-                        fontSize = 14.sp,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.W500,
                         fontFamily = InterFontFamily,
                         color = colors.textPrimary,
+                        letterSpacing = (-0.15).sp,
                     )
                 },
                 leadingIcon = { MenuIcon(Icons.Outlined.Edit) },
@@ -298,9 +300,11 @@ private fun AccountRowMenu(onEdit: () -> Unit, onDelete: () -> Unit) {
                 text = {
                     Text(
                         text = "Borrar",
-                        fontSize = 14.sp,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.W500,
                         fontFamily = InterFontFamily,
                         color = colors.danger,
+                        letterSpacing = (-0.15).sp,
                     )
                 },
                 leadingIcon = {
@@ -357,10 +361,11 @@ private fun ManageCategoriesRow(onClick: () -> Unit) {
 
         Text(
             text = "Gestionar categorías",
-            fontSize = 14.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.W500,
             fontFamily = InterFontFamily,
             color = colors.textPrimary,
+            letterSpacing = (-0.15).sp,
             modifier = Modifier.weight(1f),
         )
 

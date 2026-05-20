@@ -48,7 +48,6 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
@@ -216,7 +215,6 @@ private fun InOutRow(income: Money, spend: Money) {
 @Composable
 private fun RecentsHeader(onViewAll: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
     val interactionSource = remember { MutableInteractionSource() }
 
     Row(
@@ -234,7 +232,13 @@ private fun RecentsHeader(onViewAll: () -> Unit, modifier: Modifier = Modifier) 
         ) {
             Text(
                 text = "Ver todas",
-                style = type.caption.copy(fontWeight = FontWeight.W500),
+                style = TextStyle(
+                    fontFamily = InterFontFamily,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                    fontWeight = FontWeight.W500,
+                    letterSpacing = 0.sp,
+                ),
                 color = colors.textSecondary,
             )
         }
@@ -246,14 +250,13 @@ private fun RecentsHeader(onViewAll: () -> Unit, modifier: Modifier = Modifier) 
 @Composable
 private fun TransactionRow(tx: TransactionUi) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
 
-    val amountColor = if (tx.type == TransactionType.Income) colors.success else colors.textSecondary
+    val amountColor = if (tx.type == TransactionType.Income) colors.success else colors.textPrimary
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .padding(horizontal = 24.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -267,21 +270,26 @@ private fun TransactionRow(tx: TransactionUi) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = tx.description.ifBlank { "Sin descripción" },
-                style = type.amountS.copy(
+                style = TextStyle(
                     fontFamily = InterFontFamily,
+                    fontSize = 15.sp,
+                    lineHeight = 20.sp,
                     fontWeight = FontWeight.W500,
-                    letterSpacing = (-0.065).sp, // ≈ -0.005em × 13sp
-                    fontFeatureSettings = "",
+                    letterSpacing = (-0.15).sp,
                 ),
                 color = colors.textPrimary,
                 maxLines = 1,
             )
             Text(
                 text = "${tx.readableDate} · ${tx.readableTime}",
-                style = type.caption.copy(
-                    letterSpacing = 0.11.sp, // ≈ 0.01em × 11sp
+                style = TextStyle(
+                    fontFamily = InterFontFamily,
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp,
+                    fontWeight = FontWeight.W400,
+                    letterSpacing = 0.sp,
                 ),
-                color = colors.textTertiary,
+                color = colors.textSecondary,
                 maxLines = 1,
             )
         }
@@ -289,7 +297,14 @@ private fun TransactionRow(tx: TransactionUi) {
         // tx.amount is pre-formatted (e.g. "+S/ 3,200.00" or "−S/ 84.20")
         Text(
             text = tx.amount,
-            style = type.amountS,
+            style = TextStyle(
+                fontFamily = InterFontFamily,
+                fontSize = 15.sp,
+                lineHeight = 20.sp,
+                fontWeight = FontWeight.W600,
+                letterSpacing = (-0.15).sp,
+                fontFeatureSettings = "tnum",
+            ),
             color = amountColor,
         )
     }
@@ -430,9 +445,10 @@ private fun EmptyBody(text: String) {
         text = text,
         style = TextStyle(
             fontFamily = InterFontFamily,
-            fontSize = 13.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.W400,
-            lineHeight = 19.sp,
+            lineHeight = 22.sp,
+            letterSpacing = (-0.15).sp,
         ),
         color = colors.textSecondary,
         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -471,8 +487,9 @@ private fun FilledAccentCta(
             text = label,
             style = TextStyle(
                 fontFamily = InterFontFamily,
-                fontSize = 13.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.W600,
+                letterSpacing = (-0.15).sp,
             ),
             color = Color.White,
         )
@@ -511,8 +528,9 @@ private fun OutlinedCta(
             text = label,
             style = TextStyle(
                 fontFamily = InterFontFamily,
-                fontSize = 13.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.W600,
+                letterSpacing = (-0.15).sp,
             ),
             color = colors.textPrimary,
         )

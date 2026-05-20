@@ -187,10 +187,11 @@ private fun CategoryRow(category: Category, movementCount: Int, onClick: () -> U
         )
         Text(
             text = category.name,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.W600,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.W500,
             fontFamily = InterFontFamily,
             color = colors.textPrimary,
+            letterSpacing = (-0.15).sp,
             modifier = Modifier.weight(1f),
         )
         MovementMeta(count = movementCount, muted = false)
@@ -223,10 +224,11 @@ private fun UncategorizedRow(count: Int) {
         )
         Text(
             text = "Sin categoría",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.W600,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.W500,
             fontFamily = InterFontFamily,
             color = colors.textTertiary,
+            letterSpacing = (-0.15).sp,
             modifier = Modifier.weight(1f),
         )
         MovementMeta(count = count, muted = true)
@@ -344,10 +346,11 @@ private fun EmptyState(onCreate: () -> Unit, modifier: Modifier = Modifier) {
         ) {
             Text(
                 text = "Crear categoría",
-                fontSize = 13.sp,
+                fontSize = 15.sp,
                 fontFamily = InterFontFamily,
                 fontWeight = FontWeight.W600,
                 color = Color.White,
+                letterSpacing = (-0.15).sp,
             )
         }
     }
