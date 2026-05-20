@@ -32,7 +32,6 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -64,6 +63,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
 import com.emm.justchill.hh.account.AccountsEffect
 import com.emm.justchill.hh.account.AccountsScreen
 import com.emm.justchill.hh.account.AccountsViewModel
@@ -121,7 +121,7 @@ fun Hh() {
 
     Scaffold(
         modifier = Modifier.background(colors.bg),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { EmmSnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             AnimatedVisibility(
                 visible = showBottomBar,
@@ -363,7 +363,7 @@ fun Hh() {
                                 backStack.removeLastOrNull() // AddCategory
                                 backStack.removeLastOrNull() // SelectCategory
                             } else {
-                                showRootMessage("Categoría creada")
+                                showRootMessage("Categoría «${created.name}» creada")
                                 backStack.removeLastOrNull()
                             }
                         },
