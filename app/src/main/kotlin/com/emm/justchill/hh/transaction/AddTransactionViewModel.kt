@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 
+internal const val MAX_VISIBLE_CATEGORIES = 7
+
 class AddTransactionViewModel(
     private val createTransaction: CreateTransactionUseCase,
     accountRepository: AccountRepository,
@@ -40,7 +42,7 @@ class AddTransactionViewModel(
                 copy(
                     accounts = accounts,
                     accountSelected = accountSelected ?: accounts.firstOrNull(),
-                    categories = allCategories[transactionType.categoryType]?.take(7).orEmpty(),
+                    categories = allCategories[transactionType.categoryType]?.take(MAX_VISIBLE_CATEGORIES).orEmpty(),
                     categorySelected = categorySelected ?: allCategories[transactionType.categoryType]?.firstOrNull(),
                 ).validate()
             }
@@ -58,7 +60,7 @@ class AddTransactionViewModel(
             is AddTransactionIntent.OnTransactionTypeChange -> updateState {
                 copy(
                     transactionType = intent.value,
-                    categories = allCategories[intent.value.categoryType]?.take(7).orEmpty(),
+                    categories = allCategories[intent.value.categoryType]?.take(MAX_VISIBLE_CATEGORIES).orEmpty(),
                     categorySelected = allCategories[intent.value.categoryType]?.firstOrNull(),
                 ).touched()
             }
@@ -84,7 +86,7 @@ class AddTransactionViewModel(
                         description = String.Empty,
                         date = DateUtils.friendlyDate(dateInLong),
                         transactionType = defaultType,
-                        categories = allCategories[defaultType.categoryType]?.take(7).orEmpty(),
+                        categories = allCategories[defaultType.categoryType]?.take(MAX_VISIBLE_CATEGORIES).orEmpty(),
                         categorySelected = allCategories[defaultType.categoryType]?.firstOrNull(),
                         accountSelected = accounts.firstOrNull(),
                         isEnabled = false,
@@ -100,7 +102,7 @@ class AddTransactionViewModel(
                     .apply { add(0, intent.value) }
                 updateState {
                     copy(
-                        categories = updatedCategories.take(7),
+                        categories = updatedCategories.take(MAX_VISIBLE_CATEGORIES),
                         categorySelected = intent.value,
                     ).touched()
                 }

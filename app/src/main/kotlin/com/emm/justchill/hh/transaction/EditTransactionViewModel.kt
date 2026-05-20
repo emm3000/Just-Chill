@@ -55,7 +55,7 @@ class EditTransactionViewModel(
                 val list = allCategories[intent.value.categoryType].orEmpty()
                 copy(
                     transactionType = intent.value,
-                    categories = list.take(7),
+                    categories = list.take(MAX_VISIBLE_CATEGORIES),
                     categorySelected = list.firstOrNull { it.categoryId == snapshot?.categoryId }
                         ?: list.firstOrNull(),
                 ).recompute()
@@ -127,7 +127,7 @@ class EditTransactionViewModel(
                 transactionType = oldTransaction.type,
                 accounts = accounts,
                 accountSelected = account,
-                categories = categoriesForType.take(7),
+                categories = categoriesForType.take(MAX_VISIBLE_CATEGORIES),
                 categorySelected = selectedCategory ?: categoriesForType.firstOrNull(),
                 isEnabled = false,
                 hasChanges = false,

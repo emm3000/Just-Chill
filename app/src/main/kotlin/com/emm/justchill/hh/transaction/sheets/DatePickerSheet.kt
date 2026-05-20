@@ -290,13 +290,15 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
     }
 }
 
-/** Returns 42 entries (6 rows × 7 cols, Mon-first). Cells outside the month are null. */
+// 6 rows × 7 cols, Mon-first. Cells outside the month are null.
+private const val CALENDAR_GRID_CELLS = 42
+
 private fun YearMonth.daysGrid(): List<LocalDate?> {
     val firstDay = atDay(1)
     // Monday = 0 … Sunday = 6
     val offset = (firstDay.dayOfWeek.value - DayOfWeek.MONDAY.value + 7) % 7
     val length = lengthOfMonth()
-    return List(42) { index ->
+    return List(CALENDAR_GRID_CELLS) { index ->
         val dayNumber = index - offset + 1
         if (dayNumber in 1..length) atDay(dayNumber) else null
     }

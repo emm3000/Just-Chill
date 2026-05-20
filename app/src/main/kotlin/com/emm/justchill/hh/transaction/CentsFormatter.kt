@@ -12,6 +12,8 @@ private val FORMATTER: DecimalFormat = DecimalFormat(
 
 internal const val MAX_AMOUNT_DIGITS: Int = 13
 
+private const val CENTS_PER_UNIT = 100.0
+
 /**
  * Normaliza un input arbitrario a una cadena de solo dígitos, capeada a [MAX_AMOUNT_DIGITS].
  * Esta es la forma canónica del state del input de monto.
@@ -24,7 +26,7 @@ internal fun sanitizeCentsInput(raw: String): String = raw.filter(Char::isDigit)
  */
 internal fun formatCentsForDisplay(digits: String): String {
     val cents: Long = if (digits.isEmpty()) 0L else digits.toLong()
-    return FORMATTER.format(cents / 100.0)
+    return FORMATTER.format(cents / CENTS_PER_UNIT)
 }
 
 /**
@@ -42,7 +44,7 @@ internal fun centsToMoney(digits: String): Money {
  */
 internal fun centsToSoles(digits: String): Double {
     val cents: Long = if (digits.isEmpty()) 0L else digits.toLong()
-    return cents / 100.0
+    return cents / CENTS_PER_UNIT
 }
 
 /**

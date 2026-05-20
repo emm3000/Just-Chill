@@ -29,6 +29,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+private const val SEARCH_DEBOUNCE_MS = 250L
+
 data class DayGroup(val date: LocalDate, val transactions: List<TransactionUi>) {
     val readableDate: String
         get() {
@@ -97,7 +99,7 @@ class SeeTransactionsViewModel(
 
         // Filtered + grouped list.
         filter
-            .debounce { f -> if (f.query.isBlank()) 0L else 250L }
+            .debounce { f -> if (f.query.isBlank()) 0L else SEARCH_DEBOUNCE_MS }
             .distinctUntilChanged()
             .flatMapLatest(searchTransactions::invoke)
             .map(::groupByDate)

@@ -4,6 +4,8 @@ import com.emm.domain.shared.Money
 import java.text.NumberFormat
 import java.util.Locale
 
+private const val CENTS_PER_UNIT = 100.0
+
 /**
  * Formats a [Money] value as a locale-formatted decimal string (e.g. "1.234,56" for es-PE).
  * Does NOT include a currency symbol — use [com.emm.justchill.hh.shared.formatIncome],
@@ -14,5 +16,5 @@ fun Money.format(locale: Locale = Locale("es", "PE")): String {
         minimumFractionDigits = 2
         maximumFractionDigits = 2
     }
-    return formatter.format(cents / 100.0)
+    return formatter.format(cents / CENTS_PER_UNIT)
 }
