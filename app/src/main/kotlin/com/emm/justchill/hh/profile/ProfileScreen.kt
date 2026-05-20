@@ -199,25 +199,27 @@ private fun ProfileRow(icon: ImageVector, label: String, meta: String, metaIsPri
                 indication = null,
                 onClick = onClick,
             )
-            .padding(horizontal = spacing.s5, vertical = 14.dp),
+            .padding(horizontal = spacing.s5, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         IconTileSmall(icon = icon)
-        Text(
-            text = label,
-            style = type.bodyL.copy(fontWeight = FontWeight.W500),
-            color = colors.textPrimary,
-            modifier = Modifier.weight(1f),
-        )
-        Text(
-            text = meta,
-            fontSize = 13.sp,
-            fontFamily = InterFontFamily,
-            fontWeight = if (metaIsPrimary) FontWeight.W600 else FontWeight.W500,
-            color = if (metaIsPrimary) colors.textPrimary else colors.textTertiary,
-        )
-        Spacer(Modifier.size(6.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                style = type.bodyL.copy(fontWeight = FontWeight.W500),
+                color = colors.textPrimary,
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = meta,
+                fontSize = 13.sp,
+                lineHeight = 18.sp,
+                fontFamily = InterFontFamily,
+                fontWeight = FontWeight.W400,
+                color = if (metaIsPrimary) colors.textSecondary else colors.textTertiary,
+            )
+        }
         Icon(
             imageVector = Icons.Outlined.ChevronRight,
             contentDescription = null,
