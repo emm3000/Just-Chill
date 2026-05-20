@@ -121,7 +121,6 @@ fun TransactionWithCategoryEntity.toDomain() = TransactionWithCategory(
 
 fun List<TransactionWithCategoryEntity>.toDomain() = map(TransactionWithCategoryEntity::toDomain)
 
-// SQLDelight MonthlyAmountByCategory -> Entity
 // totalAmount is Long? from SQLDelight (SUM is nullable), default to 0 if null
 fun MonthlyAmountByCategory.asEntity() = MonthlyAmountByCategoryEntity(
     categoryId = categoryId,
@@ -131,7 +130,6 @@ fun MonthlyAmountByCategory.asEntity() = MonthlyAmountByCategoryEntity(
     totalAmount = totalAmount ?: 0L,
 )
 
-// MonthlyAmountByCategoryEntity -> Domain
 fun MonthlyAmountByCategoryEntity.toDomain() = CategoryAmount(
     categoryId = CategoryId(categoryId),
     categoryName = categoryName,

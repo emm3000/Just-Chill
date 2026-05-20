@@ -457,7 +457,6 @@ private fun HhBottomBar(current: BottomBarRoute?, onTabClick: (BottomBarRoute) -
             .background(colors.bg)
             .navigationBarsPadding(),
     ) {
-        // 1dp top border (hairline)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
