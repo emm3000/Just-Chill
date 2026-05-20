@@ -32,6 +32,9 @@ abstract class MviViewModel<S : UiState, I : UiIntent, E : UiEffect> : ViewModel
         viewModelScope.launch { _effect.send(effect) }
     }
 
+    // Intentional broad catch: launchSafe is the VM-level adapter that funnels every
+    // non-domain throwable into DomainException.Unknown(cause = e), preserving the original.
+    @Suppress("TooGenericExceptionCaught")
     protected fun launchSafe(onError: (DomainException) -> E, block: suspend () -> Unit) = viewModelScope.launch {
         try {
             block()

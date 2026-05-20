@@ -5,6 +5,9 @@ import com.emm.domain.shared.error.DomainException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 
+// Intentional broad catch: this is the adapter that funnels every non-domain throwable
+// into DomainException.Unknown(cause = e). The original exception is preserved as cause.
+@Suppress("TooGenericExceptionCaught")
 suspend fun <T> safeDbCall(block: suspend () -> T): T = try {
     block()
 } catch (e: SQLiteException) {

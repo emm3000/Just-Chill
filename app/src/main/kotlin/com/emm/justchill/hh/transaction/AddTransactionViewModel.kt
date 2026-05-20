@@ -125,7 +125,8 @@ class AddTransactionViewModel(
         date = dateInLong,
         amount = centsToMoney(currentState.amount),
         categoryId = currentState.categorySelected?.categoryId,
-        accountId = currentState.accountSelected?.accountId ?: throw IllegalStateException(),
+        accountId = currentState.accountSelected?.accountId
+            ?: error("accountSelected required to build TransactionInsert — UI should have disabled save"),
     )
 
     private fun updateCurrentDate(millis: Long?) = millis?.let {

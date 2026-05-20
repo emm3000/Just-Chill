@@ -44,10 +44,10 @@ class DefaultBackupRepository(
         val payload = try {
             importJson.decodeFromString<ExportPayloadDto>(json)
         } catch (e: SerializationException) {
-            throw DomainException.ValidationError("Archivo no válido o corrupto")
+            throw DomainException.ValidationError("Archivo no válido o corrupto", cause = e)
         } catch (e: IllegalArgumentException) {
             // Enum value not found when deserializing DTOs
-            throw DomainException.ValidationError("Archivo no válido o corrupto")
+            throw DomainException.ValidationError("Archivo no válido o corrupto", cause = e)
         }
 
         if (payload.schemaVersion != 1) {

@@ -4,7 +4,7 @@ sealed class DomainException(message: String, cause: Throwable? = null) : Except
 
     class NotFound(entity: String) : DomainException("$entity not found")
 
-    class ValidationError(message: String) : DomainException(message)
+    class ValidationError(message: String, cause: Throwable? = null) : DomainException(message, cause)
 
     class DatabaseError(cause: Throwable) : DomainException(cause.message ?: "Database error", cause)
 

@@ -147,7 +147,8 @@ class EditTransactionViewModel(
         description = currentState.description,
         date = dateInLong,
         amount = centsToMoney(currentState.amount),
-        accountId = currentState.accountSelected?.accountId ?: throw IllegalStateException(),
+        accountId = currentState.accountSelected?.accountId
+            ?: error("accountSelected required to build TransactionUpdate — UI should have disabled save"),
         categoryId = currentState.categorySelected?.categoryId,
     )
 

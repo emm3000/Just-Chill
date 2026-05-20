@@ -45,7 +45,13 @@ class ProfileViewModel(
 
     private fun exportToStream(output: OutputStream) = launchSafe(
         onError = { e ->
-            ProfileEffect.ShowMessage(e.toUserMessage())
+            // Domain errors carry their own user-facing message (e.g. DatabaseError);
+            // Unknown collapses to a disk-space hint, the most plausible cause for export IO failures.
+            val msg = when (e) {
+                is DomainException.Unknown -> "No pude exportar — capaz no hay espacio en tu celu?"
+                else -> e.toUserMessage()
+            }
+            ProfileEffect.ShowMessage(msg)
         },
     ) {
         updateState { copy(isExporting = true) }
@@ -59,10 +65,6 @@ class ProfileViewModel(
             // Closing the BufferedWriter flushes its buffer to the stream before closing.
             output.bufferedWriter().use { it.write(json) }
             sendEffect(ProfileEffect.ShowMessage("Listo, tu data está guardada."))
-        } catch (e: DomainException) {
-            sendEffect(ProfileEffect.ShowMessage(e.toUserMessage()))
-        } catch (e: Exception) {
-            sendEffect(ProfileEffect.ShowMessage("No pude exportar — capaz no hay espacio en tu celu?"))
         } finally {
             updateState { copy(isExporting = false) }
         }
@@ -70,17 +72,19 @@ class ProfileViewModel(
 
     private fun importFromJson(json: String) = launchSafe(
         onError = { e ->
-            ProfileEffect.ShowMessage(e.toUserMessage())
+            // ValidationError carries a user-actionable message (corrupt file, unsupported version);
+            // anything else collapses to a generic "file might be damaged" hint.
+            val msg = when (e) {
+                is DomainException.ValidationError -> e.toUserMessage()
+                else -> "No pude importar el archivo — capaz está dañado."
+            }
+            ProfileEffect.ShowMessage(msg)
         },
     ) {
         updateState { copy(isImporting = true) }
         try {
             val stats = importData(json)
             sendEffect(ProfileEffect.ShowMessage("Listo — ${stats.transactions} movimientos importados."))
-        } catch (e: DomainException) {
-            sendEffect(ProfileEffect.ShowMessage(e.toUserMessage()))
-        } catch (e: Exception) {
-            sendEffect(ProfileEffect.ShowMessage("No pude importar el archivo — capaz está dañado."))
         } finally {
             updateState { copy(isImporting = false) }
         }
