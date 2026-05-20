@@ -51,6 +51,8 @@ import java.util.Locale
 
 private val ES = Locale.forLanguageTag("es")
 
+private data class Shortcut(val label: String, val millis: Long)
+
 /**
  * Bottom sheet for picking a date.
  *
@@ -73,9 +75,6 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
     }
     var selectedDate: LocalDate by remember { mutableStateOf(initialDate) }
     var displayedMonth: YearMonth by remember { mutableStateOf(YearMonth.from(initialDate)) }
-
-    // Shortcuts
-    data class Shortcut(val label: String, val millis: Long)
 
     val shortcuts: List<Shortcut> = remember(today) {
         val zone = ZoneId.systemDefault()
