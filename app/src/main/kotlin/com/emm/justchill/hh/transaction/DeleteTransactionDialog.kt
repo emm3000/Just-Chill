@@ -46,7 +46,7 @@ internal fun DeleteTransactionDialog(
     onDismiss: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
-    val type_ = LocalEmmType.current
+    val typography = LocalEmmType.current
 
     val isSpend = type == TransactionType.Spend
     val title = if (isSpend) "¿Eliminar este gasto?" else "¿Eliminar este ingreso?"
@@ -85,7 +85,7 @@ internal fun DeleteTransactionDialog(
 
             Text(
                 text = title,
-                style = type_.headlineM,
+                style = typography.headlineM,
                 color = colors.textPrimary,
             )
 
@@ -93,7 +93,7 @@ internal fun DeleteTransactionDialog(
 
             Text(
                 text = "Esta acción no se puede deshacer.",
-                style = type_.bodyM,
+                style = typography.bodyM,
                 color = colors.textSecondary,
             )
 
@@ -119,25 +119,25 @@ internal fun DeleteTransactionDialog(
                 }
                 Text(
                     text = categoryName ?: "—",
-                    style = type_.labelL,
+                    style = typography.labelL,
                     color = colors.textPrimary,
                 )
                 if (accountName != null) {
                     Text(
                         text = " / ",
-                        style = type_.labelL,
+                        style = typography.labelL,
                         color = colors.textTertiary,
                     )
                     Text(
                         text = accountName,
-                        style = type_.labelL,
+                        style = typography.labelL,
                         color = colors.textSecondary,
                     )
                 }
                 Spacer(Modifier.weight(1f))
                 Text(
                     text = amountDisplay,
-                    style = type_.amountM,
+                    style = typography.amountM,
                     color = amountColor,
                 )
             }

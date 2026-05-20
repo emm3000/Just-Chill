@@ -857,3 +857,12 @@ style:
     active: true
     excludeImports:
       - 'java.util.*'
+
+Compose:
+  CompositionLocalAllowlist:
+    active: true
+    allowedCompositionLocals:
+      - 'LocalEmmColors'
+      - 'LocalEmmRadii'
+      - 'LocalEmmSpacing'
+      - 'LocalEmmType'

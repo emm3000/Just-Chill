@@ -30,8 +30,8 @@ import java.text.DecimalFormat
 fun EmmAmountChill(
     value: TextFieldValue,
     onValueChange: (TextFieldValue) -> Unit,
+    modifier: Modifier = Modifier,
     onNext: () -> Unit = {},
-    modifier: Modifier,
 ) {
     val amount = value.text.replace(",", "").toBigDecimalOrNull() ?: BigDecimal.ZERO
     val textColor = when {

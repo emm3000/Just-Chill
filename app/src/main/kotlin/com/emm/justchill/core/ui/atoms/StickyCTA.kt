@@ -39,12 +39,12 @@ import com.emm.justchill.core.theme.PlexMonoFontFamily
 @Composable
 fun StickyCTA(
     label: String,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     sublabel: String? = null,
     inlineSublabel: Boolean = false,
     tone: CtaTone = CtaTone.Accent,
     enabled: Boolean = true,
-    onClick: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
