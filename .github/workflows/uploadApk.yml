@@ -47,6 +47,10 @@ jobs:
       - name: Set current date
         run: echo "date_today=$(date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_ENV
 
+      - name: Resolve release notes
+        id: notes
+        run: echo "msg=$(git log -1 --pretty=%s)" >> $GITHUB_OUTPUT
+
       - name: Build Dev Debug + Prod Release
         run: ./gradlew assembleDevDebug assembleProdRelease
 
@@ -63,6 +67,16 @@ jobs:
           serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
           groups: EMM
           file: ${{ steps.paths.outputs.devDebug }}
+          releaseNotes: ${{ steps.notes.outputs.msg }}
+
+      - name: Distribute Prod Release to Firebase
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_PROD_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
+          groups: EMM
+          file: ${{ steps.paths.outputs.prodRelease }}
+          releaseNotes: ${{ steps.notes.outputs.msg }}
 
       - name: Upload Dev Debug APK artifact
         uses: actions/upload-artifact@v7
