@@ -262,14 +262,6 @@ private fun VersionFooter() {
             color = colors.textTertiary,
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = "Hecho en Lima · 100% local",
-            fontSize = 11.sp,
-            fontFamily = InterFontFamily,
-            color = colors.textDisabled,
-            textAlign = TextAlign.Center,
-        )
     }
 }
 
