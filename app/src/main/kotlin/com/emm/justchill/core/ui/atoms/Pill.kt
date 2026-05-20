@@ -26,7 +26,12 @@ import com.emm.justchill.core.theme.LocalEmmRadii
  * Radius: [EmmRadii.rFull].
  */
 @Composable
-fun Pill(text: String, modifier: Modifier = Modifier, tone: PillTone = PillTone.Neutral, leadingIcon: ImageVector? = null) {
+fun Pill(
+    text: String,
+    modifier: Modifier = Modifier,
+    tone: PillTone = PillTone.Neutral,
+    leadingIcon: ImageVector? = null,
+) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
 

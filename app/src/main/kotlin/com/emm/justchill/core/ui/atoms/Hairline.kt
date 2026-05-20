@@ -20,12 +20,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
  * @param color       divider color; defaults to [EmmColors.border].
  */
 @Composable
-fun Hairline(
-    modifier: Modifier = Modifier,
-    insetStart: Dp = 0.dp,
-    insetEnd: Dp = 0.dp,
-    color: Color? = null,
-) {
+fun Hairline(modifier: Modifier = Modifier, insetStart: Dp = 0.dp, insetEnd: Dp = 0.dp, color: Color? = null) {
     val colors = LocalEmmColors.current
 
     Box(
