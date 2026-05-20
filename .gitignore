@@ -20,6 +20,7 @@ local.properties
 
 # Claude Code
 .claude/settings.local.json
+.claude/worktrees/
 .atl/
 docs/*
 !docs/PRODUCT_DISCOVERY.md
