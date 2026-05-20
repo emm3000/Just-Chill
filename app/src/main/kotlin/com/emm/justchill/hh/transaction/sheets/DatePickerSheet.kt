@@ -104,7 +104,6 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
         contentWindowInsets = { WindowInsets.navigationBars },
         dragHandle = { SheetDragHandle() },
     ) {
-        // Sheet header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -126,7 +125,6 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
             )
         }
 
-        // Shortcuts row
         LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
@@ -158,7 +156,6 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
             }
         }
 
-        // Month navigator
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -190,7 +187,7 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
             )
         }
 
-        // Weekday header — lunes-first, Spanish single letter
+        // Weekday header — Monday-first, single-letter labels
         val weekdayLabels = listOf("L", "M", "M", "J", "V", "S", "D")
         Row(
             modifier = Modifier
@@ -214,7 +211,6 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
             }
         }
 
-        // Day grid — 6 rows × 7 columns
         val days = remember(displayedMonth) { displayedMonth.daysGrid() }
         Column(
             modifier = Modifier
@@ -255,7 +251,6 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
             }
         }
 
-        // Confirm CTA
         val confirmShape = RoundedCornerShape(12.dp)
         val confirmLabel = remember(selectedDate) {
             val formatter = DateTimeFormatter.ofPattern("d MMMM", ES)
@@ -289,12 +284,10 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
     }
 }
 
-// 6 rows × 7 cols, Mon-first. Cells outside the month are null.
 private const val CALENDAR_GRID_CELLS = 42
 
 private fun YearMonth.daysGrid(): List<LocalDate?> {
     val firstDay = atDay(1)
-    // Monday = 0 … Sunday = 6
     val offset = (firstDay.dayOfWeek.value - DayOfWeek.MONDAY.value + 7) % 7
     val length = lengthOfMonth()
     return List(CALENDAR_GRID_CELLS) { index ->

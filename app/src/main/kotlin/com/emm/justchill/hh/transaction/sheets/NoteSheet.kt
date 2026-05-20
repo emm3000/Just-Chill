@@ -86,7 +86,6 @@ fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Un
                 .padding(bottom = 16.dp)
                 .imePadding(),
         ) {
-            // ── Header: "Nota" + "Opcional" ────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -111,7 +110,6 @@ fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Un
 
             Spacer(Modifier.height(14.dp))
 
-            // ── Multi-line note field ──────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -149,7 +147,6 @@ fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Un
                 )
             }
 
-            // ── Helper row: hint + char counter ────────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -175,7 +172,6 @@ fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Un
 
             Spacer(Modifier.height(20.dp))
 
-            // ── Cancel + Save buttons ──────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),

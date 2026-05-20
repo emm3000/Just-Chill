@@ -77,7 +77,6 @@ fun AccountPickerSheet(
         contentWindowInsets = { WindowInsets.navigationBars },
         dragHandle = { SheetDragHandle() },
     ) {
-        // Title row
         Row(
             modifier = Modifier
                 .fillMaxWidth()

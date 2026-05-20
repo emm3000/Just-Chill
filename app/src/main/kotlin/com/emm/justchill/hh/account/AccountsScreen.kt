@@ -74,7 +74,6 @@ fun AccountsScreen(
             .background(colors.bg)
             .statusBarsPadding(),
     ) {
-        // ── Header ─────────────────────────────────────────────────
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -95,7 +94,6 @@ fun AccountsScreen(
 
         Hairline()
 
-        // ── List or empty state ────────────────────────────────────
         if (state.accounts.isEmpty()) {
             EmptyState(
                 onCreate = addAccount,
@@ -119,7 +117,6 @@ fun AccountsScreen(
             }
         }
 
-        // ── Bottom: manage categories ──────────────────────────────
         Hairline()
         ManageCategoriesRow(onClick = addCategory)
     }
@@ -141,8 +138,6 @@ fun AccountsScreen(
         )
     }
 }
-
-// ── Header pill button: "+ Nueva" ─────────────────────────────────
 
 @Composable
 private fun NewAccountButton(onClick: () -> Unit) {
@@ -178,8 +173,6 @@ private fun NewAccountButton(onClick: () -> Unit) {
         )
     }
 }
-
-// ── Account row ────────────────────────────────────────────────────
 
 @Composable
 private fun AccountRow(account: Account, movementCount: Int, onEdit: () -> Unit, onDelete: () -> Unit) {
@@ -324,8 +317,6 @@ private fun AccountRowMenu(onEdit: () -> Unit, onDelete: () -> Unit) {
     }
 }
 
-// ── Bottom: manage categories ──────────────────────────────────────
-
 @Composable
 private fun ManageCategoriesRow(onClick: () -> Unit) {
     val colors = LocalEmmColors.current
@@ -377,8 +368,6 @@ private fun ManageCategoriesRow(onClick: () -> Unit) {
         )
     }
 }
-
-// ── Dialogs (preserved from previous version) ─────────────────────
 
 @Composable
 private fun EditAccountDialog(
@@ -437,8 +426,6 @@ private fun MenuIcon(icon: ImageVector) {
     )
 }
 
-// ── Empty state ───────────────────────────────────────────────────
-
 @Composable
 private fun EmptyState(onCreate: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
@@ -477,8 +464,6 @@ private fun EmptyState(onCreate: () -> Unit, modifier: Modifier = Modifier) {
         )
     }
 }
-
-// ── Preview ───────────────────────────────────────────────────────
 
 @Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 800)
 @Composable

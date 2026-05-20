@@ -32,33 +32,26 @@ private const val TABULAR = "tnum"
 
 @Immutable
 data class EmmType(
-    // Amounts (mono + tnum)
     val amountHero: TextStyle,
     val amountL: TextStyle,
     val amountM: TextStyle,
     val amountS: TextStyle,
 
-    // Display & headlines
     val display: TextStyle,
     val headlineL: TextStyle,
     val headlineM: TextStyle,
 
-    // Titles
     val titleL: TextStyle,
     val titleM: TextStyle,
 
-    // Body
     val bodyL: TextStyle,
     val bodyM: TextStyle,
 
-    // Labels
     val labelL: TextStyle,
     val labelM: TextStyle,
 
-    // Caption
     val caption: TextStyle,
 
-    // Eyebrow (new in SR-1)
     val eyebrow: TextStyle,
 )
 

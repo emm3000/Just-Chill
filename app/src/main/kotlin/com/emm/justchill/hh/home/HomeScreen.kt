@@ -154,8 +154,6 @@ private fun HomeWithData(
     }
 }
 
-// ── Hero balance ──────────────────────────────────────────────────────────────
-
 @Composable
 private fun HeroBalance(balance: Money, month: String) {
     val balanceDouble = balance.cents.toDouble() / 100.0
@@ -172,8 +170,6 @@ private fun HeroBalance(balance: Money, month: String) {
     }
 }
 
-// ── In/Out row ────────────────────────────────────────────────────────────────
-
 @Composable
 private fun InOutRow(income: Money, spend: Money) {
     val colors = LocalEmmColors.current
@@ -186,14 +182,12 @@ private fun InOutRow(income: Money, spend: Money) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(22.dp),
     ) {
-        // Entró
         Column {
             Eyebrow(text = "Entró", color = colors.textDisabled)
             Spacer(Modifier.height(4.dp))
             MoneyInline(value = incomeDouble, color = colors.textPrimary)
         }
 
-        // Divider
         Box(
             modifier = Modifier
                 .width(1.dp)
@@ -201,7 +195,6 @@ private fun InOutRow(income: Money, spend: Money) {
                 .background(colors.border),
         )
 
-        // Salió
         Column {
             Eyebrow(text = "Salió", color = colors.textDisabled)
             Spacer(Modifier.height(4.dp))
@@ -209,8 +202,6 @@ private fun InOutRow(income: Money, spend: Money) {
         }
     }
 }
-
-// ── Recents header ────────────────────────────────────────────────────────────
 
 @Composable
 private fun RecentsHeader(onViewAll: () -> Unit, modifier: Modifier = Modifier) {
@@ -244,8 +235,6 @@ private fun RecentsHeader(onViewAll: () -> Unit, modifier: Modifier = Modifier) 
         }
     }
 }
-
-// ── Transaction row ───────────────────────────────────────────────────────────
 
 @Composable
 private fun TransactionRow(tx: TransactionUi) {
@@ -294,7 +283,6 @@ private fun TransactionRow(tx: TransactionUi) {
             )
         }
 
-        // tx.amount is pre-formatted (e.g. "+S/ 3,200.00" or "−S/ 84.20")
         Text(
             text = tx.amount,
             style = TextStyle(
@@ -309,8 +297,6 @@ private fun TransactionRow(tx: TransactionUi) {
         )
     }
 }
-
-// ── Empty states ──────────────────────────────────────────────────────────────
 
 @Composable
 private fun FirstLaunchEmpty(onAddClick: () -> Unit) {
@@ -536,8 +522,6 @@ private fun OutlinedCta(
         )
     }
 }
-
-// ── Previews ──────────────────────────────────────────────────────────────────
 
 @PreviewLightDark
 @Composable

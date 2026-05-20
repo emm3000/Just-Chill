@@ -104,7 +104,6 @@ private fun AddAccountContent(
             .navigationBarsPadding()
             .imePadding(),
     ) {
-        // ── Top bar ────────────────────────────────────────────────
         JcTopBar(
             title = "Nueva cuenta",
             left = {
@@ -115,7 +114,6 @@ private fun AddAccountContent(
             },
         )
 
-        // ── Scrollable form ────────────────────────────────────────
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -126,7 +124,6 @@ private fun AddAccountContent(
         ) {
             Spacer(Modifier.height(4.dp))
 
-            // ATAJOS PERUANOS ─────────────────────────────────────
             Section(eyebrow = "ATAJOS PERUANOS") {
                 ShortcutsRow(
                     selectedName = state.name,
@@ -137,7 +134,6 @@ private fun AddAccountContent(
                 )
             }
 
-            // NOMBRE ──────────────────────────────────────────────
             Section(eyebrow = "NOMBRE") {
                 NameInput(
                     value = state.name,
@@ -145,7 +141,6 @@ private fun AddAccountContent(
                 )
             }
 
-            // TIPO ────────────────────────────────────────────────
             Section(eyebrow = "TIPO") {
                 TypeGrid(
                     selected = state.selectedType,
@@ -156,7 +151,6 @@ private fun AddAccountContent(
             Spacer(Modifier.height(8.dp))
         }
 
-        // ── Sticky CTA ─────────────────────────────────────────────
         StickyCTA(
             label = "Crear cuenta",
             tone = CtaTone.Accent,
@@ -166,8 +160,6 @@ private fun AddAccountContent(
     }
 }
 
-// ── Section wrapper ────────────────────────────────────────────────
-
 @Composable
 private fun Section(eyebrow: String, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -175,8 +167,6 @@ private fun Section(eyebrow: String, content: @Composable () -> Unit) {
         content()
     }
 }
-
-// ── Atajos peruanos ────────────────────────────────────────────────
 
 private data class Shortcut(val label: String, val type: AccountType, val dotPicker: (EmmColors) -> Color)
 
@@ -247,8 +237,6 @@ private fun ShortcutChip(label: String, dotColor: Color, selected: Boolean, onCl
     }
 }
 
-// ── Nombre input ───────────────────────────────────────────────────
-
 @Composable
 private fun NameInput(value: String, onValueChange: (String) -> Unit) {
     val colors = LocalEmmColors.current
@@ -293,8 +281,6 @@ private fun NameInput(value: String, onValueChange: (String) -> Unit) {
         },
     )
 }
-
-// ── Tipo grid 2x2 ──────────────────────────────────────────────────
 
 private data class TypeOption(val label: String, val type: AccountType, val icon: ImageVector)
 
@@ -370,8 +356,6 @@ private fun TypeCell(
         )
     }
 }
-
-// ── Preview ────────────────────────────────────────────────────────
 
 @Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 800)
 @Composable

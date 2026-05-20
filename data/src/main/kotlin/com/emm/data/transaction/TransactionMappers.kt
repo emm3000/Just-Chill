@@ -17,7 +17,6 @@ import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
 
-// SQLDelight -> Entity (internal, stays within data source)
 fun Transactions.asEntity() = TransactionEntity(
     transactionId = transactionId,
     type = type,
@@ -32,7 +31,6 @@ fun Transactions.asEntity() = TransactionEntity(
 
 fun List<Transactions>.asEntity() = map(Transactions::asEntity)
 
-// Entity -> Domain (Long cents → Money)
 fun TransactionEntity.asExternalModel() = Transaction(
     transactionId = TransactionId(transactionId),
     type = TransactionType.valueOf(type),
@@ -45,7 +43,6 @@ fun TransactionEntity.asExternalModel() = Transaction(
 
 fun List<TransactionEntity>.asExternalModel() = map(TransactionEntity::asExternalModel)
 
-// Domain insert -> Entity (Money → Long cents)
 fun TransactionInsert.asEntity() = TransactionEntity(
     transactionId = id.value,
     type = type.name,
@@ -58,7 +55,6 @@ fun TransactionInsert.asEntity() = TransactionEntity(
     updatedAt = updatedAt,
 )
 
-// SQLDelight CompleteTransactions -> Entity
 fun CompleteTransactions.asEntity() = TransactionWithCategoryEntity(
     transactionId = transactionId,
     type = type,
@@ -73,7 +69,6 @@ fun CompleteTransactions.asEntity() = TransactionWithCategoryEntity(
     categoryType = categoryType_,
 )
 
-// SQLDelight CompleteTransactionsByDateRange -> Entity
 fun CompleteTransactionsByDateRange.asEntity() = TransactionWithCategoryEntity(
     transactionId = transactionId,
     type = type,
@@ -88,7 +83,6 @@ fun CompleteTransactionsByDateRange.asEntity() = TransactionWithCategoryEntity(
     categoryType = categoryType_,
 )
 
-// SQLDelight SearchTransactions -> Entity
 fun SearchTransactions.asEntity() = TransactionWithCategoryEntity(
     transactionId = transactionId,
     type = type,
@@ -103,7 +97,6 @@ fun SearchTransactions.asEntity() = TransactionWithCategoryEntity(
     categoryType = categoryType_,
 )
 
-// TransactionWithCategoryEntity -> Domain (Long cents → Money)
 fun TransactionWithCategoryEntity.toDomain() = TransactionWithCategory(
     transactionId = TransactionId(transactionId),
     type = TransactionType.valueOf(type),

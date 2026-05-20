@@ -35,7 +35,6 @@ object DateUtils {
         return localDate.format(readableFormatter)
     }
 
-    // This is ok for TransactionViewModel
     fun millisToReadableFormatUTC(millis: Long): String {
         val localDate: LocalDate = Instant.ofEpochMilli(millis)
             .atZone(ZoneOffset.UTC)

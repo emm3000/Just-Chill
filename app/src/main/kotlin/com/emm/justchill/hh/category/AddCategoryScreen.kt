@@ -214,8 +214,6 @@ private fun saveButtonLabel(state: AddCategoryUiState): String {
     return if (trimmed.isBlank()) "Escribe un nombre" else "Crear «$trimmed»"
 }
 
-// ── Section ────────────────────────────────────────────────────────
-
 @Composable
 private fun Section(eyebrow: String, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -223,8 +221,6 @@ private fun Section(eyebrow: String, content: @Composable () -> Unit) {
         content()
     }
 }
-
-// ── Preview chip ───────────────────────────────────────────────────
 
 @Composable
 private fun PreviewChip(
@@ -300,8 +296,6 @@ private fun TypeBadge(type: CategoryType) {
     }
 }
 
-// ── Name input ─────────────────────────────────────────────────────
-
 @Composable
 private fun NameInput(
     value: String,
@@ -352,8 +346,6 @@ private fun NameInput(
         },
     )
 }
-
-// ── Type segmented ────────────────────────────────────────────────
 
 @Composable
 private fun TypeSegmented(selected: CategoryType, onSelect: (CategoryType) -> Unit) {
@@ -409,8 +401,6 @@ private fun TypeSegCell(label: String, selected: Boolean, onClick: () -> Unit, m
     }
 }
 
-// ── Icon grid (2 rows × horizontal scroll) ─────────────────────────
-
 @Composable
 private fun IconGrid(selected: IconCatalog, accent: Color, onSelect: (IconCatalog) -> Unit) {
     LazyHorizontalGrid(
@@ -462,8 +452,6 @@ private fun IconCell(icon: IconCatalog, selected: Boolean, accent: Color, onClic
         )
     }
 }
-
-// ── Color row ──────────────────────────────────────────────────────
 
 @Composable
 private fun ColorRow(selected: CategoryColor, onSelect: (CategoryColor) -> Unit) {

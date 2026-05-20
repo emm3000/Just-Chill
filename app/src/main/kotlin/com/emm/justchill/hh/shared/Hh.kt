@@ -323,9 +323,6 @@ fun Hh(modifier: Modifier = Modifier) {
                         vm = vm,
                         popBackStack = { backStack.removeLastOrNull() },
                         snackbarHostState = snackbarHostState,
-                        // Category picker is now in-screen (CategoryPickerSheet).
-                        // Tapping "add new category" navigates to AddCategory with propagateToTransaction = true,
-                        // so the created category is propagated back via pendingCategory.
                         onAddNewCategory = {
                             backStack.add(
                                 CategoryRoute(

@@ -10,7 +10,6 @@ val HhPrimaryTextColor = Color(0xFF010101)
 val HhSecondaryTextBackground = Color(0xFFB0B0B0)
 val HhDisabledTextPrimaryBackground = Color(0xFF393939)
 
-// card colors
 val HhCardBackground = Color(0xFF171717)
 val HhCardTextColor = Color(0xFFB7B7B7)
 
@@ -30,7 +29,6 @@ val SecondaryButtonColor = Color(0xFF8849CD)
 val DeleteButtonColor = Color(0xFFF11355)
 val BorderTextFieldColor = Color(0xFF6E6973)
 
-// Material3 builder
 val primaryLightHighContrast = Color(0xFF00272C)
 val onPrimaryLightHighContrast = Color(0xFFFFFFFF)
 val primaryContainerLightHighContrast = Color(0xFF004A53)

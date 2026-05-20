@@ -48,7 +48,6 @@ fun MonthSelector(label: String, onPrev: () -> Unit, onNext: () -> Unit, modifie
             .border(BorderStroke(1.dp, colors.border), radii.rFull)
             .padding(horizontal = 4.dp, vertical = 4.dp),
     ) {
-        // Prev arrow
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -72,7 +71,6 @@ fun MonthSelector(label: String, onPrev: () -> Unit, onNext: () -> Unit, modifie
             color = colors.textPrimary,
         )
 
-        // Next arrow
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier

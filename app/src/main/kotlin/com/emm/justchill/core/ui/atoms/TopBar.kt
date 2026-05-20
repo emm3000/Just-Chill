@@ -38,7 +38,6 @@ fun JcTopBar(
             .height(64.dp)
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
-        // Leading slot
         if (left != null) {
             Box(
                 contentAlignment = Alignment.Center,
@@ -50,7 +49,6 @@ fun JcTopBar(
             }
         }
 
-        // Centered title
         Text(
             text = title,
             fontSize = 13.sp,
@@ -61,7 +59,6 @@ fun JcTopBar(
             modifier = Modifier.align(Alignment.Center),
         )
 
-        // Trailing slot
         if (right != null) {
             Box(
                 contentAlignment = Alignment.Center,

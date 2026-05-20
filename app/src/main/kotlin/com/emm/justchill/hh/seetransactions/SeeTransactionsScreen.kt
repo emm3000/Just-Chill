@@ -163,10 +163,6 @@ private fun SeeTransactionsContent(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// SCREEN HEADER
-// ═══════════════════════════════════════════════════════════════
-
 @Composable
 private fun ScreenHeader() {
     val colors = LocalEmmColors.current
@@ -181,10 +177,6 @@ private fun ScreenHeader() {
             .padding(top = 18.dp, start = 24.dp, end = 24.dp, bottom = 12.dp),
     )
 }
-
-// ═══════════════════════════════════════════════════════════════
-// SEARCH INPUT
-// ═══════════════════════════════════════════════════════════════
 
 @Composable
 private fun SearchInput(query: String, onQueryChange: (String) -> Unit) {
@@ -247,9 +239,6 @@ private fun SearchInput(query: String, onQueryChange: (String) -> Unit) {
         }
     }
 }
-
-// ═══════════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════════
 
 @Composable
 private fun CategoryChipsRow(
@@ -357,10 +346,6 @@ private fun MoreChip(count: Int, onClick: () -> Unit) {
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// ACTIVE FILTER BANNER
-// ═══════════════════════════════════════════════════════════════
-
 @Composable
 private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: () -> Unit) {
     val colors = LocalEmmColors.current
@@ -437,10 +422,6 @@ private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: ()
         }
     }
 }
-
-// ═══════════════════════════════════════════════════════════════
-// DAY-GROUPED LIST
-// ═══════════════════════════════════════════════════════════════
 
 private fun monthShortEs(month: java.time.Month): String = when (month) {
     java.time.Month.JANUARY -> "enero"
@@ -569,10 +550,6 @@ private fun TxRow(tx: TransactionUi, onClick: () -> Unit) {
         )
     }
 }
-
-// ═══════════════════════════════════════════════════════════════
-// EMPTY STATES
-// ═══════════════════════════════════════════════════════════════
 
 @Composable
 private fun EmptyNoTransactionsAtAll(modifier: Modifier = Modifier) {
@@ -708,10 +685,6 @@ private fun EmptyFilteredNoResults(
         }
     }
 }
-
-// ═══════════════════════════════════════════════════════════════
-// PREVIEWS
-// ═══════════════════════════════════════════════════════════════
 
 @PreviewLightDark
 @Composable

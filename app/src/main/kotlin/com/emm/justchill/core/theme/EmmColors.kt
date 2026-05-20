@@ -11,7 +11,6 @@ import androidx.compose.ui.graphics.Color
  */
 @Immutable
 data class EmmColors(
-    // Surface
     val bg: Color,
     val surface1: Color,
     val surface2: Color,
@@ -19,25 +18,21 @@ data class EmmColors(
     val border: Color,
     val borderFocus: Color,
 
-    // Text
     val textPrimary: Color,
     val textSecondary: Color,
     val textTertiary: Color,
     val textDisabled: Color,
     val textOnAccent: Color,
 
-    // Accent (terracotta)
     val accent: Color,
     val accentMuted: Color,
     val accentFocus: Color,
 
-    // Semantic (status — not for income/expense)
     val success: Color,
     val warning: Color,
     val danger: Color,
     val info: Color,
 
-    // Muted semantic (alpha overlays)
     val posMuted: Color,
     val negMuted: Color,
 

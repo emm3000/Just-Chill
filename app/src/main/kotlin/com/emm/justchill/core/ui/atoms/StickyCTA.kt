@@ -49,7 +49,6 @@ fun StickyCTA(
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
 
-    // Disabled state matches the design: bg → surface1 (panel), fg → textTertiary.
     val (bgColor, fgColor) = when {
         !enabled -> colors.surface1 to colors.textTertiary
         tone == CtaTone.Accent -> colors.accent to colors.textOnAccent
