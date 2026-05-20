@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -52,7 +51,6 @@ private const val NOTE_MAX_CHARS = 120
  * Local draft state is initialized from [initialNote]; nothing is saved until the
  * user taps "Guardar nota", which calls [onSave] with the final text.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current

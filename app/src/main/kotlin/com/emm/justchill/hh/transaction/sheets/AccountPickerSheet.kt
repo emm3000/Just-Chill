@@ -25,7 +25,6 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AttachMoney
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.CreditCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -59,7 +58,6 @@ import kotlinx.coroutines.launch
  * @param onAddNew          When non-null, shows a dashed "+ Nueva cuenta" button.
  * @param onDismiss         Called to dismiss the sheet.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountPickerSheet(
     accounts: List<Account>,

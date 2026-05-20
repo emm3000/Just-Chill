@@ -12,8 +12,6 @@ import com.emm.domain.transaction.TransactionWithCategory
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.toUi
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -55,7 +53,6 @@ data class DayGroup(val date: LocalDate, val transactions: List<TransactionUi>) 
 private const val TOP_N = 5
 private const val SHOW_MORE_THRESHOLD = 8
 
-@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class SeeTransactionsViewModel(
     private val searchTransactions: SearchTransactionsUseCase,
     categoryRepository: CategoryRepository,

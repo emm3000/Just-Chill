@@ -109,6 +109,16 @@ composeCompiler {
     reportsDestination = layout.buildDirectory.dir("compose_reports")
 }
 
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.addAll(
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+            "-opt-in=kotlinx.coroutines.FlowPreview",
+        )
+    }
+}
+
 dependencies {
 
     implementation(project(":domain"))

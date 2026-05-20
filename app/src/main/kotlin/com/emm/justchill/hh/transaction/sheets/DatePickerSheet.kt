@@ -22,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -62,7 +61,6 @@ private val ES = Locale.forLanguageTag("es")
  * @param onConfirm      Delivers the selected epoch-millis to the caller.
  * @param onDismiss      Dismisses the sheet.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current

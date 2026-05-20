@@ -6,13 +6,11 @@ import com.emm.domain.home.HomeData
 import com.emm.domain.shared.YearMonth
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.transaction.toUi
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel(private val getHomeData: GetHomeDataUseCase) :
     MviViewModel<HomeUiState, HomeIntent, HomeEffect>() {
 
