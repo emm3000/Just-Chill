@@ -26,7 +26,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
-import androidx.compose.material.icons.outlined.AttachMoney
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Payments
@@ -57,7 +56,6 @@ import com.emm.justchill.core.theme.EmmColors
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.PlexMonoFontFamily
 import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
@@ -188,11 +186,7 @@ private fun Section(eyebrow: String, content: @Composable () -> Unit) {
 
 // ── Atajos peruanos ────────────────────────────────────────────────
 
-private data class Shortcut(
-    val label: String,
-    val type: AccountType,
-    val dotPicker: (EmmColors) -> Color,
-)
+private data class Shortcut(val label: String, val type: AccountType, val dotPicker: (EmmColors) -> Color)
 
 private val PERUVIAN_SHORTCUTS = listOf(
     Shortcut("Yape", AccountType.Wallet) { it.catMauve },
@@ -205,10 +199,7 @@ private val PERUVIAN_SHORTCUTS = listOf(
 )
 
 @Composable
-private fun ShortcutsRow(
-    selectedName: String,
-    onSelect: (Shortcut) -> Unit,
-) {
+private fun ShortcutsRow(selectedName: String, onSelect: (Shortcut) -> Unit) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -225,12 +216,7 @@ private fun ShortcutsRow(
 }
 
 @Composable
-private fun ShortcutChip(
-    label: String,
-    dotColor: Color,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
+private fun ShortcutChip(label: String, dotColor: Color, selected: Boolean, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val shape = RoundedCornerShape(999.dp)
 
@@ -272,10 +258,7 @@ private fun ShortcutChip(
 // ── Nombre input ───────────────────────────────────────────────────
 
 @Composable
-private fun NameInput(
-    value: String,
-    onValueChange: (String) -> Unit,
-) {
+private fun NameInput(value: String, onValueChange: (String) -> Unit) {
     val colors = LocalEmmColors.current
 
     BasicTextField(
@@ -321,11 +304,7 @@ private fun NameInput(
 
 // ── Tipo grid 2x2 ──────────────────────────────────────────────────
 
-private data class TypeOption(
-    val label: String,
-    val type: AccountType,
-    val icon: ImageVector,
-)
+private data class TypeOption(val label: String, val type: AccountType, val icon: ImageVector)
 
 private val TYPE_OPTIONS = listOf(
     TypeOption("Billetera", AccountType.Wallet, Icons.Outlined.AccountBalanceWallet),
@@ -335,10 +314,7 @@ private val TYPE_OPTIONS = listOf(
 )
 
 @Composable
-private fun TypeGrid(
-    selected: AccountType,
-    onSelect: (AccountType) -> Unit,
-) {
+private fun TypeGrid(selected: AccountType, onSelect: (AccountType) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         TYPE_OPTIONS.chunked(2).forEach { pair ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -405,10 +381,7 @@ private fun TypeCell(
 // ── Moneda row ─────────────────────────────────────────────────────
 
 @Composable
-private fun CurrencyRow(
-    selected: Currency,
-    onSelect: (Currency) -> Unit,
-) {
+private fun CurrencyRow(selected: Currency, onSelect: (Currency) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         CurrencyCell(
             symbol = "S/",

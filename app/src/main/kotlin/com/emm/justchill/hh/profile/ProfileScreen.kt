@@ -181,13 +181,7 @@ private fun HairlineDivider() {
 }
 
 @Composable
-private fun ProfileRow(
-    icon: ImageVector,
-    label: String,
-    meta: String,
-    metaIsPrimary: Boolean,
-    onClick: () -> Unit,
-) {
+private fun ProfileRow(icon: ImageVector, label: String, meta: String, metaIsPrimary: Boolean, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current

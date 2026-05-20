@@ -40,12 +40,17 @@ class AccountsViewModel(
             is AccountsIntent.OnEditClick -> updateState {
                 copy(pendingEdit = intent.account, editName = intent.account.name)
             }
+
             is AccountsIntent.OnEditNameChange -> updateState { copy(editName = intent.value) }
+
             AccountsIntent.OnEditDismiss -> updateState { copy(pendingEdit = null, editName = "") }
+
             AccountsIntent.OnEditConfirm -> confirmEdit()
 
             is AccountsIntent.OnDeleteClick -> updateState { copy(pendingDelete = intent.account) }
+
             AccountsIntent.OnDeleteDismiss -> updateState { copy(pendingDelete = null) }
+
             AccountsIntent.OnDeleteConfirm -> confirmDelete()
         }
     }

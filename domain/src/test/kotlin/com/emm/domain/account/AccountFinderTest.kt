@@ -15,7 +15,6 @@ class AccountFinderTest {
 
     @Test
     fun `find should call repository findBy with correct accountId`() = runTest {
-
         coEvery { repository.find(any()) } returns null
 
         val find: Account? = accountFinder(AccountId("1234"))

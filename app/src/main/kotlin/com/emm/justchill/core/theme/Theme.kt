@@ -34,9 +34,7 @@ private val materialDarkScheme = darkColorScheme(
 )
 
 @Composable
-fun EmmTheme(
-    content: @Composable () -> Unit,
-) {
+fun EmmTheme(content: @Composable () -> Unit) {
     CompositionLocalProvider(
         LocalEmmColors provides emmDarkColors,
         LocalEmmType provides emmType,

@@ -34,9 +34,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,11 +55,7 @@ private const val NOTE_MAX_CHARS = 120
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NoteSheet(
-    initialNote: String,
-    onSave: (String) -> Unit,
-    onDismiss: () -> Unit,
-) {
+fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -209,12 +204,7 @@ fun NoteSheet(
 }
 
 @Composable
-private fun SheetButton(
-    label: String,
-    primary: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun SheetButton(label: String, primary: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
 

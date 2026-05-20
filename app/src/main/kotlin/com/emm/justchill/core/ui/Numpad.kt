@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Backspace
@@ -43,12 +42,7 @@ import com.emm.justchill.core.theme.PlexMonoFontFamily
  * @param onBackspace   Called when ⌫ is pressed.
  */
 @Composable
-fun Numpad(
-    onDigit: (Char) -> Unit,
-    onDoubleZero: () -> Unit,
-    onBackspace: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun Numpad(onDigit: (Char) -> Unit, onDoubleZero: () -> Unit, onBackspace: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
 
     // Hairline border for digits, slightly brighter border for accented keys
@@ -107,6 +101,7 @@ fun Numpad(
                                     letterSpacing = (-0.44).sp,
                                 )
                             }
+
                             NumKey.DoubleZero -> {
                                 Text(
                                     text = "00",
@@ -117,6 +112,7 @@ fun Numpad(
                                     letterSpacing = (-0.44).sp,
                                 )
                             }
+
                             NumKey.Backspace -> {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Outlined.Backspace,

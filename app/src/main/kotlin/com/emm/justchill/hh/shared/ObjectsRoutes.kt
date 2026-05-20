@@ -31,5 +31,3 @@ data object AddTransactionRoute : NavKey
 
 @Serializable
 data object ReportRoute : NavKey
-
-

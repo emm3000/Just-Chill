@@ -182,12 +182,7 @@ private fun NewAccountButton(onClick: () -> Unit) {
 // ── Account row ────────────────────────────────────────────────────
 
 @Composable
-private fun AccountRow(
-    account: Account,
-    movementCount: Int,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit,
-) {
+private fun AccountRow(account: Account, movementCount: Int, onEdit: () -> Unit, onDelete: () -> Unit) {
     val colors = LocalEmmColors.current
 
     Column {
@@ -409,11 +404,7 @@ private fun EditAccountDialog(
 }
 
 @Composable
-private fun DeleteAccountDialog(
-    accountName: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
+private fun DeleteAccountDialog(accountName: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
     AlertDialog(
         onDismissRequest = onDismiss,

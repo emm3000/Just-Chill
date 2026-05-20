@@ -13,7 +13,7 @@ class DeleteAccountUseCase(
         val count = transactionRepository.countByAccount(accountId)
         if (count > 0) {
             throw DomainException.ValidationError(
-                "No puedes eliminar una cuenta con transacciones. Bórralas o muévelas primero."
+                "No puedes eliminar una cuenta con transacciones. Bórralas o muévelas primero.",
             )
         }
         repository.delete(accountId)

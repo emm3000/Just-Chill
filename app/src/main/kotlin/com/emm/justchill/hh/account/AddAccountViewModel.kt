@@ -4,9 +4,8 @@ import com.emm.domain.account.CreateAccountUseCase
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 
-class AddAccountViewModel(
-    private val createAccount: CreateAccountUseCase,
-) : MviViewModel<AddAccountUiState, AddAccountIntent, AddAccountEffect>() {
+class AddAccountViewModel(private val createAccount: CreateAccountUseCase) :
+    MviViewModel<AddAccountUiState, AddAccountIntent, AddAccountEffect>() {
 
     override val initialState = AddAccountUiState()
 
@@ -15,8 +14,11 @@ class AddAccountViewModel(
             is AddAccountIntent.OnNameChange -> updateState {
                 copy(name = intent.value, isEnabled = intent.value.isNotEmpty())
             }
+
             is AddAccountIntent.OnTypeChange -> updateState { copy(selectedType = intent.value) }
+
             is AddAccountIntent.OnCurrencyChange -> updateState { copy(selectedCurrency = intent.value) }
+
             AddAccountIntent.OnSave -> save()
         }
     }

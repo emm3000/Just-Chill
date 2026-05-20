@@ -14,6 +14,5 @@ val coreModule = module {
     single { AppPreferences(get()) }
 }
 
-private fun provideSharedPreferences(
-    context: Context,
-): SharedPreferences = context.getSharedPreferences(Build.ID, Context.MODE_PRIVATE)
+private fun provideSharedPreferences(context: Context): SharedPreferences =
+    context.getSharedPreferences(Build.ID, Context.MODE_PRIVATE)

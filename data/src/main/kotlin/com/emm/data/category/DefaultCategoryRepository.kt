@@ -9,9 +9,7 @@ import com.emm.domain.shared.CategoryId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 
-class DefaultCategoryRepository(
-    private val localDataSource: CategoryLocalDataSource,
-) : CategoryRepository {
+class DefaultCategoryRepository(private val localDataSource: CategoryLocalDataSource) : CategoryRepository {
 
     override fun all(): Flow<List<Category>> = localDataSource.all().catchAsDomainException()
 

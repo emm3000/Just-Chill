@@ -33,7 +33,6 @@ fun EmmAmountChill(
     onNext: () -> Unit = {},
     modifier: Modifier,
 ) {
-
     val amount = value.text.replace(",", "").toBigDecimalOrNull() ?: BigDecimal.ZERO
     val textColor = when {
         amount == BigDecimal("0.00") -> {
@@ -41,7 +40,9 @@ fun EmmAmountChill(
         }
 
         amount < BigDecimal("1.00") -> DeleteButtonColor
+
         amount >= BigDecimal("1.00") -> MaterialTheme.colorScheme.onBackground
+
         else -> MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
     }
 
@@ -57,7 +58,6 @@ fun EmmAmountChill(
     )
 }
 
-
 @Composable
 fun AmountTextField(
     value: TextFieldValue,
@@ -66,7 +66,6 @@ fun AmountTextField(
     textColor: Color,
     modifier: Modifier = Modifier,
 ) {
-
     BasicTextField(
         modifier = modifier,
         value = value,
@@ -78,7 +77,7 @@ fun AmountTextField(
         keyboardActions = KeyboardActions(
             onNext = {
                 onNext()
-            }
+            },
         ),
         textStyle = TextStyle(
             fontSize = 40.sp,
@@ -89,18 +88,18 @@ fun AmountTextField(
             Row(
                 modifier = Modifier,
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
             ) {
                 Text(
                     text = "S/  ",
                     fontFamily = InterFontFamily,
                     fontSize = 40.sp,
-                    color = textColor
+                    color = textColor,
                 )
                 innerTextField()
             }
         },
-        cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground)
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
     )
 }
 
@@ -124,7 +123,7 @@ fun AmountPreview() {
             EmmAmountChill(
                 value = TextFieldValue("100.00"),
                 onValueChange = {},
-                modifier = Modifier
+                modifier = Modifier,
             )
         }
     }

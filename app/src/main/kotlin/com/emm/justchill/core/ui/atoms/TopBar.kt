@@ -1,7 +1,6 @@
 package com.emm.justchill.core.ui.atoms
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -25,11 +24,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
  * or apply background on the parent scaffold.
  */
 @Composable
-fun JcTopBar(
-    title: String,
-    left: @Composable (() -> Unit)? = null,
-    right: @Composable (() -> Unit)? = null,
-) {
+fun JcTopBar(title: String, left: @Composable (() -> Unit)? = null, right: @Composable (() -> Unit)? = null) {
     val colors = LocalEmmColors.current
 
     Box(

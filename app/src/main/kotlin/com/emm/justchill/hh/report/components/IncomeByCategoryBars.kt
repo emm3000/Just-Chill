@@ -20,7 +20,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -43,10 +42,7 @@ import kotlinx.coroutines.delay
  * better screenshot.
  */
 @Composable
-fun IncomeByCategoryBars(
-    shares: List<CategoryShare>,
-    modifier: Modifier = Modifier,
-) {
+fun IncomeByCategoryBars(shares: List<CategoryShare>, modifier: Modifier = Modifier) {
     val spacing = LocalEmmSpacing.current
 
     Column(
@@ -63,10 +59,7 @@ fun IncomeByCategoryBars(
 }
 
 @Composable
-private fun CategoryShareRow(
-    share: CategoryShare,
-    animationDelayMs: Long,
-) {
+private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current

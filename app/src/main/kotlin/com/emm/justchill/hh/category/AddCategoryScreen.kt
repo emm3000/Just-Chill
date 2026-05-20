@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
@@ -54,7 +53,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -92,6 +90,7 @@ fun AddCategoryScreen(
                     keyboard?.hide()
                     onCategorySaved(effect.created)
                 }
+
                 is AddCategoryEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
             }
         }
@@ -355,10 +354,7 @@ private fun NameInput(
 // ── Tipo segmented ─────────────────────────────────────────────────
 
 @Composable
-private fun TypeSegmented(
-    selected: CategoryType,
-    onSelect: (CategoryType) -> Unit,
-) {
+private fun TypeSegmented(selected: CategoryType, onSelect: (CategoryType) -> Unit) {
     val colors = LocalEmmColors.current
     val shape = RoundedCornerShape(12.dp)
 
@@ -387,12 +383,7 @@ private fun TypeSegmented(
 }
 
 @Composable
-private fun TypeSegCell(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun TypeSegCell(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val shape = RoundedCornerShape(9.dp)
     val bg = if (selected) colors.surface3 else Color.Transparent
@@ -419,11 +410,7 @@ private fun TypeSegCell(
 // ── Icon grid (2 rows × horizontal scroll) ─────────────────────────
 
 @Composable
-private fun IconGrid(
-    selected: IconCatalog,
-    accent: Color,
-    onSelect: (IconCatalog) -> Unit,
-) {
+private fun IconGrid(selected: IconCatalog, accent: Color, onSelect: (IconCatalog) -> Unit) {
     LazyHorizontalGrid(
         rows = GridCells.Fixed(2),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -445,12 +432,7 @@ private fun IconGrid(
 }
 
 @Composable
-private fun IconCell(
-    icon: IconCatalog,
-    selected: Boolean,
-    accent: Color,
-    onClick: () -> Unit,
-) {
+private fun IconCell(icon: IconCatalog, selected: Boolean, accent: Color, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val shape = RoundedCornerShape(12.dp)
     val border = if (selected) accent else colors.border
@@ -482,10 +464,7 @@ private fun IconCell(
 // ── Color row ──────────────────────────────────────────────────────
 
 @Composable
-private fun ColorRow(
-    selected: CategoryColor,
-    onSelect: (CategoryColor) -> Unit,
-) {
+private fun ColorRow(selected: CategoryColor, onSelect: (CategoryColor) -> Unit) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         contentPadding = PaddingValues(horizontal = 2.dp),
@@ -501,11 +480,7 @@ private fun ColorRow(
 }
 
 @Composable
-private fun ColorDot(
-    color: CategoryColor,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
+private fun ColorDot(color: CategoryColor, selected: Boolean, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
 
     Box(

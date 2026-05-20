@@ -18,7 +18,7 @@ data class EmmRadii(
     val rM: RoundedCornerShape = RoundedCornerShape(12.dp),
     val rL: RoundedCornerShape = RoundedCornerShape(14.dp),
     val rXL: RoundedCornerShape = RoundedCornerShape(16.dp),
-    val rXXL: RoundedCornerShape = RoundedCornerShape(20.dp),  // bottom sheet top corners
+    val rXXL: RoundedCornerShape = RoundedCornerShape(20.dp), // bottom sheet top corners
     val rLTop: RoundedCornerShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
     val rFull: RoundedCornerShape = RoundedCornerShape(999.dp),
 )

@@ -53,12 +53,17 @@ class CategoriesViewModel(
             is CategoriesIntent.OnEditClick -> updateState {
                 copy(pendingEdit = intent.category, editName = intent.category.name)
             }
+
             is CategoriesIntent.OnEditNameChange -> updateState { copy(editName = intent.value) }
+
             CategoriesIntent.OnEditDismiss -> updateState { copy(pendingEdit = null, editName = "") }
+
             CategoriesIntent.OnEditConfirm -> confirmEdit()
 
             is CategoriesIntent.OnDeleteClick -> updateState { copy(pendingDelete = intent.category) }
+
             CategoriesIntent.OnDeleteDismiss -> updateState { copy(pendingDelete = null) }
+
             CategoriesIntent.OnDeleteConfirm -> confirmDelete()
         }
     }

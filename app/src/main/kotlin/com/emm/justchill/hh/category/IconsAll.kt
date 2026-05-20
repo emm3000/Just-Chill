@@ -76,12 +76,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import java.text.Normalizer
 import java.util.regex.Pattern
 
-data class IconCatalog(
-    val id: String,
-    val name: String,
-    val icon: ImageVector,
-    val keywords: List<String>,
-) {
+data class IconCatalog(val id: String, val name: String, val icon: ImageVector, val keywords: List<String>) {
 
     val cleanKeywords: List<String>
         get() = keywords.map(String::normalizeForSearch)
@@ -104,19 +99,44 @@ fun String.normalizeForSearch(): String {
 object AppIconCatalog {
 
     val catalog: List<IconCatalog> = listOf(
-        IconCatalog("food", "Restaurante", Icons.Rounded.Restaurant, listOf("comida", "almuerzo", "cena", "menú", "restaurant")),
-        IconCatalog("fast_food", "Comida rápida", Icons.Rounded.Fastfood, listOf("hamburguesa", "fast food", "pollo broaster", "salchipapa")),
+        IconCatalog(
+            "food",
+            "Restaurante",
+            Icons.Rounded.Restaurant,
+            listOf("comida", "almuerzo", "cena", "menú", "restaurant"),
+        ),
+        IconCatalog(
+            "fast_food",
+            "Comida rápida",
+            Icons.Rounded.Fastfood,
+            listOf("hamburguesa", "fast food", "pollo broaster", "salchipapa"),
+        ),
         IconCatalog("coffee", "Cafetería", Icons.Rounded.LocalCafe, listOf("café", "cafecito", "capuccino", "latte")),
         IconCatalog("bar", "Bar", Icons.Rounded.LocalBar, listOf("bar", "cerveza", "trago", "alcohol")),
         IconCatalog("pizza", "Pizzería", Icons.Rounded.LocalPizza, listOf("pizza", "italiano")),
         IconCatalog("ice_cream", "Heladería", Icons.Rounded.Icecream, listOf("helado", "postre", "paleta")),
-        IconCatalog("bakery", "Panadería", Icons.Rounded.BakeryDining, listOf("pan", "panadería", "pastelería", "keke")),
-        IconCatalog("groceries", "Supermercado", Icons.Rounded.ShoppingCart, listOf("supermercado", "mercado", "bodega", "víveres")),
+        IconCatalog(
+            "bakery",
+            "Panadería",
+            Icons.Rounded.BakeryDining,
+            listOf("pan", "panadería", "pastelería", "keke"),
+        ),
+        IconCatalog(
+            "groceries",
+            "Supermercado",
+            Icons.Rounded.ShoppingCart,
+            listOf("supermercado", "mercado", "bodega", "víveres"),
+        ),
         IconCatalog("water", "Agua", Icons.Rounded.WaterDrop, listOf("agua", "botella", "bidón")),
 
         IconCatalog("home", "Hogar", Icons.Rounded.Home, listOf("hogar", "casa", "departamento")),
         IconCatalog("rent", "Alquiler", Icons.Rounded.House, listOf("alquiler", "renta", "cuarto")),
-        IconCatalog("mortgage", "Hipoteca", Icons.Rounded.AccountBalance, listOf("hipoteca", "banco", "crédito hipotecario")),
+        IconCatalog(
+            "mortgage",
+            "Hipoteca",
+            Icons.Rounded.AccountBalance,
+            listOf("hipoteca", "banco", "crédito hipotecario"),
+        ),
         IconCatalog("furniture", "Muebles", Icons.Rounded.Chair, listOf("muebles", "sillón", "mesa")),
         IconCatalog("repairs", "Reparaciones", Icons.Rounded.Build, listOf("reparaciones", "arreglos", "maestro")),
         IconCatalog("cleaning", "Limpieza", Icons.Rounded.CleaningServices, listOf("limpieza", "aseo")),
@@ -126,7 +146,12 @@ object AppIconCatalog {
 
         IconCatalog("car", "Auto", Icons.Rounded.DirectionsCar, listOf("auto", "carro", "vehículo")),
         IconCatalog("taxi", "Taxi", Icons.Rounded.LocalTaxi, listOf("taxi", "uber", "cabify", "indrive")),
-        IconCatalog("bus", "Transporte público", Icons.Rounded.DirectionsBus, listOf("bus", "micro", "combi", "corredor")),
+        IconCatalog(
+            "bus",
+            "Transporte público",
+            Icons.Rounded.DirectionsBus,
+            listOf("bus", "micro", "combi", "corredor"),
+        ),
         IconCatalog("train", "Metro", Icons.Rounded.Train, listOf("metro", "tren eléctrico")),
         IconCatalog("bike", "Bicicleta", Icons.AutoMirrored.Rounded.DirectionsBike, listOf("bicicleta", "bici")),
         IconCatalog("fuel", "Gasolina", Icons.Rounded.LocalGasStation, listOf("gasolina", "grifo", "combustible")),
@@ -137,7 +162,12 @@ object AppIconCatalog {
         IconCatalog("shopping", "Compras", Icons.Rounded.ShoppingBag, listOf("compras", "tienda", "mall")),
         IconCatalog("clothes", "Ropa", Icons.Rounded.Checkroom, listOf("ropa", "polos", "pantalón")),
         IconCatalog("shoes", "Calzado", Icons.Rounded.Hiking, listOf("zapatos", "zapatillas")),
-        IconCatalog("electronics", "Electrónica", Icons.Rounded.Devices, listOf("electrónica", "gadgets", "tecnología")),
+        IconCatalog(
+            "electronics",
+            "Electrónica",
+            Icons.Rounded.Devices,
+            listOf("electrónica", "gadgets", "tecnología"),
+        ),
         IconCatalog("phone", "Celular", Icons.Rounded.Smartphone, listOf("celular", "móvil")),
         IconCatalog("computer", "Computadora", Icons.Rounded.Computer, listOf("laptop", "pc", "computadora")),
         IconCatalog("gift", "Regalos", Icons.Rounded.CardGiftcard, listOf("regalo", "cumpleaños")),
@@ -162,10 +192,25 @@ object AppIconCatalog {
         IconCatalog("bonus", "Bonos", Icons.AutoMirrored.Rounded.TrendingUp, listOf("bono", "extra")),
         IconCatalog("tips", "Propinas", Icons.Rounded.VolunteerActivism, listOf("propina", "tips")),
 
-        IconCatalog("taxes", "Impuestos", Icons.AutoMirrored.Rounded.ReceiptLong, listOf("impuestos", "sunat", "tributos")),
-        IconCatalog("credit_card", "Tarjeta de crédito", Icons.Rounded.CreditCard, listOf("tarjeta", "visa", "mastercard")),
+        IconCatalog(
+            "taxes",
+            "Impuestos",
+            Icons.AutoMirrored.Rounded.ReceiptLong,
+            listOf("impuestos", "sunat", "tributos"),
+        ),
+        IconCatalog(
+            "credit_card",
+            "Tarjeta de crédito",
+            Icons.Rounded.CreditCard,
+            listOf("tarjeta", "visa", "mastercard"),
+        ),
         IconCatalog("savings", "Ahorros", Icons.Rounded.Savings, listOf("ahorros", "guardar")),
-        IconCatalog("investment", "Inversiones", Icons.AutoMirrored.Rounded.ShowChart, listOf("inversión", "acciones", "crypto")),
+        IconCatalog(
+            "investment",
+            "Inversiones",
+            Icons.AutoMirrored.Rounded.ShowChart,
+            listOf("inversión", "acciones", "crypto"),
+        ),
         IconCatalog("loan", "Préstamo", Icons.Rounded.AccountBalance, listOf("préstamo", "banco", "crédito")),
         IconCatalog("insurance", "Seguro", Icons.Rounded.Security, listOf("seguro", "aseguradora")),
         IconCatalog("wallet", "Billetera", Icons.Rounded.AccountBalanceWallet, listOf("billetera", "yape", "plin")),
@@ -185,12 +230,9 @@ object AppIconCatalog {
         IconCatalog("settings", "Ajustes", Icons.Rounded.Settings, listOf("ajustes", "configuración")),
     )
 
-
     fun findById(id: String): IconCatalog = catalog.firstOrNull { it.id == id } ?: catalog.first()
 
-    fun search(query: String): List<IconCatalog> {
-        return catalog.filter { iconCatalog ->
-            iconCatalog.keywords.any { keyword -> keyword.contains(query, ignoreCase = true) }
-        }
+    fun search(query: String): List<IconCatalog> = catalog.filter { iconCatalog ->
+        iconCatalog.keywords.any { keyword -> keyword.contains(query, ignoreCase = true) }
     }
 }

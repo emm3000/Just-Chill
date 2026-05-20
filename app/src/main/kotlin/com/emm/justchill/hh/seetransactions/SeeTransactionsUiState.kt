@@ -5,12 +5,7 @@ import com.emm.domain.category.CategoryType
 import com.emm.justchill.core.mvi.UiState
 
 @Immutable
-data class CategoryChipUi(
-    val id: String,
-    val name: String,
-    val colorId: String,
-    val selected: Boolean,
-)
+data class CategoryChipUi(val id: String, val name: String, val colorId: String, val selected: Boolean)
 
 @Immutable
 data class CategorySheetItem(
@@ -23,10 +18,7 @@ data class CategorySheetItem(
 )
 
 @Immutable
-data class ActiveCategoryInfo(
-    val id: String,
-    val name: String,
-)
+data class ActiveCategoryInfo(val id: String, val name: String)
 
 data class SeeTransactionsUiState(
     val days: List<DayGroup> = emptyList(),

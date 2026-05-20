@@ -15,32 +15,25 @@ import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class DefaultTransactionRepository(
-    private val localDataSource: TransactionLocalDataSource,
-) : TransactionRepository {
+class DefaultTransactionRepository(private val localDataSource: TransactionLocalDataSource) : TransactionRepository {
 
     override suspend fun create(transactionInsert: TransactionInsert) = safeDbCall {
         localDataSource.create(transactionInsert)
     }
 
-    override fun all(): Flow<List<Transaction>> {
-        return localDataSource.all().catchAsDomainException()
-    }
+    override fun all(): Flow<List<Transaction>> = localDataSource.all().catchAsDomainException()
 
-    override fun fetchAllWithCategory(): Flow<List<TransactionWithCategory>> {
-        return localDataSource.completeTransactions()
-            .map { it.toDomain() }
-            .catchAsDomainException()
-    }
+    override fun fetchAllWithCategory(): Flow<List<TransactionWithCategory>> = localDataSource.completeTransactions()
+        .map { it.toDomain() }
+        .catchAsDomainException()
 
     override fun fetchAllWithCategoryInRange(
         startInclusive: Long,
         endExclusive: Long,
-    ): Flow<List<TransactionWithCategory>> {
-        return localDataSource.completeTransactionsByDateRange(startInclusive, endExclusive)
+    ): Flow<List<TransactionWithCategory>> =
+        localDataSource.completeTransactionsByDateRange(startInclusive, endExclusive)
             .map { it.toDomain() }
             .catchAsDomainException()
-    }
 
     override suspend fun update(transactionId: TransactionId, transactionUpdate: TransactionUpdate): Unit = safeDbCall {
         localDataSource.update(transactionId.value, transactionUpdate)
@@ -60,14 +53,13 @@ class DefaultTransactionRepository(
         localDataSource.find(transactionId.value)
     }
 
-    override fun searchWithCategory(filter: TransactionFilter): Flow<List<TransactionWithCategory>> {
-        return localDataSource.searchTransactions(
+    override fun searchWithCategory(filter: TransactionFilter): Flow<List<TransactionWithCategory>> =
+        localDataSource.searchTransactions(
             query = filter.query,
             categoryIds = filter.categoryIds.map { it.value }.toSet(),
         )
             .map { it.toDomain() }
             .catchAsDomainException()
-    }
 
     override suspend fun monthlyAmountByCategory(
         type: TransactionType,

@@ -5,5 +5,5 @@ data class MonthlyAmountByCategoryEntity(
     val categoryName: String,
     val categoryIcon: String,
     val categoryColor: String,
-    val totalAmount: Long,  // SUM is nullable in SQL but GROUP BY ensures at least one row
+    val totalAmount: Long, // SUM is nullable in SQL but GROUP BY ensures at least one row
 )

@@ -67,11 +67,13 @@ internal fun SignToggle(
                 .fillMaxSize()
                 .clip(cellShape)
                 .then(
-                    if (incomeActive)
+                    if (incomeActive) {
                         Modifier
                             .background(colors.surface3)
                             .border(1.dp, colors.borderFocus, cellShape)
-                    else Modifier,
+                    } else {
+                        Modifier
+                    },
                 )
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
@@ -104,11 +106,13 @@ internal fun SignToggle(
                 .fillMaxSize()
                 .clip(cellShape)
                 .then(
-                    if (isSpend)
+                    if (isSpend) {
                         Modifier
                             .background(colors.surface3)
                             .border(1.dp, colors.borderFocus, cellShape)
-                    else Modifier,
+                    } else {
+                        Modifier
+                    },
                 )
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
@@ -202,11 +206,7 @@ internal fun QuickChip(
 }
 
 @Composable
-internal fun NoteRow(
-    note: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun NoteRow(note: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     if (note.isBlank()) {
         NoteEmptyButton(onClick = onClick, modifier = modifier)
     } else {
@@ -215,10 +215,7 @@ internal fun NoteRow(
 }
 
 @Composable
-private fun NoteEmptyButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun NoteEmptyButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -249,11 +246,7 @@ private fun NoteEmptyButton(
 }
 
 @Composable
-private fun NoteFilledCard(
-    note: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun NoteFilledCard(note: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
     val interactionSource = remember { MutableInteractionSource() }

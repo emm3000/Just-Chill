@@ -20,10 +20,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -156,11 +156,7 @@ private fun SectionHeader(label: String, count: Int) {
 }
 
 @Composable
-private fun CategoryRow(
-    category: Category,
-    movementCount: Int,
-    onClick: () -> Unit,
-) {
+private fun CategoryRow(category: Category, movementCount: Int, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
     val swatch = remember(category.color) { findById(category.color).primary }
@@ -290,11 +286,7 @@ private fun EditCategoryDialog(
 }
 
 @Composable
-private fun DeleteCategoryDialog(
-    categoryName: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
+private fun DeleteCategoryDialog(categoryName: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -302,7 +294,7 @@ private fun DeleteCategoryDialog(
         text = {
             Text(
                 "Los movimientos asociados pasarán a «Sin categoría». " +
-                    "Esta acción no se puede deshacer."
+                    "Esta acción no se puede deshacer.",
             )
         },
         confirmButton = {

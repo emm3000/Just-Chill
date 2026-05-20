@@ -22,9 +22,13 @@ class AddCategoryViewModel(
             is AddCategoryIntent.OnNameChange -> updateState {
                 copy(name = intent.value, isAllFieldValidated = intent.value.isNotBlank())
             }
+
             is AddCategoryIntent.OnCategoryTypeChange -> updateState { copy(categoryType = intent.value) }
+
             is AddCategoryIntent.OnColorChange -> updateState { copy(color = intent.value) }
+
             is AddCategoryIntent.OnIconChange -> updateState { copy(icon = intent.value) }
+
             AddCategoryIntent.OnSave -> saveCategory()
         }
     }

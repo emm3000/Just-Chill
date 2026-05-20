@@ -73,12 +73,7 @@ fun ToggleIncomeExpense(
 }
 
 @Composable
-private fun SegmentButton(
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun SegmentButton(label: String, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
 

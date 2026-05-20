@@ -46,11 +46,9 @@ fun <T> EmmDropDown(
     onItemSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-
     Column(
-        modifier = modifier
+        modifier = modifier,
     ) {
-
         val (isExpanded, setIsExpanded) = remember {
             mutableStateOf(false)
         }
@@ -58,7 +56,7 @@ fun <T> EmmDropDown(
         val sizeInside by animateFloatAsState(
             targetValue = if (isExpanded) 180f else 0f,
             animationSpec = tween(easing = LinearOutSlowInEasing),
-            label = ""
+            label = "",
         )
 
         val selected: String by remember(itemSelected) {
@@ -83,10 +81,10 @@ fun <T> EmmDropDown(
                     fontFamily = InterFontFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 18.sp,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
                 ),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.onBackground
+                    focusedBorderColor = MaterialTheme.colorScheme.onBackground,
                 ),
                 suffix = {
                     Icon(
@@ -104,9 +102,9 @@ fun <T> EmmDropDown(
                         fontFamily = InterFontFamily,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 16.sp,
-                        modifier = Modifier.padding(bottom = 5.dp)
+                        modifier = Modifier.padding(bottom = 5.dp),
                     )
-                }
+                },
             )
             DropdownMenu(
                 expanded = isExpanded,
@@ -118,7 +116,7 @@ fun <T> EmmDropDown(
                 ),
                 modifier = Modifier
                     .exposedDropdownSize()
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
             ) {
                 items.forEach { item ->
                     DropdownMenuItem(
@@ -129,13 +127,13 @@ fun <T> EmmDropDown(
                                 fontFamily = InterFontFamily,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Normal,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                         },
                         onClick = {
                             onItemSelected(item)
                             setIsExpanded(false)
-                        }
+                        },
                     )
                 }
             }
@@ -160,7 +158,7 @@ private fun DropDownContainerPreview() {
                 ),
                 onItemSelected = {},
                 itemSelected = "random322",
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

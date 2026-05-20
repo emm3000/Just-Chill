@@ -1,12 +1,12 @@
 package com.emm.domain.shared
 
-import kotlin.time.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 
 /**
  * A year + month, without day. Used to query and report on a calendar
@@ -14,10 +14,7 @@ import kotlinx.datetime.toLocalDateTime
  *
  * kotlinx-datetime doesn't ship a YearMonth type, so we roll our own.
  */
-data class YearMonth(
-    val year: Int,
-    val month: Month,
-) {
+data class YearMonth(val year: Int, val month: Month) {
 
     fun previous(): YearMonth {
         val prevOrdinal = month.ordinal - 1
@@ -48,15 +45,11 @@ data class YearMonth(
     /**
      * Exclusive end-of-month epoch millis (= start of next month).
      */
-    fun endExclusiveMillis(timeZone: TimeZone = TimeZone.currentSystemDefault()): Long {
-        return next().startInclusiveMillis(timeZone)
-    }
+    fun endExclusiveMillis(timeZone: TimeZone = TimeZone.currentSystemDefault()): Long =
+        next().startInclusiveMillis(timeZone)
 
     companion object {
-        fun current(
-            clock: Clock = Clock.System,
-            timeZone: TimeZone = TimeZone.currentSystemDefault(),
-        ): YearMonth {
+        fun current(clock: Clock = Clock.System, timeZone: TimeZone = TimeZone.currentSystemDefault()): YearMonth {
             val today: LocalDateTime = clock.now().toLocalDateTime(timeZone)
             return YearMonth(year = today.year, month = today.month)
         }

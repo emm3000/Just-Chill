@@ -9,9 +9,8 @@ import com.emm.justchill.hh.transaction.SelectableCategory
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-class SelectCategoryViewModel(
-    categoryRepository: CategoryRepository,
-) : MviViewModel<SelectCategoryUi, SelectCategoryIntent, SelectCategoryEffect>() {
+class SelectCategoryViewModel(categoryRepository: CategoryRepository) :
+    MviViewModel<SelectCategoryUi, SelectCategoryIntent, SelectCategoryEffect>() {
 
     override val initialState = SelectCategoryUi()
 

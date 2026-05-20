@@ -22,16 +22,19 @@ class GetMonthlyComparisonUseCaseTest {
     private val previousMonth = currentMonth.previous() // April 2026
 
     private fun stubMonthly(yearMonth: YearMonth, amountCents: Long) {
-        val items = if (amountCents == 0L) emptyList()
-        else listOf(
-            CategoryAmount(
-                categoryId = CategoryId("x"),
-                categoryName = "X",
-                categoryIcon = "icon",
-                categoryColor = "blue",
-                amount = Money(amountCents),
+        val items = if (amountCents == 0L) {
+            emptyList()
+        } else {
+            listOf(
+                CategoryAmount(
+                    categoryId = CategoryId("x"),
+                    categoryName = "X",
+                    categoryIcon = "icon",
+                    categoryColor = "blue",
+                    amount = Money(amountCents),
+                ),
             )
-        )
+        }
         coEvery {
             repository.monthlyAmountByCategory(
                 any(),

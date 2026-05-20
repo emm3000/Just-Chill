@@ -218,10 +218,7 @@ private fun TotalHeader(
 }
 
 @Composable
-private fun EmptyState(
-    type: TransactionType,
-    onAddTransaction: () -> Unit,
-) {
+private fun EmptyState(type: TransactionType, onAddTransaction: () -> Unit) {
     val colors = LocalEmmColors.current
     val typeTokens = LocalEmmType.current
     val spacing = LocalEmmSpacing.current

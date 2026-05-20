@@ -5,18 +5,13 @@ import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionType
 
-class GetMonthlyComparisonUseCase(
-    private val transactionRepository: TransactionRepository,
-) {
+class GetMonthlyComparisonUseCase(private val transactionRepository: TransactionRepository) {
 
     /**
      * Returns [MonthlyComparison] with the delta % between [yearMonth] and its previous month,
      * or null when there is nothing to compare (previous total is zero).
      */
-    suspend operator fun invoke(
-        yearMonth: YearMonth,
-        type: TransactionType,
-    ): MonthlyComparison? {
+    suspend operator fun invoke(yearMonth: YearMonth, type: TransactionType): MonthlyComparison? {
         val currentTotal = totalFor(yearMonth, type)
         val previousMonth = yearMonth.previous()
         val previousTotal = totalFor(previousMonth, type)

@@ -36,11 +36,7 @@ import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 
 @Composable
-fun ManifestoScreen(
-    isRevisit: Boolean,
-    onStart: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun ManifestoScreen(isRevisit: Boolean, onStart: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current

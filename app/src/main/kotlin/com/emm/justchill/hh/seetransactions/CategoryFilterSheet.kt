@@ -313,10 +313,7 @@ private fun SegmentCell(
 }
 
 @Composable
-private fun SheetCategoryRow(
-    item: CategorySheetItem,
-    onClick: () -> Unit,
-) {
+private fun SheetCategoryRow(item: CategorySheetItem, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val icon = remember(item.iconId) { AppIconCatalog.findById(item.iconId) }
     val color = remember(item.colorId) { findById(item.colorId) }
@@ -365,6 +362,5 @@ private fun SheetCategoryRow(
     }
 }
 
-private fun String.normalizeForSearch(): String =
-    Normalizer.normalize(this.trim().lowercase(), Normalizer.Form.NFD)
-        .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+private fun String.normalizeForSearch(): String = Normalizer.normalize(this.trim().lowercase(), Normalizer.Form.NFD)
+    .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")

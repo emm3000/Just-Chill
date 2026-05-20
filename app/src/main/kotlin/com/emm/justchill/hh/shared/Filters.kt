@@ -11,15 +11,12 @@ import com.emm.justchill.core.theme.EmmTheme
 
 @Composable
 fun Filters() {
-
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundColor)
+            .background(BackgroundColor),
     ) {
-
     }
-
 }
 
 @Preview(showBackground = true)

@@ -55,11 +55,15 @@ fun EmmListItem(
             .fillMaxWidth()
             .background(bg)
             .then(
-                if (onClick != null) Modifier.clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = onClick,
-                ) else Modifier
+                if (onClick != null) {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = onClick,
+                    )
+                } else {
+                    Modifier
+                },
             )
             .padding(horizontal = spacing.s4, vertical = spacing.s4),
         verticalAlignment = Alignment.CenterVertically,

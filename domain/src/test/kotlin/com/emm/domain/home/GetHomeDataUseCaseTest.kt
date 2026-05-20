@@ -12,26 +12,21 @@ import io.mockk.slot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import kotlin.time.Clock
-import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class GetHomeDataUseCaseTest {
 
     private val transactionRepository = mockk<TransactionRepository>()
     private val useCase = GetHomeDataUseCase(transactionRepository)
 
-    private fun tx(
-        id: String,
-        type: TransactionType,
-        amount: Long,
-        date: Long = 0L,
-    ) = TransactionWithCategory(
+    private fun tx(id: String, type: TransactionType, amount: Long, date: Long = 0L) = TransactionWithCategory(
         transactionId = TransactionId(id),
         type = type,
         amount = Money(amount),

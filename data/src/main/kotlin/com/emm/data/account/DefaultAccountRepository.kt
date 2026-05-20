@@ -8,21 +8,15 @@ import com.emm.domain.account.AccountUpsert
 import com.emm.domain.shared.AccountId
 import kotlinx.coroutines.flow.Flow
 
-class DefaultAccountRepository(
-    private val localDataSource: AccountLocalDataSource,
-) : AccountRepository {
+class DefaultAccountRepository(private val localDataSource: AccountLocalDataSource) : AccountRepository {
 
-    override fun all(): Flow<List<Account>> {
-        return localDataSource.all().catchAsDomainException()
-    }
+    override fun all(): Flow<List<Account>> = localDataSource.all().catchAsDomainException()
 
     override suspend fun find(accountId: AccountId): Account? = safeDbCall {
         localDataSource.find(accountId.value)
     }
 
-    override fun default(): Flow<Account?> {
-        return localDataSource.default().catchAsDomainException()
-    }
+    override fun default(): Flow<Account?> = localDataSource.default().catchAsDomainException()
 
     override suspend fun create(account: AccountUpsert): Unit = safeDbCall {
         localDataSource.create(account)

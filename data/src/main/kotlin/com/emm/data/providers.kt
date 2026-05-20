@@ -5,14 +5,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 
-fun provideSqlDriver(context: Context): SqlDriver {
-    return AndroidSqliteDriver(
-        schema = EmmDatabaseData.Schema,
-        context = context,
-        name = "${BuildConfig.LIBRARY_PACKAGE_NAME}.db",
-        callback = csm()
-    )
-}
+fun provideSqlDriver(context: Context): SqlDriver = AndroidSqliteDriver(
+    schema = EmmDatabaseData.Schema,
+    context = context,
+    name = "${BuildConfig.LIBRARY_PACKAGE_NAME}.db",
+    callback = csm(),
+)
 
 fun csm() = object : AndroidSqliteDriver.Callback(schema = EmmDatabaseData.Schema) {
     override fun onOpen(db: SupportSQLiteDatabase) {
@@ -36,7 +34,8 @@ fun csm() = object : AndroidSqliteDriver.Callback(schema = EmmDatabaseData.Schem
 }
 
 private fun seedDefaultCategories(db: SupportSQLiteDatabase) {
-    db.execSQL("""
+    db.execSQL(
+        """
         INSERT INTO categories (categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt) VALUES
         ('c3c1d0a2-8f12-4b9e-9a36-1c4d2f0b2f01', 'Supermercado', 'groceries', 'green', 'Spend', 1, 1736800000000, 1736800000000),
         ('9d2a0c6e-9d3b-4a2e-9d71-1a3e8d5a6b02', 'Restaurantes', 'food', 'orange', 'Spend', 1, 1736800000000, 1736800000000),
@@ -61,7 +60,8 @@ private fun seedDefaultCategories(db: SupportSQLiteDatabase) {
         ('b9625963-dbb7-4c76-8393-e0bd15f12b3c', 'Propinas', 'tips', 'yellow', 'Income', 1, 1736800000000, 1736800000000),
         ('ee8698c7-5c11-419d-a6bb-0242e931c6b0', 'Otros', 'wallet', 'gray', 'Income', 1, 1736800000000, 1736800000000),
         ('c6d7e8f9-1a2b-4d3e-b4c5-d6e7f8a905', 'Tarjeta de crédito', 'credit_card', 'red', 'Spend', 1, 1736800000000, 1736800000000);
-    """.trimIndent())
+        """.trimIndent(),
+    )
 }
 
 fun provideDb(sqlDriver: SqlDriver): EmmDatabaseData = EmmDatabaseData(sqlDriver)

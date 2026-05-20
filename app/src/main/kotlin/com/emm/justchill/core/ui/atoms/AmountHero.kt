@@ -25,9 +25,9 @@ import kotlin.math.abs
 
 enum class AmountTone {
     Neutral, // textPrimary
-    Pos,     // success
-    Neg,     // danger
-    Mute,    // textTertiary
+    Pos, // success
+    Neg, // danger
+    Mute, // textTertiary
 }
 
 /**
@@ -63,7 +63,9 @@ fun AmountHero(
         if (withDecimals) {
             val formatter = DecimalFormat("00")
             formatter.format(((absValue - absValue.toLong()) * 100).toLong())
-        } else null
+        } else {
+            null
+        }
     }
 
     val prefixSize = (size.value * 0.40f).sp

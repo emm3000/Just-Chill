@@ -7,12 +7,7 @@ import com.emm.domain.shared.AccountId
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AccountDto(
-    val accountId: String,
-    val name: String,
-    val type: String,
-    val currency: String,
-)
+data class AccountDto(val accountId: String, val name: String, val type: String, val currency: String)
 
 fun Account.toDto() = AccountDto(
     accountId = accountId.value,

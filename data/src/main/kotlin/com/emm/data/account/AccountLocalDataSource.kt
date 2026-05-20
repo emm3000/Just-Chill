@@ -17,12 +17,10 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
     private val aq: AccountsQueries
         get() = emmDatabase.accountsQueries
 
-    fun all(): Flow<List<Account>> {
-        return aq.all()
-            .asFlow()
-            .mapToList(Dispatchers.IO)
-            .map { list -> list.asEntity().asExternalModel() }
-    }
+    fun all(): Flow<List<Account>> = aq.all()
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+        .map { list -> list.asEntity().asExternalModel() }
 
     suspend fun find(accountId: String): Account? = withContext(Dispatchers.IO) {
         aq.find(accountId).executeAsOneOrNull()?.asEntity()?.asExternalModel()

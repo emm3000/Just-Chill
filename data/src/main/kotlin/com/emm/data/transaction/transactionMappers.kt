@@ -111,7 +111,9 @@ fun TransactionWithCategoryEntity.toDomain() = TransactionWithCategory(
     description = description,
     date = date,
     accountId = AccountId(accountId),
-    category = if (categoryId != null && categoryName != null && categoryIcon != null && categoryColor != null && categoryType != null) {
+    category = if (categoryId != null && categoryName != null && categoryIcon != null && categoryColor != null &&
+        categoryType != null
+    ) {
         Category(
             categoryId = CategoryId(categoryId),
             name = categoryName,
@@ -119,7 +121,9 @@ fun TransactionWithCategoryEntity.toDomain() = TransactionWithCategory(
             color = categoryColor,
             categoryType = CategoryType.valueOf(categoryType),
         )
-    } else null,
+    } else {
+        null
+    },
 )
 
 fun List<TransactionWithCategoryEntity>.toDomain() = map(TransactionWithCategoryEntity::toDomain)

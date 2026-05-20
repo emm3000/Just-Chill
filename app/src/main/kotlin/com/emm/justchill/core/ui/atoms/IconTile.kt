@@ -22,9 +22,9 @@ enum class IconTileSize(val tileSize: Dp, val iconSize: Dp, val radius: Dp) {
 }
 
 enum class IconTileTone {
-    Neutral,   // surface2 bg + textTertiary icon
-    Accent,    // accentMuted bg + accent icon
-    Swatch,    // custom color (pass via swatch param, alpha ~14% bg)
+    Neutral, // surface2 bg + textTertiary icon
+    Accent, // accentMuted bg + accent icon
+    Swatch, // custom color (pass via swatch param, alpha ~14% bg)
 }
 
 /**

@@ -8,10 +8,7 @@ class UpdateTransactionUseCase(
     private val dateAndTimeCombiner: DateAndTimeCombiner,
 ) {
 
-    suspend operator fun invoke(
-        oldTransaction: Transaction,
-        transactionUpdate: TransactionUpdate,
-    ) {
+    suspend operator fun invoke(oldTransaction: Transaction, transactionUpdate: TransactionUpdate) {
         if (transactionUpdate.amount.cents <= 0) {
             throw DomainException.ValidationError("El monto debe ser mayor a cero")
         }

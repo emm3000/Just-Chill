@@ -25,7 +25,7 @@ data class Transaction(
             description = "",
             date = currentTimeInMillis(),
             accountId = AccountId(""),
-            categoryId = null
+            categoryId = null,
         )
     }
 }

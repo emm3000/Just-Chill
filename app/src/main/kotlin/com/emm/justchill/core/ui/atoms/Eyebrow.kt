@@ -1,10 +1,10 @@
 package com.emm.justchill.core.ui.atoms
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.material3.Text
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
 
@@ -13,11 +13,7 @@ import com.emm.justchill.core.theme.LocalEmmType
  * Default color: [EmmColors.textTertiary].
  */
 @Composable
-fun Eyebrow(
-    text: String,
-    color: Color? = null,
-    modifier: Modifier = Modifier,
-) {
+fun Eyebrow(text: String, color: Color? = null, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
 

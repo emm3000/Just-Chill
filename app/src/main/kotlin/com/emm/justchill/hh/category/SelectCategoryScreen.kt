@@ -88,7 +88,7 @@ fun SelectCategoryScreen(
                         when (selectedType) {
                             CategoryType.Income -> CategoryType.Spend
                             CategoryType.Spend -> CategoryType.Income
-                        }
+                        },
                     )
                 },
             )
@@ -120,11 +120,7 @@ fun SelectCategoryScreen(
 }
 
 @Composable
-private fun SearchInput(
-    value: String,
-    onValueChange: (String) -> Unit,
-    onClear: () -> Unit,
-) {
+private fun SearchInput(value: String, onValueChange: (String) -> Unit, onClear: () -> Unit) {
     val colors = LocalEmmColors.current
     EmmTextInput(
         value = value,
@@ -163,16 +159,14 @@ private fun SearchInput(
                     )
                 }
             }
-        } else null,
+        } else {
+            null
+        },
     )
 }
 
 @Composable
-private fun TypeRow(
-    selectedType: CategoryType,
-    countTotal: Int,
-    onFlip: () -> Unit,
-) {
+private fun TypeRow(selectedType: CategoryType, countTotal: Int, onFlip: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
@@ -197,10 +191,7 @@ private fun TypeRow(
 }
 
 @Composable
-private fun CategoryList(
-    categories: List<SelectableCategory>,
-    onSelect: (SelectableCategory) -> Unit,
-) {
+private fun CategoryList(categories: List<SelectableCategory>, onSelect: (SelectableCategory) -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
@@ -247,11 +238,7 @@ private fun CategoryList(
 }
 
 @Composable
-private fun EmptyState(
-    query: String,
-    selectedType: CategoryType,
-    onCreate: () -> Unit,
-) {
+private fun EmptyState(query: String, selectedType: CategoryType, onCreate: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
@@ -265,8 +252,11 @@ private fun EmptyState(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = if (hasQuery) "Sin resultados para «${query.trim()}»"
-            else "No tienes categorías de ${if (selectedType == CategoryType.Income) "ingreso" else "gasto"}",
+            text = if (hasQuery) {
+                "Sin resultados para «${query.trim()}»"
+            } else {
+                "No tienes categorías de ${if (selectedType == CategoryType.Income) "ingreso" else "gasto"}"
+            },
             style = type.bodyL,
             color = colors.textSecondary,
         )
@@ -333,7 +323,7 @@ private fun SelectCategoryScreenPreview() {
                             icon = AppIconCatalog.catalog[it],
                             categoryType = CategoryType.Income,
                             color = allColors[it],
-                        )
+                        ),
                     )
                 }
             }

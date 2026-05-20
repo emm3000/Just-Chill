@@ -13,9 +13,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class HomeViewModel(
-    private val getHomeData: GetHomeDataUseCase,
-) : MviViewModel<HomeUiState, HomeIntent, HomeEffect>() {
+class HomeViewModel(private val getHomeData: GetHomeDataUseCase) :
+    MviViewModel<HomeUiState, HomeIntent, HomeEffect>() {
 
     override val initialState = HomeUiState()
 

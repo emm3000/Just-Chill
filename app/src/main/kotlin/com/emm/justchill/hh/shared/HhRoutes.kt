@@ -33,10 +33,7 @@ data object AccountsRoute : BottomBarRoute
 @Serializable
 data object ProfileRoute : BottomBarRoute
 
-data class HhNavBarItem(
-    val name: String,
-    val icon: ImageVector,
-)
+data class HhNavBarItem(val name: String, val icon: ImageVector)
 
 val TOP_LEVEL_ROUTES: Map<BottomBarRoute, HhNavBarItem> = mapOf(
     HomeRoute to HhNavBarItem(name = "Inicio", icon = Icons.Filled.Home),

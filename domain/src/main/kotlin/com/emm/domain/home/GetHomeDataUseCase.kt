@@ -14,9 +14,7 @@ class GetHomeDataUseCase(
     private val clock: Clock = Clock.System,
 ) {
 
-    operator fun invoke(
-        yearMonth: YearMonth = YearMonth.current(clock),
-    ): Flow<HomeData> {
+    operator fun invoke(yearMonth: YearMonth = YearMonth.current(clock)): Flow<HomeData> {
         val startOfMonth = yearMonth.startInclusiveMillis()
         val startOfNextMonth = yearMonth.endExclusiveMillis()
         return combine(
@@ -32,7 +30,6 @@ class GetHomeDataUseCase(
         allTransactions: List<TransactionWithCategory>,
         currentMonthTransactions: List<TransactionWithCategory>,
     ): HomeData {
-
         val lastTransactions: List<TransactionWithCategory> = currentMonthTransactions.take(7)
         val income: Money = currentMonthTransactions
             .filter { it.type == TransactionType.Income }

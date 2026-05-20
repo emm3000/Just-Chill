@@ -28,8 +28,8 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
-import com.emm.justchill.hh.shared.formatNeutral
 import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.hh.shared.formatNeutral
 
 /**
  * Visual reference for the design system components. Open in Android Studio Preview
@@ -51,7 +51,6 @@ private fun EmmComponentsGallery() {
                 .padding(spacing.s4),
             verticalArrangement = Arrangement.spacedBy(spacing.s6),
         ) {
-
             SectionTitle("Type · amounts")
             Text("+1,234.56", style = type.amountHero, color = colors.textPrimary)
             Text(formatNeutral("4,820.00"), style = type.amountL, color = colors.textPrimary)
@@ -70,9 +69,19 @@ private fun EmmComponentsGallery() {
 
             SectionTitle("Buttons")
             EmmButton("Primary", onClick = {}, modifier = Modifier.fillMaxWidth())
-            EmmButton("Secondary", onClick = {}, variant = EmmButtonVariant.Secondary, modifier = Modifier.fillMaxWidth())
+            EmmButton(
+                "Secondary",
+                onClick = {},
+                variant = EmmButtonVariant.Secondary,
+                modifier = Modifier.fillMaxWidth(),
+            )
             EmmButton("Ghost", onClick = {}, variant = EmmButtonVariant.Ghost, modifier = Modifier.fillMaxWidth())
-            EmmButton("Eliminar", onClick = {}, variant = EmmButtonVariant.Destructive, modifier = Modifier.fillMaxWidth())
+            EmmButton(
+                "Eliminar",
+                onClick = {},
+                variant = EmmButtonVariant.Destructive,
+                modifier = Modifier.fillMaxWidth(),
+            )
             EmmButton("Disabled", onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth())
 
             SectionTitle("Text input")

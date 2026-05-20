@@ -28,6 +28,7 @@ import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -70,16 +71,12 @@ import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
-import androidx.compose.material.icons.rounded.Category
 import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDate
 import java.util.UUID
 
 @Composable
-fun SeeTransactionsScreen(
-    onEditTransaction: (String) -> Unit,
-    vm: SeeTransactionsViewModel = koinViewModel(),
-) {
+fun SeeTransactionsScreen(onEditTransaction: (String) -> Unit, vm: SeeTransactionsViewModel = koinViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
 
     SeeTransactionsContent(
@@ -132,12 +129,14 @@ private fun SeeTransactionsContent(
 
         when {
             state.hasNoTransactionsAtAll -> EmptyNoTransactionsAtAll(modifier = Modifier.fillMaxSize())
+
             state.hasNoResultsForFilter -> EmptyFilteredNoResults(
                 query = state.query,
                 activeCategoryName = state.activeCategory?.name,
                 onClear = { onIntent(SeeTransactionsIntent.OnClearFilters) },
                 modifier = Modifier.fillMaxSize(),
             )
+
             else -> DayGroupedList(
                 days = state.days,
                 onItemClick = navigateToEdit,
@@ -186,10 +185,7 @@ private fun ScreenHeader() {
 // ═══════════════════════════════════════════════════════════════
 
 @Composable
-private fun SearchInput(
-    query: String,
-    onQueryChange: (String) -> Unit,
-) {
+private fun SearchInput(query: String, onQueryChange: (String) -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
 
@@ -297,11 +293,7 @@ private fun CategoryChipsRow(
 }
 
 @Composable
-private fun CategoryChip(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
+private fun CategoryChip(label: String, selected: Boolean, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
 
@@ -370,11 +362,7 @@ private fun MoreChip(count: Int, onClick: () -> Unit) {
 // ═══════════════════════════════════════════════════════════════
 
 @Composable
-private fun ActiveFilterBanner(
-    categoryName: String,
-    query: String?,
-    onClear: () -> Unit,
-) {
+private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val shape = RoundedCornerShape(10.dp)
@@ -470,10 +458,7 @@ private fun monthShortEs(month: java.time.Month): String = when (month) {
 }
 
 @Composable
-private fun DayGroupedList(
-    days: List<DayGroup>,
-    onItemClick: (String) -> Unit,
-) {
+private fun DayGroupedList(days: List<DayGroup>, onItemClick: (String) -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val listState = rememberLazyListState()
@@ -492,10 +477,13 @@ private fun DayGroupedList(
             val yesterday = today.minusDays(1)
             val dayLabel = when (dayGroup.date) {
                 today -> "HOY"
+
                 yesterday -> "AYER"
-                else -> dayGroup.date.dayOfWeek
-                    .getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.forLanguageTag("es"))
-                    .uppercase()
+
+                else ->
+                    dayGroup.date.dayOfWeek
+                        .getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.forLanguageTag("es"))
+                        .uppercase()
             }
             val dateCaption = "${dayGroup.date.dayOfMonth} ${monthShortEs(dayGroup.date.month)}"
 
@@ -524,10 +512,7 @@ private fun DayGroupedList(
 }
 
 @Composable
-private fun TxRow(
-    tx: TransactionUi,
-    onClick: () -> Unit,
-) {
+private fun TxRow(tx: TransactionUi, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
 
@@ -637,7 +622,7 @@ private fun EmptyFilteredNoResults(
                 fontFamily = type.labelM.fontFamily,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.W600,
                 letterSpacing = (-0.07).sp,
-            )
+            ),
         ) { append("Sin resultados para ") }
 
         when {
@@ -647,7 +632,7 @@ private fun EmptyFilteredNoResults(
                     fontFamily = type.labelM.fontFamily,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.W600,
                     fontSize = 14.sp,
-                )
+                ),
             ) { append("«$activeCategoryName»") }
 
             query.isNotEmpty() -> withStyle(
@@ -655,7 +640,7 @@ private fun EmptyFilteredNoResults(
                     color = colors.accent,
                     fontFamily = PlexMonoFontFamily,
                     fontSize = 14.sp,
-                )
+                ),
             ) { append("«$query»") }
         }
     }

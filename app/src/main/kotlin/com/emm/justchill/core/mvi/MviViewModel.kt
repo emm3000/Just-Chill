@@ -32,10 +32,7 @@ abstract class MviViewModel<S : UiState, I : UiIntent, E : UiEffect> : ViewModel
         viewModelScope.launch { _effect.send(effect) }
     }
 
-    protected fun launchSafe(
-        onError: (DomainException) -> E,
-        block: suspend () -> Unit,
-    ) = viewModelScope.launch {
+    protected fun launchSafe(onError: (DomainException) -> E, block: suspend () -> Unit) = viewModelScope.launch {
         try {
             block()
         } catch (e: DomainException) {

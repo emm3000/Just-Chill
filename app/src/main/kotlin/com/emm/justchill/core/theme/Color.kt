@@ -9,6 +9,7 @@ val HhDisabledPrimaryButtonColor = Color(0xFF505050)
 val HhPrimaryTextColor = Color(0xFF010101)
 val HhSecondaryTextBackground = Color(0xFFB0B0B0)
 val HhDisabledTextPrimaryBackground = Color(0xFF393939)
+
 // card colors
 val HhCardBackground = Color(0xFF171717)
 val HhCardTextColor = Color(0xFFB7B7B7)
@@ -82,9 +83,11 @@ val errorDarkHighContrast = Color(0xFFFFF9F9)
 val onErrorDarkHighContrast = Color(0xFF000000)
 val errorContainerDarkHighContrast = Color(0xFFFFBAB2)
 val onErrorContainerDarkHighContrast = Color(0xFF000000)
-//val backgroundDarkHighContrast = Color(0xFF0E1415)
+
+// val backgroundDarkHighContrast = Color(0xFF0E1415)
 val backgroundDarkHighContrast = HhBackgroundColor
-//val onBackgroundDarkHighContrast = Color(0xFFDEE3E5)
+
+// val onBackgroundDarkHighContrast = Color(0xFFDEE3E5)
 val onBackgroundDarkHighContrast = HhOnBackgroundColor
 val surfaceDarkHighContrast = Color(0xFF0E1415)
 val onSurfaceDarkHighContrast = Color(0xFFFFFFFF)

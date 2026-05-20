@@ -18,13 +18,7 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 
 @Composable
-fun EmmPrimaryButton(
-    text: String,
-    onClick: () -> Unit,
-    enabled: Boolean,
-    modifier: Modifier = Modifier,
-) {
-
+fun EmmPrimaryButton(text: String, onClick: () -> Unit, enabled: Boolean, modifier: Modifier = Modifier) {
     FilledTonalButton(
         modifier = modifier
             .height(50.dp),
@@ -34,9 +28,9 @@ fun EmmPrimaryButton(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             disabledContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.50f),
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            disabledContentColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.50f)
+            disabledContentColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.50f),
         ),
-        shape = RoundedCornerShape(25)
+        shape = RoundedCornerShape(25),
     ) {
         Text(
             text = text,
@@ -55,7 +49,7 @@ private fun EmmPrimaryButtonPreview() {
             text = "Save",
             onClick = {},
             enabled = true,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
@@ -68,7 +62,7 @@ private fun EmmPrimaryButton2Preview() {
             text = "Save",
             onClick = {},
             enabled = false,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

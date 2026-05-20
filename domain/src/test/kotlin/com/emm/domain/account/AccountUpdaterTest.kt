@@ -18,7 +18,6 @@ class AccountUpdaterTest {
 
     @Test
     fun `update should call repository update with correct accountId and accountUpsert`() = runTest {
-
         coEvery { repository.update(any(), any()) } just Runs
 
         val account = AccountUpsert(

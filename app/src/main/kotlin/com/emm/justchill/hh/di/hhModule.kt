@@ -77,7 +77,6 @@ private fun Module.viewModelsProviders() {
     viewModelOf(::ProfileViewModel)
 }
 
-
 private fun Module.dataSource() {
     factoryOf(::CategoryLocalDataSource)
     factoryOf(::TransactionLocalDataSource)
@@ -85,7 +84,6 @@ private fun Module.dataSource() {
 }
 
 private fun Module.repositoriesProviders() {
-
     factoryOf(::DefaultTransactionRepository) {
         bind<TransactionRepository>()
     }

@@ -48,7 +48,9 @@ class EditTransactionViewModel(
     override fun onIntent(intent: EditTransactionIntent) {
         when (intent) {
             is EditTransactionIntent.OnAmountChange -> updateState { copy(amount = intent.value).recompute() }
+
             is EditTransactionIntent.OnDescriptionChange -> updateState { copy(description = intent.value).recompute() }
+
             is EditTransactionIntent.OnTransactionTypeChange -> updateState {
                 val list = allCategories[intent.value.categoryType].orEmpty()
                 copy(
@@ -58,10 +60,23 @@ class EditTransactionViewModel(
                         ?: list.firstOrNull(),
                 ).recompute()
             }
+
             is EditTransactionIntent.OnDateChangeInMillis -> updateCurrentDate(intent.value)
-            is EditTransactionIntent.OnAccountSelected -> updateState { copy(accountSelected = intent.value).recompute() }
-            is EditTransactionIntent.OnCategorySelected -> updateState { copy(categorySelected = intent.value).recompute() }
+
+            is EditTransactionIntent.OnAccountSelected -> updateState {
+                copy(
+                    accountSelected = intent.value,
+                ).recompute()
+            }
+
+            is EditTransactionIntent.OnCategorySelected -> updateState {
+                copy(
+                    categorySelected = intent.value,
+                ).recompute()
+            }
+
             EditTransactionIntent.OnSave -> updateTransaction()
+
             EditTransactionIntent.OnDelete -> deleteTransaction()
         }
     }
@@ -69,11 +84,11 @@ class EditTransactionViewModel(
     private fun EditTransactionUiState.recompute(): EditTransactionUiState {
         val snap = snapshot ?: return copy(isEnabled = false, hasChanges = false)
         val changed = amount != snap.amount ||
-                description != snap.description ||
-                dateInLong != snap.dateMillis ||
-                transactionType != snap.type ||
-                accountSelected?.accountId != snap.accountId ||
-                categorySelected?.categoryId != snap.categoryId
+            description != snap.description ||
+            dateInLong != snap.dateMillis ||
+            transactionType != snap.type ||
+            accountSelected?.accountId != snap.accountId ||
+            categorySelected?.categoryId != snap.categoryId
         return copy(
             hasChanges = changed,
             isEnabled = changed && missingField == null,

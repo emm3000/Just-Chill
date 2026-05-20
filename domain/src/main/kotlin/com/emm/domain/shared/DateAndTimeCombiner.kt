@@ -1,11 +1,11 @@
 package com.emm.domain.shared
 
-import kotlin.time.Clock
-import kotlin.time.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class DateAndTimeCombiner {
 
@@ -21,5 +21,4 @@ class DateAndTimeCombiner {
 
         return combinedDateTime.toInstant(systemZone).toEpochMilliseconds()
     }
-
 }

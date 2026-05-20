@@ -36,11 +36,7 @@ import com.emm.justchill.core.theme.LocalEmmRadii
  * @param onNext  Called when the right chevron is tapped.
  */
 @Composable
-fun MonthSelector(
-    label: String,
-    onPrev: () -> Unit,
-    onNext: () -> Unit,
-) {
+fun MonthSelector(label: String, onPrev: () -> Unit, onNext: () -> Unit) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
 

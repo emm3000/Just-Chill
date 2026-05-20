@@ -40,7 +40,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountType
 import com.emm.justchill.core.theme.InterFontFamily
@@ -49,6 +48,7 @@ import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
+import kotlinx.coroutines.launch
 
 /**
  * Bottom sheet for selecting an account.

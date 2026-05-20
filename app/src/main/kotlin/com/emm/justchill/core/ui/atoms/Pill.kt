@@ -11,20 +11,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.font.FontWeight
+import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
-import com.emm.justchill.core.theme.InterFontFamily
 
 enum class PillTone {
-    Neutral,  // surface2 bg + textSecondary fg
-    Pos,      // posMuted bg + success fg
-    Neg,      // negMuted bg + danger fg
-    Accent,   // accentMuted bg + accent fg
+    Neutral, // surface2 bg + textSecondary fg
+    Pos, // posMuted bg + success fg
+    Neg, // negMuted bg + danger fg
+    Accent, // accentMuted bg + accent fg
 }
 
 /**
@@ -34,11 +33,7 @@ enum class PillTone {
  * Radius: [EmmRadii.rFull].
  */
 @Composable
-fun Pill(
-    text: String,
-    tone: PillTone = PillTone.Neutral,
-    leadingIcon: ImageVector? = null,
-) {
+fun Pill(text: String, tone: PillTone = PillTone.Neutral, leadingIcon: ImageVector? = null) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
 

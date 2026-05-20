@@ -50,8 +50,11 @@ class AddTransactionViewModel(
     override fun onIntent(intent: AddTransactionIntent) {
         when (intent) {
             is AddTransactionIntent.OnAmountChange -> updateState { copy(amount = intent.value).touched() }
+
             is AddTransactionIntent.OnDateChange -> updateState { copy(date = intent.value).touched() }
+
             is AddTransactionIntent.OnDescriptionChange -> updateState { copy(description = intent.value).touched() }
+
             is AddTransactionIntent.OnTransactionTypeChange -> updateState {
                 copy(
                     transactionType = intent.value,
@@ -59,10 +62,19 @@ class AddTransactionViewModel(
                     categorySelected = allCategories[intent.value.categoryType]?.firstOrNull(),
                 ).touched()
             }
+
             is AddTransactionIntent.OnDateChangeInMillis -> updateCurrentDate(intent.value)
+
             AddTransactionIntent.OnSave -> addTransaction()
+
             is AddTransactionIntent.OnAccountSelected -> updateState { copy(accountSelected = intent.value).touched() }
-            is AddTransactionIntent.OnCategorySelected -> updateState { copy(categorySelected = intent.value).touched() }
+
+            is AddTransactionIntent.OnCategorySelected -> updateState {
+                copy(
+                    categorySelected = intent.value,
+                ).touched()
+            }
+
             AddTransactionIntent.OnReset -> {
                 dateInLong = DateUtils.currentDateInMillis()
                 updateState {
@@ -80,6 +92,7 @@ class AddTransactionViewModel(
                     )
                 }
             }
+
             is AddTransactionIntent.OnNewValueFromOthers -> {
                 val updatedCategories = allCategories.values.flatten()
                     .filterNot { it.categoryId == intent.value.categoryId }
@@ -95,11 +108,9 @@ class AddTransactionViewModel(
         }
     }
 
-    private fun AddTransactionUiState.validate(): AddTransactionUiState =
-        copy(isEnabled = missingField == null)
+    private fun AddTransactionUiState.validate(): AddTransactionUiState = copy(isEnabled = missingField == null)
 
-    private fun AddTransactionUiState.touched(): AddTransactionUiState =
-        validate().copy(hasChanges = true)
+    private fun AddTransactionUiState.touched(): AddTransactionUiState = validate().copy(hasChanges = true)
 
     private fun addTransaction() = launchSafe(
         onError = { AddTransactionEffect.ShowError(it.toUserMessage()) },

@@ -26,10 +26,7 @@ data class TransactionUi(
 )
 
 @Immutable
-data class CategoryUi(
-    val categoryIcon: ImageVector,
-    val categoryColor: CategoryColor,
-)
+data class CategoryUi(val categoryIcon: ImageVector, val categoryColor: CategoryColor)
 
 private fun TransactionWithCategory.toUi(): TransactionUi {
     val formattedNumber: String = fromCentsToSolesWith(amount)

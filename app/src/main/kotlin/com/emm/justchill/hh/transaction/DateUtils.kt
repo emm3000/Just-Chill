@@ -14,7 +14,6 @@ private val SHORT_DATE = DateTimeFormatter.ofPattern("EEE d MMM", SPANISH)
 object DateUtils {
 
     fun currentDateAtReadableFormat(formatStyle: FormatStyle = FormatStyle.LONG): String {
-
         val currentLocalDate: LocalDate = LocalDate.now()
 
         val readableFormatter: DateTimeFormatter = DateTimeFormatter
@@ -25,7 +24,6 @@ object DateUtils {
     }
 
     fun millisToReadableFormat(millis: Long): String {
-
         val localDate: LocalDate = Instant.ofEpochMilli(millis)
             .atZone(ZoneId.systemDefault())
             .toLocalDate()
@@ -39,7 +37,6 @@ object DateUtils {
 
     // This is ok for TransactionViewModel
     fun millisToReadableFormatUTC(millis: Long): String {
-
         val localDate: LocalDate = Instant.ofEpochMilli(millis)
             .atZone(ZoneOffset.UTC)
             .toLocalDate()

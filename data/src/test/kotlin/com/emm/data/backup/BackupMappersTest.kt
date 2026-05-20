@@ -50,7 +50,7 @@ class BackupMappersTest {
                 currency = Currency.PEN,
             )
             val restored = json.decodeFromString<AccountDto>(
-                json.encodeToString(original.toDto())
+                json.encodeToString(original.toDto()),
             ).toEntity()
             assertEquals(accountType, restored.type)
         }
@@ -66,7 +66,7 @@ class BackupMappersTest {
                 currency = currency,
             )
             val restored = json.decodeFromString<AccountDto>(
-                json.encodeToString(original.toDto())
+                json.encodeToString(original.toDto()),
             ).toEntity()
             assertEquals(currency, restored.currency)
         }
@@ -103,7 +103,7 @@ class BackupMappersTest {
                 categoryType = categoryType,
             )
             val restored = json.decodeFromString<CategoryDto>(
-                json.encodeToString(original.toDto())
+                json.encodeToString(original.toDto()),
             ).toEntity()
             assertEquals(categoryType, restored.categoryType)
         }
@@ -144,7 +144,7 @@ class BackupMappersTest {
         )
 
         val restored = json.decodeFromString<TransactionDto>(
-            json.encodeToString(original.toDto())
+            json.encodeToString(original.toDto()),
         ).toEntity()
 
         assertNull(restored.categoryId)
@@ -165,7 +165,7 @@ class BackupMappersTest {
         )
 
         val restored = json.decodeFromString<TransactionDto>(
-            json.encodeToString(original.toDto())
+            json.encodeToString(original.toDto()),
         ).toEntity()
 
         assertEquals(exactCents, restored.amount.cents)
@@ -184,7 +184,7 @@ class BackupMappersTest {
                 categoryId = null,
             )
             val restored = json.decodeFromString<TransactionDto>(
-                json.encodeToString(original.toDto())
+                json.encodeToString(original.toDto()),
             ).toEntity()
             assertEquals(txType, restored.type)
         }

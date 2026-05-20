@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,9 +23,9 @@ import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.PlexMonoFontFamily
 
 enum class CtaTone {
-    Accent,   // bg = accent, fg = white
-    Pos,      // bg = success, fg = white
-    Neutral,  // bg = textPrimary, fg = bg
+    Accent, // bg = accent, fg = white
+    Pos, // bg = success, fg = white
+    Neutral, // bg = textPrimary, fg = bg
 }
 
 /**
@@ -75,8 +74,11 @@ fun StickyCTA(
                 .clip(radii.rL)
                 .background(bgColor)
                 .then(
-                    if (enabled) Modifier.clickable(onClick = onClick)
-                    else Modifier
+                    if (enabled) {
+                        Modifier.clickable(onClick = onClick)
+                    } else {
+                        Modifier
+                    },
                 ),
             contentAlignment = Alignment.Center,
         ) {

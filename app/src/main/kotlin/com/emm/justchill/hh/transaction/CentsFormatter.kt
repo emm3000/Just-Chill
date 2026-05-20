@@ -16,8 +16,7 @@ internal const val MAX_AMOUNT_DIGITS: Int = 13
  * Normaliza un input arbitrario a una cadena de solo dígitos, capeada a [MAX_AMOUNT_DIGITS].
  * Esta es la forma canónica del state del input de monto.
  */
-internal fun sanitizeCentsInput(raw: String): String =
-    raw.filter(Char::isDigit).take(MAX_AMOUNT_DIGITS)
+internal fun sanitizeCentsInput(raw: String): String = raw.filter(Char::isDigit).take(MAX_AMOUNT_DIGITS)
 
 /**
  * Formatea una cadena de dígitos (que representa centavos) al display "#,##0.00".

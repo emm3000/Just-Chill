@@ -23,9 +23,8 @@ internal fun <T> EndlessLazyColumn(
     items: List<T>,
     itemKey: (T) -> Any,
     itemContent: @Composable (T) -> Unit,
-    loadMore: () -> Unit
+    loadMore: () -> Unit,
 ) {
-
     val reachedBottom: Boolean by remember { derivedStateOf { listState.reachedBottom() } }
 
     LaunchedEffect(reachedBottom) {

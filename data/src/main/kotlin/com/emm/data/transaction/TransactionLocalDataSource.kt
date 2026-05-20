@@ -9,12 +9,12 @@ import com.emm.data.TransactionsQueries
 import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
+import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionUpdate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import com.emm.domain.transaction.TransactionType
 
 class TransactionLocalDataSource(private val tq: TransactionsQueries) {
 
@@ -33,35 +33,26 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
         Unit
     }
 
-    fun all(): Flow<List<Transaction>> {
-        return tq
-            .all()
-            .asFlow()
-            .mapToList(Dispatchers.IO)
-            .map { list -> list.asEntity().asExternalModel() }
-    }
+    fun all(): Flow<List<Transaction>> = tq
+        .all()
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+        .map { list -> list.asEntity().asExternalModel() }
 
-    fun completeTransactions(): Flow<List<TransactionWithCategoryEntity>> {
-        return tq.completeTransactions()
-            .asFlow()
-            .mapToList(Dispatchers.IO)
-            .map { list -> list.map(CompleteTransactions::asEntity) }
-    }
+    fun completeTransactions(): Flow<List<TransactionWithCategoryEntity>> = tq.completeTransactions()
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+        .map { list -> list.map(CompleteTransactions::asEntity) }
 
     fun completeTransactionsByDateRange(
         startInclusive: Long,
         endExclusive: Long,
-    ): Flow<List<TransactionWithCategoryEntity>> {
-        return tq.completeTransactionsByDateRange(startInclusive, endExclusive)
-            .asFlow()
-            .mapToList(Dispatchers.IO)
-            .map { list -> list.map(CompleteTransactionsByDateRange::asEntity) }
-    }
+    ): Flow<List<TransactionWithCategoryEntity>> = tq.completeTransactionsByDateRange(startInclusive, endExclusive)
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+        .map { list -> list.map(CompleteTransactionsByDateRange::asEntity) }
 
-    fun searchTransactions(
-        query: String,
-        categoryIds: Set<String>,
-    ): Flow<List<TransactionWithCategoryEntity>> {
+    fun searchTransactions(query: String, categoryIds: Set<String>): Flow<List<TransactionWithCategoryEntity>> {
         val queryEmpty: Long = if (query.isBlank()) 1L else 0L
         val categoryFilterEmpty: Long = if (categoryIds.isEmpty()) 1L else 0L
         val safeCategoryIds: Collection<String> =
@@ -86,14 +77,10 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
         tq.delete(transactionId)
     }
 
-    fun find(transactionId: String): Transaction? {
-        return tq.find(transactionId).executeAsOneOrNull()?.asEntity()?.asExternalModel()
-    }
+    fun find(transactionId: String): Transaction? =
+        tq.find(transactionId).executeAsOneOrNull()?.asEntity()?.asExternalModel()
 
-    suspend fun update(
-        transactionId: String,
-        transactionUpdate: TransactionUpdate,
-    ) = withContext(Dispatchers.IO) {
+    suspend fun update(transactionId: String, transactionUpdate: TransactionUpdate) = withContext(Dispatchers.IO) {
         tq.update(
             type = transactionUpdate.type.name,
             amount = transactionUpdate.amount.cents,

@@ -4,10 +4,7 @@ import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.UniqueIdProvider
 import com.emm.domain.shared.error.DomainException
 
-class CreateAccountUseCase(
-    private val repository: AccountRepository,
-    private val uniqueIdProvider: UniqueIdProvider,
-) {
+class CreateAccountUseCase(private val repository: AccountRepository, private val uniqueIdProvider: UniqueIdProvider) {
 
     suspend operator fun invoke(
         name: String,

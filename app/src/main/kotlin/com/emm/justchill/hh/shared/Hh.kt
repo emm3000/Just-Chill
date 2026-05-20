@@ -102,7 +102,6 @@ private val START_TAB: BottomBarRoute = SeeTransactionRoute
 
 @Composable
 fun Hh() {
-
     val colors = LocalEmmColors.current
     val appPrefs: AppPreferences = koinInject()
     val startRoute: NavKey = remember {
@@ -408,7 +407,6 @@ fun Hh() {
                         activeCountTotal = selectState.activeList.size,
                     )
                 }
-
             },
         )
     }
@@ -438,26 +436,22 @@ private fun NavBackStack<NavKey>.switchTab(target: BottomBarRoute) {
 }
 
 private data class BottomTab(
-    val route: BottomBarRoute?,  // null = add pseudo-tab
+    val route: BottomBarRoute?, // null = add pseudo-tab
     val label: String,
     val icon: ImageVector,
     val isAdd: Boolean = false,
 )
 
 private val BOTTOM_TABS = listOf(
-    BottomTab(HomeRoute,          "Inicio",   Icons.Outlined.Home),
-    BottomTab(SeeTransactionRoute,"Ver",      Icons.AutoMirrored.Outlined.List),
-    BottomTab(null,               "Agregar",  Icons.Outlined.Add, isAdd = true),
-    BottomTab(AccountsRoute,      "Cuentas",  Icons.Outlined.AccountBalanceWallet),
-    BottomTab(ProfileRoute,       "Perfil",   Icons.Outlined.Person),
+    BottomTab(HomeRoute, "Inicio", Icons.Outlined.Home),
+    BottomTab(SeeTransactionRoute, "Ver", Icons.AutoMirrored.Outlined.List),
+    BottomTab(null, "Agregar", Icons.Outlined.Add, isAdd = true),
+    BottomTab(AccountsRoute, "Cuentas", Icons.Outlined.AccountBalanceWallet),
+    BottomTab(ProfileRoute, "Perfil", Icons.Outlined.Person),
 )
 
 @Composable
-private fun HhBottomBar(
-    current: BottomBarRoute?,
-    onTabClick: (BottomBarRoute) -> Unit,
-    onAddClick: () -> Unit,
-) {
+private fun HhBottomBar(current: BottomBarRoute?, onTabClick: (BottomBarRoute) -> Unit, onAddClick: () -> Unit) {
     val colors = LocalEmmColors.current
 
     Column(
@@ -545,11 +539,7 @@ private fun RegularBottomBarItem(
 }
 
 @Composable
-private fun AddBottomBarItem(
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun AddBottomBarItem(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val interactionSource = remember { MutableInteractionSource() }
 

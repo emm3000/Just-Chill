@@ -18,9 +18,7 @@ fun <T> Flow<T>.asResult(): Flow<Result<T>> = map<T, Result<T>> { Result.Success
     .onStart { emit(Result.Loading) }
     .catch { emit(Result.Failure(it)) }
 
-inline fun <T, X> Flow<Result<T>>.mapResult(
-    crossinline mapping: (T) -> X
-): Flow<Result<X>> = map { result ->
+inline fun <T, X> Flow<Result<T>>.mapResult(crossinline mapping: (T) -> X): Flow<Result<X>> = map { result ->
     when (result) {
         is Result.Failure -> Result.Failure(result.exception)
         Result.Loading -> Result.Loading

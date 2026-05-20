@@ -6,7 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,7 +34,6 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
-import com.emm.justchill.hh.transaction.DateUtils
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -61,11 +59,7 @@ import java.util.Locale
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DatePickerSheet(
-    currentMillis: Long,
-    onConfirm: (Long) -> Unit,
-    onDismiss: () -> Unit,
-) {
+fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 

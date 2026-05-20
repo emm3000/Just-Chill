@@ -4,7 +4,5 @@ import com.emm.domain.shared.AccountId
 
 class FindAccountUseCase(private val repository: AccountRepository) {
 
-    suspend operator fun invoke(accountId: AccountId): Account? {
-        return repository.find(accountId)
-    }
+    suspend operator fun invoke(accountId: AccountId): Account? = repository.find(accountId)
 }

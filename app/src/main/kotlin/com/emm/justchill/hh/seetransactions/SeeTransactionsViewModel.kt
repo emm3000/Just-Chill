@@ -29,20 +29,20 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-data class DayGroup(
-    val date: LocalDate,
-    val transactions: List<TransactionUi>,
-) {
+data class DayGroup(val date: LocalDate, val transactions: List<TransactionUi>) {
     val readableDate: String
         get() {
             val today = LocalDate.now()
             val yesterday = today.minusDays(1)
             return when (date) {
                 today -> "HOY"
+
                 yesterday -> "AYER"
+
                 else -> {
                     val formatter = DateTimeFormatter.ofPattern(
-                        "MMMM dd", Locale.forLanguageTag("es"),
+                        "MMMM dd",
+                        Locale.forLanguageTag("es"),
                     )
                     date.format(formatter).uppercase()
                 }
@@ -113,19 +113,23 @@ class SeeTransactionsViewModel(
                 filter.value = filter.value.copy(query = intent.query)
                 updateState { copy(query = intent.query) }
             }
+
             is SeeTransactionsIntent.OnCategoryToggled -> {
                 val id = CategoryId(intent.categoryId)
                 val current = filter.value.categoryIds
                 val next = if (id in current) emptySet() else setOf(id)
                 filter.value = filter.value.copy(categoryIds = next)
             }
+
             is SeeTransactionsIntent.OnCategorySelected -> {
                 val id = CategoryId(intent.categoryId)
                 filter.value = filter.value.copy(categoryIds = setOf(id))
             }
+
             SeeTransactionsIntent.OnClearCategoryFilter -> {
                 filter.value = filter.value.copy(categoryIds = emptySet())
             }
+
             SeeTransactionsIntent.OnClearFilters -> {
                 filter.value = TransactionFilter.None
                 updateState { copy(query = "") }
@@ -150,10 +154,14 @@ class SeeTransactionsViewModel(
         val visibleBase = if (showAll) rankedByUsage else rankedByUsage.take(TOP_N)
 
         // Always surface the active chip even if it's not in the top.
-        val visibleCategories: List<Category> = if (activeId != null && visibleBase.none { it.categoryId == activeId }) {
+        val visibleCategories: List<Category> = if (activeId != null &&
+            visibleBase.none { it.categoryId == activeId }
+        ) {
             val active = categories.firstOrNull { it.categoryId == activeId }
             if (active != null) listOf(active) + visibleBase.dropLast(1) else visibleBase
-        } else visibleBase
+        } else {
+            visibleBase
+        }
 
         val topChips = visibleCategories.map { cat ->
             CategoryChipUi(
@@ -201,16 +209,14 @@ class SeeTransactionsViewModel(
     )
 }
 
-private fun mapToDayGroup(
-    transactionGroups: Map<LocalDate, List<TransactionWithCategory>>,
-): List<DayGroup> = transactionGroups.map { (date, transactions) ->
-    DayGroup(date = date, transactions = transactions.toUi())
-}
+private fun mapToDayGroup(transactionGroups: Map<LocalDate, List<TransactionWithCategory>>): List<DayGroup> =
+    transactionGroups.map { (date, transactions) ->
+        DayGroup(date = date, transactions = transactions.toUi())
+    }
 
-private fun groupByDate(
-    transactions: List<TransactionWithCategory>,
-): Map<LocalDate, List<TransactionWithCategory>> = transactions.groupBy { transaction ->
-    Instant.ofEpochMilli(transaction.date)
-        .atZone(ZoneId.systemDefault())
-        .toLocalDate()
-}
+private fun groupByDate(transactions: List<TransactionWithCategory>): Map<LocalDate, List<TransactionWithCategory>> =
+    transactions.groupBy { transaction ->
+        Instant.ofEpochMilli(transaction.date)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+    }

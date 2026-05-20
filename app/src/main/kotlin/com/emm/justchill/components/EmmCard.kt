@@ -18,10 +18,7 @@ import com.emm.justchill.core.theme.LocalEmmSpacing
  * No shadow. Separation by surface color + 1dp hairline border.
  */
 @Composable
-fun EmmCard(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
+fun EmmCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
     val spacing = LocalEmmSpacing.current

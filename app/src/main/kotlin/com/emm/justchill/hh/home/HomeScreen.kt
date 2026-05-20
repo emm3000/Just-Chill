@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -93,12 +92,14 @@ fun HomeScreen(
 ) {
     when {
         homeData.isFirstLaunch -> FirstLaunchEmpty(onAddClick = navigateToAdd)
+
         homeData.isMonthEmpty -> MonthEmpty(
             month = homeData.month,
             onPreviousMonth = onPreviousMonth,
             onNextMonth = onNextMonth,
             onAddClick = navigateToAdd,
         )
+
         else -> HomeWithData(
             homeData = homeData,
             navigateToAll = navigateToAll,
@@ -213,10 +214,7 @@ private fun InOutRow(income: Money, spend: Money) {
 // ── Recents header ────────────────────────────────────────────────────────────
 
 @Composable
-private fun RecentsHeader(
-    onViewAll: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun RecentsHeader(onViewAll: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val interactionSource = remember { MutableInteractionSource() }
@@ -564,7 +562,7 @@ private fun HomeScreenPreview() {
                         category = CategoryUi(Icons.Rounded.Category, findById("pink")),
                     ),
                 ),
-            )
+            ),
         )
     }
 }

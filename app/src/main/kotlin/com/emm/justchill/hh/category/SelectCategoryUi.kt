@@ -18,6 +18,9 @@ data class SelectCategoryUi(
         }
 
     val filteredActive: List<SelectableCategory>
-        get() = if (query.isBlank()) activeList
-        else activeList.filter { it.name.contains(query.trim(), ignoreCase = true) }
+        get() = if (query.isBlank()) {
+            activeList
+        } else {
+            activeList.filter { it.name.contains(query.trim(), ignoreCase = true) }
+        }
 }

@@ -1,12 +1,12 @@
 package com.emm.justchill.hh.seetransactions
 
-import com.emm.justchill.MainDispatcherRule
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.transaction.SearchTransactionsUseCase
 import com.emm.domain.transaction.TransactionFilter
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionWithCategory
+import com.emm.justchill.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -109,7 +109,7 @@ class SeeTransactionsViewModelTest {
 
         verify {
             searchTransactions.invoke(
-                match { it.categoryIds.contains(CategoryId("cat-1")) }
+                match { it.categoryIds.contains(CategoryId("cat-1")) },
             )
         }
     }
@@ -126,7 +126,7 @@ class SeeTransactionsViewModelTest {
 
         verify {
             searchTransactions.invoke(
-                match { it.categoryIds.isEmpty() }
+                match { it.categoryIds.isEmpty() },
             )
         }
     }
