@@ -291,7 +291,9 @@ fun Hh() {
                         )
                     }
 
+                    val profileState by vm.state.collectAsStateWithLifecycle()
                     ProfileScreen(
+                        state = profileState,
                         onCategoriesClick = { backStack.add(CategoriesListRoute) },
                         onAccountsClick = { backStack.add(AccountsRoute) },
                         onAboutClick = { backStack.add(ManifestoRoute(isRevisit = true)) },

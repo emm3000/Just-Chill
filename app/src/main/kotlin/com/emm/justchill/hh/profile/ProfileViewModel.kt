@@ -1,19 +1,40 @@
 package com.emm.justchill.hh.profile
 
+import androidx.lifecycle.viewModelScope
+import com.emm.domain.account.AccountRepository
+import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.backup.ExportDataUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.BuildConfig
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import java.io.OutputStream
 
 class ProfileViewModel(
     private val exportData: ExportDataUseCase,
     private val importData: ImportDataUseCase,
+    categoryRepository: CategoryRepository,
+    accountRepository: AccountRepository,
 ) : MviViewModel<ProfileUiState, ProfileIntent, ProfileEffect>() {
 
     override val initialState = ProfileUiState()
+
+    init {
+        combine(
+            categoryRepository.all(),
+            accountRepository.all(),
+        ) { categories, accounts ->
+            categories.size to accounts.size
+        }
+            .onEach { (catCount, accCount) ->
+                updateState { copy(categoryCount = catCount, accountCount = accCount) }
+            }
+            .launchIn(viewModelScope)
+    }
 
     override fun onIntent(intent: ProfileIntent) {
         when (intent) {
