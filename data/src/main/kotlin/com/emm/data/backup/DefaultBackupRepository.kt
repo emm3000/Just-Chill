@@ -44,14 +44,14 @@ class DefaultBackupRepository(
         val payload = try {
             importJson.decodeFromString<ExportPayloadDto>(json)
         } catch (e: SerializationException) {
-            throw DomainException.ValidationError("Archivo no válido o corrupto", cause = e)
+            throw DomainException.ValidationError("Invalid or corrupted file", cause = e)
         } catch (e: IllegalArgumentException) {
             // Enum value not found when deserializing DTOs
-            throw DomainException.ValidationError("Archivo no válido o corrupto", cause = e)
+            throw DomainException.ValidationError("Invalid or corrupted file", cause = e)
         }
 
         if (payload.schemaVersion != 1) {
-            throw DomainException.ValidationError("Versión de archivo no soportada.")
+            throw DomainException.ValidationError("Unsupported file version.")
         }
 
         return safeDbCall {

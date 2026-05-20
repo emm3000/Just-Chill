@@ -50,16 +50,6 @@ import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.hh.transaction.SelectableCategory
 
-/**
- * Bottom sheet for selecting a category, with local search/filter and an
- * "+ Nueva categoría" dashed button.
- *
- * @param categories        Full list of available categories.
- * @param selectedCategoryId Currently selected category id (or null).
- * @param onSelect       Called when user taps a category row.
- * @param onAddNew          Called when user taps "+ Nueva categoría".
- * @param onDismiss         Called to dismiss the sheet.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryPickerSheet(

@@ -7,7 +7,7 @@ class UpdateAccountUseCase(private val repository: AccountRepository) {
 
     suspend operator fun invoke(accountId: AccountId, account: AccountUpsert) {
         if (account.name.isBlank()) {
-            throw DomainException.ValidationError("El nombre no puede estar vacío")
+            throw DomainException.ValidationError("Name cannot be empty")
         }
         repository.update(accountId, account)
     }

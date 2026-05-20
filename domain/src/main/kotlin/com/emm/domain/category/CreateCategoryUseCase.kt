@@ -9,7 +9,7 @@ class CreateCategoryUseCase(private val repository: CategoryRepository, private 
     suspend operator fun invoke(name: String, icon: String, color: String, categoryType: CategoryType): Category {
         val trimmed = name.trim()
         if (trimmed.isBlank()) {
-            throw DomainException.ValidationError("El nombre no puede estar vacío")
+            throw DomainException.ValidationError("Name cannot be empty")
         }
         val categoryId = CategoryId(idProvider.id)
         repository.create(

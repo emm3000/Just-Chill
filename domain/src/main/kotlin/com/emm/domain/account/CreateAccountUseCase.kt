@@ -12,7 +12,7 @@ class CreateAccountUseCase(private val repository: AccountRepository, private va
         currency: Currency = Currency.PEN,
     ) {
         if (name.isBlank()) {
-            throw DomainException.ValidationError("El nombre no puede estar vacío")
+            throw DomainException.ValidationError("Name cannot be empty")
         }
         val accountUpsert = AccountUpsert(
             accountId = AccountId(uniqueIdProvider.id),

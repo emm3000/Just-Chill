@@ -7,7 +7,7 @@ class UpdateCategoryUseCase(private val repository: CategoryRepository) {
 
     suspend operator fun invoke(categoryId: CategoryId, categoryUpsert: CategoryUpsert) {
         if (categoryUpsert.name.isBlank()) {
-            throw DomainException.ValidationError("El nombre no puede estar vacío")
+            throw DomainException.ValidationError("Name cannot be empty")
         }
         repository.update(categoryId, categoryUpsert)
     }

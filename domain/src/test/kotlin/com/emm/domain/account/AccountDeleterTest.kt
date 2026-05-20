@@ -45,6 +45,6 @@ class AccountDeleterTest {
         val ex = assertFailsWith<DomainException.ValidationError> {
             accountDeleter(AccountId("acc-1"))
         }
-        assert(ex.message == "No puedes eliminar una cuenta con transacciones. Bórralas o muévelas primero.")
+        assert(ex.message == "Cannot delete an account with transactions. Delete or move them first.")
     }
 }
