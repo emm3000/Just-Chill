@@ -333,6 +333,9 @@ fun Hh() {
                                 ),
                             )
                         },
+                        onAddNewAccount = {
+                            backStack.add(AddAccountRoute)
+                        },
                     )
                 }
 

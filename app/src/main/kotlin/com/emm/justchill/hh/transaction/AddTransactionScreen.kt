@@ -79,6 +79,7 @@ fun AddTransactionScreen(
     popBackStack: () -> Unit,
     snackbarHostState: SnackbarHostState,
     onAddNewCategory: () -> Unit = {},
+    onAddNewAccount: () -> Unit = {},
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
 
@@ -96,6 +97,7 @@ fun AddTransactionScreen(
         onIntent = vm::onIntent,
         popBackStack = popBackStack,
         onAddNewCategory = onAddNewCategory,
+        onAddNewAccount = onAddNewAccount,
     )
 }
 
@@ -105,6 +107,7 @@ private fun AddTransactionScreenContent(
     onIntent: (AddTransactionIntent) -> Unit,
     popBackStack: () -> Unit,
     onAddNewCategory: () -> Unit = {},
+    onAddNewAccount: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
 
@@ -115,13 +118,18 @@ private fun AddTransactionScreenContent(
     var showNoteSheet by rememberSaveable { mutableStateOf(false) }
 
     val isSpend = state.transactionType == TransactionType.Spend
+    val noAccounts = state.accounts.isEmpty()
 
     // Formatted CTA sublabel
     val ctaAmount = remember(state.amount) {
         val value = centsToSoles(state.amount)
         "S/ ${formatCentsForDisplay(state.amount)}"
     }
-    val ctaLabel = if (isSpend) "Anotar gasto" else "Anotar ingreso"
+    val ctaLabel = when {
+        noAccounts -> "Crea una cuenta primero"
+        isSpend -> "Anotar gasto"
+        else -> "Anotar ingreso"
+    }
 
     Column(
         modifier = Modifier
@@ -176,16 +184,27 @@ private fun AddTransactionScreenContent(
                 .padding(bottom = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            // Cuenta chip
-            QuickChip(
-                eyebrow = "CUENTA",
-                value = state.accountSelected?.name ?: "—",
-                dotColor = state.accountSelected?.let {
-                    accountChipDotColor(it.name, colors)
-                },
-                onClick = { showAccountSheet = true },
-                modifier = Modifier.weight(1f),
-            )
+            // Cuenta chip — CTA mode when no accounts exist yet
+            if (noAccounts) {
+                QuickChip(
+                    eyebrow = "CUENTA",
+                    value = "Crear cuenta",
+                    dotColor = colors.accent,
+                    onClick = onAddNewAccount,
+                    cta = true,
+                    modifier = Modifier.weight(1f),
+                )
+            } else {
+                QuickChip(
+                    eyebrow = "CUENTA",
+                    value = state.accountSelected?.name ?: "—",
+                    dotColor = state.accountSelected?.let {
+                        accountChipDotColor(it.name, colors)
+                    },
+                    onClick = { showAccountSheet = true },
+                    modifier = Modifier.weight(1f),
+                )
+            }
 
             // Categoría chip
             QuickChip(
@@ -241,8 +260,8 @@ private fun AddTransactionScreenContent(
         // ─── CTA ──────────────────────────────────────────────────
         StickyCTA(
             label = ctaLabel,
-            sublabel = ctaAmount,
-            inlineSublabel = true,
+            sublabel = if (noAccounts) null else ctaAmount,
+            inlineSublabel = !noAccounts,
             tone = CtaTone.Accent,
             enabled = state.isEnabled,
             onClick = { onIntent(AddTransactionIntent.OnSave) },
@@ -397,15 +416,22 @@ private fun QuickChip(
     dotColor: Color?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    cta: Boolean = false,
 ) {
     val colors = LocalEmmColors.current
     val chipShape = RoundedCornerShape(10.dp)
+
+    val borderColor = if (cta) colors.accent else colors.border
+    val eyebrowColor: Color? = if (cta) colors.accent else null
+    val valueColor = if (cta) colors.accent else colors.textPrimary
+    val trailingIcon = if (cta) Icons.Outlined.Add else Icons.Outlined.KeyboardArrowDown
+    val trailingTint = if (cta) colors.accent else colors.textDisabled
 
     Row(
         modifier = modifier
             .clip(chipShape)
             .background(colors.surface1)
-            .border(1.dp, colors.border, chipShape)
+            .border(1.dp, borderColor, chipShape)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -425,13 +451,13 @@ private fun QuickChip(
         }
 
         Column(modifier = Modifier.weight(1f)) {
-            Eyebrow(text = eyebrow)
+            Eyebrow(text = eyebrow, color = eyebrowColor)
             Text(
                 text = value,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.W600,
                 fontFamily = InterFontFamily,
-                color = colors.textPrimary,
+                color = valueColor,
                 letterSpacing = (-0.06).sp,
                 maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
@@ -439,9 +465,9 @@ private fun QuickChip(
         }
 
         Icon(
-            imageVector = Icons.Outlined.KeyboardArrowDown,
+            imageVector = trailingIcon,
             contentDescription = null,
-            tint = colors.textDisabled,
+            tint = trailingTint,
             modifier = Modifier.size(11.dp),
         )
     }
