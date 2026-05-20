@@ -40,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -78,6 +79,7 @@ fun AddCategoryScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val keyboard = LocalSoftwareKeyboardController.current
+    val currentOnCategorySave by rememberUpdatedState(onCategorySave)
     val dismissAndBack = {
         keyboard?.hide()
         onBack()
@@ -88,7 +90,7 @@ fun AddCategoryScreen(
             when (effect) {
                 is AddCategoryEffect.CategorySaved -> {
                     keyboard?.hide()
-                    onCategorySave(effect.created)
+                    currentOnCategorySave(effect.created)
                 }
 
                 is AddCategoryEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)

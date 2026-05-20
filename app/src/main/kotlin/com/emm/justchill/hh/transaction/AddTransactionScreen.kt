@@ -20,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -60,11 +61,12 @@ fun AddTransactionScreen(
     onAddNewAccount: () -> Unit = {},
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val currentPopBackStack by rememberUpdatedState(popBackStack)
 
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
             when (effect) {
-                AddTransactionEffect.TransactionSaved -> popBackStack()
+                AddTransactionEffect.TransactionSaved -> currentPopBackStack()
                 is AddTransactionEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
             }
         }

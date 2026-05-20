@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -60,12 +61,13 @@ fun EditTransaction(
     vm: EditTransactionViewModel = koinViewModel(parameters = { parametersOf(transactionId) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val currentOnBack by rememberUpdatedState(onBack)
 
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
             when (effect) {
-                EditTransactionEffect.TransactionUpdated -> onBack()
-                EditTransactionEffect.TransactionDeleted -> onBack()
+                EditTransactionEffect.TransactionUpdated -> currentOnBack()
+                EditTransactionEffect.TransactionDeleted -> currentOnBack()
                 is EditTransactionEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
             }
         }

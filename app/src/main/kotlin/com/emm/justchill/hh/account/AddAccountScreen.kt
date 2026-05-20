@@ -36,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -71,11 +72,12 @@ fun AddAccountScreen(
     vm: AddAccountViewModel = koinViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val currentOnBack by rememberUpdatedState(onBack)
 
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
             when (effect) {
-                AddAccountEffect.AccountSaved -> onBack()
+                AddAccountEffect.AccountSaved -> currentOnBack()
                 is AddAccountEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
             }
         }
