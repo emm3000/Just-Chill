@@ -1,60 +1,56 @@
 package com.emm.justchill.hh.transaction
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DatePickerState
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.emm.justchill.components.EmmButton
-import com.emm.justchill.components.EmmButtonVariant
+import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmSpacing
-import com.emm.justchill.core.theme.LocalEmmType
-import com.emm.justchill.core.ui.modalScreenInsets
-import com.emm.justchill.hh.shared.UiStrings
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.emm.justchill.core.ui.Numpad
+import com.emm.justchill.core.ui.atoms.AmountHero
+import com.emm.justchill.core.ui.atoms.AmountTone
+import com.emm.justchill.core.ui.atoms.CtaTone
+import com.emm.justchill.core.ui.atoms.IconBtn
+import com.emm.justchill.core.ui.atoms.IconBtnTone
+import com.emm.justchill.core.ui.atoms.JcTopBar
+import com.emm.justchill.core.ui.atoms.StickyCTA
+import com.emm.justchill.hh.account.accountDotColor
+import com.emm.justchill.hh.transaction.components.NoteRow
+import com.emm.justchill.hh.transaction.components.QuickChip
+import com.emm.justchill.hh.transaction.components.SignToggle
+import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
+import com.emm.justchill.hh.transaction.sheets.CategoryPickerSheet
+import com.emm.justchill.hh.transaction.sheets.DatePickerSheet
+import com.emm.justchill.hh.transaction.sheets.NoteSheet
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -84,7 +80,6 @@ fun EditTransaction(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun EditTransactionContent(
     state: EditTransactionUiState,
@@ -92,232 +87,211 @@ private fun EditTransactionContent(
     onBack: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
 
-    val focusManager = LocalFocusManager.current
-    val keyboard = LocalSoftwareKeyboardController.current
-    val isKeyboardOpen = WindowInsets.isImeVisible
-    val scope = rememberCoroutineScope()
+    var showAccountSheet by rememberSaveable { mutableStateOf(false) }
+    var showCategorySheet by rememberSaveable { mutableStateOf(false) }
+    var showDateSheet by rememberSaveable { mutableStateOf(false) }
+    var showNoteSheet by rememberSaveable { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
-    val (showSelectDate, setShowSelectDate) = remember { mutableStateOf(false) }
-    val (showAccountPicker, setShowAccountPicker) = rememberSaveable { mutableStateOf(false) }
-    val (showDeleteDialog, setShowDeleteDialog) = remember { mutableStateOf(false) }
-
-    val datePickerState: DatePickerState = rememberDatePickerState()
-    val amountFocus = remember { FocusRequester() }
-
-    LaunchedEffect(Unit) { amountFocus.requestFocus() }
+    val isSpend = state.transactionType == TransactionType.Spend
+    val title = if (isSpend) "Editar gasto" else "Editar ingreso"
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg)
-            .modalScreenInsets(),
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .imePadding(),
     ) {
-        EditTopBar(
-            title = "Editar movimiento",
-            onClose = {
-                keyboard?.hide()
-                onBack()
+        JcTopBar(
+            title = title,
+            left = {
+                IconBtn(
+                    icon = Icons.AutoMirrored.Outlined.ArrowBack,
+                    onClick = onBack,
+                )
             },
-            onDelete = {
-                keyboard?.hide()
-                setShowDeleteDialog(true)
+            right = {
+                IconBtn(
+                    icon = Icons.Outlined.Delete,
+                    onClick = { showDeleteDialog = true },
+                    tone = IconBtnTone.Danger,
+                )
             },
         )
 
-        val sidePadding = Modifier.padding(horizontal = spacing.s4)
-        val openAccountPicker: () -> Unit = {
-            if (isKeyboardOpen) {
-                scope.launch {
-                    focusManager.clearFocus()
-                    keyboard?.hide()
-                    delay(300L)
-                }.invokeOnCompletion { setShowAccountPicker(true) }
-            } else {
-                setShowAccountPicker(true)
-            }
-        }
-
-        Column(
+        SignToggle(
+            isSpend = isSpend,
+            onIncomeClick = { onIntent(EditTransactionIntent.OnTransactionTypeChange(TransactionType.Income)) },
+            onSpendClick = { onIntent(EditTransactionIntent.OnTransactionTypeChange(TransactionType.Spend)) },
             modifier = Modifier
-                .weight(1f)
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(spacing.s6),
+                .padding(start = 16.dp, end = 16.dp, top = 2.dp),
+        )
+
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(top = 20.dp, bottom = 18.dp),
         ) {
-            Spacer(Modifier.height(spacing.s2))
-
-            Box(modifier = sidePadding) {
-                AmountInputSection(
-                    amount = state.amount,
-                    transactionType = state.transactionType,
-                    onAmountChange = { onIntent(EditTransactionIntent.OnAmountChange(it)) },
-                    onTypeChange = { onIntent(EditTransactionIntent.OnTransactionTypeChange(it)) },
-                    focusRequester = amountFocus,
-                    onNext = {
-                        keyboard?.hide()
-                        focusManager.clearFocus()
-                    },
-                )
-            }
-
-            Row(
-                modifier = sidePadding.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
-            ) {
-                MetaChip(
-                    label = "FECHA",
-                    value = state.date,
-                    onClick = {
-                        focusManager.clearFocus()
-                        setShowSelectDate(true)
-                    },
-                    modifier = Modifier.weight(1f),
-                )
-                MetaChip(
-                    label = "CUENTA",
-                    value = state.accountSelected?.name ?: UiStrings.PICK_ACCOUNT,
-                    emphasized = state.accountSelected != null,
-                    onClick = openAccountPicker,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-
-            Box(modifier = sidePadding) {
-                NoteSection(
-                    description = state.description,
-                    onValueChange = { onIntent(EditTransactionIntent.OnDescriptionChange(it)) },
-                )
-            }
-
-            Spacer(Modifier.height(spacing.s4))
+            AmountHero(
+                value = centsToSoles(state.amount),
+                size = 48.sp,
+                tone = if (isSpend) AmountTone.Neg else AmountTone.Pos,
+            )
         }
 
-        EmmButton(
-            text = "Guardar cambios",
-            onClick = { onIntent(EditTransactionIntent.OnSave) },
-            enabled = state.isEnabled,
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(spacing.s4),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            QuickChip(
+                eyebrow = "CUENTA",
+                value = state.accountSelected?.name ?: "—",
+                dotColor = state.accountSelected?.let { accountDotColor(it.name, colors) },
+                onClick = { showAccountSheet = true },
+                modifier = Modifier.weight(1f),
+            )
+
+            QuickChip(
+                eyebrow = "CATEGORÍA",
+                value = state.categorySelected?.name ?: "—",
+                dotColor = state.categorySelected?.color?.primary,
+                onClick = { showCategorySheet = true },
+                modifier = Modifier.weight(1f),
+            )
+
+            QuickChip(
+                eyebrow = "FECHA",
+                value = state.date,
+                dotColor = null,
+                onClick = { showDateSheet = true },
+                modifier = Modifier.weight(1f),
+            )
+        }
+
+        NoteRow(
+            note = state.description,
+            onClick = { showNoteSheet = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+        )
+
+        Spacer(Modifier.weight(1f))
+
+        Numpad(
+            onDigit = { digit ->
+                val newAmount = (state.amount + digit).take(9)
+                onIntent(EditTransactionIntent.OnAmountChange(newAmount))
+            },
+            onDoubleZero = {
+                val newAmount = (state.amount + "00").take(9)
+                onIntent(EditTransactionIntent.OnAmountChange(newAmount))
+            },
+            onBackspace = {
+                val newAmount = state.amount.dropLast(1)
+                onIntent(EditTransactionIntent.OnAmountChange(newAmount))
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp)
+                .padding(bottom = 6.dp),
+        )
+
+        StickyCTA(
+            label = "Guardar cambios",
+            tone = CtaTone.Accent,
+            enabled = state.isEnabled,
+            onClick = { onIntent(EditTransactionIntent.OnSave) },
         )
     }
 
-    if (showSelectDate) {
-        DatePickerDialog(
-            onDismissRequest = { setShowSelectDate(false) },
-            confirmButton = {
-                EmmButton("Ok", onClick = {
-                    onIntent(EditTransactionIntent.OnDateChangeInMillis(datePickerState.selectedDateMillis))
-                    setShowSelectDate(false)
-                })
-            },
-            dismissButton = {
-                EmmButton("Cancelar", onClick = { setShowSelectDate(false) }, variant = EmmButtonVariant.Ghost)
-            },
-        ) {
-            DatePicker(state = datePickerState, showModeToggle = false)
-        }
+    if (showAccountSheet) {
+        AccountPickerSheet(
+            accounts = state.accounts,
+            selectedAccountId = state.accountSelected?.accountId?.value,
+            onSelected = { onIntent(EditTransactionIntent.OnAccountSelected(it)) },
+            onDismiss = { showAccountSheet = false },
+        )
+    }
+
+    if (showCategorySheet) {
+        CategoryPickerSheet(
+            categories = state.categories,
+            selectedCategoryId = state.categorySelected?.categoryId?.value,
+            onSelected = { onIntent(EditTransactionIntent.OnCategorySelected(it)) },
+            onAddNew = { showCategorySheet = false },
+            onDismiss = { showCategorySheet = false },
+        )
+    }
+
+    if (showDateSheet) {
+        DatePickerSheet(
+            currentMillis = DateUtils.currentDateInMillis(),
+            onConfirm = { millis -> onIntent(EditTransactionIntent.OnDateChangeInMillis(millis)) },
+            onDismiss = { showDateSheet = false },
+        )
+    }
+
+    if (showNoteSheet) {
+        NoteSheet(
+            initialNote = state.description,
+            onSave = { note -> onIntent(EditTransactionIntent.OnDescriptionChange(note)) },
+            onDismiss = { showNoteSheet = false },
+        )
     }
 
     if (showDeleteDialog) {
         AlertDialog(
-            onDismissRequest = { setShowDeleteDialog(false) },
-            title = { Text("Eliminar transacción") },
-            text = { Text("Esta acción no se puede deshacer.") },
-            confirmButton = {
-                EmmButton(
-                    "Eliminar",
-                    onClick = {
-                        setShowDeleteDialog(false)
-                        onIntent(EditTransactionIntent.OnDelete)
-                    },
-                    variant = EmmButtonVariant.Destructive,
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text(
+                    text = "Eliminar transacción",
+                    color = colors.textPrimary,
                 )
             },
-            dismissButton = {
-                EmmButton(
-                    "Cancelar",
-                    onClick = { setShowDeleteDialog(false) },
-                    variant = EmmButtonVariant.Ghost,
+            text = {
+                Text(
+                    text = "Esta acción no se puede deshacer.",
+                    color = colors.textSecondary,
                 )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    onIntent(EditTransactionIntent.OnDelete)
+                }) {
+                    Text(text = "Eliminar", color = colors.danger)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(text = "Cancelar", color = colors.textSecondary)
+                }
             },
             containerColor = colors.surface2,
         )
     }
-
-    AccountPickerBottomSheet(
-        show = showAccountPicker,
-        accounts = state.accounts,
-        onAccountSelected = { onIntent(EditTransactionIntent.OnAccountSelected(it)) },
-        onDismiss = { setShowAccountPicker(false) },
-    )
 }
 
-@Composable
-private fun EditTopBar(title: String, onClose: () -> Unit, onDelete: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing.s4, vertical = spacing.s3),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        val closeInteraction = remember { MutableInteractionSource() }
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clickable(
-                    interactionSource = closeInteraction,
-                    indication = null,
-                    onClick = onClose,
-                ),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Close,
-                contentDescription = "Cerrar",
-                tint = colors.textPrimary,
-                modifier = Modifier.size(24.dp),
-            )
-        }
-        Text(
-            text = title,
-            style = type.titleL,
-            color = colors.textPrimary,
-            modifier = Modifier.weight(1f),
-        )
-        val deleteInteraction = remember { MutableInteractionSource() }
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clickable(
-                    interactionSource = deleteInteraction,
-                    indication = null,
-                    onClick = onDelete,
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Delete,
-                contentDescription = "Eliminar",
-                tint = colors.danger,
-                modifier = Modifier.size(22.dp),
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 900)
+@Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 900)
 @Composable
 private fun EditTransactionPreview() {
     EmmTheme {
         EditTransactionContent(
-            state = EditTransactionUiState(),
+            state = EditTransactionUiState(
+                amount = "8540",
+                transactionType = TransactionType.Spend,
+                description = "Mercado Vea — pollo y verduras",
+            ),
             onIntent = {},
             onBack = {},
         )

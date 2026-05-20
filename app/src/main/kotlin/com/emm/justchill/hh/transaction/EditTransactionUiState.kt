@@ -13,6 +13,15 @@ data class EditTransactionUiState(
     val date: String = DateUtils.currentDateAtReadableFormat(),
     val transactionType: TransactionType = TransactionType.Income,
     val isEnabled: Boolean = false,
+    val hasChanges: Boolean = false,
     val accounts: List<Account> = emptyList(),
     val accountSelected: Account? = null,
-) : UiState
+    val categories: List<SelectableCategory> = emptyList(),
+    val categorySelected: SelectableCategory? = null,
+) : UiState {
+    val missingField: MissingField? get() = when {
+        centsToSoles(amount) <= 0.0 -> MissingField.Amount
+        accountSelected == null -> MissingField.Account
+        else -> null
+    }
+}

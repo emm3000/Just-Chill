@@ -1,36 +1,20 @@
 package com.emm.justchill.hh.transaction
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,38 +24,32 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.emm.domain.account.Account
 import com.emm.domain.category.CategoryType
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaTone
-import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
+import com.emm.justchill.hh.account.accountDotColor
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.allColors
+import com.emm.justchill.hh.transaction.components.NoteRow
+import com.emm.justchill.hh.transaction.components.QuickChip
+import com.emm.justchill.hh.transaction.components.SignToggle
 import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
 import com.emm.justchill.hh.transaction.sheets.CategoryPickerSheet
 import com.emm.justchill.hh.transaction.sheets.DatePickerSheet
+import com.emm.justchill.hh.transaction.sheets.NoteSheet
 
 @Composable
 fun AddTransactionScreen(
@@ -111,7 +89,6 @@ private fun AddTransactionScreenContent(
 ) {
     val colors = LocalEmmColors.current
 
-    // Sheet visibility state
     var showAccountSheet by rememberSaveable { mutableStateOf(false) }
     var showCategorySheet by rememberSaveable { mutableStateOf(false) }
     var showDateSheet by rememberSaveable { mutableStateOf(false) }
@@ -120,9 +97,7 @@ private fun AddTransactionScreenContent(
     val isSpend = state.transactionType == TransactionType.Spend
     val noAccounts = state.accounts.isEmpty()
 
-    // Formatted CTA sublabel
     val ctaAmount = remember(state.amount) {
-        val value = centsToSoles(state.amount)
         "S/ ${formatCentsForDisplay(state.amount)}"
     }
     val ctaLabel = when {
@@ -139,7 +114,6 @@ private fun AddTransactionScreenContent(
             .navigationBarsPadding()
             .imePadding(),
     ) {
-        // ─── Top bar ─────────────────────────────────────────────
         JcTopBar(
             title = if (isSpend) "Nuevo gasto" else "Nuevo ingreso",
             left = {
@@ -151,7 +125,6 @@ private fun AddTransactionScreenContent(
             right = null,
         )
 
-        // ─── Sign toggle ──────────────────────────────────────────
         SignToggle(
             isSpend = isSpend,
             onIncomeClick = { onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Income)) },
@@ -161,7 +134,6 @@ private fun AddTransactionScreenContent(
                 .padding(start = 16.dp, end = 16.dp, top = 2.dp),
         )
 
-        // ─── Amount hero ──────────────────────────────────────────
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -176,7 +148,6 @@ private fun AddTransactionScreenContent(
             )
         }
 
-        // ─── Quick chips row ─────────────────────────────────────
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -184,7 +155,6 @@ private fun AddTransactionScreenContent(
                 .padding(bottom = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            // Cuenta chip — CTA mode when no accounts exist yet
             if (noAccounts) {
                 QuickChip(
                     eyebrow = "CUENTA",
@@ -199,14 +169,13 @@ private fun AddTransactionScreenContent(
                     eyebrow = "CUENTA",
                     value = state.accountSelected?.name ?: "—",
                     dotColor = state.accountSelected?.let {
-                        com.emm.justchill.hh.account.accountDotColor(it.name, colors)
+                        accountDotColor(it.name, colors)
                     },
                     onClick = { showAccountSheet = true },
                     modifier = Modifier.weight(1f),
                 )
             }
 
-            // Categoría chip
             QuickChip(
                 eyebrow = "CATEGORÍA",
                 value = state.categorySelected?.name ?: "—",
@@ -215,7 +184,6 @@ private fun AddTransactionScreenContent(
                 modifier = Modifier.weight(1f),
             )
 
-            // Fecha chip
             QuickChip(
                 eyebrow = "FECHA",
                 value = state.date,
@@ -225,7 +193,6 @@ private fun AddTransactionScreenContent(
             )
         }
 
-        // ─── Note trigger ─────────────────────────────────────────
         NoteRow(
             note = state.description,
             onClick = { showNoteSheet = true },
@@ -234,10 +201,8 @@ private fun AddTransactionScreenContent(
                 .padding(horizontal = 16.dp, vertical = 6.dp),
         )
 
-        // ─── Flex spacer ──────────────────────────────────────────
         Spacer(Modifier.weight(1f))
 
-        // ─── Custom numpad ────────────────────────────────────────
         Numpad(
             onDigit = { digit ->
                 val newAmount = (state.amount + digit).take(9)
@@ -257,7 +222,6 @@ private fun AddTransactionScreenContent(
                 .padding(bottom = 6.dp),
         )
 
-        // ─── CTA ──────────────────────────────────────────────────
         StickyCTA(
             label = ctaLabel,
             sublabel = if (noAccounts) null else ctaAmount,
@@ -268,7 +232,6 @@ private fun AddTransactionScreenContent(
         )
     }
 
-    // ─── Bottom sheets ────────────────────────────────────────────
     if (showAccountSheet) {
         AccountPickerSheet(
             accounts = state.accounts,
@@ -299,305 +262,13 @@ private fun AddTransactionScreenContent(
     }
 
     if (showNoteSheet) {
-        com.emm.justchill.hh.transaction.sheets.NoteSheet(
+        NoteSheet(
             initialNote = state.description,
             onSave = { note -> onIntent(AddTransactionIntent.OnDescriptionChange(note)) },
             onDismiss = { showNoteSheet = false },
         )
     }
 }
-
-// ─── Sign toggle ─────────────────────────────────────────────────────────────
-
-@Composable
-private fun SignToggle(
-    isSpend: Boolean,
-    onIncomeClick: () -> Unit,
-    onSpendClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = LocalEmmColors.current
-    val containerShape = RoundedCornerShape(12.dp)
-    val cellShape = RoundedCornerShape(9.dp)
-
-    Row(
-        modifier = modifier
-            .clip(containerShape)
-            .background(colors.surface1)
-            .border(1.dp, colors.border, containerShape)
-            .padding(3.dp)
-            .height(38.dp),
-    ) {
-        // Income cell
-        val incomeActive = !isSpend
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxSize()
-                .clip(cellShape)
-                .then(
-                    if (incomeActive)
-                        Modifier
-                            .background(colors.surface3)
-                            .border(1.dp, colors.borderFocus, cellShape)
-                    else Modifier
-                )
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onIncomeClick,
-                ),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "+",
-                color = colors.success,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.W700,
-                fontFamily = com.emm.justchill.core.theme.PlexMonoFontFamily,
-            )
-            Spacer(Modifier.size(6.dp))
-            Text(
-                text = "Ingreso",
-                fontSize = 12.sp,
-                fontWeight = if (incomeActive) FontWeight.W600 else FontWeight.W500,
-                fontFamily = InterFontFamily,
-                color = if (incomeActive) colors.textPrimary else colors.textTertiary,
-            )
-        }
-
-        // Spend cell
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxSize()
-                .clip(cellShape)
-                .then(
-                    if (isSpend)
-                        Modifier
-                            .background(colors.surface3)
-                            .border(1.dp, colors.borderFocus, cellShape)
-                    else Modifier
-                )
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onSpendClick,
-                ),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "−",
-                color = colors.danger,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.W700,
-                fontFamily = com.emm.justchill.core.theme.PlexMonoFontFamily,
-            )
-            Spacer(Modifier.size(6.dp))
-            Text(
-                text = "Gasto",
-                fontSize = 12.sp,
-                fontWeight = if (isSpend) FontWeight.W600 else FontWeight.W500,
-                fontFamily = InterFontFamily,
-                color = if (isSpend) colors.textPrimary else colors.textTertiary,
-            )
-        }
-    }
-}
-
-// ─── Quick chip ───────────────────────────────────────────────────────────────
-
-@Composable
-private fun QuickChip(
-    eyebrow: String,
-    value: String,
-    dotColor: Color?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    cta: Boolean = false,
-) {
-    val colors = LocalEmmColors.current
-    val chipShape = RoundedCornerShape(10.dp)
-
-    val borderColor = if (cta) colors.accent else colors.border
-    val eyebrowColor: Color? = if (cta) colors.accent else null
-    val valueColor = if (cta) colors.accent else colors.textPrimary
-    val trailingIcon = if (cta) Icons.Outlined.Add else Icons.Outlined.KeyboardArrowDown
-    val trailingTint = if (cta) colors.accent else colors.textDisabled
-
-    Row(
-        modifier = modifier
-            .clip(chipShape)
-            .background(colors.surface1)
-            .border(1.dp, borderColor, chipShape)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            )
-            .padding(horizontal = 10.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(7.dp),
-    ) {
-        if (dotColor != null) {
-            Box(
-                modifier = Modifier
-                    .size(6.dp)
-                    .clip(CircleShape)
-                    .background(dotColor),
-            )
-        }
-
-        Column(modifier = Modifier.weight(1f)) {
-            Eyebrow(text = eyebrow, color = eyebrowColor)
-            Text(
-                text = value,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.W600,
-                fontFamily = InterFontFamily,
-                color = valueColor,
-                letterSpacing = (-0.06).sp,
-                maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-            )
-        }
-
-        Icon(
-            imageVector = trailingIcon,
-            contentDescription = null,
-            tint = trailingTint,
-            modifier = Modifier.size(11.dp),
-        )
-    }
-}
-
-// ─── Note trigger ─────────────────────────────────────────────────────────────
-
-@Composable
-private fun NoteRow(
-    note: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    if (note.isBlank()) {
-        NoteEmptyButton(onClick = onClick, modifier = modifier)
-    } else {
-        NoteFilledCard(note = note, onClick = onClick, modifier = modifier)
-    }
-}
-
-@Composable
-private fun NoteEmptyButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = LocalEmmColors.current
-    val interactionSource = remember { MutableInteractionSource() }
-
-    Row(
-        modifier = modifier.clickable(
-            interactionSource = interactionSource,
-            indication = null,
-            onClick = onClick,
-        ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Add,
-            contentDescription = null,
-            tint = colors.textTertiary,
-            modifier = Modifier.size(11.dp),
-        )
-        Spacer(Modifier.size(5.dp))
-        Text(
-            text = "Agregar nota",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
-            color = colors.textTertiary,
-        )
-    }
-}
-
-@Composable
-private fun NoteFilledCard(
-    note: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-    val interactionSource = remember { MutableInteractionSource() }
-
-    Row(
-        modifier = modifier
-            .clip(radii.rM)
-            .background(colors.surface1)
-            .border(1.dp, colors.border, radii.rM)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-            )
-            .height(IntrinsicSize.Min),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        // Left accent bar
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(3.dp)
-                .background(colors.accent),
-        )
-
-        // Content
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            Text(
-                text = "NOTA",
-                fontSize = 9.sp,
-                fontWeight = FontWeight.W500,
-                fontFamily = InterFontFamily,
-                color = colors.textTertiary,
-                letterSpacing = 1.4.sp,
-            )
-            Text(
-                text = note,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.W400,
-                fontFamily = InterFontFamily,
-                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                color = colors.textSecondary,
-                maxLines = 2,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-            )
-        }
-
-        // Edit icon
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(40.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Edit,
-                contentDescription = "Editar nota",
-                tint = colors.textTertiary,
-                modifier = Modifier.size(14.dp),
-            )
-        }
-    }
-}
-
-
-// ─── Preview ─────────────────────────────────────────────────────────────────
 
 @Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 900)
 @Composable

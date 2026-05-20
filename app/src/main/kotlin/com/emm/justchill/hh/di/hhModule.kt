@@ -57,6 +57,7 @@ private fun Module.viewModelsProviders() {
             findTransaction = get(),
             deleteTransaction = get(),
             accountRepository = get(),
+            categoryRepository = get(),
             findAccount = get(),
         )
     }

@@ -16,8 +16,9 @@ import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.LocalEmmColors
 
 enum class IconBtnTone {
-    Neutral,  // hairline border + textSecondary icon
-    Accent,   // accent border + accent icon
+    Neutral,
+    Accent,
+    Danger,
 }
 
 /**
@@ -37,10 +38,12 @@ fun IconBtn(
     val borderColor = when (tone) {
         IconBtnTone.Neutral -> colors.border
         IconBtnTone.Accent -> colors.accent
+        IconBtnTone.Danger -> colors.danger
     }
     val iconColor = when (tone) {
         IconBtnTone.Neutral -> colors.textSecondary
         IconBtnTone.Accent -> colors.accent
+        IconBtnTone.Danger -> colors.danger
     }
     val shape = RoundedCornerShape(12.dp)
 

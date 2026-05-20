@@ -10,13 +10,13 @@ sealed interface EditTransactionIntent : UiIntent {
 
     data class OnDescriptionChange(val value: String) : EditTransactionIntent
 
-    data class OnDateChange(val value: String) : EditTransactionIntent
-
     data class OnTransactionTypeChange(val value: TransactionType) : EditTransactionIntent
 
     data class OnDateChangeInMillis(val value: Long?) : EditTransactionIntent
 
     data class OnAccountSelected(val value: Account) : EditTransactionIntent
+
+    data class OnCategorySelected(val value: SelectableCategory) : EditTransactionIntent
 
     data object OnSave : EditTransactionIntent
 
