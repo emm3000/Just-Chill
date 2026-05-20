@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Search
@@ -32,11 +33,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -46,10 +54,10 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.emm.domain.category.CategoryType
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.theme.PlexMonoFontFamily
 import com.emm.justchill.core.ui.atoms.Eyebrow
@@ -89,36 +97,44 @@ private fun SeeTransactionsContent(
 ) {
     val colors = LocalEmmColors.current
 
+    var showFilterSheet by rememberSaveable { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg)
             .statusBarsPadding(),
     ) {
-        // ── Header ────────────────────────────────────────────────
         ScreenHeader()
 
-        // ── Search ────────────────────────────────────────────────
         SearchInput(
             query = state.query,
             onQueryChange = { onIntent(SeeTransactionsIntent.OnQueryChanged(it)) },
         )
 
-        // ── Category chips ────────────────────────────────────────
         CategoryChipsRow(
-            chips = state.categoryChips,
+            chips = state.topChips,
+            overflowCount = state.overflowCount,
             onToggle = { onIntent(SeeTransactionsIntent.OnCategoryToggled(it)) },
-            onClearFilters = { onIntent(SeeTransactionsIntent.OnClearFilters) },
+            onTodas = { onIntent(SeeTransactionsIntent.OnClearCategoryFilter) },
+            onMore = { showFilterSheet = true },
         )
 
-        // ── Hairline ──────────────────────────────────────────────
+        if (state.activeCategory != null) {
+            ActiveFilterBanner(
+                categoryName = state.activeCategory.name,
+                query = state.query.takeIf { it.isNotBlank() },
+                onClear = { onIntent(SeeTransactionsIntent.OnClearCategoryFilter) },
+            )
+        }
+
         Hairline()
 
-        // ── Content area (flex 1) ─────────────────────────────────
         when {
             state.hasNoTransactionsAtAll -> EmptyNoTransactionsAtAll(modifier = Modifier.fillMaxSize())
             state.hasNoResultsForFilter -> EmptyFilteredNoResults(
                 query = state.query,
+                activeCategoryName = state.activeCategory?.name,
                 onClear = { onIntent(SeeTransactionsIntent.OnClearFilters) },
                 modifier = Modifier.fillMaxSize(),
             )
@@ -127,6 +143,22 @@ private fun SeeTransactionsContent(
                 onItemClick = navigateToEdit,
             )
         }
+    }
+
+    if (showFilterSheet) {
+        CategoryFilterSheet(
+            items = state.sheetItems,
+            incomeCount = state.incomeCount,
+            spendCount = state.spendCount,
+            hasActiveFilter = state.activeCategory != null,
+            initialSegment = state.sheetItems
+                .firstOrNull { it.id == state.activeCategory?.id }
+                ?.type
+                ?: CategoryType.Spend,
+            onSelect = { onIntent(SeeTransactionsIntent.OnCategorySelected(it)) },
+            onClear = { onIntent(SeeTransactionsIntent.OnClearCategoryFilter) },
+            onDismiss = { showFilterSheet = false },
+        )
     }
 }
 
@@ -225,14 +257,12 @@ private fun SearchInput(
 @Composable
 private fun CategoryChipsRow(
     chips: List<CategoryChipUi>,
+    overflowCount: Int,
     onToggle: (String) -> Unit,
-    onClearFilters: () -> Unit,
+    onTodas: () -> Unit,
+    onMore: () -> Unit,
 ) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-
     val anySelected = chips.any { it.selected }
-    // Synthetic "Todas" chip — active when no category chip is selected
     val todasActive = !anySelected
 
     LazyRow(
@@ -242,53 +272,180 @@ private fun CategoryChipsRow(
             .fillMaxWidth()
             .padding(bottom = 14.dp),
     ) {
-        // "Todas" synthetic chip
         item(key = "todas") {
-            val bgColor = if (todasActive) colors.textPrimary else colors.bg
-            val borderColor = if (todasActive) colors.textPrimary else colors.border
-            val textColor = if (todasActive) colors.bg else colors.textSecondary
-
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(bgColor)
-                    .border(1.dp, borderColor, RoundedCornerShape(999.dp))
-                    .clickable { onClearFilters() }
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-            ) {
-                Text(
-                    text = "Todas",
-                    style = type.labelM.copy(
-                        fontSize = 12.sp,
-                        letterSpacing = 0.sp,
-                    ),
-                    color = textColor,
-                )
-            }
+            CategoryChip(
+                label = "Todas",
+                selected = todasActive,
+                onClick = onTodas,
+            )
         }
 
         items(chips, key = { it.id }) { chip ->
-            val bgColor = if (chip.selected) colors.textPrimary else colors.bg
-            val borderColor = if (chip.selected) colors.textPrimary else colors.border
-            val textColor = if (chip.selected) colors.bg else colors.textSecondary
+            CategoryChip(
+                label = chip.name,
+                selected = chip.selected,
+                onClick = { onToggle(chip.id) },
+            )
+        }
 
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(bgColor)
-                    .border(1.dp, borderColor, RoundedCornerShape(999.dp))
-                    .clickable { onToggle(chip.id) }
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-            ) {
-                Text(
-                    text = chip.name,
-                    style = type.labelM.copy(
-                        fontSize = 12.sp,
-                        letterSpacing = 0.sp,
-                    ),
-                    color = textColor,
+        if (overflowCount > 0) {
+            item(key = "more") {
+                MoreChip(count = overflowCount, onClick = onMore)
+            }
+        }
+    }
+}
+
+@Composable
+private fun CategoryChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+
+    val bgColor = if (selected) colors.textPrimary else colors.bg
+    val borderColor = if (selected) colors.textPrimary else colors.border
+    val textColor = if (selected) colors.bg else colors.textSecondary
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(bgColor)
+            .border(1.dp, borderColor, RoundedCornerShape(999.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+    ) {
+        Text(
+            text = label,
+            style = type.labelM.copy(fontSize = 12.sp, letterSpacing = 0.sp),
+            color = textColor,
+        )
+    }
+}
+
+@Composable
+private fun MoreChip(count: Int, onClick: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .clickable(onClick = onClick)
+            .drawBehind {
+                val stroke = Stroke(
+                    width = 1.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(7f, 5f)),
+                )
+                drawRoundRect(
+                    color = colors.borderFocus,
+                    style = stroke,
+                    cornerRadius = CornerRadius(size.height / 2f),
                 )
             }
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+    ) {
+        Text(
+            text = "Más ",
+            style = type.labelM.copy(fontSize = 12.sp, letterSpacing = 0.sp),
+            color = colors.textTertiary,
+        )
+        Text(
+            text = "$count",
+            style = type.labelM.copy(
+                fontSize = 12.sp,
+                letterSpacing = 0.sp,
+                fontFamily = PlexMonoFontFamily,
+            ),
+            color = colors.textTertiary,
+        )
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ACTIVE FILTER BANNER
+// ═══════════════════════════════════════════════════════════════
+
+@Composable
+private fun ActiveFilterBanner(
+    categoryName: String,
+    query: String?,
+    onClear: () -> Unit,
+) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val shape = RoundedCornerShape(10.dp)
+
+    val displayText = buildAnnotatedString {
+        append("Filtrando por «")
+        withStyle(SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.W600)) {
+            append(categoryName)
+        }
+        append("»")
+        if (query != null) {
+            append(" + \"")
+            withStyle(SpanStyle(fontFamily = PlexMonoFontFamily)) { append(query) }
+            append("\"")
+        }
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 12.dp)
+            .clip(shape)
+            .background(colors.accentMuted)
+            .border(1.dp, colors.accent.copy(alpha = 0.2f), shape)
+            .padding(horizontal = 12.dp, vertical = 9.dp),
+    ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Outlined.List,
+            contentDescription = null,
+            tint = colors.accent,
+            modifier = Modifier.size(13.dp),
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = displayText,
+            style = type.labelM.copy(
+                fontSize = 12.sp,
+                letterSpacing = 0.sp,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.W500,
+            ),
+            color = colors.accent,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Spacer(Modifier.width(8.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onClear)
+                .padding(horizontal = 6.dp, vertical = 2.dp),
+        ) {
+            Text(
+                text = "Limpiar",
+                style = type.labelM.copy(
+                    fontSize = 12.sp,
+                    letterSpacing = 0.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.W500,
+                ),
+                color = colors.accent,
+            )
+            Spacer(Modifier.width(4.dp))
+            Icon(
+                imageVector = Icons.Outlined.Close,
+                contentDescription = "Limpiar filtro",
+                tint = colors.accent,
+                modifier = Modifier.size(11.dp),
+            )
         }
     }
 }
@@ -331,7 +488,6 @@ private fun DayGroupedList(
         contentPadding = PaddingValues(bottom = 16.dp),
     ) {
         days.forEach { dayGroup ->
-            // Day label: HOY / AYER from readableDate, else day-name uppercased
             val today = LocalDate.now()
             val yesterday = today.minusDays(1)
             val dayLabel = when (dayGroup.date) {
@@ -354,20 +510,14 @@ private fun DayGroupedList(
                     Eyebrow(text = dayLabel)
                     Text(
                         text = dateCaption,
-                        style = type.eyebrow.copy(
-                            fontSize = 10.sp,
-                            letterSpacing = 0.4.sp,
-                        ),
+                        style = type.eyebrow.copy(fontSize = 10.sp, letterSpacing = 0.4.sp),
                         color = colors.textDisabled,
                     )
                 }
             }
 
             items(dayGroup.transactions, key = TransactionUi::transactionId) { tx ->
-                TxRow(
-                    tx = tx,
-                    onClick = { onItemClick(tx.transactionId) },
-                )
+                TxRow(tx = tx, onClick = { onItemClick(tx.transactionId) })
             }
         }
     }
@@ -400,20 +550,14 @@ private fun TxRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = tx.description.ifBlank { "Sin descripción" },
-                style = type.labelM.copy(
-                    fontSize = 13.sp,
-                    letterSpacing = (-0.065).sp,
-                ),
+                style = type.labelM.copy(fontSize = 13.sp, letterSpacing = (-0.065).sp),
                 color = colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = tx.readableTime,
-                style = type.caption.copy(
-                    fontSize = 11.sp,
-                    letterSpacing = 0.11.sp,
-                ),
+                style = type.caption.copy(fontSize = 11.sp, letterSpacing = 0.11.sp),
                 color = colors.textTertiary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -442,7 +586,6 @@ private fun EmptyNoTransactionsAtAll(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        // Icon container
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -461,10 +604,7 @@ private fun EmptyNoTransactionsAtAll(modifier: Modifier = Modifier) {
         Spacer(Modifier.height(18.dp))
         Text(
             text = "Aún sin transacciones",
-            style = type.titleL.copy(
-                fontSize = 15.sp,
-                letterSpacing = (-0.075).sp,
-            ),
+            style = type.titleL.copy(fontSize = 15.sp, letterSpacing = (-0.075).sp),
             color = colors.textPrimary,
             textAlign = TextAlign.Center,
         )
@@ -482,40 +622,51 @@ private fun EmptyNoTransactionsAtAll(modifier: Modifier = Modifier) {
 @Composable
 private fun EmptyFilteredNoResults(
     query: String,
+    activeCategoryName: String?,
     onClear: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
 
+    val headline = buildAnnotatedString {
+        withStyle(
+            SpanStyle(
+                color = colors.textPrimary,
+                fontSize = 14.sp,
+                fontFamily = type.labelM.fontFamily,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.W600,
+                letterSpacing = (-0.07).sp,
+            )
+        ) { append("Sin resultados para ") }
+
+        when {
+            activeCategoryName != null -> withStyle(
+                SpanStyle(
+                    color = colors.accent,
+                    fontFamily = type.labelM.fontFamily,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.W600,
+                    fontSize = 14.sp,
+                )
+            ) { append("«$activeCategoryName»") }
+
+            query.isNotEmpty() -> withStyle(
+                SpanStyle(
+                    color = colors.accent,
+                    fontFamily = PlexMonoFontFamily,
+                    fontSize = 14.sp,
+                )
+            ) { append("«$query»") }
+        }
+    }
+
     Column(
         modifier = modifier.padding(horizontal = 24.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        // Headline — query in accent mono
-        if (query.isNotEmpty()) {
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(
-                        SpanStyle(
-                            color = colors.textPrimary,
-                            fontSize = 14.sp,
-                            fontFamily = type.labelM.fontFamily,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.W600,
-                            letterSpacing = (-0.07).sp,
-                        )
-                    ) { append("Sin resultados para ") }
-                    withStyle(
-                        SpanStyle(
-                            color = colors.accent,
-                            fontFamily = PlexMonoFontFamily,
-                            fontSize = 14.sp,
-                        )
-                    ) { append("«$query»") }
-                },
-                textAlign = TextAlign.Center,
-            )
+        if (activeCategoryName != null || query.isNotEmpty()) {
+            Text(text = headline, textAlign = TextAlign.Center)
         } else {
             Text(
                 text = "Sin movimientos con esos filtros",
@@ -533,7 +684,6 @@ private fun EmptyFilteredNoResults(
             modifier = Modifier.widthIn(max = 240.dp),
         )
         Spacer(Modifier.height(20.dp))
-        // "Limpiar filtros" pill button
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -600,29 +750,20 @@ private fun SeeTransactionsPopulatedPreview() {
                     readableTime = "09:00",
                     category = CategoryUi(Icons.Rounded.Category, findById("gray")),
                 ),
-                TransactionUi(
-                    transactionId = UUID.randomUUID().toString(),
-                    type = TransactionType.Spend,
-                    amount = formatExpense("12.00"),
-                    description = "Café",
-                    date = 0,
-                    readableDate = "AYER",
-                    readableTime = "16:48",
-                    category = CategoryUi(Icons.Rounded.Category, findById("pink")),
-                ),
             )
         }
         val chips = listOf(
             CategoryChipUi(id = "1", name = "Comida", colorId = "green", selected = false),
-            CategoryChipUi(id = "2", name = "Salud", colorId = "blue", selected = false),
+            CategoryChipUi(id = "2", name = "Transporte", colorId = "blue", selected = false),
+            CategoryChipUi(id = "3", name = "Servicios", colorId = "orange", selected = false),
+            CategoryChipUi(id = "4", name = "Ocio", colorId = "pink", selected = true),
         )
         SeeTransactionsContent(
             state = SeeTransactionsUiState(
-                days = listOf(
-                    DayGroup(LocalDate.now(), txs.take(2)),
-                    DayGroup(LocalDate.now().minusDays(1), txs.takeLast(1)),
-                ),
-                categoryChips = chips,
+                days = listOf(DayGroup(LocalDate.now(), txs)),
+                topChips = chips,
+                overflowCount = 15,
+                activeCategory = ActiveCategoryInfo("4", "Ocio"),
             ),
             onIntent = {},
             navigateToEdit = {},
@@ -638,28 +779,7 @@ private fun SeeTransactionsNoResultsPreview() {
             state = SeeTransactionsUiState(
                 days = emptyList(),
                 query = "café",
-                isFilterActive = true,
-            ),
-            onIntent = {},
-            navigateToEdit = {},
-        )
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun SeeTransactionsWithFiltersPreview() {
-    EmmTheme {
-        val chips = listOf(
-            CategoryChipUi(id = "1", name = "Comida", colorId = "green", selected = true),
-            CategoryChipUi(id = "2", name = "Salud", colorId = "blue", selected = false),
-            CategoryChipUi(id = "3", name = "Transporte", colorId = "orange", selected = false),
-        )
-        SeeTransactionsContent(
-            state = SeeTransactionsUiState(
-                days = emptyList(),
-                categoryChips = chips,
-                isFilterActive = true,
+                activeCategory = ActiveCategoryInfo("1", "Comida"),
             ),
             onIntent = {},
             navigateToEdit = {},
