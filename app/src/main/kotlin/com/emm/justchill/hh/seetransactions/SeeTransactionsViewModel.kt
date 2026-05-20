@@ -10,7 +10,6 @@ import com.emm.domain.transaction.TransactionFilter
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionWithCategory
 import com.emm.justchill.core.mvi.MviViewModel
-import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.toUi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -24,31 +23,9 @@ import kotlinx.coroutines.flow.onEach
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 private const val SEARCH_DEBOUNCE_MS = 250L
-
-data class DayGroup(val date: LocalDate, val transactions: List<TransactionUi>) {
-    val readableDate: String
-        get() {
-            val today = LocalDate.now()
-            val yesterday = today.minusDays(1)
-            return when (date) {
-                today -> "HOY"
-
-                yesterday -> "AYER"
-
-                else -> {
-                    val formatter = DateTimeFormatter.ofPattern(
-                        "MMMM dd",
-                        Locale.forLanguageTag("es"),
-                    )
-                    date.format(formatter).uppercase()
-                }
-            }
-        }
-}
 
 private const val TOP_N = 5
 private const val SHOW_MORE_THRESHOLD = 8

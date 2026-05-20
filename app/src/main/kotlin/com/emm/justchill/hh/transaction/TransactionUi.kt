@@ -3,11 +3,9 @@ package com.emm.justchill.hh.transaction
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.QuestionMark
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.graphics.vector.ImageVector
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
 import com.emm.justchill.hh.category.AppIconCatalog
-import com.emm.justchill.hh.category.CategoryColor
 import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
@@ -24,9 +22,6 @@ data class TransactionUi(
     val readableTime: String,
     val category: CategoryUi,
 )
-
-@Immutable
-data class CategoryUi(val categoryIcon: ImageVector, val categoryColor: CategoryColor)
 
 private fun TransactionWithCategory.toUi(): TransactionUi {
     val formattedNumber: String = fromCentsToSolesWith(amount)
