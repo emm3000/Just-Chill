@@ -7,8 +7,10 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,13 +19,15 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -54,6 +58,7 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
@@ -202,12 +207,12 @@ private fun AddTransactionScreenContent(
         }
 
         // ─── Note trigger ─────────────────────────────────────────
-        NoteToggleButton(
-            label = if (state.description.isBlank()) "Agregar nota" else state.description,
+        NoteRow(
+            note = state.description,
             onClick = { showNoteSheet = true },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 6.dp),
+                .padding(horizontal = 16.dp, vertical = 6.dp),
         )
 
         // ─── Flex spacer ──────────────────────────────────────────
@@ -445,43 +450,123 @@ private fun QuickChip(
 // ─── Note trigger ─────────────────────────────────────────────────────────────
 
 @Composable
-private fun NoteToggleButton(
-    label: String,
+private fun NoteRow(
+    note: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (note.isBlank()) {
+        NoteEmptyButton(onClick = onClick, modifier = modifier)
+    } else {
+        NoteFilledCard(note = note, onClick = onClick, modifier = modifier)
+    }
+}
+
+@Composable
+private fun NoteEmptyButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
     val interactionSource = remember { MutableInteractionSource() }
-    val isPlaceholder = label == "Agregar nota"
+
+    Row(
+        modifier = modifier.clickable(
+            interactionSource = interactionSource,
+            indication = null,
+            onClick = onClick,
+        ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Add,
+            contentDescription = null,
+            tint = colors.textTertiary,
+            modifier = Modifier.size(11.dp),
+        )
+        Spacer(Modifier.size(5.dp))
+        Text(
+            text = "Agregar nota",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.W500,
+            fontFamily = InterFontFamily,
+            color = colors.textTertiary,
+        )
+    }
+}
+
+@Composable
+private fun NoteFilledCard(
+    note: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalEmmColors.current
+    val radii = LocalEmmRadii.current
+    val interactionSource = remember { MutableInteractionSource() }
 
     Row(
         modifier = modifier
+            .clip(radii.rM)
+            .background(colors.surface1)
+            .border(1.dp, colors.border, radii.rM)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        if (isPlaceholder) {
-            Icon(
-                imageVector = Icons.Outlined.Add,
-                contentDescription = null,
-                tint = colors.textTertiary,
-                modifier = Modifier.size(11.dp),
             )
-            Spacer(Modifier.size(5.dp))
-        }
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
-            color = if (isPlaceholder) colors.textTertiary else colors.textSecondary,
-            maxLines = 1,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            .height(IntrinsicSize.Min),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Left accent bar
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(3.dp)
+                .background(colors.accent),
         )
+
+        // Content
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = "NOTA",
+                fontSize = 9.sp,
+                fontWeight = FontWeight.W500,
+                fontFamily = InterFontFamily,
+                color = colors.textTertiary,
+                letterSpacing = 1.4.sp,
+            )
+            Text(
+                text = note,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.W400,
+                fontFamily = InterFontFamily,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                color = colors.textSecondary,
+                maxLines = 2,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
+        }
+
+        // Edit icon
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(40.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Edit,
+                contentDescription = "Editar nota",
+                tint = colors.textTertiary,
+                modifier = Modifier.size(14.dp),
+            )
+        }
     }
 }
 
