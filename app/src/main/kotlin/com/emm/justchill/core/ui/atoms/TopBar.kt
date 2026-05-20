@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,7 +35,8 @@ fun JcTopBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(44.dp),
+            .height(64.dp)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
         // Leading slot
         if (left != null) {
