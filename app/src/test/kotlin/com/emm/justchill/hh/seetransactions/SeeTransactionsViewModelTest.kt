@@ -5,6 +5,7 @@ import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.transaction.SearchTransactionsUseCase
 import com.emm.domain.transaction.TransactionFilter
+import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionWithCategory
 import io.mockk.every
 import io.mockk.mockk
@@ -31,14 +32,18 @@ class SeeTransactionsViewModelTest {
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
     private val categoriesFlow = MutableStateFlow(emptyList<com.emm.domain.category.Category>())
+    private val allTransactionsFlow = MutableStateFlow(emptyList<TransactionWithCategory>())
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns categoriesFlow
+    }
+    private val transactionRepository = mockk<TransactionRepository> {
+        every { fetchAllWithCategory() } returns allTransactionsFlow
     }
     private val searchTransactions = mockk<SearchTransactionsUseCase>()
 
     private fun buildViewModel(): SeeTransactionsViewModel {
         every { searchTransactions.invoke(any()) } returns flowOf(emptyList())
-        return SeeTransactionsViewModel(searchTransactions, categoryRepository)
+        return SeeTransactionsViewModel(searchTransactions, categoryRepository, transactionRepository)
     }
 
     @Test
