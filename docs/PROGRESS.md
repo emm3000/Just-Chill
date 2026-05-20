@@ -3,25 +3,31 @@
 > Estado del proyecto a fecha del último update. Punto de re-entrada
 > para retomar después de cerrar/limpiar el contexto.
 >
-> **Última actualización**: 2026-05-19 (S7 prep — AAB 2.0.0-alpha + listing/privacy drafts).
+> **Última actualización**: 2026-05-20 (post-redesign + detekt pipeline).
 
 ---
 
 ## TL;DR — dónde estamos ahora
 
 - **Proceso de definición**: ✅ Fases 1-5 firmadas y versionadas.
-- **Ejecución**: Sprints 0-5 + mini-S6.5 cerrados (tags `post-s0` …
-  `post-s5`, mini-S6.5 sin tag aún). Pre-alpha audit (Sonnet) descubrió
-  que ROADMAP §7 (S4) había **interpretado mal** US-17 — el roadmap
-  decía "íconos por banco" pero PRD §4 dice "cuentas preset peruanas"
-  (US-17 es además Should, no Must). Más grave: US-14 (categorías)
-  no tenía pantalla de gestión, y US-15 (cuentas) no tenía UI de
-  edit/delete. Mini-S6.5 cerró los 3 gaps reales del gate.
-- **Próximo paso concreto**: subir AAB `2.0.0-alpha` a Play Console
-  (alpha cerrada). Listing y privacidad ya redactados en
-  `docs/PLAY_STORE_LISTING.md` + `docs/PRIVACY_POLICY.md`. Falta:
-  hostear Gist público de privacidad, screenshots, reclutar testers,
-  setup WhatsApp grupal.
+- **Ejecución**: Sprints 0-5 + mini-S6.5 cerrados. AAB `2.0.0-alpha`
+  tagueado (pre-redesign) pero **aún no subido a Play Console**.
+- **Post-alpha track 1 — Notion-Dark visual refactor** (cerrado):
+  rediseño completo de la UI sobre el handoff de Claude Design.
+  SR-1..SR-10 commiteados en `trunk` (foundations + Home + Add/Edit
+  tx + Reporte + Ver + Cuentas + Categorías + Perfil + Manifesto +
+  Calendar). La UI actual es **mucho mejor que la del AAB tagueado**
+  — cualquier screenshot para Play Store debería ser de esta versión.
+  Detalles en `docs/PLAN_REDESIGN.md`.
+- **Post-alpha track 2 — detekt pipeline** (cerrado): detekt
+  2.0.0-alpha.3 + ktlint-wrapper + mrmans0n/compose-rules instalados.
+  138 findings → 13 baselined (-91%) en 7 pasos. CI gate en PRs +
+  pre-push hook local. Detalles abajo.
+- **Próximo paso concreto**: re-buildear AAB con la UI nueva, subirlo
+  a Play Console (alpha cerrada). Listing y privacidad ya redactados
+  en `docs/PLAY_STORE_LISTING.md` + `docs/PRIVACY_POLICY.md`. Falta:
+  hostear Gist público de privacidad, screenshots con la **UI nueva**,
+  reclutar testers, setup WhatsApp grupal.
 
 ---
 
@@ -250,11 +256,12 @@ Entregado en 3 chunks delegados a Sonnet (uno por sesión):
 | `post-s3` | Export/Import JSON (US-18, US-19) | `git reset --hard post-s3` |
 | `post-s4` | ProfileScreen completo + Privacidad (US-21) | `git reset --hard post-s4` |
 | `post-s5` | Polish: a11y + copy peruano + US-17 íconos por tipo | `git reset --hard post-s5` |
-| `2.0.0-alpha` | AAB release-firmable. Rewrite local-only completo. | `git reset --hard 2.0.0-alpha` |
+| `2.0.0-alpha` | AAB release-firmable. **Pre-redesign** — UI vieja. | `git reset --hard 2.0.0-alpha` |
 
-**Próximo tag esperado**: `post-s7` cuando el alpha esté en manos de
-testers + primeras 24h sin crashes. Hot-fix patches dentro del ciclo
-S7 irían como `2.0.1-alpha`, `2.0.2-alpha`.
+**Próximo tag esperado**: `2.0.0-alpha.2` (o similar) cuando se
+re-buildee el AAB con la UI Notion-Dark y se suba a Play Console.
+Después `post-s7` cuando el alpha esté en manos de testers + primeras
+24h sin crashes. Hot-fix patches irían como `2.0.x-alpha`.
 
 ### Mini-S6.5 — cierre del pre-alpha gate
 
@@ -323,6 +330,84 @@ publique en S7 (no son blocker hasta entonces).
 
 ---
 
+## Post-alpha track 1 — Notion-Dark visual refactor (2026-05-19 → 2026-05-20)
+
+Refactor visual completo basado en el handoff de Claude Design ("JustChill — Notion Dark", 19 pantallas / 8 componentes base / 3 bottom sheets / 3 empty states). Mantiene 100% de la arquitectura (Clean + MVI + Koin + SQLDelight) — solo capa Compose.
+
+Plan completo y decisiones en `docs/PLAN_REDESIGN.md`. Stack mapping diseño → Compose ahí.
+
+### Lo que entró
+
+10 SRs commiteados en `trunk` (uno por feature, sin merge — cada commit deja un dev APK iterable):
+
+| ID | Scope | Commit |
+|---|---|---|
+| **SR-1** | Foundations: colors + Inter/IBM Plex Mono + radii + 10 atoms (Eyebrow, Pill, IconTile, MetaRow, JcTopBar, IconBtn, StickyCTA, AmountHero, MoneyInline, Hairline) | (foundation, no visible) |
+| **SR-2** | Home + BottomBar | (varios) |
+| **SR-3** | Add transaction · numpad 3×4 custom · 3 bottom sheets (account/date/category) · NoteSheet | `6278c8c`, `9254fba`, `ea20cb6`, `4454a75`, `281a8ea`, `d6c2b1a` |
+| **SR-4** | Edit transaction · espejo de Add · custom delete dialog | `0b2085b`, `7fcf3e3` |
+| **SR-5** | Reporte (ya estaba decente, ajustes menores) | — |
+| **SR-6** | Ver: search rounded + chips hairline + grouped-by-day | `19fa27e`, `e5cd536` |
+| **SR-7** | Cuentas + Nueva cuenta · atajos peruanos · Wallet type · reactive movement counts | `d041243` |
+| **SR-8** | Categorías + Nueva categoría · sheet de seleccionar (deprecó `SelectCategoryScreen`) | `8f12271`, `ceec3a0` |
+| **SR-9** | Perfil + Privacidad + Manifesto typography | `baba975`, `28ccc90` |
+| **SR-10** | Calendar — header + month nav + 7-col grid custom (custom, no Material) | `1f32330` |
+
+Polish posterior: `EmmSnackbarHost` full-width pill (`59a5775`), home empty states diferenciados (`64a0810`), home simplification (`a14887a`), account-picker "+ Nueva cuenta" wire (`3332a2d`).
+
+### Implicancias para Play Store
+- Cualquier screenshot ya redactado en `docs/PLAY_STORE_LISTING.md` queda **stale**.
+- El AAB `2.0.0-alpha` que está tagueado es **pre-redesign**. Si querés subir alpha con la UI nueva, hay que re-buildear (`./gradlew bundleProdRelease`) y reetiquetar.
+
+---
+
+## Post-alpha track 2 — Tooling: detekt pipeline + CI gate (2026-05-20)
+
+13-commit run instalando y limpiando detekt 2.0.0-alpha.3 + ktlint-wrapper + mrmans0n/compose-rules. Final: **138 findings → 13 baselined (-91%)**, build verde, CI gate en PRs, pre-push hook local.
+
+### Setup (`bf6810e`, `a064103`, `9d1f66f`, `dc03677`, `a3263dc`)
+
+- Plugin `dev.detekt` aplicado en root + `subprojects { }`. Versión `2.0.0-alpha.3` porque es la única que targetea Kotlin 2.3.21 (stable 1.23.8 viene con Kotlin 2.0.21 embebido).
+- `detekt-rules-ktlint-wrapper` (lo que era `detekt-formatting` antes de 2.0) + `io.nlopez.compose.rules:detekt:0.5.9` como `detektPlugins`.
+- `config/detekt/detekt.yml` con tweaks Compose-aware: `ignoreAnnotated: ['Composable', 'Preview']` en `FunctionNaming`, `LongMethod`, `MagicNumber`. `CompositionLocalAllowlist` configurado con los 4 locals propios (`LocalEmmColors`, `LocalEmmRadii`, `LocalEmmSpacing`, `LocalEmmType`).
+- `autoCorrect = false` por default — opt-in con `./gradlew detekt --auto-correct`.
+- Baselines per-módulo (`config/detekt/baseline-{app,data,domain}.xml`). 13 findings congelados, mayormente complejidad estructural (`CyclomaticComplexMethod` en `EmmButton`/`EmmTextInput`, `TooManyFunctions` en pantallas grandes).
+- CI: job `detekt` paralelo a `lint`/`unit-test` en `.github/workflows/buildDev.yml`, bloquea `build`. Reportes HTML como artifact (7 días retención).
+- Pre-push hook tracked en `scripts/git-hooks/pre-push` — opt-in con `git config --local core.hooksPath scripts/git-hooks` (ya activo en este local). Skipeable con `git push --no-verify`.
+
+### Cleanup (7 pasos, commits `5a9bdaf` a `26d727e`)
+
+| Paso | Foco | Δ findings | Commit |
+|---|---|---|---|
+| 1 | Renames camelCase→PascalCase + extract single-decl files + private previews | 138 → 90 | `5a9bdaf` |
+| 2 | Compose API hygiene: `modifier: Modifier = Modifier` slot, param order, present-tense lambda names (`onClicked`→`onClick`) | 90 → 81 | `2ac7def` |
+| 2.5 | `./gradlew detekt --auto-correct` — ktlint wrap en signatures multi-línea | 81 → 58 | `ae26b8b` |
+| 3 | `rememberUpdatedState` para lambdas en `LaunchedEffect` (5 screens) | 58 → 53 | `6d9977b` |
+| 4 | Exception hygiene: `@Suppress` en adapters (SafeCall, launchSafe), `cause = e` en ValidationError, `error("msg")` en lugar de `IllegalStateException()` | 53 → 43 | `93c961f` |
+| 5 | Magic numbers: `CENTS_PER_UNIT`, `MAX_VISIBLE_CATEGORIES`, `SEARCH_DEBOUNCE_MS`, `CALENDAR_GRID_CELLS` | 43 → 32 | `1ecd17a` |
+| 6 | Wrap líneas >120 chars (privacy policy, JSON test fixtures) | 32 → 21 | `f748556` |
+| 7 | Cola trivial (`type_`→`typography`, `StickyCTA.onClick` orden, `EmmAmountChill.modifier` default) + `Compose.CompositionLocalAllowlist` config | 21 → 13 | `26d727e` |
+
+### Caveats / decisiones a recordar
+
+- **`ProfileViewModel` cambio de behavior** (paso 4): los `catch (Exception)` internos de `exportToStream`/`importFromJson` fueron eliminados (redundantes con `launchSafe`'s outer catch). El `onError` ahora discrimina con `when`: para export `Unknown → "No pude exportar... espacio"`, resto `→ toUserMessage()`; para import `ValidationError → toUserMessage()`, resto `→ "...archivo dañado"`. Test de `DatabaseError` en export sigue verde.
+- **`ValidationError` ahora acepta `cause: Throwable? = null`** (paso 4) — cambio aditivo en `:domain/shared/error/DomainException.kt`. Permite preservar la causa cuando se traduce una excepción específica.
+- **Constantes compartidas entre VMs**: `MAX_VISIBLE_CATEGORIES = 7` vive como `internal const val` en `AddTransactionViewModel.kt`, reusado desde `EditTransactionViewModel.kt` (mismo package, sin import).
+- **El CI gate solo se dispara en PRs**: el workflow está configurado `on: pull_request`. Direct push a trunk (que bypasea branch protection) **no** corre CI — pero el pre-push hook sí valida localmente.
+
+### Cómo correr / fixear
+
+```bash
+./gradlew detekt                    # corre los 3 módulos, verde con baseline
+./gradlew detekt --auto-correct     # arregla lo que ktlint sepa fixear
+./gradlew detektBaseline            # regenera baselines (cuando bajes findings)
+./gradlew detektGenerateConfig      # regenera config default (no pisar el actual)
+```
+
+Reportes HTML en `<módulo>/build/reports/detekt/detekt.html`.
+
+---
+
 ## Cosas que vale la pena recordar
 
 - **Sub-agents Sonnet**: el patrón que funcionó fue delegarle trabajo
@@ -346,5 +431,11 @@ publique en S7 (no son blocker hasta entonces).
 - **Sub-agents son colaboradores** (no llamarlos "amigo del user").
 - **Sprint plans** (`PLAN_S*_*.md`) son efímeros y gitignored.
   Los docs del proceso de definición sí están versionados.
+  (Excepción: `PLAN_REDESIGN.md` sí está versionado — fue track largo
+  y conviene tener registro.)
 - Si el user pide arrancar un sprint, **leer el plan correspondiente
   en `ROADMAP_V1.md` primero** para no inventar nada.
+- **detekt instalado**: si rompiste un test/build, revisar
+  `<módulo>/build/reports/detekt/detekt.html` antes de pelearte con
+  Gradle. El pre-push hook corre detekt — `git push --no-verify` lo
+  saltea si necesitás un push de emergencia.
