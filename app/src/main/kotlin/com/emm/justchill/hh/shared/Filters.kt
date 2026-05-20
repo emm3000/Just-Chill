@@ -10,9 +10,9 @@ import com.emm.justchill.core.theme.BackgroundColor
 import com.emm.justchill.core.theme.EmmTheme
 
 @Composable
-fun Filters() {
+fun Filters(modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(BackgroundColor),
     ) {

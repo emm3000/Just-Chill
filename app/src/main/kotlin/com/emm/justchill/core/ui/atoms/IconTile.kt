@@ -36,6 +36,7 @@ enum class IconTileTone {
 @Composable
 fun IconTile(
     icon: ImageVector,
+    modifier: Modifier = Modifier,
     size: IconTileSize = IconTileSize.Md,
     tone: IconTileTone = IconTileTone.Neutral,
     swatch: Color? = null,
@@ -55,7 +56,7 @@ fun IconTile(
 
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
+        modifier = modifier
             .size(size.tileSize)
             .clip(RoundedCornerShape(size.radius))
             .background(bgColor),

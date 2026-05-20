@@ -18,12 +18,12 @@ internal fun LazyListState.reachedBottom(buffer: Int = 1): Boolean {
 
 @Composable
 internal fun <T> EndlessLazyColumn(
-    modifier: Modifier = Modifier,
-    listState: LazyListState = rememberLazyListState(),
     items: List<T>,
     itemKey: (T) -> Any,
     itemContent: @Composable (T) -> Unit,
     loadMore: () -> Unit,
+    modifier: Modifier = Modifier,
+    listState: LazyListState = rememberLazyListState(),
 ) {
     val reachedBottom: Boolean by remember { derivedStateOf { listState.reachedBottom() } }
 

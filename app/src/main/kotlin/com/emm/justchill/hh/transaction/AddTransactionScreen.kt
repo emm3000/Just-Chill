@@ -236,7 +236,7 @@ private fun AddTransactionScreenContent(
         AccountPickerSheet(
             accounts = state.accounts,
             selectedAccountId = state.accountSelected?.accountId?.value,
-            onSelected = { onIntent(AddTransactionIntent.OnAccountSelected(it)) },
+            onSelect = { onIntent(AddTransactionIntent.OnAccountSelected(it)) },
             onDismiss = { showAccountSheet = false },
             onAddNew = { onAddNewAccount() },
         )
@@ -246,7 +246,7 @@ private fun AddTransactionScreenContent(
         CategoryPickerSheet(
             categories = state.categories,
             selectedCategoryId = state.categorySelected?.categoryId?.value,
-            onSelected = { onIntent(AddTransactionIntent.OnCategorySelected(it)) },
+            onSelect = { onIntent(AddTransactionIntent.OnCategorySelected(it)) },
             onAddNew = { onAddNewCategory() },
             onDismiss = { showCategorySheet = false },
         )

@@ -38,7 +38,7 @@ import com.emm.justchill.core.theme.LocalEmmType
 @Composable
 fun ToggleIncomeExpense(
     selected: TransactionType,
-    onSelected: (TransactionType) -> Unit,
+    onSelect: (TransactionType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
@@ -54,7 +54,7 @@ fun ToggleIncomeExpense(
         SegmentButton(
             label = "Ingresos",
             isSelected = selected == TransactionType.Income,
-            onClick = { onSelected(TransactionType.Income) },
+            onClick = { onSelect(TransactionType.Income) },
             modifier = Modifier.weight(1f),
         )
         Box(
@@ -66,7 +66,7 @@ fun ToggleIncomeExpense(
         SegmentButton(
             label = "Gastos",
             isSelected = selected == TransactionType.Spend,
-            onClick = { onSelected(TransactionType.Spend) },
+            onClick = { onSelect(TransactionType.Spend) },
             modifier = Modifier.weight(1f),
         )
     }
@@ -114,7 +114,7 @@ private fun ToggleIncomeExpensePreview() {
         ) {
             ToggleIncomeExpense(
                 selected = TransactionType.Income,
-                onSelected = {},
+                onSelect = {},
             )
         }
     }

@@ -24,8 +24,8 @@ import com.emm.justchill.core.theme.LocalEmmColors
 fun IconBtn(
     icon: ImageVector,
     onClick: () -> Unit,
-    tone: IconBtnTone = IconBtnTone.Neutral,
     modifier: Modifier = Modifier,
+    tone: IconBtnTone = IconBtnTone.Neutral,
 ) {
     val colors = LocalEmmColors.current
 

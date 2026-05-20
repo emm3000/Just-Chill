@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
  *
  * @param accounts          List of accounts to display.
  * @param selectedAccountId Currently selected account id (or null).
- * @param onSelected        Called when user taps an account row.
+ * @param onSelect       Called when user taps an account row.
  * @param onAddNew          When non-null, shows a dashed "+ Nueva cuenta" button.
  * @param onDismiss         Called to dismiss the sheet.
  */
@@ -64,7 +64,7 @@ import kotlinx.coroutines.launch
 fun AccountPickerSheet(
     accounts: List<Account>,
     selectedAccountId: String?,
-    onSelected: (Account) -> Unit,
+    onSelect: (Account) -> Unit,
     onDismiss: () -> Unit,
     onAddNew: (() -> Unit)? = null,
 ) {
@@ -145,7 +145,7 @@ fun AccountPickerSheet(
                         textTertiary = colors.textTertiary,
                         activeBg = colors.surface1,
                         onClick = {
-                            onSelected(account)
+                            onSelect(account)
                             onDismiss()
                         },
                     )

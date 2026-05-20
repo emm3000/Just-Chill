@@ -36,6 +36,7 @@ import com.emm.justchill.core.theme.LocalEmmType
 fun MetaRow(
     label: String,
     value: String,
+    modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     valueColor: Color? = null,
     last: Boolean = false,
@@ -45,11 +46,11 @@ fun MetaRow(
     val type = LocalEmmType.current
 
     val rowModifier = if (onClick != null) {
-        Modifier
+        modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
     } else {
-        Modifier.fillMaxWidth()
+        modifier.fillMaxWidth()
     }
 
     Column(modifier = rowModifier) {

@@ -73,7 +73,7 @@ import org.koin.androidx.compose.koinViewModel
 fun AddCategoryScreen(
     onBack: () -> Unit,
     snackbarHostState: SnackbarHostState,
-    onCategorySaved: (Category) -> Unit = {},
+    onCategorySave: (Category) -> Unit = {},
     vm: AddCategoryViewModel = koinViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -88,7 +88,7 @@ fun AddCategoryScreen(
             when (effect) {
                 is AddCategoryEffect.CategorySaved -> {
                     keyboard?.hide()
-                    onCategorySaved(effect.created)
+                    onCategorySave(effect.created)
                 }
 
                 is AddCategoryEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
@@ -169,7 +169,7 @@ private fun AddCategoryContent(
                     value = state.name,
                     onValueChange = { onIntent(AddCategoryIntent.OnNameChange(it)) },
                     focusRequester = nameFocus,
-                    onImeDone = { attemptSave() },
+                    onImeAction = { attemptSave() },
                 )
             }
 
@@ -305,7 +305,7 @@ private fun NameInput(
     value: String,
     onValueChange: (String) -> Unit,
     focusRequester: FocusRequester,
-    onImeDone: () -> Unit,
+    onImeAction: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
 
@@ -321,7 +321,7 @@ private fun NameInput(
         ),
         cursorBrush = SolidColor(colors.accent),
         singleLine = true,
-        keyboardActions = KeyboardActions(onDone = { onImeDone() }),
+        keyboardActions = KeyboardActions(onDone = { onImeAction() }),
         modifier = Modifier
             .fillMaxWidth()
             .focusRequester(focusRequester)

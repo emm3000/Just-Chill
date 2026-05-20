@@ -47,7 +47,7 @@ import com.emm.justchill.hh.transaction.SignChip
 
 @Composable
 fun SelectCategoryScreen(
-    onCategorySelected: (SelectableCategory) -> Unit,
+    onCategorySelect: (SelectableCategory) -> Unit,
     onBack: () -> Unit,
     onNewCategory: (CategoryType, String) -> Unit,
     onValueChange: (String) -> Unit,
@@ -56,12 +56,13 @@ fun SelectCategoryScreen(
     selectedType: CategoryType,
     activeList: List<SelectableCategory>,
     activeCountTotal: Int,
+    modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(colors.bg)
             .modalScreenInsets(),
@@ -104,7 +105,7 @@ fun SelectCategoryScreen(
                     onCreate = { onNewCategory(selectedType, value.trim()) },
                 )
             } else {
-                CategoryList(activeList, onCategorySelected)
+                CategoryList(activeList, onCategorySelect)
             }
         }
 
@@ -337,7 +338,7 @@ private fun SelectCategoryScreenPreview() {
             onTypeChange = {},
             onNewCategory = { _, _ -> },
             value = "",
-            onCategorySelected = {},
+            onCategorySelect = {},
         )
     }
 }

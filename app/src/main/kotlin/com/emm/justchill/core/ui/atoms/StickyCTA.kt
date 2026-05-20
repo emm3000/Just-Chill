@@ -39,6 +39,7 @@ import com.emm.justchill.core.theme.PlexMonoFontFamily
 @Composable
 fun StickyCTA(
     label: String,
+    modifier: Modifier = Modifier,
     sublabel: String? = null,
     inlineSublabel: Boolean = false,
     tone: CtaTone = CtaTone.Accent,
@@ -56,7 +57,7 @@ fun StickyCTA(
         else -> colors.textPrimary to colors.bg
     }
 
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Hairline()
 
         Box(

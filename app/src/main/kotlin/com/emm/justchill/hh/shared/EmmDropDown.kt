@@ -43,7 +43,7 @@ fun <T> EmmDropDown(
     textPlaceholder: String,
     items: List<T>,
     itemSelected: T?,
-    onItemSelected: (T) -> Unit,
+    onItemSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -131,7 +131,7 @@ fun <T> EmmDropDown(
                             )
                         },
                         onClick = {
-                            onItemSelected(item)
+                            onItemSelect(item)
                             setIsExpanded(false)
                         },
                     )
@@ -156,7 +156,7 @@ private fun DropDownContainerPreview() {
                     ("random"),
                     ("random"),
                 ),
-                onItemSelected = {},
+                onItemSelect = {},
                 itemSelected = "random322",
                 modifier = Modifier.fillMaxWidth(),
             )

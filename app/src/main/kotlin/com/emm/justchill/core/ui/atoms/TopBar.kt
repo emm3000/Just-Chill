@@ -24,11 +24,16 @@ import com.emm.justchill.core.theme.LocalEmmColors
  * or apply background on the parent scaffold.
  */
 @Composable
-fun JcTopBar(title: String, left: @Composable (() -> Unit)? = null, right: @Composable (() -> Unit)? = null) {
+fun JcTopBar(
+    title: String,
+    modifier: Modifier = Modifier,
+    left: @Composable (() -> Unit)? = null,
+    right: @Composable (() -> Unit)? = null,
+) {
     val colors = LocalEmmColors.current
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(64.dp)
             .padding(horizontal = 12.dp, vertical = 10.dp),

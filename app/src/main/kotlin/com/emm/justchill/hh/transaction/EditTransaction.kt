@@ -218,7 +218,7 @@ private fun EditTransactionContent(
         AccountPickerSheet(
             accounts = state.accounts,
             selectedAccountId = state.accountSelected?.accountId?.value,
-            onSelected = { onIntent(EditTransactionIntent.OnAccountSelected(it)) },
+            onSelect = { onIntent(EditTransactionIntent.OnAccountSelected(it)) },
             onDismiss = { showAccountSheet = false },
             onAddNew = { onAddNewAccount() },
         )
@@ -228,7 +228,7 @@ private fun EditTransactionContent(
         CategoryPickerSheet(
             categories = state.categories,
             selectedCategoryId = state.categorySelected?.categoryId?.value,
-            onSelected = { onIntent(EditTransactionIntent.OnCategorySelected(it)) },
+            onSelect = { onIntent(EditTransactionIntent.OnCategorySelected(it)) },
             onAddNew = { showCategorySheet = false },
             onDismiss = { showCategorySheet = false },
         )

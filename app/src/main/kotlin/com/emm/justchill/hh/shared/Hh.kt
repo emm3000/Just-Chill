@@ -101,7 +101,7 @@ import java.time.format.DateTimeFormatter
 private val START_TAB: BottomBarRoute = SeeTransactionRoute
 
 @Composable
-fun Hh() {
+fun Hh(modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val appPrefs: AppPreferences = koinInject()
     val startRoute: NavKey = remember {
@@ -119,7 +119,7 @@ fun Hh() {
     val showBottomBar: Boolean = currentRoute is BottomBarRoute
 
     Scaffold(
-        modifier = Modifier.background(colors.bg),
+        modifier = modifier.background(colors.bg),
         snackbarHost = { EmmSnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             AnimatedVisibility(
@@ -352,7 +352,7 @@ fun Hh() {
                     AddCategoryScreen(
                         onBack = { backStack.removeLastOrNull() },
                         snackbarHostState = snackbarHostState,
-                        onCategorySaved = { created ->
+                        onCategorySave = { created ->
                             if (key.propagateToTransaction) {
                                 pendingCategory = SelectableCategory(
                                     categoryId = created.categoryId,
@@ -385,7 +385,7 @@ fun Hh() {
                     val vm: SelectCategoryViewModel = koinViewModel()
                     val selectState by vm.state.collectAsStateWithLifecycle()
                     SelectCategoryScreen(
-                        onCategorySelected = {
+                        onCategorySelect = {
                             pendingCategory = it
                             backStack.removeLastOrNull()
                         },

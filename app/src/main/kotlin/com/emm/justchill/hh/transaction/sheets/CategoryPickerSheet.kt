@@ -56,7 +56,7 @@ import com.emm.justchill.hh.transaction.SelectableCategory
  *
  * @param categories        Full list of available categories.
  * @param selectedCategoryId Currently selected category id (or null).
- * @param onSelected        Called when user taps a category row.
+ * @param onSelect       Called when user taps a category row.
  * @param onAddNew          Called when user taps "+ Nueva categoría".
  * @param onDismiss         Called to dismiss the sheet.
  */
@@ -65,7 +65,7 @@ import com.emm.justchill.hh.transaction.SelectableCategory
 fun CategoryPickerSheet(
     categories: List<SelectableCategory>,
     selectedCategoryId: String?,
-    onSelected: (SelectableCategory) -> Unit,
+    onSelect: (SelectableCategory) -> Unit,
     onAddNew: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -195,7 +195,7 @@ fun CategoryPickerSheet(
                         textPrimary = colors.textPrimary,
                         activeBg = colors.surface1,
                         onClick = {
-                            onSelected(category)
+                            onSelect(category)
                             onDismiss()
                         },
                     )

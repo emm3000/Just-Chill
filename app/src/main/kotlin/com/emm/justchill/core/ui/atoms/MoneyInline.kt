@@ -26,9 +26,9 @@ import kotlin.math.abs
 @Composable
 fun MoneyInline(
     value: Double,
+    modifier: Modifier = Modifier,
     color: Color? = null,
     weight: FontWeight = FontWeight.Medium,
-    modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
 

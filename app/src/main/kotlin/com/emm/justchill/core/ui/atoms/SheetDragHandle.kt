@@ -17,12 +17,12 @@ import com.emm.justchill.core.theme.LocalEmmRadii
  * Color: borderFocus (~hairline2 in design).
  */
 @Composable
-fun SheetDragHandle() {
+fun SheetDragHandle(modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(top = 8.dp, bottom = 4.dp),
         contentAlignment = Alignment.Center,

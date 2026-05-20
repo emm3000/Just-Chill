@@ -13,7 +13,7 @@ import com.emm.justchill.core.theme.LocalEmmType
  * Default color: [EmmColors.textTertiary].
  */
 @Composable
-fun Eyebrow(text: String, color: Color? = null, modifier: Modifier = Modifier) {
+fun Eyebrow(text: String, modifier: Modifier = Modifier, color: Color? = null) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
 

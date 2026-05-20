@@ -32,6 +32,7 @@ import kotlin.math.abs
 @Composable
 fun AmountHero(
     value: Double,
+    modifier: Modifier = Modifier,
     size: TextUnit = 56.sp,
     tone: AmountTone = AmountTone.Neutral,
     withDecimals: Boolean = true,
@@ -90,7 +91,7 @@ fun AmountHero(
         }
     }
 
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             text = prefix,
             style = prefixStyle,

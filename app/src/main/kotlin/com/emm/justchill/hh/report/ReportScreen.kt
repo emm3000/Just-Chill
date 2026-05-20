@@ -44,10 +44,10 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun ReportScreen(
+    modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     onAddTransaction: () -> Unit = {},
     vm: ReportViewModel = koinViewModel(),
-    modifier: Modifier = Modifier,
 ) {
     val state: ReportUiState by vm.state.collectAsStateWithLifecycle()
     ReportScreen(
@@ -57,7 +57,7 @@ fun ReportScreen(
         onPreviousMonth = { vm.onIntent(ReportIntent.PreviousMonth) },
         onNextMonth = { vm.onIntent(ReportIntent.NextMonth) },
         onJumpToCurrent = { vm.onIntent(ReportIntent.JumpToCurrent) },
-        onTypeSelected = { vm.onIntent(ReportIntent.SelectType(it)) },
+        onTypeSelect = { vm.onIntent(ReportIntent.SelectType(it)) },
         modifier = modifier,
     )
 }
@@ -70,7 +70,7 @@ private fun ReportScreen(
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onJumpToCurrent: () -> Unit,
-    onTypeSelected: (TransactionType) -> Unit,
+    onTypeSelect: (TransactionType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
@@ -102,7 +102,7 @@ private fun ReportScreen(
 
             ToggleIncomeExpense(
                 selected = state.selectedType,
-                onSelected = onTypeSelected,
+                onSelect = onTypeSelect,
             )
 
             if (state.isEmpty) {
@@ -306,7 +306,7 @@ private fun ReportScreenPreview() {
             onPreviousMonth = {},
             onNextMonth = {},
             onJumpToCurrent = {},
-            onTypeSelected = {},
+            onTypeSelect = {},
         )
     }
 }
@@ -327,7 +327,7 @@ private fun ReportScreenEmptyPreview() {
             onPreviousMonth = {},
             onNextMonth = {},
             onJumpToCurrent = {},
-            onTypeSelected = {},
+            onTypeSelect = {},
         )
     }
 }

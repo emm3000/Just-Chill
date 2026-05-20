@@ -32,8 +32,8 @@ import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 
 @Composable
-fun EmmSnackbarHost(hostState: SnackbarHostState) {
-    SnackbarHost(hostState = hostState) { data ->
+fun EmmSnackbarHost(hostState: SnackbarHostState, modifier: Modifier = Modifier) {
+    SnackbarHost(modifier = modifier, hostState = hostState) { data ->
         EmmSnackbarBody(data)
     }
 }
