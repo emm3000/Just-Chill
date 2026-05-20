@@ -199,7 +199,7 @@ private fun AddTransactionScreenContent(
                     eyebrow = "CUENTA",
                     value = state.accountSelected?.name ?: "—",
                     dotColor = state.accountSelected?.let {
-                        accountChipDotColor(it.name, colors)
+                        com.emm.justchill.hh.account.accountDotColor(it.name, colors)
                     },
                     onClick = { showAccountSheet = true },
                     modifier = Modifier.weight(1f),
@@ -596,28 +596,6 @@ private fun NoteFilledCard(
     }
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/**
- * Maps a well-known account name to a dot color for the chip.
- * Mirrors [accountSwatchColor] but is internal to the screen.
- */
-private fun accountChipDotColor(
-    name: String,
-    colors: com.emm.justchill.core.theme.EmmColors,
-): Color {
-    val lower = name.lowercase()
-    return when {
-        "yape" in lower -> colors.catMauve
-        "plin" in lower -> colors.catSage
-        "bcp" in lower -> colors.catSlate
-        "bbva" in lower -> colors.catTerracotta
-        "interbank" in lower -> colors.catOchre
-        "scotiabank" in lower -> colors.catMauve
-        "efectivo" in lower -> colors.catOchre
-        else -> colors.catGraphite
-    }
-}
 
 // ─── Preview ─────────────────────────────────────────────────────────────────
 

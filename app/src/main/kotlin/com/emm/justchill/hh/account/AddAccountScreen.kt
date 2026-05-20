@@ -1,51 +1,69 @@
 package com.emm.justchill.hh.account
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountBalance
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.AttachMoney
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material.icons.outlined.CreditCard
+import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.account.AccountType
 import com.emm.domain.account.Currency
-import com.emm.justchill.components.EmmButton
-import com.emm.justchill.components.EmmTextInput
+import com.emm.justchill.core.theme.EmmColors
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmSpacing
-import com.emm.justchill.core.theme.LocalEmmType
-import com.emm.justchill.core.ui.modalScreenInsets
+import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.theme.PlexMonoFontFamily
+import com.emm.justchill.core.ui.atoms.CtaTone
+import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.atoms.IconBtn
+import com.emm.justchill.core.ui.atoms.JcTopBar
+import com.emm.justchill.core.ui.atoms.StickyCTA
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -79,236 +97,403 @@ private fun AddAccountContent(
     onBack: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg)
-            .modalScreenInsets(),
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .imePadding(),
     ) {
+        // ── Top bar ────────────────────────────────────────────────
+        JcTopBar(
+            title = "Nueva cuenta",
+            left = {
+                IconBtn(
+                    icon = Icons.Outlined.Close,
+                    onClick = onBack,
+                )
+            },
+        )
 
-        TopBar(title = "Nueva cuenta", onClose = onBack)
-
+        // ── Scrollable form ────────────────────────────────────────
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = spacing.s4),
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
+            Spacer(Modifier.height(4.dp))
 
-            Spacer(Modifier.height(spacing.s6))
+            // ATAJOS PERUANOS ─────────────────────────────────────
+            Section(eyebrow = "ATAJOS PERUANOS") {
+                ShortcutsRow(
+                    selectedName = state.name,
+                    onSelect = { shortcut ->
+                        onIntent(AddAccountIntent.OnNameChange(shortcut.label))
+                        onIntent(AddAccountIntent.OnTypeChange(shortcut.type))
+                    },
+                )
+            }
 
-            Text(
-                text = "Crea una nueva cuenta para organizar tus transacciones.",
-                style = type.bodyM,
-                color = colors.textSecondary,
+            // NOMBRE ──────────────────────────────────────────────
+            Section(eyebrow = "NOMBRE") {
+                NameInput(
+                    value = state.name,
+                    onValueChange = { onIntent(AddAccountIntent.OnNameChange(it)) },
+                )
+            }
+
+            // TIPO ────────────────────────────────────────────────
+            Section(eyebrow = "TIPO") {
+                TypeGrid(
+                    selected = state.selectedType,
+                    onSelect = { onIntent(AddAccountIntent.OnTypeChange(it)) },
+                )
+            }
+
+            // MONEDA ──────────────────────────────────────────────
+            Section(eyebrow = "MONEDA") {
+                CurrencyRow(
+                    selected = state.selectedCurrency,
+                    onSelect = { onIntent(AddAccountIntent.OnCurrencyChange(it)) },
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+        }
+
+        // ── Sticky CTA ─────────────────────────────────────────────
+        StickyCTA(
+            label = "Crear cuenta",
+            tone = CtaTone.Accent,
+            enabled = state.isEnabled,
+            onClick = { onIntent(AddAccountIntent.OnSave) },
+        )
+    }
+}
+
+// ── Section wrapper ────────────────────────────────────────────────
+
+@Composable
+private fun Section(eyebrow: String, content: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Eyebrow(text = eyebrow)
+        content()
+    }
+}
+
+// ── Atajos peruanos ────────────────────────────────────────────────
+
+private data class Shortcut(
+    val label: String,
+    val type: AccountType,
+    val dotPicker: (EmmColors) -> Color,
+)
+
+private val PERUVIAN_SHORTCUTS = listOf(
+    Shortcut("Yape", AccountType.Wallet) { it.catMauve },
+    Shortcut("Plin", AccountType.Wallet) { it.catSage },
+    Shortcut("BCP", AccountType.Bank) { it.catSlate },
+    Shortcut("BBVA", AccountType.Bank) { it.catTerracotta },
+    Shortcut("Interbank", AccountType.Bank) { it.catOchre },
+    Shortcut("Scotiabank", AccountType.Bank) { it.catMauve },
+    Shortcut("Efectivo", AccountType.Cash) { it.catOchre },
+)
+
+@Composable
+private fun ShortcutsRow(
+    selectedName: String,
+    onSelect: (Shortcut) -> Unit,
+) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(PERUVIAN_SHORTCUTS.size) { idx ->
+            val s = PERUVIAN_SHORTCUTS[idx]
+            ShortcutChip(
+                label = s.label,
+                dotColor = s.dotPicker(LocalEmmColors.current),
+                selected = selectedName == s.label,
+                onClick = { onSelect(s) },
             )
-
-            Spacer(Modifier.height(spacing.s8))
-
-            EmmTextInput(
-                value = state.name,
-                onValueChange = { onIntent(AddAccountIntent.OnNameChange(it)) },
-                label = "NOMBRE",
-                placeholder = "ejm. Gasto diario",
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(Modifier.height(spacing.s4))
-
-            AccountTypeDropdown(
-                selected = state.selectedType,
-                onSelect = { onIntent(AddAccountIntent.OnTypeChange(it)) },
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(Modifier.height(spacing.s4))
-
-            CurrencyDropdown(
-                selected = state.selectedCurrency,
-                onSelect = { onIntent(AddAccountIntent.OnCurrencyChange(it)) },
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(Modifier.height(spacing.s8))
-
-            EmmButton(
-                text = "Crear cuenta",
-                onClick = { onIntent(AddAccountIntent.OnSave) },
-                enabled = state.isEnabled,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(Modifier.height(spacing.s4))
         }
     }
 }
 
 @Composable
-private fun TopBar(title: String, onClose: () -> Unit) {
+private fun ShortcutChip(
+    label: String,
+    dotColor: Color,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
+    val shape = RoundedCornerShape(999.dp)
+
+    val bgColor = if (selected) colors.surface3 else colors.surface1
+    val borderColor = if (selected) colors.textPrimary else colors.border
+    val textColor = if (selected) colors.textPrimary else colors.textSecondary
 
     Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing.s2, vertical = spacing.s2),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = onClose) {
-            Icon(
-                imageVector = Icons.Outlined.Close,
-                contentDescription = "Cerrar",
-                tint = colors.textPrimary,
-                modifier = Modifier.size(24.dp),
+            .clip(shape)
+            .background(bgColor)
+            .border(1.dp, borderColor, shape)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
             )
-        }
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(6.dp)
+                .clip(CircleShape)
+                .background(dotColor),
+        )
         Text(
-            text = title,
-            style = type.titleL,
+            text = label,
+            fontSize = 13.sp,
+            fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
+            fontFamily = InterFontFamily,
+            color = textColor,
+            letterSpacing = (-0.06).sp,
+        )
+    }
+}
+
+// ── Nombre input ───────────────────────────────────────────────────
+
+@Composable
+private fun NameInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+) {
+    val colors = LocalEmmColors.current
+
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        textStyle = TextStyle(
             color = colors.textPrimary,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.W500,
+            fontFamily = InterFontFamily,
+            letterSpacing = (-0.18).sp,
+        ),
+        cursorBrush = SolidColor(colors.accent),
+        singleLine = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .drawBehind {
+                val strokeY = size.height
+                drawLine(
+                    color = colors.border,
+                    start = Offset(0f, strokeY),
+                    end = Offset(size.width, strokeY),
+                    strokeWidth = 1f,
+                )
+            }
+            .padding(vertical = 8.dp),
+        decorationBox = { inner ->
+            Box {
+                if (value.isEmpty()) {
+                    Text(
+                        text = "ejm. Yape",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.W400,
+                        fontFamily = InterFontFamily,
+                        color = colors.textTertiary,
+                    )
+                }
+                inner()
+            }
+        },
+    )
+}
+
+// ── Tipo grid 2x2 ──────────────────────────────────────────────────
+
+private data class TypeOption(
+    val label: String,
+    val type: AccountType,
+    val icon: ImageVector,
+)
+
+private val TYPE_OPTIONS = listOf(
+    TypeOption("Billetera", AccountType.Wallet, Icons.Outlined.AccountBalanceWallet),
+    TypeOption("Banco", AccountType.Bank, Icons.Outlined.AccountBalance),
+    TypeOption("Tarjeta", AccountType.CreditCard, Icons.Outlined.CreditCard),
+    TypeOption("Efectivo", AccountType.Cash, Icons.Outlined.Payments),
+)
+
+@Composable
+private fun TypeGrid(
+    selected: AccountType,
+    onSelect: (AccountType) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        TYPE_OPTIONS.chunked(2).forEach { pair ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                pair.forEach { option ->
+                    TypeCell(
+                        label = option.label,
+                        icon = option.icon,
+                        selected = selected == option.type,
+                        onClick = { onSelect(option.type) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TypeCell(
+    label: String,
+    icon: ImageVector,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalEmmColors.current
+    val shape = RoundedCornerShape(12.dp)
+
+    val borderColor = if (selected) colors.textPrimary else colors.border
+    val bgColor = if (selected) colors.surface3 else colors.surface1
+    val tint = if (selected) colors.textPrimary else colors.textSecondary
+
+    Row(
+        modifier = modifier
+            .height(52.dp)
+            .clip(shape)
+            .background(bgColor)
+            .border(1.dp, borderColor, shape)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(18.dp),
+        )
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
+            fontFamily = InterFontFamily,
+            color = tint,
+        )
+    }
+}
+
+// ── Moneda row ─────────────────────────────────────────────────────
+
+@Composable
+private fun CurrencyRow(
+    selected: Currency,
+    onSelect: (Currency) -> Unit,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        CurrencyCell(
+            symbol = "S/",
+            label = "Soles",
+            selected = selected == Currency.PEN,
+            onClick = { onSelect(Currency.PEN) },
+            modifier = Modifier.weight(1f),
+        )
+        CurrencyCell(
+            symbol = "$",
+            label = "Dólares",
+            selected = selected == Currency.USD,
+            onClick = { onSelect(Currency.USD) },
             modifier = Modifier.weight(1f),
         )
     }
 }
 
 @Composable
-private fun AccountTypeDropdown(
-    selected: AccountType,
-    onSelect: (AccountType) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val entries = AccountType.entries
-    DropdownField(
-        label = "TIPO DE CUENTA",
-        value = selected.displayName(),
-        options = entries.map { it.displayName() },
-        onSelect = { onSelect(entries[it]) },
-        modifier = modifier,
-    )
-}
-
-@Composable
-private fun CurrencyDropdown(
-    selected: Currency,
-    onSelect: (Currency) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val entries = Currency.entries
-    DropdownField(
-        label = "MONEDA",
-        value = "${selected.name} (${selected.symbol})",
-        options = entries.map { "${it.name} (${it.symbol})" },
-        onSelect = { onSelect(entries[it]) },
-        modifier = modifier,
-    )
-}
-
-private fun AccountType.displayName(): String = when (this) {
-    AccountType.Bank -> "Banco"
-    AccountType.Cash -> "Efectivo"
-    AccountType.CreditCard -> "Tarjeta de crédito"
-    AccountType.Investment -> "Inversión"
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DropdownField(
+private fun CurrencyCell(
+    symbol: String,
     label: String,
-    value: String,
-    options: List<String>,
-    onSelect: (Int) -> Unit,
+    selected: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
-    var expanded by remember { mutableStateOf(false) }
-    val chevronRotation by animateFloatAsState(
-        targetValue = if (expanded) 180f else 0f,
-        label = "chevron",
-    )
+    val shape = RoundedCornerShape(12.dp)
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it },
-        modifier = modifier,
+    val borderColor = if (selected) colors.textPrimary else colors.border
+    val bgColor = if (selected) colors.surface3 else colors.surface1
+    val fgColor = if (selected) colors.textPrimary else colors.textTertiary
+
+    Row(
+        modifier = modifier
+            .height(52.dp)
+            .clip(shape)
+            .background(bgColor)
+            .border(1.dp, borderColor, shape)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
     ) {
-        Column(
-            modifier = Modifier
-                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                .fillMaxWidth(),
-        ) {
-            Text(
-                text = label,
-                style = type.labelM,
-                color = colors.textSecondary,
-            )
-            Spacer(Modifier.height(spacing.s2))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .drawBehind {
-                        drawLine(
-                            color = colors.border,
-                            start = Offset(0f, size.height),
-                            end = Offset(size.width, size.height),
-                            strokeWidth = 1f,
-                        )
-                    }
-                    .padding(vertical = spacing.s3),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = value,
-                    style = type.bodyL,
-                    color = colors.textPrimary,
-                    modifier = Modifier.weight(1f),
-                )
-                Icon(
-                    imageVector = Icons.Outlined.KeyboardArrowDown,
-                    contentDescription = null,
-                    tint = colors.textSecondary,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .rotate(chevronRotation),
-                )
-            }
-        }
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            containerColor = colors.surface2,
-        ) {
-            options.forEachIndexed { index, optionText ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = optionText,
-                            style = type.bodyL,
-                            color = colors.textPrimary,
-                        )
-                    },
-                    onClick = {
-                        onSelect(index)
-                        expanded = false
-                    },
-                )
-            }
-        }
+        Text(
+            text = symbol,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.W600,
+            fontFamily = PlexMonoFontFamily,
+            color = fgColor,
+        )
+        Spacer(Modifier.size(6.dp))
+        Text(
+            text = "·",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.W600,
+            color = fgColor.copy(alpha = 0.5f),
+        )
+        Spacer(Modifier.size(6.dp))
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
+            fontFamily = InterFontFamily,
+            color = fgColor,
+        )
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 700)
+// ── Preview ────────────────────────────────────────────────────────
+
+@Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 800)
 @Composable
 private fun AddAccountScreenPreview() {
     EmmTheme {
         AddAccountContent(
-            state = AddAccountUiState(name = "Gasto diario", isEnabled = true),
+            state = AddAccountUiState(
+                name = "Yape",
+                selectedType = AccountType.Wallet,
+                selectedCurrency = Currency.PEN,
+                isEnabled = true,
+            ),
             onIntent = {},
         )
     }

@@ -1,6 +1,9 @@
 package com.emm.justchill.hh.account
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,22 +18,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Category
-import androidx.compose.material.icons.outlined.CreditCard
+import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.Payments
-import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -40,11 +40,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountType
 import com.emm.domain.shared.AccountId
@@ -52,9 +54,10 @@ import com.emm.justchill.components.EmmButton
 import com.emm.justchill.components.EmmButtonVariant
 import com.emm.justchill.components.EmmTextInput
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmSpacing
-import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.ui.atoms.Hairline
 
 @Composable
 fun AccountsScreen(
@@ -65,48 +68,60 @@ fun AccountsScreen(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
 
-    Column(modifier = modifier.background(colors.bg).statusBarsPadding()) {
-
+    Column(
+        modifier = modifier
+            .background(colors.bg)
+            .statusBarsPadding(),
+    ) {
+        // ── Header ─────────────────────────────────────────────────
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    start = spacing.s4,
-                    end = spacing.s4,
-                    top = spacing.s6,
-                    bottom = spacing.s4,
-                ),
+                .padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "Cuentas",
-                style = type.headlineL,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.W700,
+                fontFamily = InterFontFamily,
                 color = colors.textPrimary,
+                letterSpacing = (-0.4).sp,
                 modifier = Modifier.weight(1f),
             )
-            AddMenu(
-                onAddAccount = addAccount,
-                onAddCategory = addCategory,
-            )
+            NewAccountButton(onClick = addAccount)
         }
 
+        Hairline()
+
+        // ── List or empty state ────────────────────────────────────
         if (state.accounts.isEmpty()) {
-            EmptyState(onCreate = addAccount, modifier = Modifier.fillMaxSize())
-            return@Column
-        }
-
-        LazyColumn(contentPadding = PaddingValues(bottom = spacing.s8)) {
-            items(state.accounts, key = { it.accountId.value }) { account ->
-                AccountRow(
-                    account = account,
-                    onEdit = { onIntent(AccountsIntent.OnEditClick(account)) },
-                    onDelete = { onIntent(AccountsIntent.OnDeleteClick(account)) },
-                )
+            EmptyState(
+                onCreate = addAccount,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f),
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(top = 4.dp, bottom = 12.dp),
+            ) {
+                items(state.accounts, key = { it.accountId.value }) { account ->
+                    AccountRow(
+                        account = account,
+                        movementCount = state.movementCounts[account.accountId] ?: 0,
+                        onEdit = { onIntent(AccountsIntent.OnEditClick(account)) },
+                        onDelete = { onIntent(AccountsIntent.OnDeleteClick(account)) },
+                    )
+                }
             }
         }
+
+        // ── Bottom: manage categories ──────────────────────────────
+        Hairline()
+        ManageCategoriesRow(onClick = addCategory)
     }
 
     state.pendingEdit?.let {
@@ -127,60 +142,141 @@ fun AccountsScreen(
     }
 }
 
+// ── Header pill button: "+ Nueva" ─────────────────────────────────
+
+@Composable
+private fun NewAccountButton(onClick: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val shape = RoundedCornerShape(999.dp)
+
+    Row(
+        modifier = Modifier
+            .clip(shape)
+            .background(colors.surface3)
+            .border(1.dp, colors.borderFocus, shape)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(horizontal = 12.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Add,
+            contentDescription = null,
+            tint = colors.textPrimary,
+            modifier = Modifier.size(14.dp),
+        )
+        Text(
+            text = "Nueva",
+            fontSize = 13.sp,
+            fontWeight = FontWeight.W600,
+            fontFamily = InterFontFamily,
+            color = colors.textPrimary,
+        )
+    }
+}
+
+// ── Account row ────────────────────────────────────────────────────
+
 @Composable
 private fun AccountRow(
     account: Account,
+    movementCount: Int,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing.s4, vertical = spacing.s4)
-            .drawBehind {
-                drawLine(
-                    color = colors.border,
-                    start = Offset(0f, size.height),
-                    end = Offset(size.width, size.height),
-                    strokeWidth = 1f,
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            AccountIconTile(
+                icon = account.type.toIcon(),
+                tintColor = accountDotColor(account.name, colors),
+            )
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = account.name,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.W600,
+                    fontFamily = InterFontFamily,
+                    color = colors.textPrimary,
+                    letterSpacing = (-0.1).sp,
                 )
-            },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(spacing.s4),
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = "${account.type.toLabel()} · ${formatMovements(movementCount)}",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.W400,
+                    fontFamily = InterFontFamily,
+                    color = colors.textTertiary,
+                )
+            }
+
+            AccountRowMenu(onEdit = onEdit, onDelete = onDelete)
+        }
+        Hairline()
+    }
+}
+
+private fun formatMovements(count: Int): String = when (count) {
+    0 -> "Sin movimientos"
+    1 -> "1 movimiento"
+    else -> "$count movimientos"
+}
+
+@Composable
+private fun AccountIconTile(icon: ImageVector, tintColor: Color) {
+    val colors = LocalEmmColors.current
+    val shape = RoundedCornerShape(8.dp)
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(34.dp)
+            .clip(shape)
+            .background(tintColor.copy(alpha = 0.18f))
+            .border(1.dp, tintColor.copy(alpha = 0.32f), shape),
     ) {
         Icon(
-            imageVector = account.type.toIcon(),
+            imageVector = icon,
             contentDescription = null,
-            tint = colors.textPrimary,
-            modifier = Modifier.size(24.dp),
+            tint = tintColor,
+            modifier = Modifier.size(16.dp),
         )
-        Text(
-            text = account.name,
-            style = type.bodyL,
-            color = colors.textPrimary,
-            modifier = Modifier.weight(1f),
-        )
-        AccountRowMenu(onEdit = onEdit, onDelete = onDelete)
     }
 }
 
 @Composable
 private fun AccountRowMenu(onEdit: () -> Unit, onDelete: () -> Unit) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
     var expanded by remember { mutableStateOf(false) }
 
     Box {
-        IconButton(onClick = { expanded = !expanded }) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(32.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { expanded = !expanded },
+                ),
+        ) {
             Icon(
                 imageVector = Icons.Outlined.MoreVert,
                 contentDescription = "Opciones de cuenta",
-                tint = colors.textPrimary,
-                modifier = Modifier.size(22.dp),
+                tint = colors.textTertiary,
+                modifier = Modifier.size(18.dp),
             )
         }
         DropdownMenu(
@@ -189,7 +285,14 @@ private fun AccountRowMenu(onEdit: () -> Unit, onDelete: () -> Unit) {
             containerColor = colors.surface2,
         ) {
             DropdownMenuItem(
-                text = { Text("Editar", style = type.bodyL, color = colors.textPrimary) },
+                text = {
+                    Text(
+                        text = "Editar",
+                        fontSize = 14.sp,
+                        fontFamily = InterFontFamily,
+                        color = colors.textPrimary,
+                    )
+                },
                 leadingIcon = { MenuIcon(Icons.Outlined.Edit) },
                 onClick = {
                     expanded = false
@@ -197,7 +300,14 @@ private fun AccountRowMenu(onEdit: () -> Unit, onDelete: () -> Unit) {
                 },
             )
             DropdownMenuItem(
-                text = { Text("Borrar", style = type.bodyL, color = colors.danger) },
+                text = {
+                    Text(
+                        text = "Borrar",
+                        fontSize = 14.sp,
+                        fontFamily = InterFontFamily,
+                        color = colors.danger,
+                    )
+                },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Delete,
@@ -214,6 +324,61 @@ private fun AccountRowMenu(onEdit: () -> Unit, onDelete: () -> Unit) {
         }
     }
 }
+
+// ── Bottom: Gestionar categorías ──────────────────────────────────
+
+@Composable
+private fun ManageCategoriesRow(onClick: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val radii = LocalEmmRadii.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(28.dp)
+                .clip(radii.rS)
+                .background(colors.surface2)
+                .border(1.dp, colors.border, radii.rS),
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Category,
+                contentDescription = null,
+                tint = colors.textSecondary,
+                modifier = Modifier.size(14.dp),
+            )
+        }
+
+        Text(
+            text = "Gestionar categorías",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.W500,
+            fontFamily = InterFontFamily,
+            color = colors.textPrimary,
+            modifier = Modifier.weight(1f),
+        )
+
+        Icon(
+            imageVector = Icons.Outlined.ChevronRight,
+            contentDescription = null,
+            tint = colors.textTertiary,
+            modifier = Modifier.size(16.dp),
+        )
+    }
+}
+
+// ── Dialogs (preserved from previous version) ─────────────────────
 
 @Composable
 private fun EditAccountDialog(
@@ -235,14 +400,10 @@ private fun EditAccountDialog(
             )
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text("Guardar")
-            }
+            TextButton(onClick = onConfirm) { Text("Guardar") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
-            }
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
         },
     )
 }
@@ -264,51 +425,9 @@ private fun DeleteAccountDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
-            }
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
         },
     )
-}
-
-@Composable
-private fun AddMenu(onAddAccount: () -> Unit, onAddCategory: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        IconButton(onClick = { expanded = !expanded }) {
-            Icon(
-                imageVector = Icons.Outlined.MoreVert,
-                contentDescription = "Más opciones",
-                tint = colors.textPrimary,
-                modifier = Modifier.size(22.dp),
-            )
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            containerColor = colors.surface2,
-        ) {
-            DropdownMenuItem(
-                text = { Text("Nueva cuenta", style = type.bodyL, color = colors.textPrimary) },
-                leadingIcon = { MenuIcon(Icons.Outlined.Add) },
-                onClick = {
-                    expanded = false
-                    onAddAccount()
-                },
-            )
-            DropdownMenuItem(
-                text = { Text("Nueva categoría", style = type.bodyL, color = colors.textPrimary) },
-                leadingIcon = { MenuIcon(Icons.Outlined.Category) },
-                onClick = {
-                    expanded = false
-                    onAddCategory()
-                },
-            )
-        }
-    }
 }
 
 @Composable
@@ -322,14 +441,14 @@ private fun MenuIcon(icon: ImageVector) {
     )
 }
 
+// ── Empty state ───────────────────────────────────────────────────
+
 @Composable
 private fun EmptyState(onCreate: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
 
     Column(
-        modifier = modifier.padding(horizontal = spacing.s4),
+        modifier = modifier.padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -339,19 +458,22 @@ private fun EmptyState(onCreate: () -> Unit, modifier: Modifier = Modifier) {
             tint = colors.textTertiary,
             modifier = Modifier.size(48.dp),
         )
-        Spacer(Modifier.height(spacing.s4))
+        Spacer(Modifier.height(14.dp))
         Text(
             text = "Aún sin cuentas",
-            style = type.headlineM,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.W600,
+            fontFamily = InterFontFamily,
             color = colors.textPrimary,
         )
-        Spacer(Modifier.height(spacing.s2))
+        Spacer(Modifier.height(6.dp))
         Text(
             text = "Crea una para empezar a registrar movimientos",
-            style = type.bodyM,
+            fontSize = 13.sp,
+            fontFamily = InterFontFamily,
             color = colors.textSecondary,
         )
-        Spacer(Modifier.height(spacing.s6))
+        Spacer(Modifier.height(20.dp))
         EmmButton(
             text = "Crear cuenta",
             onClick = onCreate,
@@ -360,16 +482,27 @@ private fun EmptyState(onCreate: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 800)
+// ── Preview ───────────────────────────────────────────────────────
+
+@Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 800)
 @Composable
 private fun AccountsScreenPreview() {
     EmmTheme {
         AccountsScreen(
             state = AccountsUiState(
                 accounts = listOf(
-                    Account(accountId = AccountId("1"), name = "Cuenta principal"),
-                    Account(accountId = AccountId("2"), name = "Ahorros"),
-                    Account(accountId = AccountId("3"), name = "Tarjeta de crédito"),
+                    Account(accountId = AccountId("1"), name = "Yape", type = AccountType.Wallet),
+                    Account(accountId = AccountId("2"), name = "Plin", type = AccountType.Wallet),
+                    Account(accountId = AccountId("3"), name = "BCP", type = AccountType.Bank),
+                    Account(accountId = AccountId("4"), name = "BBVA", type = AccountType.Bank),
+                    Account(accountId = AccountId("5"), name = "Cash", type = AccountType.Cash),
+                ),
+                movementCounts = mapOf(
+                    AccountId("1") to 32,
+                    AccountId("2") to 8,
+                    AccountId("3") to 14,
+                    AccountId("4") to 4,
+                    AccountId("5") to 11,
                 ),
             ),
             onIntent = {},
@@ -380,7 +513,7 @@ private fun AccountsScreenPreview() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 800)
+@Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 800)
 @Composable
 private fun AccountsScreenEmptyPreview() {
     EmmTheme {
@@ -392,11 +525,4 @@ private fun AccountsScreenEmptyPreview() {
             modifier = Modifier.fillMaxSize(),
         )
     }
-}
-
-private fun AccountType.toIcon(): ImageVector = when (this) {
-    AccountType.Bank -> Icons.Outlined.AccountBalance
-    AccountType.Cash -> Icons.Outlined.Payments
-    AccountType.CreditCard -> Icons.Outlined.CreditCard
-    AccountType.Investment -> Icons.Outlined.TrendingUp
 }

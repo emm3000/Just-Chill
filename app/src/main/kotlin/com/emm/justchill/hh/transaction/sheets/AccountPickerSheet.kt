@@ -203,6 +203,7 @@ private fun AccountRow(
         AccountType.Cash -> Icons.Outlined.AttachMoney
         AccountType.CreditCard -> Icons.Outlined.CreditCard
         AccountType.Investment -> Icons.Outlined.AccountBalance
+        AccountType.Wallet -> Icons.Outlined.AccountBalanceWallet
     }
 
     val typeLabel = when (account.type) {
@@ -210,6 +211,7 @@ private fun AccountRow(
         AccountType.Cash -> "Efectivo"
         AccountType.CreditCard -> "Crédito"
         AccountType.Investment -> "Inversión"
+        AccountType.Wallet -> "Billetera"
     }
 
     Row(

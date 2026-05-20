@@ -5,13 +5,16 @@ import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountUpsert
 import com.emm.domain.account.DeleteAccountUseCase
 import com.emm.domain.account.UpdateAccountUseCase
+import com.emm.domain.transaction.TransactionRepository
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class AccountsViewModel(
     accountRepository: AccountRepository,
+    transactionRepository: TransactionRepository,
     private val updateAccount: UpdateAccountUseCase,
     private val deleteAccount: DeleteAccountUseCase,
 ) : MviViewModel<AccountsUiState, AccountsIntent, AccountsEffect>() {
@@ -19,8 +22,16 @@ class AccountsViewModel(
     override val initialState = AccountsUiState()
 
     init {
-        accountRepository.all()
-            .onEach { accounts -> updateState { copy(accounts = accounts) } }
+        combine(
+            accountRepository.all(),
+            transactionRepository.all(),
+        ) { accounts, transactions ->
+            val counts = transactions.groupingBy { it.accountId }.eachCount()
+            accounts to counts
+        }
+            .onEach { (accounts, counts) ->
+                updateState { copy(accounts = accounts, movementCounts = counts) }
+            }
             .launchIn(viewModelScope)
     }
 

@@ -5,4 +5,5 @@ enum class AccountType {
     Cash,
     CreditCard,
     Investment,
+    Wallet,
 }
