@@ -7,8 +7,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,15 +20,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -54,9 +49,7 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmType
-import com.emm.justchill.core.theme.PlexMonoFontFamily
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
@@ -65,8 +58,6 @@ import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.MoneyInline
 import com.emm.justchill.core.ui.atoms.MonthSelector
-import com.emm.justchill.core.ui.atoms.Pill
-import com.emm.justchill.core.ui.atoms.PillTone
 import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
@@ -80,14 +71,12 @@ import org.koin.androidx.compose.koinViewModel
 fun HomeScreen(
     homeViewModel: HomeViewModel = koinViewModel(),
     navigateToAll: () -> Unit = {},
-    navigateToReport: () -> Unit = {},
     navigateToAdd: () -> Unit = {},
 ) {
     val state: HomeUiState by homeViewModel.state.collectAsStateWithLifecycle()
     HomeScreen(
         homeData = state,
         navigateToAll = navigateToAll,
-        navigateToReport = navigateToReport,
         navigateToAdd = navigateToAdd,
         onPreviousMonth = { homeViewModel.onIntent(HomeIntent.PreviousMonth) },
         onNextMonth = { homeViewModel.onIntent(HomeIntent.NextMonth) },
@@ -98,7 +87,6 @@ fun HomeScreen(
 fun HomeScreen(
     homeData: HomeUiState,
     navigateToAll: () -> Unit = {},
-    navigateToReport: () -> Unit = {},
     navigateToAdd: () -> Unit = {},
     onPreviousMonth: () -> Unit = {},
     onNextMonth: () -> Unit = {},
@@ -114,8 +102,6 @@ fun HomeScreen(
         else -> HomeWithData(
             homeData = homeData,
             navigateToAll = navigateToAll,
-            navigateToReport = navigateToReport,
-            navigateToAdd = navigateToAdd,
             onPreviousMonth = onPreviousMonth,
             onNextMonth = onNextMonth,
         )
@@ -126,8 +112,6 @@ fun HomeScreen(
 private fun HomeWithData(
     homeData: HomeUiState,
     navigateToAll: () -> Unit,
-    navigateToReport: () -> Unit,
-    navigateToAdd: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
 ) {
@@ -155,7 +139,6 @@ private fun HomeWithData(
         }
         item { HeroBalance(balance = homeData.balance, month = homeData.month.shortLabel()) }
         item { InOutRow(income = homeData.income, spend = homeData.spend) }
-        item { ReportPreviewCard(onClick = navigateToReport) }
         item {
             RecentsHeader(
                 onViewAll = navigateToAll,
@@ -175,9 +158,6 @@ private fun HomeWithData(
 
 @Composable
 private fun HeroBalance(balance: Money, month: String) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-
     val balanceDouble = balance.cents.toDouble() / 100.0
     val tone = when {
         balance.cents > 0L -> AmountTone.Pos
@@ -185,29 +165,10 @@ private fun HeroBalance(balance: Money, month: String) {
         else -> AmountTone.Mute
     }
 
-    // derive previous month name for the caption
-    // TODO(SR-10): wire to real comparison
-    val prevMonthName = "abril"
-
-    Column(
-        modifier = Modifier.padding(top = 30.dp, start = 24.dp, end = 24.dp),
-    ) {
+    Column(modifier = Modifier.padding(top = 30.dp, start = 24.dp, end = 24.dp)) {
         Eyebrow(text = "Balance · ${month.lowercase()}")
         Spacer(Modifier.height(12.dp))
         AmountHero(value = balanceDouble, size = 52.sp, tone = tone)
-        Spacer(Modifier.height(12.dp))
-        // TODO(SR-10): wire to real comparison
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Pill(text = "12%", tone = PillTone.Pos, leadingIcon = Icons.Outlined.ArrowUpward)
-            Text(
-                text = "vs. $prevMonthName",
-                style = type.caption,
-                color = colors.textTertiary,
-            )
-        }
     }
 }
 
@@ -245,128 +206,6 @@ private fun InOutRow(income: Money, spend: Money) {
             Eyebrow(text = "Salió", color = colors.textDisabled)
             Spacer(Modifier.height(4.dp))
             MoneyInline(value = spendDouble, color = colors.textSecondary)
-        }
-    }
-}
-
-// ── Report preview card ───────────────────────────────────────────────────────
-
-private data class ReportSegment(val color: Color, val pct: Float, val label: String, val value: String)
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun ReportPreviewCard(onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-    val type = LocalEmmType.current
-    val interactionSource = remember { MutableInteractionSource() }
-
-    // TODO(SR-10): wire to real income-by-category breakdown
-    val segments = listOf(
-        ReportSegment(colors.catTerracotta, 0.72f, "Sueldo", "72%"),
-        ReportSegment(colors.catSlate,      0.19f, "Freelance", "19%"),
-        ReportSegment(colors.catSage,       0.06f, "Ventas", "6%"),
-        ReportSegment(colors.catOchre,      0.03f, "Yapes", "3%"),
-    )
-
-    Box(
-        modifier = Modifier
-            .padding(top = 22.dp, start = 20.dp, end = 20.dp)
-            .fillMaxWidth()
-            .clip(radii.rXL)
-            .background(colors.surface1)
-            .border(1.dp, colors.border, radii.rXL)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-            )
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-    ) {
-        Column {
-            // Header row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Eyebrow(text = "Reporte de ingresos")
-                Spacer(Modifier.weight(1f))
-                Text(
-                    text = "Ver",
-                    style = type.caption.copy(fontWeight = FontWeight.W500),
-                    color = colors.textSecondary,
-                )
-                Spacer(Modifier.width(4.dp))
-                Icon(
-                    imageVector = Icons.Outlined.ChevronRight,
-                    contentDescription = null,
-                    tint = colors.textSecondary,
-                    modifier = Modifier.size(12.dp),
-                )
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            // Mini stacked horizontal bar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(CircleShape)
-                    .background(colors.surface2),
-                horizontalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                segments.forEach { seg ->
-                    Box(
-                        modifier = Modifier
-                            .weight(seg.pct)
-                            .height(8.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(seg.color),
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            // Legend chips
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(5.dp),
-            ) {
-                segments.forEach { seg ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp),
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(seg.color),
-                        )
-                        Text(
-                            text = seg.label,
-                            style = TextStyle(
-                                fontFamily = InterFontFamily,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.W500,
-                            ),
-                            color = colors.textTertiary,
-                        )
-                        Text(
-                            text = seg.value,
-                            style = TextStyle(
-                                fontFamily = PlexMonoFontFamily,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.W500,
-                                fontFeatureSettings = "tnum",
-                            ),
-                            color = colors.textDisabled,
-                        )
-                    }
-                }
-            }
         }
     }
 }

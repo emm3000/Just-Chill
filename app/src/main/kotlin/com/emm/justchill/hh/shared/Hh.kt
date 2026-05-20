@@ -175,7 +175,6 @@ fun Hh() {
                         navigateToAll = dropUnlessResumed {
                             backStack.switchTab(SeeTransactionRoute)
                         },
-                        navigateToReport = { backStack.add(ReportRoute) },
                         navigateToAdd = { backStack.add(AddTransactionRoute) },
                     )
                 }
