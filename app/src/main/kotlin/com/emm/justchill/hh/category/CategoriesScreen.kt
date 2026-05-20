@@ -1,6 +1,9 @@
 package com.emm.justchill.hh.category
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,38 +22,37 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Category
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryType
 import com.emm.domain.shared.CategoryId
-import com.emm.justchill.components.EmmButton
-import com.emm.justchill.components.EmmButtonVariant
 import com.emm.justchill.components.EmmTextInput
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.atoms.IconBtn
+import com.emm.justchill.core.ui.atoms.IconTile
+import com.emm.justchill.core.ui.atoms.IconTileSize
+import com.emm.justchill.core.ui.atoms.IconTileTone
+import com.emm.justchill.core.ui.atoms.JcTopBar
 
 @Composable
 fun CategoriesScreen(
@@ -61,45 +63,19 @@ fun CategoriesScreen(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
 
-    Column(modifier = modifier.background(colors.bg).statusBarsPadding()) {
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = spacing.s2,
-                    end = spacing.s2,
-                    top = spacing.s6,
-                    bottom = spacing.s4,
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = colors.textPrimary,
-                    modifier = Modifier.size(22.dp),
-                )
-            }
-            Text(
-                text = "Categorías",
-                style = type.headlineL,
-                color = colors.textPrimary,
-                modifier = Modifier.weight(1f),
-            )
-            IconButton(onClick = onAddCategory) {
-                Icon(
-                    imageVector = Icons.Outlined.Add,
-                    contentDescription = "Nueva categoría",
-                    tint = colors.textPrimary,
-                    modifier = Modifier.size(22.dp),
-                )
-            }
-        }
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(colors.bg)
+            .statusBarsPadding(),
+    ) {
+        JcTopBar(
+            title = "Categorías",
+            left = { IconBtn(icon = Icons.AutoMirrored.Outlined.ArrowBack, onClick = onBack) },
+            right = { IconBtn(icon = Icons.Outlined.Add, onClick = onAddCategory) },
+        )
 
         if (state.categories.isEmpty()) {
             EmptyState(onCreate = onAddCategory, modifier = Modifier.fillMaxSize())
@@ -115,34 +91,44 @@ fun CategoriesScreen(
 
         LazyColumn(contentPadding = PaddingValues(bottom = spacing.s8)) {
             if (incomes.isNotEmpty()) {
-                item(key = "header-incomes") { SectionHeader(text = "INGRESOS") }
+                item(key = "header-incomes") {
+                    SectionHeader(label = "Ingresos", count = incomes.size)
+                }
                 items(incomes, key = { "income-${it.categoryId.value}" }) { category ->
                     CategoryRow(
                         category = category,
-                        onEdit = { onIntent(CategoriesIntent.OnEditClick(category)) },
-                        onDelete = { onIntent(CategoriesIntent.OnDeleteClick(category)) },
+                        movementCount = state.txCountByCategory[category.categoryId] ?: 0,
+                        onClick = { onIntent(CategoriesIntent.OnEditClick(category)) },
                     )
                 }
             }
-            if (spends.isNotEmpty()) {
-                item(key = "header-spends") { SectionHeader(text = "GASTOS") }
-                items(spends, key = { "spend-${it.categoryId.value}" }) { category ->
-                    CategoryRow(
-                        category = category,
-                        onEdit = { onIntent(CategoriesIntent.OnEditClick(category)) },
-                        onDelete = { onIntent(CategoriesIntent.OnDeleteClick(category)) },
-                    )
-                }
+            // GASTOS always shows "Sin categoría" row at the end, so the count is +1
+            item(key = "header-spends") {
+                SectionHeader(label = "Gastos", count = spends.size + 1)
+            }
+            items(spends, key = { "spend-${it.categoryId.value}" }) { category ->
+                CategoryRow(
+                    category = category,
+                    movementCount = state.txCountByCategory[category.categoryId] ?: 0,
+                    onClick = { onIntent(CategoriesIntent.OnEditClick(category)) },
+                )
+            }
+            item(key = "uncategorized-spend") {
+                UncategorizedRow(count = state.uncategorizedSpendCount)
             }
         }
     }
 
-    state.pendingEdit?.let {
+    state.pendingEdit?.let { editing ->
         EditCategoryDialog(
             name = state.editName,
             onNameChange = { onIntent(CategoriesIntent.OnEditNameChange(it)) },
             onConfirm = { onIntent(CategoriesIntent.OnEditConfirm) },
             onDismiss = { onIntent(CategoriesIntent.OnEditDismiss) },
+            onDelete = {
+                onIntent(CategoriesIntent.OnEditDismiss)
+                onIntent(CategoriesIntent.OnDeleteClick(editing))
+            },
         )
     }
 
@@ -156,18 +142,15 @@ fun CategoriesScreen(
 }
 
 @Composable
-private fun SectionHeader(text: String) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
+private fun SectionHeader(label: String, count: Int) {
     val spacing = LocalEmmSpacing.current
-
-    Text(
-        text = text,
-        style = type.labelM,
-        color = colors.textTertiary,
+    Eyebrow(
+        text = "$label · $count",
         modifier = Modifier.padding(
-            horizontal = spacing.s4,
-            vertical = spacing.s2,
+            start = spacing.s5,
+            end = spacing.s5,
+            top = spacing.s5,
+            bottom = spacing.s2,
         ),
     )
 }
@@ -175,90 +158,102 @@ private fun SectionHeader(text: String) {
 @Composable
 private fun CategoryRow(
     category: Category,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit,
+    movementCount: Int,
+    onClick: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+    val swatch = remember(category.color) { findById(category.color).primary }
+    val icon = remember(category.icon) { AppIconCatalog.findById(category.icon).icon }
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val bg: Color = if (isPressed) colors.surface1 else Color.Transparent
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(bg)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(horizontal = spacing.s5, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        IconTile(
+            icon = icon,
+            size = IconTileSize.Md,
+            tone = IconTileTone.Swatch,
+            swatch = swatch,
+        )
+        Text(
+            text = category.name,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.W600,
+            fontFamily = InterFontFamily,
+            color = colors.textPrimary,
+            modifier = Modifier.weight(1f),
+        )
+        MovementMeta(count = movementCount, muted = false)
+        Spacer(Modifier.size(6.dp))
+        Icon(
+            imageVector = Icons.Outlined.ChevronRight,
+            contentDescription = null,
+            tint = colors.textTertiary,
+            modifier = Modifier.size(16.dp),
+        )
+    }
+}
+
+@Composable
+private fun UncategorizedRow(count: Int) {
+    val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = spacing.s4, vertical = spacing.s4)
-            .drawBehind {
-                drawLine(
-                    color = colors.border,
-                    start = Offset(0f, size.height),
-                    end = Offset(size.width, size.height),
-                    strokeWidth = 1f,
-                )
-            },
+            .padding(horizontal = spacing.s5, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(spacing.s4),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
+        IconTile(
+            icon = Icons.AutoMirrored.Outlined.HelpOutline,
+            size = IconTileSize.Md,
+            tone = IconTileTone.Neutral,
+        )
         Text(
-            text = category.name,
-            style = type.bodyL,
-            color = colors.textPrimary,
+            text = "Sin categoría",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.W600,
+            fontFamily = InterFontFamily,
+            color = colors.textTertiary,
             modifier = Modifier.weight(1f),
         )
-        CategoryRowMenu(onEdit = onEdit, onDelete = onDelete)
+        MovementMeta(count = count, muted = true)
+        Spacer(Modifier.size(6.dp))
+        Icon(
+            imageVector = Icons.Outlined.ChevronRight,
+            contentDescription = null,
+            tint = colors.textDisabled,
+            modifier = Modifier.size(16.dp),
+        )
     }
 }
 
 @Composable
-private fun CategoryRowMenu(onEdit: () -> Unit, onDelete: () -> Unit) {
+private fun MovementMeta(count: Int, muted: Boolean) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        IconButton(onClick = { expanded = !expanded }) {
-            Icon(
-                imageVector = Icons.Outlined.MoreVert,
-                contentDescription = "Opciones de categoría",
-                tint = colors.textPrimary,
-                modifier = Modifier.size(22.dp),
-            )
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            containerColor = colors.surface2,
-        ) {
-            DropdownMenuItem(
-                text = { Text("Editar", style = type.bodyL, color = colors.textPrimary) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.Edit,
-                        contentDescription = null,
-                        tint = colors.textSecondary,
-                        modifier = Modifier.size(20.dp),
-                    )
-                },
-                onClick = {
-                    expanded = false
-                    onEdit()
-                },
-            )
-            DropdownMenuItem(
-                text = { Text("Borrar", style = type.bodyL, color = colors.danger) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = null,
-                        tint = colors.danger,
-                        modifier = Modifier.size(20.dp),
-                    )
-                },
-                onClick = {
-                    expanded = false
-                    onDelete()
-                },
-            )
-        }
-    }
+    Text(
+        text = "$count mov.",
+        fontSize = 13.sp,
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.W500,
+        color = if (muted) colors.textDisabled else colors.textTertiary,
+    )
 }
 
 @Composable
@@ -267,29 +262,30 @@ private fun EditCategoryDialog(
     onNameChange: (String) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
+    onDelete: () -> Unit,
 ) {
+    val colors = LocalEmmColors.current
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Editar categoría") },
         text = {
-            EmmTextInput(
-                value = name,
-                onValueChange = onNameChange,
-                label = "NOMBRE",
-                placeholder = "ejm. Supermercado",
-                modifier = Modifier.fillMaxWidth(),
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text("Guardar")
+            Column {
+                EmmTextInput(
+                    value = name,
+                    onValueChange = onNameChange,
+                    label = "NOMBRE",
+                    placeholder = "ejm. Supermercado",
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(12.dp))
+                TextButton(onClick = onDelete) {
+                    Text(text = "Borrar categoría", color = colors.danger)
+                }
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
-            }
-        },
+        confirmButton = { TextButton(onClick = onConfirm) { Text("Guardar") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
     )
 }
 
@@ -314,11 +310,7 @@ private fun DeleteCategoryDialog(
                 Text(text = "Borrar", color = colors.danger)
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
-            }
-        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
     )
 }
 
@@ -329,7 +321,7 @@ private fun EmptyState(onCreate: () -> Unit, modifier: Modifier = Modifier) {
     val spacing = LocalEmmSpacing.current
 
     Column(
-        modifier = modifier.padding(horizontal = spacing.s4),
+        modifier = modifier.padding(horizontal = spacing.s5),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -337,7 +329,7 @@ private fun EmptyState(onCreate: () -> Unit, modifier: Modifier = Modifier) {
             imageVector = Icons.Outlined.Category,
             contentDescription = null,
             tint = colors.textTertiary,
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(40.dp),
         )
         Spacer(Modifier.height(spacing.s4))
         Text(
@@ -352,11 +344,20 @@ private fun EmptyState(onCreate: () -> Unit, modifier: Modifier = Modifier) {
             color = colors.textSecondary,
         )
         Spacer(Modifier.height(spacing.s6))
-        EmmButton(
-            text = "Crear categoría",
-            onClick = onCreate,
-            variant = EmmButtonVariant.Secondary,
-        )
+        Box(
+            modifier = Modifier
+                .clickable(onClick = onCreate)
+                .background(colors.accent)
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+        ) {
+            Text(
+                text = "Crear categoría",
+                fontSize = 13.sp,
+                fontFamily = InterFontFamily,
+                fontWeight = FontWeight.W600,
+                color = Color.White,
+            )
+        }
     }
 }
 
@@ -367,35 +368,22 @@ private fun CategoriesScreenPreview() {
         CategoriesScreen(
             state = CategoriesUiState(
                 categories = listOf(
-                    Category(
-                        categoryId = CategoryId("1"),
-                        name = "Sueldo",
-                        icon = "salary",
-                        color = "#00FF00",
-                        categoryType = CategoryType.Income,
-                    ),
-                    Category(
-                        categoryId = CategoryId("2"),
-                        name = "Freelance",
-                        icon = "freelance",
-                        color = "#00FF00",
-                        categoryType = CategoryType.Income,
-                    ),
-                    Category(
-                        categoryId = CategoryId("3"),
-                        name = "Supermercado",
-                        icon = "shopping",
-                        color = "#FF0000",
-                        categoryType = CategoryType.Spend,
-                    ),
-                    Category(
-                        categoryId = CategoryId("4"),
-                        name = "Restaurantes",
-                        icon = "restaurant",
-                        color = "#FF0000",
-                        categoryType = CategoryType.Spend,
-                    ),
+                    Category(CategoryId("1"), "Sueldo", "wallet", "green", CategoryType.Income),
+                    Category(CategoryId("2"), "Freelance", "bolt", "yellow", CategoryType.Income),
+                    Category(CategoryId("3"), "Ventas IG", "store", "purple", CategoryType.Income),
+                    Category(CategoryId("4"), "Yapes", "wallet", "blue", CategoryType.Income),
+                    Category(CategoryId("5"), "Comida", "restaurant", "red", CategoryType.Spend),
+                    Category(CategoryId("6"), "Transporte", "directions_car", "orange", CategoryType.Spend),
+                    Category(CategoryId("7"), "Servicios", "bolt", "yellow", CategoryType.Spend),
+                    Category(CategoryId("8"), "Ocio", "movie", "purple", CategoryType.Spend),
+                    Category(CategoryId("9"), "Salud", "favorite", "green", CategoryType.Spend),
                 ),
+                txCountByCategory = mapOf(
+                    CategoryId("1") to 1, CategoryId("2") to 4, CategoryId("3") to 7, CategoryId("4") to 3,
+                    CategoryId("5") to 8, CategoryId("6") to 5, CategoryId("7") to 2,
+                    CategoryId("8") to 4, CategoryId("9") to 1,
+                ),
+                uncategorizedSpendCount = 0,
             ),
             onIntent = {},
             onAddCategory = {},

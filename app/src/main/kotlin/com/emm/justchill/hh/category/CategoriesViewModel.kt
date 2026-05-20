@@ -5,13 +5,17 @@ import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryUpsert
 import com.emm.domain.category.DeleteCategoryUseCase
 import com.emm.domain.category.UpdateCategoryUseCase
+import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class CategoriesViewModel(
     categoryRepository: CategoryRepository,
+    transactionRepository: TransactionRepository,
     private val updateCategory: UpdateCategoryUseCase,
     private val deleteCategory: DeleteCategoryUseCase,
 ) : MviViewModel<CategoriesUiState, CategoriesIntent, CategoriesEffect>() {
@@ -19,8 +23,28 @@ class CategoriesViewModel(
     override val initialState = CategoriesUiState()
 
     init {
-        categoryRepository.all()
-            .onEach { categories -> updateState { copy(categories = categories) } }
+        combine(
+            categoryRepository.all(),
+            transactionRepository.fetchAllWithCategory(),
+        ) { categories, transactions ->
+            val countByCategory = transactions
+                .mapNotNull { it.category?.categoryId }
+                .groupingBy { it }
+                .eachCount()
+            val uncategorizedSpend = transactions.count {
+                it.category == null && it.type == TransactionType.Spend
+            }
+            Triple(categories, countByCategory, uncategorizedSpend)
+        }
+            .onEach { (categories, countByCategory, uncategorizedSpend) ->
+                updateState {
+                    copy(
+                        categories = categories,
+                        txCountByCategory = countByCategory,
+                        uncategorizedSpendCount = uncategorizedSpend,
+                    )
+                }
+            }
             .launchIn(viewModelScope)
     }
 
