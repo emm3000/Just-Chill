@@ -33,7 +33,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -63,7 +65,12 @@ fun NoteSheet(
     val radii = LocalEmmRadii.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    var draft by remember { mutableStateOf(initialNote.take(NOTE_MAX_CHARS)) }
+    // TextFieldValue carries both text and cursor selection — placing the cursor at the
+    // end on initial load means the user can keep typing without re-positioning.
+    var draft by remember {
+        val initial = initialNote.take(NOTE_MAX_CHARS)
+        mutableStateOf(TextFieldValue(text = initial, selection = TextRange(initial.length)))
+    }
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
@@ -116,7 +123,7 @@ fun NoteSheet(
                     .border(1.dp, colors.border, radii.rM)
                     .padding(horizontal = 14.dp, vertical = 12.dp),
             ) {
-                if (draft.isEmpty()) {
+                if (draft.text.isEmpty()) {
                     Text(
                         text = "Mercado Vea — pollo y verduras",
                         fontSize = 14.sp,
@@ -128,7 +135,7 @@ fun NoteSheet(
                 BasicTextField(
                     value = draft,
                     onValueChange = { newValue ->
-                        if (newValue.length <= NOTE_MAX_CHARS) draft = newValue
+                        if (newValue.text.length <= NOTE_MAX_CHARS) draft = newValue
                     },
                     textStyle = LocalTextStyle.current.copy(
                         color = colors.textPrimary,
@@ -161,11 +168,11 @@ fun NoteSheet(
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    text = "${draft.length} / $NOTE_MAX_CHARS",
+                    text = "${draft.text.length} / $NOTE_MAX_CHARS",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.W500,
                     fontFamily = PlexMonoFontFamily,
-                    color = if (draft.length >= NOTE_MAX_CHARS) colors.danger else colors.textTertiary,
+                    color = if (draft.text.length >= NOTE_MAX_CHARS) colors.danger else colors.textTertiary,
                 )
             }
 
@@ -186,7 +193,7 @@ fun NoteSheet(
                     label = "Guardar nota",
                     primary = true,
                     onClick = {
-                        onSave(draft)
+                        onSave(draft.text)
                         onDismiss()
                     },
                     modifier = Modifier.weight(1f),
