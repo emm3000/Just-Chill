@@ -76,7 +76,6 @@ fun CategoryPickerSheet(
         contentWindowInsets = { WindowInsets.navigationBars },
         dragHandle = { SheetDragHandle() },
     ) {
-        // Title row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -110,7 +109,6 @@ fun CategoryPickerSheet(
             }
         }
 
-        // Search input
         val searchShape = RoundedCornerShape(12.dp)
         Row(
             modifier = Modifier
@@ -191,7 +189,6 @@ fun CategoryPickerSheet(
             }
         }
 
-        // "+ Nueva categoría" dashed button
         val dashedShape = RoundedCornerShape(12.dp)
         Row(
             modifier = Modifier

@@ -179,7 +179,6 @@ private fun IncomeByCategoryBarsPreview() {
                     ),
                 ),
             )
-            // Spacer just to ensure preview height
             Spacer(Modifier.height(0.dp))
         }
     }

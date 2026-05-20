@@ -249,7 +249,6 @@ private fun SearchInput(query: String, onQueryChange: (String) -> Unit) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CATEGORY CHIPS ROW
 // ═══════════════════════════════════════════════════════════════
 
 @Composable

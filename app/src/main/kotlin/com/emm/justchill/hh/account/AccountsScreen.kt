@@ -324,7 +324,7 @@ private fun AccountRowMenu(onEdit: () -> Unit, onDelete: () -> Unit) {
     }
 }
 
-// ── Bottom: Gestionar categorías ──────────────────────────────────
+// ── Bottom: manage categories ──────────────────────────────────────
 
 @Composable
 private fun ManageCategoriesRow(onClick: () -> Unit) {

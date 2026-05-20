@@ -151,7 +151,6 @@ fun AccountPickerSheet(
             }
         }
 
-        // "+ Nueva cuenta" dashed button
         if (onAddNew != null) {
             val onAdd: () -> Unit = onAddNew
             val dashedShape = RoundedCornerShape(12.dp)

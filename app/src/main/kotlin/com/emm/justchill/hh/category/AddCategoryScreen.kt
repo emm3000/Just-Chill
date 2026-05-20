@@ -353,7 +353,7 @@ private fun NameInput(
     )
 }
 
-// ── Tipo segmented ─────────────────────────────────────────────────
+// ── Type segmented ────────────────────────────────────────────────
 
 @Composable
 private fun TypeSegmented(selected: CategoryType, onSelect: (CategoryType) -> Unit) {

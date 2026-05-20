@@ -96,7 +96,6 @@ internal fun CategoryFilterSheet(
                 .fillMaxWidth()
                 .fillMaxHeight(0.8f),
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -130,7 +129,6 @@ internal fun CategoryFilterSheet(
                 }
             }
 
-            // Search
             val searchShape = RoundedCornerShape(12.dp)
             Row(
                 modifier = Modifier
@@ -174,7 +172,6 @@ internal fun CategoryFilterSheet(
                 }
             }
 
-            // Segmented control
             SegmentedRow(
                 segment = segment,
                 onSegmentChange = { segment = it },
@@ -187,7 +184,6 @@ internal fun CategoryFilterSheet(
 
             Spacer(Modifier.height(6.dp))
 
-            // List
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -204,7 +200,6 @@ internal fun CategoryFilterSheet(
                 }
             }
 
-            // Footer: Limpiar filtro
             if (hasActiveFilter) {
                 Row(
                     modifier = Modifier

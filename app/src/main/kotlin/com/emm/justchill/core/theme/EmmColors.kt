@@ -41,7 +41,6 @@ data class EmmColors(
     val posMuted: Color,
     val negMuted: Color,
 
-    // Category palette
     val catSlate: Color,
     val catSage: Color,
     val catTerracotta: Color,
