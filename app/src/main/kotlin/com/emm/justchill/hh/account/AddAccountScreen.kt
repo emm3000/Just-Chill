@@ -52,12 +52,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.account.AccountType
-import com.emm.domain.account.Currency
 import com.emm.justchill.core.theme.EmmColors
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.PlexMonoFontFamily
 import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
@@ -152,14 +150,6 @@ private fun AddAccountContent(
                 TypeGrid(
                     selected = state.selectedType,
                     onSelect = { onIntent(AddAccountIntent.OnTypeChange(it)) },
-                )
-            }
-
-            // MONEDA ──────────────────────────────────────────────
-            Section(eyebrow = "MONEDA") {
-                CurrencyRow(
-                    selected = state.selectedCurrency,
-                    onSelect = { onIntent(AddAccountIntent.OnCurrencyChange(it)) },
                 )
             }
 
@@ -381,83 +371,6 @@ private fun TypeCell(
     }
 }
 
-// ── Moneda row ─────────────────────────────────────────────────────
-
-@Composable
-private fun CurrencyRow(selected: Currency, onSelect: (Currency) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        CurrencyCell(
-            symbol = "S/",
-            label = "Soles",
-            selected = selected == Currency.PEN,
-            onClick = { onSelect(Currency.PEN) },
-            modifier = Modifier.weight(1f),
-        )
-        CurrencyCell(
-            symbol = "$",
-            label = "Dólares",
-            selected = selected == Currency.USD,
-            onClick = { onSelect(Currency.USD) },
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-@Composable
-private fun CurrencyCell(
-    symbol: String,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = LocalEmmColors.current
-    val shape = RoundedCornerShape(12.dp)
-
-    val borderColor = if (selected) colors.textPrimary else colors.border
-    val bgColor = if (selected) colors.surface3 else colors.surface1
-    val fgColor = if (selected) colors.textPrimary else colors.textTertiary
-
-    Row(
-        modifier = modifier
-            .height(52.dp)
-            .clip(shape)
-            .background(bgColor)
-            .border(1.dp, borderColor, shape)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            text = symbol,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.W600,
-            fontFamily = PlexMonoFontFamily,
-            color = fgColor,
-        )
-        Spacer(Modifier.size(6.dp))
-        Text(
-            text = "·",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.W600,
-            color = fgColor.copy(alpha = 0.5f),
-        )
-        Spacer(Modifier.size(6.dp))
-        Text(
-            text = label,
-            fontSize = 15.sp,
-            fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
-            fontFamily = InterFontFamily,
-            color = fgColor,
-            letterSpacing = (-0.15).sp,
-        )
-    }
-}
-
 // ── Preview ────────────────────────────────────────────────────────
 
 @Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 800)
@@ -468,7 +381,6 @@ private fun AddAccountScreenPreview() {
             state = AddAccountUiState(
                 name = "Yape",
                 selectedType = AccountType.Wallet,
-                selectedCurrency = Currency.PEN,
                 isEnabled = true,
             ),
             onIntent = {},

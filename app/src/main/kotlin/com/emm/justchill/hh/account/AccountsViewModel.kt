@@ -66,7 +66,6 @@ class AccountsViewModel(
                 accountId = target.accountId,
                 name = newName,
                 type = target.type,
-                currency = target.currency,
             ),
         )
         updateState { copy(pendingEdit = null, editName = "") }

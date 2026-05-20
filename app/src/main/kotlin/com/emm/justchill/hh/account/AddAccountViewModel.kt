@@ -17,8 +17,6 @@ class AddAccountViewModel(private val createAccount: CreateAccountUseCase) :
 
             is AddAccountIntent.OnTypeChange -> updateState { copy(selectedType = intent.value) }
 
-            is AddAccountIntent.OnCurrencyChange -> updateState { copy(selectedCurrency = intent.value) }
-
             AddAccountIntent.OnSave -> save()
         }
     }
@@ -29,7 +27,6 @@ class AddAccountViewModel(private val createAccount: CreateAccountUseCase) :
         createAccount(
             name = currentState.name,
             type = currentState.selectedType,
-            currency = currentState.selectedCurrency,
         )
         sendEffect(AddAccountEffect.AccountSaved)
     }

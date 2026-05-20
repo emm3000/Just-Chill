@@ -25,5 +25,5 @@ DELETE FROM accounts;
 
 update:
 UPDATE accounts
-SET name = ?, type = ?, currency = ?, updatedAt = ?
+SET name = ?, type = ?, updatedAt = ?
 WHERE accountId = ?;

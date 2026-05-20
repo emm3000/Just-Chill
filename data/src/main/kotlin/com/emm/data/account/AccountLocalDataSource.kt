@@ -39,7 +39,7 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
             accountId = account.accountId.value,
             name = account.name,
             type = account.type.name,
-            currency = account.currency.name,
+            currency = "PEN",
             updatedAt = account.updatedAt,
             createdAt = account.createdAt,
         )
@@ -53,7 +53,6 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         aq.update(
             name = account.name,
             type = account.type.name,
-            currency = account.currency.name,
             updatedAt = currentTimeInMillis(),
             accountId = accountId,
         )

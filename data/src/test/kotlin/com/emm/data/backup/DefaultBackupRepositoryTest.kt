@@ -4,7 +4,6 @@ import com.emm.data.EmmDatabaseData
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountType
-import com.emm.domain.account.Currency
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryType
@@ -37,7 +36,6 @@ class DefaultBackupRepositoryTest {
         accountId = AccountId("acc-1"),
         name = "Yape",
         type = AccountType.Cash,
-        currency = Currency.PEN,
     )
 
     private val categoryIncome = Category(

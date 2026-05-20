@@ -2,7 +2,6 @@ package com.emm.data.backup
 
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountType
-import com.emm.domain.account.Currency
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryType
 import com.emm.domain.shared.AccountId
@@ -29,7 +28,6 @@ class BackupMappersTest {
             accountId = AccountId("acc-bank-001"),
             name = "BCP Cuenta Ahorros",
             type = AccountType.Bank,
-            currency = Currency.PEN,
         )
 
         val dto = original.toDto()
@@ -47,7 +45,6 @@ class BackupMappersTest {
                 accountId = AccountId("id-$accountType"),
                 name = "Test",
                 type = accountType,
-                currency = Currency.PEN,
             )
             val restored = json.decodeFromString<AccountDto>(
                 json.encodeToString(original.toDto()),
@@ -57,19 +54,35 @@ class BackupMappersTest {
     }
 
     @Test
-    fun `Account roundtrip - all Currency values survive serialization`() {
-        Currency.entries.forEach { currency ->
-            val original = Account(
-                accountId = AccountId("id-$currency"),
-                name = "Test",
-                type = AccountType.Cash,
-                currency = currency,
-            )
-            val restored = json.decodeFromString<AccountDto>(
-                json.encodeToString(original.toDto()),
-            ).toEntity()
-            assertEquals(currency, restored.currency)
-        }
+    fun `Account export always writes PEN regardless of legacy data`() {
+        val account = Account(
+            accountId = AccountId("acc-1"),
+            name = "Yape",
+            type = AccountType.Wallet,
+        )
+        val dto = account.toDto()
+        assertEquals("PEN", dto.currency)
+    }
+
+    @Test
+    fun `Account import ignores currency field - old JSON with USD does not fail`() {
+        // Simulates a backup JSON created by an old app version that stored "USD"
+        val oldJson = """{"accountId":"acc-old","name":"Old Account","type":"Bank","currency":"USD"}"""
+        val dto = Json.decodeFromString<AccountDto>(oldJson)
+        // toEntity() must not throw; currency field is ignored
+        val entity = dto.toEntity()
+        assertEquals(AccountId("acc-old"), entity.accountId)
+        assertEquals(AccountType.Bank, entity.type)
+    }
+
+    @Test
+    fun `Account import - missing currency field in JSON uses default PEN`() {
+        // Simulates a minimal future backup that omits the currency field entirely
+        val minimalJson = """{"accountId":"acc-2","name":"Minimal","type":"Cash"}"""
+        val dto = Json { ignoreUnknownKeys = true }.decodeFromString<AccountDto>(minimalJson)
+        assertEquals("PEN", dto.currency)
+        val entity = dto.toEntity()
+        assertEquals(AccountId("acc-2"), entity.accountId)
     }
 
     // ── Category ─────────────────────────────────────────────────────────────

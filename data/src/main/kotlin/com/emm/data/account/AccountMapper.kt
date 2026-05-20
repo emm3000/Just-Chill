@@ -4,7 +4,6 @@ import com.emm.data.Accounts
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountType
 import com.emm.domain.account.AccountUpsert
-import com.emm.domain.account.Currency
 import com.emm.domain.shared.AccountId
 
 // SQLDelight -> Entity (internal, stays within data source)
@@ -12,7 +11,6 @@ fun Accounts.asEntity() = AccountEntity(
     accountId = accountId,
     name = name,
     type = type,
-    currency = currency,
     updatedAt = updatedAt,
     createdAt = createdAt,
 )
@@ -24,7 +22,6 @@ fun AccountEntity.asExternalModel() = Account(
     accountId = AccountId(accountId),
     name = name,
     type = runCatching { AccountType.valueOf(type) }.getOrDefault(AccountType.Bank),
-    currency = runCatching { Currency.valueOf(currency) }.getOrDefault(Currency.PEN),
 )
 
 fun List<AccountEntity>.asExternalModel() = map(AccountEntity::asExternalModel)
@@ -34,7 +31,6 @@ fun AccountUpsert.asEntity() = AccountEntity(
     accountId = accountId.value,
     name = name,
     type = type.name,
-    currency = currency.name,
     updatedAt = updatedAt,
     createdAt = createdAt,
 )
