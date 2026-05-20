@@ -107,10 +107,7 @@ private fun AddTransactionScreenContent(
     var showAccountSheet by rememberSaveable { mutableStateOf(false) }
     var showCategorySheet by rememberSaveable { mutableStateOf(false) }
     var showDateSheet by rememberSaveable { mutableStateOf(false) }
-
-    // Note toggle + field
-    var noteExpanded by rememberSaveable { mutableStateOf(state.description.isNotEmpty()) }
-    val noteFocusRequester = remember { FocusRequester() }
+    var showNoteSheet by rememberSaveable { mutableStateOf(false) }
 
     val isSpend = state.transactionType == TransactionType.Spend
 
@@ -204,27 +201,14 @@ private fun AddTransactionScreenContent(
             )
         }
 
-        // ─── Note toggle ──────────────────────────────────────────
-        if (!noteExpanded) {
-            NoteToggleButton(
-                onClick = { noteExpanded = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 6.dp),
-            )
-        } else {
-            NoteField(
-                value = state.description,
-                onValueChange = { onIntent(AddTransactionIntent.OnDescriptionChange(it)) },
-                focusRequester = noteFocusRequester,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 6.dp),
-            )
-            LaunchedEffect(Unit) {
-                noteFocusRequester.requestFocus()
-            }
-        }
+        // ─── Note trigger ─────────────────────────────────────────
+        NoteToggleButton(
+            label = if (state.description.isBlank()) "Agregar nota" else state.description,
+            onClick = { showNoteSheet = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 6.dp),
+        )
 
         // ─── Flex spacer ──────────────────────────────────────────
         Spacer(Modifier.weight(1f))
@@ -287,6 +271,14 @@ private fun AddTransactionScreenContent(
                 onIntent(AddTransactionIntent.OnDateChangeInMillis(millis))
             },
             onDismiss = { showDateSheet = false },
+        )
+    }
+
+    if (showNoteSheet) {
+        com.emm.justchill.hh.transaction.sheets.NoteSheet(
+            initialNote = state.description,
+            onSave = { note -> onIntent(AddTransactionIntent.OnDescriptionChange(note)) },
+            onDismiss = { showNoteSheet = false },
         )
     }
 }
@@ -450,15 +442,17 @@ private fun QuickChip(
     }
 }
 
-// ─── Note toggle + field ──────────────────────────────────────────────────────
+// ─── Note trigger ─────────────────────────────────────────────────────────────
 
 @Composable
 private fun NoteToggleButton(
+    label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
     val interactionSource = remember { MutableInteractionSource() }
+    val isPlaceholder = label == "Agregar nota"
 
     Row(
         modifier = modifier
@@ -470,54 +464,23 @@ private fun NoteToggleButton(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
-        Icon(
-            imageVector = Icons.Outlined.Add,
-            contentDescription = null,
-            tint = colors.textTertiary,
-            modifier = Modifier.size(11.dp),
-        )
-        Spacer(Modifier.size(5.dp))
+        if (isPlaceholder) {
+            Icon(
+                imageVector = Icons.Outlined.Add,
+                contentDescription = null,
+                tint = colors.textTertiary,
+                modifier = Modifier.size(11.dp),
+            )
+            Spacer(Modifier.size(5.dp))
+        }
         Text(
-            text = "Agregar nota",
+            text = label,
             fontSize = 12.sp,
             fontWeight = FontWeight.W500,
             fontFamily = InterFontFamily,
-            color = colors.textTertiary,
-        )
-    }
-}
-
-@Composable
-private fun NoteField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    focusRequester: FocusRequester,
-    modifier: Modifier = Modifier,
-) {
-    val colors = LocalEmmColors.current
-
-    Box(modifier = modifier) {
-        if (value.isEmpty()) {
-            Text(
-                text = "Una nota",
-                fontSize = 12.sp,
-                fontFamily = InterFontFamily,
-                color = colors.textTertiary,
-            )
-        }
-        BasicTextField(
-            value = value,
-            onValueChange = { if (it.length <= 80) onValueChange(it) },
-            singleLine = true,
-            cursorBrush = SolidColor(colors.accentFocus),
-            textStyle = TextStyle(
-                fontSize = 12.sp,
-                fontFamily = InterFontFamily,
-                color = colors.textPrimary,
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester),
+            color = if (isPlaceholder) colors.textTertiary else colors.textSecondary,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
         )
     }
 }
