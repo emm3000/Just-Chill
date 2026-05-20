@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.transaction
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -8,63 +9,71 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DatePickerState
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.emm.domain.account.Account
 import com.emm.domain.category.CategoryType
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.transaction.TransactionType
-import com.emm.justchill.components.EmmButton
-import com.emm.justchill.components.EmmButtonVariant
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmSpacing
-import com.emm.justchill.core.theme.LocalEmmType
-import com.emm.justchill.core.ui.modalScreenInsets
+import com.emm.justchill.core.ui.Numpad
+import com.emm.justchill.core.ui.atoms.AmountHero
+import com.emm.justchill.core.ui.atoms.AmountTone
+import com.emm.justchill.core.ui.atoms.CtaTone
+import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.atoms.IconBtn
+import com.emm.justchill.core.ui.atoms.JcTopBar
+import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.allColors
-import com.emm.justchill.hh.shared.UiStrings
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
+import com.emm.justchill.hh.transaction.sheets.CategoryPickerSheet
+import com.emm.justchill.hh.transaction.sheets.DatePickerSheet
 
 @Composable
 fun AddTransactionScreen(
     vm: AddTransactionViewModel,
-    onOtherCategorySelected: () -> Unit,
     popBackStack: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    onAddNewCategory: () -> Unit = {},
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
 
@@ -80,243 +89,465 @@ fun AddTransactionScreen(
     AddTransactionScreenContent(
         state = state,
         onIntent = vm::onIntent,
-        onOtherCategorySelected = onOtherCategorySelected,
         popBackStack = popBackStack,
+        onAddNewCategory = onAddNewCategory,
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun AddTransactionScreenContent(
     state: AddTransactionUiState,
     onIntent: (AddTransactionIntent) -> Unit,
-    onOtherCategorySelected: () -> Unit,
     popBackStack: () -> Unit,
+    onAddNewCategory: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
 
-    val focusManager = LocalFocusManager.current
-    val keyboard = LocalSoftwareKeyboardController.current
-    val isKeyboardOpen = WindowInsets.isImeVisible
-    val scope = rememberCoroutineScope()
-    val scrollState = rememberScrollState()
+    // Sheet visibility state
+    var showAccountSheet by rememberSaveable { mutableStateOf(false) }
+    var showCategorySheet by rememberSaveable { mutableStateOf(false) }
+    var showDateSheet by rememberSaveable { mutableStateOf(false) }
 
-    val (showSelectDate, setShowSelectDate) = remember { mutableStateOf(false) }
-    val (showAccountPicker, setShowAccountPicker) = rememberSaveable { mutableStateOf(false) }
-    val datePickerState: DatePickerState = rememberDatePickerState()
-    val amountFocus = remember { FocusRequester() }
+    // Note toggle + field
+    var noteExpanded by rememberSaveable { mutableStateOf(state.description.isNotEmpty()) }
+    val noteFocusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(Unit) { amountFocus.requestFocus() }
+    val isSpend = state.transactionType == TransactionType.Spend
+
+    // Formatted CTA sublabel
+    val ctaAmount = remember(state.amount) {
+        val value = centsToSoles(state.amount)
+        "S/ ${formatCentsForDisplay(state.amount)}"
+    }
+    val ctaLabel = if (isSpend) "Anotar gasto" else "Anotar ingreso"
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg)
-            .modalScreenInsets(),
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .imePadding(),
     ) {
-        AddScreenTopBar(
-            title = when (state.transactionType) {
-                TransactionType.Income -> "Nuevo ingreso"
-                TransactionType.Spend -> "Nuevo gasto"
+        // ─── Top bar ─────────────────────────────────────────────
+        JcTopBar(
+            title = if (isSpend) "Nuevo gasto" else "Nuevo ingreso",
+            left = {
+                IconBtn(
+                    icon = Icons.Outlined.Close,
+                    onClick = popBackStack,
+                )
             },
-            showReset = state.hasChanges,
-            onClose = {
-                keyboard?.hide()
-                popBackStack()
-            },
-            onReset = { onIntent(AddTransactionIntent.OnReset) },
+            right = null,
         )
 
-        val sidePadding = Modifier.padding(horizontal = spacing.s4)
-        val openAccountPicker: () -> Unit = {
-            if (isKeyboardOpen) {
-                scope.launch {
-                    focusManager.clearFocus()
-                    keyboard?.hide()
-                    delay(300L)
-                }.invokeOnCompletion { setShowAccountPicker(true) }
-            } else {
-                setShowAccountPicker(true)
-            }
+        // ─── Sign toggle ──────────────────────────────────────────
+        SignToggle(
+            isSpend = isSpend,
+            onIncomeClick = { onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Income)) },
+            onSpendClick = { onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Spend)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 2.dp),
+        )
+
+        // ─── Amount hero ──────────────────────────────────────────
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 0.dp)
+                .padding(top = 20.dp, bottom = 18.dp),
+        ) {
+            AmountHero(
+                value = centsToSoles(state.amount),
+                size = 48.sp,
+                tone = if (isSpend) AmountTone.Neg else AmountTone.Pos,
+            )
         }
 
-        Column(
+        // ─── Quick chips row ─────────────────────────────────────
+        Row(
             modifier = Modifier
-                .weight(1f)
                 .fillMaxWidth()
-                .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(spacing.s6),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Spacer(Modifier.height(spacing.s2))
-
-            Box(modifier = sidePadding) {
-                AmountInputSection(
-                    amount = state.amount,
-                    transactionType = state.transactionType,
-                    onAmountChange = { onIntent(AddTransactionIntent.OnAmountChange(it)) },
-                    onTypeChange = { onIntent(AddTransactionIntent.OnTransactionTypeChange(it)) },
-                    focusRequester = amountFocus,
-                    onNext = {
-                        keyboard?.hide()
-                        focusManager.clearFocus()
-                    },
-                )
-            }
-
-            CategorySelectorSection(
-                categories = state.categories,
-                selected = state.categorySelected,
-                onSelect = { onIntent(AddTransactionIntent.OnCategorySelected(it)) },
-                onMore = onOtherCategorySelected,
-                contentPadding = PaddingValues(horizontal = spacing.s4),
+            // Cuenta chip
+            QuickChip(
+                eyebrow = "CUENTA",
+                value = state.accountSelected?.name ?: "—",
+                dotColor = state.accountSelected?.let {
+                    accountChipDotColor(it.name, colors)
+                },
+                onClick = { showAccountSheet = true },
+                modifier = Modifier.weight(1f),
             )
 
-            Row(
-                modifier = sidePadding.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
-            ) {
-                MetaChip(
-                    label = "FECHA",
-                    value = state.date,
-                    onClick = {
-                        focusManager.clearFocus()
-                        setShowSelectDate(true)
-                    },
-                    modifier = Modifier.weight(1f),
-                )
-                MetaChip(
-                    label = "CUENTA",
-                    value = state.accountSelected?.name ?: UiStrings.PICK_ACCOUNT,
-                    emphasized = state.accountSelected != null,
-                    onClick = openAccountPicker,
-                    modifier = Modifier.weight(1f),
-                )
-            }
+            // Categoría chip
+            QuickChip(
+                eyebrow = "CATEGORÍA",
+                value = state.categorySelected?.name ?: "—",
+                dotColor = state.categorySelected?.color?.primary,
+                onClick = { showCategorySheet = true },
+                modifier = Modifier.weight(1f),
+            )
 
-            Box(modifier = sidePadding) {
-                NoteSection(
-                    description = state.description,
-                    onValueChange = { onIntent(AddTransactionIntent.OnDescriptionChange(it)) },
-                )
-            }
-
-            Spacer(Modifier.height(spacing.s4))
+            // Fecha chip
+            QuickChip(
+                eyebrow = "FECHA",
+                value = state.date,
+                dotColor = null,
+                onClick = { showDateSheet = true },
+                modifier = Modifier.weight(1f),
+            )
         }
 
-        EmmButton(
-            text = saveButtonLabel(state),
-            onClick = { onIntent(AddTransactionIntent.OnSave) },
-            enabled = state.isEnabled,
+        // ─── Note toggle ──────────────────────────────────────────
+        if (!noteExpanded) {
+            NoteToggleButton(
+                onClick = { noteExpanded = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 6.dp),
+            )
+        } else {
+            NoteField(
+                value = state.description,
+                onValueChange = { onIntent(AddTransactionIntent.OnDescriptionChange(it)) },
+                focusRequester = noteFocusRequester,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 6.dp),
+            )
+            LaunchedEffect(Unit) {
+                noteFocusRequester.requestFocus()
+            }
+        }
+
+        // ─── Flex spacer ──────────────────────────────────────────
+        Spacer(Modifier.weight(1f))
+
+        // ─── Custom numpad ────────────────────────────────────────
+        Numpad(
+            onDigit = { digit ->
+                val newAmount = (state.amount + digit).take(9)
+                onIntent(AddTransactionIntent.OnAmountChange(newAmount))
+            },
+            onDoubleZero = {
+                val newAmount = (state.amount + "00").take(9)
+                onIntent(AddTransactionIntent.OnAmountChange(newAmount))
+            },
+            onBackspace = {
+                val newAmount = state.amount.dropLast(1)
+                onIntent(AddTransactionIntent.OnAmountChange(newAmount))
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(spacing.s4),
+                .padding(horizontal = 14.dp)
+                .padding(bottom = 6.dp),
+        )
+
+        // ─── CTA ──────────────────────────────────────────────────
+        StickyCTA(
+            label = ctaLabel,
+            sublabel = ctaAmount,
+            inlineSublabel = true,
+            tone = CtaTone.Accent,
+            enabled = state.isEnabled,
+            onClick = { onIntent(AddTransactionIntent.OnSave) },
         )
     }
 
-    if (showSelectDate) {
-        DatePickerDialog(
-            onDismissRequest = { setShowSelectDate(false) },
-            confirmButton = {
-                EmmButton(
-                    text = "Ok",
-                    onClick = {
-                        onIntent(AddTransactionIntent.OnDateChangeInMillis(datePickerState.selectedDateMillis))
-                        setShowSelectDate(false)
-                    },
-                )
-            },
-            dismissButton = {
-                EmmButton(
-                    text = "Cancelar",
-                    onClick = { setShowSelectDate(false) },
-                    variant = EmmButtonVariant.Ghost,
-                )
-            },
-        ) {
-            DatePicker(state = datePickerState, showModeToggle = false)
-        }
+    // ─── Bottom sheets ────────────────────────────────────────────
+    if (showAccountSheet) {
+        AccountPickerSheet(
+            accounts = state.accounts,
+            selectedAccountId = state.accountSelected?.accountId?.value,
+            onSelected = { onIntent(AddTransactionIntent.OnAccountSelected(it)) },
+            onDismiss = { showAccountSheet = false },
+        )
     }
 
-    AccountPickerBottomSheet(
-        show = showAccountPicker,
-        accounts = state.accounts,
-        onAccountSelected = { onIntent(AddTransactionIntent.OnAccountSelected(it)) },
-        onDismiss = { setShowAccountPicker(false) },
-    )
+    if (showCategorySheet) {
+        CategoryPickerSheet(
+            categories = state.categories,
+            selectedCategoryId = state.categorySelected?.categoryId?.value,
+            onSelected = { onIntent(AddTransactionIntent.OnCategorySelected(it)) },
+            onAddNew = { onAddNewCategory() },
+            onDismiss = { showCategorySheet = false },
+        )
+    }
+
+    if (showDateSheet) {
+        DatePickerSheet(
+            currentMillis = DateUtils.currentDateInMillis(),
+            onConfirm = { millis ->
+                onIntent(AddTransactionIntent.OnDateChangeInMillis(millis))
+            },
+            onDismiss = { showDateSheet = false },
+        )
+    }
+}
+
+// ─── Sign toggle ─────────────────────────────────────────────────────────────
+
+@Composable
+private fun SignToggle(
+    isSpend: Boolean,
+    onIncomeClick: () -> Unit,
+    onSpendClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalEmmColors.current
+    val containerShape = RoundedCornerShape(12.dp)
+    val cellShape = RoundedCornerShape(9.dp)
+
+    Row(
+        modifier = modifier
+            .clip(containerShape)
+            .background(colors.surface1)
+            .border(1.dp, colors.border, containerShape)
+            .padding(3.dp)
+            .height(38.dp),
+    ) {
+        // Income cell
+        val incomeActive = !isSpend
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxSize()
+                .clip(cellShape)
+                .then(
+                    if (incomeActive)
+                        Modifier
+                            .background(colors.surface3)
+                            .border(1.dp, colors.borderFocus, cellShape)
+                    else Modifier
+                )
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onIncomeClick,
+                ),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "+",
+                color = colors.success,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.W700,
+                fontFamily = com.emm.justchill.core.theme.PlexMonoFontFamily,
+            )
+            Spacer(Modifier.size(6.dp))
+            Text(
+                text = "Ingreso",
+                fontSize = 12.sp,
+                fontWeight = if (incomeActive) FontWeight.W600 else FontWeight.W500,
+                fontFamily = InterFontFamily,
+                color = if (incomeActive) colors.textPrimary else colors.textTertiary,
+            )
+        }
+
+        // Spend cell
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxSize()
+                .clip(cellShape)
+                .then(
+                    if (isSpend)
+                        Modifier
+                            .background(colors.surface3)
+                            .border(1.dp, colors.borderFocus, cellShape)
+                    else Modifier
+                )
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onSpendClick,
+                ),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "−",
+                color = colors.danger,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.W700,
+                fontFamily = com.emm.justchill.core.theme.PlexMonoFontFamily,
+            )
+            Spacer(Modifier.size(6.dp))
+            Text(
+                text = "Gasto",
+                fontSize = 12.sp,
+                fontWeight = if (isSpend) FontWeight.W600 else FontWeight.W500,
+                fontFamily = InterFontFamily,
+                color = if (isSpend) colors.textPrimary else colors.textTertiary,
+            )
+        }
+    }
+}
+
+// ─── Quick chip ───────────────────────────────────────────────────────────────
+
+@Composable
+private fun QuickChip(
+    eyebrow: String,
+    value: String,
+    dotColor: Color?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalEmmColors.current
+    val chipShape = RoundedCornerShape(10.dp)
+
+    Row(
+        modifier = modifier
+            .clip(chipShape)
+            .background(colors.surface1)
+            .border(1.dp, colors.border, chipShape)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(7.dp),
+    ) {
+        if (dotColor != null) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(dotColor),
+            )
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            Eyebrow(text = eyebrow)
+            Text(
+                text = value,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.W600,
+                fontFamily = InterFontFamily,
+                color = colors.textPrimary,
+                letterSpacing = (-0.06).sp,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
+        }
+
+        Icon(
+            imageVector = Icons.Outlined.KeyboardArrowDown,
+            contentDescription = null,
+            tint = colors.textDisabled,
+            modifier = Modifier.size(11.dp),
+        )
+    }
+}
+
+// ─── Note toggle + field ──────────────────────────────────────────────────────
+
+@Composable
+private fun NoteToggleButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalEmmColors.current
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Row(
+        modifier = modifier
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Add,
+            contentDescription = null,
+            tint = colors.textTertiary,
+            modifier = Modifier.size(11.dp),
+        )
+        Spacer(Modifier.size(5.dp))
+        Text(
+            text = "Agregar nota",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.W500,
+            fontFamily = InterFontFamily,
+            color = colors.textTertiary,
+        )
+    }
 }
 
 @Composable
-private fun AddScreenTopBar(
-    title: String,
-    showReset: Boolean,
-    onClose: () -> Unit,
-    onReset: () -> Unit,
+private fun NoteField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    focusRequester: FocusRequester,
+    modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing.s4, vertical = spacing.s3),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        val closeInteraction = remember { MutableInteractionSource() }
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clickable(
-                    interactionSource = closeInteraction,
-                    indication = null,
-                    onClick = onClose,
-                ),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Close,
-                contentDescription = "Cerrar",
-                tint = colors.textPrimary,
-                modifier = Modifier.size(24.dp),
-            )
-        }
-
-        Text(
-            text = title,
-            style = type.titleL,
-            color = colors.textPrimary,
-            modifier = Modifier.weight(1f),
-        )
-
-        if (showReset) {
-            val resetInteraction = remember { MutableInteractionSource() }
+    Box(modifier = modifier) {
+        if (value.isEmpty()) {
             Text(
-                text = "Limpiar",
-                style = type.labelL,
-                color = colors.textSecondary,
-                modifier = Modifier
-                    .clickable(
-                        interactionSource = resetInteraction,
-                        indication = null,
-                        onClick = onReset,
-                    )
-                    .padding(spacing.s2),
+                text = "Una nota",
+                fontSize = 12.sp,
+                fontFamily = InterFontFamily,
+                color = colors.textTertiary,
             )
         }
+        BasicTextField(
+            value = value,
+            onValueChange = { if (it.length <= 80) onValueChange(it) },
+            singleLine = true,
+            cursorBrush = SolidColor(colors.accentFocus),
+            textStyle = TextStyle(
+                fontSize = 12.sp,
+                fontFamily = InterFontFamily,
+                color = colors.textPrimary,
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester),
+        )
     }
 }
 
-private fun saveButtonLabel(state: AddTransactionUiState): String = when (state.missingField) {
-    MissingField.Amount -> "Ingresa un monto"
-    MissingField.Account -> "Elige una cuenta"
-    null -> when (state.transactionType) {
-        TransactionType.Income -> "Anotar ingreso"
-        TransactionType.Spend -> "Anotar gasto"
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * Maps a well-known account name to a dot color for the chip.
+ * Mirrors [accountSwatchColor] but is internal to the screen.
+ */
+private fun accountChipDotColor(
+    name: String,
+    colors: com.emm.justchill.core.theme.EmmColors,
+): Color {
+    val lower = name.lowercase()
+    return when {
+        "yape" in lower -> colors.catMauve
+        "plin" in lower -> colors.catSage
+        "bcp" in lower -> colors.catSlate
+        "bbva" in lower -> colors.catTerracotta
+        "interbank" in lower -> colors.catOchre
+        "scotiabank" in lower -> colors.catMauve
+        "efectivo" in lower -> colors.catOchre
+        else -> colors.catGraphite
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 900)
+// ─── Preview ─────────────────────────────────────────────────────────────────
+
+@Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 900)
 @Composable
 private fun AddTransactionPreview() {
     EmmTheme {
@@ -330,16 +561,19 @@ private fun AddTransactionPreview() {
                             icon = AppIconCatalog.catalog[it],
                             color = allColors[it],
                             categoryType = CategoryType.Income,
-                        )
+                        ),
                     )
                 }
             }
         }
         AddTransactionScreenContent(
-            state = AddTransactionUiState(categories = categories),
+            state = AddTransactionUiState(
+                categories = categories,
+                amount = "8540",
+                transactionType = TransactionType.Spend,
+            ),
             onIntent = {},
             popBackStack = {},
-            onOtherCategorySelected = {},
         )
     }
 }

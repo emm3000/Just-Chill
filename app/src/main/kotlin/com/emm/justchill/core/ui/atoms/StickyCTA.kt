@@ -3,6 +3,7 @@ package com.emm.justchill.core.ui.atoms
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,14 +36,17 @@ enum class CtaTone {
  * - Bottom container padding: 12dp top + 16dp bottom  (caller should add WindowInsets padding above this)
  * - Top hairline: always present
  *
- * @param label     Primary button label.
- * @param sublabel  Optional secondary line below the label (smaller text).
- * @param enabled   When false, the button is dimmed and non-interactive.
+ * @param label          Primary button label.
+ * @param sublabel       Optional secondary content.
+ * @param inlineSublabel When true, renders `label · sublabel` in a single Row instead of
+ *                       stacking them. Useful for the Add-Transaction CTA ("Anotar gasto · S/ 85.40").
+ * @param enabled        When false, the button is dimmed and non-interactive.
  */
 @Composable
 fun StickyCTA(
     label: String,
     sublabel: String? = null,
+    inlineSublabel: Boolean = false,
     tone: CtaTone = CtaTone.Accent,
     enabled: Boolean = true,
     onClick: () -> Unit,
@@ -76,25 +80,56 @@ fun StickyCTA(
                     else Modifier
                 ),
         ) {
-            Column(
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = label,
-                    color = fgColor,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
-                )
-                if (sublabel != null) {
+            if (inlineSublabel && sublabel != null) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     Text(
-                        text = sublabel,
-                        color = fgColor.copy(alpha = 0.65f),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.W400,
+                        text = label,
+                        color = fgColor,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.W600,
+                        fontFamily = InterFontFamily,
+                        letterSpacing = (-0.07).sp,
+                    )
+                    Text(
+                        text = "·",
+                        color = fgColor.copy(alpha = 0.6f),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.W600,
                         fontFamily = InterFontFamily,
                     )
+                    Text(
+                        text = sublabel,
+                        color = fgColor.copy(alpha = 0.9f),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.W500,
+                        fontFamily = com.emm.justchill.core.theme.PlexMonoFontFamily,
+                        letterSpacing = 0.sp,
+                    )
+                }
+            } else {
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        text = label,
+                        color = fgColor,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.W600,
+                        fontFamily = InterFontFamily,
+                    )
+                    if (sublabel != null) {
+                        Text(
+                            text = sublabel,
+                            color = fgColor.copy(alpha = 0.65f),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.W400,
+                            fontFamily = InterFontFamily,
+                        )
+                    }
                 }
             }
         }

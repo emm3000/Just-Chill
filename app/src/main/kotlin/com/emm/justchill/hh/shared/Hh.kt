@@ -322,8 +322,17 @@ fun Hh() {
                     AddTransactionScreen(
                         vm = vm,
                         popBackStack = { backStack.removeLastOrNull() },
-                        onOtherCategorySelected = { backStack.add(SelectCategoryRoute) },
                         snackbarHostState = snackbarHostState,
+                        // Category picker is now in-screen (CategoryPickerSheet).
+                        // "+ Nueva categoría" navigates to AddCategory with propagateToTransaction = true,
+                        // so the created category is propagated back via pendingCategory.
+                        onAddNewCategory = {
+                            backStack.add(
+                                CategoryRoute(
+                                    propagateToTransaction = true,
+                                ),
+                            )
+                        },
                     )
                 }
 
