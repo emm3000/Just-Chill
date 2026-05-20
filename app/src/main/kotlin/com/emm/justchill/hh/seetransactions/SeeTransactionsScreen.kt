@@ -1,7 +1,10 @@
 package com.emm.justchill.hh.seetransactions
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,43 +15,54 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.SearchOff
-import androidx.compose.material.icons.rounded.Category
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.transaction.TransactionType
-import com.emm.justchill.components.EmmListItem
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.theme.PlexMonoFontFamily
+import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.atoms.Hairline
+import com.emm.justchill.core.ui.atoms.IconTile
+import com.emm.justchill.core.ui.atoms.IconTileSize
+import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
+import androidx.compose.material.icons.rounded.Category
 import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDate
 import java.util.UUID
@@ -74,7 +88,6 @@ private fun SeeTransactionsContent(
     navigateToEdit: (String) -> Unit,
 ) {
     val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
 
     Column(
         modifier = Modifier
@@ -82,32 +95,34 @@ private fun SeeTransactionsContent(
             .background(colors.bg)
             .statusBarsPadding(),
     ) {
-        ScreenHeader(title = "Transacciones")
+        // ── Header ────────────────────────────────────────────────
+        ScreenHeader()
 
-        SearchHeader(
+        // ── Search ────────────────────────────────────────────────
+        SearchInput(
             query = state.query,
             onQueryChange = { onIntent(SeeTransactionsIntent.OnQueryChanged(it)) },
         )
 
+        // ── Category chips ────────────────────────────────────────
         CategoryChipsRow(
             chips = state.categoryChips,
             onToggle = { onIntent(SeeTransactionsIntent.OnCategoryToggled(it)) },
+            onClearFilters = { onIntent(SeeTransactionsIntent.OnClearFilters) },
         )
 
-        if (state.isFilterActive) {
-            ActiveFilterBanner(
-                onClear = { onIntent(SeeTransactionsIntent.OnClearFilters) },
-            )
-        }
+        // ── Hairline ──────────────────────────────────────────────
+        Hairline()
 
+        // ── Content area (flex 1) ─────────────────────────────────
         when {
-            state.hasNoTransactionsAtAll -> EmptyState(modifier = Modifier.fillMaxSize())
-            state.hasNoResultsForFilter -> NoResultsState(
+            state.hasNoTransactionsAtAll -> EmptyNoTransactionsAtAll(modifier = Modifier.fillMaxSize())
+            state.hasNoResultsForFilter -> EmptyFilteredNoResults(
                 query = state.query,
                 onClear = { onIntent(SeeTransactionsIntent.OnClearFilters) },
                 modifier = Modifier.fillMaxSize(),
             )
-            else -> TransactionList(
+            else -> DayGroupedList(
                 days = state.days,
                 onItemClick = navigateToEdit,
             )
@@ -115,117 +130,195 @@ private fun SeeTransactionsContent(
     }
 }
 
-@Composable
-private fun SearchHeader(
-    query: String,
-    onQueryChange: (String) -> Unit,
-) {
-    val spacing = LocalEmmSpacing.current
+// ═══════════════════════════════════════════════════════════════
+// SCREEN HEADER
+// ═══════════════════════════════════════════════════════════════
 
-    OutlinedTextField(
-        value = query,
-        onValueChange = onQueryChange,
-        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Limpiar")
-                }
-            }
-        },
-        placeholder = { Text("Buscar por descripción") },
-        singleLine = true,
+@Composable
+private fun ScreenHeader() {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+
+    Text(
+        text = "Transacciones",
+        style = type.headlineM.copy(fontSize = 22.sp, letterSpacing = (-0.44).sp),
+        color = colors.textPrimary,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = spacing.s4),
+            .padding(top = 18.dp, start = 24.dp, end = 24.dp, bottom = 12.dp),
     )
 }
 
+// ═══════════════════════════════════════════════════════════════
+// SEARCH INPUT
+// ═══════════════════════════════════════════════════════════════
+
 @Composable
-private fun CategoryChipsRow(
-    chips: List<CategoryChipUi>,
-    onToggle: (String) -> Unit,
+private fun SearchInput(
+    query: String,
+    onQueryChange: (String) -> Unit,
 ) {
-    if (chips.isEmpty()) return
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
 
-    val spacing = LocalEmmSpacing.current
-
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = spacing.s4),
-        horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = spacing.s2),
+            .padding(horizontal = 24.dp, vertical = 0.dp)
+            .padding(bottom = 14.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(colors.surface1)
+            .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+            .padding(horizontal = 12.dp, vertical = 11.dp),
     ) {
-        items(chips, key = { it.id }) { chip ->
-            FilterChip(
-                selected = chip.selected,
-                onClick = { onToggle(chip.id) },
-                label = { Text(chip.name) },
+        Icon(
+            imageVector = Icons.Outlined.Search,
+            contentDescription = null,
+            tint = colors.textTertiary,
+            modifier = Modifier.size(15.dp),
+        )
+        Spacer(Modifier.width(10.dp))
+        BasicTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            singleLine = true,
+            textStyle = type.labelM.copy(
+                color = colors.textPrimary,
+                fontSize = 13.sp,
+                letterSpacing = 0.sp,
+            ),
+            cursorBrush = SolidColor(colors.accent),
+            decorationBox = { inner ->
+                if (query.isEmpty()) {
+                    Text(
+                        text = "Buscar por descripción o monto",
+                        style = type.labelM.copy(
+                            color = colors.textTertiary,
+                            fontSize = 13.sp,
+                            letterSpacing = 0.sp,
+                        ),
+                    )
+                }
+                inner()
+            },
+            modifier = Modifier.weight(1f),
+        )
+        if (query.isNotEmpty()) {
+            Spacer(Modifier.width(8.dp))
+            Icon(
+                imageVector = Icons.Outlined.Close,
+                contentDescription = "Limpiar búsqueda",
+                tint = colors.textTertiary,
+                modifier = Modifier
+                    .size(14.dp)
+                    .clickable { onQueryChange("") },
             )
         }
     }
 }
 
-@Composable
-private fun ActiveFilterBanner(onClear: () -> Unit) {
-    val spacing = LocalEmmSpacing.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing.s4),
-        horizontalArrangement = Arrangement.End,
-    ) {
-        TextButton(onClick = onClear) {
-            Text("Limpiar filtros")
-        }
-    }
-}
+// ═══════════════════════════════════════════════════════════════
+// CATEGORY CHIPS ROW
+// ═══════════════════════════════════════════════════════════════
 
 @Composable
-private fun NoResultsState(
-    query: String,
-    onClear: () -> Unit,
-    modifier: Modifier = Modifier,
+private fun CategoryChipsRow(
+    chips: List<CategoryChipUi>,
+    onToggle: (String) -> Unit,
+    onClearFilters: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
 
-    Column(
-        modifier = modifier.padding(horizontal = spacing.s4),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    val anySelected = chips.any { it.selected }
+    // Synthetic "Todas" chip — active when no category chip is selected
+    val todasActive = !anySelected
+
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 14.dp),
     ) {
-        Icon(
-            imageVector = Icons.Outlined.SearchOff,
-            contentDescription = null,
-            tint = colors.textTertiary,
-            modifier = Modifier.size(48.dp),
-        )
-        Spacer(Modifier.height(spacing.s4))
-        Text(
-            text = if (query.isBlank()) "Sin resultados" else "Sin resultados para «$query»",
-            style = type.headlineM,
-            color = colors.textPrimary,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(spacing.s3))
-        TextButton(onClick = onClear) {
-            Text("Limpiar filtros")
+        // "Todas" synthetic chip
+        item(key = "todas") {
+            val bgColor = if (todasActive) colors.textPrimary else colors.bg
+            val borderColor = if (todasActive) colors.textPrimary else colors.border
+            val textColor = if (todasActive) colors.bg else colors.textSecondary
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(bgColor)
+                    .border(1.dp, borderColor, RoundedCornerShape(999.dp))
+                    .clickable { onClearFilters() }
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            ) {
+                Text(
+                    text = "Todas",
+                    style = type.labelM.copy(
+                        fontSize = 12.sp,
+                        letterSpacing = 0.sp,
+                    ),
+                    color = textColor,
+                )
+            }
+        }
+
+        items(chips, key = { it.id }) { chip ->
+            val bgColor = if (chip.selected) colors.textPrimary else colors.bg
+            val borderColor = if (chip.selected) colors.textPrimary else colors.border
+            val textColor = if (chip.selected) colors.bg else colors.textSecondary
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(bgColor)
+                    .border(1.dp, borderColor, RoundedCornerShape(999.dp))
+                    .clickable { onToggle(chip.id) }
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            ) {
+                Text(
+                    text = chip.name,
+                    style = type.labelM.copy(
+                        fontSize = 12.sp,
+                        letterSpacing = 0.sp,
+                    ),
+                    color = textColor,
+                )
+            }
         }
     }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// DAY-GROUPED LIST
+// ═══════════════════════════════════════════════════════════════
+
+private fun monthShortEs(month: java.time.Month): String = when (month) {
+    java.time.Month.JANUARY -> "enero"
+    java.time.Month.FEBRUARY -> "febrero"
+    java.time.Month.MARCH -> "marzo"
+    java.time.Month.APRIL -> "abril"
+    java.time.Month.MAY -> "mayo"
+    java.time.Month.JUNE -> "junio"
+    java.time.Month.JULY -> "julio"
+    java.time.Month.AUGUST -> "agosto"
+    java.time.Month.SEPTEMBER -> "septiembre"
+    java.time.Month.OCTOBER -> "octubre"
+    java.time.Month.NOVEMBER -> "noviembre"
+    java.time.Month.DECEMBER -> "diciembre"
+}
+
 @Composable
-private fun TransactionList(
+private fun DayGroupedList(
     days: List<DayGroup>,
     onItemClick: (String) -> Unit,
 ) {
-    val type = LocalEmmType.current
     val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
-
+    val type = LocalEmmType.current
     val listState = rememberLazyListState()
 
     LaunchedEffect(days.size) {
@@ -235,31 +328,44 @@ private fun TransactionList(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = listState,
-        contentPadding = PaddingValues(bottom = spacing.s8),
+        contentPadding = PaddingValues(bottom = 16.dp),
     ) {
         days.forEach { dayGroup ->
+            // Day label: HOY / AYER from readableDate, else day-name uppercased
+            val today = LocalDate.now()
+            val yesterday = today.minusDays(1)
+            val dayLabel = when (dayGroup.date) {
+                today -> "HOY"
+                yesterday -> "AYER"
+                else -> dayGroup.date.dayOfWeek
+                    .getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.forLanguageTag("es"))
+                    .uppercase()
+            }
+            val dateCaption = "${dayGroup.date.dayOfMonth} ${monthShortEs(dayGroup.date.month)}"
+
             item(key = "header-${dayGroup.date}") {
-                Text(
-                    text = dayGroup.readableDate,
-                    style = type.labelM,
-                    color = colors.textTertiary,
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(
-                            start = spacing.s4,
-                            end = spacing.s4,
-                            top = spacing.s5,
-                            bottom = spacing.s2,
+                        .padding(top = 14.dp, start = 24.dp, end = 24.dp, bottom = 8.dp),
+                ) {
+                    Eyebrow(text = dayLabel)
+                    Text(
+                        text = dateCaption,
+                        style = type.eyebrow.copy(
+                            fontSize = 10.sp,
+                            letterSpacing = 0.4.sp,
                         ),
-                )
+                        color = colors.textDisabled,
+                    )
+                }
             }
+
             items(dayGroup.transactions, key = TransactionUi::transactionId) { tx ->
-                EmmListItem(
-                    icon = tx.category.categoryIcon,
-                    title = tx.description.ifBlank { "Sin descripción" },
-                    metadata = tx.readableTime,
-                    amount = tx.amount,
-                    categoryColor = tx.category.categoryColor.primary,
+                TxRow(
+                    tx = tx,
                     onClick = { onItemClick(tx.transactionId) },
                 )
             }
@@ -268,60 +374,193 @@ private fun TransactionList(
 }
 
 @Composable
-private fun ScreenHeader(title: String) {
+private fun TxRow(
+    tx: TransactionUi,
+    onClick: () -> Unit,
+) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
 
-    Column(
+    val amountColor = if (tx.type == TransactionType.Income) colors.success else colors.textSecondary
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(
-                start = spacing.s4,
-                end = spacing.s4,
-                top = spacing.s6,
-                bottom = spacing.s4,
-            ),
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp, horizontal = 24.dp),
     ) {
+        IconTile(
+            icon = tx.category.categoryIcon,
+            size = IconTileSize.Sm,
+            tone = IconTileTone.Swatch,
+            swatch = tx.category.categoryColor.primary,
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = tx.description.ifBlank { "Sin descripción" },
+                style = type.labelM.copy(
+                    fontSize = 13.sp,
+                    letterSpacing = (-0.065).sp,
+                ),
+                color = colors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = tx.readableTime,
+                style = type.caption.copy(
+                    fontSize = 11.sp,
+                    letterSpacing = 0.11.sp,
+                ),
+                color = colors.textTertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Spacer(Modifier.width(8.dp))
         Text(
-            text = title,
-            style = type.headlineL,
+            text = tx.amount,
+            style = type.amountS,
+            color = amountColor,
+        )
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EMPTY STATES
+// ═══════════════════════════════════════════════════════════════
+
+@Composable
+private fun EmptyNoTransactionsAtAll(modifier: Modifier = Modifier) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+
+    Column(
+        modifier = modifier.padding(horizontal = 24.dp, vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        // Icon container
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(56.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(colors.surface1)
+                .border(1.dp, colors.border, RoundedCornerShape(16.dp)),
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Receipt,
+                contentDescription = null,
+                tint = colors.textTertiary,
+                modifier = Modifier.size(22.dp),
+            )
+        }
+        Spacer(Modifier.height(18.dp))
+        Text(
+            text = "Aún sin transacciones",
+            style = type.titleL.copy(
+                fontSize = 15.sp,
+                letterSpacing = (-0.075).sp,
+            ),
             color = colors.textPrimary,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Las que registres aparecerán acá agrupadas por día.",
+            style = type.caption.copy(lineHeight = 18.sp),
+            color = colors.textTertiary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.widthIn(max = 260.dp),
         )
     }
 }
 
 @Composable
-private fun EmptyState(modifier: Modifier = Modifier) {
+private fun EmptyFilteredNoResults(
+    query: String,
+    onClear: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
 
     Column(
-        modifier = modifier.padding(horizontal = spacing.s4),
+        modifier = modifier.padding(horizontal = 24.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(
-            imageVector = Icons.Outlined.Receipt,
-            contentDescription = null,
-            tint = colors.textTertiary,
-            modifier = Modifier.size(48.dp),
-        )
-        Spacer(Modifier.height(spacing.s4))
+        // Headline — query in accent mono
+        if (query.isNotEmpty()) {
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(
+                        SpanStyle(
+                            color = colors.textPrimary,
+                            fontSize = 14.sp,
+                            fontFamily = type.labelM.fontFamily,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.W600,
+                            letterSpacing = (-0.07).sp,
+                        )
+                    ) { append("Sin resultados para ") }
+                    withStyle(
+                        SpanStyle(
+                            color = colors.accent,
+                            fontFamily = PlexMonoFontFamily,
+                            fontSize = 14.sp,
+                        )
+                    ) { append("«$query»") }
+                },
+                textAlign = TextAlign.Center,
+            )
+        } else {
+            Text(
+                text = "Sin movimientos con esos filtros",
+                style = type.labelM.copy(fontSize = 14.sp, letterSpacing = (-0.07).sp),
+                color = colors.textPrimary,
+                textAlign = TextAlign.Center,
+            )
+        }
+        Spacer(Modifier.height(8.dp))
         Text(
-            text = "Aún sin transacciones",
-            style = type.headlineM,
-            color = colors.textPrimary,
+            text = "Probá con otro nombre, otro monto, o limpiá los filtros activos.",
+            style = type.caption.copy(lineHeight = 18.sp),
+            color = colors.textTertiary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.widthIn(max = 240.dp),
         )
-        Spacer(Modifier.height(spacing.s2))
-        Text(
-            text = "Las que registres aparecerán aquí",
-            style = type.bodyM,
-            color = colors.textSecondary,
-        )
+        Spacer(Modifier.height(20.dp))
+        // "Limpiar filtros" pill button
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(999.dp))
+                .border(1.dp, colors.borderFocus, RoundedCornerShape(999.dp))
+                .clickable { onClear() }
+                .padding(horizontal = 14.dp, vertical = 9.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Close,
+                contentDescription = null,
+                tint = colors.textPrimary,
+                modifier = Modifier.size(11.dp),
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = "Limpiar filtros",
+                style = type.labelM.copy(fontSize = 12.sp, letterSpacing = 0.sp),
+                color = colors.textPrimary,
+            )
+        }
     }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// PREVIEWS
+// ═══════════════════════════════════════════════════════════════
 
 @PreviewLightDark
 @Composable
