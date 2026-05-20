@@ -19,13 +19,6 @@ import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 
-enum class PillTone {
-    Neutral, // surface2 bg + textSecondary fg
-    Pos, // posMuted bg + success fg
-    Neg, // negMuted bg + danger fg
-    Accent, // accentMuted bg + accent fg
-}
-
 /**
  * Small status/tag chip.
  *

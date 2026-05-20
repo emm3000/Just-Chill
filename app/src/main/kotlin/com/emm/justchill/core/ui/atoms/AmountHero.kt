@@ -23,13 +23,6 @@ import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.abs
 
-enum class AmountTone {
-    Neutral, // textPrimary
-    Pos, // success
-    Neg, // danger
-    Mute, // textTertiary
-}
-
 /**
  * Hero amount display in IBM Plex Mono with tabular figures.
  *

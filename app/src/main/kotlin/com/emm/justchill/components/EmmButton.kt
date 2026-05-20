@@ -27,11 +27,6 @@ import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 
-/**
- * Design system button. Mirrors `docs/DESIGN_SYSTEM.md §7.1`.
- */
-enum class EmmButtonVariant { Primary, Secondary, Ghost, Destructive }
-
 @Composable
 fun EmmButton(
     text: String,

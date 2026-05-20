@@ -22,12 +22,6 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.PlexMonoFontFamily
 
-enum class CtaTone {
-    Accent, // bg = accent, fg = white
-    Pos, // bg = success, fg = white
-    Neutral, // bg = textPrimary, fg = bg
-}
-
 /**
  * Full-width sticky CTA button, typically pinned to the bottom of a screen.
  *

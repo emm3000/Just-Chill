@@ -21,7 +21,7 @@ fun Filters() {
 
 @Preview(showBackground = true)
 @Composable
-fun FiltersPreview(modifier: Modifier = Modifier) {
+private fun FiltersPreview() {
     EmmTheme {
         Filters()
     }

@@ -117,7 +117,7 @@ fun formatInputToAmount(input: TextFieldValue): TextFieldValue {
 
 @PreviewLightDark
 @Composable
-fun AmountPreview() {
+private fun AmountPreview() {
     EmmTheme {
         Surface {
             EmmAmountChill(

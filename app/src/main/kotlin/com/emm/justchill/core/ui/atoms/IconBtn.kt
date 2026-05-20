@@ -15,12 +15,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.LocalEmmColors
 
-enum class IconBtnTone {
-    Neutral,
-    Accent,
-    Danger,
-}
-
 /**
  * 48dp square icon button with 1dp border and 12dp corner radius.
  *
