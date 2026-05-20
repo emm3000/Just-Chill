@@ -13,12 +13,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -34,25 +44,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryType
-import com.emm.justchill.components.EmmButton
-import com.emm.justchill.components.EmmTextInput
 import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmRadii
-import com.emm.justchill.core.theme.LocalEmmSpacing
-import com.emm.justchill.core.theme.LocalEmmType
-import com.emm.justchill.core.ui.modalScreenInsets
-import com.emm.justchill.hh.transaction.SignChip
+import com.emm.justchill.core.ui.atoms.CtaTone
+import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.atoms.IconBtn
+import com.emm.justchill.core.ui.atoms.JcTopBar
+import com.emm.justchill.core.ui.atoms.StickyCTA
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -95,7 +111,6 @@ private fun AddCategoryContent(
     onBack: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
     val focusManager = LocalFocusManager.current
     val nameFocus = remember { FocusRequester() }
 
@@ -114,276 +129,429 @@ private fun AddCategoryContent(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg)
-            .modalScreenInsets(),
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .imePadding(),
     ) {
-        TopBar(title = "Nueva categoría", onBack = onBack)
+        JcTopBar(
+            title = "Nueva categoría",
+            left = {
+                IconBtn(
+                    icon = Icons.AutoMirrored.Outlined.ArrowBack,
+                    onClick = onBack,
+                )
+            },
+        )
 
         Column(
             modifier = Modifier
-                .weight(1f)
                 .fillMaxWidth()
+                .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = spacing.s4),
-            verticalArrangement = Arrangement.spacedBy(spacing.s6),
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            Spacer(Modifier.height(spacing.s2))
+            Spacer(Modifier.height(6.dp))
 
-            PreviewChip(
-                name = state.name,
-                icon = state.icon,
-                color = state.color,
-            )
-
-            EmmTextInput(
-                value = state.name,
-                onValueChange = { onIntent(AddCategoryIntent.OnNameChange(it)) },
-                label = "NOMBRE",
-                placeholder = "ej. Comida",
+            Box(
                 modifier = Modifier.fillMaxWidth(),
-                imeAction = ImeAction.Done,
-                keyboardActions = KeyboardActions(onDone = { attemptSave() }),
-                focusRequester = nameFocus,
-            )
+                contentAlignment = Alignment.Center,
+            ) {
+                PreviewChip(
+                    name = state.name,
+                    icon = state.icon,
+                    color = state.color,
+                    type = state.categoryType,
+                )
+            }
 
-            TypeRow(
-                selected = state.categoryType,
-                onFlip = {
-                    onIntent(
-                        AddCategoryIntent.OnCategoryTypeChange(
-                            when (state.categoryType) {
-                                CategoryType.Income -> CategoryType.Spend
-                                CategoryType.Spend -> CategoryType.Income
-                            }
-                        )
-                    )
-                },
-            )
+            Section(eyebrow = "NOMBRE") {
+                NameInput(
+                    value = state.name,
+                    onValueChange = { onIntent(AddCategoryIntent.OnNameChange(it)) },
+                    focusRequester = nameFocus,
+                    onImeDone = { attemptSave() },
+                )
+            }
 
-            IconRow(
-                selected = state.icon,
-                onSelect = { onIntent(AddCategoryIntent.OnIconChange(it)) },
-            )
+            Section(eyebrow = "TIPO") {
+                TypeSegmented(
+                    selected = state.categoryType,
+                    onSelect = { onIntent(AddCategoryIntent.OnCategoryTypeChange(it)) },
+                )
+            }
 
-            ColorRow(
-                selected = state.color,
-                onSelect = { onIntent(AddCategoryIntent.OnColorChange(it)) },
-            )
+            Section(eyebrow = "ÍCONO") {
+                IconGrid(
+                    selected = state.icon,
+                    accent = state.color.primary,
+                    onSelect = { onIntent(AddCategoryIntent.OnIconChange(it)) },
+                )
+            }
 
-            Spacer(Modifier.height(spacing.s4))
+            Section(eyebrow = "COLOR") {
+                ColorRow(
+                    selected = state.color,
+                    onSelect = { onIntent(AddCategoryIntent.OnColorChange(it)) },
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
         }
 
-        EmmButton(
-            text = saveButtonLabel(state),
-            onClick = attemptSave,
+        StickyCTA(
+            label = saveButtonLabel(state),
+            tone = CtaTone.Accent,
             enabled = state.isAllFieldValidated,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(spacing.s4),
+            onClick = attemptSave,
         )
     }
 }
 
 private fun saveButtonLabel(state: AddCategoryUiState): String {
     val trimmed = state.name.trim()
-    return if (trimmed.isBlank()) "Escribe un nombre"
-    else "Crear «$trimmed»"
+    return if (trimmed.isBlank()) "Escribe un nombre" else "Crear «$trimmed»"
 }
+
+// ── Section ────────────────────────────────────────────────────────
+
+@Composable
+private fun Section(eyebrow: String, content: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Eyebrow(text = eyebrow)
+        content()
+    }
+}
+
+// ── Preview chip ───────────────────────────────────────────────────
 
 @Composable
 private fun PreviewChip(
     name: String,
     icon: IconCatalog,
     color: CategoryColor,
+    type: CategoryType,
+    modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val radii = LocalEmmRadii.current
-    val spacing = LocalEmmSpacing.current
 
     val displayName = name.trim().ifBlank { "Tu categoría" }
-    val labelColor = if (name.isBlank()) colors.textTertiary else colors.textPrimary
+    val nameColor = if (name.isBlank()) colors.textTertiary else colors.textPrimary
+    val shape = RoundedCornerShape(999.dp)
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = modifier
+            .clip(shape)
+            .background(colors.surface1)
+            .border(1.dp, colors.border, shape)
+            .padding(start = 10.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(34.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(colors.surface3),
+        ) {
+            Icon(
+                imageVector = icon.icon,
+                contentDescription = null,
+                tint = color.primary,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+        Text(
+            text = displayName,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.W600,
+            fontFamily = InterFontFamily,
+            color = nameColor,
+            letterSpacing = (-0.075).sp,
+        )
+        TypeBadge(type = type)
+    }
+}
+
+@Composable
+private fun TypeBadge(type: CategoryType) {
+    val colors = LocalEmmColors.current
+    val isIncome = type == CategoryType.Income
+    val bg = if (isIncome) colors.posMuted else colors.negMuted
+    val fg = if (isIncome) colors.success else colors.danger
+    val label = if (isIncome) "Ingreso" else "Gasto"
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(bg)
+            .padding(horizontal = 9.dp, vertical = 3.dp),
+    ) {
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.W600,
+            fontFamily = InterFontFamily,
+            color = fg,
+            letterSpacing = 0.sp,
+        )
+    }
+}
+
+// ── Name input ─────────────────────────────────────────────────────
+
+@Composable
+private fun NameInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    focusRequester: FocusRequester,
+    onImeDone: () -> Unit,
+) {
+    val colors = LocalEmmColors.current
+
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        textStyle = TextStyle(
+            color = colors.textPrimary,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.W500,
+            fontFamily = InterFontFamily,
+            letterSpacing = (-0.18).sp,
+        ),
+        cursorBrush = SolidColor(colors.accent),
+        singleLine = true,
+        keyboardActions = KeyboardActions(onDone = { onImeDone() }),
+        modifier = Modifier
+            .fillMaxWidth()
+            .focusRequester(focusRequester)
+            .drawBehind {
+                drawLine(
+                    color = colors.border,
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = 1f,
+                )
+            }
+            .padding(vertical = 8.dp),
+        decorationBox = { inner ->
+            Box {
+                if (value.isEmpty()) {
+                    Text(
+                        text = "ej. Comida",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.W400,
+                        fontFamily = InterFontFamily,
+                        color = colors.textTertiary,
+                    )
+                }
+                inner()
+            }
+        },
+    )
+}
+
+// ── Tipo segmented ─────────────────────────────────────────────────
+
+@Composable
+private fun TypeSegmented(
+    selected: CategoryType,
+    onSelect: (CategoryType) -> Unit,
+) {
+    val colors = LocalEmmColors.current
+    val shape = RoundedCornerShape(12.dp)
 
     Row(
         modifier = Modifier
-            .background(colors.surface1, radii.rFull)
-            .border(1.dp, colors.border, radii.rFull)
-            .padding(horizontal = spacing.s4, vertical = spacing.s3),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(spacing.s3),
+            .fillMaxWidth()
+            .clip(shape)
+            .background(colors.surface1)
+            .border(1.dp, colors.border, shape)
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Icon(
-            imageVector = icon.icon,
-            contentDescription = null,
-            tint = color.primary,
-            modifier = Modifier.size(24.dp),
+        TypeSegCell(
+            label = "Ingreso",
+            selected = selected == CategoryType.Income,
+            onClick = { onSelect(CategoryType.Income) },
+            modifier = Modifier.weight(1f),
         )
-        Text(
-            text = displayName,
-            style = type.titleL,
-            color = labelColor,
-            maxLines = 1,
+        TypeSegCell(
+            label = "Gasto",
+            selected = selected == CategoryType.Spend,
+            onClick = { onSelect(CategoryType.Spend) },
+            modifier = Modifier.weight(1f),
         )
     }
 }
 
 @Composable
-private fun TypeRow(
-    selected: CategoryType,
-    onFlip: () -> Unit,
+private fun TypeSegCell(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
+    val shape = RoundedCornerShape(9.dp)
+    val bg = if (selected) colors.surface3 else Color.Transparent
+    val fg = if (selected) colors.textPrimary else colors.textSecondary
 
-    val sign = if (selected == CategoryType.Income) "+" else "−"
-    val label = if (selected == CategoryType.Income) "Ingreso" else "Gasto"
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .clip(shape)
+            .background(bg)
+            .clickable(onClick = onClick)
+            .padding(vertical = 11.dp),
+    ) {
+        Text(
+            text = label,
+            fontSize = 13.sp,
+            fontFamily = InterFontFamily,
+            fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
+            color = fg,
+        )
+    }
+}
 
-    Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
-        Text(text = "TIPO", style = type.labelM, color = colors.textTertiary)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(spacing.s3),
-        ) {
-            SignChip(sign = sign, onClick = onFlip)
-            Text(
-                text = label,
-                style = type.bodyL,
-                color = colors.textPrimary,
+// ── Icon grid (2 rows × horizontal scroll) ─────────────────────────
+
+@Composable
+private fun IconGrid(
+    selected: IconCatalog,
+    accent: Color,
+    onSelect: (IconCatalog) -> Unit,
+) {
+    LazyHorizontalGrid(
+        rows = GridCells.Fixed(2),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(0.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(112.dp),
+    ) {
+        items(AppIconCatalog.catalog, key = IconCatalog::id) { icon ->
+            IconCell(
+                icon = icon,
+                selected = icon == selected,
+                accent = accent,
+                onClick = { onSelect(icon) },
             )
         }
     }
 }
 
 @Composable
-private fun IconRow(
-    selected: IconCatalog,
-    onSelect: (IconCatalog) -> Unit,
+private fun IconCell(
+    icon: IconCatalog,
+    selected: Boolean,
+    accent: Color,
+    onClick: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
+    val shape = RoundedCornerShape(12.dp)
+    val border = if (selected) accent else colors.border
+    val bg = if (selected) accent.copy(alpha = 0.14f) else colors.surface1
+    val tint = if (selected) accent else colors.textSecondary
 
-    Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
-        Text(text = "ÍCONO", style = type.labelM, color = colors.textTertiary)
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
-            contentPadding = PaddingValues(horizontal = spacing.s1),
-        ) {
-            items(AppIconCatalog.catalog, key = IconCatalog::id) { icon ->
-                val isSelected = icon == selected
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(if (isSelected) colors.surface2 else colors.surface1)
-                        .border(
-                            width = if (isSelected) 2.dp else 1.dp,
-                            color = if (isSelected) colors.accentFocus else colors.border,
-                            shape = CircleShape,
-                        )
-                        .clickable { onSelect(icon) },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = icon.icon,
-                        contentDescription = icon.name,
-                        tint = colors.textPrimary,
-                    )
-                }
-            }
-        }
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(52.dp)
+            .clip(shape)
+            .background(bg)
+            .border(1.dp, border, shape)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            ),
+    ) {
+        Icon(
+            imageVector = icon.icon,
+            contentDescription = icon.name,
+            tint = tint,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
+
+// ── Color row ──────────────────────────────────────────────────────
 
 @Composable
 private fun ColorRow(
     selected: CategoryColor,
     onSelect: (CategoryColor) -> Unit,
 ) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
-
-    Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
-        Text(text = "COLOR", style = type.labelM, color = colors.textTertiary)
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(spacing.s3),
-            contentPadding = PaddingValues(horizontal = spacing.s1),
-        ) {
-            items(allColors, key = CategoryColor::id) { color ->
-                val isSelected = color == selected
-                val interactionSource = remember { MutableInteractionSource() }
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(color.primary)
-                        .clickable(
-                            interactionSource = interactionSource,
-                            indication = null,
-                            onClick = { onSelect(color) },
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (isSelected) {
-                        Icon(
-                            imageVector = Icons.Outlined.Check,
-                            contentDescription = "Seleccionado",
-                            tint = colors.textOnAccent,
-                            modifier = Modifier.size(22.dp),
-                        )
-                    }
-                }
-            }
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        contentPadding = PaddingValues(horizontal = 2.dp),
+    ) {
+        items(allColors, key = CategoryColor::id) { color ->
+            ColorDot(
+                color = color,
+                selected = color == selected,
+                onClick = { onSelect(color) },
+            )
         }
     }
 }
 
 @Composable
-private fun TopBar(title: String, onBack: () -> Unit) {
+private fun ColorDot(
+    color: CategoryColor,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
 
-    Row(
+    Box(
+        contentAlignment = Alignment.Center,
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing.s4, vertical = spacing.s3),
-        verticalAlignment = Alignment.CenterVertically,
+            .size(44.dp)
+            .clip(CircleShape)
+            .background(color.primary)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            ),
     ) {
-        val interactionSource = remember { MutableInteractionSource() }
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = onBack,
-                ),
-            contentAlignment = Alignment.CenterStart,
-        ) {
+        if (selected) {
             Icon(
-                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                contentDescription = "Volver",
-                tint = colors.textPrimary,
-                modifier = Modifier.size(24.dp),
+                imageVector = Icons.Outlined.Check,
+                contentDescription = "Seleccionado",
+                tint = Color.White,
+                modifier = Modifier.size(18.dp),
             )
         }
-        Text(
-            text = title,
-            style = type.titleL,
-            color = colors.textPrimary,
-            modifier = Modifier.weight(1f),
-        )
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 900)
+@Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 900)
 @Composable
 private fun AddCategoryScreenPreview() {
     EmmTheme {
         AddCategoryContent(
-            state = AddCategoryUiState(name = "Comida"),
+            state = AddCategoryUiState(
+                name = "Regalos",
+                categoryType = CategoryType.Spend,
+                isAllFieldValidated = true,
+            ),
+            onIntent = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 900)
+@Composable
+private fun AddCategoryScreenEmptyPreview() {
+    EmmTheme {
+        AddCategoryContent(
+            state = AddCategoryUiState(),
             onIntent = {},
         )
     }
