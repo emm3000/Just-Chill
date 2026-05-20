@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.PlexMonoFontFamily
 import java.text.DecimalFormat
+import java.text.NumberFormat
+import java.util.Locale
 import kotlin.math.abs
 
 enum class AmountTone {
@@ -57,7 +59,11 @@ fun AmountHero(
     }
 
     val absValue = abs(value)
-    val intPart = remember(absValue) { absValue.toLong().toString() }
+    val isNegative = value < 0
+    val intPart = remember(absValue) {
+        val formatter = NumberFormat.getIntegerInstance(Locale("es", "PE"))
+        formatter.format(absValue.toLong())
+    }
     val decPart = remember(absValue, withDecimals) {
         if (withDecimals) {
             val formatter = DecimalFormat("00")
@@ -70,34 +76,39 @@ fun AmountHero(
         fontFamily = PlexMonoFontFamily,
         fontWeight = FontWeight.W500,
         fontFeatureSettings = "tnum",
+        letterSpacing = (-0.04 * size.value).sp,
     )
 
     Row(
         verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        // Prefix "S/"
+        // Prefix "S/" — 40% size, textTertiary
         Text(
             text = prefix,
-            style = monoStyle.copy(fontSize = prefixSize),
+            style = monoStyle.copy(
+                fontSize = prefixSize,
+                fontWeight = FontWeight.W400,
+                letterSpacing = 0.sp,
+            ),
             color = colors.textTertiary,
         )
 
-        // Integer part
-        Text(
-            text = intPart,
-            style = monoStyle.copy(fontSize = size),
-            color = mainColor,
-        )
-
-        // Decimal part
-        if (decPart != null) {
+        // Integer + decimals — same size, decimals at 0.55 alpha
+        Row(verticalAlignment = Alignment.Bottom) {
             Text(
-                text = ".$decPart",
-                style = monoStyle.copy(fontSize = prefixSize),
+                text = if (isNegative) "−$intPart" else intPart,
+                style = monoStyle.copy(fontSize = size),
                 color = mainColor,
-                modifier = Modifier.alpha(0.55f),
             )
+            if (decPart != null) {
+                Text(
+                    text = ".$decPart",
+                    style = monoStyle.copy(fontSize = size),
+                    color = mainColor,
+                    modifier = Modifier.alpha(0.55f),
+                )
+            }
         }
     }
 }
