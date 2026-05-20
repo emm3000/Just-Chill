@@ -67,8 +67,36 @@ jobs:
             app/build/reports/tests/testDevDebugUnitTest/
           retention-days: 7
 
+  detekt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-android
+        with:
+          keystore-properties: ${{ secrets.JUST_VERONICA }}
+          signing-key-base64: ${{ secrets.JUST_CHILL }}
+          cache-read-only: 'true'
+
+      - name: Run detekt
+        run: ./gradlew detekt
+
+      - name: Upload detekt reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: detekt-reports
+          path: |
+            app/build/reports/detekt/
+            data/build/reports/detekt/
+            domain/build/reports/detekt/
+          retention-days: 7
+
   build:
-    needs: [ lint, unit-test ]
+    needs: [ lint, unit-test, detekt ]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
