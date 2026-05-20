@@ -73,7 +73,12 @@ fun NoteSheet(
     }
     val focusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    // Wait for the sheet slide-in to finish (~150ms) before focusing the field
+    // — keeps the sheet and IME animations from colliding.
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(150)
+        focusRequester.requestFocus()
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
