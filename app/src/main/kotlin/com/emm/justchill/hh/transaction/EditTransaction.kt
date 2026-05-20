@@ -15,10 +15,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -250,34 +247,17 @@ private fun EditTransactionContent(
     }
 
     if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = {
-                Text(
-                    text = "Eliminar transacción",
-                    color = colors.textPrimary,
-                )
+        DeleteTransactionDialog(
+            type = state.transactionType,
+            amountCents = state.amount,
+            accountName = state.accountSelected?.name,
+            categoryName = state.categorySelected?.name,
+            categoryColor = state.categorySelected?.color?.primary,
+            onConfirm = {
+                showDeleteDialog = false
+                onIntent(EditTransactionIntent.OnDelete)
             },
-            text = {
-                Text(
-                    text = "Esta acción no se puede deshacer.",
-                    color = colors.textSecondary,
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDeleteDialog = false
-                    onIntent(EditTransactionIntent.OnDelete)
-                }) {
-                    Text(text = "Eliminar", color = colors.danger)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text(text = "Cancelar", color = colors.textSecondary)
-                }
-            },
-            containerColor = colors.surface2,
+            onDismiss = { showDeleteDialog = false },
         )
     }
 }
