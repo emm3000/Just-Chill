@@ -42,5 +42,6 @@ class HomeViewModel(
         income = data.income,
         spend = data.spend,
         balance = data.balance,
+        hasAnyTransaction = data.hasAnyTransaction,
     )
 }

@@ -8,4 +8,5 @@ data class HomeData(
     val income: Money,
     val spend: Money,
     val balance: Money,
+    val hasAnyTransaction: Boolean,
 )

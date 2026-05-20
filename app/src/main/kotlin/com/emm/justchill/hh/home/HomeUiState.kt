@@ -13,4 +13,10 @@ data class HomeUiState(
     val income: Money = Money.Zero,
     val spend: Money = Money.Zero,
     val balance: Money = Money.Zero,
-) : UiState
+    val hasAnyTransaction: Boolean = false,
+) : UiState {
+    val isFirstLaunch: Boolean
+        get() = !hasAnyTransaction
+    val isMonthEmpty: Boolean
+        get() = hasAnyTransaction && lastTransactions.isEmpty()
+}

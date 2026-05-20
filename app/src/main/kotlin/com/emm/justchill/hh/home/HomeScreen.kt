@@ -25,8 +25,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.rounded.Category
@@ -101,6 +103,34 @@ fun HomeScreen(
     onPreviousMonth: () -> Unit = {},
     onNextMonth: () -> Unit = {},
 ) {
+    when {
+        homeData.isFirstLaunch -> FirstLaunchEmpty(onAddClick = navigateToAdd)
+        homeData.isMonthEmpty -> MonthEmpty(
+            month = homeData.month,
+            onPreviousMonth = onPreviousMonth,
+            onNextMonth = onNextMonth,
+            onAddClick = navigateToAdd,
+        )
+        else -> HomeWithData(
+            homeData = homeData,
+            navigateToAll = navigateToAll,
+            navigateToReport = navigateToReport,
+            navigateToAdd = navigateToAdd,
+            onPreviousMonth = onPreviousMonth,
+            onNextMonth = onNextMonth,
+        )
+    }
+}
+
+@Composable
+private fun HomeWithData(
+    homeData: HomeUiState,
+    navigateToAll: () -> Unit,
+    navigateToReport: () -> Unit,
+    navigateToAdd: () -> Unit,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+) {
     val colors = LocalEmmColors.current
 
     LazyColumn(
@@ -109,7 +139,6 @@ fun HomeScreen(
             .background(colors.bg)
             .statusBarsPadding(),
     ) {
-        // Month pill — centered, 14dp top padding
         item {
             Box(
                 modifier = Modifier
@@ -124,23 +153,9 @@ fun HomeScreen(
                 )
             }
         }
-
-        // Hero balance — 30dp top, 24dp horizontal
-        item {
-            HeroBalance(balance = homeData.balance, month = homeData.month.shortLabel())
-        }
-
-        // In/Out row — 24dp top, 24dp horizontal
-        item {
-            InOutRow(income = homeData.income, spend = homeData.spend)
-        }
-
-        // Report preview card — 22dp top, 20dp horizontal
-        item {
-            ReportPreviewCard(onClick = navigateToReport)
-        }
-
-        // Recents header — 24dp top, 24dp horizontal, 8dp bottom
+        item { HeroBalance(balance = homeData.balance, month = homeData.month.shortLabel()) }
+        item { InOutRow(income = homeData.income, spend = homeData.spend) }
+        item { ReportPreviewCard(onClick = navigateToReport) }
         item {
             RecentsHeader(
                 onViewAll = navigateToAll,
@@ -149,24 +164,9 @@ fun HomeScreen(
                     .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 8.dp),
             )
         }
-
-        // Recents list or empty state
-        if (homeData.lastTransactions.isEmpty()) {
-            item {
-                EmptyHomeCard(
-                    onAddClick = navigateToAdd,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 32.dp),
-                )
-            }
-        } else {
-            items(homeData.lastTransactions, TransactionUi::transactionId) { tx ->
-                TransactionRow(tx = tx)
-            }
+        items(homeData.lastTransactions, TransactionUi::transactionId) { tx ->
+            TransactionRow(tx = tx)
         }
-
-        // Bottom padding
         item { Spacer(Modifier.height(16.dp)) }
     }
 }
@@ -458,99 +458,227 @@ private fun TransactionRow(tx: TransactionUi) {
     }
 }
 
-// ── Empty state ───────────────────────────────────────────────────────────────
+// ── Empty states ──────────────────────────────────────────────────────────────
 
 @Composable
-private fun EmptyHomeCard(
-    onAddClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun FirstLaunchEmpty(onAddClick: () -> Unit) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val radii = LocalEmmRadii.current
-    val interactionSource = remember { MutableInteractionSource() }
-
     Box(
-        modifier = modifier,
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.bg)
+            .statusBarsPadding()
+            .padding(horizontal = 32.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Column(
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            AccentSparkleTile()
+            Spacer(Modifier.height(28.dp))
+            EmptyTitle(text = "Tu plata empieza acá.")
+            Spacer(Modifier.height(10.dp))
+            EmptyBody(text = "Anotá tu primer Yape, sueldo o gasto.\nTe toma 15 segundos.")
+            Spacer(Modifier.height(28.dp))
+            FilledAccentCta(
+                label = "Anotar el primero",
+                onClick = onAddClick,
+                leadingIcon = Icons.Outlined.Add,
+            )
+        }
+    }
+}
+
+@Composable
+private fun MonthEmpty(
+    month: YearMonth,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+    onAddClick: () -> Unit,
+) {
+    val colors = LocalEmmColors.current
+    val prevName = remember(month) { month.previous().shortLabel().lowercase() }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.bg)
+            .statusBarsPadding(),
+    ) {
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(
-                    width = 1.dp,
-                    color = colors.borderFocus,
-                    shape = RoundedCornerShape(18.dp),
-                )
-                .padding(horizontal = 24.dp, vertical = 36.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .padding(top = 14.dp, start = 20.dp, end = 20.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            // Accent-tinted sparkle icon
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(colors.accentMuted),
-            ) {
+            MonthSelector(
+                label = month.fullLabel(),
+                onPrev = onPreviousMonth,
+                onNext = onNextMonth,
+            )
+        }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(
-                    imageVector = Icons.Outlined.AutoAwesome,
+                    imageVector = Icons.Outlined.CalendarMonth,
                     contentDescription = null,
-                    tint = colors.accent,
-                    modifier = Modifier.size(20.dp),
+                    tint = colors.textTertiary,
+                    modifier = Modifier.size(26.dp),
                 )
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            Text(
-                text = "Aún no hay movimientos",
-                style = type.titleM,
-                color = colors.textPrimary,
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = "Tu primer movimiento te toma 15 segundos. Tipea el monto, elige la categoría, listo.",
-                style = type.bodyM.copy(lineHeight = (13 * 1.5).sp),
-                color = colors.textTertiary,
-                modifier = Modifier.widthIn(max = 260.dp),
-            )
-
-            Spacer(Modifier.height(20.dp))
-
-            // CTA button
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(colors.accent)
-                    .clickable(
-                        interactionSource = interactionSource,
-                        indication = null,
+                Spacer(Modifier.height(20.dp))
+                EmptyTitle(text = "${month.shortLabel()} aún vacío.")
+                Spacer(Modifier.height(10.dp))
+                EmptyBody(text = "No registraste nada en este mes\ntodavía.")
+                Spacer(Modifier.height(22.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    FilledAccentCta(
+                        label = "Anotar acá",
                         onClick = onAddClick,
+                        leadingIcon = Icons.Outlined.Add,
                     )
-                    .padding(horizontal = 18.dp, vertical = 11.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Add,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(14.dp),
-                )
-                Text(
-                    text = "Anotar el primero",
-                    style = TextStyle(
-                        fontFamily = InterFontFamily,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.W600,
-                    ),
-                    color = Color.White,
-                )
+                    OutlinedCta(
+                        label = "Ir a $prevName",
+                        onClick = onPreviousMonth,
+                        leadingIcon = Icons.AutoMirrored.Outlined.ArrowBack,
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun AccentSparkleTile() {
+    val colors = LocalEmmColors.current
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(56.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.accentMuted),
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.AutoAwesome,
+            contentDescription = null,
+            tint = colors.accent,
+            modifier = Modifier.size(24.dp),
+        )
+    }
+}
+
+@Composable
+private fun EmptyTitle(text: String) {
+    val colors = LocalEmmColors.current
+    Text(
+        text = text,
+        style = TextStyle(
+            fontFamily = InterFontFamily,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.W700,
+            letterSpacing = (-0.4).sp,
+        ),
+        color = colors.textPrimary,
+        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+    )
+}
+
+@Composable
+private fun EmptyBody(text: String) {
+    val colors = LocalEmmColors.current
+    Text(
+        text = text,
+        style = TextStyle(
+            fontFamily = InterFontFamily,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.W400,
+            lineHeight = 19.sp,
+        ),
+        color = colors.textSecondary,
+        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        modifier = Modifier.widthIn(max = 280.dp),
+    )
+}
+
+@Composable
+private fun FilledAccentCta(
+    label: String,
+    onClick: () -> Unit,
+    leadingIcon: androidx.compose.ui.graphics.vector.ImageVector,
+) {
+    val colors = LocalEmmColors.current
+    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(colors.accent)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(horizontal = 20.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(
+            imageVector = leadingIcon,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(14.dp),
+        )
+        Text(
+            text = label,
+            style = TextStyle(
+                fontFamily = InterFontFamily,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.W600,
+            ),
+            color = Color.White,
+        )
+    }
+}
+
+@Composable
+private fun OutlinedCta(
+    label: String,
+    onClick: () -> Unit,
+    leadingIcon: androidx.compose.ui.graphics.vector.ImageVector,
+) {
+    val colors = LocalEmmColors.current
+    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(colors.surface1)
+            .border(1.dp, colors.border, RoundedCornerShape(999.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(horizontal = 18.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(
+            imageVector = leadingIcon,
+            contentDescription = null,
+            tint = colors.textPrimary,
+            modifier = Modifier.size(14.dp),
+        )
+        Text(
+            text = label,
+            style = TextStyle(
+                fontFamily = InterFontFamily,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.W600,
+            ),
+            color = colors.textPrimary,
+        )
     }
 }
 

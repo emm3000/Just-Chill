@@ -49,6 +49,7 @@ class GetHomeDataUseCase(
             income = income,
             spend = spend,
             balance = balance,
+            hasAnyTransaction = allTransactions.isNotEmpty(),
         )
     }
 }
