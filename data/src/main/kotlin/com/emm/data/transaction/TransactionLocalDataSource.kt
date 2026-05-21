@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
+@Suppress("TooManyFunctions")
 class TransactionLocalDataSource(private val tq: TransactionsQueries) {
 
     suspend fun create(transactionInsert: TransactionInsert) = withContext(Dispatchers.IO) {
@@ -115,15 +116,12 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             row.movementCount to row.totalAmount
         }
 
-    suspend fun topUsedCategoryIds(
-        type: TransactionType,
-        startInclusive: Long,
-        limit: Long,
-    ): List<String> = withContext(Dispatchers.IO) {
-        tq.topUsedCategoryIds(
-            type = type.name,
-            startInclusive = startInclusive,
-            limit = limit,
-        ).executeAsList().filterNotNull()
-    }
+    suspend fun topUsedCategoryIds(type: TransactionType, startInclusive: Long, limit: Long): List<String> =
+        withContext(Dispatchers.IO) {
+            tq.topUsedCategoryIds(
+                type = type.name,
+                startInclusive = startInclusive,
+                limit = limit,
+            ).executeAsList().filterNotNull()
+        }
 }

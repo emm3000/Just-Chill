@@ -18,6 +18,7 @@ import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+@Suppress("TooManyFunctions")
 class DefaultTransactionRepository(private val localDataSource: TransactionLocalDataSource) : TransactionRepository {
 
     override suspend fun create(transactionInsert: TransactionInsert) = safeDbCall {
@@ -86,12 +87,9 @@ class DefaultTransactionRepository(private val localDataSource: TransactionLocal
         )
     }
 
-    override suspend fun topUsedCategoryIds(
-        type: TransactionType,
-        startInclusive: Long,
-        limit: Int,
-    ): List<CategoryId> = safeDbCall {
-        localDataSource.topUsedCategoryIds(type, startInclusive, limit.toLong())
-            .map { CategoryId(it) }
-    }
+    override suspend fun topUsedCategoryIds(type: TransactionType, startInclusive: Long, limit: Int): List<CategoryId> =
+        safeDbCall {
+            localDataSource.topUsedCategoryIds(type, startInclusive, limit.toLong())
+                .map { CategoryId(it) }
+        }
 }

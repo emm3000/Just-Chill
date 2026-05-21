@@ -3,9 +3,7 @@ package com.emm.domain.transaction
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.currentTimeInMillis
 
-class GetTopUsedCategoryIdsUseCase(
-    private val transactionRepository: TransactionRepository,
-) {
+class GetTopUsedCategoryIdsUseCase(private val transactionRepository: TransactionRepository) {
     suspend operator fun invoke(
         type: TransactionType,
         windowDays: Int = WINDOW_DAYS,
