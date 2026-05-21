@@ -1,6 +1,8 @@
 package com.emm.domain.transaction
 
 import com.emm.domain.report.CategoryAmount
+import com.emm.domain.report.MonthlySectionStats
+import com.emm.domain.shared.Money
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.TransactionId
 import kotlinx.coroutines.flow.Flow
@@ -18,6 +20,7 @@ class FakeTransactionRepository : TransactionRepository {
     var searchWithCategoryToReturn: List<TransactionWithCategory> = emptyList()
     var countByAccountToReturn: Long = 0L
     var monthlyAmountByCategoryToReturn: List<CategoryAmount> = emptyList()
+    var monthlyStatsToReturn: MonthlySectionStats = MonthlySectionStats(0, Money.Zero)
 
     override suspend fun create(transactionInsert: TransactionInsert) {
         lastCreated = transactionInsert
@@ -53,4 +56,10 @@ class FakeTransactionRepository : TransactionRepository {
         startInclusive: Long,
         endExclusive: Long,
     ): List<CategoryAmount> = monthlyAmountByCategoryToReturn
+
+    override suspend fun monthlyStats(
+        type: TransactionType,
+        startInclusive: Long,
+        endExclusive: Long,
+    ): MonthlySectionStats = monthlyStatsToReturn
 }

@@ -104,4 +104,17 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             endExclusive = endExclusive,
         ).executeAsList().map { it.asEntity() }
     }
+
+    suspend fun monthlyStats(
+        type: TransactionType,
+        startInclusive: Long,
+        endExclusive: Long,
+    ): Pair<Long, Long> = withContext(Dispatchers.IO) {
+        val row = tq.monthlyStats(
+            type = type.name,
+            startInclusive = startInclusive,
+            endExclusive = endExclusive,
+        ).executeAsOne()
+        row.movementCount to row.totalAmount
+    }
 }

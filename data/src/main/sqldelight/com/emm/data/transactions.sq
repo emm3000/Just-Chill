@@ -82,6 +82,13 @@ DELETE FROM transactions WHERE transactionId = ?;
 deleteAll:
 DELETE FROM transactions;
 
+monthlyStats:
+SELECT COUNT(*) AS movementCount, COALESCE(SUM(amount), 0) AS totalAmount
+FROM transactions
+WHERE type = :type
+  AND date >= :startInclusive
+  AND date < :endExclusive;
+
 monthlyAmountByCategory:
 SELECT
     c.categoryId AS categoryId,

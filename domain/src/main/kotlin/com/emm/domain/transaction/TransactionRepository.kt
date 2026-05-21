@@ -1,6 +1,7 @@
 package com.emm.domain.transaction
 
 import com.emm.domain.report.CategoryAmount
+import com.emm.domain.report.MonthlySectionStats
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.TransactionId
 import kotlinx.coroutines.flow.Flow
@@ -30,4 +31,10 @@ interface TransactionRepository {
         startInclusive: Long,
         endExclusive: Long,
     ): List<CategoryAmount>
+
+    suspend fun monthlyStats(
+        type: TransactionType,
+        startInclusive: Long,
+        endExclusive: Long,
+    ): MonthlySectionStats
 }

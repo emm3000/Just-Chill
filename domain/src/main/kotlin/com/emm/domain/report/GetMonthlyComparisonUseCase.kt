@@ -25,6 +25,7 @@ class GetMonthlyComparisonUseCase(private val transactionRepository: Transaction
             currentTotal = currentTotal,
             previousTotal = previousTotal,
             deltaPercent = delta,
+            absoluteDelta = currentTotal - previousTotal,
         )
     }
 

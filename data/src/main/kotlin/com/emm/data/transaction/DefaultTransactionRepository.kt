@@ -3,6 +3,8 @@ package com.emm.data.transaction
 import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.safeDbCall
 import com.emm.domain.report.CategoryAmount
+import com.emm.domain.report.MonthlySectionStats
+import com.emm.domain.shared.Money
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.Transaction
@@ -68,5 +70,18 @@ class DefaultTransactionRepository(private val localDataSource: TransactionLocal
     ): List<CategoryAmount> = safeDbCall {
         localDataSource.monthlyAmountByCategory(type, startInclusive, endExclusive)
             .map { it.toDomain() }
+    }
+
+    override suspend fun monthlyStats(
+        type: TransactionType,
+        startInclusive: Long,
+        endExclusive: Long,
+    ): MonthlySectionStats = safeDbCall {
+        val (count, total) = localDataSource.monthlyStats(type, startInclusive, endExclusive)
+        val average = if (count == 0L) Money.Zero else Money(total / count)
+        MonthlySectionStats(
+            movementCount = count.toInt(),
+            averageAmount = average,
+        )
     }
 }
