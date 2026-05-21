@@ -1,6 +1,9 @@
 package com.emm.justchill.hh.report
 
+import android.content.Intent
+import android.content.Intent.EXTRA_TEXT
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -15,17 +18,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,10 +44,19 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
-import com.emm.justchill.hh.report.components.IncomeByCategoryBars
+import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.atoms.SegmentOption
+import com.emm.justchill.core.ui.atoms.Segmented
+import com.emm.justchill.hh.report.components.CategoryBarsCard
+import com.emm.justchill.hh.report.components.ComparisonPill
 import com.emm.justchill.hh.report.components.MonthSelector
+import com.emm.justchill.hh.report.components.ShareReportButton
+import com.emm.justchill.hh.report.components.TodayPill
 import com.emm.justchill.hh.report.components.ToggleIncomeExpense
+import com.emm.justchill.hh.report.components.TotalAmountHero
+import com.emm.justchill.hh.report.components.TrendsContent
 import com.emm.justchill.hh.shared.fullLabel
+import com.emm.justchill.hh.shared.shortLabel
 import kotlinx.datetime.Month
 import org.koin.androidx.compose.koinViewModel
 
@@ -50,6 +68,24 @@ fun ReportScreen(
     vm: ReportViewModel = koinViewModel(),
 ) {
     val state: ReportUiState by vm.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    LaunchedEffect(vm) {
+        vm.effect.collect { effect ->
+            when (effect) {
+                is ReportEffect.ShowError -> { /* snackbar handled by Hh.kt root */ }
+
+                is ReportEffect.ShareReport -> {
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(EXTRA_TEXT, effect.text)
+                    }
+                    context.startActivity(Intent.createChooser(intent, "Compartir reporte"))
+                }
+            }
+        }
+    }
+
     ReportScreen(
         state = state,
         onBack = onBack,
@@ -58,6 +94,8 @@ fun ReportScreen(
         onNextMonth = { vm.onIntent(ReportIntent.NextMonth) },
         onJumpToCurrent = { vm.onIntent(ReportIntent.JumpToCurrent) },
         onTypeSelect = { vm.onIntent(ReportIntent.SelectType(it)) },
+        onTabSelect = { vm.onIntent(ReportIntent.SelectTab(it)) },
+        onShare = { vm.onIntent(ReportIntent.ShareReport) },
         modifier = modifier,
     )
 }
@@ -71,6 +109,8 @@ private fun ReportScreen(
     onNextMonth: () -> Unit,
     onJumpToCurrent: () -> Unit,
     onTypeSelect: (TransactionType) -> Unit,
+    onTabSelect: (ReportTab) -> Unit,
+    onShare: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
@@ -82,50 +122,40 @@ private fun ReportScreen(
             .background(colors.bg)
             .statusBarsPadding(),
     ) {
-        ReportTopBar(onBack = onBack)
+        ReportTopBar(onBack = onBack, onShare = onShare)
+
+        val tabOptions = listOf(
+            SegmentOption(ReportTab.Mes, "Mes"),
+            SegmentOption(ReportTab.Tendencias, "Tendencias 6m"),
+        )
+        Segmented(
+            options = tabOptions,
+            selected = state.selectedTab,
+            onSelect = onTabSelect,
+            modifier = Modifier.padding(horizontal = spacing.s4),
+        )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = spacing.s4),
-            verticalArrangement = Arrangement.spacedBy(spacing.s6),
+            verticalArrangement = Arrangement.spacedBy(spacing.s5),
         ) {
-            Spacer(Modifier.height(spacing.s2))
+            Spacer(Modifier.height(spacing.s4))
 
-            MonthSelector(
-                label = state.month.fullLabel(),
-                onPrevious = onPreviousMonth,
-                onNext = onNextMonth,
-                onJumpToCurrent = if (state.month != YearMonth.current()) onJumpToCurrent else null,
-            )
-
-            ToggleIncomeExpense(
-                selected = state.selectedType,
-                onSelect = onTypeSelect,
-            )
-
-            if (state.isEmpty) {
-                EmptyState(
-                    type = state.selectedType,
+            when (state.selectedTab) {
+                ReportTab.Mes -> MesContent(
+                    state = state,
+                    onPreviousMonth = onPreviousMonth,
+                    onNextMonth = onNextMonth,
+                    onJumpToCurrent = onJumpToCurrent,
+                    onTypeSelect = onTypeSelect,
                     onAddTransaction = onAddTransaction,
-                )
-            } else {
-                TotalHeader(
-                    totalFormatted = state.totalFormatted,
-                    type = state.selectedType,
-                    comparisonText = state.comparisonText,
-                    comparisonIsPositive = state.comparisonIsPositive,
+                    onShare = onShare,
                 )
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(colors.border),
-                )
-
-                IncomeByCategoryBars(shares = state.shares)
+                ReportTab.Tendencias -> TrendsContent(trends = state.trends)
             }
 
             Spacer(Modifier.height(spacing.s8))
@@ -134,7 +164,99 @@ private fun ReportScreen(
 }
 
 @Composable
-private fun ReportTopBar(onBack: () -> Unit) {
+private fun MesContent(
+    state: ReportUiState,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+    onJumpToCurrent: () -> Unit,
+    onTypeSelect: (TransactionType) -> Unit,
+    onAddTransaction: () -> Unit,
+    onShare: () -> Unit,
+) {
+    val spacing = LocalEmmSpacing.current
+    val isCurrentMonth = state.month == YearMonth.current()
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        MonthSelector(
+            label = state.month.fullLabel(),
+            onPrevious = onPreviousMonth,
+            onNext = onNextMonth,
+        )
+        if (!isCurrentMonth) {
+            Spacer(Modifier.size(spacing.s2))
+            TodayPill(onClick = onJumpToCurrent)
+        }
+    }
+
+    ToggleIncomeExpense(
+        selected = state.selectedType,
+        onSelect = onTypeSelect,
+    )
+
+    if (state.isEmpty) {
+        EmptyState(
+            type = state.selectedType,
+            onAddTransaction = onAddTransaction,
+        )
+    } else {
+        TotalHeroBlock(state = state)
+
+        CategoryBarsCard(
+            shares = state.shares,
+            movementCount = state.movementCount,
+            averageFormatted = state.averageFormatted,
+        )
+
+        ShareReportButton(onClick = onShare)
+    }
+}
+
+@Composable
+private fun TotalHeroBlock(state: ReportUiState) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+
+    val eyebrowText = when (state.selectedType) {
+        TransactionType.Income -> "TOTAL INGRESOS · ${state.month.shortLabel().uppercase()}"
+        TransactionType.Spend -> "TOTAL GASTOS · ${state.month.shortLabel().uppercase()}"
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
+        Eyebrow(text = eyebrowText)
+        TotalAmountHero(
+            totalFormatted = state.totalFormatted,
+            type = state.selectedType,
+        )
+
+        val comparisonAmt = state.comparisonAmountFormatted
+        val comparisonTxt = state.comparisonText
+        if (comparisonAmt != null && comparisonTxt != null) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ComparisonPill(
+                    absoluteDeltaFormatted = comparisonAmt,
+                    percent = state.comparisonPercent,
+                    isPositive = state.comparisonIsPositive ?: true,
+                )
+                Text(
+                    text = comparisonTxt,
+                    style = type.bodyM,
+                    color = colors.textSecondary,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReportTopBar(onBack: () -> Unit, onShare: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
@@ -142,78 +264,55 @@ private fun ReportTopBar(onBack: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
-            .padding(horizontal = spacing.s2),
+            .height(64.dp)
+            .padding(horizontal = spacing.s4),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val interactionSource = remember { MutableInteractionSource() }
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = onBack,
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                contentDescription = "Volver",
-                tint = colors.textPrimary,
-                modifier = Modifier.size(24.dp),
-            )
-        }
+        TopBarTile(
+            icon = Icons.AutoMirrored.Outlined.ArrowBack,
+            contentDescription = "Volver",
+            onClick = onBack,
+        )
         Text(
             text = "Reporte",
             style = type.titleL,
             color = colors.textPrimary,
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = spacing.s2),
+            modifier = Modifier.weight(1f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
+        TopBarTile(
+            icon = Icons.Outlined.IosShare,
+            contentDescription = "Compartir reporte",
+            onClick = onShare,
         )
     }
 }
 
 @Composable
-private fun TotalHeader(
-    totalFormatted: String,
-    type: TransactionType,
-    comparisonText: String?,
-    comparisonIsPositive: Boolean?,
-) {
+private fun TopBarTile(icon: ImageVector, contentDescription: String, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
-    val typeTokens = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
+    val shape = RoundedCornerShape(12.dp)
+    val interactionSource = remember { MutableInteractionSource() }
 
-    val subtitle = when (type) {
-        TransactionType.Income -> "ingresos en el mes"
-        TransactionType.Spend -> "gastos en el mes"
-    }
-
-    Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
-        Text(
-            text = totalFormatted,
-            style = typeTokens.amountL,
-            color = colors.textPrimary,
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .clip(shape)
+            .background(colors.surface1)
+            .border(width = 1.dp, color = colors.border, shape = shape)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = colors.textPrimary,
+            modifier = Modifier.size(20.dp),
         )
-        Text(
-            text = subtitle,
-            style = typeTokens.bodyM,
-            color = colors.textSecondary,
-        )
-        if (comparisonText != null) {
-            val color = when (comparisonIsPositive) {
-                true -> colors.success
-                false -> colors.danger
-                null -> colors.textSecondary
-            }
-            Text(
-                text = comparisonText,
-                style = typeTokens.labelL,
-                color = color,
-            )
-        }
     }
 }
 
@@ -227,10 +326,7 @@ private fun EmptyState(type: TransactionType, onAddTransaction: () -> Unit) {
         TransactionType.Income -> "Aún no registraste ingresos este mes"
         TransactionType.Spend -> "Aún no registraste gastos este mes"
     }
-    val subtitle = when (type) {
-        TransactionType.Income -> "Anota el primero y vuelve al final del mes"
-        TransactionType.Spend -> "Anota el primero y vuelve al final del mes"
-    }
+    val subtitle = "Anota el primero y vuelve al final del mes"
     val cta = when (type) {
         TransactionType.Income -> "Anotar ingreso"
         TransactionType.Spend -> "Anotar gasto"
@@ -263,6 +359,7 @@ private fun EmptyState(type: TransactionType, onAddTransaction: () -> Unit) {
         val interactionSource = remember { MutableInteractionSource() }
         Box(
             modifier = Modifier
+                .clip(RoundedCornerShape(6.dp))
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
@@ -282,24 +379,28 @@ private fun EmptyState(type: TransactionType, onAddTransaction: () -> Unit) {
 
 @PreviewLightDark
 @Composable
-private fun ReportScreenPreview() {
+private fun ReportScreenMesPreview() {
     EmmTheme {
         val colors = LocalEmmColors.current
         ReportScreen(
             state = ReportUiState(
                 month = YearMonth(2026, Month.MAY),
                 selectedType = TransactionType.Income,
-                totalFormatted = "S/ 6,200",
-                comparisonText = "+12% vs Abril",
+                selectedTab = ReportTab.Mes,
+                totalFormatted = "S/ 6,200.00",
+                comparisonText = "vs. abril",
                 comparisonIsPositive = true,
+                comparisonAmountFormatted = "S/ 660",
+                comparisonPercent = 12,
                 shares = listOf(
-                    CategoryShare("1", "Sueldo", "S/ 4,500", 60, colors.catSlate),
-                    CategoryShare("2", "Freelance", "S/ 1,200", 19, colors.catSage),
-                    CategoryShare("3", "Ventas", "S/ 400", 6, colors.catTerracotta),
-                    CategoryShare("4", "Propinas", "S/ 80", 1, colors.catOchre),
-                    CategoryShare("5", "Otros", "S/ 20", 0, colors.catGraphite),
+                    CategoryShare("1", "Sueldo", "S/ 4,500.00", 73, colors.catTerracotta),
+                    CategoryShare("2", "Freelance", "S/ 1,200.00", 19, colors.catSlate),
+                    CategoryShare("3", "Ventas IG", "S/ 380.00", 6, colors.catSage),
+                    CategoryShare("4", "Yapes", "S/ 120.00", 2, colors.catOchre),
                 ),
                 isEmpty = false,
+                movementCount = 12,
+                averageFormatted = "S/ 517",
             ),
             onBack = {},
             onAddTransaction = {},
@@ -307,6 +408,47 @@ private fun ReportScreenPreview() {
             onNextMonth = {},
             onJumpToCurrent = {},
             onTypeSelect = {},
+            onTabSelect = {},
+            onShare = {},
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ReportScreenMesGastosPreview() {
+    EmmTheme {
+        val colors = LocalEmmColors.current
+        ReportScreen(
+            state = ReportUiState(
+                month = YearMonth(2026, Month.MARCH),
+                selectedType = TransactionType.Spend,
+                selectedTab = ReportTab.Mes,
+                totalFormatted = "S/ 4,580.00",
+                comparisonText = "vs. marzo",
+                comparisonIsPositive = false,
+                comparisonAmountFormatted = "S/ 220",
+                comparisonPercent = 5,
+                shares = listOf(
+                    CategoryShare("1", "Comida", "S/ 1,840.00", 40, colors.catTerracotta),
+                    CategoryShare("2", "Transporte", "S/ 920.00", 20, colors.catSlate),
+                    CategoryShare("3", "Ocio", "S/ 680.00", 15, colors.catMauve),
+                    CategoryShare("4", "Servicios", "S/ 540.00", 12, colors.catOchre),
+                    CategoryShare("5", "Salud", "S/ 340.00", 7, colors.catSage),
+                    CategoryShare("6", "Sin categoría", "S/ 260.00", 6, colors.catGraphite),
+                ),
+                isEmpty = false,
+                movementCount = 26,
+                averageFormatted = "S/ 176",
+            ),
+            onBack = {},
+            onAddTransaction = {},
+            onPreviousMonth = {},
+            onNextMonth = {},
+            onJumpToCurrent = {},
+            onTypeSelect = {},
+            onTabSelect = {},
+            onShare = {},
         )
     }
 }
@@ -328,6 +470,8 @@ private fun ReportScreenEmptyPreview() {
             onNextMonth = {},
             onJumpToCurrent = {},
             onTypeSelect = {},
+            onTabSelect = {},
+            onShare = {},
         )
     }
 }

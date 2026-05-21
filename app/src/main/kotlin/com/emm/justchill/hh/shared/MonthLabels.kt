@@ -3,11 +3,13 @@ package com.emm.justchill.hh.shared
 import com.emm.domain.shared.YearMonth
 import kotlinx.datetime.Month
 
+private const val SHORT_LABEL_LENGTH = 3
+
 fun YearMonth.fullLabel(): String = "${month.spanish()} $year"
 
 fun YearMonth.shortLabel(): String = month.spanish()
 
-fun YearMonth.shortLabel3(): String = month.spanish().take(3)
+fun YearMonth.shortLabel3(): String = month.spanish().take(SHORT_LABEL_LENGTH)
 
 fun Month.spanish(): String = when (this) {
     Month.JANUARY -> "Enero"

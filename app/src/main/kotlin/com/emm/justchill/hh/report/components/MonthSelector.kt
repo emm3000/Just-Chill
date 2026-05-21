@@ -1,100 +1,120 @@
 package com.emm.justchill.hh.report.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 
 /**
- * Month picker with chevrons and a centered label.
+ * Month picker pill with chevrons and a centered label.
  *
- * Compartido entre Home y Report (PLAN_S1_REPORT.md §1 D3).
- * Pattern: Mint, Apple Health — chevrons + label.
- *
- * Optional "Volver a hoy" shortcut shown below the row when
- * [onJumpToCurrent] is non-null. The caller decides visibility by
- * comparing the displayed month with `YearMonth.current()`.
+ * Self-contained pill (`surface1` bg, hairline border, 44dp height). The
+ * caller composes a "Hoy" shortcut as a sibling pill when needed — this
+ * atom no longer renders the jump-to-today affordance internally, to
+ * mirror the designer's handoff layout (selector + "Hoy" side-by-side).
  */
 @Composable
-fun MonthSelector(
-    label: String,
-    onPrevious: () -> Unit,
-    onNext: () -> Unit,
-    onJumpToCurrent: (() -> Unit)? = null,
-    modifier: Modifier = Modifier,
-) {
+fun MonthSelector(label: String, onPrevious: () -> Unit, onNext: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+    val shape = RoundedCornerShape(999.dp)
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Row(
+        modifier = modifier
+            .height(44.dp)
+            .clip(shape)
+            .background(colors.surface1)
+            .border(width = 1.dp, color = colors.border, shape = shape)
+            .padding(horizontal = spacing.s1),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spacing.s1),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            ChevronButton(
-                icon = Icons.Outlined.ChevronLeft,
-                contentDescription = "Mes anterior",
-                onClick = onPrevious,
+        ChevronButton(
+            icon = Icons.Outlined.ChevronLeft,
+            contentDescription = "Mes anterior",
+            onClick = onPrevious,
+        )
+        Text(
+            text = label,
+            style = type.labelL,
+            color = colors.textPrimary,
+            modifier = Modifier.padding(horizontal = spacing.s2),
+        )
+        ChevronButton(
+            icon = Icons.Outlined.ChevronRight,
+            contentDescription = "Mes siguiente",
+            onClick = onNext,
+        )
+    }
+}
+
+/**
+ * "Hoy" pill, shown beside [MonthSelector] when the selected month is not
+ * the current one. Matches the selector's height + border style.
+ */
+@Composable
+fun TodayPill(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+    val shape = RoundedCornerShape(999.dp)
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Box(
+        modifier = modifier
+            .height(44.dp)
+            .clip(shape)
+            .background(colors.surface1)
+            .border(width = 1.dp, color = colors.border, shape = shape)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
             )
-            Text(
-                text = label,
-                style = type.titleL,
-                color = colors.textPrimary,
-            )
-            ChevronButton(
-                icon = Icons.Outlined.ChevronRight,
-                contentDescription = "Mes siguiente",
-                onClick = onNext,
-            )
-        }
-        if (onJumpToCurrent != null) {
-            TextButton(onClick = onJumpToCurrent) {
-                Text(
-                    text = "Volver a hoy",
-                    style = type.labelM,
-                    color = colors.accent,
-                )
-            }
-        }
+            .padding(horizontal = spacing.s4),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = "Hoy",
+            style = type.labelL,
+            color = colors.textPrimary,
+        )
     }
 }
 
 @Composable
-private fun ChevronButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-) {
+private fun ChevronButton(icon: ImageVector, contentDescription: String, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
         modifier = Modifier
-            .size(48.dp)
+            .size(36.dp)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -106,7 +126,7 @@ private fun ChevronButton(
             imageVector = icon,
             contentDescription = contentDescription,
             tint = colors.textSecondary,
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(20.dp),
         )
     }
 }
@@ -117,33 +137,29 @@ private fun MonthSelectorPreview() {
     EmmTheme {
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(LocalEmmColors.current.bg),
+                .background(LocalEmmColors.current.bg)
+                .padding(16.dp),
         ) {
-            MonthSelector(
-                label = "Mayo 2026",
-                onPrevious = {},
-                onNext = {},
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                MonthSelector(label = "Mayo 2026", onPrevious = {}, onNext = {})
+            }
         }
     }
 }
 
 @PreviewLightDark
 @Composable
-private fun MonthSelectorWithJumpPreview() {
+private fun MonthSelectorWithTodayPreview() {
     EmmTheme {
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(LocalEmmColors.current.bg),
+                .background(LocalEmmColors.current.bg)
+                .padding(16.dp),
         ) {
-            MonthSelector(
-                label = "Marzo 2026",
-                onPrevious = {},
-                onNext = {},
-                onJumpToCurrent = {},
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                MonthSelector(label = "Marzo 2026", onPrevious = {}, onNext = {})
+                TodayPill(onClick = {})
+            }
         }
     }
 }

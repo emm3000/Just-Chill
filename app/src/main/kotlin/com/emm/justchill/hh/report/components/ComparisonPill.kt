@@ -28,16 +28,10 @@ import com.emm.justchill.core.ui.atoms.PillTone
  * The "vs abril" label is rendered separately beside this pill by the caller.
  */
 @Composable
-fun ComparisonPill(
-    absoluteDeltaFormatted: String,
-    percent: Int,
-    isPositive: Boolean,
-    modifier: Modifier = Modifier,
-) {
+fun ComparisonPill(absoluteDeltaFormatted: String, percent: Int, isPositive: Boolean, modifier: Modifier = Modifier) {
     val tone = if (isPositive) PillTone.Pos else PillTone.Neg
     val icon = if (isPositive) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward
-    val sign = if (isPositive) "" else "-"
-    val text = "${sign}${absoluteDeltaFormatted} · ${percent}%"
+    val text = "$absoluteDeltaFormatted · $percent%"
 
     Pill(
         text = text,

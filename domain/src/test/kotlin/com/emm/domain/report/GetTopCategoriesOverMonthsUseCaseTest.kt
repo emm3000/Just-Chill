@@ -32,24 +32,31 @@ class GetTopCategoriesOverMonthsUseCaseTest {
         amount = Money(amountCents),
     )
 
+    private fun stubMonthEmpty(ym: YearMonth) {
+        coEvery {
+            repository.monthlyAmountByCategory(any(), ym.startInclusiveMillis(), ym.endExclusiveMillis())
+        } returns emptyList()
+    }
+
     private fun stubAllMonthsEmpty(months: Int = 6) {
         var ym = YearMonth(2026, Month.MAY)
         repeat(months) {
-            coEvery { repository.monthlyAmountByCategory(any(), ym.startInclusiveMillis(), ym.endExclusiveMillis()) } returns emptyList()
+            stubMonthEmpty(ym)
             ym = ym.previous()
         }
     }
 
+    private fun stubMonth(ym: YearMonth, items: List<CategoryAmount>) {
+        coEvery {
+            repository.monthlyAmountByCategory(any(), ym.startInclusiveMillis(), ym.endExclusiveMillis())
+        } returns items
+    }
+
     @Test
     fun `happy path - returns top 3 categories sorted by total amount`() = runTest {
-        // May: cat A 500, cat B 300, cat C 200
         val may = YearMonth(2026, Month.MAY)
-        coEvery { repository.monthlyAmountByCategory(any(), may.startInclusiveMillis(), may.endExclusiveMillis()) } returns
-            listOf(cat("A", 500_00L), cat("B", 300_00L), cat("C", 200_00L))
-        // Other months empty
         stubAllMonthsEmpty(6)
-        coEvery { repository.monthlyAmountByCategory(any(), may.startInclusiveMillis(), may.endExclusiveMillis()) } returns
-            listOf(cat("A", 500_00L), cat("B", 300_00L), cat("C", 200_00L))
+        stubMonth(may, listOf(cat("A", 500_00L), cat("B", 300_00L), cat("C", 200_00L)))
 
         val result = useCase(TransactionType.Spend, months = 1, topN = 3, clock = fixedClock)
 
@@ -70,14 +77,11 @@ class GetTopCategoriesOverMonthsUseCaseTest {
 
     @Test
     fun `monthsInTop is counted correctly`() = runTest {
-        // Cat A appears in all 2 months; cat B only in 1
         val may = YearMonth(2026, Month.MAY)
         val apr = may.previous()
 
-        coEvery { repository.monthlyAmountByCategory(any(), may.startInclusiveMillis(), may.endExclusiveMillis()) } returns
-            listOf(cat("A", 500_00L), cat("B", 300_00L))
-        coEvery { repository.monthlyAmountByCategory(any(), apr.startInclusiveMillis(), apr.endExclusiveMillis()) } returns
-            listOf(cat("A", 400_00L))
+        stubMonth(may, listOf(cat("A", 500_00L), cat("B", 300_00L)))
+        stubMonth(apr, listOf(cat("A", 400_00L)))
 
         val result = useCase(TransactionType.Spend, months = 2, topN = 3, clock = fixedClock)
 
@@ -93,14 +97,12 @@ class GetTopCategoriesOverMonthsUseCaseTest {
     fun `partial data - only one month has data`() = runTest {
         stubAllMonthsEmpty(6)
         val may = YearMonth(2026, Month.MAY)
-        coEvery { repository.monthlyAmountByCategory(any(), may.startInclusiveMillis(), may.endExclusiveMillis()) } returns
-            listOf(cat("A", 1000_00L))
+        stubMonth(may, listOf(cat("A", 1000_00L)))
 
         val result = useCase(TransactionType.Spend, months = 6, topN = 3, clock = fixedClock)
 
         assertEquals(1, result.size)
         assertEquals(Money(1000_00L), result[0].totalAmount)
-        // monthsInTop: cat A is top in 1 out of 6 months
         assertEquals(1, result[0].monthsInTop)
         assertEquals(6, result[0].totalMonths)
     }
@@ -108,8 +110,7 @@ class GetTopCategoriesOverMonthsUseCaseTest {
     @Test
     fun `returns at most topN results`() = runTest {
         val may = YearMonth(2026, Month.MAY)
-        coEvery { repository.monthlyAmountByCategory(any(), may.startInclusiveMillis(), may.endExclusiveMillis()) } returns
-            listOf(cat("A", 500_00L), cat("B", 400_00L), cat("C", 300_00L), cat("D", 200_00L))
+        stubMonth(may, listOf(cat("A", 500_00L), cat("B", 400_00L), cat("C", 300_00L), cat("D", 200_00L)))
 
         val result = useCase(TransactionType.Spend, months = 1, topN = 2, clock = fixedClock)
 

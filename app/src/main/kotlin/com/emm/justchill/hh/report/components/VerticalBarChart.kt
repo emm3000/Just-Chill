@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -102,10 +101,16 @@ fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier)
                     val progress = animatables[index].value
                     val groupLeft = interGroupGap + index * (groupWidthPx + interGroupGap)
 
-                    val incomeHeightPx = if (maxAmount == 0f) 0f
-                    else (item.incomeAmount.toFloat() / maxAmount) * chartHeightPx * progress
-                    val expenseHeightPx = if (maxAmount == 0f) 0f
-                    else (item.expenseAmount.toFloat() / maxAmount) * chartHeightPx * progress
+                    val incomeHeightPx = if (maxAmount == 0f) {
+                        0f
+                    } else {
+                        (item.incomeAmount.toFloat() / maxAmount) * chartHeightPx * progress
+                    }
+                    val expenseHeightPx = if (maxAmount == 0f) {
+                        0f
+                    } else {
+                        (item.expenseAmount.toFloat() / maxAmount) * chartHeightPx * progress
+                    }
 
                     // Income bar (cat.sage)
                     if (incomeHeightPx > 0f) {
@@ -145,7 +150,8 @@ fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier)
                     color = textColor,
                     fontWeight = fontWeight,
                     modifier = Modifier.semantics {
-                        contentDescription = "${item.monthShortLabel}: entró ${item.incomeFormatted}, salió ${item.expenseFormatted}"
+                        contentDescription =
+                            "${item.monthShortLabel}: entró ${item.incomeFormatted}, salió ${item.expenseFormatted}"
                     },
                 )
             }

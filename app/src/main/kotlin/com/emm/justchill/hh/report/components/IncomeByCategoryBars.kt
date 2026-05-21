@@ -8,10 +8,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,14 +34,14 @@ import com.emm.justchill.hh.report.CategoryShare
 import kotlinx.coroutines.delay
 
 /**
- * Horizontal bars showing income (or expense) by category.
+ * Category breakdown list — Notion-style.
  *
- * The signature visualization of the app — US-11, the apuesta.
- * Spec: `docs/DESIGN_SYSTEM.md §7.10`.
+ * Per DS §7.10 (updated 2026-05-21): dot + name + amount + percentage in a
+ * single row, with a thin colored stripe under the row whose width = `%` of
+ * the row. No `surface1` track behind the stripe — just a colored stroke
+ * that hints at proportion without competing with the type.
  *
- * Decision D1 (PLAN_S1_REPORT.md): horizontal bars over donut.
- * Reason: legibility in zoom (Fase 1 §5), better for >3 categories,
- * better screenshot.
+ * Sorted descending by amount by the caller.
  */
 @Composable
 fun IncomeByCategoryBars(shares: List<CategoryShare>, modifier: Modifier = Modifier) {
@@ -47,7 +49,7 @@ fun IncomeByCategoryBars(shares: List<CategoryShare>, modifier: Modifier = Modif
 
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(spacing.s4),
+        verticalArrangement = Arrangement.spacedBy(spacing.s3),
     ) {
         shares.forEachIndexed { index, share ->
             CategoryShareRow(
@@ -74,8 +76,7 @@ private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
         )
     }
 
-    val description = "${share.name}: ${share.amountFormatted}, " +
-        "${share.percentage} por ciento del total"
+    val description = "${share.name}: ${share.amountFormatted}, ${share.percentage} por ciento del total"
 
     Column(
         modifier = Modifier
@@ -85,9 +86,15 @@ private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(share.tint),
+            )
+            Spacer(Modifier.width(spacing.s2))
             Text(
                 text = share.name,
                 style = type.bodyL,
@@ -99,31 +106,25 @@ private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
                 style = type.amountS,
                 color = colors.textPrimary,
             )
+            Spacer(Modifier.width(spacing.s2))
+            Text(
+                text = "${share.percentage}%",
+                style = type.caption,
+                color = colors.textSecondary,
+            )
         }
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(8.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .background(colors.surface1),
+                .height(2.dp),
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxHeight()
                     .fillMaxWidth(animatedFraction.value)
+                    .height(2.dp)
+                    .clip(RoundedCornerShape(2.dp))
                     .background(share.tint),
-            )
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-        ) {
-            Text(
-                text = "${share.percentage}%",
-                style = type.caption,
-                color = colors.textSecondary,
             )
         }
     }
@@ -142,44 +143,12 @@ private fun IncomeByCategoryBarsPreview() {
         ) {
             IncomeByCategoryBars(
                 shares = listOf(
-                    CategoryShare(
-                        categoryId = "1",
-                        name = "Sueldo",
-                        amountFormatted = "S/ 4,500",
-                        percentage = 60,
-                        tint = colors.catSlate,
-                    ),
-                    CategoryShare(
-                        categoryId = "2",
-                        name = "Freelance",
-                        amountFormatted = "S/ 1,200",
-                        percentage = 19,
-                        tint = colors.catSage,
-                    ),
-                    CategoryShare(
-                        categoryId = "3",
-                        name = "Ventas",
-                        amountFormatted = "S/ 400",
-                        percentage = 6,
-                        tint = colors.catTerracotta,
-                    ),
-                    CategoryShare(
-                        categoryId = "4",
-                        name = "Propinas",
-                        amountFormatted = "S/ 80",
-                        percentage = 1,
-                        tint = colors.catOchre,
-                    ),
-                    CategoryShare(
-                        categoryId = "5",
-                        name = "Otros",
-                        amountFormatted = "S/ 20",
-                        percentage = 0,
-                        tint = colors.catGraphite,
-                    ),
+                    CategoryShare("1", "Sueldo", "S/ 4,500.00", 73, colors.catTerracotta),
+                    CategoryShare("2", "Freelance", "S/ 1,200.00", 19, colors.catSlate),
+                    CategoryShare("3", "Ventas IG", "S/ 380.00", 6, colors.catSage),
+                    CategoryShare("4", "Yapes", "S/ 120.00", 2, colors.catOchre),
                 ),
             )
-            Spacer(Modifier.height(0.dp))
         }
     }
 }

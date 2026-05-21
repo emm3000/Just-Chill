@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,44 +22,31 @@ import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
 
-data class SegmentOption<T>(val value: T, val label: String)
-
 /**
- * Generic segmented control. Renders options left-to-right with a border
- * around the group and vertical dividers between segments.
+ * Generic segmented control. Renders options left-to-right inside a pill-rounded
+ * container with no inner dividers — the selected cell carries the visual weight.
  *
- * Visual tokens: 40dp height, border, selected = accent bg + textOnAccent,
- * unselected = transparent bg + textSecondary. Matches ToggleIncomeExpense.
+ * Visual tokens (Notion-style, subtle): 44dp height, `surface1` track bg with 1dp
+ * border, selected cell = `surface2` filled with `textPrimary`; unselected =
+ * transparent with `textSecondary`. Matches the designer's handoff for Reporte
+ * tabs and the Ingresos/Gastos toggle.
  */
 @Composable
-fun <T> Segmented(
-    options: List<SegmentOption<T>>,
-    selected: T,
-    onSelect: (T) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun <T> Segmented(options: List<SegmentOption<T>>, selected: T, onSelect: (T) -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
-    val shape = RoundedCornerShape(6.dp)
+    val shape = RoundedCornerShape(12.dp)
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(40.dp)
+            .height(44.dp)
             .clip(shape)
-            .border(width = 1.dp, color = colors.border, shape = shape),
+            .background(colors.surface1)
+            .border(width = 1.dp, color = colors.border, shape = shape)
+            .padding(3.dp),
     ) {
-        options.forEachIndexed { index, option ->
+        options.forEach { option ->
             val isSelected = option.value == selected
-
-            if (index > 0) {
-                Box(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .fillMaxHeight()
-                        .background(colors.border),
-                )
-            }
-
             SegmentCell(
                 label = option.label,
                 isSelected = isSelected,
@@ -71,24 +57,23 @@ fun <T> Segmented(
     }
 }
 
+data class SegmentOption<T>(val value: T, val label: String)
+
 @Composable
-private fun SegmentCell(
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun SegmentCell(label: String, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
+    val cellShape = RoundedCornerShape(10.dp)
 
-    val bg: Color = if (isSelected) colors.accent else Color.Transparent
-    val textColor: Color = if (isSelected) colors.textOnAccent else colors.textSecondary
+    val bg: Color = if (isSelected) colors.surface2 else Color.Transparent
+    val textColor: Color = if (isSelected) colors.textPrimary else colors.textSecondary
 
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
         modifier = modifier
             .fillMaxHeight()
+            .clip(cellShape)
             .background(bg)
             .clickable(
                 interactionSource = interactionSource,

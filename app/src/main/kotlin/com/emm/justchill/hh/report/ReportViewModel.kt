@@ -247,33 +247,36 @@ class ReportViewModel(
         )
     }
 
-    private fun formatSoles(cents: Long): String {
-        val soles = cents.toDouble() / 100.0
-        val nf = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-PE"))
-        nf.minimumFractionDigits = 0
-        nf.maximumFractionDigits = 0
-        return "S/ ${nf.format(soles)}"
-    }
+    companion object {
 
-    private fun formatSolesWithDecimals(cents: Long): String {
-        val soles = cents.toDouble() / 100.0
-        val nf = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-PE"))
-        nf.minimumFractionDigits = 2
-        nf.maximumFractionDigits = 2
-        return "S/ ${nf.format(soles)}"
-    }
+        fun formatSoles(cents: Long): String {
+            val soles = cents.toDouble() / 100.0
+            val nf = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-PE"))
+            nf.minimumFractionDigits = 0
+            nf.maximumFractionDigits = 0
+            return "S/ ${nf.format(soles)}"
+        }
 
-    private fun domainColorToUi(color: String): Color = when (color) {
-        "green" -> emmDarkColors.catSage
-        "blue" -> emmDarkColors.catSlate
-        "purple" -> emmDarkColors.catMauve
-        "orange" -> emmDarkColors.catOchre
-        "red" -> emmDarkColors.catTerracotta
-        "brown" -> emmDarkColors.catTerracotta
-        "yellow" -> emmDarkColors.catOchre
-        "teal" -> emmDarkColors.catSage
-        "pink" -> emmDarkColors.catMauve
-        "gray" -> emmDarkColors.catGraphite
-        else -> emmDarkColors.catGraphite
+        fun formatSolesWithDecimals(cents: Long): String {
+            val soles = cents.toDouble() / 100.0
+            val nf = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-PE"))
+            nf.minimumFractionDigits = 2
+            nf.maximumFractionDigits = 2
+            return "S/ ${nf.format(soles)}"
+        }
+
+        fun domainColorToUi(color: String): Color = when (color) {
+            "green" -> emmDarkColors.catSage
+            "blue" -> emmDarkColors.catSlate
+            "purple" -> emmDarkColors.catMauve
+            "orange" -> emmDarkColors.catOchre
+            "red" -> emmDarkColors.catTerracotta
+            "brown" -> emmDarkColors.catTerracotta
+            "yellow" -> emmDarkColors.catOchre
+            "teal" -> emmDarkColors.catSage
+            "pink" -> emmDarkColors.catMauve
+            "gray" -> emmDarkColors.catGraphite
+            else -> emmDarkColors.catGraphite
+        }
     }
 }

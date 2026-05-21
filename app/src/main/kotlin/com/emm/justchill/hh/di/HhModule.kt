@@ -7,6 +7,9 @@ import com.emm.data.transaction.DefaultTransactionRepository
 import com.emm.data.transaction.TransactionLocalDataSource
 import com.emm.domain.report.GetMonthlyAmountByCategoryUseCase
 import com.emm.domain.report.GetMonthlyComparisonUseCase
+import com.emm.domain.report.GetMonthlySectionStatsUseCase
+import com.emm.domain.report.GetSavingsRateUseCase
+import com.emm.domain.report.GetTopCategoriesOverMonthsUseCase
 import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.shared.UniqueIdProvider
 import com.emm.domain.shared.backup.BackupRepository
@@ -92,6 +95,9 @@ private fun Module.repositoriesProviders() {
 
     factoryOf(::GetMonthlyAmountByCategoryUseCase)
     factoryOf(::GetMonthlyComparisonUseCase)
+    factoryOf(::GetMonthlySectionStatsUseCase)
+    factoryOf(::GetSavingsRateUseCase)
+    factoryOf(::GetTopCategoriesOverMonthsUseCase)
     factoryOf(::ExportDataUseCase)
     factoryOf(::ImportDataUseCase)
 }

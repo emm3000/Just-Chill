@@ -11,8 +11,8 @@ import androidx.compose.ui.unit.dp
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.ui.atoms.Segmented
 import com.emm.justchill.core.ui.atoms.SegmentOption
+import com.emm.justchill.core.ui.atoms.Segmented
 
 /**
  * Segmented control for Income / Expense.

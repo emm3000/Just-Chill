@@ -7,9 +7,7 @@ import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionType
 import kotlin.time.Clock
 
-class GetTopCategoriesOverMonthsUseCase(
-    private val transactionRepository: TransactionRepository,
-) {
+class GetTopCategoriesOverMonthsUseCase(private val transactionRepository: TransactionRepository) {
 
     suspend operator fun invoke(
         type: TransactionType,

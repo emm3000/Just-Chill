@@ -32,9 +32,5 @@ interface TransactionRepository {
         endExclusive: Long,
     ): List<CategoryAmount>
 
-    suspend fun monthlyStats(
-        type: TransactionType,
-        startInclusive: Long,
-        endExclusive: Long,
-    ): MonthlySectionStats
+    suspend fun monthlyStats(type: TransactionType, startInclusive: Long, endExclusive: Long): MonthlySectionStats
 }

@@ -14,6 +14,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
@@ -21,38 +22,46 @@ import com.emm.justchill.core.theme.LocalEmmType
 /**
  * Hero amount display for the Mes tab.
  *
- * "S/ " prefix and decimals (".00") are rendered in textTertiary at amountL size,
- * the integer part in textPrimary at amountL size. Uses AnnotatedString for mixed
- * color within a single Text — avoids baseline misalignment from multiple Text nodes.
+ * Per DS §1.4 *total-hero exception*: the integer part is tinted `success`
+ * (Ingresos) or `danger` (Gastos) to disambiguate type — the hero is the
+ * only signal of type in this view. The currency prefix `S/ ` and the
+ * decimals `.00` stay `textTertiary`.
  *
- * Example input: "S/ 6,200.00"
+ * Single Text + AnnotatedString to keep baselines aligned across spans.
+ *
+ * Example input: `"S/ 6,200.00"`, type = Income.
  */
 @Composable
-fun TotalAmountHero(totalFormatted: String, modifier: Modifier = Modifier) {
+fun TotalAmountHero(totalFormatted: String, type: TransactionType, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
+    val typeTokens = LocalEmmType.current
 
-    // Split "S/ 6,200.00" into ["S/ ", "6,200", ".00"]
+    val integerColor = when (type) {
+        TransactionType.Income -> colors.success
+        TransactionType.Spend -> colors.danger
+    }
+
     val annotated: AnnotatedString = buildAnnotatedString {
         val dotIndex = totalFormatted.lastIndexOf('.')
-        val slashEnd = totalFormatted.indexOf(' ') + 1 // after "S/ "
+        val slashEnd = totalFormatted.indexOf(' ') + 1
 
         if (dotIndex < 0 || slashEnd <= 0) {
-            // Fallback: render everything as primary
-            withStyle(SpanStyle(color = colors.textPrimary)) {
+            withStyle(SpanStyle(color = integerColor)) {
                 append(totalFormatted)
             }
         } else {
-            // Currency prefix ("S/ ")
-            withStyle(SpanStyle(color = colors.textTertiary, fontSize = type.amountL.fontSize)) {
+            withStyle(SpanStyle(color = colors.textTertiary, fontSize = typeTokens.amountL.fontSize)) {
                 append(totalFormatted.substring(0, slashEnd))
             }
-            // Integer part
-            withStyle(SpanStyle(color = colors.textPrimary)) {
+            withStyle(SpanStyle(color = integerColor)) {
                 append(totalFormatted.substring(slashEnd, dotIndex))
             }
-            // Decimal part (".00")
-            withStyle(SpanStyle(color = colors.textTertiary, fontSize = (type.amountL.fontSize.value * 0.6f).sp)) {
+            withStyle(
+                SpanStyle(
+                    color = colors.textTertiary,
+                    fontSize = (typeTokens.amountL.fontSize.value * 0.6f).sp,
+                ),
+            ) {
                 append(totalFormatted.substring(dotIndex))
             }
         }
@@ -60,14 +69,14 @@ fun TotalAmountHero(totalFormatted: String, modifier: Modifier = Modifier) {
 
     Text(
         text = annotated,
-        style = type.amountL,
+        style = typeTokens.amountL,
         modifier = modifier,
     )
 }
 
 @PreviewLightDark
 @Composable
-private fun TotalAmountHeroPreview() {
+private fun TotalAmountHeroIncomePreview() {
     EmmTheme {
         Box(
             modifier = Modifier
@@ -75,7 +84,22 @@ private fun TotalAmountHeroPreview() {
                 .background(LocalEmmColors.current.bg)
                 .padding(16.dp),
         ) {
-            TotalAmountHero(totalFormatted = "S/ 6,200.00")
+            TotalAmountHero(totalFormatted = "S/ 6,200.00", type = TransactionType.Income)
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun TotalAmountHeroSpendPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg)
+                .padding(16.dp),
+        ) {
+            TotalAmountHero(totalFormatted = "S/ 4,580.00", type = TransactionType.Spend)
         }
     }
 }

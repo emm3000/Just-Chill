@@ -36,10 +36,7 @@ import com.emm.justchill.hh.report.TopCategoryItem
  * Each row: IconTile (Swatch) | name (w600) + meta text | amount (amountS tnum).
  */
 @Composable
-fun TopExpensesCard(
-    items: List<TopCategoryItem>,
-    modifier: Modifier = Modifier,
-) {
+fun TopExpensesCard(items: List<TopCategoryItem>, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
