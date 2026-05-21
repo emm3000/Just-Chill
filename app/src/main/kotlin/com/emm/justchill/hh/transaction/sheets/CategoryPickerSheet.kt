@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -37,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,6 +51,8 @@ import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.hh.transaction.SelectableCategory
 
+private const val LIST_MAX_HEIGHT_FRACTION = 0.55f
+
 @Composable
 fun CategoryPickerSheet(
     categories: List<SelectableCategory>,
@@ -59,6 +63,8 @@ fun CategoryPickerSheet(
 ) {
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val configuration = LocalConfiguration.current
+    val maxListHeight = (configuration.screenHeightDp * LIST_MAX_HEIGHT_FRACTION).dp
 
     var query by rememberSaveable { mutableStateOf("") }
     val filtered = remember(categories, query) {
@@ -170,7 +176,7 @@ fun CategoryPickerSheet(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f, fill = false),
+                    .heightIn(max = maxListHeight),
             ) {
                 items(filtered, key = { it.categoryId.value }) { category ->
                     val isActive = category.categoryId.value == selectedCategoryId
