@@ -360,8 +360,7 @@ fun Hh(modifier: Modifier = Modifier) {
                                     color = findById(created.color),
                                     categoryType = created.categoryType,
                                 )
-                                backStack.removeLastOrNull() // AddCategory
-                                backStack.removeLastOrNull() // SelectCategory
+                                backStack.popToTransactionScreen()
                             } else {
                                 showRootMessage("Categoría «${created.name}» creada")
                                 backStack.removeLastOrNull()
@@ -577,5 +576,16 @@ private fun AddBottomBarItem(label: String, onClick: () -> Unit, modifier: Modif
             letterSpacing = 0.1.sp,
             maxLines = 1,
         )
+    }
+}
+
+/**
+ * Pop intermediate routes (`CategoryRoute` and any legacy in-between) until
+ * the transaction screen is at the top, so it receives `pendingCategory`
+ * via its `LaunchedEffect` and the user lands back where they were.
+ */
+private fun NavBackStack<NavKey>.popToTransactionScreen() {
+    while (isNotEmpty() && last() !is AddTransactionRoute && last() !is EditTransactionRoute) {
+        removeLastOrNull()
     }
 }
