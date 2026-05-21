@@ -64,7 +64,15 @@ Five rules that govern every decision below. When in doubt, return here.
 | `danger` | `#C57070` | Errors, destructive confirmations. Muted red. |
 | `info` | `#7B9EC5` | Informational toasts. |
 
-**Important:** these colors are *not* used to mark income/expense. A transaction list row is pure monochrome; the sign in front of the number does the work.
+**Important:** these colors are *not* used to mark income/expense **in row-level UI**. A transaction list row is pure monochrome; the sign in front of the number does the work.
+
+> **Total hero exception (Reporte)**. In `ReportScreen`'s Mes tab, the total
+> hero amount is the *only* signal of type in that view (no sign, no list
+> context). To prevent ambiguity at a glance, the integer part of the
+> hero amount is tinted `success` (Ingresos) or `danger` (Gastos). The
+> currency prefix and decimals stay `textTertiary`. This exception is
+> scoped exclusively to the Reporte total hero — every other amount in
+> the app remains monochrome.
 
 ### 2.5 Category palette (curated dark tones)
 
@@ -122,10 +130,16 @@ All sizes in `sp`. Line heights in `sp` (not multipliers). Tracking in em (Mater
 
 ### 3.4 Forbidden
 
-- All caps for anything longer than 2 words. (Allowed: short chip labels, button labels max 12 chars.)
+- All caps for anything longer than 2 words in body/title roles. (Allowed: short chip labels, button labels max 12 chars, and the `Eyebrow` role — see §7.13.)
 - Italic. Never.
 - More than 2 weights on a screen.
 - Mixing text alignment in the same vertical column.
+
+> **Eyebrow exception.** All caps is permitted exclusively in the `Eyebrow`
+> atom (10sp, w500, 0.16em tracking, `textTertiary`), which labels a section
+> with the role of a column header in a table — not as decoration. Up to
+> ~30 chars with a `·` separator (e.g. `TASA DE AHORRO · 6 MESES`). Never
+> use all caps anywhere else in the app.
 
 ---
 
@@ -321,17 +335,18 @@ monthly income split by category.
 └──────────────────────────────────────────────────┘
 ```
 
-**Layout per row**:
-- Label: `body.l` `textPrimary` left-aligned.
+**Layout per row** (Notion-style, single line + thin underline):
+- Leading dot: 6dp circle, category `cat.*` tint. `space.2` (8dp) to the right.
+- Label: `body.l` `textPrimary` left-aligned. Takes remaining width.
 - Amount: `amount.s` (14sp, `tnum`) right-aligned, same baseline as label.
-- Bar: 8dp tall, full row width, `radius.s` (6dp), `space.2` (8dp) below label/amount.
-- Bar track: `surface1`.
-- Bar fill: category `cat.*` tint (matches the category's preset color), no gradient.
-- Percentage: `caption` (11sp, `tnum`) `textSecondary`, right-aligned, `space.1` below the bar.
+- Percentage: `caption` (11sp, `tnum`) `textSecondary`, `space.2` to the right of amount.
+- Underline (decorative progress hint): 2dp tall, width = `percentage / 100 * rowWidth`, `radius.s`, category `cat.*` tint, `space.1` below the row baseline. **No track** — empty space on the right, not a `surface1` track. The bar is just a stripe under the label, not a full progress bar.
 
-**Row spacing**: `space.4` (16dp) between rows.
+**Row spacing**: `space.3` (12dp) between rows.
 
-**Container**: no card. Direct on `bg`. Horizontal padding `space.4`.
+**Container**: two variants.
+- *Default* (bars are the only content of the section): no card, direct on `bg`, horizontal padding `space.4`.
+- *Grouped variant* (bars share the section with a header + footer — e.g. ReportScreen Mes tab): wrap in §7.4 card with header `Eyebrow` ("POR CATEGORÍA") and right-aligned counter ("4 categorías", `body.m` `textSecondary`). Footer line at the bottom of the card: `caption` `textSecondary` with `count movimientos · Promedio S/ X` (see §7.14).
 
 **Sorting**: descending by amount. Always.
 
@@ -405,7 +420,74 @@ launch):
 - Same screen. Button changes to "Volver" (back arrow on top-left also
   works as exit).
 
-### 7.12 Empty states
+### 7.13 Vertical bar chart — 6-month income vs expense (US-22)
+
+The trends visualization used in `ReportScreen → Tendencias` tab. Shows 6 months of income vs expense as side-by-side vertical bars.
+
+```
+┌──────────────────────────────────────────────┐
+│ ENTRÓ VS SALIÓ        ● Entró   ● Salió      │
+│                                              │
+│ ┃ ┃    ┃ ┃    ┃ ┃    ┃ ┃    ┃ ┃    ┃ ┃       │
+│ ┃ ┃    ┃ ┃    ┃ ┃    ┃ ┃    ┃ ┃    ┃ ┃       │
+│ ┃ ┃    ┃ ┃    ┃ ┃    ┃ ┃    ┃ ┃    ┃ ┃       │
+│ Dic    Ene    Feb    Mar    Abr    May       │
+│                                              │
+│ Promedio mensual    S/ 5,973 · S/ 4,240      │
+└──────────────────────────────────────────────┘
+```
+
+**Why two muted earth tones and not green/red.** Per §1.4, income vs expense is **not** distinguished by color — the user reads "entró" / "salió" from the legend, not from the hue. We use `cat.sage` for income bars and `cat.terracotta` for expense bars. Both come from §2.5, so the chart stays inside the curated category palette.
+
+**Layout per month group**:
+- Two bars side by side, 12dp wide each, 4dp gap between.
+- Income bar: `cat.sage` fill.
+- Expense bar: `cat.terracotta` fill.
+- Bar height: proportional to amount, max bar = full chart height (120dp by default).
+- Track behind bars: none. Bars sit on `bg` (or `surface1` if inside a §7.4 card).
+- Month label below: `caption` (11sp) `textSecondary`. Current month label is `textPrimary` w600 so the user finds "where am I now" without scanning.
+
+**Group spacing**: equal gaps between month groups, calculated as `(chartWidth - 6 * groupWidth) / 7` so first and last groups have edge padding equal to inter-group gap.
+
+**Chart container**: §7.4 card. `Eyebrow` header ("ENTRÓ VS SALIÓ") at top-left, legend dots at top-right (`cat.sage` dot + "Entró", `cat.terracotta` dot + "Salió", `label.m` `textSecondary`).
+
+**Promedio mensual footer**:
+- Below the chart inside the same card, separated by `space.4`.
+- `label.m` `textSecondary` "Promedio mensual" left-aligned, amounts right-aligned `amount.s tnum`. Two amounts separated by ` · `, income first then expense.
+
+**Motion**:
+- Bars animate height 0 → final on first render, `motion.medium` (300ms), `easing.emphasized`, stagger 50ms per month group.
+- Re-renders (after data refresh): snap.
+
+**Accessibility**:
+- Each month group has `contentDescription`: *"Mayo: entró S/ 6,200, salió S/ 4,800"*.
+- Bars themselves are `invisibleToUser`.
+
+**Early state (< 3 months of data)**:
+- Don't render the chart. Use §7.12 empty state with copy: *"Vuelve cuando tengas más historial — Tendencias necesita al menos 3 meses para tener algo útil que mostrar."*
+- CTA hidden (no action user can take to fix this — it's just time).
+
+---
+
+### 7.14 Report metrics — comparison pill + section footer (US-11 / US-22)
+
+Two atoms used together on the Reporte screen.
+
+**Comparison pill** (top of total, both tabs):
+- Uses §atoms `Pill` with `tone = Pos` (up) or `tone = Neg` (down).
+- Leading icon: `Icons.Filled.ArrowUpward` (pos) or `Icons.Filled.ArrowDownward` (neg).
+- Copy format: `<sign-icon> S/ <absolute-delta> · <percent>%`, followed by separate body text `vs. <prevMonth>`.
+- Example: `↑ S/ 660 · 12%` (pill) ` vs. abril` (`body.m textSecondary`, outside pill).
+- Hidden when prior month total is 0 (no baseline to compare against).
+
+**Section footer** (inside §7.10 grouped-variant card):
+- Single line at the bottom of the "POR CATEGORÍA" card, separated from bars by `space.4` and an optional 1dp `border` hairline above.
+- Left text: `<n> movimientos`, `caption` `textSecondary`.
+- Right text: `Promedio S/ <amount>`, `caption` `textSecondary`, `tnum`.
+- Average = total ÷ movement count. Rounded to 0 decimals.
+- Singular form for 1: `1 movimiento`.
+
+### 7.15 Empty states
 
 ```
             [outline icon, 48dp, textTertiary]
@@ -547,3 +629,5 @@ Each step ends with a commit that updates this doc if the implementation forced 
 |---|---|---|
 | 2026-05-16 | Initial draft | Rebrand kickoff (Starlink-inspired, monochrome) |
 | 2026-05-17 | Alineado con Fases 1-4 del proceso de definición | Removed legacy Auth refs (§13). Added §7.9 account preset visuals (peruanidad concreta). Added §7.10 income-by-category bars (US-11 la apuesta). Added §7.11 manifesto layout (US-02). Renumbered §7.9 empty states → §7.12. |
+| 2026-05-21 | Report redesign handoff alignment | §3.4 eyebrow exception (all caps permitted in `Eyebrow` role). §7.10 card variant added for grouped layout. New §7.13 vertical bar chart for Tendencias (income vs expense, `cat.sage` + `cat.terracotta`, NOT green/red — §1.4 preserved). New §7.14 comparison pill + section footer. Empty states renumbered §7.12 → §7.15. |
+| 2026-05-21 | Report v2 — second designer pass | §1.4 total-hero exception added (`success`/`danger` tint on Reporte's hero integer part only). §7.10 row layout rewritten to Notion-style (dot + name + amount + %, thin colored stripe instead of full progress bar). |

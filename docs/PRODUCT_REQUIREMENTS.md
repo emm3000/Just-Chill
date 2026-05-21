@@ -451,6 +451,51 @@ es v1), §3.5 (manifiesto: "solo vos, tu plata").
 
 ---
 
+### Reporte mensual — vistas avanzadas
+
+#### US-22 [S] Tendencias de 6 meses (Reporte → tab Tendencias)
+**Como** Sebastián,
+**quiero** ver mi tasa de ahorro y el flujo de los últimos 6 meses,
+**para** confirmar de un vistazo si estoy mejorando o no, sin abrir Excel ni hacer cuentas.
+
+**Criterios de aceptación**:
+- En `ReportScreen`, al tope hay un segmented control `Mes / Tendencias`.
+  Mes es la vista de US-11 actual. Tendencias es esta nueva US.
+- Tendencias muestra tres bloques en este orden:
+  1. **Tasa de ahorro · 6 meses**: porcentaje grande
+     (`(ingresos - gastos) / ingresos` agregado sobre los últimos 6
+     meses incluyendo el actual). Pill con delta vs los 6 meses
+     previos (puntos porcentuales: `↑ 4 pts` o `↓ 3 pts`) si hay
+     ≥12 meses de data; oculta si no. Frase de contexto debajo:
+     *"De cada S/ 100 que entró, ahorraste S/ X. Mejoraste (o
+     empeoraste o mantuviste) vs. los 6 meses previos."*
+  2. **Entró vs Salió**: bar chart vertical 6 meses (§7.13 DS).
+     Mes actual destacado en label. Promedio mensual (ingresos ·
+     gastos) debajo.
+  3. **Tus mayores gastos**: top 3 categorías de gasto de los
+     últimos 6 meses, con monto total (no promedio) y meta
+     *"Top en X de 6 meses"* (cantidad de meses en que esa categoría
+     estuvo en el top 3 mensual).
+- **Early state** (<3 meses de data en la app): no se renderiza el
+  contenido; empty state con copy *"Vuelve cuando tengas más
+  historial — Tendencias necesita al menos 3 meses para tener algo
+  útil que mostrar."* — sin CTA (no hay acción que el usuario pueda
+  tomar, solo esperar).
+- Tendencias **no** tiene navegación de mes (es siempre "últimos 6
+  meses hasta hoy"). La nav de mes vuelve cuando se selecciona Mes.
+- Compartir reporte está disponible en ambos tabs vía botón en el
+  app bar: `Intent.ACTION_SEND` con texto plano (`text/plain`) que
+  resume el contenido visible del tab actual.
+
+**Trazabilidad**: Fase 1 §2.3 (claridad sobre ingresos múltiples
+extendida al "estás mejorando o no" del manifesto). **Caveat
+honesto**: este tab roza la línea del manifesto (*"tu plata no
+necesita un dashboard"*). Justificación: 1 pantalla, 3 bloques,
+sin filtros ni configuración. Si en dogfooding aparece que la gente
+no la abre, se diferia a v2 sin culpa.
+
+---
+
 ## 5. Won't have (explícitamente fuera de scope)
 
 Estas no se construyen, ni en v1 ni en v2. Cualquiera que pida una de

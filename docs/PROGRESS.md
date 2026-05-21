@@ -3,7 +3,44 @@
 > Estado del proyecto a fecha del último update. Punto de re-entrada
 > para retomar después de cerrar/limpiar el contexto.
 >
-> **Última actualización**: 2026-05-20 (post-redesign + detekt pipeline + typography sweep).
+> **Última actualización**: 2026-05-21 (Reporte v2 — handoff de diseñador externo: Mes polish + Tendencias).
+
+---
+
+## Track activo — Reporte v2 (2026-05-21)
+
+Llegó un handoff de diseñador externo con dos pantallas: `Reporte ·
+Mes` (polish encima del SR-5 existente) y `Reporte · Tendencias`
+(nueva). Cruce contra DS encontró 5 divergencias resueltas en el
+DS antes de codear:
+
+- §3.4: agregada excepción "eyebrow all-caps permitido" (§7.13 docs el rol).
+- §7.10: agregada variante card-around-bars (grouped variant) cuando
+  hay header + footer en la misma sección.
+- §7.13 (nueva): vertical bar chart 6 meses con `cat.sage` (entró)
+  + `cat.terracotta` (salió). **NO** verde/rojo — §1.4 preservado
+  (income/expense por signo, no por color; los earth tones del set
+  `cat.*` son aceptables porque están en la paleta curada).
+- §7.14 (nueva): comparison pill + section footer (X movimientos ·
+  Promedio S/ Y).
+- §7.15: empty states renumerado (era §7.12).
+
+US-22 añadida al PRD (Should, no Must) — *Tendencias 6 meses*.
+Caveat honesto en el AC: roza la línea del manifesto ("tu plata no
+necesita un dashboard"), si dogfooding muestra que no se usa se
+difiere a v2 sin culpa.
+
+Scope concreto pendiente:
+- **Mes polish**: total con decimales tenues, pill verde con delta
+  absoluto + %, card alrededor de "POR CATEGORÍA" con header
+  (`Eyebrow + counter`) + footer (`X movimientos · Promedio`),
+  botón share en topbar + sticky "Compartir reporte" al fondo.
+- **Tendencias**: tab pill `Mes/Tendencias` arriba, savings rate
+  6m + delta vs 6m previos, bar chart vertical 6 meses
+  (componente custom Canvas, NO lib), top 3 categorías de gasto
+  con "Top en X de 6 meses".
+- Share intent: `Intent.ACTION_SEND` text/plain con resumen del
+  tab actual.
 
 ---
 
