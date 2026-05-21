@@ -103,3 +103,13 @@ WHERE t.type = :type
   AND t.date < :endExclusive
 GROUP BY c.categoryId
 ORDER BY totalAmount DESC;
+
+topUsedCategoryIds:
+SELECT categoryId
+FROM transactions
+WHERE categoryId IS NOT NULL
+  AND type = :type
+  AND date >= :startInclusive
+GROUP BY categoryId
+ORDER BY COUNT(*) DESC, MAX(date) DESC
+LIMIT :limit;

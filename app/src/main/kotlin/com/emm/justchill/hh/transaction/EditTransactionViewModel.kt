@@ -12,6 +12,7 @@ import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.DeleteTransactionUseCase
 import com.emm.domain.transaction.FindTransactionUseCase
+import com.emm.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionUpdate
@@ -31,6 +32,7 @@ class EditTransactionViewModel(
     private val findTransaction: FindTransactionUseCase,
     private val deleteTransaction: DeleteTransactionUseCase,
     private val findAccount: FindAccountUseCase,
+    private val getTopUsedCategoryIds: GetTopUsedCategoryIdsUseCase,
 ) : MviViewModel<EditTransactionUiState, EditTransactionIntent, EditTransactionEffect>() {
 
     override val initialState = EditTransactionUiState()
@@ -51,14 +53,17 @@ class EditTransactionViewModel(
 
             is EditTransactionIntent.OnDescriptionChange -> updateState { copy(description = intent.value).recompute() }
 
-            is EditTransactionIntent.OnTransactionTypeChange -> updateState {
-                val list = allCategories[intent.value.categoryType].orEmpty()
-                copy(
-                    transactionType = intent.value,
-                    categories = list,
-                    categorySelected = list.firstOrNull { it.categoryId == snapshot?.categoryId }
-                        ?: list.firstOrNull(),
-                ).recompute()
+            is EditTransactionIntent.OnTransactionTypeChange -> {
+                updateState {
+                    val list = allCategories[intent.value.categoryType].orEmpty()
+                    copy(
+                        transactionType = intent.value,
+                        categories = list,
+                        categorySelected = list.firstOrNull { it.categoryId == snapshot?.categoryId }
+                            ?: list.firstOrNull(),
+                    ).recompute()
+                }
+                loadFrequent(intent.value)
             }
 
             is EditTransactionIntent.OnDateChangeInMillis -> updateCurrentDate(intent.value)
@@ -79,6 +84,11 @@ class EditTransactionViewModel(
 
             EditTransactionIntent.OnDelete -> deleteTransaction()
         }
+    }
+
+    private fun loadFrequent(type: TransactionType) = viewModelScope.launch {
+        val ids = runCatching { getTopUsedCategoryIds(type) }.getOrDefault(emptyList())
+        updateState { copy(frequentCategoryIds = ids.map { it.value }) }
     }
 
     private fun EditTransactionUiState.recompute(): EditTransactionUiState {
@@ -133,6 +143,7 @@ class EditTransactionViewModel(
                 hasChanges = false,
             )
         }
+        loadFrequent(oldTransaction.type)
     }
 
     private fun updateTransaction() = launchSafe(

@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.IconTileTone
@@ -60,6 +61,7 @@ fun CategoryPickerSheet(
     onSelect: (SelectableCategory) -> Unit,
     onAddNew: () -> Unit,
     onDismiss: () -> Unit,
+    frequentCategoryIds: List<String> = emptyList(),
 ) {
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -72,6 +74,22 @@ fun CategoryPickerSheet(
             categories
         } else {
             categories.filter { it.name.contains(query.trim(), ignoreCase = true) }
+        }
+    }
+    val sections = remember(categories, frequentCategoryIds, query) {
+        if (query.isNotBlank()) {
+            null
+        } else {
+            val frequent = frequentCategoryIds.mapNotNull { id ->
+                categories.firstOrNull { it.categoryId.value == id }
+            }
+            if (frequent.size < 2) {
+                null
+            } else {
+                val frequentIdSet = frequentCategoryIds.toSet()
+                val rest = categories.filter { it.categoryId.value !in frequentIdSet }
+                Pair(frequent, rest)
+            }
         }
     }
 
@@ -178,19 +196,53 @@ fun CategoryPickerSheet(
                     .fillMaxWidth()
                     .heightIn(max = maxListHeight),
             ) {
-                items(filtered, key = { it.categoryId.value }) { category ->
-                    val isActive = category.categoryId.value == selectedCategoryId
-                    CategoryRow(
-                        category = category,
-                        isActive = isActive,
-                        accentColor = colors.accent,
-                        textPrimary = colors.textPrimary,
-                        activeBg = colors.surface1,
-                        onClick = {
-                            onSelect(category)
-                            onDismiss()
-                        },
-                    )
+                if (sections != null) {
+                    val (frequent, rest) = sections
+                    item("header_frequent") { SectionHeader("Frecuentes") }
+                    items(frequent, key = { "freq_" + it.categoryId.value }) { category ->
+                        val isActive = category.categoryId.value == selectedCategoryId
+                        CategoryRow(
+                            category = category,
+                            isActive = isActive,
+                            accentColor = colors.accent,
+                            textPrimary = colors.textPrimary,
+                            activeBg = colors.surface1,
+                            onClick = {
+                                onSelect(category)
+                                onDismiss()
+                            },
+                        )
+                    }
+                    item("header_all") { SectionHeader("Todas") }
+                    items(rest, key = { "rest_" + it.categoryId.value }) { category ->
+                        val isActive = category.categoryId.value == selectedCategoryId
+                        CategoryRow(
+                            category = category,
+                            isActive = isActive,
+                            accentColor = colors.accent,
+                            textPrimary = colors.textPrimary,
+                            activeBg = colors.surface1,
+                            onClick = {
+                                onSelect(category)
+                                onDismiss()
+                            },
+                        )
+                    }
+                } else {
+                    items(filtered, key = { it.categoryId.value }) { category ->
+                        val isActive = category.categoryId.value == selectedCategoryId
+                        CategoryRow(
+                            category = category,
+                            isActive = isActive,
+                            accentColor = colors.accent,
+                            textPrimary = colors.textPrimary,
+                            activeBg = colors.surface1,
+                            onClick = {
+                                onSelect(category)
+                                onDismiss()
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -226,6 +278,16 @@ fun CategoryPickerSheet(
             )
         }
     }
+}
+
+@Composable
+private fun SectionHeader(text: String) {
+    Eyebrow(
+        text = text,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 24.dp, end = 24.dp, top = 10.dp, bottom = 6.dp),
+    )
 }
 
 @Composable

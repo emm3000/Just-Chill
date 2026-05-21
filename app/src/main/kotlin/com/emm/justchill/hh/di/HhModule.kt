@@ -60,6 +60,7 @@ private fun Module.viewModelsProviders() {
             accountRepository = get(),
             categoryRepository = get(),
             findAccount = get(),
+            getTopUsedCategoryIds = get(),
         )
     }
 

@@ -6,6 +6,7 @@ import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryType
 import com.emm.domain.transaction.CreateTransactionUseCase
+import com.emm.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
@@ -16,9 +17,11 @@ import com.emm.justchill.hh.shared.Empty
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 class AddTransactionViewModel(
     private val createTransaction: CreateTransactionUseCase,
+    private val getTopUsedCategoryIds: GetTopUsedCategoryIdsUseCase,
     accountRepository: AccountRepository,
     categoryRepository: CategoryRepository,
 ) : MviViewModel<AddTransactionUiState, AddTransactionIntent, AddTransactionEffect>() {
@@ -45,6 +48,7 @@ class AddTransactionViewModel(
                 ).validate()
             }
         }.launchIn(viewModelScope)
+        loadFrequent(currentState.transactionType)
     }
 
     override fun onIntent(intent: AddTransactionIntent) {
@@ -55,12 +59,15 @@ class AddTransactionViewModel(
 
             is AddTransactionIntent.OnDescriptionChange -> updateState { copy(description = intent.value).touched() }
 
-            is AddTransactionIntent.OnTransactionTypeChange -> updateState {
-                copy(
-                    transactionType = intent.value,
-                    categories = allCategories[intent.value.categoryType].orEmpty(),
-                    categorySelected = allCategories[intent.value.categoryType]?.firstOrNull(),
-                ).touched()
+            is AddTransactionIntent.OnTransactionTypeChange -> {
+                updateState {
+                    copy(
+                        transactionType = intent.value,
+                        categories = allCategories[intent.value.categoryType].orEmpty(),
+                        categorySelected = allCategories[intent.value.categoryType]?.firstOrNull(),
+                    ).touched()
+                }
+                loadFrequent(intent.value)
             }
 
             is AddTransactionIntent.OnDateChangeInMillis -> updateCurrentDate(intent.value)
@@ -106,6 +113,11 @@ class AddTransactionViewModel(
                 }
             }
         }
+    }
+
+    private fun loadFrequent(type: TransactionType) = viewModelScope.launch {
+        val ids = runCatching { getTopUsedCategoryIds(type) }.getOrDefault(emptyList())
+        updateState { copy(frequentCategoryIds = ids.map { it.value }) }
     }
 
     private fun AddTransactionUiState.validate(): AddTransactionUiState = copy(isEnabled = missingField == null)

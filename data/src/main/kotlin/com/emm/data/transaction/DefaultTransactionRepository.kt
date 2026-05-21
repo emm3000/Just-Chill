@@ -5,6 +5,7 @@ import com.emm.data.shared.safeDbCall
 import com.emm.domain.report.CategoryAmount
 import com.emm.domain.report.MonthlySectionStats
 import com.emm.domain.shared.AccountId
+import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.Transaction
@@ -83,5 +84,14 @@ class DefaultTransactionRepository(private val localDataSource: TransactionLocal
             movementCount = count.toInt(),
             averageAmount = average,
         )
+    }
+
+    override suspend fun topUsedCategoryIds(
+        type: TransactionType,
+        startInclusive: Long,
+        limit: Int,
+    ): List<CategoryId> = safeDbCall {
+        localDataSource.topUsedCategoryIds(type, startInclusive, limit.toLong())
+            .map { CategoryId(it) }
     }
 }

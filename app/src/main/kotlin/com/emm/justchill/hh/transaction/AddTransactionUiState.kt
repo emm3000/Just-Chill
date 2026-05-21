@@ -18,6 +18,7 @@ data class AddTransactionUiState(
     val accountSelected: Account? = null,
     val categories: List<SelectableCategory> = emptyList(),
     val categorySelected: SelectableCategory? = null,
+    val frequentCategoryIds: List<String> = emptyList(),
 ) : UiState {
     val missingField: MissingField? get() = when {
         centsToSoles(amount) <= 0.0 -> MissingField.Amount

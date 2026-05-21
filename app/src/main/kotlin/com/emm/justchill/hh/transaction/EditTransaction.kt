@@ -233,6 +233,7 @@ private fun EditTransactionContent(
             onSelect = { onIntent(EditTransactionIntent.OnCategorySelected(it)) },
             onAddNew = { showCategorySheet = false },
             onDismiss = { showCategorySheet = false },
+            frequentCategoryIds = state.frequentCategoryIds,
         )
     }
 

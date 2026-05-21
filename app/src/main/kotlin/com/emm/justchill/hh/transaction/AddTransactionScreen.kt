@@ -251,6 +251,7 @@ private fun AddTransactionScreenContent(
             onSelect = { onIntent(AddTransactionIntent.OnCategorySelected(it)) },
             onAddNew = { onAddNewCategory() },
             onDismiss = { showCategorySheet = false },
+            frequentCategoryIds = state.frequentCategoryIds,
         )
     }
 

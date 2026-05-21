@@ -3,6 +3,7 @@ package com.emm.justchill.hh.di
 import com.emm.domain.transaction.CreateTransactionUseCase
 import com.emm.domain.transaction.DeleteTransactionUseCase
 import com.emm.domain.transaction.FindTransactionUseCase
+import com.emm.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.domain.transaction.GetTransactionsUseCase
 import com.emm.domain.transaction.SearchTransactionsUseCase
 import com.emm.domain.transaction.UpdateTransactionUseCase
@@ -16,4 +17,5 @@ val transactionModule = module {
     factoryOf(::UpdateTransactionUseCase)
     factoryOf(::DeleteTransactionUseCase)
     factoryOf(::SearchTransactionsUseCase)
+    factoryOf(::GetTopUsedCategoryIdsUseCase)
 }

@@ -114,4 +114,16 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             ).executeAsOne()
             row.movementCount to row.totalAmount
         }
+
+    suspend fun topUsedCategoryIds(
+        type: TransactionType,
+        startInclusive: Long,
+        limit: Long,
+    ): List<String> = withContext(Dispatchers.IO) {
+        tq.topUsedCategoryIds(
+            type = type.name,
+            startInclusive = startInclusive,
+            limit = limit,
+        ).executeAsList().filterNotNull()
+    }
 }
