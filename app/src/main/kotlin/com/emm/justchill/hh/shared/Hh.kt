@@ -176,6 +176,7 @@ fun Hh(modifier: Modifier = Modifier) {
                         },
                         navigateToAdd = { backStack.add(AddTransactionRoute) },
                         navigateToEdit = { id -> backStack.add(EditTransactionRoute(id)) },
+                        navigateToReport = { backStack.add(ReportRoute) },
                     )
                 }
 

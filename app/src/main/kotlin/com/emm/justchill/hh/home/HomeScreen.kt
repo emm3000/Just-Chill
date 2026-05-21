@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -69,6 +70,7 @@ fun HomeScreen(
     navigateToAll: () -> Unit = {},
     navigateToAdd: () -> Unit = {},
     navigateToEdit: (String) -> Unit = {},
+    navigateToReport: () -> Unit = {},
 ) {
     val state: HomeUiState by homeViewModel.state.collectAsStateWithLifecycle()
     HomeScreen(
@@ -76,6 +78,7 @@ fun HomeScreen(
         navigateToAll = navigateToAll,
         navigateToAdd = navigateToAdd,
         navigateToEdit = navigateToEdit,
+        navigateToReport = navigateToReport,
         onPreviousMonth = { homeViewModel.onIntent(HomeIntent.PreviousMonth) },
         onNextMonth = { homeViewModel.onIntent(HomeIntent.NextMonth) },
     )
@@ -87,6 +90,7 @@ fun HomeScreen(
     navigateToAll: () -> Unit = {},
     navigateToAdd: () -> Unit = {},
     navigateToEdit: (String) -> Unit = {},
+    navigateToReport: () -> Unit = {},
     onPreviousMonth: () -> Unit = {},
     onNextMonth: () -> Unit = {},
 ) {
@@ -104,6 +108,7 @@ fun HomeScreen(
             homeData = homeData,
             navigateToAll = navigateToAll,
             navigateToEdit = navigateToEdit,
+            navigateToReport = navigateToReport,
             onPreviousMonth = onPreviousMonth,
             onNextMonth = onNextMonth,
         )
@@ -115,6 +120,7 @@ private fun HomeWithData(
     homeData: HomeUiState,
     navigateToAll: () -> Unit,
     navigateToEdit: (String) -> Unit,
+    navigateToReport: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
 ) {
@@ -131,12 +137,16 @@ private fun HomeWithData(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 14.dp, start = 20.dp, end = 20.dp),
-                contentAlignment = Alignment.Center,
             ) {
                 MonthSelector(
                     label = homeData.month.fullLabel(),
                     onPrev = onPreviousMonth,
                     onNext = onNextMonth,
+                    modifier = Modifier.align(Alignment.Center),
+                )
+                ReportIconButton(
+                    onClick = navigateToReport,
+                    modifier = Modifier.align(Alignment.CenterEnd),
                 )
             }
         }
@@ -331,6 +341,29 @@ private fun MonthEmpty(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ReportIconButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = LocalEmmColors.current
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier = modifier
+            .size(48.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = dropUnlessResumed(block = onClick),
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Insights,
+            contentDescription = "Ver reporte",
+            tint = colors.textPrimary,
+            modifier = Modifier.size(24.dp),
+        )
     }
 }
 
