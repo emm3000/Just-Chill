@@ -1,0 +1,73 @@
+package com.emm.domain.report
+
+import com.emm.domain.shared.CategoryId
+import com.emm.domain.shared.Money
+import com.emm.domain.shared.YearMonth
+import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionType
+import kotlin.time.Clock
+
+class GetTopCategoriesOverMonthsUseCase(
+    private val transactionRepository: TransactionRepository,
+) {
+
+    suspend operator fun invoke(
+        type: TransactionType,
+        months: Int = 6,
+        topN: Int = 3,
+        clock: Clock = Clock.System,
+    ): List<CategoryAggregate> {
+        val current = YearMonth.current(clock)
+
+        // Collect per-month results oldest-first
+        val monthlyResults = mutableListOf<List<CategoryAmount>>()
+        var ym = current
+        repeat(months) {
+            val start = ym.startInclusiveMillis()
+            val end = ym.endExclusiveMillis()
+            val items = transactionRepository.monthlyAmountByCategory(type, start, end)
+            monthlyResults.add(0, items)
+            ym = ym.previous()
+        }
+
+        // Aggregate totals across all months per categoryId
+        val totals = mutableMapOf<CategoryId, Money>()
+        val meta = mutableMapOf<CategoryId, Triple<String, String, String>>() // name, color, icon
+
+        monthlyResults.forEach { items ->
+            items.forEach { item ->
+                totals[item.categoryId] = (totals[item.categoryId] ?: Money.Zero) + item.amount
+                meta[item.categoryId] = Triple(item.categoryName, item.categoryColor, item.categoryIcon)
+            }
+        }
+
+        // For each month, identify the local top-N categoryIds
+        val localTopSets: List<Set<CategoryId>> = monthlyResults.map { items ->
+            items.sortedByDescending { it.amount.cents }.take(topN).map { it.categoryId }.toSet()
+        }
+
+        // Count how many months each aggregated category appeared in the local top-N
+        val monthsInTop = mutableMapOf<CategoryId, Int>()
+        totals.keys.forEach { catId ->
+            val count = localTopSets.count { it.contains(catId) }
+            monthsInTop[catId] = count
+        }
+
+        // Return top-N overall by total amount
+        return totals.entries
+            .sortedByDescending { it.value.cents }
+            .take(topN)
+            .mapNotNull { (catId, total) ->
+                val (name, color, icon) = meta[catId] ?: return@mapNotNull null
+                CategoryAggregate(
+                    categoryId = catId,
+                    categoryName = name,
+                    categoryColor = color,
+                    categoryIcon = icon,
+                    totalAmount = total,
+                    monthsInTop = monthsInTop[catId] ?: 0,
+                    totalMonths = months,
+                )
+            }
+    }
+}
