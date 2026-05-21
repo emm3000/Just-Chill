@@ -22,10 +22,8 @@ import com.emm.justchill.core.theme.LocalEmmType
 /**
  * Hero amount display for the Mes tab.
  *
- * Per DS §1.4 *total-hero exception*: the integer part is tinted `success`
- * (Ingresos) or `danger` (Gastos) to disambiguate type — the hero is the
- * only signal of type in this view. The currency prefix `S/ ` and the
- * decimals `.00` stay `textTertiary`.
+ * Income integer part: `success` (green). Spend integer part: `textPrimary` (white/dark).
+ * The currency prefix `S/ ` and the decimals `.00` stay `textTertiary` for both types.
  *
  * Single Text + AnnotatedString to keep baselines aligned across spans.
  *
@@ -38,7 +36,7 @@ fun TotalAmountHero(totalFormatted: String, type: TransactionType, modifier: Mod
 
     val integerColor = when (type) {
         TransactionType.Income -> colors.success
-        TransactionType.Spend -> colors.danger
+        TransactionType.Spend -> colors.textPrimary
     }
 
     val annotated: AnnotatedString = buildAnnotatedString {

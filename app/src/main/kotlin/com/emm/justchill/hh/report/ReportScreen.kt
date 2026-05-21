@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material3.Icon
@@ -29,12 +30,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -49,6 +54,7 @@ import com.emm.justchill.core.ui.atoms.SegmentOption
 import com.emm.justchill.core.ui.atoms.Segmented
 import com.emm.justchill.hh.report.components.CategoryBarsCard
 import com.emm.justchill.hh.report.components.ComparisonPill
+import com.emm.justchill.hh.report.components.MonthPickerSheet
 import com.emm.justchill.hh.report.components.MonthSelector
 import com.emm.justchill.hh.report.components.ShareReportButton
 import com.emm.justchill.hh.report.components.TodayPill
@@ -96,6 +102,7 @@ fun ReportScreen(
         onTypeSelect = { vm.onIntent(ReportIntent.SelectType(it)) },
         onTabSelect = { vm.onIntent(ReportIntent.SelectTab(it)) },
         onShare = { vm.onIntent(ReportIntent.ShareReport) },
+        onSelectMonth = { vm.onIntent(ReportIntent.SelectMonth(it)) },
         modifier = modifier,
     )
 }
@@ -111,10 +118,13 @@ private fun ReportScreen(
     onTypeSelect: (TransactionType) -> Unit,
     onTabSelect: (ReportTab) -> Unit,
     onShare: () -> Unit,
+    onSelectMonth: (YearMonth) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
+
+    var showMonthSheet by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -153,6 +163,7 @@ private fun ReportScreen(
                     onTypeSelect = onTypeSelect,
                     onAddTransaction = onAddTransaction,
                     onShare = onShare,
+                    onLabelClick = { showMonthSheet = true },
                 )
 
                 ReportTab.Tendencias -> TrendsContent(trends = state.trends)
@@ -160,6 +171,17 @@ private fun ReportScreen(
 
             Spacer(Modifier.height(spacing.s8))
         }
+    }
+
+    if (showMonthSheet) {
+        MonthPickerSheet(
+            current = state.month,
+            onSelect = { selected ->
+                onSelectMonth(selected)
+                showMonthSheet = false
+            },
+            onDismiss = { showMonthSheet = false },
+        )
     }
 }
 
@@ -172,6 +194,7 @@ private fun MesContent(
     onTypeSelect: (TransactionType) -> Unit,
     onAddTransaction: () -> Unit,
     onShare: () -> Unit,
+    onLabelClick: () -> Unit,
 ) {
     val spacing = LocalEmmSpacing.current
     val isCurrentMonth = state.month == YearMonth.current()
@@ -185,6 +208,7 @@ private fun MesContent(
             label = state.month.fullLabel(),
             onPrevious = onPreviousMonth,
             onNext = onNextMonth,
+            onLabelClick = onLabelClick,
         )
         if (!isCurrentMonth) {
             Spacer(Modifier.size(spacing.s2))
@@ -192,26 +216,30 @@ private fun MesContent(
         }
     }
 
-    ToggleIncomeExpense(
-        selected = state.selectedType,
-        onSelect = onTypeSelect,
-    )
-
-    if (state.isEmpty) {
-        EmptyState(
-            type = state.selectedType,
-            onAddTransaction = onAddTransaction,
-        )
+    if (state.isMonthEmpty) {
+        MonthEmptyState(month = state.month.fullLabel())
     } else {
-        TotalHeroBlock(state = state)
-
-        CategoryBarsCard(
-            shares = state.shares,
-            movementCount = state.movementCount,
-            averageFormatted = state.averageFormatted,
+        ToggleIncomeExpense(
+            selected = state.selectedType,
+            onSelect = onTypeSelect,
         )
 
-        ShareReportButton(onClick = onShare)
+        if (state.isEmpty) {
+            EmptyState(
+                type = state.selectedType,
+                onAddTransaction = onAddTransaction,
+            )
+        } else {
+            TotalHeroBlock(state = state)
+
+            CategoryBarsCard(
+                shares = state.shares,
+                movementCount = state.movementCount,
+                averageFormatted = state.averageFormatted,
+            )
+
+            ShareReportButton(onClick = onShare)
+        }
     }
 }
 
@@ -243,6 +271,7 @@ private fun TotalHeroBlock(state: ReportUiState) {
                 ComparisonPill(
                     absoluteDeltaFormatted = comparisonAmt,
                     percent = state.comparisonPercent,
+                    directionUp = state.comparisonDirectionUp ?: true,
                     isPositive = state.comparisonIsPositive ?: true,
                 )
                 Text(
@@ -278,7 +307,7 @@ private fun ReportTopBar(onBack: () -> Unit, onShare: () -> Unit) {
             style = type.titleL,
             color = colors.textPrimary,
             modifier = Modifier.weight(1f),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            textAlign = TextAlign.Center,
         )
         TopBarTile(
             icon = Icons.Outlined.IosShare,
@@ -312,6 +341,50 @@ private fun TopBarTile(icon: ImageVector, contentDescription: String, onClick: (
             contentDescription = contentDescription,
             tint = colors.textPrimary,
             modifier = Modifier.size(20.dp),
+        )
+    }
+}
+
+@Composable
+private fun MonthEmptyState(month: String) {
+    val colors = LocalEmmColors.current
+    val typeTokens = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+    val tileShape = RoundedCornerShape(12.dp)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = spacing.s12),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(spacing.s3),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(tileShape)
+                .background(colors.surface1)
+                .border(width = 1.dp, color = colors.border, shape = tileShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.CalendarMonth,
+                contentDescription = null,
+                tint = colors.textSecondary,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Text(
+            text = "Sin movimientos en $month",
+            style = typeTokens.headlineM,
+            color = colors.textPrimary,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = "Anota un gasto o ingreso para empezar a ver tu reporte de este mes.",
+            style = typeTokens.bodyM,
+            color = colors.textSecondary,
+            textAlign = TextAlign.Center,
         )
     }
 }
@@ -389,6 +462,7 @@ private fun ReportScreenMesPreview() {
                 selectedTab = ReportTab.Mes,
                 totalFormatted = "S/ 6,200.00",
                 comparisonText = "vs. abril",
+                comparisonDirectionUp = true,
                 comparisonIsPositive = true,
                 comparisonAmountFormatted = "S/ 660",
                 comparisonPercent = 12,
@@ -410,6 +484,7 @@ private fun ReportScreenMesPreview() {
             onTypeSelect = {},
             onTabSelect = {},
             onShare = {},
+            onSelectMonth = {},
         )
     }
 }
@@ -426,7 +501,8 @@ private fun ReportScreenMesGastosPreview() {
                 selectedTab = ReportTab.Mes,
                 totalFormatted = "S/ 4,580.00",
                 comparisonText = "vs. marzo",
-                comparisonIsPositive = false,
+                comparisonDirectionUp = false,
+                comparisonIsPositive = true,
                 comparisonAmountFormatted = "S/ 220",
                 comparisonPercent = 5,
                 shares = listOf(
@@ -449,6 +525,7 @@ private fun ReportScreenMesGastosPreview() {
             onTypeSelect = {},
             onTabSelect = {},
             onShare = {},
+            onSelectMonth = {},
         )
     }
 }
@@ -463,6 +540,7 @@ private fun ReportScreenEmptyPreview() {
                 selectedType = TransactionType.Income,
                 shares = emptyList(),
                 isEmpty = true,
+                isMonthEmpty = true,
             ),
             onBack = {},
             onAddTransaction = {},
@@ -472,6 +550,7 @@ private fun ReportScreenEmptyPreview() {
             onTypeSelect = {},
             onTabSelect = {},
             onShare = {},
+            onSelectMonth = {},
         )
     }
 }

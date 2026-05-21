@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,7 +39,13 @@ import com.emm.justchill.core.theme.LocalEmmType
  * mirror the designer's handoff layout (selector + "Hoy" side-by-side).
  */
 @Composable
-fun MonthSelector(label: String, onPrevious: () -> Unit, onNext: () -> Unit, modifier: Modifier = Modifier) {
+fun MonthSelector(
+    label: String,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    modifier: Modifier = Modifier,
+    onLabelClick: () -> Unit = {},
+) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
@@ -59,12 +66,29 @@ fun MonthSelector(label: String, onPrevious: () -> Unit, onNext: () -> Unit, mod
             contentDescription = "Mes anterior",
             onClick = onPrevious,
         )
-        Text(
-            text = label,
-            style = type.labelL,
-            color = colors.textPrimary,
-            modifier = Modifier.padding(horizontal = spacing.s2),
-        )
+        Row(
+            modifier = Modifier
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onLabelClick,
+                )
+                .padding(horizontal = spacing.s2),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = label,
+                style = type.labelL,
+                color = colors.textPrimary,
+            )
+            Icon(
+                imageVector = Icons.Outlined.ExpandMore,
+                contentDescription = null,
+                tint = colors.textTertiary,
+                modifier = Modifier.size(14.dp),
+            )
+        }
         ChevronButton(
             icon = Icons.Outlined.ChevronRight,
             contentDescription = "Mes siguiente",

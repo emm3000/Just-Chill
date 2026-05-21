@@ -26,11 +26,21 @@ import com.emm.justchill.core.ui.atoms.PillTone
  *
  * §7.14: leading arrow icon, text "S/ 660 · 12%", tone Pos/Neg.
  * The "vs abril" label is rendered separately beside this pill by the caller.
+ *
+ * [directionUp] controls the arrow icon (raw delta direction).
+ * [isPositive] controls the tone — semantic favorability for the user:
+ *   Income: positive when delta ≥ 0; Spend: positive when delta ≤ 0.
  */
 @Composable
-fun ComparisonPill(absoluteDeltaFormatted: String, percent: Int, isPositive: Boolean, modifier: Modifier = Modifier) {
+fun ComparisonPill(
+    absoluteDeltaFormatted: String,
+    percent: Int,
+    directionUp: Boolean,
+    isPositive: Boolean,
+    modifier: Modifier = Modifier,
+) {
     val tone = if (isPositive) PillTone.Pos else PillTone.Neg
-    val icon = if (isPositive) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward
+    val icon = if (directionUp) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward
     val text = "$absoluteDeltaFormatted · $percent%"
 
     Pill(
@@ -60,6 +70,7 @@ private fun ComparisonPillPreview() {
                 ComparisonPill(
                     absoluteDeltaFormatted = "S/ 660",
                     percent = 12,
+                    directionUp = true,
                     isPositive = true,
                 )
                 Text(

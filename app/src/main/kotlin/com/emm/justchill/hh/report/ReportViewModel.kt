@@ -66,6 +66,11 @@ class ReportViewModel(
                 }
             }
 
+            is ReportIntent.SelectMonth -> {
+                updateState { copy(month = intent.month) }
+                loadReport()
+            }
+
             ReportIntent.ShareReport -> buildAndShareReport()
         }
     }
@@ -74,7 +79,11 @@ class ReportViewModel(
         val month = currentState.month
         val type = currentState.selectedType
         launchSafe(onError = { e -> ReportEffect.ShowError(e.toUserMessage()) }) {
-            val amounts: List<CategoryAmount> = getMonthlyAmountByCategory(month, type)
+            val incomeAmounts: List<CategoryAmount> = getMonthlyAmountByCategory(month, TransactionType.Income)
+            val spendAmounts: List<CategoryAmount> = getMonthlyAmountByCategory(month, TransactionType.Spend)
+            val isMonthEmpty = incomeAmounts.isEmpty() && spendAmounts.isEmpty()
+
+            val amounts = if (type == TransactionType.Income) incomeAmounts else spendAmounts
             val comparison = getMonthlyComparison(month, type)
             val stats = getMonthlySectionStats(month, type)
 
@@ -85,6 +94,13 @@ class ReportViewModel(
                 val abs = if (mc.absoluteDelta.cents < 0) -mc.absoluteDelta else mc.absoluteDelta
                 formatSoles(abs.cents)
             }
+            val directionUp = comparison?.let { it.deltaPercent >= 0 }
+            val isPositive = comparison?.let { mc ->
+                when (type) {
+                    TransactionType.Income -> mc.deltaPercent >= 0
+                    TransactionType.Spend -> mc.deltaPercent <= 0
+                }
+            }
 
             val shares = buildShares(amounts, total)
 
@@ -92,11 +108,13 @@ class ReportViewModel(
                 copy(
                     totalFormatted = formatSolesWithDecimals(total.cents),
                     comparisonText = comparisonText,
-                    comparisonIsPositive = comparison?.let { it.deltaPercent >= 0 },
+                    comparisonDirectionUp = directionUp,
+                    comparisonIsPositive = isPositive,
                     comparisonAmountFormatted = comparisonAmountFormatted,
                     comparisonPercent = comparison?.deltaPercent ?: 0,
                     shares = shares,
                     isEmpty = amounts.isEmpty(),
+                    isMonthEmpty = isMonthEmpty,
                     movementCount = stats.movementCount,
                     averageFormatted = formatSoles(stats.averageAmount.cents),
                 )
@@ -189,7 +207,7 @@ class ReportViewModel(
         val deltaPct = state.comparisonPercent
         val vsText = state.comparisonText
         if (deltaAmt != null && vsText != null) {
-            val sign = if (state.comparisonIsPositive == true) "↑" else "↓"
+            val sign = if (state.comparisonDirectionUp == true) "↑" else "↓"
             appendLine("$sign $deltaAmt · $deltaPct% $vsText")
         }
         appendLine("Por categoría:")
