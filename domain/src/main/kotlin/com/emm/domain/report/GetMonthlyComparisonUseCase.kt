@@ -2,10 +2,10 @@ package com.emm.domain.report
 
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
-import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
 
-class GetMonthlyComparisonUseCase(private val transactionRepository: TransactionRepository) {
+class GetMonthlyComparisonUseCase(private val transactionStatsRepository: TransactionStatsRepository) {
 
     /**
      * Returns [MonthlyComparison] with the delta % between [yearMonth] and its previous month,
@@ -32,7 +32,7 @@ class GetMonthlyComparisonUseCase(private val transactionRepository: Transaction
     private suspend fun totalFor(yearMonth: YearMonth, type: TransactionType): Money {
         val start = yearMonth.startInclusiveMillis()
         val end = yearMonth.endExclusiveMillis()
-        val items = transactionRepository.monthlyAmountByCategory(type, start, end)
+        val items = transactionStatsRepository.monthlyAmountByCategory(type, start, end)
         return items.fold(Money.Zero) { acc, item -> acc + item.amount }
     }
 }

@@ -2,7 +2,7 @@ package com.emm.domain.report
 
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
-import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -13,7 +13,7 @@ import kotlin.test.assertEquals
 
 class GetMonthlySectionStatsUseCaseTest {
 
-    private val repository = mockk<TransactionRepository>()
+    private val repository = mockk<TransactionStatsRepository>()
     private val useCase = GetMonthlySectionStatsUseCase(repository)
 
     private val month = YearMonth(2026, Month.MAY)

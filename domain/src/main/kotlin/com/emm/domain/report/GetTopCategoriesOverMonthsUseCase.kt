@@ -3,11 +3,11 @@ package com.emm.domain.report
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
-import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
 import kotlin.time.Clock
 
-class GetTopCategoriesOverMonthsUseCase(private val transactionRepository: TransactionRepository) {
+class GetTopCategoriesOverMonthsUseCase(private val transactionStatsRepository: TransactionStatsRepository) {
 
     suspend operator fun invoke(
         type: TransactionType,
@@ -23,7 +23,7 @@ class GetTopCategoriesOverMonthsUseCase(private val transactionRepository: Trans
         repeat(months) {
             val start = ym.startInclusiveMillis()
             val end = ym.endExclusiveMillis()
-            val items = transactionRepository.monthlyAmountByCategory(type, start, end)
+            val items = transactionStatsRepository.monthlyAmountByCategory(type, start, end)
             monthlyResults.add(0, items)
             ym = ym.previous()
         }

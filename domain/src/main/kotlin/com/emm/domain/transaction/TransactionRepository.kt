@@ -1,13 +1,9 @@
 package com.emm.domain.transaction
 
-import com.emm.domain.report.CategoryAmount
-import com.emm.domain.report.MonthlySectionStats
 import com.emm.domain.shared.AccountId
-import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.TransactionId
 import kotlinx.coroutines.flow.Flow
 
-@Suppress("TooManyFunctions")
 interface TransactionRepository {
 
     suspend fun create(transactionInsert: TransactionInsert)
@@ -27,14 +23,4 @@ interface TransactionRepository {
     suspend fun delete(transactionId: TransactionId)
 
     fun searchWithCategory(filter: TransactionFilter): Flow<List<TransactionWithCategory>>
-
-    suspend fun monthlyAmountByCategory(
-        type: TransactionType,
-        startInclusive: Long,
-        endExclusive: Long,
-    ): List<CategoryAmount>
-
-    suspend fun monthlyStats(type: TransactionType, startInclusive: Long, endExclusive: Long): MonthlySectionStats
-
-    suspend fun topUsedCategoryIds(type: TransactionType, startInclusive: Long, limit: Int): List<CategoryId>
 }

@@ -3,7 +3,7 @@ package com.emm.domain.report
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
-import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -17,7 +17,7 @@ import kotlin.time.Instant
 
 class GetTopCategoriesOverMonthsUseCaseTest {
 
-    private val repository = mockk<TransactionRepository>()
+    private val repository = mockk<TransactionStatsRepository>()
     private val useCase = GetTopCategoriesOverMonthsUseCase(repository)
 
     private val fixedClock: Clock = object : Clock {

@@ -2,13 +2,13 @@ package com.emm.domain.report
 
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
-import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
 import kotlin.time.Clock
 
 private const val MAX_RATE_PERCENT = 100
 
-class GetSavingsRateUseCase(private val transactionRepository: TransactionRepository) {
+class GetSavingsRateUseCase(private val transactionStatsRepository: TransactionStatsRepository) {
 
     suspend operator fun invoke(months: Int = 6, clock: Clock = Clock.System): SavingsRate {
         val current = YearMonth.current(clock)
@@ -51,8 +51,8 @@ class GetSavingsRateUseCase(private val transactionRepository: TransactionReposi
         repeat(months) {
             val start = ym.startInclusiveMillis()
             val end = ym.endExclusiveMillis()
-            val incomeItems = transactionRepository.monthlyAmountByCategory(TransactionType.Income, start, end)
-            val expenseItems = transactionRepository.monthlyAmountByCategory(TransactionType.Spend, start, end)
+            val incomeItems = transactionStatsRepository.monthlyAmountByCategory(TransactionType.Income, start, end)
+            val expenseItems = transactionStatsRepository.monthlyAmountByCategory(TransactionType.Spend, start, end)
             val income = incomeItems.fold(Money.Zero) { acc, item -> acc + item.amount }
             val expense = expenseItems.fold(Money.Zero) { acc, item -> acc + item.amount }
             result.add(0, MonthlyTotal(ym, income, expense))

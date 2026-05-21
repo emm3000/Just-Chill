@@ -2,23 +2,17 @@ package com.emm.data.transaction
 
 import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.safeDbCall
-import com.emm.domain.report.CategoryAmount
-import com.emm.domain.report.MonthlySectionStats
 import com.emm.domain.shared.AccountId
-import com.emm.domain.shared.CategoryId
-import com.emm.domain.shared.Money
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionFilter
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionRepository
-import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-@Suppress("TooManyFunctions")
 class DefaultTransactionRepository(private val localDataSource: TransactionLocalDataSource) : TransactionRepository {
 
     override suspend fun create(transactionInsert: TransactionInsert) = safeDbCall {
@@ -64,32 +58,4 @@ class DefaultTransactionRepository(private val localDataSource: TransactionLocal
         )
             .map { it.toDomain() }
             .catchAsDomainException()
-
-    override suspend fun monthlyAmountByCategory(
-        type: TransactionType,
-        startInclusive: Long,
-        endExclusive: Long,
-    ): List<CategoryAmount> = safeDbCall {
-        localDataSource.monthlyAmountByCategory(type, startInclusive, endExclusive)
-            .map { it.toDomain() }
-    }
-
-    override suspend fun monthlyStats(
-        type: TransactionType,
-        startInclusive: Long,
-        endExclusive: Long,
-    ): MonthlySectionStats = safeDbCall {
-        val (count, total) = localDataSource.monthlyStats(type, startInclusive, endExclusive)
-        val average = if (count == 0L) Money.Zero else Money(total / count)
-        MonthlySectionStats(
-            movementCount = count.toInt(),
-            averageAmount = average,
-        )
-    }
-
-    override suspend fun topUsedCategoryIds(type: TransactionType, startInclusive: Long, limit: Int): List<CategoryId> =
-        safeDbCall {
-            localDataSource.topUsedCategoryIds(type, startInclusive, limit.toLong())
-                .map { CategoryId(it) }
-        }
 }

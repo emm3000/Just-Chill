@@ -3,7 +3,7 @@ package com.emm.domain.report
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
-import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -16,7 +16,7 @@ import kotlin.test.assertTrue
 
 class GetMonthlyAmountByCategoryUseCaseTest {
 
-    private val repository = mockk<TransactionRepository>()
+    private val repository = mockk<TransactionStatsRepository>()
     private val useCase = GetMonthlyAmountByCategoryUseCase(repository)
 
     private val yearMonth = YearMonth(2026, Month.MAY)

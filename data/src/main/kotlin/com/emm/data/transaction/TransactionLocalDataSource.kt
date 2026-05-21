@@ -9,14 +9,12 @@ import com.emm.data.TransactionsQueries
 import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
-import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionUpdate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-@Suppress("TooManyFunctions")
 class TransactionLocalDataSource(private val tq: TransactionsQueries) {
 
     suspend fun create(transactionInsert: TransactionInsert) = withContext(Dispatchers.IO) {
@@ -93,35 +91,4 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             updatedAt = currentTimeInMillis(),
         )
     }
-
-    suspend fun monthlyAmountByCategory(
-        type: TransactionType,
-        startInclusive: Long,
-        endExclusive: Long,
-    ): List<MonthlyAmountByCategoryEntity> = withContext(Dispatchers.IO) {
-        tq.monthlyAmountByCategory(
-            type = type.name,
-            startInclusive = startInclusive,
-            endExclusive = endExclusive,
-        ).executeAsList().map { it.asEntity() }
-    }
-
-    suspend fun monthlyStats(type: TransactionType, startInclusive: Long, endExclusive: Long): Pair<Long, Long> =
-        withContext(Dispatchers.IO) {
-            val row = tq.monthlyStats(
-                type = type.name,
-                startInclusive = startInclusive,
-                endExclusive = endExclusive,
-            ).executeAsOne()
-            row.movementCount to row.totalAmount
-        }
-
-    suspend fun topUsedCategoryIds(type: TransactionType, startInclusive: Long, limit: Long): List<String> =
-        withContext(Dispatchers.IO) {
-            tq.topUsedCategoryIds(
-                type = type.name,
-                startInclusive = startInclusive,
-                limit = limit,
-            ).executeAsList().filterNotNull()
-        }
 }
