@@ -7,6 +7,8 @@ fun YearMonth.fullLabel(): String = "${month.spanish()} $year"
 
 fun YearMonth.shortLabel(): String = month.spanish()
 
+fun YearMonth.shortLabel3(): String = month.spanish().take(3)
+
 fun Month.spanish(): String = when (this) {
     Month.JANUARY -> "Enero"
     Month.FEBRUARY -> "Febrero"

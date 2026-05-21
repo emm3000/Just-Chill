@@ -8,4 +8,6 @@ sealed interface ReportIntent : UiIntent {
     data object NextMonth : ReportIntent
     data object JumpToCurrent : ReportIntent
     data class SelectType(val type: TransactionType) : ReportIntent
+    data class SelectTab(val tab: ReportTab) : ReportIntent
+    data object ShareReport : ReportIntent
 }
