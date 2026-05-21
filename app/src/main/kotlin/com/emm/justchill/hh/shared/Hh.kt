@@ -73,9 +73,6 @@ import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.CategoriesEffect
 import com.emm.justchill.hh.category.CategoriesScreen
 import com.emm.justchill.hh.category.CategoriesViewModel
-import com.emm.justchill.hh.category.SelectCategoryIntent
-import com.emm.justchill.hh.category.SelectCategoryScreen
-import com.emm.justchill.hh.category.SelectCategoryViewModel
 import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.onboarding.ManifestoScreen
@@ -376,33 +373,6 @@ fun Hh(modifier: Modifier = Modifier) {
                     AddAccountScreen(
                         onBack = { backStack.removeLastOrNull() },
                         snackbarHostState = snackbarHostState,
-                    )
-                }
-
-                entry<SelectCategoryRoute> {
-                    val vm: SelectCategoryViewModel = koinViewModel()
-                    val selectState by vm.state.collectAsStateWithLifecycle()
-                    SelectCategoryScreen(
-                        onCategorySelect = {
-                            pendingCategory = it
-                            backStack.removeLastOrNull()
-                        },
-                        onBack = { backStack.removeLastOrNull() },
-                        onValueChange = { vm.onIntent(SelectCategoryIntent.UpdateQuery(it)) },
-                        onTypeChange = { vm.onIntent(SelectCategoryIntent.SelectType(it)) },
-                        onNewCategory = { type, prefilledName ->
-                            backStack.add(
-                                CategoryRoute(
-                                    initialType = type,
-                                    initialName = prefilledName,
-                                    propagateToTransaction = true,
-                                ),
-                            )
-                        },
-                        value = selectState.query,
-                        selectedType = selectState.selectedType,
-                        activeList = selectState.filteredActive,
-                        activeCountTotal = selectState.activeList.size,
                     )
                 }
             },
