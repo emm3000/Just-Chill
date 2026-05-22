@@ -617,9 +617,9 @@ sprint lands its screen.
 
 Each step ends with a commit that updates this doc if the implementation forced a token change.
 
-> **Not in this roadmap**: any Auth / Login / Register screen. The app is
-> local-only since the PLAN_LOCAL migration. References to auth in earlier
-> drafts of this doc are legacy.
+> **Not in this roadmap**: any Auth / Login / Register screen. The app
+> has been local-only since the migration that removed Supabase/Ktor/auth.
+> References to auth in earlier drafts of this doc are legacy.
 
 ---
 

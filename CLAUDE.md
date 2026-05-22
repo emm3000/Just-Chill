@@ -106,7 +106,7 @@ When adding a new failure mode, prefer extending `DomainException` (and `toUserM
 - **Use-case rename**: All use cases follow `[Verb][Noun]UseCase`. See `domain/CLAUDE.md`.
 - **Typed errors**: `DomainException` + `SafeCall` + `toUserMessage()`.
 - **MVI**: All ViewModels extend `MviViewModel<S, I, E>`. `launchSafe { }` covers try/catch in the base class.
-- **Local-only migration** (`docs/PLAN_LOCAL.md`): removed auth/Supabase/Ktor/WorkManager; SQLDelight schema reset (no `syncState`/`isDeleted`/`userId`); hard-delete with `ON DELETE` foreign keys.
+- **Local-only migration**: removed auth/Supabase/Ktor/WorkManager; SQLDelight schema reset (no `syncState`/`isDeleted`/`userId`); hard-delete with `ON DELETE` foreign keys.
 - **Cleanup pass**: dropped dead Retrofit/parcelize/viewBinding; `@Immutable` on `TransactionUi`/`CategoryUi`; current-month filtering pushed to SQL (`completeTransactionsByDateRange`); `AddTransactionScreen`/`EditTransaction` decomposed into shared `TransactionFormSections.kt`; unit tests for all transaction, category and home use cases.
 
 **Ad-hoc tech debt still open** (not blocking v1, picked up opportunistically):
