@@ -1,5 +1,12 @@
 # ARCHITECTURE REVIEW — JustChill v1
 
+> **Snapshot 2026-05-17.** Este doc es el gap-analysis que produjo
+> el roadmap (Fase 3 → Fase 4). Los gaps listados acá (US-11, US-09,
+> US-01/02, US-18/19, quick wins, etc.) ya fueron cerrados en los
+> sprints S0-S5. Para el estado actual leer `docs/PROGRESS.md`. Se
+> conserva como referencia histórica del razonamiento que justificó
+> el roadmap, no como checklist viva.
+
 **Fase**: 3 de 5 (Architecture / Gap Analysis)
 **Bloquea**: ROADMAP_V1.md (Fase 4).
 **Depende de**: PRODUCT_DISCOVERY.md (§1, firmada) + PRODUCT_REQUIREMENTS.md

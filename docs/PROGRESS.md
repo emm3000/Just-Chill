@@ -347,12 +347,13 @@ ae1a204 + secuencia). Encontró 3 gaps reales más 1 PARTIAL:
   arregla en este mini-sprint — diferido a v2 o nice-to-have.
 
 Cleanups menores anotados (no blocker):
-- `CategoriesListRoute` está en `HhRoutes.kt` pero `CategoryRoute`
-  está en `ObjectsRoutes.kt` — co-localizar en futuro pase.
-- `CategoriesViewModel` registrado en `categoryModule.kt` mientras
-  los otros category VMs viven en `hhModule.kt` — consolidar.
 - `libs.versions.toml` aún declara Ktor/Retrofit/Supabase/WorkManager
   sin uso real — orphans de la migración local-only.
+
+> Items previos sobre co-localizar `CategoriesListRoute`/`CategoryRoute`
+> y consolidar `CategoriesViewModel` en `HhModule` ya están resueltos
+> (verificado 2026-05-21: ambas rutas viven en `ObjectsRoutes.kt`,
+> todos los VMs de category están en `HhModule.kt`).
 
 ### S5 — notas
 

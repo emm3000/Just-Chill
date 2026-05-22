@@ -96,21 +96,22 @@ When adding a new failure mode, prefer extending `DomainException` (and `toUserM
 - Gradle wrapper `9.5.1`.
 - Koin `4.2.x` (via BOM), SQLDelight `2.3.2`, Compose BOM `2026.05.x`.
 
-## Ongoing Refactor
+## Refactor history
 
-The app was migrated to **local-only** via `docs/PLAN_LOCAL.md` (auth, Supabase, Ktor, sync, WorkManager all removed) and then cleaned up via `docs/PLAN_CLEANUP.md` (dead deps, `launchSafe`, SQL month filter, screen decomposition, domain tests). `docs/PLAN_DE_ACCION.md` and `docs/PLAN_SONNET.md` are retained for historical context; their sync-related phases are N/A.
+> Refactoring work prior to the product-definition Fases 1-5. Listed
+> here as background for code archaeology — for current execution
+> state read `docs/PROGRESS.md`.
 
 **Done:**
-- **Fase 1 (use-case rename)**: All use cases follow `[Verb][Noun]UseCase`. See `domain/CLAUDE.md`.
-- **Fase 3 (typed errors)**: `DomainException` + `SafeCall` + `toUserMessage()`.
-- **Fases 4 + 5 (MVI)**: All ViewModels extend `MviViewModel<S, I, E>`. `launchSafe { }` helper covers the try/catch boilerplate in the base class.
-- **Local-only migration (PLAN_LOCAL)**: removed auth/Supabase/Ktor/WorkManager; SQLDelight schema reset (no `syncState`/`isDeleted`/`userId`); hard-delete with `ON DELETE` foreign keys.
-- **Cleanup (PLAN_CLEANUP)**: dropped dead Retrofit/parcelize/viewBinding; `@Immutable` on `TransactionUi`/`CategoryUi`; current-month filtering pushed to SQL (`completeTransactionsByDateRange`); `AddTransactionScreen`/`EditTransaction` decomposed into shared `TransactionFormSections.kt`; unit tests for all transaction, category and home use cases.
+- **Use-case rename**: All use cases follow `[Verb][Noun]UseCase`. See `domain/CLAUDE.md`.
+- **Typed errors**: `DomainException` + `SafeCall` + `toUserMessage()`.
+- **MVI**: All ViewModels extend `MviViewModel<S, I, E>`. `launchSafe { }` covers try/catch in the base class.
+- **Local-only migration** (`docs/PLAN_LOCAL.md`): removed auth/Supabase/Ktor/WorkManager; SQLDelight schema reset (no `syncState`/`isDeleted`/`userId`); hard-delete with `ON DELETE` foreign keys.
+- **Cleanup pass**: dropped dead Retrofit/parcelize/viewBinding; `@Immutable` on `TransactionUi`/`CategoryUi`; current-month filtering pushed to SQL (`completeTransactionsByDateRange`); `AddTransactionScreen`/`EditTransaction` decomposed into shared `TransactionFormSections.kt`; unit tests for all transaction, category and home use cases.
 
-**Partial / Pending:**
-- **Fase 2 (data models)**: mappers are clean, `*Entity` data classes exist.
-- **Fase 6 (Compose perf)**: pending `derivedStateOf`, `remember`-ed lambdas, `contentType`, Layout Inspector audit.
-- **Fase 7 (SOLID/cleanup)**: DI per feature in place; pending OCP audit and final naming sweep.
+**Ad-hoc tech debt still open** (not blocking v1, picked up opportunistically):
+- Compose perf pass: audit `derivedStateOf`, `remember`-ed lambdas, `contentType` in `LazyColumn`, Layout Inspector for overdraw.
+- Orphan deps in `libs.versions.toml` (Ktor/Retrofit/Supabase/WorkManager declarations without uses).
 
 ## Product definition (Fases 1-5) + execution status
 
