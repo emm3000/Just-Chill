@@ -22,6 +22,7 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.roundToLong
 
 /**
  * Hero amount display in IBM Plex Mono with tabular figures.
@@ -56,7 +57,7 @@ fun AmountHero(
     val decPart: String? = remember(absValue, withDecimals) {
         if (withDecimals) {
             val formatter = DecimalFormat("00")
-            formatter.format(((absValue - absValue.toLong()) * 100).toLong())
+            formatter.format(((absValue - absValue.toLong()) * 100).roundToLong())
         } else {
             null
         }
