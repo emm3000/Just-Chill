@@ -73,7 +73,7 @@ fun AddTransactionScreen(
             when (effect) {
                 AddTransactionEffect.TransactionSaved -> currentPopBackStack()
                 is AddTransactionEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
-                AddTransactionEffect.FocusAmountField -> { /* amount field on this screen is a Numpad; no focus action needed */ }
+                AddTransactionEffect.FocusAmountField -> Unit // Numpad field; no focus action needed.
             }
         }
     }

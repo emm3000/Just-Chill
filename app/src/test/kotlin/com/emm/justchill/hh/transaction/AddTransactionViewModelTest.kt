@@ -87,7 +87,7 @@ class AddTransactionViewModelTest {
     // ── frequentCombos state ──────────────────────────────────────────────────
 
     @Test
-    fun `frequentCombos is populated on init when combos match loaded accounts and categories`() = runTest(testDispatcher) {
+    fun `frequentCombos populated on init when combos match accounts and categories`() = runTest(testDispatcher) {
         // Default transactionType is Income
         val combo = FrequentCombo(AccountId("bcp"), CategoryId("salary"), TransactionType.Income)
         coEvery { getFrequentCombos.invoke(TransactionType.Income, any<Int>(), any<Int>()) } returns listOf(combo)

@@ -212,12 +212,7 @@ internal fun QuickChip(
  * it does not open a picker.
  */
 @Composable
-internal fun FrequentComboChip(
-    label: String,
-    dotColor: Color?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun FrequentComboChip(label: String, dotColor: Color?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val chipShape = RoundedCornerShape(999.dp)
 

@@ -79,16 +79,7 @@ class AddTransactionViewModel(
 
             is AddTransactionIntent.OnDescriptionChange -> updateState { copy(description = intent.value).touched() }
 
-            is AddTransactionIntent.OnTransactionTypeChange -> {
-                updateState {
-                    copy(
-                        transactionType = intent.value,
-                        categories = allCategories[intent.value.categoryType].orEmpty(),
-                        categorySelected = allCategories[intent.value.categoryType]?.firstOrNull(),
-                    ).touched()
-                }
-                loadFrequent(intent.value)
-            }
+            is AddTransactionIntent.OnTransactionTypeChange -> changeTransactionType(intent.value)
 
             is AddTransactionIntent.OnDateChangeInMillis -> updateCurrentDate(intent.value)
 
@@ -102,52 +93,67 @@ class AddTransactionViewModel(
                 ).touched()
             }
 
-            is AddTransactionIntent.OnFrequentComboSelected -> {
-                val combo = intent.value
-                val account = currentState.accounts.find { it.accountId.value == combo.accountId }
-                val category = allCategories.values.flatten()
-                    .find { it.categoryId.value == combo.categoryId }
-                if (account != null && category != null) {
-                    updateState {
-                        copy(
-                            accountSelected = account,
-                            categorySelected = category,
-                        ).touched()
-                    }
-                    sendEffect(AddTransactionEffect.FocusAmountField)
-                }
-            }
+            is AddTransactionIntent.OnFrequentComboSelected -> selectFrequentCombo(intent.value)
 
-            AddTransactionIntent.OnReset -> {
-                dateInLong = DateUtils.currentDateInMillis()
-                updateState {
-                    val defaultType = TransactionType.Income
-                    copy(
-                        amount = "",
-                        description = String.Empty,
-                        date = DateUtils.friendlyDate(dateInLong),
-                        transactionType = defaultType,
-                        categories = allCategories[defaultType.categoryType].orEmpty(),
-                        categorySelected = allCategories[defaultType.categoryType]?.firstOrNull(),
-                        accountSelected = resolveLastUsedAccount(accounts),
-                        isEnabled = false,
-                        hasChanges = false,
-                    )
-                }
-            }
+            AddTransactionIntent.OnReset -> reset()
 
-            is AddTransactionIntent.OnNewValueFromOthers -> {
-                val updatedCategories = allCategories.values.flatten()
-                    .filterNot { it.categoryId == intent.value.categoryId }
-                    .toMutableList()
-                    .apply { add(0, intent.value) }
-                updateState {
-                    copy(
-                        categories = updatedCategories,
-                        categorySelected = intent.value,
-                    ).touched()
-                }
-            }
+            is AddTransactionIntent.OnNewValueFromOthers -> addCategoryFromOthers(intent.value)
+        }
+    }
+
+    private fun changeTransactionType(type: TransactionType) {
+        updateState {
+            copy(
+                transactionType = type,
+                categories = allCategories[type.categoryType].orEmpty(),
+                categorySelected = allCategories[type.categoryType]?.firstOrNull(),
+            ).touched()
+        }
+        loadFrequent(type)
+    }
+
+    private fun selectFrequentCombo(combo: FrequentComboUi) {
+        val account = currentState.accounts.find { it.accountId.value == combo.accountId }
+        val category = allCategories.values.flatten()
+            .find { it.categoryId.value == combo.categoryId }
+        if (account == null || category == null) return
+        updateState {
+            copy(
+                accountSelected = account,
+                categorySelected = category,
+            ).touched()
+        }
+        sendEffect(AddTransactionEffect.FocusAmountField)
+    }
+
+    private fun reset() {
+        dateInLong = DateUtils.currentDateInMillis()
+        updateState {
+            val defaultType = TransactionType.Income
+            copy(
+                amount = "",
+                description = String.Empty,
+                date = DateUtils.friendlyDate(dateInLong),
+                transactionType = defaultType,
+                categories = allCategories[defaultType.categoryType].orEmpty(),
+                categorySelected = allCategories[defaultType.categoryType]?.firstOrNull(),
+                accountSelected = resolveLastUsedAccount(accounts),
+                isEnabled = false,
+                hasChanges = false,
+            )
+        }
+    }
+
+    private fun addCategoryFromOthers(category: SelectableCategory) {
+        val updatedCategories = allCategories.values.flatten()
+            .filterNot { it.categoryId == category.categoryId }
+            .toMutableList()
+            .apply { add(0, category) }
+        updateState {
+            copy(
+                categories = updatedCategories,
+                categorySelected = category,
+            ).touched()
         }
     }
 
@@ -188,10 +194,6 @@ class AddTransactionViewModel(
         )
     }
 
-    private fun AddTransactionUiState.validate(): AddTransactionUiState = copy(isEnabled = missingField == null)
-
-    private fun AddTransactionUiState.touched(): AddTransactionUiState = validate().copy(hasChanges = true)
-
     private fun addTransaction() = launchSafe(
         onError = { AddTransactionEffect.ShowError(it.toUserMessage()) },
     ) {
@@ -225,3 +227,7 @@ private fun mapToUi(categories: List<Category>): List<SelectableCategory> = cate
         color = findById(it.color),
     )
 }
+
+private fun AddTransactionUiState.validate(): AddTransactionUiState = copy(isEnabled = missingField == null)
+
+private fun AddTransactionUiState.touched(): AddTransactionUiState = validate().copy(hasChanges = true)
