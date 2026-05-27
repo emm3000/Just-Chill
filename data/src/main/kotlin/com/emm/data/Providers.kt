@@ -20,6 +20,7 @@ fun csm() = object : AndroidSqliteDriver.Callback(schema = EmmDatabaseData.Schem
     override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
         // Destructive migration: drop all tables and recreate from scratch.
         // Acceptable for alpha — single-device, single-dev app.
+        db.execSQL("DROP TABLE IF EXISTS recurring_movements")
         db.execSQL("DROP TABLE IF EXISTS transactions")
         db.execSQL("DROP TABLE IF EXISTS categories")
         db.execSQL("DROP TABLE IF EXISTS accounts")
@@ -67,3 +68,6 @@ private fun seedDefaultCategories(db: SupportSQLiteDatabase) {
 fun provideDb(sqlDriver: SqlDriver): EmmDatabaseData = EmmDatabaseData(sqlDriver)
 
 fun provideTransactionQueries(db: EmmDatabaseData): TransactionsQueries = db.transactionsQueries
+
+fun provideRecurringMovementQueries(db: EmmDatabaseData): Recurring_movementsQueries =
+    db.recurring_movementsQueries

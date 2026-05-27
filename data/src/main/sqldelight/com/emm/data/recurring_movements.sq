@@ -1,0 +1,46 @@
+CREATE TABLE recurring_movements (
+    id                  TEXT NOT NULL PRIMARY KEY,
+    name                TEXT NOT NULL,
+    type                TEXT NOT NULL,
+    amount              INTEGER,
+    description         TEXT NOT NULL DEFAULT '',
+    categoryId          TEXT REFERENCES categories(categoryId) ON DELETE SET NULL,
+    accountId           TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
+    frequency           TEXT NOT NULL DEFAULT 'Monthly',
+    dayOfMonth          INTEGER NOT NULL,
+    isActive            INTEGER NOT NULL DEFAULT 1,
+    lastConfirmedPeriod TEXT,
+    createdAt           INTEGER NOT NULL,
+    updatedAt           INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS recurring_active_idx ON recurring_movements(isActive);
+
+selectAll:
+SELECT * FROM recurring_movements ORDER BY name;
+
+selectActive:
+SELECT * FROM recurring_movements WHERE isActive = 1 ORDER BY name;
+
+find:
+SELECT * FROM recurring_movements WHERE id = ?;
+
+insert:
+INSERT OR REPLACE INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, lastConfirmedPeriod, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE recurring_movements
+SET name = ?, type = ?, amount = ?, description = ?, categoryId = ?, accountId = ?, dayOfMonth = ?, isActive = ?, updatedAt = ?
+WHERE id = ?;
+
+delete:
+DELETE FROM recurring_movements WHERE id = ?;
+
+deleteAll:
+DELETE FROM recurring_movements;
+
+markConfirmed:
+UPDATE recurring_movements
+SET lastConfirmedPeriod = ?, updatedAt = ?
+WHERE id = ?;
