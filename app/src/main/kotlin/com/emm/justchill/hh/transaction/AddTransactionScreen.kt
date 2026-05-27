@@ -153,6 +153,7 @@ private fun AddTransactionScreenContent(
                 value = centsToSoles(state.amount),
                 size = 48.sp,
                 tone = if (isSpend) AmountTone.Neg else AmountTone.Pos,
+                showCaret = true,
             )
         }
 
