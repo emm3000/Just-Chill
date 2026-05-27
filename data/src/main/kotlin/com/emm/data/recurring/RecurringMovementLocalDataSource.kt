@@ -2,7 +2,6 @@ package com.emm.data.recurring
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.data.EmmDatabaseData
 import com.emm.data.Recurring_movementsQueries
 import com.emm.domain.recurring.RecurringMovement
@@ -84,11 +83,7 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData)
      *
      * Both writes share one SQLDelight database transaction — Option A true atomicity.
      */
-    suspend fun confirm(
-        insert: TransactionInsert,
-        recurringId: String,
-        period: String,
-    ) = withContext(Dispatchers.IO) {
+    suspend fun confirm(insert: TransactionInsert, recurringId: String, period: String) = withContext(Dispatchers.IO) {
         emmDatabase.transaction {
             emmDatabase.transactionsQueries.insert(
                 transactionId = insert.id.value,

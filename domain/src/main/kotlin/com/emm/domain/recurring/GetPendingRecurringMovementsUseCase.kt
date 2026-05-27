@@ -16,10 +16,8 @@ class GetPendingRecurringMovementsUseCase(private val repository: RecurringMovem
      * Does NOT produce results for past or future months — the caller is responsible
      * for passing the current period. No retroactive catch-up.
      */
-    operator fun invoke(
-        today: LocalDate,
-        yearMonth: YearMonth,
-    ): Flow<List<RecurringMovement>> = repository.allActive().map { list ->
-        list.filter { rm -> isPending(rm, yearMonth, today) }
-    }
+    operator fun invoke(today: LocalDate, yearMonth: YearMonth): Flow<List<RecurringMovement>> =
+        repository.allActive().map { list ->
+            list.filter { rm -> isPending(rm, yearMonth, today) }
+        }
 }

@@ -1,17 +1,21 @@
 package com.emm.domain.recurring
 
+import com.emm.domain.shared.Money
 import com.emm.domain.shared.RecurringMovementId
+import com.emm.domain.shared.TransactionId
 import com.emm.domain.shared.YearMonth
 import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.transaction.TransactionInsert
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.TransactionId
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+
+private fun check(condition: Boolean, error: DomainException) {
+    if (!condition) throw error
+}
 
 class ConfirmRecurringMovementUseCase(private val repository: RecurringMovementRepository) {
 
@@ -39,25 +43,20 @@ class ConfirmRecurringMovementUseCase(private val repository: RecurringMovementR
             ?: throw DomainException.NotFound("RecurringMovement(${templateId.value})")
 
         val currentPeriod = periodKey(yearMonth)
-        if (template.lastConfirmedPeriod == currentPeriod) {
-            throw DomainException.ValidationError(
+        check(
+            template.lastConfirmedPeriod != currentPeriod,
+            DomainException.ValidationError(
                 "Template '${template.name}' already confirmed for period $currentPeriod",
-            )
-        }
+            ),
+        )
 
-        val resolvedAmount: Money = when {
-            template.amount != null -> template.amount
-            callerAmount != null -> callerAmount
-            else -> throw DomainException.ValidationError(
-                "Amount is required for variable-amount template '${template.name}'",
-            )
-        }
-
-        if (resolvedAmount.cents <= 0) {
-            throw DomainException.ValidationError(
+        val resolvedAmount: Money = resolveAmount(template, callerAmount)
+        check(
+            resolvedAmount.cents > 0,
+            DomainException.ValidationError(
                 "Confirmed amount must be greater than zero, got ${resolvedAmount.cents} cents",
-            )
-        }
+            ),
+        )
 
         val dateMillis: Long = today.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
         val now = currentTimeInMillis()
@@ -76,3 +75,9 @@ class ConfirmRecurringMovementUseCase(private val repository: RecurringMovementR
         repository.confirm(insert, templateId.value, currentPeriod)
     }
 }
+
+private fun resolveAmount(template: RecurringMovement, callerAmount: Money?): Money = template.amount
+    ?: callerAmount
+    ?: throw DomainException.ValidationError(
+        "Amount is required for variable-amount template '${template.name}'",
+    )

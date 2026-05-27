@@ -242,21 +242,18 @@ class RecurringDueRulesTest {
 
     // ── helper ────────────────────────────────────────────────────────────────
 
-    private fun buildTemplate(
-        dayOfMonth: Int,
-        isActive: Boolean = true,
-        lastConfirmedPeriod: String? = null,
-    ) = RecurringMovement(
-        id = RecurringMovementId("rm-1"),
-        name = "Test",
-        type = TransactionType.Spend,
-        amount = Money(100_00L),
-        description = "",
-        categoryId = null,
-        accountId = AccountId("acc-1"),
-        frequency = Frequency.Monthly,
-        dayOfMonth = dayOfMonth,
-        isActive = isActive,
-        lastConfirmedPeriod = lastConfirmedPeriod,
-    )
+    private fun buildTemplate(dayOfMonth: Int, isActive: Boolean = true, lastConfirmedPeriod: String? = null) =
+        RecurringMovement(
+            id = RecurringMovementId("rm-1"),
+            name = "Test",
+            type = TransactionType.Spend,
+            amount = Money(100_00L),
+            description = "",
+            categoryId = null,
+            accountId = AccountId("acc-1"),
+            frequency = Frequency.Monthly,
+            dayOfMonth = dayOfMonth,
+            isActive = isActive,
+            lastConfirmedPeriod = lastConfirmedPeriod,
+        )
 }

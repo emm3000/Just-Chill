@@ -93,7 +93,9 @@ class ConfirmRecurringMovementUseCaseTest {
         // spec 4.2
         val failingRepo = io.mockk.mockk<RecurringMovementRepository>()
         io.mockk.coEvery { failingRepo.find(RecurringMovementId("rm-fixed")) } returns fixedTemplate
-        io.mockk.coEvery { failingRepo.confirm(any(), any(), any()) } throws DomainException.DatabaseError(RuntimeException("atomic fail"))
+        io.mockk.coEvery {
+            failingRepo.confirm(any(), any(), any())
+        } throws DomainException.DatabaseError(RuntimeException("atomic fail"))
         val uc = ConfirmRecurringMovementUseCase(failingRepo)
         assertFailsWith<DomainException.DatabaseError> {
             uc(

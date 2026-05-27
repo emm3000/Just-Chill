@@ -9,15 +9,12 @@ import com.emm.domain.shared.RecurringMovementId
 import com.emm.domain.transaction.TransactionInsert
 import kotlinx.coroutines.flow.Flow
 
-class DefaultRecurringMovementRepository(
-    private val localDataSource: RecurringMovementLocalDataSource,
-) : RecurringMovementRepository {
+class DefaultRecurringMovementRepository(private val localDataSource: RecurringMovementLocalDataSource) :
+    RecurringMovementRepository {
 
-    override fun all(): Flow<List<RecurringMovement>> =
-        localDataSource.all().catchAsDomainException()
+    override fun all(): Flow<List<RecurringMovement>> = localDataSource.all().catchAsDomainException()
 
-    override fun allActive(): Flow<List<RecurringMovement>> =
-        localDataSource.allActive().catchAsDomainException()
+    override fun allActive(): Flow<List<RecurringMovement>> = localDataSource.allActive().catchAsDomainException()
 
     override suspend fun find(id: RecurringMovementId): RecurringMovement? = safeDbCall {
         localDataSource.find(id.value)

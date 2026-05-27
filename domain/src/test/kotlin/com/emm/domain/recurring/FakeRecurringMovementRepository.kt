@@ -58,14 +58,11 @@ class FakeRecurringMovementRepository : RecurringMovementRepository {
         store.value = map
     }
 
-    override suspend fun find(id: RecurringMovementId): RecurringMovement? =
-        store.value[id.value]
+    override suspend fun find(id: RecurringMovementId): RecurringMovement? = store.value[id.value]
 
-    override fun all(): Flow<List<RecurringMovement>> =
-        store.map { it.values.toList() }
+    override fun all(): Flow<List<RecurringMovement>> = store.map { it.values.toList() }
 
-    override fun allActive(): Flow<List<RecurringMovement>> =
-        store.map { it.values.filter { rm -> rm.isActive } }
+    override fun allActive(): Flow<List<RecurringMovement>> = store.map { it.values.filter { rm -> rm.isActive } }
 
     override suspend fun confirm(insert: TransactionInsert, recurringId: String, period: String) {
         confirmCount++
