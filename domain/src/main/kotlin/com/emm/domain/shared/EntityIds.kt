@@ -8,3 +8,6 @@ value class TransactionId(val value: String)
 
 @JvmInline
 value class CategoryId(val value: String)
+
+@JvmInline
+value class RecurringMovementId(val value: String)
