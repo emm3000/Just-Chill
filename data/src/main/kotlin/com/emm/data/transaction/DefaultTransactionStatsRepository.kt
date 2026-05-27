@@ -3,8 +3,10 @@ package com.emm.data.transaction
 import com.emm.data.shared.safeDbCall
 import com.emm.domain.report.CategoryAmount
 import com.emm.domain.report.MonthlySectionStats
+import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
+import com.emm.domain.transaction.FrequentCombo
 import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
 
@@ -38,4 +40,20 @@ class DefaultTransactionStatsRepository(private val localDataSource: Transaction
             localDataSource.topUsedCategoryIds(type, startInclusive, limit.toLong())
                 .map { CategoryId(it) }
         }
+
+    override suspend fun topUsedCombos(type: TransactionType, startInclusive: Long, limit: Int): List<FrequentCombo> =
+        safeDbCall {
+            localDataSource.topUsedCombos(type, startInclusive, limit.toLong())
+                .map { row ->
+                    FrequentCombo(
+                        accountId = AccountId(row.accountId),
+                        categoryId = CategoryId(row.categoryId),
+                        type = TransactionType.valueOf(row.type),
+                    )
+                }
+        }
+
+    override suspend fun lastUsedAccountId(): AccountId? = safeDbCall {
+        localDataSource.lastUsedAccountId()?.let { AccountId(it) }
+    }
 }

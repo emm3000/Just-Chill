@@ -113,3 +113,19 @@ WHERE categoryId IS NOT NULL
 GROUP BY categoryId
 ORDER BY COUNT(*) DESC, MAX(date) DESC
 LIMIT :limit;
+
+topUsedCombos:
+SELECT accountId, categoryId, type
+FROM transactions
+WHERE categoryId IS NOT NULL
+  AND type = :type
+  AND date >= :startInclusive
+GROUP BY accountId, categoryId, type
+ORDER BY COUNT(*) DESC, MAX(date) DESC
+LIMIT :limit;
+
+lastUsedAccountId:
+SELECT accountId
+FROM transactions
+ORDER BY date DESC, createdAt DESC
+LIMIT 1;

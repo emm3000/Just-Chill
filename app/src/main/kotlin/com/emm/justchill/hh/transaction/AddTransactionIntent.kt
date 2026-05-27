@@ -22,6 +22,8 @@ sealed interface AddTransactionIntent : UiIntent {
 
     data class OnCategorySelected(val value: SelectableCategory) : AddTransactionIntent
 
+    data class OnFrequentComboSelected(val value: FrequentComboUi) : AddTransactionIntent
+
     data object OnReset : AddTransactionIntent
 
     data object OnSave : AddTransactionIntent

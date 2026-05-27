@@ -2,6 +2,7 @@ package com.emm.domain.transaction
 
 import com.emm.domain.report.CategoryAmount
 import com.emm.domain.report.MonthlySectionStats
+import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.CategoryId
 
 interface TransactionStatsRepository {
@@ -15,4 +16,8 @@ interface TransactionStatsRepository {
     suspend fun monthlyStats(type: TransactionType, startInclusive: Long, endExclusive: Long): MonthlySectionStats
 
     suspend fun topUsedCategoryIds(type: TransactionType, startInclusive: Long, limit: Int): List<CategoryId>
+
+    suspend fun topUsedCombos(type: TransactionType, startInclusive: Long, limit: Int): List<FrequentCombo>
+
+    suspend fun lastUsedAccountId(): AccountId?
 }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.SnackbarHostState
@@ -25,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,6 +48,7 @@ import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.hh.account.accountDotColor
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.allColors
+import com.emm.justchill.hh.transaction.components.FrequentComboChip
 import com.emm.justchill.hh.transaction.components.NoteRow
 import com.emm.justchill.hh.transaction.components.QuickChip
 import com.emm.justchill.hh.transaction.components.SignToggle
@@ -68,6 +73,7 @@ fun AddTransactionScreen(
             when (effect) {
                 AddTransactionEffect.TransactionSaved -> currentPopBackStack()
                 is AddTransactionEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
+                AddTransactionEffect.FocusAmountField -> { /* amount field on this screen is a Numpad; no focus action needed */ }
             }
         }
     }
@@ -202,6 +208,24 @@ private fun AddTransactionScreenContent(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 6.dp),
         )
+
+        if (state.frequentCombos.isNotEmpty()) {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+            ) {
+                items(state.frequentCombos) { combo ->
+                    FrequentComboChip(
+                        label = combo.label,
+                        dotColor = combo.dotColor?.let { Color(it) },
+                        onClick = { onIntent(AddTransactionIntent.OnFrequentComboSelected(combo)) },
+                    )
+                }
+            }
+        }
 
         Spacer(Modifier.weight(1f))
 

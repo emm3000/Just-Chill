@@ -37,4 +37,20 @@ class TransactionStatsLocalDataSource(private val tq: TransactionsQueries) {
                 limit = limit,
             ).executeAsList().filterNotNull()
         }
+
+    suspend fun topUsedCombos(
+        type: TransactionType,
+        startInclusive: Long,
+        limit: Long,
+    ): List<com.emm.data.TopUsedCombos> = withContext(Dispatchers.IO) {
+        tq.topUsedCombos(
+            type = type.name,
+            startInclusive = startInclusive,
+            limit = limit,
+        ).executeAsList()
+    }
+
+    suspend fun lastUsedAccountId(): String? = withContext(Dispatchers.IO) {
+        tq.lastUsedAccountId().executeAsOneOrNull()
+    }
 }

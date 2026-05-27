@@ -205,6 +205,58 @@ internal fun QuickChip(
     }
 }
 
+/**
+ * One-tap action chip for a frequent account+category combo.
+ * Unlike [QuickChip] this is wrap-content (no weighted column, so the label survives an
+ * unbounded-width LazyRow) and carries no dropdown affordance — tapping pre-fills the form,
+ * it does not open a picker.
+ */
+@Composable
+internal fun FrequentComboChip(
+    label: String,
+    dotColor: Color?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalEmmColors.current
+    val chipShape = RoundedCornerShape(999.dp)
+
+    Row(
+        modifier = modifier
+            .clip(chipShape)
+            .background(colors.surface1)
+            .border(1.dp, colors.border, chipShape)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(7.dp),
+    ) {
+        if (dotColor != null) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(dotColor),
+            )
+        }
+
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.W600,
+            fontFamily = InterFontFamily,
+            color = colors.textPrimary,
+            letterSpacing = (-0.06).sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
 @Composable
 internal fun NoteRow(note: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     if (note.isBlank()) {
