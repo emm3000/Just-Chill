@@ -55,9 +55,14 @@ fun periodKey(yearMonth: YearMonth): String {
  * 1. isActive = true
  * 2. lastConfirmedPeriod IS NULL OR != periodKey(yearMonth)
  * 3. today.dayOfMonth >= clamp(rm.dayOfMonth, yearMonth)
+ *
+ * The frequency field is explicitly consumed here so future non-monthly
+ * values can be handled without silent fallthrough.
  */
 fun isPending(rm: RecurringMovement, yearMonth: YearMonth, today: LocalDate): Boolean {
     val currentPeriod = periodKey(yearMonth)
-    val dueDay = effectiveDueDay(rm.dayOfMonth, yearMonth)
+    val dueDay = when (rm.frequency) {
+        Frequency.Monthly -> effectiveDueDay(rm.dayOfMonth, yearMonth)
+    }
     return rm.isActive && rm.lastConfirmedPeriod != currentPeriod && today.day >= dueDay
 }
