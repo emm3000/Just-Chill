@@ -31,7 +31,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +58,8 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.MoneyInline
 import com.emm.justchill.core.ui.atoms.MonthSelector
 import com.emm.justchill.hh.category.findById
+import com.emm.justchill.hh.recurring.ConfirmRecurringSheet
+import com.emm.justchill.hh.recurring.PendingRecurringUi
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.shared.fullLabel
@@ -81,6 +86,7 @@ fun HomeScreen(
         navigateToReport = navigateToReport,
         onPreviousMonth = { homeViewModel.onIntent(HomeIntent.PreviousMonth) },
         onNextMonth = { homeViewModel.onIntent(HomeIntent.NextMonth) },
+        onIntent = homeViewModel::onIntent,
     )
 }
 
@@ -93,6 +99,7 @@ fun HomeScreen(
     navigateToReport: () -> Unit = {},
     onPreviousMonth: () -> Unit = {},
     onNextMonth: () -> Unit = {},
+    onIntent: (HomeIntent) -> Unit = {},
 ) {
     when {
         homeData.isFirstLaunch -> FirstLaunchEmpty(onAddClick = navigateToAdd)
@@ -111,6 +118,7 @@ fun HomeScreen(
             navigateToReport = navigateToReport,
             onPreviousMonth = onPreviousMonth,
             onNextMonth = onNextMonth,
+            onIntent = onIntent,
         )
     }
 }
@@ -123,8 +131,14 @@ private fun HomeWithData(
     navigateToReport: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
+    onIntent: (HomeIntent) -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
+
+    var confirmSheetItem by rememberSaveable { mutableStateOf<String?>(null) }
+    val pendingMap = remember(homeData.pendingRecurringMovements) {
+        homeData.pendingRecurringMovements.associateBy { it.templateId }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -152,6 +166,24 @@ private fun HomeWithData(
         }
         item { HeroBalance(balance = homeData.balance, month = homeData.month.shortLabel()) }
         item { InOutRow(income = homeData.income, spend = homeData.spend) }
+
+        // ---- Pendientes section — only shown when list is non-empty (Scenario 10.1 / 10.2) ----
+        if (homeData.pendingRecurringMovements.isNotEmpty()) {
+            item {
+                PendientesHeader(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 8.dp),
+                )
+            }
+            items(homeData.pendingRecurringMovements, PendingRecurringUi::templateId) { pending ->
+                PendingRecurringRow(
+                    item = pending,
+                    onClick = { confirmSheetItem = pending.templateId },
+                )
+            }
+        }
+
         item {
             RecentsHeader(
                 onViewAll = navigateToAll,
@@ -168,6 +200,83 @@ private fun HomeWithData(
             )
         }
         item { Spacer(Modifier.height(16.dp)) }
+    }
+
+    // Show ConfirmRecurringSheet when an item is selected
+    confirmSheetItem?.let { templateId ->
+        pendingMap[templateId]?.let { item ->
+            ConfirmRecurringSheet(
+                item = item,
+                onIntent = onIntent,
+                onDismiss = { confirmSheetItem = null },
+            )
+        }
+    }
+}
+
+@Composable
+private fun PendientesHeader(modifier: Modifier = Modifier) {
+    val colors = LocalEmmColors.current
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Eyebrow(text = "Pendientes")
+    }
+}
+
+@Composable
+private fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = dropUnlessResumed(block = onClick),
+            )
+            .padding(horizontal = 24.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.name,
+                style = TextStyle(
+                    fontFamily = InterFontFamily,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.W500,
+                    letterSpacing = (-0.15).sp,
+                ),
+                color = colors.textPrimary,
+            )
+            Text(
+                text = "Día ${item.dayOfMonth}",
+                style = TextStyle(
+                    fontFamily = InterFontFamily,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.W400,
+                ),
+                color = colors.textTertiary,
+            )
+        }
+        Text(
+            text = item.formattedAmount,
+            style = TextStyle(
+                fontFamily = InterFontFamily,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.W600,
+                letterSpacing = (-0.1).sp,
+            ),
+            color = when (item.type) {
+                TransactionType.Income -> colors.success
+                TransactionType.Spend -> colors.danger
+            },
+        )
     }
 }
 

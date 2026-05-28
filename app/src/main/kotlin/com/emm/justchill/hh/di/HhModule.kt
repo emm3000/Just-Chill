@@ -3,10 +3,15 @@ package com.emm.justchill.hh.di
 import com.emm.data.account.AccountLocalDataSource
 import com.emm.data.backup.DefaultBackupRepository
 import com.emm.data.category.CategoryLocalDataSource
+import com.emm.data.recurring.DefaultRecurringMovementRepository
+import com.emm.data.recurring.RecurringMovementLocalDataSource
 import com.emm.data.transaction.DefaultTransactionRepository
 import com.emm.data.transaction.DefaultTransactionStatsRepository
 import com.emm.data.transaction.TransactionLocalDataSource
 import com.emm.data.transaction.TransactionStatsLocalDataSource
+import com.emm.domain.recurring.ConfirmRecurringMovementUseCase
+import com.emm.domain.recurring.GetPendingRecurringMovementsUseCase
+import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.report.GetMonthlyAmountByCategoryUseCase
 import com.emm.domain.report.GetMonthlyComparisonUseCase
 import com.emm.domain.report.GetMonthlySectionStatsUseCase
@@ -87,6 +92,8 @@ private fun Module.dataSource() {
     factoryOf(::TransactionLocalDataSource)
     factoryOf(::TransactionStatsLocalDataSource)
     factoryOf(::AccountLocalDataSource)
+    // Slice 2 — recurring data source (Slice 3 will add more use cases + VMs)
+    factoryOf(::RecurringMovementLocalDataSource)
 }
 
 private fun Module.repositoriesProviders() {
@@ -107,4 +114,11 @@ private fun Module.repositoriesProviders() {
     factoryOf(::GetTopCategoriesOverMonthsUseCase)
     factoryOf(::ExportDataUseCase)
     factoryOf(::ImportDataUseCase)
+
+    // Slice 2 — recurring repository + use cases needed by HomeViewModel
+    factoryOf(::DefaultRecurringMovementRepository) {
+        bind<RecurringMovementRepository>()
+    }
+    factoryOf(::GetPendingRecurringMovementsUseCase)
+    factoryOf(::ConfirmRecurringMovementUseCase)
 }
