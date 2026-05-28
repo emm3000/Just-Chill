@@ -69,10 +69,6 @@ import com.emm.justchill.hh.account.AccountsScreen
 import com.emm.justchill.hh.account.AccountsViewModel
 import com.emm.justchill.hh.account.AddAccountScreen
 import com.emm.justchill.hh.category.AddCategoryScreen
-import com.emm.justchill.hh.recurring.AddEditRecurringMovementScreen
-import com.emm.justchill.hh.recurring.RecurringMovementsEffect
-import com.emm.justchill.hh.recurring.RecurringMovementsScreen
-import com.emm.justchill.hh.recurring.RecurringMovementsViewModel
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.CategoriesEffect
 import com.emm.justchill.hh.category.CategoriesScreen
@@ -85,6 +81,10 @@ import com.emm.justchill.hh.profile.ProfileEffect
 import com.emm.justchill.hh.profile.ProfileIntent
 import com.emm.justchill.hh.profile.ProfileScreen
 import com.emm.justchill.hh.profile.ProfileViewModel
+import com.emm.justchill.hh.recurring.AddEditRecurringMovementScreen
+import com.emm.justchill.hh.recurring.RecurringMovementsEffect
+import com.emm.justchill.hh.recurring.RecurringMovementsScreen
+import com.emm.justchill.hh.recurring.RecurringMovementsViewModel
 import com.emm.justchill.hh.report.ReportScreen
 import com.emm.justchill.hh.seetransactions.SeeTransactionsScreen
 import com.emm.justchill.hh.transaction.AddTransactionIntent
@@ -382,37 +382,41 @@ fun Hh(modifier: Modifier = Modifier) {
                 }
 
                 entry<RecurringMovementsRoute> {
-                    val vm: RecurringMovementsViewModel = koinViewModel()
-                    val recurringState by vm.state.collectAsStateWithLifecycle()
-
-                    LaunchedEffect(vm) {
-                        vm.effect.collect { effect ->
-                            when (effect) {
-                                is RecurringMovementsEffect.NavigateToAddEdit -> {
-                                    backStack.add(AddEditRecurringMovementRoute(effect.id))
-                                }
-
-                                is RecurringMovementsEffect.ShowError -> showRootMessage(effect.message)
-                            }
-                        }
-                    }
-
-                    RecurringMovementsScreen(
-                        state = recurringState,
-                        onIntent = vm::onIntent,
+                    RecurringMovementsEntry(
+                        onNavigateToAddEdit = { id -> backStack.add(AddEditRecurringMovementRoute(id)) },
+                        onShowError = showRootMessage,
                     )
                 }
 
                 entry<AddEditRecurringMovementRoute> { key ->
                     AddEditRecurringMovementScreen(
-                        id = key.id,
                         onBack = { backStack.removeLastOrNull() },
                         snackbarHostState = snackbarHostState,
+                        id = key.id,
                     )
                 }
             },
         )
     }
+}
+
+@Composable
+private fun RecurringMovementsEntry(onNavigateToAddEdit: (String?) -> Unit, onShowError: (String) -> Unit) {
+    val vm: RecurringMovementsViewModel = koinViewModel()
+    val recurringState by vm.state.collectAsStateWithLifecycle()
+    val currentNavigate by androidx.compose.runtime.rememberUpdatedState(onNavigateToAddEdit)
+    val currentShowError by androidx.compose.runtime.rememberUpdatedState(onShowError)
+
+    LaunchedEffect(vm) {
+        vm.effect.collect { effect ->
+            when (effect) {
+                is RecurringMovementsEffect.NavigateToAddEdit -> currentNavigate(effect.id)
+                is RecurringMovementsEffect.ShowError -> currentShowError(effect.message)
+            }
+        }
+    }
+
+    RecurringMovementsScreen(state = recurringState, onIntent = vm::onIntent)
 }
 
 private fun suggestedExportFilename(): String {

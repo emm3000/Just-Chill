@@ -297,7 +297,9 @@ private fun DeleteRecurringDialog(name: String, onConfirm: () -> Unit, onDismiss
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("¿Borrar «$name»?") },
-        text = { Text("El movimiento recurrente se borrará permanentemente. Los movimientos ya confirmados no se afectan.") },
+        text = {
+            Text("El movimiento recurrente se borrará permanentemente. Los movimientos ya confirmados no se afectan.")
+        },
         confirmButton = {
             TextButton(onClick = onConfirm) {
                 Text(text = "Borrar", color = colors.danger)

@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -62,18 +63,17 @@ import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
 import com.emm.justchill.hh.transaction.sheets.CategoryPickerSheet
-import org.koin.core.parameter.parametersOf
-import androidx.compose.material3.SnackbarHostState
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 private const val MIN_DAY_OF_MONTH = 1
 private const val MAX_DAY_OF_MONTH = 31
 
 @Composable
 fun AddEditRecurringMovementScreen(
-    id: String? = null,
     onBack: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    id: String? = null,
     vm: AddEditRecurringMovementViewModel = koinViewModel(
         parameters = { parametersOf(id) },
     ),
