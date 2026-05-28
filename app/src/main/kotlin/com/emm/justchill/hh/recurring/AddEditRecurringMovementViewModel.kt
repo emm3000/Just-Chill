@@ -1,7 +1,6 @@
 package com.emm.justchill.hh.recurring
 
 import androidx.lifecycle.viewModelScope
-import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
@@ -46,11 +45,27 @@ class AddEditRecurringMovementViewModel(
         }
             .onEach { (accounts, categories) ->
                 updateState {
-                    val resolvedAccount = selectedAccount ?: accounts.firstOrNull()
+                    // Resolve the selected account from the loaded list.
+                    // - Create mode: default to first account.
+                    // - Edit mode: either already resolved (selectedAccount != null and present
+                    //   in the new list) OR pending resolution via pendingAccountId.
+                    val resolved = when {
+                        pendingAccountId != null ->
+                            accounts.find { it.accountId.value == pendingAccountId }
+                                ?: selectedAccount
+
+                        selectedAccount != null ->
+                            accounts.find { it.accountId.value == selectedAccount.accountId.value }
+                                ?: selectedAccount
+
+                        else -> accounts.firstOrNull()
+                    }
                     copy(
                         accounts = accounts,
                         categories = categories,
-                        selectedAccount = resolvedAccount,
+                        selectedAccount = resolved,
+                        // Clear pending once resolved or if accounts loaded empty (will retry next emit).
+                        pendingAccountId = if (resolved != null) null else pendingAccountId,
                     ).recalcSaveEnabled()
                 }
             }
@@ -72,11 +87,11 @@ class AddEditRecurringMovementViewModel(
             }
 
             is AddEditRecurringMovementIntent.OnAmountChange -> {
-                updateState { copy(amountDigits = intent.digits) }
+                updateState { copy(amountDigits = intent.digits).recalcSaveEnabled() }
             }
 
             is AddEditRecurringMovementIntent.OnVariableAmountToggle -> {
-                updateState { copy(isVariableAmount = intent.isVariable) }
+                updateState { copy(isVariableAmount = intent.isVariable).recalcSaveEnabled() }
             }
 
             is AddEditRecurringMovementIntent.OnDayOfMonthChange -> {
@@ -107,8 +122,11 @@ class AddEditRecurringMovementViewModel(
         val template: RecurringMovement = recurringRepository.find(RecurringMovementId(templateId)) ?: return
         val fixedAmount: Money? = template.amount
         updateState {
+            // Try to resolve the account from the already-loaded accounts list.
+            // If accounts have not yet been emitted by the combine flow, store the id in
+            // pendingAccountId; the combine collector will resolve it on next emission.
+            val resolvedAccount = accounts.find { it.accountId.value == template.accountId.value }
             copy(
-                isLoaded = true,
                 name = template.name,
                 type = template.type,
                 amountDigits = if (fixedAmount != null) moneyCentsString(fixedAmount) else "",
@@ -116,12 +134,8 @@ class AddEditRecurringMovementViewModel(
                 dayOfMonth = template.dayOfMonth,
                 isActive = template.isActive,
                 description = template.description,
-                selectedAccount = accounts.find { it.accountId.value == template.accountId.value }
-                    ?: Account(
-                        accountId = template.accountId,
-                        name = template.accountId.value,
-                        type = com.emm.domain.account.AccountType.Bank,
-                    ),
+                selectedAccount = resolvedAccount,
+                pendingAccountId = if (resolvedAccount == null) template.accountId.value else null,
                 selectedCategory = categories.find { it.categoryId.value == template.categoryId?.value },
             ).recalcSaveEnabled()
         }
@@ -153,8 +167,10 @@ class AddEditRecurringMovementViewModel(
     private fun resolveAmount(digits: String): Money? = if (digits.isEmpty()) null else centsToMoney(digits)
 }
 
-private fun AddEditRecurringMovementUiState.recalcSaveEnabled(): AddEditRecurringMovementUiState =
-    copy(isSaveEnabled = name.isNotBlank() && selectedAccount != null)
+private fun AddEditRecurringMovementUiState.recalcSaveEnabled(): AddEditRecurringMovementUiState {
+    val amountValid = isVariableAmount || (amountDigits.isNotEmpty() && amountDigits.toLongOrNull() != 0L)
+    return copy(isSaveEnabled = name.isNotBlank() && selectedAccount != null && amountValid)
+}
 
 private fun mapCategory(c: Category): SelectableCategory = SelectableCategory(
     categoryId = c.categoryId,

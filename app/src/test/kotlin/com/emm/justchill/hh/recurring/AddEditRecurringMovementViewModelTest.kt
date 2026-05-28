@@ -19,6 +19,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -29,6 +30,8 @@ import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class AddEditRecurringMovementViewModelTest {
@@ -85,15 +88,57 @@ class AddEditRecurringMovementViewModelTest {
     }
 
     @Test
-    fun `create mode - name change updates state and enables save when account selected`() = runTest {
+    fun `create mode - name change updates state and enables save when account selected and amount set`() = runTest {
         val vm = createViewModel(id = null)
         advanceUntilIdle()
 
         vm.onIntent(AddEditRecurringMovementIntent.OnNameChange("Netflix"))
         vm.onIntent(AddEditRecurringMovementIntent.OnAccountSelected(testAccount))
+        // Amount is required when not variable — empty amount keeps save disabled.
+        vm.onIntent(AddEditRecurringMovementIntent.OnAmountChange("1800"))
         advanceUntilIdle()
 
         assertEquals("Netflix", vm.state.value.name)
+        assertTrue(vm.state.value.isSaveEnabled)
+    }
+
+    @Test
+    fun `create mode - fixed amount empty keeps save disabled even with name and account`() = runTest {
+        val vm = createViewModel(id = null)
+        advanceUntilIdle()
+
+        vm.onIntent(AddEditRecurringMovementIntent.OnNameChange("Netflix"))
+        vm.onIntent(AddEditRecurringMovementIntent.OnAccountSelected(testAccount))
+        // amountDigits remains "" — save must be disabled to prevent a null fixed amount.
+        advanceUntilIdle()
+
+        assertFalse(vm.state.value.isSaveEnabled)
+    }
+
+    @Test
+    fun `create mode - fixed amount zero keeps save disabled`() = runTest {
+        val vm = createViewModel(id = null)
+        advanceUntilIdle()
+
+        vm.onIntent(AddEditRecurringMovementIntent.OnNameChange("Netflix"))
+        vm.onIntent(AddEditRecurringMovementIntent.OnAccountSelected(testAccount))
+        vm.onIntent(AddEditRecurringMovementIntent.OnAmountChange("0"))
+        advanceUntilIdle()
+
+        assertFalse(vm.state.value.isSaveEnabled)
+    }
+
+    @Test
+    fun `create mode - variable amount toggle enables save without amount digits`() = runTest {
+        val vm = createViewModel(id = null)
+        advanceUntilIdle()
+
+        vm.onIntent(AddEditRecurringMovementIntent.OnNameChange("Netflix"))
+        vm.onIntent(AddEditRecurringMovementIntent.OnAccountSelected(testAccount))
+        vm.onIntent(AddEditRecurringMovementIntent.OnVariableAmountToggle(true))
+        advanceUntilIdle()
+
+        // Variable amount — no digits required, save should be enabled.
         assertTrue(vm.state.value.isSaveEnabled)
     }
 
@@ -120,6 +165,7 @@ class AddEditRecurringMovementViewModelTest {
 
         vm.onIntent(AddEditRecurringMovementIntent.OnNameChange("Netflix"))
         vm.onIntent(AddEditRecurringMovementIntent.OnAccountSelected(testAccount))
+        vm.onIntent(AddEditRecurringMovementIntent.OnAmountChange("1800"))
         vm.onIntent(AddEditRecurringMovementIntent.Save)
         advanceUntilIdle()
 
@@ -185,5 +231,47 @@ class AddEditRecurringMovementViewModelTest {
         advanceUntilIdle()
 
         assertTrue(vm.state.value.isVariableAmount)
+    }
+
+    // ---- Account load-ordering (edit mode race) ----
+
+    @Test
+    fun `edit mode - account resolved even when accounts flow emits after template load`() = runTest {
+        // Simulate the race: accounts flow is a MutableSharedFlow that starts with no emission.
+        // The template loads (via recurringRepository.find) before accounts arrive.
+        val accountsFlow = MutableSharedFlow<List<Account>>(replay = 1)
+        every { accountRepository.all() } returns accountsFlow
+
+        coEvery { recurringRepository.find(RecurringMovementId("rm-1")) } returns testTemplate
+        val vm = createViewModel(id = "rm-1")
+
+        // Let the init block run — accounts have NOT yet been emitted.
+        advanceUntilIdle()
+
+        // At this point template is loaded, but accounts not yet; selectedAccount may be null.
+        // pendingAccountId should carry the unresolved id.
+        assertNull(vm.state.value.selectedAccount)
+
+        // Now emit accounts — the combine collector should resolve pendingAccountId.
+        accountsFlow.emit(listOf(testAccount))
+        advanceUntilIdle()
+
+        assertNotNull(vm.state.value.selectedAccount)
+        assertEquals("acc-1", vm.state.value.selectedAccount?.accountId?.value)
+        // pendingAccountId cleared after resolution.
+        assertNull(vm.state.value.pendingAccountId)
+    }
+
+    @Test
+    fun `edit mode - account resolved when accounts flow emits before template load`() = runTest {
+        // Happy path: accounts arrive first (typical with SQLDelight immediate emission).
+        coEvery { recurringRepository.find(RecurringMovementId("rm-1")) } returns testTemplate
+        // accountRepository.all() returns flowOf(listOf(testAccount)) via setUp()
+        val vm = createViewModel(id = "rm-1")
+        advanceUntilIdle()
+
+        assertNotNull(vm.state.value.selectedAccount)
+        assertEquals("acc-1", vm.state.value.selectedAccount?.accountId?.value)
+        assertNull(vm.state.value.pendingAccountId)
     }
 }

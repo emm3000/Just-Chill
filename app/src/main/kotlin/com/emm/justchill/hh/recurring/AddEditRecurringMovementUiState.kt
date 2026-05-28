@@ -19,10 +19,13 @@ data class AddEditRecurringMovementUiState(
     val description: String = "",
     val accounts: List<Account> = emptyList(),
     val selectedAccount: Account? = null,
+    /**
+     * Account id awaiting resolution from the accounts flow.
+     * Set by [loadTemplate] when the accounts list has not yet been emitted; cleared once
+     * the combine collector resolves it to an actual [Account].
+     */
+    val pendingAccountId: String? = null,
     val categories: List<SelectableCategory> = emptyList(),
     val selectedCategory: SelectableCategory? = null,
-    val isLoading: Boolean = false,
     val isSaveEnabled: Boolean = false,
-    /** True after loading an existing template — prevents double-loading */
-    val isLoaded: Boolean = false,
 ) : UiState
