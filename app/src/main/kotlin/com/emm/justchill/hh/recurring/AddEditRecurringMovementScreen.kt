@@ -56,11 +56,16 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.ui.Numpad
+import com.emm.justchill.core.ui.atoms.AmountHero
+import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
+import com.emm.justchill.hh.transaction.MAX_AMOUNT_DIGITS
+import com.emm.justchill.hh.transaction.centsToSoles
 import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
 import com.emm.justchill.hh.transaction.sheets.CategoryPickerSheet
 import org.koin.androidx.compose.koinViewModel
@@ -93,7 +98,7 @@ fun AddEditRecurringMovementScreen(
     AddEditRecurringMovementContent(
         state = state,
         onIntent = vm::onIntent,
-        onBack = onBack,
+        onBack = currentOnBack,
     )
 }
 
@@ -170,6 +175,7 @@ private fun AddEditRecurringMovementContent(
                 AmountSection(
                     amountDigits = state.amountDigits,
                     isVariable = state.isVariableAmount,
+                    type = state.type,
                     onAmountChange = { onIntent(AddEditRecurringMovementIntent.OnAmountChange(it)) },
                     onVariableToggle = { onIntent(AddEditRecurringMovementIntent.OnVariableAmountToggle(it)) },
                 )
@@ -398,10 +404,12 @@ private fun PickerRow(label: String, onClick: () -> Unit) {
 private fun AmountSection(
     amountDigits: String,
     isVariable: Boolean,
+    type: TransactionType,
     onAmountChange: (String) -> Unit,
     onVariableToggle: (Boolean) -> Unit,
 ) {
     val colors = LocalEmmColors.current
+    val tone = if (type == TransactionType.Income) AmountTone.Pos else AmountTone.Neg
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(
@@ -427,45 +435,27 @@ private fun AmountSection(
         }
 
         if (!isVariable) {
-            BasicTextField(
-                value = amountDigits,
-                onValueChange = { raw ->
-                    val filtered = raw.filter(Char::isDigit).take(13)
-                    onAmountChange(filtered)
+            // AmountHero + Numpad: same pattern as AddTransactionScreen.
+            // amountDigits is a raw cents string; centsToSoles converts to displayable Double.
+            AmountHero(
+                value = centsToSoles(amountDigits),
+                tone = tone,
+                showCaret = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(8.dp))
+            Numpad(
+                modifier = Modifier.fillMaxWidth(),
+                onDigit = { ch ->
+                    val newDigits = (amountDigits + ch).take(MAX_AMOUNT_DIGITS)
+                    onAmountChange(newDigits)
                 },
-                textStyle = TextStyle(
-                    color = colors.textPrimary,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.W500,
-                    fontFamily = InterFontFamily,
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                cursorBrush = SolidColor(colors.accent),
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .drawBehind {
-                        drawLine(
-                            color = colors.border,
-                            start = Offset(0f, size.height),
-                            end = Offset(size.width, size.height),
-                            strokeWidth = 1f,
-                        )
-                    }
-                    .padding(vertical = 8.dp),
-                decorationBox = { inner ->
-                    Box {
-                        if (amountDigits.isEmpty()) {
-                            Text(
-                                text = "0 centavos",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.W400,
-                                fontFamily = InterFontFamily,
-                                color = colors.textTertiary,
-                            )
-                        }
-                        inner()
-                    }
+                onDoubleZero = {
+                    val newDigits = (amountDigits + "00").take(MAX_AMOUNT_DIGITS)
+                    onAmountChange(newDigits)
+                },
+                onBackspace = {
+                    onAmountChange(amountDigits.dropLast(1))
                 },
             )
         }
