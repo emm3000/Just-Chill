@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Category
+import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
@@ -56,6 +57,7 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     onCategoriesClick: () -> Unit = {},
     onAccountsClick: () -> Unit = {},
+    onRecurringClick: () -> Unit = {},
     onAboutClick: () -> Unit = {},
     onExportClick: () -> Unit = {},
     onImportClick: () -> Unit = {},
@@ -101,6 +103,14 @@ fun ProfileScreen(
                 meta = "${state.accountCount} activas",
                 metaIsPrimary = true,
                 onClick = onAccountsClick,
+            )
+            HairlineDivider()
+            ProfileRow(
+                icon = Icons.Outlined.Repeat,
+                label = "Movimientos recurrentes",
+                meta = "Pagos y cobros fijos",
+                metaIsPrimary = false,
+                onClick = onRecurringClick,
             )
         }
 

@@ -10,8 +10,12 @@ import com.emm.data.transaction.DefaultTransactionStatsRepository
 import com.emm.data.transaction.TransactionLocalDataSource
 import com.emm.data.transaction.TransactionStatsLocalDataSource
 import com.emm.domain.recurring.ConfirmRecurringMovementUseCase
+import com.emm.domain.recurring.CreateRecurringMovementUseCase
+import com.emm.domain.recurring.DeleteRecurringMovementUseCase
+import com.emm.domain.recurring.GetAllRecurringMovementsUseCase
 import com.emm.domain.recurring.GetPendingRecurringMovementsUseCase
 import com.emm.domain.recurring.RecurringMovementRepository
+import com.emm.domain.recurring.UpdateRecurringMovementUseCase
 import com.emm.domain.report.GetMonthlyAmountByCategoryUseCase
 import com.emm.domain.report.GetMonthlyComparisonUseCase
 import com.emm.domain.report.GetMonthlySectionStatsUseCase
@@ -30,6 +34,8 @@ import com.emm.justchill.hh.category.AddCategoryViewModel
 import com.emm.justchill.hh.category.CategoriesViewModel
 import com.emm.justchill.hh.home.HomeViewModel
 import com.emm.justchill.hh.profile.ProfileViewModel
+import com.emm.justchill.hh.recurring.AddEditRecurringMovementViewModel
+import com.emm.justchill.hh.recurring.RecurringMovementsViewModel
 import com.emm.justchill.hh.report.ReportViewModel
 import com.emm.justchill.hh.seetransactions.SeeTransactionsViewModel
 import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
@@ -85,6 +91,20 @@ private fun Module.viewModelsProviders() {
     viewModelOf(::AccountsViewModel)
     viewModelOf(::ReportViewModel)
     viewModelOf(::ProfileViewModel)
+
+    // Slice 3 — recurring management CRUD ViewModels
+    viewModelOf(::RecurringMovementsViewModel)
+
+    viewModel { parameters ->
+        AddEditRecurringMovementViewModel(
+            id = parameters.getOrNull(),
+            accountRepository = get(),
+            categoryRepository = get(),
+            recurringRepository = get(),
+            createRecurring = get(),
+            updateRecurring = get(),
+        )
+    }
 }
 
 private fun Module.dataSource() {
@@ -121,4 +141,10 @@ private fun Module.repositoriesProviders() {
     }
     factoryOf(::GetPendingRecurringMovementsUseCase)
     factoryOf(::ConfirmRecurringMovementUseCase)
+
+    // Slice 3 — remaining recurring use cases
+    factoryOf(::GetAllRecurringMovementsUseCase)
+    factoryOf(::CreateRecurringMovementUseCase)
+    factoryOf(::UpdateRecurringMovementUseCase)
+    factoryOf(::DeleteRecurringMovementUseCase)
 }

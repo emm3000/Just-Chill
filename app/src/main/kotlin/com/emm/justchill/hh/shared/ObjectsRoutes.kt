@@ -28,3 +28,9 @@ data object AddTransactionRoute : NavKey
 
 @Serializable
 data object ReportRoute : NavKey
+
+@Serializable
+data object RecurringMovementsRoute : NavKey
+
+@Serializable
+data class AddEditRecurringMovementRoute(val id: String? = null) : NavKey

@@ -69,6 +69,10 @@ import com.emm.justchill.hh.account.AccountsScreen
 import com.emm.justchill.hh.account.AccountsViewModel
 import com.emm.justchill.hh.account.AddAccountScreen
 import com.emm.justchill.hh.category.AddCategoryScreen
+import com.emm.justchill.hh.recurring.AddEditRecurringMovementScreen
+import com.emm.justchill.hh.recurring.RecurringMovementsEffect
+import com.emm.justchill.hh.recurring.RecurringMovementsScreen
+import com.emm.justchill.hh.recurring.RecurringMovementsViewModel
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.CategoriesEffect
 import com.emm.justchill.hh.category.CategoriesScreen
@@ -294,6 +298,7 @@ fun Hh(modifier: Modifier = Modifier) {
                         state = profileState,
                         onCategoriesClick = { backStack.add(CategoriesListRoute) },
                         onAccountsClick = { backStack.add(AccountsRoute) },
+                        onRecurringClick = { backStack.add(RecurringMovementsRoute) },
                         onAboutClick = { backStack.add(ManifestoRoute(isRevisit = true)) },
                         onExportClick = { exportLauncher.launch(suggestedExportFilename()) },
                         onImportClick = { importLauncher.launch(arrayOf("application/json")) },
@@ -371,6 +376,36 @@ fun Hh(modifier: Modifier = Modifier) {
 
                 entry<AddAccountRoute> {
                     AddAccountScreen(
+                        onBack = { backStack.removeLastOrNull() },
+                        snackbarHostState = snackbarHostState,
+                    )
+                }
+
+                entry<RecurringMovementsRoute> {
+                    val vm: RecurringMovementsViewModel = koinViewModel()
+                    val recurringState by vm.state.collectAsStateWithLifecycle()
+
+                    LaunchedEffect(vm) {
+                        vm.effect.collect { effect ->
+                            when (effect) {
+                                is RecurringMovementsEffect.NavigateToAddEdit -> {
+                                    backStack.add(AddEditRecurringMovementRoute(effect.id))
+                                }
+
+                                is RecurringMovementsEffect.ShowError -> showRootMessage(effect.message)
+                            }
+                        }
+                    }
+
+                    RecurringMovementsScreen(
+                        state = recurringState,
+                        onIntent = vm::onIntent,
+                    )
+                }
+
+                entry<AddEditRecurringMovementRoute> { key ->
+                    AddEditRecurringMovementScreen(
+                        id = key.id,
                         onBack = { backStack.removeLastOrNull() },
                         snackbarHostState = snackbarHostState,
                     )
