@@ -322,8 +322,8 @@ private fun NameInput(value: String, onValueChange: (String) -> Unit, placeholde
 }
 
 private val TYPE_OPTIONS = listOf(
-    TransactionType.Income to "Ingreso",
-    TransactionType.Spend to "Gasto",
+    TransactionType.Income,
+    TransactionType.Spend,
 )
 
 @Composable
@@ -331,7 +331,7 @@ private fun TypeToggle(selected: TransactionType, onSelect: (TransactionType) ->
     val colors = LocalEmmColors.current
 
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        TYPE_OPTIONS.forEach { (type, label) ->
+        TYPE_OPTIONS.forEach { type ->
             val isSelected = selected == type
             val shape = RoundedCornerShape(12.dp)
             val borderColor = if (isSelected) colors.textPrimary else colors.border
@@ -353,7 +353,7 @@ private fun TypeToggle(selected: TransactionType, onSelect: (TransactionType) ->
                     ),
             ) {
                 Text(
-                    text = label,
+                    text = type.label,
                     fontSize = 15.sp,
                     fontWeight = if (isSelected) FontWeight.W600 else FontWeight.W500,
                     fontFamily = InterFontFamily,

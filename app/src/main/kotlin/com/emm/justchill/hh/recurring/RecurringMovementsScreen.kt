@@ -190,7 +190,7 @@ private fun RecurringMovementRow(item: RecurringMovementUi, onEdit: () -> Unit, 
                     letterSpacing = (-0.15).sp,
                 )
                 Spacer(Modifier.height(2.dp))
-                val typeLabel = if (item.type == TransactionType.Income) "Ingreso" else "Gasto"
+                val typeLabel = item.type.label
                 val activeLabel = if (item.isActive) "Activo" else "Inactivo"
                 Text(
                     text = "$typeLabel · Día ${item.dayOfMonth} · $activeLabel · ${item.formattedAmount}",

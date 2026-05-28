@@ -202,10 +202,7 @@ fun ConfirmRecurringSheet(
 @Composable
 private fun TypeBadge(type: TransactionType) {
     val colors = LocalEmmColors.current
-    val label = when (type) {
-        TransactionType.Income -> "Ingreso"
-        TransactionType.Spend -> "Gasto"
-    }
+    val label = type.label
     val bgColor = when (type) {
         TransactionType.Income -> colors.posMuted
         TransactionType.Spend -> colors.negMuted
