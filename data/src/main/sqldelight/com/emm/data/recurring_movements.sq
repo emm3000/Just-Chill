@@ -14,7 +14,7 @@ CREATE TABLE recurring_movements (
     updatedAt           INTEGER NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS recurring_active_idx ON recurring_movements(isActive);
+CREATE INDEX IF NOT EXISTS recurring_active_idx ON recurring_movements(isActive, name);
 
 selectAll:
 SELECT * FROM recurring_movements ORDER BY name;
@@ -26,7 +26,7 @@ find:
 SELECT * FROM recurring_movements WHERE id = ?;
 
 insert:
-INSERT OR REPLACE INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, lastConfirmedPeriod, createdAt, updatedAt)
+INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, lastConfirmedPeriod, createdAt, updatedAt)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 update:

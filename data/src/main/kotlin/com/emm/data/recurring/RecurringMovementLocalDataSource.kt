@@ -7,6 +7,7 @@ import com.emm.data.Recurring_movementsQueries
 import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.recurring.RecurringMovementInsert
 import com.emm.domain.shared.currentTimeInMillis
+import com.emm.domain.shared.error.DomainException
 import com.emm.domain.transaction.TransactionInsert
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -78,13 +79,27 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData)
 
     /**
      * Atomically:
-     * 1. Insert the transaction record
-     * 2. Mark the recurring movement as confirmed for the period
+     * 1. Re-read lastConfirmedPeriod inside the transaction (DB-level idempotency guard)
+     * 2. Insert the transaction record
+     * 3. Mark the recurring movement confirmed with a caller-supplied [updatedAt]
      *
-     * Both writes share one SQLDelight database transaction — Option A true atomicity.
+     * If the template is already confirmed for [period] (TOCTOU race), throws
+     * [DomainException.ValidationError] which causes the SQLDelight transaction to roll back,
+     * reverting the just-inserted transaction row.
+     *
+     * [updatedAt] is supplied by the caller (from a single captured `now`) so this method
+     * never reads the clock independently.
      */
     suspend fun confirm(insert: TransactionInsert, recurringId: String, period: String) = withContext(Dispatchers.IO) {
         emmDatabase.transaction {
+            // DB-level idempotency guard: re-check inside the transaction to close the TOCTOU window.
+            val current = rmq.find(recurringId).executeAsOneOrNull()
+            if (current?.lastConfirmedPeriod == period) {
+                throw DomainException.ValidationError(
+                    "Template '$recurringId' already confirmed for period $period (concurrent write detected)",
+                )
+            }
+
             emmDatabase.transactionsQueries.insert(
                 transactionId = insert.id.value,
                 type = insert.type.name,
@@ -98,7 +113,7 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData)
             )
             rmq.markConfirmed(
                 lastConfirmedPeriod = period,
-                updatedAt = currentTimeInMillis(),
+                updatedAt = insert.updatedAt,
                 id = recurringId,
             )
         }

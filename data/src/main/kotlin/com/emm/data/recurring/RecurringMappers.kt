@@ -31,15 +31,18 @@ fun Recurring_movements.asEntity() = RecurringMovementEntity(
 fun List<Recurring_movements>.asEntity() = map(Recurring_movements::asEntity)
 
 // Entity → Domain
+// TransactionType.valueOf and Frequency.valueOf intentionally let any unknown value throw
+// so safeDbCall translates it to DomainException.DatabaseError.
+// Silent coercion (e.g. Income→Spend) would corrupt financial totals.
 fun RecurringMovementEntity.asExternalModel() = RecurringMovement(
     id = RecurringMovementId(id),
     name = name,
-    type = runCatching { TransactionType.valueOf(type) }.getOrDefault(TransactionType.Spend),
+    type = TransactionType.valueOf(type),
     amount = amount?.let { Money(it) },
     description = description,
     categoryId = categoryId?.let(::CategoryId),
     accountId = AccountId(accountId),
-    frequency = runCatching { Frequency.valueOf(frequency) }.getOrDefault(Frequency.Monthly),
+    frequency = Frequency.valueOf(frequency),
     dayOfMonth = dayOfMonth.toInt(),
     isActive = isActive != 0L,
     lastConfirmedPeriod = lastConfirmedPeriod,
