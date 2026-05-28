@@ -74,7 +74,9 @@ import com.emm.justchill.hh.category.CategoriesEffect
 import com.emm.justchill.hh.category.CategoriesScreen
 import com.emm.justchill.hh.category.CategoriesViewModel
 import com.emm.justchill.hh.category.findById
+import com.emm.justchill.hh.home.HomeEffect
 import com.emm.justchill.hh.home.HomeScreen
+import com.emm.justchill.hh.home.HomeViewModel
 import com.emm.justchill.hh.onboarding.ManifestoScreen
 import com.emm.justchill.hh.profile.PrivacyPolicyScreen
 import com.emm.justchill.hh.profile.ProfileEffect
@@ -171,13 +173,14 @@ fun Hh(modifier: Modifier = Modifier) {
                 }
 
                 entry<HomeRoute> {
-                    HomeScreen(
+                    HomeEntry(
                         navigateToAll = dropUnlessResumed {
                             backStack.switchTab(SeeTransactionRoute)
                         },
                         navigateToAdd = { backStack.add(AddTransactionRoute) },
                         navigateToEdit = { id -> backStack.add(EditTransactionRoute(id)) },
                         navigateToReport = { backStack.add(ReportRoute) },
+                        snackbarHostState = snackbarHostState,
                     )
                 }
 
@@ -398,6 +401,37 @@ fun Hh(modifier: Modifier = Modifier) {
             },
         )
     }
+}
+
+@Composable
+private fun HomeEntry(
+    navigateToAll: () -> Unit,
+    navigateToAdd: () -> Unit,
+    navigateToEdit: (String) -> Unit,
+    navigateToReport: () -> Unit,
+    snackbarHostState: SnackbarHostState,
+) {
+    val vm: HomeViewModel = koinViewModel()
+    var confirmSheetOpen by remember { mutableStateOf(false) }
+
+    LaunchedEffect(vm) {
+        vm.effect.collect { effect ->
+            when (effect) {
+                HomeEffect.CloseConfirmSheet -> confirmSheetOpen = false
+                is HomeEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
+            }
+        }
+    }
+
+    HomeScreen(
+        homeViewModel = vm,
+        confirmSheetOpen = confirmSheetOpen,
+        onConfirmSheetOpenChange = { confirmSheetOpen = it },
+        navigateToAll = navigateToAll,
+        navigateToAdd = navigateToAdd,
+        navigateToEdit = navigateToEdit,
+        navigateToReport = navigateToReport,
+    )
 }
 
 @Composable

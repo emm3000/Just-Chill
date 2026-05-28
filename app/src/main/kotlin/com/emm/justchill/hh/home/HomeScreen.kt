@@ -67,11 +67,17 @@ import com.emm.justchill.hh.shared.shortLabel
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.components.TransactionRow
-import org.koin.androidx.compose.koinViewModel
 
+/**
+ * VM-owning overload used by [HomeEntry] in Hh.kt.
+ * Effect collection (CloseConfirmSheet, ShowError) lives in HomeEntry; sheet-open state is
+ * threaded in so the effect collector can close the sheet from outside this composable.
+ */
 @Composable
 fun HomeScreen(
-    homeViewModel: HomeViewModel = koinViewModel(),
+    homeViewModel: HomeViewModel,
+    confirmSheetOpen: Boolean,
+    onConfirmSheetOpenChange: (Boolean) -> Unit,
     navigateToAll: () -> Unit = {},
     navigateToAdd: () -> Unit = {},
     navigateToEdit: (String) -> Unit = {},
@@ -80,6 +86,8 @@ fun HomeScreen(
     val state: HomeUiState by homeViewModel.state.collectAsStateWithLifecycle()
     HomeScreen(
         homeData = state,
+        confirmSheetOpen = confirmSheetOpen,
+        onConfirmSheetOpenChange = onConfirmSheetOpenChange,
         navigateToAll = navigateToAll,
         navigateToAdd = navigateToAdd,
         navigateToEdit = navigateToEdit,
@@ -93,6 +101,8 @@ fun HomeScreen(
 @Composable
 fun HomeScreen(
     homeData: HomeUiState,
+    confirmSheetOpen: Boolean = false,
+    onConfirmSheetOpenChange: (Boolean) -> Unit = {},
     navigateToAll: () -> Unit = {},
     navigateToAdd: () -> Unit = {},
     navigateToEdit: (String) -> Unit = {},
@@ -113,6 +123,8 @@ fun HomeScreen(
 
         else -> HomeWithData(
             homeData = homeData,
+            confirmSheetOpen = confirmSheetOpen,
+            onConfirmSheetOpenChange = onConfirmSheetOpenChange,
             navigateToAll = navigateToAll,
             navigateToEdit = navigateToEdit,
             navigateToReport = navigateToReport,
@@ -126,6 +138,8 @@ fun HomeScreen(
 @Composable
 private fun HomeWithData(
     homeData: HomeUiState,
+    confirmSheetOpen: Boolean,
+    onConfirmSheetOpenChange: (Boolean) -> Unit,
     navigateToAll: () -> Unit,
     navigateToEdit: (String) -> Unit,
     navigateToReport: () -> Unit,
@@ -135,7 +149,15 @@ private fun HomeWithData(
 ) {
     val colors = LocalEmmColors.current
 
+    // The selected template ID driving the sheet — stored locally for row clicks.
+    // Sheet-close is driven by the parent via confirmSheetOpen = false (from CloseConfirmSheet effect).
     var confirmSheetItem by rememberSaveable { mutableStateOf<String?>(null) }
+
+    // When the parent signals close (effect-driven), clear the local item too.
+    if (!confirmSheetOpen && confirmSheetItem != null) {
+        confirmSheetItem = null
+    }
+
     val pendingMap = remember(homeData.pendingRecurringMovements) {
         homeData.pendingRecurringMovements.associateBy { it.templateId }
     }
@@ -179,7 +201,10 @@ private fun HomeWithData(
             items(homeData.pendingRecurringMovements, PendingRecurringUi::templateId) { pending ->
                 PendingRecurringRow(
                     item = pending,
-                    onClick = { confirmSheetItem = pending.templateId },
+                    onClick = {
+                        confirmSheetItem = pending.templateId
+                        onConfirmSheetOpenChange(true)
+                    },
                 )
             }
         }
@@ -202,14 +227,23 @@ private fun HomeWithData(
         item { Spacer(Modifier.height(16.dp)) }
     }
 
-    // Show ConfirmRecurringSheet when an item is selected
-    confirmSheetItem?.let { templateId ->
-        pendingMap[templateId]?.let { item ->
-            ConfirmRecurringSheet(
-                item = item,
-                onIntent = onIntent,
-                onDismiss = { confirmSheetItem = null },
-            )
+    // Show ConfirmRecurringSheet when an item is selected and sheet is open.
+    // Sheet closes ONLY via CloseConfirmSheet effect (success) → onConfirmSheetOpenChange(false).
+    // On error the sheet stays open so the snackbar is still visible with the sheet.
+    if (confirmSheetOpen) {
+        confirmSheetItem?.let { templateId ->
+            pendingMap[templateId]?.let { item ->
+                ConfirmRecurringSheet(
+                    item = item,
+                    onConfirm = { id, callerAmount ->
+                        onIntent(HomeIntent.ConfirmRecurring(templateId = id, callerAmount = callerAmount))
+                    },
+                    onDismiss = {
+                        confirmSheetItem = null
+                        onConfirmSheetOpenChange(false)
+                    },
+                )
+            }
         }
     }
 }

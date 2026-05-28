@@ -35,7 +35,6 @@ import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.atoms.StickyCTA
-import com.emm.justchill.hh.home.HomeIntent
 
 private const val MAX_CENTS_DIGITS = 9
 private const val DOUBLE_ZERO_MULTIPLIER = 100L
@@ -47,14 +46,22 @@ private const val DIGIT_SHIFT = 10L
  * - Fixed amount: shows the amount read-only; "Confirmar" is always enabled.
  * - Variable amount: shows an editable Numpad-driven amount field;
  *   "Confirmar" is disabled while the entered amount is 0 (Scenario 5.1).
+ *
+ * Sheet dismissal on success is driven by the caller (via [HomeEffect.CloseConfirmSheet]).
+ * [onDismiss] is only invoked when the user swipes down or taps outside (user-initiated).
  */
 @Composable
-fun ConfirmRecurringSheet(item: PendingRecurringUi, onIntent: (HomeIntent) -> Unit, onDismiss: () -> Unit) {
+fun ConfirmRecurringSheet(
+    item: PendingRecurringUi,
+    onConfirm: (templateId: String, callerAmount: Money?) -> Unit,
+    onDismiss: () -> Unit,
+) {
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     // Cents accumulator — starts at the fixed amount (if any) or 0 for variable.
-    var amountCents by rememberSaveable { mutableLongStateOf(item.fixedAmountCents ?: 0L) }
+    // Keyed by templateId so the amount resets when a different item is shown.
+    var amountCents by rememberSaveable(item.templateId) { mutableLongStateOf(item.fixedAmountCents ?: 0L) }
 
     val amountDouble = amountCents.toDouble() / 100.0
     val tone = when (item.type) {
@@ -174,19 +181,18 @@ fun ConfirmRecurringSheet(item: PendingRecurringUi, onIntent: (HomeIntent) -> Un
             }
 
             // ---- CTA ----
+            // onDismiss() is NOT called here — the sheet stays open until the VM emits
+            // CloseConfirmSheet (success) so errors keep the sheet open with snackbar feedback.
             val confirmEnabled = amountCents > 0L
             StickyCTA(
                 label = "Confirmar",
                 sublabel = if (!confirmEnabled && item.isVariableAmount) "Ingresá el monto" else null,
                 enabled = confirmEnabled,
                 onClick = {
-                    onIntent(
-                        HomeIntent.ConfirmRecurring(
-                            templateId = item.templateId,
-                            callerAmount = if (item.isVariableAmount) Money(amountCents) else null,
-                        ),
+                    onConfirm(
+                        item.templateId,
+                        if (item.isVariableAmount) Money(amountCents) else null,
                     )
-                    onDismiss()
                 },
             )
         }
