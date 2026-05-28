@@ -107,7 +107,7 @@ fun RecurringMovementsScreen(
     }
 
     state.pendingDelete?.let { id ->
-        val item = state.items.find { it.id == id }
+        val item = remember(id, state.items) { state.items.find { it.id == id } }
         DeleteRecurringDialog(
             name = item?.name ?: "",
             onConfirm = { onIntent(RecurringMovementsIntent.ConfirmDelete) },

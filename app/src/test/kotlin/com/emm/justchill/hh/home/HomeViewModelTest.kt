@@ -147,6 +147,44 @@ class HomeViewModelTest {
         job.cancel()
     }
 
+    @Test
+    fun `4_2b ConfirmRecurring DatabaseError ShowError carries toUserMessage string not raw exception`() = runTest {
+        val error = DomainException.DatabaseError(RuntimeException("raw internal message"))
+        coEvery { confirmRecurring(any(), any(), any(), any()) } throws error
+        every { getHomeData(any()) } returns flowOf(emptyHomeData)
+        viewModel = HomeViewModel(getHomeData, confirmRecurring)
+
+        val effects = mutableListOf<HomeEffect>()
+        val job = launch { viewModel.effect.collect { effects.add(it) } }
+
+        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-1", Money(1800L)))
+        advanceUntilIdle()
+
+        val showError = effects.filterIsInstance<HomeEffect.ShowError>().firstOrNull()
+        checkNotNull(showError) { "Expected ShowError effect but got: $effects" }
+        // Must carry the toUserMessage() string — never the raw exception message.
+        assertEquals("Hubo un problema guardando tu data", showError.message)
+        assertFalse(showError.message.contains("raw internal message"))
+        job.cancel()
+    }
+
+    @Test
+    fun `4_1b ConfirmRecurring success emits CloseConfirmSheet — not ShowError`() = runTest {
+        coEvery { confirmRecurring(any(), any(), any(), any()) } returns Unit
+        every { getHomeData(any()) } returns flowOf(emptyHomeData)
+        viewModel = HomeViewModel(getHomeData, confirmRecurring)
+
+        val effects = mutableListOf<HomeEffect>()
+        val job = launch { viewModel.effect.collect { effects.add(it) } }
+
+        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-1", Money(1800L)))
+        advanceUntilIdle()
+
+        assertTrue(effects.any { it is HomeEffect.CloseConfirmSheet }, "Expected CloseConfirmSheet but got: $effects")
+        assertFalse(effects.any { it is HomeEffect.ShowError }, "Should not emit ShowError on success")
+        job.cancel()
+    }
+
     // ---- Scenario 5.1: Variable amount — confirm button disabled while amount == 0 ----
     // This scenario is enforced by the Sheet composable (amount field required before enabling the
     // button). The ViewModel receives a valid callerAmount when the user taps Confirm, so there is

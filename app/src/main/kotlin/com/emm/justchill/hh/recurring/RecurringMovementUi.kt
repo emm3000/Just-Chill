@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.recurring
 
+import androidx.compose.runtime.Immutable
 import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.shared.formatExpense
@@ -10,6 +11,7 @@ import com.emm.justchill.hh.shared.fromCentsToSolesWith
  * UI representation of a recurring movement template used in the management list (Slice 3).
  * Created here so Slice 2 mappers can reference it without creating a dependency cycle.
  */
+@Immutable
 data class RecurringMovementUi(
     val id: String,
     val name: String,

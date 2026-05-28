@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.recurring
 
+import androidx.compose.runtime.Immutable
 import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.shared.Money
 import com.emm.domain.transaction.TransactionType
@@ -14,6 +15,7 @@ import com.emm.justchill.hh.shared.fromCentsToSolesWith
  * uses this flag to show an editable amount field and disable the confirm button until the user
  * supplies a valid amount.
  */
+@Immutable
 data class PendingRecurringUi(
     val templateId: String,
     val name: String,
