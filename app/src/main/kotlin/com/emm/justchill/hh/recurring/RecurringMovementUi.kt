@@ -24,6 +24,7 @@ fun RecurringMovement.toRecurringMovementUi(): RecurringMovementUi {
     val isVariable = amount == null
     val formatted = when {
         isVariable -> "Variable"
+
         else -> {
             val raw = fromCentsToSolesWith(amount!!)
             when (type) {

@@ -69,6 +69,5 @@ class HomeViewModel(
         pendingRecurringMovements = data.pendingRecurringMovements.toPendingUi(),
     )
 
-    private fun List<RecurringMovement>.toPendingUi(): List<PendingRecurringUi> =
-        map { it.toPendingRecurringUi() }
+    private fun List<RecurringMovement>.toPendingUi(): List<PendingRecurringUi> = map { it.toPendingRecurringUi() }
 }
