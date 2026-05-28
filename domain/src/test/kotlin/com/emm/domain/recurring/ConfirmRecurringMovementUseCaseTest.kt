@@ -10,6 +10,8 @@ import com.emm.domain.transaction.TransactionType
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -19,14 +21,21 @@ import kotlin.test.assertNotNull
 /**
  * Tests for ConfirmRecurringMovementUseCase.
  * Spec coverage: 4.1 4.2 5.2 5.3 6.1
+ *
+ * A fixed UTC timezone is injected so date-millis assertions are deterministic
+ * regardless of the machine's local timezone.
  */
 class ConfirmRecurringMovementUseCaseTest {
 
     private lateinit var repository: FakeRecurringMovementRepository
     private lateinit var useCase: ConfirmRecurringMovementUseCase
 
+    private val utc = TimeZone.UTC
     private val may2026 = YearMonth(2026, Month.MAY)
     private val today = LocalDate(2026, 5, 20)
+
+    // 2026-05-20T00:00:00Z in epoch millis (fixed UTC timezone)
+    private val expectedDateMillis = today.atStartOfDayIn(utc).toEpochMilliseconds()
 
     private val fixedTemplate = RecurringMovement(
         id = RecurringMovementId("rm-fixed"),
@@ -60,7 +69,7 @@ class ConfirmRecurringMovementUseCaseTest {
     fun setUp() {
         repository = FakeRecurringMovementRepository()
         repository.addTemplate(fixedTemplate, variableTemplate)
-        useCase = ConfirmRecurringMovementUseCase(repository)
+        useCase = ConfirmRecurringMovementUseCase(repository, utc)
     }
 
     /**
@@ -96,7 +105,7 @@ class ConfirmRecurringMovementUseCaseTest {
         io.mockk.coEvery {
             failingRepo.confirm(any(), any(), any())
         } throws DomainException.DatabaseError(RuntimeException("atomic fail"))
-        val uc = ConfirmRecurringMovementUseCase(failingRepo)
+        val uc = ConfirmRecurringMovementUseCase(failingRepo, utc)
         assertFailsWith<DomainException.DatabaseError> {
             uc(
                 templateId = RecurringMovementId("rm-fixed"),
@@ -208,8 +217,12 @@ class ConfirmRecurringMovementUseCaseTest {
         assertEquals(0, repository.confirmCount)
     }
 
+    /**
+     * Verifies the exact epoch millis for the transaction date.
+     * With injected UTC timezone: 2026-05-20T00:00:00Z = 1748044800000L
+     */
     @Test
-    fun `invoke date on TransactionInsert matches today`() = runTest {
+    fun `invoke date on TransactionInsert matches today at start of day in injected timezone`() = runTest {
         useCase(
             templateId = RecurringMovementId("rm-fixed"),
             yearMonth = may2026,
@@ -218,8 +231,7 @@ class ConfirmRecurringMovementUseCaseTest {
         )
         val insert = repository.lastConfirmInsert
         assertNotNull(insert)
-        // The date stored is epoch millis for today; verify it's non-zero and corresponds to today
-        assert(insert.date > 0L)
+        assertEquals(expectedDateMillis, insert.date)
     }
 
     @Test

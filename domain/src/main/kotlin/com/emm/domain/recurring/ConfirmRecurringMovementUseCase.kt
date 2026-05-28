@@ -13,11 +13,10 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-private fun check(condition: Boolean, error: DomainException) {
-    if (!condition) throw error
-}
-
-class ConfirmRecurringMovementUseCase(private val repository: RecurringMovementRepository) {
+class ConfirmRecurringMovementUseCase(
+    private val repository: RecurringMovementRepository,
+    private val timeZone: TimeZone = TimeZone.currentSystemDefault(),
+) {
 
     /**
      * Confirms a recurring movement for [yearMonth].
@@ -27,10 +26,11 @@ class ConfirmRecurringMovementUseCase(private val repository: RecurringMovementR
      * 2. idempotency guard: if lastConfirmedPeriod == periodKey(yearMonth) → ValidationError
      * 3. resolve amount: template.amount if non-null, else callerAmount (null → ValidationError)
      * 4. validate resolved amount > 0
-     * 5. build TransactionInsert with today's epoch millis as date
+     * 5. build TransactionInsert — date = today.atStartOfDayIn(timeZone); timestamps from single now
      * 6. repo.confirm(insert, id, periodKey) — atomic in data layer
      *
      * Does NOT call CreateTransactionUseCase (Option A atomicity).
+     * [timeZone] is injected so tests can assert exact epoch millis without hidden clock reads.
      */
     @OptIn(ExperimentalUuidApi::class)
     suspend operator fun invoke(
@@ -43,7 +43,7 @@ class ConfirmRecurringMovementUseCase(private val repository: RecurringMovementR
             ?: throw DomainException.NotFound("RecurringMovement(${templateId.value})")
 
         val currentPeriod = periodKey(yearMonth)
-        check(
+        ensure(
             template.lastConfirmedPeriod != currentPeriod,
             DomainException.ValidationError(
                 "Template '${template.name}' already confirmed for period $currentPeriod",
@@ -51,14 +51,14 @@ class ConfirmRecurringMovementUseCase(private val repository: RecurringMovementR
         )
 
         val resolvedAmount: Money = resolveAmount(template, callerAmount)
-        check(
+        ensure(
             resolvedAmount.cents > 0,
             DomainException.ValidationError(
                 "Confirmed amount must be greater than zero, got ${resolvedAmount.cents} cents",
             ),
         )
 
-        val dateMillis: Long = today.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+        val dateMillis: Long = today.atStartOfDayIn(timeZone).toEpochMilliseconds()
         val now = currentTimeInMillis()
         val insert = TransactionInsert(
             id = TransactionId(Uuid.random().toString()),
@@ -72,7 +72,7 @@ class ConfirmRecurringMovementUseCase(private val repository: RecurringMovementR
             createdAt = now,
         )
 
-        repository.confirm(insert, templateId.value, currentPeriod)
+        repository.confirm(insert, templateId, currentPeriod)
     }
 }
 
