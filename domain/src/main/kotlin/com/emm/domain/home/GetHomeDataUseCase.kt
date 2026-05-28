@@ -1,5 +1,7 @@
 package com.emm.domain.home
 
+import com.emm.domain.recurring.GetPendingRecurringMovementsUseCase
+import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionRepository
@@ -7,21 +9,27 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
 class GetHomeDataUseCase(
     private val transactionRepository: TransactionRepository,
+    private val getPendingRecurringMovements: GetPendingRecurringMovementsUseCase,
     private val clock: Clock = Clock.System,
 ) {
 
     operator fun invoke(yearMonth: YearMonth = YearMonth.current(clock)): Flow<HomeData> {
         val startOfMonth = yearMonth.startInclusiveMillis()
         val startOfNextMonth = yearMonth.endExclusiveMillis()
+        val today: LocalDate = clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         return combine(
             flow = transactionRepository.fetchAllWithCategory(),
             flow2 = transactionRepository.fetchAllWithCategoryInRange(startOfMonth, startOfNextMonth),
-            transform = { allTransactions, currentMonth ->
-                computeFinancialSummary(allTransactions, currentMonth)
+            flow3 = getPendingRecurringMovements(today, yearMonth),
+            transform = { allTransactions, currentMonth, pending ->
+                computeFinancialSummary(allTransactions, currentMonth, pending)
             },
         )
     }
@@ -29,6 +37,7 @@ class GetHomeDataUseCase(
     private fun computeFinancialSummary(
         allTransactions: List<TransactionWithCategory>,
         currentMonthTransactions: List<TransactionWithCategory>,
+        pendingRecurringMovements: List<RecurringMovement>,
     ): HomeData {
         val lastTransactions: List<TransactionWithCategory> = currentMonthTransactions.take(7)
         val income: Money = currentMonthTransactions
@@ -47,6 +56,7 @@ class GetHomeDataUseCase(
             spend = spend,
             balance = balance,
             hasAnyTransaction = allTransactions.isNotEmpty(),
+            pendingRecurringMovements = pendingRecurringMovements,
         )
     }
 }

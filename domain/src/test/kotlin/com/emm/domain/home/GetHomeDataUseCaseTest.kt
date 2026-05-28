@@ -1,5 +1,7 @@
 package com.emm.domain.home
 
+import com.emm.domain.recurring.GetPendingRecurringMovementsUseCase
+import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.TransactionId
@@ -24,7 +26,9 @@ import kotlin.time.Instant
 class GetHomeDataUseCaseTest {
 
     private val transactionRepository = mockk<TransactionRepository>()
-    private val useCase = GetHomeDataUseCase(transactionRepository)
+    private val getPendingRecurringMovements = mockk<GetPendingRecurringMovementsUseCase>()
+
+    private val useCase = GetHomeDataUseCase(transactionRepository, getPendingRecurringMovements)
 
     private fun tx(id: String, type: TransactionType, amount: Long, date: Long = 0L) = TransactionWithCategory(
         transactionId = TransactionId(id),
@@ -49,6 +53,7 @@ class GetHomeDataUseCaseTest {
         )
         every { transactionRepository.fetchAllWithCategory() } returns flowOf(allTransactions)
         every { transactionRepository.fetchAllWithCategoryInRange(any(), any()) } returns flowOf(currentMonth)
+        every { getPendingRecurringMovements(any(), any()) } returns flowOf(emptyList())
 
         val data = useCase().first()
 
@@ -57,6 +62,7 @@ class GetHomeDataUseCaseTest {
         // balance = 10000 + 5000 - 3000 - 20000 = -8000 cents
         assertEquals(Money(-8000L), data.balance)
         assertEquals(currentMonth, data.lastTransactions)
+        assertTrue(data.pendingRecurringMovements.isEmpty())
     }
 
     @Test
@@ -64,6 +70,7 @@ class GetHomeDataUseCaseTest {
         val currentMonth = (1..10).map { tx(it.toString(), TransactionType.Income, 100L) }
         every { transactionRepository.fetchAllWithCategory() } returns flowOf(currentMonth)
         every { transactionRepository.fetchAllWithCategoryInRange(any(), any()) } returns flowOf(currentMonth)
+        every { getPendingRecurringMovements(any(), any()) } returns flowOf(emptyList())
 
         val data = useCase().first()
 
@@ -76,6 +83,7 @@ class GetHomeDataUseCaseTest {
     fun `invoke should return zeros when nothing is in the current month`() = runTest {
         every { transactionRepository.fetchAllWithCategory() } returns flowOf(emptyList())
         every { transactionRepository.fetchAllWithCategoryInRange(any(), any()) } returns flowOf(emptyList())
+        every { getPendingRecurringMovements(any(), any()) } returns flowOf(emptyList())
 
         val data = useCase().first()
 
@@ -95,6 +103,7 @@ class GetHomeDataUseCaseTest {
         )
         every { transactionRepository.fetchAllWithCategory() } returns flowOf(currentMonth)
         every { transactionRepository.fetchAllWithCategoryInRange(any(), any()) } returns flowOf(currentMonth)
+        every { getPendingRecurringMovements(any(), any()) } returns flowOf(emptyList())
 
         val data = useCase().first()
 
@@ -105,13 +114,15 @@ class GetHomeDataUseCaseTest {
     fun `currentMonthRange uses injected clock to compute start of month`() = runTest {
         val fixedClock = fixedClock("2026-05-16T12:34:56Z")
         val repo = mockk<TransactionRepository>()
+        val pendingUc = mockk<GetPendingRecurringMovementsUseCase>()
         val startSlot = slot<Long>()
         val endSlot = slot<Long>()
 
         every { repo.fetchAllWithCategory() } returns flowOf(emptyList())
         every { repo.fetchAllWithCategoryInRange(capture(startSlot), capture(endSlot)) } returns flowOf(emptyList())
+        every { pendingUc(any(), any()) } returns flowOf(emptyList())
 
-        GetHomeDataUseCase(repo, fixedClock).invoke().first()
+        GetHomeDataUseCase(repo, pendingUc, fixedClock).invoke().first()
 
         val zone = TimeZone.currentSystemDefault()
         val expectedStart = LocalDate(2026, 5, 1).atStartOfDayIn(zone).toEpochMilliseconds()
@@ -119,6 +130,19 @@ class GetHomeDataUseCaseTest {
 
         assertEquals(expectedStart, startSlot.captured)
         assertEquals(expectedEnd, endSlot.captured)
+    }
+
+    @Test
+    fun `invoke should include pending recurring movements in HomeData`() = runTest {
+        val pendingItem = mockk<RecurringMovement>()
+        every { transactionRepository.fetchAllWithCategory() } returns flowOf(emptyList())
+        every { transactionRepository.fetchAllWithCategoryInRange(any(), any()) } returns flowOf(emptyList())
+        every { getPendingRecurringMovements(any(), any()) } returns flowOf(listOf(pendingItem))
+
+        val data = useCase().first()
+
+        assertEquals(1, data.pendingRecurringMovements.size)
+        assertEquals(pendingItem, data.pendingRecurringMovements.first())
     }
 
     private fun fixedClock(at: String): Clock = object : Clock {

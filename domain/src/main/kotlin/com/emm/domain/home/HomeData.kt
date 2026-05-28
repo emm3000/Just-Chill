@@ -1,5 +1,6 @@
 package com.emm.domain.home
 
+import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.shared.Money
 import com.emm.domain.transaction.TransactionWithCategory
 
@@ -9,4 +10,5 @@ data class HomeData(
     val spend: Money,
     val balance: Money,
     val hasAnyTransaction: Boolean,
+    val pendingRecurringMovements: List<RecurringMovement> = emptyList(),
 )
