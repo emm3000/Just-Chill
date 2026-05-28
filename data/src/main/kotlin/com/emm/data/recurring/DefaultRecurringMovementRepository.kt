@@ -32,7 +32,8 @@ class DefaultRecurringMovementRepository(private val localDataSource: RecurringM
         localDataSource.delete(id.value)
     }
 
-    override suspend fun confirm(insert: TransactionInsert, recurringId: String, period: String): Unit = safeDbCall {
-        localDataSource.confirm(insert, recurringId, period)
-    }
+    override suspend fun confirm(insert: TransactionInsert, recurringId: RecurringMovementId, period: String): Unit =
+        safeDbCall {
+            localDataSource.confirm(insert, recurringId.value, period)
+        }
 }

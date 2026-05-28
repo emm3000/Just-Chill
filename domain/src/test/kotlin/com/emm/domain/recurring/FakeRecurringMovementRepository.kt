@@ -64,15 +64,15 @@ class FakeRecurringMovementRepository : RecurringMovementRepository {
 
     override fun allActive(): Flow<List<RecurringMovement>> = store.map { it.values.filter { rm -> rm.isActive } }
 
-    override suspend fun confirm(insert: TransactionInsert, recurringId: String, period: String) {
+    override suspend fun confirm(insert: TransactionInsert, recurringId: RecurringMovementId, period: String) {
         confirmCount++
         lastConfirmInsert = insert
         lastConfirmPeriod = period
         // Simulate marking confirmed so idempotency can be tested
         val map = store.value.toMutableMap()
-        val existing = map[recurringId]
+        val existing = map[recurringId.value]
         if (existing != null) {
-            map[recurringId] = existing.copy(lastConfirmedPeriod = period)
+            map[recurringId.value] = existing.copy(lastConfirmedPeriod = period)
         }
         store.value = map
     }
