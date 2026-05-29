@@ -12,8 +12,9 @@ import com.emm.data.transaction.TransactionStatsLocalDataSource
 import com.emm.domain.recurring.ConfirmRecurringMovementUseCase
 import com.emm.domain.recurring.CreateRecurringMovementUseCase
 import com.emm.domain.recurring.DeleteRecurringMovementUseCase
-import com.emm.domain.recurring.GetAllRecurringMovementsUseCase
+import com.emm.domain.recurring.GetAllRecurringMovementDetailsUseCase
 import com.emm.domain.recurring.GetPendingRecurringMovementsUseCase
+import com.emm.domain.recurring.GetRecurringMonthlyTotalsUseCase
 import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.recurring.UpdateRecurringMovementUseCase
 import com.emm.domain.report.GetMonthlyAmountByCategoryUseCase
@@ -149,7 +150,8 @@ private fun Module.repositoriesProviders() {
     factoryOf(::ConfirmRecurringMovementUseCase)
 
     // Slice 3 — remaining recurring use cases
-    factoryOf(::GetAllRecurringMovementsUseCase)
+    factoryOf(::GetAllRecurringMovementDetailsUseCase)
+    factoryOf(::GetRecurringMonthlyTotalsUseCase)
     factoryOf(::CreateRecurringMovementUseCase)
     factoryOf(::UpdateRecurringMovementUseCase)
     factoryOf(::DeleteRecurringMovementUseCase)

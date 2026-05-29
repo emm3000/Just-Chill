@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.recurring
 
 import androidx.compose.runtime.Immutable
-import com.emm.domain.recurring.RecurringMovement
+import com.emm.domain.recurring.RecurringMovementDetails
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
@@ -20,9 +20,16 @@ data class RecurringMovementUi(
     val isVariableAmount: Boolean,
     val dayOfMonth: Int,
     val isActive: Boolean,
+    /** null when category was deleted or never assigned */
+    val categoryName: String? = null,
+    /** Token key (e.g. "green", "blue") — resolved to Color at render time via findById(key).primary */
+    val categoryColor: String? = null,
+    /** Account display name */
+    val accountName: String = "",
 )
 
-fun RecurringMovement.toRecurringMovementUi(): RecurringMovementUi {
+/** Mapper for the list screen — sourced from the enriched details projection. */
+fun RecurringMovementDetails.toRecurringMovementUi(): RecurringMovementUi {
     val isVariable = amount == null
     val formatted = when {
         isVariable -> "Variable"
@@ -36,12 +43,15 @@ fun RecurringMovement.toRecurringMovementUi(): RecurringMovementUi {
         }
     }
     return RecurringMovementUi(
-        id = id.value,
+        id = id,
         name = name,
         type = type,
         formattedAmount = formatted,
         isVariableAmount = isVariable,
         dayOfMonth = dayOfMonth,
         isActive = isActive,
+        categoryName = categoryName,
+        categoryColor = categoryColor,
+        accountName = accountName ?: "",
     )
 }
