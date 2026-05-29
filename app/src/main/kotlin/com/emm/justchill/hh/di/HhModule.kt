@@ -56,6 +56,12 @@ val hhModule = module {
     factory { DateAndTimeCombiner() }
     factory { DefaultUniqueIdProvider } bind UniqueIdProvider::class
 
+    // Constructor-DSL deps (Koin does not use Kotlin default params): used by
+    // ConfirmRecurringMovementUseCase (TimeZone) and HomeViewModel (Clock).
+    // FQN avoids an ImportOrdering detekt violation (mirrors HomeViewModel).
+    factory { kotlinx.datetime.TimeZone.currentSystemDefault() }
+    factory<kotlin.time.Clock> { kotlin.time.Clock.System }
+
     viewModelsProviders()
     dataSource()
 }
