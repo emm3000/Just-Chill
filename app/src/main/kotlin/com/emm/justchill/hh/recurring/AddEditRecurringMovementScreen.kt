@@ -489,6 +489,7 @@ private fun SelectorPill(
 
     Box(
         modifier = Modifier
+            .fillMaxWidth()
             .clip(radii.rM)
             .background(colors.surface1)
             .border(1.dp, colors.border, radii.rM)
