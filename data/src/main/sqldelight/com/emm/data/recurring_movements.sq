@@ -40,6 +40,17 @@ DELETE FROM recurring_movements WHERE id = ?;
 deleteAll:
 DELETE FROM recurring_movements;
 
+selectAllWithDetails:
+SELECT
+    rm.*,
+    c.name  AS categoryName,
+    c.color AS categoryColor,
+    a.name  AS accountName
+FROM recurring_movements rm
+LEFT JOIN categories c ON rm.categoryId = c.categoryId
+LEFT JOIN accounts   a ON rm.accountId  = a.accountId
+ORDER BY rm.isActive DESC, rm.name;
+
 markConfirmed:
 UPDATE recurring_movements
 SET lastConfirmedPeriod = ?, updatedAt = ?

@@ -5,6 +5,7 @@ import app.cash.sqldelight.coroutines.mapToList
 import com.emm.data.EmmDatabaseData
 import com.emm.data.Recurring_movementsQueries
 import com.emm.domain.recurring.RecurringMovement
+import com.emm.domain.recurring.RecurringMovementDetails
 import com.emm.domain.recurring.RecurringMovementInsert
 import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.shared.error.DomainException
@@ -30,6 +31,11 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData)
         .asFlow()
         .mapToList(Dispatchers.IO)
         .map { list -> list.asEntity().asExternalModel() }
+
+    fun allWithDetails(): Flow<List<RecurringMovementDetails>> = rmq.selectAllWithDetails()
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+        .map { list -> list.map { it.asExternalModel() } }
 
     suspend fun find(id: String): RecurringMovement? = withContext(Dispatchers.IO) {
         rmq.find(id).executeAsOneOrNull()?.asEntity()?.asExternalModel()

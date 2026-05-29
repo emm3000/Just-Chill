@@ -18,5 +18,7 @@ interface RecurringMovementRepository {
 
     fun allActive(): Flow<List<RecurringMovement>>
 
+    fun allWithDetails(): Flow<List<RecurringMovementDetails>>
+
     suspend fun confirm(insert: TransactionInsert, recurringId: RecurringMovementId, period: String)
 }

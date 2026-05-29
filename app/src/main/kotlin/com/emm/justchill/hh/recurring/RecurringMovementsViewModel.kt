@@ -2,23 +2,50 @@ package com.emm.justchill.hh.recurring
 
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.recurring.DeleteRecurringMovementUseCase
-import com.emm.domain.recurring.GetAllRecurringMovementsUseCase
+import com.emm.domain.recurring.GetAllRecurringMovementDetailsUseCase
+import com.emm.domain.recurring.GetRecurringMonthlyTotalsUseCase
 import com.emm.domain.shared.RecurringMovementId
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.hh.shared.formatNeutral
+import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class RecurringMovementsViewModel(
-    getAllRecurring: GetAllRecurringMovementsUseCase,
+    getAllDetails: GetAllRecurringMovementDetailsUseCase,
+    private val getTotals: GetRecurringMonthlyTotalsUseCase,
     private val deleteRecurring: DeleteRecurringMovementUseCase,
 ) : MviViewModel<RecurringMovementsUiState, RecurringMovementsIntent, RecurringMovementsEffect>() {
 
     override val initialState = RecurringMovementsUiState()
 
     init {
-        getAllRecurring()
-            .onEach { list -> updateState { copy(items = list.map { it.toRecurringMovementUi() }) } }
+        // Single allWithDetails() subscription — totals are derived in-memory from the same list
+        // (Decision 2: no second DB query / Flow to keep consistent with the row data).
+        getAllDetails()
+            .onEach { list ->
+                val activeItems = list
+                    .filter { it.isActive }
+                    .map { it.toRecurringMovementUi() }
+                    .sortedBy { it.name }
+                val pausedItems = list
+                    .filter { !it.isActive }
+                    .map { it.toRecurringMovementUi() }
+                    .sortedBy { it.name }
+                val totals = getTotals(list)
+                val entranFormatted = formatNeutral(fromCentsToSolesWith(totals.incomeTotal))
+                val salenFormatted = formatNeutral(fromCentsToSolesWith(totals.expenseTotal))
+                updateState {
+                    copy(
+                        activeItems = activeItems,
+                        pausedItems = pausedItems,
+                        entranFormatted = entranFormatted,
+                        salenFormatted = salenFormatted,
+                        variableCount = totals.activeVariableCount,
+                    )
+                }
+            }
             .launchIn(viewModelScope)
     }
 

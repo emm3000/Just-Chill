@@ -3,6 +3,7 @@ package com.emm.data.recurring
 import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.safeDbCall
 import com.emm.domain.recurring.RecurringMovement
+import com.emm.domain.recurring.RecurringMovementDetails
 import com.emm.domain.recurring.RecurringMovementInsert
 import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.RecurringMovementId
@@ -15,6 +16,9 @@ class DefaultRecurringMovementRepository(private val localDataSource: RecurringM
     override fun all(): Flow<List<RecurringMovement>> = localDataSource.all().catchAsDomainException()
 
     override fun allActive(): Flow<List<RecurringMovement>> = localDataSource.allActive().catchAsDomainException()
+
+    override fun allWithDetails(): Flow<List<RecurringMovementDetails>> =
+        localDataSource.allWithDetails().catchAsDomainException()
 
     override suspend fun find(id: RecurringMovementId): RecurringMovement? = safeDbCall {
         localDataSource.find(id.value)
