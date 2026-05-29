@@ -94,7 +94,7 @@ class RecurringMovementFkTest {
      * SQLite FK: accountId ON DELETE RESTRICT
      */
     @Test
-    fun `deleting account referenced by template throws DatabaseError via safeDbCall`() = runTest {
+    fun deleting_account_referenced_by_template_throws_DatabaseError() = runTest {
         assertFailsWith<DomainException.DatabaseError> {
             safeDbCall {
                 database.accountsQueries.delete("A1")
@@ -112,7 +112,7 @@ class RecurringMovementFkTest {
      * SQLite FK: categoryId ON DELETE SET NULL
      */
     @Test
-    fun `deleting category referenced by template sets template categoryId to null`() = runTest {
+    fun deleting_category_referenced_by_template_sets_categoryId_to_null() = runTest {
         database.categoriesQueries.delete("C1")
 
         // Template T1 still exists
