@@ -28,7 +28,6 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -62,6 +61,7 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
+import com.emm.justchill.core.ui.atoms.emmSwitchColors
 import com.emm.justchill.hh.transaction.centsToSoles
 import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
 import com.emm.justchill.hh.transaction.sheets.CategoryPickerSheet
@@ -465,10 +465,7 @@ private fun AmountCardSection(
                 Switch(
                     checked = isVariable,
                     onCheckedChange = onVariableToggle,
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = colors.accent,
-                        checkedTrackColor = colors.accent.copy(alpha = 0.3f),
-                    ),
+                    colors = emmSwitchColors(checkedColor = colors.accent),
                 )
             }
         }
@@ -622,10 +619,7 @@ private fun ActiveCard(isActive: Boolean, onToggle: (Boolean) -> Unit) {
             Switch(
                 checked = isActive,
                 onCheckedChange = onToggle,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = colors.success,
-                    checkedTrackColor = colors.success.copy(alpha = 0.3f),
-                ),
+                colors = emmSwitchColors(checkedColor = colors.success),
             )
         }
     }
