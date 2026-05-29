@@ -18,20 +18,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,10 +42,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,7 +54,7 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.ui.Numpad
+import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaTone
@@ -64,15 +62,11 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
-import com.emm.justchill.hh.transaction.MAX_AMOUNT_DIGITS
 import com.emm.justchill.hh.transaction.centsToSoles
 import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
 import com.emm.justchill.hh.transaction.sheets.CategoryPickerSheet
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-
-private const val MIN_DAY_OF_MONTH = 1
-private const val MAX_DAY_OF_MONTH = 31
 
 @Composable
 fun AddEditRecurringMovementScreen(
@@ -112,7 +106,8 @@ private fun AddEditRecurringMovementContent(
 
     var showAccountPicker by remember { mutableStateOf(false) }
     var showCategoryPicker by remember { mutableStateOf(false) }
-    var showDayPicker by remember { mutableStateOf(false) }
+    var showDaySheet by remember { mutableStateOf(false) }
+    var showAmountSheet by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -143,6 +138,7 @@ private fun AddEditRecurringMovementContent(
         ) {
             Spacer(Modifier.height(4.dp))
 
+            // 1. NOMBRE
             FormSection(eyebrow = "NOMBRE") {
                 NameInput(
                     value = state.name,
@@ -150,6 +146,7 @@ private fun AddEditRecurringMovementContent(
                 )
             }
 
+            // 2. TIPO — segmented toggle with leading glyph
             FormSection(eyebrow = "TIPO") {
                 TypeToggle(
                     selected = state.type,
@@ -157,65 +154,36 @@ private fun AddEditRecurringMovementContent(
                 )
             }
 
-            FormSection(eyebrow = "CUENTA") {
-                PickerRow(
-                    label = state.selectedAccount?.name ?: "Seleccionar cuenta",
-                    onClick = { showAccountPicker = true },
-                )
-            }
-
-            FormSection(eyebrow = "CATEGORÍA (opcional)") {
-                PickerRow(
-                    label = state.selectedCategory?.name ?: "Sin categoría",
-                    onClick = { showCategoryPicker = true },
-                )
-            }
-
+            // 3. MONTO — tappable card + variable-amount toggle row
             FormSection(eyebrow = "MONTO") {
-                AmountSection(
+                AmountCardSection(
                     amountDigits = state.amountDigits,
                     isVariable = state.isVariableAmount,
                     type = state.type,
-                    onAmountChange = { onIntent(AddEditRecurringMovementIntent.OnAmountChange(it)) },
                     onVariableToggle = { onIntent(AddEditRecurringMovementIntent.OnVariableAmountToggle(it)) },
+                    onOpenSheet = { showAmountSheet = true },
                 )
             }
 
-            FormSection(eyebrow = "DÍA DEL MES (1-31)") {
-                PickerRow(
-                    label = "Día ${state.dayOfMonth}",
-                    onClick = { showDayPicker = true },
-                )
-            }
+            // 4. ROW OF 3 COMPACT PILLS (CUENTA / CATEGORÍA / DÍA)
+            SelectorPillsRow(
+                state = state,
+                onOpenAccount = { showAccountPicker = true },
+                onOpenCategory = { showCategoryPicker = true },
+                onOpenDay = { showDaySheet = true },
+            )
 
-            FormSection(eyebrow = "ACTIVO") {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = if (state.isActive) "Sí" else "No",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.W500,
-                        fontFamily = InterFontFamily,
-                        color = colors.textPrimary,
-                    )
-                    Switch(
-                        checked = state.isActive,
-                        onCheckedChange = { onIntent(AddEditRecurringMovementIntent.OnIsActiveChange(it)) },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = colors.accent,
-                            checkedTrackColor = colors.accent.copy(alpha = 0.3f),
-                        ),
-                    )
-                }
-            }
+            // 5. ACTIVO — card with subtitle + switch (success/green when on)
+            ActiveCard(
+                isActive = state.isActive,
+                onToggle = { onIntent(AddEditRecurringMovementIntent.OnIsActiveChange(it)) },
+            )
 
-            FormSection(eyebrow = "DESCRIPCIÓN (opcional)") {
+            // 6. DESCRIPCIÓN · OPCIONAL
+            FormSection(eyebrow = "DESCRIPCIÓN · OPCIONAL") {
                 NameInput(
                     value = state.description,
-                    placeholder = "ejm. Pago mensual streaming",
+                    placeholder = "Ej. Pago mensual streaming",
                     onValueChange = { onIntent(AddEditRecurringMovementIntent.OnDescriptionChange(it)) },
                 )
             }
@@ -223,6 +191,7 @@ private fun AddEditRecurringMovementContent(
             Spacer(Modifier.height(8.dp))
         }
 
+        // 7. Sticky CTA
         val ctaLabel = if (state.isEdit) "Guardar cambios" else "Crear recurrente"
         StickyCTA(
             label = ctaLabel,
@@ -232,6 +201,7 @@ private fun AddEditRecurringMovementContent(
         )
     }
 
+    // Sheet: account picker
     if (showAccountPicker) {
         AccountPickerSheet(
             accounts = state.accounts,
@@ -244,6 +214,7 @@ private fun AddEditRecurringMovementContent(
         )
     }
 
+    // Sheet: category picker
     if (showCategoryPicker) {
         CategoryPickerSheet(
             categories = state.categories,
@@ -257,17 +228,32 @@ private fun AddEditRecurringMovementContent(
         )
     }
 
-    if (showDayPicker) {
-        DayOfMonthPickerDialog(
+    // Sheet: day-of-month grid
+    if (showDaySheet) {
+        DayOfMonthSheet(
             current = state.dayOfMonth,
             onConfirm = { day ->
                 onIntent(AddEditRecurringMovementIntent.OnDayOfMonthChange(day))
-                showDayPicker = false
+                showDaySheet = false
             },
-            onDismiss = { showDayPicker = false },
+            onDismiss = { showDaySheet = false },
+        )
+    }
+
+    // Sheet: amount numpad
+    if (showAmountSheet) {
+        AmountInputSheet(
+            amountDigits = state.amountDigits,
+            type = state.type,
+            onAmountChange = { onIntent(AddEditRecurringMovementIntent.OnAmountChange(it)) },
+            onDismiss = { showAmountSheet = false },
         )
     }
 }
+
+// ---------------------------------------------------------------------------
+// FormSection wrapper
+// ---------------------------------------------------------------------------
 
 @Composable
 private fun FormSection(eyebrow: String, content: @Composable () -> Unit) {
@@ -277,8 +263,12 @@ private fun FormSection(eyebrow: String, content: @Composable () -> Unit) {
     }
 }
 
+// ---------------------------------------------------------------------------
+// NameInput (underline text field)
+// ---------------------------------------------------------------------------
+
 @Composable
-private fun NameInput(value: String, onValueChange: (String) -> Unit, placeholder: String = "ejm. Netflix") {
+private fun NameInput(value: String, onValueChange: (String) -> Unit, placeholder: String = "Ej. Netflix") {
     val colors = LocalEmmColors.current
 
     BasicTextField(
@@ -321,10 +311,19 @@ private fun NameInput(value: String, onValueChange: (String) -> Unit, placeholde
     )
 }
 
+// ---------------------------------------------------------------------------
+// TypeToggle — segmented with leading glyph (+ Ingreso / − Gasto)
+// ---------------------------------------------------------------------------
+
 private val TYPE_OPTIONS = listOf(
     TransactionType.Income,
     TransactionType.Spend,
 )
+
+private fun typeGlyph(type: TransactionType): String = when (type) {
+    TransactionType.Income -> "+"
+    TransactionType.Spend -> "−"
+}
 
 @Composable
 private fun TypeToggle(selected: TransactionType, onSelect: (TransactionType) -> Unit) {
@@ -352,12 +351,182 @@ private fun TypeToggle(selected: TransactionType, onSelect: (TransactionType) ->
                         onClick = { onSelect(type) },
                     ),
             ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = typeGlyph(type),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.W600,
+                        fontFamily = InterFontFamily,
+                        color = textColor,
+                    )
+                    Text(
+                        text = type.label,
+                        fontSize = 15.sp,
+                        fontWeight = if (isSelected) FontWeight.W600 else FontWeight.W500,
+                        fontFamily = InterFontFamily,
+                        color = textColor,
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// AmountCardSection — tappable card that opens AmountInputSheet
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun AmountCardSection(
+    amountDigits: String,
+    isVariable: Boolean,
+    type: TransactionType,
+    onVariableToggle: (Boolean) -> Unit,
+    onOpenSheet: () -> Unit,
+) {
+    val colors = LocalEmmColors.current
+    val radii = LocalEmmRadii.current
+    val tone = if (type == TransactionType.Income) AmountTone.Pos else AmountTone.Neg
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        // Amount card — tappable when not variable
+        val cardInteraction = remember { MutableInteractionSource() }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(radii.rM)
+                .background(colors.surface1)
+                .border(1.dp, colors.border, radii.rM)
+                .then(
+                    if (!isVariable) {
+                        Modifier.clickable(
+                            interactionSource = cardInteraction,
+                            indication = null,
+                            onClick = onOpenSheet,
+                        )
+                    } else {
+                        Modifier
+                    },
+                )
+                .padding(vertical = 20.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (isVariable || amountDigits.isEmpty()) {
                 Text(
-                    text = type.label,
-                    fontSize = 15.sp,
-                    fontWeight = if (isSelected) FontWeight.W600 else FontWeight.W500,
+                    text = "S/ —.—",
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.W500,
                     fontFamily = InterFontFamily,
-                    color = textColor,
+                    color = colors.textTertiary,
+                    letterSpacing = (-0.8).sp,
+                )
+            } else {
+                AmountHero(
+                    value = centsToSoles(amountDigits),
+                    tone = tone,
+                    showCaret = false,
+                )
+            }
+        }
+
+        // Monto variable row
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(radii.rM)
+                .background(colors.surface1)
+                .border(1.dp, colors.border, radii.rM)
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Monto variable",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.W500,
+                        fontFamily = InterFontFamily,
+                        color = colors.textPrimary,
+                    )
+                    Text(
+                        text = "Lo defines al confirmar cada mes.",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.W400,
+                        fontFamily = InterFontFamily,
+                        color = colors.textTertiary,
+                    )
+                }
+                Switch(
+                    checked = isVariable,
+                    onCheckedChange = onVariableToggle,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = colors.accent,
+                        checkedTrackColor = colors.accent.copy(alpha = 0.3f),
+                    ),
+                )
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// SelectorPill + SelectorPillsRow — compact 3-pill row (CUENTA/CATEGORÍA/DÍA)
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun SelectorPill(
+    eyebrow: String,
+    value: String,
+    onClick: () -> Unit,
+    dotColor: Color? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
+) {
+    val colors = LocalEmmColors.current
+    val radii = LocalEmmRadii.current
+
+    Box(
+        modifier = Modifier
+            .clip(radii.rM)
+            .background(colors.surface1)
+            .border(1.dp, colors.border, radii.rM)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Eyebrow(text = eyebrow)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                if (dotColor != null) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(dotColor),
+                    )
+                }
+                if (trailingIcon != null) {
+                    trailingIcon()
+                }
+                Text(
+                    text = value,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.W500,
+                    fontFamily = InterFontFamily,
+                    color = colors.textPrimary,
+                    letterSpacing = (-0.13).sp,
+                    maxLines = 1,
                 )
             }
         }
@@ -365,137 +534,106 @@ private fun TypeToggle(selected: TransactionType, onSelect: (TransactionType) ->
 }
 
 @Composable
-private fun PickerRow(label: String, onClick: () -> Unit) {
+private fun SelectorPillsRow(
+    state: AddEditRecurringMovementUiState,
+    onOpenAccount: () -> Unit,
+    onOpenCategory: () -> Unit,
+    onOpenDay: () -> Unit,
+) {
     val colors = LocalEmmColors.current
+    val categoryDotColor = state.selectedCategory?.color?.primary ?: colors.accent
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(colors.surface1)
-            .border(1.dp, colors.border, RoundedCornerShape(12.dp))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            )
-            .padding(horizontal = 14.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(
-            text = label,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
-            color = colors.textPrimary,
-            letterSpacing = (-0.15).sp,
-        )
-        Icon(
-            imageVector = Icons.Outlined.ChevronRight,
-            contentDescription = null,
-            tint = colors.textTertiary,
-            modifier = Modifier.size(16.dp),
-        )
+        Box(modifier = Modifier.weight(1f)) {
+            SelectorPill(
+                eyebrow = "CUENTA",
+                value = state.selectedAccount?.name ?: "Seleccionar",
+                dotColor = colors.accent,
+                onClick = onOpenAccount,
+            )
+        }
+        Box(modifier = Modifier.weight(1f)) {
+            SelectorPill(
+                eyebrow = "CATEGORÍA",
+                value = state.selectedCategory?.name ?: "Sin categoría",
+                dotColor = categoryDotColor,
+                onClick = onOpenCategory,
+            )
+        }
+        Box(modifier = Modifier.weight(1f)) {
+            SelectorPill(
+                eyebrow = "DÍA",
+                value = "Día ${state.dayOfMonth}",
+                onClick = onOpenDay,
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.CalendarMonth,
+                        contentDescription = null,
+                        tint = colors.textTertiary,
+                        modifier = Modifier.size(11.dp),
+                    )
+                },
+            )
+        }
     }
 }
 
-@Composable
-private fun AmountSection(
-    amountDigits: String,
-    isVariable: Boolean,
-    type: TransactionType,
-    onAmountChange: (String) -> Unit,
-    onVariableToggle: (Boolean) -> Unit,
-) {
-    val colors = LocalEmmColors.current
-    val tone = if (type == TransactionType.Income) AmountTone.Pos else AmountTone.Neg
+// ---------------------------------------------------------------------------
+// ActiveCard — card with subtitle + success/green switch
+// ---------------------------------------------------------------------------
 
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+@Composable
+private fun ActiveCard(isActive: Boolean, onToggle: (Boolean) -> Unit) {
+    val colors = LocalEmmColors.current
+    val radii = LocalEmmRadii.current
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(radii.rM)
+            .background(colors.surface1)
+            .border(1.dp, colors.border, radii.rM)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = "Monto variable",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.W400,
-                fontFamily = InterFontFamily,
-                color = colors.textSecondary,
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Activo",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.W500,
+                    fontFamily = InterFontFamily,
+                    color = colors.textPrimary,
+                )
+                Text(
+                    text = "Mientras esté pausado no genera pendientes en tu Inicio.",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.W400,
+                    fontFamily = InterFontFamily,
+                    color = colors.textTertiary,
+                )
+            }
             Switch(
-                checked = isVariable,
-                onCheckedChange = onVariableToggle,
+                checked = isActive,
+                onCheckedChange = onToggle,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = colors.accent,
-                    checkedTrackColor = colors.accent.copy(alpha = 0.3f),
+                    checkedThumbColor = colors.success,
+                    checkedTrackColor = colors.success.copy(alpha = 0.3f),
                 ),
-            )
-        }
-
-        if (!isVariable) {
-            // AmountHero + Numpad: same pattern as AddTransactionScreen.
-            // amountDigits is a raw cents string; centsToSoles converts to displayable Double.
-            AmountHero(
-                value = centsToSoles(amountDigits),
-                tone = tone,
-                showCaret = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(Modifier.height(8.dp))
-            Numpad(
-                modifier = Modifier.fillMaxWidth(),
-                onDigit = { ch ->
-                    val newDigits = (amountDigits + ch).take(MAX_AMOUNT_DIGITS)
-                    onAmountChange(newDigits)
-                },
-                onDoubleZero = {
-                    val newDigits = (amountDigits + "00").take(MAX_AMOUNT_DIGITS)
-                    onAmountChange(newDigits)
-                },
-                onBackspace = {
-                    onAmountChange(amountDigits.dropLast(1))
-                },
             )
         }
     }
 }
 
-@Composable
-private fun DayOfMonthPickerDialog(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Unit) {
-    var input by remember { mutableStateOf(current.toString()) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Día del mes") },
-        text = {
-            BasicTextField(
-                value = input,
-                onValueChange = { raw ->
-                    val filtered = raw.filter(Char::isDigit).take(2)
-                    input = filtered
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                textStyle = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.W500,
-                    fontFamily = InterFontFamily,
-                ),
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                val day = input.toIntOrNull()?.coerceIn(MIN_DAY_OF_MONTH, MAX_DAY_OF_MONTH) ?: current
-                onConfirm(day)
-            }) { Text("Aceptar") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
-        },
-    )
-}
+// ---------------------------------------------------------------------------
+// Preview
+// ---------------------------------------------------------------------------
 
 @Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 900)
 @Composable
