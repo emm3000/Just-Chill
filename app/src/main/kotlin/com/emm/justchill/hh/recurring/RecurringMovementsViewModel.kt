@@ -28,11 +28,11 @@ class RecurringMovementsViewModel(
                 val activeItems = list
                     .filter { it.isActive }
                     .map { it.toRecurringMovementUi() }
-                    .sortedBy { it.name }
+                    .sortedWith(compareBy({ it.dayOfMonth }, { it.name }))
                 val pausedItems = list
                     .filter { !it.isActive }
                     .map { it.toRecurringMovementUi() }
-                    .sortedBy { it.name }
+                    .sortedWith(compareBy({ it.dayOfMonth }, { it.name }))
                 val totals = getTotals(list)
                 val entranFormatted = formatNeutral(fromCentsToSolesWith(totals.incomeTotal))
                 val salenFormatted = formatNeutral(fromCentsToSolesWith(totals.expenseTotal))

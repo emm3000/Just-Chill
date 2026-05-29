@@ -49,7 +49,7 @@ SELECT
 FROM recurring_movements rm
 LEFT JOIN categories c ON rm.categoryId = c.categoryId
 LEFT JOIN accounts   a ON rm.accountId  = a.accountId
-ORDER BY rm.isActive DESC, rm.name;
+ORDER BY rm.isActive DESC, rm.dayOfMonth, rm.name;
 
 markConfirmed:
 UPDATE recurring_movements

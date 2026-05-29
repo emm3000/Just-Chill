@@ -45,6 +45,7 @@ class RecurringMovementsViewModelTest {
         type: TransactionType = TransactionType.Spend,
         amount: Money? = Money(1800L),
         isActive: Boolean = true,
+        dayOfMonth: Int = 15,
     ) = RecurringMovementDetails(
         id = id,
         name = name,
@@ -53,7 +54,7 @@ class RecurringMovementsViewModelTest {
         categoryName = null,
         categoryColor = null,
         accountName = "BCP",
-        dayOfMonth = 15,
+        dayOfMonth = dayOfMonth,
         isActive = isActive,
     )
 
@@ -67,12 +68,12 @@ class RecurringMovementsViewModelTest {
     // ---- R7.1 — Active and paused templates partitioned correctly and sorted ----
 
     @Test
-    fun `R7_1 active and paused items are partitioned and sorted by name`() = runTest {
+    fun `R7_1 active and paused items are partitioned and sorted by day of month`() = runTest {
         every { getAllDetails() } returns flowOf(
             listOf(
-                details("rm-a", "Netflix", isActive = true),
-                details("rm-b", "Agua", isActive = false),
-                details("rm-c", "Alquiler", isActive = true),
+                details("rm-a", "Netflix", isActive = true, dayOfMonth = 3),
+                details("rm-b", "Agua", isActive = false, dayOfMonth = 20),
+                details("rm-c", "Alquiler", isActive = true, dayOfMonth = 5),
             ),
         )
         every { getTotals(any()) } returns RecurringMonthlyTotals.Empty
@@ -80,8 +81,9 @@ class RecurringMovementsViewModelTest {
 
         advanceUntilIdle()
 
+        // Day order (Netflix=3, Alquiler=5) differs from name order, proving the sort key is the day.
         val state = viewModel.state.value
-        assertEquals(listOf("Alquiler", "Netflix"), state.activeItems.map { it.name })
+        assertEquals(listOf("Netflix", "Alquiler"), state.activeItems.map { it.name })
         assertEquals(listOf("Agua"), state.pausedItems.map { it.name })
     }
 
