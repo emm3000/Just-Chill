@@ -17,16 +17,10 @@ fun csm() = object : AndroidSqliteDriver.Callback(schema = EmmDatabaseData.Schem
         db.setForeignKeyConstraintsEnabled(true)
     }
 
-    override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Destructive migration: drop all tables and recreate from scratch.
-        // Acceptable for alpha — single-device, single-dev app.
-        db.execSQL("DROP TABLE IF EXISTS recurring_movements")
-        db.execSQL("DROP TABLE IF EXISTS transactions")
-        db.execSQL("DROP TABLE IF EXISTS categories")
-        db.execSQL("DROP TABLE IF EXISTS accounts")
-        EmmDatabaseData.Schema.create(AndroidSqliteDriver(database = db))
-        seedDefaultCategories(db)
-    }
+    // No onUpgrade override: AndroidSqliteDriver.Callback's default onUpgrade calls
+    // EmmDatabaseData.Schema.migrate(driver, oldVersion, newVersion), which runs the
+    // numbered .sqm files in order (e.g. 1.sqm: CREATE TABLE recurring_movements).
+    // This preserves all existing user data across schema upgrades.
 
     override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)
