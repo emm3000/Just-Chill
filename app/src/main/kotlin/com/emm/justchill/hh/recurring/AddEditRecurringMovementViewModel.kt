@@ -60,12 +60,23 @@ class AddEditRecurringMovementViewModel(
 
                         else -> accounts.firstOrNull()
                     }
+                    // Resolve the selected category the same way the account is resolved, so an
+                    // edit-mode load-ordering race (categories not yet emitted) does not drop it.
+                    val resolvedCategory = when {
+                        pendingCategoryId != null ->
+                            categories.find { it.categoryId.value == pendingCategoryId }
+                                ?: selectedCategory
+
+                        else -> selectedCategory
+                    }
                     copy(
                         accounts = accounts,
                         categories = categories,
                         selectedAccount = resolved,
+                        selectedCategory = resolvedCategory,
                         // Clear pending once resolved or if accounts loaded empty (will retry next emit).
                         pendingAccountId = if (resolved != null) null else pendingAccountId,
+                        pendingCategoryId = if (resolvedCategory != null) null else pendingCategoryId,
                     ).recalcSaveEnabled()
                 }
             }
@@ -126,6 +137,9 @@ class AddEditRecurringMovementViewModel(
             // If accounts have not yet been emitted by the combine flow, store the id in
             // pendingAccountId; the combine collector will resolve it on next emission.
             val resolvedAccount = accounts.find { it.accountId.value == template.accountId.value }
+            val resolvedCategory = template.categoryId?.let { categoryId ->
+                categories.find { it.categoryId.value == categoryId.value }
+            }
             copy(
                 name = template.name,
                 type = template.type,
@@ -136,7 +150,9 @@ class AddEditRecurringMovementViewModel(
                 description = template.description,
                 selectedAccount = resolvedAccount,
                 pendingAccountId = if (resolvedAccount == null) template.accountId.value else null,
-                selectedCategory = categories.find { it.categoryId.value == template.categoryId?.value },
+                selectedCategory = resolvedCategory,
+                // Defer resolution to the combine collector when categories have not loaded yet.
+                pendingCategoryId = if (resolvedCategory == null) template.categoryId?.value else null,
             ).recalcSaveEnabled()
         }
     }

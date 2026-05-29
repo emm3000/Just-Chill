@@ -27,5 +27,12 @@ data class AddEditRecurringMovementUiState(
     val pendingAccountId: String? = null,
     val categories: List<SelectableCategory> = emptyList(),
     val selectedCategory: SelectableCategory? = null,
+    /**
+     * Category id awaiting resolution from the categories flow.
+     * Set by [loadTemplate] when the categories list has not yet been emitted; cleared once
+     * the combine collector resolves it to an actual [SelectableCategory]. Without this, a
+     * load-ordering race would leave the category null and silently wipe it on save.
+     */
+    val pendingCategoryId: String? = null,
     val isSaveEnabled: Boolean = false,
 ) : UiState

@@ -3,13 +3,16 @@ package com.emm.justchill.hh.recurring
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountType
+import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
+import com.emm.domain.category.CategoryType
 import com.emm.domain.recurring.CreateRecurringMovementUseCase
 import com.emm.domain.recurring.Frequency
 import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.recurring.UpdateRecurringMovementUseCase
 import com.emm.domain.shared.AccountId
+import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.RecurringMovementId
 import com.emm.domain.shared.error.DomainException
@@ -260,6 +263,35 @@ class AddEditRecurringMovementViewModelTest {
         assertEquals("acc-1", vm.state.value.selectedAccount?.accountId?.value)
         // pendingAccountId cleared after resolution.
         assertNull(vm.state.value.pendingAccountId)
+    }
+
+    // ---- Category load-ordering (edit mode race) ----
+
+    @Test
+    fun `edit mode - category resolved even when categories flow emits after template load`() = runTest {
+        // Simulate the race: categories flow has not emitted when the template loads.
+        // Without a pendingCategoryId safety net the category silently resolves to null,
+        // which would WIPE the category on save.
+        val categoriesFlow = MutableSharedFlow<List<Category>>(replay = 1)
+        every { categoryRepository.all() } returns categoriesFlow
+
+        val templateWithCategory = testTemplate.copy(categoryId = CategoryId("cat-1"))
+        coEvery { recurringRepository.find(RecurringMovementId("rm-1")) } returns templateWithCategory
+        val vm = createViewModel(id = "rm-1")
+
+        // Template loaded, categories NOT yet emitted — category unresolved.
+        advanceUntilIdle()
+        assertNull(vm.state.value.selectedCategory)
+
+        // Now emit categories — the combine collector must resolve pendingCategoryId.
+        categoriesFlow.emit(
+            listOf(Category(CategoryId("cat-1"), "Bar", "bar", "purple", CategoryType.Spend)),
+        )
+        advanceUntilIdle()
+
+        assertNotNull(vm.state.value.selectedCategory)
+        assertEquals("cat-1", vm.state.value.selectedCategory?.categoryId?.value)
+        assertNull(vm.state.value.pendingCategoryId)
     }
 
     @Test
