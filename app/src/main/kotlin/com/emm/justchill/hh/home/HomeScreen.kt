@@ -186,7 +186,7 @@ private fun HomeWithData(
                 )
             }
         }
-        item { HeroBalance(balance = homeData.balance, month = homeData.month.shortLabel()) }
+        item { HeroBalance(balance = homeData.balance) }
         item { InOutRow(income = homeData.income, spend = homeData.spend) }
 
         // ---- Pendientes section — only shown when list is non-empty (Scenario 10.1 / 10.2) ----
@@ -315,7 +315,7 @@ private fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit) {
 }
 
 @Composable
-private fun HeroBalance(balance: Money, month: String) {
+private fun HeroBalance(balance: Money) {
     val balanceDouble = balance.cents.toDouble() / 100.0
     val tone = when {
         balance.cents > 0L -> AmountTone.Pos
@@ -324,7 +324,7 @@ private fun HeroBalance(balance: Money, month: String) {
     }
 
     Column(modifier = Modifier.padding(top = 30.dp, start = 24.dp, end = 24.dp)) {
-        Eyebrow(text = "Balance · ${month.lowercase()}")
+        Eyebrow(text = "Saldo total")
         Spacer(Modifier.height(12.dp))
         AmountHero(value = balanceDouble, size = 52.sp, tone = tone)
     }
@@ -336,11 +336,18 @@ private fun InOutRow(income: Money, spend: Money) {
 
     val incomeDouble = income.cents.toDouble() / 100.0
     val spendDouble = spend.cents.toDouble() / 100.0
+    val monthBalanceCents = income.cents - spend.cents
+    val monthBalanceDouble = monthBalanceCents.toDouble() / 100.0
+    val monthBalanceColor = when {
+        monthBalanceCents > 0L -> colors.success
+        monthBalanceCents < 0L -> colors.danger
+        else -> colors.textSecondary
+    }
 
     Row(
         modifier = Modifier.padding(top = 24.dp, start = 24.dp, end = 24.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(22.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Column {
             Eyebrow(text = "Entró", color = colors.textDisabled)
@@ -359,6 +366,19 @@ private fun InOutRow(income: Money, spend: Money) {
             Eyebrow(text = "Salió", color = colors.textDisabled)
             Spacer(Modifier.height(4.dp))
             MoneyInline(value = spendDouble, color = colors.textSecondary)
+        }
+
+        Box(
+            modifier = Modifier
+                .width(1.dp)
+                .height(28.dp)
+                .background(colors.border),
+        )
+
+        Column {
+            Eyebrow(text = "Balance", color = colors.textDisabled)
+            Spacer(Modifier.height(4.dp))
+            MoneyInline(value = monthBalanceDouble, color = monthBalanceColor)
         }
     }
 }
