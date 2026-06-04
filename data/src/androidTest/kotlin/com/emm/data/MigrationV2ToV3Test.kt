@@ -138,51 +138,12 @@ class MigrationV2ToV3Test {
         )
         database = EmmDatabaseData(driver)
 
-        // Insert representative v2 data (one row per table).
-        database.accountsQueries.insert(
-            accountId = "A1",
-            name = "BCP",
-            type = "Bank",
-            currency = "PEN",
-            updatedAt = 1_000L,
-            createdAt = 1_000L,
-        )
-        database.categoriesQueries.insert(
-            categoryId = "C1",
-            name = "Sueldo",
-            icon = "salary",
-            color = "green",
-            categoryType = "Income",
-            isDefault = false,
-            updatedAt = 1_000L,
-            createdAt = 1_000L,
-        )
-        database.transactionsQueries.insert(
-            transactionId = "TX1",
-            type = "Income",
-            amount = 350_000L,
-            description = "Sueldo mayo",
-            date = 2_000L,
-            categoryId = "C1",
-            accountId = "A1",
-            createdAt = 2_000L,
-            updatedAt = 2_000L,
-        )
-        database.recurring_movementsQueries.insert(
-            id = "RM1",
-            name = "Netflix",
-            type = "Spend",
-            amount = 4_490L,
-            description = "",
-            categoryId = "C1",
-            accountId = "A1",
-            frequency = "Monthly",
-            dayOfMonth = 5L,
-            isActive = 1L,
-            lastConfirmedPeriod = null,
-            createdAt = 3_000L,
-            updatedAt = 3_000L,
-        )
+        // Insert representative v2 data using raw SQL so the inserts match the v2 schema
+        // (the generated AccountsQueries.insert targets the v3 schema which has syncState).
+        driver.execute(null, "INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt) VALUES ('A1', 'BCP', 'Bank', 'PEN', 1000, 1000)", 0)
+        driver.execute(null, "INSERT INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt) VALUES ('C1', 'Sueldo', 'salary', 'green', 'Income', 0, 1000, 1000)", 0)
+        driver.execute(null, "INSERT INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt) VALUES ('TX1', 'Income', 350000, 'Sueldo mayo', 2000, 'C1', 'A1', 2000, 2000)", 0)
+        driver.execute(null, "INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, createdAt, updatedAt) VALUES ('RM1', 'Netflix', 'Spend', 4490, '', 'C1', 'A1', 'Monthly', 5, 1, 3000, 3000)", 0)
     }
 
     @After
@@ -194,6 +155,9 @@ class MigrationV2ToV3Test {
     fun migration_v2_to_v3_preserves_rows_and_adds_sync_columns() {
         // Run the REAL migration (executes 2.sqm).
         EmmDatabaseData.Schema.migrate(driver, oldVersion = 2, newVersion = 3)
+
+        // After migrate(2,3) the schema IS v3 — the generated query classes now match.
+        // All inserted rows have deletedAt = NULL so the IS NULL filter passes.
 
         // 1. accounts — row survives; new columns have expected defaults.
         val account = database.accountsQueries.find("A1").executeAsOneOrNull()

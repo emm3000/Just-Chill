@@ -117,36 +117,12 @@ class MigrationV1ToV2Test {
         )
         database = EmmDatabaseData(driver)
 
-        // Representative user data on the v1 database.
-        database.accountsQueries.insert(
-            accountId = "A1",
-            name = "BCP",
-            type = "Bank",
-            currency = "PEN",
-            updatedAt = 1_000L,
-            createdAt = 1_000L,
-        )
-        database.categoriesQueries.insert(
-            categoryId = "C1",
-            name = "Sueldo",
-            icon = "salary",
-            color = "green",
-            categoryType = "Income",
-            isDefault = false,
-            updatedAt = 1_000L,
-            createdAt = 1_000L,
-        )
-        database.transactionsQueries.insert(
-            transactionId = "TX1",
-            type = "Income",
-            amount = 350_000L,
-            description = "Sueldo mayo",
-            date = 2_000L,
-            categoryId = "C1",
-            accountId = "A1",
-            createdAt = 2_000L,
-            updatedAt = 2_000L,
-        )
+        // Insert using raw SQL so inserts match the v1 schema columns.
+        // The generated queries always target the current schema version; using them
+        // against an older schema causes "table has no column" failures.
+        driver.execute(null, "INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt) VALUES ('A1', 'BCP', 'Bank', 'PEN', 1000, 1000)", 0)
+        driver.execute(null, "INSERT INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt) VALUES ('C1', 'Sueldo', 'salary', 'green', 'Income', 0, 1000, 1000)", 0)
+        driver.execute(null, "INSERT INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt) VALUES ('TX1', 'Income', 350000, 'Sueldo mayo', 2000, 'C1', 'A1', 2000, 2000)", 0)
     }
 
     @After
@@ -159,38 +135,42 @@ class MigrationV1ToV2Test {
         // Run the REAL migration (executes 1.sqm).
         EmmDatabaseData.Schema.migrate(driver, oldVersion = 1, newVersion = 2)
 
+        // Use raw SQL reads — the generated query classes target the current (v3) schema
+        // which has columns (userId, deletedAt, syncState) not yet present at schema v2.
+
         // 1. Pre-existing data survives untouched.
-        val account = database.accountsQueries.find("A1").executeAsOneOrNull()
-        assertNotNull(account, "account must survive the migration")
-        assertEquals("BCP", account.name)
+        val accountName = driver.executeQuery(
+            null, "SELECT name FROM accounts WHERE accountId = 'A1'",
+            { cursor -> QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null) }, 0
+        ).value
+        assertNotNull(accountName, "account must survive the migration")
+        assertEquals("BCP", accountName)
 
-        val category = database.categoriesQueries.find("C1").executeAsOneOrNull()
-        assertNotNull(category, "category must survive the migration")
-        assertEquals("Sueldo", category.name)
+        val categoryName = driver.executeQuery(
+            null, "SELECT name FROM categories WHERE categoryId = 'C1'",
+            { cursor -> QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null) }, 0
+        ).value
+        assertNotNull(categoryName, "category must survive the migration")
+        assertEquals("Sueldo", categoryName)
 
-        val tx = database.transactionsQueries.find("TX1").executeAsOneOrNull()
-        assertNotNull(tx, "transaction must survive the migration")
-        assertEquals(350_000L, tx.amount)
+        val txAmount = driver.executeQuery(
+            null, "SELECT amount FROM transactions WHERE transactionId = 'TX1'",
+            { cursor -> QueryResult.Value(if (cursor.next().value) cursor.getLong(0) else null) }, 0
+        ).value
+        assertNotNull(txAmount, "transaction must survive the migration")
+        assertEquals(350_000L, txAmount)
 
-        // 2. The new recurring_movements table exists and is usable (FKs to the
-        //    surviving account/category resolve).
-        database.recurring_movementsQueries.insert(
-            id = "RM1",
-            name = "Netflix",
-            type = "Spend",
-            amount = 4_490L,
-            description = "",
-            categoryId = "C1",
-            accountId = "A1",
-            frequency = "Monthly",
-            dayOfMonth = 5L,
-            isActive = 1L,
-            lastConfirmedPeriod = null,
-            createdAt = 3_000L,
-            updatedAt = 3_000L,
+        // 2. The new recurring_movements table exists and is usable (v2 schema, no syncState).
+        driver.execute(
+            null,
+            "INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, createdAt, updatedAt) VALUES ('RM1', 'Netflix', 'Spend', 4490, '', 'C1', 'A1', 'Monthly', 5, 1, 3000, 3000)",
+            0,
         )
-        val recurring = database.recurring_movementsQueries.find("RM1").executeAsOneOrNull()
-        assertNotNull(recurring, "recurring_movements row must be insertable after migration")
-        assertEquals("Netflix", recurring.name)
+        val recurringName = driver.executeQuery(
+            null, "SELECT name FROM recurring_movements WHERE id = 'RM1'",
+            { cursor -> QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null) }, 0
+        ).value
+        assertNotNull(recurringName, "recurring_movements row must be insertable after migration")
+        assertEquals("Netflix", recurringName)
     }
 }
