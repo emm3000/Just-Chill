@@ -23,6 +23,8 @@ local.properties
 .claude/worktrees/
 .atl/
 docs/*
+!docs/adr/
+!docs/adr/**
 !docs/PRODUCT_DISCOVERY.md
 !docs/PRODUCT_REQUIREMENTS.md
 !docs/ARCHITECTURE_REVIEW.md

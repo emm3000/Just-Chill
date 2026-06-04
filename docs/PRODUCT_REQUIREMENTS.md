@@ -12,13 +12,15 @@
 
 ## 0. Resumen ejecutivo
 
-JustChill v1 es una app Android **100% local**, **manual**, **gratis sin ads
+JustChill v1 es una app Android **local-first**, **manual**, **gratis sin ads
 ni paywall**, en **español**, en **soles**, para el **peruano 25-35 con
 sueldo + ingresos extras**, cuyo pilar diferencial es **claridad de
 ingresos múltiples + simplicidad radical (30 segundos al día)**.
 
+> **Nota 2026-06-04**: El cambio `local-first-sync` agrega sync OPCIONAL opt-in. El app sigue siendo local-first y funciona 100% sin cuenta — "sin login" sigue siendo cierto para la experiencia base. La sync multi-dispositivo se activa solo si el usuario elige hacerlo desde Perfil (email/password). Ver sección 5 (Won't reversados) y ADR docs/adr/004 (pendiente).
+
 **El alcance de v1 tiene 7 épicas** (E1-E7), **15 stories Must**, **6 Should**,
-**5 Could** y **una lista explícita de 12 Won't have**. La métrica de éxito
+**5 Could** y **una lista explícita de 9 Won't have activos** (más 3 ahora opcionales — ver sección 5). La métrica de éxito
 de v1 es **retención semana 4** (% de usuarios que siguen registrando 5+
 días por semana al mes de instalación).
 
@@ -83,19 +85,19 @@ la respuesta es no, la story está mal escrita o mal priorizada.
 ### E1 — Onboarding sin fricción
 
 #### US-01 [M] Primer launch sin login
+
 **Como** Sebastián que acaba de instalar JustChill,
 **quiero** abrir la app y poder usarla inmediatamente,
 **para** no sentir que es "otra app más que me pide cuenta".
 
 **Criterios de aceptación**:
-- Al abrir por primera vez, NO se pide email, teléfono, ni cuenta de
-  Google.
-- El primer launch a home tarda **<3 segundos** desde tap del ícono.
-- No hay tutorial obligatorio. El usuario puede registrar su primer
-  movimiento en la pantalla siguiente al primer launch.
+- Al abrir por primera vez, NO se pide email, teléfono, ni cuenta de Google.
+- El primer launch a la pantalla principal tarda **<3 segundos** desde tap del ícono.
+- No hay tutorial obligatorio. El usuario puede registrar su primer movimiento inmediatamente.
+- Si el usuario quiere sync multi-dispositivo, puede activarlo desde Perfil en cualquier momento — pero es su elección, no un requisito para usar la app.
 
 **Trazabilidad**: Fase 1 §3 ("sin login"), §3.5 (manifiesto), §7 (decisiones
-bloqueadas: cero auth).
+bloqueadas: cero auth). El cambio `local-first-sync` (2026-06-04) agrega sync opcional opt-in; esta story NO fue reversada — el primer launch sigue siendo sin login.
 
 ---
 
@@ -505,8 +507,6 @@ estas, la respuesta es "no, y leé el manifiesto". Si una se mueve a v2,
 | ID | No se hace | Razón (de Fase 1) |
 |---|---|---|
 | W-01 | **Conexión al banco / bank-sync** | §4 NO ES; §9.7 (Wallet caso de estudio de cómo arruina reviews). |
-| W-02 | **Cloud backend propio** | §4 NO ES; §7 decisión bloqueada. |
-| W-03 | **Google Sign-In / cuenta** | §3 (sin login). |
 | W-04 | **Multi-cuenta compartida (parejas, equipos)** | §4 NO ES (es individual). |
 | W-05 | **Presupuestos rígidos ("no gastes más de X")** | §4 NO ES (es observación, no policía). |
 | W-06 | **Multi-moneda** | §4 NO ES; §7 (solo soles). |
@@ -514,8 +514,17 @@ estas, la respuesta es "no, y leé el manifiesto". Si una se mueve a v2,
 | W-08 | **Notificaciones push diarias / gamificación / badges** | §3.5 (anti-complejidad). |
 | W-09 | **Suscripción premium / paywall** | §7 (gratis sin paywall v1); §9.7 (paywall sobre features básicas es traición). |
 | W-10 | **Anuncios** | §7 (sin ads). |
-| W-11 | **Sync entre dispositivos** | §4 NO ES; §7 (backend NO entra). |
 | W-12 | **OCR / lectura automática de notificaciones Yape** | Apuesta descartada en Fase 1 §3.5 (elegimos mensaje radical, no integración audaz). |
+
+### Won't have revisados como opcionales (v2 — local-first sync)
+
+Estos tres requisitos estaban en la lista de Won't. Se revisaron el 2026-06-04 con el cambio `local-first-sync` para ser **OPT-IN opcionales**: el usuario los activa si quiere, la app funciona 100% sin ellos. Ver cambio `local-first-sync` y ADR docs/adr/004 (pendiente).
+
+| ID | Decisión original | Revisión |
+|---|---|---|
+| W-02 | **Cloud backend propio** — §4 NO ES; §7 decisión bloqueada. | Revisado 2026-06-04 — ahora es **OPT-IN opcional**. Backend Supabase solo se usa si el usuario activa sync desde Perfil. La app funciona 100% sin él. |
+| W-03 | **Google Sign-In / cuenta** — §3 (sin login). | Revisado 2026-06-04 — cuentas son **OPCIONALES**, no requeridas. El usuario puede crear una cuenta (email/password) únicamente si quiere sync. "Sin cuenta" es un estado válido permanente. Google Sign-In sigue fuera. |
+| W-11 | **Sync entre dispositivos** — §4 NO ES; §7 (backend NO entra). | Revisado 2026-06-04 — sync es **OPT-IN opcional**. Solo activo si el usuario elige conectar una cuenta desde Perfil. |
 
 ---
 
@@ -529,9 +538,9 @@ estas, la respuesta es "no, y leé el manifiesto". Si una se mueve a v2,
 | **Mínimo Android** | API 28 (Android 9). Acordado por proyecto actual. |
 | **Idioma** | Solo español. Sin fallback a inglés, sin selector. |
 | **Accesibilidad** | Texto escalable (sin breakage), contraste WCAG AA mínimo, content descriptions en elementos interactivos. NO se compromete a screen reader completo en v1. |
-| **Offline** | 100% funcional sin red. NUNCA hace request HTTP en v1. La permission `INTERNET` se quita del manifest (es contradictoria con la promesa). |
+| **Offline** | 100% funcional sin red para lectura y escritura. Mutaciones locales quedan en `syncState='Pending'` y se suben al reconectar — solo si el usuario tiene cuenta activa. **No hace requests HTTP sin consentimiento explícito del usuario**: la app solo contacta Supabase si el usuario activó sync desde Perfil. Sin cuenta, cero requests. Ver cambio `local-first-sync`. |
 | **Persistencia** | SQLDelight local. Crash o force-close no pierde data (transacciones atómicas). |
-| **Batería** | Sin trabajo en background, sin WorkManager periódico, sin servicios. La app solo trabaja cuando está abierta. |
+| **Batería** | Sin WorkManager periódico ni servicios en segundo plano. Si el usuario tiene sesión activa: sync en resume desde background y Supabase Realtime mientras la app está en primer plano. Sin sesión (anonymous-local): cero actividad de red, la app solo trabaja cuando está abierta. Ver cambio `local-first-sync`. |
 | **Crashes** | Crashlytics solo en builds `prodRelease`. Builds `dev` sin telemetría. |
 
 ---
@@ -578,8 +587,8 @@ JustChill v1 está lista para alpha en Play Store cuando:
 
 - Todas las **15 Must** están en estado "lista".
 - Al menos **3 de las 6 Should** están en estado "lista".
-- Las **12 Won't** siguen sin construirse (no se filtraron features durante
-  el desarrollo).
+- Las **9 Won't activos** siguen sin construirse (no se filtraron features durante
+  el desarrollo). Los 3 Won't opcionales (W-02, W-03, W-11) se construyen en `local-first-sync` como infraestructura opt-in.
 - 4 semanas mínimas de dogfooding propio + 5 testers reales antes del
   primer push a Play Store alpha.
 
@@ -589,7 +598,7 @@ JustChill v1 está lista para alpha en Play Store cuando:
 
 | Story | Épica | Decisión Fase 1 que la sostiene |
 |---|---|---|
-| US-01 | E1 | §3 sin login, §7 cero auth |
+| US-01 | E1 | §3 sin login, §7 cero auth — primer launch sin login sigue vigente; `local-first-sync` agrega sync opt-in, no revierte esta story |
 | US-02 | E1 | §3.5 manifiesto |
 | US-03 | E1 | §5, §9.6 peruanidad |
 | US-04 | E2 | §3 sin fricción, §9.9 Monefy benchmark |
@@ -620,7 +629,8 @@ JustChill v1 está lista para alpha en Play Store cuando:
 | Must (M) | 15 | US-01, 02, 04, 05, 06, 08, 09, 11, 14, 15, 16, 18, 19, 21 + US-17 si llega |
 | Should (S) | 6 | US-03, 07, 10, 12, 17, otros marcados |
 | Could (C) | 5 | US-13, 20 + tema oscuro v2 + comparativa multi-mes + íconos bancarios |
-| Won't (W) | 12 | W-01 a W-12 (sección 5) |
+| Won't (W) activos | 9 | W-01, W-04–W-10, W-12 (sección 5) |
+| Won't (W) opcionales (opt-in) | 3 | W-02, W-03, W-11 (sección 5 — local-first-sync, opt-in) |
 
 ---
 
