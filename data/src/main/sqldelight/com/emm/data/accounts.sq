@@ -35,6 +35,3 @@ update:
 UPDATE accounts
 SET name = ?, type = ?, updatedAt = ?, syncState = 'Pending'
 WHERE accountId = ?;
-
-countLiveByAccount:
-SELECT COUNT(*) FROM accounts WHERE accountId = :accountId AND deletedAt IS NULL;

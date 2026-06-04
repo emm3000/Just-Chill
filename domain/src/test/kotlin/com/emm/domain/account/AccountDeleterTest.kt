@@ -11,6 +11,7 @@ import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class AccountDeleterTest {
@@ -70,13 +71,30 @@ class AccountDeleterTest {
     }
 
     @Test
-    fun `delete ValidationError message is descriptive`() = runTest {
+    fun `delete ValidationError message for live transactions is exact`() = runTest {
         coEvery { transactionRepository.countLiveByAccount(any()) } returns 1L
         coEvery { recurringMovementRepository.countLiveByAccount(any()) } returns 0L
 
         val ex = assertFailsWith<DomainException.ValidationError> {
             accountDeleter(AccountId("acc-1"))
         }
-        assert(ex.message?.isNotBlank() == true)
+        assertEquals(
+            "Cannot delete an account with transactions. Delete or move them first.",
+            ex.message,
+        )
+    }
+
+    @Test
+    fun `delete ValidationError message for live recurring movements is exact`() = runTest {
+        coEvery { transactionRepository.countLiveByAccount(any()) } returns 0L
+        coEvery { recurringMovementRepository.countLiveByAccount(any()) } returns 1L
+
+        val ex = assertFailsWith<DomainException.ValidationError> {
+            accountDeleter(AccountId("acc-1"))
+        }
+        assertEquals(
+            "Cannot delete an account with active recurring movements. Remove them first.",
+            ex.message,
+        )
     }
 }

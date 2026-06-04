@@ -3,6 +3,7 @@ package com.emm.data.recurring
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import com.emm.data.EmmDatabaseData
 import kotlinx.coroutines.test.runTest
@@ -127,6 +128,9 @@ class RecurringMovementFkTest {
 
     /**
      * nullCategoryOnLiveRows does NOT touch tombstoned rows.
+     *
+     * The assertion uses a raw SQL query that bypasses the deletedAt IS NULL filter
+     * so the test is meaningful even if the guard were removed from nullCategoryOnLiveRows.
      */
     @Test
     fun null_category_on_live_rows_skips_tombstoned_rows() = runTest {
@@ -143,9 +147,19 @@ class RecurringMovementFkTest {
             categoryId = "C1",
         )
 
-        // Direct raw read (bypass the IS NULL filter) to verify categoryId was not touched.
-        val rawResult = database.recurring_movementsQueries.selectAll().executeAsList()
-        // selectAll filters tombstoned rows so result should be empty.
-        assertEquals(0, rawResult.size, "tombstoned row must not appear in selectAll")
+        // Raw read that bypasses the tombstone filter — categoryId must still be 'C1'.
+        // This is the meaningful assertion: if nullCategoryOnLiveRows lost its
+        // WHERE deletedAt IS NULL guard, the categoryId would be NULL here instead.
+        val rawCategoryId = driver.executeQuery(
+            null,
+            "SELECT categoryId FROM recurring_movements WHERE id = 'T1'",
+            { cursor -> QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null) },
+            0,
+        ).value
+        assertEquals("C1", rawCategoryId, "tombstoned row's categoryId must not be touched")
+
+        // Also confirm the live-rows view returns nothing (T1 is tombstoned).
+        val liveRows = database.recurring_movementsQueries.selectAll().executeAsList()
+        assertEquals(0, liveRows.size, "tombstoned row must not appear in selectAll")
     }
 }
