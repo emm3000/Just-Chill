@@ -1,0 +1,230 @@
+package com.emm.data
+
+import android.content.Context
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.cash.sqldelight.db.QueryResult
+import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.db.SqlSchema
+import app.cash.sqldelight.driver.android.AndroidSqliteDriver
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+
+/**
+ * Migration test: schema version 2 → 3 (adds userId, deletedAt, syncState columns).
+ *
+ * Guarantees that existing user data is preserved when rolling out the soft-delete /
+ * sync-metadata schema. Builds a v2 database (all 4 tables as they exist after the
+ * recurring_movements migration), inserts representative rows, runs the actual
+ * SQLDelight migration (EmmDatabaseData.Schema.migrate 2→3, which executes 2.sqm),
+ * and asserts that:
+ *   1. All pre-existing rows survive.
+ *   2. Each row has userId = null, deletedAt = null, syncState = 'Pending'.
+ *
+ * Requires a device/emulator. Run with: ./gradlew connectedDevDebugAndroidTest
+ */
+@RunWith(AndroidJUnit4::class)
+class MigrationV2ToV3Test {
+
+    private lateinit var driver: AndroidSqliteDriver
+    private lateinit var database: EmmDatabaseData
+
+    /**
+     * The production schema at version 2 — all 4 tables exactly as they existed before
+     * the sync-metadata columns were added. DDL is copied verbatim from the .sq files
+     * plus the 1.sqm recurring_movements table (they are unchanged between v2 and v3).
+     */
+    private val schemaV2 = object : SqlSchema<QueryResult.Value<Unit>> {
+        override val version: Long = 2
+
+        override fun create(driver: SqlDriver): QueryResult.Value<Unit> {
+            driver.execute(
+                null,
+                """
+                CREATE TABLE accounts (
+                    accountId  TEXT NOT NULL PRIMARY KEY,
+                    name       TEXT NOT NULL,
+                    type       TEXT NOT NULL DEFAULT 'Bank',
+                    currency   TEXT NOT NULL DEFAULT 'PEN',
+                    updatedAt  INTEGER NOT NULL,
+                    createdAt  INTEGER NOT NULL
+                );
+                """.trimIndent(),
+                0,
+            )
+            driver.execute(
+                null,
+                """
+                CREATE TABLE categories (
+                    categoryId    TEXT NOT NULL PRIMARY KEY,
+                    name          TEXT NOT NULL,
+                    icon          TEXT NOT NULL,
+                    color         TEXT NOT NULL,
+                    categoryType  TEXT NOT NULL,
+                    isDefault     INTEGER NOT NULL DEFAULT 0,
+                    updatedAt     INTEGER NOT NULL,
+                    createdAt     INTEGER NOT NULL
+                );
+                """.trimIndent(),
+                0,
+            )
+            driver.execute(
+                null,
+                """
+                CREATE TABLE transactions (
+                    transactionId  TEXT NOT NULL PRIMARY KEY,
+                    type           TEXT NOT NULL,
+                    amount         INTEGER NOT NULL,
+                    description    TEXT NOT NULL DEFAULT '',
+                    date           INTEGER NOT NULL,
+                    categoryId     TEXT REFERENCES categories(categoryId) ON DELETE SET NULL,
+                    accountId      TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
+                    createdAt      INTEGER NOT NULL,
+                    updatedAt      INTEGER NOT NULL
+                );
+                """.trimIndent(),
+                0,
+            )
+            driver.execute(
+                null,
+                """
+                CREATE TABLE recurring_movements (
+                    id                  TEXT NOT NULL PRIMARY KEY,
+                    name                TEXT NOT NULL,
+                    type                TEXT NOT NULL,
+                    amount              INTEGER,
+                    description         TEXT NOT NULL DEFAULT '',
+                    categoryId          TEXT REFERENCES categories(categoryId) ON DELETE SET NULL,
+                    accountId           TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
+                    frequency           TEXT NOT NULL DEFAULT 'Monthly',
+                    dayOfMonth          INTEGER NOT NULL,
+                    isActive            INTEGER NOT NULL DEFAULT 1,
+                    lastConfirmedPeriod TEXT,
+                    createdAt           INTEGER NOT NULL,
+                    updatedAt           INTEGER NOT NULL
+                );
+                """.trimIndent(),
+                0,
+            )
+            return QueryResult.Unit
+        }
+
+        override fun migrate(
+            driver: SqlDriver,
+            oldVersion: Long,
+            newVersion: Long,
+            vararg callbacks: app.cash.sqldelight.db.AfterVersion,
+        ): QueryResult.Value<Unit> = QueryResult.Unit
+    }
+
+    @Before
+    fun setUp() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        driver = AndroidSqliteDriver(
+            schema = schemaV2,
+            context = context,
+            name = null,
+            callback = object : AndroidSqliteDriver.Callback(schema = schemaV2) {
+                override fun onOpen(db: SupportSQLiteDatabase) {
+                    db.setForeignKeyConstraintsEnabled(true)
+                }
+            },
+        )
+        database = EmmDatabaseData(driver)
+
+        // Insert representative v2 data (one row per table).
+        database.accountsQueries.insert(
+            accountId = "A1",
+            name = "BCP",
+            type = "Bank",
+            currency = "PEN",
+            updatedAt = 1_000L,
+            createdAt = 1_000L,
+        )
+        database.categoriesQueries.insert(
+            categoryId = "C1",
+            name = "Sueldo",
+            icon = "salary",
+            color = "green",
+            categoryType = "Income",
+            isDefault = false,
+            updatedAt = 1_000L,
+            createdAt = 1_000L,
+        )
+        database.transactionsQueries.insert(
+            transactionId = "TX1",
+            type = "Income",
+            amount = 350_000L,
+            description = "Sueldo mayo",
+            date = 2_000L,
+            categoryId = "C1",
+            accountId = "A1",
+            createdAt = 2_000L,
+            updatedAt = 2_000L,
+        )
+        database.recurring_movementsQueries.insert(
+            id = "RM1",
+            name = "Netflix",
+            type = "Spend",
+            amount = 4_490L,
+            description = "",
+            categoryId = "C1",
+            accountId = "A1",
+            frequency = "Monthly",
+            dayOfMonth = 5L,
+            isActive = 1L,
+            lastConfirmedPeriod = null,
+            createdAt = 3_000L,
+            updatedAt = 3_000L,
+        )
+    }
+
+    @After
+    fun tearDown() {
+        driver.close()
+    }
+
+    @Test
+    fun migration_v2_to_v3_preserves_rows_and_adds_sync_columns() {
+        // Run the REAL migration (executes 2.sqm).
+        EmmDatabaseData.Schema.migrate(driver, oldVersion = 2, newVersion = 3)
+
+        // 1. accounts — row survives; new columns have expected defaults.
+        val account = database.accountsQueries.find("A1").executeAsOneOrNull()
+        assertNotNull(account, "account must survive the migration")
+        assertEquals("BCP", account.name)
+        assertNull(account.userId, "userId must be null for anonymous-local rows")
+        assertNull(account.deletedAt, "deletedAt must be null for existing rows")
+        assertEquals("Pending", account.syncState, "syncState must default to 'Pending'")
+
+        // 2. categories — row survives.
+        val category = database.categoriesQueries.find("C1").executeAsOneOrNull()
+        assertNotNull(category, "category must survive the migration")
+        assertEquals("Sueldo", category.name)
+        assertNull(category.userId)
+        assertNull(category.deletedAt)
+        assertEquals("Pending", category.syncState)
+
+        // 3. transactions — row survives.
+        val tx = database.transactionsQueries.find("TX1").executeAsOneOrNull()
+        assertNotNull(tx, "transaction must survive the migration")
+        assertEquals(350_000L, tx.amount)
+        assertNull(tx.userId)
+        assertNull(tx.deletedAt)
+        assertEquals("Pending", tx.syncState)
+
+        // 4. recurring_movements — row survives.
+        val recurring = database.recurring_movementsQueries.find("RM1").executeAsOneOrNull()
+        assertNotNull(recurring, "recurring movement must survive the migration")
+        assertEquals("Netflix", recurring.name)
+        assertNull(recurring.userId)
+        assertNull(recurring.deletedAt)
+        assertEquals("Pending", recurring.syncState)
+    }
+}

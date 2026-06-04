@@ -1,0 +1,34 @@
+-- Migration 2 → 3: add sync-metadata columns (userId, deletedAt, syncState)
+-- and covering indexes for the sync engine.
+--
+-- ADDITIVE and DATA-PRESERVING:
+--   • userId NULL  = anonymous-local row (no account yet)
+--   • deletedAt NULL = live row (not tombstoned)
+--   • syncState defaults to 'Pending' so existing rows are picked up on first push
+--
+-- SQLite does not support multi-column ALTER TABLE in a single statement;
+-- each column is a separate ALTER TABLE.
+
+ALTER TABLE accounts ADD COLUMN userId TEXT;
+ALTER TABLE accounts ADD COLUMN deletedAt INTEGER;
+ALTER TABLE accounts ADD COLUMN syncState TEXT NOT NULL DEFAULT 'Pending';
+CREATE INDEX accounts_syncstate_idx ON accounts(syncState);
+CREATE INDEX accounts_user_deleted_idx ON accounts(userId, deletedAt);
+
+ALTER TABLE categories ADD COLUMN userId TEXT;
+ALTER TABLE categories ADD COLUMN deletedAt INTEGER;
+ALTER TABLE categories ADD COLUMN syncState TEXT NOT NULL DEFAULT 'Pending';
+CREATE INDEX categories_syncstate_idx ON categories(syncState);
+CREATE INDEX categories_user_deleted_idx ON categories(userId, deletedAt);
+
+ALTER TABLE transactions ADD COLUMN userId TEXT;
+ALTER TABLE transactions ADD COLUMN deletedAt INTEGER;
+ALTER TABLE transactions ADD COLUMN syncState TEXT NOT NULL DEFAULT 'Pending';
+CREATE INDEX transactions_syncstate_idx ON transactions(syncState);
+CREATE INDEX transactions_user_deleted_idx ON transactions(userId, deletedAt);
+
+ALTER TABLE recurring_movements ADD COLUMN userId TEXT;
+ALTER TABLE recurring_movements ADD COLUMN deletedAt INTEGER;
+ALTER TABLE recurring_movements ADD COLUMN syncState TEXT NOT NULL DEFAULT 'Pending';
+CREATE INDEX recurring_movements_syncstate_idx ON recurring_movements(syncState);
+CREATE INDEX recurring_movements_user_deleted_idx ON recurring_movements(userId, deletedAt);
