@@ -1,6 +1,7 @@
 package com.emm.domain.transaction
 
 import com.emm.domain.shared.AccountId
+import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.TransactionId
 import kotlinx.coroutines.flow.Flow
 
@@ -19,6 +20,13 @@ interface TransactionRepository {
     suspend fun update(transactionId: TransactionId, transactionUpdate: TransactionUpdate)
 
     suspend fun countByAccount(accountId: AccountId): Long
+
+    /** Count live (non-tombstoned) transactions for the given account. */
+    suspend fun countLiveByAccount(accountId: AccountId): Long
+
+    /** Null out categoryId on all live (deletedAt IS NULL) transactions referencing this category,
+     *  and set syncState = 'Pending' on those rows. */
+    suspend fun nullCategoryOnLiveRows(categoryId: CategoryId)
 
     suspend fun delete(transactionId: TransactionId)
 
