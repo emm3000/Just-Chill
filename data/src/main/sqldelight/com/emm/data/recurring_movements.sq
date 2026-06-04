@@ -11,31 +11,38 @@ CREATE TABLE recurring_movements (
     isActive            INTEGER NOT NULL DEFAULT 1,
     lastConfirmedPeriod TEXT,
     createdAt           INTEGER NOT NULL,
-    updatedAt           INTEGER NOT NULL
+    updatedAt           INTEGER NOT NULL,
+    userId              TEXT,
+    deletedAt           INTEGER,
+    syncState           TEXT NOT NULL DEFAULT 'Pending'
 );
 
 CREATE INDEX IF NOT EXISTS recurring_active_idx ON recurring_movements(isActive, name);
+CREATE INDEX IF NOT EXISTS recurring_movements_syncstate_idx ON recurring_movements(syncState);
+CREATE INDEX IF NOT EXISTS recurring_movements_user_deleted_idx ON recurring_movements(userId, deletedAt);
 
 selectAll:
-SELECT * FROM recurring_movements ORDER BY name;
+SELECT * FROM recurring_movements WHERE deletedAt IS NULL ORDER BY name;
 
 selectActive:
-SELECT * FROM recurring_movements WHERE isActive = 1 ORDER BY name;
+SELECT * FROM recurring_movements WHERE isActive = 1 AND deletedAt IS NULL ORDER BY name;
 
 find:
-SELECT * FROM recurring_movements WHERE id = ?;
+SELECT * FROM recurring_movements WHERE id = ? AND deletedAt IS NULL;
 
 insert:
-INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, lastConfirmedPeriod, createdAt, updatedAt)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, lastConfirmedPeriod, createdAt, updatedAt, syncState)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending');
 
 update:
 UPDATE recurring_movements
-SET name = ?, type = ?, amount = ?, description = ?, categoryId = ?, accountId = ?, dayOfMonth = ?, isActive = ?, updatedAt = ?
+SET name = ?, type = ?, amount = ?, description = ?, categoryId = ?, accountId = ?, dayOfMonth = ?, isActive = ?, updatedAt = ?, syncState = 'Pending'
 WHERE id = ?;
 
-delete:
-DELETE FROM recurring_movements WHERE id = ?;
+softDelete:
+UPDATE recurring_movements
+SET deletedAt = ?, updatedAt = ?, syncState = 'Pending'
+WHERE id = ?;
 
 deleteAll:
 DELETE FROM recurring_movements;
@@ -47,11 +54,20 @@ SELECT
     c.color AS categoryColor,
     a.name  AS accountName
 FROM recurring_movements rm
-LEFT JOIN categories c ON rm.categoryId = c.categoryId
-LEFT JOIN accounts   a ON rm.accountId  = a.accountId
+LEFT JOIN categories c ON rm.categoryId = c.categoryId AND c.deletedAt IS NULL
+LEFT JOIN accounts   a ON rm.accountId  = a.accountId AND a.deletedAt IS NULL
+WHERE rm.deletedAt IS NULL
 ORDER BY rm.isActive DESC, rm.dayOfMonth, rm.name;
 
 markConfirmed:
 UPDATE recurring_movements
-SET lastConfirmedPeriod = ?, updatedAt = ?
+SET lastConfirmedPeriod = ?, updatedAt = ?, syncState = 'Pending'
 WHERE id = ?;
+
+countLiveByAccount:
+SELECT COUNT(*) FROM recurring_movements WHERE accountId = :accountId AND deletedAt IS NULL;
+
+nullCategoryOnLiveRows:
+UPDATE recurring_movements
+SET categoryId = NULL, updatedAt = :updatedAt, syncState = 'Pending'
+WHERE categoryId = :categoryId AND deletedAt IS NULL;

@@ -7,15 +7,20 @@ CREATE TABLE transactions (
     categoryId     TEXT REFERENCES categories(categoryId) ON DELETE SET NULL,
     accountId      TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
     createdAt      INTEGER NOT NULL,
-    updatedAt      INTEGER NOT NULL
+    updatedAt      INTEGER NOT NULL,
+    userId         TEXT,
+    deletedAt      INTEGER,
+    syncState      TEXT NOT NULL DEFAULT 'Pending'
 );
 
 CREATE INDEX IF NOT EXISTS transactions_account_idx  ON transactions(accountId);
 CREATE INDEX IF NOT EXISTS transactions_date_idx     ON transactions(date);
 CREATE INDEX IF NOT EXISTS transactions_category_idx ON transactions(categoryId);
+CREATE INDEX IF NOT EXISTS transactions_syncstate_idx ON transactions(syncState);
+CREATE INDEX IF NOT EXISTS transactions_user_deleted_idx ON transactions(userId, deletedAt);
 
 all:
-SELECT * FROM transactions ORDER BY date DESC;
+SELECT * FROM transactions WHERE deletedAt IS NULL ORDER BY date DESC;
 
 completeTransactions:
 SELECT
@@ -25,7 +30,8 @@ SELECT
     c.color AS categoryColor,
     c.categoryType AS categoryType_
 FROM transactions t
-LEFT JOIN categories c ON t.categoryId = c.categoryId
+LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
+WHERE t.deletedAt IS NULL
 ORDER BY t.date DESC;
 
 completeTransactionsByDateRange:
@@ -36,8 +42,9 @@ SELECT
     c.color AS categoryColor,
     c.categoryType AS categoryType_
 FROM transactions t
-LEFT JOIN categories c ON t.categoryId = c.categoryId
-WHERE t.date >= :startOfMonth
+LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
+WHERE t.deletedAt IS NULL
+  AND t.date >= :startOfMonth
   AND t.date < :startOfNextMonth
 ORDER BY t.date DESC;
 
@@ -46,22 +53,30 @@ SELECT COALESCE(
     SUM(CASE WHEN type = 'Income' THEN amount ELSE -amount END), 0
 )
 FROM transactions
-WHERE accountId = :accountId;
+WHERE accountId = :accountId AND deletedAt IS NULL;
 
 insert:
-INSERT OR REPLACE INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt, syncState)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending');
 
 find:
-SELECT * FROM transactions WHERE transactionId = ?;
+SELECT * FROM transactions WHERE transactionId = ? AND deletedAt IS NULL;
 
 update:
 UPDATE transactions
-SET type = ?, amount = ?, description = ?, date = ?, accountId = ?, categoryId = ?, updatedAt = ?
+SET type = ?, amount = ?, description = ?, date = ?, accountId = ?, categoryId = ?, updatedAt = ?, syncState = 'Pending'
 WHERE transactionId = ?;
 
 countByAccount:
 SELECT COUNT(*) FROM transactions WHERE accountId = :accountId;
+
+countLiveByAccount:
+SELECT COUNT(*) FROM transactions WHERE accountId = :accountId AND deletedAt IS NULL;
+
+nullCategoryOnLiveRows:
+UPDATE transactions
+SET categoryId = NULL, updatedAt = :updatedAt, syncState = 'Pending'
+WHERE categoryId = :categoryId AND deletedAt IS NULL;
 
 searchTransactions:
 SELECT
@@ -71,13 +86,16 @@ SELECT
     c.color AS categoryColor,
     c.categoryType AS categoryType_
 FROM transactions t
-LEFT JOIN categories c ON t.categoryId = c.categoryId
-WHERE (:queryEmpty = 1 OR LOWER(t.description) LIKE '%' || LOWER(:query) || '%')
+LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
+WHERE t.deletedAt IS NULL
+  AND (:queryEmpty = 1 OR LOWER(t.description) LIKE '%' || LOWER(:query) || '%')
   AND (:categoryFilterEmpty = 1 OR t.categoryId IN :categoryIds)
 ORDER BY t.date DESC;
 
-delete:
-DELETE FROM transactions WHERE transactionId = ?;
+softDelete:
+UPDATE transactions
+SET deletedAt = ?, updatedAt = ?, syncState = 'Pending'
+WHERE transactionId = ?;
 
 deleteAll:
 DELETE FROM transactions;
@@ -87,7 +105,8 @@ SELECT COUNT(*) AS movementCount, COALESCE(SUM(amount), 0) AS totalAmount
 FROM transactions
 WHERE type = :type
   AND date >= :startInclusive
-  AND date < :endExclusive;
+  AND date < :endExclusive
+  AND deletedAt IS NULL;
 
 monthlyAmountByCategory:
 SELECT
@@ -97,10 +116,11 @@ SELECT
     c.color      AS categoryColor,
     SUM(t.amount) AS totalAmount
 FROM transactions t
-INNER JOIN categories c ON t.categoryId = c.categoryId
+INNER JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
 WHERE t.type = :type
   AND t.date >= :startInclusive
   AND t.date < :endExclusive
+  AND t.deletedAt IS NULL
 GROUP BY c.categoryId
 ORDER BY totalAmount DESC;
 
@@ -110,6 +130,7 @@ FROM transactions
 WHERE categoryId IS NOT NULL
   AND type = :type
   AND date >= :startInclusive
+  AND deletedAt IS NULL
 GROUP BY categoryId
 ORDER BY COUNT(*) DESC, MAX(date) DESC
 LIMIT :limit;
@@ -120,6 +141,7 @@ FROM transactions
 WHERE categoryId IS NOT NULL
   AND type = :type
   AND date >= :startInclusive
+  AND deletedAt IS NULL
 GROUP BY accountId, categoryId, type
 ORDER BY COUNT(*) DESC, MAX(date) DESC
 LIMIT :limit;
@@ -127,5 +149,6 @@ LIMIT :limit;
 lastUsedAccountId:
 SELECT accountId
 FROM transactions
+WHERE deletedAt IS NULL
 ORDER BY date DESC, createdAt DESC
 LIMIT 1;

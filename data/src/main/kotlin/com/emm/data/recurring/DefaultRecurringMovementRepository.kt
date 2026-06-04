@@ -6,6 +6,8 @@ import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.recurring.RecurringMovementDetails
 import com.emm.domain.recurring.RecurringMovementInsert
 import com.emm.domain.recurring.RecurringMovementRepository
+import com.emm.domain.shared.AccountId
+import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.RecurringMovementId
 import com.emm.domain.transaction.TransactionInsert
 import kotlinx.coroutines.flow.Flow
@@ -32,8 +34,17 @@ class DefaultRecurringMovementRepository(private val localDataSource: RecurringM
         localDataSource.update(id.value, insert)
     }
 
+    override suspend fun countLiveByAccount(accountId: AccountId): Long = safeDbCall {
+        localDataSource.countLiveByAccount(accountId.value)
+    }
+
+    override suspend fun nullCategoryOnLiveRows(categoryId: CategoryId): Unit = safeDbCall {
+        localDataSource.nullCategoryOnLiveRows(categoryId.value)
+        Unit
+    }
+
     override suspend fun delete(id: RecurringMovementId): Unit = safeDbCall {
-        localDataSource.delete(id.value)
+        localDataSource.softDelete(id.value)
     }
 
     override suspend fun confirm(insert: TransactionInsert, recurringId: RecurringMovementId, period: String): Unit =

@@ -45,8 +45,9 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         )
     }
 
-    suspend fun delete(accountId: String) = withContext(Dispatchers.IO) {
-        aq.delete(accountId)
+    suspend fun softDelete(accountId: String) = withContext(Dispatchers.IO) {
+        val now = currentTimeInMillis()
+        aq.softDelete(deletedAt = now, updatedAt = now, accountId = accountId)
     }
 
     suspend fun update(accountId: String, account: AccountUpsert) = withContext(Dispatchers.IO) {

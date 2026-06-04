@@ -55,7 +55,8 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         )
     }
 
-    suspend fun delete(categoryId: String) = withContext(Dispatchers.IO) {
-        cq.delete(categoryId)
+    suspend fun softDelete(categoryId: String) = withContext(Dispatchers.IO) {
+        val now = currentTimeInMillis()
+        cq.softDelete(deletedAt = now, updatedAt = now, categoryId = categoryId)
     }
 }

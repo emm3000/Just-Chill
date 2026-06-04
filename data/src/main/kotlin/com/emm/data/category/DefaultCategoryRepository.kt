@@ -28,7 +28,7 @@ class DefaultCategoryRepository(private val localDataSource: CategoryLocalDataSo
     }
 
     override suspend fun delete(categoryId: CategoryId): Unit = safeDbCall {
-        localDataSource.delete(categoryId.value)
+        localDataSource.softDelete(categoryId.value)
         Unit
     }
 

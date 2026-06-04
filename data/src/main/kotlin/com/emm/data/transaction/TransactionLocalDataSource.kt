@@ -72,8 +72,17 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
         tq.countByAccount(accountId).executeAsOne()
     }
 
-    suspend fun delete(transactionId: String) = withContext(Dispatchers.IO) {
-        tq.delete(transactionId)
+    suspend fun countLiveByAccount(accountId: String): Long = withContext(Dispatchers.IO) {
+        tq.countLiveByAccount(accountId).executeAsOne()
+    }
+
+    suspend fun nullCategoryOnLiveRows(categoryId: String) = withContext(Dispatchers.IO) {
+        tq.nullCategoryOnLiveRows(updatedAt = currentTimeInMillis(), categoryId = categoryId)
+    }
+
+    suspend fun softDelete(transactionId: String) = withContext(Dispatchers.IO) {
+        val now = currentTimeInMillis()
+        tq.softDelete(deletedAt = now, updatedAt = now, transactionId = transactionId)
     }
 
     fun find(transactionId: String): Transaction? =

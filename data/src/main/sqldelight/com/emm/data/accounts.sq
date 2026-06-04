@@ -4,26 +4,37 @@ CREATE TABLE accounts (
     type       TEXT NOT NULL DEFAULT 'Bank',
     currency   TEXT NOT NULL DEFAULT 'PEN',
     updatedAt  INTEGER NOT NULL,
-    createdAt  INTEGER NOT NULL
+    createdAt  INTEGER NOT NULL,
+    userId     TEXT,
+    deletedAt  INTEGER,
+    syncState  TEXT NOT NULL DEFAULT 'Pending'
 );
 
+CREATE INDEX IF NOT EXISTS accounts_syncstate_idx ON accounts(syncState);
+CREATE INDEX IF NOT EXISTS accounts_user_deleted_idx ON accounts(userId, deletedAt);
+
 all:
-SELECT * FROM accounts;
+SELECT * FROM accounts WHERE deletedAt IS NULL;
 
 insert:
-INSERT OR REPLACE INTO accounts(accountId, name, type, currency, updatedAt, createdAt)
-VALUES (?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO accounts(accountId, name, type, currency, updatedAt, createdAt, syncState)
+VALUES (?, ?, ?, ?, ?, ?, 'Pending');
 
 find:
-SELECT * FROM accounts WHERE accountId = ?;
+SELECT * FROM accounts WHERE accountId = ? AND deletedAt IS NULL;
 
-delete:
-DELETE FROM accounts WHERE accountId = ?;
+softDelete:
+UPDATE accounts
+SET deletedAt = ?, updatedAt = ?, syncState = 'Pending'
+WHERE accountId = ?;
 
 deleteAll:
 DELETE FROM accounts;
 
 update:
 UPDATE accounts
-SET name = ?, type = ?, updatedAt = ?
+SET name = ?, type = ?, updatedAt = ?, syncState = 'Pending'
 WHERE accountId = ?;
+
+countLiveByAccount:
+SELECT COUNT(*) FROM accounts WHERE accountId = :accountId AND deletedAt IS NULL;

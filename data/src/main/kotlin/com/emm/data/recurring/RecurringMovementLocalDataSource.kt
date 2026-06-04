@@ -78,9 +78,18 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData)
         Unit
     }
 
-    suspend fun delete(id: String) = withContext(Dispatchers.IO) {
-        rmq.delete(id)
+    suspend fun softDelete(id: String) = withContext(Dispatchers.IO) {
+        val now = currentTimeInMillis()
+        rmq.softDelete(deletedAt = now, updatedAt = now, id = id)
         Unit
+    }
+
+    suspend fun countLiveByAccount(accountId: String): Long = withContext(Dispatchers.IO) {
+        rmq.countLiveByAccount(accountId).executeAsOne()
+    }
+
+    suspend fun nullCategoryOnLiveRows(categoryId: String) = withContext(Dispatchers.IO) {
+        rmq.nullCategoryOnLiveRows(updatedAt = currentTimeInMillis(), categoryId = categoryId)
     }
 
     /**

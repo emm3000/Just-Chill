@@ -24,7 +24,7 @@ class DefaultAccountRepository(private val localDataSource: AccountLocalDataSour
     }
 
     override suspend fun delete(accountId: AccountId): Unit = safeDbCall {
-        localDataSource.delete(accountId.value)
+        localDataSource.softDelete(accountId.value)
         Unit
     }
 
