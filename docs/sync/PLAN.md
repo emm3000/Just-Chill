@@ -18,9 +18,9 @@
 |---|---|---|
 | 1 | Schema v3: soft-delete + sync metadata | ✅ trunk `59b8adf` |
 | 2 | Auth opt-in (email/password) + claim local data | ✅ trunk `700d28b` |
-| 3 | Sync engine: push/pull + LWW + cursor | ⏳ in progress |
-| 4 | Sync lifecycle: triggers, realtime, status UI | — |
-| 5 | Compliance + multi-device QA + release gate | — |
+| 3 | Sync engine: push/pull + LWW + cursor | ✅ trunk (hardened, device-verified 2026-06-10) |
+| 4 | Sync lifecycle: triggers, realtime, status UI | ✅ trunk (device-verified on emulator 2026-06-10) |
+| 5 | Compliance + multi-device QA + release gate | ⏳ in progress |
 
 ## Environments
 
@@ -250,7 +250,14 @@ Tasks:
 Verification: two emulators, same account — create/edit/delete on A,
 "Sync now" on both → B converges, tombstones propagate, no ghost rows.
 
-## Slice 4 — Sync lifecycle (~350 lines)
+## Slice 4 — Sync lifecycle (~350 lines) ✅ DONE 2026-06-10
+
+> Implemented + verified E2E on emulator against the local Supabase
+> stack. Critical pre-existing bug found and fixed during verification:
+> rows created while already signed-in had userId=NULL and were invisible
+> to push (distinctUntilChanged on session flow suppressed claim). Fix:
+> reactive claim via observeUnclaimedCount() + flatMapLatest — claimAll
+> fires whenever session is Authenticated AND unclaimed rows exist.
 
 Goal: sync happens without the user thinking about it (foreground-only,
 per ADR 001 — WorkManager background sync explicitly deferred).
@@ -270,17 +277,39 @@ Tasks:
 5. Edge case to test: device B signs in with pre-existing anonymous
    local data → claim + LWW merge against server data converges.
 
-## Slice 5 — Compliance + release gate (~doc-heavy)
+## Slice 5 — Compliance + release gate (~doc-heavy) ⏳ in progress
 
-1. Rewrite `docs/PRIVACY_POLICY.md` (data now optionally leaves the
-   device) + `PrivacyPolicyScreen` copy.
-2. Google Play Data Safety form declaration (ADR 001 marks this a
-   legal obligation, gated here).
-3. Multi-device QA checklist pass (clean install, offline-first week,
-   sign-in late, two devices, sign-out).
-4. Follow-up from slice 1 (tracked in PROGRESS): instrumented E2E of
-   delete use cases against real SQLite, before or during this slice.
-5. Tag + AAB.
+Items DONE (2026-06-10):
+- `34cca18` — defensive enum parsing: unknown remote enum values skip
+  row instead of crashing. Covers `TransactionType`, `CategoryType`,
+  and all `valueOf`-over-remote paths in mappers.
+- `297fad3` — pull pagination with composite keyset
+  `(server_updated_at, pk)` — safe for large remote datasets.
+- `50ff8d4` — privacy policy rewrite (`docs/PRIVACY_POLICY.md` +
+  `PrivacyPolicyScreen`) for optional sync; firebase-analytics
+  dependency dropped (Crashlytics stays in prod).
+- `65da609` — audit fixes: dev Crashlytics disabled; clean stop-guard
+  on pull pagination.
+- `359b9ce` — in-app account deletion: RPC `delete_account` (security
+  definer on server); local data preserved via `unclaimAll`
+  (userId→NULL, syncState→Pending, tombstones included); per-user cursor
+  prefs cleared; E2E verified on emulator against local Supabase
+  2026-06-10 (see verification record in `docs/PROGRESS.md`).
+
+Items REMAINING (code):
+- Instrumented E2E tests of delete use cases against real SQLite
+  (slice-1 follow-up, tracked since PROGRESS).
+- Multi-device QA checklist pass (clean install, offline-first week,
+  sign-in late, two devices, sign-out).
+- Tag + AAB.
+
+Human tasks (unblockable by code):
+- Create prod Supabase cloud project: `supabase link --project-ref <ref>`
+  + `supabase db push`, then fill `prod.*` entries in `supabase.properties`.
+- Host `docs/PRIVACY_POLICY.md` as a public Gist (deletion URL required
+  by Play for apps with account deletion).
+- Google Play Data Safety form declaration (ADR 001 marks this a legal
+  obligation, gated here).
 
 ## Working agreement
 

@@ -3,9 +3,10 @@
 > Estado del proyecto a fecha del último update. Punto de re-entrada
 > para retomar después de cerrar/limpiar el contexto.
 >
-> **Última actualización**: 2026-06-10 (local-first-sync: slice 4 sync
-> lifecycle implementado + verificado en device; destapó y arregló un bug
-> crítico de claim — ver "Slice 4" abajo. SIN commitear todavía).
+> **Última actualización**: 2026-06-10 (local-first-sync: slices 1-4
+> commitados y verificados. Slice 5 en curso: 5 commits landed, ver
+> "Slice 5" abajo. Próximo: Play Data Safety form + prod Supabase
+> (humano) → tag + AAB).
 
 ---
 
@@ -25,11 +26,11 @@ de trunk + git history, porque el design original quedó en engram cuando
 estuvo desactivado (engram + SDD se **re-habilitaron** el 2026-06-10 en
 commit `55fcab1`).
 
-**Estado**: slices 1-3 de 5 ✅ + slice 4 implementado y verificado en
-device (SIN commitear) — la verificación destapó un bug crítico de claim,
-ya arreglado (ver "Slice 4" abajo). Próximo: work-unit commits de slice 4,
-luego slice 5 (compliance + release gate, incluye paginación de pull +
-parseo defensivo de enums remotos).
+**Estado**: slices 1-4 de 5 ✅ commitados y verificados en device.
+Slice 5 ⏳ en curso: 5 commits landed (parseo defensivo de enums,
+paginación de pull, reescritura de privacidad + baja de Analytics,
+fixes de auditoría, eliminación de cuenta in-app). Ver "Slice 5" abajo.
+Próximo: Play Data Safety form + prod Supabase (humano) → tag + AAB.
 
 Slice 1 ✅ (`59b8adf`):
 - Migración 2.sqm (schema v3): `userId`/`deletedAt`/`syncState` + índices en las 4 tablas.
@@ -111,14 +112,13 @@ delete use cases contra SQLite real (hoy solo fakes MockK).
 
 ---
 
-### Slice 4 — sync lifecycle: bug CRÍTICO encontrado en verificación (2026-06-10)
+### Slice 4 — sync lifecycle: cerrado (2026-06-10)
 
 Slice 4 (triggers automáticos: on-resume, write debounced 3s,
 sync-on-sign-in + UI "Última sincronización" en Perfil) implementado,
-**sin commitear** todavía. La verificación en device (medium_phone,
-stack Supabase local) destapó un bug **crítico pre-existente** que
-rompía la feature estrella del slice. Fix aplicado + re-verificado en
-device.
+commitado y **verificado en device** (medium_phone, stack Supabase local).
+La verificación destapó un bug **crítico pre-existente** que rompía la
+feature estrella del slice. Fix aplicado + re-verificado antes de commitear.
 
 **Síntoma**: una transacción creada estando YA logueado no sincroniza
 — ni con el trigger debounced, ni con sync manual, ni en el siguiente
@@ -186,6 +186,68 @@ Notas laterales:
 
 ---
 
+### Slice 5 — compliance + release gate: en curso (2026-06-10)
+
+5 commits en trunk:
+
+- `34cca18` — parseo defensivo de enums en mappers remotos: valores
+  desconocidos hacen skip de fila en vez de crash (`IllegalArgumentException`
+  no manejada en el Flow de lista = crash-loop al arrancar). Cubre
+  `TransactionType`, `CategoryType` y cualquier `valueOf`-sobre-remoto.
+- `297fad3` — paginación de pull con composite keyset `(server_updated_at, pk)`:
+  elimina el truncamiento silencioso del pull (límite default de 1000
+  filas de PostgREST) en datasets remotos grandes.
+- `50ff8d4` — reescritura de `docs/PRIVACY_POLICY.md` + `PrivacyPolicyScreen`
+  para data que opcionalmente sale del device; dependencia
+  firebase-analytics removida (Crashlytics se mantiene en `prod`).
+- `65da609` — fixes de auditoría: Crashlytics deshabilitado en `dev`;
+  guard de stop-limpio en la paginación de pull.
+- `359b9ce` — eliminación de cuenta in-app: RPC `delete_account` (security
+  definer server-side); local data preservada vía `unclaimAll`
+  (userId→NULL, syncState→Pending, tombstones incluidos); prefs de cursor
+  per-user limpiados; E2E verificado en emulator (ver registro abajo).
+
+**Verificación E2E — eliminación de cuenta (2026-06-10)**
+
+Entorno: emulator-5554 (Medium Phone), stack Supabase local
+(`supabase start`), migración aplicada vía `supabase migration up`.
+Usuario de prueba pre-existente: `test2@justchill.dev` (28 filas remotas:
+1 account, 23 categorías, 4 tx). Nuevo post-delete: `test3@justchill.dev`.
+
+Verificado:
+- Flujo de eliminación remueve el auth user + todas las 28 filas remotas
+  del servidor.
+- Filas locales revierten a `userId = NULL` / `syncState = 'Pending'`
+  (incluyendo tombstones que quedan marcados `Pending` para propagarse
+  si el usuario vuelve a loguearse).
+- Prefs de cursor per-user removidos (el siguiente sign-in arranca con
+  full re-pull).
+- App completamente usable firmado-out tras eliminar; sin crash-loop, sin
+  filas huérfanas.
+- "Cancelar" en el diálogo de confirmación no toca nada — datos y sesión
+  intactos.
+- Sign-up con `test3@justchill.dev` (nueva cuenta) re-clama las 28 filas
+  locales vía `ClaimLocalDataOnAuthenticationUseCase` y las pushea bajo
+  el nuevo `userId` — claim-on-sign-in confirmado en ambas direcciones.
+- Entorno limpio post-test: `test2@justchill.dev` eliminado; `test3@justchill.dev`
+  ahora es dueño de la data.
+
+**Pendiente (código)**:
+- Tests instrumentados E2E de delete use cases contra SQLite real
+  (follow-up de slice 1, pendiente desde entonces).
+- Checklist QA multi-device (clean install, semana offline-first,
+  sign-in tardío, dos devices, sign-out).
+- Tag + AAB.
+
+**Tareas humanas (no las puede hacer el agente)**:
+- Crear proyecto Supabase cloud prod: `supabase link --project-ref <ref>`
+  + `supabase db push` → llenar `prod.*` en `supabase.properties`.
+- Hostear `docs/PRIVACY_POLICY.md` como Gist público (Play exige URL de
+  política de eliminación para apps con account deletion).
+- Completar Google Play Data Safety form (obligación legal per ADR 001).
+
+---
+
 ## Track previo — Reporte v2 (2026-05-21)
 
 Llegó un handoff de diseñador externo con dos pantallas: `Reporte ·
@@ -250,9 +312,11 @@ con cualquier tamaño de letra.
 
 ## TL;DR — dónde estamos ahora
 
-- **Track activo — local-first-sync**: slices 1-3/5 (soft-delete + sync
-  metadata + auth opt-in + sync engine verificado en 2 devices). Decisiones
-  en `docs/adr/`. Próximo: slice 4 (sync lifecycle).
+- **Track activo — local-first-sync**: slices 1-4/5 commitados y
+  verificados en device. Slice 5 ⏳ en curso — 5 commits landed (parseo
+  defensivo, paginación de pull, privacidad, auditoría, eliminación de
+  cuenta). Pendiente: Play Data Safety form + prod Supabase (humano),
+  luego QA checklist + tag + AAB. Decisiones en `docs/adr/`.
   OJO: la decisión "100% local, sin login" de Fases 1-5 fue **reversada
   formalmente** vía ADR 001 — ahora es local-first con sync opcional.
 - **Proceso de definición**: ✅ Fases 1-5 firmadas y versionadas.
@@ -269,11 +333,12 @@ con cualquier tamaño de letra.
   2.0.0-alpha.3 + ktlint-wrapper + mrmans0n/compose-rules instalados.
   138 findings → 13 baselined (-91%) en 7 pasos. CI gate en PRs +
   pre-push hook local. Detalles abajo.
-- **Próximo paso concreto**: re-buildear AAB con la UI nueva, subirlo
-  a Play Console (alpha cerrada). Listing y privacidad ya redactados
-  en `docs/PLAY_STORE_LISTING.md` + `docs/PRIVACY_POLICY.md`. Falta:
-  hostear Gist público de privacidad, screenshots con la **UI nueva**,
-  reclutar testers, setup WhatsApp grupal.
+- **Próximo paso concreto**: Google Play Data Safety form + crear proyecto
+  Supabase cloud prod (tareas humanas — release gate). En paralelo:
+  instrumented E2E deletes + QA checklist multi-device. Después: tag +
+  AAB. Listing en `docs/PLAY_STORE_LISTING.md`; privacidad reescrita en
+  `docs/PRIVACY_POLICY.md` (pendiente hostear como Gist para URL de
+  eliminación en Play).
 
 ---
 
