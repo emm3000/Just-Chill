@@ -98,3 +98,6 @@ WHERE id = ?;
 
 countPending:
 SELECT COUNT(*) FROM recurring_movements WHERE syncState = 'Pending' AND userId IS NOT NULL;
+
+countUnclaimed:
+SELECT COUNT(*) FROM recurring_movements WHERE userId IS NULL;

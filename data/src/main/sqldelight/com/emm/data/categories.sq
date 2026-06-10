@@ -70,3 +70,6 @@ WHERE categoryId = ?;
 
 countPending:
 SELECT COUNT(*) FROM categories WHERE syncState = 'Pending' AND userId IS NOT NULL;
+
+countUnclaimed:
+SELECT COUNT(*) FROM categories WHERE userId IS NULL;

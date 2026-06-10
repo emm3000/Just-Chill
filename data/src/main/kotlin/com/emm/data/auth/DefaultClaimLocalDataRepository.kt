@@ -1,9 +1,13 @@
 package com.emm.data.auth
 
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToOne
 import com.emm.data.EmmDatabaseData
 import com.emm.data.shared.safeDbCall
 import com.emm.domain.auth.ClaimLocalDataRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.withContext
 
 /**
@@ -29,4 +33,11 @@ class DefaultClaimLocalDataRepository(private val db: EmmDatabaseData) : ClaimLo
             }
         }
     }
+
+    override fun observeUnclaimedCount(): Flow<Long> = combine(
+        db.accountsQueries.countUnclaimed().asFlow().mapToOne(Dispatchers.IO),
+        db.categoriesQueries.countUnclaimed().asFlow().mapToOne(Dispatchers.IO),
+        db.transactionsQueries.countUnclaimed().asFlow().mapToOne(Dispatchers.IO),
+        db.recurring_movementsQueries.countUnclaimed().asFlow().mapToOne(Dispatchers.IO),
+    ) { acc, cat, txn, rec -> acc + cat + txn + rec }
 }

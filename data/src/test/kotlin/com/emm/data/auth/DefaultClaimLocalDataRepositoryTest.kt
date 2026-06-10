@@ -3,6 +3,7 @@ package com.emm.data.auth
 import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -101,6 +102,29 @@ class DefaultClaimLocalDataRepositoryTest {
         // Already-owned rows are immune to the WHERE userId IS NULL guard.
         assertEquals("me", userIdOf("accounts", "accountId", "acc-null"))
         assertEquals("other-user", userIdOf("accounts", "accountId", "acc-other"))
+    }
+
+    @Test
+    fun `observeUnclaimedCount sums NULL-userId rows across all four tables`() = runTest {
+        // setUp already inserted 1 anonymous row per table = 4 total.
+        val count = repository.observeUnclaimedCount().first()
+        assertEquals(4L, count)
+    }
+
+    @Test
+    fun `observeUnclaimedCount decreases after claimAll stamps the anonymous rows`() = runTest {
+        assertEquals(4L, repository.observeUnclaimedCount().first())
+
+        repository.claimAll("me")
+
+        assertEquals(0L, repository.observeUnclaimedCount().first())
+    }
+
+    @Test
+    fun `observeUnclaimedCount ignores rows already owned by another user`() = runTest {
+        // Only the 4 anonymous rows count; the 4 'other-user' rows must be excluded.
+        val count = repository.observeUnclaimedCount().first()
+        assertEquals(4L, count)
     }
 
     private fun exec(sql: String) {

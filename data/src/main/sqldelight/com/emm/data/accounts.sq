@@ -62,3 +62,6 @@ WHERE accountId = ?;
 
 countPending:
 SELECT COUNT(*) FROM accounts WHERE syncState = 'Pending' AND userId IS NOT NULL;
+
+countUnclaimed:
+SELECT COUNT(*) FROM accounts WHERE userId IS NULL;
