@@ -306,6 +306,30 @@ class BaseTableSyncPaginationTest {
         assertTrue(result.skippedRows, "stuck keyset must set skippedRows=true so cursor is held")
     }
 
+    /**
+     * Off-by-one pin: a pull whose LAST page lands exactly on the MAX_PULL_PAGES budget and
+     * stops cleanly (partial page) must NOT be treated as a broken keyset — skippedRows stays
+     * false so the cursor advances normally.
+     */
+    @Test
+    fun `pull completing cleanly on exactly the last budgeted page does not hold the cursor`() = runTest {
+        val pageSize = 2
+        // (MAX_PULL_PAGES - 1) full pages + 1 partial page = clean stop on page MAX_PULL_PAGES.
+        val rowCount = (BaseTableSync.MAX_PULL_PAGES - 1) * pageSize + 1
+        val rows = (0 until rowCount).map { i ->
+            dto(
+                id = "id%04d".format(i),
+                sat = "2026-01-01T%02d:%02d:%02dZ".format(i / 3600, (i / 60) % 60, i % 60),
+            )
+        }
+        val sync = FakeTableSync(KeysetStore(rows), pageSize = pageSize)
+
+        val result = sync.pull(userId, cursor = null, resolver = resolver)
+
+        assertEquals(rowCount, sync.applied.size)
+        assertFalse(result.skippedRows, "clean stop on the last budgeted page must not hold the cursor")
+    }
+
     @Test
     fun `userId mismatch row is not applied and sets skippedRows true`() = runTest {
         // Bypasses the server-side userId filter to simulate a buggy server / RLS misconfiguration:

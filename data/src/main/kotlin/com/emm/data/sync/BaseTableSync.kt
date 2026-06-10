@@ -167,6 +167,7 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
             var skipped = false
 
             var pageIndex = 0
+            var stoppedCleanly = false
             while (pageIndex < MAX_PULL_PAGES) {
                 val nextKey = fetchAndApplyPage(userId, overlapCursor, pageKey, resolver)
                 if (nextKey.skipped) skipped = true
@@ -175,13 +176,17 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
                 }
                 pageKey = nextKey.nextPageKey
                 pageIndex++
-                if (nextKey.stop) break
+                if (nextKey.stop) {
+                    stoppedCleanly = true
+                    break
+                }
             }
 
-            // Defensive guard: if we consumed all MAX_PULL_PAGES without a stop signal, a broken
-            // keyset may be causing an infinite loop. Hold the cursor so the next cycle resumes
-            // from the same position via the overlap window.
-            if (pageIndex >= MAX_PULL_PAGES) skipped = true
+            // Defensive guard: exhausting the page budget WITHOUT a clean stop signal means a
+            // broken keyset may be looping. Hold the cursor so the next cycle resumes from the
+            // same position via the overlap window. A pull that completes cleanly on exactly the
+            // last budgeted page is NOT penalized.
+            if (!stoppedCleanly) skipped = true
 
             PullResult(maxServerUpdatedAt = maxInstant?.toString(), skippedRows = skipped)
         }
