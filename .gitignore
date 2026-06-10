@@ -37,3 +37,6 @@ docs/*
 !docs/PROGRESS.md
 !docs/PLAY_STORE_LISTING.md
 !docs/PRIVACY_POLICY.md
+# Supabase
+supabase.properties
+supabase/.temp/

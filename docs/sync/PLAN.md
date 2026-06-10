@@ -22,25 +22,36 @@
 | 4 | Sync lifecycle: triggers, realtime, status UI | — |
 | 5 | Compliance + multi-device QA + release gate | — |
 
-## Human prerequisites (block slice 2)
+## Environments
 
-1. Create two Supabase projects: `justchill-dev`, `justchill-prod`.
-2. Run the SQL in [§ Supabase schema](#supabase-schema-re-derived) on both.
-3. Create `supabase.properties` at repo root (gitignored), consumed as
-   `BuildConfig` fields per flavor:
+**Dev = local Supabase stack** (since 2026-06-10): `supabase start`
+(Docker) at the repo root. The schema lives as a CLI migration in
+`supabase/migrations/` — the single source of truth for the server
+schema (the SQL in this doc is reference only; if they diverge, the
+migration wins). `supabase db reset` re-applies from scratch.
 
-   ```properties
-   dev.supabase.url=https://<dev-ref>.supabase.co
-   dev.supabase.anonKey=<dev-anon-key>
-   prod.supabase.url=https://<prod-ref>.supabase.co
-   prod.supabase.anonKey=<prod-anon-key>
-   ```
+- Emulator reaches the host stack via `http://10.0.2.2:54321`;
+  physical device uses the machine's LAN IP.
+- `supabase.properties` (gitignored, repo root) already carries the
+  dev values, consumed as `BuildConfig` fields per flavor:
 
-   The anon key is public by design (RLS is the guard). The
-   `service_role` key must NEVER appear in the repo or the app.
-   Note: the old implementation (`5c0e471`) read url/key from string
-   resources — do not repeat that; BuildConfig from a gitignored
-   properties file keeps keys out of git.
+  ```properties
+  dev.supabase.url=http://10.0.2.2:54321
+  dev.supabase.anonKey=<local demo anon JWT>
+  prod.supabase.url=
+  prod.supabase.anonKey=
+  ```
+
+**Prod = cloud project** — still pending (human task), but it no
+longer blocks slices 2-4; it blocks slice 5 (release). When created:
+`supabase link --project-ref <ref>` + `supabase db push` applies the
+same migrations, then fill the `prod.*` properties.
+
+The anon key is public by design (RLS is the guard). The
+`service_role` key must NEVER appear in the repo or the app.
+Note: the old implementation (`5c0e471`) read url/key from string
+resources — do not repeat that; BuildConfig from a gitignored
+properties file keeps keys out of git.
 
 ## Supabase schema (re-derived)
 
