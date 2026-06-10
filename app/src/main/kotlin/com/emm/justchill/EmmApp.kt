@@ -10,6 +10,7 @@ import com.emm.justchill.hh.di.categoryModule
 import com.emm.justchill.hh.di.dbModule
 import com.emm.justchill.hh.di.hhModule
 import com.emm.justchill.hh.di.supabaseModule
+import com.emm.justchill.hh.di.syncModule
 import com.emm.justchill.hh.di.transactionModule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +41,7 @@ class EmmApp : Application() {
                 dbModule,
                 supabaseModule,
                 authModule,
+                syncModule,
             )
         }
 

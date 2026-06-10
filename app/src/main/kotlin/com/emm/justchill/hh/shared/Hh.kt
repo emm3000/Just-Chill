@@ -316,6 +316,7 @@ fun Hh(modifier: Modifier = Modifier) {
                         onPrivacyClick = { backStack.add(PrivacyPolicyRoute) },
                         onSignInClick = { backStack.add(AuthRoute) },
                         onSignOutClick = { vm.onIntent(ProfileIntent.SignOut) },
+                        onSyncNowClick = { vm.onIntent(ProfileIntent.SyncNow) },
                     )
                 }
 

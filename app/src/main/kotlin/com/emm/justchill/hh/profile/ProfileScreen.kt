@@ -65,6 +65,7 @@ fun ProfileScreen(
     onPrivacyClick: () -> Unit = {},
     onSignInClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {},
+    onSyncNowClick: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -159,6 +160,19 @@ fun ProfileScreen(
                 metaIsPrimary = false,
                 onClick = onPrivacyClick,
             )
+        }
+
+        if (BuildConfig.DEBUG) {
+            SectionHeader(text = "Debug")
+            ProfileGroup {
+                ProfileRow(
+                    icon = Icons.Outlined.Repeat,
+                    label = "Sincronizar ahora",
+                    meta = if (state.isSyncing) "Sincronizando…" else "Push + Pull manual",
+                    metaIsPrimary = state.isSyncing,
+                    onClick = onSyncNowClick,
+                )
+            }
         }
 
         Spacer(Modifier.height(spacing.s6))

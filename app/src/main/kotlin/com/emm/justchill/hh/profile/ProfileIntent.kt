@@ -7,4 +7,5 @@ sealed interface ProfileIntent : UiIntent {
     data class ExportToStream(val output: OutputStream) : ProfileIntent
     data class ImportJson(val json: String) : ProfileIntent
     data object SignOut : ProfileIntent
+    data object SyncNow : ProfileIntent
 }
