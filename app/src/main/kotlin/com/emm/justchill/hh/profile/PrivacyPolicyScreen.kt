@@ -51,12 +51,14 @@ fun PrivacyPolicyScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(spacing.s4),
         ) {
             Text(
-                text = "Tu plata vive en tu celular.",
+                text = "Tu plata vive en tu celular. Sin cuenta, nada sale de él.",
                 style = type.bodyL,
                 color = colors.textPrimary,
             )
             Text(
-                text = "No la mandamos a ningún servidor. No tenemos servidor.",
+                text = "Si creas una cuenta (opcional), tu data se sincroniza cifrada con " +
+                    "nuestros servidores para que la veas en todos tus dispositivos. " +
+                    "No la vendemos ni la compartimos.",
                 style = type.bodyL,
                 color = colors.textPrimary,
             )
@@ -67,14 +69,20 @@ fun PrivacyPolicyScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 color = colors.textPrimary,
             )
             Text(
-                text = "No usamos analytics. No usamos cookies. " +
-                    "No tenemos manera de saber qué cuentas o categorías creaste.",
+                text = "No usamos analytics ni cookies. La versión de Play Store reporta " +
+                    "solo crashes (Crashlytics), nunca tu data financiera.",
                 style = type.bodyL,
                 color = colors.textPrimary,
             )
             Text(
-                text = "Si reinstalas la app o cambias de celular sin exportar primero, " +
-                    "la data se pierde. Es el precio de no tener servidor — y nos parece justo.",
+                text = "Sin cuenta, si cambias de celular sin exportar primero, la data " +
+                    "se pierde. Con cuenta, inicia sesión y tu data vuelve.",
+                style = type.bodyL,
+                color = colors.textPrimary,
+            )
+            Text(
+                text = "¿Quieres borrar tu cuenta y tu data del servidor? " +
+                    "Escríbenos a edgardo.emm20@gmail.com.",
                 style = type.bodyL,
                 color = colors.textPrimary,
             )
