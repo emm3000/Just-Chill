@@ -1,6 +1,7 @@
 package com.emm.data.sync
 
 import com.emm.domain.sync.ConflictResolver
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Per-table sync unit: push locally-pending rows to Supabase, then pull remote changes.
@@ -21,6 +22,12 @@ interface TableSync {
      *         parent has not arrived yet).
      */
     suspend fun pull(userId: String, cursor: String?, resolver: ConflictResolver): PullResult
+
+    /**
+     * Emits the count of rows with syncState = 'Pending' AND userId IS NOT NULL for this table.
+     * Used to drive debounced-write sync triggers.
+     */
+    fun pendingCount(): Flow<Long>
 }
 
 /**

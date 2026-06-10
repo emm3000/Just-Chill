@@ -1,6 +1,7 @@
 package com.emm.domain.sync
 
 import com.emm.domain.shared.error.DomainException
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Synchronises local data with the remote backend: push pending rows, then pull remote
@@ -10,4 +11,13 @@ import com.emm.domain.shared.error.DomainException
  */
 interface SyncRepository {
     suspend fun sync()
+
+    /**
+     * Emits the total count of locally-pending rows across all tables (accounts, categories,
+     * transactions, recurring_movements) that have syncState = 'Pending' and a non-null userId.
+     *
+     * Used by [ObservePendingSyncCountUseCase] to trigger a debounced sync after local writes.
+     * Emits 0 when every row is synced or no user is signed in.
+     */
+    fun observePendingCount(): Flow<Long>
 }

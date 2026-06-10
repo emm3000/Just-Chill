@@ -4,6 +4,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -64,6 +66,7 @@ class SyncDataUseCaseTest {
                 gate.await()
                 events += "exit"
             }
+            override fun observePendingCount(): Flow<Long> = flowOf(0L)
         }
 
         val serializedUseCase = SyncDataUseCase(serializedRepo)

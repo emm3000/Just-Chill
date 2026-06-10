@@ -95,3 +95,6 @@ updateFromRemote:
 UPDATE recurring_movements
 SET name = ?, type = ?, amount = ?, description = ?, categoryId = ?, accountId = ?, frequency = ?, dayOfMonth = ?, isActive = ?, lastConfirmedPeriod = ?, createdAt = ?, updatedAt = ?, userId = ?, deletedAt = ?, syncState = 'Synced'
 WHERE id = ?;
+
+countPending:
+SELECT COUNT(*) FROM recurring_movements WHERE syncState = 'Pending' AND userId IS NOT NULL;

@@ -12,6 +12,8 @@ import io.github.jan.supabase.exceptions.UnauthorizedRestException
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeout
 import java.time.Instant
@@ -47,6 +49,13 @@ class DefaultSyncRepository(
     private val transactionSync: TableSync,
     private val recurringSync: TableSync,
 ) : SyncRepository {
+
+    override fun observePendingCount(): Flow<Long> = combine(
+        accountSync.pendingCount(),
+        categorySync.pendingCount(),
+        transactionSync.pendingCount(),
+        recurringSync.pendingCount(),
+    ) { acc, cat, txn, rec -> acc + cat + txn + rec }
 
     // Intentional broad catch: maps remote/db throwables to DomainException.
     // ThrowsCount: three distinct re-throw paths are required — CancellationException must

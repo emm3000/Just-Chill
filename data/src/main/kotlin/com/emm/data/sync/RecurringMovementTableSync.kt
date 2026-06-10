@@ -1,10 +1,14 @@
 package com.emm.data.sync
 
 import android.database.sqlite.SQLiteConstraintException
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToOne
 import com.emm.data.EmmDatabaseData
 import com.emm.data.shared.safeDbCall
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 
 private const val TABLE = "recurring_movements"
 
@@ -139,4 +143,7 @@ class RecurringMovementTableSync(private val db: EmmDatabaseData, client: Supaba
     override fun markPendingForResync(pk: String) {
         db.recurring_movementsQueries.markPendingForResync(pk)
     }
+
+    override fun pendingCount(): Flow<Long> =
+        db.recurring_movementsQueries.countPending().asFlow().mapToOne(Dispatchers.IO)
 }

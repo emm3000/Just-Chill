@@ -176,3 +176,6 @@ updateFromRemote:
 UPDATE transactions
 SET type = ?, amount = ?, description = ?, date = ?, categoryId = ?, accountId = ?, createdAt = ?, updatedAt = ?, userId = ?, deletedAt = ?, syncState = 'Synced'
 WHERE transactionId = ?;
+
+countPending:
+SELECT COUNT(*) FROM transactions WHERE syncState = 'Pending' AND userId IS NOT NULL;

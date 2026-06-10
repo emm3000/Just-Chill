@@ -59,3 +59,6 @@ updateFromRemote:
 UPDATE accounts
 SET name = ?, type = ?, currency = ?, updatedAt = ?, createdAt = ?, userId = ?, deletedAt = ?, syncState = 'Synced'
 WHERE accountId = ?;
+
+countPending:
+SELECT COUNT(*) FROM accounts WHERE syncState = 'Pending' AND userId IS NOT NULL;

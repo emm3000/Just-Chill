@@ -67,3 +67,6 @@ updateFromRemote:
 UPDATE categories
 SET name = ?, icon = ?, color = ?, categoryType = ?, isDefault = ?, updatedAt = ?, createdAt = ?, userId = ?, deletedAt = ?, syncState = 'Synced'
 WHERE categoryId = ?;
+
+countPending:
+SELECT COUNT(*) FROM categories WHERE syncState = 'Pending' AND userId IS NOT NULL;
