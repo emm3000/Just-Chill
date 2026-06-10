@@ -19,7 +19,7 @@ Dimension `tier`:
 | ViewModel | `{Feature}ViewModel` | `hh/<feature>/` |
 | UI state | `{Feature}UiState` | `hh/<feature>/` |
 
-Existing features under `hh/`: `account`, `category`, `home`, `profile`, `seetransactions`, `shared`, `transaction`, plus `di/`.
+Existing features under `hh/`: `account`, `auth`, `category`, `home`, `onboarding`, `profile`, `recurring`, `report`, `seetransactions`, `shared`, `transaction`, plus `di/`.
 
 ## Data flow
 
@@ -29,10 +29,12 @@ ViewModels should **never** depend on SQLDelight types directly — go through d
 
 ## DI (Koin)
 
-Modules live in `hh/di/`:
+Modules live in `hh/di/` (plus `core/CoreModule.kt`):
 
 - `dbModule` — SQLDelight driver + `EmmDatabaseData`
-- `accountModule`, `categoryModule`, `transactionModule` — feature wiring (data sources, repository impls, use cases, ViewModels)
+- `supabaseModule` — `SupabaseClient` (auth + postgrest)
+- `accountModule`, `categoryModule`, `transactionModule`, `authModule` — feature wiring (data sources, repository impls, use cases, ViewModels)
+- `syncModule` — per-table `TableSync` units (qualified), `DefaultSyncRepository`, `SyncDataUseCase` (**single** — holds the mutex that serializes sync cycles), `SyncCursorStore` adapter
 - `hhModule` — top-level aggregator
 
 A new feature module should be registered in `EmmApp` alongside the others.

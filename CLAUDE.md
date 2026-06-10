@@ -38,11 +38,11 @@ Clean Architecture, three modules:
 
 ```
 :domain  →  pure Kotlin JVM lib, no Android deps        (java-library + kotlin.jvm)
-:data    →  Android lib, implements domain interfaces   (SQLDelight, local-only)
+:data    →  Android lib, implements domain interfaces   (SQLDelight + Supabase sync/auth)
 :app     →  Compose UI, ViewModels, Koin DI wiring      (android-application)
 ```
 
-The app is **local-first**: SQLDelight on-device is the single source of truth and the app is fully usable with no account and no network. Optional multi-device sync via Supabase (opt-in sign-in, LWW) is **in progress** — slice 1 (soft-delete + sync metadata) is on trunk; auth and the sync engine are not implemented yet. Decisions in `docs/adr/001` and `docs/adr/002`.
+The app is **local-first**: SQLDelight on-device is the single source of truth and the app is fully usable with no account and no network. Optional multi-device sync via Supabase (opt-in email/password sign-in, LWW) is **in progress** — slices 1-3 are on trunk: soft-delete + sync metadata (slice 1), auth + claim-on-sign-in (slice 2), and the manual-trigger sync engine (slice 3, push/pull + cursor — see `data/CLAUDE.md`). Remaining: automatic sync lifecycle (slice 4) and compliance/release gate (slice 5), per `docs/sync/PLAN.md`. Decisions in `docs/adr/001` and `docs/adr/002`.
 
 **Dependency direction**: `:app` → `:domain`, `:data`; `:data` → `:domain`; `:domain` has no module deps.
 
