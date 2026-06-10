@@ -3,7 +3,7 @@
 > Estado del proyecto a fecha del último update. Punto de re-entrada
 > para retomar después de cerrar/limpiar el contexto.
 >
-> **Última actualización**: 2026-06-09 (local-first-sync: slice 1 en trunk, ADRs 001/002, planificación migrada a `docs/sync/`).
+> **Última actualización**: 2026-06-10 (local-first-sync: slice 3 sync engine ✅ verificado en 2 devices, commits en trunk local — SIN push).
 
 ---
 
@@ -19,19 +19,88 @@ opt-in desde Perfil, sin gate. Decisión documentada en `docs/adr/001`
 **Decisiones en `docs/adr/001` + `docs/adr/002`.** El plan operativo
 (slices 2-5, tasks, SQL de Supabase re-derivado) vive en
 `docs/sync/PLAN.md` — re-derivado 2026-06-09 desde los ADRs + código
-de trunk + git history, porque el design original quedó en engram
-(desactivado para este repo).
+de trunk + git history, porque el design original quedó en engram cuando
+estuvo desactivado (engram + SDD se **re-habilitaron** el 2026-06-10 en
+commit `55fcab1`).
 
-**Estado**: slice 1 de 5 ✅ en trunk (`59b8adf`):
+**Estado**: slices 1-3 de 5 ✅ (slice 3 verificado E2E en 2 devices el
+2026-06-10 — ver "Slice 3 — cerrado" abajo). Próximo: slice 4 (sync
+lifecycle: on-resume, debounced push, sync-on-sign-in).
 
+Slice 1 ✅ (`59b8adf`):
 - Migración 2.sqm (schema v3): `userId`/`deletedAt`/`syncState` + índices en las 4 tablas.
 - Soft-delete con tombstones; todas las lecturas filtran `deletedAt IS NULL`.
 - Integridad referencial movida a `DeleteAccountUseCase`/`DeleteCategoryUseCase` (los FK no disparan en soft-delete).
 - Tests: domain verdes, 5/5 instrumentados, detekt limpio. Pasó review adversarial (4 fixes en `59b8adf`).
 
-**Próximo paso**: slice 2 (auth opt-in, ~550 líneas). **Prerequisito
-humano que bloquea**: crear proyectos Supabase dev+prod, correr el SQL
-del design (en engram), llenar `supabase.properties` (gitignored).
+Slice 2 ✅ (auth opt-in, `ce5180f`→`700d28b`, 8 commits):
+- `ce5180f` build: deps Supabase + BuildConfig por flavor desde `supabase.properties`.
+- `501ed4f` domain: `AuthRepository`, `SessionStatus`, use cases `SignIn/Up/Out`, `ObserveSession`, `ClaimLocalData`.
+- `668a415` data: `DefaultAuthRepository` sobre auth-kt + claim atómico local.
+- `0e42d3b` data: hardening del threading del claim + error mapping.
+- `17ecfdb` domain: claim via session observer (no inline).
+- `700d28b` app: sección "Cuenta" en Perfil (sign-in opt-in) + `AuthScreen` MVI, sin gate.
+- Entorno dev migrado a **stack Supabase local** (`supabase start`, Docker) — ver `docs/sync/PLAN.md §Environments`. Prod cloud sigue pendiente (humano), solo bloquea slice 5.
+- Tests verdes: `./gradlew test` BUILD SUCCESSFUL. Domain (`SignIn/Up/Out`, `ObserveSession`, `ClaimLocalData*`) + data mappers (`AuthExceptionMapper`, `SessionStatusMapper`, `DefaultClaimLocalDataRepository`).
+- **Blocker encontrado + arreglado durante verificación en device (commit `b300499`)**:
+  S0 había quitado el permiso `INTERNET` + cleartext; slice 2 restauró las
+  deps de Supabase pero no el acceso a red, así que el auth fallaba en
+  silencio (ni user creado ni logs). Fix: `INTERNET` en el manifest main +
+  `network_security_config` solo-dev permitiendo cleartext a `10.0.2.2`/
+  localhost (prod queda https-only). **Verificado E2E en Medium Phone contra
+  el stack local**: sign-up crea user en Supabase, sesión sobrevive
+  process-death, claim setea `userId`+`syncState=Pending` en las 4 tablas,
+  sign-out conserva la data local. Usuario de prueba: `test2@justchill.dev` /
+  `secret123`.
+
+---
+
+### Slice 3 — cerrado (2026-06-10)
+
+Sync engine core: push/pull LWW + cursor global para las 4 tablas,
+trigger manual debug "Sincronizar ahora" en Perfil. Arquitectura:
+
+- `:domain/sync/`: `ConflictResolver` (LWW puro, tie→remote, tombstone-aware sin special-casing), `SyncRepository`, `SyncDataUseCase` (mutex compartido — Koin `single`), `SyncCursorStore` (port; impl en `:app`).
+- 4 `.sq`: `selectPending`, `markSynced` (guardada por `updatedAt`), `findForSync` (NO filtra `deletedAt` — LWW debe ver tombstones), `insertOrIgnoreFromRemote` + `updateFromRemote` (upsert en 2 statements — SQLDelight 2.3.2 NO parsea `ON CONFLICT DO UPDATE`; `OR REPLACE` dispararía FKs), `markPendingForResync`.
+- `:data/sync/`: `BaseTableSync<DTO>` (el algoritmo push/pull vive UNA sola vez; subclases solo aportan queries generadas + llamadas postgrest reified), DTOs `@Serializable` snake_case con interface `SyncRowDto`, `SyncCursorUtils` (parse `+00:00` de PostgREST, overlap 10s, canónico `Z`), `DefaultSyncRepository` (push 4 → pull FK-safe, cursor global con hold si hubo skips).
+- `:app`: `AppPreferences.lastPulledAt_<userId>`, `SyncModule` (qualifiers nombrados), fila debug en Perfil.
+
+**Hardening (2 rondas de judgment-day, doble juez ciego, ambas APPROVED)**:
+ronda 1 corrigió 6 bugs de la implementación inicial (FK/REPLACE, `Instant.parse`
+vs `+00:00`, cursor no monótono, race de `markSynced`, sesión `Initializing`,
+baseline detekt); ronda 2 corrigió 6 más: tests de `:app` rotos, mutex roto por
+scope `factory`, scoping `user_id` en pull/push (defense-in-depth sobre RLS),
+**`KeepLocal` re-marca `Pending`** (sin eso: push ciego = last-pusher-wins y
+divergencia permanente), skip por fila de huérfanos FK con cursor-hold,
+`withTimeout(10s)` en resolución de sesión.
+
+**Tests** (PLAN task 7 cumplido): 49 nuevos — `SyncCursorUtilsTest` (11, pin
+del bug `+00:00`), `DefaultSyncRepositoryTest` (16: orden FK-safe, avance de
+cursor como `Instant`, cursor-hold con skips, timeout→`NetworkUnavailable`),
+`SyncQueriesTest` (19 contra SQLite real JVM: upsert 2-statements no dispara
+FK de hijos, guard de `markSynced`, tombstones visibles a `findForSync`),
+mutex serialization en `SyncDataUseCaseTest`, + `SyncFkExceptionTest`
+instrumentado (2: pin de que `SQLiteConstraintException` ES el tipo que lanza
+el driver Android en huérfanos FK y que cacharlo dentro de la tx NO la
+rollbackea — verificado también contra sqlite3 CLI y xerial JDBC).
+
+**Verificación E2E en 2 devices (2026-06-10) — TODO PASÓ**:
+- Push A→server: 26 filas (1 account, 23 categories, 2 tx) `Pending`→`Synced`, visibles en Postgres local.
+- 2do sync en A: sin crash (el path del cursor), cursor persistido `Z` canónico per-user.
+- Pull a device B limpio: 26 filas convergen.
+- Tombstone: delete de tx en A propaga a B (`deletedAt` seteado, fuera de la UI).
+- LWW real: misma tx editada en ambos (B→600 primero, A→700 después), sync B→A→B: **ambos devices + server convergen en 700** (gana el write más nuevo).
+
+Residuales conocidos (no bloqueantes, candidatos slice 4):
+- Cursor congelado si el server tuviera una fila huérfana PERMANENTE (requiere inconsistencia referencial server-side; el race transitorio se auto-cura al siguiente ciclo). Candidato: retry cap / poison-row defer.
+- Clear de server tombstone en "resurrect" del mismo PK — no alcanzable (no hay undelete), documentado a propósito.
+- N+1 `findForSync` por fila en pull — irrelevante a escala personal; ahora viviría en UN solo lugar (`BaseTableSync`) si se optimiza.
+
+**Bug PRE-existente encontrado de paso (NO sync)**: el editor de
+transacciones divide el monto por 1000 al CARGAR (tx de S/ 25.00 abre
+como "2.50"); guardar convierte bien (600.00 → 60000 centavos). Display-only
+al load, pero guardar sin re-tipear achicaría el monto 10×. Tech debt:
+unificar el formatter de plata entre lista y editor.
 
 **Follow-up tracked antes de slice 3**: test instrumentado E2E de los
 delete use cases contra SQLite real (hoy solo fakes MockK).
@@ -42,9 +111,11 @@ Notas laterales:
 - El repo en GitHub fue renombrado `android-retrofit` → `Just-Chill`;
   el remote `origin` local sigue apuntando a la URL vieja (funciona por
   redirect de GitHub).
-- Engram y SDD quedaron **desactivados** para este repo por regla del
-  user (ver `CLAUDE.md` raíz) — el estado del proyecto vive en `docs/`
-  y git, no en memoria externa.
+- Engram y SDD estuvieron desactivados un tiempo, pero se
+  **re-habilitaron el 2026-06-10** (commit `55fcab1`, removió la nota del
+  `CLAUDE.md` raíz). El estado canónico sigue viviendo en `docs/` + git
+  (committeable, compartible), y engram queda como memoria persistente
+  cross-sesión en paralelo.
 
 ---
 
@@ -112,8 +183,9 @@ con cualquier tamaño de letra.
 
 ## TL;DR — dónde estamos ahora
 
-- **Track activo — local-first-sync**: slice 1/5 en trunk (soft-delete +
-  sync metadata). Decisiones en `docs/adr/`. Próximo: slice 2 (auth).
+- **Track activo — local-first-sync**: slices 1-3/5 (soft-delete + sync
+  metadata + auth opt-in + sync engine verificado en 2 devices). Decisiones
+  en `docs/adr/`. Próximo: slice 4 (sync lifecycle).
   OJO: la decisión "100% local, sin login" de Fases 1-5 fue **reversada
   formalmente** vía ADR 001 — ahora es local-first con sync opcional.
 - **Proceso de definición**: ✅ Fases 1-5 firmadas y versionadas.

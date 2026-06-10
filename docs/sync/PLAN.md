@@ -17,8 +17,8 @@
 | Slice | Scope | Status |
 |---|---|---|
 | 1 | Schema v3: soft-delete + sync metadata | ✅ trunk `59b8adf` |
-| 2 | Auth opt-in (email/password) + claim local data | ⏳ next |
-| 3 | Sync engine: push/pull + LWW + cursor | — |
+| 2 | Auth opt-in (email/password) + claim local data | ✅ trunk `700d28b` |
+| 3 | Sync engine: push/pull + LWW + cursor | ⏳ in progress |
 | 4 | Sync lifecycle: triggers, realtime, status UI | — |
 | 5 | Compliance + multi-device QA + release gate | — |
 
@@ -211,7 +211,15 @@ Verification (manual, dev build): sign-up new user → session survives
 process death → sign-out → app fully usable anonymous → sign-in again
 → no duplicate claim.
 
-## Slice 3 — Sync engine core (~500 lines)
+## Slice 3 — Sync engine core (~500 lines) ✅ DONE 2026-06-10
+
+> Shipped + hardened (2 judgment-day rounds) + verified E2E on two
+> emulators against the local Supabase stack: push/pull convergence,
+> second-sync cursor path, tombstone propagation, real LWW conflict
+> (same row edited on both devices — newest write wins everywhere).
+> Implementation note: the per-table push/pull algorithm lives once in
+> `data/sync/BaseTableSync.kt`; tables provide only generated-query
+> adapters and reified postgrest calls.
 
 Goal: push + pull converge two devices. Manual trigger only (a debug
 "Sync now" row); automatic lifecycle is slice 4.
