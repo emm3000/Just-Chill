@@ -35,3 +35,6 @@ update:
 UPDATE accounts
 SET name = ?, type = ?, updatedAt = ?, syncState = 'Pending'
 WHERE accountId = ?;
+
+claimAll:
+UPDATE accounts SET userId = :userId, syncState = 'Pending' WHERE userId IS NULL;

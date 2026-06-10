@@ -43,3 +43,6 @@ updateValues:
 UPDATE categories
 SET name = ?, updatedAt = ?, syncState = 'Pending'
 WHERE categoryId = ?;
+
+claimAll:
+UPDATE categories SET userId = :userId, syncState = 'Pending' WHERE userId IS NULL;

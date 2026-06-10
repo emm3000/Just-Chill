@@ -152,3 +152,6 @@ FROM transactions
 WHERE deletedAt IS NULL
 ORDER BY date DESC, createdAt DESC
 LIMIT 1;
+
+claimAll:
+UPDATE transactions SET userId = :userId, syncState = 'Pending' WHERE userId IS NULL;
