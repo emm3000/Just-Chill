@@ -7,6 +7,7 @@ import com.emm.data.EmmDatabaseData
 import com.emm.data.shared.safeDbCall
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 
@@ -58,19 +59,19 @@ class CategoryTableSync(private val db: EmmDatabaseData, client: SupabaseClient)
     // Pull hooks
     // ---------------------------------------------------------------------------
 
-    override suspend fun fetchRemoteRows(userId: String, overlapCursor: String?): List<CategoryRowDto> =
-        if (overlapCursor != null) {
-            client.postgrest.from(TABLE).select {
-                filter {
-                    eq("user_id", userId)
-                    gte("server_updated_at", overlapCursor)
-                }
-            }.decodeList()
-        } else {
-            client.postgrest.from(TABLE).select {
-                filter { eq("user_id", userId) }
-            }.decodeList()
-        }
+    override val pkColumn: String = "category_id"
+
+    override suspend fun fetchRemotePage(
+        userId: String,
+        overlapCursor: String?,
+        after: PullPageKey?,
+        limit: Int,
+    ): List<CategoryRowDto> = client.postgrest.from(TABLE).select {
+        filter { applyPageFilter(userId, overlapCursor, after, pkColumn) }
+        order("server_updated_at", Order.ASCENDING)
+        order(pkColumn, Order.ASCENDING)
+        limit(limit.toLong())
+    }.decodeList()
 
     override fun localUpdatedAt(pk: String): Long? = db.categoriesQueries.findForSync(pk).executeAsOneOrNull()
 

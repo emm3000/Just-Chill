@@ -7,6 +7,7 @@ import com.emm.data.EmmDatabaseData
 import com.emm.data.shared.safeDbCall
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 
@@ -56,19 +57,19 @@ class AccountTableSync(private val db: EmmDatabaseData, client: SupabaseClient) 
     // Pull hooks
     // ---------------------------------------------------------------------------
 
-    override suspend fun fetchRemoteRows(userId: String, overlapCursor: String?): List<AccountRowDto> =
-        if (overlapCursor != null) {
-            client.postgrest.from(TABLE).select {
-                filter {
-                    eq("user_id", userId)
-                    gte("server_updated_at", overlapCursor)
-                }
-            }.decodeList()
-        } else {
-            client.postgrest.from(TABLE).select {
-                filter { eq("user_id", userId) }
-            }.decodeList()
-        }
+    override val pkColumn: String = "account_id"
+
+    override suspend fun fetchRemotePage(
+        userId: String,
+        overlapCursor: String?,
+        after: PullPageKey?,
+        limit: Int,
+    ): List<AccountRowDto> = client.postgrest.from(TABLE).select {
+        filter { applyPageFilter(userId, overlapCursor, after, pkColumn) }
+        order("server_updated_at", Order.ASCENDING)
+        order(pkColumn, Order.ASCENDING)
+        limit(limit.toLong())
+    }.decodeList()
 
     override fun localUpdatedAt(pk: String): Long? = db.accountsQueries.findForSync(pk).executeAsOneOrNull()
 
