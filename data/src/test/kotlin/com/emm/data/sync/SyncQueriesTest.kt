@@ -208,6 +208,35 @@ class SyncQueriesTest {
     }
 
     // =========================================================================
+    // getAccountBalance: unknown-type rows contribute 0 (Fix 1 pin)
+    // =========================================================================
+
+    @Test
+    fun `getAccountBalance - unknown-type row contributes 0, known types compute correctly`() {
+        insertAccount("acc-balance")
+        // Income row: +500
+        exec(
+            "INSERT INTO transactions(transactionId, type, amount, date, createdAt, updatedAt, accountId, syncState) " +
+                "VALUES ('tx-income', 'Income', 500, 0, 0, 0, 'acc-balance', 'Synced')",
+        )
+        // Spend row: -200
+        exec(
+            "INSERT INTO transactions(transactionId, type, amount, date, createdAt, updatedAt, accountId, syncState) " +
+                "VALUES ('tx-spend', 'Spend', 200, 0, 0, 0, 'acc-balance', 'Synced')",
+        )
+        // Unknown-casing row: must contribute 0, not -300 (the old ELSE -amount behaviour)
+        exec(
+            "INSERT INTO transactions(transactionId, type, amount, date, createdAt, updatedAt, accountId, syncState) " +
+                "VALUES ('tx-unknown', 'INCOME', 300, 0, 0, 0, 'acc-balance', 'Synced')",
+        )
+
+        val balance = db.transactionsQueries.getAccountBalance("acc-balance").executeAsOne()
+
+        // Expected: 500 (Income) - 200 (Spend) + 0 (unknown) = 300
+        assertEquals(300L, balance, "Unknown-type row must contribute 0 to account balance")
+    }
+
+    // =========================================================================
     // markSynced guard: only flips when updatedAt matches
     // =========================================================================
 

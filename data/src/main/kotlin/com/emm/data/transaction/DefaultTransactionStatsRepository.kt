@@ -1,5 +1,6 @@
 package com.emm.data.transaction
 
+import com.emm.data.shared.enumValueOrNull
 import com.emm.data.shared.safeDbCall
 import com.emm.domain.report.CategoryAmount
 import com.emm.domain.report.MonthlySectionStats
@@ -44,11 +45,12 @@ class DefaultTransactionStatsRepository(private val localDataSource: Transaction
     override suspend fun topUsedCombos(type: TransactionType, startInclusive: Long, limit: Int): List<FrequentCombo> =
         safeDbCall {
             localDataSource.topUsedCombos(type, startInclusive, limit.toLong())
-                .map { row ->
+                .mapNotNull { row ->
+                    val parsedType = enumValueOrNull<TransactionType>(row.type) ?: return@mapNotNull null
                     FrequentCombo(
                         accountId = AccountId(row.accountId),
                         categoryId = CategoryId(row.categoryId),
-                        type = TransactionType.valueOf(row.type),
+                        type = parsedType,
                     )
                 }
         }

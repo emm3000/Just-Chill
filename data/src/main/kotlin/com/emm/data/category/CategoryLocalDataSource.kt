@@ -27,7 +27,7 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         .asFlow()
         .mapToOneOrNull(Dispatchers.IO)
         .map { category ->
-            category?.asEntity()?.asExternalModel()
+            category?.asEntity()?.asExternalModelOrNull()
         }
 
     suspend fun countDefaults(): Long = withContext(Dispatchers.IO) {

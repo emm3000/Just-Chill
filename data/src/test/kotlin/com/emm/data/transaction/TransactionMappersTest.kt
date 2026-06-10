@@ -1,0 +1,179 @@
+package com.emm.data.transaction
+
+import com.emm.domain.transaction.TransactionType
+import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+
+class TransactionMappersTest {
+
+    // ── TransactionEntity.asExternalModelOrNull ────────────────────────────────
+
+    @Test
+    fun `asExternalModelOrNull - valid Income type returns Transaction`() {
+        val entity = transactionEntity("tx-1", "Income")
+        val result = entity.asExternalModelOrNull()
+        assertNotNull(result)
+        assertEquals(TransactionType.Income, result.type)
+        assertEquals("tx-1", result.transactionId.value)
+    }
+
+    @Test
+    fun `asExternalModelOrNull - valid Spend type returns Transaction`() {
+        val entity = transactionEntity("tx-1", "Spend")
+        val result = entity.asExternalModelOrNull()
+        assertNotNull(result)
+        assertEquals(TransactionType.Spend, result.type)
+    }
+
+    @Test
+    fun `asExternalModelOrNull - unknown type INCOME returns null`() {
+        assertNull(transactionEntity("tx-1", "INCOME").asExternalModelOrNull())
+    }
+
+    @Test
+    fun `asExternalModelOrNull - unknown type Transfer returns null`() {
+        assertNull(transactionEntity("tx-1", "Transfer").asExternalModelOrNull())
+    }
+
+    // ── List<TransactionEntity>.asExternalModel ────────────────────────────────
+
+    @Test
+    fun `List asExternalModel - bad-type row is skipped, valid rows survive`() {
+        val entities = listOf(
+            transactionEntity("tx-good-1", "Income"),
+            transactionEntity("tx-bad", "INCOME"), // unknown
+            transactionEntity("tx-good-2", "Spend"),
+        )
+        val result = entities.asExternalModel()
+        assertEquals(2, result.size)
+        assertEquals("tx-good-1", result[0].transactionId.value)
+        assertEquals("tx-good-2", result[1].transactionId.value)
+    }
+
+    @Test
+    fun `List asExternalModel - all-bad list returns empty list`() {
+        val entities = listOf(
+            transactionEntity("tx-1", "INCOME"),
+            transactionEntity("tx-2", "SPEND"),
+        )
+        assertEquals(emptyList(), entities.asExternalModel())
+    }
+
+    // ── TransactionWithCategoryEntity.toDomainOrNull ───────────────────────────
+
+    @Test
+    fun `toDomainOrNull - valid type and category returns full TransactionWithCategory`() {
+        val entity = transactionWithCategoryEntity(
+            type = "Spend",
+            categoryType = "Spend",
+        )
+        val result = entity.toDomainOrNull()
+        assertNotNull(result)
+        assertEquals(TransactionType.Spend, result.type)
+        assertNotNull(result.category)
+    }
+
+    @Test
+    fun `toDomainOrNull - unknown transaction type returns null`() {
+        val entity = transactionWithCategoryEntity(type = "SPEND", categoryType = "Spend")
+        assertNull(entity.toDomainOrNull())
+    }
+
+    @Test
+    fun `toDomainOrNull - valid type but unknown categoryType keeps transaction with null category`() {
+        val entity = transactionWithCategoryEntity(
+            type = "Income",
+            categoryType = "INCOME", // case-mismatch → unknown
+        )
+        val result = entity.toDomainOrNull()
+        assertNotNull(result)
+        assertEquals(TransactionType.Income, result.type)
+        assertNull(result.category)
+    }
+
+    @Test
+    fun `toDomainOrNull - valid type and null categoryId produces null category`() {
+        val entity = transactionWithCategoryEntity(
+            type = "Income",
+            categoryId = null,
+            categoryName = null,
+            categoryIcon = null,
+            categoryColor = null,
+            categoryType = null,
+        )
+        val result = entity.toDomainOrNull()
+        assertNotNull(result)
+        assertNull(result.category)
+    }
+
+    @Test
+    fun `toDomainOrNull - categoryId present but categoryType null keeps transaction with null category`() {
+        // categoryId is set (LEFT JOIN matched a row) but categoryType is null —
+        // the category cannot be parsed so the transaction is kept with category = null.
+        val entity = transactionWithCategoryEntity(
+            type = "Income",
+            categoryId = "cat-1",
+            categoryName = "Food",
+            categoryIcon = "food",
+            categoryColor = "#00FF00",
+            categoryType = null,
+        )
+        val result = entity.toDomainOrNull()
+        assertNotNull(result)
+        assertEquals(TransactionType.Income, result.type)
+        assertNull(result.category)
+    }
+
+    // ── List<TransactionWithCategoryEntity>.toDomain ──────────────────────────
+
+    @Test
+    fun `toDomain list - bad-type row is skipped, valid rows survive`() {
+        val entities = listOf(
+            transactionWithCategoryEntity(id = "tx-a", type = "Income", categoryType = "Income"),
+            transactionWithCategoryEntity(id = "tx-b", type = "SPEND"), // unknown type → skip
+            transactionWithCategoryEntity(id = "tx-c", type = "Spend", categoryType = "Spend"),
+        )
+        val result = entities.toDomain()
+        assertEquals(2, result.size)
+        assertEquals("tx-a", result[0].transactionId.value)
+        assertEquals("tx-c", result[1].transactionId.value)
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private fun transactionEntity(id: String, type: String) = TransactionEntity(
+        transactionId = id,
+        type = type,
+        amount = 10000L,
+        description = "test",
+        date = 0L,
+        categoryId = null,
+        accountId = "acc-1",
+        createdAt = 0L,
+        updatedAt = 0L,
+    )
+
+    private fun transactionWithCategoryEntity(
+        id: String = "tx-1",
+        type: String = "Income",
+        categoryId: String? = "cat-1",
+        categoryName: String? = "Comida",
+        categoryIcon: String? = "food",
+        categoryColor: String? = "#FF0000",
+        categoryType: String? = "Spend",
+    ) = TransactionWithCategoryEntity(
+        transactionId = id,
+        type = type,
+        amount = 5000L,
+        description = "desc",
+        date = 0L,
+        accountId = "acc-1",
+        categoryId = categoryId,
+        categoryName = categoryName,
+        categoryIcon = categoryIcon,
+        categoryColor = categoryColor,
+        categoryType = categoryType,
+    )
+}

@@ -5,6 +5,7 @@ import com.emm.data.CompleteTransactionsByDateRange
 import com.emm.data.MonthlyAmountByCategory
 import com.emm.data.SearchTransactions
 import com.emm.data.Transactions
+import com.emm.data.shared.enumValueOrNull
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryType
 import com.emm.domain.report.CategoryAmount
@@ -31,17 +32,20 @@ fun Transactions.asEntity() = TransactionEntity(
 
 fun List<Transactions>.asEntity() = map(Transactions::asEntity)
 
-fun TransactionEntity.asExternalModel() = Transaction(
-    transactionId = TransactionId(transactionId),
-    type = TransactionType.valueOf(type),
-    amount = Money(cents = amount),
-    description = description,
-    date = date,
-    categoryId = categoryId?.let(::CategoryId),
-    accountId = AccountId(accountId),
-)
+fun TransactionEntity.asExternalModelOrNull(): Transaction? {
+    val parsedType = enumValueOrNull<TransactionType>(type) ?: return null
+    return Transaction(
+        transactionId = TransactionId(transactionId),
+        type = parsedType,
+        amount = Money(cents = amount),
+        description = description,
+        date = date,
+        categoryId = categoryId?.let(::CategoryId),
+        accountId = AccountId(accountId),
+    )
+}
 
-fun List<TransactionEntity>.asExternalModel() = map(TransactionEntity::asExternalModel)
+fun List<TransactionEntity>.asExternalModel() = mapNotNull(TransactionEntity::asExternalModelOrNull)
 
 fun TransactionInsert.asEntity() = TransactionEntity(
     transactionId = id.value,
@@ -97,29 +101,38 @@ fun SearchTransactions.asEntity() = TransactionWithCategoryEntity(
     categoryType = categoryType_,
 )
 
-fun TransactionWithCategoryEntity.toDomain() = TransactionWithCategory(
-    transactionId = TransactionId(transactionId),
-    type = TransactionType.valueOf(type),
-    amount = Money(cents = amount),
-    description = description,
-    date = date,
-    accountId = AccountId(accountId),
-    category = if (categoryId != null && categoryName != null && categoryIcon != null && categoryColor != null &&
-        categoryType != null
-    ) {
+fun TransactionWithCategoryEntity.toDomainOrNull(): TransactionWithCategory? {
+    val parsedType = enumValueOrNull<TransactionType>(type) ?: return null
+    return TransactionWithCategory(
+        transactionId = TransactionId(transactionId),
+        type = parsedType,
+        amount = Money(cents = amount),
+        description = description,
+        date = date,
+        accountId = AccountId(accountId),
+        category = resolveCategory(),
+    )
+}
+
+// Unknown categoryType keeps the transaction alive but sets category = null.
+// The UI already renders null category as "Sin categoría"; financial totals must not depend on it.
+private fun TransactionWithCategoryEntity.resolveCategory(): Category? {
+    val parsedType = categoryType?.let { enumValueOrNull<CategoryType>(it) } ?: return null
+    val allFieldsPresent = categoryId != null && categoryName != null && categoryIcon != null && categoryColor != null
+    return if (allFieldsPresent) {
         Category(
-            categoryId = CategoryId(categoryId),
-            name = categoryName,
-            icon = categoryIcon,
-            color = categoryColor,
-            categoryType = CategoryType.valueOf(categoryType),
+            categoryId = CategoryId(categoryId!!),
+            name = categoryName!!,
+            icon = categoryIcon!!,
+            color = categoryColor!!,
+            categoryType = parsedType,
         )
     } else {
         null
-    },
-)
+    }
+}
 
-fun List<TransactionWithCategoryEntity>.toDomain() = map(TransactionWithCategoryEntity::toDomain)
+fun List<TransactionWithCategoryEntity>.toDomain() = mapNotNull(TransactionWithCategoryEntity::toDomainOrNull)
 
 // totalAmount is Long? from SQLDelight (SUM is nullable), default to 0 if null
 fun MonthlyAmountByCategory.asEntity() = MonthlyAmountByCategoryEntity(

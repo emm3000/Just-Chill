@@ -1,6 +1,7 @@
 package com.emm.data.category
 
 import com.emm.data.Categories
+import com.emm.data.shared.enumValueOrNull
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryType
 import com.emm.domain.category.CategoryUpsert
@@ -21,15 +22,18 @@ fun Categories.asEntity() = CategoryEntity(
 fun List<Categories>.asEntity() = map(Categories::asEntity)
 
 // Entity -> Domain
-fun CategoryEntity.asExternalModel() = Category(
-    categoryId = CategoryId(categoryId),
-    name = name,
-    icon = icon,
-    color = color,
-    categoryType = CategoryType.valueOf(categoryType),
-)
+fun CategoryEntity.asExternalModelOrNull(): Category? {
+    val parsedType = enumValueOrNull<CategoryType>(categoryType) ?: return null
+    return Category(
+        categoryId = CategoryId(categoryId),
+        name = name,
+        icon = icon,
+        color = color,
+        categoryType = parsedType,
+    )
+}
 
-fun List<CategoryEntity>.asExternalModel() = map(CategoryEntity::asExternalModel)
+fun List<CategoryEntity>.asExternalModel() = mapNotNull(CategoryEntity::asExternalModelOrNull)
 
 // Domain upsert -> Entity
 fun CategoryUpsert.asEntity() = CategoryEntity(

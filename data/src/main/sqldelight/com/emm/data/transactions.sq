@@ -48,9 +48,12 @@ WHERE t.deletedAt IS NULL
   AND t.date < :startOfNextMonth
 ORDER BY t.date DESC;
 
+-- Unknown type values (e.g. from a newer app version on another device) contribute 0,
+-- consistent with the mapper skip-row policy: a row the app cannot interpret is invisible
+-- everywhere rather than partially visible (misclassified as a spend).
 getAccountBalance:
 SELECT COALESCE(
-    SUM(CASE WHEN type = 'Income' THEN amount ELSE -amount END), 0
+    SUM(CASE WHEN type = 'Income' THEN amount WHEN type = 'Spend' THEN -amount ELSE 0 END), 0
 )
 FROM transactions
 WHERE accountId = :accountId AND deletedAt IS NULL;

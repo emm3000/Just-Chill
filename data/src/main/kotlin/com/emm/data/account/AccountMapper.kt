@@ -21,6 +21,10 @@ fun List<Accounts>.asEntity() = map(Accounts::asEntity)
 fun AccountEntity.asExternalModel() = Account(
     accountId = AccountId(accountId),
     name = name,
+    // Accounts coerce to Bank instead of skipping the row: AccountType only drives the list
+    // icon (display-only, no financial semantics). Skipping an account row would orphan its
+    // transactions in the UI while they still count toward balances, which is worse than
+    // showing a generic icon.
     type = runCatching { AccountType.valueOf(type) }.getOrDefault(AccountType.Bank),
 )
 

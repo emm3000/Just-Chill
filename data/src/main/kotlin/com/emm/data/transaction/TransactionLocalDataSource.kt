@@ -86,7 +86,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
     }
 
     fun find(transactionId: String): Transaction? =
-        tq.find(transactionId).executeAsOneOrNull()?.asEntity()?.asExternalModel()
+        tq.find(transactionId).executeAsOneOrNull()?.asEntity()?.asExternalModelOrNull()
 
     suspend fun update(transactionId: String, transactionUpdate: TransactionUpdate) = withContext(Dispatchers.IO) {
         tq.update(

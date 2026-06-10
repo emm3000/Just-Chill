@@ -35,10 +35,10 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData)
     fun allWithDetails(): Flow<List<RecurringMovementDetails>> = rmq.selectAllWithDetails()
         .asFlow()
         .mapToList(Dispatchers.IO)
-        .map { list -> list.map { it.asExternalModel() } }
+        .map { list -> list.mapNotNull { it.asExternalModelOrNull() } }
 
     suspend fun find(id: String): RecurringMovement? = withContext(Dispatchers.IO) {
-        rmq.find(id).executeAsOneOrNull()?.asEntity()?.asExternalModel()
+        rmq.find(id).executeAsOneOrNull()?.asEntity()?.asExternalModelOrNull()
     }
 
     @OptIn(ExperimentalUuidApi::class)
