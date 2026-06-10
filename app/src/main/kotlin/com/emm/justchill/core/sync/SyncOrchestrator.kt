@@ -39,6 +39,9 @@ data class SyncStatus(val isSyncing: Boolean = false, val lastSyncedAtMillis: Lo
 sealed interface SyncEvent {
     /** The remote session was revoked — the user has been signed out automatically. */
     data object SessionExpired : SyncEvent
+
+    /** A manually-requested sync cycle failed (non-[DomainException.Unauthorized]). */
+    data class SyncFailed(val error: DomainException) : SyncEvent
 }
 
 /**
@@ -54,7 +57,8 @@ sealed interface SyncEvent {
  * into at most one queued run, and [isSyncing] accurately reflects a single in-flight cycle.
  *
  * Failure posture: [DomainException.Unauthorized] → sign out + emit [SyncEvent.SessionExpired].
- * All other [DomainException] subtypes are swallowed silently — the next trigger is the retry.
+ * All other [DomainException] subtypes are swallowed silently for automatic triggers — the next
+ * trigger is the retry. Manually-requested cycles (see [requestSync]) emit [SyncEvent.SyncFailed].
  * [CancellationException] is never caught.
  *
  * @param syncData            serialized push+pull use case.
@@ -89,8 +93,28 @@ class SyncOrchestrator(
     @Volatile
     private var currentUserId: String? = null
 
-    /** Offer a sync request. Overlapping calls collapse safely. */
-    fun requestSync() {
+    /**
+     * Sticky flag set when a manual sync is requested. Cannot travel through [Channel.CONFLATED]
+     * because conflation might let an automatic [Unit] overwrite a manual one. Instead, the flag
+     * is consumed at the start of each [runSync] cycle — so any cycle that includes a pending
+     * manual tap counts as manual and will surface failures via [SyncEvent.SyncFailed].
+     *
+     * Note: if a manual request collapses with an automatic one (CONFLATED), the merged cycle
+     * still counts as manual because the flag was set before conflation occurred.
+     */
+    @Volatile
+    private var manualRequestPending = false
+
+    /**
+     * Offer a sync request. Overlapping calls collapse safely.
+     *
+     * @param manual when true, marks the cycle as manually requested. A failure in a manual cycle
+     *               emits [SyncEvent.SyncFailed] rather than being swallowed silently. The flag is
+     *               sticky across CONFLATED collapsing: if a manual request collapses with an
+     *               automatic one, the merged cycle counts as manual.
+     */
+    fun requestSync(manual: Boolean = false) {
+        if (manual) manualRequestPending = true
         requestChannel.trySend(Unit)
     }
 
@@ -172,12 +196,15 @@ class SyncOrchestrator(
      *
      * Sets [isSyncing] to true for the duration, persists last-synced-at on success,
      * handles [DomainException.Unauthorized] by signing out and emitting [SyncEvent.SessionExpired],
-     * and silently swallows other [DomainException] variants (next trigger retries).
+     * silently swallows other [DomainException] variants for automatic triggers (next trigger retries),
+     * and emits [SyncEvent.SyncFailed] when the cycle was manually requested.
      */
     // Intentional broad catch: DomainException subtypes handled explicitly; CancellationException re-thrown.
     // SwallowedException: the inner signOut catch is intentional best-effort — the session is already gone.
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     private suspend fun runSync() {
+        val manual = manualRequestPending
+        manualRequestPending = false
         _status.value = _status.value.copy(isSyncing = true)
         try {
             syncData()
@@ -198,9 +225,10 @@ class SyncOrchestrator(
                 // Best-effort sign-out; session is already revoked remotely.
             }
             _events.emit(SyncEvent.SessionExpired)
-        } catch (_: DomainException) {
-            // Silent-retry posture: swallow, the next trigger will retry.
+        } catch (e: DomainException) {
+            // Silent-retry posture for automatic triggers: swallow, the next trigger will retry.
             _status.value = _status.value.copy(isSyncing = false)
+            if (manual) _events.emit(SyncEvent.SyncFailed(e))
         }
     }
 }

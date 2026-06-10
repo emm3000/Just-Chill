@@ -130,7 +130,7 @@ class ProfileViewModel(
     }
 
     private fun syncNow() {
-        syncOrchestrator.requestSync()
+        syncOrchestrator.requestSync(manual = true)
     }
 
     private fun importFromJson(json: String) = launchSafe(

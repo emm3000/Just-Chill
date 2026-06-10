@@ -60,6 +60,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.sync.SyncEvent
 import com.emm.justchill.core.sync.SyncOrchestrator
@@ -128,6 +129,9 @@ fun Hh(modifier: Modifier = Modifier) {
             when (event) {
                 SyncEvent.SessionExpired ->
                     snackbarHostState.showSnackbar("Tu sesión expiró. Inicia sesión nuevamente.")
+
+                is SyncEvent.SyncFailed ->
+                    snackbarHostState.showSnackbar("No se pudo sincronizar. ${event.error.toUserMessage()}")
             }
         }
     }

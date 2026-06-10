@@ -223,4 +223,91 @@ class SyncOrchestratorTest {
         // Note: we can't assert an exact timestamp, but we can verify prefs.setLastSyncedAt was called.
         coVerify(atLeast = 1) { prefs.setLastSyncedAt(eq("uid5"), any()) }
     }
+
+    // ── (8) Manual sync failure emits SyncFailed ──────────────────────────────────
+
+    @Test
+    fun `manual sync failure emits SyncFailed with the error`() = runTest(testDispatcher) {
+        val networkError = DomainException.NetworkUnavailable(RuntimeException("no net"))
+        coEvery { syncData.invoke() } throws networkError
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+
+        val events = mutableListOf<SyncEvent>()
+        val collectJob = launch { orchestrator.events.collect { events.add(it) } }
+
+        // Authenticate first so the orchestrator has a session; absorb the automatic sync.
+        sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = "uid8", email = "h@i.com"))
+        advanceUntilIdle()
+
+        // Clear events captured during the automatic cycle, then fire manual.
+        events.clear()
+        orchestrator.requestSync(manual = true)
+        advanceUntilIdle()
+
+        val syncFailedEvents = events.filterIsInstance<SyncEvent.SyncFailed>()
+        assertTrue(syncFailedEvents.isNotEmpty(), "Expected at least one SyncFailed event")
+        assertTrue(
+            syncFailedEvents.any { it.error === networkError },
+            "Expected SyncFailed to carry the thrown error",
+        )
+
+        collectJob.cancel()
+    }
+
+    // ── (9) Automatic sync failure does not emit SyncFailed ───────────────────────
+
+    @Test
+    fun `automatic sync failure does not emit SyncFailed`() = runTest(testDispatcher) {
+        coEvery { syncData.invoke() } throws DomainException.NetworkUnavailable(RuntimeException("no net"))
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+
+        val events = mutableListOf<SyncEvent>()
+        val collectJob = launch { orchestrator.events.collect { events.add(it) } }
+
+        // Trigger via automatic path only (sign-in trigger, no manual = true).
+        sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = "uid9", email = "i@j.com"))
+        advanceUntilIdle()
+
+        val syncFailedEvents = events.filterIsInstance<SyncEvent.SyncFailed>()
+        assertTrue(syncFailedEvents.isEmpty(), "Automatic failure must not emit SyncFailed; got $events")
+
+        collectJob.cancel()
+    }
+
+    // ── (10) Manual sync with Unauthorized emits SessionExpired but not SyncFailed ─
+
+    @Test
+    fun `manual sync with Unauthorized emits SessionExpired but not SyncFailed`() = runTest(testDispatcher) {
+        coEvery { syncData.invoke() } throws DomainException.Unauthorized(message = "token expired", cause = null)
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+
+        val events = mutableListOf<SyncEvent>()
+        val collectJob = launch { orchestrator.events.collect { events.add(it) } }
+
+        // Authenticate, absorb automatic sync (also Unauthorized → SessionExpired emitted).
+        sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = "uid10", email = "j@k.com"))
+        advanceUntilIdle()
+
+        // Clear events from the automatic cycle, then fire manual.
+        events.clear()
+        orchestrator.requestSync(manual = true)
+        advanceUntilIdle()
+
+        assertTrue(
+            events.any { it is SyncEvent.SessionExpired },
+            "Expected SessionExpired for Unauthorized, got $events",
+        )
+        assertTrue(
+            events.none { it is SyncEvent.SyncFailed },
+            "Must NOT emit SyncFailed for Unauthorized, got $events",
+        )
+
+        collectJob.cancel()
+    }
 }
