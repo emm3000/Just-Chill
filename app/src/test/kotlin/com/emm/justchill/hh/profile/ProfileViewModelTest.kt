@@ -17,6 +17,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -228,7 +229,32 @@ class ProfileViewModelTest {
             effects.any { it is ProfileEffect.ShowMessage && it.text == "Sin conexión — revisa tu internet" },
             "Expected network error message not found in $effects",
         )
+        assertTrue(
+            !vm.state.value.isDeletingAccount,
+            "isDeletingAccount must reset after a failed deletion",
+        )
 
         job.cancel()
+    }
+
+    @Test
+    fun `DeleteAccount re-fire while in flight is ignored`() = runTest(testDispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        coEvery { deleteUserAccount.invoke() } coAnswers { gate.await() }
+
+        val vm = buildViewModel()
+
+        vm.onIntent(ProfileIntent.DeleteAccount)
+        advanceUntilIdle() // first call is suspended at the gate
+        assertTrue(vm.state.value.isDeletingAccount, "Flag must be set while the delete is in flight")
+
+        vm.onIntent(ProfileIntent.DeleteAccount)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { deleteUserAccount.invoke() }
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertTrue(!vm.state.value.isDeletingAccount, "Flag must reset after the delete completes")
     }
 }

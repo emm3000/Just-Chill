@@ -2,6 +2,7 @@ package com.emm.domain.auth
 
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.sync.SyncCursorStore
+import com.emm.domain.sync.SyncMutex
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -10,7 +11,9 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import kotlin.test.assertFailsWith
@@ -20,11 +23,13 @@ class DeleteUserAccountUseCaseTest {
     private val authRepository = mockk<AuthRepository>()
     private val claimLocalDataRepository = mockk<ClaimLocalDataRepository>()
     private val syncCursorStore = mockk<SyncCursorStore>()
+    private val syncMutex = SyncMutex()
 
     private val useCase = DeleteUserAccountUseCase(
         authRepository = authRepository,
         claimLocalDataRepository = claimLocalDataRepository,
         syncCursorStore = syncCursorStore,
+        syncMutex = syncMutex,
     )
 
     private fun authenticated(userId: String) =
@@ -94,5 +99,33 @@ class DeleteUserAccountUseCaseTest {
         coVerify(exactly = 1) { authRepository.deleteAccount() }
         coVerify(exactly = 1) { claimLocalDataRepository.unclaimAll(userId) }
         verify(exactly = 1) { syncCursorStore.clear(userId) }
+    }
+
+    // ── SyncMutex serialization ───────────────────────────────────────────────
+
+    @Test
+    fun `deletion waits for an in-flight holder of the shared SyncMutex`() = runTest {
+        val userId = "uid-4"
+        every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
+        coEvery { authRepository.deleteAccount() } just Runs
+        coEvery { claimLocalDataRepository.unclaimAll(userId) } just Runs
+        every { syncCursorStore.clear(userId) } just Runs
+
+        // Simulate an in-flight sync cycle holding the shared lock.
+        val syncGate = CompletableDeferred<Unit>()
+        val syncJob = launch { syncMutex.withLock { syncGate.await() } }
+        val deleteJob = launch { useCase() }
+        testScheduler.advanceUntilIdle()
+
+        // Lock still held: the deletion must not have reached the remote RPC.
+        coVerify(exactly = 0) { authRepository.deleteAccount() }
+
+        syncGate.complete(Unit)
+        testScheduler.advanceUntilIdle()
+        syncJob.join()
+        deleteJob.join()
+
+        coVerify(exactly = 1) { authRepository.deleteAccount() }
+        coVerify(exactly = 1) { claimLocalDataRepository.unclaimAll(userId) }
     }
 }

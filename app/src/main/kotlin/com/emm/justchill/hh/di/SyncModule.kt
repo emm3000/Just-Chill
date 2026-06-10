@@ -10,6 +10,7 @@ import com.emm.domain.sync.ConflictResolver
 import com.emm.domain.sync.ObservePendingSyncCountUseCase
 import com.emm.domain.sync.SyncCursorStore
 import com.emm.domain.sync.SyncDataUseCase
+import com.emm.domain.sync.SyncMutex
 import com.emm.domain.sync.SyncRepository
 import com.emm.justchill.core.sync.AppPreferencesSyncCursorStore
 import com.emm.justchill.core.sync.SyncOrchestrator
@@ -55,8 +56,10 @@ val syncModule = module {
         )
     }
 
-    // Single, not factory: SyncDataUseCase holds a Mutex that serializes concurrent sync
-    // cycles. A fresh Mutex per injection (factoryOf) would defeat that serialization.
+    // Single: ONE lock per process. Serializes sync cycles against each other AND against
+    // account deletion (in-flight push must not resurrect rows after delete_account).
+    single { SyncMutex() }
+
     singleOf(::SyncDataUseCase)
 
     // Application-lifetime scope for SyncOrchestrator long-lived jobs.

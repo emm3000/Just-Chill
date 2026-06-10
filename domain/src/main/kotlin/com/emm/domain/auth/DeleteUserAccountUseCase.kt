@@ -2,6 +2,7 @@ package com.emm.domain.auth
 
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.sync.SyncCursorStore
+import com.emm.domain.sync.SyncMutex
 import kotlinx.coroutines.flow.first
 
 /**
@@ -25,8 +26,12 @@ class DeleteUserAccountUseCase(
     private val authRepository: AuthRepository,
     private val claimLocalDataRepository: ClaimLocalDataRepository,
     private val syncCursorStore: SyncCursorStore,
+    private val syncMutex: SyncMutex,
 ) {
-    suspend operator fun invoke() {
+    // The whole flow runs under the shared SyncMutex: an in-flight push finishing AFTER the
+    // delete_account RPC would re-upsert rows the server just wiped (stateless JWT + no FK to
+    // auth.users + RLS uid claim still matching). See SyncMutex for the full rationale.
+    suspend operator fun invoke() = syncMutex.withLock {
         val status = authRepository.sessionStatus.first { it !is SessionStatus.Initializing }
         val userId = (status as? SessionStatus.Authenticated)?.user?.userId
             ?: throw DomainException.Unauthorized("No authenticated session")

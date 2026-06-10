@@ -86,11 +86,20 @@ class ProfileViewModel(
         sendEffect(ProfileEffect.ShowMessage("Sesión cerrada. Tus datos siguen en este teléfono."))
     }
 
-    private fun deleteAccount() = launchSafe(
-        onError = { e -> ProfileEffect.ShowMessage(e.toUserMessage()) },
-    ) {
-        deleteUserAccount.invoke()
-        sendEffect(ProfileEffect.ShowMessage("Cuenta eliminada. Tus datos siguen en este teléfono."))
+    private fun deleteAccount() {
+        // Guard against re-fires while the remote delete is in flight (dialog can be reopened).
+        if (state.value.isDeletingAccount) return
+        updateState { copy(isDeletingAccount = true) }
+        launchSafe(
+            onError = { e ->
+                updateState { copy(isDeletingAccount = false) }
+                ProfileEffect.ShowMessage(e.toUserMessage())
+            },
+        ) {
+            deleteUserAccount.invoke()
+            updateState { copy(isDeletingAccount = false) }
+            sendEffect(ProfileEffect.ShowMessage("Cuenta eliminada. Tus datos siguen en este teléfono."))
+        }
     }
 
     private fun exportToStream(output: OutputStream) = launchSafe(

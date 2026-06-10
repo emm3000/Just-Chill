@@ -12,6 +12,7 @@ data class ProfileUiState(
     val isExporting: Boolean = false,
     val isImporting: Boolean = false,
     val isSyncing: Boolean = false,
+    val isDeletingAccount: Boolean = false,
     val lastSyncedAtMillis: Long? = null,
     val categoryCount: Int = 0,
     val accountCount: Int = 0,

@@ -15,7 +15,7 @@ import kotlin.test.assertTrue
 class SyncDataUseCaseTest {
 
     private val syncRepository = mockk<SyncRepository>()
-    private val useCase = SyncDataUseCase(syncRepository)
+    private val useCase = SyncDataUseCase(syncRepository, SyncMutex())
 
     @Test
     fun `invoke delegates to repository once`() = runTest {
@@ -69,7 +69,7 @@ class SyncDataUseCaseTest {
             override fun observePendingCount(): Flow<Long> = flowOf(0L)
         }
 
-        val serializedUseCase = SyncDataUseCase(serializedRepo)
+        val serializedUseCase = SyncDataUseCase(serializedRepo, SyncMutex())
 
         // Launch both coroutines; the second one will block on the mutex until the first exits.
         val job1 = launch { serializedUseCase() }
