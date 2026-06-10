@@ -3,7 +3,9 @@
 > Estado del proyecto a fecha del último update. Punto de re-entrada
 > para retomar después de cerrar/limpiar el contexto.
 >
-> **Última actualización**: 2026-06-10 (local-first-sync: slice 3 sync engine ✅ verificado en 2 devices, commits en trunk local — SIN push).
+> **Última actualización**: 2026-06-10 (local-first-sync: slice 4 sync
+> lifecycle implementado + verificado en device; destapó y arregló un bug
+> crítico de claim — ver "Slice 4" abajo. SIN commitear todavía).
 
 ---
 
@@ -23,9 +25,11 @@ de trunk + git history, porque el design original quedó en engram cuando
 estuvo desactivado (engram + SDD se **re-habilitaron** el 2026-06-10 en
 commit `55fcab1`).
 
-**Estado**: slices 1-3 de 5 ✅ (slice 3 verificado E2E en 2 devices el
-2026-06-10 — ver "Slice 3 — cerrado" abajo). Próximo: slice 4 (sync
-lifecycle: on-resume, debounced push, sync-on-sign-in).
+**Estado**: slices 1-3 de 5 ✅ + slice 4 implementado y verificado en
+device (SIN commitear) — la verificación destapó un bug crítico de claim,
+ya arreglado (ver "Slice 4" abajo). Próximo: work-unit commits de slice 4,
+luego slice 5 (compliance + release gate, incluye paginación de pull +
+parseo defensivo de enums remotos).
 
 Slice 1 ✅ (`59b8adf`):
 - Migración 2.sqm (schema v3): `userId`/`deletedAt`/`syncState` + índices en las 4 tablas.
@@ -104,6 +108,69 @@ unificar el formatter de plata entre lista y editor.
 
 **Follow-up tracked antes de slice 3**: test instrumentado E2E de los
 delete use cases contra SQLite real (hoy solo fakes MockK).
+
+---
+
+### Slice 4 — sync lifecycle: bug CRÍTICO encontrado en verificación (2026-06-10)
+
+Slice 4 (triggers automáticos: on-resume, write debounced 3s,
+sync-on-sign-in + UI "Última sincronización" en Perfil) implementado,
+**sin commitear** todavía. La verificación en device (medium_phone,
+stack Supabase local) destapó un bug **crítico pre-existente** que
+rompía la feature estrella del slice. Fix aplicado + re-verificado en
+device.
+
+**Síntoma**: una transacción creada estando YA logueado no sincroniza
+— ni con el trigger debounced, ni con sync manual, ni en el siguiente
+launch. Solo sincroniza tras **reiniciar la app**.
+
+**Causa raíz**: el `insert:` de las 4 tablas nunca setea `userId`
+(queda NULL); lo único que lo estampa es `claimAll`. Y
+`ClaimLocalDataOnAuthenticationUseCase` corría `claimAll` solo en
+transiciones `observeSession().mapNotNull{userId}.distinctUntilChanged()`
+— o sea UNA vez por login. Estando ya autenticado, una fila nueva
+(userId NULL) no genera nuevo emission de sesión → `distinctUntilChanged`
+la suprime → nunca se reclama. Como `selectPending` y `countPending`
+filtran `userId IS NOT NULL`, la fila es invisible tanto al push como al
+trigger debounced de slice 4. **Doble impacto**: (1) el trigger de
+escritura nunca dispara; (2) la fila nunca pushea. Solo el cold start la
+salva (flow nuevo → primer emission pasa el distinct → `claimAll` la
+barre). El E2E de slice 3 no lo vio porque todas sus filas se creaban
+anónimas y se reclamaban en sign-in — nadie creó una fila DESPUÉS de
+loguearse.
+
+**Fix aplicado (claim reactivo)**: `ClaimLocalDataOnAuthenticationUseCase`
+ahora reclama cuando hay sesión `Authenticated` **Y** hay filas sin
+dueño, no solo en transición de userId. Nuevo
+`ClaimLocalDataRepository.observeUnclaimedCount(): Flow<Long>` (combine
+de 4 `countUnclaimed: SELECT COUNT(*) WHERE userId IS NULL`),
+`flatMapLatest` sobre sesión, `.filter { it > 0 }`, **sin
+`distinctUntilChanged`** (era justo lo que causaba el bug). `claimAll`
+es idempotente + atómico, así que reclamos redundantes son seguros; tras
+reclamar, count→0 (filtrado), sin loop. Hace que el código honre su
+propio KDoc ("rows created while offline get claimed"). 202 tests domain
++ testDevDebug + detekt verdes.
+
+**Verificado en device post-fix (medium_phone)**: crear S/678.90
+logueado → en server en ~3s sin botón ni reinicio; on-resume trae
+cambios server en ~2s; sync-on-sign-in trae 4 tx / 1 cuenta / 23 cat en
+~2s; cero crashes (el fix `flowOn(Main.immediate)` de `ProcessResumeEvents`
+aguanta); 0 filas huérfanas.
+
+**Tech debt nuevo (NO arreglado — candidato slice 5)**:
+`TransactionMappers.toDomain` hace `TransactionType.valueOf(type)` sin
+fallback. Una fila remota con `type` inesperado (rename de enum, drift
+de schema, data externa) lanza `IllegalArgumentException` no manejada en
+el Flow de la lista (collect en Main) → la app entra en **crash-loop al
+arrancar** (la lista es el tab inicial). Imposible en operación normal
+hoy (la app controla todas las escrituras vía el enum), pero el sync
+vuelve la data remota un input real. Mismo riesgo en `CategoryType.valueOf`
+y cualquier `valueOf`-sobre-remoto en los mappers. Fix: parseo defensivo
+(unknown → skip fila / default) en el path remoto→dominio. Va junto con
+la paginación de pull en slice 5. (Descubierto porque una fila de prueba
+inyectada por REST usó `"INCOME"` en vez de `"Income"` — el server
+guarda lo que se le pushea y el `valueOf` del cliente es case-sensitive
+y sin guarda.)
 
 Notas laterales:
 - Branch `feat/income-widget` (`eafc8ec`, sin push): widget Glance de
