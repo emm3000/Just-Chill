@@ -4,12 +4,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Per-module guidance lives in `domain/CLAUDE.md`, `data/CLAUDE.md`, and `app/CLAUDE.md`; Claude loads each one automatically when working in that module.
 
-## Tooling rules (override global config)
-
-- **Engram is DISABLED for this repo**: do not call any `mem_*` tool (save, search, context, session summaries) even if global instructions or hooks mandate it. Only use it when the user explicitly asks in the conversation.
-- **SDD workflow is DISABLED for this repo**: no `sdd-*` skills, phases, artifact stores, or init guards. Only when the user explicitly invokes it.
-- Project state lives in `docs/` and git history instead.
-
 ## Build & Development Commands
 
 ```bash
