@@ -4,6 +4,7 @@
 - **Date**: 2026-06-04
 - **Deciders**: Edgardo Muñoz
 - **Supersedes**: the "100% local-only, no backend, no auth, no sync" positioning baked into `CLAUDE.md`, `domain/CLAUDE.md`, and the `Won't Have` rows W-02 / W-03 / W-11 of `docs/PRODUCT_REQUIREMENTS.md`.
+- **Amended by**: [ADR 002](002-pull-cursor-uses-server-set-timestamp.md) (Decision point 5 — the pull cursor no longer compares client-written `updatedAt`).
 
 > Resumen (es): JustChill deja de ser estrictamente local-only y pasa a ser local-first con sync OPCIONAL. La app sigue siendo 100% usable sin cuenta (estado anónimo-local, sin gate de login). Iniciar sesión es opt-in desde Perfil y habilita sync multi-dispositivo de un mismo usuario. La resolución de conflictos es last-write-wins propia (sin PowerSync/ElectricSQL), auth solo email/contraseña, y los borrados pasan a ser soft-delete con tombstones.
 
