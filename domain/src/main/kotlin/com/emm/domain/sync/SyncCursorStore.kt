@@ -13,4 +13,11 @@ package com.emm.domain.sync
 interface SyncCursorStore {
     fun lastPulledAt(userId: String): String?
     fun setLastPulledAt(userId: String, cursor: String)
+
+    /**
+     * Removes all per-user sync metadata persisted for [userId] (pull cursor and last-synced-at
+     * timestamp). Called when the user deletes their account so stale cursor data does not
+     * interfere if the same device re-registers with a new account.
+     */
+    fun clear(userId: String)
 }

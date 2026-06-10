@@ -11,9 +11,11 @@ import org.junit.Test
 import kotlin.test.assertEquals
 
 /**
- * Verifies the security-critical claim contract against a real SQLite schema (JVM JDBC driver):
- * claimAll stamps ONLY anonymous rows (userId IS NULL) across all four tables, never touches rows
- * already owned by another user, and is idempotent.
+ * Verifies the security-critical claim/unclaim contract against a real SQLite schema (JVM JDBC
+ * driver): claimAll stamps ONLY anonymous rows (userId IS NULL) across all four tables, never
+ * touches rows already owned by another user, and is idempotent. unclaimAll reverses it for ONE
+ * user's rows (userId → NULL, syncState → 'Pending'), tombstones included, leaving other users'
+ * rows untouched.
  *
  * Uses raw SQL for setup so each row's userId can be controlled directly (the generated `insert`
  * queries force syncState and never set userId).
@@ -127,9 +129,70 @@ class DefaultClaimLocalDataRepositoryTest {
         assertEquals(4L, count)
     }
 
+    // ── unclaimAll ────────────────────────────────────────────────────────────
+
+    @Test
+    fun `unclaimAll reverts owned rows to NULL userId and Pending across all four tables`() = runTest {
+        // A previously synced row must also flip back to Pending, not just lose its owner.
+        exec("UPDATE accounts SET syncState = 'Synced' WHERE accountId = 'acc-other'")
+
+        repository.unclaimAll("other-user")
+
+        assertEquals(null, userIdOf("accounts", "accountId", "acc-other"))
+        assertEquals(null, userIdOf("categories", "categoryId", "cat-other"))
+        assertEquals(null, userIdOf("transactions", "transactionId", "tx-other"))
+        assertEquals(null, userIdOf("recurring_movements", "id", "rec-other"))
+        assertEquals("Pending", syncStateOf("accounts", "accountId", "acc-other"))
+    }
+
+    @Test
+    fun `unclaimAll never touches rows owned by a different user`() = runTest {
+        repository.claimAll("me")
+
+        repository.unclaimAll("other-user")
+
+        assertEquals("me", userIdOf("accounts", "accountId", "acc-null"))
+        assertEquals("me", userIdOf("categories", "categoryId", "cat-null"))
+        assertEquals("me", userIdOf("transactions", "transactionId", "tx-null"))
+        assertEquals("me", userIdOf("recurring_movements", "id", "rec-null"))
+    }
+
+    @Test
+    fun `unclaimAll also unclaims tombstones (deletedAt NOT NULL)`() = runTest {
+        exec(
+            "INSERT INTO transactions" +
+                "(transactionId, type, amount, date, createdAt, updatedAt, accountId, userId, deletedAt) " +
+                "VALUES ('tx-tombstone', 'Spend', 100, 0, 0, 0, 'acc-null', 'other-user', 5)",
+        )
+
+        repository.unclaimAll("other-user")
+
+        assertEquals(null, userIdOf("transactions", "transactionId", "tx-tombstone"))
+    }
+
+    @Test
+    fun `unclaimed rows count as anonymous again and are re-claimable`() = runTest {
+        repository.unclaimAll("other-user")
+
+        // 4 anonymous from setUp + the 4 just-unclaimed rows.
+        assertEquals(8L, repository.observeUnclaimedCount().first())
+
+        repository.claimAll("new-user")
+        assertEquals("new-user", userIdOf("accounts", "accountId", "acc-other"))
+    }
+
     private fun exec(sql: String) {
         driver.execute(identifier = null, sql = sql, parameters = 0)
     }
+
+    private fun syncStateOf(table: String, idColumn: String, id: String): String? = driver.executeQuery(
+        identifier = null,
+        sql = "SELECT syncState FROM $table WHERE $idColumn = '$id'",
+        mapper = { cursor ->
+            QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null)
+        },
+        parameters = 0,
+    ).value
 
     private fun userIdOf(table: String, idColumn: String, id: String): String? = driver.executeQuery(
         identifier = null,

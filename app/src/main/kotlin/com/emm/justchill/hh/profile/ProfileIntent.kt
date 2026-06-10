@@ -8,4 +8,5 @@ sealed interface ProfileIntent : UiIntent {
     data class ImportJson(val json: String) : ProfileIntent
     data object SignOut : ProfileIntent
     data object SyncNow : ProfileIntent
+    data object DeleteAccount : ProfileIntent
 }

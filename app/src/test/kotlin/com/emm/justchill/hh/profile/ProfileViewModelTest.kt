@@ -2,6 +2,7 @@ package com.emm.justchill.hh.profile
 
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.auth.AuthUser
+import com.emm.domain.auth.DeleteUserAccountUseCase
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.auth.SignOutUseCase
@@ -40,6 +41,7 @@ class ProfileViewModelTest {
     private val exportData = mockk<ExportDataUseCase>()
     private val importData = mockk<ImportDataUseCase>(relaxed = true)
     private val signOut = mockk<SignOutUseCase>(relaxed = true)
+    private val deleteUserAccount = mockk<DeleteUserAccountUseCase>(relaxed = true)
     private val syncOrchestrator = mockk<SyncOrchestrator>(relaxed = true) {
         every { status } returns MutableStateFlow(SyncStatus())
         every { events } returns MutableSharedFlow()
@@ -61,6 +63,7 @@ class ProfileViewModelTest {
             exportData = exportData,
             importData = importData,
             signOut = signOut,
+            deleteUserAccount = deleteUserAccount,
             syncOrchestrator = syncOrchestrator,
             categoryRepository = categoryRepository,
             accountRepository = accountRepository,
@@ -181,6 +184,50 @@ class ProfileViewModelTest {
 
         assertTrue(effects.any { it is ProfileEffect.ShowMessage && it.text == "Hubo un problema guardando tu data" })
         assertEquals(false, vm.state.value.isExporting)
+
+        job.cancel()
+    }
+
+    // ── DeleteAccount tests ───────────────────────────────────────────────────
+
+    @Test
+    fun `DeleteAccount success emits account-deleted message`() = runTest(testDispatcher) {
+        coEvery { deleteUserAccount.invoke() } returns Unit
+
+        val vm = buildViewModel()
+        val effects = mutableListOf<ProfileEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(ProfileIntent.DeleteAccount)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { deleteUserAccount.invoke() }
+        assertTrue(
+            effects.any {
+                it is ProfileEffect.ShowMessage &&
+                    it.text == "Cuenta eliminada. Tus datos siguen en este teléfono."
+            },
+            "Expected delete-account success message not found in $effects",
+        )
+
+        job.cancel()
+    }
+
+    @Test
+    fun `DeleteAccount failure emits error effect with toUserMessage mapping`() = runTest(testDispatcher) {
+        coEvery { deleteUserAccount.invoke() } throws DomainException.NetworkUnavailable(RuntimeException("no network"))
+
+        val vm = buildViewModel()
+        val effects = mutableListOf<ProfileEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(ProfileIntent.DeleteAccount)
+        advanceUntilIdle()
+
+        assertTrue(
+            effects.any { it is ProfileEffect.ShowMessage && it.text == "Sin conexión — revisa tu internet" },
+            "Expected network error message not found in $effects",
+        )
 
         job.cancel()
     }

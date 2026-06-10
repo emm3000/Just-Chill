@@ -12,4 +12,5 @@ import com.emm.justchill.core.preferences.AppPreferences
 class AppPreferencesSyncCursorStore(private val prefs: AppPreferences) : SyncCursorStore {
     override fun lastPulledAt(userId: String): String? = prefs.lastPulledAt(userId)
     override fun setLastPulledAt(userId: String, cursor: String) = prefs.setLastPulledAt(userId, cursor)
+    override fun clear(userId: String) = prefs.clearSyncMetadata(userId)
 }

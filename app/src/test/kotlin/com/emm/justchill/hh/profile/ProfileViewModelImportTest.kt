@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.profile
 
 import com.emm.domain.account.AccountRepository
+import com.emm.domain.auth.DeleteUserAccountUseCase
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.category.CategoryRepository
@@ -37,6 +38,7 @@ class ProfileViewModelImportTest {
     private val exportData = mockk<ExportDataUseCase>(relaxed = true)
     private val importData = mockk<ImportDataUseCase>()
     private val signOut = mockk<SignOutUseCase>(relaxed = true)
+    private val deleteUserAccount = mockk<DeleteUserAccountUseCase>(relaxed = true)
     private val syncOrchestrator = mockk<SyncOrchestrator>(relaxed = true) {
         every { status } returns MutableStateFlow(SyncStatus())
         every { events } returns MutableSharedFlow()
@@ -53,6 +55,7 @@ class ProfileViewModelImportTest {
         exportData = exportData,
         importData = importData,
         signOut = signOut,
+        deleteUserAccount = deleteUserAccount,
         syncOrchestrator = syncOrchestrator,
         categoryRepository = categoryRepository,
         accountRepository = accountRepository,

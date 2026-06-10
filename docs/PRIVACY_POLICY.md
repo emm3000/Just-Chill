@@ -37,9 +37,11 @@ nada que no sea sincronizar tus dispositivos.
   borrado (necesaria para esa propagación) hasta que borres tu cuenta.
 - **Cerrar sesión**: tu data local se queda en tu celular. El servidor
   conserva lo ya sincronizado para cuando vuelvas a entrar.
-- **Borrar tu cuenta**: escríbenos a edgardo.emm20@gmail.com desde el
-  correo de tu cuenta y eliminamos tu cuenta y toda tu data del
-  servidor dentro de 30 días. Tu data local sigue en tu celular.
+- **Borrar tu cuenta**: podés hacerlo directamente desde la app en
+  Perfil → "Eliminar cuenta". Se elimina tu cuenta de Supabase y toda
+  tu data del servidor de forma inmediata; tu data local sigue en tu
+  celular. También podés escribirnos a edgardo.emm20@gmail.com desde
+  el correo de tu cuenta y lo hacemos nosotros dentro de 30 días.
 
 ## Exportar tu data
 

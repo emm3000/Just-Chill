@@ -15,4 +15,11 @@ interface AuthRepository {
     suspend fun signUp(email: String, password: String): AuthUser?
 
     suspend fun signOut()
+
+    /**
+     * Calls the remote `delete_account` RPC (removes the auth user and all remote rows), then
+     * clears the on-device session without a server round-trip — the auth user no longer exists
+     * server-side after the RPC, so a server-side sign-out call would fail.
+     */
+    suspend fun deleteAccount()
 }

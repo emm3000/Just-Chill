@@ -6,6 +6,7 @@ import com.emm.domain.auth.AuthRepository
 import com.emm.domain.auth.ClaimLocalDataOnAuthenticationUseCase
 import com.emm.domain.auth.ClaimLocalDataRepository
 import com.emm.domain.auth.ClaimLocalDataUseCase
+import com.emm.domain.auth.DeleteUserAccountUseCase
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SignInUseCase
 import com.emm.domain.auth.SignOutUseCase
@@ -27,6 +28,7 @@ val authModule = module {
     factoryOf(::SignOutUseCase)
     factoryOf(::ObserveSessionUseCase)
     factoryOf(::ClaimLocalDataOnAuthenticationUseCase)
+    factoryOf(::DeleteUserAccountUseCase)
 
     viewModelOf(::AuthViewModel)
 }

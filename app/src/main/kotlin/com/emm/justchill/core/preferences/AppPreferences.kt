@@ -37,6 +37,19 @@ class AppPreferences(private val prefs: SharedPreferences) {
         prefs.edit { putLong(lastSyncedAtKey(userId), epochMillis) }
     }
 
+    /**
+     * Removes both per-user sync metadata keys for [userId]:
+     * the pull cursor ([KEY_LAST_PULLED_AT_PREFIX]) and the last-synced-at timestamp
+     * ([KEY_LAST_SYNCED_AT_PREFIX]). Called when the user deletes their account so stale
+     * cursor data does not interfere if the same device registers again.
+     */
+    fun clearSyncMetadata(userId: String) {
+        prefs.edit {
+            remove(lastPulledAtKey(userId))
+            remove(lastSyncedAtKey(userId))
+        }
+    }
+
     private fun lastPulledAtKey(userId: String) = "${KEY_LAST_PULLED_AT_PREFIX}$userId"
     private fun lastSyncedAtKey(userId: String) = "${KEY_LAST_SYNCED_AT_PREFIX}$userId"
 

@@ -2,6 +2,7 @@ package com.emm.justchill.hh.profile
 
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.AccountRepository
+import com.emm.domain.auth.DeleteUserAccountUseCase
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.auth.SignOutUseCase
@@ -23,6 +24,7 @@ class ProfileViewModel(
     private val exportData: ExportDataUseCase,
     private val importData: ImportDataUseCase,
     private val signOut: SignOutUseCase,
+    private val deleteUserAccount: DeleteUserAccountUseCase,
     private val syncOrchestrator: SyncOrchestrator,
     categoryRepository: CategoryRepository,
     accountRepository: AccountRepository,
@@ -72,6 +74,7 @@ class ProfileViewModel(
             is ProfileIntent.ImportJson -> importFromJson(intent.json)
             ProfileIntent.SignOut -> signOut()
             ProfileIntent.SyncNow -> syncNow()
+            ProfileIntent.DeleteAccount -> deleteAccount()
         }
     }
 
@@ -81,6 +84,13 @@ class ProfileViewModel(
         signOut.invoke()
         // Local data is intentionally NOT wiped on sign-out (see SignOutUseCase doc).
         sendEffect(ProfileEffect.ShowMessage("Sesión cerrada. Tus datos siguen en este teléfono."))
+    }
+
+    private fun deleteAccount() = launchSafe(
+        onError = { e -> ProfileEffect.ShowMessage(e.toUserMessage()) },
+    ) {
+        deleteUserAccount.invoke()
+        sendEffect(ProfileEffect.ShowMessage("Cuenta eliminada. Tus datos siguen en este teléfono."))
     }
 
     private fun exportToStream(output: OutputStream) = launchSafe(

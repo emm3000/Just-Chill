@@ -34,6 +34,17 @@ class DefaultClaimLocalDataRepository(private val db: EmmDatabaseData) : ClaimLo
         }
     }
 
+    override suspend fun unclaimAll(userId: String): Unit = safeDbCall {
+        withContext(Dispatchers.IO) {
+            db.transaction {
+                db.transactionsQueries.unclaimAll(userId)
+                db.recurring_movementsQueries.unclaimAll(userId)
+                db.categoriesQueries.unclaimAll(userId)
+                db.accountsQueries.unclaimAll(userId)
+            }
+        }
+    }
+
     override fun observeUnclaimedCount(): Flow<Long> = combine(
         db.accountsQueries.countUnclaimed().asFlow().mapToOne(Dispatchers.IO),
         db.categoriesQueries.countUnclaimed().asFlow().mapToOne(Dispatchers.IO),

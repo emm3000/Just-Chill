@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Info
@@ -34,7 +35,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,6 +72,7 @@ fun ProfileScreen(
     onPrivacyClick: () -> Unit = {},
     onSignInClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {},
+    onDeleteAccountClick: () -> Unit = {},
     onSyncNowClick: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
@@ -99,6 +103,7 @@ fun ProfileScreen(
             state = state,
             onSignInClick = onSignInClick,
             onSignOutClick = onSignOutClick,
+            onDeleteAccountClick = onDeleteAccountClick,
         )
 
         SectionHeader(text = "Gestionar")
@@ -186,8 +191,25 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun AccountSection(state: ProfileUiState, onSignInClick: () -> Unit, onSignOutClick: () -> Unit) {
+private fun AccountSection(
+    state: ProfileUiState,
+    onSignInClick: () -> Unit,
+    onSignOutClick: () -> Unit,
+    onDeleteAccountClick: () -> Unit,
+) {
     val colors = LocalEmmColors.current
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteAccountDialog) {
+        DeleteAccountDialog(
+            onConfirm = {
+                showDeleteAccountDialog = false
+                onDeleteAccountClick()
+            },
+            onDismiss = { showDeleteAccountDialog = false },
+        )
+    }
+
     Column(modifier = Modifier.fillMaxWidth()) {
         SectionHeader(text = "Cuenta")
         ProfileGroup {
@@ -235,6 +257,14 @@ private fun AccountSection(state: ProfileUiState, onSignInClick: () -> Unit, onS
                         meta = "Tus datos siguen en este teléfono",
                         metaIsPrimary = false,
                         onClick = onSignOutClick,
+                    )
+                    HairlineDivider()
+                    ProfileRow(
+                        icon = Icons.Outlined.Delete,
+                        label = "Eliminar cuenta",
+                        meta = "Borra tu cuenta y tus datos en la nube",
+                        metaIsPrimary = false,
+                        onClick = { showDeleteAccountDialog = true },
                     )
                 }
             }

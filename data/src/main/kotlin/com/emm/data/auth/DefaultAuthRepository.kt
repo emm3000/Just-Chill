@@ -5,6 +5,7 @@ import com.emm.domain.auth.AuthUser
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.shared.error.DomainException
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.SignOutScope
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.exception.AuthErrorCode
 import io.github.jan.supabase.auth.exception.AuthRestException
@@ -12,6 +13,7 @@ import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.user.UserInfo
 import io.github.jan.supabase.exceptions.HttpRequestException
 import io.github.jan.supabase.exceptions.UnauthorizedRestException
+import io.github.jan.supabase.postgrest.postgrest
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -77,6 +79,27 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
     override suspend fun signOut(): Unit = withContext(Dispatchers.IO) {
         try {
             client.auth.signOut()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: DomainException) {
+            throw e
+        } catch (e: Throwable) {
+            throw e.toAuthDomainException()
+        }
+    }
+
+    /**
+     * Calls the Supabase `delete_account` RPC to remove the auth user and all remote rows,
+     * then clears the on-device session via [SignOutScope.LOCAL].
+     *
+     * [SignOutScope.LOCAL] is intentional: the auth user no longer exists on the server after
+     * the RPC, so a server-side sign-out call would fail. LOCAL clears the on-device session only.
+     */
+    @Suppress("TooGenericExceptionCaught")
+    override suspend fun deleteAccount(): Unit = withContext(Dispatchers.IO) {
+        try {
+            client.postgrest.rpc("delete_account")
+            client.auth.signOut(SignOutScope.LOCAL)
         } catch (e: CancellationException) {
             throw e
         } catch (e: DomainException) {

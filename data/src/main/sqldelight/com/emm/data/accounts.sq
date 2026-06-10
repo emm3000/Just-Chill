@@ -39,6 +39,9 @@ WHERE accountId = ?;
 claimAll:
 UPDATE accounts SET userId = :userId, syncState = 'Pending' WHERE userId IS NULL;
 
+unclaimAll:
+UPDATE accounts SET userId = NULL, syncState = 'Pending' WHERE userId = :userId;
+
 selectPending:
 SELECT * FROM accounts WHERE syncState = 'Pending' AND userId IS NOT NULL;
 

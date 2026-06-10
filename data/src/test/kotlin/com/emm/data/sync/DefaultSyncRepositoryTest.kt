@@ -42,6 +42,10 @@ class DefaultSyncRepositoryTest {
         override fun setLastPulledAt(userId: String, cursor: String) {
             cursors[userId] = cursor
         }
+
+        override fun clear(userId: String) {
+            cursors.remove(userId)
+        }
     }
 
     // ---------------------------------------------------------------------------
@@ -77,6 +81,7 @@ class DefaultSyncRepositoryTest {
         override suspend fun signIn(email: String, password: String) = error("not used")
         override suspend fun signUp(email: String, password: String) = null
         override suspend fun signOut() = Unit
+        override suspend fun deleteAccount() = Unit
     }
 
     private fun authenticatedUser() = SessionStatus.Authenticated(AuthUser(userId = "user-1", email = "a@b.com"))
@@ -325,6 +330,7 @@ class DefaultSyncRepositoryTest {
             override suspend fun signIn(email: String, password: String) = error("not used")
             override suspend fun signUp(email: String, password: String) = null
             override suspend fun signOut() = Unit
+            override suspend fun deleteAccount() = Unit
         }
         val repo = buildRepository(blockingAuthRepo)
 
@@ -370,6 +376,7 @@ class DefaultSyncRepositoryTest {
             override suspend fun signIn(email: String, password: String) = error("not used")
             override suspend fun signUp(email: String, password: String) = null
             override suspend fun signOut() = Unit
+            override suspend fun deleteAccount() = Unit
         }
         coEvery { accountSync.pull(any(), any(), any()) } coAnswers {
             callLog += "pull:accounts"

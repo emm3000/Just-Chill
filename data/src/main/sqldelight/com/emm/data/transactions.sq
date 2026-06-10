@@ -159,6 +159,9 @@ LIMIT 1;
 claimAll:
 UPDATE transactions SET userId = :userId, syncState = 'Pending' WHERE userId IS NULL;
 
+unclaimAll:
+UPDATE transactions SET userId = NULL, syncState = 'Pending' WHERE userId = :userId;
+
 selectPending:
 SELECT * FROM transactions WHERE syncState = 'Pending' AND userId IS NOT NULL;
 

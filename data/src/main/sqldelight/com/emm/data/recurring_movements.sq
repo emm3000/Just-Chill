@@ -75,6 +75,9 @@ WHERE categoryId = :categoryId AND deletedAt IS NULL;
 claimAll:
 UPDATE recurring_movements SET userId = :userId, syncState = 'Pending' WHERE userId IS NULL;
 
+unclaimAll:
+UPDATE recurring_movements SET userId = NULL, syncState = 'Pending' WHERE userId = :userId;
+
 selectPending:
 SELECT * FROM recurring_movements WHERE syncState = 'Pending' AND userId IS NOT NULL;
 

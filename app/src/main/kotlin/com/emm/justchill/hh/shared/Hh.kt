@@ -329,6 +329,7 @@ fun Hh(modifier: Modifier = Modifier) {
                         onPrivacyClick = { backStack.add(PrivacyPolicyRoute) },
                         onSignInClick = { backStack.add(AuthRoute) },
                         onSignOutClick = { vm.onIntent(ProfileIntent.SignOut) },
+                        onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccount) },
                         onSyncNowClick = { vm.onIntent(ProfileIntent.SyncNow) },
                     )
                 }
