@@ -6,6 +6,7 @@ import com.emm.domain.auth.SessionStatus
 import com.emm.domain.shared.error.DomainException
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.exception.AuthErrorCode
 import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.user.UserInfo
@@ -129,22 +130,44 @@ internal fun UserInfo.toDomain(): AuthUser = AuthUser(userId = id, email = email
  * Translates a supabase / ktor throwable into the appropriate [DomainException] subtype.
  *
  * Exception hierarchy verified against supabase-kt 3.6.0 sources:
- * - [AuthRestException] extends [RestException] — auth-specific 4xx/5xx responses.
+ * - [AuthRestException] extends [io.github.jan.supabase.exceptions.RestException] — auth-specific 4xx/5xx responses.
  *   Credential/authentication errors: [io.github.jan.supabase.auth.exception.AuthErrorCode]
  *   values UserNotFound, SessionNotFound, NoAuthorization, EmailNotConfirmed, etc.
- * - [UnauthorizedRestException] extends [RestException] — HTTP 401.
- * - [RestException] — any other structured server error.
+ * - [UnauthorizedRestException] extends [io.github.jan.supabase.exceptions.RestException] — HTTP 401.
+ * - [io.github.jan.supabase.exceptions.RestException] — any other structured server error.
  * - [HttpRequestException] extends IOException — network-level failure.
  * - [HttpRequestTimeoutException] (ktor) — request timed out (network category).
  *
- * AuthRestException must be matched before UnauthorizedRestException because it extends RestException
- * and the compiler evaluates when-branches top-to-bottom.
+ * [AuthRestException] and [UnauthorizedRestException] are siblings (both extend [RestException]
+ * directly), so their relative order is irrelevant — the branches are disjoint types.
+ *
+ * Sign-up/credential rejections that are the user's fault (weak password, email already taken,
+ * invalid email) carry an [AuthErrorCode] in [VALIDATION_AUTH_CODES] and map to [ValidationError]
+ * so the UI shows a corrective hint instead of the misleading "wrong credentials" message.
  */
+/**
+ * Auth error codes that represent invalid user input (not a failed authentication), so they map to
+ * [DomainException.ValidationError] instead of [DomainException.Unauthorized]. Relevant mostly on
+ * sign-up, where "wrong credentials" would be a nonsensical message.
+ */
+private val VALIDATION_AUTH_CODES = setOf(
+    AuthErrorCode.WeakPassword,
+    AuthErrorCode.EmailExists,
+    AuthErrorCode.UserAlreadyExists,
+    AuthErrorCode.EmailAddressInvalid,
+    AuthErrorCode.ValidationFailed,
+    AuthErrorCode.SamePassword,
+)
+
 internal fun Throwable.toAuthDomainException(): DomainException = when (this) {
-    is AuthRestException -> DomainException.Unauthorized(
-        message = "Authentication error: $errorDescription",
-        cause = this,
-    )
+    is AuthRestException -> if (errorCode in VALIDATION_AUTH_CODES) {
+        DomainException.ValidationError(message = errorDescription, cause = this)
+    } else {
+        DomainException.Unauthorized(
+            message = "Authentication error: $errorDescription",
+            cause = this,
+        )
+    }
 
     is UnauthorizedRestException -> DomainException.Unauthorized(
         message = description ?: "Unauthorized",

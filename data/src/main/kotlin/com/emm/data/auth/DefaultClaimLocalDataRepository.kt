@@ -3,6 +3,8 @@ package com.emm.data.auth
 import com.emm.data.EmmDatabaseData
 import com.emm.data.shared.safeDbCall
 import com.emm.domain.auth.ClaimLocalDataRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Stamps all anonymous-local rows (userId IS NULL) across the four tables with [userId] and marks
@@ -16,11 +18,15 @@ import com.emm.domain.auth.ClaimLocalDataRepository
 class DefaultClaimLocalDataRepository(private val db: EmmDatabaseData) : ClaimLocalDataRepository {
 
     override suspend fun claimAll(userId: String): Unit = safeDbCall {
-        db.transaction {
-            db.accountsQueries.claimAll(userId)
-            db.categoriesQueries.claimAll(userId)
-            db.transactionsQueries.claimAll(userId)
-            db.recurring_movementsQueries.claimAll(userId)
+        // Move the blocking transaction off the caller's dispatcher (callers reach this from
+        // viewModelScope / Main via SignInUseCase). Mirrors the per-entity LocalDataSources.
+        withContext(Dispatchers.IO) {
+            db.transaction {
+                db.accountsQueries.claimAll(userId)
+                db.categoriesQueries.claimAll(userId)
+                db.transactionsQueries.claimAll(userId)
+                db.recurring_movementsQueries.claimAll(userId)
+            }
         }
     }
 }
