@@ -124,7 +124,7 @@ con cualquier tamaño de letra.
   tx + Reporte + Ver + Cuentas + Categorías + Perfil + Manifesto +
   Calendar). La UI actual es **mucho mejor que la del AAB tagueado**
   — cualquier screenshot para Play Store debería ser de esta versión.
-  Detalles en `docs/PLAN_REDESIGN.md`.
+  Detalles en `docs/archive/PLAN_REDESIGN.md`.
 - **Post-alpha track 2 — detekt pipeline** (cerrado): detekt
   2.0.0-alpha.3 + ktlint-wrapper + mrmans0n/compose-rules instalados.
   138 findings → 13 baselined (-91%) en 7 pasos. CI gate en PRs +
@@ -155,7 +155,7 @@ con cualquier tamaño de letra.
 |---|---|---|
 | 1. Discovery + Positioning | `PRODUCT_DISCOVERY.md` | ✅ Firmada |
 | 2. Requirements | `PRODUCT_REQUIREMENTS.md` | ✅ Firmada |
-| 3. Architecture Review | `ARCHITECTURE_REVIEW.md` | ✅ Firmada |
+| 3. Architecture Review | `archive/ARCHITECTURE_REVIEW.md` | ✅ Firmada (archivada — gap analysis pre-S0) |
 | 4. Roadmap v1 | `ROADMAP_V1.md` | ✅ Firmada |
 | 5. Post-v1 plan | `POST_V1_PLAN.md` | ✅ Firmada |
 
@@ -443,7 +443,7 @@ publique en S7 (no son blocker hasta entonces).
 
 Refactor visual completo basado en el handoff de Claude Design ("JustChill — Notion Dark", 19 pantallas / 8 componentes base / 3 bottom sheets / 3 empty states). Mantiene 100% de la arquitectura (Clean + MVI + Koin + SQLDelight) — solo capa Compose.
 
-Plan completo y decisiones en `docs/PLAN_REDESIGN.md`. Stack mapping diseño → Compose ahí.
+Plan completo y decisiones en `docs/archive/PLAN_REDESIGN.md`. Stack mapping diseño → Compose ahí.
 
 ### Lo que entró
 
@@ -541,7 +541,8 @@ Reportes HTML en `<módulo>/build/reports/detekt/detekt.html`.
 - **Sprint plans** (`PLAN_S*_*.md`) son efímeros y gitignored.
   Los docs del proceso de definición sí están versionados.
   (Excepción: `PLAN_REDESIGN.md` sí está versionado — fue track largo
-  y conviene tener registro.)
+  y conviene tener registro. Hoy vive en `docs/archive/` junto con
+  `DESIGN_BRIEF.md` y `ARCHITECTURE_REVIEW.md`.)
 - Si el user pide arrancar un sprint, **leer el plan correspondiente
   en `ROADMAP_V1.md` primero** para no inventar nada.
 - **detekt instalado**: si rompiste un test/build, revisar

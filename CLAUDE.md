@@ -128,12 +128,12 @@ The product definition (Fases 1-5) lives in `docs/`:
 
 - `PRODUCT_DISCOVERY.md` — persona, manifesto, positioning, competence map.
 - `PRODUCT_REQUIREMENTS.md` — 15 Must / 12 Won't user stories with acceptance criteria.
-- `ARCHITECTURE_REVIEW.md` — gap analysis (code vs requirements), 9 quick wins, 5 big rocks.
 - `ROADMAP_V1.md` — 8 sprints to Play Store alpha.
 - `POST_V1_PLAN.md` — 12-month funnel, monetization paths, pivot triggers.
 - `DESIGN_SYSTEM.md` — tokens, components, screen specs.
 - `PROGRESS.md` — current execution state, rollback points, next concrete step.
 - `adr/` — architecture decision records (001 local-first reversal, 002 pull cursor).
+- `archive/` — closed-track docs kept for history (ARCHITECTURE_REVIEW, DESIGN_BRIEF, PLAN_REDESIGN).
 
 Rollback tags: `pre-s0` (before execution started), `post-s0` (after
 9 quick wins). Next expected: `post-s1` after manual device verification.
