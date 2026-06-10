@@ -20,8 +20,9 @@ Depends on: `:domain`. **Does not depend on `:app`.**
 ## Persistence (SQLDelight 2.x)
 
 - Schema files in `data/src/main/sqldelight/com/emm/data/`: `accounts.sq`, `categories.sq`, `transactions.sq`, `recurring_movements.sq`. Migrations in `*.sqm` (current schema v3 via `2.sqm`).
+- **Migrations are MANDATORY for every schema change.** Real user data exists on devices since commit `4e6de6c` (2026-06-04) — never edit a `.sq` CREATE TABLE without a matching `.sqm` migration, never reset the schema. Enforced by `verifyMigrations` + the schema snapshot in `src/main/sqldelight/databases/` (regenerate with `./gradlew :data:generateDebugEmmDatabaseDataSchema` when bumping the version; verification runs in `check`/build).
 - Generated database class: `EmmDatabaseData` (package `com.emm.data`), configured in `data/build.gradle.kts`.
-- **Soft-delete (tombstones)** since schema v3: deletes are `UPDATE ... SET deletedAt, syncState='Pending'`; every read query filters `deletedAt IS NULL`. Sync metadata columns on all 4 tables: `userId` (nullable), `deletedAt` (nullable epoch ms), `syncState` (default `'Pending'`). See `docs/sync/DESIGN.md`.
+- **Soft-delete (tombstones)** since schema v3: deletes are `UPDATE ... SET deletedAt, syncState='Pending'`; every read query filters `deletedAt IS NULL`. Sync metadata columns on all 4 tables: `userId` (nullable), `deletedAt` (nullable epoch ms), `syncState` (default `'Pending'`). See `docs/sync/PLAN.md`.
 - FK clauses still exist (`transactions.accountId → accounts ON DELETE RESTRICT`, `transactions.categoryId → categories ON DELETE SET NULL`) but **only fire on physical DELETE — never on soft-delete**. Referential integrity is enforced in domain use cases (`DeleteAccountUseCase`, `DeleteCategoryUseCase`), not by these clauses.
 - `app.cash.sqldelight:coroutines-extensions` is exported (`api`) from this module for `asFlow()` / suspend query support.
 

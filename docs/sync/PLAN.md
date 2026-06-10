@@ -270,3 +270,7 @@ Tasks:
 - Every slice lands green: `./gradlew test` + detekt + manual
   verification listed in the slice.
 - Schema changes on either side get their own commit and a note here.
+- **Local schema changes always ship an `.sqm` migration** — real user
+  data exists on devices since `4e6de6c` (2026-06-04). Destructive
+  resets are off the table. Enforced by SQLDelight `verifyMigrations`
+  (snapshot in `data/src/main/sqldelight/databases/`).

@@ -63,6 +63,11 @@ sqldelight {
     databases {
         create("EmmDatabaseData") {
             packageName.set("com.emm.data")
+            // Real user data exists on devices since 4e6de6c (2026-06-04).
+            // Schema changes MUST ship an .sqm migration; verification
+            // fails the build if migrations and schema diverge.
+            schemaOutputDirectory.set(file("src/main/sqldelight/databases"))
+            verifyMigrations.set(true)
         }
     }
 }
