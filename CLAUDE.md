@@ -48,7 +48,7 @@ Clean Architecture, three modules:
 :app     →  Compose UI, ViewModels, Koin DI wiring      (android-application)
 ```
 
-The app is **100% local**: no auth, no remote backend, no sync. All persistence is SQLDelight on-device.
+The app is **local-first**: SQLDelight on-device is the single source of truth and the app is fully usable with no account and no network. Optional multi-device sync via Supabase (opt-in sign-in, LWW) is **in progress** — slice 1 (soft-delete + sync metadata) is on trunk; auth and the sync engine are not implemented yet. Decisions in `docs/adr/001` and `docs/adr/002`.
 
 **Dependency direction**: `:app` → `:domain`, `:data`; `:data` → `:domain`; `:domain` has no module deps.
 
@@ -133,6 +133,7 @@ The product definition (Fases 1-5) lives in `docs/`:
 - `POST_V1_PLAN.md` — 12-month funnel, monetization paths, pivot triggers.
 - `DESIGN_SYSTEM.md` — tokens, components, screen specs.
 - `PROGRESS.md` — current execution state, rollback points, next concrete step.
+- `adr/` — architecture decision records (001 local-first reversal, 002 pull cursor).
 
 Rollback tags: `pre-s0` (before execution started), `post-s0` (after
 9 quick wins). Next expected: `post-s1` after manual device verification.

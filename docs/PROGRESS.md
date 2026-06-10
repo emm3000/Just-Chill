@@ -3,11 +3,51 @@
 > Estado del proyecto a fecha del último update. Punto de re-entrada
 > para retomar después de cerrar/limpiar el contexto.
 >
-> **Última actualización**: 2026-05-21 (Reporte v2 — handoff de diseñador externo: Mes polish + Tendencias).
+> **Última actualización**: 2026-06-09 (local-first-sync: slice 1 en trunk, ADRs 001/002, planificación migrada a `docs/sync/`).
 
 ---
 
-## Track activo — Reporte v2 (2026-05-21)
+## Track activo — local-first-sync (2026-06-04 → )
+
+Reversa del posicionamiento local-only: la app pasa a ser **local-first
+con sync multi-dispositivo OPCIONAL** vía Supabase (LWW propio, sin
+PowerSync). Anónimo-local sigue siendo el estado default — sign-in es
+opt-in desde Perfil, sin gate. Decisión documentada en `docs/adr/001`
+(+ `docs/adr/002` para el cursor de pull server-side). PRD amendado
+(W-02/W-03/W-11 ahora opt-in, con nota fechada).
+
+**Decisiones en `docs/adr/001` + `docs/adr/002`.** El detalle operativo
+de planificación (spec con escenarios, SQL de Supabase, checklist de
+slices) vive solo en engram (desactivado por default — pedirlo explícito
+si hace falta recuperarlo para slice 2+).
+
+**Estado**: slice 1 de 5 ✅ en trunk (`59b8adf`):
+
+- Migración 2.sqm (schema v3): `userId`/`deletedAt`/`syncState` + índices en las 4 tablas.
+- Soft-delete con tombstones; todas las lecturas filtran `deletedAt IS NULL`.
+- Integridad referencial movida a `DeleteAccountUseCase`/`DeleteCategoryUseCase` (los FK no disparan en soft-delete).
+- Tests: domain verdes, 5/5 instrumentados, detekt limpio. Pasó review adversarial (4 fixes en `59b8adf`).
+
+**Próximo paso**: slice 2 (auth opt-in, ~550 líneas). **Prerequisito
+humano que bloquea**: crear proyectos Supabase dev+prod, correr el SQL
+del design (en engram), llenar `supabase.properties` (gitignored).
+
+**Follow-up tracked antes de slice 3**: test instrumentado E2E de los
+delete use cases contra SQLite real (hoy solo fakes MockK).
+
+Notas laterales:
+- Branch `feat/income-widget` (`eafc8ec`, sin push): widget Glance de
+  ingresos por fuente del mes. Funcional, pendiente de decidir si entra.
+- El repo en GitHub fue renombrado `android-retrofit` → `Just-Chill`;
+  el remote `origin` local sigue apuntando a la URL vieja (funciona por
+  redirect de GitHub).
+- Engram y SDD quedaron **desactivados** para este repo por regla del
+  user (ver `CLAUDE.md` raíz) — el estado del proyecto vive en `docs/`
+  y git, no en memoria externa.
+
+---
+
+## Track previo — Reporte v2 (2026-05-21)
 
 Llegó un handoff de diseñador externo con dos pantallas: `Reporte ·
 Mes` (polish encima del SR-5 existente) y `Reporte · Tendencias`
@@ -71,6 +111,10 @@ con cualquier tamaño de letra.
 
 ## TL;DR — dónde estamos ahora
 
+- **Track activo — local-first-sync**: slice 1/5 en trunk (soft-delete +
+  sync metadata). Decisiones en `docs/adr/`. Próximo: slice 2 (auth).
+  OJO: la decisión "100% local, sin login" de Fases 1-5 fue **reversada
+  formalmente** vía ADR 001 — ahora es local-first con sync opcional.
 - **Proceso de definición**: ✅ Fases 1-5 firmadas y versionadas.
 - **Ejecución**: Sprints 0-5 + mini-S6.5 cerrados. AAB `2.0.0-alpha`
   tagueado (pre-redesign) pero **aún no subido a Play Console**.
@@ -117,7 +161,9 @@ con cualquier tamaño de letra.
 
 Decisiones bloqueadas (no se renegocian sin volver a Fase 1):
 - Target: peruano 25-35 con sueldo + ingresos extras.
-- 100% local, sin login, sin cloud backend.
+- ~~100% local, sin login, sin cloud backend~~ — **reversada 2026-06-04
+  vía ADR 001**: local-first con sync opcional (anónimo-local sigue
+  siendo el default; sign-in opt-in).
 - Gratis sin paywall en v1.
 - Pilar diferencial: claridad de ingresos múltiples + simplicidad.
 - Manifesto provocador-minimalista, enemigo: la complejidad innecesaria.
