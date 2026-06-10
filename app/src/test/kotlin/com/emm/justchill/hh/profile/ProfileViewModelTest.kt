@@ -9,13 +9,15 @@ import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.backup.ExportDataUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.error.DomainException
-import com.emm.domain.sync.SyncDataUseCase
 import com.emm.justchill.MainDispatcherRule
+import com.emm.justchill.core.sync.SyncOrchestrator
+import com.emm.justchill.core.sync.SyncStatus
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -38,7 +40,10 @@ class ProfileViewModelTest {
     private val exportData = mockk<ExportDataUseCase>()
     private val importData = mockk<ImportDataUseCase>(relaxed = true)
     private val signOut = mockk<SignOutUseCase>(relaxed = true)
-    private val syncData = mockk<SyncDataUseCase>(relaxed = true)
+    private val syncOrchestrator = mockk<SyncOrchestrator>(relaxed = true) {
+        every { status } returns MutableStateFlow(SyncStatus())
+        every { events } returns MutableSharedFlow()
+    }
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns flowOf(emptyList())
     }
@@ -56,7 +61,7 @@ class ProfileViewModelTest {
             exportData = exportData,
             importData = importData,
             signOut = signOut,
-            syncData = syncData,
+            syncOrchestrator = syncOrchestrator,
             categoryRepository = categoryRepository,
             accountRepository = accountRepository,
             observeSession = observeSession,

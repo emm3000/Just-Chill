@@ -9,10 +9,10 @@ import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.backup.ExportDataUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.error.DomainException
-import com.emm.domain.sync.SyncDataUseCase
 import com.emm.justchill.BuildConfig
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.core.sync.SyncOrchestrator
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -23,7 +23,7 @@ class ProfileViewModel(
     private val exportData: ExportDataUseCase,
     private val importData: ImportDataUseCase,
     private val signOut: SignOutUseCase,
-    private val syncData: SyncDataUseCase,
+    private val syncOrchestrator: SyncOrchestrator,
     categoryRepository: CategoryRepository,
     accountRepository: AccountRepository,
     observeSession: ObserveSessionUseCase,
@@ -51,6 +51,17 @@ class ProfileViewModel(
                     SessionStatus.Initializing -> SessionUiState.Initializing
                 }
                 updateState { copy(session = sessionUiState) }
+            }
+            .launchIn(viewModelScope)
+
+        syncOrchestrator.status
+            .onEach { syncStatus ->
+                updateState {
+                    copy(
+                        isSyncing = syncStatus.isSyncing,
+                        lastSyncedAtMillis = syncStatus.lastSyncedAtMillis,
+                    )
+                }
             }
             .launchIn(viewModelScope)
     }
@@ -99,16 +110,8 @@ class ProfileViewModel(
         }
     }
 
-    private fun syncNow() = launchSafe(
-        onError = { e -> ProfileEffect.ShowMessage(e.toUserMessage()) },
-    ) {
-        updateState { copy(isSyncing = true) }
-        try {
-            syncData()
-            sendEffect(ProfileEffect.ShowMessage("Sincronizado."))
-        } finally {
-            updateState { copy(isSyncing = false) }
-        }
+    private fun syncNow() {
+        syncOrchestrator.requestSync()
     }
 
     private fun importFromJson(json: String) = launchSafe(

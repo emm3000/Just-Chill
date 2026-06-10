@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,6 +52,9 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun ProfileScreen(
@@ -183,6 +187,7 @@ fun ProfileScreen(
 
 @Composable
 private fun AccountSection(state: ProfileUiState, onSignInClick: () -> Unit, onSignOutClick: () -> Unit) {
+    val colors = LocalEmmColors.current
     Column(modifier = Modifier.fillMaxWidth()) {
         SectionHeader(text = "Cuenta")
         ProfileGroup {
@@ -200,12 +205,28 @@ private fun AccountSection(state: ProfileUiState, onSignInClick: () -> Unit, onS
                 }
 
                 is SessionUiState.SignedIn -> {
-                    ProfileRow(
+                    ProfileRowWithTrailing(
                         icon = Icons.Outlined.AccountCircle,
                         label = session.email ?: "Tu cuenta",
-                        meta = "Sincronización activa",
+                        meta = syncStatusLabel(state.isSyncing, state.lastSyncedAtMillis),
                         metaIsPrimary = true,
                         onClick = {},
+                        trailing = {
+                            if (state.isSyncing) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = colors.textTertiary,
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Outlined.ChevronRight,
+                                    contentDescription = null,
+                                    tint = colors.textTertiary,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                            }
+                        },
                     )
                     HairlineDivider()
                     ProfileRow(
@@ -219,6 +240,17 @@ private fun AccountSection(state: ProfileUiState, onSignInClick: () -> Unit, onS
             }
         }
     }
+}
+
+private fun syncStatusLabel(isSyncing: Boolean, lastSyncedAtMillis: Long?): String = when {
+    isSyncing -> "Sincronizando…"
+
+    lastSyncedAtMillis != null -> {
+        val formatted = SimpleDateFormat("d MMM, HH:mm", Locale("es")).format(Date(lastSyncedAtMillis))
+        "Última sincronización: $formatted"
+    }
+
+    else -> "Sincronización activa"
 }
 
 @Composable
@@ -255,6 +287,32 @@ private fun HairlineDivider() {
 
 @Composable
 private fun ProfileRow(icon: ImageVector, label: String, meta: String, metaIsPrimary: Boolean, onClick: () -> Unit) {
+    ProfileRowWithTrailing(
+        icon = icon,
+        label = label,
+        meta = meta,
+        metaIsPrimary = metaIsPrimary,
+        onClick = onClick,
+        trailing = {
+            Icon(
+                imageVector = Icons.Outlined.ChevronRight,
+                contentDescription = null,
+                tint = LocalEmmColors.current.textTertiary,
+                modifier = Modifier.size(16.dp),
+            )
+        },
+    )
+}
+
+@Composable
+private fun ProfileRowWithTrailing(
+    icon: ImageVector,
+    label: String,
+    meta: String,
+    metaIsPrimary: Boolean,
+    onClick: () -> Unit,
+    trailing: @Composable () -> Unit,
+) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
@@ -293,12 +351,7 @@ private fun ProfileRow(icon: ImageVector, label: String, meta: String, metaIsPri
                 color = if (metaIsPrimary) colors.textSecondary else colors.textTertiary,
             )
         }
-        Icon(
-            imageVector = Icons.Outlined.ChevronRight,
-            contentDescription = null,
-            tint = colors.textTertiary,
-            modifier = Modifier.size(16.dp),
-        )
+        trailing()
     }
 }
 

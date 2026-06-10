@@ -21,10 +21,28 @@ class AppPreferences(private val prefs: SharedPreferences) {
         prefs.edit { putString(lastPulledAtKey(userId), cursor) }
     }
 
+    /**
+     * Returns the epoch-millis timestamp of the last successful sync for [userId], or null if
+     * the user has never completed a sync on this device.
+     */
+    fun lastSyncedAt(userId: String): Long? {
+        val value = prefs.getLong(lastSyncedAtKey(userId), -1L)
+        return if (value == -1L) null else value
+    }
+
+    /**
+     * Persists [epochMillis] as the last-synced-at timestamp for [userId].
+     */
+    fun setLastSyncedAt(userId: String, epochMillis: Long) {
+        prefs.edit { putLong(lastSyncedAtKey(userId), epochMillis) }
+    }
+
     private fun lastPulledAtKey(userId: String) = "${KEY_LAST_PULLED_AT_PREFIX}$userId"
+    private fun lastSyncedAtKey(userId: String) = "${KEY_LAST_SYNCED_AT_PREFIX}$userId"
 
     private companion object {
         const val KEY_FIRST_LAUNCH_SEEN = "first_launch_seen"
         const val KEY_LAST_PULLED_AT_PREFIX = "last_pulled_at_"
+        const val KEY_LAST_SYNCED_AT_PREFIX = "last_synced_at_"
     }
 }

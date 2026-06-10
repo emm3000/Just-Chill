@@ -61,6 +61,8 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.emm.justchill.core.preferences.AppPreferences
+import com.emm.justchill.core.sync.SyncEvent
+import com.emm.justchill.core.sync.SyncOrchestrator
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
@@ -104,10 +106,12 @@ import java.time.format.DateTimeFormatter
 
 private val START_TAB: BottomBarRoute = SeeTransactionRoute
 
+@Suppress("CyclomaticComplexMethod")
 @Composable
 fun Hh(modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val appPrefs: AppPreferences = koinInject()
+    val syncOrchestrator: SyncOrchestrator = koinInject()
     val startRoute: NavKey = remember {
         if (appPrefs.firstLaunchSeen) START_TAB else ManifestoRoute()
     }
@@ -117,6 +121,15 @@ fun Hh(modifier: Modifier = Modifier) {
     val rootScope = rememberCoroutineScope()
     val showRootMessage: (String) -> Unit = { message ->
         rootScope.launch { snackbarHostState.showSnackbar(message) }
+    }
+
+    LaunchedEffect(syncOrchestrator) {
+        syncOrchestrator.events.collect { event ->
+            when (event) {
+                SyncEvent.SessionExpired ->
+                    snackbarHostState.showSnackbar("Tu sesión expiró. Inicia sesión nuevamente.")
+            }
+        }
     }
 
     val currentRoute: NavKey? = backStack.lastOrNull()

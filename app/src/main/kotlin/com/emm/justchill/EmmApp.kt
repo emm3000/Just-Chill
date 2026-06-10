@@ -3,6 +3,7 @@ package com.emm.justchill
 import android.app.Application
 import com.emm.domain.auth.ClaimLocalDataOnAuthenticationUseCase
 import com.emm.justchill.core.coreModule
+import com.emm.justchill.core.sync.SyncOrchestrator
 import com.emm.justchill.experiences.readjsonfromassets.experiencesModule
 import com.emm.justchill.hh.di.accountModule
 import com.emm.justchill.hh.di.authModule
@@ -47,5 +48,7 @@ class EmmApp : Application() {
 
         val claimOnAuthentication = get<ClaimLocalDataOnAuthenticationUseCase>()
         appScope.launch { claimOnAuthentication() }
+
+        get<SyncOrchestrator>().start()
     }
 }

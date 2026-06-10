@@ -7,10 +7,16 @@ import com.emm.data.sync.RecurringMovementTableSync
 import com.emm.data.sync.TableSync
 import com.emm.data.sync.TransactionTableSync
 import com.emm.domain.sync.ConflictResolver
+import com.emm.domain.sync.ObservePendingSyncCountUseCase
 import com.emm.domain.sync.SyncCursorStore
 import com.emm.domain.sync.SyncDataUseCase
 import com.emm.domain.sync.SyncRepository
 import com.emm.justchill.core.sync.AppPreferencesSyncCursorStore
+import com.emm.justchill.core.sync.SyncOrchestrator
+import com.emm.justchill.core.sync.processResumeEvents
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
@@ -21,6 +27,7 @@ private val accountSyncQualifier = named("accountSync")
 private val categorySyncQualifier = named("categorySync")
 private val transactionSyncQualifier = named("transactionSync")
 private val recurringSyncQualifier = named("recurringSync")
+val appScopeQualifier = named("appScope")
 
 val syncModule = module {
     // Per-table sync units — registered with qualifiers so DefaultSyncRepository can
@@ -51,4 +58,24 @@ val syncModule = module {
     // Single, not factory: SyncDataUseCase holds a Mutex that serializes concurrent sync
     // cycles. A fresh Mutex per injection (factoryOf) would defeat that serialization.
     singleOf(::SyncDataUseCase)
+
+    // Application-lifetime scope for SyncOrchestrator long-lived jobs.
+    single<CoroutineScope>(appScopeQualifier) {
+        CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    }
+
+    factoryOf(::ObservePendingSyncCountUseCase)
+
+    // Single: owns long-lived coroutine jobs launched in externalScope.
+    single {
+        SyncOrchestrator(
+            syncData = get(),
+            observeSession = get(),
+            observePendingCount = get(),
+            signOut = get(),
+            prefs = get(),
+            externalScope = get(appScopeQualifier),
+            resumeEvents = processResumeEvents(),
+        )
+    }
 }
