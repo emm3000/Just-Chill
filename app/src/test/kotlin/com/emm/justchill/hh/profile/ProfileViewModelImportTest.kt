@@ -1,6 +1,8 @@
 package com.emm.justchill.hh.profile
 
 import com.emm.domain.account.AccountRepository
+import com.emm.domain.auth.ObserveSessionUseCase
+import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.backup.ExportDataUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
@@ -30,6 +32,8 @@ class ProfileViewModelImportTest {
 
     private val exportData = mockk<ExportDataUseCase>(relaxed = true)
     private val importData = mockk<ImportDataUseCase>()
+    private val signOut = mockk<SignOutUseCase>(relaxed = true)
+    private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns flowOf(emptyList())
     }
@@ -40,8 +44,10 @@ class ProfileViewModelImportTest {
     private fun buildViewModel() = ProfileViewModel(
         exportData = exportData,
         importData = importData,
+        signOut = signOut,
         categoryRepository = categoryRepository,
         accountRepository = accountRepository,
+        observeSession = observeSession,
     )
 
     @Test

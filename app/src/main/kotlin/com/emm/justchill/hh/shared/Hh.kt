@@ -68,6 +68,7 @@ import com.emm.justchill.hh.account.AccountsEffect
 import com.emm.justchill.hh.account.AccountsScreen
 import com.emm.justchill.hh.account.AccountsViewModel
 import com.emm.justchill.hh.account.AddAccountScreen
+import com.emm.justchill.hh.auth.AuthScreen
 import com.emm.justchill.hh.category.AddCategoryScreen
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.CategoriesEffect
@@ -169,6 +170,13 @@ fun Hh(modifier: Modifier = Modifier) {
                 entry<PrivacyPolicyRoute> {
                     PrivacyPolicyScreen(
                         onBack = { backStack.removeLastOrNull() },
+                    )
+                }
+
+                entry<AuthRoute> {
+                    AuthScreen(
+                        onBack = { backStack.removeLastOrNull() },
+                        snackbarHostState = snackbarHostState,
                     )
                 }
 
@@ -306,6 +314,8 @@ fun Hh(modifier: Modifier = Modifier) {
                         onExportClick = { exportLauncher.launch(suggestedExportFilename()) },
                         onImportClick = { importLauncher.launch(arrayOf("application/json")) },
                         onPrivacyClick = { backStack.add(PrivacyPolicyRoute) },
+                        onSignInClick = { backStack.add(AuthRoute) },
+                        onSignOutClick = { vm.onIntent(ProfileIntent.SignOut) },
                     )
                 }
 

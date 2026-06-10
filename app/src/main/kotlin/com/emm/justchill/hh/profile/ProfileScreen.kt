@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.FileDownload
@@ -62,6 +63,8 @@ fun ProfileScreen(
     onExportClick: () -> Unit = {},
     onImportClick: () -> Unit = {},
     onPrivacyClick: () -> Unit = {},
+    onSignInClick: () -> Unit = {},
+    onSignOutClick: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -85,6 +88,12 @@ fun ProfileScreen(
                 top = spacing.s6,
                 bottom = spacing.s4,
             ),
+        )
+
+        AccountSection(
+            state = state,
+            onSignInClick = onSignInClick,
+            onSignOutClick = onSignOutClick,
         )
 
         SectionHeader(text = "Gestionar")
@@ -155,6 +164,46 @@ fun ProfileScreen(
         Spacer(Modifier.height(spacing.s6))
         VersionFooter()
         Spacer(Modifier.height(spacing.s4))
+    }
+}
+
+@Composable
+private fun AccountSection(state: ProfileUiState, onSignInClick: () -> Unit, onSignOutClick: () -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        SectionHeader(text = "Cuenta")
+        ProfileGroup {
+            when (val session = state.session) {
+                SessionUiState.Initializing,
+                SessionUiState.SignedOut,
+                -> {
+                    ProfileRow(
+                        icon = Icons.Outlined.Shield,
+                        label = "Iniciar sesión",
+                        meta = "Sincroniza tus datos entre dispositivos",
+                        metaIsPrimary = false,
+                        onClick = onSignInClick,
+                    )
+                }
+
+                is SessionUiState.SignedIn -> {
+                    ProfileRow(
+                        icon = Icons.Outlined.AccountCircle,
+                        label = session.email ?: "Tu cuenta",
+                        meta = "Sincronización activa",
+                        metaIsPrimary = true,
+                        onClick = {},
+                    )
+                    HairlineDivider()
+                    ProfileRow(
+                        icon = Icons.Outlined.Shield,
+                        label = "Cerrar sesión",
+                        meta = "Tus datos siguen en este teléfono",
+                        metaIsPrimary = false,
+                        onClick = onSignOutClick,
+                    )
+                }
+            }
+        }
     }
 }
 

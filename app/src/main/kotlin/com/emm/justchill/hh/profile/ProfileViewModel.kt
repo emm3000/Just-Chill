@@ -2,6 +2,9 @@ package com.emm.justchill.hh.profile
 
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.AccountRepository
+import com.emm.domain.auth.ObserveSessionUseCase
+import com.emm.domain.auth.SessionStatus
+import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.backup.ExportDataUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
@@ -17,8 +20,10 @@ import java.io.OutputStream
 class ProfileViewModel(
     private val exportData: ExportDataUseCase,
     private val importData: ImportDataUseCase,
+    private val signOut: SignOutUseCase,
     categoryRepository: CategoryRepository,
     accountRepository: AccountRepository,
+    observeSession: ObserveSessionUseCase,
 ) : MviViewModel<ProfileUiState, ProfileIntent, ProfileEffect>() {
 
     override val initialState = ProfileUiState()
@@ -34,13 +39,33 @@ class ProfileViewModel(
                 updateState { copy(categoryCount = catCount, accountCount = accCount) }
             }
             .launchIn(viewModelScope)
+
+        observeSession()
+            .onEach { status ->
+                val sessionUiState = when (status) {
+                    is SessionStatus.Authenticated -> SessionUiState.SignedIn(status.user.email)
+                    SessionStatus.NotAuthenticated -> SessionUiState.SignedOut
+                    SessionStatus.Initializing -> SessionUiState.Initializing
+                }
+                updateState { copy(session = sessionUiState) }
+            }
+            .launchIn(viewModelScope)
     }
 
     override fun onIntent(intent: ProfileIntent) {
         when (intent) {
             is ProfileIntent.ExportToStream -> exportToStream(intent.output)
             is ProfileIntent.ImportJson -> importFromJson(intent.json)
+            ProfileIntent.SignOut -> signOut()
         }
+    }
+
+    private fun signOut() = launchSafe(
+        onError = { e -> ProfileEffect.ShowMessage(e.toUserMessage()) },
+    ) {
+        signOut.invoke()
+        // Local data is intentionally NOT wiped on sign-out (see SignOutUseCase doc).
+        sendEffect(ProfileEffect.ShowMessage("Sesión cerrada. Tus datos siguen en este teléfono."))
     }
 
     private fun exportToStream(output: OutputStream) = launchSafe(
