@@ -27,6 +27,8 @@ docs/*
 !docs/adr/**
 !docs/archive/
 !docs/archive/**
+!docs/sync/
+!docs/sync/**
 !docs/PRODUCT_DISCOVERY.md
 !docs/PRODUCT_REQUIREMENTS.md
 !docs/ROADMAP_V1.md

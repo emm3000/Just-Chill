@@ -16,10 +16,11 @@ opt-in desde Perfil, sin gate. Decisión documentada en `docs/adr/001`
 (+ `docs/adr/002` para el cursor de pull server-side). PRD amendado
 (W-02/W-03/W-11 ahora opt-in, con nota fechada).
 
-**Decisiones en `docs/adr/001` + `docs/adr/002`.** El detalle operativo
-de planificación (spec con escenarios, SQL de Supabase, checklist de
-slices) vive solo en engram (desactivado por default — pedirlo explícito
-si hace falta recuperarlo para slice 2+).
+**Decisiones en `docs/adr/001` + `docs/adr/002`.** El plan operativo
+(slices 2-5, tasks, SQL de Supabase re-derivado) vive en
+`docs/sync/PLAN.md` — re-derivado 2026-06-09 desde los ADRs + código
+de trunk + git history, porque el design original quedó en engram
+(desactivado para este repo).
 
 **Estado**: slice 1 de 5 ✅ en trunk (`59b8adf`):
 
