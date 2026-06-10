@@ -46,3 +46,24 @@ WHERE categoryId = ?;
 
 claimAll:
 UPDATE categories SET userId = :userId, syncState = 'Pending' WHERE userId IS NULL;
+
+selectPending:
+SELECT * FROM categories WHERE syncState = 'Pending' AND userId IS NOT NULL;
+
+markSynced:
+UPDATE categories SET syncState = 'Synced' WHERE categoryId = ? AND updatedAt = ?;
+
+markPendingForResync:
+UPDATE categories SET syncState = 'Pending' WHERE categoryId = ?;
+
+findForSync:
+SELECT updatedAt FROM categories WHERE categoryId = ?;
+
+insertOrIgnoreFromRemote:
+INSERT OR IGNORE INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt, userId, deletedAt, syncState)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Synced');
+
+updateFromRemote:
+UPDATE categories
+SET name = ?, icon = ?, color = ?, categoryType = ?, isDefault = ?, updatedAt = ?, createdAt = ?, userId = ?, deletedAt = ?, syncState = 'Synced'
+WHERE categoryId = ?;

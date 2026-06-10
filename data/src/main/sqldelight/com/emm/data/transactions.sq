@@ -155,3 +155,24 @@ LIMIT 1;
 
 claimAll:
 UPDATE transactions SET userId = :userId, syncState = 'Pending' WHERE userId IS NULL;
+
+selectPending:
+SELECT * FROM transactions WHERE syncState = 'Pending' AND userId IS NOT NULL;
+
+markSynced:
+UPDATE transactions SET syncState = 'Synced' WHERE transactionId = ? AND updatedAt = ?;
+
+markPendingForResync:
+UPDATE transactions SET syncState = 'Pending' WHERE transactionId = ?;
+
+findForSync:
+SELECT updatedAt FROM transactions WHERE transactionId = ?;
+
+insertOrIgnoreFromRemote:
+INSERT OR IGNORE INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt, userId, deletedAt, syncState)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Synced');
+
+updateFromRemote:
+UPDATE transactions
+SET type = ?, amount = ?, description = ?, date = ?, categoryId = ?, accountId = ?, createdAt = ?, updatedAt = ?, userId = ?, deletedAt = ?, syncState = 'Synced'
+WHERE transactionId = ?;

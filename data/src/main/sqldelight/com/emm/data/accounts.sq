@@ -38,3 +38,24 @@ WHERE accountId = ?;
 
 claimAll:
 UPDATE accounts SET userId = :userId, syncState = 'Pending' WHERE userId IS NULL;
+
+selectPending:
+SELECT * FROM accounts WHERE syncState = 'Pending' AND userId IS NOT NULL;
+
+markSynced:
+UPDATE accounts SET syncState = 'Synced' WHERE accountId = ? AND updatedAt = ?;
+
+markPendingForResync:
+UPDATE accounts SET syncState = 'Pending' WHERE accountId = ?;
+
+findForSync:
+SELECT updatedAt FROM accounts WHERE accountId = ?;
+
+insertOrIgnoreFromRemote:
+INSERT OR IGNORE INTO accounts(accountId, name, type, currency, updatedAt, createdAt, userId, deletedAt, syncState)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Synced');
+
+updateFromRemote:
+UPDATE accounts
+SET name = ?, type = ?, currency = ?, updatedAt = ?, createdAt = ?, userId = ?, deletedAt = ?, syncState = 'Synced'
+WHERE accountId = ?;
