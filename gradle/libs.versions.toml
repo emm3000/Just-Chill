@@ -33,6 +33,8 @@ googleCrashlyticsVersion = "3.0.7"
 jetbrainsKotlinJvm = "2.3.21"
 detekt = "2.0.0-alpha.3"
 composeRulesDetekt = "0.5.9"
+supabaseBom = "3.6.0"
+ktorClientOkhttp = "3.4.3"
 
 # nav
 nav3Core = "1.1.2"
@@ -85,6 +87,10 @@ material = { module = "com.google.android.material:material", version.ref = "mat
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 detekt-ktlint-wrapper = { module = "dev.detekt:detekt-rules-ktlint-wrapper", version.ref = "detekt" }
 detekt-compose-rules = { module = "io.nlopez.compose.rules:detekt", version.ref = "composeRulesDetekt" }
+supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "supabaseBom" }
+supabase-auth-kt = { module = "io.github.jan-tennert.supabase:auth-kt" }
+supabase-postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorClientOkhttp" }
 
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3Core" }

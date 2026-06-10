@@ -51,6 +51,11 @@ dependencies {
     implementation(libs.android.driver)
     api(libs.coroutines.extensions)
 
+    api(platform(libs.supabase.bom))
+    api(libs.supabase.auth.kt)
+    api(libs.supabase.postgrest.kt)
+    api(libs.ktor.client.okhttp)
+
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.mockk)

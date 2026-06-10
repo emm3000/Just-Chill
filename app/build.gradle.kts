@@ -13,6 +13,12 @@ val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
 keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 
+val supabasePropertiesFile = rootProject.file("supabase.properties")
+val supabaseProperties = Properties()
+if (supabasePropertiesFile.exists()) {
+    supabaseProperties.load(FileInputStream(supabasePropertiesFile))
+}
+
 fun gitCommitCount(): Int = runCatching {
     providers.exec {
         commandLine("git", "rev-list", "--count", "HEAD")
@@ -67,6 +73,8 @@ android {
             manifestPlaceholders["app_name"] = appName
             manifestPlaceholders["flavor_suffix"] = "-DEV"
             applicationIdSuffix = ".dev"
+            buildConfigField("String", "SUPABASE_URL", "\"${supabaseProperties.getProperty("dev.supabase.url", "")}\"")
+            buildConfigField("String", "SUPABASE_ANON_KEY", "\"${supabaseProperties.getProperty("dev.supabase.anonKey", "")}\"")
         }
 
         create("prod") {
@@ -74,6 +82,8 @@ android {
             manifestPlaceholders["app_name"] = "Just Chill"
             manifestPlaceholders["flavor_suffix"] = ""
             signingConfig = signingConfigs["config"]
+            buildConfigField("String", "SUPABASE_URL", "\"${supabaseProperties.getProperty("prod.supabase.url", "")}\"")
+            buildConfigField("String", "SUPABASE_ANON_KEY", "\"${supabaseProperties.getProperty("prod.supabase.anonKey", "")}\"")
         }
     }
 
