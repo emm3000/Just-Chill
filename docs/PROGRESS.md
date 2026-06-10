@@ -233,10 +233,13 @@ Verificado:
   ahora es dueño de la data.
 
 **Pendiente (código)**:
-- Tests instrumentados E2E de delete use cases contra SQLite real
-  (follow-up de slice 1, pendiente desde entonces).
+- ~~Tests instrumentados E2E de delete use cases contra SQLite real~~
+  ✅ hecho — `DeleteUseCasesE2ETest.kt`, 9 tests contra SQLite real
+  (16/16 connected verdes en emulator). Gotcha: `kotlin.assert()` es
+  no-op en ART; usar siempre `kotlin.test.assertTrue`.
 - Checklist QA multi-device (clean install, semana offline-first,
-  sign-in tardío, dos devices, sign-out).
+  sign-in tardío, dos devices, sign-out, **upgrade real con APK viejo
+  + `adb install -r`**).
 - Tag + AAB.
 
 **Tareas humanas (no las puede hacer el agente)**:
