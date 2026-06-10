@@ -31,8 +31,14 @@ class DefaultClaimLocalDataRepositoryTest {
         repository = DefaultClaimLocalDataRepository(db)
 
         // One anonymous row (userId NULL) and one owned by someone else, per table.
-        exec("INSERT INTO accounts(accountId, name, updatedAt, createdAt, userId) VALUES ('acc-null', 'A', 0, 0, NULL)")
-        exec("INSERT INTO accounts(accountId, name, updatedAt, createdAt, userId) VALUES ('acc-other', 'B', 0, 0, 'other-user')")
+        exec(
+            "INSERT INTO accounts(accountId, name, updatedAt, createdAt, userId) " +
+                "VALUES ('acc-null', 'A', 0, 0, NULL)",
+        )
+        exec(
+            "INSERT INTO accounts(accountId, name, updatedAt, createdAt, userId) " +
+                "VALUES ('acc-other', 'B', 0, 0, 'other-user')",
+        )
 
         exec(
             "INSERT INTO categories(categoryId, name, icon, color, categoryType, updatedAt, createdAt, userId) " +
@@ -101,13 +107,12 @@ class DefaultClaimLocalDataRepositoryTest {
         driver.execute(identifier = null, sql = sql, parameters = 0)
     }
 
-    private fun userIdOf(table: String, idColumn: String, id: String): String? =
-        driver.executeQuery(
-            identifier = null,
-            sql = "SELECT userId FROM $table WHERE $idColumn = '$id'",
-            mapper = { cursor ->
-                QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null)
-            },
-            parameters = 0,
-        ).value
+    private fun userIdOf(table: String, idColumn: String, id: String): String? = driver.executeQuery(
+        identifier = null,
+        sql = "SELECT userId FROM $table WHERE $idColumn = '$id'",
+        mapper = { cursor ->
+            QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null)
+        },
+        parameters = 0,
+    ).value
 }

@@ -127,6 +127,20 @@ internal fun SupabaseSessionStatus.toDomain(): SessionStatus = when (this) {
 internal fun UserInfo.toDomain(): AuthUser = AuthUser(userId = id, email = email)
 
 /**
+ * Auth error codes that represent invalid user input (not a failed authentication), so they map to
+ * [DomainException.ValidationError] instead of [DomainException.Unauthorized]. Relevant mostly on
+ * sign-up, where "wrong credentials" would be a nonsensical message.
+ */
+private val VALIDATION_AUTH_CODES = setOf(
+    AuthErrorCode.WeakPassword,
+    AuthErrorCode.EmailExists,
+    AuthErrorCode.UserAlreadyExists,
+    AuthErrorCode.EmailAddressInvalid,
+    AuthErrorCode.ValidationFailed,
+    AuthErrorCode.SamePassword,
+)
+
+/**
  * Translates a supabase / ktor throwable into the appropriate [DomainException] subtype.
  *
  * Exception hierarchy verified against supabase-kt 3.6.0 sources:
@@ -145,20 +159,6 @@ internal fun UserInfo.toDomain(): AuthUser = AuthUser(userId = id, email = email
  * invalid email) carry an [AuthErrorCode] in [VALIDATION_AUTH_CODES] and map to [ValidationError]
  * so the UI shows a corrective hint instead of the misleading "wrong credentials" message.
  */
-/**
- * Auth error codes that represent invalid user input (not a failed authentication), so they map to
- * [DomainException.ValidationError] instead of [DomainException.Unauthorized]. Relevant mostly on
- * sign-up, where "wrong credentials" would be a nonsensical message.
- */
-private val VALIDATION_AUTH_CODES = setOf(
-    AuthErrorCode.WeakPassword,
-    AuthErrorCode.EmailExists,
-    AuthErrorCode.UserAlreadyExists,
-    AuthErrorCode.EmailAddressInvalid,
-    AuthErrorCode.ValidationFailed,
-    AuthErrorCode.SamePassword,
-)
-
 internal fun Throwable.toAuthDomainException(): DomainException = when (this) {
     is AuthRestException -> if (errorCode in VALIDATION_AUTH_CODES) {
         DomainException.ValidationError(message = errorDescription, cause = this)
