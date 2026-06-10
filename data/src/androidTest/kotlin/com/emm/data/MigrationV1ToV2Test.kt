@@ -37,7 +37,7 @@ class MigrationV1ToV2Test {
     /**
      * The production schema as it shipped at version 1 — recurring_movements did
      * NOT exist yet. accounts/categories/transactions DDL is copied verbatim from
-     * the current .sq files (those three tables are unchanged between v1 and v2).
+     * 0.sqm, which declares the v1 baseline (tables and indexes).
      */
     private val schemaV1 = object : SqlSchema<QueryResult.Value<Unit>> {
         override val version: Long = 1
@@ -90,6 +90,10 @@ class MigrationV1ToV2Test {
                 """.trimIndent(),
                 0,
             )
+            driver.execute(null, "CREATE INDEX IF NOT EXISTS categories_type_idx ON categories(categoryType)", 0)
+            driver.execute(null, "CREATE INDEX IF NOT EXISTS transactions_account_idx ON transactions(accountId)", 0)
+            driver.execute(null, "CREATE INDEX IF NOT EXISTS transactions_date_idx ON transactions(date)", 0)
+            driver.execute(null, "CREATE INDEX IF NOT EXISTS transactions_category_idx ON transactions(categoryId)", 0)
             return QueryResult.Unit
         }
 

@@ -1,0 +1,56 @@
+-- Migration baseline: v0 → v1 (the original schema that shipped on real devices).
+--
+-- WHY THIS FILE EXISTS:
+--   SQLDelight's static migration validation replays all .sqm files in order
+--   from an empty database. Without a v0 baseline, 1.sqm (which references
+--   accounts/categories/transactions) and 2.sqm (ALTER TABLE on those tables)
+--   fail resolution at code-generation time.
+--
+-- PRODUCTION SEMANTICS:
+--   Version-0 databases never existed on real devices — fresh installs have
+--   always used the current .sq CREATE TABLE statements directly (SQLDelight
+--   calls Schema.create, not Schema.migrate, for new installs). This migration
+--   never runs in production; it exists solely to give the validator its
+--   replay base.
+--
+-- SOURCE:
+--   DDL recovered from git ref 1490c77^ (the commit immediately before 1.sqm
+--   was introduced). Column order and constraints are preserved verbatim.
+
+CREATE TABLE accounts (
+    accountId  TEXT NOT NULL PRIMARY KEY,
+    name       TEXT NOT NULL,
+    type       TEXT NOT NULL DEFAULT 'Bank',
+    currency   TEXT NOT NULL DEFAULT 'PEN',
+    updatedAt  INTEGER NOT NULL,
+    createdAt  INTEGER NOT NULL
+);
+
+CREATE TABLE categories (
+    categoryId    TEXT NOT NULL PRIMARY KEY,
+    name          TEXT NOT NULL,
+    icon          TEXT NOT NULL,
+    color         TEXT NOT NULL,
+    categoryType  TEXT NOT NULL,
+    isDefault     INTEGER NOT NULL DEFAULT 0,
+    updatedAt     INTEGER NOT NULL,
+    createdAt     INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS categories_type_idx ON categories(categoryType);
+
+CREATE TABLE transactions (
+    transactionId  TEXT NOT NULL PRIMARY KEY,
+    type           TEXT NOT NULL,
+    amount         INTEGER NOT NULL,
+    description    TEXT NOT NULL DEFAULT '',
+    date           INTEGER NOT NULL,
+    categoryId     TEXT REFERENCES categories(categoryId) ON DELETE SET NULL,
+    accountId      TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
+    createdAt      INTEGER NOT NULL,
+    updatedAt      INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS transactions_account_idx  ON transactions(accountId);
+CREATE INDEX IF NOT EXISTS transactions_date_idx     ON transactions(date);
+CREATE INDEX IF NOT EXISTS transactions_category_idx ON transactions(categoryId);
