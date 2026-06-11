@@ -36,6 +36,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
+import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.IconBtnTone
@@ -212,7 +213,7 @@ private fun EditTransactionContent(
         StickyCTA(
             label = "Guardar cambios",
             tone = CtaTone.Accent,
-            enabled = state.isEnabled,
+            interaction = if (state.isEnabled) CtaInteraction.Enabled else CtaInteraction.Disabled,
             onClick = { onIntent(EditTransactionIntent.OnSave) },
         )
     }

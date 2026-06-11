@@ -14,8 +14,10 @@ import com.emm.domain.auth.SignInWithGoogleUseCase
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.auth.SignUpUseCase
 import com.emm.justchill.BuildConfig
+import com.emm.justchill.hh.auth.ActivityGoogleSignInLauncher
 import com.emm.justchill.hh.auth.AuthViewModel
 import com.emm.justchill.hh.auth.GoogleCredentialClient
+import com.emm.justchill.hh.auth.GoogleSignInLauncher
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModel
@@ -27,6 +29,7 @@ val authModule = module {
     factoryOf(::DefaultClaimLocalDataRepository) { bind<ClaimLocalDataRepository>() }
 
     factoryOf(::GoogleCredentialClient)
+    factoryOf(::ActivityGoogleSignInLauncher) { bind<GoogleSignInLauncher>() }
 
     factoryOf(::ClaimLocalDataUseCase)
     factoryOf(::ResendConfirmationEmailUseCase)
@@ -38,5 +41,14 @@ val authModule = module {
     factoryOf(::ClaimLocalDataOnAuthenticationUseCase)
     factoryOf(::DeleteUserAccountUseCase)
 
-    viewModel { AuthViewModel(get(), get(), get(), get(), BuildConfig.GOOGLE_WEB_CLIENT_ID) }
+    viewModel {
+        AuthViewModel(
+            signIn = get(),
+            signUp = get(),
+            signInWithGoogle = get(),
+            resendConfirmationEmail = get(),
+            googleServerClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID,
+            googleSignInLauncher = get(),
+        )
+    }
 }

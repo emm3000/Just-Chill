@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -24,8 +25,20 @@ import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 
-/** Shared height for full-width CTA atoms (StickyCTA and OutlinedCta). */
+/** Shared height for full-width CTA atoms (StickyCTA and FilledCta). */
 internal val CtaHeight = 52.dp
+
+/** Interaction state for full-width CTA atoms. */
+enum class CtaInteraction {
+    /** Button is active and clickable — normal accent visuals. */
+    Enabled,
+
+    /** Button is dimmed (surface1/textTertiary) and not clickable. */
+    Disabled,
+
+    /** Button is dimmed, not clickable, and shows a 16dp spinner before the label. */
+    Loading,
+}
 
 /**
  * Full-width sticky CTA button, typically pinned to the bottom of a screen.
@@ -39,9 +52,7 @@ internal val CtaHeight = 52.dp
  * @param sublabel       Optional secondary content.
  * @param inlineSublabel When true, renders `label · sublabel` in a single Row instead of
  *                       stacking them. Useful for the Add-Transaction CTA ("Anotar gasto · S/ 85.40").
- * @param enabled        When false, the button is dimmed and non-interactive.
- * @param loading        When true, renders a 16dp spinner before the label and disables interaction.
- *                       Visual treatment matches the disabled state (dimmed bg + fg).
+ * @param interaction    Controls enabled/disabled/loading state. Default: [CtaInteraction.Enabled].
  */
 @Composable
 fun StickyCTA(
@@ -51,14 +62,12 @@ fun StickyCTA(
     sublabel: String? = null,
     inlineSublabel: Boolean = false,
     tone: CtaTone = CtaTone.Accent,
-    enabled: Boolean = true,
-    loading: Boolean = false,
+    interaction: CtaInteraction = CtaInteraction.Enabled,
 ) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
 
-    // loading forces the same disabled visual treatment (dimmed bg + fg)
-    val interactive = enabled && !loading
+    val interactive = interaction == CtaInteraction.Enabled
 
     val (bgColor, fgColor) = when {
         !interactive -> colors.surface1 to colors.textTertiary
@@ -87,7 +96,7 @@ fun StickyCTA(
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            if (loading) {
+            if (interaction == CtaInteraction.Loading) {
                 // Loading state: spinner + label side by side, dimmed colours
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -98,28 +107,14 @@ fun StickyCTA(
                         color = fgColor,
                         strokeWidth = 2.dp,
                     )
-                    Text(
-                        text = label,
-                        color = fgColor,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.W600,
-                        fontFamily = InterFontFamily,
-                        letterSpacing = (-0.15).sp,
-                    )
+                    CtaLabel(text = label, color = fgColor)
                 }
             } else if (inlineSublabel && sublabel != null) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text(
-                        text = label,
-                        color = fgColor,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.W600,
-                        fontFamily = InterFontFamily,
-                        letterSpacing = (-0.15).sp,
-                    )
+                    CtaLabel(text = label, color = fgColor)
                     Text(
                         text = "·",
                         color = fgColor.copy(alpha = 0.6f),
@@ -144,13 +139,7 @@ fun StickyCTA(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text(
-                        text = label,
-                        color = fgColor,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.W600,
-                        fontFamily = InterFontFamily,
-                    )
+                    CtaLabel(text = label, color = fgColor)
                     if (sublabel != null) {
                         Text(
                             text = sublabel,
@@ -164,4 +153,17 @@ fun StickyCTA(
             }
         }
     }
+}
+
+/** Shared label style used across all StickyCTA content branches. */
+@Composable
+private fun CtaLabel(text: String, color: Color) {
+    Text(
+        text = text,
+        color = color,
+        fontSize = 15.sp,
+        fontWeight = FontWeight.W600,
+        fontFamily = InterFontFamily,
+        letterSpacing = (-0.15).sp,
+    )
 }

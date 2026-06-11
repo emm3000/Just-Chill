@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +46,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -233,24 +238,26 @@ private fun AccountSection(
                 }
 
                 is SessionUiState.SignedIn -> {
-                    val showRetry = state.syncFailed && !state.isSyncing
                     ProfileRowWithTrailing(
                         icon = Icons.Outlined.AccountCircle,
                         label = session.email ?: "Tu cuenta",
-                        meta = if (showRetry) "No se pudo sincronizar"
-                               else syncStatusLabel(state.isSyncing, state.lastSyncedAtMillis),
+                        meta = when (val row = state.syncRow) {
+                            SyncRowUi.Syncing -> "Sincronizando…"
+                            SyncRowUi.Failed -> "No se pudo sincronizar"
+                            is SyncRowUi.Idle -> syncStatusLabel(row.lastSyncedAtMillis)
+                        },
                         metaIsPrimary = true,
-                        metaColor = if (showRetry) colors.danger else null,
+                        metaColor = if (state.syncRow is SyncRowUi.Failed) colors.danger else null,
                         onClick = {},
                         trailing = {
-                            when {
-                                state.isSyncing -> CircularProgressIndicator(
+                            when (state.syncRow) {
+                                SyncRowUi.Syncing -> CircularProgressIndicator(
                                     modifier = Modifier.size(16.dp),
                                     strokeWidth = 2.dp,
                                     color = colors.textTertiary,
                                 )
-                                showRetry -> RetryPill(onClick = onSyncNowClick)
-                                else -> Icon(
+                                SyncRowUi.Failed -> RetryPill(onClick = onSyncNowClick)
+                                is SyncRowUi.Idle -> Icon(
                                     imageVector = Icons.Outlined.ChevronRight,
                                     contentDescription = null,
                                     tint = colors.textTertiary,
@@ -287,16 +294,15 @@ private fun AccountSection(
     }
 }
 
-private fun syncStatusLabel(isSyncing: Boolean, lastSyncedAtMillis: Long?): String = when {
-    isSyncing -> "Sincronizando…"
+// Allocated once per process — safe because this is only ever called from the main thread (composition).
+private val syncDateFormatter = SimpleDateFormat("d MMM, HH:mm", Locale("es"))
 
-    lastSyncedAtMillis != null -> {
-        val formatted = SimpleDateFormat("d MMM, HH:mm", Locale("es")).format(Date(lastSyncedAtMillis))
-        "Última sincronización: $formatted"
+private fun syncStatusLabel(lastSyncedAtMillis: Long?): String =
+    if (lastSyncedAtMillis != null) {
+        "Última sincronización: ${syncDateFormatter.format(Date(lastSyncedAtMillis))}"
+    } else {
+        "Sincronización activa"
     }
-
-    else -> "Sincronización activa"
-}
 
 @Composable
 private fun SectionHeader(text: String) {
@@ -414,10 +420,13 @@ private fun RetryPill(onClick: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
+            .minimumInteractiveComponentSize()
+            .wrapContentSize()
             .clip(radii.rFull)
             .border(1.dp, colors.border, radii.rFull)
             .background(colors.surface2)
             .clickable(onClick = onClick)
+            .semantics { role = Role.Button }
             .padding(horizontal = 10.dp, vertical = 6.dp),
     ) {
         Icon(

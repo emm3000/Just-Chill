@@ -56,6 +56,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
+import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
@@ -196,7 +197,7 @@ private fun AddEditRecurringMovementContent(
         StickyCTA(
             label = ctaLabel,
             tone = CtaTone.Accent,
-            enabled = state.isSaveEnabled,
+            interaction = if (state.isSaveEnabled) CtaInteraction.Enabled else CtaInteraction.Disabled,
             onClick = { onIntent(AddEditRecurringMovementIntent.Save) },
         )
     }

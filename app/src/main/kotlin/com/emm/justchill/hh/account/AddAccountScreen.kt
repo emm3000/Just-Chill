@@ -56,6 +56,7 @@ import com.emm.justchill.core.theme.EmmColors
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
@@ -154,7 +155,7 @@ private fun AddAccountContent(
         StickyCTA(
             label = "Crear cuenta",
             tone = CtaTone.Accent,
-            enabled = state.isEnabled,
+            interaction = if (state.isEnabled) CtaInteraction.Enabled else CtaInteraction.Disabled,
             onClick = { onIntent(AddAccountIntent.OnSave) },
         )
     }

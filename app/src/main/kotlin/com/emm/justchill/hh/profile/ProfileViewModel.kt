@@ -58,11 +58,15 @@ class ProfileViewModel(
 
         syncOrchestrator.status
             .onEach { syncStatus ->
+                val row = when {
+                    syncStatus.isSyncing -> SyncRowUi.Syncing
+                    syncStatus.lastSyncFailed -> SyncRowUi.Failed
+                    else -> SyncRowUi.Idle(syncStatus.lastSyncedAtMillis)
+                }
                 updateState {
                     copy(
                         isSyncing = syncStatus.isSyncing,
-                        lastSyncedAtMillis = syncStatus.lastSyncedAtMillis,
-                        syncFailed = syncStatus.lastSyncFailed,
+                        syncRow = row,
                     )
                 }
             }

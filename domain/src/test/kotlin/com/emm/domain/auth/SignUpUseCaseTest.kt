@@ -8,7 +8,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNull
+import kotlin.test.assertIs
 
 class SignUpUseCaseTest {
 
@@ -21,22 +21,23 @@ class SignUpUseCaseTest {
     private val user = AuthUser(userId = "uid-2", email = validEmail)
 
     @Test
-    fun `returns AuthUser when a session was established`() = runTest {
+    fun `returns SignedIn when repository returns a user`() = runTest {
         coEvery { authRepository.signUp(validEmail, validPassword) } returns user
 
         val result = useCase(validEmail, validPassword)
 
-        assertEquals(user, result)
+        assertIs<SignUpResult.SignedIn>(result)
+        assertEquals(user, (result as SignUpResult.SignedIn).user)
         coVerify(exactly = 1) { authRepository.signUp(validEmail, validPassword) }
     }
 
     @Test
-    fun `returns null when signUp returns null (email confirmation pending)`() = runTest {
+    fun `returns ConfirmationPending when repository returns null`() = runTest {
         coEvery { authRepository.signUp(validEmail, validPassword) } returns null
 
         val result = useCase(validEmail, validPassword)
 
-        assertNull(result)
+        assertIs<SignUpResult.ConfirmationPending>(result)
     }
 
     @Test
@@ -78,7 +79,7 @@ class SignUpUseCaseTest {
 
         val result = useCase(validEmail, eightCharPassword)
 
-        assertEquals(user, result)
+        assertIs<SignUpResult.SignedIn>(result)
         coVerify(exactly = 1) { authRepository.signUp(validEmail, eightCharPassword) }
     }
 

@@ -63,6 +63,7 @@ import com.emm.domain.category.CategoryType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
@@ -203,7 +204,7 @@ private fun AddCategoryContent(
         StickyCTA(
             label = saveButtonLabel(state),
             tone = CtaTone.Accent,
-            enabled = state.isAllFieldValidated,
+            interaction = if (state.isAllFieldValidated) CtaInteraction.Enabled else CtaInteraction.Disabled,
             onClick = attemptSave,
         )
     }

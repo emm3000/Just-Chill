@@ -41,6 +41,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
+import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
@@ -254,7 +255,7 @@ private fun AddTransactionScreenContent(
             sublabel = if (noAccounts) null else ctaAmount,
             inlineSublabel = !noAccounts,
             tone = CtaTone.Accent,
-            enabled = state.isEnabled,
+            interaction = if (state.isEnabled) CtaInteraction.Enabled else CtaInteraction.Disabled,
             onClick = { onIntent(AddTransactionIntent.OnSave) },
         )
     }

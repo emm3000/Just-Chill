@@ -237,10 +237,10 @@ class ProfileViewModelTest {
         job.cancel()
     }
 
-    // ── SyncFailed flag mapping tests ─────────────────────────────────────
+    // ── SyncRowUi mapping tests ────────────────────────────────────────────
 
     @Test
-    fun `lastSyncFailed=true from orchestrator maps to syncFailed=true in state`() = runTest(testDispatcher) {
+    fun `lastSyncFailed=true from orchestrator maps to SyncRowUi-Failed`() = runTest(testDispatcher) {
         val statusFlow = MutableStateFlow(SyncStatus())
         every { syncOrchestrator.status } returns statusFlow
 
@@ -250,23 +250,40 @@ class ProfileViewModelTest {
         statusFlow.value = SyncStatus(isSyncing = false, lastSyncFailed = true)
         advanceUntilIdle()
 
-        assertEquals(true, vm.state.value.syncFailed)
+        assertIs<SyncRowUi.Failed>(vm.state.value.syncRow)
     }
 
     @Test
-    fun `syncFailed resets to false when orchestrator emits successful status`() = runTest(testDispatcher) {
+    fun `SyncRowUi-Failed resets to Idle when orchestrator emits successful status`() = runTest(testDispatcher) {
         val statusFlow = MutableStateFlow(SyncStatus(lastSyncFailed = true))
         every { syncOrchestrator.status } returns statusFlow
 
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        assertEquals(true, vm.state.value.syncFailed)
+        assertIs<SyncRowUi.Failed>(vm.state.value.syncRow)
 
         statusFlow.value = SyncStatus(isSyncing = false, lastSyncedAtMillis = 1_000L, lastSyncFailed = false)
         advanceUntilIdle()
 
-        assertEquals(false, vm.state.value.syncFailed)
+        val row = vm.state.value.syncRow
+        assertIs<SyncRowUi.Idle>(row)
+        assertEquals(1_000L, row.lastSyncedAtMillis)
+    }
+
+    @Test
+    fun `isSyncing=true wins over lastSyncFailed=true producing SyncRowUi-Syncing`() = runTest(testDispatcher) {
+        val statusFlow = MutableStateFlow(SyncStatus())
+        every { syncOrchestrator.status } returns statusFlow
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        // Both flags true — Syncing must win (precedence rule lives in the ViewModel, not the composable).
+        statusFlow.value = SyncStatus(isSyncing = true, lastSyncFailed = true)
+        advanceUntilIdle()
+
+        assertIs<SyncRowUi.Syncing>(vm.state.value.syncRow)
     }
 
     @Test

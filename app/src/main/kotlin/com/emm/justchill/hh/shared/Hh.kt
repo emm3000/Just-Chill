@@ -61,9 +61,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.emm.justchill.core.preferences.AppPreferences
-import com.emm.justchill.core.sync.SyncEvent
 import com.emm.justchill.core.sync.SyncOrchestrator
-import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
@@ -122,39 +120,15 @@ fun Hh(modifier: Modifier = Modifier) {
     val snackbarHostState = remember { SnackbarHostState() }
     val rootScope = rememberCoroutineScope()
     val showRootMessage: (String) -> Unit = { message ->
-        rootScope.launch { snackbarHostState.showSnackbar(message) }
+        rootScope.launch { snackbarHostState.showEmmSnackbar(message) }
     }
 
-    LaunchedEffect(syncOrchestrator) {
-        syncOrchestrator.events.collect { event ->
-            when (event) {
-                SyncEvent.SessionExpired -> {
-                    val result = snackbarHostState.showEmmSnackbar(
-                        message = "Tu sesión expiró. Inicia sesión de nuevo.",
-                        tone = EmmSnackbarTone.Error,
-                        actionLabel = "Entrar",
-                    )
-                    if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
-                        // Guard: only push AuthRoute if it is not anywhere in the back stack.
-                        if (backStack.none { it is AuthRoute }) {
-                            backStack.add(AuthRoute)
-                        }
-                    }
-                }
-
-                is SyncEvent.SyncFailed -> {
-                    val result = snackbarHostState.showEmmSnackbar(
-                        message = "No se pudo sincronizar",
-                        tone = EmmSnackbarTone.Error,
-                        actionLabel = "Reintentar",
-                    )
-                    if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
-                        syncOrchestrator.requestSync(manual = true)
-                    }
-                }
-            }
-        }
-    }
+    SyncEventsHandler(
+        syncOrchestrator = syncOrchestrator,
+        snackbarHostState = snackbarHostState,
+        // Guard: only push AuthRoute if it is not anywhere in the back stack.
+        onNavigateToSignIn = { if (backStack.none { it is AuthRoute }) backStack.add(AuthRoute) },
+    )
 
     val currentRoute: NavKey? = backStack.lastOrNull()
     val showBottomBar: Boolean = currentRoute is BottomBarRoute

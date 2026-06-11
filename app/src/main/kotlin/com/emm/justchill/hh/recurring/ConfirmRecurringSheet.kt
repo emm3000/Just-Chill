@@ -32,6 +32,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
+import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.atoms.StickyCTA
@@ -187,7 +188,7 @@ fun ConfirmRecurringSheet(
             StickyCTA(
                 label = "Confirmar",
                 sublabel = if (!confirmEnabled && item.isVariableAmount) "Ingresá el monto" else null,
-                enabled = confirmEnabled,
+                interaction = if (confirmEnabled) CtaInteraction.Enabled else CtaInteraction.Disabled,
                 onClick = {
                     onConfirm(
                         item.templateId,

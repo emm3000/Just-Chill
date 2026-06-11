@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,6 +30,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -46,14 +51,16 @@ enum class EmmSnackbarTone { Success, Error }
  * Custom [SnackbarVisuals] that carries a [tone] and an optional [actionLabel].
  *
  * Use [SnackbarHostState.showEmmSnackbar] as the convenient entry point.
+ * [withDismissAction] is always false — dismiss is not exposed in this design.
  */
 class EmmSnackbarVisuals(
     override val message: String,
     val tone: EmmSnackbarTone = EmmSnackbarTone.Success,
     override val actionLabel: String? = null,
-    override val withDismissAction: Boolean = false,
     override val duration: SnackbarDuration = SnackbarDuration.Short,
-) : SnackbarVisuals
+) : SnackbarVisuals {
+    override val withDismissAction: Boolean = false
+}
 
 @Composable
 fun EmmSnackbarHost(hostState: SnackbarHostState, modifier: Modifier = Modifier) {
@@ -61,6 +68,9 @@ fun EmmSnackbarHost(hostState: SnackbarHostState, modifier: Modifier = Modifier)
         EmmSnackbarBody(data)
     }
 }
+
+/** Resolved icon, tint, and circle background for a single [EmmSnackbarTone]. */
+private data class ToneVisuals(val icon: ImageVector, val tint: Color, val circleBg: Color)
 
 @Composable
 private fun EmmSnackbarBody(data: SnackbarData) {
@@ -70,17 +80,17 @@ private fun EmmSnackbarBody(data: SnackbarData) {
     // Resolve tone from the visuals — fall back to Success for plain showSnackbar(message) calls.
     val tone = (data.visuals as? EmmSnackbarVisuals)?.tone ?: EmmSnackbarTone.Success
 
-    val iconVector: ImageVector = when (tone) {
-        EmmSnackbarTone.Success -> Icons.Outlined.Check
-        EmmSnackbarTone.Error -> Icons.Outlined.ErrorOutline
-    }
-    val iconTint: Color = when (tone) {
-        EmmSnackbarTone.Success -> colors.success
-        EmmSnackbarTone.Error -> colors.danger
-    }
-    val iconBg: Color = when (tone) {
-        EmmSnackbarTone.Success -> colors.posMuted
-        EmmSnackbarTone.Error -> colors.negMuted
+    val visuals: ToneVisuals = when (tone) {
+        EmmSnackbarTone.Success -> ToneVisuals(
+            icon = Icons.Outlined.Check,
+            tint = colors.success,
+            circleBg = colors.posMuted,
+        )
+        EmmSnackbarTone.Error -> ToneVisuals(
+            icon = Icons.Outlined.ErrorOutline,
+            tint = colors.danger,
+            circleBg = colors.negMuted,
+        )
     }
 
     val actionLabel = data.visuals.actionLabel
@@ -101,12 +111,12 @@ private fun EmmSnackbarBody(data: SnackbarData) {
             modifier = Modifier
                 .size(22.dp)
                 .clip(CircleShape)
-                .background(iconBg),
+                .background(visuals.circleBg),
         ) {
             Icon(
-                imageVector = iconVector,
+                imageVector = visuals.icon,
                 contentDescription = null,
-                tint = iconTint,
+                tint = visuals.tint,
                 modifier = Modifier.size(13.dp),
             )
         }
@@ -122,7 +132,7 @@ private fun EmmSnackbarBody(data: SnackbarData) {
         )
         if (actionLabel != null) {
             Text(
-                text = actionLabel.uppercase(),
+                text = actionLabel,
                 fontSize = 13.sp,
                 fontFamily = InterFontFamily,
                 color = colors.accent,
@@ -130,14 +140,27 @@ private fun EmmSnackbarBody(data: SnackbarData) {
                 maxLines = 1,
                 modifier = Modifier
                     .padding(start = 4.dp)
+                    .heightIn(min = 48.dp)
+                    .widthIn(min = 48.dp)
                     .clickable(onClick = data::performAction)
+                    .semantics { role = Role.Button }
                     .padding(horizontal = 4.dp, vertical = 2.dp),
             )
         }
     }
 }
 
-private fun highlightQuoted(message: String): AnnotatedString = buildAnnotatedString {
+/**
+ * Parses `«…»` guillemet pairs in [message] and renders the inner text in bold (W700).
+ *
+ * Contract:
+ * - Text between `«` and the next `»` is wrapped in [SpanStyle] with [FontWeight.W700].
+ * - The `«` and `»` delimiters themselves are included in the output as literal characters.
+ * - Multiple pairs are each independently bolded.
+ * - An unclosed `«` (no following `»`) is rendered literally — no bold span is opened.
+ * - An empty pair `«»` produces a bold span over zero characters (visually a no-op).
+ */
+internal fun highlightQuoted(message: String): AnnotatedString = buildAnnotatedString {
     var i = 0
     while (i < message.length) {
         val open = message.indexOf('«', i)
@@ -162,10 +185,18 @@ private fun highlightQuoted(message: String): AnnotatedString = buildAnnotatedSt
 /**
  * Convenience extension that wraps [message] in [EmmSnackbarVisuals] and shows it.
  *
- * All existing `showSnackbar(message)` call sites are unaffected — this is additive.
+ * @param duration Controls how long the snackbar is shown. Defaults to [SnackbarDuration.Short].
  */
 suspend fun SnackbarHostState.showEmmSnackbar(
     message: String,
     tone: EmmSnackbarTone = EmmSnackbarTone.Success,
     actionLabel: String? = null,
-): SnackbarResult = showSnackbar(EmmSnackbarVisuals(message = message, tone = tone, actionLabel = actionLabel))
+    duration: SnackbarDuration = SnackbarDuration.Short,
+): SnackbarResult = showSnackbar(
+    EmmSnackbarVisuals(
+        message = message,
+        tone = tone,
+        actionLabel = actionLabel,
+        duration = duration,
+    ),
+)

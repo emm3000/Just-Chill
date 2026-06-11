@@ -47,6 +47,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -55,33 +56,37 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.CtaTone
+import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
+import com.emm.justchill.core.ui.atoms.FilledCta
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.OutlinedCta
 import com.emm.justchill.core.ui.atoms.StickyCTA
-import kotlinx.coroutines.launch
+import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import androidx.compose.ui.tooling.preview.Preview
+import com.emm.justchill.core.theme.EmmTheme
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 
 @Composable
 fun AuthScreen(
     onBack: () -> Unit,
     snackbarHostState: SnackbarHostState,
     vm: AuthViewModel = koinViewModel(),
-    googleClient: GoogleCredentialClient = koinInject(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val currentOnBack by rememberUpdatedState(onBack)
     val context = LocalContext.current
 
-    BackHandler(enabled = state.step == AuthStep.CheckEmail) { vm.onIntent(AuthIntent.Back) }
+    BackHandler(enabled = state is AuthUiState.CheckEmail) { vm.onIntent(AuthIntent.Back) }
 
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
@@ -94,24 +99,25 @@ fun AuthScreen(
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         context.startActivity(intent)
                     } catch (_: ActivityNotFoundException) {
-                        snackbarHostState.showSnackbar("No encontramos una app de correo en tu teléfono.")
+                        snackbarHostState.showEmmSnackbar(
+                            message = "No encontramos una app de correo en tu teléfono.",
+                            tone = EmmSnackbarTone.Error,
+                        )
                     }
                 }
-                is AuthEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
-                is AuthEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
-                is AuthEffect.LaunchGoogleSignIn -> launch {
-                    var delivered = false
-                    try {
-                        val result = googleClient.signIn(context, effect.serverClientId)
-                        delivered = true
-                        vm.onIntent(result.toIntent())
-                    } finally {
-                        // The composition can die mid-flow (e.g. configuration change while the
-                        // credential sheet is open). Without this fallback the ViewModel would
-                        // stay isLoading forever, leaving the screen permanently disabled.
-                        if (!delivered) vm.onIntent(AuthIntent.GoogleSignInCancelled)
-                    }
-                }
+                is AuthEffect.ShowError -> snackbarHostState.showEmmSnackbar(
+                    message = effect.error.toUserMessage(),
+                    tone = EmmSnackbarTone.Error,
+                )
+                is AuthEffect.Notify -> snackbarHostState.showEmmSnackbar(
+                    message = effect.message.toText(),
+                    tone = when (effect.message) {
+                        AuthMessage.GoogleAccountUnavailable,
+                        AuthMessage.GoogleSignInFailed,
+                        -> EmmSnackbarTone.Error
+                        AuthMessage.ConfirmationLinkResent -> EmmSnackbarTone.Success
+                    },
+                )
             }
         }
     }
@@ -122,12 +128,10 @@ fun AuthScreen(
     )
 }
 
-/** Maps [GoogleCredentialClient.Result] to the appropriate [AuthIntent]. */
-private fun GoogleCredentialClient.Result.toIntent(): AuthIntent = when (this) {
-    is GoogleCredentialClient.Result.Success -> AuthIntent.GoogleTokenReceived(idToken, rawNonce)
-    GoogleCredentialClient.Result.Cancelled -> AuthIntent.GoogleSignInCancelled
-    GoogleCredentialClient.Result.NoCredentials -> AuthIntent.GoogleSignInUnavailable
-    is GoogleCredentialClient.Result.Failure -> AuthIntent.GoogleSignInErrored(cause)
+private fun AuthMessage.toText(): String = when (this) {
+    AuthMessage.GoogleAccountUnavailable -> "No encontramos una cuenta de Google en este teléfono."
+    AuthMessage.GoogleSignInFailed -> "No se pudo iniciar sesión con Google."
+    AuthMessage.ConfirmationLinkResent -> "Listo, te reenviamos el enlace."
 }
 
 @Composable
@@ -152,13 +156,13 @@ private fun AuthContent(state: AuthUiState, onIntent: (AuthIntent) -> Unit) {
             },
         )
 
-        when (state.step) {
-            AuthStep.Form -> AuthFormStep(
+        when (state) {
+            is AuthUiState.Form -> AuthFormStep(
                 state = state,
                 onIntent = onIntent,
                 modifier = Modifier.weight(1f),
             )
-            AuthStep.CheckEmail -> CheckEmailStep(
+            is AuthUiState.CheckEmail -> CheckEmailStep(
                 state = state,
                 onIntent = onIntent,
                 modifier = Modifier.weight(1f),
@@ -169,7 +173,7 @@ private fun AuthContent(state: AuthUiState, onIntent: (AuthIntent) -> Unit) {
 
 @Composable
 private fun AuthFormStep(
-    state: AuthUiState,
+    state: AuthUiState.Form,
     onIntent: (AuthIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -179,9 +183,9 @@ private fun AuthFormStep(
 
     val headingText = if (state.mode == AuthMode.SignIn) "Inicia sesión" else "Crea tu cuenta"
     val submitLabel = if (state.mode == AuthMode.SignIn) {
-        if (state.isLoading) "Entrando…" else "Iniciar sesión"
+        if (state.isSubmitting) "Entrando…" else "Iniciar sesión"
     } else {
-        if (state.isLoading) "Creando…" else "Crear cuenta"
+        if (state.isSubmitting) "Creando…" else "Crear cuenta"
     }
     val toggleLabel = if (state.mode == AuthMode.SignIn) {
         "¿No tienes cuenta? Créala"
@@ -219,7 +223,7 @@ private fun AuthFormStep(
 
             OutlinedCta(
                 label = "Continuar con Google",
-                enabled = !state.isLoading,
+                enabled = !state.isSubmitting,
                 onClick = { onIntent(AuthIntent.GoogleSignInClicked) },
             )
 
@@ -268,7 +272,7 @@ private fun AuthFormStep(
                 color = colors.accent,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
-                    .clickable { onIntent(AuthIntent.ToggleMode) }
+                    .clickable(role = Role.Button) { onIntent(AuthIntent.ToggleMode) }
                     .padding(vertical = spacing.s2),
             )
 
@@ -278,8 +282,7 @@ private fun AuthFormStep(
         StickyCTA(
             label = submitLabel,
             tone = CtaTone.Accent,
-            enabled = !state.isLoading,
-            loading = state.isLoading,
+            interaction = if (state.isSubmitting) CtaInteraction.Loading else CtaInteraction.Enabled,
             onClick = { onIntent(AuthIntent.Submit) },
         )
     }
@@ -287,7 +290,7 @@ private fun AuthFormStep(
 
 @Composable
 private fun CheckEmailStep(
-    state: AuthUiState,
+    state: AuthUiState.CheckEmail,
     onIntent: (AuthIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -337,7 +340,7 @@ private fun CheckEmailStep(
             color = colors.textSecondary,
         )
         Text(
-            text = state.confirmationEmail,
+            text = state.email,
             style = type.amountS.copy(fontWeight = FontWeight.W600),
             color = colors.textPrimary,
         )
@@ -385,36 +388,14 @@ private fun CheckEmailStep(
                     text = "Reenviar enlace",
                     style = type.bodyM,
                     color = colors.accent,
-                    modifier = Modifier.clickable { onIntent(AuthIntent.ResendEmail) },
+                    modifier = Modifier
+                        .clickable(role = Role.Button) { onIntent(AuthIntent.ResendEmail) }
+                        .padding(vertical = 12.dp),
                 )
             }
         }
 
         Spacer(Modifier.height(spacing.s4))
-    }
-}
-
-/** Full-width filled primary button for the check-email step. */
-@Composable
-private fun FilledCta(label: String, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-    val type = LocalEmmType.current
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp)
-            .clip(radii.rL)
-            .background(colors.accent)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            style = type.titleM,
-            color = colors.textOnAccent,
-        )
     }
 }
 
@@ -492,21 +473,93 @@ private fun AuthFieldInput(
                         inner()
                     }
                     if (isPassword && onTogglePasswordVisibility != null) {
-                        Icon(
-                            imageVector = if (passwordVisible) {
-                                Icons.Outlined.Visibility
-                            } else {
-                                Icons.Outlined.VisibilityOff
-                            },
-                            contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña",
-                            tint = colors.textTertiary,
+                        Box(
+                            contentAlignment = Alignment.Center,
                             modifier = Modifier
-                                .size(20.dp)
-                                .clickable(onClick = onTogglePasswordVisibility),
-                        )
+                                .size(48.dp)
+                                .clickable(
+                                    role = Role.Button,
+                                    onClick = onTogglePasswordVisibility,
+                                ),
+                        ) {
+                            Icon(
+                                imageVector = if (passwordVisible) {
+                                    Icons.Outlined.Visibility
+                                } else {
+                                    Icons.Outlined.VisibilityOff
+                                },
+                                contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña",
+                                tint = colors.textTertiary,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
                     }
                 }
             },
+        )
+    }
+}
+
+// --- Previews ---
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 800)
+@Composable
+private fun AuthFormSignInPreview() {
+    EmmTheme {
+        AuthContent(
+            state = AuthUiState.Form(
+                email = "hola@ejemplo.com",
+                password = "password123",
+                mode = AuthMode.SignIn,
+                isSubmitting = false,
+            ),
+            onIntent = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 800)
+@Composable
+private fun AuthFormSignUpPreview() {
+    EmmTheme {
+        AuthContent(
+            state = AuthUiState.Form(
+                email = "",
+                password = "",
+                mode = AuthMode.SignUp,
+                isSubmitting = false,
+            ),
+            onIntent = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 800)
+@Composable
+private fun AuthFormSignInLoadingPreview() {
+    EmmTheme {
+        AuthContent(
+            state = AuthUiState.Form(
+                email = "hola@ejemplo.com",
+                password = "password123",
+                mode = AuthMode.SignIn,
+                isSubmitting = true,
+            ),
+            onIntent = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 700)
+@Composable
+private fun AuthCheckEmailPreview() {
+    EmmTheme {
+        AuthContent(
+            state = AuthUiState.CheckEmail(
+                email = "hola@ejemplo.com",
+                isResending = false,
+            ),
+            onIntent = {},
         )
     }
 }

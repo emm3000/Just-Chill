@@ -4,8 +4,8 @@ import android.util.Log
 import com.emm.domain.auth.ResendConfirmationEmailUseCase
 import com.emm.domain.auth.SignInUseCase
 import com.emm.domain.auth.SignInWithGoogleUseCase
+import com.emm.domain.auth.SignUpResult
 import com.emm.domain.auth.SignUpUseCase
-import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 
 class AuthViewModel(
@@ -14,129 +14,132 @@ class AuthViewModel(
     private val signInWithGoogle: SignInWithGoogleUseCase,
     private val resendConfirmationEmail: ResendConfirmationEmailUseCase,
     private val googleServerClientId: String,
+    private val googleSignInLauncher: GoogleSignInLauncher,
 ) : MviViewModel<AuthUiState, AuthIntent, AuthEffect>() {
 
-    override val initialState = AuthUiState()
+    override val initialState: AuthUiState = AuthUiState.Form()
+
+    // Routes all Form mutations through this helper — no-ops when state is CheckEmail.
+    private inline fun updateForm(crossinline reducer: AuthUiState.Form.() -> AuthUiState) =
+        updateState { if (this is AuthUiState.Form) reducer() else this }
+
+    // Routes all CheckEmail mutations through this helper — no-ops when state is Form.
+    private inline fun updateCheckEmail(crossinline reducer: AuthUiState.CheckEmail.() -> AuthUiState) =
+        updateState { if (this is AuthUiState.CheckEmail) reducer() else this }
 
     override fun onIntent(intent: AuthIntent) {
         when (intent) {
-            is AuthIntent.EmailChanged -> updateState { copy(email = intent.value) }
+            is AuthIntent.EmailChanged -> updateForm { copy(email = intent.value) }
 
-            is AuthIntent.PasswordChanged -> updateState { copy(password = intent.value) }
+            is AuthIntent.PasswordChanged -> updateForm { copy(password = intent.value) }
 
-            AuthIntent.ToggleMode -> updateState {
+            AuthIntent.ToggleMode -> updateForm {
                 copy(mode = if (mode == AuthMode.SignIn) AuthMode.SignUp else AuthMode.SignIn)
             }
 
-            AuthIntent.Submit -> submit()
+            AuthIntent.Submit -> {
+                if (currentState !is AuthUiState.Form) return
+                submit()
+            }
 
             AuthIntent.Back -> handleBack()
 
-            AuthIntent.OpenEmailApp -> sendEffect(AuthEffect.OpenEmailApp)
-
-            AuthIntent.ResendEmail -> resendEmail()
-
-            AuthIntent.BackToSignIn -> updateState {
-                copy(step = AuthStep.Form, mode = AuthMode.SignIn, password = "", confirmationEmail = "")
+            AuthIntent.OpenEmailApp -> {
+                if (currentState !is AuthUiState.CheckEmail) return
+                sendEffect(AuthEffect.OpenEmailApp)
             }
 
-            AuthIntent.GoogleSignInClicked -> launchGoogleSignIn()
-
-            is AuthIntent.GoogleTokenReceived -> exchangeGoogleToken(intent.idToken, intent.rawNonce)
-
-            AuthIntent.GoogleSignInCancelled -> updateState { copy(isLoading = false) }
-
-            AuthIntent.GoogleSignInUnavailable -> {
-                updateState { copy(isLoading = false) }
-                // Credential-retrieval failure: happens before any domain call, so it never becomes
-                // a DomainException — it is a VM-level UX message like the "Te mandamos un correo"
-                // string, NOT a bypass of toUserMessage().
-                sendEffect(AuthEffect.ShowError("No encontramos una cuenta de Google en este teléfono."))
+            AuthIntent.ResendEmail -> {
+                if (currentState !is AuthUiState.CheckEmail) return
+                resendEmail()
             }
 
-            is AuthIntent.GoogleSignInErrored -> {
-                updateState { copy(isLoading = false) }
-                Log.w(TAG, "Google credential flow failed", intent.cause)
-                // Credential-retrieval failure: same rationale as GoogleSignInUnavailable above.
-                sendEffect(AuthEffect.ShowError("No se pudo iniciar sesión con Google."))
+            AuthIntent.BackToSignIn -> updateState { AuthUiState.Form(mode = AuthMode.SignIn) }
+
+            AuthIntent.GoogleSignInClicked -> {
+                if (currentState !is AuthUiState.Form) return
+                signInWithGoogleFlow()
             }
         }
     }
 
     private fun handleBack() {
-        if (currentState.step == AuthStep.CheckEmail) {
-            updateState { copy(step = AuthStep.Form, mode = AuthMode.SignIn, password = "", confirmationEmail = "") }
-        } else {
-            sendEffect(AuthEffect.NavigateBack)
+        when (currentState) {
+            is AuthUiState.CheckEmail -> updateState { AuthUiState.Form(mode = AuthMode.SignIn) }
+            is AuthUiState.Form -> sendEffect(AuthEffect.NavigateBack)
         }
     }
 
     private fun resendEmail() {
-        if (currentState.isResending) return
-        updateState { copy(isResending = true) }
-        launchSafe(onError = { e -> AuthEffect.ShowError(e.toUserMessage()) }) {
+        val checkEmailState = currentState as? AuthUiState.CheckEmail ?: return
+        if (checkEmailState.isResending) return
+        updateCheckEmail { copy(isResending = true) }
+        launchSafe(onError = { e -> AuthEffect.ShowError(e) }) {
             try {
-                resendConfirmationEmail(currentState.confirmationEmail)
-                sendEffect(AuthEffect.ShowMessage("Listo, te reenviamos el enlace."))
+                resendConfirmationEmail(checkEmailState.email)
+                sendEffect(AuthEffect.Notify(AuthMessage.ConfirmationLinkResent))
             } finally {
-                updateState { copy(isResending = false) }
+                updateCheckEmail { copy(isResending = false) }
             }
         }
     }
 
-    private fun launchGoogleSignIn() {
-        if (currentState.isLoading) return
+    private fun signInWithGoogleFlow() {
+        val formState = currentState as? AuthUiState.Form ?: return
+        if (formState.isSubmitting) return
         if (googleServerClientId.isBlank()) {
             Log.w(TAG, "GOOGLE_WEB_CLIENT_ID not configured")
-            sendEffect(AuthEffect.ShowError("No se pudo iniciar sesión con Google."))
+            sendEffect(AuthEffect.Notify(AuthMessage.GoogleSignInFailed))
             return
         }
-        updateState { copy(isLoading = true) }
-        sendEffect(AuthEffect.LaunchGoogleSignIn(googleServerClientId))
-    }
-
-    private fun exchangeGoogleToken(idToken: String, rawNonce: String) {
-        // isLoading is already true (set by GoogleSignInClicked); do NOT guard on it here.
-        launchSafe(onError = { e -> AuthEffect.ShowError(e.toUserMessage()) }) {
+        updateForm { copy(isSubmitting = true) }
+        launchSafe(onError = { e -> AuthEffect.ShowError(e) }) {
             try {
-                signInWithGoogle(idToken, rawNonce)
-                sendEffect(AuthEffect.NavigateBack)
+                when (val result = googleSignInLauncher.signIn(googleServerClientId)) {
+                    is GoogleCredentialClient.Result.Success -> {
+                        signInWithGoogle(result.idToken, result.rawNonce)
+                        sendEffect(AuthEffect.NavigateBack)
+                    }
+                    GoogleCredentialClient.Result.Cancelled -> Unit // silent per design
+                    GoogleCredentialClient.Result.NoCredentials ->
+                        sendEffect(AuthEffect.Notify(AuthMessage.GoogleAccountUnavailable))
+                    is GoogleCredentialClient.Result.Failure -> {
+                        Log.w(TAG, "Google credential flow failed", result.cause)
+                        sendEffect(AuthEffect.Notify(AuthMessage.GoogleSignInFailed))
+                    }
+                }
             } finally {
-                updateState { copy(isLoading = false) }
+                updateForm { copy(isSubmitting = false) }
             }
         }
     }
 
     private fun submit() {
-        if (currentState.isLoading) return
+        val formState = currentState as? AuthUiState.Form ?: return
+        if (formState.isSubmitting) return
 
-        val email = currentState.email.trim()
-        val password = currentState.password
+        val email = formState.email.trim()
+        val password = formState.password
 
-        updateState { copy(isLoading = true) }
-        launchSafe(
-            // isLoading is reset in the finally block below, covering both success and error paths.
-            onError = { e -> AuthEffect.ShowError(e.toUserMessage()) },
-        ) {
+        updateForm { copy(isSubmitting = true) }
+        launchSafe(onError = { e -> AuthEffect.ShowError(e) }) {
             try {
-                when (currentState.mode) {
+                when (formState.mode) {
                     AuthMode.SignIn -> {
                         signIn(email, password)
                         sendEffect(AuthEffect.NavigateBack)
                     }
 
                     AuthMode.SignUp -> {
-                        val user = signUp(email, password)
-                        if (user != null) {
-                            sendEffect(AuthEffect.NavigateBack)
-                        } else {
-                            // null means email confirmation is pending (auto-confirm disabled)
-                            updateState { copy(step = AuthStep.CheckEmail, confirmationEmail = email) }
+                        when (signUp(email, password)) {
+                            is SignUpResult.SignedIn -> sendEffect(AuthEffect.NavigateBack)
+                            SignUpResult.ConfirmationPending ->
+                                updateState { AuthUiState.CheckEmail(email = email) }
                         }
                     }
                 }
             } finally {
-                updateState { copy(isLoading = false) }
+                updateForm { copy(isSubmitting = false) }
             }
         }
     }
