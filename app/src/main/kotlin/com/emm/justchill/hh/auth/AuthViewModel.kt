@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.auth
 
 import android.util.Log
+import com.emm.domain.auth.ResendConfirmationEmailUseCase
 import com.emm.domain.auth.SignInUseCase
 import com.emm.domain.auth.SignInWithGoogleUseCase
 import com.emm.domain.auth.SignUpUseCase
@@ -11,6 +12,7 @@ class AuthViewModel(
     private val signIn: SignInUseCase,
     private val signUp: SignUpUseCase,
     private val signInWithGoogle: SignInWithGoogleUseCase,
+    private val resendConfirmationEmail: ResendConfirmationEmailUseCase,
     private val googleServerClientId: String,
 ) : MviViewModel<AuthUiState, AuthIntent, AuthEffect>() {
 
@@ -28,7 +30,15 @@ class AuthViewModel(
 
             AuthIntent.Submit -> submit()
 
-            AuthIntent.Back -> sendEffect(AuthEffect.NavigateBack)
+            AuthIntent.Back -> handleBack()
+
+            AuthIntent.OpenEmailApp -> sendEffect(AuthEffect.OpenEmailApp)
+
+            AuthIntent.ResendEmail -> resendEmail()
+
+            AuthIntent.BackToSignIn -> updateState {
+                copy(step = AuthStep.Form, mode = AuthMode.SignIn, password = "", confirmationEmail = "")
+            }
 
             AuthIntent.GoogleSignInClicked -> launchGoogleSignIn()
 
@@ -49,6 +59,27 @@ class AuthViewModel(
                 Log.w(TAG, "Google credential flow failed", intent.cause)
                 // Credential-retrieval failure: same rationale as GoogleSignInUnavailable above.
                 sendEffect(AuthEffect.ShowError("No se pudo iniciar sesión con Google."))
+            }
+        }
+    }
+
+    private fun handleBack() {
+        if (currentState.step == AuthStep.CheckEmail) {
+            updateState { copy(step = AuthStep.Form, mode = AuthMode.SignIn, password = "", confirmationEmail = "") }
+        } else {
+            sendEffect(AuthEffect.NavigateBack)
+        }
+    }
+
+    private fun resendEmail() {
+        if (currentState.isResending) return
+        updateState { copy(isResending = true) }
+        launchSafe(onError = { e -> AuthEffect.ShowError(e.toUserMessage()) }) {
+            try {
+                resendConfirmationEmail(currentState.confirmationEmail)
+                sendEffect(AuthEffect.ShowMessage("Listo, te reenviamos el enlace."))
+            } finally {
+                updateState { copy(isResending = false) }
             }
         }
     }
@@ -100,11 +131,7 @@ class AuthViewModel(
                             sendEffect(AuthEffect.NavigateBack)
                         } else {
                             // null means email confirmation is pending (auto-confirm disabled)
-                            sendEffect(
-                                AuthEffect.ShowMessage(
-                                    "Te mandamos un correo — confírmalo y vuelve a iniciar sesión.",
-                                ),
-                            )
+                            updateState { copy(step = AuthStep.CheckEmail, confirmationEmail = email) }
                         }
                     }
                 }

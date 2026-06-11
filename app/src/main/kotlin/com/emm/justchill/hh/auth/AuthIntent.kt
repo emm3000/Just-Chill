@@ -8,6 +8,9 @@ sealed interface AuthIntent : UiIntent {
     data object ToggleMode : AuthIntent
     data object Submit : AuthIntent
     data object Back : AuthIntent
+    data object OpenEmailApp : AuthIntent
+    data object ResendEmail : AuthIntent
+    data object BackToSignIn : AuthIntent
     data object GoogleSignInClicked : AuthIntent
     data class GoogleTokenReceived(val idToken: String, val rawNonce: String) : AuthIntent
     data object GoogleSignInCancelled : AuthIntent
