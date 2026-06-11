@@ -50,40 +50,27 @@ class EditTransactionViewModel(
     override fun onIntent(intent: EditTransactionIntent) {
         when (intent) {
             is EditTransactionIntent.OnAmountChange -> updateState { copy(amount = intent.value).recompute() }
-
             is EditTransactionIntent.OnDescriptionChange -> updateState { copy(description = intent.value).recompute() }
-
-            is EditTransactionIntent.OnTransactionTypeChange -> {
-                updateState {
-                    val list = allCategories[intent.value.categoryType].orEmpty()
-                    copy(
-                        transactionType = intent.value,
-                        categories = list,
-                        categorySelected = list.firstOrNull { it.categoryId == snapshot?.categoryId }
-                            ?: list.firstOrNull(),
-                    ).recompute()
-                }
-                loadFrequent(intent.value)
-            }
-
+            is EditTransactionIntent.OnTransactionTypeChange -> changeTransactionType(intent.value)
             is EditTransactionIntent.OnDateChangeInMillis -> updateCurrentDate(intent.value)
-
-            is EditTransactionIntent.OnAccountSelected -> updateState {
-                copy(
-                    accountSelected = intent.value,
-                ).recompute()
-            }
-
-            is EditTransactionIntent.OnCategorySelected -> updateState {
-                copy(
-                    categorySelected = intent.value,
-                ).recompute()
-            }
-
-            EditTransactionIntent.OnSave -> updateTransaction()
-
-            EditTransactionIntent.OnDelete -> deleteTransaction()
+            is EditTransactionIntent.OnAccountSelected -> updateState { copy(accountSelected = intent.value).recompute() }
+            is EditTransactionIntent.OnCategorySelected -> updateState { copy(categorySelected = intent.value).recompute() }
+            EditTransactionIntent.OnSave -> saveChanges()
+            EditTransactionIntent.OnDelete -> performDelete()
         }
+    }
+
+    private fun changeTransactionType(type: TransactionType) {
+        updateState {
+            val list = allCategories[type.categoryType].orEmpty()
+            copy(
+                transactionType = type,
+                categories = list,
+                categorySelected = list.firstOrNull { it.categoryId == snapshot?.categoryId }
+                    ?: list.firstOrNull(),
+            ).recompute()
+        }
+        loadFrequent(type)
     }
 
     private fun loadFrequent(type: TransactionType) = viewModelScope.launch {
@@ -146,7 +133,7 @@ class EditTransactionViewModel(
         loadFrequent(oldTransaction.type)
     }
 
-    private fun updateTransaction() = launchSafe(
+    private fun saveChanges() = launchSafe(
         onError = { EditTransactionEffect.ShowError(it.toUserMessage()) },
     ) {
         updateTransaction(oldTransaction, createTransactionUpdate())
@@ -163,7 +150,7 @@ class EditTransactionViewModel(
         categoryId = currentState.categorySelected?.categoryId,
     )
 
-    private fun deleteTransaction() = launchSafe(
+    private fun performDelete() = launchSafe(
         onError = { EditTransactionEffect.ShowError(it.toUserMessage()) },
     ) {
         deleteTransaction(oldTransaction.transactionId)
