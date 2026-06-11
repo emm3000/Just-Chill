@@ -8,6 +8,10 @@ inputs:
   signing-key-base64:
     description: Base64-encoded signing key .p12 file
     required: true
+  supabase-properties:
+    description: Contents of supabase.properties (passed from secrets). When empty, the file is not created and builds use the non-functional placeholder URL.
+    required: false
+    default: ''
   cache-read-only:
     description: When true, Gradle cache is read-only (use for PRs to avoid pollution)
     required: false
@@ -19,6 +23,11 @@ runs:
     - name: Create keystore.properties file
       shell: bash
       run: echo "${{ inputs.keystore-properties }}" > keystore.properties
+
+    - name: Create supabase.properties file
+      if: inputs.supabase-properties != ''
+      shell: bash
+      run: echo "${{ inputs.supabase-properties }}" > supabase.properties
 
     - name: Decode signing key
       shell: bash

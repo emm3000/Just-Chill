@@ -22,6 +22,7 @@ jobs:
         with:
           keystore-properties: ${{ secrets.JUST_VERONICA }}
           signing-key-base64: ${{ secrets.JUST_CHILL }}
+          supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
 
       - name: Run tests + lint
         run: ./gradlew :domain:test :data:testDebugUnitTest :app:testDevDebugUnitTest lintProdRelease
@@ -39,6 +40,7 @@ jobs:
         with:
           keystore-properties: ${{ secrets.JUST_VERONICA }}
           signing-key-base64: ${{ secrets.JUST_CHILL }}
+          supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
 
       - name: Build Prod Release Bundle
         run: ./gradlew bundleProdRelease

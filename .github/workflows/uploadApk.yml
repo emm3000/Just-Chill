@@ -26,6 +26,7 @@ jobs:
         with:
           keystore-properties: ${{ secrets.JUST_VERONICA }}
           signing-key-base64: ${{ secrets.JUST_CHILL }}
+          supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
 
       - name: Run tests
         run: ./gradlew :domain:test :data:testDebugUnitTest :app:testDevDebugUnitTest
@@ -43,6 +44,7 @@ jobs:
         with:
           keystore-properties: ${{ secrets.JUST_VERONICA }}
           signing-key-base64: ${{ secrets.JUST_CHILL }}
+          supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
 
       - name: Set current date
         run: echo "date_today=$(date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_ENV
