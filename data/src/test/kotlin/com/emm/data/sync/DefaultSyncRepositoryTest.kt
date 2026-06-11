@@ -80,6 +80,7 @@ class DefaultSyncRepositoryTest {
         override val sessionStatus = flowOf(status)
         override suspend fun signIn(email: String, password: String) = error("not used")
         override suspend fun signUp(email: String, password: String) = null
+        override suspend fun signInWithGoogle(idToken: String, rawNonce: String) = error("not used")
         override suspend fun signOut() = Unit
         override suspend fun deleteAccount() = Unit
         override suspend fun resendConfirmationEmail(email: String) = Unit
@@ -330,6 +331,7 @@ class DefaultSyncRepositoryTest {
             }
             override suspend fun signIn(email: String, password: String) = error("not used")
             override suspend fun signUp(email: String, password: String) = null
+            override suspend fun signInWithGoogle(idToken: String, rawNonce: String) = error("not used")
             override suspend fun signOut() = Unit
             override suspend fun deleteAccount() = Unit
             override suspend fun resendConfirmationEmail(email: String) = Unit
@@ -377,6 +379,7 @@ class DefaultSyncRepositoryTest {
             )
             override suspend fun signIn(email: String, password: String) = error("not used")
             override suspend fun signUp(email: String, password: String) = null
+            override suspend fun signInWithGoogle(idToken: String, rawNonce: String) = error("not used")
             override suspend fun signOut() = Unit
             override suspend fun deleteAccount() = Unit
             override suspend fun resendConfirmationEmail(email: String) = Unit
