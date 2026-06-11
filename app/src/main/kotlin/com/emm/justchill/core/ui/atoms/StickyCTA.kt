@@ -139,7 +139,7 @@ fun StickyCTA(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    CtaLabel(text = label, color = fgColor)
+                    CtaLabel(text = label, color = fgColor, withLetterSpacing = false)
                     if (sublabel != null) {
                         Text(
                             text = sublabel,
@@ -155,15 +155,20 @@ fun StickyCTA(
     }
 }
 
-/** Shared label style used across all StickyCTA content branches. */
+/**
+ * Shared label style for StickyCTA content branches.
+ *
+ * Single-line labels use negative tracking ((-0.15).sp); the stacked-sublabel branch
+ * intentionally renders without it ([withLetterSpacing] = false).
+ */
 @Composable
-private fun CtaLabel(text: String, color: Color) {
+private fun CtaLabel(text: String, color: Color, withLetterSpacing: Boolean = true) {
     Text(
         text = text,
         color = color,
         fontSize = 15.sp,
         fontWeight = FontWeight.W600,
         fontFamily = InterFontFamily,
-        letterSpacing = (-0.15).sp,
+        letterSpacing = if (withLetterSpacing) (-0.15).sp else 0.sp,
     )
 }

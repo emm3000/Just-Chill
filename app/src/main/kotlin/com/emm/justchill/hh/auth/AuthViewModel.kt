@@ -7,6 +7,7 @@ import com.emm.domain.auth.SignInWithGoogleUseCase
 import com.emm.domain.auth.SignUpResult
 import com.emm.domain.auth.SignUpUseCase
 import com.emm.justchill.core.mvi.MviViewModel
+import kotlinx.coroutines.delay
 
 class AuthViewModel(
     private val signIn: SignInUseCase,
@@ -54,7 +55,7 @@ class AuthViewModel(
                 resendEmail()
             }
 
-            AuthIntent.BackToSignIn -> updateState { AuthUiState.Form(mode = AuthMode.SignIn) }
+            AuthIntent.BackToSignIn -> updateCheckEmail { AuthUiState.Form(mode = AuthMode.SignIn) }
 
             AuthIntent.GoogleSignInClicked -> {
                 if (currentState !is AuthUiState.Form) return
@@ -72,27 +73,32 @@ class AuthViewModel(
 
     private fun resendEmail() {
         val checkEmailState = currentState as? AuthUiState.CheckEmail ?: return
-        if (checkEmailState.isResending) return
+        if (checkEmailState.isResending || !checkEmailState.canResend) return
         updateCheckEmail { copy(isResending = true) }
         launchSafe(onError = { e -> AuthEffect.ShowError(e) }) {
             try {
                 resendConfirmationEmail(checkEmailState.email)
-                sendEffect(AuthEffect.Notify(AuthMessage.ConfirmationLinkResent))
             } finally {
+                // Reset before the cooldown delay below — isResending only covers the
+                // network call, otherwise the UI shows "Reenviando…" for the full cooldown.
                 updateCheckEmail { copy(isResending = false) }
             }
+            updateCheckEmail { copy(canResend = false) }
+            sendEffect(AuthEffect.Notify(AuthMessage.ConfirmationLinkResent))
+            delay(RESEND_COOLDOWN_MS)
+            updateCheckEmail { copy(canResend = true) }
         }
     }
 
     private fun signInWithGoogleFlow() {
         val formState = currentState as? AuthUiState.Form ?: return
-        if (formState.isSubmitting) return
+        if (formState.submitting != Submitting.None) return
         if (googleServerClientId.isBlank()) {
             Log.w(TAG, "GOOGLE_WEB_CLIENT_ID not configured")
             sendEffect(AuthEffect.Notify(AuthMessage.GoogleSignInFailed))
             return
         }
-        updateForm { copy(isSubmitting = true) }
+        updateForm { copy(submitting = Submitting.Google) }
         launchSafe(onError = { e -> AuthEffect.ShowError(e) }) {
             try {
                 when (val result = googleSignInLauncher.signIn(googleServerClientId)) {
@@ -109,19 +115,19 @@ class AuthViewModel(
                     }
                 }
             } finally {
-                updateForm { copy(isSubmitting = false) }
+                updateForm { copy(submitting = Submitting.None) }
             }
         }
     }
 
     private fun submit() {
         val formState = currentState as? AuthUiState.Form ?: return
-        if (formState.isSubmitting) return
+        if (formState.submitting != Submitting.None) return
 
         val email = formState.email.trim()
         val password = formState.password
 
-        updateForm { copy(isSubmitting = true) }
+        updateForm { copy(submitting = Submitting.Email) }
         launchSafe(onError = { e -> AuthEffect.ShowError(e) }) {
             try {
                 when (formState.mode) {
@@ -139,12 +145,13 @@ class AuthViewModel(
                     }
                 }
             } finally {
-                updateForm { copy(isSubmitting = false) }
+                updateForm { copy(submitting = Submitting.None) }
             }
         }
     }
 
     private companion object {
         const val TAG = "AuthViewModel"
+        const val RESEND_COOLDOWN_MS = 30_000L
     }
 }

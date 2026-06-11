@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.ErrorOutline
@@ -43,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.theme.LocalEmmSpacing
 
 /** Visual tone for [EmmSnackbarVisuals]. */
 enum class EmmSnackbarTone { Success, Error }
@@ -75,7 +76,9 @@ private data class ToneVisuals(val icon: ImageVector, val tint: Color, val circl
 @Composable
 private fun EmmSnackbarBody(data: SnackbarData) {
     val colors = LocalEmmColors.current
-    val shape = RoundedCornerShape(14.dp)
+    val radii = LocalEmmRadii.current
+    val spacing = LocalEmmSpacing.current
+    val shape = radii.rL
 
     // Resolve tone from the visuals — fall back to Success for plain showSnackbar(message) calls.
     val tone = (data.visuals as? EmmSnackbarVisuals)?.tone ?: EmmSnackbarTone.Success
@@ -98,11 +101,11 @@ private fun EmmSnackbarBody(data: SnackbarData) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = spacing.s4)
             .clip(shape)
             .background(colors.surface2)
             .border(1.dp, colors.border, shape)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+            .padding(horizontal = 14.dp, vertical = spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {

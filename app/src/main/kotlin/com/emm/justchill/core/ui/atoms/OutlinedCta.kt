@@ -2,9 +2,13 @@ package com.emm.justchill.core.ui.atoms
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,22 +26,24 @@ import com.emm.justchill.core.theme.LocalEmmType
  * Mirrors [StickyCTA] height ([CtaHeight]) and shape ([EmmRadii.rL]).
  * Used for secondary actions that should not compete visually with the primary [StickyCTA].
  *
- * @param label   Button label.
- * @param enabled When false, the button is dimmed and non-interactive. The node remains in the
- *                semantics tree so assistive technologies can announce it as disabled.
- * @param onClick Action fired on tap (only when [enabled]).
+ * @param label       Button label.
+ * @param interaction Controls enabled/disabled/loading state. Default: [CtaInteraction.Enabled].
+ *                    [CtaInteraction.Loading] shows a spinner before the label; the button is dimmed
+ *                    and non-interactive. [CtaInteraction.Disabled] dims the button without a spinner.
+ * @param onClick     Action fired on tap (only when [CtaInteraction.Enabled]).
  */
 @Composable
 fun OutlinedCta(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true,
+    interaction: CtaInteraction = CtaInteraction.Enabled,
 ) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
     val type = LocalEmmType.current
 
+    val enabled = interaction == CtaInteraction.Enabled
     val textColor = if (enabled) colors.textPrimary else colors.textDisabled
 
     Box(
@@ -49,10 +55,28 @@ fun OutlinedCta(
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = label,
-            style = type.titleM,
-            color = textColor,
-        )
+        if (interaction == CtaInteraction.Loading) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    color = textColor,
+                    strokeWidth = 2.dp,
+                )
+                Text(
+                    text = label,
+                    style = type.titleM,
+                    color = textColor,
+                )
+            }
+        } else {
+            Text(
+                text = label,
+                style = type.titleM,
+                color = textColor,
+            )
+        }
     }
 }

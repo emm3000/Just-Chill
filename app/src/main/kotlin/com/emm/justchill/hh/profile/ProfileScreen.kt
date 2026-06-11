@@ -248,7 +248,7 @@ private fun AccountSection(
                         },
                         metaIsPrimary = true,
                         metaColor = if (state.syncRow is SyncRowUi.Failed) colors.danger else null,
-                        onClick = {},
+                        onClick = null,
                         trailing = {
                             when (state.syncRow) {
                                 SyncRowUi.Syncing -> CircularProgressIndicator(
@@ -361,7 +361,8 @@ private fun ProfileRowWithTrailing(
     label: String,
     meta: String,
     metaIsPrimary: Boolean,
-    onClick: () -> Unit,
+    // When null, the row is non-interactive (no ripple/press state). Pass a lambda to make it tappable.
+    onClick: (() -> Unit)?,
     trailing: @Composable () -> Unit,
     // When non-null, overrides the default meta text color derived from [metaIsPrimary].
     metaColor: Color? = null,
@@ -372,16 +373,22 @@ private fun ProfileRowWithTrailing(
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val bg: Color = if (isPressed) colors.surface1 else Color.Transparent
+    val bg: Color = if (onClick != null && isPressed) colors.surface1 else Color.Transparent
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(bg)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = onClick,
+                    )
+                } else {
+                    Modifier
+                },
             )
             .padding(horizontal = spacing.s5, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,

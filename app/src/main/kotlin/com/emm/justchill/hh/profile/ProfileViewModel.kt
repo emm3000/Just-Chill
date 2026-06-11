@@ -77,13 +77,13 @@ class ProfileViewModel(
         when (intent) {
             is ProfileIntent.ExportToStream -> exportToStream(intent.output)
             is ProfileIntent.ImportJson -> importFromJson(intent.json)
-            ProfileIntent.SignOut -> signOut()
+            ProfileIntent.SignOut -> performSignOut()
             ProfileIntent.SyncNow -> syncNow()
             ProfileIntent.DeleteAccount -> deleteAccount()
         }
     }
 
-    private fun signOut() = launchSafe(
+    private fun performSignOut() = launchSafe(
         onError = { e -> ProfileEffect.ShowMessage(e.toUserMessage()) },
     ) {
         signOut.invoke()
@@ -106,6 +106,7 @@ class ProfileViewModel(
             sendEffect(ProfileEffect.ShowMessage("Cuenta eliminada. Tus datos siguen en este teléfono."))
         }
     }
+
 
     private fun exportToStream(output: OutputStream) = launchSafe(
         onError = { e ->

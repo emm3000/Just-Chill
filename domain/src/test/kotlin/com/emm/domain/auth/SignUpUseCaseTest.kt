@@ -56,6 +56,42 @@ class SignUpUseCaseTest {
         coVerify(exactly = 0) { authRepository.signUp(any(), any()) }
     }
 
+    // ── Shared validateEmail rule coverage ───────────────────────────────────
+
+    @Test
+    fun `email with blank local part (at-sign first) throws ValidationError`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase("@example.com", validPassword)
+        }
+        coVerify(exactly = 0) { authRepository.signUp(any(), any()) }
+    }
+
+    @Test
+    fun `email with blank domain part (at-sign last) throws ValidationError`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase("user@", validPassword)
+        }
+        coVerify(exactly = 0) { authRepository.signUp(any(), any()) }
+    }
+
+    @Test
+    fun `email with multiple at-signs throws ValidationError`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase("a@@b", validPassword)
+        }
+        coVerify(exactly = 0) { authRepository.signUp(any(), any()) }
+    }
+
+    @Test
+    fun `minimal email (single char local + at + single char domain) is accepted`() = runTest {
+        coEvery { authRepository.signUp("a@b", validPassword) } returns user
+
+        val result = useCase("a@b", validPassword)
+
+        assertIs<SignUpResult.SignedIn>(result)
+        coVerify(exactly = 1) { authRepository.signUp("a@b", validPassword) }
+    }
+
     @Test
     fun `blank password throws ValidationError and no repository interaction`() = runTest {
         assertFailsWith<DomainException.ValidationError> {

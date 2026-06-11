@@ -14,38 +14,44 @@ internal fun ensure(condition: Boolean, error: DomainException) {
 }
 
 /**
+ * Validates an email address.
+ *
+ * Rules (minimally honest — server is the authority for full RFC compliance):
+ * - Exactly one '@' character.
+ * - Non-blank local part (before '@').
+ * - Non-blank domain part (after '@').
+ */
+internal fun validateEmail(email: String) {
+    val atCount = email.count { it == '@' }
+    ensure(atCount == 1, DomainException.ValidationError("Email must contain exactly one '@'"))
+    val atIndex = email.indexOf('@')
+    ensure(atIndex > 0, DomainException.ValidationError("Email local part must not be blank"))
+    ensure(atIndex < email.length - 1, DomainException.ValidationError("Email domain part must not be blank"))
+}
+
+/**
  * Validates credentials for sign-in.
  *
- * - Email: non-blank and contains '@'.
+ * - Email: validated via [validateEmail].
  * - Password: merely non-blank — existing accounts may have shorter passwords; the server is
  *   the authority on sign-in credential correctness.
  */
 internal fun validateSignInCredentials(email: String, password: String) {
-    ensure(email.isNotBlank(), DomainException.ValidationError("Email must not be blank"))
-    ensure(email.contains('@'), DomainException.ValidationError("Email must contain '@'"))
+    validateEmail(email)
     ensure(password.isNotBlank(), DomainException.ValidationError("Password must not be blank"))
 }
 
 /**
  * Validates credentials for sign-up.
  *
- * - Email: non-blank and contains '@'.
+ * - Email: validated via [validateEmail].
  * - Password: minimum [MIN_SIGNUP_PASSWORD_LENGTH] characters (product rule; UI copy: "Mínimo 8 caracteres").
  */
 internal fun validateSignUpCredentials(email: String, password: String) {
-    ensure(email.isNotBlank(), DomainException.ValidationError("Email must not be blank"))
-    ensure(email.contains('@'), DomainException.ValidationError("Email must contain '@'"))
+    validateEmail(email)
     ensure(password.isNotBlank(), DomainException.ValidationError("Password must not be blank"))
     ensure(
         password.length >= MIN_SIGNUP_PASSWORD_LENGTH,
         DomainException.ValidationError("Password must be at least $MIN_SIGNUP_PASSWORD_LENGTH characters"),
     )
-}
-
-/**
- * Validates an email address for operations that only require a valid email (e.g. resend confirmation).
- */
-internal fun validateEmail(email: String) {
-    ensure(email.isNotBlank(), DomainException.ValidationError("Email must not be blank"))
-    ensure(email.contains('@'), DomainException.ValidationError("Email must contain '@'"))
 }

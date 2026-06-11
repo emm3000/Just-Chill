@@ -37,7 +37,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,10 +52,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.error.toUserMessage
+import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
@@ -72,8 +73,6 @@ import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.OutlinedCta
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
-import androidx.compose.ui.tooling.preview.Preview
-import com.emm.justchill.core.theme.EmmTheme
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -183,9 +182,9 @@ private fun AuthFormStep(
 
     val headingText = if (state.mode == AuthMode.SignIn) "Inicia sesión" else "Crea tu cuenta"
     val submitLabel = if (state.mode == AuthMode.SignIn) {
-        if (state.isSubmitting) "Entrando…" else "Iniciar sesión"
+        if (state.submitting == Submitting.Email) "Entrando…" else "Iniciar sesión"
     } else {
-        if (state.isSubmitting) "Creando…" else "Crear cuenta"
+        if (state.submitting == Submitting.Email) "Creando…" else "Crear cuenta"
     }
     val toggleLabel = if (state.mode == AuthMode.SignIn) {
         "¿No tienes cuenta? Créala"
@@ -193,8 +192,8 @@ private fun AuthFormStep(
         "¿Ya tienes cuenta? Inicia sesión"
     }
 
-    // Password visibility is a pure view concern — not in state
-    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    // Password visibility: plain remember — masked-by-default after config change is safer
+    var passwordVisible by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxWidth()) {
         Column(
@@ -206,7 +205,6 @@ private fun AuthFormStep(
         ) {
             Spacer(Modifier.height(spacing.s6))
 
-            // Heading block
             Text(
                 text = headingText,
                 style = type.headlineL,
@@ -223,7 +221,7 @@ private fun AuthFormStep(
 
             OutlinedCta(
                 label = "Continuar con Google",
-                enabled = !state.isSubmitting,
+                interaction = state.submitting.toCtaInteraction(busyWhen = Submitting.Google),
                 onClick = { onIntent(AuthIntent.GoogleSignInClicked) },
             )
 
@@ -282,10 +280,17 @@ private fun AuthFormStep(
         StickyCTA(
             label = submitLabel,
             tone = CtaTone.Accent,
-            interaction = if (state.isSubmitting) CtaInteraction.Loading else CtaInteraction.Enabled,
+            interaction = state.submitting.toCtaInteraction(busyWhen = Submitting.Email),
             onClick = { onIntent(AuthIntent.Submit) },
         )
     }
+}
+
+/** Each Form CTA spins only for its own submit path and is disabled while the other runs. */
+private fun Submitting.toCtaInteraction(busyWhen: Submitting): CtaInteraction = when (this) {
+    Submitting.None -> CtaInteraction.Enabled
+    busyWhen -> CtaInteraction.Loading
+    else -> CtaInteraction.Disabled
 }
 
 @Composable
@@ -308,7 +313,6 @@ private fun CheckEmailStep(
     ) {
         Spacer(Modifier.height(spacing.s12))
 
-        // 56dp icon tile
         Box(
             modifier = Modifier
                 .size(56.dp)
@@ -352,7 +356,6 @@ private fun CheckEmailStep(
 
         Spacer(Modifier.height(spacing.s6))
 
-        // Primary "Abrir mi correo" button — inline private composable
         FilledCta(
             label = "Abrir mi correo",
             onClick = { onIntent(AuthIntent.OpenEmailApp) },
@@ -367,7 +370,6 @@ private fun CheckEmailStep(
 
         Spacer(Modifier.height(spacing.s5))
 
-        // Resend footer
         Row(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
@@ -377,22 +379,19 @@ private fun CheckEmailStep(
                 style = type.bodyM,
                 color = colors.textTertiary,
             )
-            if (state.isResending) {
-                Text(
-                    text = "Reenviando…",
-                    style = type.bodyM,
-                    color = colors.textTertiary,
-                )
-            } else {
-                Text(
-                    text = "Reenviar enlace",
-                    style = type.bodyM,
-                    color = colors.accent,
-                    modifier = Modifier
-                        .clickable(role = Role.Button) { onIntent(AuthIntent.ResendEmail) }
-                        .padding(vertical = 12.dp),
-                )
-            }
+            val resendActive = !state.isResending && state.canResend
+            Text(
+                text = if (state.isResending) "Reenviando…" else "Reenviar enlace",
+                style = type.bodyM,
+                color = if (resendActive) colors.accent else colors.textTertiary,
+                // Padding lives outside the conditional so the row height is identical in
+                // both states — no layout jump when the link disables mid-cooldown.
+                modifier = if (resendActive) {
+                    Modifier.clickable(role = Role.Button) { onIntent(AuthIntent.ResendEmail) }
+                } else {
+                    Modifier
+                }.padding(vertical = spacing.s3),
+            )
         }
 
         Spacer(Modifier.height(spacing.s4))
@@ -452,7 +451,7 @@ private fun AuthFieldInput(
                         color = underlineColor,
                         start = Offset(0f, size.height),
                         end = Offset(size.width, size.height),
-                        strokeWidth = 1f,
+                        strokeWidth = 1.dp.toPx(),
                     )
                 }
                 .padding(vertical = 8.dp),
@@ -511,7 +510,7 @@ private fun AuthFormSignInPreview() {
                 email = "hola@ejemplo.com",
                 password = "password123",
                 mode = AuthMode.SignIn,
-                isSubmitting = false,
+                submitting = Submitting.None,
             ),
             onIntent = {},
         )
@@ -527,7 +526,7 @@ private fun AuthFormSignUpPreview() {
                 email = "",
                 password = "",
                 mode = AuthMode.SignUp,
-                isSubmitting = false,
+                submitting = Submitting.None,
             ),
             onIntent = {},
         )
@@ -543,7 +542,7 @@ private fun AuthFormSignInLoadingPreview() {
                 email = "hola@ejemplo.com",
                 password = "password123",
                 mode = AuthMode.SignIn,
-                isSubmitting = true,
+                submitting = Submitting.Email,
             ),
             onIntent = {},
         )

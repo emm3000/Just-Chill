@@ -16,6 +16,7 @@ import io.mockk.mockkStatic
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -84,7 +85,7 @@ class AuthViewModelTest {
 
         assertTrue(effects.any { it is AuthEffect.NavigateBack })
         val formState = assertIs<AuthUiState.Form>(vm.state.value)
-        assertFalse(formState.isSubmitting)
+        assertEquals(Submitting.None, formState.submitting)
 
         job.cancel()
     }
@@ -107,7 +108,7 @@ class AuthViewModelTest {
         assertIs<AuthEffect.ShowError>(showError)
         assertEquals(error, showError.error)
         val formState = assertIs<AuthUiState.Form>(vm.state.value)
-        assertFalse(formState.isSubmitting)
+        assertEquals(Submitting.None, formState.submitting)
 
         job.cancel()
     }
@@ -283,13 +284,13 @@ class AuthViewModelTest {
         coVerify(exactly = 1) { signInWithGoogle.invoke("token", "nonce") }
         assertTrue(effects.any { it is AuthEffect.NavigateBack })
         val formState = assertIs<AuthUiState.Form>(vm.state.value)
-        assertFalse(formState.isSubmitting)
+        assertEquals(Submitting.None, formState.submitting)
 
         job.cancel()
     }
 
     @Test
-    fun `Google Cancelled produces no effect and isSubmitting is false`() = runTest(testDispatcher) {
+    fun `Google Cancelled produces no effect and submitting is None`() = runTest(testDispatcher) {
         coEvery { googleSignInLauncher.signIn(any()) } returns GoogleCredentialClient.Result.Cancelled
 
         val vm = buildViewModel()
@@ -301,7 +302,7 @@ class AuthViewModelTest {
 
         assertTrue(effects.isEmpty())
         val formState = assertIs<AuthUiState.Form>(vm.state.value)
-        assertFalse(formState.isSubmitting)
+        assertEquals(Submitting.None, formState.submitting)
 
         job.cancel()
     }
@@ -437,5 +438,85 @@ class AuthViewModelTest {
 
         val checkStateAfter = assertIs<AuthUiState.CheckEmail>(vm.state.value)
         assertFalse(checkStateAfter.isResending)
+    }
+
+    @Test
+    fun `ResendEmail success sets canResend false during cooldown`() = runTest(testDispatcher) {
+        coEvery { resendConfirmationEmail.invoke(any()) } returns Unit
+
+        val vm = buildViewModel()
+        navigateToCheckEmail(vm)
+        vm.onIntent(AuthIntent.ResendEmail)
+        // Advance only enough to finish the send but not the 30s delay
+        advanceTimeBy(100L)
+
+        val checkState = assertIs<AuthUiState.CheckEmail>(vm.state.value)
+        assertFalse(checkState.canResend)
+    }
+
+    @Test
+    fun `isResending resets as soon as the send completes, not after the cooldown`() = runTest(testDispatcher) {
+        coEvery { resendConfirmationEmail.invoke(any()) } returns Unit
+
+        val vm = buildViewModel()
+        navigateToCheckEmail(vm)
+        vm.onIntent(AuthIntent.ResendEmail)
+        // Mid-cooldown: the send finished but the 30s cooldown is still running.
+        advanceTimeBy(100L)
+
+        val checkState = assertIs<AuthUiState.CheckEmail>(vm.state.value)
+        assertFalse(checkState.isResending)
+        assertFalse(checkState.canResend)
+    }
+
+    @Test
+    fun `canResend becomes true after cooldown elapses`() = runTest(testDispatcher) {
+        coEvery { resendConfirmationEmail.invoke(any()) } returns Unit
+
+        val vm = buildViewModel()
+        navigateToCheckEmail(vm)
+        vm.onIntent(AuthIntent.ResendEmail)
+        // Advance past the send but within the cooldown — canResend must be false
+        advanceTimeBy(100L)
+        assertFalse(assertIs<AuthUiState.CheckEmail>(vm.state.value).canResend)
+
+        // Now advance past the cooldown
+        advanceTimeBy(30_001L)
+
+        assertTrue(assertIs<AuthUiState.CheckEmail>(vm.state.value).canResend)
+    }
+
+    @Test
+    fun `ResendEmail intent while canResend is false is a no-op`() = runTest(testDispatcher) {
+        coEvery { resendConfirmationEmail.invoke(any()) } returns Unit
+
+        val vm = buildViewModel()
+        navigateToCheckEmail(vm)
+
+        // First send — succeeds; advance just past the network call but not the delay
+        vm.onIntent(AuthIntent.ResendEmail)
+        advanceTimeBy(100L)
+        assertFalse(assertIs<AuthUiState.CheckEmail>(vm.state.value).canResend)
+
+        // Second send while canResend==false — must be a no-op
+        vm.onIntent(AuthIntent.ResendEmail)
+        advanceTimeBy(100L)
+
+        // Use case was called exactly once
+        coVerify(exactly = 1) { resendConfirmationEmail.invoke(any()) }
+    }
+
+    @Test
+    fun `ResendEmail error leaves canResend true`() = runTest(testDispatcher) {
+        val error = DomainException.NetworkUnavailable(RuntimeException("no net"))
+        coEvery { resendConfirmationEmail.invoke(any()) } throws error
+
+        val vm = buildViewModel()
+        navigateToCheckEmail(vm)
+        vm.onIntent(AuthIntent.ResendEmail)
+        advanceUntilIdle()
+
+        val checkState = assertIs<AuthUiState.CheckEmail>(vm.state.value)
+        assertTrue(checkState.canResend)
     }
 }
