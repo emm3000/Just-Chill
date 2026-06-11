@@ -83,6 +83,8 @@ class ClaimLocalDataOnAuthenticationUseCaseTest {
                     claimedUserIds += userId
                 }
 
+                override suspend fun unclaimAll(userId: String) = Unit
+
                 override fun observeUnclaimedCount() = fakeUnclaimedCount
             }
             val fakeClaimUseCase = ClaimLocalDataUseCase(fakeRepo)
