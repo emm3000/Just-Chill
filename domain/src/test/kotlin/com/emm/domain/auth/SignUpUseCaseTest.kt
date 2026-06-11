@@ -16,7 +16,8 @@ class SignUpUseCaseTest {
     private val useCase = SignUpUseCase(authRepository)
 
     private val validEmail = "new@example.com"
-    private val validPassword = "password1"
+    // Sign-up requires at least 8 characters.
+    private val validPassword = "password1" // 9 chars — well above the 8-char minimum
     private val user = AuthUser(userId = "uid-2", email = validEmail)
 
     @Test
@@ -63,11 +64,22 @@ class SignUpUseCaseTest {
     }
 
     @Test
-    fun `password shorter than 6 chars throws ValidationError and no repository interaction`() = runTest {
+    fun `password with 7 chars throws ValidationError (minimum is 8)`() = runTest {
         assertFailsWith<DomainException.ValidationError> {
-            useCase(validEmail, "ab")
+            useCase(validEmail, "1234567") // exactly 7 chars
         }
         coVerify(exactly = 0) { authRepository.signUp(any(), any()) }
+    }
+
+    @Test
+    fun `password with exactly 8 chars is accepted`() = runTest {
+        val eightCharPassword = "12345678"
+        coEvery { authRepository.signUp(validEmail, eightCharPassword) } returns user
+
+        val result = useCase(validEmail, eightCharPassword)
+
+        assertEquals(user, result)
+        coVerify(exactly = 1) { authRepository.signUp(validEmail, eightCharPassword) }
     }
 
     @Test

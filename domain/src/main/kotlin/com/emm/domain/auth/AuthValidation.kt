@@ -2,7 +2,7 @@ package com.emm.domain.auth
 
 import com.emm.domain.shared.error.DomainException
 
-internal const val MIN_PASSWORD_LENGTH = 6
+internal const val MIN_SIGNUP_PASSWORD_LENGTH = 8
 
 /**
  * Single validation guard for the auth domain.
@@ -13,12 +13,39 @@ internal fun ensure(condition: Boolean, error: DomainException) {
     if (!condition) throw error
 }
 
-internal fun validateCredentials(email: String, password: String) {
+/**
+ * Validates credentials for sign-in.
+ *
+ * - Email: non-blank and contains '@'.
+ * - Password: merely non-blank — existing accounts may have shorter passwords; the server is
+ *   the authority on sign-in credential correctness.
+ */
+internal fun validateSignInCredentials(email: String, password: String) {
+    ensure(email.isNotBlank(), DomainException.ValidationError("Email must not be blank"))
+    ensure(email.contains('@'), DomainException.ValidationError("Email must contain '@'"))
+    ensure(password.isNotBlank(), DomainException.ValidationError("Password must not be blank"))
+}
+
+/**
+ * Validates credentials for sign-up.
+ *
+ * - Email: non-blank and contains '@'.
+ * - Password: minimum [MIN_SIGNUP_PASSWORD_LENGTH] characters (product rule; UI copy: "Mínimo 8 caracteres").
+ */
+internal fun validateSignUpCredentials(email: String, password: String) {
     ensure(email.isNotBlank(), DomainException.ValidationError("Email must not be blank"))
     ensure(email.contains('@'), DomainException.ValidationError("Email must contain '@'"))
     ensure(password.isNotBlank(), DomainException.ValidationError("Password must not be blank"))
     ensure(
-        password.length >= MIN_PASSWORD_LENGTH,
-        DomainException.ValidationError("Password must be at least 6 characters"),
+        password.length >= MIN_SIGNUP_PASSWORD_LENGTH,
+        DomainException.ValidationError("Password must be at least $MIN_SIGNUP_PASSWORD_LENGTH characters"),
     )
+}
+
+/**
+ * Validates an email address for operations that only require a valid email (e.g. resend confirmation).
+ */
+internal fun validateEmail(email: String) {
+    ensure(email.isNotBlank(), DomainException.ValidationError("Email must not be blank"))
+    ensure(email.contains('@'), DomainException.ValidationError("Email must contain '@'"))
 }

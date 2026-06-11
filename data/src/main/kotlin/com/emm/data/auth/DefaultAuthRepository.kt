@@ -5,6 +5,7 @@ import com.emm.domain.auth.AuthUser
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.shared.error.DomainException
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.OtpType
 import io.github.jan.supabase.auth.SignOutScope
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.exception.AuthErrorCode
@@ -69,6 +70,10 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
 
     override suspend fun signOut(): Unit = authCall {
         client.auth.signOut()
+    }
+
+    override suspend fun resendConfirmationEmail(email: String): Unit = authCall {
+        client.auth.resendEmail(OtpType.Email.SIGNUP, email)
     }
 
     /**

@@ -8,7 +8,7 @@ package com.emm.domain.auth
 class SignInUseCase(private val authRepository: AuthRepository) {
 
     suspend operator fun invoke(email: String, password: String): AuthUser {
-        validateCredentials(email, password)
+        validateSignInCredentials(email, password)
         return authRepository.signIn(email, password)
     }
 }

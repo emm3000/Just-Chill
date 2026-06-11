@@ -29,4 +29,10 @@ interface AuthRepository {
      * server-side after the RPC, so a server-side sign-out call would fail.
      */
     suspend fun deleteAccount()
+
+    /**
+     * Re-sends the sign-up confirmation link to [email].
+     * Useful when the user did not receive the original confirmation email.
+     */
+    suspend fun resendConfirmationEmail(email: String)
 }

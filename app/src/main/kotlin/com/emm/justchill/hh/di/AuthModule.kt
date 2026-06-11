@@ -8,6 +8,7 @@ import com.emm.domain.auth.ClaimLocalDataRepository
 import com.emm.domain.auth.ClaimLocalDataUseCase
 import com.emm.domain.auth.DeleteUserAccountUseCase
 import com.emm.domain.auth.ObserveSessionUseCase
+import com.emm.domain.auth.ResendConfirmationEmailUseCase
 import com.emm.domain.auth.SignInUseCase
 import com.emm.domain.auth.SignInWithGoogleUseCase
 import com.emm.domain.auth.SignOutUseCase
@@ -28,6 +29,7 @@ val authModule = module {
     factoryOf(::GoogleCredentialClient)
 
     factoryOf(::ClaimLocalDataUseCase)
+    factoryOf(::ResendConfirmationEmailUseCase)
     factoryOf(::SignInUseCase)
     factoryOf(::SignInWithGoogleUseCase)
     factoryOf(::SignUpUseCase)
@@ -36,5 +38,5 @@ val authModule = module {
     factoryOf(::ClaimLocalDataOnAuthenticationUseCase)
     factoryOf(::DeleteUserAccountUseCase)
 
-    viewModel { AuthViewModel(get(), get(), get(), BuildConfig.GOOGLE_WEB_CLIENT_ID) }
+    viewModel { AuthViewModel(get(), get(), get(), get(), BuildConfig.GOOGLE_WEB_CLIENT_ID) }
 }

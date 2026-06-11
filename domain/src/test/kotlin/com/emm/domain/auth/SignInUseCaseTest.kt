@@ -15,7 +15,8 @@ class SignInUseCaseTest {
     private val useCase = SignInUseCase(authRepository)
 
     private val validEmail = "user@example.com"
-    private val validPassword = "secret"
+    // Sign-in only requires non-blank password; existing accounts may have short passwords.
+    private val validPassword = "abc"
     private val user = AuthUser(userId = "uid-1", email = validEmail)
 
     @Test
@@ -61,11 +62,15 @@ class SignInUseCaseTest {
     }
 
     @Test
-    fun `password shorter than 6 chars throws ValidationError and no repository interaction`() = runTest {
-        assertFailsWith<DomainException.ValidationError> {
-            useCase(validEmail, "abc")
-        }
-        coVerify(exactly = 0) { authRepository.signIn(any(), any()) }
+    fun `short password (under 8 chars) is accepted by sign-in (server is the authority)`() = runTest {
+        // Sign-in path only requires non-blank; existing accounts may have short passwords.
+        val shortPassword = "abc"
+        coEvery { authRepository.signIn(validEmail, shortPassword) } returns user
+
+        val result = useCase(validEmail, shortPassword)
+
+        assertEquals(user, result)
+        coVerify(exactly = 1) { authRepository.signIn(validEmail, shortPassword) }
     }
 
     @Test

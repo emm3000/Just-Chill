@@ -82,6 +82,7 @@ class DefaultSyncRepositoryTest {
         override suspend fun signUp(email: String, password: String) = null
         override suspend fun signOut() = Unit
         override suspend fun deleteAccount() = Unit
+        override suspend fun resendConfirmationEmail(email: String) = Unit
     }
 
     private fun authenticatedUser() = SessionStatus.Authenticated(AuthUser(userId = "user-1", email = "a@b.com"))
@@ -331,6 +332,7 @@ class DefaultSyncRepositoryTest {
             override suspend fun signUp(email: String, password: String) = null
             override suspend fun signOut() = Unit
             override suspend fun deleteAccount() = Unit
+            override suspend fun resendConfirmationEmail(email: String) = Unit
         }
         val repo = buildRepository(blockingAuthRepo)
 
@@ -377,6 +379,7 @@ class DefaultSyncRepositoryTest {
             override suspend fun signUp(email: String, password: String) = null
             override suspend fun signOut() = Unit
             override suspend fun deleteAccount() = Unit
+            override suspend fun resendConfirmationEmail(email: String) = Unit
         }
         coEvery { accountSync.pull(any(), any(), any()) } coAnswers {
             callLog += "pull:accounts"

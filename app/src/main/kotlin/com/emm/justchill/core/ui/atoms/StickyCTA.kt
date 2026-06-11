@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -38,6 +40,8 @@ internal val CtaHeight = 52.dp
  * @param inlineSublabel When true, renders `label · sublabel` in a single Row instead of
  *                       stacking them. Useful for the Add-Transaction CTA ("Anotar gasto · S/ 85.40").
  * @param enabled        When false, the button is dimmed and non-interactive.
+ * @param loading        When true, renders a 16dp spinner before the label and disables interaction.
+ *                       Visual treatment matches the disabled state (dimmed bg + fg).
  */
 @Composable
 fun StickyCTA(
@@ -48,12 +52,16 @@ fun StickyCTA(
     inlineSublabel: Boolean = false,
     tone: CtaTone = CtaTone.Accent,
     enabled: Boolean = true,
+    loading: Boolean = false,
 ) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
 
+    // loading forces the same disabled visual treatment (dimmed bg + fg)
+    val interactive = enabled && !loading
+
     val (bgColor, fgColor) = when {
-        !enabled -> colors.surface1 to colors.textTertiary
+        !interactive -> colors.surface1 to colors.textTertiary
         tone == CtaTone.Accent -> colors.accent to colors.textOnAccent
         tone == CtaTone.Pos -> colors.success to colors.textOnAccent
         else -> colors.textPrimary to colors.bg
@@ -71,7 +79,7 @@ fun StickyCTA(
                 .clip(radii.rL)
                 .background(bgColor)
                 .then(
-                    if (enabled) {
+                    if (interactive) {
                         Modifier.clickable(onClick = onClick)
                     } else {
                         Modifier
@@ -79,7 +87,27 @@ fun StickyCTA(
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            if (inlineSublabel && sublabel != null) {
+            if (loading) {
+                // Loading state: spinner + label side by side, dimmed colours
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = fgColor,
+                        strokeWidth = 2.dp,
+                    )
+                    Text(
+                        text = label,
+                        color = fgColor,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.W600,
+                        fontFamily = InterFontFamily,
+                        letterSpacing = (-0.15).sp,
+                    )
+                }
+            } else if (inlineSublabel && sublabel != null) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
