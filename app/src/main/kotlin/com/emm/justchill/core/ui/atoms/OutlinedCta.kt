@@ -30,6 +30,8 @@ import com.emm.justchill.core.theme.LocalEmmType
  * @param interaction Controls enabled/disabled/loading state. Default: [CtaInteraction.Enabled].
  *                    [CtaInteraction.Loading] shows a spinner before the label; the button is dimmed
  *                    and non-interactive. [CtaInteraction.Disabled] dims the button without a spinner.
+ * @param leading     Optional slot rendered before the label (e.g. a provider logo). Hidden while
+ *                    [CtaInteraction.Loading] — the spinner takes its place.
  * @param onClick     Action fired on tap (only when [CtaInteraction.Enabled]).
  */
 @Composable
@@ -38,6 +40,7 @@ fun OutlinedCta(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     interaction: CtaInteraction = CtaInteraction.Enabled,
+    leading: (@Composable () -> Unit)? = null,
 ) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
@@ -55,23 +58,19 @@ fun OutlinedCta(
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        if (interaction == CtaInteraction.Loading) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (interaction == CtaInteraction.Loading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(16.dp),
                     color = textColor,
                     strokeWidth = 2.dp,
                 )
-                Text(
-                    text = label,
-                    style = type.titleM,
-                    color = textColor,
-                )
+            } else if (leading != null) {
+                leading()
             }
-        } else {
             Text(
                 text = label,
                 style = type.titleM,

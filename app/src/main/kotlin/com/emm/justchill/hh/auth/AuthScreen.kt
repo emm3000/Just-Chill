@@ -3,6 +3,7 @@ package com.emm.justchill.hh.auth
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +47,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -56,6 +58,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.emm.justchill.R
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
@@ -222,6 +225,15 @@ private fun AuthFormStep(
             OutlinedCta(
                 label = "Continuar con Google",
                 interaction = state.submitting.toCtaInteraction(busyWhen = Submitting.Google),
+                leading = {
+                    // Image, not Icon — the official multicolor G must never be tinted
+                    // (Google sign-in branding guidelines).
+                    Image(
+                        painter = painterResource(R.drawable.ic_google),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                },
                 onClick = { onIntent(AuthIntent.GoogleSignInClicked) },
             )
 
