@@ -14,6 +14,7 @@ data class ProfileUiState(
     val isSyncing: Boolean = false,
     val isDeletingAccount: Boolean = false,
     val lastSyncedAtMillis: Long? = null,
+    val syncFailed: Boolean = false,
     val categoryCount: Int = 0,
     val accountCount: Int = 0,
     val session: SessionUiState = SessionUiState.Initializing,

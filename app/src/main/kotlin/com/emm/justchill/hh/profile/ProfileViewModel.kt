@@ -62,6 +62,7 @@ class ProfileViewModel(
                     copy(
                         isSyncing = syncStatus.isSyncing,
                         lastSyncedAtMillis = syncStatus.lastSyncedAtMillis,
+                        syncFailed = syncStatus.lastSyncFailed,
                     )
                 }
             }

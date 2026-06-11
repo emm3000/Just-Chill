@@ -237,6 +237,38 @@ class ProfileViewModelTest {
         job.cancel()
     }
 
+    // ── SyncFailed flag mapping tests ─────────────────────────────────────
+
+    @Test
+    fun `lastSyncFailed=true from orchestrator maps to syncFailed=true in state`() = runTest(testDispatcher) {
+        val statusFlow = MutableStateFlow(SyncStatus())
+        every { syncOrchestrator.status } returns statusFlow
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        statusFlow.value = SyncStatus(isSyncing = false, lastSyncFailed = true)
+        advanceUntilIdle()
+
+        assertEquals(true, vm.state.value.syncFailed)
+    }
+
+    @Test
+    fun `syncFailed resets to false when orchestrator emits successful status`() = runTest(testDispatcher) {
+        val statusFlow = MutableStateFlow(SyncStatus(lastSyncFailed = true))
+        every { syncOrchestrator.status } returns statusFlow
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertEquals(true, vm.state.value.syncFailed)
+
+        statusFlow.value = SyncStatus(isSyncing = false, lastSyncedAtMillis = 1_000L, lastSyncFailed = false)
+        advanceUntilIdle()
+
+        assertEquals(false, vm.state.value.syncFailed)
+    }
+
     @Test
     fun `DeleteAccount re-fire while in flight is ignored`() = runTest(testDispatcher) {
         val gate = CompletableDeferred<Unit>()

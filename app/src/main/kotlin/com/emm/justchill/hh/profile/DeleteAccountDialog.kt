@@ -76,8 +76,8 @@ internal fun DeleteAccountDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
             Spacer(Modifier.height(6.dp))
 
             Text(
-                text = "Se eliminará tu cuenta y todos tus datos en la nube. " +
-                    "Tus datos seguirán disponibles en este teléfono.",
+                text = "Se borra tu cuenta y todos tus datos en la nube. " +
+                    "Tu plata sigue acá, en este teléfono — eso no se toca.",
                 style = typography.bodyM,
                 color = colors.textSecondary,
             )
@@ -97,7 +97,7 @@ internal fun DeleteAccountDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
                     modifier = Modifier.weight(1f),
                 )
                 DialogActionButton(
-                    label = "Eliminar",
+                    label = "Eliminar cuenta",
                     bg = colors.danger,
                     border = colors.danger,
                     textColor = colors.textOnAccent,

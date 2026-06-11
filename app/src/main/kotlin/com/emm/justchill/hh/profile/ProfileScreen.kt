@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,6 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,6 +55,7 @@ import com.emm.justchill.BuildConfig
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
@@ -104,6 +108,7 @@ fun ProfileScreen(
             onSignInClick = onSignInClick,
             onSignOutClick = onSignOutClick,
             onDeleteAccountClick = onDeleteAccountClick,
+            onSyncNowClick = onSyncNowClick,
         )
 
         SectionHeader(text = "Gestionar")
@@ -196,6 +201,7 @@ private fun AccountSection(
     onSignInClick: () -> Unit,
     onSignOutClick: () -> Unit,
     onDeleteAccountClick: () -> Unit,
+    onSyncNowClick: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
@@ -227,21 +233,24 @@ private fun AccountSection(
                 }
 
                 is SessionUiState.SignedIn -> {
+                    val showRetry = state.syncFailed && !state.isSyncing
                     ProfileRowWithTrailing(
                         icon = Icons.Outlined.AccountCircle,
                         label = session.email ?: "Tu cuenta",
-                        meta = syncStatusLabel(state.isSyncing, state.lastSyncedAtMillis),
+                        meta = if (showRetry) "No se pudo sincronizar"
+                               else syncStatusLabel(state.isSyncing, state.lastSyncedAtMillis),
                         metaIsPrimary = true,
+                        metaColor = if (showRetry) colors.danger else null,
                         onClick = {},
                         trailing = {
-                            if (state.isSyncing) {
-                                CircularProgressIndicator(
+                            when {
+                                state.isSyncing -> CircularProgressIndicator(
                                     modifier = Modifier.size(16.dp),
                                     strokeWidth = 2.dp,
                                     color = colors.textTertiary,
                                 )
-                            } else {
-                                Icon(
+                                showRetry -> RetryPill(onClick = onSyncNowClick)
+                                else -> Icon(
                                     imageVector = Icons.Outlined.ChevronRight,
                                     contentDescription = null,
                                     tint = colors.textTertiary,
@@ -348,6 +357,8 @@ private fun ProfileRowWithTrailing(
     metaIsPrimary: Boolean,
     onClick: () -> Unit,
     trailing: @Composable () -> Unit,
+    // When non-null, overrides the default meta text color derived from [metaIsPrimary].
+    metaColor: Color? = null,
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -376,6 +387,8 @@ private fun ProfileRowWithTrailing(
                 text = label,
                 style = type.bodyL.copy(fontWeight = FontWeight.W500),
                 color = colors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.height(2.dp))
             Text(
@@ -384,10 +397,42 @@ private fun ProfileRowWithTrailing(
                 lineHeight = 18.sp,
                 fontFamily = InterFontFamily,
                 fontWeight = FontWeight.W400,
-                color = if (metaIsPrimary) colors.textSecondary else colors.textTertiary,
+                color = metaColor ?: if (metaIsPrimary) colors.textSecondary else colors.textTertiary,
             )
         }
         trailing()
+    }
+}
+
+/** Pill button shown in the account row trailing slot when the last sync failed. */
+@Composable
+private fun RetryPill(onClick: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val radii = LocalEmmRadii.current
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(radii.rFull)
+            .border(1.dp, colors.border, radii.rFull)
+            .background(colors.surface2)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Refresh,
+            contentDescription = null,
+            tint = colors.textSecondary,
+            modifier = Modifier.size(14.dp),
+        )
+        Spacer(Modifier.size(4.dp))
+        Text(
+            text = "Reintentar",
+            style = type.labelM,
+            color = colors.textPrimary,
+            maxLines = 1,
+        )
     }
 }
 

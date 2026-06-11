@@ -32,8 +32,15 @@ import kotlin.time.Duration.Companion.seconds
  * @property isSyncing true while a sync cycle is in progress.
  * @property lastSyncedAtMillis epoch-millis of the last successful sync for the current user,
  *           or null when the user has never synced or is not signed in.
+ * @property lastSyncFailed true when the most recent sync cycle (manual or automatic) ended in
+ *           a [DomainException]. Reset to false when a new cycle starts or completes successfully.
+ *           Also reset on sign-out (mirrors [lastSyncedAtMillis] reset behaviour).
  */
-data class SyncStatus(val isSyncing: Boolean = false, val lastSyncedAtMillis: Long? = null)
+data class SyncStatus(
+    val isSyncing: Boolean = false,
+    val lastSyncedAtMillis: Long? = null,
+    val lastSyncFailed: Boolean = false,
+)
 
 /** One-shot events emitted by [SyncOrchestrator] that require top-level UI handling. */
 sealed interface SyncEvent {
@@ -205,7 +212,7 @@ class SyncOrchestrator(
     private suspend fun runSync() {
         val manual = manualRequestPending
         manualRequestPending = false
-        _status.value = _status.value.copy(isSyncing = true)
+        _status.value = _status.value.copy(isSyncing = true, lastSyncFailed = false)
         try {
             syncData()
             val now = System.currentTimeMillis()
@@ -213,7 +220,7 @@ class SyncOrchestrator(
             if (userId != null) {
                 prefs.setLastSyncedAt(userId, now)
             }
-            _status.value = _status.value.copy(isSyncing = false, lastSyncedAtMillis = now)
+            _status.value = _status.value.copy(isSyncing = false, lastSyncedAtMillis = now, lastSyncFailed = false)
         } catch (e: CancellationException) {
             // Must not be swallowed — propagate to the coroutine machinery.
             throw e
@@ -227,7 +234,9 @@ class SyncOrchestrator(
             _events.emit(SyncEvent.SessionExpired)
         } catch (e: DomainException) {
             // Silent-retry posture for automatic triggers: swallow, the next trigger will retry.
-            _status.value = _status.value.copy(isSyncing = false)
+            // lastSyncFailed is always set so the Perfil row can show the error state regardless
+            // of whether the failure was manual or automatic.
+            _status.value = _status.value.copy(isSyncing = false, lastSyncFailed = true)
             if (manual) _events.emit(SyncEvent.SyncFailed(e))
         }
     }

@@ -60,10 +60,11 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.sync.SyncEvent
 import com.emm.justchill.core.sync.SyncOrchestrator
+import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
+import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
@@ -127,11 +128,30 @@ fun Hh(modifier: Modifier = Modifier) {
     LaunchedEffect(syncOrchestrator) {
         syncOrchestrator.events.collect { event ->
             when (event) {
-                SyncEvent.SessionExpired ->
-                    snackbarHostState.showSnackbar("Tu sesión expiró. Inicia sesión nuevamente.")
+                SyncEvent.SessionExpired -> {
+                    val result = snackbarHostState.showEmmSnackbar(
+                        message = "Tu sesión expiró. Inicia sesión de nuevo.",
+                        tone = EmmSnackbarTone.Error,
+                        actionLabel = "Entrar",
+                    )
+                    if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+                        // Guard: only push AuthRoute if it is not anywhere in the back stack.
+                        if (backStack.none { it is AuthRoute }) {
+                            backStack.add(AuthRoute)
+                        }
+                    }
+                }
 
-                is SyncEvent.SyncFailed ->
-                    snackbarHostState.showSnackbar("No se pudo sincronizar. ${event.error.toUserMessage()}")
+                is SyncEvent.SyncFailed -> {
+                    val result = snackbarHostState.showEmmSnackbar(
+                        message = "No se pudo sincronizar",
+                        tone = EmmSnackbarTone.Error,
+                        actionLabel = "Reintentar",
+                    )
+                    if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+                        syncOrchestrator.requestSync(manual = true)
+                    }
+                }
             }
         }
     }
