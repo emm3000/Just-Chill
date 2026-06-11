@@ -112,6 +112,7 @@ When adding a new failure mode, prefer extending `DomainException` (and `toUserM
 **Ad-hoc tech debt still open** (not blocking v1, picked up opportunistically):
 - Compose perf pass: audit `derivedStateOf`, `remember`-ed lambdas, `contentType` in `LazyColumn`, Layout Inspector for overdraw.
 - Orphan deps in `libs.versions.toml` (Ktor/Retrofit/Supabase/WorkManager declarations without uses).
+- `SyncOrchestrator` has no connectivity-regained trigger (only on-resume, sign-in, debounced writes). If a sync fails offline and the network comes back while the app stays foregrounded with no new writes, nothing retries until the next ON_RESUME — `lastSyncFailed` stays set. No data loss (local-first; self-heals on next resume), just sync latency. Fix: trigger (d) — `callbackFlow` over `ConnectivityManager.NetworkCallback.onAvailable`, filtered by authenticated + (`pendingCount > 0` or `lastSyncFailed`), injected as `Flow<Unit>` like `resumeEvents`.
 
 ## Product definition (Fases 1-5) + execution status
 
