@@ -20,138 +20,125 @@ class AuthViewModel(
 
     override val initialState: AuthUiState = AuthUiState.Form()
 
-    // Routes all Form mutations through this helper — no-ops when state is CheckEmail.
-    private inline fun updateForm(crossinline reducer: AuthUiState.Form.() -> AuthUiState) =
-        updateState { if (this is AuthUiState.Form) reducer() else this }
+    // Pure dispatch — each handler owns its own state guard.
+    override fun onIntent(intent: AuthIntent) = when (intent) {
+        is AuthIntent.EmailChanged -> updateForm { copy(email = intent.value) }
+        is AuthIntent.PasswordChanged -> updateForm { copy(password = intent.value) }
+        AuthIntent.ToggleMode -> updateForm { copy(mode = mode.toggled()) }
+        AuthIntent.BackToSignIn -> updateCheckEmail { AuthUiState.Form(mode = AuthMode.SignIn) }
+        AuthIntent.Submit -> submit()
+        AuthIntent.GoogleSignInClicked -> submitWithGoogle()
+        AuthIntent.ResendEmail -> resendEmail()
+        AuthIntent.OpenEmailApp -> openEmailApp()
+        AuthIntent.Back -> back()
+    }
 
-    // Routes all CheckEmail mutations through this helper — no-ops when state is Form.
-    private inline fun updateCheckEmail(crossinline reducer: AuthUiState.CheckEmail.() -> AuthUiState) =
-        updateState { if (this is AuthUiState.CheckEmail) reducer() else this }
-
-    override fun onIntent(intent: AuthIntent) {
-        when (intent) {
-            is AuthIntent.EmailChanged -> updateForm { copy(email = intent.value) }
-
-            is AuthIntent.PasswordChanged -> updateForm { copy(password = intent.value) }
-
-            AuthIntent.ToggleMode -> updateForm {
-                copy(mode = if (mode == AuthMode.SignIn) AuthMode.SignUp else AuthMode.SignIn)
+    private fun submit() = launchSubmitting(via = Submitting.Email) { form ->
+        val email = form.email.trim()
+        when (form.mode) {
+            AuthMode.SignIn -> {
+                signIn(email, form.password)
+                sendEffect(AuthEffect.NavigateBack)
             }
 
-            AuthIntent.Submit -> {
-                if (currentState !is AuthUiState.Form) return
-                submit()
-            }
-
-            AuthIntent.Back -> handleBack()
-
-            AuthIntent.OpenEmailApp -> {
-                if (currentState !is AuthUiState.CheckEmail) return
-                sendEffect(AuthEffect.OpenEmailApp)
-            }
-
-            AuthIntent.ResendEmail -> {
-                if (currentState !is AuthUiState.CheckEmail) return
-                resendEmail()
-            }
-
-            AuthIntent.BackToSignIn -> updateCheckEmail { AuthUiState.Form(mode = AuthMode.SignIn) }
-
-            AuthIntent.GoogleSignInClicked -> {
-                if (currentState !is AuthUiState.Form) return
-                signInWithGoogleFlow()
+            AuthMode.SignUp -> when (signUp(email, form.password)) {
+                is SignUpResult.SignedIn -> sendEffect(AuthEffect.NavigateBack)
+                SignUpResult.ConfirmationPending ->
+                    updateState { AuthUiState.CheckEmail(email = email) }
             }
         }
     }
 
-    private fun handleBack() {
-        when (currentState) {
-            is AuthUiState.CheckEmail -> updateState { AuthUiState.Form(mode = AuthMode.SignIn) }
-            is AuthUiState.Form -> sendEffect(AuthEffect.NavigateBack)
+    private fun submitWithGoogle() = launchSubmitting(via = Submitting.Google) {
+        if (googleServerClientId.isBlank()) {
+            Log.w(TAG, "GOOGLE_WEB_CLIENT_ID not configured")
+            sendEffect(AuthEffect.Notify(AuthMessage.GoogleSignInFailed))
+            return@launchSubmitting
+        }
+        when (val result = googleSignInLauncher.signIn(googleServerClientId)) {
+            is GoogleCredentialClient.Result.Success -> {
+                signInWithGoogle(result.idToken, result.rawNonce)
+                sendEffect(AuthEffect.NavigateBack)
+            }
+
+            GoogleCredentialClient.Result.Cancelled -> Unit // user closed the sheet — silent per design
+
+            GoogleCredentialClient.Result.NoCredentials ->
+                sendEffect(AuthEffect.Notify(AuthMessage.GoogleAccountUnavailable))
+
+            is GoogleCredentialClient.Result.Failure -> {
+                Log.w(TAG, "Google credential flow failed", result.cause)
+                sendEffect(AuthEffect.Notify(AuthMessage.GoogleSignInFailed))
+            }
         }
     }
 
     private fun resendEmail() {
-        val checkEmailState = currentState as? AuthUiState.CheckEmail ?: return
-        if (checkEmailState.isResending || !checkEmailState.canResend) return
+        val check = currentState as? AuthUiState.CheckEmail ?: return
+        if (check.isResending || !check.canResend) return
         updateCheckEmail { copy(isResending = true) }
         launchSafe(onError = { e -> AuthEffect.ShowError(e) }) {
             try {
-                resendConfirmationEmail(checkEmailState.email)
+                resendConfirmationEmail(check.email)
             } finally {
-                // Reset before the cooldown delay below — isResending only covers the
-                // network call, otherwise the UI shows "Reenviando…" for the full cooldown.
+                // isResending only covers the network call; the cooldown below has its own flag.
                 updateCheckEmail { copy(isResending = false) }
             }
-            updateCheckEmail { copy(canResend = false) }
             sendEffect(AuthEffect.Notify(AuthMessage.ConfirmationLinkResent))
-            delay(RESEND_COOLDOWN_MS)
-            updateCheckEmail { copy(canResend = true) }
+            coolDownResend()
         }
     }
 
-    private fun signInWithGoogleFlow() {
-        val formState = currentState as? AuthUiState.Form ?: return
-        if (formState.submitting != Submitting.None) return
-        if (googleServerClientId.isBlank()) {
-            Log.w(TAG, "GOOGLE_WEB_CLIENT_ID not configured")
-            sendEffect(AuthEffect.Notify(AuthMessage.GoogleSignInFailed))
-            return
-        }
-        updateForm { copy(submitting = Submitting.Google) }
+    private suspend fun coolDownResend() {
+        updateCheckEmail { copy(canResend = false) }
+        delay(RESEND_COOLDOWN_MS)
+        updateCheckEmail { copy(canResend = true) }
+    }
+
+    private fun openEmailApp() {
+        if (currentState is AuthUiState.CheckEmail) sendEffect(AuthEffect.OpenEmailApp)
+    }
+
+    private fun back() = when (currentState) {
+        is AuthUiState.CheckEmail -> updateState { AuthUiState.Form(mode = AuthMode.SignIn) }
+        is AuthUiState.Form -> sendEffect(AuthEffect.NavigateBack)
+    }
+
+    /**
+     * Shared lifecycle for every submit path (email or Google): guard against re-entry,
+     * raise [AuthUiState.Form.submitting] to [via], run [block] with a snapshot of the
+     * form, and always lower the flag again.
+     *
+     * The try/finally is what guarantees the reset on EVERY exit — success, domain error
+     * (rethrown to [launchSafe]'s handler), and coroutine cancellation. Without it each
+     * path would need its own reset, and a missed one leaves the screen disabled forever.
+     */
+    private fun launchSubmitting(via: Submitting, block: suspend (AuthUiState.Form) -> Unit) {
+        val form = currentState as? AuthUiState.Form ?: return
+        if (form.submitting != Submitting.None) return
+        updateForm { copy(submitting = via) }
         launchSafe(onError = { e -> AuthEffect.ShowError(e) }) {
             try {
-                when (val result = googleSignInLauncher.signIn(googleServerClientId)) {
-                    is GoogleCredentialClient.Result.Success -> {
-                        signInWithGoogle(result.idToken, result.rawNonce)
-                        sendEffect(AuthEffect.NavigateBack)
-                    }
-                    GoogleCredentialClient.Result.Cancelled -> Unit // silent per design
-                    GoogleCredentialClient.Result.NoCredentials ->
-                        sendEffect(AuthEffect.Notify(AuthMessage.GoogleAccountUnavailable))
-                    is GoogleCredentialClient.Result.Failure -> {
-                        Log.w(TAG, "Google credential flow failed", result.cause)
-                        sendEffect(AuthEffect.Notify(AuthMessage.GoogleSignInFailed))
-                    }
-                }
+                block(form)
             } finally {
                 updateForm { copy(submitting = Submitting.None) }
             }
         }
     }
 
-    private fun submit() {
-        val formState = currentState as? AuthUiState.Form ?: return
-        if (formState.submitting != Submitting.None) return
+    // Routes Form mutations; no-ops when the state is CheckEmail.
+    private inline fun updateForm(crossinline reducer: AuthUiState.Form.() -> AuthUiState) =
+        updateState { if (this is AuthUiState.Form) reducer() else this }
 
-        val email = formState.email.trim()
-        val password = formState.password
-
-        updateForm { copy(submitting = Submitting.Email) }
-        launchSafe(onError = { e -> AuthEffect.ShowError(e) }) {
-            try {
-                when (formState.mode) {
-                    AuthMode.SignIn -> {
-                        signIn(email, password)
-                        sendEffect(AuthEffect.NavigateBack)
-                    }
-
-                    AuthMode.SignUp -> {
-                        when (signUp(email, password)) {
-                            is SignUpResult.SignedIn -> sendEffect(AuthEffect.NavigateBack)
-                            SignUpResult.ConfirmationPending ->
-                                updateState { AuthUiState.CheckEmail(email = email) }
-                        }
-                    }
-                }
-            } finally {
-                updateForm { copy(submitting = Submitting.None) }
-            }
-        }
-    }
+    // Routes CheckEmail mutations; no-ops when the state is Form.
+    private inline fun updateCheckEmail(crossinline reducer: AuthUiState.CheckEmail.() -> AuthUiState) =
+        updateState { if (this is AuthUiState.CheckEmail) reducer() else this }
 
     private companion object {
         const val TAG = "AuthViewModel"
         const val RESEND_COOLDOWN_MS = 30_000L
     }
 }
+
+private fun AuthMode.toggled(): AuthMode =
+    if (this == AuthMode.SignIn) AuthMode.SignUp else AuthMode.SignIn
