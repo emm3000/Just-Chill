@@ -22,6 +22,9 @@ import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 
+/** Shared height for full-width CTA atoms (StickyCTA and OutlinedCta). */
+internal val CtaHeight = 52.dp
+
 /**
  * Full-width sticky CTA button, typically pinned to the bottom of a screen.
  *
@@ -64,7 +67,7 @@ fun StickyCTA(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
                 .padding(top = 12.dp, bottom = 16.dp)
-                .height(52.dp)
+                .height(CtaHeight)
                 .clip(radii.rL)
                 .background(bgColor)
                 .then(

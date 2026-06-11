@@ -8,5 +8,9 @@ sealed interface AuthIntent : UiIntent {
     data object ToggleMode : AuthIntent
     data object Submit : AuthIntent
     data object Back : AuthIntent
-    data class GoogleSignInResult(val result: GoogleCredentialClient.Result) : AuthIntent
+    data object GoogleSignInClicked : AuthIntent
+    data class GoogleTokenReceived(val idToken: String, val rawNonce: String) : AuthIntent
+    data object GoogleSignInCancelled : AuthIntent
+    data object GoogleSignInUnavailable : AuthIntent
+    data class GoogleSignInErrored(val cause: Throwable) : AuthIntent
 }

@@ -29,13 +29,11 @@ class SignInWithGoogleUseCaseTest {
     }
 
     @Test
-    fun `null nonce is forwarded to repository`() = runTest {
-        coEvery { authRepository.signInWithGoogle(validToken, null) } returns user
-
-        val result = useCase(validToken, null)
-
-        assertEquals(user, result)
-        coVerify(exactly = 1) { authRepository.signInWithGoogle(validToken, null) }
+    fun `blank nonce throws ValidationError and no repository interaction`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase(validToken, "   ")
+        }
+        coVerify(exactly = 0) { authRepository.signInWithGoogle(any(), any()) }
     }
 
     @Test

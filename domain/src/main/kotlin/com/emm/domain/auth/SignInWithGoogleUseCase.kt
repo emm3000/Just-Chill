@@ -9,8 +9,9 @@ import com.emm.domain.shared.error.DomainException
  */
 class SignInWithGoogleUseCase(private val authRepository: AuthRepository) {
 
-    suspend operator fun invoke(idToken: String, rawNonce: String?): AuthUser {
+    suspend operator fun invoke(idToken: String, rawNonce: String): AuthUser {
         ensure(idToken.isNotBlank(), DomainException.ValidationError("Google ID token must not be blank"))
+        ensure(rawNonce.isNotBlank(), DomainException.ValidationError("Nonce must not be blank"))
         return authRepository.signInWithGoogle(idToken, rawNonce)
     }
 }

@@ -1,7 +1,6 @@
 package com.emm.justchill.hh.auth
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,17 +26,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -48,24 +41,30 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.emm.justchill.BuildConfig
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
+import com.emm.justchill.core.ui.atoms.OutlinedCta
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @Composable
-fun AuthScreen(onBack: () -> Unit, snackbarHostState: SnackbarHostState, vm: AuthViewModel = koinViewModel()) {
+fun AuthScreen(
+    onBack: () -> Unit,
+    snackbarHostState: SnackbarHostState,
+    vm: AuthViewModel = koinViewModel(),
+    googleClient: GoogleCredentialClient = koinInject(),
+) {
     val state by vm.state.collectAsStateWithLifecycle()
     val currentOnBack by rememberUpdatedState(onBack)
+    val context = LocalContext.current
 
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
@@ -73,6 +72,19 @@ fun AuthScreen(onBack: () -> Unit, snackbarHostState: SnackbarHostState, vm: Aut
                 AuthEffect.NavigateBack -> currentOnBack()
                 is AuthEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
                 is AuthEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
+                is AuthEffect.LaunchGoogleSignIn -> launch {
+                    var delivered = false
+                    try {
+                        val result = googleClient.signIn(context, effect.serverClientId)
+                        delivered = true
+                        vm.onIntent(result.toIntent())
+                    } finally {
+                        // The composition can die mid-flow (e.g. configuration change while the
+                        // credential sheet is open). Without this fallback the ViewModel would
+                        // stay isLoading forever, leaving the screen permanently disabled.
+                        if (!delivered) vm.onIntent(AuthIntent.GoogleSignInCancelled)
+                    }
+                }
             }
         }
     }
@@ -83,16 +95,19 @@ fun AuthScreen(onBack: () -> Unit, snackbarHostState: SnackbarHostState, vm: Aut
     )
 }
 
+/** Maps [GoogleCredentialClient.Result] to the appropriate [AuthIntent]. */
+private fun GoogleCredentialClient.Result.toIntent(): AuthIntent = when (this) {
+    is GoogleCredentialClient.Result.Success -> AuthIntent.GoogleTokenReceived(idToken, rawNonce)
+    GoogleCredentialClient.Result.Cancelled -> AuthIntent.GoogleSignInCancelled
+    GoogleCredentialClient.Result.NoCredentials -> AuthIntent.GoogleSignInUnavailable
+    is GoogleCredentialClient.Result.Failure -> AuthIntent.GoogleSignInErrored(cause)
+}
+
 @Composable
 private fun AuthContent(state: AuthUiState, onIntent: (AuthIntent) -> Unit) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
-    val radii = LocalEmmRadii.current
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val googleClient = remember { GoogleCredentialClient() }
-    var googleFlowInFlight by remember { mutableStateOf(false) }
 
     val submitLabel = if (state.mode == AuthMode.SignIn) "Iniciar sesión" else "Crear cuenta"
     val toggleLabel = if (state.mode == AuthMode.SignIn) {
@@ -128,53 +143,11 @@ private fun AuthContent(state: AuthUiState, onIntent: (AuthIntent) -> Unit) {
         ) {
             Spacer(Modifier.height(spacing.s6))
 
-            // Google sign-in button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .clip(radii.rL)
-                    .border(width = 1.dp, color = colors.border, shape = radii.rL)
-                    .background(Color.Transparent)
-                    .then(
-                        if (!state.isLoading) {
-                            Modifier.clickable {
-                                if (googleFlowInFlight) return@clickable
-                                coroutineScope.launch {
-                                    googleFlowInFlight = true
-                                    try {
-                                        val serverClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID
-                                        if (serverClientId.isEmpty()) {
-                                            onIntent(
-                                                AuthIntent.GoogleSignInResult(
-                                                    GoogleCredentialClient.Result.Failure(
-                                                        IllegalStateException("Google client ID not configured"),
-                                                    ),
-                                                ),
-                                            )
-                                            return@launch
-                                        }
-                                        val result = googleClient.signIn(context, serverClientId)
-                                        if (result !is GoogleCredentialClient.Result.Cancelled) {
-                                            onIntent(AuthIntent.GoogleSignInResult(result))
-                                        }
-                                    } finally {
-                                        googleFlowInFlight = false
-                                    }
-                                }
-                            }
-                        } else {
-                            Modifier
-                        },
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "Continuar con Google",
-                    style = type.titleM,
-                    color = colors.textPrimary,
-                )
-            }
+            OutlinedCta(
+                label = "Continuar con Google",
+                enabled = !state.isLoading,
+                onClick = { onIntent(AuthIntent.GoogleSignInClicked) },
+            )
 
             Spacer(Modifier.height(spacing.s4))
 

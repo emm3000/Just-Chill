@@ -17,10 +17,11 @@ interface AuthRepository {
     suspend fun signOut()
 
     /**
-     * Exchanges a Google ID token (obtained natively via Credential Manager) for a Supabase session.
-     * [rawNonce] is the un-hashed nonce whose SHA-256 was embedded in the token request.
+     * Exchanges a Google ID token for a session.
+     * [rawNonce] is the un-hashed nonce whose SHA-256 digest was embedded in the token request;
+     * the backend verifies the digest matches the token's nonce claim.
      */
-    suspend fun signInWithGoogle(idToken: String, rawNonce: String?): AuthUser
+    suspend fun signInWithGoogle(idToken: String, rawNonce: String): AuthUser
 
     /**
      * Calls the remote `delete_account` RPC (removes the auth user and all remote rows), then

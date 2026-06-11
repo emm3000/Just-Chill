@@ -32,82 +32,43 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
             .map { it.toDomain() }
             .flowOn(Dispatchers.IO)
 
-    // Intentional broad catch: this is the adapter that funnels every non-domain throwable
-    // from supabase-kt / ktor into DomainException via toAuthDomainException(). The original
-    // exception is preserved as cause. Mirrors the same pattern used in SafeCall.kt.
-    @Suppress("TooGenericExceptionCaught")
-    override suspend fun signIn(email: String, password: String): AuthUser = withContext(Dispatchers.IO) {
-        try {
-            client.auth.signInWith(Email) {
-                this.email = email
-                this.password = password
-            }
-            // signInWith does not return the user directly; read it from the live session.
-            val user = client.auth.currentUserOrNull()
-                ?: throw DomainException.Unauthorized("Sign-in succeeded but no session was established")
-            user.toDomain()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: DomainException) {
-            throw e
-        } catch (e: Throwable) {
-            throw e.toAuthDomainException()
+    override suspend fun signIn(email: String, password: String): AuthUser = authCall {
+        client.auth.signInWith(Email) {
+            this.email = email
+            this.password = password
         }
+        // signInWith does not return the user directly; read it from the live session.
+        val user = client.auth.currentUserOrNull()
+            ?: throw DomainException.Unauthorized("Sign-in succeeded but no session was established")
+        user.toDomain()
     }
 
-    @Suppress("TooGenericExceptionCaught")
-    override suspend fun signUp(email: String, password: String): AuthUser? = withContext(Dispatchers.IO) {
-        try {
-            // signUpWith(Email) returns UserInfo? — non-null means the server established a session
-            // immediately (auto-confirm on); null means email confirmation is pending.
-            // We ignore the return value and derive the result from the live session instead, which
-            // is the same information but guaranteed to be consistent with sessionStatus.
-            client.auth.signUpWith(Email) {
-                this.email = email
-                this.password = password
-            }
-            // If a session exists the user was auto-confirmed; otherwise confirmation is pending.
-            client.auth.currentUserOrNull()?.toDomain()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: DomainException) {
-            throw e
-        } catch (e: Throwable) {
-            throw e.toAuthDomainException()
+    override suspend fun signUp(email: String, password: String): AuthUser? = authCall {
+        // signUpWith(Email) returns UserInfo? — non-null means the server established a session
+        // immediately (auto-confirm on); null means email confirmation is pending.
+        // We ignore the return value and derive the result from the live session instead, which
+        // is the same information but guaranteed to be consistent with sessionStatus.
+        client.auth.signUpWith(Email) {
+            this.email = email
+            this.password = password
         }
+        // If a session exists the user was auto-confirmed; otherwise confirmation is pending.
+        client.auth.currentUserOrNull()?.toDomain()
     }
 
-    @Suppress("TooGenericExceptionCaught")
-    override suspend fun signInWithGoogle(idToken: String, rawNonce: String?): AuthUser = withContext(Dispatchers.IO) {
-        try {
-            client.auth.signInWith(IDToken) {
-                this.idToken = idToken
-                provider = Google
-                nonce = rawNonce
-            }
-            val user = client.auth.currentUserOrNull()
-                ?: throw DomainException.Unauthorized("Sign-in succeeded but no session was established")
-            user.toDomain()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: DomainException) {
-            throw e
-        } catch (e: Throwable) {
-            throw e.toAuthDomainException()
+    override suspend fun signInWithGoogle(idToken: String, rawNonce: String): AuthUser = authCall {
+        client.auth.signInWith(IDToken) {
+            this.idToken = idToken
+            provider = Google
+            nonce = rawNonce
         }
+        val user = client.auth.currentUserOrNull()
+            ?: throw DomainException.Unauthorized("Sign-in succeeded but no session was established")
+        user.toDomain()
     }
 
-    @Suppress("TooGenericExceptionCaught")
-    override suspend fun signOut(): Unit = withContext(Dispatchers.IO) {
-        try {
-            client.auth.signOut()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: DomainException) {
-            throw e
-        } catch (e: Throwable) {
-            throw e.toAuthDomainException()
-        }
+    override suspend fun signOut(): Unit = authCall {
+        client.auth.signOut()
     }
 
     /**
@@ -117,19 +78,29 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
      * [SignOutScope.LOCAL] is intentional: the auth user no longer exists on the server after
      * the RPC, so a server-side sign-out call would fail. LOCAL clears the on-device session only.
      */
-    @Suppress("TooGenericExceptionCaught")
-    override suspend fun deleteAccount(): Unit = withContext(Dispatchers.IO) {
-        try {
-            client.postgrest.rpc("delete_account")
-            client.auth.signOut(SignOutScope.LOCAL)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: DomainException) {
-            throw e
-        } catch (e: Throwable) {
-            throw e.toAuthDomainException()
-        }
+    override suspend fun deleteAccount(): Unit = authCall {
+        client.postgrest.rpc("delete_account")
+        client.auth.signOut(SignOutScope.LOCAL)
     }
+
+    // ---------------------------------------------------------------------------
+    // Internal helpers
+    // ---------------------------------------------------------------------------
+
+    // Single funnel for supabase-kt/ktor throwables → DomainException (see toAuthDomainException).
+    @Suppress("TooGenericExceptionCaught")
+    private suspend inline fun <T> authCall(crossinline block: suspend () -> T): T =
+        withContext(Dispatchers.IO) {
+            try {
+                block()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: DomainException) {
+                throw e
+            } catch (e: Throwable) {
+                throw e.toAuthDomainException()
+            }
+        }
 }
 
 // ---------------------------------------------------------------------------

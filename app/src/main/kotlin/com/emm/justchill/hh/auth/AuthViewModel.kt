@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.auth
 
+import android.util.Log
 import com.emm.domain.auth.SignInUseCase
 import com.emm.domain.auth.SignInWithGoogleUseCase
 import com.emm.domain.auth.SignUpUseCase
@@ -10,6 +11,7 @@ class AuthViewModel(
     private val signIn: SignInUseCase,
     private val signUp: SignUpUseCase,
     private val signInWithGoogle: SignInWithGoogleUseCase,
+    private val googleServerClientId: String,
 ) : MviViewModel<AuthUiState, AuthIntent, AuthEffect>() {
 
     override val initialState = AuthUiState()
@@ -28,31 +30,49 @@ class AuthViewModel(
 
             AuthIntent.Back -> sendEffect(AuthEffect.NavigateBack)
 
-            is AuthIntent.GoogleSignInResult -> handleGoogleResult(intent.result)
+            AuthIntent.GoogleSignInClicked -> launchGoogleSignIn()
+
+            is AuthIntent.GoogleTokenReceived -> exchangeGoogleToken(intent.idToken, intent.rawNonce)
+
+            AuthIntent.GoogleSignInCancelled -> updateState { copy(isLoading = false) }
+
+            AuthIntent.GoogleSignInUnavailable -> {
+                updateState { copy(isLoading = false) }
+                // Credential-retrieval failure: happens before any domain call, so it never becomes
+                // a DomainException — it is a VM-level UX message like the "Te mandamos un correo"
+                // string, NOT a bypass of toUserMessage().
+                sendEffect(AuthEffect.ShowError("No encontramos una cuenta de Google en este teléfono."))
+            }
+
+            is AuthIntent.GoogleSignInErrored -> {
+                updateState { copy(isLoading = false) }
+                Log.w(TAG, "Google credential flow failed", intent.cause)
+                // Credential-retrieval failure: same rationale as GoogleSignInUnavailable above.
+                sendEffect(AuthEffect.ShowError("No se pudo iniciar sesión con Google."))
+            }
         }
     }
 
-    private fun handleGoogleResult(result: GoogleCredentialClient.Result) {
-        when (result) {
-            is GoogleCredentialClient.Result.Success -> {
-                if (currentState.isLoading) return
-                updateState { copy(isLoading = true) }
-                launchSafe(onError = { e -> AuthEffect.ShowError(e.toUserMessage()) }) {
-                    try {
-                        signInWithGoogle(result.idToken, result.rawNonce)
-                        sendEffect(AuthEffect.NavigateBack)
-                    } finally {
-                        updateState { copy(isLoading = false) }
-                    }
-                }
+    private fun launchGoogleSignIn() {
+        if (currentState.isLoading) return
+        if (googleServerClientId.isBlank()) {
+            Log.w(TAG, "GOOGLE_WEB_CLIENT_ID not configured")
+            sendEffect(AuthEffect.ShowError("No se pudo iniciar sesión con Google."))
+            return
+        }
+        updateState { copy(isLoading = true) }
+        sendEffect(AuthEffect.LaunchGoogleSignIn(googleServerClientId))
+    }
+
+    private fun exchangeGoogleToken(idToken: String, rawNonce: String) {
+        // isLoading is already true (set by GoogleSignInClicked); do NOT guard on it here.
+        launchSafe(onError = { e -> AuthEffect.ShowError(e.toUserMessage()) }) {
+            try {
+                signInWithGoogle(idToken, rawNonce)
+                sendEffect(AuthEffect.NavigateBack)
+            } finally {
+                updateState { copy(isLoading = false) }
             }
-            GoogleCredentialClient.Result.Cancelled -> Unit
-            GoogleCredentialClient.Result.NoCredentials -> sendEffect(
-                AuthEffect.ShowError("No encontramos una cuenta de Google en este teléfono."),
-            )
-            is GoogleCredentialClient.Result.Failure -> sendEffect(
-                AuthEffect.ShowError("No se pudo iniciar sesión con Google."),
-            )
         }
     }
 
@@ -92,5 +112,9 @@ class AuthViewModel(
                 updateState { copy(isLoading = false) }
             }
         }
+    }
+
+    private companion object {
+        const val TAG = "AuthViewModel"
     }
 }
