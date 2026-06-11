@@ -314,6 +314,14 @@ max_frequency = "5s"
 # Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`, `twitch`,
 # `twitter`, `x`, `slack`, `spotify`, `workos`, `zoom`.
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+# Native Android sign-in (signInWithIdToken): client_id must contain the WEB client ID
+# used as serverClientId in the app. Secret not required for ID-token flow.
+secret = ""
+skip_nonce_check = false
+
 [auth.external.apple]
 enabled = false
 client_id = ""

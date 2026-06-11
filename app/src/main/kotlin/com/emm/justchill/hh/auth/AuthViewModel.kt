@@ -1,12 +1,16 @@
 package com.emm.justchill.hh.auth
 
 import com.emm.domain.auth.SignInUseCase
+import com.emm.domain.auth.SignInWithGoogleUseCase
 import com.emm.domain.auth.SignUpUseCase
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 
-class AuthViewModel(private val signIn: SignInUseCase, private val signUp: SignUpUseCase) :
-    MviViewModel<AuthUiState, AuthIntent, AuthEffect>() {
+class AuthViewModel(
+    private val signIn: SignInUseCase,
+    private val signUp: SignUpUseCase,
+    private val signInWithGoogle: SignInWithGoogleUseCase,
+) : MviViewModel<AuthUiState, AuthIntent, AuthEffect>() {
 
     override val initialState = AuthUiState()
 
@@ -23,6 +27,32 @@ class AuthViewModel(private val signIn: SignInUseCase, private val signUp: SignU
             AuthIntent.Submit -> submit()
 
             AuthIntent.Back -> sendEffect(AuthEffect.NavigateBack)
+
+            is AuthIntent.GoogleSignInResult -> handleGoogleResult(intent.result)
+        }
+    }
+
+    private fun handleGoogleResult(result: GoogleCredentialClient.Result) {
+        when (result) {
+            is GoogleCredentialClient.Result.Success -> {
+                if (currentState.isLoading) return
+                updateState { copy(isLoading = true) }
+                launchSafe(onError = { e -> AuthEffect.ShowError(e.toUserMessage()) }) {
+                    try {
+                        signInWithGoogle(result.idToken, result.rawNonce)
+                        sendEffect(AuthEffect.NavigateBack)
+                    } finally {
+                        updateState { copy(isLoading = false) }
+                    }
+                }
+            }
+            GoogleCredentialClient.Result.Cancelled -> Unit
+            GoogleCredentialClient.Result.NoCredentials -> sendEffect(
+                AuthEffect.ShowError("No encontramos una cuenta de Google en este teléfono."),
+            )
+            is GoogleCredentialClient.Result.Failure -> sendEffect(
+                AuthEffect.ShowError("No se pudo iniciar sesión con Google."),
+            )
         }
     }
 

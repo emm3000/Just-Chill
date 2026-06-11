@@ -27,6 +27,8 @@ navigationFragmentKtx = "2.9.8"
 navigationUiKtx = "2.9.8"
 uiTextGoogleFonts = "1.11.2"
 androidApplication = "9.2.1"
+credentialsVersion = "1.5.0"
+googleIdentityVersion = "1.1.1"
 kotlinVersion = "2.4.0"
 googleServicesVersion = "4.4.4"
 googleCrashlyticsVersion = "3.0.7"
@@ -91,6 +93,10 @@ supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "s
 supabase-auth-kt = { module = "io.github.jan-tennert.supabase:auth-kt" }
 supabase-postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorClientOkhttp" }
+
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentialsVersion" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentialsVersion" }
+google-identity-googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleIdentityVersion" }
 
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3Core" }

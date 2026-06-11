@@ -9,7 +9,9 @@ import io.github.jan.supabase.auth.SignOutScope
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.exception.AuthErrorCode
 import io.github.jan.supabase.auth.exception.AuthRestException
+import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.user.UserInfo
 import io.github.jan.supabase.exceptions.HttpRequestException
 import io.github.jan.supabase.exceptions.UnauthorizedRestException
@@ -66,6 +68,26 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
             }
             // If a session exists the user was auto-confirmed; otherwise confirmation is pending.
             client.auth.currentUserOrNull()?.toDomain()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: DomainException) {
+            throw e
+        } catch (e: Throwable) {
+            throw e.toAuthDomainException()
+        }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    override suspend fun signInWithGoogle(idToken: String, rawNonce: String?): AuthUser = withContext(Dispatchers.IO) {
+        try {
+            client.auth.signInWith(IDToken) {
+                this.idToken = idToken
+                provider = Google
+                nonce = rawNonce
+            }
+            val user = client.auth.currentUserOrNull()
+                ?: throw DomainException.Unauthorized("Sign-in succeeded but no session was established")
+            user.toDomain()
         } catch (e: CancellationException) {
             throw e
         } catch (e: DomainException) {

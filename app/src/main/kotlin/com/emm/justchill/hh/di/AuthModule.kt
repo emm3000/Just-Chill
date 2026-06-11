@@ -9,6 +9,7 @@ import com.emm.domain.auth.ClaimLocalDataUseCase
 import com.emm.domain.auth.DeleteUserAccountUseCase
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SignInUseCase
+import com.emm.domain.auth.SignInWithGoogleUseCase
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.auth.SignUpUseCase
 import com.emm.justchill.hh.auth.AuthViewModel
@@ -24,6 +25,7 @@ val authModule = module {
 
     factoryOf(::ClaimLocalDataUseCase)
     factoryOf(::SignInUseCase)
+    factoryOf(::SignInWithGoogleUseCase)
     factoryOf(::SignUpUseCase)
     factoryOf(::SignOutUseCase)
     factoryOf(::ObserveSessionUseCase)
