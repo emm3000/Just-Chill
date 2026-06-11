@@ -33,7 +33,7 @@ fun gitLatestTag(): String = runCatching {
 
 android {
     namespace = "com.emm.justchill"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.emm.justchill"
