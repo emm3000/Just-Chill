@@ -82,8 +82,11 @@ import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.home.HomeViewModel
 import com.emm.justchill.hh.onboarding.ManifestoScreen
 import com.emm.justchill.hh.profile.PrivacyPolicyScreen
+import com.emm.justchill.core.error.toUserMessage
+import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.hh.profile.ProfileEffect
 import com.emm.justchill.hh.profile.ProfileIntent
+import com.emm.justchill.hh.profile.ProfileMessage
 import com.emm.justchill.hh.profile.ProfileScreen
 import com.emm.justchill.hh.profile.ProfileViewModel
 import com.emm.justchill.hh.recurring.AddEditRecurringMovementScreen
@@ -283,7 +286,19 @@ fun Hh(modifier: Modifier = Modifier) {
                     LaunchedEffect(vm) {
                         vm.effect.collect { effect ->
                             when (effect) {
-                                is ProfileEffect.ShowMessage -> showRootMessage(effect.text)
+                                is ProfileEffect.ShowError -> snackbarHostState.showEmmSnackbar(
+                                    message = effect.error.toUserMessage(),
+                                    tone = EmmSnackbarTone.Error,
+                                )
+                                is ProfileEffect.Notify -> snackbarHostState.showEmmSnackbar(
+                                    message = effect.message.toText(),
+                                    tone = when (effect.message) {
+                                        ProfileMessage.ExportFailed,
+                                        ProfileMessage.ImportFailed,
+                                        -> EmmSnackbarTone.Error
+                                        else -> EmmSnackbarTone.Success
+                                    },
+                                )
                             }
                         }
                     }
@@ -474,6 +489,15 @@ private fun RecurringMovementsEntry(onNavigateToAddEdit: (String?) -> Unit, onSh
     }
 
     RecurringMovementsScreen(state = recurringState, onIntent = vm::onIntent)
+}
+
+private fun ProfileMessage.toText(): String = when (this) {
+    ProfileMessage.SessionClosed -> "Sesión cerrada. Tus datos siguen en este teléfono."
+    ProfileMessage.AccountDeleted -> "Cuenta eliminada. Tus datos siguen en este teléfono."
+    ProfileMessage.ExportDone -> "Listo, tu data está guardada."
+    ProfileMessage.ExportFailed -> "No pude exportar — capaz no hay espacio en tu celu?"
+    is ProfileMessage.ImportDone -> "Listo — $transactions movimientos importados."
+    ProfileMessage.ImportFailed -> "No pude importar el archivo — capaz está dañado."
 }
 
 private fun suggestedExportFilename(): String {

@@ -106,7 +106,7 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `SignOut intent invokes SignOutUseCase and emits success message effect`() = runTest(testDispatcher) {
+    fun `SignOut intent invokes SignOutUseCase and emits SessionClosed notify effect`() = runTest(testDispatcher) {
         coEvery { signOut.invoke() } returns Unit
 
         val vm = buildViewModel()
@@ -117,19 +117,16 @@ class ProfileViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { signOut.invoke() }
-        val expectedSignOutText = "Sesión cerrada. Tus datos siguen en este teléfono."
         assertTrue(
-            effects.any {
-                it is ProfileEffect.ShowMessage && it.text == expectedSignOutText
-            },
-            "Expected sign-out success message not found in $effects",
+            effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.SessionClosed },
+            "Expected SessionClosed notify not found in $effects",
         )
 
         job.cancel()
     }
 
     @Test
-    fun `SignOut failure emits error effect with toUserMessage mapping`() = runTest(testDispatcher) {
+    fun `SignOut failure emits ShowError effect`() = runTest(testDispatcher) {
         coEvery { signOut.invoke() } throws DomainException.NetworkUnavailable(RuntimeException("no network"))
 
         val vm = buildViewModel()
@@ -139,19 +136,18 @@ class ProfileViewModelTest {
         vm.onIntent(ProfileIntent.SignOut)
         advanceUntilIdle()
 
-        // NetworkUnavailable.toUserMessage() = "Sin conexión — revisa tu internet"
         assertTrue(
-            effects.any { it is ProfileEffect.ShowMessage && it.text == "Sin conexión — revisa tu internet" },
-            "Expected network error message not found in $effects",
+            effects.any { it is ProfileEffect.ShowError && it.error is DomainException.NetworkUnavailable },
+            "Expected ShowError(NetworkUnavailable) not found in $effects",
         )
 
         job.cancel()
     }
 
-    // ── Export tests (preserved from original) ────────────────────────────
+    // ── Export tests ────────────────────────────────────────────────────────
 
     @Test
-    fun `ExportToStream happy path writes json to stream and emits success message`() = runTest(testDispatcher) {
+    fun `ExportToStream happy path writes json to stream and emits ExportDone`() = runTest(testDispatcher) {
         val expectedJson = """{"version":"1.0","data":[]}"""
         coEvery { exportData(any(), any()) } returns expectedJson
 
@@ -164,14 +160,17 @@ class ProfileViewModelTest {
         advanceUntilIdle()
 
         assertEquals(expectedJson, outputStream.toString(Charsets.UTF_8.name()))
-        assertTrue(effects.any { it is ProfileEffect.ShowMessage && it.text == "Listo, tu data está guardada." })
-        assertEquals(false, vm.state.value.isExporting)
+        assertTrue(
+            effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.ExportDone },
+            "Expected ExportDone notify not found in $effects",
+        )
+        assertEquals(ProfileOp.None, vm.state.value.op)
 
         job.cancel()
     }
 
     @Test
-    fun `ExportToStream on DatabaseError emits Spanish error message`() = runTest(testDispatcher) {
+    fun `ExportToStream on DatabaseError emits ShowError effect`() = runTest(testDispatcher) {
         val cause = RuntimeException("db failure")
         coEvery { exportData(any(), any()) } throws DomainException.DatabaseError(cause)
 
@@ -183,16 +182,84 @@ class ProfileViewModelTest {
         vm.onIntent(ProfileIntent.ExportToStream(outputStream))
         advanceUntilIdle()
 
-        assertTrue(effects.any { it is ProfileEffect.ShowMessage && it.text == "Hubo un problema guardando tu data" })
-        assertEquals(false, vm.state.value.isExporting)
+        assertTrue(
+            effects.any { it is ProfileEffect.ShowError && it.error is DomainException.DatabaseError },
+            "Expected ShowError(DatabaseError) not found in $effects",
+        )
+        assertEquals(ProfileOp.None, vm.state.value.op)
 
         job.cancel()
     }
 
-    // ── DeleteAccount tests ───────────────────────────────────────────────────
+    @Test
+    fun `ExportToStream on Unknown error emits ExportFailed notify`() = runTest(testDispatcher) {
+        coEvery { exportData(any(), any()) } throws DomainException.Unknown(RuntimeException("io error"))
+
+        val vm = buildViewModel()
+        val effects = mutableListOf<ProfileEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(ProfileIntent.ExportToStream(ByteArrayOutputStream()))
+        advanceUntilIdle()
+
+        assertTrue(
+            effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.ExportFailed },
+            "Expected ExportFailed notify not found in $effects",
+        )
+        assertEquals(ProfileOp.None, vm.state.value.op)
+
+        job.cancel()
+    }
 
     @Test
-    fun `DeleteAccount success emits account-deleted message`() = runTest(testDispatcher) {
+    fun `ExportToStream while import in flight is a no-op`() = runTest(testDispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        coEvery { importData(any()) } coAnswers { gate.await(); throw RuntimeException("unreachable") }
+
+        val vm = buildViewModel()
+
+        vm.onIntent(ProfileIntent.ImportJson("{}"))
+        advanceUntilIdle() // suspended at gate — op == Importing
+
+        assertEquals(ProfileOp.Importing, vm.state.value.op)
+
+        val effects = mutableListOf<ProfileEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(ProfileIntent.ExportToStream(ByteArrayOutputStream()))
+        advanceUntilIdle()
+
+        assertTrue(effects.isEmpty(), "Export while import in flight must be a no-op, got: $effects")
+
+        gate.cancel()
+        job.cancel()
+    }
+
+    @Test
+    fun `ExportToStream re-entry guard — second export while first in flight is a no-op`() = runTest(testDispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        coEvery { exportData(any(), any()) } coAnswers { gate.await(); "" }
+
+        val vm = buildViewModel()
+
+        vm.onIntent(ProfileIntent.ExportToStream(ByteArrayOutputStream()))
+        advanceUntilIdle() // suspended at gate — op == Exporting
+
+        assertEquals(ProfileOp.Exporting, vm.state.value.op)
+
+        vm.onIntent(ProfileIntent.ExportToStream(ByteArrayOutputStream()))
+        advanceUntilIdle()
+
+        // exportData must still have been called exactly once
+        coVerify(exactly = 1) { exportData(any(), any()) }
+
+        gate.cancel()
+    }
+
+    // ── DeleteAccount tests ────────────────────────────────────────────────
+
+    @Test
+    fun `DeleteAccount success emits AccountDeleted notify`() = runTest(testDispatcher) {
         coEvery { deleteUserAccount.invoke() } returns Unit
 
         val vm = buildViewModel()
@@ -204,18 +271,15 @@ class ProfileViewModelTest {
 
         coVerify(exactly = 1) { deleteUserAccount.invoke() }
         assertTrue(
-            effects.any {
-                it is ProfileEffect.ShowMessage &&
-                    it.text == "Cuenta eliminada. Tus datos siguen en este teléfono."
-            },
-            "Expected delete-account success message not found in $effects",
+            effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.AccountDeleted },
+            "Expected AccountDeleted notify not found in $effects",
         )
 
         job.cancel()
     }
 
     @Test
-    fun `DeleteAccount failure emits error effect with toUserMessage mapping`() = runTest(testDispatcher) {
+    fun `DeleteAccount failure emits ShowError and resets op`() = runTest(testDispatcher) {
         coEvery { deleteUserAccount.invoke() } throws DomainException.NetworkUnavailable(RuntimeException("no network"))
 
         val vm = buildViewModel()
@@ -226,15 +290,33 @@ class ProfileViewModelTest {
         advanceUntilIdle()
 
         assertTrue(
-            effects.any { it is ProfileEffect.ShowMessage && it.text == "Sin conexión — revisa tu internet" },
-            "Expected network error message not found in $effects",
+            effects.any { it is ProfileEffect.ShowError && it.error is DomainException.NetworkUnavailable },
+            "Expected ShowError(NetworkUnavailable) not found in $effects",
         )
-        assertTrue(
-            !vm.state.value.isDeletingAccount,
-            "isDeletingAccount must reset after a failed deletion",
-        )
+        assertEquals(ProfileOp.None, vm.state.value.op, "op must reset after a failed deletion")
 
         job.cancel()
+    }
+
+    @Test
+    fun `DeleteAccount re-fire while in flight is ignored`() = runTest(testDispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        coEvery { deleteUserAccount.invoke() } coAnswers { gate.await() }
+
+        val vm = buildViewModel()
+
+        vm.onIntent(ProfileIntent.DeleteAccount)
+        advanceUntilIdle() // first call is suspended at the gate
+        assertEquals(ProfileOp.DeletingAccount, vm.state.value.op, "op must be DeletingAccount while in flight")
+
+        vm.onIntent(ProfileIntent.DeleteAccount)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { deleteUserAccount.invoke() }
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(ProfileOp.None, vm.state.value.op, "op must reset after the delete completes")
     }
 
     // ── SyncRowUi mapping tests ────────────────────────────────────────────
@@ -284,26 +366,5 @@ class ProfileViewModelTest {
         advanceUntilIdle()
 
         assertIs<SyncRowUi.Syncing>(vm.state.value.syncRow)
-    }
-
-    @Test
-    fun `DeleteAccount re-fire while in flight is ignored`() = runTest(testDispatcher) {
-        val gate = CompletableDeferred<Unit>()
-        coEvery { deleteUserAccount.invoke() } coAnswers { gate.await() }
-
-        val vm = buildViewModel()
-
-        vm.onIntent(ProfileIntent.DeleteAccount)
-        advanceUntilIdle() // first call is suspended at the gate
-        assertTrue(vm.state.value.isDeletingAccount, "Flag must be set while the delete is in flight")
-
-        vm.onIntent(ProfileIntent.DeleteAccount)
-        advanceUntilIdle()
-
-        coVerify(exactly = 1) { deleteUserAccount.invoke() }
-
-        gate.complete(Unit)
-        advanceUntilIdle()
-        assertTrue(!vm.state.value.isDeletingAccount, "Flag must reset after the delete completes")
     }
 }

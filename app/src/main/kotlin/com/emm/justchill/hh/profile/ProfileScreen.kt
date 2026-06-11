@@ -278,14 +278,14 @@ private fun AccountSection(
                     ProfileRow(
                         icon = Icons.Outlined.Delete,
                         label = "Eliminar cuenta",
-                        meta = if (state.isDeletingAccount) {
+                        meta = if (state.op == ProfileOp.DeletingAccount) {
                             "Eliminando…"
                         } else {
                             "Borra tu cuenta y tus datos en la nube"
                         },
                         metaIsPrimary = false,
                         onClick = {
-                            if (!state.isDeletingAccount) showDeleteAccountDialog = true
+                            if (state.op != ProfileOp.DeletingAccount) showDeleteAccountDialog = true
                         },
                     )
                 }

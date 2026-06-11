@@ -20,11 +20,18 @@ sealed interface SyncRowUi {
     data class Idle(val lastSyncedAtMillis: Long?) : SyncRowUi
 }
 
+/**
+ * Mutually exclusive in-flight operation.
+ *
+ * Operations are serialized by design: e.g. you cannot import while an export
+ * is in progress. [isSyncing] and [syncRow] are orchestrator-driven and remain
+ * separate — they are NOT gated by this enum.
+ */
+enum class ProfileOp { None, Exporting, Importing, DeletingAccount, SigningOut }
+
 data class ProfileUiState(
-    val isExporting: Boolean = false,
-    val isImporting: Boolean = false,
+    val op: ProfileOp = ProfileOp.None,
     val isSyncing: Boolean = false,
-    val isDeletingAccount: Boolean = false,
     val syncRow: SyncRowUi = SyncRowUi.Idle(null),
     val categoryCount: Int = 0,
     val accountCount: Int = 0,

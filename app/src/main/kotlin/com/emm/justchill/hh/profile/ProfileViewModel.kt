@@ -11,7 +11,6 @@ import com.emm.domain.shared.backup.ExportDataUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.BuildConfig
-import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.core.sync.SyncOrchestrator
 import kotlinx.coroutines.flow.combine
@@ -83,79 +82,83 @@ class ProfileViewModel(
         }
     }
 
-    private fun performSignOut() = launchSafe(
-        onError = { e -> ProfileEffect.ShowMessage(e.toUserMessage()) },
+    /**
+     * Runs one profile operation with the shared lifecycle: guard against any
+     * concurrent op, raise [ProfileUiState.op], run [block], always reset.
+     * try/finally guarantees the reset on success, domain error (rethrown to
+     * launchSafe's handler), and coroutine cancellation.
+     */
+    private fun launchOp(
+        op: ProfileOp,
+        onError: (DomainException) -> ProfileEffect,
+        block: suspend () -> Unit,
+    ) {
+        if (currentState.op != ProfileOp.None) return
+        updateState { copy(op = op) }
+        launchSafe(onError = onError) {
+            try {
+                block()
+            } finally {
+                updateState { copy(op = ProfileOp.None) }
+            }
+        }
+    }
+
+    private fun performSignOut() = launchOp(
+        op = ProfileOp.SigningOut,
+        onError = { e -> ProfileEffect.ShowError(e) },
     ) {
         signOut.invoke()
         // Local data is intentionally NOT wiped on sign-out (see SignOutUseCase doc).
-        sendEffect(ProfileEffect.ShowMessage("Sesión cerrada. Tus datos siguen en este teléfono."))
+        sendEffect(ProfileEffect.Notify(ProfileMessage.SessionClosed))
     }
 
-    private fun deleteAccount() {
-        // Guard against re-fires while the remote delete is in flight (dialog can be reopened).
-        if (state.value.isDeletingAccount) return
-        updateState { copy(isDeletingAccount = true) }
-        launchSafe(
-            onError = { e ->
-                updateState { copy(isDeletingAccount = false) }
-                ProfileEffect.ShowMessage(e.toUserMessage())
-            },
-        ) {
-            deleteUserAccount.invoke()
-            updateState { copy(isDeletingAccount = false) }
-            sendEffect(ProfileEffect.ShowMessage("Cuenta eliminada. Tus datos siguen en este teléfono."))
-        }
+    private fun deleteAccount() = launchOp(
+        op = ProfileOp.DeletingAccount,
+        onError = { e -> ProfileEffect.ShowError(e) },
+    ) {
+        deleteUserAccount.invoke()
+        sendEffect(ProfileEffect.Notify(ProfileMessage.AccountDeleted))
     }
 
-
-    private fun exportToStream(output: OutputStream) = launchSafe(
+    private fun exportToStream(output: OutputStream) = launchOp(
+        op = ProfileOp.Exporting,
         onError = { e ->
             // Domain errors carry their own user-facing message (e.g. DatabaseError);
             // Unknown collapses to a disk-space hint, the most plausible cause for export IO failures.
-            val msg = when (e) {
-                is DomainException.Unknown -> "No pude exportar — capaz no hay espacio en tu celu?"
-                else -> e.toUserMessage()
+            when (e) {
+                is DomainException.Unknown -> ProfileEffect.Notify(ProfileMessage.ExportFailed)
+                else -> ProfileEffect.ShowError(e)
             }
-            ProfileEffect.ShowMessage(msg)
         },
     ) {
-        updateState { copy(isExporting = true) }
-        try {
-            val json = exportData(
-                exportedAt = System.currentTimeMillis(),
-                appVersion = BuildConfig.VERSION_NAME,
-            )
-            // Writer is closed here — not at the launcher callsite — because the launcher
-            // hands us a raw stream and we schedule async work; closing it early would corrupt the write.
-            // Closing the BufferedWriter flushes its buffer to the stream before closing.
-            output.bufferedWriter().use { it.write(json) }
-            sendEffect(ProfileEffect.ShowMessage("Listo, tu data está guardada."))
-        } finally {
-            updateState { copy(isExporting = false) }
-        }
+        val json = exportData(
+            exportedAt = System.currentTimeMillis(),
+            appVersion = BuildConfig.VERSION_NAME,
+        )
+        // Writer is closed here — not at the launcher callsite — because the launcher
+        // hands us a raw stream and we schedule async work; closing it early would corrupt the write.
+        // Closing the BufferedWriter flushes its buffer to the stream before closing.
+        output.bufferedWriter().use { it.write(json) }
+        sendEffect(ProfileEffect.Notify(ProfileMessage.ExportDone))
     }
 
     private fun syncNow() {
         syncOrchestrator.requestSync(manual = true)
     }
 
-    private fun importFromJson(json: String) = launchSafe(
+    private fun importFromJson(json: String) = launchOp(
+        op = ProfileOp.Importing,
         onError = { e ->
             // ValidationError carries a user-actionable message (corrupt file, unsupported version);
             // anything else collapses to a generic "file might be damaged" hint.
-            val msg = when (e) {
-                is DomainException.ValidationError -> e.toUserMessage()
-                else -> "No pude importar el archivo — capaz está dañado."
+            when (e) {
+                is DomainException.ValidationError -> ProfileEffect.ShowError(e)
+                else -> ProfileEffect.Notify(ProfileMessage.ImportFailed)
             }
-            ProfileEffect.ShowMessage(msg)
         },
     ) {
-        updateState { copy(isImporting = true) }
-        try {
-            val stats = importData(json)
-            sendEffect(ProfileEffect.ShowMessage("Listo — ${stats.transactions} movimientos importados."))
-        } finally {
-            updateState { copy(isImporting = false) }
-        }
+        val stats = importData(json)
+        sendEffect(ProfileEffect.Notify(ProfileMessage.ImportDone(stats.transactions)))
     }
 }

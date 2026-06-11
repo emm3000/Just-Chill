@@ -15,6 +15,7 @@ import com.emm.justchill.core.sync.SyncStatus
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -63,7 +64,7 @@ class ProfileViewModelImportTest {
     )
 
     @Test
-    fun `ImportJson happy path emits transaction count in Spanish success message`() = runTest(testDispatcher) {
+    fun `ImportJson happy path emits ImportDone notify with transaction count`() = runTest(testDispatcher) {
         coEvery { importData(any()) } returns ImportStats(accounts = 2, categories = 5, transactions = 234)
 
         val vm = buildViewModel()
@@ -74,16 +75,16 @@ class ProfileViewModelImportTest {
         advanceUntilIdle()
 
         assertTrue(
-            effects.any { it is ProfileEffect.ShowMessage && it.text == "Listo — 234 movimientos importados." },
-            "Expected success message not found in $effects",
+            effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.ImportDone(234) },
+            "Expected ImportDone(234) notify not found in $effects",
         )
-        assertFalse(vm.state.value.isImporting)
+        assertEquals(ProfileOp.None, vm.state.value.op)
 
         job.cancel()
     }
 
     @Test
-    fun `ImportJson on ValidationError emits Spanish error from toUserMessage`() = runTest(testDispatcher) {
+    fun `ImportJson on ValidationError emits ShowError with the domain exception`() = runTest(testDispatcher) {
         coEvery { importData(any()) } throws DomainException.ValidationError("Archivo corrupto")
 
         val vm = buildViewModel()
@@ -93,18 +94,37 @@ class ProfileViewModelImportTest {
         vm.onIntent(ProfileIntent.ImportJson("{ bad }"))
         advanceUntilIdle()
 
-        // ValidationError.toUserMessage() returns the message directly
         assertTrue(
-            effects.any { it is ProfileEffect.ShowMessage && it.text == "Archivo corrupto" },
-            "Expected ValidationError message not found in $effects",
+            effects.any { it is ProfileEffect.ShowError && it.error is DomainException.ValidationError },
+            "Expected ShowError(ValidationError) not found in $effects",
         )
-        assertFalse(vm.state.value.isImporting)
+        assertEquals(ProfileOp.None, vm.state.value.op)
 
         job.cancel()
     }
 
     @Test
-    fun `ImportJson resets isImporting to false after completion`() = runTest(testDispatcher) {
+    fun `ImportJson on non-ValidationError emits ImportFailed notify`() = runTest(testDispatcher) {
+        coEvery { importData(any()) } throws DomainException.DatabaseError(RuntimeException("db"))
+
+        val vm = buildViewModel()
+        val effects = mutableListOf<ProfileEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(ProfileIntent.ImportJson("{}"))
+        advanceUntilIdle()
+
+        assertTrue(
+            effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.ImportFailed },
+            "Expected ImportFailed notify not found in $effects",
+        )
+        assertEquals(ProfileOp.None, vm.state.value.op)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `ImportJson resets op to None after completion`() = runTest(testDispatcher) {
         coEvery { importData(any()) } returns ImportStats(accounts = 1, categories = 1, transactions = 10)
 
         val vm = buildViewModel()
@@ -112,6 +132,31 @@ class ProfileViewModelImportTest {
         vm.onIntent(ProfileIntent.ImportJson("{}"))
         advanceUntilIdle()
 
-        assertEquals(false, vm.state.value.isImporting)
+        assertEquals(ProfileOp.None, vm.state.value.op)
+    }
+
+    @Test
+    fun `ImportJson while export in flight is a no-op`() = runTest(testDispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        coEvery { exportData(any(), any()) } coAnswers { gate.await(); "" }
+
+        val vm = buildViewModel()
+        val outputStream = java.io.ByteArrayOutputStream()
+
+        vm.onIntent(ProfileIntent.ExportToStream(outputStream))
+        advanceUntilIdle() // suspended at gate — op == Exporting
+
+        assertEquals(ProfileOp.Exporting, vm.state.value.op)
+
+        val effects = mutableListOf<ProfileEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(ProfileIntent.ImportJson("{}"))
+        advanceUntilIdle()
+
+        assertTrue(effects.isEmpty(), "Import while export in flight must be a no-op, got: $effects")
+
+        gate.cancel()
+        job.cancel()
     }
 }
