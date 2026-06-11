@@ -15,7 +15,6 @@ import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
@@ -41,15 +40,13 @@ class ReportViewModelTest {
     private val getSavingsRate = mockk<GetSavingsRateUseCase>()
     private val getTopCategories = mockk<GetTopCategoriesOverMonthsUseCase>()
 
-    private fun buildViewModel(): ReportViewModel {
-        return ReportViewModel(
-            getMonthlyAmountByCategory = getMonthlyAmountByCategory,
-            getMonthlyComparison = getMonthlyComparison,
-            getMonthlySectionStats = getMonthlySectionStats,
-            getSavingsRate = getSavingsRate,
-            getTopCategories = getTopCategories,
-        )
-    }
+    private fun buildViewModel(): ReportViewModel = ReportViewModel(
+        getMonthlyAmountByCategory = getMonthlyAmountByCategory,
+        getMonthlyComparison = getMonthlyComparison,
+        getMonthlySectionStats = getMonthlySectionStats,
+        getSavingsRate = getSavingsRate,
+        getTopCategories = getTopCategories,
+    )
 
     /** Returns a minimal SavingsRate with no data months. */
     private fun emptySavingsRate(): SavingsRate = SavingsRate(

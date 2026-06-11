@@ -94,18 +94,17 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
 
     // Single funnel for supabase-kt/ktor throwables → DomainException (see toAuthDomainException).
     @Suppress("TooGenericExceptionCaught")
-    private suspend inline fun <T> authCall(crossinline block: suspend () -> T): T =
-        withContext(Dispatchers.IO) {
-            try {
-                block()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: DomainException) {
-                throw e
-            } catch (e: Throwable) {
-                throw e.toAuthDomainException()
-            }
+    private suspend inline fun <T> authCall(crossinline block: suspend () -> T): T = withContext(Dispatchers.IO) {
+        try {
+            block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: DomainException) {
+            throw e
+        } catch (e: Throwable) {
+            throw e.toAuthDomainException()
         }
+    }
 }
 
 // ---------------------------------------------------------------------------

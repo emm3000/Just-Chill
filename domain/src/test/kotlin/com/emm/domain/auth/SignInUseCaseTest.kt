@@ -15,6 +15,7 @@ class SignInUseCaseTest {
     private val useCase = SignInUseCase(authRepository)
 
     private val validEmail = "user@example.com"
+
     // Sign-in only requires non-blank password; existing accounts may have short passwords.
     private val validPassword = "abc"
     private val user = AuthUser(userId = "uid-1", email = validEmail)

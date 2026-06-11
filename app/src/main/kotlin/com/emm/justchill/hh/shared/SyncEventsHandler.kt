@@ -4,6 +4,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import com.emm.justchill.core.sync.SyncEvent
 import com.emm.justchill.core.sync.SyncOrchestrator
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
@@ -27,6 +29,8 @@ fun SyncEventsHandler(
     snackbarHostState: SnackbarHostState,
     onNavigateToSignIn: () -> Unit,
 ) {
+    val currentOnNavigateToSignIn by rememberUpdatedState(onNavigateToSignIn)
+
     LaunchedEffect(syncOrchestrator) {
         syncOrchestrator.events.collect { event ->
             when (event) {
@@ -48,7 +52,7 @@ fun SyncEventsHandler(
                         actionLabel = "ENTRAR",
                     )
                     if (result == SnackbarResult.ActionPerformed) {
-                        onNavigateToSignIn()
+                        currentOnNavigateToSignIn()
                     }
                 }
             }

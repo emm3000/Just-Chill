@@ -16,6 +16,7 @@ class SignUpUseCaseTest {
     private val useCase = SignUpUseCase(authRepository)
 
     private val validEmail = "new@example.com"
+
     // Sign-up requires at least 8 characters.
     private val validPassword = "password1" // 9 chars — well above the 8-char minimum
     private val user = AuthUser(userId = "uid-2", email = validEmail)

@@ -43,6 +43,7 @@ class AuthViewModel(
 
             AuthMode.SignUp -> when (signUp(email, form.password)) {
                 is SignUpResult.SignedIn -> sendEffect(AuthEffect.NavigateBack)
+
                 SignUpResult.ConfirmationPending ->
                     updateState { AuthUiState.CheckEmail(email = email) }
             }
@@ -61,7 +62,8 @@ class AuthViewModel(
                 sendEffect(AuthEffect.NavigateBack)
             }
 
-            GoogleCredentialClient.Result.Cancelled -> Unit // user closed the sheet — silent per design
+            // User closed the sheet — silent per design.
+            GoogleCredentialClient.Result.Cancelled -> Unit
 
             GoogleCredentialClient.Result.NoCredentials ->
                 sendEffect(AuthEffect.Notify(AuthMessage.GoogleAccountUnavailable))
@@ -140,5 +142,4 @@ class AuthViewModel(
     }
 }
 
-private fun AuthMode.toggled(): AuthMode =
-    if (this == AuthMode.SignIn) AuthMode.SignUp else AuthMode.SignIn
+private fun AuthMode.toggled(): AuthMode = if (this == AuthMode.SignIn) AuthMode.SignUp else AuthMode.SignIn

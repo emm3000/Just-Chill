@@ -208,7 +208,9 @@ class AuthViewModelTest {
     // ── 4. Back intent ───────────────────────────────────────────────────────
 
     @Test
-    fun `Back while CheckEmail transitions to fresh Form with SignIn mode and empty fields`() = runTest(testDispatcher) {
+    fun `Back while CheckEmail transitions to fresh Form with SignIn mode and empty fields`() = runTest(
+        testDispatcher,
+    ) {
         val vm = buildViewModel()
         navigateToCheckEmail(vm)
 
@@ -269,7 +271,9 @@ class AuthViewModelTest {
     // ── 5. Google flow via fake launcher ─────────────────────────────────────
 
     @Test
-    fun `Google Success calls signInWithGoogle and emits NavigateBack, isSubmitting false at end`() = runTest(testDispatcher) {
+    fun `Google Success calls signInWithGoogle and emits NavigateBack, isSubmitting false at end`() = runTest(
+        testDispatcher,
+    ) {
         coEvery { googleSignInLauncher.signIn(any()) } returns
             GoogleCredentialClient.Result.Success(idToken = "token", rawNonce = "nonce")
         coEvery { signInWithGoogle.invoke(any(), any()) } returns AuthUser("uid1", "g@g.com")
@@ -379,7 +383,9 @@ class AuthViewModelTest {
     // ── 6. ResendEmail ───────────────────────────────────────────────────────
 
     @Test
-    fun `ResendEmail happy path emits Notify ConfirmationLinkResent and resets isResending`() = runTest(testDispatcher) {
+    fun `ResendEmail happy path emits Notify ConfirmationLinkResent and resets isResending`() = runTest(
+        testDispatcher,
+    ) {
         coEvery { resendConfirmationEmail.invoke(any()) } returns Unit
 
         val vm = buildViewModel()

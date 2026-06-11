@@ -1,7 +1,5 @@
 package com.emm.justchill.hh.report
 
-import androidx.compose.ui.graphics.Color
-import com.emm.domain.report.CategoryAggregate
 import com.emm.domain.report.CategoryAmount
 import com.emm.domain.report.GetMonthlyAmountByCategoryUseCase
 import com.emm.domain.report.GetMonthlyComparisonUseCase
@@ -13,12 +11,9 @@ import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
-import com.emm.justchill.core.theme.emmDarkColors
 import com.emm.justchill.hh.shared.shortLabel
 import com.emm.justchill.hh.shared.shortLabel3
 import kotlinx.coroutines.Job
-import java.text.NumberFormat
-import java.util.Locale
 import kotlin.math.abs
 
 class ReportViewModel(
@@ -201,67 +196,5 @@ class ReportViewModel(
             ReportTab.Tendencias -> ReportShareFormatter.buildTrendsShareText(state)
         }
         sendEffect(ReportEffect.ShareReport(text))
-    }
-
-    // ── Mapping helpers ───────────────────────────────────────────────────
-
-    private fun buildShares(amounts: List<CategoryAmount>, total: Money): List<CategoryShare> {
-        if (total.cents == 0L) return amounts.map { it.toCategoryShare(percentage = 0) }
-        return amounts.map { item ->
-            val pct = ((item.amount.cents.toDouble() / total.cents.toDouble()) * 100).toInt()
-            item.toCategoryShare(percentage = pct)
-        }
-    }
-
-    private fun CategoryAmount.toCategoryShare(percentage: Int) = CategoryShare(
-        categoryId = categoryId.value,
-        name = categoryName,
-        amountFormatted = formatSoles(amount.cents),
-        percentage = percentage,
-        tint = domainColorToUi(categoryColor),
-    )
-
-    private fun CategoryAggregate.toTopCategoryItem(): TopCategoryItem {
-        return TopCategoryItem(
-            categoryId = categoryId.value,
-            name = categoryName,
-            iconKey = categoryIcon,
-            tint = domainColorToUi(categoryColor),
-            totalFormatted = formatSoles(totalAmount.cents),
-            topMetaText = ReportShareFormatter.buildTopMetaText(monthsInTop, totalMonths),
-        )
-    }
-
-    companion object {
-
-        fun formatSoles(cents: Long): String {
-            val soles = cents.toDouble() / 100.0
-            val nf = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-PE"))
-            nf.minimumFractionDigits = 0
-            nf.maximumFractionDigits = 0
-            return "S/ ${nf.format(soles)}"
-        }
-
-        fun formatSolesWithDecimals(cents: Long): String {
-            val soles = cents.toDouble() / 100.0
-            val nf = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-PE"))
-            nf.minimumFractionDigits = 2
-            nf.maximumFractionDigits = 2
-            return "S/ ${nf.format(soles)}"
-        }
-
-        fun domainColorToUi(color: String): Color = when (color) {
-            "green" -> emmDarkColors.catSage
-            "blue" -> emmDarkColors.catSlate
-            "purple" -> emmDarkColors.catMauve
-            "orange" -> emmDarkColors.catOchre
-            "red" -> emmDarkColors.catTerracotta
-            "brown" -> emmDarkColors.catTerracotta
-            "yellow" -> emmDarkColors.catOchre
-            "teal" -> emmDarkColors.catSage
-            "pink" -> emmDarkColors.catMauve
-            "gray" -> emmDarkColors.catGraphite
-            else -> emmDarkColors.catGraphite
-        }
     }
 }

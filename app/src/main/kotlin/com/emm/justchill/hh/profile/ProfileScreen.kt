@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,13 +29,11 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,9 +43,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -60,7 +54,6 @@ import com.emm.justchill.BuildConfig
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
@@ -256,7 +249,9 @@ private fun AccountSection(
                                     strokeWidth = 2.dp,
                                     color = colors.textTertiary,
                                 )
+
                                 SyncRowUi.Failed -> RetryPill(onClick = onSyncNowClick)
+
                                 is SyncRowUi.Idle -> Icon(
                                     imageVector = Icons.Outlined.ChevronRight,
                                     contentDescription = null,
@@ -297,12 +292,11 @@ private fun AccountSection(
 // Allocated once per process — safe because this is only ever called from the main thread (composition).
 private val syncDateFormatter = SimpleDateFormat("d MMM, HH:mm", Locale("es"))
 
-private fun syncStatusLabel(lastSyncedAtMillis: Long?): String =
-    if (lastSyncedAtMillis != null) {
-        "Última sincronización: ${syncDateFormatter.format(Date(lastSyncedAtMillis))}"
-    } else {
-        "Sincronización activa"
-    }
+private fun syncStatusLabel(lastSyncedAtMillis: Long?): String = if (lastSyncedAtMillis != null) {
+    "Última sincronización: ${syncDateFormatter.format(Date(lastSyncedAtMillis))}"
+} else {
+    "Sincronización activa"
+}
 
 @Composable
 private fun SectionHeader(text: String) {
@@ -414,41 +408,6 @@ private fun ProfileRowWithTrailing(
             )
         }
         trailing()
-    }
-}
-
-/** Pill button shown in the account row trailing slot when the last sync failed. */
-@Composable
-private fun RetryPill(onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val radii = LocalEmmRadii.current
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .minimumInteractiveComponentSize()
-            .wrapContentSize()
-            .clip(radii.rFull)
-            .border(1.dp, colors.border, radii.rFull)
-            .background(colors.surface2)
-            .clickable(onClick = onClick)
-            .semantics { role = Role.Button }
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Refresh,
-            contentDescription = null,
-            tint = colors.textSecondary,
-            modifier = Modifier.size(14.dp),
-        )
-        Spacer(Modifier.size(4.dp))
-        Text(
-            text = "Reintentar",
-            style = type.labelM,
-            color = colors.textPrimary,
-            maxLines = 1,
-        )
     }
 }
 

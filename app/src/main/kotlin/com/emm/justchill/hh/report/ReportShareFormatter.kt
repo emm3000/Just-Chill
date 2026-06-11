@@ -14,11 +14,11 @@ internal object ReportShareFormatter {
     /**
      * Builds the "De cada S/ 100..." context sentence shown in the Trends tab.
      *
-     * Examples:
-     *   ratePercent=30, deltaPoints=null → "De cada S/ 100 que entró, ahorraste S/ 30."
-     *   ratePercent=30, deltaPoints=5   → "De cada S/ 100 que entró, ahorraste S/ 30. Mejoraste vs. los 6 meses previos."
-     *   ratePercent=30, deltaPoints=-2  → "De cada S/ 100 que entró, ahorraste S/ 30. Empeoraste vs. los 6 meses previos."
-     *   ratePercent=30, deltaPoints=0   → "De cada S/ 100 que entró, ahorraste S/ 30. Mantuviste el mismo ritmo que los 6 meses previos."
+     * Examples (ratePercent=30):
+     *   deltaPoints=null → "De cada S/ 100 que entró, ahorraste S/ 30."
+     *   deltaPoints=5    → appends " Mejoraste vs. los 6 meses previos."
+     *   deltaPoints=-2   → appends " Empeoraste vs. los 6 meses previos."
+     *   deltaPoints=0    → appends " Mantuviste el mismo ritmo que los 6 meses previos."
      */
     fun buildContextSentence(ratePercent: Int, deltaPoints: Int?): String {
         val base = "De cada S/ 100 que entró, ahorraste S/ $ratePercent."
@@ -34,8 +34,7 @@ internal object ReportShareFormatter {
     /**
      * Builds the "Top en X de Y meses" label used in the top-expenses list.
      */
-    fun buildTopMetaText(monthsInTop: Int, totalMonths: Int): String =
-        "Top en $monthsInTop de $totalMonths meses"
+    fun buildTopMetaText(monthsInTop: Int, totalMonths: Int): String = "Top en $monthsInTop de $totalMonths meses"
 
     /** Formats the full share text for the "Mes" tab. */
     fun buildMesShareText(state: ReportUiState): String = buildString {

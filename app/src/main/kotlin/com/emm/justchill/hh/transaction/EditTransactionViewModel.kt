@@ -50,12 +50,27 @@ class EditTransactionViewModel(
     override fun onIntent(intent: EditTransactionIntent) {
         when (intent) {
             is EditTransactionIntent.OnAmountChange -> updateState { copy(amount = intent.value).recompute() }
+
             is EditTransactionIntent.OnDescriptionChange -> updateState { copy(description = intent.value).recompute() }
+
             is EditTransactionIntent.OnTransactionTypeChange -> changeTransactionType(intent.value)
+
             is EditTransactionIntent.OnDateChangeInMillis -> updateCurrentDate(intent.value)
-            is EditTransactionIntent.OnAccountSelected -> updateState { copy(accountSelected = intent.value).recompute() }
-            is EditTransactionIntent.OnCategorySelected -> updateState { copy(categorySelected = intent.value).recompute() }
+
+            is EditTransactionIntent.OnAccountSelected -> updateState {
+                copy(
+                    accountSelected = intent.value,
+                ).recompute()
+            }
+
+            is EditTransactionIntent.OnCategorySelected -> updateState {
+                copy(
+                    categorySelected = intent.value,
+                ).recompute()
+            }
+
             EditTransactionIntent.OnSave -> saveChanges()
+
             EditTransactionIntent.OnDelete -> performDelete()
         }
     }

@@ -26,7 +26,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ProfileViewModelImportTest {
@@ -138,7 +137,10 @@ class ProfileViewModelImportTest {
     @Test
     fun `ImportJson while export in flight is a no-op`() = runTest(testDispatcher) {
         val gate = CompletableDeferred<Unit>()
-        coEvery { exportData(any(), any()) } coAnswers { gate.await(); "" }
+        coEvery { exportData(any(), any()) } coAnswers {
+            gate.await()
+            ""
+        }
 
         val vm = buildViewModel()
         val outputStream = java.io.ByteArrayOutputStream()

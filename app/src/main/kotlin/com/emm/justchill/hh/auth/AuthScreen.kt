@@ -79,11 +79,7 @@ import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun AuthScreen(
-    onBack: () -> Unit,
-    snackbarHostState: SnackbarHostState,
-    vm: AuthViewModel = koinViewModel(),
-) {
+fun AuthScreen(onBack: () -> Unit, snackbarHostState: SnackbarHostState, vm: AuthViewModel = koinViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val currentOnBack by rememberUpdatedState(onBack)
     val context = LocalContext.current
@@ -94,6 +90,7 @@ fun AuthScreen(
         vm.effect.collect { effect ->
             when (effect) {
                 AuthEffect.NavigateBack -> currentOnBack()
+
                 AuthEffect.OpenEmailApp -> {
                     try {
                         val intent = Intent(Intent.ACTION_MAIN)
@@ -107,16 +104,19 @@ fun AuthScreen(
                         )
                     }
                 }
+
                 is AuthEffect.ShowError -> snackbarHostState.showEmmSnackbar(
                     message = effect.error.toUserMessage(),
                     tone = EmmSnackbarTone.Error,
                 )
+
                 is AuthEffect.Notify -> snackbarHostState.showEmmSnackbar(
                     message = effect.message.toText(),
                     tone = when (effect.message) {
                         AuthMessage.GoogleAccountUnavailable,
                         AuthMessage.GoogleSignInFailed,
                         -> EmmSnackbarTone.Error
+
                         AuthMessage.ConfirmationLinkResent -> EmmSnackbarTone.Success
                     },
                 )
@@ -164,6 +164,7 @@ private fun AuthContent(state: AuthUiState, onIntent: (AuthIntent) -> Unit) {
                 onIntent = onIntent,
                 modifier = Modifier.weight(1f),
             )
+
             is AuthUiState.CheckEmail -> CheckEmailStep(
                 state = state,
                 onIntent = onIntent,
@@ -174,11 +175,7 @@ private fun AuthContent(state: AuthUiState, onIntent: (AuthIntent) -> Unit) {
 }
 
 @Composable
-private fun AuthFormStep(
-    state: AuthUiState.Form,
-    onIntent: (AuthIntent) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun AuthFormStep(state: AuthUiState.Form, onIntent: (AuthIntent) -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
@@ -499,7 +496,11 @@ private fun AuthFieldInput(
                                 } else {
                                     Icons.Outlined.VisibilityOff
                                 },
-                                contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña",
+                                contentDescription = if (passwordVisible) {
+                                    "Ocultar contraseña"
+                                } else {
+                                    "Mostrar contraseña"
+                                },
                                 tint = colors.textTertiary,
                                 modifier = Modifier.size(20.dp),
                             )

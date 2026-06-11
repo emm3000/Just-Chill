@@ -89,6 +89,7 @@ private fun EmmSnackbarBody(data: SnackbarData) {
             tint = colors.success,
             circleBg = colors.posMuted,
         )
+
         EmmSnackbarTone.Error -> ToneVisuals(
             icon = Icons.Outlined.ErrorOutline,
             tint = colors.danger,

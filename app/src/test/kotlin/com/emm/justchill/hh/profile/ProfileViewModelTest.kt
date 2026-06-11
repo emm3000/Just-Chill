@@ -214,7 +214,10 @@ class ProfileViewModelTest {
     @Test
     fun `ExportToStream while import in flight is a no-op`() = runTest(testDispatcher) {
         val gate = CompletableDeferred<Unit>()
-        coEvery { importData(any()) } coAnswers { gate.await(); throw RuntimeException("unreachable") }
+        coEvery { importData(any()) } coAnswers {
+            gate.await()
+            error("unreachable")
+        }
 
         val vm = buildViewModel()
 
@@ -238,7 +241,10 @@ class ProfileViewModelTest {
     @Test
     fun `ExportToStream re-entry guard — second export while first in flight is a no-op`() = runTest(testDispatcher) {
         val gate = CompletableDeferred<Unit>()
-        coEvery { exportData(any(), any()) } coAnswers { gate.await(); "" }
+        coEvery { exportData(any(), any()) } coAnswers {
+            gate.await()
+            ""
+        }
 
         val vm = buildViewModel()
 

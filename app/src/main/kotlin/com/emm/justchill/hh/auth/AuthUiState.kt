@@ -16,9 +16,6 @@ sealed interface AuthUiState : UiState {
         val submitting: Submitting = Submitting.None,
     ) : AuthUiState
 
-    data class CheckEmail(
-        val email: String,
-        val isResending: Boolean = false,
-        val canResend: Boolean = true,
-    ) : AuthUiState
+    data class CheckEmail(val email: String, val isResending: Boolean = false, val canResend: Boolean = true) :
+        AuthUiState
 }

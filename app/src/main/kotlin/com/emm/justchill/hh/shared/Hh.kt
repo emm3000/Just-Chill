@@ -60,12 +60,14 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.sync.SyncOrchestrator
-import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
+import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
+import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.hh.account.AccountsEffect
 import com.emm.justchill.hh.account.AccountsScreen
 import com.emm.justchill.hh.account.AccountsViewModel
@@ -82,8 +84,6 @@ import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.home.HomeViewModel
 import com.emm.justchill.hh.onboarding.ManifestoScreen
 import com.emm.justchill.hh.profile.PrivacyPolicyScreen
-import com.emm.justchill.core.error.toUserMessage
-import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.hh.profile.ProfileEffect
 import com.emm.justchill.hh.profile.ProfileIntent
 import com.emm.justchill.hh.profile.ProfileMessage
@@ -290,12 +290,14 @@ fun Hh(modifier: Modifier = Modifier) {
                                     message = effect.error.toUserMessage(),
                                     tone = EmmSnackbarTone.Error,
                                 )
+
                                 is ProfileEffect.Notify -> snackbarHostState.showEmmSnackbar(
                                     message = effect.message.toText(),
                                     tone = when (effect.message) {
                                         ProfileMessage.ExportFailed,
                                         ProfileMessage.ImportFailed,
                                         -> EmmSnackbarTone.Error
+
                                         else -> EmmSnackbarTone.Success
                                     },
                                 )

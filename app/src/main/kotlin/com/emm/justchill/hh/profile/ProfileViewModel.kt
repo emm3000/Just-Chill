@@ -88,11 +88,7 @@ class ProfileViewModel(
      * try/finally guarantees the reset on success, domain error (rethrown to
      * launchSafe's handler), and coroutine cancellation.
      */
-    private fun launchOp(
-        op: ProfileOp,
-        onError: (DomainException) -> ProfileEffect,
-        block: suspend () -> Unit,
-    ) {
+    private fun launchOp(op: ProfileOp, onError: (DomainException) -> ProfileEffect, block: suspend () -> Unit) {
         if (currentState.op != ProfileOp.None) return
         updateState { copy(op = op) }
         launchSafe(onError = onError) {
