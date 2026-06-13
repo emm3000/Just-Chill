@@ -1,32 +1,47 @@
 package com.emm.justchill.core.theme
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.emm.justchill.R
+import com.emm.justchill.shared.generated.resources.Res
+import com.emm.justchill.shared.generated.resources.ibm_plex_mono_medium
+import com.emm.justchill.shared.generated.resources.ibm_plex_mono_regular
+import com.emm.justchill.shared.generated.resources.ibm_plex_mono_semibold
+import com.emm.justchill.shared.generated.resources.inter_bold
+import com.emm.justchill.shared.generated.resources.inter_medium
+import com.emm.justchill.shared.generated.resources.inter_regular
+import com.emm.justchill.shared.generated.resources.inter_semibold
+import org.jetbrains.compose.resources.Font
 
 /**
  * Design system typography — SR-1.
  *
  * Inter (bundled) for all UI text, IBM Plex Mono (bundled) for amounts.
  * Use [LocalEmmType.current] inside composables wrapped by [EmmTheme].
+ *
+ * Compose Multiplatform loads bundled fonts via [org.jetbrains.compose.resources.Font],
+ * which is `@Composable`. The font families and [emmType] are therefore exposed as
+ * `@Composable get()` properties so existing call sites (which read them inside
+ * composables) keep working unchanged after the move to `shared-ui`.
  */
-val InterFontFamily: FontFamily = FontFamily(
-    Font(R.font.inter_regular, FontWeight.Normal),
-    Font(R.font.inter_medium, FontWeight.Medium),
-    Font(R.font.inter_semibold, FontWeight.SemiBold),
-    Font(R.font.inter_bold, FontWeight.Bold),
-)
+val InterFontFamily: FontFamily
+    @Composable get() = FontFamily(
+        Font(Res.font.inter_regular, FontWeight.Normal),
+        Font(Res.font.inter_medium, FontWeight.Medium),
+        Font(Res.font.inter_semibold, FontWeight.SemiBold),
+        Font(Res.font.inter_bold, FontWeight.Bold),
+    )
 
-val PlexMonoFontFamily: FontFamily = FontFamily(
-    Font(R.font.ibm_plex_mono_regular, FontWeight.Normal),
-    Font(R.font.ibm_plex_mono_medium, FontWeight.Medium),
-    Font(R.font.ibm_plex_mono_semibold, FontWeight.SemiBold),
-)
+val PlexMonoFontFamily: FontFamily
+    @Composable get() = FontFamily(
+        Font(Res.font.ibm_plex_mono_regular, FontWeight.Normal),
+        Font(Res.font.ibm_plex_mono_medium, FontWeight.Medium),
+        Font(Res.font.ibm_plex_mono_semibold, FontWeight.SemiBold),
+    )
 
 private const val TABULAR = "tnum"
 
@@ -55,7 +70,8 @@ data class EmmType(
     val eyebrow: TextStyle,
 )
 
-internal val emmType: EmmType = EmmType(
+internal val emmType: EmmType
+    @Composable get() = EmmType(
     amountHero = TextStyle(
         fontFamily = PlexMonoFontFamily,
         fontSize = 48.sp,

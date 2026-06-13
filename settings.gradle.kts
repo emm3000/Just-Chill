@@ -31,3 +31,4 @@ dependencyResolutionManagement {
 rootProject.name = "JustChill"
 include(":app")
 include(":domain")
+include(":shared-ui")

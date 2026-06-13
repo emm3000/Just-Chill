@@ -44,7 +44,7 @@ data class EmmColors(
     val catGraphite: Color,
 )
 
-internal val emmDarkColors: EmmColors = EmmColors(
+val emmDarkColors: EmmColors = EmmColors(
     bg = Color(0xFF191919),
     surface1 = Color(0xFF202020),
     surface2 = Color(0xFF262626),

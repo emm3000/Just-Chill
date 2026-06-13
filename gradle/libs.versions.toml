@@ -46,6 +46,9 @@ composeMultiplatform = "1.11.1"
 nav3Core = "1.1.2"
 lifecycleViewmodelNav3 = "2.10.0"
 
+# JetBrains multiplatform lifecycle (shared-ui commonMain ViewModel) — aligned with Compose MP 1.11.1.
+jetbrainsLifecycle = "2.10.0"
+
 [libraries]
 android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "androidDriver" }
 sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "androidDriver" }
@@ -110,6 +113,9 @@ androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runt
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3Core" }
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodelNav3" }
 androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycleLivedataKtx" }
+
+# JetBrains multiplatform lifecycle-viewmodel — provides ViewModel + viewModelScope in commonMain (shared-ui).
+jetbrains-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "jetbrainsLifecycle" }
 
 [plugins]
 
