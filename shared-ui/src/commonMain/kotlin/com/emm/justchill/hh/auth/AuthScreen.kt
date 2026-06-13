@@ -73,7 +73,7 @@ import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.shared.generated.resources.Res
 import com.emm.justchill.shared.generated.resources.ic_google
 import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable

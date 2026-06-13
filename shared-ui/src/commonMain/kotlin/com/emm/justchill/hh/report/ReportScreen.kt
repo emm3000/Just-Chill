@@ -60,7 +60,7 @@ import com.emm.justchill.hh.report.components.TrendsContent
 import com.emm.justchill.hh.shared.fullLabel
 import com.emm.justchill.hh.shared.shortLabel
 import kotlinx.datetime.Month
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable

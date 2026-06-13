@@ -59,7 +59,10 @@ kotlin {
             // transitively by compose.ui; needed by AuthScreen's CheckEmail back handling.
             implementation("org.jetbrains.compose.ui:ui-backhandler:${libs.versions.composeMultiplatform.get()}")
             implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
+            // CMP 1.10+ multiplatform @Preview lives in org.jetbrains.compose.ui:ui-tooling-preview
+            // (provides androidx.compose.ui.tooling.preview.Preview); the old
+            // compose.components.uiToolingPreview shipped the now-deprecated jetbrains namespace.
+            implementation("org.jetbrains.compose.ui:ui-tooling-preview:${libs.versions.composeMultiplatform.get()}")
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

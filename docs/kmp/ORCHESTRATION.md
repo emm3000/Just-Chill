@@ -101,8 +101,11 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
   `Normalizer`→`SpanishSearch`; `java.util.UUID`→`kotlin.uuid.Uuid`;
   `koin.androidx.compose.koinViewModel`→`koin-compose-viewmodel`.
 - **CMP swaps**: `@Preview` takes no params (strip); import
-  `org.jetbrains.compose.ui.tooling.preview.Preview`; `LocalConfiguration`→
-  `LocalWindowInfo`+`LocalDensity`.
+  `androidx.compose.ui.tooling.preview.Preview` — the CMP 1.10+ multiplatform
+  annotation, provided by the `org.jetbrains.compose.ui:ui-tooling-preview`
+  dependency (NOT `compose.components.uiToolingPreview`, which shipped the
+  now-deprecated `org.jetbrains.compose.ui.tooling.preview.Preview` namespace);
+  `LocalConfiguration`→`LocalWindowInfo`+`LocalDensity`.
 - **Package paths never change** when files cross the module boundary — keeps
   `:app` imports from churning. `:app` consumers of moved same-package symbols
   need explicit imports added (implicit same-package resolution stops at the

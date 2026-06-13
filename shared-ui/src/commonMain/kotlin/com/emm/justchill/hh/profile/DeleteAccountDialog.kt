@@ -30,7 +30,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 internal fun DeleteAccountDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
