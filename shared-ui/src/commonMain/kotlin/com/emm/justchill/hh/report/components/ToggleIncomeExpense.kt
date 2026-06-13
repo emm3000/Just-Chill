@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
@@ -43,7 +43,7 @@ fun ToggleIncomeExpense(
     )
 }
 
-@PreviewLightDark
+@Preview
 @Composable
 private fun ToggleIncomeExpensePreview() {
     EmmTheme {

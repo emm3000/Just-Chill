@@ -10,8 +10,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
-import java.text.DecimalFormat
-import kotlin.math.abs
+import com.emm.justchill.hh.shared.NumberFormatEs
 
 /**
  * Inline monetary amount — 15sp Inter W600 tnum, tabular figures.
@@ -27,9 +26,8 @@ fun MoneyInline(value: Double, modifier: Modifier = Modifier, color: Color? = nu
     val colors = LocalEmmColors.current
 
     val formatted = remember(value) {
-        val formatter = DecimalFormat("#,##0.00")
         val prefix = if (value < 0) "− S/ " else "S/ "
-        "$prefix${formatter.format(abs(value))}"
+        "$prefix${NumberFormatEs.decimal2(value)}"
     }
 
     Text(

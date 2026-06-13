@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.shared
 
 import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.roundToLong
 
 /**
@@ -35,6 +36,27 @@ internal object NumberFormatEs {
 
     /** Grouped integer with no fraction part — e.g. 1234567 -> "1,234,567". For [value] >= 0. */
     fun integer(value: Long): String = groupDigits(value.toString())
+
+    /**
+     * Grouped integer rounded to zero fraction digits — e.g. 1234.56 -> "1,235",
+     * 1234.50 -> "1,234". Mirrors `NumberFormat.getNumberInstance(es-PE)` with min/max
+     * fraction digits = 0, which uses HALF_EVEN (banker's) rounding by default. For [value] >= 0.
+     */
+    fun integerRounded(value: Double): String = groupDigits(roundHalfEven(abs(value)).toString())
+
+    /** HALF_EVEN rounding to a whole number, matching `java.text.NumberFormat`'s default. */
+    private fun roundHalfEven(value: Double): Long {
+        val floorValue = floor(value)
+        val diff = value - floorValue
+        val floorLong = floorValue.toLong()
+        return when {
+            diff < 0.5 -> floorLong
+            diff > 0.5 -> floorLong + 1
+            // Exactly .5 → round to the nearest even integer.
+            floorLong % 2 == 0L -> floorLong
+            else -> floorLong + 1
+        }
+    }
 
     /**
      * Grouped value with exactly two fraction digits — e.g. 1234.56 -> "1,234.56",

@@ -21,7 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
@@ -71,7 +71,7 @@ fun ShareReportButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-@PreviewLightDark
+@Preview
 @Composable
 private fun ShareReportButtonPreview() {
     EmmTheme {

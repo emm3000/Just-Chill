@@ -91,6 +91,18 @@ class SpanishFormatGoldenTest {
         assertEquals("1,234,567", NumberFormatEs.integer(1234567))
     }
 
+    // integerRounded mirrors `NumberFormat.getNumberInstance(es-PE)` with 0 fraction digits,
+    // which rounds HALF_EVEN (banker's). Used by report/ReportFormat.formatSoles.
+    @Test fun integerRounded_matches_esPE_zeroFraction_NumberFormat() {
+        assertEquals("1,235", NumberFormatEs.integerRounded(1234.56))
+        assertEquals("0", NumberFormatEs.integerRounded(0.0))
+        assertEquals("1", NumberFormatEs.integerRounded(0.6))
+        assertEquals("1,000", NumberFormatEs.integerRounded(999.5)) // .5 -> nearest even (1000)
+        assertEquals("1,234", NumberFormatEs.integerRounded(1234.5)) // .5 -> nearest even (1234)
+        assertEquals("1,236", NumberFormatEs.integerRounded(1235.5)) // .5 -> nearest even (1236)
+        assertEquals("1,234,568", NumberFormatEs.integerRounded(1234567.6))
+    }
+
     // ---- SpanishSearch ----
 
     @Test fun stripSpanishAccents_maps_accented_to_base() {

@@ -2,23 +2,16 @@ package com.emm.justchill.hh.report
 
 import androidx.compose.ui.graphics.Color
 import com.emm.justchill.core.theme.emmDarkColors
-import java.text.NumberFormat
-import java.util.Locale
+import com.emm.justchill.hh.shared.NumberFormatEs
 
 internal fun formatSoles(cents: Long): String {
     val soles = cents.toDouble() / 100.0
-    val nf = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-PE"))
-    nf.minimumFractionDigits = 0
-    nf.maximumFractionDigits = 0
-    return "S/ ${nf.format(soles)}"
+    return "S/ ${NumberFormatEs.integerRounded(soles)}"
 }
 
 internal fun formatSolesWithDecimals(cents: Long): String {
     val soles = cents.toDouble() / 100.0
-    val nf = NumberFormat.getNumberInstance(Locale.forLanguageTag("es-PE"))
-    nf.minimumFractionDigits = 2
-    nf.maximumFractionDigits = 2
-    return "S/ ${nf.format(soles)}"
+    return "S/ ${NumberFormatEs.decimal2(soles)}"
 }
 
 internal fun domainColorToUi(color: String): Color = when (color) {

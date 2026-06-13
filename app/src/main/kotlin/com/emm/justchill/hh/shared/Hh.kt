@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.shared
 
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -350,9 +351,17 @@ fun Hh(modifier: Modifier = Modifier) {
                 }
 
                 entry<ReportRoute> {
+                    val context = LocalContext.current
                     ReportScreen(
                         onBack = { backStack.removeLastOrNull() },
                         onAddTransaction = { backStack.add(AddTransactionRoute) },
+                        onShareText = { text ->
+                            val intent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, text)
+                            }
+                            context.startActivity(Intent.createChooser(intent, "Compartir reporte"))
+                        },
                     )
                 }
 

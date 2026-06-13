@@ -1,7 +1,5 @@
 package com.emm.justchill.hh.report
 
-import android.content.Intent
-import android.content.Intent.EXTRA_TEXT
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -38,9 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.shared.YearMonth
@@ -64,30 +60,25 @@ import com.emm.justchill.hh.report.components.TrendsContent
 import com.emm.justchill.hh.shared.fullLabel
 import com.emm.justchill.hh.shared.shortLabel
 import kotlinx.datetime.Month
-import org.koin.androidx.compose.koinViewModel
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun ReportScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     onAddTransaction: () -> Unit = {},
+    onShareText: (String) -> Unit = {},
     vm: ReportViewModel = koinViewModel(),
 ) {
     val state: ReportUiState by vm.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
             when (effect) {
                 is ReportEffect.ShowError -> { /* snackbar handled by Hh.kt root */ }
 
-                is ReportEffect.ShareReport -> {
-                    val intent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(EXTRA_TEXT, effect.text)
-                    }
-                    context.startActivity(Intent.createChooser(intent, "Compartir reporte"))
-                }
+                is ReportEffect.ShareReport -> onShareText(effect.text)
             }
         }
     }
@@ -450,7 +441,7 @@ private fun EmptyState(type: TransactionType, onAddTransaction: () -> Unit) {
     }
 }
 
-@PreviewLightDark
+@Preview
 @Composable
 private fun ReportScreenMesPreview() {
     EmmTheme {
@@ -489,7 +480,7 @@ private fun ReportScreenMesPreview() {
     }
 }
 
-@PreviewLightDark
+@Preview
 @Composable
 private fun ReportScreenMesGastosPreview() {
     EmmTheme {
@@ -530,7 +521,7 @@ private fun ReportScreenMesGastosPreview() {
     }
 }
 
-@PreviewLightDark
+@Preview
 @Composable
 private fun ReportScreenEmptyPreview() {
     EmmTheme {

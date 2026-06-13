@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.report
 
-import org.junit.Test
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
