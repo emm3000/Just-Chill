@@ -117,7 +117,7 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
 | 1 | transactions + de-JVM | `4b10bad` | ✅ |
 | 2 | categories | `1f35f32` | ✅ |
 | 3 | accounts | `5701f95` | ✅ (writer+reviewer) |
-| 4 | recurring | — | pending |
+| 4 | recurring | `591cbcc` | ✅ (writer+reviewer) |
 | 5 | home + report | — | pending |
 | 6 | onboarding | — | pending |
 | 7 | auth/sync UI + profile | — | pending |
