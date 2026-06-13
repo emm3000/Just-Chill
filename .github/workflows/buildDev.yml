@@ -56,7 +56,7 @@ jobs:
           cache-read-only: 'true'
 
       - name: Run tests
-        run: ./gradlew :domain:test :data:testDebugUnitTest :androidApp:testDevDebugUnitTest
+        run: ./gradlew :domain:testAndroidHostTest :data:testAndroidHostTest :androidApp:testDevDebugUnitTest
 
       - name: Upload test report
         if: always()
@@ -64,8 +64,8 @@ jobs:
         with:
           name: unit-test-report
           path: |
-            domain/build/reports/tests/test/
-            data/build/reports/tests/testDebugUnitTest/
+            domain/build/reports/tests/testAndroidHostTest/
+            data/build/reports/tests/testAndroidHostTest/
             androidApp/build/reports/tests/testDevDebugUnitTest/
           retention-days: 7
 

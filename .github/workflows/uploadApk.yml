@@ -29,7 +29,7 @@ jobs:
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
 
       - name: Run tests
-        run: ./gradlew :domain:test :data:testDebugUnitTest :androidApp:testDevDebugUnitTest
+        run: ./gradlew :domain:testAndroidHostTest :data:testAndroidHostTest :androidApp:testDevDebugUnitTest
 
   upload:
     needs: [ test ]
