@@ -146,24 +146,27 @@ Moved `transaction/`, `seetransactions/`, `transactionModule`. Reality: ~62 file
 SpanishSearch}.kt`. `HhModule` stays in `:app` (nav host). `CentsFormatterTest`
 moved to `shared-ui/commonTest` (pure JUnit); MockK VM tests stayed in `:app`.
 
-### Slice 2 — categories (PARTIAL — finish it)
-Already in commonMain from Slice 1: `CategoryColor`, `ColorsAll`, `IconCatalog`,
-`IconsAll`. **Remaining**: category screens/VMs/sheets/UiState/Intent/Effect +
-`categoryModule` (`hh/di/CategoryModule.kt`). Map import closure first; expect a
-few `internal→public` flips. Gate green.
+### Slice 2 — categories — ✅ DONE (`1f35f32`)
+Moved category screens/VMs + `categoryModule` (use cases only; `DefaultCategoryRepository`
+binding moved to `:app` `HhModule`). Co-moved `components/EmmTextInput.kt`. Established
+the **commonMain depends on `:domain` only, NOT `:data`** Koin-split pattern.
 
-### Slice 3 — accounts (PARTIAL — finish it)
-Already in commonMain: `AccountPalette`. **Remaining**: account screens/VMs +
-`accountModule` (`hh/di/AccountModule.kt`). Gate green.
+### Slice 3 — accounts — ✅ DONE (`5701f95`, writer+reviewer)
+Moved account screens/VMs + `accountModule` (use cases only; repo binding → `HhModule`).
+Co-moved `components/{EmmButton,EmmButtonVariant}.kt`.
 
-### Slice 4 — recurring
-Move `recurring/` (full). Consumes shared atoms/`CtaHeight` already in commonMain
-(made public in Slice 1). Map closure; de-JVM any `java.*`. Gate green.
+### Slice 4 — recurring — ✅ DONE (`591cbcc`, writer+reviewer)
+Moved all 15 recurring files. No separate Koin module — VMs/use-cases/repo binding
+already in `:app` `HhModule` (untouched). Co-moved `EmmCard`, `Pill`, `PillTone`,
+`EmmSwitch`. No de-JVM needed.
 
-### Slice 5 — home + report
-Move `home/`, `report/` (+ components). Hotspot: hoist `ReportScreen` share intent
-(`ACTION_SEND`) to an `onShare(text)` callback wired in the nav host (`:app`).
-Gate green.
+### Slice 5 — home + report — ✅ DONE (`b82f128`, writer+reviewer)
+Moved home (5) + report (23). Hoisted `ReportScreen` share intent (`ACTION_SEND`) to
+an `onShareText(String)` callback wired in the nav host (`Hh.kt`). De-JVM'd
+`ReportFormat` + a hidden `DecimalFormat` leak in `MoneyInline` via `NumberFormatEs`
+(added `integerRounded` with HALF_EVEN to match java's es-PE rounding — reviewer
+brute-forced 100M cent values, zero mismatches). `@PreviewLightDark`→`@Preview` (15).
+Co-moved `core/ui/atoms/{MonthSelector,MoneyInline,Segmented}`, `hh/shared/MonthLabels`.
 
 ### Slice 6 — onboarding
 Move `onboarding/` (was missing from the original slice list). Check for platform

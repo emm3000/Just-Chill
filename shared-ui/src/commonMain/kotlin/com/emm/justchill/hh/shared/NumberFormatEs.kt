@@ -62,6 +62,11 @@ internal object NumberFormatEs {
      * Grouped value with exactly two fraction digits — e.g. 1234.56 -> "1,234.56",
      * 1234567.5 -> "1,234,567.50", 0.0 -> "0.00". Mirrors `DecimalFormat("#,##0.00")` (US) and
      * `NumberFormat.getNumberInstance(es-PE)` with min/max fraction digits = 2.
+     *
+     * Uses HALF_UP at the 3rd decimal (`roundToLong`), whereas the java formatters it replaces use
+     * HALF_EVEN. Safe ONLY because every caller passes a cents-exact value (`cents.toDouble() / 100.0`),
+     * so a 3rd-decimal tie can never occur. A future caller passing a raw double with 3+ decimals
+     * could diverge — route such inputs through a HALF_EVEN path instead.
      */
     fun decimal2(value: Double): String {
         val totalCents = (abs(value) * 100.0).roundToLong()
