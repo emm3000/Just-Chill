@@ -5,12 +5,14 @@
 > **Android-first, iOS-additive**: every step keeps Android compiling green;
 > iOS is added as *new targets*, never at the cost of what already works.
 >
-> **Status**: ✅ Phases 0–3 DONE (domain, data, shared-ui all KMP; Android green
-> throughout; common code compiles for iOS). Phase 3 + post-phase cleanup closed
-> on branch `kmp/phase-0-scaffolding` (see `PHASE_3_SPEC.md` + `ORCHESTRATION.md`
-> ledger). **NEXT: Phase 4** — split `:app` → `androidApp` (still Android-only;
-> iOS first appears in Phase 5). Open product decisions deferred to Phase 6:
-> Google Sign-In on iOS, Firebase telemetry on iOS (see §5).
+> **Status**: ✅ Phases 0–4 DONE (domain, data, shared-ui all KMP; `:app` renamed
+> to `:androidApp` with typesafe project accessors; Android green throughout;
+> common code compiles for iOS). All closed on branch `kmp/phase-0-scaffolding`
+> (see `PHASE_3_SPEC.md` + `ORCHESTRATION.md` ledger; Phase 4 commit `0d309df`,
+> CI fix `c5fa93e`, validated build+install+run from `:androidApp` + writer/
+> reviewer SHIP). **NEXT: Phase 5** — `iosApp` first run (iOS appears). Open
+> product decisions deferred to Phase 6: Google Sign-In on iOS, Firebase
+> telemetry on iOS (see §5).
 > **Date**: 2026-06-12 (plan) · status updated 2026-06-13
 > **Owner**: @emm
 
@@ -235,19 +237,22 @@ a shared module. 196 files don't move in one PR — slice by feature.
 
 ---
 
-### Phase 4 — split `:app` → `androidApp` — MEDIUM RISK
+### Phase 4 — split `:app` → `androidApp` — MEDIUM RISK ✅ DONE (`0d309df`)
 **Scope:** gut the old `:app` down to a thin Android entry point.
-- [ ] Rename/restructure `:app` → `androidApp` (`android.application`).
-- [ ] Keep ONLY: `MainActivity`, `EmmApp` (Application), `google-services` +
-      Firebase BOM + Crashlytics, Google Sign-In (Credential Manager /
-      `google-identity-googleid`), `AndroidManifest`, Android-specific Koin
-      bootstrap (driver `Context`, Firebase), launcher/theme resources.
-- [ ] `androidApp` depends on `shared-ui` (which transitively brings `data`,
-      `domain`). Use typesafe accessors `projects.sharedUi` (enable
-      `TYPESAFE_PROJECT_ACCESSORS` like the wizard).
-- [ ] Update `settings.gradle.kts` module names.
-- **Gate:** full app builds and runs from `androidApp`. This is the proof the
-  Android product is intact post-extraction.
+- [x] Rename/restructure `:app` → `androidApp` (`git mv`, history preserved).
+- [x] Keeps ONLY: `MainActivity`, `EmmApp`, `google-services` + Firebase BOM +
+      Crashlytics, Google Sign-In, `AndroidManifest`, Android Koin bootstrap,
+      nav host `Hh.kt`, `SyncOrchestrator`, launcher/theme resources. (No
+      further code moved — Phase 3 already extracted shared UI.)
+- [x] `androidApp` depends on `shared-ui`/`data`/`domain` via typesafe accessors
+      (`projects.sharedUi`, `projects.data`, `projects.domain`);
+      `TYPESAFE_PROJECT_ACCESSORS` enabled in `settings.gradle.kts`.
+- [x] `settings.gradle.kts` + CI workflows + `CLAUDE.md` updated; prod AAB is
+      now `androidApp-prod-release.aab`.
+- [x] **Gate PASSED:** full app builds, installs, and runs from `:androidApp`
+      (MainActivity resumed on device); writer+reviewer Opus loop, verdict SHIP.
+- Follow-up `c5fa93e`: fixed pre-existing dead CI test tasks (`:domain:test` /
+  `:data:testDebugUnitTest` → `testAndroidHostTest`) surfaced during this phase.
 
 ---
 
