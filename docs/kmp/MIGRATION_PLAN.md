@@ -5,8 +5,13 @@
 > **Android-first, iOS-additive**: every step keeps Android compiling green;
 > iOS is added as *new targets*, never at the cost of what already works.
 >
-> **Status**: PLANNING — not started. No gradle touched yet.
-> **Date**: 2026-06-12
+> **Status**: ✅ Phases 0–3 DONE (domain, data, shared-ui all KMP; Android green
+> throughout; common code compiles for iOS). Phase 3 + post-phase cleanup closed
+> on branch `kmp/phase-0-scaffolding` (see `PHASE_3_SPEC.md` + `ORCHESTRATION.md`
+> ledger). **NEXT: Phase 4** — split `:app` → `androidApp` (still Android-only;
+> iOS first appears in Phase 5). Open product decisions deferred to Phase 6:
+> Google Sign-In on iOS, Firebase telemetry on iOS (see §5).
+> **Date**: 2026-06-12 (plan) · status updated 2026-06-13
 > **Owner**: @emm
 
 ---

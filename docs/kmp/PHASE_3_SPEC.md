@@ -81,10 +81,25 @@ Compose for `shared-ui` is driven by the `org.jetbrains.compose` plugin
 
 ## Slices (each = one Android-green gate: `./gradlew assembleDevDebug`)
 
-> **STATUS (updated 2026-06-13, after Slice 1):**
-> - ✅ Slice 0 — scaffold + MVI + theme (commit `7d66e54`)
-> - ✅ Slice 1 — transactions + de-JVM (commit `4b10bad`)
-> - ⏳ Slices 2-8 below, **re-sequenced**. Lessons from Slice 1 baked in.
+> **STATUS (updated 2026-06-13): ✅ PHASE 3 COMPLETE.**
+> All slices 0–8b done (full ledger in `ORCHESTRATION.md`). All shared UI lives in
+> `shared-ui` commonMain; `:app` holds only the nav host + platform Koin modules +
+> MainActivity/EmmApp. `assembleDevDebug` + iOS compile + all tests green.
+> **Post-phase cleanup also done** (not slices, separate commits):
+> - `8afe740` — dedup `Clock` binding (keep commonMain `sharedModule` provider).
+> - `85fa2b5` + `37bc4fd` — migrate `@Preview` to the CMP 1.10+ multiplatform
+>   `androidx.compose.ui.tooling.preview.Preview` (dep `org.jetbrains.compose.ui:ui-tooling-preview`)
+>   + add `org.jetbrains.compose.ui:ui-tooling` (`androidRuntimeClasspath`) so previews RENDER in the IDE.
+> - `f3b0219` — migrate `compose.*` plugin accessors → version-catalog `libs.compose.*`
+>   deps (material3 pinned `1.11.0-alpha07`, material-icons-extended `1.7.3` — both versioned
+>   independently of the umbrella CMP version).
+> - `4d1305a` — sweep `invisibleToUser`→`hideFromAccessibility`, `MenuAnchorType`→`ExposedDropdownMenuAnchorType`.
+> **Left deliberately:** `BackHandler` (works; migration needs a new nav-event dep + API rewrite),
+> `androidLibrary {}` block (the official CMP wizard still uses it), AGP-10 option warnings.
+> **NEXT: Phase 4** — split `:app` → `androidApp` thin entry point (still Android-only).
+>
+> ---
+> _Historical lessons below (kept for reference — Slice 1 set the playbook):_
 >
 > **Dependency-closure lesson (CRITICAL — applies to every remaining slice):**
 > A feature CANNOT move alone. `commonMain` cannot import from `:app`, so moving
