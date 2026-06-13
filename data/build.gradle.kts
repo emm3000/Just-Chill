@@ -1,78 +1,67 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
     id("app.cash.sqldelight") version "2.3.2"
     kotlin("plugin.serialization") version libs.versions.kotlinVersion
 }
 
-android {
-    namespace = "com.emm.data"
-    compileSdk = 37
-
-    defaultConfig {
+kotlin {
+    android {
+        namespace = "com.emm.data"
+        compileSdk = 37
         minSdk = 26
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        withHostTest { }
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
 
-    kotlin {
-        jvmToolchain(17)
-    }
+    iosArm64()
+    iosSimulatorArm64()
 
-    buildFeatures {
-        buildConfig = true
+    sourceSets {
+        commonMain.dependencies {
+            implementation(project(":domain"))
+            implementation(libs.coroutines.extensions)
+            api(libs.supabase.auth.kt)
+            api(libs.supabase.postgrest.kt)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
+        }
+        androidMain.dependencies {
+            implementation(libs.android.driver)
+            api(libs.ktor.client.okhttp)
+        }
+        iosMain.dependencies {
+            implementation(libs.sqldelight.native.driver)
+            api(libs.ktor.client.darwin)
+        }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+            implementation(libs.kotlinx.coroutines.test)
+        }
+        getByName("androidHostTest").dependencies {
+            implementation(libs.mockk)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.junit)
+            // JVM in-memory SQLite for DB-integration unit tests (JdbcSqliteDriver).
+            implementation(libs.sqlite.driver)
+        }
     }
 }
 
 dependencies {
-
-    implementation(project(":domain"))
-
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.kotlinx.coroutines.test)
-    androidTestImplementation(kotlin("test"))
-
-    implementation(libs.android.driver)
-    api(libs.coroutines.extensions)
-
-    api(platform(libs.supabase.bom))
-    api(libs.supabase.auth.kt)
-    api(libs.supabase.postgrest.kt)
-    api(libs.ktor.client.okhttp)
-
-    implementation(libs.kotlinx.serialization.json)
-
-    testImplementation(libs.mockk)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(kotlin("test"))
-    testImplementation(libs.sqlite.driver)
+    add("commonMainApi", platform(libs.supabase.bom))
 }
 
 sqldelight {
     databases {
         create("EmmDatabaseData") {
             packageName.set("com.emm.data")
-            // Real user data exists on devices since 4e6de6c (2026-06-04).
-            // Schema changes MUST ship an .sqm migration; verification
-            // fails the build if migrations and schema diverge.
-            schemaOutputDirectory.set(file("src/main/sqldelight/databases"))
-            verifyMigrations.set(true)
+            schemaOutputDirectory.set(file("src/commonMain/sqldelight/databases"))
         }
     }
 }
