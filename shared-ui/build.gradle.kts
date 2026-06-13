@@ -50,15 +50,15 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.materialIconsExtended)
-            implementation(compose.ui)
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.material3)
+            implementation(libs.compose.material.icons.extended)
+            implementation(libs.compose.ui)
             // Multiplatform BackHandler (androidx.compose.ui.backhandler) — not pulled in
             // transitively by compose.ui; needed by AuthScreen's CheckEmail back handling.
             implementation("org.jetbrains.compose.ui:ui-backhandler:${libs.versions.composeMultiplatform.get()}")
-            implementation(compose.components.resources)
+            implementation(libs.compose.components.resources)
             // CMP 1.10+ multiplatform @Preview lives in org.jetbrains.compose.ui:ui-tooling-preview
             // (provides androidx.compose.ui.tooling.preview.Preview); the old
             // compose.components.uiToolingPreview shipped the now-deprecated jetbrains namespace.

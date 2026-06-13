@@ -40,6 +40,10 @@ ktorClientOkhttp = "3.5.0"
 # KMP / Compose Multiplatform (declared in phase 0, applied per-module in later phases).
 # Compose MP 1.11.1 is the release built against Kotlin 2.4.0 (see docs/kmp/BASELINE.md).
 composeMultiplatform = "1.11.1"
+# CMP material3 is versioned independently of the umbrella composeMultiplatform version.
+composeMaterial3 = "1.11.0-alpha07"
+# material-icons-extended is frozen by JetBrains at 1.7.3 (icons no longer updated upstream).
+composeMaterialIcons = "1.7.3"
 
 # nav
 nav3Core = "1.1.2"
@@ -73,6 +77,12 @@ androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
+compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeMultiplatform" }
+compose-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "composeMaterialIcons" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "composeMaterial3" }
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
 coroutines-extensions = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "androidDriver" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
