@@ -29,6 +29,8 @@ docs/*
 !docs/archive/**
 !docs/sync/
 !docs/sync/**
+!docs/kmp/
+!docs/kmp/**
 !docs/PRODUCT_DISCOVERY.md
 !docs/PRODUCT_REQUIREMENTS.md
 !docs/ROADMAP_V1.md
