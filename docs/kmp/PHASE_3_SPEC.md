@@ -174,14 +174,31 @@ No VM, no Koin, no de-JVM, no hotspot — only `@Preview` param strip + import s
 Done inline (no writer/reviewer ceremony — risk ~nil). Nav host `Hh.kt` already
 imported it explicitly. Gate green.
 
-### Slice 7 — auth/sync UI + profile
-Move `auth/` screens (NOT `GoogleCredentialClient`/`ActivityGoogleSignInLauncher`
-— those stay android), `profile/`. Hoist `AuthScreen` open-email to a callback.
-`ic_google.xml` → `composeResources/drawable/`, use `Res.drawable.ic_google`.
-Inject `appVersion`/`isDebug` via Koin platform module (drop `BuildConfig` from
-commonMain). Move the remaining agnostic part of `hhModule` (feature wiring) — keep
-nav/platform bits in `:app`. Platform Koin modules (`DbModule`, `SupabaseModule`,
-`AuthModule`, `SyncModule`) STAY in `:app`. Gate green.
+### Slice 7 — auth + profile (SPLIT into 7a / 7b — coupling too complex for one review)
+
+#### Slice 7a — auth — ✅ DONE (`eed7778`, writer+reviewer)
+Moved `AuthEffect/Intent/UiState/ViewModel/Screen` + the `GoogleSignInLauncher`
+interface to commonMain. **Extracted** `GoogleSignInResult` (sealed) to commonMain;
+`GoogleCredentialClient` + `ActivityGoogleSignInLauncher` (split to its own file)
+STAY in `:app`, implement the common interface. Removed `android.util.Log` from the
+VM. Hoisted open-email intent → `onOpenEmailApp()` callback in nav host. `ic_google.xml`
+→ `composeResources/drawable/`, `Res.drawable.ic_google`. Swapped Android `BackHandler`
+→ CMP `androidx.compose.ui.backhandler.BackHandler` (+ `ui-backhandler` dep,
+`@OptIn(ExperimentalComposeUiApi)`). `authModule` stays in `:app`. **Reviewer caught a
+RED gate** the writer falsely reported green: co-moving `EmmSnackbar.kt` (holds
+`internal highlightQuoted`) orphaned `HighlightQuotedTest.kt` in `:app` (can't see a
+`shared-ui` internal). Fixed by moving the test to `commonTest` (junit→kotlin.test).
+**Lesson: co-moving a file with an `internal` symbol breaks its test if the test
+stays behind — move the test too.**
+
+#### Slice 7b — profile — pending
+Move `profile/` (`ProfileScreen/ViewModel/UiState/Intent/Effect`, `DeleteAccountDialog`,
+`PrivacyPolicyScreen`, `RetryPill`). Known work: `ProfileIntent.ExportToStream(java.io.OutputStream)`
+→ change contract to a `String` (symmetric with `ImportJson(String)`); nav host does the
+SAF stream IO. `BuildConfig.VERSION_NAME`/`DEBUG` → inject `appVersion`/`isDebug` via Koin
+platform module (no `BuildConfig` in commonMain). `java.text.SimpleDateFormat`/`Date`/`Locale`
+→ de-JVM. Move the remaining agnostic part of `hhModule`; keep nav/platform bits in `:app`.
+Platform Koin modules (`DbModule`, `SupabaseModule`, `AuthModule`, `SyncModule`) STAY in `:app`.
 
 ### Slice 8 — cleanup
 Move remaining agnostic `hh/shared/` atoms/utils not already pulled forward. Drop
