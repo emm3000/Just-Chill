@@ -122,5 +122,5 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
 | 6 | onboarding | `66df00e` | ✅ (inline — trivial, 1 file) |
 | 7a | auth | `eed7778` | ✅ (writer+reviewer — reviewer caught a RED gate the writer falsely reported green; fixed before ship) |
 | 7b | profile | `ecdd111` | ✅ (writer+reviewer) |
-| 8a | cleanup — agnostic atoms + orphan deletion + fonts drop | pending | ✅ (writer; hash recorded in follow-up docs commit) |
+| 8a | cleanup — agnostic atoms + orphan deletion + fonts drop | `9d7cfa4` | ✅ (writer+reviewer) |
 | 8b | cleanup — hhModule DI sweep | — | pending |
