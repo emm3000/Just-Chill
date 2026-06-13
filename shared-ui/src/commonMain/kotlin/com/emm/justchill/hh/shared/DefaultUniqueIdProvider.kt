@@ -1,10 +1,12 @@
+@file:OptIn(kotlin.uuid.ExperimentalUuidApi::class)
+
 package com.emm.justchill.hh.shared
 
 import com.emm.domain.shared.UniqueIdProvider
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 object DefaultUniqueIdProvider : UniqueIdProvider {
 
     override val id: String
-        get() = UUID.randomUUID().toString()
+        get() = Uuid.random().toString()
 }

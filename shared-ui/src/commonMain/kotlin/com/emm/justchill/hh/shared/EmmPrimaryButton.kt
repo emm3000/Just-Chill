@@ -10,12 +10,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun EmmPrimaryButton(text: String, onClick: () -> Unit, enabled: Boolean, modifier: Modifier = Modifier) {
@@ -42,7 +42,7 @@ fun EmmPrimaryButton(text: String, onClick: () -> Unit, enabled: Boolean, modifi
     }
 }
 
-@PreviewLightDark
+@Preview
 @Composable
 private fun EmmPrimaryButtonPreview() {
     EmmTheme {
@@ -55,7 +55,7 @@ private fun EmmPrimaryButtonPreview() {
     }
 }
 
-@PreviewLightDark
+@Preview
 @Composable
 private fun EmmPrimaryButton2Preview() {
     EmmTheme {

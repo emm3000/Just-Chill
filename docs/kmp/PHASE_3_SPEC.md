@@ -219,10 +219,29 @@ compiles for `iosSimulatorArm64` (no JVM leak). MockK VM tests stay in `:app` `t
 > Kept out of 7b to preserve the one-feature-per-commit, reviewable-slice discipline.
 Platform Koin modules (`DbModule`, `SupabaseModule`, `AuthModule`, `SyncModule`) STAY in `:app`.
 
-### Slice 8 — cleanup
-Move remaining agnostic `hh/shared/` atoms/utils not already pulled forward. Drop
-unused `ui-text-google-fonts`. Update detekt config + `CLAUDE.md` build commands if
-the `:app` task names changed. Gate green.
+### Slice 8 — cleanup (SPLIT into 8a / 8b — coupling too complex for one review, mirrors 7a/7b)
+
+#### Slice 8a — agnostic shared atoms + orphan deletion + fonts drop — ✅ DONE
+Moved the remaining agnostic `hh/shared/` atoms/utils to `shared-ui/commonMain`:
+`LabelTextField`, `UiStrings` (as-is), `EmmDropDown`, `EmmPrimaryButton`, `Filters`
+(`@PreviewLightDark`/`@Preview(showBackground=true)` → CMP param-less
+`org.jetbrains.compose.ui.tooling.preview.Preview`, preview functions kept), and
+`DefaultUniqueIdProvider` (de-JVM'd `java.util.UUID` → `kotlin.uuid.Uuid` with
+`@file:OptIn(ExperimentalUuidApi::class)`, matching the domain precedent). Its Koin
+binding (`factory { DefaultUniqueIdProvider } bind UniqueIdProvider::class`) STAYS in
+`:app` `HhModule` (the explicit `import com.emm.justchill.hh.shared.DefaultUniqueIdProvider`
+resolves cross-module). Deleted orphans `NowProvider`/`DefaultNowProvider` (zero usage,
+unbound). Dropped the unused `ui-text-google-fonts` dependency + its catalog `[versions]`
++ `[libraries]` entries. After 8a, `:app` `hh/shared/` holds only the nav-host/platform
+pieces: `Hh.kt`, `HhRoutes.kt`, `ObjectsRoutes.kt`, `SyncEventsHandler.kt`. Gate green
+(incl. iOS compile — zero `java.*` leak). No detekt/`CLAUDE.md` task-name changes.
+
+#### Slice 8b — hhModule DI sweep — pending
+Move the remaining agnostic part of `:app`'s `hhModule` (home/report/recurring/
+seetransactions wiring) into `commonMain` per-feature modules. Platform Koin modules
+(`coreModule`, `dbModule`, `supabaseModule`, `authModule`, `syncModule`) and `:data`
+repository bindings stay in `:app`. Update detekt config + `CLAUDE.md` build commands
+only if `:app`/`:shared-ui` task names change. Gate green.
 
 ## Cross-cutting guards
 - **Package paths unchanged**: keep `com.emm.justchill.*` package names when

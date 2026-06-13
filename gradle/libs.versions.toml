@@ -25,7 +25,6 @@ mockk = "1.14.11"
 navigationCompose = "2.9.8"
 navigationFragmentKtx = "2.9.8"
 navigationUiKtx = "2.9.8"
-uiTextGoogleFonts = "1.11.2"
 androidApplication = "9.2.1"
 credentialsVersion = "1.5.0"
 googleIdentityVersion = "1.1.1"
@@ -69,7 +68,6 @@ androidx-navigation-fragment-ktx = { module = "androidx.navigation:navigation-fr
 androidx-navigation-ui-ktx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "navigationUiKtx" }
 androidx-ui = { module = "androidx.compose.ui:ui" }
 androidx-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
-androidx-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 androidx-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
