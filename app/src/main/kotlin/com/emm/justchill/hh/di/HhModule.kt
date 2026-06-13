@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.di
 
 import com.emm.data.account.AccountLocalDataSource
+import com.emm.data.account.DefaultAccountRepository
 import com.emm.data.backup.DefaultBackupRepository
 import com.emm.data.category.CategoryLocalDataSource
 import com.emm.data.category.DefaultCategoryRepository
@@ -10,6 +11,7 @@ import com.emm.data.transaction.DefaultTransactionRepository
 import com.emm.data.transaction.DefaultTransactionStatsRepository
 import com.emm.data.transaction.TransactionLocalDataSource
 import com.emm.data.transaction.TransactionStatsLocalDataSource
+import com.emm.domain.account.AccountRepository
 import com.emm.domain.recurring.ConfirmRecurringMovementUseCase
 import com.emm.domain.recurring.CreateRecurringMovementUseCase
 import com.emm.domain.recurring.DeleteRecurringMovementUseCase
@@ -136,6 +138,10 @@ private fun Module.repositoriesProviders() {
 
     factoryOf(::DefaultCategoryRepository) {
         bind<CategoryRepository>()
+    }
+
+    factoryOf(::DefaultAccountRepository) {
+        bind<AccountRepository>()
     }
 
     factoryOf(::DefaultBackupRepository) { bind<BackupRepository>() }
