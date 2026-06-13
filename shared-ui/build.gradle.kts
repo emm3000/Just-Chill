@@ -64,6 +64,14 @@ kotlin {
             // compose.components.uiToolingPreview shipped the now-deprecated jetbrains namespace.
             implementation("org.jetbrains.compose.ui:ui-tooling-preview:${libs.versions.composeMultiplatform.get()}")
         }
+        // iOS-only wiring (Phase 5a). commonMain stays :domain-only per the established
+        // split rule; depending on :data is allowed HERE because the iOS Koin module
+        // binds the :data repository/datasource impls (provideSqlDriver/provideDb live in
+        // :data iosMain). :data is transitively exposed to the Shared framework, and it
+        // also brings the SQLDelight native driver onto the iOS classpath.
+        iosMain.dependencies {
+            implementation(projects.data)
+        }
         commonTest.dependencies {
             implementation(kotlin("test"))
         }

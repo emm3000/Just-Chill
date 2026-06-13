@@ -43,3 +43,10 @@ docs/*
 # Supabase
 supabase.properties
 supabase/.temp/
+
+# Xcode / iOS (iosApp is an Xcode project, not a Gradle module)
+iosApp/build/
+**/xcuserdata/
+*.xcuserstate
+iosApp/iosApp.xcodeproj/project.xcworkspace/xcuserdata/
+DerivedData/
