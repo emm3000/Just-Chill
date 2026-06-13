@@ -54,7 +54,7 @@ import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.findById
-import java.text.Normalizer
+import com.emm.justchill.hh.shared.stripSpanishAccents
 
 @Composable
 internal fun CategoryFilterSheet(
@@ -356,5 +356,4 @@ private fun SheetCategoryRow(item: CategorySheetItem, onClick: () -> Unit) {
     }
 }
 
-private fun String.normalizeForSearch(): String = Normalizer.normalize(this.trim().lowercase(), Normalizer.Form.NFD)
-    .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+private fun String.normalizeForSearch(): String = this.trim().lowercase().stripSpanishAccents()

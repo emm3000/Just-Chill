@@ -37,9 +37,7 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.PlexMonoFontFamily
-import java.text.DecimalFormat
-import java.text.NumberFormat
-import java.util.Locale
+import com.emm.justchill.hh.shared.NumberFormatEs
 import kotlin.math.abs
 import kotlin.math.roundToLong
 
@@ -75,13 +73,11 @@ fun AmountHero(
     val absValue = abs(value)
     val isNegative = value < 0
     val intPart = remember(absValue) {
-        val formatter = NumberFormat.getIntegerInstance(Locale("es", "PE"))
-        formatter.format(absValue.toLong())
+        NumberFormatEs.integer(absValue.toLong())
     }
     val decPart: String? = remember(absValue, withDecimals) {
         if (withDecimals) {
-            val formatter = DecimalFormat("00")
-            formatter.format(((absValue - absValue.toLong()) * 100).roundToLong())
+            ((absValue - absValue.toLong()) * 100).roundToLong().toString().padStart(2, '0')
         } else {
             null
         }

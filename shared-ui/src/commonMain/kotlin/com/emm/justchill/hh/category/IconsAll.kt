@@ -72,17 +72,12 @@ import androidx.compose.material.icons.rounded.Train
 import androidx.compose.material.icons.rounded.VolunteerActivism
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material.icons.rounded.Wifi
-import java.text.Normalizer
-import java.util.regex.Pattern
+import com.emm.justchill.hh.shared.stripSpanishAccents
 
-fun String.normalizeForSearch(): String {
-    val temp = Normalizer.normalize(this, Normalizer.Form.NFD)
-    val pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+")
-    return pattern.matcher(temp)
-        .replaceAll("")
+fun String.normalizeForSearch(): String =
+    stripSpanishAccents()
         .lowercase()
         .trim()
-}
 
 object AppIconCatalog {
 

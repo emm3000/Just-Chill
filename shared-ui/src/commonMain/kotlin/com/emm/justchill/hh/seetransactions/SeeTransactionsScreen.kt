@@ -53,7 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -66,14 +66,21 @@ import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.hh.category.findById
+import com.emm.justchill.hh.shared.SpanishDateFormat
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.components.TransactionRow
-import org.koin.androidx.compose.koinViewModel
-import java.time.LocalDate
-import java.util.UUID
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
+import kotlin.uuid.Uuid
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun SeeTransactionsScreen(onEditTransaction: (String) -> Unit, vm: SeeTransactionsViewModel = koinViewModel()) {
@@ -421,21 +428,6 @@ private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: ()
     }
 }
 
-private fun monthShortEs(month: java.time.Month): String = when (month) {
-    java.time.Month.JANUARY -> "enero"
-    java.time.Month.FEBRUARY -> "febrero"
-    java.time.Month.MARCH -> "marzo"
-    java.time.Month.APRIL -> "abril"
-    java.time.Month.MAY -> "mayo"
-    java.time.Month.JUNE -> "junio"
-    java.time.Month.JULY -> "julio"
-    java.time.Month.AUGUST -> "agosto"
-    java.time.Month.SEPTEMBER -> "septiembre"
-    java.time.Month.OCTOBER -> "octubre"
-    java.time.Month.NOVEMBER -> "noviembre"
-    java.time.Month.DECEMBER -> "diciembre"
-}
-
 @Composable
 private fun DayGroupedList(days: List<DayGroup>, onItemClick: (String) -> Unit) {
     val colors = LocalEmmColors.current
@@ -452,19 +444,17 @@ private fun DayGroupedList(days: List<DayGroup>, onItemClick: (String) -> Unit) 
         contentPadding = PaddingValues(bottom = 16.dp),
     ) {
         days.forEach { dayGroup ->
-            val today = LocalDate.now()
-            val yesterday = today.minusDays(1)
+            val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+            val yesterday = today.minus(1, DateTimeUnit.DAY)
             val dayLabel = when (dayGroup.date) {
                 today -> "HOY"
 
                 yesterday -> "AYER"
 
                 else ->
-                    dayGroup.date.dayOfWeek
-                        .getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.forLanguageTag("es"))
-                        .uppercase()
+                    SpanishDateFormat.fullWeekday(dayGroup.date.dayOfWeek.isoDayNumber).uppercase()
             }
-            val dateCaption = "${dayGroup.date.dayOfMonth} ${monthShortEs(dayGroup.date.month)}"
+            val dateCaption = "${dayGroup.date.dayOfMonth} ${SpanishDateFormat.fullMonth(dayGroup.date.month)}"
 
             item(key = "header-${dayGroup.date}") {
                 Row(
@@ -629,7 +619,7 @@ private fun EmptyFilteredNoResults(
     }
 }
 
-@PreviewLightDark
+@Preview
 @Composable
 private fun SeeTransactionsEmptyPreview() {
     EmmTheme {
@@ -641,14 +631,14 @@ private fun SeeTransactionsEmptyPreview() {
     }
 }
 
-@PreviewLightDark
+@Preview
 @Composable
 private fun SeeTransactionsPopulatedPreview() {
     EmmTheme {
         val txs: List<TransactionUi> = remember {
             listOf(
                 TransactionUi(
-                    transactionId = UUID.randomUUID().toString(),
+                    transactionId = Uuid.random().toString(),
                     type = TransactionType.Spend,
                     amount = formatExpense("84.20"),
                     description = "Mercado del lunes",
@@ -658,7 +648,7 @@ private fun SeeTransactionsPopulatedPreview() {
                     category = CategoryUi(Icons.Rounded.Category, findById("green")),
                 ),
                 TransactionUi(
-                    transactionId = UUID.randomUUID().toString(),
+                    transactionId = Uuid.random().toString(),
                     type = TransactionType.Income,
                     amount = formatIncome("3,200.00"),
                     description = "Sueldo",
@@ -677,7 +667,7 @@ private fun SeeTransactionsPopulatedPreview() {
         )
         SeeTransactionsContent(
             state = SeeTransactionsUiState(
-                days = listOf(DayGroup(LocalDate.now(), txs)),
+                days = listOf(DayGroup(previewToday(), txs)),
                 topChips = chips,
                 overflowCount = 15,
                 activeCategory = ActiveCategoryInfo("4", "Ocio"),
@@ -688,7 +678,7 @@ private fun SeeTransactionsPopulatedPreview() {
     }
 }
 
-@PreviewLightDark
+@Preview
 @Composable
 private fun SeeTransactionsNoResultsPreview() {
     EmmTheme {
@@ -703,3 +693,6 @@ private fun SeeTransactionsNoResultsPreview() {
         )
     }
 }
+
+private fun previewToday(): LocalDate =
+    Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date

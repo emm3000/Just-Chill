@@ -26,7 +26,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 
 /** Shared height for full-width CTA atoms (StickyCTA and FilledCta). */
-internal val CtaHeight = 52.dp
+val CtaHeight = 52.dp
 
 /** Interaction state for full-width CTA atoms. */
 enum class CtaInteraction {

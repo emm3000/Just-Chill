@@ -38,7 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -65,8 +66,10 @@ fun CategoryPickerSheet(
 ) {
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val configuration = LocalConfiguration.current
-    val maxListHeight = (configuration.screenHeightDp * LIST_MAX_HEIGHT_FRACTION).dp
+    val windowInfo = LocalWindowInfo.current
+    val density = LocalDensity.current
+    val screenHeightDp = with(density) { windowInfo.containerSize.height.toDp() }
+    val maxListHeight = screenHeightDp * LIST_MAX_HEIGHT_FRACTION
 
     var query by rememberSaveable { mutableStateOf("") }
     val filtered = remember(categories, query) {

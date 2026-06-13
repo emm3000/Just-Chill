@@ -41,15 +41,19 @@ import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
-import java.time.DayOfWeek
-import java.time.Instant
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-
-private val ES = Locale.forLanguageTag("es")
+import com.emm.justchill.hh.shared.SpanishDateFormat
+import com.emm.justchill.hh.shared.titlecaseFirstChar
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 private data class Shortcut(val label: String, val millis: Long)
 
@@ -68,26 +72,27 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    val today: LocalDate = LocalDate.now()
+    val zone = TimeZone.currentSystemDefault()
+    val today: LocalDate = Clock.System.now().toLocalDateTime(zone).date
 
     val initialDate: LocalDate = remember(currentMillis) {
-        Instant.ofEpochMilli(currentMillis).atZone(ZoneId.systemDefault()).toLocalDate()
+        Instant.fromEpochMilliseconds(currentMillis).toLocalDateTime(zone).date
     }
     var selectedDate: LocalDate by remember { mutableStateOf(initialDate) }
-    var displayedMonth: YearMonth by remember { mutableStateOf(YearMonth.from(initialDate)) }
+    // First day of the currently displayed month.
+    var displayedMonth: LocalDate by remember { mutableStateOf(initialDate.firstOfMonth()) }
 
     val shortcuts: List<Shortcut> = remember(today) {
-        val zone = ZoneId.systemDefault()
         listOf(
-            Shortcut("Hoy", today.atStartOfDay(zone).toInstant().toEpochMilli()),
-            Shortcut("Ayer", today.minusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()),
+            Shortcut("Hoy", today.atStartOfDayIn(zone).toEpochMilliseconds()),
+            Shortcut("Ayer", today.minus(1, DateTimeUnit.DAY).atStartOfDayIn(zone).toEpochMilliseconds()),
             Shortcut(
                 "Esta semana",
-                today.with(DayOfWeek.MONDAY).atStartOfDay(zone).toInstant().toEpochMilli(),
+                today.startOfWeekMonday().atStartOfDayIn(zone).toEpochMilliseconds(),
             ),
             Shortcut(
                 "Este mes",
-                today.withDayOfMonth(1).atStartOfDay(zone).toInstant().toEpochMilli(),
+                today.firstOfMonth().atStartOfDayIn(zone).toEpochMilliseconds(),
             ),
         )
     }
@@ -165,12 +170,11 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
         ) {
             IconBtn(
                 icon = Icons.Outlined.ChevronLeft,
-                onClick = { displayedMonth = displayedMonth.minusMonths(1) },
+                onClick = { displayedMonth = displayedMonth.minus(1, DateTimeUnit.MONTH) },
                 modifier = Modifier.size(36.dp),
             )
             val monthLabel = remember(displayedMonth) {
-                val raw = displayedMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", ES))
-                raw.replaceFirstChar { it.titlecase(ES) }
+                SpanishDateFormat.monthYear(displayedMonth.year, displayedMonth.month).titlecaseFirstChar()
             }
             Text(
                 text = monthLabel,
@@ -182,7 +186,7 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
             )
             IconBtn(
                 icon = Icons.Outlined.ChevronRight,
-                onClick = { displayedMonth = displayedMonth.plusMonths(1) },
+                onClick = { displayedMonth = displayedMonth.plus(1, DateTimeUnit.MONTH) },
                 modifier = Modifier.size(36.dp),
             )
         }
@@ -253,8 +257,7 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
 
         val confirmShape = RoundedCornerShape(12.dp)
         val confirmLabel = remember(selectedDate) {
-            val formatter = DateTimeFormatter.ofPattern("d MMMM", ES)
-            selectedDate.format(formatter)
+            SpanishDateFormat.dayFullMonth(selectedDate)
         }
 
         Row(
@@ -265,7 +268,7 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
                 .clip(confirmShape)
                 .background(colors.textPrimary)
                 .clickable {
-                    val millis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    val millis = selectedDate.atStartOfDayIn(zone).toEpochMilliseconds()
                     onConfirm(millis)
                     onDismiss()
                 },
@@ -286,12 +289,26 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
 
 private const val CALENDAR_GRID_CELLS = 42
 
-private fun YearMonth.daysGrid(): List<LocalDate?> {
-    val firstDay = atDay(1)
-    val offset = (firstDay.dayOfWeek.value - DayOfWeek.MONDAY.value + 7) % 7
+private fun LocalDate.firstOfMonth(): LocalDate = LocalDate(year, month, 1)
+
+/** Monday of the ISO week containing this date. */
+private fun LocalDate.startOfWeekMonday(): LocalDate {
+    val offset = (dayOfWeek.isoDayNumber - DayOfWeek.MONDAY.isoDayNumber + 7) % 7
+    return minus(offset, DateTimeUnit.DAY)
+}
+
+private fun LocalDate.lengthOfMonth(): Int {
+    val firstOfMonth = firstOfMonth()
+    val firstOfNextMonth = firstOfMonth.plus(1, DateTimeUnit.MONTH)
+    return firstOfNextMonth.minus(1, DateTimeUnit.DAY).dayOfMonth
+}
+
+/** [this] must be the first day of the displayed month. */
+private fun LocalDate.daysGrid(): List<LocalDate?> {
+    val offset = (dayOfWeek.isoDayNumber - DayOfWeek.MONDAY.isoDayNumber + 7) % 7
     val length = lengthOfMonth()
     return List(CALENDAR_GRID_CELLS) { index ->
         val dayNumber = index - offset + 1
-        if (dayNumber in 1..length) atDay(dayNumber) else null
+        if (dayNumber in 1..length) LocalDate(year, month, dayNumber) else null
     }
 }

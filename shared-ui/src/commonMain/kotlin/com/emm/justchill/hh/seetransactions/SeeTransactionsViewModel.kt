@@ -20,10 +20,10 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.util.Locale
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
 
 private const val SEARCH_DEBOUNCE_MS = 250L
 
@@ -157,7 +157,7 @@ class SeeTransactionsViewModel(
         }
 
         val sheetItems = categories
-            .sortedBy { it.name.lowercase(Locale.forLanguageTag("es")) }
+            .sortedBy { it.name.lowercase() }
             .map { cat ->
                 CategorySheetItem(
                     id = cat.categoryId.value,
@@ -192,7 +192,7 @@ private fun mapToDayGroup(transactionGroups: Map<LocalDate, List<TransactionWith
 
 private fun groupByDate(transactions: List<TransactionWithCategory>): Map<LocalDate, List<TransactionWithCategory>> =
     transactions.groupBy { transaction ->
-        Instant.ofEpochMilli(transaction.date)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate()
+        Instant.fromEpochMilliseconds(transaction.date)
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .date
     }
