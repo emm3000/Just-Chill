@@ -26,7 +26,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.invisibleToUser
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,7 +52,7 @@ private val BAR_RADIUS = 4.dp
  * NOT green/red; these are category palette colors signifying "entró"/"salió".
  *
  * Each month group has a contentDescription for a11y.
- * Bars themselves are invisibleToUser.
+ * Bars themselves are hidden from accessibility.
  */
 @Composable
 fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier) {
@@ -85,7 +85,7 @@ fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier)
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(CHART_HEIGHT)
-                    .semantics { invisibleToUser() },
+                    .semantics { hideFromAccessibility() },
             ) {
                 val chartWidthPx = size.width
                 val chartHeightPx = size.height
