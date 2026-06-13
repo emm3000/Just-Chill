@@ -38,6 +38,10 @@ composeRulesDetekt = "0.6.0"
 supabaseBom = "3.6.0"
 ktorClientOkhttp = "3.5.0"
 
+# KMP / Compose Multiplatform (declared in phase 0, applied per-module in later phases).
+# Compose MP 1.11.1 is the release built against Kotlin 2.4.0 (see docs/kmp/BASELINE.md).
+composeMultiplatform = "1.11.1"
+
 # nav
 nav3Core = "1.1.2"
 lifecycleViewmodelNav3 = "2.10.0"
@@ -93,6 +97,10 @@ supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "s
 supabase-auth-kt = { module = "io.github.jan-tennert.supabase:auth-kt" }
 supabase-postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorClientOkhttp" }
+# iOS engine — pinned to the same Ktor version as the OkHttp (Android) engine.
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktorClientOkhttp" }
+# iOS SQLDelight driver — same SQLDelight version as the Android driver.
+sqldelight-native-driver = { module = "app.cash.sqldelight:native-driver", version.ref = "androidDriver" }
 
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentialsVersion" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentialsVersion" }
@@ -112,3 +120,9 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
 android-library = { id = "com.android.library", version.ref = "androidApplication" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
+
+# KMP / Compose Multiplatform plugins (declared in phase 0, applied per-module later).
+# composeCompiler reuses the existing `kotlin-compose` alias (org.jetbrains.kotlin.plugin.compose).
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlinVersion" }
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "androidApplication" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
