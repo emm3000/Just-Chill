@@ -168,9 +168,11 @@ an `onShareText(String)` callback wired in the nav host (`Hh.kt`). De-JVM'd
 brute-forced 100M cent values, zero mismatches). `@PreviewLightDark`→`@Preview` (15).
 Co-moved `core/ui/atoms/{MonthSelector,MoneyInline,Segmented}`, `hh/shared/MonthLabels`.
 
-### Slice 6 — onboarding
-Move `onboarding/` (was missing from the original slice list). Check for platform
-hotspots (intents, BuildConfig) and hoist to callbacks. Gate green.
+### Slice 6 — onboarding — ✅ DONE (`13473d0`)
+Moved `onboarding/ManifestoScreen.kt` (single stateless callback-driven screen).
+No VM, no Koin, no de-JVM, no hotspot — only `@Preview` param strip + import swap.
+Done inline (no writer/reviewer ceremony — risk ~nil). Nav host `Hh.kt` already
+imported it explicitly. Gate green.
 
 ### Slice 7 — auth/sync UI + profile
 Move `auth/` screens (NOT `GoogleCredentialClient`/`ActivityGoogleSignInLauncher`

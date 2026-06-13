@@ -28,7 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
@@ -152,7 +152,7 @@ private fun StartButton(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 700)
+@Preview
 @Composable
 private fun ManifestoScreenFirstLaunchPreview() {
     EmmTheme {
@@ -160,7 +160,7 @@ private fun ManifestoScreenFirstLaunchPreview() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 560)
+@Preview
 @Composable
 private fun ManifestoScreenSmallScreenPreview() {
     EmmTheme {
@@ -168,7 +168,7 @@ private fun ManifestoScreenSmallScreenPreview() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 700)
+@Preview
 @Composable
 private fun ManifestoScreenRevisitPreview() {
     EmmTheme {
