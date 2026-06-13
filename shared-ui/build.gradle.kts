@@ -74,3 +74,10 @@ compose.resources {
     publicResClass = true
     packageOfResClass = "com.emm.justchill.shared.generated.resources"
 }
+
+dependencies {
+    // Enables @Preview RENDERING in the IDE (not just compilation). Required per the CMP
+    // preview docs; AGP 9.0 + the android.kotlin.multiplatform.library plugin uses the
+    // androidRuntimeClasspath configuration (debugImplementation is the AGP 8.x form).
+    androidRuntimeClasspath("org.jetbrains.compose.ui:ui-tooling:${libs.versions.composeMultiplatform.get()}")
+}
