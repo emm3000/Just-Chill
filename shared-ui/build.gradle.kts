@@ -11,6 +11,7 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.addAll(
             "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
             "-opt-in=kotlinx.coroutines.FlowPreview",
         )
@@ -54,6 +55,9 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.materialIconsExtended)
             implementation(compose.ui)
+            // Multiplatform BackHandler (androidx.compose.ui.backhandler) — not pulled in
+            // transitively by compose.ui; needed by AuthScreen's CheckEmail back handling.
+            implementation("org.jetbrains.compose.ui:ui-backhandler:${libs.versions.composeMultiplatform.get()}")
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
         }

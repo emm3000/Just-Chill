@@ -14,17 +14,10 @@ import java.util.UUID
 
 class GoogleCredentialClient {
 
-    sealed interface Result {
-        data class Success(val idToken: String, val rawNonce: String) : Result
-        data object Cancelled : Result
-        data object NoCredentials : Result
-        data class Failure(val cause: Throwable) : Result
-    }
-
     // Intentional broad catch: this is the adapter boundary for the Credential Manager —
-    // any unexpected failure maps to Result.Failure for the ViewModel to translate.
+    // any unexpected failure maps to GoogleSignInResult.Failure for the ViewModel to translate.
     @Suppress("TooGenericExceptionCaught")
-    suspend fun signIn(activityContext: Context, serverClientId: String): Result = try {
+    suspend fun signIn(activityContext: Context, serverClientId: String): GoogleSignInResult = try {
         val rawNonce = UUID.randomUUID().toString()
         val hashedNonce = sha256Hex(rawNonce)
 
@@ -46,18 +39,18 @@ class GoogleCredentialClient {
             credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
         ) {
             val googleCredential = GoogleIdTokenCredential.createFrom(credential.data)
-            Result.Success(idToken = googleCredential.idToken, rawNonce = rawNonce)
+            GoogleSignInResult.Success(idToken = googleCredential.idToken, rawNonce = rawNonce)
         } else {
-            Result.Failure(IllegalStateException("Unexpected credential type: ${credential.type}"))
+            GoogleSignInResult.Failure(IllegalStateException("Unexpected credential type: ${credential.type}"))
         }
     } catch (_: GetCredentialCancellationException) {
-        Result.Cancelled
+        GoogleSignInResult.Cancelled
     } catch (_: NoCredentialException) {
-        Result.NoCredentials
+        GoogleSignInResult.NoCredentials
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Result.Failure(e)
+        GoogleSignInResult.Failure(e)
     }
 
     private fun sha256Hex(input: String): String {

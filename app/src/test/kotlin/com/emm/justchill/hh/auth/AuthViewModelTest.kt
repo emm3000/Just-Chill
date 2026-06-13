@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.auth
 
-import android.util.Log
 import com.emm.domain.auth.AuthUser
 import com.emm.domain.auth.ResendConfirmationEmailUseCase
 import com.emm.domain.auth.SignInUseCase
@@ -10,16 +9,13 @@ import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -39,14 +35,6 @@ class AuthViewModelTest {
     private val signInWithGoogle = mockk<SignInWithGoogleUseCase>(relaxed = true)
     private val resendConfirmationEmail = mockk<ResendConfirmationEmailUseCase>(relaxed = true)
     private val googleSignInLauncher = mockk<GoogleSignInLauncher>(relaxed = true)
-
-    @Before
-    fun setup() {
-        // android.util.Log is not available in JVM unit tests; stub it out.
-        mockkStatic(Log::class)
-        every { Log.w(any(), any<String>()) } returns 0
-        every { Log.w(any(), any<String>(), any()) } returns 0
-    }
 
     private fun buildViewModel(googleClientId: String = "test-client-id") = AuthViewModel(
         signIn = signIn,
@@ -275,7 +263,7 @@ class AuthViewModelTest {
         testDispatcher,
     ) {
         coEvery { googleSignInLauncher.signIn(any()) } returns
-            GoogleCredentialClient.Result.Success(idToken = "token", rawNonce = "nonce")
+            GoogleSignInResult.Success(idToken = "token", rawNonce = "nonce")
         coEvery { signInWithGoogle.invoke(any(), any()) } returns AuthUser("uid1", "g@g.com")
 
         val vm = buildViewModel()
@@ -295,7 +283,7 @@ class AuthViewModelTest {
 
     @Test
     fun `Google Cancelled produces no effect and submitting is None`() = runTest(testDispatcher) {
-        coEvery { googleSignInLauncher.signIn(any()) } returns GoogleCredentialClient.Result.Cancelled
+        coEvery { googleSignInLauncher.signIn(any()) } returns GoogleSignInResult.Cancelled
 
         val vm = buildViewModel()
         val effects = mutableListOf<AuthEffect>()
@@ -313,7 +301,7 @@ class AuthViewModelTest {
 
     @Test
     fun `Google NoCredentials emits Notify GoogleAccountUnavailable`() = runTest(testDispatcher) {
-        coEvery { googleSignInLauncher.signIn(any()) } returns GoogleCredentialClient.Result.NoCredentials
+        coEvery { googleSignInLauncher.signIn(any()) } returns GoogleSignInResult.NoCredentials
 
         val vm = buildViewModel()
         val effects = mutableListOf<AuthEffect>()
@@ -332,7 +320,7 @@ class AuthViewModelTest {
     @Test
     fun `Google Failure emits Notify GoogleSignInFailed`() = runTest(testDispatcher) {
         coEvery { googleSignInLauncher.signIn(any()) } returns
-            GoogleCredentialClient.Result.Failure(RuntimeException("crash"))
+            GoogleSignInResult.Failure(RuntimeException("crash"))
 
         val vm = buildViewModel()
         val effects = mutableListOf<AuthEffect>()
@@ -368,7 +356,7 @@ class AuthViewModelTest {
     @Test
     fun `GoogleSignInClicked while already submitting calls launcher exactly once`() = runTest(testDispatcher) {
         // Make the first signIn call suspend until we advance
-        coEvery { googleSignInLauncher.signIn(any()) } returns GoogleCredentialClient.Result.Cancelled
+        coEvery { googleSignInLauncher.signIn(any()) } returns GoogleSignInResult.Cancelled
 
         val vm = buildViewModel()
 

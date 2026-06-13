@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.auth
 
-import android.util.Log
 import com.emm.domain.auth.ResendConfirmationEmailUseCase
 import com.emm.domain.auth.SignInUseCase
 import com.emm.domain.auth.SignInWithGoogleUseCase
@@ -52,26 +51,23 @@ class AuthViewModel(
 
     private fun submitWithGoogle() = launchSubmitting(via = Submitting.Google) {
         if (googleServerClientId.isBlank()) {
-            Log.w(TAG, "GOOGLE_WEB_CLIENT_ID not configured")
             sendEffect(AuthEffect.Notify(AuthMessage.GoogleSignInFailed))
             return@launchSubmitting
         }
         when (val result = googleSignInLauncher.signIn(googleServerClientId)) {
-            is GoogleCredentialClient.Result.Success -> {
+            is GoogleSignInResult.Success -> {
                 signInWithGoogle(result.idToken, result.rawNonce)
                 sendEffect(AuthEffect.NavigateBack)
             }
 
             // User closed the sheet — silent per design.
-            GoogleCredentialClient.Result.Cancelled -> Unit
+            GoogleSignInResult.Cancelled -> Unit
 
-            GoogleCredentialClient.Result.NoCredentials ->
+            GoogleSignInResult.NoCredentials ->
                 sendEffect(AuthEffect.Notify(AuthMessage.GoogleAccountUnavailable))
 
-            is GoogleCredentialClient.Result.Failure -> {
-                Log.w(TAG, "Google credential flow failed", result.cause)
+            is GoogleSignInResult.Failure ->
                 sendEffect(AuthEffect.Notify(AuthMessage.GoogleSignInFailed))
-            }
         }
     }
 
@@ -137,7 +133,6 @@ class AuthViewModel(
         updateState { if (this is AuthUiState.CheckEmail) reducer() else this }
 
     private companion object {
-        const val TAG = "AuthViewModel"
         const val RESEND_COOLDOWN_MS = 30_000L
     }
 }

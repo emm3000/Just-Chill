@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.shared
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -189,9 +190,25 @@ fun Hh(modifier: Modifier = Modifier) {
                 }
 
                 entry<AuthRoute> {
+                    val context = LocalContext.current
                     AuthScreen(
                         onBack = { backStack.removeLastOrNull() },
                         snackbarHostState = snackbarHostState,
+                        onOpenEmailApp = {
+                            try {
+                                val intent = Intent(Intent.ACTION_MAIN)
+                                    .addCategory(Intent.CATEGORY_APP_EMAIL)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                context.startActivity(intent)
+                            } catch (_: ActivityNotFoundException) {
+                                rootScope.launch {
+                                    snackbarHostState.showEmmSnackbar(
+                                        message = "No encontramos una app de correo en tu teléfono.",
+                                        tone = EmmSnackbarTone.Error,
+                                    )
+                                }
+                            }
+                        },
                     )
                 }
 

@@ -1,8 +1,5 @@
 package com.emm.justchill.hh.auth
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -45,20 +42,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.emm.justchill.R
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
@@ -76,13 +70,22 @@ import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.OutlinedCta
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
-import org.koin.androidx.compose.koinViewModel
+import com.emm.justchill.shared.generated.resources.Res
+import com.emm.justchill.shared.generated.resources.ic_google
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun AuthScreen(onBack: () -> Unit, snackbarHostState: SnackbarHostState, vm: AuthViewModel = koinViewModel()) {
+fun AuthScreen(
+    onBack: () -> Unit,
+    snackbarHostState: SnackbarHostState,
+    onOpenEmailApp: () -> Unit,
+    vm: AuthViewModel = koinViewModel(),
+) {
     val state by vm.state.collectAsStateWithLifecycle()
     val currentOnBack by rememberUpdatedState(onBack)
-    val context = LocalContext.current
+    val currentOnOpenEmailApp by rememberUpdatedState(onOpenEmailApp)
 
     BackHandler(enabled = state is AuthUiState.CheckEmail) { vm.onIntent(AuthIntent.Back) }
 
@@ -91,19 +94,7 @@ fun AuthScreen(onBack: () -> Unit, snackbarHostState: SnackbarHostState, vm: Aut
             when (effect) {
                 AuthEffect.NavigateBack -> currentOnBack()
 
-                AuthEffect.OpenEmailApp -> {
-                    try {
-                        val intent = Intent(Intent.ACTION_MAIN)
-                            .addCategory(Intent.CATEGORY_APP_EMAIL)
-                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        context.startActivity(intent)
-                    } catch (_: ActivityNotFoundException) {
-                        snackbarHostState.showEmmSnackbar(
-                            message = "No encontramos una app de correo en tu teléfono.",
-                            tone = EmmSnackbarTone.Error,
-                        )
-                    }
-                }
+                AuthEffect.OpenEmailApp -> currentOnOpenEmailApp()
 
                 is AuthEffect.ShowError -> snackbarHostState.showEmmSnackbar(
                     message = effect.error.toUserMessage(),
@@ -226,7 +217,7 @@ private fun AuthFormStep(state: AuthUiState.Form, onIntent: (AuthIntent) -> Unit
                     // Image, not Icon — the official multicolor G must never be tinted
                     // (Google sign-in branding guidelines).
                     Image(
-                        painter = painterResource(R.drawable.ic_google),
+                        painter = painterResource(Res.drawable.ic_google),
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
                     )
@@ -514,7 +505,7 @@ private fun AuthFieldInput(
 
 // --- Previews ---
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 800)
+@Preview
 @Composable
 private fun AuthFormSignInPreview() {
     EmmTheme {
@@ -530,7 +521,7 @@ private fun AuthFormSignInPreview() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 800)
+@Preview
 @Composable
 private fun AuthFormSignUpPreview() {
     EmmTheme {
@@ -546,7 +537,7 @@ private fun AuthFormSignUpPreview() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 800)
+@Preview
 @Composable
 private fun AuthFormSignInLoadingPreview() {
     EmmTheme {
@@ -562,7 +553,7 @@ private fun AuthFormSignInLoadingPreview() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 700)
+@Preview
 @Composable
 private fun AuthCheckEmailPreview() {
     EmmTheme {
