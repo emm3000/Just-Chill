@@ -7,7 +7,6 @@ import com.emm.domain.home.GetHomeDataUseCase
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
-import kotlin.time.Clock
 
 val dbModule = module {
 
@@ -15,6 +14,5 @@ val dbModule = module {
     single { provideDb(get()) }
     single { provideTransactionQueries(get()) }
 
-    single<Clock> { Clock.System }
     factoryOf(::GetHomeDataUseCase)
 }
