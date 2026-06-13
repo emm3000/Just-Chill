@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.shared
 
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.number
 
@@ -43,6 +44,16 @@ internal object SpanishDateFormat {
 
     /** "d MMM" — e.g. "13 jun". */
     fun dayShortMonth(date: LocalDate): String = "${date.dayOfMonth} ${shortMonth(date.month)}"
+
+    /**
+     * "d MMM, HH:mm" — e.g. "13 sept, 09:05". Non-padded day, short month, 24-hour
+     * zero-padded hour and minute. Matches the JVM `SimpleDateFormat("d MMM, HH:mm", es)` output.
+     */
+    fun dayShortMonthTime(dateTime: LocalDateTime): String {
+        val hour = dateTime.hour.toString().padStart(2, '0')
+        val minute = dateTime.minute.toString().padStart(2, '0')
+        return "${dateTime.dayOfMonth} ${shortMonth(dateTime.month)}, $hour:$minute"
+    }
 
     /** "MMMM dd" — e.g. "junio 13" (zero-padded day). */
     fun monthDayPadded(date: LocalDate): String {

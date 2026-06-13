@@ -4,6 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Per-module guidance lives in `domain/CLAUDE.md`, `data/CLAUDE.md`, and `app/CLAUDE.md`; Claude loads each one automatically when working in that module.
 
+> **KMP / Compose Multiplatform migration is ACTIVE.** Before executing ANY migration slice
+> (moving a feature to `shared-ui` commonMain), READ `docs/kmp/ORCHESTRATION.md` — it is the
+> canonical, non-negotiable workflow. The main thread (Opus) only orchestrates: it delegates
+> the writer AND the reviewer as separate **Opus 4.8 sub-agents** and never writes feature code
+> inline. Never delegate KMP work to Sonnet. Current state + slice ledger live in that doc and
+> `docs/kmp/PHASE_3_SPEC.md`.
+
 ## Build & Development Commands
 
 ```bash

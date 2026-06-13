@@ -62,6 +62,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.emm.justchill.BuildConfig
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.sync.SyncOrchestrator
@@ -277,16 +278,30 @@ fun Hh(modifier: Modifier = Modifier) {
                 entry<ProfileRoute> {
                     val vm: ProfileViewModel = koinViewModel()
                     val context = LocalContext.current
+                    val scope = rememberCoroutineScope()
                     var pendingImportJson by remember { mutableStateOf<String?>(null) }
+                    // Holds the backup JSON produced by the VM until the SAF picker returns a destination.
+                    var pendingExportJson by remember { mutableStateOf<String?>(null) }
 
                     val exportLauncher = rememberLauncherForActivityResult(
                         contract = ActivityResultContracts.CreateDocument("application/json"),
                     ) { uri ->
-                        if (uri != null) {
-                            // Raw stream, not wrapped in `use` — the VM closes it inside its coroutine.
-                            // Closing here would shut the stream before the async write runs.
-                            val stream = context.contentResolver.openOutputStream(uri)
-                            if (stream != null) vm.onIntent(ProfileIntent.ExportToStream(stream))
+                        val json = pendingExportJson
+                        pendingExportJson = null
+                        if (uri != null && json != null) {
+                            // Platform owns the SAF write; the VM only generated the JSON (commonMain, no IO).
+                            val ok = runCatching {
+                                context.contentResolver.openOutputStream(uri)?.use { stream ->
+                                    stream.bufferedWriter().use { it.write(json) }
+                                } != null
+                            }.getOrDefault(false)
+                            val message = if (ok) ProfileMessage.ExportDone else ProfileMessage.ExportFailed
+                            scope.launch {
+                                snackbarHostState.showEmmSnackbar(
+                                    message = message.toText(),
+                                    tone = if (ok) EmmSnackbarTone.Success else EmmSnackbarTone.Error,
+                                )
+                            }
                         }
                     }
 
@@ -308,6 +323,12 @@ fun Hh(modifier: Modifier = Modifier) {
                                     message = effect.error.toUserMessage(),
                                     tone = EmmSnackbarTone.Error,
                                 )
+
+                                is ProfileEffect.ExportReady -> {
+                                    // VM finished generating the backup; stash it and open the SAF picker.
+                                    pendingExportJson = effect.json
+                                    exportLauncher.launch(suggestedExportFilename())
+                                }
 
                                 is ProfileEffect.Notify -> snackbarHostState.showEmmSnackbar(
                                     message = effect.message.toText(),
@@ -353,11 +374,13 @@ fun Hh(modifier: Modifier = Modifier) {
                     val profileState by vm.state.collectAsStateWithLifecycle()
                     ProfileScreen(
                         state = profileState,
+                        appVersion = BuildConfig.VERSION_NAME,
+                        isDebug = BuildConfig.DEBUG,
                         onCategoriesClick = { backStack.add(CategoriesListRoute) },
                         onAccountsClick = { backStack.add(AccountsRoute) },
                         onRecurringClick = { backStack.add(RecurringMovementsRoute) },
                         onAboutClick = { backStack.add(ManifestoRoute(isRevisit = true)) },
-                        onExportClick = { exportLauncher.launch(suggestedExportFilename()) },
+                        onExportClick = { vm.onIntent(ProfileIntent.ExportRequested) },
                         onImportClick = { importLauncher.launch(arrayOf("application/json")) },
                         onPrivacyClick = { backStack.add(PrivacyPolicyRoute) },
                         onSignInClick = { backStack.add(AuthRoute) },

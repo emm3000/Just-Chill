@@ -11,7 +11,7 @@ import com.emm.domain.shared.backup.ExportDataUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.MainDispatcherRule
-import com.emm.justchill.core.sync.SyncOrchestrator
+import com.emm.justchill.core.sync.SyncController
 import com.emm.justchill.core.sync.SyncStatus
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -27,7 +27,6 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
-import java.io.ByteArrayOutputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
@@ -43,9 +42,8 @@ class ProfileViewModelTest {
     private val importData = mockk<ImportDataUseCase>(relaxed = true)
     private val signOut = mockk<SignOutUseCase>(relaxed = true)
     private val deleteUserAccount = mockk<DeleteUserAccountUseCase>(relaxed = true)
-    private val syncOrchestrator = mockk<SyncOrchestrator>(relaxed = true) {
+    private val syncController = mockk<SyncController>(relaxed = true) {
         every { status } returns MutableStateFlow(SyncStatus())
-        every { events } returns MutableSharedFlow()
     }
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns flowOf(emptyList())
@@ -65,10 +63,11 @@ class ProfileViewModelTest {
             importData = importData,
             signOut = signOut,
             deleteUserAccount = deleteUserAccount,
-            syncOrchestrator = syncOrchestrator,
+            syncController = syncController,
             categoryRepository = categoryRepository,
             accountRepository = accountRepository,
             observeSession = observeSession,
+            appVersion = "1.0.0",
         )
     }
 
@@ -147,7 +146,7 @@ class ProfileViewModelTest {
     // ── Export tests ────────────────────────────────────────────────────────
 
     @Test
-    fun `ExportToStream happy path writes json to stream and emits ExportDone`() = runTest(testDispatcher) {
+    fun `ExportRequested happy path emits ExportReady with the generated json`() = runTest(testDispatcher) {
         val expectedJson = """{"version":"1.0","data":[]}"""
         coEvery { exportData(any(), any()) } returns expectedJson
 
@@ -155,22 +154,30 @@ class ProfileViewModelTest {
         val effects = mutableListOf<ProfileEffect>()
         val job = launch { vm.effect.collect { effects.add(it) } }
 
-        val outputStream = ByteArrayOutputStream()
-        vm.onIntent(ProfileIntent.ExportToStream(outputStream))
+        vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle()
 
-        assertEquals(expectedJson, outputStream.toString(Charsets.UTF_8.name()))
-        assertTrue(
-            effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.ExportDone },
-            "Expected ExportDone notify not found in $effects",
-        )
+        val exportReady = effects.filterIsInstance<ProfileEffect.ExportReady>().firstOrNull()
+        assertEquals(expectedJson, exportReady?.json, "Expected ExportReady($expectedJson) not found in $effects")
         assertEquals(ProfileOp.None, vm.state.value.op)
 
         job.cancel()
     }
 
     @Test
-    fun `ExportToStream on DatabaseError emits ShowError effect`() = runTest(testDispatcher) {
+    fun `ExportRequested stamps the injected app version into the backup`() = runTest(testDispatcher) {
+        coEvery { exportData(any(), any()) } returns "{}"
+
+        val vm = buildViewModel()
+
+        vm.onIntent(ProfileIntent.ExportRequested)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { exportData(any(), "1.0.0") }
+    }
+
+    @Test
+    fun `ExportRequested on DatabaseError emits ShowError effect`() = runTest(testDispatcher) {
         val cause = RuntimeException("db failure")
         coEvery { exportData(any(), any()) } throws DomainException.DatabaseError(cause)
 
@@ -178,8 +185,7 @@ class ProfileViewModelTest {
         val effects = mutableListOf<ProfileEffect>()
         val job = launch { vm.effect.collect { effects.add(it) } }
 
-        val outputStream = ByteArrayOutputStream()
-        vm.onIntent(ProfileIntent.ExportToStream(outputStream))
+        vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle()
 
         assertTrue(
@@ -192,19 +198,21 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `ExportToStream on Unknown error emits ExportFailed notify`() = runTest(testDispatcher) {
-        coEvery { exportData(any(), any()) } throws DomainException.Unknown(RuntimeException("io error"))
+    fun `ExportRequested on Unknown error emits ShowError effect`() = runTest(testDispatcher) {
+        // The disk-space ExportFailed hint now lives in the platform write layer; the VM only
+        // generates the JSON, so any domain failure here surfaces uniformly as ShowError.
+        coEvery { exportData(any(), any()) } throws DomainException.Unknown(RuntimeException("serialize error"))
 
         val vm = buildViewModel()
         val effects = mutableListOf<ProfileEffect>()
         val job = launch { vm.effect.collect { effects.add(it) } }
 
-        vm.onIntent(ProfileIntent.ExportToStream(ByteArrayOutputStream()))
+        vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle()
 
         assertTrue(
-            effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.ExportFailed },
-            "Expected ExportFailed notify not found in $effects",
+            effects.any { it is ProfileEffect.ShowError && it.error is DomainException.Unknown },
+            "Expected ShowError(Unknown) not found in $effects",
         )
         assertEquals(ProfileOp.None, vm.state.value.op)
 
@@ -212,7 +220,7 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `ExportToStream while import in flight is a no-op`() = runTest(testDispatcher) {
+    fun `ExportRequested while import in flight is a no-op`() = runTest(testDispatcher) {
         val gate = CompletableDeferred<Unit>()
         coEvery { importData(any()) } coAnswers {
             gate.await()
@@ -229,7 +237,7 @@ class ProfileViewModelTest {
         val effects = mutableListOf<ProfileEffect>()
         val job = launch { vm.effect.collect { effects.add(it) } }
 
-        vm.onIntent(ProfileIntent.ExportToStream(ByteArrayOutputStream()))
+        vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle()
 
         assertTrue(effects.isEmpty(), "Export while import in flight must be a no-op, got: $effects")
@@ -239,7 +247,7 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `ExportToStream re-entry guard — second export while first in flight is a no-op`() = runTest(testDispatcher) {
+    fun `ExportRequested re-entry guard — second export while first in flight is a no-op`() = runTest(testDispatcher) {
         val gate = CompletableDeferred<Unit>()
         coEvery { exportData(any(), any()) } coAnswers {
             gate.await()
@@ -248,12 +256,12 @@ class ProfileViewModelTest {
 
         val vm = buildViewModel()
 
-        vm.onIntent(ProfileIntent.ExportToStream(ByteArrayOutputStream()))
+        vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle() // suspended at gate — op == Exporting
 
         assertEquals(ProfileOp.Exporting, vm.state.value.op)
 
-        vm.onIntent(ProfileIntent.ExportToStream(ByteArrayOutputStream()))
+        vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle()
 
         // exportData must still have been called exactly once
@@ -330,7 +338,7 @@ class ProfileViewModelTest {
     @Test
     fun `lastSyncFailed=true from orchestrator maps to SyncRowUi-Failed`() = runTest(testDispatcher) {
         val statusFlow = MutableStateFlow(SyncStatus())
-        every { syncOrchestrator.status } returns statusFlow
+        every { syncController.status } returns statusFlow
 
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -344,7 +352,7 @@ class ProfileViewModelTest {
     @Test
     fun `SyncRowUi-Failed resets to Idle when orchestrator emits successful status`() = runTest(testDispatcher) {
         val statusFlow = MutableStateFlow(SyncStatus(lastSyncFailed = true))
-        every { syncOrchestrator.status } returns statusFlow
+        every { syncController.status } returns statusFlow
 
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -362,7 +370,7 @@ class ProfileViewModelTest {
     @Test
     fun `isSyncing=true wins over lastSyncFailed=true producing SyncRowUi-Syncing`() = runTest(testDispatcher) {
         val statusFlow = MutableStateFlow(SyncStatus())
-        every { syncOrchestrator.status } returns statusFlow
+        every { syncController.status } returns statusFlow
 
         val vm = buildViewModel()
         advanceUntilIdle()

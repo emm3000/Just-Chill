@@ -121,5 +121,5 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
 | 5 | home + report | `b82f128` | ✅ (writer+reviewer) |
 | 6 | onboarding | `66df00e` | ✅ (inline — trivial, 1 file) |
 | 7a | auth | `eed7778` | ✅ (writer+reviewer — reviewer caught a RED gate the writer falsely reported green; fixed before ship) |
-| 7b | profile | — | pending |
+| 7b | profile | `pending` | ✅ (writer+reviewer) |
 | 8 | cleanup | — | pending |

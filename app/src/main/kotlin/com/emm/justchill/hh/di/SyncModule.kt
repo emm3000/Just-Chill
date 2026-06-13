@@ -13,6 +13,7 @@ import com.emm.domain.sync.SyncDataUseCase
 import com.emm.domain.sync.SyncMutex
 import com.emm.domain.sync.SyncRepository
 import com.emm.justchill.core.sync.AppPreferencesSyncCursorStore
+import com.emm.justchill.core.sync.SyncController
 import com.emm.justchill.core.sync.SyncOrchestrator
 import com.emm.justchill.core.sync.processResumeEvents
 import kotlinx.coroutines.CoroutineScope
@@ -70,6 +71,7 @@ val syncModule = module {
     factoryOf(::ObservePendingSyncCountUseCase)
 
     // Single: owns long-lived coroutine jobs launched in externalScope.
+    // Bound to SyncController so commonMain consumers (ProfileViewModel) resolve the same instance.
     single {
         SyncOrchestrator(
             syncData = get(),
@@ -80,5 +82,5 @@ val syncModule = module {
             externalScope = get(appScopeQualifier),
             resumeEvents = processResumeEvents(),
         )
-    }
+    } bind SyncController::class
 }

@@ -191,13 +191,32 @@ RED gate** the writer falsely reported green: co-moving `EmmSnackbar.kt` (holds
 **Lesson: co-moving a file with an `internal` symbol breaks its test if the test
 stays behind — move the test too.**
 
-#### Slice 7b — profile — pending
-Move `profile/` (`ProfileScreen/ViewModel/UiState/Intent/Effect`, `DeleteAccountDialog`,
-`PrivacyPolicyScreen`, `RetryPill`). Known work: `ProfileIntent.ExportToStream(java.io.OutputStream)`
-→ change contract to a `String` (symmetric with `ImportJson(String)`); nav host does the
-SAF stream IO. `BuildConfig.VERSION_NAME`/`DEBUG` → inject `appVersion`/`isDebug` via Koin
-platform module (no `BuildConfig` in commonMain). `java.text.SimpleDateFormat`/`Date`/`Locale`
-→ de-JVM. Move the remaining agnostic part of `hhModule`; keep nav/platform bits in `:app`.
+#### Slice 7b — profile — ✅ DONE
+Moved `profile/` (`ProfileScreen/ViewModel/UiState/Intent/Effect`, `DeleteAccountDialog`,
+`PrivacyPolicyScreen`, `RetryPill`) to `shared-ui` commonMain. Resolved work:
+- **Export contract**: `ProfileIntent.ExportToStream(OutputStream)` → `ExportRequested` (object).
+  VM generates the JSON and emits it via new `ProfileEffect.ExportReady(json)`; the nav host
+  owns the SAF write (and now the disk-space `ExportFailed` hint, which used to live in the VM —
+  the VM only surfaces domain errors from generation as `ShowError`). Symmetric with `ImportJson(String)`.
+- **BuildConfig**: `VERSION_NAME` → `appVersion: String` injected into `ProfileViewModel` via a
+  `named("appVersion")` Koin binding in `coreModule` (platform layer). `DEBUG`/`VERSION_NAME` in
+  the screen → `isDebug`/`appVersion` composable params passed by the nav host. No `BuildConfig` in commonMain.
+- **De-JVM dates**: `SimpleDateFormat("d MMM, HH:mm", es)` → new `SpanishDateFormat.dayShortMonthTime`
+  helper + `Instant.fromEpochMilliseconds(...).toLocalDateTime(...)`.
+- **SyncOrchestrator coupling**: ProfileViewModel needed `SyncOrchestrator` (lives in `:app`, depends
+  on Android `AppPreferences`). **Extracted** a narrow `SyncController` interface (`status` +
+  `requestSync`) + moved `SyncStatus` (pure data class) to commonMain; `SyncOrchestrator` STAYS in
+  `:app`, implements `SyncController`, bound via `bind SyncController::class`. De-JVM'd the orchestrator
+  in passing (`@Volatile` → `kotlin.concurrent.Volatile`, `System.currentTimeMillis()` → `Clock.System`).
+- `ProfileViewModel` wired with an explicit `viewModel { }` block (qualified `appVersion` can't go
+  through the constructor-DSL); `clock` omitted to use its `Clock.System` default.
+
+Verified: `assembleDevDebug` green, `:app` + `shared-ui` host unit tests green, `commonMain`
+compiles for `iosSimulatorArm64` (no JVM leak). MockK VM tests stay in `:app` `test/` (same package).
+
+> **Deferred to Slice 8**: the "move the remaining agnostic part of `hhModule`" sweep is a
+> cross-feature DI cleanup (home/report/recurring/seetransactions wiring), not profile-specific.
+> Kept out of 7b to preserve the one-feature-per-commit, reviewable-slice discipline.
 Platform Koin modules (`DbModule`, `SupabaseModule`, `AuthModule`, `SyncModule`) STAY in `:app`.
 
 ### Slice 8 — cleanup

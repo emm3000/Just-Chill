@@ -10,13 +10,12 @@ import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.backup.ExportDataUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.error.DomainException
-import com.emm.justchill.BuildConfig
 import com.emm.justchill.core.mvi.MviViewModel
-import com.emm.justchill.core.sync.SyncOrchestrator
+import com.emm.justchill.core.sync.SyncController
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import java.io.OutputStream
+import kotlin.time.Clock
 
 @Suppress("LongParameterList")
 class ProfileViewModel(
@@ -24,10 +23,14 @@ class ProfileViewModel(
     private val importData: ImportDataUseCase,
     private val signOut: SignOutUseCase,
     private val deleteUserAccount: DeleteUserAccountUseCase,
-    private val syncOrchestrator: SyncOrchestrator,
+    private val syncController: SyncController,
     categoryRepository: CategoryRepository,
     accountRepository: AccountRepository,
     observeSession: ObserveSessionUseCase,
+    // Stamped into the backup payload. Injected (no BuildConfig in commonMain) by the
+    // platform Koin module via the "appVersion" qualifier.
+    private val appVersion: String,
+    private val clock: Clock = Clock.System,
 ) : MviViewModel<ProfileUiState, ProfileIntent, ProfileEffect>() {
 
     override val initialState = ProfileUiState()
@@ -55,7 +58,7 @@ class ProfileViewModel(
             }
             .launchIn(viewModelScope)
 
-        syncOrchestrator.status
+        syncController.status
             .onEach { syncStatus ->
                 val row = when {
                     syncStatus.isSyncing -> SyncRowUi.Syncing
@@ -74,7 +77,7 @@ class ProfileViewModel(
 
     override fun onIntent(intent: ProfileIntent) {
         when (intent) {
-            is ProfileIntent.ExportToStream -> exportToStream(intent.output)
+            ProfileIntent.ExportRequested -> exportRequested()
             is ProfileIntent.ImportJson -> importFromJson(intent.json)
             ProfileIntent.SignOut -> performSignOut()
             ProfileIntent.SyncNow -> syncNow()
@@ -117,30 +120,21 @@ class ProfileViewModel(
         sendEffect(ProfileEffect.Notify(ProfileMessage.AccountDeleted))
     }
 
-    private fun exportToStream(output: OutputStream) = launchOp(
+    private fun exportRequested() = launchOp(
         op = ProfileOp.Exporting,
-        onError = { e ->
-            // Domain errors carry their own user-facing message (e.g. DatabaseError);
-            // Unknown collapses to a disk-space hint, the most plausible cause for export IO failures.
-            when (e) {
-                is DomainException.Unknown -> ProfileEffect.Notify(ProfileMessage.ExportFailed)
-                else -> ProfileEffect.ShowError(e)
-            }
-        },
+        // Failures here are domain errors from generating the backup (DB read / serialize).
+        // The disk-space / write failure is the platform layer's concern and is surfaced there.
+        onError = { e -> ProfileEffect.ShowError(e) },
     ) {
         val json = exportData(
-            exportedAt = System.currentTimeMillis(),
-            appVersion = BuildConfig.VERSION_NAME,
+            exportedAt = clock.now().toEpochMilliseconds(),
+            appVersion = appVersion,
         )
-        // Writer is closed here — not at the launcher callsite — because the launcher
-        // hands us a raw stream and we schedule async work; closing it early would corrupt the write.
-        // Closing the BufferedWriter flushes its buffer to the stream before closing.
-        output.bufferedWriter().use { it.write(json) }
-        sendEffect(ProfileEffect.Notify(ProfileMessage.ExportDone))
+        sendEffect(ProfileEffect.ExportReady(json))
     }
 
     private fun syncNow() {
-        syncOrchestrator.requestSync(manual = true)
+        syncController.requestSync(manual = true)
     }
 
     private fun importFromJson(json: String) = launchOp(

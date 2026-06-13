@@ -51,6 +51,7 @@ import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -101,7 +102,22 @@ private fun Module.viewModelsProviders() {
 
     viewModelOf(::AccountsViewModel)
     viewModelOf(::ReportViewModel)
-    viewModelOf(::ProfileViewModel)
+
+    // Explicit block (not viewModelOf): appVersion is a qualified String the constructor-DSL
+    // can't resolve by type. clock is omitted so it falls back to its Clock.System default.
+    viewModel {
+        ProfileViewModel(
+            exportData = get(),
+            importData = get(),
+            signOut = get(),
+            deleteUserAccount = get(),
+            syncController = get(),
+            categoryRepository = get(),
+            accountRepository = get(),
+            observeSession = get(),
+            appVersion = get(named("appVersion")),
+        )
+    }
 
     // Slice 3 — recurring management CRUD ViewModels
     viewModelOf(::RecurringMovementsViewModel)

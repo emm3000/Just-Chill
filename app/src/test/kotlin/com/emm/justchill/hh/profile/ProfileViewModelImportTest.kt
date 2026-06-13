@@ -10,13 +10,12 @@ import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.MainDispatcherRule
-import com.emm.justchill.core.sync.SyncOrchestrator
+import com.emm.justchill.core.sync.SyncController
 import com.emm.justchill.core.sync.SyncStatus
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -39,9 +38,8 @@ class ProfileViewModelImportTest {
     private val importData = mockk<ImportDataUseCase>()
     private val signOut = mockk<SignOutUseCase>(relaxed = true)
     private val deleteUserAccount = mockk<DeleteUserAccountUseCase>(relaxed = true)
-    private val syncOrchestrator = mockk<SyncOrchestrator>(relaxed = true) {
+    private val syncController = mockk<SyncController>(relaxed = true) {
         every { status } returns MutableStateFlow(SyncStatus())
-        every { events } returns MutableSharedFlow()
     }
     private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
     private val categoryRepository = mockk<CategoryRepository> {
@@ -56,10 +54,11 @@ class ProfileViewModelImportTest {
         importData = importData,
         signOut = signOut,
         deleteUserAccount = deleteUserAccount,
-        syncOrchestrator = syncOrchestrator,
+        syncController = syncController,
         categoryRepository = categoryRepository,
         accountRepository = accountRepository,
         observeSession = observeSession,
+        appVersion = "1.0.0",
     )
 
     @Test
@@ -143,9 +142,8 @@ class ProfileViewModelImportTest {
         }
 
         val vm = buildViewModel()
-        val outputStream = java.io.ByteArrayOutputStream()
 
-        vm.onIntent(ProfileIntent.ExportToStream(outputStream))
+        vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle() // suspended at gate — op == Exporting
 
         assertEquals(ProfileOp.Exporting, vm.state.value.op)

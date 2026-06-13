@@ -47,24 +47,27 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.emm.justchill.BuildConfig
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.emm.justchill.hh.shared.SpanishDateFormat
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun ProfileScreen(
     state: ProfileUiState,
     modifier: Modifier = Modifier,
+    // Injected from the platform layer (no BuildConfig in commonMain).
+    appVersion: String = "",
+    isDebug: Boolean = false,
     onCategoriesClick: () -> Unit = {},
     onAccountsClick: () -> Unit = {},
     onRecurringClick: () -> Unit = {},
@@ -174,7 +177,7 @@ fun ProfileScreen(
             )
         }
 
-        if (BuildConfig.DEBUG) {
+        if (isDebug) {
             SectionHeader(text = "Debug")
             ProfileGroup {
                 ProfileRow(
@@ -188,7 +191,7 @@ fun ProfileScreen(
         }
 
         Spacer(Modifier.height(spacing.s6))
-        VersionFooter()
+        VersionFooter(appVersion = appVersion)
         Spacer(Modifier.height(spacing.s4))
     }
 }
@@ -289,11 +292,10 @@ private fun AccountSection(
     }
 }
 
-// Allocated once per process — safe because this is only ever called from the main thread (composition).
-private val syncDateFormatter = SimpleDateFormat("d MMM, HH:mm", Locale("es"))
-
 private fun syncStatusLabel(lastSyncedAtMillis: Long?): String = if (lastSyncedAtMillis != null) {
-    "Última sincronización: ${syncDateFormatter.format(Date(lastSyncedAtMillis))}"
+    val dateTime = Instant.fromEpochMilliseconds(lastSyncedAtMillis)
+        .toLocalDateTime(TimeZone.currentSystemDefault())
+    "Última sincronización: ${SpanishDateFormat.dayShortMonthTime(dateTime)}"
 } else {
     "Sincronización activa"
 }
@@ -431,14 +433,14 @@ private fun IconTileSmall(icon: ImageVector) {
 }
 
 @Composable
-private fun VersionFooter() {
+private fun VersionFooter(appVersion: String) {
     val colors = LocalEmmColors.current
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Versión ${BuildConfig.VERSION_NAME} · alpha",
+            text = "Versión $appVersion · alpha",
             fontSize = 12.sp,
             fontFamily = InterFontFamily,
             color = colors.textTertiary,
@@ -447,12 +449,13 @@ private fun VersionFooter() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 800)
+@Preview
 @Composable
 private fun ProfileScreenPreview() {
     EmmTheme {
         ProfileScreen(
             state = ProfileUiState(categoryCount = 12, accountCount = 5),
+            appVersion = "1.0.0",
         )
     }
 }

@@ -24,23 +24,9 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import kotlin.concurrent.Volatile
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
-
-/**
- * Current sync status exposed to the UI.
- *
- * @property isSyncing true while a sync cycle is in progress.
- * @property lastSyncedAtMillis epoch-millis of the last successful sync for the current user,
- *           or null when the user has never synced or is not signed in.
- * @property lastSyncFailed true when the most recent sync cycle (manual or automatic) ended in
- *           a [DomainException]. Reset to false when a new cycle starts or completes successfully.
- *           Also reset on sign-out (mirrors [lastSyncedAtMillis] reset behaviour).
- */
-data class SyncStatus(
-    val isSyncing: Boolean = false,
-    val lastSyncedAtMillis: Long? = null,
-    val lastSyncFailed: Boolean = false,
-)
 
 /** One-shot events emitted by [SyncOrchestrator] that require top-level UI handling. */
 sealed interface SyncEvent {
@@ -85,10 +71,10 @@ class SyncOrchestrator(
     private val prefs: AppPreferences,
     private val externalScope: CoroutineScope,
     private val resumeEvents: Flow<Unit>,
-) {
+) : SyncController {
 
     private val _status = MutableStateFlow(SyncStatus())
-    val status: StateFlow<SyncStatus> = _status.asStateFlow()
+    override val status: StateFlow<SyncStatus> = _status.asStateFlow()
 
     private val _events = MutableSharedFlow<SyncEvent>()
     val events: SharedFlow<SyncEvent> = _events.asSharedFlow()
@@ -120,7 +106,7 @@ class SyncOrchestrator(
      *               sticky across CONFLATED collapsing: if a manual request collapses with an
      *               automatic one, the merged cycle counts as manual.
      */
-    fun requestSync(manual: Boolean = false) {
+    override fun requestSync(manual: Boolean) {
         if (manual) manualRequestPending = true
         requestChannel.trySend(Unit)
     }
@@ -215,7 +201,7 @@ class SyncOrchestrator(
         _status.value = _status.value.copy(isSyncing = true, lastSyncFailed = false)
         try {
             syncData()
-            val now = System.currentTimeMillis()
+            val now = Clock.System.now().toEpochMilliseconds()
             val userId = currentUserId
             if (userId != null) {
                 prefs.setLastSyncedAt(userId, now)
