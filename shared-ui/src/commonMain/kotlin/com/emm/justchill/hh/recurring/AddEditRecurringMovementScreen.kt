@@ -45,7 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -66,7 +66,7 @@ import com.emm.justchill.core.ui.atoms.emmSwitchColors
 import com.emm.justchill.hh.transaction.centsToSoles
 import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
 import com.emm.justchill.hh.transaction.sheets.CategoryPickerSheet
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
@@ -631,7 +631,7 @@ private fun ActiveCard(isActive: Boolean, onToggle: (Boolean) -> Unit) {
 // Preview
 // ---------------------------------------------------------------------------
 
-@Preview(showBackground = true, backgroundColor = 0xFF191919, heightDp = 900)
+@Preview
 @Composable
 private fun AddEditRecurringMovementScreenPreview() {
     EmmTheme {
