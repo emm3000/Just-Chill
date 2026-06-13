@@ -81,7 +81,38 @@ Compose for `shared-ui` is driven by the `org.jetbrains.compose` plugin
 
 ## Slices (each = one Android-green gate: `./gradlew assembleDevDebug`)
 
-### Slice 0 — module scaffold + foundation (LOW risk) ← START HERE
+> **STATUS (updated 2026-06-13, after Slice 1):**
+> - ✅ Slice 0 — scaffold + MVI + theme (commit `7d66e54`)
+> - ✅ Slice 1 — transactions + de-JVM (commit `4b10bad`)
+> - ⏳ Slices 2-8 below, **re-sequenced**. Lessons from Slice 1 baked in.
+>
+> **Dependency-closure lesson (CRITICAL — applies to every remaining slice):**
+> A feature CANNOT move alone. `commonMain` cannot import from `:app`, so moving
+> a feature drags in **every shared symbol it transitively consumes**. Slice 1
+> was planned as ~30 files; it landed at **~62** because transactions pulled in
+> `core/ui/atoms`, `core/format/MoneyFormatter`, `core/error/DomainExceptionExt`,
+> `hh/shared/{CurrencyFormat,Utils}`, plus parts of `category/` and `account/`.
+> **Before each slice: map the full transitive closure FIRST** (`rg` the feature's
+> imports), and budget for: (a) `internal → public` flips on any symbol `:app`
+> still consumes cross-module; (b) iOS-only API swaps (see hotspots below);
+> (c) hand-rolled de-JVM of any `java.*`. Full gotcha log in engram
+> `kmp/phase-3/slice-1-de-jvm`.
+>
+> **De-JVM playbook (established in Slice 1, reuse verbatim):** app is
+> Spanish-only → NO `expect/actual`, NO locale machinery. Hand-roll in pure
+> commonMain: `java.time.*`→`kotlinx-datetime`; localized Spanish dates→hardcoded
+> month/day tables (`hh/shared/SpanishDateFormat.kt`); `DecimalFormat`→
+> `NumberFormatEs.kt`; `java.text.Normalizer`→`SpanishSearch.kt`; `java.util.UUID`
+> →`kotlin.uuid.Uuid`; `koin.androidx.compose.koinViewModel`→`koin-compose-viewmodel`.
+> Strip CMP-incompatible `@Preview` params; `LocalConfiguration`→`LocalWindowInfo`
+> +`LocalDensity`. Golden test (`SpanishFormatGoldenTest`) guards Spanish output.
+>
+> **Reinforced gate (every slice):** `./gradlew :shared-ui:compileAndroidMain`
+> (note: NOT `compileDebugKotlinAndroid` — the new android KMP plugin renamed it)
+> + `:shared-ui:compileKotlinIosSimulatorArm64` (proves zero `java.*` leak)
+> + `assembleDevDebug` + `:app:testDevDebugUnitTest` + `:shared-ui:testAndroidHostTest`.
+
+### Slice 0 — module scaffold + foundation (LOW risk) — ✅ DONE (`7d66e54`)
 - Create `shared-ui/build.gradle.kts`: `kotlin.multiplatform` +
   `android.kotlin.multiplatform.library` + `iosArm64()` + `iosSimulatorArm64()`
   + `org.jetbrains.compose` + `kotlin-compose`. Framework `baseName = "Shared"`,
@@ -104,34 +135,53 @@ Compose for `shared-ui` is driven by the `org.jetbrains.compose` plugin
 - **Gate**: `./gradlew :data:compileDebugKotlinAndroid` + `assembleDevDebug`
   green. App still runs, theme + fonts render identically.
 
-### Slice 1 — transactions (add/edit/list)
-Move `transaction/`, `seetransactions/`, their sheets/components, `transactionModule`.
-Handle: nothing platform-specific (verify). Gate green.
+### Slice 1 — transactions (add/edit/list) — ✅ DONE (`4b10bad`)
+Moved `transaction/`, `seetransactions/`, `transactionModule`. Reality: ~62 files
+(dependency closure). De-JVM'd `DateUtils`, `DayGroup`, `SeeTransactionsViewModel`,
+`DatePickerSheet`, `CategoryFilterSheet`, `CentsFormatter`, `MoneyFormatter`,
+`AmountHero`, `IconsAll`, etc. Co-moved to commonMain (originally other slices):
+`core/ui/atoms`, `core/format`, `core/error/DomainExceptionExt`,
+`category/{CategoryColor,ColorsAll,IconCatalog,IconsAll}`, `account/AccountPalette`,
+`hh/shared/{CurrencyFormat,Utils}` + new `hh/shared/{SpanishDateFormat,NumberFormatEs,
+SpanishSearch}.kt`. `HhModule` stays in `:app` (nav host). `CentsFormatterTest`
+moved to `shared-ui/commonTest` (pure JUnit); MockK VM tests stayed in `:app`.
 
-### Slice 2 — categories
-Move `category/` + `categoryModule`. Gate green.
+### Slice 2 — categories (PARTIAL — finish it)
+Already in commonMain from Slice 1: `CategoryColor`, `ColorsAll`, `IconCatalog`,
+`IconsAll`. **Remaining**: category screens/VMs/sheets/UiState/Intent/Effect +
+`categoryModule` (`hh/di/CategoryModule.kt`). Map import closure first; expect a
+few `internal→public` flips. Gate green.
 
-### Slice 3 — accounts
-Move `account/` + `accountModule`. Gate green.
+### Slice 3 — accounts (PARTIAL — finish it)
+Already in commonMain: `AccountPalette`. **Remaining**: account screens/VMs +
+`accountModule` (`hh/di/AccountModule.kt`). Gate green.
 
 ### Slice 4 — recurring
-Move `recurring/`. Gate green.
+Move `recurring/` (full). Consumes shared atoms/`CtaHeight` already in commonMain
+(made public in Slice 1). Map closure; de-JVM any `java.*`. Gate green.
 
 ### Slice 5 — home + report
-Move `home/`, `report/` (+ components). Hoist `ReportScreen` share intent to an
-`onShare(text)` callback wired in the nav host. Gate green.
+Move `home/`, `report/` (+ components). Hotspot: hoist `ReportScreen` share intent
+(`ACTION_SEND`) to an `onShare(text)` callback wired in the nav host (`:app`).
+Gate green.
 
-### Slice 6 — auth/sync UI + profile
+### Slice 6 — onboarding
+Move `onboarding/` (was missing from the original slice list). Check for platform
+hotspots (intents, BuildConfig) and hoist to callbacks. Gate green.
+
+### Slice 7 — auth/sync UI + profile
 Move `auth/` screens (NOT `GoogleCredentialClient`/`ActivityGoogleSignInLauncher`
 — those stay android), `profile/`. Hoist `AuthScreen` open-email to a callback.
 `ic_google.xml` → `composeResources/drawable/`, use `Res.drawable.ic_google`.
 Inject `appVersion`/`isDebug` via Koin platform module (drop `BuildConfig` from
-commonMain). Move `hhModule` (the big agnostic feature module) last. Gate green.
+commonMain). Move the remaining agnostic part of `hhModule` (feature wiring) — keep
+nav/platform bits in `:app`. Platform Koin modules (`DbModule`, `SupabaseModule`,
+`AuthModule`, `SyncModule`) STAY in `:app`. Gate green.
 
-### Slice 7 — cleanup
-Move remaining agnostic `hh/shared/` atoms/utils. Drop unused
-`ui-text-google-fonts`. Update detekt config + `CLAUDE.md` build commands if the
-`:app` task names changed. Gate green.
+### Slice 8 — cleanup
+Move remaining agnostic `hh/shared/` atoms/utils not already pulled forward. Drop
+unused `ui-text-google-fonts`. Update detekt config + `CLAUDE.md` build commands if
+the `:app` task names changed. Gate green.
 
 ## Cross-cutting guards
 - **Package paths unchanged**: keep `com.emm.justchill.*` package names when
