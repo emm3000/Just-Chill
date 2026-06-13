@@ -111,7 +111,7 @@ android {
 
     lint {
         // Pin known false positives so the rule keeps catching real bugs.
-        // To refresh: ./gradlew :app:updateLintBaselineProdRelease
+        // To refresh: ./gradlew :androidApp:updateLintBaselineProdRelease
         baseline = file("lint-baseline.xml")
     }
 }
@@ -133,9 +133,9 @@ kotlin {
 
 dependencies {
 
-    implementation(project(":domain"))
-    implementation(project(":data"))
-    implementation(project(":shared-ui"))
+    implementation(projects.domain)
+    implementation(projects.data)
+    implementation(projects.sharedUi)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

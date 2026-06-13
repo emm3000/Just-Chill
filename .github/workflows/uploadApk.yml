@@ -29,7 +29,7 @@ jobs:
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
 
       - name: Run tests
-        run: ./gradlew :domain:test :data:testDebugUnitTest :app:testDevDebugUnitTest
+        run: ./gradlew :domain:test :data:testDebugUnitTest :androidApp:testDevDebugUnitTest
 
   upload:
     needs: [ test ]
@@ -59,8 +59,8 @@ jobs:
       - name: Resolve APK paths
         id: paths
         run: |
-          echo "devDebug=$(find app/build/outputs/apk/dev/debug -name '*.apk' | head -n1)" >> $GITHUB_OUTPUT
-          echo "prodRelease=$(find app/build/outputs/apk/prod/release -name '*.apk' | head -n1)" >> $GITHUB_OUTPUT
+          echo "devDebug=$(find androidApp/build/outputs/apk/dev/debug -name '*.apk' | head -n1)" >> $GITHUB_OUTPUT
+          echo "prodRelease=$(find androidApp/build/outputs/apk/prod/release -name '*.apk' | head -n1)" >> $GITHUB_OUTPUT
 
       - name: Distribute Dev Debug to Firebase
         uses: wzieba/Firebase-Distribution-Github-Action@v1
@@ -84,12 +84,12 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ${{ env.date_today }}-dev-debug-apk
-          path: app/build/outputs/apk/dev/debug/
+          path: androidApp/build/outputs/apk/dev/debug/
           retention-days: 14
 
       - name: Upload Prod Release APK artifact
         uses: actions/upload-artifact@v7
         with:
           name: ${{ env.date_today }}-prod-release-apk
-          path: app/build/outputs/apk/prod/release/
+          path: androidApp/build/outputs/apk/prod/release/
           retention-days: 14

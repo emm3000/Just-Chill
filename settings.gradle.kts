@@ -1,5 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 include(":data")
 
 
@@ -29,6 +31,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "JustChill"
-include(":app")
+include(":androidApp")
 include(":domain")
 include(":shared-ui")

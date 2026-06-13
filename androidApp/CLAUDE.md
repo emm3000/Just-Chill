@@ -1,4 +1,4 @@
-# :app — CLAUDE.md
+# :androidApp — CLAUDE.md
 
 Android application module. Compose UI, ViewModels, Koin DI wiring.
 
@@ -52,6 +52,6 @@ A new feature module should be registered in `EmmApp` alongside the others.
 
 ## Testing
 
-- `MainDispatcherRule` at `app/src/test/kotlin/com/emm/justchill/MainDispatcherRule.kt` — **use it in every ViewModel test that touches `viewModelScope`**.
+- `MainDispatcherRule` at `androidApp/src/test/kotlin/com/emm/justchill/MainDispatcherRule.kt` — **use it in every ViewModel test that touches `viewModelScope`**.
 - JUnit4 + MockK + `kotlinx-coroutines-test`.
-- Instrumented tests in `app/src/androidTest/` are for behaviour that depends on the Android runtime (Compose UI tests, etc.).
+- Instrumented tests in `androidApp/src/androidTest/` are for behaviour that depends on the Android runtime (Compose UI tests, etc.).

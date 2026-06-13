@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Per-module guidance lives in `domain/CLAUDE.md`, `data/CLAUDE.md`, and `app/CLAUDE.md`; Claude loads each one automatically when working in that module.
+Per-module guidance lives in `domain/CLAUDE.md`, `data/CLAUDE.md`, and `androidApp/CLAUDE.md`; Claude loads each one automatically when working in that module.
 
 > **KMP / Compose Multiplatform migration is ACTIVE.** Before executing ANY migration slice
 > (moving a feature to `shared-ui` commonMain), READ `docs/kmp/ORCHESTRATION.md` — it is the
@@ -33,8 +33,8 @@ Per-module guidance lives in `domain/CLAUDE.md`, `data/CLAUDE.md`, and `app/CLAU
 
 ## Project Layout
 
-- Gradle modules included in `settings.gradle.kts`: `:app`, `:domain`, `:data`.
-- Java toolchain 17 across all modules. `compileSdk = 36`. `minSdk = 28` (`:app`) / `26` (`:data`).
+- Gradle modules included in `settings.gradle.kts`: `:androidApp`, `:domain`, `:data`.
+- Java toolchain 17 across all modules. `compileSdk = 36`. `minSdk = 28` (`:androidApp`) / `26` (`:data`).
 - Two product flavors on dimension `tier`:
   - `dev` — `applicationIdSuffix = ".dev"`.
   - `prod` — release signing via `keystore.properties`, Firebase Analytics + Crashlytics.
@@ -46,12 +46,12 @@ Clean Architecture, three modules:
 ```
 :domain  →  pure Kotlin JVM lib, no Android deps        (java-library + kotlin.jvm)
 :data    →  Android lib, implements domain interfaces   (SQLDelight + Supabase sync/auth)
-:app     →  Compose UI, ViewModels, Koin DI wiring      (android-application)
+:androidApp →  Compose UI, ViewModels, Koin DI wiring   (android-application)
 ```
 
 The app is **local-first**: SQLDelight on-device is the single source of truth and the app is fully usable with no account and no network. Optional multi-device sync via Supabase (opt-in email/password sign-in, LWW) is **in progress** — slices 1-3 are on trunk: soft-delete + sync metadata (slice 1), auth + claim-on-sign-in (slice 2), and the manual-trigger sync engine (slice 3, push/pull + cursor — see `data/CLAUDE.md`). Remaining: automatic sync lifecycle (slice 4) and compliance/release gate (slice 5), per `docs/sync/PLAN.md`. Decisions in `docs/adr/001` and `docs/adr/002`.
 
-**Dependency direction**: `:app` → `:domain`, `:data`; `:data` → `:domain`; `:domain` has no module deps.
+**Dependency direction**: `:androidApp` → `:domain`, `:data`; `:data` → `:domain`; `:domain` has no module deps.
 
 ### Package roots
 
@@ -59,7 +59,7 @@ The app is **local-first**: SQLDelight on-device is the single source of truth a
 |---|---|
 | `:domain` | `com.emm.domain.<entity>` |
 | `:data` | `com.emm.data.<entity>` |
-| `:app` | `com.emm.justchill.{hh.<feature>, core, components}` |
+| `:androidApp` | `com.emm.justchill.{hh.<feature>, core, components}` |
 
 ### Data flow
 
@@ -86,7 +86,7 @@ Per feature, create three files alongside the ViewModel:
 
 - Sealed `DomainException` in `:domain/shared/error/` with subtypes: `NotFound`, `ValidationError`, `NetworkUnavailable`, `DatabaseError`, `Unauthorized`, `Unknown`.
 - `:data/shared/SafeCall.kt` wraps local DB calls and translates SQLDelight exceptions into `DomainException`. Repositories should funnel I/O through it instead of throwing raw SQLDelight errors.
-- `:app/core/error/DomainExceptionExt.kt` maps each subtype to a user-facing Spanish string via `DomainException.toUserMessage()`.
+- `:androidApp/core/error/DomainExceptionExt.kt` maps each subtype to a user-facing Spanish string via `DomainException.toUserMessage()`.
 
 When adding a new failure mode, prefer extending `DomainException` (and `toUserMessage`) over introducing a new exception type.
 
