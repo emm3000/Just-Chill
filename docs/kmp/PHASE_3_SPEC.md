@@ -168,7 +168,7 @@ an `onShareText(String)` callback wired in the nav host (`Hh.kt`). De-JVM'd
 brute-forced 100M cent values, zero mismatches). `@PreviewLightDark`→`@Preview` (15).
 Co-moved `core/ui/atoms/{MonthSelector,MoneyInline,Segmented}`, `hh/shared/MonthLabels`.
 
-### Slice 6 — onboarding — ✅ DONE (`13473d0`)
+### Slice 6 — onboarding — ✅ DONE (`66df00e`)
 Moved `onboarding/ManifestoScreen.kt` (single stateless callback-driven screen).
 No VM, no Koin, no de-JVM, no hotspot — only `@Preview` param strip + import swap.
 Done inline (no writer/reviewer ceremony — risk ~nil). Nav host `Hh.kt` already
