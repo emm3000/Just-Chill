@@ -8,9 +8,16 @@ import com.emm.justchill.core.sync.SyncOrchestrator
 import com.emm.justchill.experiences.readjsonfromassets.experiencesModule
 import com.emm.justchill.hh.di.accountModule
 import com.emm.justchill.hh.di.authModule
+import com.emm.justchill.hh.di.backupModule
 import com.emm.justchill.hh.di.categoryModule
 import com.emm.justchill.hh.di.dbModule
 import com.emm.justchill.hh.di.hhModule
+import com.emm.justchill.hh.di.homeModule
+import com.emm.justchill.hh.di.profileModule
+import com.emm.justchill.hh.di.recurringModule
+import com.emm.justchill.hh.di.reportModule
+import com.emm.justchill.hh.di.seetransactionsModule
+import com.emm.justchill.hh.di.sharedModule
 import com.emm.justchill.hh.di.supabaseModule
 import com.emm.justchill.hh.di.syncModule
 import com.emm.justchill.hh.di.transactionModule
@@ -40,6 +47,13 @@ class EmmApp : Application() {
                 categoryModule,
                 accountModule,
                 transactionModule,
+                reportModule,
+                recurringModule,
+                homeModule,
+                seetransactionsModule,
+                profileModule,
+                backupModule,
+                sharedModule,
                 dbModule,
                 supabaseModule,
                 authModule,

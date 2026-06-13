@@ -236,12 +236,28 @@ unbound). Dropped the unused `ui-text-google-fonts` dependency + its catalog `[v
 pieces: `Hh.kt`, `HhRoutes.kt`, `ObjectsRoutes.kt`, `SyncEventsHandler.kt`. Gate green
 (incl. iOS compile — zero `java.*` leak). No detekt/`CLAUDE.md` task-name changes.
 
-#### Slice 8b — hhModule DI sweep — pending
-Move the remaining agnostic part of `:app`'s `hhModule` (home/report/recurring/
-seetransactions wiring) into `commonMain` per-feature modules. Platform Koin modules
-(`coreModule`, `dbModule`, `supabaseModule`, `authModule`, `syncModule`) and `:data`
-repository bindings stay in `:app`. Update detekt config + `CLAUDE.md` build commands
-only if `:app`/`:shared-ui` task names change. Gate green.
+#### Slice 8b — hhModule DI sweep — ✅ DONE
+Split `:app`'s `hhModule` into `commonMain` per-feature Koin modules. Domain use cases +
+ViewModels (which depend on `:domain` repository INTERFACES, not `Default` impls) moved to
+`commonMain`; `:data` repository binds + `LocalDataSource`s stayed in `:app` `hhModule`.
+New `commonMain` modules (`shared-ui/.../hh/di/`): `reportModule` (5 report use cases +
+`ReportViewModel`), `recurringModule` (7 recurring use cases + `RecurringMovementsViewModel`
++ explicit `AddEditRecurringMovementViewModel` param block), `homeModule` (`HomeViewModel`;
+its use cases live in transaction/recurring/dbModule and resolve globally), `seetransactionsModule`
+(`SeeTransactionsViewModel`), `profileModule` (explicit `ProfileViewModel` block — qualified
+`appVersion` from `:app` `coreModule`, `clock` omitted to use its default), `backupModule`
+(`ExportDataUseCase` + `ImportDataUseCase`), and `sharedModule` (cross-cutting: `DateAndTimeCombiner`,
+`DefaultUniqueIdProvider bind UniqueIdProvider`, `TimeZone`, `Clock`). Extended existing
+`categoryModule`/`accountModule`/`transactionModule` with their ViewModel registrations
+(explicit param blocks preserved verbatim). `:app` `hhModule` now holds ONLY the 6 repository
+binds + 5 `LocalDataSource`s. All 7 new modules registered in `EmmApp.startKoin { modules(...) }`.
+Binding-exactly-once audit: every use case (per `factoryOf` uniqueness check), all 12 ViewModels,
+6 repo binds, 5 data sources, and the cross-cutting factories each appear EXACTLY ONCE — except
+the pre-existing `Clock` duplicate (`single<Clock>` in `dbModule` + `factory<Clock>` in `sharedModule`,
+both `Clock.System`; this coexistence predates 8b and Koin last-wins makes it behavior-identical).
+Gotcha: `factoryOf(::X) { bind<Y>() }` uses `org.koin.core.module.dsl.bind` (lambda form), while
+`X bind Y::class` uses `org.koin.dsl.bind` (infix) — `hhModule` needs the dsl variant, `sharedModule`
+the infix one. Gate green (incl. iOS compile — zero `java.*` leak). This CLOSES Phase 3.
 
 ## Cross-cutting guards
 - **Package paths unchanged**: keep `com.emm.justchill.*` package names when

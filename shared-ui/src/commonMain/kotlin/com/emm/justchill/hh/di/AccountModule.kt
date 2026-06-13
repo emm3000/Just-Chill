@@ -4,15 +4,21 @@ import com.emm.domain.account.CreateAccountUseCase
 import com.emm.domain.account.DeleteAccountUseCase
 import com.emm.domain.account.FindAccountUseCase
 import com.emm.domain.account.UpdateAccountUseCase
+import com.emm.justchill.hh.account.AccountsViewModel
+import com.emm.justchill.hh.account.AddAccountViewModel
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
-// Domain use-case wiring only. The DefaultAccountRepository -> AccountRepository
-// binding lives in :app HhModule.repositoriesProviders() because commonMain
-// depends on :domain only, not :data.
+// Domain use-case + ViewModel wiring only. The DefaultAccountRepository ->
+// AccountRepository binding lives in :app HhModule.repositoriesProviders()
+// because commonMain depends on :domain only, not :data.
 val accountModule = module {
     factoryOf(::CreateAccountUseCase)
     factoryOf(::DeleteAccountUseCase)
     factoryOf(::FindAccountUseCase)
     factoryOf(::UpdateAccountUseCase)
+
+    viewModelOf(::AccountsViewModel)
+    viewModelOf(::AddAccountViewModel)
 }

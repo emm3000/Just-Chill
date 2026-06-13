@@ -9,7 +9,11 @@ import com.emm.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.domain.transaction.GetTransactionsUseCase
 import com.emm.domain.transaction.SearchTransactionsUseCase
 import com.emm.domain.transaction.UpdateTransactionUseCase
+import com.emm.justchill.hh.transaction.AddTransactionViewModel
+import com.emm.justchill.hh.transaction.EditTransactionViewModel
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.viewModel
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val transactionModule = module {
@@ -22,4 +26,19 @@ val transactionModule = module {
     factoryOf(::GetTopUsedCategoryIdsUseCase)
     factoryOf(::GetFrequentCombosUseCase)
     factoryOf(::GetLastUsedAccountIdUseCase)
+
+    viewModelOf(::AddTransactionViewModel)
+
+    viewModel { parameters ->
+        EditTransactionViewModel(
+            transactionId = parameters.get(),
+            updateTransaction = get(),
+            findTransaction = get(),
+            deleteTransaction = get(),
+            accountRepository = get(),
+            categoryRepository = get(),
+            findAccount = get(),
+            getTopUsedCategoryIds = get(),
+        )
+    }
 }
