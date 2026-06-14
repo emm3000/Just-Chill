@@ -222,8 +222,10 @@ fun IosApp() {
                             onSignInClick = { backStack.add(IosAuthRoute) },
                             onSignOutClick = { vm.onIntent(ProfileIntent.SignOut) },
                             onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccount) },
-                            // Sync is phase 6b — the no-op SyncController absorbs this harmlessly.
-                            onSyncNowClick = { /* TODO phase 6b: sync on iOS */ },
+                            // Sync (6b): manual trigger. The Syncing spinner / RetryPill / "última
+                            // sincronización" row is driven by SyncController.status in ProfileViewModel,
+                            // so it reflects this cycle automatically once IosSyncOrchestrator is bound.
+                            onSyncNowClick = { vm.onIntent(ProfileIntent.SyncNow) },
                         )
                     }
 

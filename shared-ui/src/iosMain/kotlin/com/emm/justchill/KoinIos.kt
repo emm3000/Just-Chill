@@ -13,6 +13,12 @@ import com.emm.data.provideTransactionQueries
 import com.emm.data.recurring.DefaultRecurringMovementRepository
 import com.emm.data.recurring.RecurringMovementLocalDataSource
 import com.emm.data.seedDefaultCategoriesIfEmpty
+import com.emm.data.sync.AccountTableSync
+import com.emm.data.sync.CategoryTableSync
+import com.emm.data.sync.DefaultSyncRepository
+import com.emm.data.sync.RecurringMovementTableSync
+import com.emm.data.sync.TableSync
+import com.emm.data.sync.TransactionTableSync
 import com.emm.data.transaction.DefaultTransactionRepository
 import com.emm.data.transaction.DefaultTransactionStatsRepository
 import com.emm.data.transaction.TransactionLocalDataSource
@@ -33,10 +39,16 @@ import com.emm.domain.home.GetHomeDataUseCase
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.backup.BackupRepository
+import com.emm.domain.sync.ConflictResolver
+import com.emm.domain.sync.ObservePendingSyncCountUseCase
 import com.emm.domain.sync.SyncCursorStore
+import com.emm.domain.sync.SyncDataUseCase
 import com.emm.domain.sync.SyncMutex
+import com.emm.domain.sync.SyncRepository
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionStatsRepository
+import com.emm.justchill.core.sync.IosSyncCursorStore
+import com.emm.justchill.core.sync.IosSyncOrchestrator
 import com.emm.justchill.core.sync.SyncController
 import com.emm.justchill.hh.auth.AuthViewModel
 import com.emm.justchill.hh.auth.GoogleSignInLauncher
@@ -63,6 +75,7 @@ import kotlinx.serialization.json.Json
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -73,8 +86,9 @@ import org.koin.dsl.module
 // onCreate path) runs here once the DB is built, guarded idempotently.
 //
 // 6a scope: the local-first closure PLUS real email/password auth + claim-on-sign-in (iosSupabaseModule
-// + iosAuthModule). Multi-device SYNC is still stubbed (NoOpSyncCursorStore / NoOpSyncController,
-// IosLocalFirstStubs.kt) — that is phase 6b. Google Sign-In + Firebase remain out (deferred).
+// + iosAuthModule). 6b adds MANUAL multi-device sync (iosSyncModule: IosSyncCursorStore over
+// NSUserDefaults + IosSyncOrchestrator, manual + sign-in triggers only). Auto-sync triggers (on-resume,
+// debounced writes) are slice 6c. Google Sign-In + Firebase remain out (deferred).
 private val iosDataModule = module {
     single {
         val db = provideDb(provideSqlDriver())
@@ -170,23 +184,80 @@ private val iosAuthModule = module {
     }
 }
 
-// iOS profile-support module. Holds what is NOT covered by iosAuthModule: the app-version qualifier,
-// the still-stubbed sync ports (NoOpSyncCursorStore / NoOpSyncController — phase 6b), and SyncMutex.
-// AuthRepository + ClaimLocalDataRepository are now REAL (iosAuthModule), so ProfileViewModel and
-// DeleteUserAccountUseCase resolve against the Supabase-backed impls. See IosLocalFirstStubs.kt.
+// iOS profile-support module. Holds what is NOT covered by iosAuthModule or iosSyncModule: the
+// app-version qualifier and the single SyncMutex (one lock per process — serializes sync cycles
+// against each other AND against account deletion; reused by SyncDataUseCase and DeleteUserAccountUseCase).
+// AuthRepository + ClaimLocalDataRepository are REAL (iosAuthModule), so ProfileViewModel and
+// DeleteUserAccountUseCase resolve against the Supabase-backed impls.
 private val iosProfileSupportModule = module {
     // App version surfaced in the Profile footer.
     single(named("appVersion")) { "1.0.0" }
 
-    // Sync is phase 6b — these stay no-op (replaced with the real Supabase sync engine then).
-    single<SyncCursorStore> { NoOpSyncCursorStore() }
-    single<SyncController> { NoOpSyncController() }
+    // Single: ONE lock per process. Serializes sync cycles against each other AND against account
+    // deletion (in-flight push must not resurrect rows after delete_account). Reused by SyncDataUseCase.
     single { SyncMutex() }
 }
 
-// Application-scoped coroutine scope for the iOS process (analogue of EmmApp.appScope). Drives the
-// global session -> claim observer for the lifetime of the app.
-private val iosAppScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+// Qualifier for the single application-lifetime coroutine scope (mirrors Android's appScopeQualifier).
+// One scope drives BOTH the claim-on-sign-in observer (initKoin) and the sync orchestrator loops.
+private val appScopeQualifier = named("appScope")
+
+// iOS sync wiring — mirrors :androidApp/hh/di/SyncModule.kt for the MANUAL-sync subset (slice 6b).
+// The commonMain sync engine (DefaultSyncRepository, BaseTableSync, SyncDataUseCase) is already shared
+// via :data; this module only supplies the four qualified TableSync units, the cursor store + conflict
+// resolver, the use cases, the app scope, and the iOS orchestrator. Auto-sync triggers (on-resume,
+// debounced writes) are slice 6c — IosSyncOrchestrator keeps only the manual + sign-in triggers.
+private val iosSyncModule = module {
+    // Per-table sync units — qualified so DefaultSyncRepository can distinguish the four TableSync
+    // slots even though they share the interface type. SAME qualifier strings as Android's SyncModule.
+    // Each takes (EmmDatabaseData, SupabaseClient) — bound by iosDataModule + iosSupabaseModule.
+    factory<TableSync>(named("accountSync")) { AccountTableSync(get(), get()) }
+    factory<TableSync>(named("categorySync")) { CategoryTableSync(get(), get()) }
+    factory<TableSync>(named("transactionSync")) { TransactionTableSync(get(), get()) }
+    factory<TableSync>(named("recurringSync")) { RecurringMovementTableSync(get(), get()) }
+
+    // Domain port: cursor store over NSUserDefaults (replaces the 6a NoOpSyncCursorStore).
+    single<SyncCursorStore> { IosSyncCursorStore() }
+
+    // DefaultSyncRepository dependency — easy to miss; omitting it crashes at first sync resolution.
+    factory { ConflictResolver() }
+
+    // FK-safe ordering preserved: accounts → categories → transactions → recurring_movements.
+    factory<SyncRepository> {
+        DefaultSyncRepository(
+            observeSession = get(),
+            cursorStore = get(),
+            conflictResolver = get(),
+            accountSync = get(named("accountSync")),
+            categorySync = get(named("categorySync")),
+            transactionSync = get(named("transactionSync")),
+            recurringSync = get(named("recurringSync")),
+        )
+    }
+
+    singleOf(::SyncDataUseCase)
+
+    // Bound for parity with Android; the debounce trigger that consumes it is deferred to slice 6c.
+    factoryOf(::ObservePendingSyncCountUseCase)
+
+    // Single application-lifetime scope (analogue of EmmApp.appScope). Owns the orchestrator loops
+    // AND the claim observer (see initKoin) — ONE scope, not two.
+    single<CoroutineScope>(appScopeQualifier) {
+        CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    }
+
+    // Single: owns the long-lived consumer + sign-in observer launched in its init{} on appScope.
+    // Bound to SyncController so commonMain consumers (ProfileViewModel) resolve the same instance
+    // (replaces the 6a NoOpSyncController). Binding it here starts the loops.
+    single<SyncController> {
+        IosSyncOrchestrator(
+            syncData = get(),
+            observeSession = get(),
+            signOut = get(),
+            appScope = get(appScopeQualifier),
+        )
+    }
+}
 
 // Called once from Swift at app launch (iOSApp.init). Swift sees this top-level fn as
 // KoinIosKt.doInitKoin() (the `init` prefix is mangled by the Kotlin/Native Obj-C exporter).
@@ -209,14 +280,27 @@ fun initKoin() {
             iosSupabaseModule,
             iosAuthModule,
             iosProfileSupportModule,
+            iosSyncModule,
         )
     }
+
+    val koin = koinApp.koin
+
+    // The single application-lifetime scope (analogue of EmmApp.appScope). ONE scope drives both the
+    // claim-on-sign-in observer below AND the sync orchestrator's internal loops.
+    val appScope = koin.get<CoroutineScope>(appScopeQualifier)
 
     // Claim-on-sign-in trigger (mirrors EmmApp.onCreate): a long-running observer that stamps
     // anonymous-local rows (userId IS NULL) with the user id whenever the session is Authenticated
     // and unclaimed rows exist. Launched once here because iOS has no Application.onCreate; without
-    // it, signing in would authenticate the user but never claim their local data. Resolved from the
-    // KoinApplication returned by startKoin (avoids any global-accessor API ambiguity).
-    val claimOnAuthentication = koinApp.koin.get<ClaimLocalDataOnAuthenticationUseCase>()
-    iosAppScope.launch { claimOnAuthentication() }
+    // it, signing in would authenticate the user but never claim their local data.
+    val claimOnAuthentication = koin.get<ClaimLocalDataOnAuthenticationUseCase>()
+    appScope.launch { claimOnAuthentication() }
+
+    // Eagerly resolve the orchestrator so its init{} starts the consumer + sign-in observer NOW.
+    // A Koin `single` is lazy: without this, the loops would not start until the Profile screen first
+    // resolves SyncController — so a sign-in from the Auth screen (before visiting Perfil) would not
+    // trigger sync. Mirrors EmmApp calling SyncOrchestrator.start() at launch. The instance is shared,
+    // so ProfileViewModel later resolves this very same started orchestrator.
+    koin.get<SyncController>()
 }
