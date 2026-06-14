@@ -275,13 +275,16 @@ a shared module. 196 files don't move in one PR — slice by feature.
 **Scope:** close the platform-specific gaps. Each is an independent decision.
 - [ ] **Supabase sync on iOS** — should mostly work via supabase-kt KMP +
       Darwin engine. Verify push/pull/cursor against the same backend.
-- [ ] **Google Sign-In on iOS** — `google-identity-googleid` (Credential
-      Manager) is **Android-only**. iOS needs the GoogleSignIn iOS SDK behind an
-      `expect/actual` auth bridge, OR email/password-only on iOS for v1.
-      → **OPEN DECISION** (see §5).
-- [ ] **Firebase Crashlytics / Analytics on iOS** — separate Firebase iOS SDK +
-      `GoogleService-Info.plist`. Or defer telemetry on iOS for v1.
-      → **OPEN DECISION** (see §5).
+- [ ] **Email/password auth on iOS (v1 scope)** — wire `DefaultAuthRepository`
+      on iOS (replace `NoOpAuthRepository` in `KoinIos.kt`), un-stub `signIn` in
+      `IosLocalFirstStubs.kt`, restore the auth route in `IosRoutes.kt`, hide the
+      Google button on iOS (no `GoogleSignInLauncher` actual). → §5 decision 1.
+- [ ] **Native Google Sign-In on iOS** — DEFERRED post-v1: GoogleSignIn iOS SDK
+      behind the `GoogleSignInLauncher` actual. `google-identity-googleid`
+      (Credential Manager) is Android-only. → §5 decision 1.
+- [ ] **Firebase telemetry on iOS** — DEFERRED for the alpha (→ §5 decision 2).
+      Rely on Xcode/TestFlight crash reports. Add a `CrashReporter` abstraction +
+      iOS impl (Sentry KMP vs. Firebase iOS) before the public iOS release.
 - [ ] **Connectivity-regained sync trigger** — the open tech-debt item
       (`SyncOrchestrator`, see root `CLAUDE.md`) uses `ConnectivityManager`
       (Android). For iOS it needs `NWPathMonitor` behind `expect/actual`. Track
@@ -320,11 +323,18 @@ a shared module. 196 files don't move in one PR — slice by feature.
 
 ## 5. Open decisions (need @emm input before the relevant phase)
 
-1. **iOS auth (Phase 6):** Google Sign-In native on iOS (GoogleSignIn SDK +
-   bridge) vs. email/password-only for iOS v1? *Recommendation: email/password
-   for first iOS release, add Google later — smaller surface, faster to ship.*
-2. **iOS telemetry (Phase 6):** Firebase Crashlytics/Analytics on iOS now, or
-   defer? *Recommendation: defer for the iOS alpha; add before public release.*
+1. **iOS auth (Phase 6):** ✅ DECIDED 2026-06-14 — **email/password only on iOS
+   v1.** Supabase auth is already commonMain + Darwin engine (compiles on iOS;
+   only stubbed via `NoOpAuthRepository`), so email/password auth + sync is
+   near-free: un-stub + swap the Koin binding, hide the Google button on iOS.
+   Native Google Sign-In (GoogleSignIn iOS SDK behind the `GoogleSignInLauncher`
+   actual) deferred to post-v1 — add only if iOS data justifies it.
+2. **iOS telemetry (Phase 6):** ✅ DECIDED 2026-06-14 — **defer Firebase on iOS
+   for the alpha.** Telemetry today is Crashlytics-only (2 dev-flavor call sites,
+   no abstraction); rely on Xcode/TestFlight crash reports for the alpha. Before
+   the public iOS release, introduce a `CrashReporter` abstraction (none exists
+   today) and add iOS crash reporting then — evaluate Sentry KMP (one SDK, both
+   platforms) vs. Firebase iOS at that point.
 3. **Compose vs native SwiftUI (architectural):** confirmed **shared Compose UI**
    for now. Revisit only if iOS UX feels non-native enough to justify the
    `sharedLogic`+`sharedUI` split.
