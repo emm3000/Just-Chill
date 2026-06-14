@@ -4,11 +4,9 @@ androidDriver = "2.3.2"
 appcompat = "1.7.1"
 coilCompose = "2.7.0"
 composeBom = "2026.05.01"
-constraintlayout = "2.2.1"
 coreKtx = "1.19.0"
 espressoCore = "3.7.0"
 firebaseBom = "34.14.1"
-javafaker = "1.0.2"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 koinBom = "4.2.1"
@@ -16,22 +14,16 @@ kotlinxDatetime = "0.8.0"
 kotlinxCoroutinesCore = "1.11.0"
 kotlinxCoroutinesTest = "1.11.0"
 kotlinxSerializationJson = "1.11.0"
-library = "4.3.1"
-libraryNoOp = "4.3.1"
 lifecycleLivedataKtx = "2.10.0"
-loggingInterceptor = "5.4.0"
 material = "1.14.0"
 mockk = "1.14.11"
 navigationCompose = "2.9.8"
-navigationFragmentKtx = "2.9.8"
-navigationUiKtx = "2.9.8"
 androidApplication = "9.2.1"
-credentialsVersion = "1.5.0"
-googleIdentityVersion = "1.1.1"
+credentialsVersion = "1.6.0"
+googleIdentityVersion = "1.2.0"
 kotlinVersion = "2.4.0"
 googleServicesVersion = "4.4.4"
 googleCrashlyticsVersion = "3.0.7"
-jetbrainsKotlinJvm = "2.4.0"
 detekt = "2.0.0-alpha.3"
 composeRulesDetekt = "0.6.0"
 supabaseBom = "3.6.0"
@@ -49,6 +41,15 @@ composeMaterialIcons = "1.7.3"
 nav3Core = "1.1.2"
 lifecycleViewmodelNav3 = "2.10.0"
 
+# navigation3 for the iOS nav host ONLY (shared-ui iosMain) — Android keeps the stable
+# androidx.navigation3:* above (Option A, PHASE_3_SPEC). The JetBrains Compose Multiplatform
+# port only republishes the *UI* layer (org.jetbrains.androidx.navigation3:navigation3-ui);
+# the runtime (NavKey, NavBackStack, entryProvider) comes from androidx.navigation3:navigation3-runtime
+# which is itself multiplatform from 1.0.0-rc01 (pulled transitively by navigation3-ui, pinned here).
+jetbrainsNav3Ui = "1.1.1"
+nav3RuntimeKmp = "1.1.2"
+jetbrainsLifecycleViewmodelNav3 = "2.10.0"
+
 # JetBrains multiplatform lifecycle (shared-ui commonMain ViewModel) — aligned with Compose MP 1.11.1.
 jetbrainsLifecycle = "2.10.0"
 
@@ -59,17 +60,13 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activityCompose" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
-androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion" }
-androidx-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycleLivedataKtx" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleLivedataKtx" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-material3 = { module = "androidx.compose.material3:material3" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
-androidx-navigation-fragment-ktx = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
-androidx-navigation-ui-ktx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "navigationUiKtx" }
 androidx-ui = { module = "androidx.compose.ui:ui" }
 androidx-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
 androidx-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
@@ -87,7 +84,6 @@ coroutines-extensions = { module = "app.cash.sqldelight:coroutines-extensions", 
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
-javafaker = { module = "com.github.javafaker:javafaker", version.ref = "javafaker" }
 junit = { module = "junit:junit", version.ref = "junit" }
 koin-android = { module = "io.insert-koin:koin-android" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
@@ -99,9 +95,6 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
-library = { module = "com.github.chuckerteam.chucker:library", version.ref = "library" }
-library-no-op = { module = "com.github.chuckerteam.chucker:library-no-op", version.ref = "libraryNoOp" }
-logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 detekt-ktlint-wrapper = { module = "dev.detekt:detekt-rules-ktlint-wrapper", version.ref = "detekt" }
@@ -127,13 +120,19 @@ androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", 
 # JetBrains multiplatform lifecycle-viewmodel — provides ViewModel + viewModelScope in commonMain (shared-ui).
 jetbrains-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "jetbrainsLifecycle" }
 
+# navigation3 for the iOS nav host (shared-ui iosMain) ONLY.
+# Runtime: androidx.navigation3 multiplatform (has iosSimulatorArm64/iosArm64 artifacts at rc01).
+# UI + viewmodel: JetBrains Compose Multiplatform ports.
+jetbrains-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "jetbrainsNav3Ui" }
+jetbrains-lifecycle-viewmodel-navigation3 = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "jetbrainsLifecycleViewmodelNav3" }
+
 [plugins]
 
 android-application = { id = "com.android.application", version.ref = "androidApplication" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServicesVersion" }
 google-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleCrashlyticsVersion" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinVersion" }
-jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
+jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlinVersion" }
 android-library = { id = "com.android.library", version.ref = "androidApplication" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 

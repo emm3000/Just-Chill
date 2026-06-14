@@ -5,6 +5,9 @@ plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.compose)
+    // Generates KSerializer for @Serializable NavKey routes (IosRoutes.kt). Without it, Kotlin/Native
+    // has no serializers and rememberNavBackStack cannot persist the back stack. Mirrors :androidApp.
+    kotlin("plugin.serialization") version libs.versions.kotlinVersion
 }
 
 kotlin {
@@ -71,6 +74,12 @@ kotlin {
         // also brings the SQLDelight native driver onto the iOS classpath.
         iosMain.dependencies {
             implementation(projects.data)
+            // iOS nav host (5b): JetBrains Compose Multiplatform navigation3 port. Android keeps
+            // its stable androidx.navigation3:* (Option A) — this KMP port is iosMain-only so it
+            // never touches the Android nav host (Hh.kt) or commonMain (which stays :domain-only).
+            implementation(libs.androidx.navigation3.runtime)
+            implementation(libs.jetbrains.navigation3.ui)
+            implementation(libs.jetbrains.lifecycle.viewmodel.navigation3)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
