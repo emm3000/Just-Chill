@@ -50,6 +50,7 @@ import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.justchill.core.sync.IosSyncCursorStore
 import com.emm.justchill.core.sync.IosSyncOrchestrator
 import com.emm.justchill.core.sync.SyncController
+import com.emm.justchill.core.sync.iosForegroundEvents
 import com.emm.justchill.hh.auth.AuthViewModel
 import com.emm.justchill.hh.auth.GoogleSignInLauncher
 import com.emm.justchill.hh.di.accountModule
@@ -87,8 +88,9 @@ import org.koin.dsl.module
 //
 // 6a scope: the local-first closure PLUS real email/password auth + claim-on-sign-in (iosSupabaseModule
 // + iosAuthModule). 6b adds MANUAL multi-device sync (iosSyncModule: IosSyncCursorStore over
-// NSUserDefaults + IosSyncOrchestrator, manual + sign-in triggers only). Auto-sync triggers (on-resume,
-// debounced writes) are slice 6c. Google Sign-In + Firebase remain out (deferred).
+// NSUserDefaults + IosSyncOrchestrator, manual + sign-in triggers). 6c completes the automatic-sync
+// lifecycle (on-resume via UIApplicationDidBecomeActive + debounced writes), reaching Android parity.
+// Google Sign-In + Firebase remain out (deferred).
 private val iosDataModule = module {
     single {
         val db = provideDb(provideSqlDriver())
@@ -202,11 +204,12 @@ private val iosProfileSupportModule = module {
 // One scope drives BOTH the claim-on-sign-in observer (initKoin) and the sync orchestrator loops.
 private val appScopeQualifier = named("appScope")
 
-// iOS sync wiring — mirrors :androidApp/hh/di/SyncModule.kt for the MANUAL-sync subset (slice 6b).
-// The commonMain sync engine (DefaultSyncRepository, BaseTableSync, SyncDataUseCase) is already shared
-// via :data; this module only supplies the four qualified TableSync units, the cursor store + conflict
-// resolver, the use cases, the app scope, and the iOS orchestrator. Auto-sync triggers (on-resume,
-// debounced writes) are slice 6c — IosSyncOrchestrator keeps only the manual + sign-in triggers.
+// iOS sync wiring — mirrors :androidApp/hh/di/SyncModule.kt. The commonMain sync engine
+// (DefaultSyncRepository, BaseTableSync, SyncDataUseCase) is already shared via :data; this module only
+// supplies the four qualified TableSync units, the cursor store + conflict resolver, the use cases, the
+// app scope, and the iOS orchestrator. As of slice 6c IosSyncOrchestrator runs the full automatic-sync
+// trigger set (manual + sign-in + on-resume + debounced writes), at parity with Android. Only the
+// connectivity-regained trigger is absent on both platforms (shared cross-platform debt).
 private val iosSyncModule = module {
     // Per-table sync units — qualified so DefaultSyncRepository can distinguish the four TableSync
     // slots even though they share the interface type. SAME qualifier strings as Android's SyncModule.
@@ -237,7 +240,8 @@ private val iosSyncModule = module {
 
     singleOf(::SyncDataUseCase)
 
-    // Bound for parity with Android; the debounce trigger that consumes it is deferred to slice 6c.
+    // Consumed by IosSyncOrchestrator's debounced-writes trigger (slice 6c) — the same use case the
+    // Android SyncOrchestrator uses for its trigger (c).
     factoryOf(::ObservePendingSyncCountUseCase)
 
     // Single application-lifetime scope (analogue of EmmApp.appScope). Owns the orchestrator loops
@@ -246,15 +250,19 @@ private val iosSyncModule = module {
         CoroutineScope(SupervisorJob() + Dispatchers.Default)
     }
 
-    // Single: owns the long-lived consumer + sign-in observer launched in its init{} on appScope.
-    // Bound to SyncController so commonMain consumers (ProfileViewModel) resolve the same instance
-    // (replaces the 6a NoOpSyncController). Binding it here starts the loops.
+    // Single: owns the long-lived consumer + the four trigger loops (manual/sign-in/on-resume/debounced
+    // writes), all launched in its init{} on appScope. Bound to SyncController so commonMain consumers
+    // (ProfileViewModel) resolve the same instance (replaces the 6a NoOpSyncController). Binding it here
+    // starts the loops. resumeEvents = iosForegroundEvents() supplies the on-resume signal
+    // (UIApplicationDidBecomeActive) — the iOS analogue of Android's ProcessLifecycleOwner ON_RESUME flow.
     single<SyncController> {
         IosSyncOrchestrator(
             syncData = get(),
             observeSession = get(),
+            observePendingCount = get(),
             signOut = get(),
             appScope = get(appScopeQualifier),
+            resumeEvents = iosForegroundEvents(),
         )
     }
 }

@@ -4,28 +4,41 @@ import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.sync.ObservePendingSyncCountUseCase
 import com.emm.domain.sync.SyncDataUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import platform.Foundation.NSUserDefaults
 import kotlin.concurrent.Volatile
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
- * iOS [SyncController] — the MANUAL-sync core, mirroring `:androidApp`'s SyncOrchestrator but stripped
- * to the two triggers iOS supports today:
+ * iOS [SyncController] — the automatic-sync core, mirroring `:androidApp`'s SyncOrchestrator. As of
+ * slice 6c it carries the SAME four triggers Android has (manual + the three automatic ones); only the
+ * connectivity-regained trigger is absent — and Android lacks it too, so that stays shared cross-platform
+ * debt, not an iOS gap.
  *
  *  1) Manual: [requestSync] from Perfil's "sincronizar ahora".
  *  2) Sign-in: a sync fires on every distinct authenticated userId transition (covers sign-in-after-claim).
- *
- * Deferred to slice 6c (NOT wired here): the on-resume trigger (needs UIApplication lifecycle, no
- * ProcessLifecycleOwner on iOS) and the debounced-writes trigger (observePendingCount().debounce).
+ *  3) On-resume: a sync fires on every app foreground while [SessionStatus.Authenticated], driven by
+ *     [resumeEvents] (the iOS analogue of Android's ProcessLifecycleOwner `ON_RESUME`). Mirrors Android
+ *     trigger (a): `observeSession().flatMapLatest { if authenticated → resumeEvents else flowOf() }`.
+ *  4) Debounced writes: while authenticated, observes [ObservePendingSyncCountUseCase]; debounces bursts
+ *     by 3 s and fires only when count > 0 to avoid a feedback loop (sync flips rows to Synced, count → 0).
+ *     Mirrors Android trigger (c) verbatim, including the 3-second window.
  *
  * Concurrency: a [Channel.CONFLATED] channel serializes requests. Overlapping triggers collapse into
  * at most one queued run, and [SyncStatus.isSyncing] reflects a single in-flight cycle.
@@ -39,20 +52,25 @@ import kotlin.time.Clock
  * (Android reads it via AppPreferences directly; iOS does the equivalent inside this orchestrator,
  * using the SAME key scheme as IosSyncCursorStore so a later cursor `clear` wipes it too).
  *
- * The consumer loop and the sign-in observer are launched from [init] on [appScope], so simply binding
- * this single in Koin starts them. A bound-but-not-started orchestrator would make [requestSync] a
- * silent no-op.
+ * All four trigger loops are launched from [init] on [appScope], so simply binding this single in Koin
+ * starts them. A bound-but-not-started orchestrator would make [requestSync] a silent no-op.
  *
- * @param syncData       serialized push+pull use case (holds the shared SyncMutex).
- * @param observeSession session-status flow from the auth port.
- * @param signOut        sign-out use case; called only on [DomainException.Unauthorized].
- * @param appScope       application-lifetime [CoroutineScope]; owns the launched jobs.
+ * @param syncData            serialized push+pull use case (holds the shared SyncMutex).
+ * @param observeSession      session-status flow from the auth port.
+ * @param observePendingCount pending-row count across all tables; gates the debounced-writes trigger.
+ * @param signOut             sign-out use case; called only on [DomainException.Unauthorized].
+ * @param appScope            application-lifetime [CoroutineScope]; owns the launched jobs.
+ * @param resumeEvents        emits [Unit] on every foreground (iOS `UIApplicationDidBecomeActive`); the
+ *                            platform-injected analogue of Android's `resumeEvents` (ON_RESUME).
  */
+@OptIn(FlowPreview::class)
 class IosSyncOrchestrator(
     private val syncData: SyncDataUseCase,
     private val observeSession: ObserveSessionUseCase,
+    private val observePendingCount: ObservePendingSyncCountUseCase,
     private val signOut: SignOutUseCase,
     private val appScope: CoroutineScope,
+    private val resumeEvents: Flow<Unit>,
 ) : SyncController {
 
     private val _status = MutableStateFlow(SyncStatus())
@@ -68,6 +86,8 @@ class IosSyncOrchestrator(
     init {
         startConsumer()
         startSignInTrigger()
+        startResumeTrigger()
+        startDebounceTrigger()
     }
 
     override fun requestSync(manual: Boolean) {
@@ -118,6 +138,48 @@ class IosSyncOrchestrator(
                         }
                     }
                 }
+        }
+    }
+
+    /**
+     * On-resume trigger: fires a sync on every app foreground while authenticated. Mirrors
+     * SyncOrchestrator.kt trigger (a) exactly — `flatMapLatest` on the session gates the resume
+     * collector, so foregrounds while signed out emit nothing (the empty [flowOf]) and the collector
+     * is torn down the instant the session leaves Authenticated.
+     */
+    private fun startResumeTrigger() {
+        appScope.launch {
+            observeSession()
+                .flatMapLatest { sessionStatus ->
+                    if (sessionStatus is SessionStatus.Authenticated) {
+                        resumeEvents
+                    } else {
+                        flowOf() // no-op: emit nothing when not authenticated
+                    }
+                }
+                .collect { requestSync() }
+        }
+    }
+
+    /**
+     * Debounced-writes trigger: while authenticated, observes the pending-row count, debounces bursts
+     * by 3 s, and requests a sync only when count > 0. Mirrors SyncOrchestrator.kt trigger (c) verbatim,
+     * including the 3-second window. The `count > 0` filter prevents a feedback loop: sync flips rows
+     * Pending→Synced, emitting count 0, which must not retrigger another sync.
+     */
+    private fun startDebounceTrigger() {
+        appScope.launch {
+            observeSession()
+                .flatMapLatest { sessionStatus ->
+                    if (sessionStatus is SessionStatus.Authenticated) {
+                        observePendingCount()
+                    } else {
+                        flowOf(0L)
+                    }
+                }
+                .filter { count -> count > 0L }
+                .debounce(3.seconds)
+                .collect { requestSync() }
         }
     }
 
