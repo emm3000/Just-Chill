@@ -5,15 +5,14 @@
 > **Android-first, iOS-additive**: every step keeps Android compiling green;
 > iOS is added as *new targets*, never at the cost of what already works.
 >
-> **Status**: ✅ Phases 0–4 DONE (domain, data, shared-ui all KMP; `:app` renamed
+> **Status**: ✅ Phases 0–5 DONE (domain, data, shared-ui all KMP; `:app` renamed
 > to `:androidApp` with typesafe project accessors; Android green throughout;
-> common code compiles for iOS). All closed on branch `kmp/phase-0-scaffolding`
+> iOS runs local-first in the simulator). All closed on branch `kmp/phase-0-scaffolding`
 > (see `PHASE_3_SPEC.md` + `ORCHESTRATION.md` ledger; Phase 4 commit `0d309df`,
-> CI fix `c5fa93e`, validated build+install+run from `:androidApp` + writer/
-> reviewer SHIP). **NEXT: Phase 5** — `iosApp` first run (iOS appears). Open
-> product decisions deferred to Phase 6: Google Sign-In on iOS, Firebase
-> telemetry on iOS (see §5).
-> **Date**: 2026-06-12 (plan) · status updated 2026-06-13
+> CI fix `c5fa93e`, Phase 5a `dffba01` + 5b `42f3ecd`; writer/reviewer SHIP +
+> user-validated iOS gate). **NEXT: Phase 6** — iOS parity. Open product
+> decisions for Phase 6: Google Sign-In on iOS, Firebase telemetry on iOS (see §5).
+> **Date**: 2026-06-12 (plan) · status updated 2026-06-14
 > **Owner**: @emm
 
 ---
@@ -256,18 +255,19 @@ a shared module. 196 files don't move in one PR — slice by feature.
 
 ---
 
-### Phase 5 — `iosApp` first run — iOS APPEARS — MEDIUM RISK
+### Phase 5 — `iosApp` first run — iOS APPEARS — MEDIUM RISK ✅ DONE (5a `dffba01`, 5b `42f3ecd`)
 **Scope:** get Compose UI rendering on an iOS simulator.
-- [ ] Wire the wizard's `iosApp/` Xcode project to link the `Shared` framework
-      produced by `shared-ui`.
-- [ ] Implement iOS actuals confirmed working: `NativeSqliteDriver` (2b),
-      Darwin engine (2e), exception mapping (2d), Clock (2c).
-- [ ] `MainViewController()` entry point in `shared-ui/iosMain` returning the
-      root Compose screen; `ContentView.swift` hosts it (copy wizard pattern).
-- [ ] Koin init for iOS (no Android Context — provide iOS driver/paths).
-- **Gate:** app launches in iOS simulator, local-first flows (add/list
-  transactions, categories) work **with no account, no network** — the
-  local-first core must work on iOS before touching sync/auth.
+- [x] Wire the wizard's `iosApp/` Xcode project to link the `Shared` framework
+      produced by `shared-ui` (`FRAMEWORK_SEARCH_PATHS` in pbxproj).
+- [x] Implement iOS actuals confirmed working: `NativeSqliteDriver` (2b),
+      exception mapping (2d), Clock (2c). (Darwin engine (2e) wired, first
+      exercised by sync in Phase 6.)
+- [x] `MainViewController()` entry point in `shared-ui/iosMain` returning the
+      root Compose screen (`IosApp()` nav host); `ContentView.swift` hosts it.
+- [x] Koin init for iOS (no Android Context — provide iOS driver/paths).
+- **Gate:** ✅ met — user-validated on the simulator (5b). App launches, local-first
+  flows (add/list transactions, categories) work **with no account, no network**.
+  5a was the one-screen proof of life; 5b added the full navigation3 nav host.
 
 ---
 
