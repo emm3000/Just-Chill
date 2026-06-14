@@ -30,6 +30,14 @@ kotlin {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_17
         }
+        // Opt-in to Android resource processing for this KMP library target. Without it, the
+        // com.android.kotlin.multiplatform.library plugin (AGP 9) generates the Compose Multiplatform
+        // Res accessors but never runs CopyResourcesToAndroidAssetsTask, so composeResources
+        // (drawables, fonts) are NOT merged into the consuming :androidApp APK assets. The app then
+        // crashes at runtime with MissingResourceException on the first painterResource(Res.drawable.*)
+        // (the Google sign-in button). iOS packaging is unaffected. See JetBrains CMP-9547 and the
+        // KMP "Setup and configuration for multiplatform resources" docs (androidLibrary section).
+        androidResources { enable = true }
     }
 
     // iOS framework consumed by iosApp (wizard scaffold parity). JVM target stays 17
