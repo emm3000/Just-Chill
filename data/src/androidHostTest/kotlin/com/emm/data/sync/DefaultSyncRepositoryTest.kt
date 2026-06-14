@@ -78,6 +78,7 @@ class DefaultSyncRepositoryTest {
 
     private fun authRepoWith(status: SessionStatus): AuthRepository = object : AuthRepository {
         override val sessionStatus = flowOf(status)
+        override suspend fun awaitSessionInitialization() = Unit
         override suspend fun signIn(email: String, password: String) = error("not used")
         override suspend fun signUp(email: String, password: String) = null
         override suspend fun signInWithGoogle(idToken: String, rawNonce: String) = error("not used")
@@ -329,6 +330,9 @@ class DefaultSyncRepositoryTest {
                 emit(SessionStatus.Initializing)
                 awaitCancellation()
             }
+            // A session stuck in Initializing never finishes loading, so awaiting its
+            // initialization suspends forever — withTimeout(10_000ms) is what unblocks the cycle.
+            override suspend fun awaitSessionInitialization() = awaitCancellation()
             override suspend fun signIn(email: String, password: String) = error("not used")
             override suspend fun signUp(email: String, password: String) = null
             override suspend fun signInWithGoogle(idToken: String, rawNonce: String) = error("not used")
@@ -377,6 +381,7 @@ class DefaultSyncRepositoryTest {
             override val sessionStatus = flowOf(
                 SessionStatus.Authenticated(AuthUser(userId = "specific-user", email = null)),
             )
+            override suspend fun awaitSessionInitialization() = Unit
             override suspend fun signIn(email: String, password: String) = error("not used")
             override suspend fun signUp(email: String, password: String) = null
             override suspend fun signInWithGoogle(idToken: String, rawNonce: String) = error("not used")

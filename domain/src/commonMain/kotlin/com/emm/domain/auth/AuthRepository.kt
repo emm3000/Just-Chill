@@ -6,6 +6,19 @@ interface AuthRepository {
 
     val sessionStatus: Flow<SessionStatus>
 
+    /**
+     * Suspends until the underlying auth provider has finished loading any persisted session,
+     * i.e. the session status has left its initial "Initializing" state.
+     *
+     * Sync requests rely on the provider attaching the authenticated JWT to outgoing calls. On
+     * some platforms (Kotlin/Native), the session is loaded asynchronously after the client is
+     * built, so a request fired before initialization completes resolves with no token and is
+     * silently downgraded to an anonymous request (HTTP 403 under RLS). Awaiting initialization
+     * before the first authenticated request guarantees the token is available. On platforms where
+     * the session is already settled (e.g. JVM after sign-in) this returns immediately.
+     */
+    suspend fun awaitSessionInitialization()
+
     suspend fun signIn(email: String, password: String): AuthUser
 
     /**

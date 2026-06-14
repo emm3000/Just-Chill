@@ -33,6 +33,22 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
             .map { it.toDomain() }
             .flowOn(ioDispatcher)
 
+    /**
+     * Delegates to supabase-kt's [io.github.jan.supabase.auth.Auth.awaitInitialization], which
+     * suspends until [io.github.jan.supabase.auth.Auth.sessionStatus] leaves
+     * [io.github.jan.supabase.auth.status.SessionStatus.Initializing].
+     *
+     * Postgrest resolves the request JWT synchronously from `auth.sessionStatus.value`. On
+     * Kotlin/Native the session is loaded asynchronously after the client is built, so a push fired
+     * before that read settles attaches no token and the request is silently downgraded to the anon
+     * key (HTTP 403 under RLS `with check (user_id = auth.uid())`). Awaiting initialization on the
+     * same StateFlow the resolver reads closes that gap. On JVM the session is already settled after
+     * sign-in, so this returns immediately.
+     */
+    override suspend fun awaitSessionInitialization(): Unit = withContext(ioDispatcher) {
+        client.auth.awaitInitialization()
+    }
+
     override suspend fun signIn(email: String, password: String): AuthUser = authCall {
         client.auth.signInWith(Email) {
             this.email = email

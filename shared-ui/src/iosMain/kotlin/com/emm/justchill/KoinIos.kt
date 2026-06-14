@@ -64,6 +64,7 @@ import com.emm.justchill.hh.di.seetransactionsModule
 import com.emm.justchill.hh.di.sharedModule
 import com.emm.justchill.hh.di.transactionModule
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
@@ -142,7 +143,15 @@ private fun provideSupabaseClient(): SupabaseClient {
         supabaseKey = key,
     ) {
         install(Auth)
-        install(Postgrest)
+        install(Postgrest) {
+            // Require an authenticated session for every Postgrest request: never fall back to the
+            // anon supabaseKey. Postgrest is used ONLY by the sync engine and the delete_account RPC,
+            // both strictly authenticated paths. Without this, an unresolved JWT is silently
+            // downgraded to an anonymous request that RLS rejects with a confusing HTTP 403; with it,
+            // the call throws SessionRequiredException, which maps to a retryable sync error instead.
+            @OptIn(SupabaseExperimental::class)
+            requireValidSession = true
+        }
         defaultSerializer = KotlinXSerializer(
             json = Json {
                 ignoreUnknownKeys = true

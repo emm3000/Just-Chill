@@ -6,6 +6,7 @@ import com.emm.domain.shared.error.DomainException
 import com.emm.domain.sync.ConflictResolver
 import com.emm.domain.sync.SyncCursorStore
 import com.emm.domain.sync.SyncRepository
+import io.github.jan.supabase.auth.exception.SessionRequiredException
 import io.github.jan.supabase.exceptions.HttpRequestException
 import io.github.jan.supabase.exceptions.RestException
 import io.github.jan.supabase.exceptions.UnauthorizedRestException
@@ -115,6 +116,13 @@ class DefaultSyncRepository(
         // Bound the wait for session resolution: an unresolved session must not block the
         // mutex held by SyncDataUseCase forever. On timeout, surface as a network error.
         val status = withTimeout(SESSION_RESOLVE_TIMEOUT_MS) {
+            // Block until the auth provider has finished loading any persisted session BEFORE
+            // resolving the user. Postgrest reads the request JWT synchronously from the auth
+            // session StateFlow; on Kotlin/Native that StateFlow is populated asynchronously after
+            // the client is built, so a push fired before it settles goes out without a token and
+            // is silently downgraded to the anon key (HTTP 403 under RLS). Awaiting here closes that
+            // window. On JVM the session is already settled, so this is a no-op.
+            observeSession.awaitInitialization()
             observeSession().first { it !is SessionStatus.Initializing }
         }
         when (status) {
@@ -139,6 +147,14 @@ fun Throwable.toSyncDomainException(): DomainException = when (this) {
         message = description ?: "Unauthorized",
         cause = this,
     )
+
+    // Postgrest has requireValidSession = true: when the auth session is not yet resolved, the
+    // request throws SessionRequiredException instead of silently downgrading to the anon key.
+    // This is a transient "session not ready" condition, not a revoked session — map it to a
+    // retryable network error (NOT Unauthorized, which would sign the user out). The
+    // awaitSessionInitialization() gate in currentUserId() makes this essentially unreachable; it
+    // remains as a safety net so the failure stays loud and retryable rather than a confusing 403.
+    is SessionRequiredException -> DomainException.NetworkUnavailable(this)
 
     is RestException -> DomainException.Unknown(this)
 
