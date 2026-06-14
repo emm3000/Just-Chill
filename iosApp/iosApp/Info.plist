@@ -4,5 +4,13 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- Allow cleartext HTTP to the local Supabase stack (http://127.0.0.1:54321) during
+	     simulator testing. NSAllowsLocalNetworking is the targeted exception (loopback + local
+	     network only); it does NOT weaken ATS for public hosts, so it is safe to ship. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

@@ -110,7 +110,7 @@ compose.resources {
 // file into a build/ generated source dir wired into iosMain. Secrets are never hardcoded and the
 // generated file lives under build/ (gitignored). When supabase.properties is absent (CI), the
 // fields fall back to empty / the localhost placeholder, exactly like Android — the app stays
-// usable in anonymous/offline mode. The simulator build uses the dev.* keys.
+// usable in anonymous/offline mode. The simulator build uses the ios.* keys, falling back to dev.*.
 // ---------------------------------------------------------------------------
 val generatedIosConfigDir: Provider<Directory> =
     layout.buildDirectory.dir("generated/iosSupabaseConfig/kotlin")
@@ -135,12 +135,17 @@ val generateIosSupabaseConfig by tasks.registering {
         if (propsFile.exists()) {
             FileInputStream(propsFile).use { props.load(it) }
         }
-        // dev.* keys for the simulator build (parity with :androidApp's dev flavor).
-        // SUPABASE_URL gets the same empty -> localhost placeholder fallback Android applies in
-        // provideSupabaseClient(); SUPABASE_ANON_KEY stays as-is (empty when absent).
-        val url = props.getProperty("dev.supabase.url", "")
+        // ios.* override first, then dev.* (parity with :androidApp's dev flavor). The iOS simulator
+        // shares the host network, so localhost == host; dev.supabase.url uses 10.0.2.2 (the
+        // Android-emulator host alias) which the simulator cannot resolve. The ios.* override lets
+        // both clients target the SAME local stack via their own alias. SUPABASE_URL keeps the empty
+        // -> localhost placeholder fallback Android applies in provideSupabaseClient(); the anon key
+        // falls back to dev.* (the shared local demo JWT) and stays empty only when both are absent.
+        val url = props.getProperty("ios.supabase.url", "")
+            .ifBlank { props.getProperty("dev.supabase.url", "") }
             .ifBlank { "http://localhost:54321" }
-        val anonKey = props.getProperty("dev.supabase.anonKey", "")
+        val anonKey = props.getProperty("ios.supabase.anonKey", "")
+            .ifBlank { props.getProperty("dev.supabase.anonKey", "") }
         val pkgDir = outputDir.get().asFile.resolve("com/emm/justchill")
         pkgDir.mkdirs()
         // String literals are escaped so quotes/backslashes in a key never break compilation.
