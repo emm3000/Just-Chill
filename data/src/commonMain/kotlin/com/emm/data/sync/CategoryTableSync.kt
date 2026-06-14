@@ -52,7 +52,10 @@ class CategoryTableSync(private val db: EmmDatabaseData, client: SupabaseClient)
     }
 
     override suspend fun upsertDtos(dtos: List<CategoryRowDto>) {
-        client.postgrest.from(TABLE).upsert(dtos)
+        // Composite PK (user_id, category_id) on the remote: the conflict target MUST match so the
+        // upsert merges on this user's own row instead of colliding with another tenant's id and
+        // failing the RLS check. Default ignoreDuplicates=false keeps resolution=merge-duplicates.
+        client.postgrest.from(TABLE).upsert(dtos) { onConflict = "user_id,category_id" }
     }
 
     // ---------------------------------------------------------------------------

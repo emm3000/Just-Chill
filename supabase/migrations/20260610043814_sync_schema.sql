@@ -20,8 +20,15 @@ begin
 end;
 $$;
 
+-- Primary keys are COMPOSITE (user_id, <client_id>). The client-generated id alone is NOT
+-- unique across tenants: default categories are seeded with FIXED, byte-identical UUIDs on
+-- every install (see DatabaseDriver.android.kt / DefaultCategorySeed.ios.kt). A single-column
+-- PK on the client id makes account B's push upsert collide with account A's row and fail the
+-- RLS USING check (42501). Scoping uniqueness by (user_id, id) lets the SAME user's multiple
+-- devices still dedupe a shared id while two DIFFERENT users may hold the same id independently.
+-- Safe to change: this schema has no server-side FKs, so the composite PK cascades nothing.
 create table public.accounts (
-  account_id        text primary key,
+  account_id        text not null,
   name              text not null,
   type              text not null,
   currency          text not null,
@@ -29,11 +36,12 @@ create table public.accounts (
   created_at        bigint not null,
   deleted_at        bigint,
   user_id           uuid not null,
-  server_updated_at timestamptz not null default now()
+  server_updated_at timestamptz not null default now(),
+  primary key (user_id, account_id)
 );
 
 create table public.categories (
-  category_id       text primary key,
+  category_id       text not null,
   name              text not null,
   icon              text not null,
   color             text not null,
@@ -43,11 +51,12 @@ create table public.categories (
   created_at        bigint not null,
   deleted_at        bigint,
   user_id           uuid not null,
-  server_updated_at timestamptz not null default now()
+  server_updated_at timestamptz not null default now(),
+  primary key (user_id, category_id)
 );
 
 create table public.transactions (
-  transaction_id    text primary key,
+  transaction_id    text not null,
   type              text not null,
   amount            bigint not null,
   description       text not null default '',
@@ -58,11 +67,12 @@ create table public.transactions (
   created_at        bigint not null,
   deleted_at        bigint,
   user_id           uuid not null,
-  server_updated_at timestamptz not null default now()
+  server_updated_at timestamptz not null default now(),
+  primary key (user_id, transaction_id)
 );
 
 create table public.recurring_movements (
-  id                     text primary key,
+  id                     text not null,
   name                   text not null,
   type                   text not null,
   amount                 bigint,
@@ -77,7 +87,8 @@ create table public.recurring_movements (
   created_at             bigint not null,
   deleted_at             bigint,
   user_id                uuid not null,
-  server_updated_at      timestamptz not null default now()
+  server_updated_at      timestamptz not null default now(),
+  primary key (user_id, id)
 );
 
 -- Trigger + pull index + RLS, per table.

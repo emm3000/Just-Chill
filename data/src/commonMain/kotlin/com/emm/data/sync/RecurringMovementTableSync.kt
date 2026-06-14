@@ -59,7 +59,10 @@ class RecurringMovementTableSync(private val db: EmmDatabaseData, client: Supaba
     }
 
     override suspend fun upsertDtos(dtos: List<RecurringMovementRowDto>) {
-        client.postgrest.from(TABLE).upsert(dtos)
+        // Composite PK (user_id, id) on the remote: the conflict target MUST match so the upsert
+        // merges on this user's own row instead of colliding with another tenant's id and failing
+        // the RLS check. Default ignoreDuplicates=false keeps resolution=merge-duplicates.
+        client.postgrest.from(TABLE).upsert(dtos) { onConflict = "user_id,id" }
     }
 
     // ---------------------------------------------------------------------------
