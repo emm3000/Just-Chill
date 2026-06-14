@@ -81,6 +81,10 @@ fun AuthScreen(
     onBack: () -> Unit,
     snackbarHostState: SnackbarHostState,
     onOpenEmailApp: () -> Unit,
+    // Whether to show the "Continuar con Google" button. Android passes the default (true); iOS
+    // passes false because native Google Sign-In is deferred post-v1 (no GoogleSignInLauncher iOS
+    // impl). Default true keeps every existing Android call site unchanged.
+    showGoogleSignIn: Boolean = true,
     vm: AuthViewModel = koinViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -118,6 +122,7 @@ fun AuthScreen(
     AuthContent(
         state = state,
         onIntent = vm::onIntent,
+        showGoogleSignIn = showGoogleSignIn,
     )
 }
 
@@ -128,7 +133,11 @@ private fun AuthMessage.toText(): String = when (this) {
 }
 
 @Composable
-private fun AuthContent(state: AuthUiState, onIntent: (AuthIntent) -> Unit) {
+private fun AuthContent(
+    state: AuthUiState,
+    onIntent: (AuthIntent) -> Unit,
+    showGoogleSignIn: Boolean = true,
+) {
     val colors = LocalEmmColors.current
 
     Column(
@@ -153,6 +162,7 @@ private fun AuthContent(state: AuthUiState, onIntent: (AuthIntent) -> Unit) {
             is AuthUiState.Form -> AuthFormStep(
                 state = state,
                 onIntent = onIntent,
+                showGoogleSignIn = showGoogleSignIn,
                 modifier = Modifier.weight(1f),
             )
 
@@ -166,7 +176,12 @@ private fun AuthContent(state: AuthUiState, onIntent: (AuthIntent) -> Unit) {
 }
 
 @Composable
-private fun AuthFormStep(state: AuthUiState.Form, onIntent: (AuthIntent) -> Unit, modifier: Modifier = Modifier) {
+private fun AuthFormStep(
+    state: AuthUiState.Form,
+    onIntent: (AuthIntent) -> Unit,
+    showGoogleSignIn: Boolean = true,
+    modifier: Modifier = Modifier,
+) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
@@ -210,36 +225,41 @@ private fun AuthFormStep(state: AuthUiState.Form, onIntent: (AuthIntent) -> Unit
 
             Spacer(Modifier.height(spacing.s6))
 
-            OutlinedCta(
-                label = "Continuar con Google",
-                interaction = state.submitting.toCtaInteraction(busyWhen = Submitting.Google),
-                leading = {
-                    // Image, not Icon — the official multicolor G must never be tinted
-                    // (Google sign-in branding guidelines).
-                    Image(
-                        painter = painterResource(Res.drawable.ic_google),
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                },
-                onClick = { onIntent(AuthIntent.GoogleSignInClicked) },
-            )
+            // Google sign-in is platform-gated: hidden on iOS (native Google Sign-In deferred
+            // post-v1). The "o" divider belongs to this block too — without the button above it,
+            // a lone divider makes no sense, so both are hidden together.
+            if (showGoogleSignIn) {
+                OutlinedCta(
+                    label = "Continuar con Google",
+                    interaction = state.submitting.toCtaInteraction(busyWhen = Submitting.Google),
+                    leading = {
+                        // Image, not Icon — the official multicolor G must never be tinted
+                        // (Google sign-in branding guidelines).
+                        Image(
+                            painter = painterResource(Res.drawable.ic_google),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
+                    onClick = { onIntent(AuthIntent.GoogleSignInClicked) },
+                )
 
-            Spacer(Modifier.height(spacing.s4))
+                Spacer(Modifier.height(spacing.s4))
 
-            // Divider with label
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Hairline(modifier = Modifier.weight(1f))
-                Spacer(Modifier.width(spacing.s3))
-                Text(text = "o", style = type.bodyM, color = colors.textTertiary)
-                Spacer(Modifier.width(spacing.s3))
-                Hairline(modifier = Modifier.weight(1f))
+                // Divider with label
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Hairline(modifier = Modifier.weight(1f))
+                    Spacer(Modifier.width(spacing.s3))
+                    Text(text = "o", style = type.bodyM, color = colors.textTertiary)
+                    Spacer(Modifier.width(spacing.s3))
+                    Hairline(modifier = Modifier.weight(1f))
+                }
+
+                Spacer(Modifier.height(spacing.s4))
             }
-
-            Spacer(Modifier.height(spacing.s4))
 
             AuthFieldInput(
                 label = "Correo",

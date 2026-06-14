@@ -14,7 +14,8 @@ import kotlinx.serialization.modules.subclass
 // multiplatform runtime). The Android nav host keeps its own androidx.navigation3 NavKeys
 // (Option A — do not migrate Android's nav, do not put nav in commonMain).
 //
-// OMITTED vs Android (phase 6): Auth, the Manifesto-as-launch-gate (iOS launches straight to Home).
+// OMITTED vs Android (phase 6+): the Manifesto-as-launch-gate (iOS launches straight to Home).
+// Auth is wired in 6a (IosAuthRoute below) — opt-in from Profile, NOT a launch gate.
 
 /** Marker for routes that show the bottom navigation bar. */
 internal sealed interface IosBottomBarRoute : NavKey
@@ -59,6 +60,12 @@ internal data class IosAddEditRecurringRoute(val id: String? = null) : NavKey
 @Serializable
 internal data object IosReportRoute : NavKey
 
+// Auth (6a). Pushed from Profile's "Iniciar sesión" row; on successful sign-in/sign-up the
+// AuthScreen pops back to Profile. NOT a bottom-bar route and NOT a launch gate — iOS still
+// launches straight to Home.
+@Serializable
+internal data object IosAuthRoute : NavKey
+
 // Kotlin/Native has no reflection-based serializer discovery, so the NavKey back stack cannot resolve
 // route serializers the way the JVM (Android) does. Every @Serializable route above MUST be registered
 // here for open NavKey polymorphism, or rememberNavBackStack throws at runtime ("You must pass a
@@ -80,6 +87,7 @@ internal val iosNavSavedStateConfiguration: SavedStateConfiguration = SavedState
             subclass(IosRecurringRoute::class, IosRecurringRoute.serializer())
             subclass(IosAddEditRecurringRoute::class, IosAddEditRecurringRoute.serializer())
             subclass(IosReportRoute::class, IosReportRoute.serializer())
+            subclass(IosAuthRoute::class, IosAuthRoute.serializer())
         }
     }
 }

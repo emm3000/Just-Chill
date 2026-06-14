@@ -55,6 +55,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
@@ -70,9 +71,13 @@ import com.emm.justchill.hh.category.CategoriesEffect
 import com.emm.justchill.hh.category.CategoriesScreen
 import com.emm.justchill.hh.category.CategoriesViewModel
 import com.emm.justchill.hh.category.findById
+import com.emm.justchill.hh.auth.AuthScreen
 import com.emm.justchill.hh.home.HomeEffect
 import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.home.HomeViewModel
+import com.emm.justchill.hh.profile.ProfileEffect
+import com.emm.justchill.hh.profile.ProfileIntent
+import com.emm.justchill.hh.profile.ProfileMessage
 import com.emm.justchill.hh.profile.ProfileScreen
 import com.emm.justchill.hh.profile.ProfileViewModel
 import com.emm.justchill.hh.recurring.AddEditRecurringMovementScreen
@@ -188,6 +193,19 @@ fun IosApp() {
                     entry<IosProfileRoute> {
                         val vm: ProfileViewModel = koinViewModel()
                         val state by vm.state.collectAsStateWithLifecycle()
+                        // Surface sign-out / delete-account outcomes (and errors) via the root
+                        // snackbar — mirrors Android's ProfileRoute effect collection.
+                        LaunchedEffect(vm) {
+                            vm.effect.collect { effect ->
+                                when (effect) {
+                                    is ProfileEffect.ShowError -> showRootMessage(effect.error.toUserMessage())
+                                    is ProfileEffect.Notify -> showRootMessage(effect.message.toIosText())
+                                    // Export/import (SAF) is phase 6b on iOS — onExportClick never fires,
+                                    // so ExportReady is unreachable here; ignore it for now.
+                                    is ProfileEffect.ExportReady -> Unit
+                                }
+                            }
+                        }
                         ProfileScreen(
                             state = state,
                             appVersion = "1.0.0",
@@ -195,15 +213,17 @@ fun IosApp() {
                             onCategoriesClick = { backStack.add(IosCategoriesListRoute) },
                             onAccountsClick = { backStack.add(IosAccountsRoute) },
                             onRecurringClick = { backStack.add(IosRecurringRoute) },
-                            onAboutClick = { /* TODO phase 6: Manifesto/About on iOS */ },
-                            // Backup + auth + sync are phase 6 on iOS — no-op (must not crash).
-                            onExportClick = { /* TODO phase 6: iOS export (SAF equivalent) */ },
-                            onImportClick = { /* TODO phase 6: iOS import */ },
-                            onPrivacyClick = { /* TODO phase 6: privacy policy screen */ },
-                            onSignInClick = { /* TODO phase 6: auth on iOS */ },
-                            onSignOutClick = { /* TODO phase 6 */ },
-                            onDeleteAccountClick = { /* TODO phase 6 */ },
-                            onSyncNowClick = { /* TODO phase 6: sync on iOS */ },
+                            onAboutClick = { /* TODO phase 6+: Manifesto/About on iOS */ },
+                            // Backup is phase 6b on iOS — no-op (must not crash).
+                            onExportClick = { /* TODO phase 6b: iOS export (SAF equivalent) */ },
+                            onImportClick = { /* TODO phase 6b: iOS import */ },
+                            onPrivacyClick = { /* TODO phase 6+: privacy policy screen */ },
+                            // Auth (6a): opt-in from Profile. On success AuthScreen pops back here.
+                            onSignInClick = { backStack.add(IosAuthRoute) },
+                            onSignOutClick = { vm.onIntent(ProfileIntent.SignOut) },
+                            onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccount) },
+                            // Sync is phase 6b — the no-op SyncController absorbs this harmlessly.
+                            onSyncNowClick = { /* TODO phase 6b: sync on iOS */ },
                         )
                     }
 
@@ -306,7 +326,23 @@ fun IosApp() {
                             onBack = { backStack.removeLastOrNull() },
                             onAddTransaction = { backStack.add(IosAddTransactionRoute) },
                             // Sharing is a platform concern — no-op for 5b.
-                            onShareText = { /* TODO phase 6: iOS share sheet */ },
+                            onShareText = { /* TODO phase 6b: iOS share sheet */ },
+                        )
+                    }
+
+                    entry<IosAuthRoute> {
+                        AuthScreen(
+                            // On successful sign-in/sign-up AuthViewModel emits NavigateBack, which
+                            // calls onBack — popping Auth and returning to Profile (which then shows
+                            // the signed-in state via its ObserveSessionUseCase subscription).
+                            onBack = { backStack.removeLastOrNull() },
+                            snackbarHostState = snackbarHostState,
+                            // Opening the system mail app needs UIKit (UIApplication.openURL with a
+                            // mailto: / message:// scheme) — deferred to 6b. No-op for now: the
+                            // CheckEmail screen still shows the address and the resend link works.
+                            onOpenEmailApp = { /* TODO phase 6b: open iOS Mail app */ },
+                            // iOS hides Google Sign-In (deferred post-v1). Email/password only.
+                            showGoogleSignIn = false,
                         )
                     }
                 },
@@ -371,6 +407,18 @@ private fun NavBackStack<NavKey>.popToTransactionScreen() {
     while (isNotEmpty() && last() !is IosAddTransactionRoute && last() !is IosEditTransactionRoute) {
         removeLastOrNull()
     }
+}
+
+// Spanish copy for ProfileViewModel notifications surfaced via the root snackbar (mirrors Android's
+// ProfileMessage.toText). On iOS 6a only SessionClosed / AccountDeleted can fire (export/import is 6b);
+// the rest are mapped for exhaustiveness so a future iOS path stays covered.
+private fun ProfileMessage.toIosText(): String = when (this) {
+    ProfileMessage.SessionClosed -> "Sesión cerrada. Tus datos siguen en este teléfono."
+    ProfileMessage.AccountDeleted -> "Cuenta eliminada. Tus datos siguen en este teléfono."
+    ProfileMessage.ExportDone -> "Listo, tu data está guardada."
+    ProfileMessage.ExportFailed -> "No pude exportar — capaz no hay espacio en tu celu?"
+    is ProfileMessage.ImportDone -> "Listo — $transactions movimientos importados."
+    ProfileMessage.ImportFailed -> "No pude importar el archivo — capaz está dañado."
 }
 
 private data class IosBottomTab(
