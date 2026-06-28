@@ -7,6 +7,8 @@ import com.emm.justchill.BuildConfig
 import com.emm.justchill.core.DispatchersProvider
 import com.emm.justchill.core.platform.CurrentActivityHolder
 import com.emm.justchill.core.preferences.AppPreferences
+import com.russhwolf.settings.SharedPreferencesSettings
+import com.russhwolf.settings.Settings
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -14,7 +16,9 @@ import org.koin.dsl.module
 val coreModule = module {
 
     single<DispatchersProvider> { DefaultDispatcher() }
-    single<SharedPreferences> { provideSharedPreferences(androidContext()) }
+    // multiplatform-settings over the SAME SharedPreferences file (Build.ID, MODE_PRIVATE) the
+    // app has always used — preserves existing onboarding state + sync cursor for live installs.
+    single<Settings> { SharedPreferencesSettings(provideSharedPreferences(androidContext())) }
     single { AppPreferences(get()) }
     single { CurrentActivityHolder() }
 

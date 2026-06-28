@@ -12,7 +12,7 @@ import com.emm.domain.sync.SyncCursorStore
 import com.emm.domain.sync.SyncDataUseCase
 import com.emm.domain.sync.SyncMutex
 import com.emm.domain.sync.SyncRepository
-import com.emm.justchill.core.sync.AppPreferencesSyncCursorStore
+import com.emm.justchill.core.sync.DefaultSyncCursorStore
 import com.emm.justchill.core.sync.SyncController
 import com.emm.justchill.core.sync.SyncOrchestrator
 import com.emm.justchill.core.sync.resumeEvents
@@ -39,8 +39,8 @@ val syncModule = module {
     factory<TableSync>(transactionSyncQualifier) { TransactionTableSync(get(), get()) }
     factory<TableSync>(recurringSyncQualifier) { RecurringMovementTableSync(get(), get()) }
 
-    // Domain port: cursor store implemented over AppPreferences
-    factoryOf(::AppPreferencesSyncCursorStore) bind SyncCursorStore::class
+    // Domain port: cursor store implemented over AppPreferences (single commonMain impl).
+    factoryOf(::DefaultSyncCursorStore) bind SyncCursorStore::class
 
     factory { ConflictResolver() }
 

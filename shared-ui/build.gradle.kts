@@ -59,6 +59,9 @@ kotlin {
             implementation(libs.jetbrains.lifecycle.viewmodel.compose)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
+            // KMP key-value preferences behind AppPreferences (core/preferences). Settings interface
+            // in commonMain; SharedPreferencesSettings (androidMain) / NSUserDefaultsSettings (iosMain).
+            implementation(libs.multiplatform.settings)
             implementation(project.dependencies.platform(libs.koin.bom))
             implementation(libs.koin.core)
             implementation(libs.koin.compose)

@@ -47,7 +47,8 @@ import com.emm.domain.sync.SyncMutex
 import com.emm.domain.sync.SyncRepository
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionStatsRepository
-import com.emm.justchill.core.sync.IosSyncCursorStore
+import com.emm.justchill.core.preferences.AppPreferences
+import com.emm.justchill.core.sync.DefaultSyncCursorStore
 import com.emm.justchill.core.sync.IosSyncOrchestrator
 import com.emm.justchill.core.sync.SyncController
 import com.emm.justchill.core.sync.resumeEvents
@@ -63,6 +64,8 @@ import com.emm.justchill.hh.di.reportModule
 import com.emm.justchill.hh.di.seetransactionsModule
 import com.emm.justchill.hh.di.sharedModule
 import com.emm.justchill.hh.di.transactionModule
+import com.russhwolf.settings.NSUserDefaultsSettings
+import com.russhwolf.settings.Settings
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.auth.Auth
@@ -81,6 +84,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import platform.Foundation.NSUserDefaults
 
 // iOS :data wiring — the platform Koin module. Mirrors :app's dbModule + hhModule (the :data
 // repository/datasource binds) but uses the iOS native SQLDelight driver (provideSqlDriver()
@@ -204,6 +208,13 @@ private val iosProfileSupportModule = module {
     // App version surfaced in the Profile footer.
     single(named("appVersion")) { "1.0.0" }
 
+    // Shared key-value preferences (commonMain AppPreferences) over multiplatform-settings. iOS has
+    // no production users, so NSUserDefaults key parity with the old IosSyncCursorStore is irrelevant;
+    // the key scheme stays self-consistent (same prefixes baked into AppPreferences). Mirrors Android's
+    // coreModule, which provides Settings + AppPreferences over SharedPreferences.
+    single<Settings> { NSUserDefaultsSettings(NSUserDefaults.standardUserDefaults) }
+    single { AppPreferences(get()) }
+
     // Single: ONE lock per process. Serializes sync cycles against each other AND against account
     // deletion (in-flight push must not resurrect rows after delete_account). Reused by SyncDataUseCase.
     single { SyncMutex() }
@@ -228,8 +239,8 @@ private val iosSyncModule = module {
     factory<TableSync>(named("transactionSync")) { TransactionTableSync(get(), get()) }
     factory<TableSync>(named("recurringSync")) { RecurringMovementTableSync(get(), get()) }
 
-    // Domain port: cursor store over NSUserDefaults (replaces the 6a NoOpSyncCursorStore).
-    single<SyncCursorStore> { IosSyncCursorStore() }
+    // Domain port: single commonMain cursor store over AppPreferences (replaces IosSyncCursorStore).
+    single<SyncCursorStore> { DefaultSyncCursorStore(get()) }
 
     // DefaultSyncRepository dependency — easy to miss; omitting it crashes at first sync resolution.
     factory { ConflictResolver() }
@@ -270,6 +281,7 @@ private val iosSyncModule = module {
             observeSession = get(),
             observePendingCount = get(),
             signOut = get(),
+            prefs = get(),
             appScope = get(appScopeQualifier),
             resumeEvents = resumeEvents(),
         )

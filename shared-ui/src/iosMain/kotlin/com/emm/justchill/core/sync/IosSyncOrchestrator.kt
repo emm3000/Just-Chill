@@ -6,6 +6,7 @@ import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.sync.ObservePendingSyncCountUseCase
 import com.emm.domain.sync.SyncDataUseCase
+import com.emm.justchill.core.preferences.AppPreferences
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
@@ -20,7 +21,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import platform.Foundation.NSUserDefaults
 import kotlin.concurrent.Volatile
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
@@ -47,10 +47,11 @@ import kotlin.time.Duration.Companion.seconds
  * [DomainException] subtypes set [SyncStatus.lastSyncFailed] so Perfil can show the retry pill; the
  * next [requestSync] is the retry. [CancellationException] is never caught.
  *
- * `last_synced_at_$userId` (Long, epoch millis, sentinel -1L = never) is persisted directly to
- * [NSUserDefaults] here — it is NOT part of the [com.emm.domain.sync.SyncCursorStore] interface
- * (Android reads it via AppPreferences directly; iOS does the equivalent inside this orchestrator,
- * using the SAME key scheme as IosSyncCursorStore so a later cursor `clear` wipes it too).
+ * `last_synced_at_$userId` (Long, epoch millis, sentinel -1L = never) is persisted via the shared
+ * [AppPreferences] — the SAME accessor Android's SyncOrchestrator uses — so both platforms route this
+ * timestamp through one abstraction. It is NOT part of the [com.emm.domain.sync.SyncCursorStore]
+ * interface; account deletion still wipes it through [AppPreferences.clearSyncMetadata] (called by
+ * DefaultSyncCursorStore.clear).
  *
  * All four trigger loops are launched from [init] on [appScope], so simply binding this single in Koin
  * starts them. A bound-but-not-started orchestrator would make [requestSync] a silent no-op.
@@ -59,6 +60,7 @@ import kotlin.time.Duration.Companion.seconds
  * @param observeSession      session-status flow from the auth port.
  * @param observePendingCount pending-row count across all tables; gates the debounced-writes trigger.
  * @param signOut             sign-out use case; called only on [DomainException.Unauthorized].
+ * @param prefs               key-value preferences adapter; persists last-synced-at per user.
  * @param appScope            application-lifetime [CoroutineScope]; owns the launched jobs.
  * @param resumeEvents        emits [Unit] on every foreground (iOS `UIApplicationDidBecomeActive`); the
  *                            platform-injected analogue of Android's `resumeEvents` (ON_RESUME).
@@ -69,6 +71,7 @@ class IosSyncOrchestrator(
     private val observeSession: ObserveSessionUseCase,
     private val observePendingCount: ObservePendingSyncCountUseCase,
     private val signOut: SignOutUseCase,
+    private val prefs: AppPreferences,
     private val appScope: CoroutineScope,
     private val resumeEvents: Flow<Unit>,
 ) : SyncController {
@@ -123,7 +126,7 @@ class IosSyncOrchestrator(
                         is SessionStatus.Authenticated -> {
                             val userId = sessionStatus.user.userId
                             currentUserId = userId
-                            val stored = loadLastSyncedAt(userId)
+                            val stored = prefs.lastSyncedAt(userId)
                             _status.value = SyncStatus(isSyncing = false, lastSyncedAtMillis = stored)
                             requestSync()
                         }
@@ -198,7 +201,7 @@ class IosSyncOrchestrator(
             val now = Clock.System.now().toEpochMilliseconds()
             val userId = currentUserId
             if (userId != null) {
-                saveLastSyncedAt(userId, now)
+                prefs.setLastSyncedAt(userId, now)
             }
             _status.value = _status.value.copy(isSyncing = false, lastSyncedAtMillis = now, lastSyncFailed = false)
         } catch (e: CancellationException) {
@@ -216,30 +219,5 @@ class IosSyncOrchestrator(
             // show the error state regardless of whether the failure was manual or sign-in triggered.
             _status.value = _status.value.copy(isSyncing = false, lastSyncFailed = true)
         }
-    }
-
-    /**
-     * Reads the per-user last-synced-at epoch-millis from [NSUserDefaults]. Returns null when the
-     * user has never synced on this device (sentinel [NEVER_SYNCED] = -1). Mirrors AppPreferences.lastSyncedAt.
-     */
-    private fun loadLastSyncedAt(userId: String): Long? {
-        val defaults = NSUserDefaults.standardUserDefaults
-        val key = lastSyncedAtKey(userId)
-        // objectForKey distinguishes "absent" from a stored 0; integerForKey alone cannot.
-        if (defaults.objectForKey(key) == null) return null
-        val value = defaults.integerForKey(key)
-        return if (value == NEVER_SYNCED) null else value
-    }
-
-    /** Persists the per-user last-synced-at epoch-millis to [NSUserDefaults]. Mirrors AppPreferences.setLastSyncedAt. */
-    private fun saveLastSyncedAt(userId: String, epochMillis: Long) {
-        NSUserDefaults.standardUserDefaults.setInteger(epochMillis, lastSyncedAtKey(userId))
-    }
-
-    private fun lastSyncedAtKey(userId: String) = "$KEY_LAST_SYNCED_AT_PREFIX$userId"
-
-    private companion object {
-        const val KEY_LAST_SYNCED_AT_PREFIX = "last_synced_at_"
-        const val NEVER_SYNCED = -1L
     }
 }
