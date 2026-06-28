@@ -78,6 +78,7 @@ import com.emm.justchill.hh.shared.ReportRoute
 import com.emm.justchill.hh.shared.SeeTransactionRoute
 import com.emm.justchill.hh.shared.SyncEventsHandler
 import com.emm.justchill.hh.shared.popToTransactionScreen
+import com.emm.justchill.hh.shared.replaceAll
 import com.emm.justchill.hh.shared.switchTab
 import com.emm.justchill.hh.shared.toText
 import com.emm.justchill.hh.transaction.AddTransactionIntent
@@ -380,15 +381,6 @@ fun IosApp() {
             )
         }
     }
-}
-
-/**
- * Replaces the entire back stack with [route]. Used by the Manifesto first-launch gate to land on
- * START_TAB. Mirrors the Android Hh.kt helper.
- */
-private fun NavBackStack<NavKey>.replaceAll(route: NavKey) {
-    clear()
-    add(route)
 }
 
 @Composable

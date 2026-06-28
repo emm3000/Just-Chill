@@ -98,7 +98,7 @@ When adding a new failure mode, prefer extending `DomainException` (and `toUserM
 
 ## Tooling Versions
 
-- Kotlin `2.3.21` (Compose plugin matches).
+- Kotlin `2.4.0` (Compose plugin matches).
 - AGP `9.2.1` (built-in Kotlin).
 - Gradle wrapper `9.5.1`.
 - Koin `4.2.x` (via BOM), SQLDelight `2.3.2`, Compose BOM `2026.05.x`.

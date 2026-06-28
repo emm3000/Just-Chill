@@ -210,3 +210,12 @@ fun NavBackStack<NavKey>.popToTransactionScreen() {
         removeLastOrNull()
     }
 }
+
+/**
+ * Replaces the entire back stack with [route]. Used for auth transitions, logout, and the
+ * Manifesto first-launch gate to land on START_TAB.
+ */
+fun NavBackStack<NavKey>.replaceAll(route: NavKey) {
+    clear()
+    add(route)
+}

@@ -520,11 +520,3 @@ private fun suggestedExportFilename(): String {
     val date = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
     return "justchill-backup-$date.json"
 }
-
-/**
- * Replaces the entire back stack with [route]. Used for auth transitions and logout.
- */
-private fun NavBackStack<NavKey>.replaceAll(route: NavKey) {
-    clear()
-    add(route)
-}

@@ -474,7 +474,7 @@ Commits desde `5bcebac` (US-09 nav):
   botón cambia a "Volver", NO se reescribe el flag.
 
 ### Caveat resuelto durante S3
-- `ProfileRoute` se agregó a `TOP_LEVEL_ROUTES` con icono `Icons.Filled.Person`
+- `ProfileRoute` se agregó como tab del bottom bar (`HhBottomBar`) con icono de perfil
   para wirear Export/Import. El "Acerca de" pasó a ser navegable automáticamente.
   Sprint 4 (US-21 ProfileScreen completo) solo va a sumar contenido/polish
   encima de la base ya enganchada.
