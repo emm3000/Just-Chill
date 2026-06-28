@@ -77,6 +77,12 @@ kotlin {
             // compose.components.uiToolingPreview shipped the now-deprecated jetbrains namespace.
             implementation("org.jetbrains.compose.ui:ui-tooling-preview:${libs.versions.composeMultiplatform.get()}")
         }
+        // Android-only wiring. Supplies ProcessLifecycleOwner for the resumeEvents() actual
+        // (ResumeEvents.android.kt) — the Android foreground-resume signal that feeds the sync
+        // orchestrator. iOS uses NSNotificationCenter instead and needs no extra dependency.
+        androidMain.dependencies {
+            implementation(libs.androidx.lifecycle.process)
+        }
         // iOS-only wiring (Phase 5a). commonMain stays :domain-only per the established
         // split rule; depending on :data is allowed HERE because the iOS Koin module
         // binds the :data repository/datasource impls (provideSqlDriver/provideDb live in

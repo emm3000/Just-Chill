@@ -50,7 +50,7 @@ import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.justchill.core.sync.IosSyncCursorStore
 import com.emm.justchill.core.sync.IosSyncOrchestrator
 import com.emm.justchill.core.sync.SyncController
-import com.emm.justchill.core.sync.iosForegroundEvents
+import com.emm.justchill.core.sync.resumeEvents
 import com.emm.justchill.hh.auth.AuthViewModel
 import com.emm.justchill.hh.auth.GoogleSignInLauncher
 import com.emm.justchill.hh.di.accountModule
@@ -262,8 +262,8 @@ private val iosSyncModule = module {
     // Single: owns the long-lived consumer + the four trigger loops (manual/sign-in/on-resume/debounced
     // writes), all launched in its init{} on appScope. Bound to SyncController so commonMain consumers
     // (ProfileViewModel) resolve the same instance (replaces the 6a NoOpSyncController). Binding it here
-    // starts the loops. resumeEvents = iosForegroundEvents() supplies the on-resume signal
-    // (UIApplicationDidBecomeActive) — the iOS analogue of Android's ProcessLifecycleOwner ON_RESUME flow.
+    // starts the loops. resumeEvents() supplies the on-resume signal (UIApplicationDidBecomeActive via
+    // its iOS actual) — the iOS analogue of Android's ProcessLifecycleOwner ON_RESUME flow.
     single<SyncController> {
         IosSyncOrchestrator(
             syncData = get(),
@@ -271,7 +271,7 @@ private val iosSyncModule = module {
             observePendingCount = get(),
             signOut = get(),
             appScope = get(appScopeQualifier),
-            resumeEvents = iosForegroundEvents(),
+            resumeEvents = resumeEvents(),
         )
     }
 }

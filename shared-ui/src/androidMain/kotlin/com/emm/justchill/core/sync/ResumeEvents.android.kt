@@ -10,14 +10,12 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 
 /**
- * Emits [Unit] on every foreground ON_RESUME event of the process lifecycle.
- *
- * This is the production implementation of the `resumeEvents: Flow<Unit>` parameter on
- * [SyncOrchestrator]. Backed by [ProcessLifecycleOwner] so it fires when the app comes
- * to the foreground (first Activity resumes). [awaitClose] removes the observer when the
+ * Android `actual` of the common [resumeEvents]. Emits [Unit] on every foreground ON_RESUME
+ * event of the process lifecycle, backed by [ProcessLifecycleOwner] so it fires when the app
+ * comes to the foreground (first Activity resumes). [awaitClose] removes the observer when the
  * downstream flow is cancelled.
  */
-fun processResumeEvents(): Flow<Unit> = callbackFlow {
+actual fun resumeEvents(): Flow<Unit> = callbackFlow {
     val observer = object : DefaultLifecycleObserver {
         override fun onResume(owner: LifecycleOwner) {
             trySend(Unit)

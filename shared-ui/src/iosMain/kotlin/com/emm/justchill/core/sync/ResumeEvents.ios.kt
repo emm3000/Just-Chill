@@ -8,22 +8,21 @@ import platform.Foundation.NSOperationQueue
 import platform.UIKit.UIApplicationDidBecomeActiveNotification
 
 /**
- * iOS analogue of `:androidApp`'s `processResumeEvents()` (ProcessLifecycleOwner `ON_RESUME`).
+ * iOS `actual` of the common [resumeEvents]. Supplies the iOS foreground-resume signal closest to
+ * Android's ProcessLifecycleOwner `ON_RESUME`.
  *
  * Emits [Unit] every time the app becomes active in the foreground, by observing
- * [UIApplicationDidBecomeActiveNotification] on the default [NSNotificationCenter]. This is the
- * iOS lifecycle signal closest to Android's `ON_RESUME`: it fires on cold launch becoming active
- * and on every return from background.
+ * [UIApplicationDidBecomeActiveNotification] on the default [NSNotificationCenter]. It fires on cold
+ * launch becoming active and on every return from background.
  *
- * Wired into [IosSyncOrchestrator] as its `resumeEvents` flow (the platform-injected equivalent of
- * Android's `resumeEvents` constructor parameter), so the on-resume sync trigger reaches Android parity
- * without any commonMain `expect/actual` ceremony — each platform supplies its own resume flow through
- * its own Koin module.
+ * Wired into [IosSyncOrchestrator] as its `resumeEvents` flow (the platform-injected on-resume signal),
+ * so the on-resume sync trigger reaches Android parity. Both platforms now resolve through the single
+ * common `resumeEvents()` expect declaration — this is its iOS actual.
  *
  * The observer token returned by `addObserverForName` is removed in [awaitClose] to avoid leaking the
  * registration (and the captured `trySend`) once the collector is cancelled.
  */
-fun iosForegroundEvents(): Flow<Unit> = callbackFlow {
+actual fun resumeEvents(): Flow<Unit> = callbackFlow {
     val token = NSNotificationCenter.defaultCenter.addObserverForName(
         name = UIApplicationDidBecomeActiveNotification,
         `object` = null,

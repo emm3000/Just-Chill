@@ -15,7 +15,7 @@ import com.emm.domain.sync.SyncRepository
 import com.emm.justchill.core.sync.AppPreferencesSyncCursorStore
 import com.emm.justchill.core.sync.SyncController
 import com.emm.justchill.core.sync.SyncOrchestrator
-import com.emm.justchill.core.sync.processResumeEvents
+import com.emm.justchill.core.sync.resumeEvents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -80,7 +80,7 @@ val syncModule = module {
             signOut = get(),
             prefs = get(),
             externalScope = get(appScopeQualifier),
-            resumeEvents = processResumeEvents(),
+            resumeEvents = resumeEvents(),
         )
     } bind SyncController::class
 }
