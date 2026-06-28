@@ -11,6 +11,7 @@ import com.emm.justchill.hh.shared.CategoriesListRoute
 import com.emm.justchill.hh.shared.CategoryRoute
 import com.emm.justchill.hh.shared.EditTransactionRoute
 import com.emm.justchill.hh.shared.HomeRoute
+import com.emm.justchill.hh.shared.ManifestoRoute
 import com.emm.justchill.hh.shared.ProfileRoute
 import com.emm.justchill.hh.shared.RecurringMovementsRoute
 import com.emm.justchill.hh.shared.ReportRoute
@@ -26,13 +27,15 @@ import kotlinx.serialization.modules.subclass
 // throws at runtime ("You must pass a SavedStateConfiguration.serializersModule configured to handle
 // NavKey open polymorphism"). When the iOS host starts using a new route, register it here too.
 //
-// This registers EXACTLY the routes the iOS host (IosApp.kt) navigates to. ManifestoRoute /
-// PrivacyPolicyRoute are Android-only launch/info screens not yet wired on iOS, so they are omitted
-// on purpose — adding them would be harmless but is not required until iOS uses them.
+// This registers EXACTLY the routes the iOS host (IosApp.kt) navigates to. ManifestoRoute is now
+// wired on iOS (first-launch gate + Perfil "Acerca de"), so it MUST be registered here — without it
+// rememberNavBackStack crashes on nav-state restore the moment the manifesto is on the back stack.
+// PrivacyPolicyRoute stays Android-only (iOS keeps the privacy TODO), so it is still omitted.
 // Source: https://kotlinlang.org/docs/multiplatform/compose-navigation-3.html (non-JVM state serialization).
 internal val iosNavSavedStateConfiguration: SavedStateConfiguration = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
+            subclass(ManifestoRoute::class, ManifestoRoute.serializer())
             subclass(HomeRoute::class, HomeRoute.serializer())
             subclass(SeeTransactionRoute::class, SeeTransactionRoute.serializer())
             subclass(AccountsRoute::class, AccountsRoute.serializer())

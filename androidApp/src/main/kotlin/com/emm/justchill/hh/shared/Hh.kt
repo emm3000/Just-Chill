@@ -104,7 +104,7 @@ fun Hh(modifier: Modifier = Modifier) {
     }
 
     SyncEventsHandler(
-        syncOrchestrator = syncOrchestrator,
+        syncController = syncOrchestrator,
         snackbarHostState = snackbarHostState,
         // Guard: only push AuthRoute if it is not anywhere in the back stack.
         onNavigateToSignIn = { if (backStack.none { it is AuthRoute }) backStack.add(AuthRoute) },

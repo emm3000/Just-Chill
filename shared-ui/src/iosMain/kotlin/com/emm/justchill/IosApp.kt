@@ -29,6 +29,8 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.emm.justchill.core.error.toUserMessage
+import com.emm.justchill.core.preferences.AppPreferences
+import com.emm.justchill.core.sync.SyncController
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
@@ -47,6 +49,7 @@ import com.emm.justchill.hh.auth.AuthScreen
 import com.emm.justchill.hh.home.HomeEffect
 import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.home.HomeViewModel
+import com.emm.justchill.hh.onboarding.ManifestoScreen
 import com.emm.justchill.hh.profile.ProfileEffect
 import com.emm.justchill.hh.profile.ProfileIntent
 import com.emm.justchill.hh.profile.ProfileScreen
@@ -68,10 +71,12 @@ import com.emm.justchill.hh.shared.CategoryRoute
 import com.emm.justchill.hh.shared.EditTransactionRoute
 import com.emm.justchill.hh.shared.HhBottomBar
 import com.emm.justchill.hh.shared.HomeRoute
+import com.emm.justchill.hh.shared.ManifestoRoute
 import com.emm.justchill.hh.shared.ProfileRoute
 import com.emm.justchill.hh.shared.RecurringMovementsRoute
 import com.emm.justchill.hh.shared.ReportRoute
 import com.emm.justchill.hh.shared.SeeTransactionRoute
+import com.emm.justchill.hh.shared.SyncEventsHandler
 import com.emm.justchill.hh.shared.popToTransactionScreen
 import com.emm.justchill.hh.shared.switchTab
 import com.emm.justchill.hh.shared.toText
@@ -81,6 +86,7 @@ import com.emm.justchill.hh.transaction.AddTransactionViewModel
 import com.emm.justchill.hh.transaction.EditTransaction
 import com.emm.justchill.hh.transaction.SelectableCategory
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -90,8 +96,9 @@ import org.koin.core.parameter.parametersOf
 // The route keys (HhRoutes.kt) + bottom bar (HhBottomBar.kt) + ProfileMessage.toText are shared from
 // commonMain; only the NavDisplay/entryProvider body stays platform-specific (nav3-UI dependency split).
 //
-// Launches on Home (no Manifesto/Auth gate — phase 6). The "Agregar" center button pushes
-// AddTransaction. Platform callbacks (share/export/import/sign-in) are no-oped for 5b.
+// First launch shows the Manifesto gate (mirrors Android); subsequent launches land on Home. The
+// "Agregar" center button pushes AddTransaction. Platform callbacks (share/export/import) are still
+// no-oped on iOS.
 
 private val START_TAB: BottomBarRoute = HomeRoute
 
@@ -100,18 +107,35 @@ private val START_TAB: BottomBarRoute = HomeRoute
 fun IosApp() {
     EmmTheme {
         val colors = LocalEmmColors.current
+        val appPrefs: AppPreferences = koinInject()
+        val syncController: SyncController = koinInject()
+        // First-launch Manifesto gate (mirrors Android Hh.kt): show the manifesto once, then land on
+        // START_TAB on every subsequent launch.
+        val startRoute: NavKey = remember {
+            if (appPrefs.firstLaunchSeen) START_TAB else ManifestoRoute()
+        }
         // KMP rememberNavBackStack needs a SavedStateConfiguration whose serializersModule registers
         // every NavKey subtype (Kotlin/Native has no reflection-based serializer discovery like
         // Android). DEFAULT carries an empty module and crashes at runtime; iosNavSavedStateConfiguration
         // (IosRoutes.kt) wires the open NavKey polymorphism.
         val backStack: NavBackStack<NavKey> =
-            rememberNavBackStack(iosNavSavedStateConfiguration, START_TAB)
+            rememberNavBackStack(iosNavSavedStateConfiguration, startRoute)
         var pendingCategory by remember { mutableStateOf<SelectableCategory?>(null) }
         val snackbarHostState = remember { SnackbarHostState() }
         val rootScope = rememberCoroutineScope()
         val showRootMessage: (String) -> Unit = { message ->
             rootScope.launch { snackbarHostState.showEmmSnackbar(message) }
         }
+
+        // Collects one-shot sync events from the SAME SyncController instance the orchestrator emits
+        // on (KoinIos binds single<SyncController> { get<SyncOrchestrator>() } and start()s it). Shows
+        // the manual-sync retry snackbar and the session-expired snackbar — parity with Android.
+        SyncEventsHandler(
+            syncController = syncController,
+            snackbarHostState = snackbarHostState,
+            // Guard: only push AuthRoute if it is not anywhere in the back stack.
+            onNavigateToSignIn = { if (backStack.none { it is AuthRoute }) backStack.add(AuthRoute) },
+        )
 
         val currentRoute: NavKey? = backStack.lastOrNull()
         val showBottomBar: Boolean = currentRoute is BottomBarRoute
@@ -146,6 +170,20 @@ fun IosApp() {
                     rememberViewModelStoreNavEntryDecorator(),
                 ),
                 entryProvider = entryProvider {
+                    entry<ManifestoRoute> { key ->
+                        ManifestoScreen(
+                            isRevisit = key.isRevisit,
+                            onStart = {
+                                if (key.isRevisit) {
+                                    backStack.removeLastOrNull()
+                                } else {
+                                    appPrefs.firstLaunchSeen = true
+                                    backStack.replaceAll(START_TAB)
+                                }
+                            },
+                        )
+                    }
+
                     entry<HomeRoute> {
                         IosHomeEntry(
                             navigateToAll = { backStack.switchTab(SeeTransactionRoute, START_TAB) },
@@ -204,7 +242,7 @@ fun IosApp() {
                             onCategoriesClick = { backStack.add(CategoriesListRoute) },
                             onAccountsClick = { backStack.add(AccountsRoute) },
                             onRecurringClick = { backStack.add(RecurringMovementsRoute) },
-                            onAboutClick = { /* TODO phase 6+: Manifesto/About on iOS */ },
+                            onAboutClick = { backStack.add(ManifestoRoute(isRevisit = true)) },
                             // Backup is phase 6b on iOS — no-op (must not crash).
                             onExportClick = { /* TODO phase 6b: iOS export (SAF equivalent) */ },
                             onImportClick = { /* TODO phase 6b: iOS import */ },
@@ -342,6 +380,15 @@ fun IosApp() {
             )
         }
     }
+}
+
+/**
+ * Replaces the entire back stack with [route]. Used by the Manifesto first-launch gate to land on
+ * START_TAB. Mirrors the Android Hh.kt helper.
+ */
+private fun NavBackStack<NavKey>.replaceAll(route: NavKey) {
+    clear()
+    add(route)
 }
 
 @Composable
