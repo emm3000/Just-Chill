@@ -7,31 +7,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.List
-import androidx.compose.material.icons.outlined.AccountBalanceWallet
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,14 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
@@ -57,7 +30,6 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
@@ -77,7 +49,6 @@ import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.home.HomeViewModel
 import com.emm.justchill.hh.profile.ProfileEffect
 import com.emm.justchill.hh.profile.ProfileIntent
-import com.emm.justchill.hh.profile.ProfileMessage
 import com.emm.justchill.hh.profile.ProfileScreen
 import com.emm.justchill.hh.profile.ProfileViewModel
 import com.emm.justchill.hh.recurring.AddEditRecurringMovementScreen
@@ -86,6 +57,24 @@ import com.emm.justchill.hh.recurring.RecurringMovementsScreen
 import com.emm.justchill.hh.recurring.RecurringMovementsViewModel
 import com.emm.justchill.hh.report.ReportScreen
 import com.emm.justchill.hh.seetransactions.SeeTransactionsScreen
+import com.emm.justchill.hh.shared.AccountsRoute
+import com.emm.justchill.hh.shared.AddAccountRoute
+import com.emm.justchill.hh.shared.AddEditRecurringMovementRoute
+import com.emm.justchill.hh.shared.AddTransactionRoute
+import com.emm.justchill.hh.shared.AuthRoute
+import com.emm.justchill.hh.shared.BottomBarRoute
+import com.emm.justchill.hh.shared.CategoriesListRoute
+import com.emm.justchill.hh.shared.CategoryRoute
+import com.emm.justchill.hh.shared.EditTransactionRoute
+import com.emm.justchill.hh.shared.HhBottomBar
+import com.emm.justchill.hh.shared.HomeRoute
+import com.emm.justchill.hh.shared.ProfileRoute
+import com.emm.justchill.hh.shared.RecurringMovementsRoute
+import com.emm.justchill.hh.shared.ReportRoute
+import com.emm.justchill.hh.shared.SeeTransactionRoute
+import com.emm.justchill.hh.shared.popToTransactionScreen
+import com.emm.justchill.hh.shared.switchTab
+import com.emm.justchill.hh.shared.toText
 import com.emm.justchill.hh.transaction.AddTransactionIntent
 import com.emm.justchill.hh.transaction.AddTransactionScreen
 import com.emm.justchill.hh.transaction.AddTransactionViewModel
@@ -98,11 +87,13 @@ import org.koin.core.parameter.parametersOf
 // iOS nav host. Mirrors the Android Hh.kt structure (bottom nav + center "Agregar" + NavDisplay
 // entryProvider) for the LOCAL-FIRST subset only, using the JetBrains Compose Multiplatform
 // navigation3 port. Lives in iosMain — Android keeps its own androidx.navigation3 Hh.kt (Option A).
+// The route keys (HhRoutes.kt) + bottom bar (HhBottomBar.kt) + ProfileMessage.toText are shared from
+// commonMain; only the NavDisplay/entryProvider body stays platform-specific (nav3-UI dependency split).
 //
 // Launches on Home (no Manifesto/Auth gate — phase 6). The "Agregar" center button pushes
 // AddTransaction. Platform callbacks (share/export/import/sign-in) are no-oped for 5b.
 
-private val START_TAB: IosBottomBarRoute = IosHomeRoute
+private val START_TAB: BottomBarRoute = HomeRoute
 
 @Suppress("CyclomaticComplexMethod", "LongMethod")
 @Composable
@@ -123,7 +114,7 @@ fun IosApp() {
         }
 
         val currentRoute: NavKey? = backStack.lastOrNull()
-        val showBottomBar: Boolean = currentRoute is IosBottomBarRoute
+        val showBottomBar: Boolean = currentRoute is BottomBarRoute
 
         Scaffold(
             modifier = Modifier.background(colors.bg),
@@ -134,10 +125,10 @@ fun IosApp() {
                     enter = slideInVertically(tween(300)) { it } + fadeIn(tween(300)),
                     exit = slideOutVertically(tween(250)) { it } + fadeOut(tween(200)),
                 ) {
-                    IosBottomBar(
-                        current = currentRoute as? IosBottomBarRoute,
-                        onTabClick = { tab -> backStack.switchTab(tab) },
-                        onAddClick = { backStack.add(IosAddTransactionRoute) },
+                    HhBottomBar(
+                        current = currentRoute as? BottomBarRoute,
+                        onTabClick = { tab -> backStack.switchTab(tab, START_TAB) },
+                        onAddClick = { backStack.add(AddTransactionRoute) },
                     )
                 }
             },
@@ -155,23 +146,23 @@ fun IosApp() {
                     rememberViewModelStoreNavEntryDecorator(),
                 ),
                 entryProvider = entryProvider {
-                    entry<IosHomeRoute> {
+                    entry<HomeRoute> {
                         IosHomeEntry(
-                            navigateToAll = { backStack.switchTab(IosSeeTransactionsRoute) },
-                            navigateToAdd = { backStack.add(IosAddTransactionRoute) },
-                            navigateToEdit = { id -> backStack.add(IosEditTransactionRoute(id)) },
-                            navigateToReport = { backStack.add(IosReportRoute) },
+                            navigateToAll = { backStack.switchTab(SeeTransactionRoute, START_TAB) },
+                            navigateToAdd = { backStack.add(AddTransactionRoute) },
+                            navigateToEdit = { id -> backStack.add(EditTransactionRoute(id)) },
+                            navigateToReport = { backStack.add(ReportRoute) },
                             snackbarHostState = snackbarHostState,
                         )
                     }
 
-                    entry<IosSeeTransactionsRoute> {
+                    entry<SeeTransactionRoute> {
                         SeeTransactionsScreen(
-                            onEditTransaction = { id -> backStack.add(IosEditTransactionRoute(id)) },
+                            onEditTransaction = { id -> backStack.add(EditTransactionRoute(id)) },
                         )
                     }
 
-                    entry<IosAccountsRoute> {
+                    entry<AccountsRoute> {
                         val vm: AccountsViewModel = koinViewModel()
                         val state by vm.state.collectAsStateWithLifecycle()
                         LaunchedEffect(vm) {
@@ -184,13 +175,13 @@ fun IosApp() {
                         AccountsScreen(
                             state = state,
                             onIntent = vm::onIntent,
-                            addCategory = { backStack.add(IosAddCategoryRoute()) },
-                            addAccount = { backStack.add(IosAddAccountRoute) },
+                            addCategory = { backStack.add(CategoryRoute()) },
+                            addAccount = { backStack.add(AddAccountRoute) },
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
 
-                    entry<IosProfileRoute> {
+                    entry<ProfileRoute> {
                         val vm: ProfileViewModel = koinViewModel()
                         val state by vm.state.collectAsStateWithLifecycle()
                         // Surface sign-out / delete-account outcomes (and errors) via the root
@@ -199,7 +190,7 @@ fun IosApp() {
                             vm.effect.collect { effect ->
                                 when (effect) {
                                     is ProfileEffect.ShowError -> showRootMessage(effect.error.toUserMessage())
-                                    is ProfileEffect.Notify -> showRootMessage(effect.message.toIosText())
+                                    is ProfileEffect.Notify -> showRootMessage(effect.message.toText())
                                     // Export/import (SAF) is phase 6b on iOS — onExportClick never fires,
                                     // so ExportReady is unreachable here; ignore it for now.
                                     is ProfileEffect.ExportReady -> Unit
@@ -210,16 +201,16 @@ fun IosApp() {
                             state = state,
                             appVersion = "1.0.0",
                             isDebug = false,
-                            onCategoriesClick = { backStack.add(IosCategoriesListRoute) },
-                            onAccountsClick = { backStack.add(IosAccountsRoute) },
-                            onRecurringClick = { backStack.add(IosRecurringRoute) },
+                            onCategoriesClick = { backStack.add(CategoriesListRoute) },
+                            onAccountsClick = { backStack.add(AccountsRoute) },
+                            onRecurringClick = { backStack.add(RecurringMovementsRoute) },
                             onAboutClick = { /* TODO phase 6+: Manifesto/About on iOS */ },
                             // Backup is phase 6b on iOS — no-op (must not crash).
                             onExportClick = { /* TODO phase 6b: iOS export (SAF equivalent) */ },
                             onImportClick = { /* TODO phase 6b: iOS import */ },
                             onPrivacyClick = { /* TODO phase 6+: privacy policy screen */ },
                             // Auth (6a): opt-in from Profile. On success AuthScreen pops back here.
-                            onSignInClick = { backStack.add(IosAuthRoute) },
+                            onSignInClick = { backStack.add(AuthRoute) },
                             onSignOutClick = { vm.onIntent(ProfileIntent.SignOut) },
                             onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccount) },
                             // Sync (6b): manual trigger. The Syncing spinner / RetryPill / "última
@@ -229,7 +220,7 @@ fun IosApp() {
                         )
                     }
 
-                    entry<IosAddTransactionRoute> {
+                    entry<AddTransactionRoute> {
                         val vm: AddTransactionViewModel = koinViewModel()
                         LaunchedEffect(pendingCategory) {
                             pendingCategory?.let { selectable ->
@@ -242,29 +233,29 @@ fun IosApp() {
                             popBackStack = { backStack.removeLastOrNull() },
                             snackbarHostState = snackbarHostState,
                             onAddNewCategory = {
-                                backStack.add(IosAddCategoryRoute(propagateToTransaction = true))
+                                backStack.add(CategoryRoute(propagateToTransaction = true))
                             },
-                            onAddNewAccount = { backStack.add(IosAddAccountRoute) },
+                            onAddNewAccount = { backStack.add(AddAccountRoute) },
                         )
                     }
 
-                    entry<IosEditTransactionRoute> { key ->
+                    entry<EditTransactionRoute> { key ->
                         EditTransaction(
                             transactionId = key.transactionId,
                             onBack = { backStack.removeLastOrNull() },
                             snackbarHostState = snackbarHostState,
-                            onAddNewAccount = { backStack.add(IosAddAccountRoute) },
+                            onAddNewAccount = { backStack.add(AddAccountRoute) },
                         )
                     }
 
-                    entry<IosAddAccountRoute> {
+                    entry<AddAccountRoute> {
                         AddAccountScreen(
                             onBack = { backStack.removeLastOrNull() },
                             snackbarHostState = snackbarHostState,
                         )
                     }
 
-                    entry<IosCategoriesListRoute> {
+                    entry<CategoriesListRoute> {
                         val vm: CategoriesViewModel = koinViewModel()
                         val state by vm.state.collectAsStateWithLifecycle()
                         LaunchedEffect(vm) {
@@ -277,13 +268,13 @@ fun IosApp() {
                         CategoriesScreen(
                             state = state,
                             onIntent = vm::onIntent,
-                            onAddCategory = { backStack.add(IosAddCategoryRoute()) },
+                            onAddCategory = { backStack.add(CategoryRoute()) },
                             onBack = { backStack.removeLastOrNull() },
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
 
-                    entry<IosAddCategoryRoute> { key ->
+                    entry<CategoryRoute> { key ->
                         AddCategoryScreen(
                             onBack = { backStack.removeLastOrNull() },
                             snackbarHostState = snackbarHostState,
@@ -308,14 +299,14 @@ fun IosApp() {
                         )
                     }
 
-                    entry<IosRecurringRoute> {
+                    entry<RecurringMovementsRoute> {
                         IosRecurringEntry(
-                            onNavigateToAddEdit = { id -> backStack.add(IosAddEditRecurringRoute(id)) },
+                            onNavigateToAddEdit = { id -> backStack.add(AddEditRecurringMovementRoute(id)) },
                             onShowError = showRootMessage,
                         )
                     }
 
-                    entry<IosAddEditRecurringRoute> { key ->
+                    entry<AddEditRecurringMovementRoute> { key ->
                         AddEditRecurringMovementScreen(
                             onBack = { backStack.removeLastOrNull() },
                             snackbarHostState = snackbarHostState,
@@ -323,16 +314,16 @@ fun IosApp() {
                         )
                     }
 
-                    entry<IosReportRoute> {
+                    entry<ReportRoute> {
                         ReportScreen(
                             onBack = { backStack.removeLastOrNull() },
-                            onAddTransaction = { backStack.add(IosAddTransactionRoute) },
+                            onAddTransaction = { backStack.add(AddTransactionRoute) },
                             // Sharing is a platform concern — no-op for 5b.
                             onShareText = { /* TODO phase 6b: iOS share sheet */ },
                         )
                     }
 
-                    entry<IosAuthRoute> {
+                    entry<AuthRoute> {
                         AuthScreen(
                             // On successful sign-in/sign-up AuthViewModel emits NavigateBack, which
                             // calls onBack — popping Auth and returning to Profile (which then shows
@@ -395,163 +386,4 @@ private fun IosRecurringEntry(onNavigateToAddEdit: (String?) -> Unit, onShowErro
         }
     }
     RecurringMovementsScreen(state = state, onIntent = vm::onIntent)
-}
-
-/** Exit-through-home tab switch, mirroring Android's switchTab. */
-private fun NavBackStack<NavKey>.switchTab(target: IosBottomBarRoute) {
-    clear()
-    add(START_TAB)
-    if (target != START_TAB) add(target)
-}
-
-/** Pop intermediate routes until the (add/edit) transaction screen is on top, so it receives pendingCategory. */
-private fun NavBackStack<NavKey>.popToTransactionScreen() {
-    while (isNotEmpty() && last() !is IosAddTransactionRoute && last() !is IosEditTransactionRoute) {
-        removeLastOrNull()
-    }
-}
-
-// Spanish copy for ProfileViewModel notifications surfaced via the root snackbar (mirrors Android's
-// ProfileMessage.toText). On iOS 6a only SessionClosed / AccountDeleted can fire (export/import is 6b);
-// the rest are mapped for exhaustiveness so a future iOS path stays covered.
-private fun ProfileMessage.toIosText(): String = when (this) {
-    ProfileMessage.SessionClosed -> "Sesión cerrada. Tus datos siguen en este teléfono."
-    ProfileMessage.AccountDeleted -> "Cuenta eliminada. Tus datos siguen en este teléfono."
-    ProfileMessage.ExportDone -> "Listo, tu data está guardada."
-    ProfileMessage.ExportFailed -> "No pude exportar — capaz no hay espacio en tu celu?"
-    is ProfileMessage.ImportDone -> "Listo — $transactions movimientos importados."
-    ProfileMessage.ImportFailed -> "No pude importar el archivo — capaz está dañado."
-}
-
-private data class IosBottomTab(
-    val route: IosBottomBarRoute?, // null = add pseudo-tab
-    val label: String,
-    val icon: ImageVector,
-    val isAdd: Boolean = false,
-)
-
-private val IOS_BOTTOM_TABS = listOf(
-    IosBottomTab(IosHomeRoute, "Inicio", Icons.Outlined.Home),
-    IosBottomTab(IosSeeTransactionsRoute, "Ver", Icons.AutoMirrored.Outlined.List),
-    IosBottomTab(null, "Agregar", Icons.Outlined.Add, isAdd = true),
-    IosBottomTab(IosAccountsRoute, "Cuentas", Icons.Outlined.AccountBalanceWallet),
-    IosBottomTab(IosProfileRoute, "Perfil", Icons.Outlined.Person),
-)
-
-@Composable
-private fun IosBottomBar(
-    current: IosBottomBarRoute?,
-    onTabClick: (IosBottomBarRoute) -> Unit,
-    onAddClick: () -> Unit,
-) {
-    val colors = LocalEmmColors.current
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colors.bg)
-            .navigationBarsPadding(),
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .size(1.dp)
-                .background(colors.border),
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            IOS_BOTTOM_TABS.forEach { tab ->
-                if (tab.isAdd) {
-                    IosAddBottomBarItem(
-                        label = tab.label,
-                        onClick = onAddClick,
-                        modifier = Modifier.weight(1f),
-                    )
-                } else {
-                    IosRegularBottomBarItem(
-                        label = tab.label,
-                        icon = tab.icon,
-                        isActive = tab.route == current,
-                        onClick = { tab.route?.let(onTabClick) },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun IosRegularBottomBarItem(
-    label: String,
-    icon: ImageVector,
-    isActive: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = LocalEmmColors.current
-    val tint = if (isActive) colors.textPrimary else colors.textDisabled
-    val interactionSource = remember { MutableInteractionSource() }
-    Column(
-        modifier = modifier
-            .heightIn(min = 56.dp)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
-            .padding(top = 6.dp, bottom = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(imageVector = icon, contentDescription = label, tint = tint, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.size(3.dp))
-        Text(
-            text = label,
-            color = tint,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
-            letterSpacing = 0.1.sp,
-            maxLines = 1,
-        )
-    }
-}
-
-@Composable
-private fun IosAddBottomBarItem(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val interactionSource = remember { MutableInteractionSource() }
-    Column(
-        modifier = modifier
-            .heightIn(min = 56.dp)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
-            .padding(top = 6.dp, bottom = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(28.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(colors.accent),
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Add,
-                contentDescription = label,
-                tint = Color.White,
-                modifier = Modifier.size(14.dp),
-            )
-        }
-        Spacer(Modifier.size(3.dp))
-        Text(
-            text = label,
-            color = colors.accent,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.W600,
-            fontFamily = InterFontFamily,
-            letterSpacing = 0.1.sp,
-            maxLines = 1,
-        )
-    }
 }

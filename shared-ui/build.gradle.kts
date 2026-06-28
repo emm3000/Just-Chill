@@ -59,6 +59,12 @@ kotlin {
             implementation(libs.jetbrains.lifecycle.viewmodel.compose)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
+            // Nav route keys (NavKey/NavBackStack) live in commonMain (hh/shared/HhRoutes.kt +
+            // HhBottomBar.kt). androidx.navigation3:navigation3-runtime is Google's MULTIPLATFORM
+            // artifact (iosSimulatorArm64/iosArm64 from rc01) so commonMain can reference it directly;
+            // iosMain inherits it from here. Only the navigation3-UI layer stays split (Google in
+            // :androidApp, JetBrains port in iosMain — Option A, deliberate dependency split).
+            implementation(libs.androidx.navigation3.runtime)
             // KMP key-value preferences behind AppPreferences (core/preferences). Settings interface
             // in commonMain; SharedPreferencesSettings (androidMain) / NSUserDefaultsSettings (iosMain).
             implementation(libs.multiplatform.settings)
@@ -94,9 +100,9 @@ kotlin {
         iosMain.dependencies {
             implementation(projects.data)
             // iOS nav host (5b): JetBrains Compose Multiplatform navigation3 port. Android keeps
-            // its stable androidx.navigation3:* (Option A) — this KMP port is iosMain-only so it
-            // never touches the Android nav host (Hh.kt) or commonMain (which stays :domain-only).
-            implementation(libs.androidx.navigation3.runtime)
+            // its stable androidx.navigation3:* UI layer (Option A) — this KMP UI port is iosMain-only
+            // so it never touches the Android nav host (Hh.kt). The navigation3-RUNTIME
+            // (NavKey/NavBackStack) now comes from commonMain.dependencies and is inherited here.
             implementation(libs.jetbrains.navigation3.ui)
             implementation(libs.jetbrains.lifecycle.viewmodel.navigation3)
         }
