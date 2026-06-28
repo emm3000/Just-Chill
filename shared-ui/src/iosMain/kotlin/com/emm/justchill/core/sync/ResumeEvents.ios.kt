@@ -15,9 +15,9 @@ import platform.UIKit.UIApplicationDidBecomeActiveNotification
  * [UIApplicationDidBecomeActiveNotification] on the default [NSNotificationCenter]. It fires on cold
  * launch becoming active and on every return from background.
  *
- * Wired into [IosSyncOrchestrator] as its `resumeEvents` flow (the platform-injected on-resume signal),
- * so the on-resume sync trigger reaches Android parity. Both platforms now resolve through the single
- * common `resumeEvents()` expect declaration — this is its iOS actual.
+ * Wired into the common [SyncOrchestrator] as its `resumeEvents` flow (the platform-injected on-resume
+ * signal), so the on-resume sync trigger reaches Android parity. Both platforms now resolve through the
+ * single common `resumeEvents()` expect declaration — this is its iOS actual.
  *
  * The observer token returned by `addObserverForName` is removed in [awaitClose] to avoid leaking the
  * registration (and the captured `trySend`) once the collector is cancelled.

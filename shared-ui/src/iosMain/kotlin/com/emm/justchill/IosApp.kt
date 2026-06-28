@@ -224,7 +224,7 @@ fun IosApp() {
                             onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccount) },
                             // Sync (6b): manual trigger. The Syncing spinner / RetryPill / "última
                             // sincronización" row is driven by SyncController.status in ProfileViewModel,
-                            // so it reflects this cycle automatically once IosSyncOrchestrator is bound.
+                            // so it reflects this cycle automatically once SyncOrchestrator is bound.
                             onSyncNowClick = { vm.onIntent(ProfileIntent.SyncNow) },
                         )
                     }

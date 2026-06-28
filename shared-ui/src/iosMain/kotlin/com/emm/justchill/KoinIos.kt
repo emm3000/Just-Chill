@@ -49,8 +49,8 @@ import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.sync.DefaultSyncCursorStore
-import com.emm.justchill.core.sync.IosSyncOrchestrator
 import com.emm.justchill.core.sync.SyncController
+import com.emm.justchill.core.sync.SyncOrchestrator
 import com.emm.justchill.core.sync.resumeEvents
 import com.emm.justchill.hh.auth.AuthViewModel
 import com.emm.justchill.hh.auth.GoogleSignInLauncher
@@ -227,8 +227,8 @@ private val appScopeQualifier = named("appScope")
 // iOS sync wiring — mirrors :androidApp/hh/di/SyncModule.kt. The commonMain sync engine
 // (DefaultSyncRepository, BaseTableSync, SyncDataUseCase) is already shared via :data; this module only
 // supplies the four qualified TableSync units, the cursor store + conflict resolver, the use cases, the
-// app scope, and the iOS orchestrator. As of slice 6c IosSyncOrchestrator runs the full automatic-sync
-// trigger set (manual + sign-in + on-resume + debounced writes), at parity with Android. Only the
+// app scope, and the shared commonMain SyncOrchestrator. It runs the full automatic-sync trigger set
+// (manual + sign-in + on-resume + debounced writes), at parity with Android. Only the
 // connectivity-regained trigger is absent on both platforms (shared cross-platform debt).
 private val iosSyncModule = module {
     // Per-table sync units — qualified so DefaultSyncRepository can distinguish the four TableSync
@@ -260,8 +260,7 @@ private val iosSyncModule = module {
 
     singleOf(::SyncDataUseCase)
 
-    // Consumed by IosSyncOrchestrator's debounced-writes trigger (slice 6c) — the same use case the
-    // Android SyncOrchestrator uses for its trigger (c).
+    // Consumed by SyncOrchestrator's debounced-writes trigger — the same use case it uses for trigger (c).
     factoryOf(::ObservePendingSyncCountUseCase)
 
     // Single application-lifetime scope (analogue of EmmApp.appScope). Owns the orchestrator loops
@@ -271,21 +270,25 @@ private val iosSyncModule = module {
     }
 
     // Single: owns the long-lived consumer + the four trigger loops (manual/sign-in/on-resume/debounced
-    // writes), all launched in its init{} on appScope. Bound to SyncController so commonMain consumers
-    // (ProfileViewModel) resolve the same instance (replaces the 6a NoOpSyncController). Binding it here
-    // starts the loops. resumeEvents() supplies the on-resume signal (UIApplicationDidBecomeActive via
-    // its iOS actual) — the iOS analogue of Android's ProcessLifecycleOwner ON_RESUME flow.
-    single<SyncController> {
-        IosSyncOrchestrator(
+    // writes). The common SyncOrchestrator does NOT self-start — it exposes an explicit start() (like
+    // Android); initKoin() calls start() after the graph is built (mirrors EmmApp.start()). resumeEvents()
+    // supplies the on-resume signal (UIApplicationDidBecomeActive via its iOS actual) — the iOS analogue
+    // of Android's ProcessLifecycleOwner ON_RESUME flow.
+    single {
+        SyncOrchestrator(
             syncData = get(),
             observeSession = get(),
             observePendingCount = get(),
             signOut = get(),
             prefs = get(),
-            appScope = get(appScopeQualifier),
+            externalScope = get(appScopeQualifier),
             resumeEvents = resumeEvents(),
         )
     }
+
+    // Bound to SyncController so commonMain consumers (ProfileViewModel) resolve the SAME instance
+    // (replaces the 6a NoOpSyncController). Both binds share one SyncOrchestrator single.
+    single<SyncController> { get<SyncOrchestrator>() }
 }
 
 // Called once from Swift at app launch (iOSApp.init). Swift sees this top-level fn as
@@ -326,10 +329,11 @@ fun initKoin() {
     val claimOnAuthentication = koin.get<ClaimLocalDataOnAuthenticationUseCase>()
     appScope.launch { claimOnAuthentication() }
 
-    // Eagerly resolve the orchestrator so its init{} starts the consumer + sign-in observer NOW.
-    // A Koin `single` is lazy: without this, the loops would not start until the Profile screen first
-    // resolves SyncController — so a sign-in from the Auth screen (before visiting Perfil) would not
-    // trigger sync. Mirrors EmmApp calling SyncOrchestrator.start() at launch. The instance is shared,
-    // so ProfileViewModel later resolves this very same started orchestrator.
-    koin.get<SyncController>()
+    // Explicitly start the orchestrator NOW. The common SyncOrchestrator does NOT self-start in init{}
+    // (unlike the removed IosSyncOrchestrator): it launches the consumer + the three trigger loops only
+    // when start() is called — exactly like Android's EmmApp does at launch. Skipping this call would
+    // leave requestSync() a silent no-op (no crash, no compile error) and break iOS sync entirely. A
+    // Koin `single` is lazy, so resolving here also forces construction. The instance is shared, so
+    // ProfileViewModel later resolves this very same started orchestrator.
+    koin.get<SyncOrchestrator>().start()
 }

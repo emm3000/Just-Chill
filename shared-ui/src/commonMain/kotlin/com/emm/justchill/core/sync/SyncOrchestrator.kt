@@ -28,15 +28,6 @@ import kotlin.concurrent.Volatile
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
-/** One-shot events emitted by [SyncOrchestrator] that require top-level UI handling. */
-sealed interface SyncEvent {
-    /** The remote session was revoked — the user has been signed out automatically. */
-    data object SessionExpired : SyncEvent
-
-    /** A manually-requested sync cycle failed (non-[DomainException.Unauthorized]). */
-    data class SyncFailed(val error: DomainException) : SyncEvent
-}
-
 /**
  * Orchestrates automatic foreground sync (no WorkManager, no realtime).
  *
@@ -77,7 +68,7 @@ class SyncOrchestrator(
     override val status: StateFlow<SyncStatus> = _status.asStateFlow()
 
     private val _events = MutableSharedFlow<SyncEvent>()
-    val events: SharedFlow<SyncEvent> = _events.asSharedFlow()
+    override val events: SharedFlow<SyncEvent> = _events.asSharedFlow()
 
     // CONFLATED: overlapping requests collapse; only one extra run queues behind the active cycle.
     private val requestChannel = Channel<Unit>(Channel.CONFLATED)
