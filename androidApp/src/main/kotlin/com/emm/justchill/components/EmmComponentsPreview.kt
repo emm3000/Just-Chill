@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.emm.justchill.components.EmmButton
 import com.emm.justchill.components.EmmButtonVariant
 import com.emm.justchill.components.EmmCard
+import com.emm.justchill.components.EmmListItem
 import com.emm.justchill.components.EmmTextInput
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors

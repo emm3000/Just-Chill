@@ -1,5 +1,6 @@
 package com.emm.justchill.core
 
+import com.emm.justchill.core.DispatchersProvider
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
