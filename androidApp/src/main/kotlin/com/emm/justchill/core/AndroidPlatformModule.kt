@@ -3,13 +3,18 @@ package com.emm.justchill.core
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
+import com.emm.data.provideDb
+import com.emm.data.provideSqlDriver
 import com.emm.justchill.BuildConfig
-import com.emm.justchill.core.DispatchersProvider
 import com.emm.justchill.core.platform.CurrentActivityHolder
-import com.emm.justchill.core.preferences.AppPreferences
+import com.emm.justchill.hh.auth.ActivityGoogleSignInLauncher
+import com.emm.justchill.hh.auth.GoogleCredentialClient
+import com.emm.justchill.hh.auth.GoogleSignInLauncher
 import com.russhwolf.settings.SharedPreferencesSettings
 import com.russhwolf.settings.Settings
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.factoryOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -19,16 +24,39 @@ import org.koin.dsl.module
 private const val PREFS_NAME = "justchill_prefs"
 private const val PREFS_MIGRATED_FLAG = "_migrated_from_build_id"
 
-val coreModule = module {
+// Android platform Koin module — the ONLY place Android-specific DI lives after the commonMain dedup
+// (slice H). Supplies every binding whose construction is Android-specific; the platform-agnostic
+// graph (feature modules + supabase/sync/auth/data/commonCore wiring) is shared via appModules().
+val androidPlatformModule = module {
+
+    // SQLDelight: AndroidSqliteDriver (with its onCreate default-category seed) + EmmDatabaseData.
+    single { provideSqlDriver(androidContext()) }
+    single { provideDb(get()) }
 
     single<DispatchersProvider> { DefaultDispatcher() }
     single<Settings> { SharedPreferencesSettings(provideSharedPreferences(androidContext())) }
-    single { AppPreferences(get()) }
     single { CurrentActivityHolder() }
 
     // Platform-provided app version (no BuildConfig in commonMain). Consumed by ProfileViewModel
     // via the "appVersion" qualifier; stamped into exported backups.
     single(named("appVersion")) { BuildConfig.VERSION_NAME }
+
+    // Google Sign-In web client id, consumed by AuthViewModel. Empty when supabase.properties is
+    // absent; the Google button stays hidden so submitWithGoogle never reaches the launcher.
+    single(named("googleServerClientId")) { BuildConfig.GOOGLE_WEB_CLIENT_ID }
+
+    // Supabase connection settings injected into the commonMain supabaseModule. Empty URL falls back
+    // to the localhost placeholder so the app stays usable in anonymous/offline mode.
+    single<SupabaseConfig> {
+        SupabaseConfig(
+            url = BuildConfig.SUPABASE_URL.ifBlank { "http://localhost:54321" },
+            anonKey = BuildConfig.SUPABASE_ANON_KEY,
+        )
+    }
+
+    // Google Sign-In launcher (Android-only; iOS uses the no-op UnavailableGoogleSignInLauncher).
+    factoryOf(::GoogleCredentialClient)
+    factoryOf(::ActivityGoogleSignInLauncher) { bind<GoogleSignInLauncher>() }
 }
 
 private fun provideSharedPreferences(context: Context): SharedPreferences {

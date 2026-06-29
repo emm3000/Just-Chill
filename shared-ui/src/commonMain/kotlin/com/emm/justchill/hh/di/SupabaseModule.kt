@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.di
 
-import com.emm.justchill.BuildConfig
+import com.emm.justchill.core.SupabaseConfig
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.auth.Auth
@@ -10,21 +10,21 @@ import io.github.jan.supabase.serializer.KotlinXSerializer
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
+// Single commonMain Supabase client (replaces :androidApp/hh/di/SupabaseModule.kt + KoinIos.kt's
+// iosSupabaseModule). URL/key come from the injected platform SupabaseConfig (Android BuildConfig /
+// iOS IosSupabaseConfig). The builder body is byte-identical to the previous platform copies except
+// the config source.
 val supabaseModule = module {
-    single { provideSupabaseClient() }
+    single { provideSupabaseClient(get()) }
 }
 
-private fun provideSupabaseClient(): SupabaseClient {
-    // When supabase.properties is absent (CI, prod today) the BuildConfig fields are empty strings.
-    // createSupabaseClient requires a non-blank URL, so we substitute a local placeholder.
-    // Network calls will fail and surface as DomainException.NetworkUnavailable — the app remains
-    // fully usable in anonymous/offline mode. This placeholder is intentionally non-functional.
-    val url = BuildConfig.SUPABASE_URL.ifBlank { "http://localhost:54321" }
-    val key = BuildConfig.SUPABASE_ANON_KEY
-
+private fun provideSupabaseClient(config: SupabaseConfig): SupabaseClient {
+    // createSupabaseClient requires a non-blank URL; the empty -> "http://localhost:54321" fallback is
+    // applied platform-side when constructing SupabaseConfig. Network calls then fail and surface as
+    // DomainException.NetworkUnavailable — the app remains fully usable in anonymous/offline mode.
     return createSupabaseClient(
-        supabaseUrl = url,
-        supabaseKey = key,
+        supabaseUrl = config.url,
+        supabaseKey = config.anonKey,
     ) {
         install(Auth)
         install(Postgrest) {

@@ -56,7 +56,19 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":domain"))
+            // :data is now a full KMP library (android + ios targets), so commonMain depends on it
+            // directly. This REVERSES the earlier ":domain-only in commonMain" rule (slice H): the Koin
+            // wiring that binds :data impls (supabaseModule/syncModule/authModule/dataModule) now lives
+            // in ONE commonMain copy each, instead of being duplicated in :androidApp and KoinIos.kt.
+            // The only remaining per-platform DI is the platform module (DB driver, Settings,
+            // SupabaseConfig, app version, Google launcher, dispatchers). ViewModel purity (VMs take
+            // :domain interfaces, never SQLDelight/Default* types) is now a CONVENTION, no longer
+            // enforced by the module boundary. :data api-exposes the Supabase client SDK, inherited here.
+            implementation(projects.data)
             implementation(libs.jetbrains.lifecycle.viewmodel.compose)
+            // Supabase's KotlinXSerializer config in supabaseModule needs kotlinx-serialization-json
+            // directly (declared rather than relied on transitively via :data's api(supabase)).
+            implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
             // The unified nav host (hh/shared/AppNavHost.kt) lives in commonMain, so the WHOLE nav3
@@ -99,16 +111,11 @@ kotlin {
             // (rememberLauncherForActivityResult + ActivityResultContracts) for backup export/import.
             implementation(libs.androidx.activity.compose)
         }
-        // iOS-only wiring (Phase 5a). commonMain stays :domain-only per the established
-        // split rule; depending on :data is allowed HERE because the iOS Koin module
-        // binds the :data repository/datasource impls (provideSqlDriver/provideDb live in
-        // :data iosMain). :data is transitively exposed to the Shared framework, and it
-        // also brings the SQLDelight native driver onto the iOS classpath.
-        iosMain.dependencies {
-            implementation(projects.data)
-            // nav3 (runtime + JetBrains Compose Multiplatform UI port) is now declared in
-            // commonMain.dependencies and inherited here — the unified host lives in commonMain.
-        }
+        // iOS no longer needs an explicit :data dependency — it is inherited from commonMain (the
+        // layering reversal above, slice H). The SQLDelight native driver still reaches the Shared
+        // framework transitively via :data, and nav3 (runtime + JetBrains CMP UI port) is likewise
+        // inherited from commonMain. The iOS-only generated-config source dir is registered in the
+        // iosMain { } sourceSets block further below.
         commonTest.dependencies {
             implementation(kotlin("test"))
         }

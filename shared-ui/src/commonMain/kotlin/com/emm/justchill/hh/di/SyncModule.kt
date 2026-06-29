@@ -19,32 +19,40 @@ import com.emm.justchill.core.sync.resumeEvents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
-import org.koin.dsl.bind
 import org.koin.dsl.module
 
 private val accountSyncQualifier = named("accountSync")
 private val categorySyncQualifier = named("categorySync")
 private val transactionSyncQualifier = named("transactionSync")
 private val recurringSyncQualifier = named("recurringSync")
+
+// Single application-lifetime coroutine scope qualifier. ONE scope drives BOTH the claim-on-sign-in
+// observer (bootstrapAppGraph) and the SyncOrchestrator's internal loops. Public so AppGraph resolves it.
 val appScopeQualifier = named("appScope")
 
+// Single commonMain sync wiring (replaces :androidApp/hh/di/SyncModule.kt + KoinIos.kt's iosSyncModule
+// AND the SyncMutex previously bound in iosProfileSupportModule). resumeEvents() is expect/actual in
+// commonMain (Android ProcessLifecycleOwner / iOS UIApplicationDidBecomeActive) — no platform branching
+// here. The connectivity-regained trigger is absent on both platforms (shared cross-platform debt).
 val syncModule = module {
-    // Per-table sync units — registered with qualifiers so DefaultSyncRepository can
-    // distinguish the four TableSync slots even though they share the same interface type.
+    // Per-table sync units — qualified so DefaultSyncRepository can distinguish the four TableSync
+    // slots even though they share the interface type. Each takes (EmmDatabaseData, SupabaseClient).
     factory<TableSync>(accountSyncQualifier) { AccountTableSync(get(), get()) }
     factory<TableSync>(categorySyncQualifier) { CategoryTableSync(get(), get()) }
     factory<TableSync>(transactionSyncQualifier) { TransactionTableSync(get(), get()) }
     factory<TableSync>(recurringSyncQualifier) { RecurringMovementTableSync(get(), get()) }
 
-    // Domain port: cursor store implemented over AppPreferences (single commonMain impl).
-    factoryOf(::DefaultSyncCursorStore) bind SyncCursorStore::class
+    // Domain port: cursor store over AppPreferences (a stateless adapter; cursor state lives in prefs).
+    factoryOf(::DefaultSyncCursorStore) { bind<SyncCursorStore>() }
 
+    // DefaultSyncRepository dependency — easy to miss; omitting it crashes at first sync resolution.
     factory { ConflictResolver() }
 
-    // FK-safe ordering preserved: accounts → categories → transactions → recurring_movements.
+    // FK-safe ordering preserved: accounts -> categories -> transactions -> recurring_movements.
     factory<SyncRepository> {
         DefaultSyncRepository(
             observeSession = get(),
@@ -57,21 +65,21 @@ val syncModule = module {
         )
     }
 
-    // Single: ONE lock per process. Serializes sync cycles against each other AND against
-    // account deletion (in-flight push must not resurrect rows after delete_account).
+    // Single: ONE lock per process. Serializes sync cycles against each other AND against account
+    // deletion (in-flight push must not resurrect rows after delete_account).
     single { SyncMutex() }
 
     singleOf(::SyncDataUseCase)
 
-    // Application-lifetime scope for SyncOrchestrator long-lived jobs.
+    // Application-lifetime scope for SyncOrchestrator long-lived jobs and the claim observer.
     single<CoroutineScope>(appScopeQualifier) {
         CoroutineScope(SupervisorJob() + Dispatchers.Default)
     }
 
     factoryOf(::ObservePendingSyncCountUseCase)
 
-    // Single: owns long-lived coroutine jobs launched in externalScope.
-    // Bound to SyncController so commonMain consumers (ProfileViewModel) resolve the same instance.
+    // Single: owns long-lived coroutine jobs launched in externalScope. Does NOT self-start — start()
+    // is called by bootstrapAppGraph after the graph is built (same lifecycle on both platforms).
     single {
         SyncOrchestrator(
             syncData = get(),
@@ -82,5 +90,9 @@ val syncModule = module {
             externalScope = get(appScopeQualifier),
             resumeEvents = resumeEvents(),
         )
-    } bind SyncController::class
+    }
+
+    // Bound to the SAME SyncOrchestrator single so commonMain consumers (ProfileViewModel) resolve the
+    // same instance that bootstrapAppGraph started.
+    single<SyncController> { get<SyncOrchestrator>() }
 }

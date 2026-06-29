@@ -13,23 +13,22 @@ import com.emm.domain.auth.SignInUseCase
 import com.emm.domain.auth.SignInWithGoogleUseCase
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.auth.SignUpUseCase
-import com.emm.justchill.BuildConfig
-import com.emm.justchill.hh.auth.ActivityGoogleSignInLauncher
 import com.emm.justchill.hh.auth.AuthViewModel
-import com.emm.justchill.hh.auth.GoogleCredentialClient
 import com.emm.justchill.hh.auth.GoogleSignInLauncher
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModel
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
+// Single commonMain auth wiring (replaces :androidApp/hh/di/AuthModule.kt + KoinIos.kt's iosAuthModule).
+// DefaultAuthRepository takes SupabaseClient (supabaseModule); DefaultClaimLocalDataRepository takes
+// EmmDatabaseData (platform DB single). The Google sign-in launcher and the googleServerClientId string
+// are platform-provided (Android: ActivityGoogleSignInLauncher + BuildConfig; iOS: the no-op
+// UnavailableGoogleSignInLauncher + "").
 val authModule = module {
     factoryOf(::DefaultAuthRepository) { bind<AuthRepository>() }
-    // DefaultClaimLocalDataRepository takes EmmDatabaseData — resolved via get() from dbModule.
     factoryOf(::DefaultClaimLocalDataRepository) { bind<ClaimLocalDataRepository>() }
-
-    factoryOf(::GoogleCredentialClient)
-    factoryOf(::ActivityGoogleSignInLauncher) { bind<GoogleSignInLauncher>() }
 
     factoryOf(::ClaimLocalDataUseCase)
     factoryOf(::ResendConfirmationEmailUseCase)
@@ -47,8 +46,10 @@ val authModule = module {
             signUp = get(),
             signInWithGoogle = get(),
             resendConfirmationEmail = get(),
-            googleServerClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID,
-            googleSignInLauncher = get(),
+            // Platform-provided: Android BuildConfig.GOOGLE_WEB_CLIENT_ID; iOS "" (button hidden,
+            // submitWithGoogle short-circuits on a blank id).
+            googleServerClientId = get(named("googleServerClientId")),
+            googleSignInLauncher = get<GoogleSignInLauncher>(),
         )
     }
 }
