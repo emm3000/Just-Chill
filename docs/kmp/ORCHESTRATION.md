@@ -131,9 +131,10 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
 ## Phase 7 — dedup ledger (one Compose base)
 
 > Distinct from the Phase 3 feature-migration above. Goal: kill Android/iOS
-> duplication, push platform-specifics behind `expect/actual`. Slices A–F +
-> cleanup, all writer+reviewer Opus except the low-risk cleanup (writer +
-> cheap-verify). Branch `kmp/phase-0-scaffolding`, linear, not pushed.
+> duplication, push platform-specifics behind `expect/actual`. Slices A–F (dedup)
+> + cleanup + G (iOS-capability fill-in), all writer+reviewer Opus except the
+> low-risk cleanup (writer + cheap-verify). Branch `kmp/phase-0-scaffolding`,
+> linear, not pushed.
 
 | Slice | What | Commit | Status |
 |---|---|---|---|
@@ -145,6 +146,7 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
 | E2 | iOS sync retry snackbar + Manifesto first-launch gate (commonMain handlers) | `de26928` | ✅ |
 | cleanup | hoist replaceAll, drop orphan dep + unused atom, fix stale docs | `0784014` | ✅ (writer + cheap-verify) |
 | F | merge Android + iOS nav hosts → one commonMain `AppNavHost`; Android → JetBrains nav3-UI | `186d3b6` | ✅ (writer+reviewer Opus; net −254) |
+| G | implement iOS `PlatformHostActions` (export/import/share/email via UIKit) + enable privacy policy | `139518a` | ✅ (writer+reviewer Opus; modals need sim verify) |
 
 ### Carry-forward decisions / landmines
 - **Nav host UNIFIED (Option A reversed, slice F `186d3b6`).** Both platforms now
@@ -164,3 +166,11 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
 - **Build.ID prefs bug FIXED** (`4d2e204`): the SharedPreferences file was named
   after `Build.ID` → wiped on every OS update. Now stable `justchill_prefs` +
   one-time migration. (Not a dedup slice; Android-only `CoreModule`.)
+- **iOS UIKit delegate-retention landmine (slice G):** a Kotlin/Native `NSObject`
+  delegate (e.g. `UIDocumentPickerDelegateProtocol`) is held by UIKit via a WEAK
+  ref → it gets GC'd before the user finishes → the modal silently fires nothing.
+  Fix used: a module-level `mutableSetOf<NSObject>()` that retains the delegate
+  from creation until it removes itself inside EVERY terminal callback. Invisible
+  to the compile gate. The export/import/share/email/mail modals are compile- +
+  launch-verified only — their live round-trips MUST be driven on the iOS simulator
+  by a human (no idb/XCUITest here).
