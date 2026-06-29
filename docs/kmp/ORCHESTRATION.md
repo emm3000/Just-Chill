@@ -78,7 +78,7 @@ Before delegating, map the slice cheaply so the writer prompt is precise:
 ./gradlew :shared-ui:compileAndroidMain
 ./gradlew :shared-ui:compileKotlinIosSimulatorArm64   # proves zero java.* leak
 ./gradlew assembleDevDebug
-./gradlew :app:testDevDebugUnitTest
+./gradlew :androidApp:testDevDebugUnitTest
 ./gradlew :shared-ui:testAndroidHostTest
 # detekt — REAL KMP coverage (see note below; all three must exit 0)
 ./gradlew detektMainAndroid        # KMP modules (domain, data, shared-ui): commonMain + androidMain, WITH type resolution
