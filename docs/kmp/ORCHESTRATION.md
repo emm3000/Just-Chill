@@ -127,3 +127,34 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
 | 7b | profile | `ecdd111` | ✅ (writer+reviewer) |
 | 8a | cleanup — agnostic atoms + orphan deletion + fonts drop | `9d7cfa4` | ✅ (writer+reviewer) |
 | 8b | cleanup — hhModule DI sweep | `8e50b30` | ✅ (writer+reviewer — Phase 3 closed) |
+
+## Phase 7 — dedup ledger (one Compose base)
+
+> Distinct from the Phase 3 feature-migration above. Goal: kill Android/iOS
+> duplication, push platform-specifics behind `expect/actual`. Slices A–E2 +
+> cleanup, all writer+reviewer Opus except the low-risk cleanup (writer +
+> cheap-verify). Branch `kmp/phase-0-scaffolding`, linear, not pushed.
+
+| Slice | What | Commit | Status |
+|---|---|---|---|
+| A | platform-neutral core/components shell → commonMain | `c849091` | ✅ |
+| B | `expect/actual resumeEvents()` + establish shared-ui/androidMain | `d251760` | ✅ |
+| C | AppPreferences + cursor store → commonMain over multiplatform-settings (keystone) | `402c26d` | ✅ |
+| D | merge 2 SyncOrchestrators → 1 commonMain class + `SyncController.events` | `352a97c` | ✅ |
+| E1 | nav route keys + BottomBar + ProfileMessage → commonMain; nav3-runtime → common | `a02c09b` | ✅ |
+| E2 | iOS sync retry snackbar + Manifesto first-launch gate (commonMain handlers) | `de26928` | ✅ |
+| cleanup | hoist replaceAll, drop orphan dep + unused atom, fix stale docs | `0784014` | ✅ (writer + cheap-verify) |
+
+### Carry-forward decisions / landmines
+- **Nav split is deliberate (Option A), NOT reversed.** Android = Google
+  `androidx.navigation3`, iOS = JetBrains port. nav3-RUNTIME is multiplatform
+  (in commonMain since E1); nav3-UI stays split per platform. Fully unifying the
+  `NavDisplay` host = forcing shipped Android nav onto the JetBrains UI port =
+  predictive-back regression risk for modest payoff. Evaluated 2026-06-28, HELD.
+- **iOS nav-state landmine:** K/N has no reflection serializer discovery — every
+  route the iOS host pushes MUST be registered in `iosNavSavedStateConfiguration`
+  (`IosRoutes.kt`), else `rememberNavBackStack` crashes on restore. Invisible to
+  the compiler + the Android gate.
+- **Build.ID prefs bug FIXED** (`4d2e204`): the SharedPreferences file was named
+  after `Build.ID` → wiped on every OS update. Now stable `justchill_prefs` +
+  one-time migration. (Not a dedup slice; Android-only `CoreModule`.)
