@@ -9,10 +9,7 @@ internal fun formatSoles(cents: Long): String {
     return "S/ ${NumberFormatEs.integerRounded(soles)}"
 }
 
-internal fun formatSolesWithDecimals(cents: Long): String {
-    val soles = cents.toDouble() / 100.0
-    return "S/ ${NumberFormatEs.decimal2(soles)}"
-}
+internal fun formatSolesWithDecimals(cents: Long): String = "S/ ${NumberFormatEs.cents(cents)}"
 
 internal fun domainColorToUi(color: String): Color = when (color) {
     "green" -> emmDarkColors.catSage

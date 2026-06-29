@@ -59,21 +59,24 @@ internal object NumberFormatEs {
     }
 
     /**
-     * Grouped value with exactly two fraction digits — e.g. 1234.56 -> "1,234.56",
-     * 1234567.5 -> "1,234,567.50", 0.0 -> "0.00". Mirrors `DecimalFormat("#,##0.00")` (US) and
-     * `NumberFormat.getNumberInstance(es-PE)` with min/max fraction digits = 2.
-     *
-     * Uses HALF_UP at the 3rd decimal (`roundToLong`), whereas the java formatters it replaces use
-     * HALF_EVEN. Safe ONLY because every caller passes a cents-exact value (`cents.toDouble() / 100.0`),
-     * so a 3rd-decimal tie can never occur. A future caller passing a raw double with 3+ decimals
-     * could diverge — route such inputs through a HALF_EVEN path instead.
+     * Grouped string with exactly two fraction digits from an exact cents amount — e.g.
+     * 123456 -> "1,234.56", 50 -> "0.50", 0 -> "0.00". Sign is dropped (uses abs); callers that
+     * need a sign prefix add it themselves. This is the canonical money-formatting core: it works
+     * directly on the Long cents value with no Double round-trip.
      */
-    fun decimal2(value: Double): String {
-        val totalCents = (abs(value) * 100.0).roundToLong()
-        val intUnits = totalCents / 100
-        val cents = totalCents % 100
-        val grouped = groupDigits(intUnits.toString())
-        val centsStr = cents.toString().padStart(2, '0')
+    fun cents(cents: Long): String {
+        val abs = abs(cents)
+        val grouped = groupDigits((abs / 100).toString())
+        val centsStr = (abs % 100).toString().padStart(2, '0')
         return "$grouped$DECIMAL$centsStr"
     }
+
+    /**
+     * Grouped value with exactly two fraction digits — e.g. 1234.56 -> "1,234.56",
+     * 1234567.5 -> "1,234,567.50", 0.0 -> "0.00". Mirrors `DecimalFormat("#,##0.00")` (US) and
+     * `NumberFormat.getNumberInstance(es-PE)` with min/max fraction digits = 2. Delegates to [cents]
+     * after rounding to the nearest cent (HALF_UP via roundToLong); safe because every caller passes
+     * a cents-exact value, so a 3rd-decimal tie can never occur.
+     */
+    fun decimal2(value: Double): String = cents((abs(value) * 100.0).roundToLong())
 }
