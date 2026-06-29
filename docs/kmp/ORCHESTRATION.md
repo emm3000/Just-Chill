@@ -80,9 +80,22 @@ Before delegating, map the slice cheaply so the writer prompt is precise:
 ./gradlew assembleDevDebug
 ./gradlew :app:testDevDebugUnitTest
 ./gradlew :shared-ui:testAndroidHostTest
+# detekt — REAL KMP coverage (see note below; all three must exit 0)
+./gradlew detektMainAndroid        # KMP modules (domain, data, shared-ui): commonMain + androidMain, WITH type resolution
+./gradlew detektIosMainSourceSet   # KMP modules: iosMain — NO type resolution (Native has none in detekt 2.0)
+./gradlew :androidApp:detektMain   # androidApp: all variants, WITH type resolution
 ```
 The iOS compile is the real proof the de-JVM worked. The Android gate alone does
 NOT catch a missing Koin binding — that's why the reviewer re-runs + traces DI.
+
+The KMP gate previously omitted detekt — that's why a prior slice slipped style
+violations past review. The plain `./gradlew detekt` task (what the pre-push hook
+runs) is **NO-SOURCE on KMP modules**: it never scanned commonMain/iosMain, so it
+only really checked `:androidApp`. The three tasks above give real coverage of the
+code a slice actually touches — `detektMainAndroid` for commonMain+androidMain (with
+type resolution) and `detektIosMainSourceSet` for iosMain. **iosMain has no type
+resolution in detekt 2.0** (Kotlin/Native has none), so TR-dependent rules don't
+fire there — treat iosMain detekt as style/structure only, not a deep semantic gate.
 
 ## Why two Opus agents per slice
 The Android build can be green while DI is broken (missing repository binding →
@@ -176,3 +189,21 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
   launch-verified only — their live round-trips MUST be driven on the iOS simulator
   by a human (no idb/XCUITest here).
 - **commonMain → :data layering REVERSED (slice H `56314ba`).** Was `:domain`-only (a pre-KMP rail). shared-ui/commonMain now depends on `:data`, so the DI wiring (`syncModule`/`authModule`/`dataModule`/`supabaseModule`) is ONE commonMain copy parameterized by a per-platform `platformModule` (DB single + seed, `Settings` backend, `SupabaseConfig`, `GoogleSignInLauncher`, `appVersion`, `googleServerClientId`). Tradeoff: lost the compile-time guardrail that blocked a ViewModel importing `Default*Repository`/SQLDelight types — VM purity is now CONVENTION only. `startKoin{}` itself can't be shared (Android needs koin-android `androidContext`/`androidLogger`, absent in commonMain); only the module list (`appModules`) + post-start `bootstrapAppGraph` (claim observer + `orchestrator.start()`) are shared. Koin failures are RUNTIME-ONLY (invisible to the compiler AND the Android gate) — iOS `initKoin()` runtime resolution STILL needs a human simulator run; static bind-trace + `compileKotlinIosSimulatorArm64` are green but that is not a device launch.
+- **detekt 2.0 per-task baseline scheme (how to keep the gate green).** detekt 2.0
+  derives a SEPARATE baseline file per analysis task from the extension stem
+  `config/detekt/baseline-<module>.xml` (set once in the root `build.gradle.kts`
+  `subprojects {}` block — no per-task config needed). Mapping:
+  `detektMainAndroid` ↔ `baseline-<module>-main.xml`; `detektIosMainSourceSet` ↔
+  `baseline-<module>-iosMainSourceSet.xml`; `:androidApp:detektMain` fans out to
+  `baseline-androidApp-{devDebug,devRelease,prodDebug,prodRelease}.xml`. The old
+  stem files (`baseline-<module>.xml`) belong to the plain `detekt` task (NO-SOURCE
+  on KMP) + the pre-push hook — leave them ALONE. Because each task derives its own
+  path, two baseline tasks for the same module never overwrite each other (the
+  feared 2.0 overwrite landmine does not apply here). To grandfather pre-existing
+  issues for a source set, run the matching baseline task and COMMIT the generated
+  file, e.g. `./gradlew :shared-ui:detektBaselineMainAndroid
+  :shared-ui:detektBaselineIosMainSourceSet` → commit `baseline-shared-ui-main.xml`
+  + `baseline-shared-ui-iosMainSourceSet.xml`. NEVER baseline to dodge a NEW
+  violation a slice introduces — fix it; baselines only grandfather what predates
+  the detekt gate (initial counts: shared-ui main 154 / iosMain 10, data main 589 /
+  iosMain 2, domain main 1, androidApp devDebug 136 / prodDebug 8).
