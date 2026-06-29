@@ -10,8 +10,8 @@ import com.emm.justchill.core.platform.CurrentActivityHolder
 import com.emm.justchill.hh.auth.ActivityGoogleSignInLauncher
 import com.emm.justchill.hh.auth.GoogleCredentialClient
 import com.emm.justchill.hh.auth.GoogleSignInLauncher
-import com.russhwolf.settings.SharedPreferencesSettings
 import com.russhwolf.settings.Settings
+import com.russhwolf.settings.SharedPreferencesSettings
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
@@ -73,11 +73,18 @@ internal fun migrateBuildIdPrefs(legacy: SharedPreferences, target: SharedPrefer
     for ((key, value) in legacy.all) {
         when (value) {
             is Boolean -> editor.putBoolean(key, value)
+
             is Int -> editor.putInt(key, value)
+
             is Long -> editor.putLong(key, value)
+
             is Float -> editor.putFloat(key, value)
+
             is String -> editor.putString(key, value)
-            is Set<*> -> @Suppress("UNCHECKED_CAST") editor.putStringSet(key, value as Set<String>)
+
+            is Set<*> ->
+                @Suppress("UNCHECKED_CAST")
+                editor.putStringSet(key, value as Set<String>)
         }
     }
     editor.putBoolean(PREFS_MIGRATED_FLAG, true)
