@@ -180,9 +180,8 @@ dependencies {
 
     testImplementation(libs.mockk)
 
-    implementation(libs.androidx.navigation3.ui)
-    implementation(libs.androidx.navigation3.runtime)
-    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    // nav3 (runtime + UI) is inherited transitively from :shared-ui commonMain, which now hosts the
+    // unified AppNavHost. :androidApp no longer references androidx.navigation3 types directly.
 
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)

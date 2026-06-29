@@ -1,4 +1,4 @@
-package com.emm.justchill
+package com.emm.justchill.hh.shared
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -10,17 +10,22 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -34,24 +39,27 @@ import com.emm.justchill.core.sync.SyncController
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
+import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.hh.account.AccountsEffect
 import com.emm.justchill.hh.account.AccountsScreen
 import com.emm.justchill.hh.account.AccountsViewModel
 import com.emm.justchill.hh.account.AddAccountScreen
+import com.emm.justchill.hh.auth.AuthScreen
 import com.emm.justchill.hh.category.AddCategoryScreen
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.CategoriesEffect
 import com.emm.justchill.hh.category.CategoriesScreen
 import com.emm.justchill.hh.category.CategoriesViewModel
 import com.emm.justchill.hh.category.findById
-import com.emm.justchill.hh.auth.AuthScreen
 import com.emm.justchill.hh.home.HomeEffect
 import com.emm.justchill.hh.home.HomeScreen
 import com.emm.justchill.hh.home.HomeViewModel
 import com.emm.justchill.hh.onboarding.ManifestoScreen
+import com.emm.justchill.hh.profile.PrivacyPolicyScreen
 import com.emm.justchill.hh.profile.ProfileEffect
 import com.emm.justchill.hh.profile.ProfileIntent
+import com.emm.justchill.hh.profile.ProfileMessage
 import com.emm.justchill.hh.profile.ProfileScreen
 import com.emm.justchill.hh.profile.ProfileViewModel
 import com.emm.justchill.hh.recurring.AddEditRecurringMovementScreen
@@ -60,27 +68,6 @@ import com.emm.justchill.hh.recurring.RecurringMovementsScreen
 import com.emm.justchill.hh.recurring.RecurringMovementsViewModel
 import com.emm.justchill.hh.report.ReportScreen
 import com.emm.justchill.hh.seetransactions.SeeTransactionsScreen
-import com.emm.justchill.hh.shared.AccountsRoute
-import com.emm.justchill.hh.shared.AddAccountRoute
-import com.emm.justchill.hh.shared.AddEditRecurringMovementRoute
-import com.emm.justchill.hh.shared.AddTransactionRoute
-import com.emm.justchill.hh.shared.AuthRoute
-import com.emm.justchill.hh.shared.BottomBarRoute
-import com.emm.justchill.hh.shared.CategoriesListRoute
-import com.emm.justchill.hh.shared.CategoryRoute
-import com.emm.justchill.hh.shared.EditTransactionRoute
-import com.emm.justchill.hh.shared.HhBottomBar
-import com.emm.justchill.hh.shared.HomeRoute
-import com.emm.justchill.hh.shared.ManifestoRoute
-import com.emm.justchill.hh.shared.ProfileRoute
-import com.emm.justchill.hh.shared.RecurringMovementsRoute
-import com.emm.justchill.hh.shared.ReportRoute
-import com.emm.justchill.hh.shared.SeeTransactionRoute
-import com.emm.justchill.hh.shared.SyncEventsHandler
-import com.emm.justchill.hh.shared.popToTransactionScreen
-import com.emm.justchill.hh.shared.replaceAll
-import com.emm.justchill.hh.shared.switchTab
-import com.emm.justchill.hh.shared.toText
 import com.emm.justchill.hh.transaction.AddTransactionIntent
 import com.emm.justchill.hh.transaction.AddTransactionScreen
 import com.emm.justchill.hh.transaction.AddTransactionViewModel
@@ -90,47 +77,56 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
+import org.koin.core.qualifier.named
 
-// iOS nav host. Mirrors the Android Hh.kt structure (bottom nav + center "Agregar" + NavDisplay
-// entryProvider) for the LOCAL-FIRST subset only, using the JetBrains Compose Multiplatform
-// navigation3 port. Lives in iosMain — Android keeps its own androidx.navigation3 Hh.kt (Option A).
-// The route keys (HhRoutes.kt) + bottom bar (HhBottomBar.kt) + ProfileMessage.toText are shared from
-// commonMain; only the NavDisplay/entryProvider body stays platform-specific (nav3-UI dependency split).
+// Single Compose Multiplatform nav host for both Android and iOS. Merges the two former hosts
+// (androidApp Hh.kt + iosMain IosApp.kt) into one commonMain composable. The route keys, bottom bar,
+// sync-event handling and ProfileMessage copy already live in commonMain; this slice unifies the
+// NavDisplay + entryProvider body too. The five capabilities that genuinely differ per platform
+// (backup export/import, share, open-email, privacy click + the start tab) sit behind expect/actual
+// (PlatformHostActions + startTab) — Android wires real intents, iOS no-ops, exactly as before.
 //
-// First launch shows the Manifesto gate (mirrors Android); subsequent launches land on Home. The
-// "Agregar" center button pushes AddTransaction. Platform callbacks (share/export/import) are still
-// no-oped on iOS.
-
-private val START_TAB: BottomBarRoute = HomeRoute
+// Both platforms now run on the JetBrains Compose Multiplatform navigation3-UI port (NavDisplay) over
+// Google's multiplatform navigation3-runtime (NavKey/NavBackStack). EmmTheme is applied here so each
+// entry point only calls AppNavHost().
 
 @Suppress("CyclomaticComplexMethod", "LongMethod")
 @Composable
-fun IosApp() {
+fun AppNavHost(modifier: Modifier = Modifier) {
     EmmTheme {
         val colors = LocalEmmColors.current
         val appPrefs: AppPreferences = koinInject()
+        // Inject via the SyncController port so the SAME instance the orchestrator emits on drives the
+        // sync-event snackbars. Android binds SyncOrchestrator to SyncController; iOS binds it too.
         val syncController: SyncController = koinInject()
-        // First-launch Manifesto gate (mirrors Android Hh.kt): show the manifesto once, then land on
-        // START_TAB on every subsequent launch.
+        val appVersion: String = koinInject(named("appVersion"))
+
+        // First-launch Manifesto gate: show the manifesto once, then land on startTab on every
+        // subsequent launch.
         val startRoute: NavKey = remember {
-            if (appPrefs.firstLaunchSeen) START_TAB else ManifestoRoute()
+            if (appPrefs.firstLaunchSeen) startTab else ManifestoRoute()
         }
-        // KMP rememberNavBackStack needs a SavedStateConfiguration whose serializersModule registers
-        // every NavKey subtype (Kotlin/Native has no reflection-based serializer discovery like
-        // Android). DEFAULT carries an empty module and crashes at runtime; iosNavSavedStateConfiguration
-        // (IosRoutes.kt) wires the open NavKey polymorphism.
+        // 2-arg rememberNavBackStack with an explicit SavedStateConfiguration on BOTH platforms (one
+        // host, one call). iOS needs it (no K/N reflection serializer discovery); Android tolerates it.
         val backStack: NavBackStack<NavKey> =
-            rememberNavBackStack(iosNavSavedStateConfiguration, startRoute)
+            rememberNavBackStack(navSavedStateConfiguration, startRoute)
         var pendingCategory by remember { mutableStateOf<SelectableCategory?>(null) }
+        // Holds the JSON contents of an imported backup file until the user confirms the destructive
+        // replace. Hoisted to the host so the Android SAF import launcher (created in
+        // rememberPlatformHostActions, above NavDisplay) can feed it back; the Profile entry renders
+        // the confirmation dialog. Never set on iOS (requestImport no-ops there).
+        var pendingImportJson by remember { mutableStateOf<String?>(null) }
         val snackbarHostState = remember { SnackbarHostState() }
         val rootScope = rememberCoroutineScope()
         val showRootMessage: (String) -> Unit = { message ->
             rootScope.launch { snackbarHostState.showEmmSnackbar(message) }
         }
+        val platform = rememberPlatformHostActions(
+            snackbarHostState = snackbarHostState,
+            scope = rootScope,
+            onImported = { json -> pendingImportJson = json },
+        )
 
-        // Collects one-shot sync events from the SAME SyncController instance the orchestrator emits
-        // on (KoinIos binds single<SyncController> { get<SyncOrchestrator>() } and start()s it). Shows
-        // the manual-sync retry snackbar and the session-expired snackbar — parity with Android.
         SyncEventsHandler(
             syncController = syncController,
             snackbarHostState = snackbarHostState,
@@ -142,7 +138,7 @@ fun IosApp() {
         val showBottomBar: Boolean = currentRoute is BottomBarRoute
 
         Scaffold(
-            modifier = Modifier.background(colors.bg),
+            modifier = modifier.background(colors.bg),
             snackbarHost = { EmmSnackbarHost(hostState = snackbarHostState) },
             bottomBar = {
                 AnimatedVisibility(
@@ -152,13 +148,14 @@ fun IosApp() {
                 ) {
                     HhBottomBar(
                         current = currentRoute as? BottomBarRoute,
-                        onTabClick = { tab -> backStack.switchTab(tab, START_TAB) },
+                        onTabClick = { tab -> backStack.switchTab(tab, startTab) },
                         onAddClick = { backStack.add(AddTransactionRoute) },
                     )
                 }
             },
             contentWindowInsets = WindowInsets(0),
         ) { padding ->
+
             NavDisplay(
                 modifier = Modifier
                     .fillMaxSize()
@@ -179,15 +176,33 @@ fun IosApp() {
                                     backStack.removeLastOrNull()
                                 } else {
                                     appPrefs.firstLaunchSeen = true
-                                    backStack.replaceAll(START_TAB)
+                                    backStack.replaceAll(startTab)
                                 }
                             },
                         )
                     }
 
+                    entry<PrivacyPolicyRoute> {
+                        // Registered on both platforms; iOS never navigates here (privacy click is inert).
+                        PrivacyPolicyScreen(
+                            onBack = { backStack.removeLastOrNull() },
+                        )
+                    }
+
+                    entry<AuthRoute> {
+                        AuthScreen(
+                            onBack = { backStack.removeLastOrNull() },
+                            snackbarHostState = snackbarHostState,
+                            onOpenEmailApp = platform.onOpenEmailApp,
+                            showGoogleSignIn = platform.showGoogleSignIn,
+                        )
+                    }
+
                     entry<HomeRoute> {
-                        IosHomeEntry(
-                            navigateToAll = { backStack.switchTab(SeeTransactionRoute, START_TAB) },
+                        HomeEntry(
+                            navigateToAll = dropUnlessResumed {
+                                backStack.switchTab(SeeTransactionRoute, startTab)
+                            },
                             navigateToAdd = { backStack.add(AddTransactionRoute) },
                             navigateToEdit = { id -> backStack.add(EditTransactionRoute(id)) },
                             navigateToReport = { backStack.add(ReportRoute) },
@@ -197,13 +212,16 @@ fun IosApp() {
 
                     entry<SeeTransactionRoute> {
                         SeeTransactionsScreen(
-                            onEditTransaction = { id -> backStack.add(EditTransactionRoute(id)) },
+                            onEditTransaction = { id ->
+                                backStack.add(EditTransactionRoute(id))
+                            },
                         )
                     }
 
                     entry<AccountsRoute> {
                         val vm: AccountsViewModel = koinViewModel()
-                        val state by vm.state.collectAsStateWithLifecycle()
+                        val accountsState by vm.state.collectAsStateWithLifecycle()
+
                         LaunchedEffect(vm) {
                             vm.effect.collect { effect ->
                                 when (effect) {
@@ -211,8 +229,9 @@ fun IosApp() {
                                 }
                             }
                         }
+
                         AccountsScreen(
-                            state = state,
+                            state = accountsState,
                             onIntent = vm::onIntent,
                             addCategory = { backStack.add(CategoryRoute()) },
                             addAccount = { backStack.add(AddAccountRoute) },
@@ -220,61 +239,139 @@ fun IosApp() {
                         )
                     }
 
-                    entry<ProfileRoute> {
-                        val vm: ProfileViewModel = koinViewModel()
-                        val state by vm.state.collectAsStateWithLifecycle()
-                        // Surface sign-out / delete-account outcomes (and errors) via the root
-                        // snackbar — mirrors Android's ProfileRoute effect collection.
+                    entry<CategoriesListRoute> {
+                        val vm: CategoriesViewModel = koinViewModel()
+                        val categoriesState by vm.state.collectAsStateWithLifecycle()
+
                         LaunchedEffect(vm) {
                             vm.effect.collect { effect ->
                                 when (effect) {
-                                    is ProfileEffect.ShowError -> showRootMessage(effect.error.toUserMessage())
-                                    is ProfileEffect.Notify -> showRootMessage(effect.message.toText())
-                                    // Export/import (SAF) is phase 6b on iOS — onExportClick never fires,
-                                    // so ExportReady is unreachable here; ignore it for now.
-                                    is ProfileEffect.ExportReady -> Unit
+                                    is CategoriesEffect.ShowMessage -> showRootMessage(effect.text)
                                 }
                             }
                         }
+
+                        CategoriesScreen(
+                            state = categoriesState,
+                            onIntent = vm::onIntent,
+                            onAddCategory = { backStack.add(CategoryRoute()) },
+                            onBack = { backStack.removeLastOrNull() },
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+
+                    entry<ProfileRoute> {
+                        val vm: ProfileViewModel = koinViewModel()
+                        val profileState by vm.state.collectAsStateWithLifecycle()
+
+                        LaunchedEffect(vm) {
+                            vm.effect.collect { effect ->
+                                when (effect) {
+                                    is ProfileEffect.ShowError -> snackbarHostState.showEmmSnackbar(
+                                        message = effect.error.toUserMessage(),
+                                        tone = EmmSnackbarTone.Error,
+                                    )
+
+                                    // VM finished generating the backup; the platform layer owns the
+                                    // SAF write. No-op on iOS (export is gated off there, so this never
+                                    // fires).
+                                    is ProfileEffect.ExportReady -> platform.requestExport(effect.json)
+
+                                    is ProfileEffect.Notify -> snackbarHostState.showEmmSnackbar(
+                                        message = effect.message.toText(),
+                                        tone = when (effect.message) {
+                                            ProfileMessage.ExportFailed,
+                                            ProfileMessage.ImportFailed,
+                                            -> EmmSnackbarTone.Error
+
+                                            else -> EmmSnackbarTone.Success
+                                        },
+                                    )
+                                }
+                            }
+                        }
+
+                        pendingImportJson?.let { json ->
+                            val dialogColors = LocalEmmColors.current
+                            AlertDialog(
+                                onDismissRequest = { pendingImportJson = null },
+                                title = { Text("¿Reemplazar tu data?") },
+                                text = { Text("Esto va a borrar todo lo que tengas hoy y poner lo del archivo.") },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            vm.onIntent(ProfileIntent.ImportJson(json))
+                                            pendingImportJson = null
+                                        },
+                                    ) {
+                                        Text(
+                                            text = "Reemplazar todo",
+                                            color = dialogColors.danger,
+                                        )
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { pendingImportJson = null }) {
+                                        Text("Cancelar")
+                                    }
+                                },
+                            )
+                        }
+
                         ProfileScreen(
-                            state = state,
-                            appVersion = "1.0.0",
-                            isDebug = false,
+                            state = profileState,
+                            appVersion = appVersion,
+                            isDebug = platform.isDebug,
                             onCategoriesClick = { backStack.add(CategoriesListRoute) },
                             onAccountsClick = { backStack.add(AccountsRoute) },
                             onRecurringClick = { backStack.add(RecurringMovementsRoute) },
                             onAboutClick = { backStack.add(ManifestoRoute(isRevisit = true)) },
-                            // Backup is phase 6b on iOS — no-op (must not crash).
-                            onExportClick = { /* TODO phase 6b: iOS export (SAF equivalent) */ },
-                            onImportClick = { /* TODO phase 6b: iOS import */ },
-                            onPrivacyClick = { /* TODO phase 6+: privacy policy screen */ },
-                            // Auth (6a): opt-in from Profile. On success AuthScreen pops back here.
+                            onExportClick = {
+                                if (platform.supportsBackup) vm.onIntent(ProfileIntent.ExportRequested)
+                            },
+                            onImportClick = { if (platform.supportsBackup) platform.requestImport() },
+                            onPrivacyClick = {
+                                if (platform.supportsPrivacyPolicy) backStack.add(PrivacyPolicyRoute)
+                            },
                             onSignInClick = { backStack.add(AuthRoute) },
                             onSignOutClick = { vm.onIntent(ProfileIntent.SignOut) },
                             onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccount) },
-                            // Sync (6b): manual trigger. The Syncing spinner / RetryPill / "última
-                            // sincronización" row is driven by SyncController.status in ProfileViewModel,
-                            // so it reflects this cycle automatically once SyncOrchestrator is bound.
                             onSyncNowClick = { vm.onIntent(ProfileIntent.SyncNow) },
+                        )
+                    }
+
+                    entry<ReportRoute> {
+                        ReportScreen(
+                            onBack = { backStack.removeLastOrNull() },
+                            onAddTransaction = { backStack.add(AddTransactionRoute) },
+                            onShareText = platform.onShareText,
                         )
                     }
 
                     entry<AddTransactionRoute> {
                         val vm: AddTransactionViewModel = koinViewModel()
+
                         LaunchedEffect(pendingCategory) {
-                            pendingCategory?.let { selectable ->
-                                vm.onIntent(AddTransactionIntent.OnNewValueFromOthers(selectable))
+                            pendingCategory?.let { selectableCategory ->
+                                vm.onIntent(AddTransactionIntent.OnNewValueFromOthers(selectableCategory))
                                 pendingCategory = null
                             }
                         }
+
                         AddTransactionScreen(
                             vm = vm,
                             popBackStack = { backStack.removeLastOrNull() },
                             snackbarHostState = snackbarHostState,
                             onAddNewCategory = {
-                                backStack.add(CategoryRoute(propagateToTransaction = true))
+                                backStack.add(
+                                    CategoryRoute(
+                                        propagateToTransaction = true,
+                                    ),
+                                )
                             },
-                            onAddNewAccount = { backStack.add(AddAccountRoute) },
+                            onAddNewAccount = {
+                                backStack.add(AddAccountRoute)
+                            },
                         )
                     }
 
@@ -284,32 +381,6 @@ fun IosApp() {
                             onBack = { backStack.removeLastOrNull() },
                             snackbarHostState = snackbarHostState,
                             onAddNewAccount = { backStack.add(AddAccountRoute) },
-                        )
-                    }
-
-                    entry<AddAccountRoute> {
-                        AddAccountScreen(
-                            onBack = { backStack.removeLastOrNull() },
-                            snackbarHostState = snackbarHostState,
-                        )
-                    }
-
-                    entry<CategoriesListRoute> {
-                        val vm: CategoriesViewModel = koinViewModel()
-                        val state by vm.state.collectAsStateWithLifecycle()
-                        LaunchedEffect(vm) {
-                            vm.effect.collect { effect ->
-                                when (effect) {
-                                    is CategoriesEffect.ShowMessage -> showRootMessage(effect.text)
-                                }
-                            }
-                        }
-                        CategoriesScreen(
-                            state = state,
-                            onIntent = vm::onIntent,
-                            onAddCategory = { backStack.add(CategoryRoute()) },
-                            onBack = { backStack.removeLastOrNull() },
-                            modifier = Modifier.fillMaxSize(),
                         )
                     }
 
@@ -338,8 +409,15 @@ fun IosApp() {
                         )
                     }
 
+                    entry<AddAccountRoute> {
+                        AddAccountScreen(
+                            onBack = { backStack.removeLastOrNull() },
+                            snackbarHostState = snackbarHostState,
+                        )
+                    }
+
                     entry<RecurringMovementsRoute> {
-                        IosRecurringEntry(
+                        RecurringMovementsEntry(
                             onNavigateToAddEdit = { id -> backStack.add(AddEditRecurringMovementRoute(id)) },
                             onShowError = showRootMessage,
                         )
@@ -352,31 +430,6 @@ fun IosApp() {
                             id = key.id,
                         )
                     }
-
-                    entry<ReportRoute> {
-                        ReportScreen(
-                            onBack = { backStack.removeLastOrNull() },
-                            onAddTransaction = { backStack.add(AddTransactionRoute) },
-                            // Sharing is a platform concern — no-op for 5b.
-                            onShareText = { /* TODO phase 6b: iOS share sheet */ },
-                        )
-                    }
-
-                    entry<AuthRoute> {
-                        AuthScreen(
-                            // On successful sign-in/sign-up AuthViewModel emits NavigateBack, which
-                            // calls onBack — popping Auth and returning to Profile (which then shows
-                            // the signed-in state via its ObserveSessionUseCase subscription).
-                            onBack = { backStack.removeLastOrNull() },
-                            snackbarHostState = snackbarHostState,
-                            // Opening the system mail app needs UIKit (UIApplication.openURL with a
-                            // mailto: / message:// scheme) — deferred to 6b. No-op for now: the
-                            // CheckEmail screen still shows the address and the resend link works.
-                            onOpenEmailApp = { /* TODO phase 6b: open iOS Mail app */ },
-                            // iOS hides Google Sign-In (deferred post-v1). Email/password only.
-                            showGoogleSignIn = false,
-                        )
-                    }
                 },
             )
         }
@@ -384,7 +437,7 @@ fun IosApp() {
 }
 
 @Composable
-private fun IosHomeEntry(
+private fun HomeEntry(
     navigateToAll: () -> Unit,
     navigateToAdd: () -> Unit,
     navigateToEdit: (String) -> Unit,
@@ -393,14 +446,16 @@ private fun IosHomeEntry(
 ) {
     val vm: HomeViewModel = koinViewModel()
     var confirmSheetOpen by remember { mutableStateOf(false) }
+
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
             when (effect) {
                 HomeEffect.CloseConfirmSheet -> confirmSheetOpen = false
-                is HomeEffect.ShowError -> snackbarHostState.showEmmSnackbar(effect.message)
+                is HomeEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
             }
         }
     }
+
     HomeScreen(
         homeViewModel = vm,
         confirmSheetOpen = confirmSheetOpen,
@@ -413,16 +468,20 @@ private fun IosHomeEntry(
 }
 
 @Composable
-private fun IosRecurringEntry(onNavigateToAddEdit: (String?) -> Unit, onShowError: (String) -> Unit) {
+private fun RecurringMovementsEntry(onNavigateToAddEdit: (String?) -> Unit, onShowError: (String) -> Unit) {
     val vm: RecurringMovementsViewModel = koinViewModel()
-    val state by vm.state.collectAsStateWithLifecycle()
+    val recurringState by vm.state.collectAsStateWithLifecycle()
+    val currentNavigate by rememberUpdatedState(onNavigateToAddEdit)
+    val currentShowError by rememberUpdatedState(onShowError)
+
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
             when (effect) {
-                is RecurringMovementsEffect.NavigateToAddEdit -> onNavigateToAddEdit(effect.id)
-                is RecurringMovementsEffect.ShowError -> onShowError(effect.message)
+                is RecurringMovementsEffect.NavigateToAddEdit -> currentNavigate(effect.id)
+                is RecurringMovementsEffect.ShowError -> currentShowError(effect.message)
             }
         }
     }
-    RecurringMovementsScreen(state = state, onIntent = vm::onIntent)
+
+    RecurringMovementsScreen(state = recurringState, onIntent = vm::onIntent)
 }

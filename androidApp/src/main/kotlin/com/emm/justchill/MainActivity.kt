@@ -6,8 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.hh.shared.Hh
+import com.emm.justchill.hh.shared.AppNavHost
 
 class MainActivity : ComponentActivity() {
 
@@ -18,10 +17,9 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
         )
+        // EmmTheme is applied inside AppNavHost (the unified commonMain nav host).
         setContent {
-            EmmTheme {
-                Hh()
-            }
+            AppNavHost()
         }
     }
 }

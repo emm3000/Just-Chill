@@ -59,12 +59,16 @@ kotlin {
             implementation(libs.jetbrains.lifecycle.viewmodel.compose)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
-            // Nav route keys (NavKey/NavBackStack) live in commonMain (hh/shared/HhRoutes.kt +
-            // HhBottomBar.kt). androidx.navigation3:navigation3-runtime is Google's MULTIPLATFORM
-            // artifact (iosSimulatorArm64/iosArm64 from rc01) so commonMain can reference it directly;
-            // iosMain inherits it from here. Only the navigation3-UI layer stays split (Google in
-            // :androidApp, JetBrains port in iosMain — Option A, deliberate dependency split).
+            // The unified nav host (hh/shared/AppNavHost.kt) lives in commonMain, so the WHOLE nav3
+            // stack is shared here. Runtime: androidx.navigation3:navigation3-runtime is Google's
+            // MULTIPLATFORM artifact (NavKey/NavBackStack, iosSimulatorArm64/iosArm64 from rc01). UI:
+            // the JetBrains Compose Multiplatform port (org.jetbrains.androidx.navigation3:navigation3-ui
+            // + lifecycle-viewmodel-navigation3) — both publish android + ios variants and sit on the
+            // Google runtime. Android now inherits the JetBrains nav3-UI transitively (Hh.kt's Google
+            // nav3-ui was dropped from :androidApp); the spike proved Android compiles + runs on it.
             implementation(libs.androidx.navigation3.runtime)
+            implementation(libs.jetbrains.navigation3.ui)
+            implementation(libs.jetbrains.lifecycle.viewmodel.navigation3)
             // KMP key-value preferences behind AppPreferences (core/preferences). Settings interface
             // in commonMain; SharedPreferencesSettings (androidMain) / NSUserDefaultsSettings (iosMain).
             implementation(libs.multiplatform.settings)
@@ -91,6 +95,9 @@ kotlin {
         // orchestrator. iOS uses NSNotificationCenter instead and needs no extra dependency.
         androidMain.dependencies {
             implementation(libs.androidx.lifecycle.process)
+            // activity-compose: the androidMain PlatformHostActions actual builds the SAF launchers
+            // (rememberLauncherForActivityResult + ActivityResultContracts) for backup export/import.
+            implementation(libs.androidx.activity.compose)
         }
         // iOS-only wiring (Phase 5a). commonMain stays :domain-only per the established
         // split rule; depending on :data is allowed HERE because the iOS Koin module
@@ -99,12 +106,8 @@ kotlin {
         // also brings the SQLDelight native driver onto the iOS classpath.
         iosMain.dependencies {
             implementation(projects.data)
-            // iOS nav host (5b): JetBrains Compose Multiplatform navigation3 port. Android keeps
-            // its stable androidx.navigation3:* UI layer (Option A) — this KMP UI port is iosMain-only
-            // so it never touches the Android nav host (Hh.kt). The navigation3-RUNTIME
-            // (NavKey/NavBackStack) now comes from commonMain.dependencies and is inherited here.
-            implementation(libs.jetbrains.navigation3.ui)
-            implementation(libs.jetbrains.lifecycle.viewmodel.navigation3)
+            // nav3 (runtime + JetBrains Compose Multiplatform UI port) is now declared in
+            // commonMain.dependencies and inherited here — the unified host lives in commonMain.
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

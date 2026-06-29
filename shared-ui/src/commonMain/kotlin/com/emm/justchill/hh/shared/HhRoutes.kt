@@ -4,15 +4,13 @@ import androidx.navigation3.runtime.NavKey
 import com.emm.domain.category.CategoryType
 import kotlinx.serialization.Serializable
 
-// Unified nav route keys shared by BOTH nav hosts (Android Hh.kt + iOS IosApp.kt). They live in
-// commonMain because the keys are identical-shape on both platforms; only the NavDisplay/entryProvider
-// host bodies stay split (Android uses androidx.navigation3:navigation3-ui, iOS uses the JetBrains
-// Compose Multiplatform port — a deliberate dependency split). The androidx.navigation3:navigation3-runtime
-// artifact (NavKey/NavBackStack) is multiplatform and is wired into commonMain.dependencies.
+// Nav route keys for the unified host (AppNavHost). The whole nav stack is now commonMain: the
+// androidx.navigation3:navigation3-runtime artifact (NavKey/NavBackStack) is multiplatform, and the
+// JetBrains Compose Multiplatform navigation3-UI port (NavDisplay) drives BOTH platforms.
 //
-// Kotlin/Native has no reflection-based serializer discovery, so every @Serializable route the iOS host
-// uses MUST also be registered in iosNavSavedStateConfiguration (IosRoutes.kt). Android resolves
-// serializers via JVM reflection and needs no such registration.
+// Kotlin/Native has no reflection-based serializer discovery, so every @Serializable route the host can
+// push MUST also be registered in navSavedStateConfiguration (NavSavedStateConfiguration.kt). Android
+// resolves serializers via JVM reflection and tolerates the explicit registration.
 
 /**
  * Marker for routes that should display the bottom navigation bar.
