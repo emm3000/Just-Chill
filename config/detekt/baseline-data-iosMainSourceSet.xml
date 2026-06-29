@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>FunctionSignature:SqliteExceptions.ios.kt:actual fun Throwable.isSqliteConstraintViolation: Boolean</ID>
+    <ID>FunctionSignature:SqliteExceptions.ios.kt:actual fun Throwable.isSqliteException: Boolean</ID>
+  </CurrentIssues>
+</SmellBaseline>

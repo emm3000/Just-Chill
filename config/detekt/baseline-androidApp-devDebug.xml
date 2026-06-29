@@ -1,0 +1,142 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ClassSignature:DefaultExperiencesRepository.kt:DefaultExperiencesRepository : ExperiencesRepository</ID>
+    <ID>ClassSignature:ExperiencesLocalDataSource.kt:ExperiencesLocalDataSource : ExperiencesDataSourceDispatchersProvider</ID>
+    <ID>EmptyFunctionBlock:MeTimerPicker.kt:{ }</ID>
+    <ID>Filename:calculateDays.kt:com.emm.justchill.experiences.calendar.calculateDays.kt</ID>
+    <ID>Filename:experienceItemExtensions.kt:com.emm.justchill.experiences.readjsonfromassets.ui.experienceItemExtensions.kt</ID>
+    <ID>Filename:experiencesModule.kt:com.emm.justchill.experiences.readjsonfromassets.experiencesModule.kt</ID>
+    <ID>Filename:rootData.kt:com.emm.justchill.core.rootData.kt</ID>
+    <ID>FinalNewline:Calendar.kt:com.emm.justchill.experiences.calendar.Calendar.kt</ID>
+    <ID>FinalNewline:DefaultExperiencesRepository.kt:com.emm.justchill.experiences.readjsonfromassets.data.DefaultExperiencesRepository.kt</ID>
+    <ID>FinalNewline:Experience.kt:com.emm.justchill.experiences.readjsonfromassets.domain.Experience.kt</ID>
+    <ID>FinalNewline:ExperienceBundle.kt:com.emm.justchill.experiences.ExperienceBundle.kt</ID>
+    <ID>FinalNewline:ExperienceItem.kt:com.emm.justchill.experiences.ExperienceItem.kt</ID>
+    <ID>FinalNewline:ExperienceItemUiState.kt:com.emm.justchill.experiences.readjsonfromassets.ui.ExperienceItemUiState.kt</ID>
+    <ID>FinalNewline:Experiences.kt:com.emm.justchill.experiences.readjsonfromassets.ui.Experiences.kt</ID>
+    <ID>FinalNewline:ExperiencesDataSource.kt:com.emm.justchill.experiences.readjsonfromassets.data.ExperiencesDataSource.kt</ID>
+    <ID>FinalNewline:ExperiencesLocalDataSource.kt:com.emm.justchill.experiences.readjsonfromassets.data.ExperiencesLocalDataSource.kt</ID>
+    <ID>FinalNewline:ExperiencesLocalModel.kt:com.emm.justchill.experiences.readjsonfromassets.data.ExperiencesLocalModel.kt</ID>
+    <ID>FinalNewline:ExperiencesReader.kt:com.emm.justchill.experiences.readjsonfromassets.domain.ExperiencesReader.kt</ID>
+    <ID>FinalNewline:ExperiencesRepository.kt:com.emm.justchill.experiences.readjsonfromassets.domain.ExperiencesRepository.kt</ID>
+    <ID>FinalNewline:ExperiencesViewModel.kt:com.emm.justchill.experiences.readjsonfromassets.ui.ExperiencesViewModel.kt</ID>
+    <ID>FinalNewline:Feature.kt:com.emm.justchill.core.Feature.kt</ID>
+    <ID>FinalNewline:FilesManager.kt:com.emm.justchill.experiences.FilesManager.kt</ID>
+    <ID>FinalNewline:MeTimerPicker.kt:com.emm.justchill.experiences.timerpicker.MeTimerPicker.kt</ID>
+    <ID>FinalNewline:RooExperiences.kt:com.emm.justchill.experiences.RooExperiences.kt</ID>
+    <ID>FinalNewline:calculateDays.kt:com.emm.justchill.experiences.calendar.calculateDays.kt</ID>
+    <ID>FinalNewline:experienceItemExtensions.kt:com.emm.justchill.experiences.readjsonfromassets.ui.experienceItemExtensions.kt</ID>
+    <ID>FinalNewline:experiencesModule.kt:com.emm.justchill.experiences.readjsonfromassets.experiencesModule.kt</ID>
+    <ID>FinalNewline:rootData.kt:com.emm.justchill.core.rootData.kt</ID>
+    <ID>FunctionExpressionBody:DefaultExperiencesRepository.kt:DefaultExperiencesRepository${ return dataSource.readExperiences() .map(List&lt;ExperiencesLocalModel&gt;::toDomain) }</ID>
+    <ID>FunctionExpressionBody:ExperiencesLocalDataSource.kt:ExperiencesLocalDataSource${ return flow { val inputStream: InputStream = context.assets.open(JSON_PATH) val stringReader: String = inputStream.bufferedReader().use(BufferedReader::readText) emit(Json.decodeFromString&lt;List&lt;ExperiencesLocalModel&gt;&gt;(stringReader)) }.flowOn(ioDispatcher) }</ID>
+    <ID>FunctionExpressionBody:ExperiencesReader.kt:ExperiencesReader${ return repository.readExperiences().asResult() }</ID>
+    <ID>FunctionSignature:Calendar.kt:@Composable fun Calendar</ID>
+    <ID>FunctionSignature:Calendar.kt:@Composable fun CalendarView</ID>
+    <ID>FunctionSignature:ExperienceItem.kt:@Composable fun ExperienceItem</ID>
+    <ID>FunctionSignature:Experiences.kt:@Composable fun Experiences</ID>
+    <ID>FunctionSignature:Experiences.kt:@Composable private fun Experiences</ID>
+    <ID>FunctionSignature:FilesManager.kt:FilesManager$fun createJsonFile: Boolean</ID>
+    <ID>ImplicitDefaultLocale:GoogleCredentialClient.kt:GoogleCredentialClient$"%02x".format(it)</ID>
+    <ID>ImportOrdering:Experiences.kt:import com.emm.justchill.experiences.ExperienceItem import androidx.compose.foundation.layout.fillMaxSize import androidx.compose.foundation.layout.padding import androidx.compose.foundation.lazy.LazyColumn import androidx.compose.foundation.lazy.items import androidx.compose.material3.CircularProgressIndicator import androidx.compose.material3.Text import androidx.compose.runtime.Composable import androidx.compose.runtime.collectAsState import androidx.compose.runtime.getValue import androidx.compose.ui.Alignment import androidx.compose.ui.Modifier import androidx.compose.ui.graphics.Color import androidx.compose.ui.tooling.preview.Preview import androidx.compose.ui.unit.dp import androidx.navigation.NavController import com.emm.justchill.core.Result import com.emm.justchill.core.theme.EmmTheme import com.emm.justchill.experiences.toBundle import org.koin.androidx.compose.koinViewModel</ID>
+    <ID>ImportOrdering:RooExperiences.kt:import com.emm.justchill.core.Feature import androidx.compose.foundation.layout.fillMaxSize import androidx.compose.foundation.lazy.LazyColumn import androidx.compose.foundation.lazy.items import androidx.compose.runtime.Composable import androidx.compose.ui.Modifier import androidx.navigation.NavController import androidx.navigation.NavHostController import androidx.navigation.compose.NavHost import androidx.navigation.compose.composable import androidx.navigation.compose.rememberNavController import com.emm.justchill.core.RootRoutes import com.emm.justchill.core.rootData</ID>
+    <ID>InjectDispatcher:DefaultDispatcher.kt:DefaultDispatcher$Default</ID>
+    <ID>InjectDispatcher:DefaultDispatcher.kt:DefaultDispatcher$IO</ID>
+    <ID>LongParameterList:Feature.kt:Feature</ID>
+    <ID>MatchingDeclarationName:rootData.kt:RootRoutes</ID>
+    <ID>MaxLineLength:Experiences.kt:description = "In this part, it was used jetpack compose components, (LazyColumn), In this part, it was used jetpack compose components, (LazyColumn)"</ID>
+    <ID>MaximumLineLength:Experiences.kt:,</ID>
+    <ID>ModifierMissing:Calendar.kt:@Composable fun Calendar</ID>
+    <ID>ModifierMissing:Calendar.kt:@Composable fun CalendarView</ID>
+    <ID>ModifierMissing:ExperienceItem.kt:@Composable fun ExperienceItem</ID>
+    <ID>ModifierMissing:PaddingScreen.kt:@Composable fun PaddingScreen</ID>
+    <ID>ModifierMissing:RooExperiences.kt:@Composable fun RootExperiences</ID>
+    <ID>NestedBlockDepth:FilesManager.kt:FilesManager$fun readJsonFile: String?</ID>
+    <ID>NewLineAtEndOfFile:Calendar.kt:com.emm.justchill.experiences.calendar.Calendar.kt</ID>
+    <ID>NewLineAtEndOfFile:DefaultExperiencesRepository.kt:com.emm.justchill.experiences.readjsonfromassets.data.DefaultExperiencesRepository.kt</ID>
+    <ID>NewLineAtEndOfFile:Experience.kt:com.emm.justchill.experiences.readjsonfromassets.domain.Experience.kt</ID>
+    <ID>NewLineAtEndOfFile:ExperienceBundle.kt:com.emm.justchill.experiences.ExperienceBundle.kt</ID>
+    <ID>NewLineAtEndOfFile:ExperienceItem.kt:com.emm.justchill.experiences.ExperienceItem.kt</ID>
+    <ID>NewLineAtEndOfFile:ExperienceItemUiState.kt:com.emm.justchill.experiences.readjsonfromassets.ui.ExperienceItemUiState.kt</ID>
+    <ID>NewLineAtEndOfFile:Experiences.kt:com.emm.justchill.experiences.readjsonfromassets.ui.Experiences.kt</ID>
+    <ID>NewLineAtEndOfFile:ExperiencesDataSource.kt:com.emm.justchill.experiences.readjsonfromassets.data.ExperiencesDataSource.kt</ID>
+    <ID>NewLineAtEndOfFile:ExperiencesLocalDataSource.kt:com.emm.justchill.experiences.readjsonfromassets.data.ExperiencesLocalDataSource.kt</ID>
+    <ID>NewLineAtEndOfFile:ExperiencesLocalModel.kt:com.emm.justchill.experiences.readjsonfromassets.data.ExperiencesLocalModel.kt</ID>
+    <ID>NewLineAtEndOfFile:ExperiencesReader.kt:com.emm.justchill.experiences.readjsonfromassets.domain.ExperiencesReader.kt</ID>
+    <ID>NewLineAtEndOfFile:ExperiencesRepository.kt:com.emm.justchill.experiences.readjsonfromassets.domain.ExperiencesRepository.kt</ID>
+    <ID>NewLineAtEndOfFile:ExperiencesViewModel.kt:com.emm.justchill.experiences.readjsonfromassets.ui.ExperiencesViewModel.kt</ID>
+    <ID>NewLineAtEndOfFile:Feature.kt:com.emm.justchill.core.Feature.kt</ID>
+    <ID>NewLineAtEndOfFile:FilesManager.kt:com.emm.justchill.experiences.FilesManager.kt</ID>
+    <ID>NewLineAtEndOfFile:MeTimerPicker.kt:com.emm.justchill.experiences.timerpicker.MeTimerPicker.kt</ID>
+    <ID>NewLineAtEndOfFile:RooExperiences.kt:com.emm.justchill.experiences.RooExperiences.kt</ID>
+    <ID>NewLineAtEndOfFile:calculateDays.kt:com.emm.justchill.experiences.calendar.calculateDays.kt</ID>
+    <ID>NewLineAtEndOfFile:experienceItemExtensions.kt:com.emm.justchill.experiences.readjsonfromassets.ui.experienceItemExtensions.kt</ID>
+    <ID>NewLineAtEndOfFile:experiencesModule.kt:com.emm.justchill.experiences.readjsonfromassets.experiencesModule.kt</ID>
+    <ID>NewLineAtEndOfFile:rootData.kt:com.emm.justchill.core.rootData.kt</ID>
+    <ID>NoBlankLineBeforeRbrace:Calendar.kt: </ID>
+    <ID>NoBlankLineBeforeRbrace:Experiences.kt: </ID>
+    <ID>NoBlankLineBeforeRbrace:MeTimerPicker.kt: </ID>
+    <ID>NoConsecutiveBlankLines:Experiences.kt: </ID>
+    <ID>NoConsecutiveBlankLines:PaddingScreen.kt: </ID>
+    <ID>NoConsecutiveBlankLines:ShortActivity.kt: </ID>
+    <ID>NoEmptyFirstLineInMethodBlock:Calendar.kt: </ID>
+    <ID>NoEmptyFirstLineInMethodBlock:ExperienceItem.kt: </ID>
+    <ID>NoEmptyFirstLineInMethodBlock:Experiences.kt: </ID>
+    <ID>NoEmptyFirstLineInMethodBlock:FilesManager.kt:FilesManager$ </ID>
+    <ID>NoEmptyFirstLineInMethodBlock:MeTimerPicker.kt: </ID>
+    <ID>NoEmptyFirstLineInMethodBlock:PaddingScreen.kt: </ID>
+    <ID>NoEmptyFirstLineInMethodBlock:RooExperiences.kt: </ID>
+    <ID>NoEmptyFirstLineInMethodBlock:calculateDays.kt: </ID>
+    <ID>NoUnusedImports:PaddingScreen.kt:com.emm.justchill.experiences.padding.PaddingScreen.kt</ID>
+    <ID>PreviewPublic:Calendar.kt:@Preview(showBackground = true) @Composable fun CalendarPreview</ID>
+    <ID>PreviewPublic:Experiences.kt:@Preview(showBackground = true) @Composable fun ExperiencesPreview</ID>
+    <ID>PreviewPublic:PaddingScreen.kt:@Preview(showBackground = true) @Composable fun Gaa</ID>
+    <ID>PreviewPublic:PaddingScreen.kt:@Preview(showBackground = true) @Composable fun PaddingScreenPreview</ID>
+    <ID>TooGenericExceptionCaught:FilesManager.kt:FilesManager$e: Throwable</ID>
+    <ID>TrailingCommaOnCallSite:Calendar.kt:( if (day != null &amp;&amp; day == selectedDate.value) PrimaryButtonColor else Color.Transparent )</ID>
+    <ID>TrailingCommaOnCallSite:Calendar.kt:( modifier = Modifier .fillMaxWidth() .padding(20.dp) )</ID>
+    <ID>TrailingCommaOnCallSite:Calendar.kt:( modifier = Modifier .weight(1f) .aspectRatio(1f) .padding(4.dp) .background( if (day != null &amp;&amp; day == selectedDate.value) PrimaryButtonColor else Color.Transparent ) .clickable { day?.let { selectedDate.value = it onDateClick(it) } }, contentAlignment = Alignment.Center )</ID>
+    <ID>TrailingCommaOnCallSite:Calendar.kt:( modifier = Modifier.fillMaxSize() )</ID>
+    <ID>TrailingCommaOnCallSite:Calendar.kt:( state = pagerState, modifier = Modifier .fillMaxWidth() .background(BackgroundColor) )</ID>
+    <ID>TrailingCommaOnCallSite:Calendar.kt:( text = day.dayOfMonth.toString(), color = TextColor, fontFamily = InterFontFamily, fontWeight = FontWeight.Bold, fontSize = 15.sp )</ID>
+    <ID>TrailingCommaOnCallSite:ExperienceBundle.kt:( title = title, description = description, date = date, route = "", category = category, resource = resource )</ID>
+    <ID>TrailingCommaOnCallSite:ExperienceBundle.kt:( title = title, description = description, route = route.route, date = LocalDate.now().toString(), category = category, resource = resource )</ID>
+    <ID>TrailingCommaOnCallSite:ExperienceItem.kt:( color = Color.Blue.copy(alpha = 0.5f), fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline )</ID>
+    <ID>TrailingCommaOnCallSite:ExperienceItem.kt:( modifier = Modifier .fillMaxWidth() .clickable { toDetail(data) } .padding(10.dp) )</ID>
+    <ID>TrailingCommaOnCallSite:ExperienceItem.kt:( modifier = Modifier .fillMaxWidth() .height(40.dp), verticalArrangement = Arrangement.Center )</ID>
+    <ID>TrailingCommaOnCallSite:ExperienceItem.kt:( modifier = Modifier .fillMaxWidth() .height(IntrinsicSize.Min) .padding(horizontal = 10.dp, vertical = 5.dp) )</ID>
+    <ID>TrailingCommaOnCallSite:ExperienceItem.kt:( text = data.category.uppercase(), modifier = Modifier .border(2.dp, Color.DarkGray, RoundedCornerShape(15)) .padding(vertical = 5.dp, horizontal = 10.dp), style = MaterialTheme.typography.bodySmall )</ID>
+    <ID>TrailingCommaOnCallSite:ExperienceItem.kt:( text = data.date, style = MaterialTheme.typography.bodySmall )</ID>
+    <ID>TrailingCommaOnCallSite:ExperienceItem.kt:( text = data.description, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis )</ID>
+    <ID>TrailingCommaOnCallSite:ExperienceItem.kt:( text = data.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold )</ID>
+    <ID>TrailingCommaOnCallSite:Experiences.kt:( modifier = Modifier )</ID>
+    <ID>TrailingCommaOnCallSite:Experiences.kt:( modifier = Modifier .fillMaxSize() .padding(top = 10.dp), horizontalAlignment = Alignment.CenterHorizontally )</ID>
+    <ID>TrailingCommaOnCallSite:Experiences.kt:( title = "Simple list and detail from drinks api", description = "In this part, it was used jetpack compose components, (LazyColumn), In this part, it was used jetpack compose components, (LazyColumn)", date = "09/06/2024", category = "video", resource = "www.random.com", categoryColor = Color.Green )</ID>
+    <ID>TrailingCommaOnCallSite:Experiences.kt:(state = state,)</ID>
+    <ID>TrailingCommaOnCallSite:ExperiencesLocalModel.kt:( title = title, description = description, date = date, category = category, resource = resource )</ID>
+    <ID>TrailingCommaOnCallSite:ExperiencesViewModel.kt:ExperiencesViewModel$( scope = viewModelScope, started = SharingStarted.WhileSubscribed(5000L), initialValue = Result.Loading )</ID>
+    <ID>TrailingCommaOnCallSite:FilesManager.kt:FilesManager$( MediaStore.Files.FileColumns._ID, MediaStore.Files.FileColumns.DATA, MediaStore.Files.FileColumns.DISPLAY_NAME, MediaStore.Files.FileColumns.DATE_MODIFIED, MediaStore.Files.FileColumns.MIME_TYPE, MediaStore.Files.FileColumns.SIZE )</ID>
+    <ID>TrailingCommaOnCallSite:PaddingScreen.kt:( color = Color.White, textAlign = TextAlign.Center )</ID>
+    <ID>TrailingCommaOnCallSite:PaddingScreen.kt:( modifier = Modifier.fillMaxSize() )</ID>
+    <ID>TrailingCommaOnCallSite:PaddingScreen.kt:( text = "Sample Text", style = TextStyle( color = Color.White, textAlign = TextAlign.Center ), modifier = Modifier .fillMaxWidth() .padding(16.dp) .background(MaterialTheme.colorScheme.primary, CircleShape) .padding(16.dp) )</ID>
+    <ID>TrailingCommaOnCallSite:RooExperiences.kt:( modifier = Modifier.fillMaxSize() )</ID>
+    <ID>TrailingCommaOnCallSite:ShortActivity.kt:ShortActivity$( modifier = Modifier .fillMaxSize() )</ID>
+    <ID>TrailingCommaOnCallSite:experienceItemExtensions.kt:( title = title, description = description, date = date, category = category, resource = resource, categoryColor = selectColorByCategory() )</ID>
+    <ID>TrailingCommaOnCallSite:rootData.kt:( Feature( id = UUID.randomUUID().toString(), title = "Simple clean architecture, the data is from local assets in json format", description = "In this example Kotlin was used", category = "blog", resource = "no link", route = RootRoutes.Drink, screen = { Experiences(it) } ), Feature( id = UUID.randomUUID().toString(), title = "Understanding Margin and Padding in Compose UI", description = "How work padding in Jetpack compose and margin with padding", category = "blog", resource = "no link", route = RootRoutes.Drink, screen = { Experiences(it) } ), Feature( id = UUID.randomUUID().toString(), title = "Create finance app, with", description = "Create complete app, after change the styles", category = "personal", resource = "-", route = RootRoutes.Hh, screen = { AppNavHost() } ), Feature( id = UUID.randomUUID().toString(), title = "Amount component", description = "Create new component in jetpack compose like bcp app to add amount", category = "personal", resource = "-", route = RootRoutes.Amount, screen = { Column(Modifier.fillMaxSize()) { EmmAmountChill( value = TextFieldValue(), onValueChange = { Log.e("aea", it.toString()) }, modifier = Modifier.fillMaxWidth() ) } } ), Feature( id = UUID.randomUUID().toString(), title = "Calendar Component", description = "Calendar Component", category = "personal", resource = "-", route = RootRoutes.Calendar, screen = { Calendar() } ), Feature( id = UUID.randomUUID().toString(), title = "NewComponent timer picker", description = "Timer picker", category = "personal", resource = "-", route = RootRoutes.MeTimerPicker, screen = { MeTimerPicker() } ) )</ID>
+    <ID>TrailingCommaOnCallSite:rootData.kt:( id = UUID.randomUUID().toString(), title = "Amount component", description = "Create new component in jetpack compose like bcp app to add amount", category = "personal", resource = "-", route = RootRoutes.Amount, screen = { Column(Modifier.fillMaxSize()) { EmmAmountChill( value = TextFieldValue(), onValueChange = { Log.e("aea", it.toString()) }, modifier = Modifier.fillMaxWidth() ) } } )</ID>
+    <ID>TrailingCommaOnCallSite:rootData.kt:( id = UUID.randomUUID().toString(), title = "Calendar Component", description = "Calendar Component", category = "personal", resource = "-", route = RootRoutes.Calendar, screen = { Calendar() } )</ID>
+    <ID>TrailingCommaOnCallSite:rootData.kt:( id = UUID.randomUUID().toString(), title = "Create finance app, with", description = "Create complete app, after change the styles", category = "personal", resource = "-", route = RootRoutes.Hh, screen = { AppNavHost() } )</ID>
+    <ID>TrailingCommaOnCallSite:rootData.kt:( id = UUID.randomUUID().toString(), title = "NewComponent timer picker", description = "Timer picker", category = "personal", resource = "-", route = RootRoutes.MeTimerPicker, screen = { MeTimerPicker() } )</ID>
+    <ID>TrailingCommaOnCallSite:rootData.kt:( id = UUID.randomUUID().toString(), title = "Simple clean architecture, the data is from local assets in json format", description = "In this example Kotlin was used", category = "blog", resource = "no link", route = RootRoutes.Drink, screen = { Experiences(it) } )</ID>
+    <ID>TrailingCommaOnCallSite:rootData.kt:( id = UUID.randomUUID().toString(), title = "Understanding Margin and Padding in Compose UI", description = "How work padding in Jetpack compose and margin with padding", category = "blog", resource = "no link", route = RootRoutes.Drink, screen = { Experiences(it) } )</ID>
+    <ID>TrailingCommaOnCallSite:rootData.kt:( value = TextFieldValue(), onValueChange = { Log.e("aea", it.toString()) }, modifier = Modifier.fillMaxWidth() )</ID>
+    <ID>TrailingCommaOnDeclarationSite:FilesManager.kt:FilesManager$( context: Context, filename: String, jsonContent: String )</ID>
+    <ID>UnusedParameter:Calendar.kt:onDayClick: (String) -&gt; Unit = {}</ID>
+    <ID>UnusedParameter:Experiences.kt:navController: NavController</ID>
+    <ID>UnusedParameter:PaddingScreen.kt:modifier: Modifier = Modifier</ID>
+    <ID>UnusedPrivateFunction:EmmAmountChill.kt:@PreviewLightDark @Composable private fun AmountPreview</ID>
+    <ID>UnusedPrivateFunction:EmmComponentsPreview.kt:@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 1600) @Composable private fun EmmComponentsGallery</ID>
+  </CurrentIssues>
+</SmellBaseline>

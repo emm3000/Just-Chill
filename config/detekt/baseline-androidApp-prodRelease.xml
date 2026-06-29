@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>Filename:experiencesModule.kt:com.emm.justchill.experiences.readjsonfromassets.experiencesModule.kt</ID>
+    <ID>FinalNewline:experiencesModule.kt:com.emm.justchill.experiences.readjsonfromassets.experiencesModule.kt</ID>
+    <ID>ImplicitDefaultLocale:GoogleCredentialClient.kt:GoogleCredentialClient$"%02x".format(it)</ID>
+    <ID>InjectDispatcher:DefaultDispatcher.kt:DefaultDispatcher$Default</ID>
+    <ID>InjectDispatcher:DefaultDispatcher.kt:DefaultDispatcher$IO</ID>
+    <ID>NewLineAtEndOfFile:experiencesModule.kt:com.emm.justchill.experiences.readjsonfromassets.experiencesModule.kt</ID>
+    <ID>UnusedPrivateFunction:EmmAmountChill.kt:@PreviewLightDark @Composable private fun AmountPreview</ID>
+    <ID>UnusedPrivateFunction:EmmComponentsPreview.kt:@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 1600) @Composable private fun EmmComponentsGallery</ID>
+  </CurrentIssues>
+</SmellBaseline>

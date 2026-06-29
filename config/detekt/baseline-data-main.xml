@@ -1,0 +1,595 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ArgumentListWrapping:AccountsQueries.kt:AccountsQueries$("accounts")</ID>
+    <ID>ArgumentListWrapping:AccountsQueries.kt:AccountsQueries$(-1_013_840_915, arrayOf("accounts"), driver, "accounts.sq", "selectPending", "SELECT accounts.accountId, accounts.name, accounts.type, accounts.currency, accounts.updatedAt, accounts.createdAt, accounts.userId, accounts.deletedAt, accounts.syncState FROM accounts WHERE syncState = 'Pending' AND userId IS NOT NULL")</ID>
+    <ID>ArgumentListWrapping:AccountsQueries.kt:AccountsQueries$(-1_366_844_427, """UPDATE accounts SET syncState = 'Synced' WHERE accountId = ? AND updatedAt = ?""", 2)</ID>
+    <ID>ArgumentListWrapping:AccountsQueries.kt:AccountsQueries$(-1_671_555_237, """UPDATE accounts SET syncState = 'Pending' WHERE accountId = ?""", 1)</ID>
+    <ID>ArgumentListWrapping:AccountsQueries.kt:AccountsQueries$(1_517_128_467, arrayOf("accounts"), driver, "accounts.sq", "all", "SELECT accounts.accountId, accounts.name, accounts.type, accounts.currency, accounts.updatedAt, accounts.createdAt, accounts.userId, accounts.deletedAt, accounts.syncState FROM accounts WHERE deletedAt IS NULL")</ID>
+    <ID>ArgumentListWrapping:AccountsQueries.kt:AccountsQueries$(1_725_111_329, arrayOf("accounts"), driver, "accounts.sq", "countUnclaimed", "SELECT COUNT(*) FROM accounts WHERE userId IS NULL")</ID>
+    <ID>ArgumentListWrapping:AccountsQueries.kt:AccountsQueries$(2_024_915_030, arrayOf("accounts"), driver, "accounts.sq", "countPending", "SELECT COUNT(*) FROM accounts WHERE syncState = 'Pending' AND userId IS NOT NULL")</ID>
+    <ID>ArgumentListWrapping:AccountsQueries.kt:AccountsQueries$(917_808_531, """UPDATE accounts SET userId = ?, syncState = 'Pending' WHERE userId IS NULL""", 1)</ID>
+    <ID>ArgumentListWrapping:AccountsQueries.kt:AccountsQueries$(null, """UPDATE accounts SET userId = NULL, syncState = 'Pending' WHERE userId ${ if (userId == null) "IS" else "=" } ?""", 1)</ID>
+    <ID>ArgumentListWrapping:AccountsQueries.kt:AccountsQueries.FindForSyncQuery$(-911_442_307, """SELECT updatedAt FROM accounts WHERE accountId = ?""", mapper, 1)</ID>
+    <ID>ArgumentListWrapping:AccountsQueries.kt:AccountsQueries.FindQuery$(-213_511_545, """SELECT accounts.accountId, accounts.name, accounts.type, accounts.currency, accounts.updatedAt, accounts.createdAt, accounts.userId, accounts.deletedAt, accounts.syncState FROM accounts WHERE accountId = ? AND deletedAt IS NULL""", mapper, 1)</ID>
+    <ID>ArgumentListWrapping:CategoriesQueries.kt:CategoriesQueries$("categories")</ID>
+    <ID>ArgumentListWrapping:CategoriesQueries.kt:CategoriesQueries$(-1_083_049_711, """UPDATE categories SET syncState = 'Pending' WHERE categoryId = ?""", 1)</ID>
+    <ID>ArgumentListWrapping:CategoriesQueries.kt:CategoriesQueries$(-670_564_777, arrayOf("categories"), driver, "categories.sq", "countUnclaimed", "SELECT COUNT(*) FROM categories WHERE userId IS NULL")</ID>
+    <ID>ArgumentListWrapping:CategoriesQueries.kt:CategoriesQueries$(-675_478_793, arrayOf("categories"), driver, "categories.sq", "selectPending", "SELECT categories.categoryId, categories.name, categories.icon, categories.color, categories.categoryType, categories.isDefault, categories.updatedAt, categories.createdAt, categories.userId, categories.deletedAt, categories.syncState FROM categories WHERE syncState = 'Pending' AND userId IS NOT NULL")</ID>
+    <ID>ArgumentListWrapping:CategoriesQueries.kt:CategoriesQueries$(1_237_453_099, """UPDATE categories SET syncState = 'Synced' WHERE categoryId = ? AND updatedAt = ?""", 2)</ID>
+    <ID>ArgumentListWrapping:CategoriesQueries.kt:CategoriesQueries$(1_626_662_985, """UPDATE categories SET userId = ?, syncState = 'Pending' WHERE userId IS NULL""", 1)</ID>
+    <ID>ArgumentListWrapping:CategoriesQueries.kt:CategoriesQueries$(2_114_206_578, arrayOf("categories"), driver, "categories.sq", "countDefaultCategories", "SELECT COUNT(*) FROM categories WHERE isDefault = 1 AND deletedAt IS NULL")</ID>
+    <ID>ArgumentListWrapping:CategoriesQueries.kt:CategoriesQueries$(615_509_661, arrayOf("categories"), driver, "categories.sq", "all", "SELECT categories.categoryId, categories.name, categories.icon, categories.color, categories.categoryType, categories.isDefault, categories.updatedAt, categories.createdAt, categories.userId, categories.deletedAt, categories.syncState FROM categories WHERE deletedAt IS NULL")</ID>
+    <ID>ArgumentListWrapping:CategoriesQueries.kt:CategoriesQueries$(788_903_948, arrayOf("categories"), driver, "categories.sq", "countPending", "SELECT COUNT(*) FROM categories WHERE syncState = 'Pending' AND userId IS NOT NULL")</ID>
+    <ID>ArgumentListWrapping:CategoriesQueries.kt:CategoriesQueries$(null, """UPDATE categories SET userId = NULL, syncState = 'Pending' WHERE userId ${ if (userId == null) "IS" else "=" } ?""", 1)</ID>
+    <ID>ArgumentListWrapping:CategoriesQueries.kt:CategoriesQueries.FindForSyncQuery$(-1_782_597_625, """SELECT updatedAt FROM categories WHERE categoryId = ?""", mapper, 1)</ID>
+    <ID>ArgumentListWrapping:CategoriesQueries.kt:CategoriesQueries.FindQuery$(1_901_076_541, """SELECT categories.categoryId, categories.name, categories.icon, categories.color, categories.categoryType, categories.isDefault, categories.updatedAt, categories.createdAt, categories.userId, categories.deletedAt, categories.syncState FROM categories WHERE categoryId = ? AND deletedAt IS NULL""", mapper, 1)</ID>
+    <ID>ArgumentListWrapping:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$(null, "CREATE INDEX IF NOT EXISTS categories_user_deleted_idx ON categories(userId, deletedAt)", 0)</ID>
+    <ID>ArgumentListWrapping:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$(null, "CREATE INDEX IF NOT EXISTS recurring_active_idx ON recurring_movements(isActive, name)", 0)</ID>
+    <ID>ArgumentListWrapping:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$(null, "CREATE INDEX IF NOT EXISTS recurring_movements_syncstate_idx ON recurring_movements(syncState)", 0)</ID>
+    <ID>ArgumentListWrapping:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$(null, "CREATE INDEX IF NOT EXISTS recurring_movements_user_deleted_idx ON recurring_movements(userId, deletedAt)", 0)</ID>
+    <ID>ArgumentListWrapping:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$(null, "CREATE INDEX IF NOT EXISTS transactions_user_deleted_idx ON transactions(userId, deletedAt)", 0)</ID>
+    <ID>ArgumentListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$("recurring_movements")</ID>
+    <ID>ArgumentListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$("recurring_movements", "categories", "accounts")</ID>
+    <ID>ArgumentListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(-1_179_674_498, arrayOf("recurring_movements"), driver, "recurring_movements.sq", "countPending", "SELECT COUNT(*) FROM recurring_movements WHERE syncState = 'Pending' AND userId IS NOT NULL")</ID>
+    <ID>ArgumentListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(-1_571_868_475, arrayOf("recurring_movements"), driver, "recurring_movements.sq", "selectPending", "SELECT recurring_movements.id, recurring_movements.name, recurring_movements.type, recurring_movements.amount, recurring_movements.description, recurring_movements.categoryId, recurring_movements.accountId, recurring_movements.frequency, recurring_movements.dayOfMonth, recurring_movements.isActive, recurring_movements.lastConfirmedPeriod, recurring_movements.createdAt, recurring_movements.updatedAt, recurring_movements.userId, recurring_movements.deletedAt, recurring_movements.syncState FROM recurring_movements WHERE syncState = 'Pending' AND userId IS NOT NULL")</ID>
+    <ID>ArgumentListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(-481_805_800, arrayOf("recurring_movements"), driver, "recurring_movements.sq", "selectActive", "SELECT recurring_movements.id, recurring_movements.name, recurring_movements.type, recurring_movements.amount, recurring_movements.description, recurring_movements.categoryId, recurring_movements.accountId, recurring_movements.frequency, recurring_movements.dayOfMonth, recurring_movements.isActive, recurring_movements.lastConfirmedPeriod, recurring_movements.createdAt, recurring_movements.updatedAt, recurring_movements.userId, recurring_movements.deletedAt, recurring_movements.syncState FROM recurring_movements WHERE isActive = 1 AND deletedAt IS NULL ORDER BY name")</ID>
+    <ID>ArgumentListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(1_606_126_153, arrayOf("recurring_movements"), driver, "recurring_movements.sq", "countUnclaimed", "SELECT COUNT(*) FROM recurring_movements WHERE userId IS NULL")</ID>
+    <ID>ArgumentListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(1_769_263_547, """UPDATE recurring_movements SET userId = ?, syncState = 'Pending' WHERE userId IS NULL""", 1)</ID>
+    <ID>ArgumentListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(1_893_656_527, arrayOf("recurring_movements"), driver, "recurring_movements.sq", "selectAll", "SELECT recurring_movements.id, recurring_movements.name, recurring_movements.type, recurring_movements.amount, recurring_movements.description, recurring_movements.categoryId, recurring_movements.accountId, recurring_movements.frequency, recurring_movements.dayOfMonth, recurring_movements.isActive, recurring_movements.lastConfirmedPeriod, recurring_movements.createdAt, recurring_movements.updatedAt, recurring_movements.userId, recurring_movements.deletedAt, recurring_movements.syncState FROM recurring_movements WHERE deletedAt IS NULL ORDER BY name")</ID>
+    <ID>ArgumentListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(2_025_146_243, """UPDATE recurring_movements SET syncState = 'Pending' WHERE id = ?""", 1)</ID>
+    <ID>ArgumentListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(837_639_709, """UPDATE recurring_movements SET syncState = 'Synced' WHERE id = ? AND updatedAt = ?""", 2)</ID>
+    <ID>ArgumentListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(null, """UPDATE recurring_movements SET userId = NULL, syncState = 'Pending' WHERE userId ${ if (userId == null) "IS" else "=" } ?""", 1)</ID>
+    <ID>ArgumentListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries.CountLiveByAccountQuery$(-339_569_679, """SELECT COUNT(*) FROM recurring_movements WHERE accountId = ? AND deletedAt IS NULL""", mapper, 1)</ID>
+    <ID>ArgumentListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries.FindForSyncQuery$(-1_291_910_827, """SELECT updatedAt FROM recurring_movements WHERE id = ?""", mapper, 1)</ID>
+    <ID>ArgumentListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries.FindQuery$(1_578_275_503, """SELECT recurring_movements.id, recurring_movements.name, recurring_movements.type, recurring_movements.amount, recurring_movements.description, recurring_movements.categoryId, recurring_movements.accountId, recurring_movements.frequency, recurring_movements.dayOfMonth, recurring_movements.isActive, recurring_movements.lastConfirmedPeriod, recurring_movements.createdAt, recurring_movements.updatedAt, recurring_movements.userId, recurring_movements.deletedAt, recurring_movements.syncState FROM recurring_movements WHERE id = ? AND deletedAt IS NULL""", mapper, 1)</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries$("transactions")</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries$("transactions", "categories")</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries$(-11_689_275, arrayOf("transactions"), driver, "transactions.sq", "countPending", "SELECT COUNT(*) FROM transactions WHERE syncState = 'Pending' AND userId IS NOT NULL")</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries$(-1_241_506_096, arrayOf("transactions"), driver, "transactions.sq", "countUnclaimed", "SELECT COUNT(*) FROM transactions WHERE userId IS NULL")</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries$(-1_268_293_692, arrayOf("transactions"), driver, "transactions.sq", "all", "SELECT transactions.transactionId, transactions.type, transactions.amount, transactions.description, transactions.date, transactions.categoryId, transactions.accountId, transactions.createdAt, transactions.updatedAt, transactions.userId, transactions.deletedAt, transactions.syncState FROM transactions WHERE deletedAt IS NULL ORDER BY date DESC")</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries$(195_304_138, """UPDATE transactions SET syncState = 'Pending' WHERE transactionId = ?""", 1)</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries$(275_935_070, arrayOf("transactions"), driver, "transactions.sq", "selectPending", "SELECT transactions.transactionId, transactions.type, transactions.amount, transactions.description, transactions.date, transactions.categoryId, transactions.accountId, transactions.createdAt, transactions.updatedAt, transactions.userId, transactions.deletedAt, transactions.syncState FROM transactions WHERE syncState = 'Pending' AND userId IS NOT NULL")</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries$(566_826_882, """UPDATE transactions SET userId = ?, syncState = 'Pending' WHERE userId IS NULL""", 1)</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries$(642_207_268, """UPDATE transactions SET syncState = 'Synced' WHERE transactionId = ? AND updatedAt = ?""", 2)</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries$(null, """UPDATE transactions SET userId = NULL, syncState = 'Pending' WHERE userId ${ if (userId == null) "IS" else "=" } ?""", 1)</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries$(queryEmpty, query, categoryFilterEmpty, categoryIds, ::SearchTransactions)</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries$(startOfMonth, startOfNextMonth, ::CompleteTransactionsByDateRange)</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries$(type, startInclusive, endExclusive, ::MonthlyAmountByCategory)</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries.CountByAccountQuery$(365_452_164, """SELECT COUNT(*) FROM transactions WHERE accountId = ?""", mapper, 1)</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries.CountLiveByAccountQuery$(-1_391_751_944, """SELECT COUNT(*) FROM transactions WHERE accountId = ? AND deletedAt IS NULL""", mapper, 1)</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries.FindForSyncQuery$(1_239_618_094, """SELECT updatedAt FROM transactions WHERE transactionId = ?""", mapper, 1)</ID>
+    <ID>ArgumentListWrapping:TransactionsQueries.kt:TransactionsQueries.FindQuery$(-662_252_554, """SELECT transactions.transactionId, transactions.type, transactions.amount, transactions.description, transactions.date, transactions.categoryId, transactions.accountId, transactions.createdAt, transactions.updatedAt, transactions.userId, transactions.deletedAt, transactions.syncState FROM transactions WHERE transactionId = ? AND deletedAt IS NULL""", mapper, 1)</ID>
+    <ID>ClassNaming:Recurring_movements.kt:Recurring_movements</ID>
+    <ID>ClassNaming:Recurring_movementsQueries.kt:Recurring_movementsQueries : TransacterImpl</ID>
+    <ID>ClassSignature:AccountsQueries.kt:AccountsQueries : TransacterImpl</ID>
+    <ID>ClassSignature:AccountsQueries.kt:AccountsQueries$FindForSyncQuery&lt;out T : Any&gt; : Query</ID>
+    <ID>ClassSignature:AccountsQueries.kt:AccountsQueries$FindQuery&lt;out T : Any&gt; : Query</ID>
+    <ID>ClassSignature:CategoriesQueries.kt:CategoriesQueries : TransacterImpl</ID>
+    <ID>ClassSignature:CategoriesQueries.kt:CategoriesQueries$FindForSyncQuery&lt;out T : Any&gt; : Query</ID>
+    <ID>ClassSignature:CategoriesQueries.kt:CategoriesQueries$FindQuery&lt;out T : Any&gt; : Query</ID>
+    <ID>ClassSignature:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl : TransacterImplEmmDatabaseData</ID>
+    <ID>ClassSignature:MonthlyStats.kt:MonthlyStats</ID>
+    <ID>ClassSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries : TransacterImpl</ID>
+    <ID>ClassSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$CountLiveByAccountQuery&lt;out T : Any&gt; : Query</ID>
+    <ID>ClassSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$FindForSyncQuery&lt;out T : Any&gt; : Query</ID>
+    <ID>ClassSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$FindQuery&lt;out T : Any&gt; : Query</ID>
+    <ID>ClassSignature:TopUsedCombos.kt:TopUsedCombos</ID>
+    <ID>ClassSignature:TransactionsQueries.kt:TransactionsQueries : TransacterImpl</ID>
+    <ID>ClassSignature:TransactionsQueries.kt:TransactionsQueries$CountByAccountQuery&lt;out T : Any&gt; : Query</ID>
+    <ID>ClassSignature:TransactionsQueries.kt:TransactionsQueries$CountLiveByAccountQuery&lt;out T : Any&gt; : Query</ID>
+    <ID>ClassSignature:TransactionsQueries.kt:TransactionsQueries$FindForSyncQuery&lt;out T : Any&gt; : Query</ID>
+    <ID>ClassSignature:TransactionsQueries.kt:TransactionsQueries$FindQuery&lt;out T : Any&gt; : Query</ID>
+    <ID>ClassSignature:TransactionsQueries.kt:TransactionsQueries$GetAccountBalanceQuery&lt;out T : Any&gt; : Query</ID>
+    <ID>ConstructorParameterNaming:CompleteTransactions.kt:CompleteTransactions$public val categoryType_: String?</ID>
+    <ID>ConstructorParameterNaming:CompleteTransactionsByDateRange.kt:CompleteTransactionsByDateRange$public val categoryType_: String?</ID>
+    <ID>ConstructorParameterNaming:SearchTransactions.kt:SearchTransactions$public val categoryType_: String?</ID>
+    <ID>FunctionLiteral:AccountsQueries.kt:AccountsQueries$&lt;anonymous&gt;</ID>
+    <ID>FunctionLiteral:CategoriesQueries.kt:CategoriesQueries$&lt;anonymous&gt;</ID>
+    <ID>FunctionLiteral:Recurring_movementsQueries.kt:Recurring_movementsQueries$&lt;anonymous&gt;</ID>
+    <ID>FunctionLiteral:TransactionsQueries.kt:TransactionsQueries$&lt;anonymous&gt;</ID>
+    <ID>FunctionSignature:AccountsQueries.kt:AccountsQueries$public fun &lt;T : Any&gt; all: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:AccountsQueries.kt:AccountsQueries$public fun &lt;T : Any&gt; find: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:AccountsQueries.kt:AccountsQueries$public fun &lt;T : Any&gt; selectPending: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:AccountsQueries.kt:AccountsQueries$public fun countPending: Query&lt;Long&gt;</ID>
+    <ID>FunctionSignature:AccountsQueries.kt:AccountsQueries$public fun countUnclaimed: Query&lt;Long&gt;</ID>
+    <ID>FunctionSignature:AccountsQueries.kt:AccountsQueries$public fun insert: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:AccountsQueries.kt:AccountsQueries$public fun insertOrIgnoreFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:AccountsQueries.kt:AccountsQueries$public fun softDelete: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:AccountsQueries.kt:AccountsQueries$public fun update: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:AccountsQueries.kt:AccountsQueries$public fun updateFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:AccountsQueries.kt:AccountsQueries.FindForSyncQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:AccountsQueries.kt:AccountsQueries.FindQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:CategoriesQueries.kt:CategoriesQueries$public fun &lt;T : Any&gt; all: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:CategoriesQueries.kt:CategoriesQueries$public fun &lt;T : Any&gt; find: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:CategoriesQueries.kt:CategoriesQueries$public fun &lt;T : Any&gt; selectPending: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:CategoriesQueries.kt:CategoriesQueries$public fun countDefaultCategories: Query&lt;Long&gt;</ID>
+    <ID>FunctionSignature:CategoriesQueries.kt:CategoriesQueries$public fun countPending: Query&lt;Long&gt;</ID>
+    <ID>FunctionSignature:CategoriesQueries.kt:CategoriesQueries$public fun countUnclaimed: Query&lt;Long&gt;</ID>
+    <ID>FunctionSignature:CategoriesQueries.kt:CategoriesQueries$public fun insert: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:CategoriesQueries.kt:CategoriesQueries$public fun insertOrIgnoreFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:CategoriesQueries.kt:CategoriesQueries$public fun softDelete: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:CategoriesQueries.kt:CategoriesQueries$public fun updateFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:CategoriesQueries.kt:CategoriesQueries$public fun updateValues: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:CategoriesQueries.kt:CategoriesQueries.FindForSyncQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:CategoriesQueries.kt:CategoriesQueries.FindQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$override fun migrate: QueryResult.Value&lt;Unit&gt;</ID>
+    <ID>FunctionSignature:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$private fun migrateInternal: QueryResult.Value&lt;Unit&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun &lt;T : Any&gt; find: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun &lt;T : Any&gt; selectActive: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun &lt;T : Any&gt; selectAll: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun &lt;T : Any&gt; selectAllWithDetails: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun &lt;T : Any&gt; selectPending: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun countPending: Query&lt;Long&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun countUnclaimed: Query&lt;Long&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun insert: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun insertOrIgnoreFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun markConfirmed: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun softDelete: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun update: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun updateFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries.CountLiveByAccountQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries.FindForSyncQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:Recurring_movementsQueries.kt:Recurring_movementsQueries.FindQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun &lt;T : Any&gt; all: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun &lt;T : Any&gt; completeTransactions: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun &lt;T : Any&gt; completeTransactionsByDateRange: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun &lt;T : Any&gt; find: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun &lt;T : Any&gt; monthlyAmountByCategory: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun &lt;T : Any&gt; monthlyStats: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun &lt;T : Any&gt; searchTransactions: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun &lt;T : Any&gt; selectPending: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun &lt;T : Any&gt; topUsedCombos: Query&lt;T&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun completeTransactionsByDateRange: Query&lt;CompleteTransactionsByDateRange&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun countPending: Query&lt;Long&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun countUnclaimed: Query&lt;Long&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun insert: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun insertOrIgnoreFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun lastUsedAccountId: Query&lt;String&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun monthlyAmountByCategory: Query&lt;MonthlyAmountByCategory&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun monthlyStats: Query&lt;MonthlyStats&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun searchTransactions: Query&lt;SearchTransactions&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun softDelete: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun topUsedCategoryIds: Query&lt;String&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun topUsedCombos: Query&lt;TopUsedCombos&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun update: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries$public fun updateFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries.CompleteTransactionsByDateRangeQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries.CountByAccountQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries.CountLiveByAccountQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries.FindForSyncQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries.FindQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries.GetAccountBalanceQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries.MonthlyAmountByCategoryQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries.MonthlyStatsQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries.TopUsedCategoryIdsQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>FunctionSignature:TransactionsQueries.kt:TransactionsQueries.TopUsedCombosQuery$override fun &lt;R&gt; execute: QueryResult&lt;R&gt;</ID>
+    <ID>ImportOrdering:AccountLocalDataSource.kt:import app.cash.sqldelight.coroutines.asFlow import app.cash.sqldelight.coroutines.mapToList import com.emm.data.AccountsQueries import com.emm.data.EmmDatabaseData import com.emm.domain.account.Account import com.emm.domain.account.AccountUpsert import com.emm.domain.shared.currentTimeInMillis import com.emm.data.shared.ioDispatcher import kotlinx.coroutines.flow.Flow import kotlinx.coroutines.flow.map import kotlinx.coroutines.withContext</ID>
+    <ID>ImportOrdering:CategoryLocalDataSource.kt:import app.cash.sqldelight.coroutines.asFlow import app.cash.sqldelight.coroutines.mapToList import app.cash.sqldelight.coroutines.mapToOneOrNull import com.emm.data.CategoriesQueries import com.emm.data.EmmDatabaseData import com.emm.domain.category.Category import com.emm.domain.category.CategoryUpsert import com.emm.domain.shared.currentTimeInMillis import com.emm.data.shared.ioDispatcher import kotlinx.coroutines.flow.Flow import kotlinx.coroutines.flow.map import kotlinx.coroutines.withContext</ID>
+    <ID>ImportOrdering:DefaultAuthRepository.kt:import com.emm.domain.auth.AuthRepository import com.emm.domain.auth.AuthUser import com.emm.domain.auth.SessionStatus import com.emm.domain.shared.error.DomainException import io.github.jan.supabase.SupabaseClient import io.github.jan.supabase.auth.OtpType import io.github.jan.supabase.auth.SignOutScope import io.github.jan.supabase.auth.auth import io.github.jan.supabase.auth.exception.AuthErrorCode import io.github.jan.supabase.auth.exception.AuthRestException import io.github.jan.supabase.auth.providers.Google import io.github.jan.supabase.auth.providers.builtin.Email import io.github.jan.supabase.auth.providers.builtin.IDToken import io.github.jan.supabase.auth.user.UserInfo import io.github.jan.supabase.exceptions.HttpRequestException import io.github.jan.supabase.exceptions.UnauthorizedRestException import io.github.jan.supabase.postgrest.postgrest import io.ktor.client.plugins.HttpRequestTimeoutException import com.emm.data.shared.ioDispatcher import kotlinx.coroutines.CancellationException import kotlinx.coroutines.flow.Flow import kotlinx.coroutines.flow.flowOn import kotlinx.coroutines.flow.map import kotlinx.coroutines.withContext import io.github.jan.supabase.auth.status.SessionStatus as SupabaseSessionStatus</ID>
+    <ID>ImportOrdering:DefaultBackupRepository.kt:import com.emm.data.EmmDatabaseData import com.emm.data.shared.safeDbCall import com.emm.domain.account.AccountRepository import com.emm.domain.category.CategoryRepository import com.emm.domain.shared.backup.BackupRepository import com.emm.domain.shared.backup.ImportStats import com.emm.domain.shared.error.DomainException import com.emm.domain.transaction.TransactionRepository import kotlinx.coroutines.flow.first import kotlin.time.Clock import kotlinx.serialization.SerializationException import kotlinx.serialization.encodeToString import kotlinx.serialization.json.Json</ID>
+    <ID>ImportOrdering:DefaultClaimLocalDataRepository.kt:import app.cash.sqldelight.coroutines.asFlow import app.cash.sqldelight.coroutines.mapToOne import com.emm.data.EmmDatabaseData import com.emm.data.shared.safeDbCall import com.emm.domain.auth.ClaimLocalDataRepository import com.emm.data.shared.ioDispatcher import kotlinx.coroutines.flow.Flow import kotlinx.coroutines.flow.combine import kotlinx.coroutines.withContext</ID>
+    <ID>ImportOrdering:RecurringMovementLocalDataSource.kt:import app.cash.sqldelight.coroutines.asFlow import app.cash.sqldelight.coroutines.mapToList import com.emm.data.EmmDatabaseData import com.emm.data.Recurring_movementsQueries import com.emm.domain.recurring.RecurringMovement import com.emm.domain.recurring.RecurringMovementDetails import com.emm.domain.recurring.RecurringMovementInsert import com.emm.domain.shared.currentTimeInMillis import com.emm.domain.shared.error.DomainException import com.emm.domain.transaction.TransactionInsert import com.emm.data.shared.ioDispatcher import kotlinx.coroutines.flow.Flow import kotlinx.coroutines.flow.map import kotlinx.coroutines.withContext import kotlin.uuid.ExperimentalUuidApi import kotlin.uuid.Uuid</ID>
+    <ID>ImportOrdering:TransactionLocalDataSource.kt:import app.cash.sqldelight.coroutines.asFlow import app.cash.sqldelight.coroutines.mapToList import com.emm.data.CompleteTransactions import com.emm.data.CompleteTransactionsByDateRange import com.emm.data.SearchTransactions import com.emm.data.TransactionsQueries import com.emm.domain.shared.currentTimeInMillis import com.emm.domain.transaction.Transaction import com.emm.domain.transaction.TransactionInsert import com.emm.domain.transaction.TransactionUpdate import com.emm.data.shared.ioDispatcher import kotlinx.coroutines.flow.Flow import kotlinx.coroutines.flow.map import kotlinx.coroutines.withContext</ID>
+    <ID>ImportOrdering:TransactionStatsLocalDataSource.kt:import com.emm.data.TransactionsQueries import com.emm.domain.transaction.TransactionType import com.emm.data.shared.ioDispatcher import kotlinx.coroutines.withContext</ID>
+    <ID>Indentation:Accounts.kt:Accounts$ </ID>
+    <ID>Indentation:AccountsQueries.kt:AccountsQueries$ </ID>
+    <ID>Indentation:AccountsQueries.kt:AccountsQueries.FindForSyncQuery$ </ID>
+    <ID>Indentation:AccountsQueries.kt:AccountsQueries.FindQuery$ </ID>
+    <ID>Indentation:Categories.kt:Categories$ </ID>
+    <ID>Indentation:CategoriesQueries.kt:CategoriesQueries$ </ID>
+    <ID>Indentation:CategoriesQueries.kt:CategoriesQueries.FindForSyncQuery$ </ID>
+    <ID>Indentation:CategoriesQueries.kt:CategoriesQueries.FindQuery$ </ID>
+    <ID>Indentation:CompleteTransactions.kt:CompleteTransactions$ </ID>
+    <ID>Indentation:CompleteTransactionsByDateRange.kt:CompleteTransactionsByDateRange$ </ID>
+    <ID>Indentation:EmmDatabaseData.kt:EmmDatabaseData$ </ID>
+    <ID>Indentation:EmmDatabaseData.kt:EmmDatabaseData.Companion$ </ID>
+    <ID>Indentation:EmmDatabaseDataImpl.kt: </ID>
+    <ID>Indentation:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl$ </ID>
+    <ID>Indentation:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$ </ID>
+    <ID>Indentation:MonthlyAmountByCategory.kt:MonthlyAmountByCategory$ </ID>
+    <ID>Indentation:MonthlyStats.kt:MonthlyStats$ </ID>
+    <ID>Indentation:Recurring_movements.kt:Recurring_movements$ </ID>
+    <ID>Indentation:Recurring_movementsQueries.kt:Recurring_movementsQueries$ </ID>
+    <ID>Indentation:Recurring_movementsQueries.kt:Recurring_movementsQueries.CountLiveByAccountQuery$ </ID>
+    <ID>Indentation:Recurring_movementsQueries.kt:Recurring_movementsQueries.FindForSyncQuery$ </ID>
+    <ID>Indentation:Recurring_movementsQueries.kt:Recurring_movementsQueries.FindQuery$ </ID>
+    <ID>Indentation:SearchTransactions.kt:SearchTransactions$ </ID>
+    <ID>Indentation:SelectAllWithDetails.kt:SelectAllWithDetails$ </ID>
+    <ID>Indentation:SelectPending.kt:SelectPending$ </ID>
+    <ID>Indentation:TopUsedCombos.kt:TopUsedCombos$ </ID>
+    <ID>Indentation:Transactions.kt:Transactions$ </ID>
+    <ID>Indentation:TransactionsQueries.kt:TransactionsQueries$ </ID>
+    <ID>Indentation:TransactionsQueries.kt:TransactionsQueries.CompleteTransactionsByDateRangeQuery$ </ID>
+    <ID>Indentation:TransactionsQueries.kt:TransactionsQueries.CountByAccountQuery$ </ID>
+    <ID>Indentation:TransactionsQueries.kt:TransactionsQueries.CountLiveByAccountQuery$ </ID>
+    <ID>Indentation:TransactionsQueries.kt:TransactionsQueries.FindForSyncQuery$ </ID>
+    <ID>Indentation:TransactionsQueries.kt:TransactionsQueries.FindQuery$ </ID>
+    <ID>Indentation:TransactionsQueries.kt:TransactionsQueries.GetAccountBalanceQuery$ </ID>
+    <ID>Indentation:TransactionsQueries.kt:TransactionsQueries.MonthlyAmountByCategoryQuery$ </ID>
+    <ID>Indentation:TransactionsQueries.kt:TransactionsQueries.MonthlyStatsQuery$ </ID>
+    <ID>Indentation:TransactionsQueries.kt:TransactionsQueries.SearchTransactionsQuery$ </ID>
+    <ID>Indentation:TransactionsQueries.kt:TransactionsQueries.TopUsedCategoryIdsQuery$ </ID>
+    <ID>Indentation:TransactionsQueries.kt:TransactionsQueries.TopUsedCombosQuery$ </ID>
+    <ID>InjectDispatcher:Dispatchers.android.kt:IO</ID>
+    <ID>LongMethod:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$override fun create: QueryResult.Value&lt;Unit&gt;</ID>
+    <ID>LongMethod:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$private fun migrateInternal: QueryResult.Value&lt;Unit&gt;</ID>
+    <ID>LongParameterList:AccountsQueries.kt:AccountsQueries$public fun insert: QueryResult&lt;Long&gt;</ID>
+    <ID>LongParameterList:AccountsQueries.kt:AccountsQueries$public fun insertOrIgnoreFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>LongParameterList:AccountsQueries.kt:AccountsQueries$public fun updateFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>LongParameterList:CategoriesQueries.kt:CategoriesQueries$public fun insert: QueryResult&lt;Long&gt;</ID>
+    <ID>LongParameterList:CategoriesQueries.kt:CategoriesQueries$public fun insertOrIgnoreFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>LongParameterList:CategoriesQueries.kt:CategoriesQueries$public fun updateFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>LongParameterList:DefaultSyncRepository.kt:DefaultSyncRepository</ID>
+    <ID>LongParameterList:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun insert: QueryResult&lt;Long&gt;</ID>
+    <ID>LongParameterList:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun insertOrIgnoreFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>LongParameterList:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun update: QueryResult&lt;Long&gt;</ID>
+    <ID>LongParameterList:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun updateFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>LongParameterList:TransactionsQueries.kt:TransactionsQueries$public fun insert: QueryResult&lt;Long&gt;</ID>
+    <ID>LongParameterList:TransactionsQueries.kt:TransactionsQueries$public fun insertOrIgnoreFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>LongParameterList:TransactionsQueries.kt:TransactionsQueries$public fun update: QueryResult&lt;Long&gt;</ID>
+    <ID>LongParameterList:TransactionsQueries.kt:TransactionsQueries$public fun updateFromRemote: QueryResult&lt;Long&gt;</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$1_013_840_915</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$1_064_494_087</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$1_366_844_427</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$1_409_440_279</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$1_517_128_467</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$1_669_346_328</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$1_671_555_237</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$1_725_111_329</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$1_725_229_251</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$1_976_424_967</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$210_684_012</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$235_065_260</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$2_024_915_030</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$3</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$4</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$5</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$6</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$7</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$8</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries$917_808_531</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries.FindForSyncQuery$911_442_307</ID>
+    <ID>MagicNumber:AccountsQueries.kt:AccountsQueries.FindQuery$213_511_545</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$10</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$1_083_049_711</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$1_169_694_734</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$1_237_453_099</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$1_455_604_510</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$1_626_662_985</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$1_664_113_725</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$1_834_157_757</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$2_114_206_578</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$3</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$34_559_481</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$4</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$5</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$6</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$615_509_661</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$623_976_670</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$670_564_777</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$675_478_793</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$7</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$788_903_948</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$8</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$895_177_265</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries$9</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries.FindForSyncQuery$1_782_597_625</ID>
+    <ID>MagicNumber:CategoriesQueries.kt:CategoriesQueries.FindQuery$1_901_076_541</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$10</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$11</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$12</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$13</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$14</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$15</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$16</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$17</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$18</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$1_034_907_711</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$1_044_044_608</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$1_179_674_498</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$1_571_868_475</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$1_606_126_153</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$1_769_263_547</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$1_806_018_381</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$1_855_417_900</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$1_893_656_527</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$1_946_049_388</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$2_025_146_243</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$3</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$365_253_909</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$4</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$481_805_800</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$5</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$521_388_255</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$6</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$689_961_519</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$699_179_473</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$7</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$8</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$837_639_709</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$9</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries$939_046_180</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries.CountLiveByAccountQuery$339_569_679</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries.FindForSyncQuery$1_291_910_827</ID>
+    <ID>MagicNumber:Recurring_movementsQueries.kt:Recurring_movementsQueries.FindQuery$1_578_275_503</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$10</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$11</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$11_689_275</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$12</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$13</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$14</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$15</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$195_304_138</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$1_036_633_451</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$1_241_506_096</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$1_268_293_692</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$1_315_250_586</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$1_379_603_210</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$1_724_416_933</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$275_935_070</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$2_050_850_341</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$3</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$333_939_770</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$335_124_441</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$4</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$467_583_704</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$5</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$560_686_350</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$566_826_882</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$6</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$642_207_268</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$678_885_962</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$7</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$8</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries$9</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries.CompleteTransactionsByDateRangeQuery$1_482_498_771</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries.CountByAccountQuery$365_452_164</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries.CountLiveByAccountQuery$1_391_751_944</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries.FindForSyncQuery$1_239_618_094</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries.FindQuery$662_252_554</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries.GetAccountBalanceQuery$256_235_976</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries.MonthlyAmountByCategoryQuery$265_087_555</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries.MonthlyAmountByCategoryQuery$3</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries.MonthlyStatsQuery$3</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries.MonthlyStatsQuery$589_469_135</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries.SearchTransactionsQuery$3</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries.TopUsedCategoryIdsQuery$3</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries.TopUsedCategoryIdsQuery$460_947_013</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries.TopUsedCombosQuery$1_895_883_866</ID>
+    <ID>MagicNumber:TransactionsQueries.kt:TransactionsQueries.TopUsedCombosQuery$3</ID>
+    <ID>MaxLineLength:AccountsQueries.kt:AccountsQueries$)</ID>
+    <ID>MaxLineLength:AccountsQueries.kt:AccountsQueries$public</ID>
+    <ID>MaxLineLength:AccountsQueries.kt:AccountsQueries$val</ID>
+    <ID>MaxLineLength:AccountsQueries.kt:AccountsQueries.FindForSyncQuery$override</ID>
+    <ID>MaxLineLength:AccountsQueries.kt:AccountsQueries.FindQuery$override</ID>
+    <ID>MaxLineLength:CategoriesQueries.kt:CategoriesQueries$)</ID>
+    <ID>MaxLineLength:CategoriesQueries.kt:CategoriesQueries$public</ID>
+    <ID>MaxLineLength:CategoriesQueries.kt:CategoriesQueries$val</ID>
+    <ID>MaxLineLength:CategoriesQueries.kt:CategoriesQueries.FindForSyncQuery$override</ID>
+    <ID>MaxLineLength:CategoriesQueries.kt:CategoriesQueries.FindQuery$override</ID>
+    <ID>MaxLineLength:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$driver.execute(null, "CREATE INDEX IF NOT EXISTS categories_user_deleted_idx ON categories(userId, deletedAt)", 0)</ID>
+    <ID>MaxLineLength:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$driver.execute(null, "CREATE INDEX IF NOT EXISTS recurring_active_idx ON recurring_movements(isActive, name)", 0)</ID>
+    <ID>MaxLineLength:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$driver.execute(null, "CREATE INDEX IF NOT EXISTS recurring_movements_syncstate_idx ON recurring_movements(syncState)", 0)</ID>
+    <ID>MaxLineLength:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$driver.execute(null, "CREATE INDEX IF NOT EXISTS recurring_movements_user_deleted_idx ON recurring_movements(userId, deletedAt)", 0)</ID>
+    <ID>MaxLineLength:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$driver.execute(null, "CREATE INDEX IF NOT EXISTS transactions_user_deleted_idx ON transactions(userId, deletedAt)", 0)</ID>
+    <ID>MaxLineLength:Recurring_movementsQueries.kt:Recurring_movementsQueries$)</ID>
+    <ID>MaxLineLength:Recurring_movementsQueries.kt:Recurring_movementsQueries$public</ID>
+    <ID>MaxLineLength:Recurring_movementsQueries.kt:Recurring_movementsQueries$val</ID>
+    <ID>MaxLineLength:Recurring_movementsQueries.kt:Recurring_movementsQueries.CountLiveByAccountQuery$override</ID>
+    <ID>MaxLineLength:Recurring_movementsQueries.kt:Recurring_movementsQueries.FindForSyncQuery$override</ID>
+    <ID>MaxLineLength:Recurring_movementsQueries.kt:Recurring_movementsQueries.FindQuery$override</ID>
+    <ID>MaxLineLength:TransactionsQueries.kt:TransactionsQueries$)</ID>
+    <ID>MaxLineLength:TransactionsQueries.kt:TransactionsQueries$public</ID>
+    <ID>MaxLineLength:TransactionsQueries.kt:TransactionsQueries$public fun completeTransactionsByDateRange: Query&lt;CompleteTransactionsByDateRange&gt;</ID>
+    <ID>MaxLineLength:TransactionsQueries.kt:TransactionsQueries$val</ID>
+    <ID>MaxLineLength:TransactionsQueries.kt:TransactionsQueries.CountByAccountQuery$override</ID>
+    <ID>MaxLineLength:TransactionsQueries.kt:TransactionsQueries.CountLiveByAccountQuery$override</ID>
+    <ID>MaxLineLength:TransactionsQueries.kt:TransactionsQueries.FindForSyncQuery$override</ID>
+    <ID>MaxLineLength:TransactionsQueries.kt:TransactionsQueries.FindQuery$override</ID>
+    <ID>MaximumLineLength:AccountsQueries.kt:AccountsQueries$-&gt;</ID>
+    <ID>MaximumLineLength:AccountsQueries.kt:AccountsQueries${</ID>
+    <ID>MaximumLineLength:AccountsQueries.kt:AccountsQueries.FindForSyncQuery${</ID>
+    <ID>MaximumLineLength:AccountsQueries.kt:AccountsQueries.FindQuery${</ID>
+    <ID>MaximumLineLength:CategoriesQueries.kt:CategoriesQueries$-&gt;</ID>
+    <ID>MaximumLineLength:CategoriesQueries.kt:CategoriesQueries${</ID>
+    <ID>MaximumLineLength:CategoriesQueries.kt:CategoriesQueries.FindForSyncQuery${</ID>
+    <ID>MaximumLineLength:CategoriesQueries.kt:CategoriesQueries.FindQuery${</ID>
+    <ID>MaximumLineLength:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$)</ID>
+    <ID>MaximumLineLength:Recurring_movementsQueries.kt:Recurring_movementsQueries$-&gt;</ID>
+    <ID>MaximumLineLength:Recurring_movementsQueries.kt:Recurring_movementsQueries${</ID>
+    <ID>MaximumLineLength:Recurring_movementsQueries.kt:Recurring_movementsQueries.CountLiveByAccountQuery${</ID>
+    <ID>MaximumLineLength:Recurring_movementsQueries.kt:Recurring_movementsQueries.FindForSyncQuery${</ID>
+    <ID>MaximumLineLength:Recurring_movementsQueries.kt:Recurring_movementsQueries.FindQuery${</ID>
+    <ID>MaximumLineLength:TransactionsQueries.kt:TransactionsQueries$)</ID>
+    <ID>MaximumLineLength:TransactionsQueries.kt:TransactionsQueries$-&gt;</ID>
+    <ID>MaximumLineLength:TransactionsQueries.kt:TransactionsQueries${</ID>
+    <ID>MaximumLineLength:TransactionsQueries.kt:TransactionsQueries.CountByAccountQuery${</ID>
+    <ID>MaximumLineLength:TransactionsQueries.kt:TransactionsQueries.CountLiveByAccountQuery${</ID>
+    <ID>MaximumLineLength:TransactionsQueries.kt:TransactionsQueries.FindForSyncQuery${</ID>
+    <ID>MaximumLineLength:TransactionsQueries.kt:TransactionsQueries.FindQuery${</ID>
+    <ID>PackageName:Accounts.kt:package com.emm.`data`</ID>
+    <ID>PackageName:AccountsQueries.kt:package com.emm.`data`</ID>
+    <ID>PackageName:Categories.kt:package com.emm.`data`</ID>
+    <ID>PackageName:CategoriesQueries.kt:package com.emm.`data`</ID>
+    <ID>PackageName:CompleteTransactions.kt:package com.emm.`data`</ID>
+    <ID>PackageName:CompleteTransactionsByDateRange.kt:package com.emm.`data`</ID>
+    <ID>PackageName:EmmDatabaseData.kt:package com.emm.`data`</ID>
+    <ID>PackageName:EmmDatabaseDataImpl.kt:package com.emm.`data`.`data`</ID>
+    <ID>PackageName:MonthlyAmountByCategory.kt:package com.emm.`data`</ID>
+    <ID>PackageName:MonthlyStats.kt:package com.emm.`data`</ID>
+    <ID>PackageName:Recurring_movements.kt:package com.emm.`data`</ID>
+    <ID>PackageName:Recurring_movementsQueries.kt:package com.emm.`data`</ID>
+    <ID>PackageName:SearchTransactions.kt:package com.emm.`data`</ID>
+    <ID>PackageName:SelectAllWithDetails.kt:package com.emm.`data`</ID>
+    <ID>PackageName:SelectPending.kt:package com.emm.`data`.accounts</ID>
+    <ID>PackageName:SelectPending.kt:package com.emm.`data`.categories</ID>
+    <ID>PackageName:SelectPending.kt:package com.emm.`data`.recurring_movements</ID>
+    <ID>PackageName:SelectPending.kt:package com.emm.`data`.transactions</ID>
+    <ID>PackageName:TopUsedCombos.kt:package com.emm.`data`</ID>
+    <ID>PackageName:Transactions.kt:package com.emm.`data`</ID>
+    <ID>PackageName:TransactionsQueries.kt:package com.emm.`data`</ID>
+    <ID>PackageNaming:SelectPending.kt:package com.emm.`data`.recurring_movements</ID>
+    <ID>ParameterListWrapping:AccountsQueries.kt:AccountsQueries$(accountId: String, mapper: ( accountId: String, name: String, type: String, currency: String, updatedAt: Long, createdAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>ParameterListWrapping:AccountsQueries.kt:AccountsQueries$(mapper: ( accountId: String, name: String, type: String, currency: String, updatedAt: Long, createdAt: Long, userId: String, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>ParameterListWrapping:AccountsQueries.kt:AccountsQueries$(mapper: ( accountId: String, name: String, type: String, currency: String, updatedAt: Long, createdAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>ParameterListWrapping:CategoriesQueries.kt:CategoriesQueries$(categoryId: String, mapper: ( categoryId: String, name: String, icon: String, color: String, categoryType: String, isDefault: Boolean, updatedAt: Long, createdAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>ParameterListWrapping:CategoriesQueries.kt:CategoriesQueries$(mapper: ( categoryId: String, name: String, icon: String, color: String, categoryType: String, isDefault: Boolean, updatedAt: Long, createdAt: Long, userId: String, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>ParameterListWrapping:CategoriesQueries.kt:CategoriesQueries$(mapper: ( categoryId: String, name: String, icon: String, color: String, categoryType: String, isDefault: Boolean, updatedAt: Long, createdAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>ParameterListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(id: String, mapper: ( id: String, name: String, type: String, amount: Long?, description: String, categoryId: String?, accountId: String, frequency: String, dayOfMonth: Long, isActive: Long, lastConfirmedPeriod: String?, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>ParameterListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(mapper: ( id: String, name: String, type: String, amount: Long?, description: String, categoryId: String?, accountId: String, frequency: String, dayOfMonth: Long, isActive: Long, lastConfirmedPeriod: String?, createdAt: Long, updatedAt: Long, userId: String, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>ParameterListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(mapper: ( id: String, name: String, type: String, amount: Long?, description: String, categoryId: String?, accountId: String, frequency: String, dayOfMonth: Long, isActive: Long, lastConfirmedPeriod: String?, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>ParameterListWrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(mapper: ( id: String, name: String, type: String, amount: Long?, description: String, categoryId: String?, accountId: String, frequency: String, dayOfMonth: Long, isActive: Long, lastConfirmedPeriod: String?, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, categoryName: String?, categoryColor: String?, accountName: String?, ) -&gt; T)</ID>
+    <ID>ParameterListWrapping:TransactionsQueries.kt:TransactionsQueries$(mapper: ( transactionId: String, type: String, amount: Long, description: String, date: Long, categoryId: String?, accountId: String, createdAt: Long, updatedAt: Long, userId: String, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>ParameterListWrapping:TransactionsQueries.kt:TransactionsQueries$(mapper: ( transactionId: String, type: String, amount: Long, description: String, date: Long, categoryId: String?, accountId: String, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>ParameterListWrapping:TransactionsQueries.kt:TransactionsQueries$(mapper: ( transactionId: String, type: String, amount: Long, description: String, date: Long, categoryId: String?, accountId: String, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, categoryName: String?, categoryIcon: String?, categoryColor: String?, categoryType_: String?, ) -&gt; T)</ID>
+    <ID>ParameterListWrapping:TransactionsQueries.kt:TransactionsQueries$(transactionId: String, mapper: ( transactionId: String, type: String, amount: Long, description: String, date: Long, categoryId: String?, accountId: String, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>PropertyName:EmmDatabaseData.kt:EmmDatabaseData$public val recurring_movementsQueries: Recurring_movementsQueries</ID>
+    <ID>PropertyName:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl$override val recurring_movementsQueries: Recurring_movementsQueries = Recurring_movementsQueries(driver)</ID>
+    <ID>ThrowsCount:DefaultBackupRepository.kt:DefaultBackupRepository$override suspend fun importFromJson: ImportStats</ID>
+    <ID>TooManyFunctions:AccountsQueries.kt:AccountsQueries : TransacterImpl</ID>
+    <ID>TooManyFunctions:CategoriesQueries.kt:CategoriesQueries : TransacterImpl</ID>
+    <ID>TooManyFunctions:Recurring_movementsQueries.kt:Recurring_movementsQueries : TransacterImpl</ID>
+    <ID>TooManyFunctions:TransactionMappers.kt:com.emm.data.transaction.TransactionMappers.kt</ID>
+    <ID>TooManyFunctions:TransactionsQueries.kt:TransactionsQueries : TransacterImpl</ID>
+    <ID>TrailingCommaOnCallSite:AccountsQueries.kt:AccountsQueries$( cursor.getString(0)!!, cursor.getString(1)!!, cursor.getString(2)!!, cursor.getString(3)!!, cursor.getLong(4)!!, cursor.getLong(5)!!, cursor.getString(6)!!, cursor.getLong(7), cursor.getString(8)!! )</ID>
+    <ID>TrailingCommaOnCallSite:AccountsQueries.kt:AccountsQueries$( cursor.getString(0)!!, cursor.getString(1)!!, cursor.getString(2)!!, cursor.getString(3)!!, cursor.getLong(4)!!, cursor.getLong(5)!!, cursor.getString(6), cursor.getLong(7), cursor.getString(8)!! )</ID>
+    <ID>TrailingCommaOnCallSite:CategoriesQueries.kt:CategoriesQueries$( cursor.getString(0)!!, cursor.getString(1)!!, cursor.getString(2)!!, cursor.getString(3)!!, cursor.getString(4)!!, cursor.getBoolean(5)!!, cursor.getLong(6)!!, cursor.getLong(7)!!, cursor.getString(8)!!, cursor.getLong(9), cursor.getString(10)!! )</ID>
+    <ID>TrailingCommaOnCallSite:CategoriesQueries.kt:CategoriesQueries$( cursor.getString(0)!!, cursor.getString(1)!!, cursor.getString(2)!!, cursor.getString(3)!!, cursor.getString(4)!!, cursor.getBoolean(5)!!, cursor.getLong(6)!!, cursor.getLong(7)!!, cursor.getString(8), cursor.getLong(9), cursor.getString(10)!! )</ID>
+    <ID>TrailingCommaOnCallSite:Recurring_movementsQueries.kt:Recurring_movementsQueries$( cursor.getString(0)!!, cursor.getString(1)!!, cursor.getString(2)!!, cursor.getLong(3), cursor.getString(4)!!, cursor.getString(5), cursor.getString(6)!!, cursor.getString(7)!!, cursor.getLong(8)!!, cursor.getLong(9)!!, cursor.getString(10), cursor.getLong(11)!!, cursor.getLong(12)!!, cursor.getString(13)!!, cursor.getLong(14), cursor.getString(15)!! )</ID>
+    <ID>TrailingCommaOnCallSite:Recurring_movementsQueries.kt:Recurring_movementsQueries$( cursor.getString(0)!!, cursor.getString(1)!!, cursor.getString(2)!!, cursor.getLong(3), cursor.getString(4)!!, cursor.getString(5), cursor.getString(6)!!, cursor.getString(7)!!, cursor.getLong(8)!!, cursor.getLong(9)!!, cursor.getString(10), cursor.getLong(11)!!, cursor.getLong(12)!!, cursor.getString(13), cursor.getLong(14), cursor.getString(15)!! )</ID>
+    <ID>TrailingCommaOnCallSite:Recurring_movementsQueries.kt:Recurring_movementsQueries$( cursor.getString(0)!!, cursor.getString(1)!!, cursor.getString(2)!!, cursor.getLong(3), cursor.getString(4)!!, cursor.getString(5), cursor.getString(6)!!, cursor.getString(7)!!, cursor.getLong(8)!!, cursor.getLong(9)!!, cursor.getString(10), cursor.getLong(11)!!, cursor.getLong(12)!!, cursor.getString(13), cursor.getLong(14), cursor.getString(15)!!, cursor.getString(16), cursor.getString(17), cursor.getString(18) )</ID>
+    <ID>TrailingCommaOnCallSite:TransactionsQueries.kt:TransactionsQueries$( cursor.getLong(0)!!, cursor.getLong(1)!! )</ID>
+    <ID>TrailingCommaOnCallSite:TransactionsQueries.kt:TransactionsQueries$( cursor.getString(0)!!, cursor.getString(1)!!, cursor.getLong(2)!!, cursor.getString(3)!!, cursor.getLong(4)!!, cursor.getString(5), cursor.getString(6)!!, cursor.getLong(7)!!, cursor.getLong(8)!!, cursor.getString(9)!!, cursor.getLong(10), cursor.getString(11)!! )</ID>
+    <ID>TrailingCommaOnCallSite:TransactionsQueries.kt:TransactionsQueries$( cursor.getString(0)!!, cursor.getString(1)!!, cursor.getLong(2)!!, cursor.getString(3)!!, cursor.getLong(4)!!, cursor.getString(5), cursor.getString(6)!!, cursor.getLong(7)!!, cursor.getLong(8)!!, cursor.getString(9), cursor.getLong(10), cursor.getString(11)!! )</ID>
+    <ID>TrailingCommaOnCallSite:TransactionsQueries.kt:TransactionsQueries$( cursor.getString(0)!!, cursor.getString(1)!!, cursor.getLong(2)!!, cursor.getString(3)!!, cursor.getLong(4)!!, cursor.getString(5), cursor.getString(6)!!, cursor.getLong(7)!!, cursor.getLong(8)!!, cursor.getString(9), cursor.getLong(10), cursor.getString(11)!!, cursor.getString(12), cursor.getString(13), cursor.getString(14), cursor.getString(15) )</ID>
+    <ID>TrailingCommaOnCallSite:TransactionsQueries.kt:TransactionsQueries$( cursor.getString(0)!!, cursor.getString(1)!!, cursor.getString(2)!! )</ID>
+    <ID>TrailingCommaOnCallSite:TransactionsQueries.kt:TransactionsQueries$( cursor.getString(0)!!, cursor.getString(1)!!, cursor.getString(2)!!, cursor.getString(3)!!, cursor.getLong(4) )</ID>
+    <ID>TrailingCommaOnDeclarationSite:AccountsQueries.kt:AccountsQueries$(accountId: String, mapper: ( accountId: String, name: String, type: String, currency: String, updatedAt: Long, createdAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>TrailingCommaOnDeclarationSite:AccountsQueries.kt:AccountsQueries$(mapper: ( accountId: String, name: String, type: String, currency: String, updatedAt: Long, createdAt: Long, userId: String, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>TrailingCommaOnDeclarationSite:AccountsQueries.kt:AccountsQueries$(mapper: ( accountId: String, name: String, type: String, currency: String, updatedAt: Long, createdAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>TrailingCommaOnDeclarationSite:CategoriesQueries.kt:CategoriesQueries$(categoryId: String, mapper: ( categoryId: String, name: String, icon: String, color: String, categoryType: String, isDefault: Boolean, updatedAt: Long, createdAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>TrailingCommaOnDeclarationSite:CategoriesQueries.kt:CategoriesQueries$(mapper: ( categoryId: String, name: String, icon: String, color: String, categoryType: String, isDefault: Boolean, updatedAt: Long, createdAt: Long, userId: String, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>TrailingCommaOnDeclarationSite:CategoriesQueries.kt:CategoriesQueries$(mapper: ( categoryId: String, name: String, icon: String, color: String, categoryType: String, isDefault: Boolean, updatedAt: Long, createdAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>TrailingCommaOnDeclarationSite:Recurring_movementsQueries.kt:Recurring_movementsQueries$(id: String, mapper: ( id: String, name: String, type: String, amount: Long?, description: String, categoryId: String?, accountId: String, frequency: String, dayOfMonth: Long, isActive: Long, lastConfirmedPeriod: String?, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>TrailingCommaOnDeclarationSite:Recurring_movementsQueries.kt:Recurring_movementsQueries$(mapper: ( id: String, name: String, type: String, amount: Long?, description: String, categoryId: String?, accountId: String, frequency: String, dayOfMonth: Long, isActive: Long, lastConfirmedPeriod: String?, createdAt: Long, updatedAt: Long, userId: String, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>TrailingCommaOnDeclarationSite:Recurring_movementsQueries.kt:Recurring_movementsQueries$(mapper: ( id: String, name: String, type: String, amount: Long?, description: String, categoryId: String?, accountId: String, frequency: String, dayOfMonth: Long, isActive: Long, lastConfirmedPeriod: String?, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>TrailingCommaOnDeclarationSite:Recurring_movementsQueries.kt:Recurring_movementsQueries$(mapper: ( id: String, name: String, type: String, amount: Long?, description: String, categoryId: String?, accountId: String, frequency: String, dayOfMonth: Long, isActive: Long, lastConfirmedPeriod: String?, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, categoryName: String?, categoryColor: String?, accountName: String?, ) -&gt; T)</ID>
+    <ID>TrailingCommaOnDeclarationSite:TransactionsQueries.kt:TransactionsQueries$(mapper: ( transactionId: String, type: String, amount: Long, description: String, date: Long, categoryId: String?, accountId: String, createdAt: Long, updatedAt: Long, userId: String, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>TrailingCommaOnDeclarationSite:TransactionsQueries.kt:TransactionsQueries$(mapper: ( transactionId: String, type: String, amount: Long, description: String, date: Long, categoryId: String?, accountId: String, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>TrailingCommaOnDeclarationSite:TransactionsQueries.kt:TransactionsQueries$(mapper: ( transactionId: String, type: String, amount: Long, description: String, date: Long, categoryId: String?, accountId: String, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, categoryName: String?, categoryIcon: String?, categoryColor: String?, categoryType_: String?, ) -&gt; T)</ID>
+    <ID>TrailingCommaOnDeclarationSite:TransactionsQueries.kt:TransactionsQueries$(transactionId: String, mapper: ( transactionId: String, type: String, amount: Long, description: String, date: Long, categoryId: String?, accountId: String, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>UnnecessaryNotNullOperator:BaseTableSync.kt:BaseTableSync$lastSat!!</ID>
+    <ID>UnnecessaryNotNullOperator:BaseTableSync.kt:BaseTableSync$maxInstant!!</ID>
+    <ID>UnnecessaryNotNullOperator:TransactionMappers.kt:categoryColor!!</ID>
+    <ID>UnnecessaryNotNullOperator:TransactionMappers.kt:categoryIcon!!</ID>
+    <ID>UnnecessaryNotNullOperator:TransactionMappers.kt:categoryId!!</ID>
+    <ID>UnnecessaryNotNullOperator:TransactionMappers.kt:categoryName!!</ID>
+    <ID>UnsafeCallOnNullableType:AccountsQueries.kt:AccountsQueries$cursor.getLong(0)!!</ID>
+    <ID>UnsafeCallOnNullableType:AccountsQueries.kt:AccountsQueries$cursor.getLong(4)!!</ID>
+    <ID>UnsafeCallOnNullableType:AccountsQueries.kt:AccountsQueries$cursor.getLong(5)!!</ID>
+    <ID>UnsafeCallOnNullableType:AccountsQueries.kt:AccountsQueries$cursor.getString(0)!!</ID>
+    <ID>UnsafeCallOnNullableType:AccountsQueries.kt:AccountsQueries$cursor.getString(1)!!</ID>
+    <ID>UnsafeCallOnNullableType:AccountsQueries.kt:AccountsQueries$cursor.getString(2)!!</ID>
+    <ID>UnsafeCallOnNullableType:AccountsQueries.kt:AccountsQueries$cursor.getString(3)!!</ID>
+    <ID>UnsafeCallOnNullableType:AccountsQueries.kt:AccountsQueries$cursor.getString(6)!!</ID>
+    <ID>UnsafeCallOnNullableType:AccountsQueries.kt:AccountsQueries$cursor.getString(8)!!</ID>
+    <ID>UnsafeCallOnNullableType:BaseTableSync.kt:BaseTableSync$maxInstant!!</ID>
+    <ID>UnsafeCallOnNullableType:CategoriesQueries.kt:CategoriesQueries$cursor.getBoolean(5)!!</ID>
+    <ID>UnsafeCallOnNullableType:CategoriesQueries.kt:CategoriesQueries$cursor.getLong(0)!!</ID>
+    <ID>UnsafeCallOnNullableType:CategoriesQueries.kt:CategoriesQueries$cursor.getLong(6)!!</ID>
+    <ID>UnsafeCallOnNullableType:CategoriesQueries.kt:CategoriesQueries$cursor.getLong(7)!!</ID>
+    <ID>UnsafeCallOnNullableType:CategoriesQueries.kt:CategoriesQueries$cursor.getString(0)!!</ID>
+    <ID>UnsafeCallOnNullableType:CategoriesQueries.kt:CategoriesQueries$cursor.getString(1)!!</ID>
+    <ID>UnsafeCallOnNullableType:CategoriesQueries.kt:CategoriesQueries$cursor.getString(10)!!</ID>
+    <ID>UnsafeCallOnNullableType:CategoriesQueries.kt:CategoriesQueries$cursor.getString(2)!!</ID>
+    <ID>UnsafeCallOnNullableType:CategoriesQueries.kt:CategoriesQueries$cursor.getString(3)!!</ID>
+    <ID>UnsafeCallOnNullableType:CategoriesQueries.kt:CategoriesQueries$cursor.getString(4)!!</ID>
+    <ID>UnsafeCallOnNullableType:CategoriesQueries.kt:CategoriesQueries$cursor.getString(8)!!</ID>
+    <ID>UnsafeCallOnNullableType:Recurring_movementsQueries.kt:Recurring_movementsQueries$cursor.getLong(0)!!</ID>
+    <ID>UnsafeCallOnNullableType:Recurring_movementsQueries.kt:Recurring_movementsQueries$cursor.getLong(11)!!</ID>
+    <ID>UnsafeCallOnNullableType:Recurring_movementsQueries.kt:Recurring_movementsQueries$cursor.getLong(12)!!</ID>
+    <ID>UnsafeCallOnNullableType:Recurring_movementsQueries.kt:Recurring_movementsQueries$cursor.getLong(8)!!</ID>
+    <ID>UnsafeCallOnNullableType:Recurring_movementsQueries.kt:Recurring_movementsQueries$cursor.getLong(9)!!</ID>
+    <ID>UnsafeCallOnNullableType:Recurring_movementsQueries.kt:Recurring_movementsQueries$cursor.getString(0)!!</ID>
+    <ID>UnsafeCallOnNullableType:Recurring_movementsQueries.kt:Recurring_movementsQueries$cursor.getString(1)!!</ID>
+    <ID>UnsafeCallOnNullableType:Recurring_movementsQueries.kt:Recurring_movementsQueries$cursor.getString(13)!!</ID>
+    <ID>UnsafeCallOnNullableType:Recurring_movementsQueries.kt:Recurring_movementsQueries$cursor.getString(15)!!</ID>
+    <ID>UnsafeCallOnNullableType:Recurring_movementsQueries.kt:Recurring_movementsQueries$cursor.getString(2)!!</ID>
+    <ID>UnsafeCallOnNullableType:Recurring_movementsQueries.kt:Recurring_movementsQueries$cursor.getString(4)!!</ID>
+    <ID>UnsafeCallOnNullableType:Recurring_movementsQueries.kt:Recurring_movementsQueries$cursor.getString(6)!!</ID>
+    <ID>UnsafeCallOnNullableType:Recurring_movementsQueries.kt:Recurring_movementsQueries$cursor.getString(7)!!</ID>
+    <ID>UnsafeCallOnNullableType:TransactionsQueries.kt:TransactionsQueries$cursor.getLong(0)!!</ID>
+    <ID>UnsafeCallOnNullableType:TransactionsQueries.kt:TransactionsQueries$cursor.getLong(1)!!</ID>
+    <ID>UnsafeCallOnNullableType:TransactionsQueries.kt:TransactionsQueries$cursor.getLong(2)!!</ID>
+    <ID>UnsafeCallOnNullableType:TransactionsQueries.kt:TransactionsQueries$cursor.getLong(4)!!</ID>
+    <ID>UnsafeCallOnNullableType:TransactionsQueries.kt:TransactionsQueries$cursor.getLong(7)!!</ID>
+    <ID>UnsafeCallOnNullableType:TransactionsQueries.kt:TransactionsQueries$cursor.getLong(8)!!</ID>
+    <ID>UnsafeCallOnNullableType:TransactionsQueries.kt:TransactionsQueries$cursor.getString(0)!!</ID>
+    <ID>UnsafeCallOnNullableType:TransactionsQueries.kt:TransactionsQueries$cursor.getString(1)!!</ID>
+    <ID>UnsafeCallOnNullableType:TransactionsQueries.kt:TransactionsQueries$cursor.getString(11)!!</ID>
+    <ID>UnsafeCallOnNullableType:TransactionsQueries.kt:TransactionsQueries$cursor.getString(2)!!</ID>
+    <ID>UnsafeCallOnNullableType:TransactionsQueries.kt:TransactionsQueries$cursor.getString(3)!!</ID>
+    <ID>UnsafeCallOnNullableType:TransactionsQueries.kt:TransactionsQueries$cursor.getString(6)!!</ID>
+    <ID>UnsafeCallOnNullableType:TransactionsQueries.kt:TransactionsQueries$cursor.getString(9)!!</ID>
+    <ID>VariableNaming:EmmDatabaseData.kt:EmmDatabaseData$public val recurring_movementsQueries: Recurring_movementsQueries</ID>
+    <ID>Wrapping:AccountsQueries.kt:AccountsQueries$(</ID>
+    <ID>Wrapping:AccountsQueries.kt:AccountsQueries$(1_064_494_087, """ |INSERT OR REPLACE INTO accounts(accountId, name, type, currency, updatedAt, createdAt, syncState) |VALUES (?, ?, ?, ?, ?, ?, 'Pending') """.trimMargin(), 6)</ID>
+    <ID>Wrapping:AccountsQueries.kt:AccountsQueries$(1_409_440_279, """ |UPDATE accounts |SET name = ?, type = ?, updatedAt = ?, syncState = 'Pending' |WHERE accountId = ? """.trimMargin(), 4)</ID>
+    <ID>Wrapping:AccountsQueries.kt:AccountsQueries$(1_725_229_251, """ |UPDATE accounts |SET deletedAt = ?, updatedAt = ?, syncState = 'Pending' |WHERE accountId = ? """.trimMargin(), 3)</ID>
+    <ID>Wrapping:AccountsQueries.kt:AccountsQueries$(1_976_424_967, """ |UPDATE accounts |SET name = ?, type = ?, currency = ?, updatedAt = ?, createdAt = ?, userId = ?, deletedAt = ?, syncState = 'Synced' |WHERE accountId = ? """.trimMargin(), 8)</ID>
+    <ID>Wrapping:AccountsQueries.kt:AccountsQueries$(210_684_012, """ |INSERT OR IGNORE INTO accounts(accountId, name, type, currency, updatedAt, createdAt, userId, deletedAt, syncState) |VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Synced') """.trimMargin(), 8)</ID>
+    <ID>Wrapping:AccountsQueries.kt:AccountsQueries$(accountId: String, mapper: ( accountId: String, name: String, type: String, currency: String, updatedAt: Long, createdAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>Wrapping:CategoriesQueries.kt:CategoriesQueries$(</ID>
+    <ID>Wrapping:CategoriesQueries.kt:CategoriesQueries$(-623_976_670, """ |INSERT OR IGNORE INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt, userId, deletedAt, syncState) |VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Synced') """.trimMargin(), 10)</ID>
+    <ID>Wrapping:CategoriesQueries.kt:CategoriesQueries$(-895_177_265, """ |UPDATE categories |SET name = ?, updatedAt = ?, syncState = 'Pending' |WHERE categoryId = ? """.trimMargin(), 3)</ID>
+    <ID>Wrapping:CategoriesQueries.kt:CategoriesQueries$(1_664_113_725, """ |INSERT OR REPLACE INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt, syncState) |VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending') """.trimMargin(), 8)</ID>
+    <ID>Wrapping:CategoriesQueries.kt:CategoriesQueries$(1_834_157_757, """ |UPDATE categories |SET name = ?, icon = ?, color = ?, categoryType = ?, isDefault = ?, updatedAt = ?, createdAt = ?, userId = ?, deletedAt = ?, syncState = 'Synced' |WHERE categoryId = ? """.trimMargin(), 10)</ID>
+    <ID>Wrapping:CategoriesQueries.kt:CategoriesQueries$(34_559_481, """ |UPDATE categories |SET deletedAt = ?, updatedAt = ?, syncState = 'Pending' |WHERE categoryId = ? """.trimMargin(), 3)</ID>
+    <ID>Wrapping:CategoriesQueries.kt:CategoriesQueries$(categoryId: String, mapper: ( categoryId: String, name: String, icon: String, color: String, categoryType: String, isDefault: Boolean, updatedAt: Long, createdAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>Wrapping:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$(</ID>
+    <ID>Wrapping:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$(null, """ |CREATE TABLE accounts ( | accountId TEXT NOT NULL PRIMARY KEY, | name TEXT NOT NULL, | type TEXT NOT NULL DEFAULT 'Bank', | currency TEXT NOT NULL DEFAULT 'PEN', | updatedAt INTEGER NOT NULL, | createdAt INTEGER NOT NULL |) """.trimMargin(), 0)</ID>
+    <ID>Wrapping:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$(null, """ |CREATE TABLE accounts ( | accountId TEXT NOT NULL PRIMARY KEY, | name TEXT NOT NULL, | type TEXT NOT NULL DEFAULT 'Bank', | currency TEXT NOT NULL DEFAULT 'PEN', | updatedAt INTEGER NOT NULL, | createdAt INTEGER NOT NULL, | userId TEXT, | deletedAt INTEGER, | syncState TEXT NOT NULL DEFAULT 'Pending' |) """.trimMargin(), 0)</ID>
+    <ID>Wrapping:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$(null, """ |CREATE TABLE categories ( | categoryId TEXT NOT NULL PRIMARY KEY, | name TEXT NOT NULL, | icon TEXT NOT NULL, | color TEXT NOT NULL, | categoryType TEXT NOT NULL, | isDefault INTEGER NOT NULL DEFAULT 0, | updatedAt INTEGER NOT NULL, | createdAt INTEGER NOT NULL |) """.trimMargin(), 0)</ID>
+    <ID>Wrapping:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$(null, """ |CREATE TABLE categories ( | categoryId TEXT NOT NULL PRIMARY KEY, | name TEXT NOT NULL, | icon TEXT NOT NULL, | color TEXT NOT NULL, | categoryType TEXT NOT NULL, | isDefault INTEGER NOT NULL DEFAULT 0, | updatedAt INTEGER NOT NULL, | createdAt INTEGER NOT NULL, | userId TEXT, | deletedAt INTEGER, | syncState TEXT NOT NULL DEFAULT 'Pending' |) """.trimMargin(), 0)</ID>
+    <ID>Wrapping:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$(null, """ |CREATE TABLE recurring_movements ( | id TEXT NOT NULL PRIMARY KEY, | name TEXT NOT NULL, | type TEXT NOT NULL, | amount INTEGER, | description TEXT NOT NULL DEFAULT '', | categoryId TEXT REFERENCES categories(categoryId) ON DELETE SET NULL, | accountId TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT, | frequency TEXT NOT NULL DEFAULT 'Monthly', | dayOfMonth INTEGER NOT NULL, | isActive INTEGER NOT NULL DEFAULT 1, | lastConfirmedPeriod TEXT, | createdAt INTEGER NOT NULL, | updatedAt INTEGER NOT NULL |) """.trimMargin(), 0)</ID>
+    <ID>Wrapping:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$(null, """ |CREATE TABLE recurring_movements ( | id TEXT NOT NULL PRIMARY KEY, | name TEXT NOT NULL, | type TEXT NOT NULL, | amount INTEGER, | description TEXT NOT NULL DEFAULT '', | categoryId TEXT REFERENCES categories(categoryId) ON DELETE SET NULL, | accountId TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT, | frequency TEXT NOT NULL DEFAULT 'Monthly', | dayOfMonth INTEGER NOT NULL, | isActive INTEGER NOT NULL DEFAULT 1, | lastConfirmedPeriod TEXT, | createdAt INTEGER NOT NULL, | updatedAt INTEGER NOT NULL, | userId TEXT, | deletedAt INTEGER, | syncState TEXT NOT NULL DEFAULT 'Pending' |) """.trimMargin(), 0)</ID>
+    <ID>Wrapping:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$(null, """ |CREATE TABLE transactions ( | transactionId TEXT NOT NULL PRIMARY KEY, | type TEXT NOT NULL, | amount INTEGER NOT NULL, | description TEXT NOT NULL DEFAULT '', | date INTEGER NOT NULL, | categoryId TEXT REFERENCES categories(categoryId) ON DELETE SET NULL, | accountId TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT, | createdAt INTEGER NOT NULL, | updatedAt INTEGER NOT NULL |) """.trimMargin(), 0)</ID>
+    <ID>Wrapping:EmmDatabaseDataImpl.kt:EmmDatabaseDataImpl.Schema$(null, """ |CREATE TABLE transactions ( | transactionId TEXT NOT NULL PRIMARY KEY, | type TEXT NOT NULL, | amount INTEGER NOT NULL, | description TEXT NOT NULL DEFAULT '', | date INTEGER NOT NULL, | categoryId TEXT REFERENCES categories(categoryId) ON DELETE SET NULL, | accountId TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT, | createdAt INTEGER NOT NULL, | updatedAt INTEGER NOT NULL, | userId TEXT, | deletedAt INTEGER, | syncState TEXT NOT NULL DEFAULT 'Pending' |) """.trimMargin(), 0)</ID>
+    <ID>Wrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(</ID>
+    <ID>Wrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(-1_946_049_388, """ |INSERT OR IGNORE INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, lastConfirmedPeriod, createdAt, updatedAt, userId, deletedAt, syncState) |VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Synced') """.trimMargin(), 15)</ID>
+    <ID>Wrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(-365_253_909, """ |UPDATE recurring_movements |SET deletedAt = ?, updatedAt = ?, syncState = 'Pending' |WHERE id = ? """.trimMargin(), 3)</ID>
+    <ID>Wrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(-699_179_473, """ |UPDATE recurring_movements |SET name = ?, type = ?, amount = ?, description = ?, categoryId = ?, accountId = ?, frequency = ?, dayOfMonth = ?, isActive = ?, lastConfirmedPeriod = ?, createdAt = ?, updatedAt = ?, userId = ?, deletedAt = ?, syncState = 'Synced' |WHERE id = ? """.trimMargin(), 15)</ID>
+    <ID>Wrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(-939_046_180, """ |UPDATE recurring_movements |SET lastConfirmedPeriod = ?, updatedAt = ?, syncState = 'Pending' |WHERE id = ? """.trimMargin(), 3)</ID>
+    <ID>Wrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(1_034_907_711, """ |UPDATE recurring_movements |SET name = ?, type = ?, amount = ?, description = ?, categoryId = ?, accountId = ?, dayOfMonth = ?, isActive = ?, updatedAt = ?, syncState = 'Pending' |WHERE id = ? """.trimMargin(), 10)</ID>
+    <ID>Wrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(1_806_018_381, arrayOf("recurring_movements", "categories", "accounts"), driver, "recurring_movements.sq", "selectAllWithDetails", """ |SELECT | rm.id, rm.name, rm.type, rm.amount, rm.description, rm.categoryId, rm.accountId, rm.frequency, rm.dayOfMonth, rm.isActive, rm.lastConfirmedPeriod, rm.createdAt, rm.updatedAt, rm.userId, rm.deletedAt, rm.syncState, | c.name AS categoryName, | c.color AS categoryColor, | a.name AS accountName |FROM recurring_movements rm |LEFT JOIN categories c ON rm.categoryId = c.categoryId AND c.deletedAt IS NULL |LEFT JOIN accounts a ON rm.accountId = a.accountId AND a.deletedAt IS NULL |WHERE rm.deletedAt IS NULL |ORDER BY rm.isActive DESC, rm.dayOfMonth, rm.name """.trimMargin())</ID>
+    <ID>Wrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(689_961_519, """ |INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, lastConfirmedPeriod, createdAt, updatedAt, syncState) |VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending') """.trimMargin(), 13)</ID>
+    <ID>Wrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(id: String, mapper: ( id: String, name: String, type: String, amount: Long?, description: String, categoryId: String?, accountId: String, frequency: String, dayOfMonth: Long, isActive: Long, lastConfirmedPeriod: String?, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>Wrapping:Recurring_movementsQueries.kt:Recurring_movementsQueries$(null, """ |UPDATE recurring_movements |SET categoryId = NULL, updatedAt = ?, syncState = 'Pending' |WHERE categoryId ${ if (categoryId == null) "IS" else "=" } ? AND deletedAt IS NULL """.trimMargin(), 2)</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries$(</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries$(-1_379_603_210, """ |UPDATE transactions |SET type = ?, amount = ?, description = ?, date = ?, categoryId = ?, accountId = ?, createdAt = ?, updatedAt = ?, userId = ?, deletedAt = ?, syncState = 'Synced' |WHERE transactionId = ? """.trimMargin(), 11)</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries$(-1_724_416_933, """ |INSERT OR IGNORE INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt, userId, deletedAt, syncState) |VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Synced') """.trimMargin(), 11)</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries$(-333_939_770, """ |UPDATE transactions |SET type = ?, amount = ?, description = ?, date = ?, accountId = ?, categoryId = ?, updatedAt = ?, syncState = 'Pending' |WHERE transactionId = ? """.trimMargin(), 8)</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries$(-560_686_350, """ |UPDATE transactions |SET deletedAt = ?, updatedAt = ?, syncState = 'Pending' |WHERE transactionId = ? """.trimMargin(), 3)</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries$(-678_885_962, """ |INSERT OR REPLACE INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt, syncState) |VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending') """.trimMargin(), 9)</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries$(1_036_633_451, arrayOf("transactions", "categories"), driver, "transactions.sq", "completeTransactions", """ |SELECT | t.transactionId, t.type, t.amount, t.description, t.date, t.categoryId, t.accountId, t.createdAt, t.updatedAt, t.userId, t.deletedAt, t.syncState, | c.name AS categoryName, | c.icon AS categoryIcon, | c.color AS categoryColor, | c.categoryType AS categoryType_ |FROM transactions t |LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL |WHERE t.deletedAt IS NULL |ORDER BY t.date DESC """.trimMargin())</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries$(467_583_704, arrayOf("transactions"), driver, "transactions.sq", "lastUsedAccountId", """ |SELECT accountId |FROM transactions |WHERE deletedAt IS NULL |ORDER BY date DESC, createdAt DESC |LIMIT 1 """.trimMargin())</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries$(null, """ |UPDATE transactions |SET categoryId = NULL, updatedAt = ?, syncState = 'Pending' |WHERE categoryId ${ if (categoryId == null) "IS" else "=" } ? AND deletedAt IS NULL """.trimMargin(), 2)</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries$(transactionId: String, mapper: ( transactionId: String, type: String, amount: Long, description: String, date: Long, categoryId: String?, accountId: String, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries.CompleteTransactionsByDateRangeQuery$(</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries.CompleteTransactionsByDateRangeQuery$(-1_482_498_771, """ |SELECT | t.transactionId, t.type, t.amount, t.description, t.date, t.categoryId, t.accountId, t.createdAt, t.updatedAt, t.userId, t.deletedAt, t.syncState, | c.name AS categoryName, | c.icon AS categoryIcon, | c.color AS categoryColor, | c.categoryType AS categoryType_ |FROM transactions t |LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL |WHERE t.deletedAt IS NULL | AND t.date &gt;= ? | AND t.date &lt; ? |ORDER BY t.date DESC """.trimMargin(), mapper, 2)</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries.GetAccountBalanceQuery$(</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries.GetAccountBalanceQuery$(256_235_976, """ |SELECT COALESCE( | SUM(CASE WHEN type = 'Income' THEN amount WHEN type = 'Spend' THEN -amount ELSE 0 END), 0 |) |FROM transactions |WHERE accountId = ? AND deletedAt IS NULL """.trimMargin(), mapper, 1)</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries.MonthlyAmountByCategoryQuery$(</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries.MonthlyAmountByCategoryQuery$(-265_087_555, """ |SELECT | c.categoryId AS categoryId, | c.name AS categoryName, | c.icon AS categoryIcon, | c.color AS categoryColor, | SUM(t.amount) AS totalAmount |FROM transactions t |INNER JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL |WHERE t.type = ? | AND t.date &gt;= ? | AND t.date &lt; ? | AND t.deletedAt IS NULL |GROUP BY c.categoryId |ORDER BY totalAmount DESC """.trimMargin(), mapper, 3)</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries.MonthlyStatsQuery$(</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries.MonthlyStatsQuery$(589_469_135, """ |SELECT COUNT(*) AS movementCount, COALESCE(SUM(amount), 0) AS totalAmount |FROM transactions |WHERE type = ? | AND date &gt;= ? | AND date &lt; ? | AND deletedAt IS NULL """.trimMargin(), mapper, 3)</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries.SearchTransactionsQuery$(</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries.SearchTransactionsQuery$(null, """ |SELECT | t.transactionId, t.type, t.amount, t.description, t.date, t.categoryId, t.accountId, t.createdAt, t.updatedAt, t.userId, t.deletedAt, t.syncState, | c.name AS categoryName, | c.icon AS categoryIcon, | c.color AS categoryColor, | c.categoryType AS categoryType_ |FROM transactions t |LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL |WHERE t.deletedAt IS NULL | AND (? = 1 OR LOWER(t.description) LIKE '%' || LOWER(?) || '%') | AND (? = 1 OR t.categoryId IN $categoryIdsIndexes) |ORDER BY t.date DESC """.trimMargin(), mapper, 3 + categoryIds.size)</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries.TopUsedCategoryIdsQuery$(</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries.TopUsedCategoryIdsQuery$(460_947_013, """ |SELECT categoryId |FROM transactions |WHERE categoryId IS NOT NULL | AND type = ? | AND date &gt;= ? | AND deletedAt IS NULL |GROUP BY categoryId |ORDER BY COUNT(*) DESC, MAX(date) DESC |LIMIT ? """.trimMargin(), mapper, 3)</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries.TopUsedCombosQuery$(</ID>
+    <ID>Wrapping:TransactionsQueries.kt:TransactionsQueries.TopUsedCombosQuery$(1_895_883_866, """ |SELECT accountId, categoryId, type |FROM transactions |WHERE categoryId IS NOT NULL | AND type = ? | AND date &gt;= ? | AND deletedAt IS NULL |GROUP BY accountId, categoryId, type |ORDER BY COUNT(*) DESC, MAX(date) DESC |LIMIT ? """.trimMargin(), mapper, 3)</ID>
+  </CurrentIssues>
+</SmellBaseline>
