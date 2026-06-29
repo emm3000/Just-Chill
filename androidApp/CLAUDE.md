@@ -29,15 +29,25 @@ ViewModels should **never** depend on SQLDelight types directly — go through d
 
 ## DI (Koin)
 
-Modules live in `hh/di/` (plus `core/CoreModule.kt`):
+Since the slice H dedup, the feature DI modules **and** the `:data`-binding wiring
+(`supabaseModule`, `syncModule`, `authModule`, `dataModule`, `commonCoreModule`)
+live in `shared-ui/commonMain` (`com.emm.justchill.hh.di` / `core`), not in
+`:androidApp`. The shared module list and the post-`startKoin` bootstrap are exposed
+via `appModules(platformModule)` + `bootstrapAppGraph(koin)` in
+`shared-ui/commonMain/core/AppGraph.kt`.
 
-- `dbModule` — SQLDelight driver + `EmmDatabaseData`
-- `supabaseModule` — `SupabaseClient` (auth + postgrest)
-- `accountModule`, `categoryModule`, `transactionModule`, `authModule` — feature wiring (data sources, repository impls, use cases, ViewModels)
-- `syncModule` — per-table `TableSync` units (qualified), `DefaultSyncRepository`, `SyncDataUseCase` (**single** — holds the mutex that serializes sync cycles), `SyncCursorStore` adapter
-- `hhModule` — top-level aggregator
+Only genuine platform bits live in `androidPlatformModule`
+(`androidApp/core/AndroidPlatformModule.kt`):
 
-A new feature module should be registered in `EmmApp` alongside the others.
+- DB `single` (driver + onCreate seed) + `EmmDatabaseData`
+- `Settings` backend (`SharedPreferencesSettings`)
+- `SupabaseConfig`
+- `GoogleSignInLauncher` (+ `GoogleCredentialClient`)
+- `appVersion` / `googleServerClientId` — named `String`s from `BuildConfig`
+- `DispatchersProvider`
+- `CurrentActivityHolder`
+
+A new feature module is registered in `appModules()` (commonMain), **not** in `EmmApp`.
 
 ## UI
 

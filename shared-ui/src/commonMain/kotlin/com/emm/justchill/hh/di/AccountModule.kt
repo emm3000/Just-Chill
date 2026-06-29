@@ -11,8 +11,8 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 // Domain use-case + ViewModel wiring only. The DefaultAccountRepository ->
-// AccountRepository binding lives in :app HhModule.repositoriesProviders()
-// because commonMain depends on :domain only, not :data.
+// AccountRepository bind lives in commonMain hh/di/DataModule.kt (commonMain
+// depends on :data since slice H); platform singles live in each platformModule.
 val accountModule = module {
     factoryOf(::CreateAccountUseCase)
     factoryOf(::DeleteAccountUseCase)

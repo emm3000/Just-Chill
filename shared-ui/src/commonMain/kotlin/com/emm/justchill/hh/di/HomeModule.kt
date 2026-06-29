@@ -6,8 +6,8 @@ import org.koin.dsl.module
 
 // Home has no exclusive use cases — its dependencies (transaction/recurring use
 // cases, Clock) are bound by their own modules and resolve globally at startup.
-// Repository binds + data sources stay in :app HhModule because commonMain
-// depends on :domain only, not :data.
+// Repository + data-source binds live in commonMain hh/di/DataModule.kt
+// (commonMain depends on :data since slice H).
 val homeModule = module {
     viewModelOf(::HomeViewModel)
 }

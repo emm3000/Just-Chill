@@ -6,8 +6,8 @@ import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
 // Domain use-case wiring only. The DefaultBackupRepository -> BackupRepository
-// binding lives in :app HhModule because commonMain depends on :domain only,
-// not :data.
+// bind lives in commonMain hh/di/DataModule.kt (commonMain depends on :data
+// since slice H).
 val backupModule = module {
     factoryOf(::ExportDataUseCase)
     factoryOf(::ImportDataUseCase)

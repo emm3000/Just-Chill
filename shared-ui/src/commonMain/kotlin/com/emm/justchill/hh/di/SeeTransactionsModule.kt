@@ -5,8 +5,8 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 // ViewModel wiring only; its use cases live in transactionModule and resolve
-// globally. Repository binds + data sources stay in :app HhModule because
-// commonMain depends on :domain only, not :data.
+// globally. Repository + data-source binds live in commonMain hh/di/DataModule.kt
+// (commonMain depends on :data since slice H).
 val seetransactionsModule = module {
     viewModelOf(::SeeTransactionsViewModel)
 }

@@ -10,8 +10,8 @@ import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
-// Domain use-case + ViewModel wiring only. Repository binds + data sources stay
-// in :app HhModule because commonMain depends on :domain only, not :data.
+// Domain use-case + ViewModel wiring only. Repository + data-source binds live
+// in commonMain hh/di/DataModule.kt (commonMain depends on :data since slice H).
 val reportModule = module {
     factoryOf(::GetMonthlyAmountByCategoryUseCase)
     factoryOf(::GetMonthlyComparisonUseCase)

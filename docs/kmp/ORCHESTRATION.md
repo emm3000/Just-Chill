@@ -147,6 +147,7 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
 | cleanup | hoist replaceAll, drop orphan dep + unused atom, fix stale docs | `0784014` | ✅ (writer + cheap-verify) |
 | F | merge Android + iOS nav hosts → one commonMain `AppNavHost`; Android → JetBrains nav3-UI | `186d3b6` | ✅ (writer+reviewer Opus; net −254) |
 | G | implement iOS `PlatformHostActions` (export/import/share/email via UIKit) + enable privacy policy | `139518a` | ✅ (writer+reviewer Opus; modals need sim verify) |
+| H | dedup Koin platform-wiring → one commonMain copy each + injected `platformModule`; reverse commonMain `:domain`-only rule (commonMain → `:data`) | `56314ba` | ✅ (writer+reviewer Opus; net −210; iOS Koin runtime needs sim verify) |
 
 ### Carry-forward decisions / landmines
 - **Nav host UNIFIED (Option A reversed, slice F `186d3b6`).** Both platforms now
@@ -174,3 +175,4 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
   to the compile gate. The export/import/share/email/mail modals are compile- +
   launch-verified only — their live round-trips MUST be driven on the iOS simulator
   by a human (no idb/XCUITest here).
+- **commonMain → :data layering REVERSED (slice H `56314ba`).** Was `:domain`-only (a pre-KMP rail). shared-ui/commonMain now depends on `:data`, so the DI wiring (`syncModule`/`authModule`/`dataModule`/`supabaseModule`) is ONE commonMain copy parameterized by a per-platform `platformModule` (DB single + seed, `Settings` backend, `SupabaseConfig`, `GoogleSignInLauncher`, `appVersion`, `googleServerClientId`). Tradeoff: lost the compile-time guardrail that blocked a ViewModel importing `Default*Repository`/SQLDelight types — VM purity is now CONVENTION only. `startKoin{}` itself can't be shared (Android needs koin-android `androidContext`/`androidLogger`, absent in commonMain); only the module list (`appModules`) + post-start `bootstrapAppGraph` (claim observer + `orchestrator.start()`) are shared. Koin failures are RUNTIME-ONLY (invisible to the compiler AND the Android gate) — iOS `initKoin()` runtime resolution STILL needs a human simulator run; static bind-trace + `compileKotlinIosSimulatorArm64` are green but that is not a device launch.

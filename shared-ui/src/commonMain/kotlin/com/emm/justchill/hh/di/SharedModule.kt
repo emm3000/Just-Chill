@@ -6,9 +6,9 @@ import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-// Cross-cutting agnostic/domain wiring shared across features. commonMain
-// depends on :domain only, not :data. DefaultUniqueIdProvider lives in
-// shared-ui commonMain (slice 8a), so this binding belongs in commonMain now.
+// Cross-cutting agnostic/domain wiring shared across features.
+// DefaultUniqueIdProvider lives in shared-ui commonMain (slice 8a), so this
+// binding belongs in commonMain.
 val sharedModule = module {
     factory { DateAndTimeCombiner() }
     factory { DefaultUniqueIdProvider } bind UniqueIdProvider::class
