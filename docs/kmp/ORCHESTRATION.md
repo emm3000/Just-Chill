@@ -131,7 +131,7 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
 ## Phase 7 — dedup ledger (one Compose base)
 
 > Distinct from the Phase 3 feature-migration above. Goal: kill Android/iOS
-> duplication, push platform-specifics behind `expect/actual`. Slices A–E2 +
+> duplication, push platform-specifics behind `expect/actual`. Slices A–F +
 > cleanup, all writer+reviewer Opus except the low-risk cleanup (writer +
 > cheap-verify). Branch `kmp/phase-0-scaffolding`, linear, not pushed.
 
@@ -144,17 +144,23 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
 | E1 | nav route keys + BottomBar + ProfileMessage → commonMain; nav3-runtime → common | `a02c09b` | ✅ |
 | E2 | iOS sync retry snackbar + Manifesto first-launch gate (commonMain handlers) | `de26928` | ✅ |
 | cleanup | hoist replaceAll, drop orphan dep + unused atom, fix stale docs | `0784014` | ✅ (writer + cheap-verify) |
+| F | merge Android + iOS nav hosts → one commonMain `AppNavHost`; Android → JetBrains nav3-UI | `186d3b6` | ✅ (writer+reviewer Opus; net −254) |
 
 ### Carry-forward decisions / landmines
-- **Nav split is deliberate (Option A), NOT reversed.** Android = Google
-  `androidx.navigation3`, iOS = JetBrains port. nav3-RUNTIME is multiplatform
-  (in commonMain since E1); nav3-UI stays split per platform. Fully unifying the
-  `NavDisplay` host = forcing shipped Android nav onto the JetBrains UI port =
-  predictive-back regression risk for modest payoff. Evaluated 2026-06-28, HELD.
-- **iOS nav-state landmine:** K/N has no reflection serializer discovery — every
-  route the iOS host pushes MUST be registered in `iosNavSavedStateConfiguration`
-  (`IosRoutes.kt`), else `rememberNavBackStack` crashes on restore. Invisible to
-  the compiler + the Android gate.
+- **Nav host UNIFIED (Option A reversed, slice F `186d3b6`).** Both platforms now
+  run ONE commonMain `AppNavHost` on the JetBrains nav3-UI port (Google nav3-UI
+  dropped from `:androidApp`). The earlier HELD decision (predictive-back regression
+  risk) was lifted by a spike: `enableOnBackInvokedCallback` is absent from every
+  manifest, so the app never opted into the predictive-back gesture — there was
+  nothing to regress. Device process-death restore verified on both the spike and
+  slice F. The 5 platform-divergent capabilities (export/import/share/email/privacy)
+  live behind `expect/actual PlatformHostActions`.
+- **Nav-state landmine (now BOTH platforms):** since slice F, Android also uses the
+  2-arg `rememberNavBackStack(navSavedStateConfiguration, …)`. Every route the host
+  can push MUST be registered in `NavSavedStateConfiguration.kt` (commonMain), else
+  `rememberNavBackStack` crashes on process-death restore. K/N has no reflection
+  serializer discovery; Android's explicit config must stay complete too. Invisible
+  to the compiler + the Android compile gate — only process-death restore catches it.
 - **Build.ID prefs bug FIXED** (`4d2e204`): the SharedPreferences file was named
   after `Build.ID` → wiped on every OS update. Now stable `justchill_prefs` +
   one-time migration. (Not a dedup slice; Android-only `CoreModule`.)
