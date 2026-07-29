@@ -191,18 +191,19 @@ val generateIosSupabaseConfig by tasks.registering {
     }
 }
 
-// Register the generated dir on the iOS source sets and make the iOS compile depend on the task.
+// Register the generated dir on the iOS source set. The TaskProvider (not the bare Directory
+// provider) is passed on purpose: srcDir then carries the task dependency through the source set's
+// declared outputs, so EVERY consumer of iosMain — Kotlin/Native compiles, detekt, detekt baseline,
+// IDE sync — depends on the generator implicitly. Registering the plain directory instead makes
+// Gradle 9 fail the build with "uses this output of task ':shared-ui:generateIosSupabaseConfig'
+// without declaring an explicit or implicit dependency" for any consumer that lacks its own
+// dependsOn (detekt hit exactly this once detektIosMainSourceSet joined the KMP gate).
 kotlin {
     sourceSets {
         iosMain {
-            kotlin.srcDir(generatedIosConfigDir)
+            kotlin.srcDir(generateIosSupabaseConfig)
         }
     }
-}
-
-// Every Kotlin/Native (iOS) compile task must see the generated file before compiling.
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile>().configureEach {
-    dependsOn(generateIosSupabaseConfig)
 }
 
 dependencies {
