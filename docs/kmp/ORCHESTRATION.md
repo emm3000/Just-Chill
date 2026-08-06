@@ -80,10 +80,11 @@ Before delegating, map the slice cheaply so the writer prompt is precise:
 ./gradlew assembleDevDebug
 ./gradlew :androidApp:testDevDebugUnitTest
 ./gradlew :shared-ui:testAndroidHostTest
-# detekt — REAL KMP coverage (see note below; all three must exit 0)
+# detekt — REAL KMP coverage (see note below; all four must exit 0)
 ./gradlew detektMainAndroid        # KMP modules (domain, data, shared-ui): commonMain + androidMain, WITH type resolution
 ./gradlew detektIosMainSourceSet   # KMP modules: iosMain — NO type resolution (Native has none in detekt 2.0)
 ./gradlew :androidApp:detektMain   # androidApp: all variants, WITH type resolution
+./gradlew :shared-ui:detektAndroidHostTestSourceSet   # shared-ui androidHostTest (JVM-only test source set)
 ```
 The iOS compile is the real proof the de-JVM worked. The Android gate alone does
 NOT catch a missing Koin binding — that's why the reviewer re-runs + traces DI.
