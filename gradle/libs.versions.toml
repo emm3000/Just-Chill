@@ -115,6 +115,14 @@ sqldelight-native-driver = { module = "app.cash.sqldelight:native-driver", versi
 # multiplatform-settings — KMP key-value store behind AppPreferences (commonMain). Provides the
 # common Settings interface plus SharedPreferencesSettings (Android) and NSUserDefaultsSettings (iOS).
 multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatformSettings" }
+# Official in-memory Settings double (MapSettings) from the same release train. Test-only: it backs
+# the fake platform module of the shared-ui Koin graph test, so no SharedPreferences/Context is needed.
+multiplatform-settings-test = { module = "com.russhwolf:multiplatform-settings-test", version.ref = "multiplatformSettings" }
+# Already on the RUNTIME classpath transitively (supabase-kt's Auth plugin builds its default
+# SettingsSessionManager through the no-arg Settings() factory). Declared explicitly for host tests
+# only, to compile-reference SettingsInitializer — the library's documented hook for supplying the
+# Android Context that androidx.startup provides in a real app but not in a JVM unit test.
+multiplatform-settings-no-arg = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettings" }
 
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentialsVersion" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentialsVersion" }

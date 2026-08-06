@@ -119,6 +119,25 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
         }
+        // JVM host tests (no device). Home of the whole-graph Koin resolution test: a missing or
+        // wrong binding is invisible to both the Kotlin compiler and assembleDevDebug, so the graph
+        // is built off-device against a fake platform module instead. Everything here is JVM-only on
+        // purpose and must never leak into commonMain (the iOS compile gate would break).
+        getByName("androidHostTest").dependencies {
+            implementation(libs.junit)
+            // Dispatchers.setMain — the ViewModels under test create a viewModelScope on construction.
+            implementation(libs.kotlinx.coroutines.test)
+            // In-memory JDBC SQLite: the fake platform module creates the REAL SQLDelight schema, so
+            // the graph binds a real EmmDatabaseData instead of a mock (same driver :data's tests use).
+            implementation(libs.sqlite.driver)
+            // MapSettings — in-memory Settings backing AppPreferences without SharedPreferences.
+            implementation(libs.multiplatform.settings.test)
+            // SettingsInitializer + a mock Context: supabase-kt's Auth plugin builds its default
+            // SettingsSessionManager through the no-arg Settings(), which on Android gets its
+            // Context from androidx.startup — absent in a host test. See AppGraphKoinTest.setUp.
+            implementation(libs.multiplatform.settings.no.arg)
+            implementation(libs.mockk)
+        }
     }
 }
 
