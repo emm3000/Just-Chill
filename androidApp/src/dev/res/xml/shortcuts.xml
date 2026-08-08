@@ -11,16 +11,4 @@
             android:targetPackage="com.emm.justchill.dev"
             android:targetClass="com.emm.justchill.experiences.ShortActivity" />
     </shortcut>
-    <shortcut
-        android:shortcutId="loans"
-        android:enabled="true"
-        android:icon="@mipmap/ic_loans_icon"
-        android:roundIcon="@mipmap/ic_loans_icon_round"
-        android:shortcutShortLabel="@string/dev_loans"
-        android:shortcutLongLabel="@string/dev_loans">
-        <intent
-            android:action="android.intent.action.VIEW"
-            android:targetPackage="com.emm.justchill.dev"
-            android:targetClass="com.emm.justchill.me.MeActivity" />
-    </shortcut>
 </shortcuts>

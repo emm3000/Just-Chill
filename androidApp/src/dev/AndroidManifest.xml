@@ -19,11 +19,6 @@
         <activity
             android:name=".experiences.ShortActivity"
             android:exported="true" />
-
-        <activity
-            android:name=".me.MeActivity"
-            android:windowSoftInputMode="adjustResize"
-            android:exported="true" />
     </application>
 
 </manifest>

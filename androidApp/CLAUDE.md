@@ -18,8 +18,9 @@ hh/auth/ActivityGoogleSignInLauncher.kt + GoogleCredentialClient.kt
 components/EmmAmountChill.kt + EmmComponentsPreview.kt   (Android-only @Preview surface)
 ```
 
-`core/preferences/`, `core/sync/`, `core/ui/`, `hh/di/` are **empty leftover directories** from the
-migration. Delete them when you next touch this module; don't put anything back in them.
+If you find empty `core/preferences/`, `core/sync/`, `core/ui/` or `hh/di/` directories here, they
+are local residue from the KMP migration (git does not track empty directories). Delete them;
+nothing belongs in them anymore.
 
 ## Platform Koin module
 
