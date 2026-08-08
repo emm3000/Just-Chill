@@ -8,14 +8,15 @@
 
 - **Orchestrator** (main thread, Opus): scopes the slice, delegates, verifies
   cheaply, keeps its own context clean. Does NOT write feature code inline.
-- **Writer** (delegated sub-agent, **Opus 4.8**): does the actual move +
-  de-JVM + Koin split for one slice. Fresh context, full task prompt.
-- **Reviewer** (delegated sub-agent, **Opus 4.8**, fresh context): adversarial
+- **Writer** (delegated sub-agent, **Opus**): does the actual move + de-JVM +
+  Koin split for one slice. Fresh context, full task prompt.
+- **Reviewer** (delegated sub-agent, **Opus**, fresh context): adversarial
   double-check of the writer's commit. Different agent instance — no shared
   context with the writer. Finds breakage / risky changes the gate can't catch.
 
-Both writer and reviewer are Opus 4.8. The user does not trust mechanical KMP
-work to Sonnet; this migration runs Opus end to end.
+Both writer and reviewer are Opus — the current top model, whatever its version
+number is at the time. The user does not trust mechanical KMP work to Sonnet;
+this work runs Opus end to end.
 
 ## Per-slice loop
 
@@ -54,7 +55,7 @@ Before delegating, map the slice cheaply so the writer prompt is precise:
 ### 3. Cheap-verify (orchestrator, inline)
 - `git log --oneline` — commit landed.
 - `rg -l 'import (java|javax|android)\.' shared-ui/src/commonMain` — must be empty.
-- Confirm the moved dir is gone from `app/src/main`.
+- Confirm the moved dir is gone from `androidApp/src/main`.
 - Do NOT re-run the full build here (expensive) — the reviewer does that.
 
 ### 4. Reviewer prompt must include

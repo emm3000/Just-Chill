@@ -1,6 +1,11 @@
 # PLAN_REDESIGN — Notion-Dark visual refactor
 
-Status: **executing** · Started 2026-05-19 · Tag: `pre-redesign`
+Status: **closed** (archived) · Started 2026-05-19 · Tag: `pre-redesign`
+
+> Historical record of the Notion-Dark redesign track. It shipped; the tokens it
+> produced live in `docs/DESIGN_SYSTEM.md` and `shared-ui/commonMain/core/theme/`.
+> Kept for the reasoning, not as a live checklist. Paths below predate the KMP
+> migration (`:app` is now `:androidApp`, and the UI lives in `:shared-ui`).
 
 Refactor visual completo basado en el handoff de Claude Design ("JustChill — Notion Dark", entregado 2026-05-19). Mantiene 100% de la arquitectura actual (Clean + MVI + Koin + SQLDelight). **Sólo toca la capa Compose.**
 

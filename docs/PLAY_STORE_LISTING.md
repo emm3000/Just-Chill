@@ -1,8 +1,13 @@
-# Play Store listing — JustChill 2.0.0-alpha
+# Play Store listing — JustChill
 
 > Copy listo para pegar en Google Play Console (alpha cerrada).
 > Normalizado a **tú** (peruano), coherente con el manifesto in-app
 > post-S5 y la política de privacidad.
+>
+> Escrito para la 2.0.0-alpha. El copy de la ficha sigue vigente; la sección
+> "What's new" es específica de esa versión y hay que reescribirla en cada
+> release (el tag más reciente es `v2.2.0`). El `versionName` sale del último
+> tag de git, no de este archivo.
 
 ---
 

@@ -3,6 +3,19 @@
 > Companion to `MIGRATION_PLAN.md §Phase 3`. This is the sliced, gated
 > execution plan derived from a full `:app` audit (2026-06-13).
 > **Prime directive: Android build stays green at every slice.**
+>
+> ⚠️ **HISTORICAL — Phase 3 is done and some decisions below were later reversed.**
+> Read `ORCHESTRATION.md` for what is true today. Specifically:
+> - **Decision 2 (Navigation = Option A) was REVERSED** by slice F (`186d3b6`).
+>   There is no longer a per-platform nav host and `Hh.kt` no longer exists: both
+>   platforms run ONE commonMain `hh/shared/AppNavHost.kt` on the JetBrains
+>   nav3-UI port. The predictive-back risk that justified Option A turned out to
+>   be nil — the app never opted into the gesture.
+> - **`:app` means `:androidApp`** everywhere below (renamed in Phase 4).
+> - The commonMain **`:domain`-only rule was reversed** by slice H (`56314ba`):
+>   `shared-ui/commonMain` now depends on `:data` so the Koin wiring exists once.
+> Everything after §"Resolved decisions" is a per-slice execution record — accurate
+> as history, not as a description of the current tree.
 
 ## Resolved decisions
 

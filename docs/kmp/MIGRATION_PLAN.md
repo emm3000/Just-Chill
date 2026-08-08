@@ -5,14 +5,20 @@
 > **Android-first, iOS-additive**: every step keeps Android compiling green;
 > iOS is added as *new targets*, never at the cost of what already works.
 >
-> **Status**: ✅ Phases 0–5 DONE (domain, data, shared-ui all KMP; `:app` renamed
-> to `:androidApp` with typesafe project accessors; Android green throughout;
-> iOS runs local-first in the simulator). All closed on branch `kmp/phase-0-scaffolding`
-> (see `PHASE_3_SPEC.md` + `ORCHESTRATION.md` ledger; Phase 4 commit `0d309df`,
-> CI fix `c5fa93e`, Phase 5a `dffba01` + 5b `42f3ecd`; writer/reviewer SHIP +
-> user-validated iOS gate). **NEXT: Phase 6** — iOS parity. Open product
-> decisions for Phase 6: Google Sign-In on iOS, Firebase telemetry on iOS (see §5).
-> **Date**: 2026-06-12 (plan) · status updated 2026-06-14
+> **Status**: ✅ **COMPLETE AND MERGED TO TRUNK.** Phases 0–6 are done: all four
+> modules are KMP, `:app` was renamed `:androidApp`, `shared-ui` holds one shared
+> Compose base for both platforms, and iOS reached parity (auth + sync
+> runtime-validated against a local Supabase stack). The branch
+> `kmp/phase-0-scaffolding` fast-forwarded into `trunk` (67 commits, linear).
+>
+> **This document is now historical.** It records the plan and the reasoning, not
+> the current state. Several decisions in it were later reversed — most notably
+> the Option A navigation split (see `PHASE_3_SPEC.md §Resolved decisions`), which
+> slice F undid in favour of a single commonMain `AppNavHost`. For what is true
+> today read `ORCHESTRATION.md` (workflow + slice ledger + carry-forward
+> landmines) and the per-module `CLAUDE.md` files.
+>
+> **Date**: 2026-06-12 (plan) · status updated 2026-08-08
 > **Owner**: @emm
 
 ---

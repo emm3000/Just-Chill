@@ -1,6 +1,6 @@
 # JustChill — Design System
 
-> v0.1 · Living document. Every token here is the source of truth; implementations in `app/src/main/kotlin/com/emm/justchill/core/theme/` must mirror it.
+> v0.1 · Living document. Every token here is the source of truth; implementations in `shared-ui/src/commonMain/kotlin/com/emm/justchill/core/theme/` must mirror it.
 
 ---
 
@@ -528,7 +528,7 @@ Two atoms used together on the Reporte screen.
   - `motion.short` = 200ms (button feedback, micro-interactions).
   - `motion.medium` = 300ms (sheet open, nav transitions, AnimatedVisibility).
   - `motion.long` = 500ms (rare — onboarding intros, hero entry).
-- Bottom nav hide/show on secondary screens: 300ms enter / 250ms exit (already implemented in `Hh.kt`).
+- Bottom nav hide/show on secondary screens: 300ms enter / 250ms exit (already implemented in `hh/shared/AppNavHost.kt`).
 - All motion can be disabled if `Settings.Global.ANIMATOR_DURATION_SCALE = 0`.
 
 ---
@@ -547,7 +547,7 @@ Non-negotiable floor:
 
 ## 11 · Naming convention (Kotlin tokens)
 
-When implementing in `app/src/main/kotlin/com/emm/justchill/core/theme/`:
+When implementing in `shared-ui/src/commonMain/kotlin/com/emm/justchill/core/theme/`:
 
 ```kotlin
 object EmmColors {

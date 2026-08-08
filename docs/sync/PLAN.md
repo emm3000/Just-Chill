@@ -11,6 +11,11 @@
 > repo). Prior auth/sync implementation recoverable from commits
 > `5c0e471` (Supabase client + auth), `906d55c`⁻¹ (auth layers),
 > `d322a2d`⁻¹ (auth screens), `ff7afc8`⁻¹ (remote/sync layer).
+>
+> **Module names below predate the KMP migration.** `:app` is now `:androidApp`,
+> and everything it is credited with here (Koin wiring, auth/profile UI,
+> `SyncOrchestrator`, `SyncCursorStore`) lives in `:shared-ui` commonMain,
+> shared with iOS. The sync engine itself is unchanged and still in `:data`.
 
 ## Status
 
@@ -55,7 +60,7 @@ properties file keeps keys out of git.
 
 ## Supabase schema (re-derived)
 
-Mirrors the local SQLDelight v3 schema (`data/src/main/sqldelight/com/emm/data/*.sq`).
+Mirrors the local SQLDelight v3 schema (`data/src/commonMain/sqldelight/com/emm/data/*.sq`).
 Per ADR 001: client-generated TEXT PKs, `user_id NOT NULL`, no server
 FKs, RLS as tenant guard. Per ADR 002: `server_updated_at` + shared
 trigger, only server-side logic allowed.
@@ -320,5 +325,7 @@ Human tasks (unblockable by code):
 - Schema changes on either side get their own commit and a note here.
 - **Local schema changes always ship an `.sqm` migration** — real user
   data exists on devices since `4e6de6c` (2026-06-04). Destructive
-  resets are off the table. Enforced by SQLDelight `verifyMigrations`
-  (snapshot in `data/src/main/sqldelight/databases/`).
+  resets are off the table. Verified by `./gradlew :data:verifySqlDelightMigration`
+  (snapshot in `data/src/commonMain/sqldelight/databases/`). ⚠️ The
+  instrumented migration tests are currently NOT running — see
+  `data/CLAUDE.md § Testing`.

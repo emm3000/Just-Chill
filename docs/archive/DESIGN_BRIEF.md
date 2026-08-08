@@ -1,5 +1,10 @@
 # JustChill — Design Brief
 
+> **Archivado.** Brief histórico del track de diseño (2026-05). Se conserva por el
+> razonamiento; no es un checklist vivo. El sistema de diseño vigente está en
+> `docs/DESIGN_SYSTEM.md`. Las rutas de archivos que menciona son pre-KMP: la UI
+> hoy vive en `:shared-ui`, no en `:app`.
+
 > Documento para la diseñadora. Self-contained: no necesitas leer otros
 > archivos del repo para hacer tu trabajo. Si algo está confuso,
 > pregúntame antes de empezar a diseñar.
