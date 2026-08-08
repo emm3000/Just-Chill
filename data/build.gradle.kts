@@ -5,7 +5,7 @@ plugins {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "com.emm.data"
         minSdk = 26
         // Instrumented tests, on top of the androidHostTest the convention plugin sets up. These

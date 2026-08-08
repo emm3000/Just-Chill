@@ -20,7 +20,7 @@ kotlin {
         )
     }
 
-    androidLibrary {
+    android {
         namespace = "com.emm.justchill.shared"
         minSdk = 28
         // Opt-in to Android resource processing for this KMP library target. Without it, the

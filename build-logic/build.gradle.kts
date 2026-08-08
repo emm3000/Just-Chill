@@ -8,8 +8,8 @@ kotlin {
     jvmToolchain(17)
 }
 
-// A convention plugin can only `id("...")` a plugin whose implementation is on this build's
-// compile classpath. Gradle publishes one "marker" artifact per plugin id, shaped
+// A convention plugin can only apply a plugin whose implementation is on this build's compile
+// classpath. Gradle publishes one "marker" artifact per plugin id, shaped
 // `<id>:<id>.gradle.plugin:<version>` — this maps a catalog plugin alias onto that coordinate so
 // the version still comes from gradle/libs.versions.toml and is never repeated here.
 fun marker(plugin: Provider<PluginDependency>): String = plugin.get().run {
@@ -19,4 +19,25 @@ fun marker(plugin: Provider<PluginDependency>): String = plugin.get().run {
 dependencies {
     implementation(marker(libs.plugins.kotlin.multiplatform))
     implementation(marker(libs.plugins.android.kotlin.multiplatform.library))
+    implementation(marker(libs.plugins.detekt))
+}
+
+// Convention plugins are Plugin<Project> classes rather than precompiled .gradle.kts scripts: real
+// Kotlin the IDE can navigate and refactor, with a declared id -> class mapping instead of an
+// implicit filename convention.
+gradlePlugin {
+    plugins {
+        register("kmpLibrary") {
+            id = "justchill.kmp.library"
+            implementationClass = "com.emm.buildlogic.KmpLibraryConventionPlugin"
+        }
+        register("detekt") {
+            id = "justchill.detekt"
+            implementationClass = "com.emm.buildlogic.DetektConventionPlugin"
+        }
+        register("iosSupabaseConfig") {
+            id = "justchill.ios.supabase.config"
+            implementationClass = "com.emm.buildlogic.IosSupabaseConfigConventionPlugin"
+        }
+    }
 }

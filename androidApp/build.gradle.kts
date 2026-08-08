@@ -3,6 +3,8 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
+    // The KMP modules get detekt via justchill.kmp.library; this module applies it directly.
+    id("justchill.detekt")
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.services)
     alias(libs.plugins.google.crashlytics)

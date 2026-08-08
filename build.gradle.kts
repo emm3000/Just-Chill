@@ -1,38 +1,12 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+// Top-level build file. Deliberately thin: everything that used to be configured here through a
+// `subprojects { }` block now lives in build-logic as a convention plugin each module applies for
+// itself. Cross-project configuration is what blocks Gradle's Project Isolation, and it also made
+// this file the place where "how is detekt set up?" secretly lived.
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.google.services) apply false
     alias(libs.plugins.google.crashlytics) apply false
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.android.kotlin.multiplatform.library) apply false
-    alias(libs.plugins.detekt)
-}
-
-val detektKtlintWrapper = libs.detekt.ktlint.wrapper
-val detektComposeRules = libs.detekt.compose.rules
-
-subprojects {
-    apply(plugin = "dev.detekt")
-
-    detekt {
-        parallel = true
-        buildUponDefaultConfig = true
-        autoCorrect = false
-        config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
-        baseline = file("$rootDir/config/detekt/baseline-${project.name}.xml")
-    }
-
-    dependencies {
-        "detektPlugins"(detektKtlintWrapper)
-        "detektPlugins"(detektComposeRules)
-    }
-
-    tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
-        jvmTarget.set("17")
-        reports {
-            html.required.set(true)
-            sarif.required.set(false)
-            checkstyle.required.set(false)
-        }
-    }
+    alias(libs.plugins.detekt) apply false
 }
