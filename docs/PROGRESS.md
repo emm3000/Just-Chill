@@ -3,7 +3,7 @@
 > Punto de re-entrada canónico. Si retomás el proyecto después de un context
 > reset, leé esto primero y después el `CLAUDE.md` del módulo que vayas a tocar.
 >
-> **Última actualización**: 2026-08-08 · trunk `8cd21a6`
+> **Última actualización**: 2026-08-08 · trunk `eb8f034`
 >
 > Este doc se reescribió el 2026-08-08 porque quedó dos meses desactualizado y
 > se perdió toda la migración KMP. El detalle histórico previo (sprints S0-S5,
@@ -16,8 +16,12 @@
 ## Dónde estamos ahora
 
 App Android de finanzas personales, **local-first**, en Play Store alpha cerrada.
-Hay usuarios reales con data en el device desde `4e6de6c` (2026-06-04) — ninguna
-decisión puede romper su data local.
+
+**No hay usuarios todavía** — ni en Android ni en iOS. La alpha cerrada no tiene
+instalaciones reales más allá del device del autor. Este doc afirmaba lo contrario
+("hay usuarios reales con data en el device desde `4e6de6c`"); era falso y se
+corrigió el 2026-08-08. La diferencia importa: sin usuarios se puede romper data
+local, rehacer la navegación y postergar compliance sin costo para nadie.
 
 Tres tracks grandes cerrados o casi:
 
@@ -40,9 +44,13 @@ base Compose** para Android e iOS. 67 commits, fast-forward a trunk.
 - `:shared-ui` (nuevo) tiene toda la UI, los ViewModels y el wiring de Koin.
 - `:androidApp` (ex `:app`) quedó como entry point delgado; `iosApp/` es el
   proyecto Xcode que lo consume.
-- iOS llegó a paridad: auth + sync validados en runtime contra un stack Supabase
-  local. **No está publicado en App Store** — la prioridad sigue siendo Android,
-  que es donde hay usuarios.
+- iOS está **congelado, no cerrado** — ver
+  [ADR 003](adr/003-freeze-ios-keep-the-compile-gate.md). Compila y corre, y auth +
+  sync se validaron en runtime **una vez** contra un stack Supabase local. No está
+  publicado ni en App Store ni en TestFlight, Google Sign-In es un stub, y los
+  round-trips de las modales nunca se verificaron. Lo único que se sigue corriendo
+  por slice es el compile gate (`compileKotlinIosSimulatorArm64`, 12.9s medidos).
+  El checklist de deshielo vive en el ADR.
 - Después de la migración se hizo un programa de dedup (slices A→H) que unificó
   nav host, Koin, preferencias y orquestador de sync en commonMain.
 
@@ -89,9 +97,10 @@ Después de eso: tag + AAB.
   declarada pero sin usar).
 - 🟡 Pasada de performance de Compose pendiente: `derivedStateOf`, lambdas
   recordadas, `contentType` en `LazyColumn`.
-- 🟡 Las modales de iOS (export/import/share/email) están verificadas solo a nivel
-  de compilación y arranque. Sus round-trips reales necesitan un humano en el
-  simulador.
+- 🔵 Las modales de iOS (export/import/share/email) están verificadas solo a nivel
+  de compilación y arranque. **Ya no cuenta como deuda**: iOS está congelado y esto
+  pasó al checklist de deshielo de
+  [ADR 003](adr/003-freeze-ios-keep-the-compile-gate.md).
 
 ---
 
@@ -107,7 +116,8 @@ siguen en el repo como marcadores históricos.
 
 - `docs/kmp/ORCHESTRATION.md` — workflow de slices + ledger. **Vigente.**
 - `docs/sync/PLAN.md` — slices de sync + SQL de Supabase.
-- `docs/adr/` — 001 (reversa a local-first con sync opcional), 002 (cursor de pull).
+- `docs/adr/` — 001 (reversa a local-first con sync opcional), 002 (cursor de pull),
+  003 (iOS congelado: se mantiene solo el compile gate, se retira el ritual).
 - `docs/PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `ROADMAP_V1.md`,
   `POST_V1_PLAN.md` — definición de producto, Fases 1-5.
 - `docs/DESIGN_SYSTEM.md` — tokens y componentes.
@@ -122,6 +132,9 @@ siguen en el repo como marcadores históricos.
   UI van en español.
 - Historia lineal: siempre `--ff-only`, rebase si divergió, nunca merge commits.
 - Nunca pushear sin confirmación explícita en ese momento.
-- Trabajo de KMP / shared-ui: se orquesta, no se escribe inline. Writer y reviewer
-  son sub-agentes Opus separados, nunca Sonnet. Ver `docs/kmp/ORCHESTRATION.md`.
+- Trabajo de KMP / shared-ui: **un writer, review inline**. El ritual de writer +
+  reviewer como sub-agentes Opus separados por slice se retiró en
+  [ADR 003](adr/003-freeze-ios-keep-the-compile-gate.md) — estaba calibrado para
+  usuarios en producción que no existen. El gate reforzado de
+  `docs/kmp/ORCHESTRATION.md` sigue vigente, compile de iOS incluido.
 - Los planes de sprint (`PLAN_S*_*.md`) son efímeros y gitignored.

@@ -7,10 +7,16 @@ Per-module guidance lives in `domain/CLAUDE.md`, `data/CLAUDE.md`, `shared-ui/CL
 
 > **KMP / Compose Multiplatform: migrated and merged to trunk.** All four modules are KMP;
 > `shared-ui` holds the shared Compose UI for Android and iOS. `docs/kmp/ORCHESTRATION.md` is the
-> canonical workflow for any further shared-UI slice — read it first; its ledger and landmines are
-> current. `PHASE_3_SPEC.md` / `MIGRATION_PLAN.md` are historical and contain superseded decisions
-> (the "Option A" nav split was reversed). The main thread only orchestrates: writer and reviewer
-> are separate Opus sub-agents, never Sonnet.
+> canonical workflow for any further shared-UI slice — read it first; its ledger, landmines and
+> reinforced gate are current. `PHASE_3_SPEC.md` / `MIGRATION_PLAN.md` are historical and contain
+> superseded decisions (the "Option A" nav split was reversed).
+>
+> **iOS is frozen, not closed** — [ADR 003](docs/adr/003-freeze-ios-keep-the-compile-gate.md). It
+> compiles; nothing beyond that is claimed. Keep `:shared-ui:compileKotlinIosSimulatorArm64` in
+> every gate run — 12.9s, and the only thing stopping `commonMain` from silently filling with
+> `java.*`. The per-slice writer + reviewer (both Opus) ritual is retired: one writer, review
+> inline. Android-only *capabilities* may live in `:androidApp`, but their platform-neutral *logic*
+> stays in `commonMain`. **There are no users on either platform** — see `docs/PROGRESS.md`.
 
 ## Build & Development Commands
 
@@ -136,7 +142,8 @@ Compose BOM `2026.05.01` · Compose Multiplatform `1.11.1` · detekt `2.0.0-alph
 ## Docs map (`docs/`)
 
 - `kmp/ORCHESTRATION.md` — shared-UI slice workflow + ledger. Current and trustworthy.
-- `adr/` — 001 local-first reversal, 002 pull cursor. `sync/PLAN.md` — sync slices.
+- `adr/` — 001 local-first reversal, 002 pull cursor, 003 iOS frozen (compile gate only).
+  `sync/PLAN.md` — sync slices.
 - `PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `ROADMAP_V1.md`, `POST_V1_PLAN.md` — Fases 1-5.
 - `DESIGN_SYSTEM.md` — tokens and components (its paths still point at the pre-KMP `app/` module).
 - `archive/` — closed tracks kept for history.
