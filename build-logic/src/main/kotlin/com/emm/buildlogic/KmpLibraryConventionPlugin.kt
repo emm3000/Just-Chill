@@ -23,6 +23,24 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
         pluginManager.apply("org.jetbrains.kotlin.multiplatform")
         pluginManager.apply("com.android.kotlin.multiplatform.library")
         pluginManager.apply("justchill.detekt")
+        pluginManager.apply("justchill.quality.gate")
+
+        // Every KMP module here has a JVM host-test suite; it belongs on the gate. The pre-push
+        // hook used to run detekt and no tests at all.
+        contributeToQualityGate("testAndroidHostTest")
+
+        if (QualityGateConventionPlugin.isMacOsHost) {
+            // The iOS compile is the only mechanical proof that commonMain stays free of java.* /
+            // android.* — see docs/adr/003. ~13s, and it is why iOS can stay frozen but revivable.
+            tasks.named(QualityGateConventionPlugin.GATE_TASK) {
+                dependsOn(tasks.matching { it.name.startsWith("compileKotlinIos") })
+            }
+        } else {
+            logger.lifecycle(
+                "qualityGate($path): iOS compile skipped — Kotlin/Native needs a macOS host. " +
+                    "detekt still covers iosMain.",
+            )
+        }
 
         extensions.configure<KotlinMultiplatformExtension> {
             iosArm64()

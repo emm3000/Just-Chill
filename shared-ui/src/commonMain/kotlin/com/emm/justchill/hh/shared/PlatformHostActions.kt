@@ -41,7 +41,7 @@ interface PlatformHostActions {
     /** Writes the backup [json] to a user-picked destination and reports success/failure (Android SAF). */
     val requestExport: (json: String) -> Unit
 
-    /** Opens the platform document picker and feeds the chosen file's contents to `onImported`. */
+    /** Opens the platform document picker and feeds the chosen file's contents to `onImport`. */
     val requestImport: () -> Unit
 }
 
@@ -50,13 +50,13 @@ interface PlatformHostActions {
  * Android SAF launchers (which must be registered in composition) live above the [androidx.navigation3]
  * NavDisplay and survive entry recomposition.
  *
- * @param onImported invoked with the imported file contents (Android only; never fires on iOS).
+ * @param onImport invoked with the imported file contents (Android only; never fires on iOS).
  */
 @Composable
 expect fun rememberPlatformHostActions(
     snackbarHostState: SnackbarHostState,
     scope: CoroutineScope,
-    onImported: (String) -> Unit,
+    onImport: (String) -> Unit,
 ): PlatformHostActions
 
 /**

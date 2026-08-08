@@ -25,7 +25,7 @@ jobs:
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
 
       - name: Run tests + lint
-        run: ./gradlew :domain:testAndroidHostTest :data:testAndroidHostTest :androidApp:testDevDebugUnitTest lintProdRelease
+        run: ./gradlew qualityGate lintProdRelease
 
   publish:
     needs: [ verify ]

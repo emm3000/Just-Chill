@@ -76,28 +76,36 @@ Before delegating, map the slice cheaply so the writer prompt is precise:
 
 ## The reinforced gate (every slice)
 ```bash
-./gradlew :shared-ui:compileAndroidMain
-./gradlew :shared-ui:compileKotlinIosSimulatorArm64   # proves zero java.* leak
-./gradlew assembleDevDebug
-./gradlew :androidApp:testDevDebugUnitTest
-./gradlew :shared-ui:testAndroidHostTest
-# detekt — REAL KMP coverage (see note below; all four must exit 0)
-./gradlew detektMainAndroid        # KMP modules (domain, data, shared-ui): commonMain + androidMain, WITH type resolution
-./gradlew detektIosMainSourceSet   # KMP modules: iosMain — NO type resolution (Native has none in detekt 2.0)
-./gradlew :androidApp:detektMain   # androidApp: all variants, WITH type resolution
-./gradlew :shared-ui:detektAndroidHostTestSourceSet   # shared-ui androidHostTest (JVM-only test source set)
+./gradlew qualityGate      # the whole gate
+./gradlew assembleDevDebug # plus the build, which the gate deliberately excludes
 ```
-The iOS compile is the real proof the de-JVM worked. The Android gate alone does
-NOT catch a missing Koin binding — that's why the reviewer re-runs + traces DI.
 
-The KMP gate previously omitted detekt — that's why a prior slice slipped style
-violations past review. The plain `./gradlew detekt` task (what the pre-push hook
-runs) is **NO-SOURCE on KMP modules**: it never scanned commonMain/iosMain, so it
-only really checked `:androidApp`. The three tasks above give real coverage of the
-code a slice actually touches — `detektMainAndroid` for commonMain+androidMain (with
-type resolution) and `detektIosMainSourceSet` for iosMain. **iosMain has no type
-resolution in detekt 2.0** (Kotlin/Native has none), so TR-dependent rules don't
-fire there — treat iosMain detekt as style/structure only, not a deep semantic gate.
+**Do not maintain a task list here.** This section used to spell one out, and it drifted: it was
+missing `:data:detektAndroidDeviceTestSourceSet`, while the pre-push hook was missing every test
+and CI was missing `:shared-ui:testAndroidHostTest`. Four hand-written lists, none a superset of
+the others. The gate now has exactly one definition —
+`build-logic/src/main/kotlin/com/emm/buildlogic/QualityGateConventionPlugin.kt` — and the hook, the
+three workflows and this doc all invoke it.
+
+`qualityGate` covers, per module: detekt over every source set that holds code, the JVM host test
+suites, Android lint on the dev variant, and the iOS compile. To change what the gate means, edit
+the plugin; everything downstream follows.
+
+Two properties worth knowing:
+
+- **The iOS compile is host-gated.** Kotlin/Native only builds iOS binaries on macOS, so the gate
+  adds it there and logs the skip elsewhere — CI on Linux runs everything else. It is the real proof
+  the de-JVM worked, and per `docs/adr/003` it is the one thing keeping frozen iOS revivable.
+- **iosMain detekt has no type resolution** (Kotlin/Native has none in detekt 2.0), so TR-dependent
+  rules do not fire there. Treat it as style and structure, not a deep semantic gate. It is JVM
+  analysis, though, so it runs on any host — including CI.
+
+A green gate still does NOT catch a missing Koin binding at the DI graph level; that is what
+`shared-ui/androidHostTest/core/AppGraphKoinTest.kt` is for, and it is now on the gate (it never
+ran in CI before).
+
+Never gate on plain `./gradlew detekt`: it is **NO-SOURCE on every KMP module** and only ever
+linted `:androidApp`.
 
 ## Why two Opus agents per slice
 The Android build can be green while DI is broken (missing repository binding →

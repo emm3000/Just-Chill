@@ -23,17 +23,17 @@ import java.time.format.DateTimeFormatter
 
 // Android actual of the unified host's platform seams. Owns every android.*/SAF/Intent dependency so
 // they never leak into commonMain. Behavior is byte-for-byte the former Hh.kt: SAF CreateDocument for
-// export (with success/failure snackbar), SAF OpenDocument for import (feeds onImported), ACTION_SEND
+// export (with success/failure snackbar), SAF OpenDocument for import (feeds onImport), ACTION_SEND
 // share chooser, and ACTION_MAIN/CATEGORY_APP_EMAIL with a missing-app snackbar fallback.
 
 @Composable
 actual fun rememberPlatformHostActions(
     snackbarHostState: SnackbarHostState,
     scope: CoroutineScope,
-    onImported: (String) -> Unit,
+    onImport: (String) -> Unit,
 ): PlatformHostActions {
     val context = LocalContext.current
-    val currentOnImported by rememberUpdatedState(onImported)
+    val currentOnImport by rememberUpdatedState(onImport)
 
     // Holds the backup JSON produced by the VM until the SAF picker returns a destination.
     var pendingExportJson by remember { mutableStateOf<String?>(null) }
@@ -67,7 +67,7 @@ actual fun rememberPlatformHostActions(
             val text = context.contentResolver.openInputStream(uri)
                 ?.bufferedReader()
                 ?.use { it.readText() }
-            if (text != null) currentOnImported(text)
+            if (text != null) currentOnImport(text)
         }
     }
 

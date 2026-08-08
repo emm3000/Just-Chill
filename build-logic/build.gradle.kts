@@ -35,6 +35,10 @@ gradlePlugin {
             id = "justchill.detekt"
             implementationClass = "com.emm.buildlogic.DetektConventionPlugin"
         }
+        register("qualityGate") {
+            id = "justchill.quality.gate"
+            implementationClass = "com.emm.buildlogic.QualityGateConventionPlugin"
+        }
         register("iosSupabaseConfig") {
             id = "justchill.ios.supabase.config"
             implementationClass = "com.emm.buildlogic.IosSupabaseConfigConventionPlugin"

@@ -1,11 +1,22 @@
 #!/usr/bin/env bash
-# Pre-push: run detekt over every source set that actually holds code.
+# Pre-push: run the project's quality gate.
 #
-# NOT `./gradlew detekt`. After the KMP migration that task is NO-SOURCE on
-# :domain, :data and :shared-ui — it only ever linted :androidApp, which is now a
-# thin entry point. See scripts/git-hooks/README.md.
+# This used to hold its own hand-written list of detekt tasks — and only detekt, no tests at all.
+# That list drifted from the three GitHub workflows and from docs/kmp/ORCHESTRATION.md, and none of
+# the four was a superset of the others. The gate is now defined once, in
+# build-logic/src/main/kotlin/com/emm/buildlogic/QualityGateConventionPlugin.kt, and this hook runs
+# exactly what CI runs.
 #
-# Fails the push on any new finding (one not in `config/detekt/baseline-*.xml`).
+# `./gradlew qualityGate` covers, across all four modules:
+#   - detekt over every source set that holds code (NOT plain `./gradlew detekt`, which is
+#     NO-SOURCE on :domain, :data and :shared-ui and only ever linted :androidApp)
+#   - the JVM host test suites, including :shared-ui — which is where AppGraphKoinTest lives, the
+#     only mechanical guard against a missing Koin binding
+#   - Android lint on the dev variant
+#   - the iOS compile, which proves commonMain stays free of java.* / android.* (docs/adr/003).
+#     CI runs on Linux and skips this part, loudly; on this machine it runs.
+#
+# Fails the push on any finding not already in config/detekt/baseline-*.xml.
 #
 # Skip with: git push --no-verify
 
@@ -14,11 +25,6 @@ set -e
 # Drain stdin (git feeds ref info — we don't use it but some shells trip without consuming).
 cat > /dev/null
 
-echo "→ detekt…"
-./gradlew --quiet --console=plain \
-    detektMainAndroid \
-    detektIosMainSourceSet \
-    :androidApp:detektMain \
-    :shared-ui:detektAndroidHostTestSourceSet \
-    :data:detektAndroidDeviceTestSourceSet
-echo "✓ detekt clean"
+echo "→ quality gate…"
+./gradlew --quiet --console=plain qualityGate
+echo "✓ quality gate clean"

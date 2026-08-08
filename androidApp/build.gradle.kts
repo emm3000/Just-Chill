@@ -3,8 +3,9 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    // The KMP modules get detekt via justchill.kmp.library; this module applies it directly.
+    // The KMP modules get these via justchill.kmp.library; this module applies them directly.
     id("justchill.detekt")
+    id("justchill.quality.gate")
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.services)
     alias(libs.plugins.google.crashlytics)
@@ -121,6 +122,13 @@ android {
 composeCompiler {
     metricsDestination = layout.buildDirectory.dir("compose_metrics")
     reportsDestination = layout.buildDirectory.dir("compose_reports")
+}
+
+// This module's contribution to `./gradlew qualityGate` (detekt is wired in by the plugin itself).
+// Only the dev-debug unit tests and the dev lint variant: the prod variants run the same code
+// through a signing config the gate has no reason to need.
+tasks.named("qualityGate") {
+    dependsOn("testDevDebugUnitTest", "lintDevDebug")
 }
 
 kotlin {

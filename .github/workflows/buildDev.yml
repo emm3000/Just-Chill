@@ -14,7 +14,17 @@ permissions:
   contents: read
 
 jobs:
-  lint:
+  # One job, one command. This used to be three jobs (lint / unit-test / detekt) each with its own
+  # hand-written task list, and all three had drifted from the pre-push hook and from the gate
+  # documented in docs/kmp/ORCHESTRATION.md. `qualityGate` is defined once in build-logic
+  # (QualityGateConventionPlugin) and is the same thing the hook runs, so the lists cannot diverge.
+  #
+  # Splitting it back into parallel jobs would not be faster: each job pays a full Gradle
+  # configuration and cache restore, and Gradle already parallelises tasks within one invocation.
+  #
+  # The iOS compile is part of qualityGate but skips itself here — Kotlin/Native needs a macOS host.
+  # The plugin logs the skip rather than passing silently. detekt still covers iosMain (JVM analysis).
+  quality-gate:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -29,8 +39,32 @@ jobs:
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
           cache-read-only: 'true'
 
-      - name: Run Lint
-        run: ./gradlew lintDevDebug
+      - name: Quality gate (detekt + host tests + lint)
+        run: ./gradlew qualityGate
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-test-report
+          path: |
+            domain/build/reports/tests/testAndroidHostTest/
+            data/build/reports/tests/testAndroidHostTest/
+            shared-ui/build/reports/tests/testAndroidHostTest/
+            androidApp/build/reports/tests/testDevDebugUnitTest/
+          retention-days: 7
+
+      - name: Upload detekt reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: detekt-reports
+          path: |
+            androidApp/build/reports/detekt/
+            shared-ui/build/reports/detekt/
+            data/build/reports/detekt/
+            domain/build/reports/detekt/
+          retention-days: 7
 
       - name: Upload lint report
         if: always()
@@ -40,66 +74,8 @@ jobs:
           path: androidApp/build/reports/lint-results-devDebug.html
           retention-days: 7
 
-  unit-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - uses: ./.github/actions/setup-android
-        with:
-          keystore-properties: ${{ secrets.JUST_VERONICA }}
-          signing-key-base64: ${{ secrets.JUST_CHILL }}
-          supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
-          cache-read-only: 'true'
-
-      - name: Run tests
-        run: ./gradlew :domain:testAndroidHostTest :data:testAndroidHostTest :androidApp:testDevDebugUnitTest
-
-      - name: Upload test report
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: unit-test-report
-          path: |
-            domain/build/reports/tests/testAndroidHostTest/
-            data/build/reports/tests/testAndroidHostTest/
-            androidApp/build/reports/tests/testDevDebugUnitTest/
-          retention-days: 7
-
-  detekt:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - uses: ./.github/actions/setup-android
-        with:
-          keystore-properties: ${{ secrets.JUST_VERONICA }}
-          signing-key-base64: ${{ secrets.JUST_CHILL }}
-          supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
-          cache-read-only: 'true'
-
-      - name: Run detekt
-        run: ./gradlew detekt
-
-      - name: Upload detekt reports
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: detekt-reports
-          path: |
-            androidApp/build/reports/detekt/
-            data/build/reports/detekt/
-            domain/build/reports/detekt/
-          retention-days: 7
-
   build:
-    needs: [ lint, unit-test, detekt ]
+    needs: [ quality-gate ]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

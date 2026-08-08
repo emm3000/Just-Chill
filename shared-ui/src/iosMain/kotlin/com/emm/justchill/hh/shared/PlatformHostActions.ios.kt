@@ -38,7 +38,7 @@ import kotlin.time.Clock
 //    (forExportingURLs) with a success snackbar on pick, error snackbar on write failure, nothing on
 //    cancel — same ProfileMessage copy as Android.
 //  - requestImport: present UIDocumentPickerViewController (forOpeningContentTypes = JSON), read the
-//    picked (security-scoped) file and feed it to onImported. NO snackbar — the ProfileViewModel reports
+//    picked (security-scoped) file and feed it to onImport. NO snackbar — the ProfileViewModel reports
 //    import success/failure via ProfileEffect.Notify, exactly as on Android.
 //  - onShareText: UIActivityViewController. iOS share sheets carry no chooser title, so Android's
 //    "Compartir reporte" title is dropped (no equivalent).
@@ -87,9 +87,9 @@ private class ExportPickerDelegate(
     }
 }
 
-/** Import picker delegate: read the security-scoped file and feed onImported. No snackbar (Android parity). */
+/** Import picker delegate: read the security-scoped file and feed onImport. No snackbar (Android parity). */
 private class ImportPickerDelegate(
-    private val onImported: (String) -> Unit,
+    private val onImport: (String) -> Unit,
 ) : NSObject(), UIDocumentPickerDelegateProtocol {
 
     override fun documentPicker(
@@ -102,9 +102,9 @@ private class ImportPickerDelegate(
         val accessGranted = url.startAccessingSecurityScopedResource()
         val text = NSString.stringWithContentsOfURL(url, NSUTF8StringEncoding, null)
         if (accessGranted) url.stopAccessingSecurityScopedResource()
-        // Mirror Android: silent on read failure; the VM surfaces import success/failure once onImported
+        // Mirror Android: silent on read failure; the VM surfaces import success/failure once onImport
         // runs (ProfileEffect.Notify). Nothing to show from here.
-        if (text != null) onImported(text)
+        if (text != null) onImport(text)
     }
 
     override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) {
@@ -188,10 +188,10 @@ private fun exportBackup(json: String, snackbarHostState: SnackbarHostState, sco
     presenter.presentViewController(picker, animated = true, completion = null)
 }
 
-private fun importBackup(onImported: (String) -> Unit) {
+private fun importBackup(onImport: (String) -> Unit) {
     val presenter = topmostViewController() ?: return
     val picker = UIDocumentPickerViewController(forOpeningContentTypes = listOf(UTTypeJSON))
-    val delegate = ImportPickerDelegate(onImported)
+    val delegate = ImportPickerDelegate(onImport)
     retainedPickerDelegates.add(delegate) // R1 — keep alive until the delegate callback fires.
     picker.delegate = delegate
     presenter.presentViewController(picker, animated = true, completion = null)
@@ -201,15 +201,15 @@ private fun importBackup(onImported: (String) -> Unit) {
 actual fun rememberPlatformHostActions(
     snackbarHostState: SnackbarHostState,
     scope: CoroutineScope,
-    onImported: (String) -> Unit,
+    onImport: (String) -> Unit,
 ): PlatformHostActions {
-    // Latest onImported, mirroring the Android actual (the host re-creates this lambda each recomposition).
-    val currentOnImported by rememberUpdatedState(onImported)
+    // Latest onImport, mirroring the Android actual (the host re-creates this lambda each recomposition).
+    val currentOnImport by rememberUpdatedState(onImport)
     return remember(snackbarHostState, scope) {
         IosHostActions(
             snackbarHostState = snackbarHostState,
             scope = scope,
-            onImported = { text -> currentOnImported(text) },
+            onImport = { text -> currentOnImport(text) },
         )
     }
 }
@@ -217,7 +217,7 @@ actual fun rememberPlatformHostActions(
 private class IosHostActions(
     private val snackbarHostState: SnackbarHostState,
     private val scope: CoroutineScope,
-    private val onImported: (String) -> Unit,
+    private val onImport: (String) -> Unit,
 ) : PlatformHostActions {
     override val isDebug: Boolean = false
     override val showGoogleSignIn: Boolean = false
@@ -227,7 +227,7 @@ private class IosHostActions(
     override val onShareText: (String) -> Unit = { text -> presentShareSheet(text) }
     override val onOpenEmailApp: () -> Unit = { openEmailApp(snackbarHostState, scope) }
     override val requestExport: (String) -> Unit = { json -> exportBackup(json, snackbarHostState, scope) }
-    override val requestImport: () -> Unit = { importBackup(onImported) }
+    override val requestImport: () -> Unit = { importBackup(onImport) }
 }
 
 actual val startTab: BottomBarRoute = HomeRoute

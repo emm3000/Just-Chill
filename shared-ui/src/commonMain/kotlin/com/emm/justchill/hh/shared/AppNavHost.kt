@@ -124,7 +124,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         val platform = rememberPlatformHostActions(
             snackbarHostState = snackbarHostState,
             scope = rootScope,
-            onImported = { json -> pendingImportJson = json },
+            onImport = { json -> pendingImportJson = json },
         )
 
         SyncEventsHandler(

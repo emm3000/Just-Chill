@@ -43,6 +43,10 @@ class DetektConventionPlugin : Plugin<Project> {
         }
 
         tasks.withType<Detekt>().configureEach {
+            // Generated sources are not ours to style. Compose's resource generator and the iOS
+            // Supabase config generator both write into build/, and linting them produced 13
+            // findings about indentation in a file no human will ever edit.
+            exclude("**/build/**")
             jvmTarget.set(BuildConventions.JVM_TARGET)
             reports {
                 html.required.set(true)

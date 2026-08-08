@@ -330,6 +330,7 @@ class DefaultSyncRepositoryTest {
                 emit(SessionStatus.Initializing)
                 awaitCancellation()
             }
+
             // A session stuck in Initializing never finishes loading, so awaiting its
             // initialization suspends forever — withTimeout(10_000ms) is what unblocks the cycle.
             override suspend fun awaitSessionInitialization() = awaitCancellation()

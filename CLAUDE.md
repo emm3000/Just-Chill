@@ -119,10 +119,12 @@ introducing a new exception type.
 
 ## Gotchas
 
+- **`./gradlew qualityGate` is the gate.** One definition, in
+  `build-logic/.../QualityGateConventionPlugin.kt`; the pre-push hook and all three workflows
+  invoke it. detekt over every source set that holds code, the host test suites, dev lint, and
+  (on macOS only) the iOS compile. Change the plugin, not the callers.
 - **Never gate on plain `./gradlew detekt`** — it is `NO-SOURCE` on all three KMP modules and only
-  lints `:androidApp`. Real coverage comes from the per-source-set tasks (`detektMainAndroid`,
-  `detektIosMainSourceSet`, `:androidApp:detektMain`, `:shared-ui:detektAndroidHostTestSourceSet`,
-  `:data:detektAndroidDeviceTestSourceSet`), which is what the pre-push hook now runs.
+  lints `:androidApp`.
 - Every route the nav host can push MUST be registered in `NavSavedStateConfiguration.kt`
   (commonMain), else `rememberNavBackStack` crashes on process-death restore. Invisible to the compiler.
 
