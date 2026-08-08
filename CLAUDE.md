@@ -2,14 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Per-module guidance lives in `domain/CLAUDE.md`, `data/CLAUDE.md`, and `androidApp/CLAUDE.md`; Claude loads each one automatically when working in that module.
+Per-module guidance lives in `domain/CLAUDE.md`, `data/CLAUDE.md`, `shared-ui/CLAUDE.md`, and
+`androidApp/CLAUDE.md`; Claude loads each one automatically when working in that module.
 
-> **KMP / Compose Multiplatform migration is ACTIVE.** Before executing ANY migration slice
-> (moving a feature to `shared-ui` commonMain), READ `docs/kmp/ORCHESTRATION.md` — it is the
-> canonical, non-negotiable workflow. The main thread (Opus) only orchestrates: it delegates
-> the writer AND the reviewer as separate **Opus 4.8 sub-agents** and never writes feature code
-> inline. Never delegate KMP work to Sonnet. Current state + slice ledger live in that doc and
-> `docs/kmp/PHASE_3_SPEC.md`.
+> **KMP / Compose Multiplatform: migrated and merged to trunk.** All four modules are KMP;
+> `shared-ui` holds the shared Compose UI for Android and iOS. `docs/kmp/ORCHESTRATION.md` is the
+> canonical workflow for any further shared-UI slice — read it first; its ledger and landmines are
+> current. `PHASE_3_SPEC.md` / `MIGRATION_PLAN.md` are historical and contain superseded decisions
+> (the "Option A" nav split was reversed). The main thread only orchestrates: writer and reviewer
+> are separate Opus sub-agents, never Sonnet.
 
 ## Build & Development Commands
 
@@ -18,126 +19,129 @@ Per-module guidance lives in `domain/CLAUDE.md`, `data/CLAUDE.md`, and `androidA
 ./gradlew assembleDevDebug              # Dev debug build (most common during dev)
 ./gradlew assembleProdRelease           # Production signed release
 
-# Unit tests
-./gradlew test                          # All unit tests across all modules
-./gradlew :domain:test                  # Domain-only (fastest, no Android)
-./gradlew testDevDebugUnitTest          # Tests for the dev+debug variant
-./gradlew :domain:test --tests "com.emm.domain.transaction.TransactionCreatorTest"   # Single test
+# Unit tests (JVM host tests — no device)
+./gradlew test                             # Everything
+./gradlew :domain:testAndroidHostTest      # also :data: and :shared-ui: — fastest feedback
+./gradlew :androidApp:testDevDebugUnitTest # the MockK ViewModel suite lives here
+./gradlew :domain:testAndroidHostTest --tests "com.emm.domain.transaction.CreateTransactionUseCaseTest"
 
-# Instrumented tests (requires device/emulator)
-./gradlew connectedDevDebugAndroidTest
-
-# Clean
-./gradlew clean
+# iOS
+./gradlew :shared-ui:compileKotlinIosSimulatorArm64   # proves zero java.*/android.* leak
+open iosApp/iosApp.xcodeproj                          # run the iOS app from Xcode
 ```
+
+KMP host-test tasks go `UP-TO-DATE` across sessions — add `--rerun` to force a real run.
+There is no `:domain:test` and no `connectedDevDebugAndroidTest`; both died with the KMP migration.
 
 ## Project Layout
 
-- Gradle modules included in `settings.gradle.kts`: `:androidApp`, `:domain`, `:data`.
-- Java toolchain 17 across all modules. `compileSdk = 36`. `minSdk = 28` (`:androidApp`) / `26` (`:data`).
-- Two product flavors on dimension `tier`:
+- Modules in `settings.gradle.kts`: `:androidApp`, `:shared-ui`, `:domain`, `:data`.
+- Java toolchain 17 everywhere. `compileSdk = 37`. `minSdk = 28` (`:androidApp`, `:shared-ui`) /
+  `26` (`:domain`, `:data`).
+- `iosApp/` — Xcode project consuming `shared-ui`. `supabase/` — CLI migrations for the server schema.
+- Two product flavors on dimension `tier` (`:androidApp` only):
   - `dev` — `applicationIdSuffix = ".dev"`.
   - `prod` — release signing via `keystore.properties`, Firebase Analytics + Crashlytics.
 
 ## Architecture
 
-Clean Architecture, three modules:
+Clean Architecture, four KMP modules. Dependency direction is top to bottom:
 
-```
-:domain  →  pure Kotlin JVM lib, no Android deps        (java-library + kotlin.jvm)
-:data    →  Android lib, implements domain interfaces   (SQLDelight + Supabase sync/auth)
-:androidApp →  Compose UI, ViewModels, Koin DI wiring   (android-application)
-```
+| Module | Role | Root package |
+|---|---|---|
+| `:androidApp` | thin Android entry point (Activity, platform Koin module) | `com.emm.justchill.*` |
+| `:shared-ui` | Compose Multiplatform UI + ViewModels + Koin wiring | `com.emm.justchill.{hh.<feature>, core, components}` |
+| `:data` | implements domain interfaces (commonMain/androidMain/iosMain) | `com.emm.data.<entity>` |
+| `:domain` | pure Kotlin, no framework deps | `com.emm.domain.<entity>` |
 
-The app is **local-first**: SQLDelight on-device is the single source of truth and the app is fully usable with no account and no network. Optional multi-device sync via Supabase (opt-in email/password sign-in, LWW) is **in progress** — slices 1-3 are on trunk: soft-delete + sync metadata (slice 1), auth + claim-on-sign-in (slice 2), and the manual-trigger sync engine (slice 3, push/pull + cursor — see `data/CLAUDE.md`). Remaining: automatic sync lifecycle (slice 4) and compliance/release gate (slice 5), per `docs/sync/PLAN.md`. Decisions in `docs/adr/001` and `docs/adr/002`.
+The app is **local-first**: SQLDelight on-device is the single source of truth and the app is fully
+usable with no account and no network. Optional multi-device sync via Supabase (opt-in
+email/password or Google sign-in, LWW) — slices 1-4 are done and device-verified; slice 5
+(compliance + release gate) is in progress. See `docs/sync/PLAN.md`, `docs/adr/001`, `docs/adr/002`.
 
-**Dependency direction**: `:androidApp` → `:domain`, `:data`; `:data` → `:domain`; `:domain` has no module deps.
-
-### Package roots
-
-| Module | Root package |
-|---|---|
-| `:domain` | `com.emm.domain.<entity>` |
-| `:data` | `com.emm.data.<entity>` |
-| `:androidApp` | `com.emm.justchill.{hh.<feature>, core, components}` |
+`shared-ui/commonMain` depending on `:data` is deliberate (slice H) — it lets the Koin wiring exist
+once instead of per platform. The cost: ViewModel purity (VMs take `:domain` interfaces, never
+SQLDelight or `Default*` types) is now **convention only**, no longer enforced by the module graph.
 
 ### Data flow
 
-`Screen` collects `StateFlow<UiState>` from `ViewModel` → `ViewModel` calls a domain use case → use case calls a `Repository` interface → `Default{Entity}Repository` delegates to a `LocalDataSource` (SQLDelight).
+`Screen` collects `StateFlow<UiState>` from `ViewModel` → `ViewModel` calls a domain use case →
+use case calls a `Repository` interface → `Default{Entity}Repository` delegates to a
+`LocalDataSource` (SQLDelight).
 
-### MVI pattern (`app/core/mvi/`)
+### MVI pattern (`shared-ui/commonMain/core/mvi/`)
 
-All ViewModels extend `MviViewModel<S : UiState, I : UiIntent, E : UiEffect>` from `app/core/mvi/`. The base class provides:
+All ViewModels extend `MviViewModel<S : UiState, I : UiIntent, E : UiEffect>`. The base class provides:
 
 - `state: StateFlow<S>` — collected in the Screen with `collectAsStateWithLifecycle()`
-- `effect: Flow<E>` — one-shot side-effects (navigation, snackbars) collected in `LaunchedEffect(vm) { vm.effect.collect { } }`
+- `effect: Flow<E>` — one-shot side-effects (navigation, snackbars) collected in
+  `LaunchedEffect(vm) { vm.effect.collect { } }`
 - `updateState(reducer: S.() -> S)` — atomic state update
 - `sendEffect(effect: E)` — fires a one-shot effect
 - `abstract fun onIntent(intent: I)` — single entry point for user actions
 
-Per feature, create three files alongside the ViewModel:
-- `XxxUiState.kt` — `data class` implementing `UiState`, no navigation flags or message strings
-- `XxxIntent.kt` — `sealed interface` implementing `UiIntent`
-- `XxxEffect.kt` — `sealed interface` implementing `UiEffect` (navigation targets, `ShowError`)
+Per feature, alongside the ViewModel: `XxxUiState.kt` (`data class`, no navigation flags or message
+strings), `XxxIntent.kt` and `XxxEffect.kt` (`sealed interface`s — navigation targets, `ShowError`).
 
-`SnackbarHostState` lives in the root `Scaffold` in `Hh.kt` and is passed down to each Screen that needs it.
+`SnackbarHostState` lives in the root `Scaffold` of `hh/shared/AppNavHost.kt` (commonMain) and is
+passed down to each Screen that needs it.
 
 ### Error model (cross-module)
 
-- Sealed `DomainException` in `:domain/shared/error/` with subtypes: `NotFound`, `ValidationError`, `NetworkUnavailable`, `DatabaseError`, `Unauthorized`, `Unknown`.
-- `:data/shared/SafeCall.kt` wraps local DB calls and translates SQLDelight exceptions into `DomainException`. Repositories should funnel I/O through it instead of throwing raw SQLDelight errors.
-- `:androidApp/core/error/DomainExceptionExt.kt` maps each subtype to a user-facing Spanish string via `DomainException.toUserMessage()`.
+- Sealed `DomainException` in `:domain/shared/error/` with subtypes: `NotFound`, `ValidationError`,
+  `NetworkUnavailable`, `DatabaseError`, `Unauthorized`, `Unknown`.
+- `:data/shared/SafeCall.kt` wraps local DB calls and translates SQLDelight exceptions into
+  `DomainException`. Repositories funnel I/O through it instead of throwing raw SQLDelight errors.
+- `:shared-ui/core/error/DomainExceptionExt.kt` maps each subtype to a user-facing Spanish string
+  via `DomainException.toUserMessage()`.
 
-When adding a new failure mode, prefer extending `DomainException` (and `toUserMessage`) over introducing a new exception type.
+When adding a new failure mode, prefer extending `DomainException` (and `toUserMessage`) over
+introducing a new exception type.
 
 ## Testing (cross-module)
 
-- JUnit4 + MockK + `kotlinx-coroutines-test` across all modules.
-- Domain use-case tests under `domain/src/test/` are the primary unit-test surface (no Android = fast). They use `runTest`, `mockk()`, `coEvery`, `coVerify`.
-- Instrumented tests live in `data/src/androidTest/` and `app/src/androidTest/`; reserve them for behaviour that genuinely depends on the Android runtime.
+- JUnit4 + MockK + `kotlinx-coroutines-test`, running as JVM host tests (`androidHostTest`).
+- Domain use-case tests are the primary unit-test surface. They use `runTest`, `mockk()`,
+  `coEvery`, `coVerify`.
+- `shared-ui/androidHostTest/core/AppGraphKoinTest.kt` resolves the whole Koin graph off-device.
+  A missing binding compiles clean and passes `assembleDevDebug` — this test is the only thing
+  that catches it before a user does. Keep it green.
+- **Instrumented tests are currently disabled.** `data/src/androidDeviceTest/` still holds 5 tests
+  (including the schema-migration tests), but no module declares `withDeviceTest { }`, so Gradle
+  never compiles or runs them. Open issue — do not assume migration coverage exists.
+
+## Gotchas
+
+- **The pre-push detekt hook covers almost nothing.** Plain `./gradlew detekt` is `NO-SOURCE` on all
+  three KMP modules; only `:androidApp:detekt` runs. Use the reinforced gate in
+  `docs/kmp/ORCHESTRATION.md` (`detektMainAndroid`, `detektIosMainSourceSet`,
+  `:androidApp:detektMain`, `:shared-ui:detektAndroidHostTestSourceSet`) for real coverage.
+- Every route the nav host can push MUST be registered in `NavSavedStateConfiguration.kt`
+  (commonMain), else `rememberNavBackStack` crashes on process-death restore. Invisible to the compiler.
 
 ## Tooling Versions
 
-- Kotlin `2.4.0` (Compose plugin matches).
-- AGP `9.2.1` (built-in Kotlin).
-- Gradle wrapper `9.5.1`.
-- Koin `4.2.x` (via BOM), SQLDelight `2.3.2`, Compose BOM `2026.05.x`.
+Kotlin `2.4.0` · AGP `9.2.1` · Gradle wrapper `9.5.1` · Koin BOM `4.2.1` · SQLDelight `2.3.2` ·
+Compose BOM `2026.05.01` · Compose Multiplatform `1.11.1` · detekt `2.0.0-alpha.3` · Supabase BOM `3.6.0`.
 
-## Refactor history
+## Open tech debt
 
-> Refactoring work prior to the product-definition Fases 1-5. Listed
-> here as background for code archaeology — for current execution
-> state read `docs/PROGRESS.md`.
+- Compose perf pass: audit `derivedStateOf`, `remember`-ed lambdas, `contentType` in `LazyColumn`.
+- `SyncOrchestrator` has no connectivity-regained trigger (only on-resume, sign-in, debounced
+  writes), so a sync that fails offline waits for the next `ON_RESUME`. No data loss — just latency.
+  Fix: `callbackFlow` over `ConnectivityManager.NetworkCallback.onAvailable`, filtered by
+  authenticated + (`pendingCount > 0` or `lastSyncFailed`), injected like `resumeEvents`.
 
-**Done:**
-- **Use-case rename**: All use cases follow `[Verb][Noun]UseCase`. See `domain/CLAUDE.md`.
-- **Typed errors**: `DomainException` + `SafeCall` + `toUserMessage()`.
-- **MVI**: All ViewModels extend `MviViewModel<S, I, E>`. `launchSafe { }` covers try/catch in the base class.
-- **Local-only migration**: removed auth/Supabase/Ktor/WorkManager; SQLDelight schema reset (no `syncState`/`isDeleted`/`userId`); hard-delete with `ON DELETE` foreign keys.
-- **Cleanup pass**: dropped dead Retrofit/parcelize/viewBinding; `@Immutable` on `TransactionUi`/`CategoryUi`; current-month filtering pushed to SQL (`completeTransactionsByDateRange`); `AddTransactionScreen`/`EditTransaction` decomposed into shared `TransactionFormSections.kt`; unit tests for all transaction, category and home use cases.
+## Docs map (`docs/`)
 
-**Ad-hoc tech debt still open** (not blocking v1, picked up opportunistically):
-- Compose perf pass: audit `derivedStateOf`, `remember`-ed lambdas, `contentType` in `LazyColumn`, Layout Inspector for overdraw.
-- Orphan deps in `libs.versions.toml` (Ktor/Retrofit/Supabase/WorkManager declarations without uses).
-- `SyncOrchestrator` has no connectivity-regained trigger (only on-resume, sign-in, debounced writes). If a sync fails offline and the network comes back while the app stays foregrounded with no new writes, nothing retries until the next ON_RESUME — `lastSyncFailed` stays set. No data loss (local-first; self-heals on next resume), just sync latency. Fix: trigger (d) — `callbackFlow` over `ConnectivityManager.NetworkCallback.onAvailable`, filtered by authenticated + (`pendingCount > 0` or `lastSyncFailed`), injected as `Flow<Unit>` like `resumeEvents`.
+- `kmp/ORCHESTRATION.md` — shared-UI slice workflow + ledger. Current and trustworthy.
+- `adr/` — 001 local-first reversal, 002 pull cursor. `sync/PLAN.md` — sync slices.
+- `PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `ROADMAP_V1.md`, `POST_V1_PLAN.md` — Fases 1-5.
+- `DESIGN_SYSTEM.md` — tokens and components (its paths still point at the pre-KMP `app/` module).
+- `archive/` — closed tracks kept for history.
+- ⚠️ `PROGRESS.md` is stale (2026-06-10, predates the whole KMP migration). Do not trust it as the
+  "where are we now" doc until it is rewritten.
 
-## Product definition (Fases 1-5) + execution status
-
-> **Read `docs/PROGRESS.md` first** if you're resuming this project
-> after a context reset. It's the canonical "where are we now" doc.
-
-The product definition (Fases 1-5) lives in `docs/`:
-
-- `PRODUCT_DISCOVERY.md` — persona, manifesto, positioning, competence map.
-- `PRODUCT_REQUIREMENTS.md` — 15 Must / 12 Won't user stories with acceptance criteria.
-- `ROADMAP_V1.md` — 8 sprints to Play Store alpha.
-- `POST_V1_PLAN.md` — 12-month funnel, monetization paths, pivot triggers.
-- `DESIGN_SYSTEM.md` — tokens, components, screen specs.
-- `PROGRESS.md` — current execution state, rollback points, next concrete step.
-- `adr/` — architecture decision records (001 local-first reversal, 002 pull cursor).
-- `archive/` — closed-track docs kept for history (ARCHITECTURE_REVIEW, DESIGN_BRIEF, PLAN_REDESIGN).
-
-Rollback tags: `pre-s0` (before execution started), `post-s0` (after
-9 quick wins). Next expected: `post-s1` after manual device verification.
+Latest tags: `v2.2.0`, `pre-kmp` (rollback point before the KMP migration).
 
 Use case naming convention: **`[Verb][Noun]UseCase`** (e.g. `CreateTransactionUseCase`, `DeleteCategoryUseCase`).
