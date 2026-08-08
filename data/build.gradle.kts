@@ -3,12 +3,14 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.kotlin.multiplatform.library)
-    id("app.cash.sqldelight") version "2.3.2"
-    kotlin("plugin.serialization") version libs.versions.kotlinVersion
+    alias(libs.plugins.sqldelight)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
-    android {
+    // `androidLibrary`, not `android` — same block, but :domain and :shared-ui both spell it this
+    // way and two names for one thing reads like magic.
+    androidLibrary {
         namespace = "com.emm.data"
         compileSdk = 37
         minSdk = 26

@@ -7,9 +7,9 @@ plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.compose)
-    // Generates KSerializer for @Serializable NavKey routes (IosRoutes.kt). Without it, Kotlin/Native
-    // has no serializers and rememberNavBackStack cannot persist the back stack. Mirrors :androidApp.
-    kotlin("plugin.serialization") version libs.versions.kotlinVersion
+    // Generates KSerializer for the @Serializable NavKey routes (HhRoutes.kt). Without it,
+    // Kotlin/Native has no serializers and rememberNavBackStack cannot persist the back stack.
+    alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
@@ -93,14 +93,9 @@ kotlin {
             implementation(libs.compose.material3)
             implementation(libs.compose.material.icons.extended)
             implementation(libs.compose.ui)
-            // Multiplatform BackHandler (androidx.compose.ui.backhandler) — not pulled in
-            // transitively by compose.ui; needed by AuthScreen's CheckEmail back handling.
-            implementation("org.jetbrains.compose.ui:ui-backhandler:${libs.versions.composeMultiplatform.get()}")
+            implementation(libs.compose.ui.backhandler)
             implementation(libs.compose.components.resources)
-            // CMP 1.10+ multiplatform @Preview lives in org.jetbrains.compose.ui:ui-tooling-preview
-            // (provides androidx.compose.ui.tooling.preview.Preview); the old
-            // compose.components.uiToolingPreview shipped the now-deprecated jetbrains namespace.
-            implementation("org.jetbrains.compose.ui:ui-tooling-preview:${libs.versions.composeMultiplatform.get()}")
+            implementation(libs.compose.ui.tooling.preview)
         }
         // Android-only wiring. Supplies ProcessLifecycleOwner for the resumeEvents() actual
         // (ResumeEvents.android.kt) — the Android foreground-resume signal that feeds the sync
@@ -229,5 +224,5 @@ dependencies {
     // Enables @Preview RENDERING in the IDE (not just compilation). Required per the CMP
     // preview docs; AGP 9.0 + the android.kotlin.multiplatform.library plugin uses the
     // androidRuntimeClasspath configuration (debugImplementation is the AGP 8.x form).
-    androidRuntimeClasspath("org.jetbrains.compose.ui:ui-tooling:${libs.versions.composeMultiplatform.get()}")
+    androidRuntimeClasspath(libs.compose.ui.tooling)
 }

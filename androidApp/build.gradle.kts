@@ -3,7 +3,7 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    kotlin("plugin.serialization") version libs.versions.kotlinVersion
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.services)
     alias(libs.plugins.google.crashlytics)
     alias(libs.plugins.kotlin.compose)
@@ -138,7 +138,8 @@ dependencies {
     implementation(projects.sharedUi)
 
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
+    // Material Components is NOT dead code: res/values/themes.xml inherits from
+    // Theme.Material3.DayNight.NoActionBar, so removing it breaks the manifest theme.
     implementation(libs.material)
 
     implementation(libs.androidx.activity.compose)
@@ -149,14 +150,11 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
+    // @Preview rendering in the IDE. The androidTest* deps that used to sit here were removed:
+    // androidApp/src/androidTest/ does not exist, so nothing ever consumed them.
     debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
-    
+
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
@@ -170,8 +168,13 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation(libs.androidx.material.icons.extended)
 
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.coil.compose)
+    // Nav2 + AppCompat are used ONLY by the `dev` experiences playground
+    // (src/dev/.../experiences/), never by the product. Scoped to the flavor so a prod build
+    // does not carry them. coil-compose used to be declared here and had zero usages — removed.
+    // Quoted form on purpose: AGP does not generate a typed `devImplementation` DSL accessor for
+    // flavor configurations, so `devImplementation(...)` fails to compile the build script.
+    "devImplementation"(libs.androidx.navigation.compose)
+    "devImplementation"(libs.androidx.appcompat)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
