@@ -326,6 +326,5 @@ Human tasks (unblockable by code):
 - **Local schema changes always ship an `.sqm` migration** — real user
   data exists on devices since `4e6de6c` (2026-06-04). Destructive
   resets are off the table. Verified by `./gradlew :data:verifySqlDelightMigration`
-  (snapshot in `data/src/commonMain/sqldelight/databases/`). ⚠️ The
-  instrumented migration tests are currently NOT running — see
-  `data/CLAUDE.md § Testing`.
+  (snapshot in `data/src/commonMain/sqldelight/databases/`) and by the
+  instrumented tests: `./gradlew :data:connectedAndroidDeviceTest`.

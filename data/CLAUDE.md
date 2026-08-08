@@ -73,12 +73,12 @@ exception type here.
 - Host tests (JUnit4 + MockK) in `data/src/androidHostTest/kotlin/` — mappers, sync repository,
   pagination, enum parsing, backup. Run with `./gradlew :data:testAndroidHostTest`.
 - Platform-neutral tests in `data/src/commonTest/kotlin/` (`kotlin.test`), e.g. `SyncCursorUtilsTest`.
-- **Instrumented tests are currently DISABLED.** `data/src/androidDeviceTest/` still contains
-  `MigrationV1ToV2Test`, `MigrationV2ToV3Test`, `DeleteUseCasesE2ETest`, `RecurringMovementFkTest`
-  and `SyncFkExceptionTest`, but `data/build.gradle.kts` declares only `withHostTest { }` — no
-  `withDeviceTest { }`. Gradle warns about this on every configure. Those tests are not compiled
-  and not run, so **the schema-migration safety net is currently silent.** Re-enabling it is an
-  open task; until then, verify migrations by hand on a device before shipping a schema change.
+- Instrumented tests in `data/src/androidDeviceTest/`: `MigrationV1ToV2Test`, `MigrationV2ToV3Test`,
+  `DeleteUseCasesE2ETest`, `RecurringMovementFkTest`, `SyncFkExceptionTest`. Run them with
+  `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator; 16 tests). They are the
+  only thing that exercises migrations against the real `AndroidSqliteDriver` — **run them before
+  shipping any schema change.** Gotcha: `kotlin.assert()` is a no-op on ART; always use
+  `kotlin.test.assertTrue`.
 
 ### Migration tests: use raw SQL against historical schemas
 

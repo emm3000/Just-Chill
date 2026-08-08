@@ -82,12 +82,6 @@ Después de eso: tag + AAB.
 
 ## Regresiones y deuda abiertas
 
-- 🔴 **Los tests instrumentados no corren.** `data/src/androidDeviceTest/` tiene 5
-  archivos —entre ellos `MigrationV1ToV2Test`, `MigrationV2ToV3Test` y
-  `DeleteUseCasesE2ETest`— pero ningún módulo declara `withDeviceTest { }`, así
-  que Gradle no los compila ni los ejecuta (lo avisa en cada configure). La red
-  de seguridad de migraciones de schema está apagada. Rehabilitarla puede
-  destapar que ya no compilan contra las APIs post-KMP.
 - 🔴 **El hook pre-push casi no cubre nada.** `./gradlew detekt` es `NO-SOURCE`
   en los tres módulos KMP; solo corre `:androidApp:detekt`. El gate real son las
   tasks por source set de `docs/kmp/ORCHESTRATION.md`. Ver

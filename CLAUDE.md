@@ -107,9 +107,9 @@ introducing a new exception type.
 - `shared-ui/androidHostTest/core/AppGraphKoinTest.kt` resolves the whole Koin graph off-device.
   A missing binding compiles clean and passes `assembleDevDebug` — this test is the only thing
   that catches it before a user does. Keep it green.
-- **Instrumented tests are currently disabled.** `data/src/androidDeviceTest/` still holds 5 tests
-  (including the schema-migration tests), but no module declares `withDeviceTest { }`, so Gradle
-  never compiles or runs them. Open issue — do not assume migration coverage exists.
+- Instrumented tests live in `data/src/androidDeviceTest/` (16 tests, schema migrations + FK
+  behaviour). Run with `./gradlew :data:connectedAndroidDeviceTest` on a device or emulator. They
+  are not part of the default gate — run them before shipping a schema change.
 
 ## Gotchas
 
