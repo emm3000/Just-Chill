@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
-# Pre-push: run detekt across all modules. Fails the push if any new finding
-# (not in `config/detekt/baseline-*.xml`) is introduced.
+# Pre-push: run detekt over every source set that actually holds code.
+#
+# NOT `./gradlew detekt`. After the KMP migration that task is NO-SOURCE on
+# :domain, :data and :shared-ui — it only ever linted :androidApp, which is now a
+# thin entry point. See scripts/git-hooks/README.md.
+#
+# Fails the push on any new finding (one not in `config/detekt/baseline-*.xml`).
 #
 # Skip with: git push --no-verify
 
@@ -10,5 +15,10 @@ set -e
 cat > /dev/null
 
 echo "→ detekt…"
-./gradlew detekt --quiet --console=plain
+./gradlew --quiet --console=plain \
+    detektMainAndroid \
+    detektIosMainSourceSet \
+    :androidApp:detektMain \
+    :shared-ui:detektAndroidHostTestSourceSet \
+    :data:detektAndroidDeviceTestSourceSet
 echo "✓ detekt clean"

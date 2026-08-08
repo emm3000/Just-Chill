@@ -113,10 +113,10 @@ introducing a new exception type.
 
 ## Gotchas
 
-- **The pre-push detekt hook covers almost nothing.** Plain `./gradlew detekt` is `NO-SOURCE` on all
-  three KMP modules; only `:androidApp:detekt` runs. Use the reinforced gate in
-  `docs/kmp/ORCHESTRATION.md` (`detektMainAndroid`, `detektIosMainSourceSet`,
-  `:androidApp:detektMain`, `:shared-ui:detektAndroidHostTestSourceSet`) for real coverage.
+- **Never gate on plain `./gradlew detekt`** — it is `NO-SOURCE` on all three KMP modules and only
+  lints `:androidApp`. Real coverage comes from the per-source-set tasks (`detektMainAndroid`,
+  `detektIosMainSourceSet`, `:androidApp:detektMain`, `:shared-ui:detektAndroidHostTestSourceSet`,
+  `:data:detektAndroidDeviceTestSourceSet`), which is what the pre-push hook now runs.
 - Every route the nav host can push MUST be registered in `NavSavedStateConfiguration.kt`
   (commonMain), else `rememberNavBackStack` crashes on process-death restore. Invisible to the compiler.
 

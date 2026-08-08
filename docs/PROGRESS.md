@@ -82,10 +82,6 @@ Después de eso: tag + AAB.
 
 ## Regresiones y deuda abiertas
 
-- 🔴 **El hook pre-push casi no cubre nada.** `./gradlew detekt` es `NO-SOURCE`
-  en los tres módulos KMP; solo corre `:androidApp:detekt`. El gate real son las
-  tasks por source set de `docs/kmp/ORCHESTRATION.md`. Ver
-  `scripts/git-hooks/README.md`.
 - 🟡 `SyncOrchestrator` no tiene trigger de reconexión: si un sync falla offline y
   vuelve la red sin escrituras nuevas, no reintenta hasta el próximo `ON_RESUME`.
   No hay pérdida de data (local-first, se auto-cura), solo latencia.
