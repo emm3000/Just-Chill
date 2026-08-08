@@ -44,7 +44,12 @@ Dimension `tier`:
 - `dev` — `applicationIdSuffix = ".dev"`. Also carries `src/dev/kotlin/.../experiences/` — a
   personal Compose playground (calendar, padding, timer picker, JSON-from-assets) that is **not part
   of the product**. It ships its own `experiencesModule`; `prod` has a no-op stub of the same file.
-- `prod` — release signing via `keystore.properties`, Firebase Analytics + Crashlytics.
+- `prod` — release signing via `keystore.properties`, Firebase Crashlytics.
+
+Crashlytics is declared for all variants, but `src/dev/AndroidManifest.xml` sets
+`firebase_crashlytics_collection_enabled=false`, which keeps the privacy policy's "build the dev
+flavor for a telemetry-free app" claim true. Firebase **Analytics is not used** — the catalog entry
+`firebase-analytics` is an orphan.
 
 `versionCode` is the git commit count, `versionName` the latest git tag — both computed at
 configure time in `build.gradle.kts`.

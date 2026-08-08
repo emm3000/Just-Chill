@@ -1,6 +1,6 @@
 # Política de privacidad — JustChill
 
-**Última actualización**: 2026-06-10
+**Última actualización**: 2026-08-08
 
 JustChill es una app de finanzas personales que funciona primero en tu
 celular. Esta política explica qué información tratamos, cuándo sale de
@@ -14,17 +14,31 @@ nada a ningún servidor.
 
 ## Si creas una cuenta (opcional)
 
-Puedes crear una cuenta con tu correo y una contraseña para
-sincronizar tu data entre tus dispositivos. Es opcional: la app
-completa funciona sin cuenta.
+Puedes crear una cuenta para sincronizar tu data entre tus
+dispositivos, de dos maneras: con tu correo y una contraseña, o con tu
+cuenta de Google. Es opcional: la app completa funciona sin cuenta.
 
 Si te registras, guardamos en nuestros servidores (Supabase):
 
-- **Tu correo**, para identificar tu cuenta. Tu contraseña se guarda
-  como hash — ni nosotros podemos leerla.
+- **Tu correo**, para identificar tu cuenta. Si usas correo y
+  contraseña, la contraseña se guarda como hash — ni nosotros podemos
+  leerla.
 - **Tu data financiera**: cuentas, categorías, movimientos y
   movimientos recurrentes — montos, descripciones y fechas —
   asociados a tu cuenta.
+
+### Si entras con Google
+
+Cuando eliges "Continuar con Google", tu celular le pide a Google que
+confirme quién eres. Google nos devuelve un token firmado que incluye
+tu correo y los datos básicos de perfil de la cuenta que elegiste.
+Usamos ese token únicamente para crear o abrir tu cuenta; de todo eso
+guardamos solo tu correo, igual que en el registro con contraseña.
+
+Nunca recibimos tu contraseña de Google ni tenemos acceso a tu Gmail,
+tus contactos ni ningún otro servicio de Google. El intercambio lo
+maneja Google en tu propio celular, así que Google sabe que iniciaste
+sesión en JustChill; lo que hagas dentro de la app no se le informa.
 
 Esa data viaja cifrada (HTTPS) y cada cuenta solo puede acceder a su
 propia data. No la vendemos, no la compartimos y no la usamos para
@@ -37,10 +51,10 @@ nada que no sea sincronizar tus dispositivos.
   borrado (necesaria para esa propagación) hasta que borres tu cuenta.
 - **Cerrar sesión**: tu data local se queda en tu celular. El servidor
   conserva lo ya sincronizado para cuando vuelvas a entrar.
-- **Borrar tu cuenta**: podés hacerlo directamente desde la app en
+- **Borrar tu cuenta**: puedes hacerlo directamente desde la app en
   Perfil → "Eliminar cuenta". Se elimina tu cuenta de Supabase y toda
   tu data del servidor de forma inmediata; tu data local sigue en tu
-  celular. También podés escribirnos a edgardo.emm20@gmail.com desde
+  celular. También puedes escribirnos a edgardo.emm20@gmail.com desde
   el correo de tu cuenta y lo hacemos nosotros dentro de 30 días.
 
 ## Exportar tu data

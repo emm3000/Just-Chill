@@ -41,7 +41,8 @@ There is no `:domain:test` and no `connectedDevDebugAndroidTest`; both died with
 - `iosApp/` — Xcode project consuming `shared-ui`. `supabase/` — CLI migrations for the server schema.
 - Two product flavors on dimension `tier` (`:androidApp` only):
   - `dev` — `applicationIdSuffix = ".dev"`.
-  - `prod` — release signing via `keystore.properties`, Firebase Analytics + Crashlytics.
+  - `prod` — release signing via `keystore.properties`, Firebase Crashlytics (dev disables
+    collection via manifest meta-data; Firebase Analytics is NOT used, only declared in the catalog).
 
 ## Architecture
 
@@ -139,8 +140,8 @@ Compose BOM `2026.05.01` · Compose Multiplatform `1.11.1` · detekt `2.0.0-alph
 - `PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `ROADMAP_V1.md`, `POST_V1_PLAN.md` — Fases 1-5.
 - `DESIGN_SYSTEM.md` — tokens and components (its paths still point at the pre-KMP `app/` module).
 - `archive/` — closed tracks kept for history.
-- ⚠️ `PROGRESS.md` is stale (2026-06-10, predates the whole KMP migration). Do not trust it as the
-  "where are we now" doc until it is rewritten.
+- `PROGRESS.md` — canonical "where are we now". Rewritten 2026-08-08; pre-KMP sprint detail is in
+  git history, not in the file.
 
 Latest tags: `v2.2.0`, `pre-kmp` (rollback point before the KMP migration).
 
