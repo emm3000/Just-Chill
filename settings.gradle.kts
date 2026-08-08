@@ -5,6 +5,10 @@
 // pluginManagement, which read as if :data were special. It is not.
 
 pluginManagement {
+    // Hosts the `justchill.*` convention plugins. Because it is an included build, modules apply
+    // them by id with no version — see build-logic/src/main/kotlin/.
+    includeBuild("build-logic")
+
     repositories {
         google {
             content {

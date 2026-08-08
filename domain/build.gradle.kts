@@ -1,25 +1,12 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.kotlin.multiplatform.library)
+    id("justchill.kmp.library")
 }
 
 kotlin {
     androidLibrary {
         namespace = "com.emm.domain"
-        compileSdk = 37
         minSdk = 26
-
-        withHostTest { }
-
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_17
-        }
     }
-
-    iosArm64()
-    iosSimulatorArm64()
 
     sourceSets {
         commonMain.dependencies {

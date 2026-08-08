@@ -1,10 +1,8 @@
 import java.io.FileInputStream
 import java.util.Properties
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.kotlin.multiplatform.library)
+    id("justchill.kmp.library")
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.compose)
     // Generates KSerializer for the @Serializable NavKey routes (HhRoutes.kt). Without it,
@@ -24,12 +22,7 @@ kotlin {
 
     androidLibrary {
         namespace = "com.emm.justchill.shared"
-        compileSdk = 37
         minSdk = 28
-        withHostTest { }
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_17
-        }
         // Opt-in to Android resource processing for this KMP library target. Without it, the
         // com.android.kotlin.multiplatform.library plugin (AGP 9) generates the Compose Multiplatform
         // Res accessors but never runs CopyResourcesToAndroidAssetsTask, so composeResources
@@ -40,13 +33,10 @@ kotlin {
         androidResources { enable = true }
     }
 
-    // iOS framework consumed by iosApp (wizard scaffold parity). JVM target stays 17
-    // (project standard), not the wizard's 11. Only built by iOS link tasks — the
-    // Android gate (assembleDevDebug) is unaffected.
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64(),
-    ).forEach { iosTarget ->
+    // The iOS targets themselves come from the convention plugin; only this module publishes a
+    // framework from them, so the binaries config stays here. Consumed by iosApp/. Built by the
+    // iOS link tasks only — the Android gate (assembleDevDebug) is unaffected.
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "Shared"
             isStatic = true

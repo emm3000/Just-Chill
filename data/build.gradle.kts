@@ -1,33 +1,20 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.kotlin.multiplatform.library)
+    id("justchill.kmp.library")
     alias(libs.plugins.sqldelight)
     alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
-    // `androidLibrary`, not `android` — same block, but :domain and :shared-ui both spell it this
-    // way and two names for one thing reads like magic.
     androidLibrary {
         namespace = "com.emm.data"
-        compileSdk = 37
         minSdk = 26
-        withHostTest { }
-        // Instrumented tests. These were stranded by the KMP migration: the source set moved to
-        // androidDeviceTest/ but was never re-enabled, so Gradle silently skipped the schema
-        // migration tests — the safety net for real user data on devices since 4e6de6c.
+        // Instrumented tests, on top of the androidHostTest the convention plugin sets up. These
+        // were stranded by the KMP migration: the source set moved to androidDeviceTest/ but was
+        // never re-enabled, so Gradle silently skipped the schema migration tests.
         withDeviceTest {
             instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_17
-        }
     }
-
-    iosArm64()
-    iosSimulatorArm64()
 
     sourceSets {
         commonMain.dependencies {
