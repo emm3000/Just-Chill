@@ -53,9 +53,11 @@ If the user provided no argument or something unrecognized, ask which bump (patc
 
 If the user gave an explicit version, normalize to `vX.Y.Z` (add `v` prefix if missing). Validate it matches `^v\d+\.\d+\.\d+(-[\w.]+)?$`.
 
-If the user gave `patch`/`minor`/`major`, read the latest tag:
+If the user gave `patch`/`minor`/`major`, read the latest **release** tag. The `--match` filter is
+required: the repo carries non-release tags (`pre-kmp`, `post-s5`, `pre-redesign`) and a bare
+`describe` returns whichever is nearest, which is not parseable as semver.
 ```bash
-git describe --tags --abbrev=0 2>/dev/null
+git describe --tags --abbrev=0 --match "v[0-9]*" 2>/dev/null
 ```
 If no tag exists at all, default to `v0.1.0` for `minor`/`patch` or `v1.0.0` for `major`. Otherwise parse the existing tag, strip leading `v`, strip any `-suffix` (treat `1.5.0-alpha` as `1.5.0`), bump per the rule.
 
@@ -70,18 +72,26 @@ Release plan
   New tag:        <new tag>
   versionCode:    <commit count from `git rev-list --count HEAD`>
   versionName:    <new tag without leading v>
-  Workflow:       uploadRelease.yml → Play Store alpha (status: completed)
+  Workflow:       uploadRelease.yml → Play Store alpha (status: draft — needs manual promotion)
 ```
 
 Then ask the user to confirm with a clear yes/no. **Do not proceed without explicit confirmation.**
 
 ## Optional pre-flight tests
 
-Unless the user passed `--skip-tests`, run a quick local validation BEFORE tagging — same targets the CI `verify` job will run, so a fail here predicts a CI fail without polluting the remote with a dead tag:
+Unless the user passed `--skip-tests`, run a quick local validation BEFORE tagging — the same tasks
+the CI `publish` job runs, so a fail here predicts a CI fail without polluting the remote with a
+dead tag:
 
 ```bash
-./gradlew :domain:test :data:testDebugUnitTest :app:testDevDebugUnitTest
+./gradlew qualityGate lintProdRelease
 ```
+
+Do not substitute a hand-written task list. `qualityGate` is defined once in build-logic and this
+line existed for months naming three tasks that the KMP migration had deleted (`:domain:test`,
+`:data:testDebugUnitTest`, `:app:testDevDebugUnitTest`), so the preflight failed on every release
+for a reason that had nothing to do with the release. On macOS `qualityGate` also compiles the iOS
+target; that is intended.
 
 If anything fails, STOP. Show the failure, tell the user to fix and rerun. Do not tag.
 
@@ -107,7 +117,10 @@ After the push succeeds, tell the user:
    Construct: `https://github.com/<owner>/<repo>/actions/workflows/uploadRelease.yml`
 3. Remind them:
    - Wait for the workflow to finish green (verify + publish).
-   - Open Play Console → Producción → "Promover desde otra pista" → seleccionar la build de alpha → release notes → revisar → lanzar a producción.
+   - The workflow uploads the AAB as a **draft** on the alpha track — it does not ship. Open
+     Play Console → Pruebas → Alfa, confirm the draft's versionCode/versionName, and publish it.
+     A green workflow alone means nothing reached testers.
+   - Only then: Play Console → Producción → "Promover desde otra pista" → seleccionar la build de alpha → release notes → revisar → lanzar a producción.
    - Google review: 1–3 días para apps existentes.
 
 ## Failure recovery
