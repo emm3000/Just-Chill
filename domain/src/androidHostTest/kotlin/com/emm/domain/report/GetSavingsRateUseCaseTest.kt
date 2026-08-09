@@ -171,7 +171,24 @@ class GetSavingsRateUseCaseTest {
     }
 
     @Test
-    fun `averages are total divided by months count`() = runTest {
+    fun `averages divide by the whole window when every month has data`() = runTest {
+        stubAllMonthsBlank()
+        var ym = YearMonth(2026, Month.MAY)
+        repeat(6) {
+            stubMonth(ym, TransactionType.Income, 60_000L)
+            stubMonth(ym, TransactionType.Spend, 40_000L)
+            ym = ym.previous()
+        }
+
+        val result = useCase(months = 6, clock = fixedClock)
+
+        assertEquals(6, result.monthsWithData)
+        assertEquals(Money(60_000L), result.averageIncome)
+        assertEquals(Money(40_000L), result.averageExpense)
+    }
+
+    @Test
+    fun `averages divide by the months that have data, not by the window size`() = runTest {
         stubAllMonthsBlank()
         val ym = YearMonth(2026, Month.MAY)
         stubMonth(ym, TransactionType.Income, 60_000L)
@@ -179,7 +196,37 @@ class GetSavingsRateUseCaseTest {
 
         val result = useCase(months = 6, clock = fixedClock)
 
-        assertEquals(Money(10_000L), result.averageIncome) // 60000 / 6
-        assertEquals(Money(6_666L), result.averageExpense) // 40000 / 6 = 6666
+        // A user one month into the app earned 600 and spent 400 that month. Dividing by the
+        // fixed 6-month window reported 100 and 66 — a sixth of reality, for everyone whose
+        // history is shorter than the window.
+        assertEquals(1, result.monthsWithData)
+        assertEquals(Money(60_000L), result.averageIncome)
+        assertEquals(Money(40_000L), result.averageExpense)
+    }
+
+    @Test
+    fun `a month with only expense still counts as a month with data`() = runTest {
+        stubAllMonthsBlank()
+        val may = YearMonth(2026, Month.MAY)
+        val april = may.previous()
+        stubMonth(may, TransactionType.Spend, 40_000L)
+        stubMonth(april, TransactionType.Income, 60_000L)
+
+        val result = useCase(months = 6, clock = fixedClock)
+
+        assertEquals(2, result.monthsWithData)
+        assertEquals(Money(30_000L), result.averageIncome)
+        assertEquals(Money(20_000L), result.averageExpense)
+    }
+
+    @Test
+    fun `averages are zero on an empty window instead of dividing by zero`() = runTest {
+        stubAllMonthsBlank(12)
+
+        val result = useCase(months = 6, clock = fixedClock)
+
+        assertEquals(0, result.monthsWithData)
+        assertEquals(Money.Zero, result.averageIncome)
+        assertEquals(Money.Zero, result.averageExpense)
     }
 }

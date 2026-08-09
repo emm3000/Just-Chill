@@ -32,17 +32,30 @@ class GetSavingsRateUseCase(private val transactionStatsRepository: TransactionS
             currentRatePercent - priorRatePercent
         }
 
-        val averageIncome = Money(totalIncomeCurrent.cents / months)
-        val averageExpense = Money(totalExpenseCurrent.cents / months)
+        val monthsWithData = currentWindow.count { it.income.cents > 0 || it.expense.cents > 0 }
 
         return SavingsRate(
             currentRatePercent = currentRatePercent,
             deltaPointsVsPrior = deltaPoints,
             monthly = currentWindow,
-            averageIncome = averageIncome,
-            averageExpense = averageExpense,
+            averageIncome = averageOver(totalIncomeCurrent, monthsWithData),
+            averageExpense = averageOver(totalExpenseCurrent, monthsWithData),
+            monthsWithData = monthsWithData,
         )
     }
+
+    /**
+     * Monthly average over the months that actually hold movements, not over the window.
+     *
+     * Dividing by the fixed window length reported a sixth of reality to every user whose history
+     * is shorter than it — which is every user for their first five months.
+     *
+     * Income and expense deliberately share one divisor. Giving each its own ("months with
+     * income", "months with expense") would make the two numbers describe different time spans,
+     * and they are read side by side.
+     */
+    private fun averageOver(total: Money, monthsWithData: Int): Money =
+        if (monthsWithData == 0) Money.Zero else Money(total.cents / monthsWithData)
 
     private suspend fun buildWindow(endMonthInclusive: YearMonth, months: Int): List<MonthlyTotal> {
         // Build oldest-first list of `months` months ending at endMonthInclusive

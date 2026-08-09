@@ -55,6 +55,7 @@ class ReportViewModelTest {
         monthly = emptyList(),
         averageIncome = Money.Zero,
         averageExpense = Money.Zero,
+        monthsWithData = 0,
     )
 
     /** Configures the use-case mocks to return empty/zero responses. */

@@ -16,6 +16,15 @@ import com.emm.justchill.hh.shared.shortLabel3
 import kotlinx.coroutines.Job
 import kotlin.math.abs
 
+/** Window the Tendencias tab reads. Long enough to show a season, short enough to stay relevant. */
+private const val TRENDS_WINDOW_MONTHS = 6
+
+/** Under this many months holding movements the trend is noise, and the UI says so. */
+private const val MONTHS_FOR_A_MEANINGFUL_TREND = 3
+
+/** How many categories the "en qué se te va" card lists. */
+private const val TOP_EXPENSES_SHOWN = 3
+
 class ReportViewModel(
     private val getMonthlyAmountByCategory: GetMonthlyAmountByCategoryUseCase,
     private val getMonthlyComparison: GetMonthlyComparisonUseCase,
@@ -136,14 +145,15 @@ class ReportViewModel(
     private fun reloadTrends() {
         trendsJob?.cancel()
         trendsJob = launchSafe(onError = { e -> ReportEffect.ShowError(e.toUserMessage()) }) {
-            val savingsRate = getSavingsRate(months = 6)
-            val topExpenses = getTopCategories(TransactionType.Spend, months = 6, topN = 3)
+            val savingsRate = getSavingsRate(months = TRENDS_WINDOW_MONTHS)
+            val topExpenses = getTopCategories(
+                TransactionType.Spend,
+                months = TRENDS_WINDOW_MONTHS,
+                topN = TOP_EXPENSES_SHOWN,
+            )
 
             val currentYm = YearMonth.current()
-            val monthsWithData = savingsRate.monthly.count { m ->
-                m.income.cents > 0 || m.expense.cents > 0
-            }
-            val isEarlyState = monthsWithData < 3
+            val isEarlyState = savingsRate.monthsWithData < MONTHS_FOR_A_MEANINGFUL_TREND
 
             val deltaText = savingsRate.deltaPointsVsPrior?.let { delta ->
                 val sign = if (delta >= 0) "↑" else "↓"
