@@ -105,7 +105,7 @@ private fun SavingsRateBlockPreview() {
         ) {
             SavingsRateBlock(
                 ratePercent = 26,
-                deltaText = "↑ 4 pts",
+                deltaText = "4 pts",
                 deltaIsPositive = true,
                 contextSentence = "De cada S/ 100 que entró, ahorraste S/ 26. Mejoraste vs. los 6 meses previos.",
             )

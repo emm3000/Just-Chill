@@ -75,7 +75,12 @@ internal object ReportShareFormatter {
         val t = state.trends
         return buildString {
             appendLine("Reporte · Tendencias 6 meses")
-            val deltaStr = t.deltaText?.let { " ($it vs. 6 meses previos)" } ?: ""
+            // Shared text has no pill and no icon, so the arrow the screen draws has to be
+            // written out here or the reader cannot tell an improvement from a slip.
+            val deltaStr = t.deltaText?.let { text ->
+                val sign = if (t.deltaIsPositive == true) "↑" else "↓"
+                " ($sign $text vs. 6 meses previos)"
+            }.orEmpty()
             appendLine("Tasa de ahorro: ${t.savingsRatePercent}%$deltaStr")
             appendLine("Promedio mensual: ingresos ${t.averageIncomeFormatted} · gastos ${t.averageExpenseFormatted}")
             if (t.topExpenses.isNotEmpty()) {

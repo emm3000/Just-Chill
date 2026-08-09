@@ -163,6 +163,40 @@ class ReportViewModelTest {
         assertEquals(ReportTab.Tendencias, vm.state.value.selectedTab)
     }
 
+    // ── Trends delta ──────────────────────────────────────────────────────
+
+    @Test
+    fun `deltaText carries no arrow glyph, the pill draws its own icon`() = runTest(testDispatcher) {
+        // The pill renders a leading ArrowUpward/ArrowDownward from deltaIsPositive. A glyph in
+        // the text too showed the user "↓ ↓ 10 pts".
+        stubEmptyReport()
+        coEvery { getSavingsRate(any()) } returns emptySavingsRate().copy(
+            currentRatePercent = 20,
+            deltaPointsVsPrior = -10,
+        )
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        val trends = vm.state.value.trends
+        assertEquals("10 pts", trends.deltaText)
+        assertEquals(false, trends.deltaIsPositive)
+    }
+
+    @Test
+    fun `an improving delta reports the magnitude and a positive direction`() = runTest(testDispatcher) {
+        stubEmptyReport()
+        coEvery { getSavingsRate(any()) } returns emptySavingsRate().copy(
+            currentRatePercent = 40,
+            deltaPointsVsPrior = 7,
+        )
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        val trends = vm.state.value.trends
+        assertEquals("7 pts", trends.deltaText)
+        assertEquals(true, trends.deltaIsPositive)
+    }
+
     // ── Report data mapping ───────────────────────────────────────────────
 
     @Test

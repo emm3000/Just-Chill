@@ -122,6 +122,35 @@ class ReportShareFormatterTest {
     }
 
     @Test
+    fun `buildTrendsShareText signs the delta itself, since plain text has no arrow icon`() {
+        // The pill on screen gets its direction from a leading icon, so deltaText carries no
+        // glyph. Shared text has no icon to lean on: "(10 pts vs. 6 meses previos)" would not
+        // say whether the user improved or slipped.
+        val worse = ReportUiState(
+            trends = TrendsUiData(savingsRatePercent = 20, deltaText = "10 pts", deltaIsPositive = false),
+        )
+        val better = ReportUiState(
+            trends = TrendsUiData(savingsRatePercent = 40, deltaText = "10 pts", deltaIsPositive = true),
+        )
+
+        assertTrue(
+            ReportShareFormatter.buildTrendsShareText(worse).contains("(↓ 10 pts vs. 6 meses previos)"),
+            "Expected a down arrow in: ${ReportShareFormatter.buildTrendsShareText(worse)}",
+        )
+        assertTrue(
+            ReportShareFormatter.buildTrendsShareText(better).contains("(↑ 10 pts vs. 6 meses previos)"),
+            "Expected an up arrow in: ${ReportShareFormatter.buildTrendsShareText(better)}",
+        )
+    }
+
+    @Test
+    fun `buildTrendsShareText omits the delta entirely when there is no baseline`() {
+        val state = ReportUiState(trends = TrendsUiData(savingsRatePercent = 20, deltaText = null))
+        val result = ReportShareFormatter.buildTrendsShareText(state)
+        assertTrue(!result.contains("6 meses previos"), "Unexpected comparison in: $result")
+    }
+
+    @Test
     fun `buildTrendsShareText omits Mayores gastos section when topExpenses is empty`() {
         val state = ReportUiState(
             trends = TrendsUiData(topExpenses = emptyList()),

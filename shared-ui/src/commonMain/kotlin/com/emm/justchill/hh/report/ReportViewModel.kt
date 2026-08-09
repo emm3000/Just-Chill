@@ -155,10 +155,9 @@ class ReportViewModel(
             val currentYm = YearMonth.current()
             val isEarlyState = savingsRate.monthsWithData < MONTHS_FOR_A_MEANINGFUL_TREND
 
-            val deltaText = savingsRate.deltaPointsVsPrior?.let { delta ->
-                val sign = if (delta >= 0) "↑" else "↓"
-                "$sign ${abs(delta)} pts"
-            }
+            // Magnitude only. Direction is `deltaIsPositive`, which the pill turns into a leading
+            // arrow icon — spelling it out here too rendered "↓ ↓ 10 pts".
+            val deltaText = savingsRate.deltaPointsVsPrior?.let { delta -> "${abs(delta)} pts" }
             val deltaIsPositive = savingsRate.deltaPointsVsPrior?.let { it >= 0 }
 
             val contextSentence = ReportShareFormatter.buildContextSentence(
