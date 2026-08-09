@@ -17,6 +17,7 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin
  * What lands on the gate per module:
  *  - the detekt tasks in [DETEKT_GATE_TASKS] that this module actually has
  *  - the compile-only tasks in [COMPILE_GATE_TASKS] that this module actually has
+ *  - the schema checks in [SCHEMA_GATE_TASKS], for the module that has a SQLDelight schema
  *  - its host test suite, contributed by [KmpLibraryConventionPlugin] or the module's build file
  *  - the iOS compile, on macOS hosts only, contributed by [KmpLibraryConventionPlugin]
  */
@@ -31,7 +32,13 @@ class QualityGateConventionPlugin : Plugin<Project> {
 
             // Lazy and existence-safe: a module only contributes the tasks it actually has, and
             // tasks registered after this plugin still land on the gate.
-            dependsOn(target.tasks.matching { it.name in DETEKT_GATE_TASKS || it.name in COMPILE_GATE_TASKS })
+            dependsOn(
+                target.tasks.matching {
+                    it.name in DETEKT_GATE_TASKS ||
+                        it.name in COMPILE_GATE_TASKS ||
+                        it.name in SCHEMA_GATE_TASKS
+                },
+            )
         }
     }
 
@@ -74,6 +81,23 @@ class QualityGateConventionPlugin : Plugin<Project> {
          * phone. Compiling costs a second and needs no device.
          */
         val COMPILE_GATE_TASKS = setOf("compileAndroidDeviceTest")
+
+        /**
+         * Schema verification: replay every `.sqm` over the committed `.db` snapshot and assert the
+         * result matches the `CREATE TABLE` statements in the `.sq` files.
+         *
+         * This is the only automated check that a schema change came with a migration. A `.sq`
+         * edited without a matching `.sqm` compiles clean, generates working query classes, and
+         * passes every test on this repo — it breaks on the first upgrade of an already-installed
+         * app, which is the one place nothing here can reach. Verified by adding a column to
+         * `accounts.sq` with no migration: the task fails with
+         * `/tables[accounts]/columns[accounts.canaryColumn] - ADDED`.
+         *
+         * SQLDelight creates the task whenever `schemaOutputDirectory` is set, and wires it into
+         * `check` — which is exactly the problem: neither the pre-push hook nor any workflow runs
+         * `check`. It was sitting there working and unreachable.
+         */
+        val SCHEMA_GATE_TASKS = setOf("verifySqlDelightMigration")
 
         /**
          * Kotlin/Native only produces iOS binaries on an Apple host, so the iOS compile joins the
