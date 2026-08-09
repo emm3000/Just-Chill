@@ -3,10 +3,12 @@ package com.emm.data.transaction
 import com.emm.data.shared.enumValueOrNull
 import com.emm.data.shared.safeDbCall
 import com.emm.domain.report.CategoryAmount
+import com.emm.domain.report.MonthCategoryAmounts
 import com.emm.domain.report.MonthlySectionStats
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
+import com.emm.domain.shared.MonthRange
 import com.emm.domain.transaction.FrequentCombo
 import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
@@ -22,6 +24,12 @@ class DefaultTransactionStatsRepository(private val localDataSource: Transaction
         localDataSource.monthlyAmountByCategory(type, startInclusive, endExclusive)
             .map { it.toDomain() }
     }
+
+    override suspend fun monthlyAmountByCategoryForRanges(ranges: List<MonthRange>): List<MonthCategoryAmounts> =
+        safeDbCall {
+            localDataSource.monthlyAmountByCategoryForRanges(ranges)
+                .map { rows -> rows.toMonthCategoryAmounts() }
+        }
 
     override suspend fun monthlyStats(
         type: TransactionType,

@@ -2,13 +2,17 @@ package com.emm.domain.report
 
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
+import com.emm.domain.shared.MonthRange
 import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Month
+import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -25,55 +29,58 @@ class GetSavingsRateUseCaseTest {
         override fun now(): Instant = Instant.parse("2026-05-15T12:00:00Z")
     }
 
-    private fun cat(id: String, amountCents: Long) = CategoryAmount(
-        categoryId = CategoryId(id),
-        categoryName = "Cat $id",
-        categoryIcon = "icon",
-        categoryColor = "blue",
-        amount = Money(amountCents),
-    )
+    /** Cents per month, income to expense. Anything not listed is a month with no movements. */
+    private val amountsByMonth = mutableMapOf<YearMonth, Pair<Long, Long>>()
 
-    private fun stubMonth(ym: YearMonth, type: TransactionType, amountCents: Long) {
-        val items = if (amountCents == 0L) {
-            emptyList()
-        } else {
-            listOf(cat(ym.toString(), amountCents))
+    @Before
+    fun setUp() {
+        // The use case reads the whole span in one call and expects the answers back in the order
+        // it asked for them, so the fake resolves each range independently.
+        coEvery { repository.monthlyAmountByCategoryForRanges(any()) } answers {
+            firstArg<List<MonthRange>>().map { range ->
+                val ym = YearMonth.of(range.startInclusive)
+                val (income, expense) = amountsByMonth[ym] ?: (0L to 0L)
+                MonthCategoryAmounts(income = amounts(ym, income), expense = amounts(ym, expense))
+            }
         }
-        coEvery {
-            repository.monthlyAmountByCategory(type, ym.startInclusiveMillis(), ym.endExclusiveMillis())
-        } returns items
     }
 
-    private fun stubAllMonthsBlank(months: Int = 12) {
-        var ym = YearMonth(2026, Month.MAY)
-        repeat(months) {
-            stubMonth(ym, TransactionType.Income, 0L)
-            stubMonth(ym, TransactionType.Spend, 0L)
+    private fun amounts(ym: YearMonth, cents: Long): List<CategoryAmount> = if (cents == 0L) {
+        emptyList()
+    } else {
+        listOf(
+            CategoryAmount(
+                categoryId = CategoryId(ym.toString()),
+                categoryName = "Cat $ym",
+                categoryIcon = "icon",
+                categoryColor = "blue",
+                amount = Money(cents),
+            ),
+        )
+    }
+
+    private fun stubMonth(ym: YearMonth, type: TransactionType, amountCents: Long) {
+        val (income, expense) = amountsByMonth[ym] ?: (0L to 0L)
+        amountsByMonth[ym] = when (type) {
+            TransactionType.Income -> amountCents to expense
+            TransactionType.Spend -> income to amountCents
+        }
+    }
+
+    private fun stubMonths(endInclusive: YearMonth, count: Int, income: Long, expense: Long): YearMonth {
+        var ym = endInclusive
+        repeat(count) {
+            stubMonth(ym, TransactionType.Income, income)
+            stubMonth(ym, TransactionType.Spend, expense)
             ym = ym.previous()
         }
+        return ym
     }
 
     @Test
     fun `happy path - returns correct savings rate and delta`() = runTest {
-        stubAllMonthsBlank()
-        val currentEnd = YearMonth(2026, Month.MAY)
-        var ym = currentEnd
-        repeat(6) {
-            stubMonth(ym, TransactionType.Income, 600_000L)
-            stubMonth(ym, TransactionType.Spend, 400_000L)
-            ym = ym.previous()
-        }
-        val priorEnd = run {
-            var m = YearMonth(2026, Month.MAY)
-            repeat(6) { m = m.previous() }
-            m
-        }
-        var pm = priorEnd
-        repeat(6) {
-            stubMonth(pm, TransactionType.Income, 500_000L)
-            stubMonth(pm, TransactionType.Spend, 400_000L)
-            pm = pm.previous()
-        }
+        val priorEnd = stubMonths(YearMonth(2026, Month.MAY), count = 6, income = 600_000L, expense = 400_000L)
+        stubMonths(priorEnd, count = 6, income = 500_000L, expense = 400_000L)
 
         val result = useCase(months = 6, clock = fixedClock)
 
@@ -84,9 +91,41 @@ class GetSavingsRateUseCaseTest {
     }
 
     @Test
-    fun `returns zero rate when income is zero`() = runTest {
-        stubAllMonthsBlank(12)
+    fun `the whole window is read in a single round-trip, oldest month first`() = runTest {
+        val ranges = slot<List<MonthRange>>()
 
+        useCase(months = 6, clock = fixedClock)
+
+        // Two windows of six months used to mean 24 sequential suspend calls: one per month, per
+        // type, per window. They are contiguous, so they are one request.
+        coVerify(exactly = 1) { repository.monthlyAmountByCategoryForRanges(capture(ranges)) }
+        assertEquals(12, ranges.captured.size)
+        val months = ranges.captured.map { YearMonth.of(it.startInclusive) }
+        assertEquals(YearMonth(2025, Month.JUNE), months.first())
+        assertEquals(YearMonth(2026, Month.MAY), months.last())
+        assertEquals(months.sorted(), months)
+    }
+
+    @Test
+    fun `each range covers exactly its own calendar month`() = runTest {
+        val ranges = slot<List<MonthRange>>()
+
+        useCase(months = 6, clock = fixedClock)
+
+        coVerify { repository.monthlyAmountByCategoryForRanges(capture(ranges)) }
+        ranges.captured.forEach { range ->
+            val ym = YearMonth.of(range.startInclusive)
+            assertEquals(ym.startInclusiveMillis(), range.startInclusive)
+            assertEquals(ym.endExclusiveMillis(), range.endExclusive)
+        }
+        // Half-open and contiguous: no gap and no overlap between consecutive months.
+        ranges.captured.zipWithNext { earlier, later ->
+            assertEquals(earlier.endExclusive, later.startInclusive)
+        }
+    }
+
+    @Test
+    fun `returns zero rate when income is zero`() = runTest {
         val result = useCase(months = 6, clock = fixedClock)
 
         assertEquals(0, result.currentRatePercent)
@@ -95,10 +134,7 @@ class GetSavingsRateUseCaseTest {
 
     @Test
     fun `overspending reports a negative rate instead of hiding it as zero`() = runTest {
-        stubAllMonthsBlank()
-        val ym = YearMonth(2026, Month.MAY)
-        stubMonth(ym, TransactionType.Income, 100_000L)
-        stubMonth(ym, TransactionType.Spend, 150_000L)
+        stubMonths(YearMonth(2026, Month.MAY), count = 1, income = 100_000L, expense = 150_000L)
 
         val result = useCase(months = 6, clock = fixedClock)
 
@@ -109,9 +145,7 @@ class GetSavingsRateUseCaseTest {
 
     @Test
     fun `rate reaches 100 when nothing is spent`() = runTest {
-        stubAllMonthsBlank()
-        val ym = YearMonth(2026, Month.MAY)
-        stubMonth(ym, TransactionType.Income, 100_000L)
+        stubMonths(YearMonth(2026, Month.MAY), count = 1, income = 100_000L, expense = 0L)
 
         val result = useCase(months = 6, clock = fixedClock)
 
@@ -120,21 +154,10 @@ class GetSavingsRateUseCaseTest {
 
     @Test
     fun `delta compares real rates, not clamped ones`() = runTest {
-        stubAllMonthsBlank(12)
         // Current 6 months: overspending, true rate -50.
-        var ym = YearMonth(2026, Month.MAY)
-        repeat(6) {
-            stubMonth(ym, TransactionType.Income, 100_000L)
-            stubMonth(ym, TransactionType.Spend, 150_000L)
-            ym = ym.previous()
-        }
+        val priorEnd = stubMonths(YearMonth(2026, Month.MAY), count = 6, income = 100_000L, expense = 150_000L)
         // Prior 6 months: worse still, true rate -150.
-        var pm = ym
-        repeat(6) {
-            stubMonth(pm, TransactionType.Income, 100_000L)
-            stubMonth(pm, TransactionType.Spend, 250_000L)
-            pm = pm.previous()
-        }
+        stubMonths(priorEnd, count = 6, income = 100_000L, expense = 250_000L)
 
         val result = useCase(months = 6, clock = fixedClock)
 
@@ -146,13 +169,7 @@ class GetSavingsRateUseCaseTest {
 
     @Test
     fun `null delta when prior period has no income`() = runTest {
-        stubAllMonthsBlank(12)
-        var ym = YearMonth(2026, Month.MAY)
-        repeat(6) {
-            stubMonth(ym, TransactionType.Income, 600_000L)
-            stubMonth(ym, TransactionType.Spend, 400_000L)
-            ym = ym.previous()
-        }
+        stubMonths(YearMonth(2026, Month.MAY), count = 6, income = 600_000L, expense = 400_000L)
 
         val result = useCase(months = 6, clock = fixedClock)
 
@@ -161,8 +178,6 @@ class GetSavingsRateUseCaseTest {
 
     @Test
     fun `monthly list has oldest month first`() = runTest {
-        stubAllMonthsBlank(12)
-
         val result = useCase(months = 6, clock = fixedClock)
 
         assertEquals(6, result.monthly.size)
@@ -171,14 +186,26 @@ class GetSavingsRateUseCaseTest {
     }
 
     @Test
+    fun `monthly totals land on the month they belong to`() = runTest {
+        val may = YearMonth(2026, Month.MAY)
+        val april = may.previous()
+        stubMonth(may, TransactionType.Income, 60_000L)
+        stubMonth(april, TransactionType.Spend, 40_000L)
+
+        val result = useCase(months = 6, clock = fixedClock)
+
+        // Reading twelve months in one call only helps if each answer is put back where it came
+        // from; an off-by-one here would move a user's money between months.
+        val byMonth = result.monthly.associateBy { it.yearMonth }
+        assertEquals(Money(60_000L), byMonth.getValue(may).income)
+        assertEquals(Money.Zero, byMonth.getValue(may).expense)
+        assertEquals(Money(40_000L), byMonth.getValue(april).expense)
+        assertEquals(Money.Zero, byMonth.getValue(april).income)
+    }
+
+    @Test
     fun `averages divide by the whole window when every month has data`() = runTest {
-        stubAllMonthsBlank()
-        var ym = YearMonth(2026, Month.MAY)
-        repeat(6) {
-            stubMonth(ym, TransactionType.Income, 60_000L)
-            stubMonth(ym, TransactionType.Spend, 40_000L)
-            ym = ym.previous()
-        }
+        stubMonths(YearMonth(2026, Month.MAY), count = 6, income = 60_000L, expense = 40_000L)
 
         val result = useCase(months = 6, clock = fixedClock)
 
@@ -189,10 +216,7 @@ class GetSavingsRateUseCaseTest {
 
     @Test
     fun `averages divide by the months that have data, not by the window size`() = runTest {
-        stubAllMonthsBlank()
-        val ym = YearMonth(2026, Month.MAY)
-        stubMonth(ym, TransactionType.Income, 60_000L)
-        stubMonth(ym, TransactionType.Spend, 40_000L)
+        stubMonths(YearMonth(2026, Month.MAY), count = 1, income = 60_000L, expense = 40_000L)
 
         val result = useCase(months = 6, clock = fixedClock)
 
@@ -206,11 +230,9 @@ class GetSavingsRateUseCaseTest {
 
     @Test
     fun `a month with only expense still counts as a month with data`() = runTest {
-        stubAllMonthsBlank()
         val may = YearMonth(2026, Month.MAY)
-        val april = may.previous()
         stubMonth(may, TransactionType.Spend, 40_000L)
-        stubMonth(april, TransactionType.Income, 60_000L)
+        stubMonth(may.previous(), TransactionType.Income, 60_000L)
 
         val result = useCase(months = 6, clock = fixedClock)
 
@@ -221,8 +243,6 @@ class GetSavingsRateUseCaseTest {
 
     @Test
     fun `averages are zero on an empty window instead of dividing by zero`() = runTest {
-        stubAllMonthsBlank(12)
-
         val result = useCase(months = 6, clock = fixedClock)
 
         assertEquals(0, result.monthsWithData)

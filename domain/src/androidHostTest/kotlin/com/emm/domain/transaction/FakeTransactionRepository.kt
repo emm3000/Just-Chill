@@ -17,6 +17,7 @@ class FakeTransactionRepository : TransactionRepository {
     var searchWithCategoryToReturn: List<TransactionWithCategory> = emptyList()
     var countByAccountToReturn: Long = 0L
     var countLiveByAccountToReturn: Long = 0L
+    var totalsToReturn: TransactionTotals = TransactionTotals.Empty
 
     override suspend fun create(transactionInsert: TransactionInsert) {
         lastCreated = transactionInsert
@@ -32,6 +33,8 @@ class FakeTransactionRepository : TransactionRepository {
         startInclusive: Long,
         endExclusive: Long,
     ): Flow<List<TransactionWithCategory>> = flowOf(rangeWithCategory)
+
+    override fun observeTotals(): Flow<TransactionTotals> = flowOf(totalsToReturn)
 
     override suspend fun update(transactionId: TransactionId, transactionUpdate: TransactionUpdate) {
         lastUpdatedId = transactionId

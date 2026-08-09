@@ -3,7 +3,6 @@ package com.emm.domain.report
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionStatsRepository
-import com.emm.domain.transaction.TransactionType
 import kotlin.time.Clock
 
 private const val PERCENT_MULTIPLIER = 100
@@ -11,9 +10,11 @@ private const val PERCENT_MULTIPLIER = 100
 class GetSavingsRateUseCase(private val transactionStatsRepository: TransactionStatsRepository) {
 
     suspend operator fun invoke(months: Int = 6, clock: Clock = Clock.System): SavingsRate {
-        val current = YearMonth.current(clock)
-        val currentWindow = buildWindow(current, months)
-        val priorWindow = buildWindow(currentWindow.first().yearMonth.previous(), months)
+        // Both windows are contiguous and end at the current month, so they are one fetch:
+        // the prior window is the older half of a 2 * months span.
+        val span = buildSpan(YearMonth.current(clock), months * 2)
+        val priorWindow = span.take(months)
+        val currentWindow = span.drop(months)
 
         val totalIncomeCurrent = currentWindow.fold(Money.Zero) { acc, m -> acc + m.income }
         val totalExpenseCurrent = currentWindow.fold(Money.Zero) { acc, m -> acc + m.expense }
@@ -57,22 +58,21 @@ class GetSavingsRateUseCase(private val transactionStatsRepository: TransactionS
     private fun averageOver(total: Money, monthsWithData: Int): Money =
         if (monthsWithData == 0) Money.Zero else Money(total.cents / monthsWithData)
 
-    private suspend fun buildWindow(endMonthInclusive: YearMonth, months: Int): List<MonthlyTotal> {
-        // Build oldest-first list of `months` months ending at endMonthInclusive
-        val result = mutableListOf<MonthlyTotal>()
-        var ym = endMonthInclusive
-        repeat(months) {
-            val start = ym.startInclusiveMillis()
-            val end = ym.endExclusiveMillis()
-            val incomeItems = transactionStatsRepository.monthlyAmountByCategory(TransactionType.Income, start, end)
-            val expenseItems = transactionStatsRepository.monthlyAmountByCategory(TransactionType.Spend, start, end)
-            val income = incomeItems.fold(Money.Zero) { acc, item -> acc + item.amount }
-            val expense = expenseItems.fold(Money.Zero) { acc, item -> acc + item.amount }
-            result.add(0, MonthlyTotal(ym, income, expense))
-            ym = ym.previous()
+    /** Oldest-first totals for the [months] months ending at [endMonthInclusive], in one round-trip. */
+    private suspend fun buildSpan(endMonthInclusive: YearMonth, months: Int): List<MonthlyTotal> {
+        val yearMonths = YearMonth.windowEndingAt(endMonthInclusive, months)
+        val slices = transactionStatsRepository.monthlyAmountByCategoryForRanges(yearMonths.map { it.range() })
+        return yearMonths.mapIndexed { index, ym ->
+            val slice = slices.getOrElse(index) { MonthCategoryAmounts.Empty }
+            MonthlyTotal(
+                yearMonth = ym,
+                income = slice.income.total(),
+                expense = slice.expense.total(),
+            )
         }
-        return result
     }
+
+    private fun List<CategoryAmount>.total(): Money = fold(Money.Zero) { acc, item -> acc + item.amount }
 
     /**
      * Share of income left after expenses, in percentage points.

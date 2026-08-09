@@ -1,8 +1,9 @@
 package com.emm.data.transaction
 
 import com.emm.data.TransactionsQueries
-import com.emm.domain.transaction.TransactionType
 import com.emm.data.shared.ioDispatcher
+import com.emm.domain.shared.MonthRange
+import com.emm.domain.transaction.TransactionType
 import kotlinx.coroutines.withContext
 
 class TransactionStatsLocalDataSource(private val tq: TransactionsQueries) {
@@ -18,6 +19,25 @@ class TransactionStatsLocalDataSource(private val tq: TransactionsQueries) {
             endExclusive = endExclusive,
         ).executeAsList().map { it.asEntity() }
     }
+
+    /**
+     * One dispatcher hop and one read transaction for the whole window.
+     *
+     * The transaction is not decoration: without it the months could be read either side of a
+     * concurrent write, and the Trends tab would draw a bar chart no single state of the database
+     * ever produced.
+     */
+    suspend fun monthlyAmountByCategoryForRanges(ranges: List<MonthRange>): List<List<MonthlyAmountByTypeEntity>> =
+        withContext(ioDispatcher) {
+            tq.transactionWithResult {
+                ranges.map { range ->
+                    tq.monthlyAmountByCategoryAndType(
+                        startInclusive = range.startInclusive,
+                        endExclusive = range.endExclusive,
+                    ).executeAsList().map { it.asEntity() }
+                }
+            }
+        }
 
     suspend fun monthlyStats(type: TransactionType, startInclusive: Long, endExclusive: Long): Pair<Long, Long> =
         withContext(ioDispatcher) {

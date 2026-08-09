@@ -2,13 +2,17 @@ package com.emm.domain.report
 
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
+import com.emm.domain.shared.MonthRange
 import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Month
+import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -24,6 +28,22 @@ class GetTopCategoriesOverMonthsUseCaseTest {
         override fun now(): Instant = Instant.parse("2026-05-15T12:00:00Z")
     }
 
+    private val spendByMonth = mutableMapOf<YearMonth, List<CategoryAmount>>()
+    private val incomeByMonth = mutableMapOf<YearMonth, List<CategoryAmount>>()
+
+    @Before
+    fun setUp() {
+        coEvery { repository.monthlyAmountByCategoryForRanges(any()) } answers {
+            firstArg<List<MonthRange>>().map { range ->
+                val ym = YearMonth.of(range.startInclusive)
+                MonthCategoryAmounts(
+                    income = incomeByMonth[ym].orEmpty(),
+                    expense = spendByMonth[ym].orEmpty(),
+                )
+            }
+        }
+    }
+
     private fun cat(id: String, amountCents: Long) = CategoryAmount(
         categoryId = CategoryId(id),
         categoryName = "Cat $id",
@@ -32,30 +52,25 @@ class GetTopCategoriesOverMonthsUseCaseTest {
         amount = Money(amountCents),
     )
 
-    private fun stubMonthEmpty(ym: YearMonth) {
-        coEvery {
-            repository.monthlyAmountByCategory(any(), ym.startInclusiveMillis(), ym.endExclusiveMillis())
-        } returns emptyList()
-    }
-
-    private fun stubAllMonthsEmpty(months: Int = 6) {
-        var ym = YearMonth(2026, Month.MAY)
-        repeat(months) {
-            stubMonthEmpty(ym)
-            ym = ym.previous()
-        }
-    }
+    private fun uncategorized(amountCents: Long) = CategoryAmount(
+        categoryId = null,
+        categoryName = null,
+        categoryIcon = null,
+        categoryColor = null,
+        amount = Money(amountCents),
+    )
 
     private fun stubMonth(ym: YearMonth, items: List<CategoryAmount>) {
-        coEvery {
-            repository.monthlyAmountByCategory(any(), ym.startInclusiveMillis(), ym.endExclusiveMillis())
-        } returns items
+        spendByMonth[ym] = items
+    }
+
+    private fun stubIncomeMonth(ym: YearMonth, items: List<CategoryAmount>) {
+        incomeByMonth[ym] = items
     }
 
     @Test
     fun `happy path - returns top 3 categories sorted by total amount`() = runTest {
         val may = YearMonth(2026, Month.MAY)
-        stubAllMonthsEmpty(6)
         stubMonth(may, listOf(cat("A", 500_00L), cat("B", 300_00L), cat("C", 200_00L)))
 
         val result = useCase(TransactionType.Spend, months = 1, topN = 3, clock = fixedClock)
@@ -67,9 +82,45 @@ class GetTopCategoriesOverMonthsUseCaseTest {
     }
 
     @Test
-    fun `empty months returns empty list`() = runTest {
-        stubAllMonthsEmpty(6)
+    fun `the whole window is read in a single round-trip, oldest month first`() = runTest {
+        val ranges = slot<List<MonthRange>>()
 
+        useCase(TransactionType.Spend, months = 6, topN = 3, clock = fixedClock)
+
+        coVerify(exactly = 1) { repository.monthlyAmountByCategoryForRanges(capture(ranges)) }
+        assertEquals(6, ranges.captured.size)
+        val months = ranges.captured.map { YearMonth.of(it.startInclusive) }
+        assertEquals(YearMonth(2025, Month.DECEMBER), months.first())
+        assertEquals(YearMonth(2026, Month.MAY), months.last())
+    }
+
+    @Test
+    fun `reads the requested type and ignores the other one`() = runTest {
+        val may = YearMonth(2026, Month.MAY)
+        stubMonth(may, listOf(cat("SPEND", 900_00L)))
+        stubIncomeMonth(may, listOf(cat("INCOME", 100_00L)))
+
+        val result = useCase(TransactionType.Income, months = 1, topN = 3, clock = fixedClock)
+
+        // One query now returns both types; picking the wrong bucket would rank a user's salary
+        // as a spending category.
+        assertEquals(1, result.size)
+        assertEquals(CategoryId("INCOME"), result.single().categoryId)
+    }
+
+    @Test
+    fun `the uncategorized bucket never occupies a top-N slot`() = runTest {
+        val may = YearMonth(2026, Month.MAY)
+        stubMonth(may, listOf(uncategorized(900_00L), cat("A", 100_00L)))
+
+        val result = useCase(TransactionType.Spend, months = 1, topN = 3, clock = fixedClock)
+
+        assertEquals(1, result.size)
+        assertEquals(CategoryId("A"), result.single().categoryId)
+    }
+
+    @Test
+    fun `empty months returns empty list`() = runTest {
         val result = useCase(TransactionType.Spend, months = 6, topN = 3, clock = fixedClock)
 
         assertTrue(result.isEmpty())
@@ -95,7 +146,6 @@ class GetTopCategoriesOverMonthsUseCaseTest {
 
     @Test
     fun `partial data - only one month has data`() = runTest {
-        stubAllMonthsEmpty(6)
         val may = YearMonth(2026, Month.MAY)
         stubMonth(may, listOf(cat("A", 1000_00L)))
 

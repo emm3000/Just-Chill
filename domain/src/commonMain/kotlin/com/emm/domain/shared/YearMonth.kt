@@ -51,6 +51,14 @@ data class YearMonth(val year: Int, val month: Month) : Comparable<YearMonth> {
     fun endExclusiveMillis(timeZone: TimeZone = TimeZone.currentSystemDefault()): Long =
         next().startInclusiveMillis(timeZone)
 
+    /**
+     * Both bounds at once, for callers that query a window of months in one batch.
+     */
+    fun range(timeZone: TimeZone = TimeZone.currentSystemDefault()): MonthRange = MonthRange(
+        startInclusive = startInclusiveMillis(timeZone),
+        endExclusive = endExclusiveMillis(timeZone),
+    )
+
     companion object {
         fun current(clock: Clock = Clock.System, timeZone: TimeZone = TimeZone.currentSystemDefault()): YearMonth {
             val today: LocalDateTime = clock.now().toLocalDateTime(timeZone)
@@ -61,5 +69,19 @@ data class YearMonth(val year: Int, val month: Month) : Comparable<YearMonth> {
 
         fun of(epochMillis: Long, timeZone: TimeZone = TimeZone.currentSystemDefault()): YearMonth =
             of(Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(timeZone).date)
+
+        /**
+         * [count] consecutive months ending at [endInclusive], oldest first — the order every
+         * report window is read and drawn in.
+         */
+        fun windowEndingAt(endInclusive: YearMonth, count: Int): List<YearMonth> {
+            val descending = ArrayList<YearMonth>(count.coerceAtLeast(0))
+            var ym = endInclusive
+            repeat(count) {
+                descending.add(ym)
+                ym = ym.previous()
+            }
+            return descending.asReversed()
+        }
     }
 }

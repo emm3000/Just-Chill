@@ -2,15 +2,16 @@ package com.emm.data.transaction
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.coroutines.mapToOne
 import com.emm.data.CompleteTransactions
 import com.emm.data.CompleteTransactionsByDateRange
 import com.emm.data.SearchTransactions
 import com.emm.data.TransactionsQueries
+import com.emm.data.shared.ioDispatcher
 import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionUpdate
-import com.emm.data.shared.ioDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -50,6 +51,11 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
         .asFlow()
         .mapToList(ioDispatcher)
         .map { list -> list.map(CompleteTransactionsByDateRange::asEntity) }
+
+    fun liveTotals(): Flow<TransactionTotalsEntity> = tq.liveTotals()
+        .asFlow()
+        .mapToOne(ioDispatcher)
+        .map { row -> TransactionTotalsEntity(balance = row.balance, movementCount = row.movementCount) }
 
     fun searchTransactions(query: String, categoryIds: Set<String>): Flow<List<TransactionWithCategoryEntity>> {
         val queryEmpty: Long = if (query.isBlank()) 1L else 0L

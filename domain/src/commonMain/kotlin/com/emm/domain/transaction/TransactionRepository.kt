@@ -16,6 +16,14 @@ interface TransactionRepository {
 
     fun fetchAllWithCategoryInRange(startInclusive: Long, endExclusive: Long): Flow<List<TransactionWithCategory>>
 
+    /**
+     * Whole-ledger balance and movement count, aggregated by the database.
+     *
+     * Callers that need only these two numbers must use this instead of [fetchAllWithCategory]:
+     * the latter re-reads and re-folds every transaction ever recorded on each emission.
+     */
+    fun observeTotals(): Flow<TransactionTotals>
+
     suspend fun update(transactionId: TransactionId, transactionUpdate: TransactionUpdate)
 
     suspend fun countByAccount(accountId: AccountId): Long

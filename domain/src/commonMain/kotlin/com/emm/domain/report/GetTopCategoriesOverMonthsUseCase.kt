@@ -15,22 +15,15 @@ class GetTopCategoriesOverMonthsUseCase(private val transactionStatsRepository: 
         topN: Int = 3,
         clock: Clock = Clock.System,
     ): List<CategoryAggregate> {
-        val current = YearMonth.current(clock)
+        val window = YearMonth.windowEndingAt(YearMonth.current(clock), months)
 
-        // Collect per-month results oldest-first.
+        // Per-month results oldest-first, fetched in one round-trip.
         // The uncategorized bucket is dropped here: this is a ranking OF categories, and a
         // bucket with no name, icon or color cannot occupy one of the top-N slots. Month
         // totals still include it — see [CategoryAmount].
-        val monthlyResults = mutableListOf<List<CategoryAmount>>()
-        var ym = current
-        repeat(months) {
-            val start = ym.startInclusiveMillis()
-            val end = ym.endExclusiveMillis()
-            val items = transactionStatsRepository.monthlyAmountByCategory(type, start, end)
-                .filter { amount -> amount.categoryId != null }
-            monthlyResults.add(0, items)
-            ym = ym.previous()
-        }
+        val monthlyResults: List<List<CategoryAmount>> = transactionStatsRepository
+            .monthlyAmountByCategoryForRanges(window.map { it.range() })
+            .map { slice -> slice.of(type).filter { amount -> amount.categoryId != null } }
 
         // Aggregate totals across all months per categoryId
         val totals = mutableMapOf<CategoryId, Money>()

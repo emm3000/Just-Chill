@@ -6,11 +6,13 @@ import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionTotals
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -19,6 +21,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -40,37 +43,64 @@ class GetHomeDataUseCaseTest {
         category = null,
     )
 
+    private fun stub(
+        currentMonth: List<TransactionWithCategory> = emptyList(),
+        totals: TransactionTotals = TransactionTotals.Empty,
+        pending: List<PendingRecurring> = emptyList(),
+    ) {
+        every { transactionRepository.observeTotals() } returns flowOf(totals)
+        every { transactionRepository.fetchAllWithCategoryInRange(any(), any()) } returns flowOf(currentMonth)
+        every { getPendingRecurringMovements(any()) } returns flowOf(pending)
+    }
+
     @Test
-    fun `invoke should compute income, spend and balance from the right sources`() = runTest {
+    fun `invoke should compute income and spend from the current month`() = runTest {
         val currentMonth = listOf(
             tx("1", TransactionType.Income, 10000L),
             tx("2", TransactionType.Spend, 3000L),
             tx("3", TransactionType.Income, 5000L),
         )
-        val allTransactions = currentMonth + listOf(
-            // previous month leftover that should only affect balance
-            tx("legacy", TransactionType.Spend, 20000L),
-        )
-        every { transactionRepository.fetchAllWithCategory() } returns flowOf(allTransactions)
-        every { transactionRepository.fetchAllWithCategoryInRange(any(), any()) } returns flowOf(currentMonth)
-        every { getPendingRecurringMovements(any()) } returns flowOf(emptyList())
+        stub(currentMonth = currentMonth, totals = TransactionTotals(Money(-8000L), 4L))
 
         val data = useCase().first()
 
         assertEquals(Money(15000L), data.income)
         assertEquals(Money(3000L), data.spend)
-        // balance = 10000 + 5000 - 3000 - 20000 = -8000 cents
-        assertEquals(Money(-8000L), data.balance)
         assertEquals(currentMonth, data.lastTransactions)
         assertTrue(data.pendingRecurringMovements.isEmpty())
     }
 
     @Test
+    fun `balance comes from the aggregate, not from folding the whole table`() = runTest {
+        // The month holds a single 100 income, but the ledger as a whole is 80 in the red. Folding
+        // the current month — the only list the use case still reads — could never produce that.
+        stub(
+            currentMonth = listOf(tx("1", TransactionType.Income, 10000L)),
+            totals = TransactionTotals(Money(-8000L), 4L),
+        )
+
+        val data = useCase().first()
+
+        assertEquals(Money(-8000L), data.balance)
+        verify(exactly = 0) { transactionRepository.fetchAllWithCategory() }
+    }
+
+    @Test
+    fun `hasAnyTransaction follows the ledger count, not the visible month`() = runTest {
+        // Browsing back to an empty month must not make the app think the user has never recorded
+        // anything: that flips Home into its first-run empty state.
+        stub(currentMonth = emptyList(), totals = TransactionTotals(Money(12000L), 3L))
+
+        val data = useCase().first()
+
+        assertTrue(data.hasAnyTransaction)
+        assertTrue(data.lastTransactions.isEmpty())
+    }
+
+    @Test
     fun `invoke should take only the first seven transactions in lastTransactions`() = runTest {
         val currentMonth = (1..10).map { tx(it.toString(), TransactionType.Income, 100L) }
-        every { transactionRepository.fetchAllWithCategory() } returns flowOf(currentMonth)
-        every { transactionRepository.fetchAllWithCategoryInRange(any(), any()) } returns flowOf(currentMonth)
-        every { getPendingRecurringMovements(any()) } returns flowOf(emptyList())
+        stub(currentMonth = currentMonth, totals = TransactionTotals(Money(1000L), 10L))
 
         val data = useCase().first()
 
@@ -80,16 +110,15 @@ class GetHomeDataUseCaseTest {
     }
 
     @Test
-    fun `invoke should return zeros when nothing is in the current month`() = runTest {
-        every { transactionRepository.fetchAllWithCategory() } returns flowOf(emptyList())
-        every { transactionRepository.fetchAllWithCategoryInRange(any(), any()) } returns flowOf(emptyList())
-        every { getPendingRecurringMovements(any()) } returns flowOf(emptyList())
+    fun `invoke should return zeros when nothing is recorded`() = runTest {
+        stub()
 
         val data = useCase().first()
 
         assertEquals(Money.Zero, data.income)
         assertEquals(Money.Zero, data.spend)
         assertEquals(Money.Zero, data.balance)
+        assertFalse(data.hasAnyTransaction)
         assertTrue(data.lastTransactions.isEmpty())
     }
 
@@ -101,9 +130,7 @@ class GetHomeDataUseCaseTest {
             tx("b", TransactionType.Income, 33L),
             tx("c", TransactionType.Income, 33L),
         )
-        every { transactionRepository.fetchAllWithCategory() } returns flowOf(currentMonth)
-        every { transactionRepository.fetchAllWithCategoryInRange(any(), any()) } returns flowOf(currentMonth)
-        every { getPendingRecurringMovements(any()) } returns flowOf(emptyList())
+        stub(currentMonth = currentMonth, totals = TransactionTotals(Money(99L), 3L))
 
         val data = useCase().first()
 
@@ -118,7 +145,7 @@ class GetHomeDataUseCaseTest {
         val startSlot = slot<Long>()
         val endSlot = slot<Long>()
 
-        every { repo.fetchAllWithCategory() } returns flowOf(emptyList())
+        every { repo.observeTotals() } returns flowOf(TransactionTotals.Empty)
         every { repo.fetchAllWithCategoryInRange(capture(startSlot), capture(endSlot)) } returns flowOf(emptyList())
         every { pendingUc(any()) } returns flowOf(emptyList())
 
@@ -135,9 +162,7 @@ class GetHomeDataUseCaseTest {
     @Test
     fun `invoke should include pending recurring movements in HomeData`() = runTest {
         val pendingItem = mockk<PendingRecurring>()
-        every { transactionRepository.fetchAllWithCategory() } returns flowOf(emptyList())
-        every { transactionRepository.fetchAllWithCategoryInRange(any(), any()) } returns flowOf(emptyList())
-        every { getPendingRecurringMovements(any()) } returns flowOf(listOf(pendingItem))
+        stub(pending = listOf(pendingItem))
 
         val data = useCase().first()
 

@@ -8,6 +8,7 @@ import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionFilter
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionTotals
 import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
@@ -32,6 +33,10 @@ class DefaultTransactionRepository(private val localDataSource: TransactionLocal
         localDataSource.completeTransactionsByDateRange(startInclusive, endExclusive)
             .map { it.toDomain() }
             .catchAsDomainException()
+
+    override fun observeTotals(): Flow<TransactionTotals> = localDataSource.liveTotals()
+        .map { it.toDomain() }
+        .catchAsDomainException()
 
     override suspend fun update(transactionId: TransactionId, transactionUpdate: TransactionUpdate): Unit = safeDbCall {
         localDataSource.update(transactionId.value, transactionUpdate)

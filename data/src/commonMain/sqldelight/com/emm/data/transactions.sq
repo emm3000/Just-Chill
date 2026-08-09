@@ -58,6 +58,19 @@ SELECT COALESCE(
 FROM transactions
 WHERE accountId = :accountId AND deletedAt IS NULL;
 
+-- Home's balance and "has the user ever recorded anything" in one aggregate row.
+-- Folding the whole table in memory on every emission was O(rows) per insert; this is O(1) work
+-- for the caller. Unknown type values contribute 0 to the balance and are not counted, matching
+-- the mapper skip-row policy that hides them from every list in the app.
+liveTotals:
+SELECT
+    COALESCE(
+        SUM(CASE WHEN type = 'Income' THEN amount WHEN type = 'Spend' THEN -amount ELSE 0 END), 0
+    ) AS balance,
+    COUNT(CASE WHEN type IN ('Income', 'Spend') THEN 1 END) AS movementCount
+FROM transactions
+WHERE deletedAt IS NULL;
+
 insert:
 INSERT OR REPLACE INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt, syncState)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending');
@@ -136,6 +149,26 @@ WHERE t.type = :type
   AND t.date < :endExclusive
   AND t.deletedAt IS NULL
 GROUP BY c.categoryId
+ORDER BY totalAmount DESC;
+
+-- Same shape and same LEFT JOIN reasoning as monthlyAmountByCategory, but it groups by type as
+-- well, so one execution covers both Income and Spend for a month. The Trends tab needs twelve
+-- months of both; running this once per month instead of once per month per type halves the
+-- round-trips, and the caller runs the whole window inside a single read transaction.
+monthlyAmountByCategoryAndType:
+SELECT
+    t.type       AS type,
+    c.categoryId AS categoryId,
+    c.name       AS categoryName,
+    c.icon       AS categoryIcon,
+    c.color      AS categoryColor,
+    SUM(t.amount) AS totalAmount
+FROM transactions t
+LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
+WHERE t.date >= :startInclusive
+  AND t.date < :endExclusive
+  AND t.deletedAt IS NULL
+GROUP BY t.type, c.categoryId
 ORDER BY totalAmount DESC;
 
 topUsedCategoryIds:
