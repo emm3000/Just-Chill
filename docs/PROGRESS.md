@@ -32,8 +32,12 @@ Tres tracks grandes cerrados o casi:
 | Migración KMP / Compose Multiplatform | ✅ completa y mergeada a trunk |
 | Auditoría de funcionalidades | 4 CRÍTICOS, 4 ALTOS y M9-M10 ✅ · M11 ⏳ decisión de diseño |
 
-**Git**: `origin/trunk` está en `2fad0ba`; **todo lo que hay por encima en `trunk` es local
-y sin pushear**. La historia es lineal (0 merge commits). Nunca mergear sin `--ff-only`.
+**Git**: `trunk` y `origin/trunk` están a la par. La historia es lineal (0 merge commits).
+Nunca mergear sin `--ff-only`.
+
+`trunk` tiene reglas de protección (PR obligatorio + 3 status checks). Se pueden bypassear con
+permisos de admin y el push directo lo hace, pero entonces esos checks **no corrieron**: la única
+verificación de ese push es la que corriste local. Preferí el PR salvo que el gate esté verde.
 
 No pongas el conteo acá: el propio commit que lo escribe lo deja viejo, y ya pasó dos veces.
 Sacalo del repo cuando lo necesites:
