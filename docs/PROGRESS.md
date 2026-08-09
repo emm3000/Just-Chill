@@ -30,7 +30,7 @@ Tres tracks grandes cerrados o casi:
 | Producto (Fases 1-5: discovery → post-v1) | ✅ cerrado, docs en `docs/` |
 | Local-first sync (slices 1-5) | slices 1-4 ✅ · slice 5 ⏳ bloqueado por tareas humanas |
 | Migración KMP / Compose Multiplatform | ✅ completa y mergeada a trunk |
-| Auditoría de funcionalidades | 4 CRÍTICOS y 4 ALTOS ✅ · 3 MEDIOS ⏳ |
+| Auditoría de funcionalidades | 4 CRÍTICOS, 4 ALTOS y M9-M10 ✅ · M11 ⏳ decisión de diseño |
 
 **Git**: `origin/trunk` está en `2fad0ba`; **todo lo que hay por encima en `trunk` es local
 y sin pushear**. La historia es lineal (0 merge commits). Nunca mergear sin `--ff-only`.
@@ -100,10 +100,10 @@ Después de eso: tag + AAB.
 ## Track: auditoría de funcionalidades (en curso)
 
 Auditoría de lectura sobre `:domain`, las queries `.sq` y los ViewModels clave.
-Todo verificado contra el código. Los 4 CRÍTICOS y los 4 ALTOS están cerrados; los
-3 MEDIOS siguen abiertos y **solo diagnosticados**.
+Todo verificado contra el código. Los 4 CRÍTICOS, los 4 ALTOS y 2 de los 3 MEDIOS están
+cerrados; queda M11, que **no es un fix sino una decisión de diseño**.
 
-Cerrados (9 commits, `c94e290`..`9227a0f`):
+Cerrados:
 
 - **C1** Home y Reporte daban totales distintos del mismo mes. `monthlyAmountByCategory`
   usaba `INNER JOIN categories`, así que los movimientos sin categoría no entraban al
@@ -128,20 +128,29 @@ Cerrados (9 commits, `c94e290`..`9227a0f`):
   mes atrasado se fecha en **su** día de vencimiento, no hoy. Sin cambio de schema ni de sync.
 - **A8** El promedio mensual dividía siempre entre 6. Ahora divide entre los meses de la ventana
   que tienen movimientos; ingresos y gastos comparten divisor a propósito.
+- **M9** El balance de Home plegaba la tabla entera en memoria en cada emisión. Ahora sale de
+  `transactions.sq:liveTotals` (balance + conteo en una fila agregada) vía
+  `TransactionRepository.observeTotals()`. Los totales del mes siguen plegándose porque la
+  pantalla lista esas mismas filas igual. `fetchAllWithCategory()` sigue existiendo para
+  Categorías y Ver movimientos, que sí necesitan las filas.
+- **M10** El Reporte disparaba ~30 queries suspend secuenciales al abrir (2 ventanas × 6 meses ×
+  2 tipos, más 6 de top categorías). Ahora `monthlyAmountByCategoryAndType` agrupa por tipo
+  además de por categoría, y `monthlyAmountByCategoryForRanges` corre la ventana entera dentro de
+  **una** transacción de lectura: 2 llamadas suspend en total. La transacción no es adorno — sin
+  ella los meses se pueden leer a ambos lados de una escritura y el gráfico muestra un estado que
+  la base nunca tuvo. Los buckets **no** se calculan en SQL a propósito: el límite entre dos meses
+  es hora local y `strftime` sobre epoch daría UTC, que es la misma clase de bug que C1.
 
-Pendientes, en orden de daño:
+Pendiente:
 
 | | Hallazgo |
 |---|---|
-| M9 | El balance de Home pliega la tabla entera en memoria en cada emisión |
-| M10 | Reporte dispara ~30 queries suspend secuenciales al abrir |
 | M11 | LWW compara relojes de cliente: un device con la fecha adelantada gana siempre |
 
-M9 y M10 son performance acotada, sin cambio de semántica. **M11 no**: cambia la resolución de
-conflictos del motor de sync, que ya está device-verificado y con el slice 5 a medio camino.
-Arreglarlo bien implica decidir entre el reloj del servidor (`server_updated_at` ya existe, ver
-`docs/adr/002`) y el del cliente. Es una decisión de diseño, no un fix — no lo empieces sin
-acordarlo primero.
+**M11 no es un fix**: cambia la resolución de conflictos del motor de sync, que ya está
+device-verificado y con el slice 5 a medio camino. Arreglarlo bien implica decidir entre el reloj
+del servidor (`server_updated_at` ya existe, ver `docs/adr/002`) y el del cliente. Es una decisión
+de diseño — no lo empieces sin acordarlo primero.
 
 Cuatro afirmaciones de la auditoría **no sobrevivieron a la verificación** — cotejar
 contra el código antes de actuar sobre las que quedan:
