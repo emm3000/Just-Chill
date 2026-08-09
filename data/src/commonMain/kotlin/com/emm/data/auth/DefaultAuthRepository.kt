@@ -131,16 +131,20 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
 /**
  * Maps supabase [SupabaseSessionStatus] to the domain [SessionStatus].
  *
- * [SupabaseSessionStatus.RefreshFailure] decision:
- * The supabase status carries the last-known session inside [SessionStatus.Authenticated],
- * but RefreshFailure itself is not Authenticated — the library emits it while the session
- * may still be structurally present in memory yet not safely usable (the token could be
- * expired). Mapping it to domain Authenticated would misrepresent the state; mapping it to
- * NotAuthenticated would force a premature sign-out for a transient network error. We
- * therefore map it to NotAuthenticated as the safer UX choice (the user can re-sign-in).
+ * [SupabaseSessionStatus.RefreshFailure] decision (settled — the slice-4 TODO that used to sit
+ * here is resolved by keeping this mapping):
+ * RefreshFailure is not Authenticated — the library emits it while the session may still be
+ * structurally present in memory yet not safely usable (the token could be expired). Mapping it
+ * to Authenticated would let sync fire with a token the server may reject; NotAuthenticated is
+ * the honest state for everything this flow gates (sync triggers, the claim observer, the Perfil
+ * session row). The cost is cosmetic and transient: while a refresh keeps failing the UI shows
+ * signed-out, and the status flips back by itself if the provider later refreshes successfully.
+ * No local data is touched either way — the app is local-first and fully usable, and the user can
+ * always re-sign-in manually.
  *
- * TODO slice 4: revisit RefreshFailure posture — consider a distinct domain status that
- * allows offline-read access while blocking sync operations.
+ * A distinct "degraded" domain status (offline reads allowed, sync blocked) was considered and
+ * rejected: sync is the only authenticated feature, so a third status would gate nothing that
+ * NotAuthenticated does not already gate, at the price of a fourth branch in every consumer.
  */
 internal fun SupabaseSessionStatus.toDomain(): SessionStatus = when (this) {
     is SupabaseSessionStatus.Authenticated -> {
