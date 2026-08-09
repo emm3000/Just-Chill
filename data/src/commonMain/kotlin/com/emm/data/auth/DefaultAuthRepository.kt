@@ -1,9 +1,11 @@
 package com.emm.data.auth
 
+import com.emm.data.shared.ioDispatcher
 import com.emm.domain.auth.AuthRepository
 import com.emm.domain.auth.AuthUser
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.error.ValidationCode
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.OtpType
 import io.github.jan.supabase.auth.SignOutScope
@@ -18,7 +20,6 @@ import io.github.jan.supabase.exceptions.HttpRequestException
 import io.github.jan.supabase.exceptions.UnauthorizedRestException
 import io.github.jan.supabase.postgrest.postgrest
 import io.ktor.client.plugins.HttpRequestTimeoutException
-import com.emm.data.shared.ioDispatcher
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
@@ -167,13 +168,13 @@ internal fun UserInfo.toDomain(): AuthUser = AuthUser(userId = id, email = email
  * [DomainException.ValidationError] instead of [DomainException.Unauthorized]. Relevant mostly on
  * sign-up, where "wrong credentials" would be a nonsensical message.
  */
-private val VALIDATION_AUTH_CODES = setOf(
-    AuthErrorCode.WeakPassword,
-    AuthErrorCode.EmailExists,
-    AuthErrorCode.UserAlreadyExists,
-    AuthErrorCode.EmailAddressInvalid,
-    AuthErrorCode.ValidationFailed,
-    AuthErrorCode.SamePassword,
+private val VALIDATION_AUTH_CODES: Map<AuthErrorCode, ValidationCode> = mapOf(
+    AuthErrorCode.WeakPassword to ValidationCode.PasswordTooWeak,
+    AuthErrorCode.EmailExists to ValidationCode.EmailAlreadyRegistered,
+    AuthErrorCode.UserAlreadyExists to ValidationCode.EmailAlreadyRegistered,
+    AuthErrorCode.EmailAddressInvalid to ValidationCode.EmailInvalid,
+    AuthErrorCode.ValidationFailed to ValidationCode.Unspecified,
+    AuthErrorCode.SamePassword to ValidationCode.PasswordUnchanged,
 )
 
 /**
@@ -193,17 +194,21 @@ private val VALIDATION_AUTH_CODES = setOf(
  *
  * Sign-up/credential rejections that are the user's fault (weak password, email already taken,
  * invalid email) carry an [AuthErrorCode] in [VALIDATION_AUTH_CODES] and map to [ValidationError]
- * so the UI shows a corrective hint instead of the misleading "wrong credentials" message.
+ * so the UI shows a corrective hint instead of the misleading "wrong credentials" message. The
+ * server's `errorDescription` is English, so the [ValidationCode] — not the message — is what the
+ * UI translates.
  */
 internal fun Throwable.toAuthDomainException(): DomainException = when (this) {
-    is AuthRestException -> if (errorCode in VALIDATION_AUTH_CODES) {
-        DomainException.ValidationError(message = errorDescription, cause = this)
-    } else {
-        DomainException.Unauthorized(
-            message = "Authentication error: $errorDescription",
+    is AuthRestException -> VALIDATION_AUTH_CODES[errorCode]?.let { validationCode ->
+        DomainException.ValidationError(
+            message = errorDescription,
+            code = validationCode,
             cause = this,
         )
-    }
+    } ?: DomainException.Unauthorized(
+        message = "Authentication error: $errorDescription",
+        cause = this,
+    )
 
     is UnauthorizedRestException -> DomainException.Unauthorized(
         message = description ?: "Unauthorized",

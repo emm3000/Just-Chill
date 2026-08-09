@@ -6,6 +6,7 @@ import com.emm.domain.shared.TransactionId
 import com.emm.domain.shared.YearMonth
 import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.error.ValidationCode
 import com.emm.domain.transaction.TransactionInsert
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -47,6 +48,7 @@ class ConfirmRecurringMovementUseCase(
             template.lastConfirmedPeriod != currentPeriod,
             DomainException.ValidationError(
                 "Template '${template.name}' already confirmed for period $currentPeriod",
+                ValidationCode.RecurringAlreadyConfirmed,
             ),
         )
 
@@ -55,6 +57,7 @@ class ConfirmRecurringMovementUseCase(
             resolvedAmount.cents > 0,
             DomainException.ValidationError(
                 "Confirmed amount must be greater than zero, got ${resolvedAmount.cents} cents",
+                ValidationCode.AmountMustBePositive,
             ),
         )
 
@@ -80,4 +83,5 @@ private fun resolveAmount(template: RecurringMovement, callerAmount: Money?): Mo
     ?: callerAmount
     ?: throw DomainException.ValidationError(
         "Amount is required for variable-amount template '${template.name}'",
+        ValidationCode.AmountRequired,
     )

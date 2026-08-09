@@ -7,12 +7,13 @@ import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.error.ValidationCode
 import com.emm.domain.transaction.TransactionRepository
 import kotlinx.coroutines.flow.first
-import kotlin.time.Clock
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlin.time.Clock
 
 private val exportJson = Json {
     prettyPrint = true
@@ -58,14 +59,25 @@ class DefaultBackupRepository(
         val payload = try {
             importJson.decodeFromString<ExportPayloadDto>(json)
         } catch (e: SerializationException) {
-            throw DomainException.ValidationError("Invalid or corrupted file", cause = e)
+            throw DomainException.ValidationError(
+                "Invalid or corrupted file",
+                ValidationCode.BackupFileInvalid,
+                cause = e,
+            )
         } catch (e: IllegalArgumentException) {
             // Enum value not found when deserializing DTOs
-            throw DomainException.ValidationError("Invalid or corrupted file", cause = e)
+            throw DomainException.ValidationError(
+                "Invalid or corrupted file",
+                ValidationCode.BackupFileInvalid,
+                cause = e,
+            )
         }
 
         if (payload.schemaVersion != 1) {
-            throw DomainException.ValidationError("Unsupported file version.")
+            throw DomainException.ValidationError(
+                "Unsupported file version.",
+                ValidationCode.BackupVersionUnsupported,
+            )
         }
 
         return safeDbCall {

@@ -4,13 +4,14 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.emm.data.EmmDatabaseData
 import com.emm.data.Recurring_movementsQueries
+import com.emm.data.shared.ioDispatcher
 import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.recurring.RecurringMovementDetails
 import com.emm.domain.recurring.RecurringMovementInsert
 import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.error.ValidationCode
 import com.emm.domain.transaction.TransactionInsert
-import com.emm.data.shared.ioDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -108,6 +109,7 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData)
             if (current?.lastConfirmedPeriod == period) {
                 throw DomainException.ValidationError(
                     "Template '$recurringId' already confirmed for period $period (concurrent write detected)",
+                    ValidationCode.RecurringAlreadyConfirmed,
                 )
             }
 

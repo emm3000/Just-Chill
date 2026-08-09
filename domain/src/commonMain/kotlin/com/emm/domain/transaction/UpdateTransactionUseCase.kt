@@ -2,6 +2,7 @@ package com.emm.domain.transaction
 
 import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.error.ValidationCode
 
 class UpdateTransactionUseCase(
     private val repository: TransactionRepository,
@@ -10,7 +11,10 @@ class UpdateTransactionUseCase(
 
     suspend operator fun invoke(oldTransaction: Transaction, transactionUpdate: TransactionUpdate) {
         if (transactionUpdate.amount.cents <= 0) {
-            throw DomainException.ValidationError("El monto debe ser mayor a cero")
+            throw DomainException.ValidationError(
+                "Amount must be greater than zero",
+                ValidationCode.AmountMustBePositive,
+            )
         }
         val dateAndTimeCombined: Long = dateAndTimeCombiner.combineWithUtc(transactionUpdate.date)
         val updatedTransaction: TransactionUpdate = transactionUpdate.copy(date = dateAndTimeCombined)

@@ -3,13 +3,14 @@ package com.emm.domain.category
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.UniqueIdProvider
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.error.ValidationCode
 
 class CreateCategoryUseCase(private val repository: CategoryRepository, private val idProvider: UniqueIdProvider) {
 
     suspend operator fun invoke(name: String, icon: String, color: String, categoryType: CategoryType): Category {
         val trimmed = name.trim()
         if (trimmed.isBlank()) {
-            throw DomainException.ValidationError("Name cannot be empty")
+            throw DomainException.ValidationError("Name cannot be empty", ValidationCode.NameRequired)
         }
         val categoryId = CategoryId(idProvider.id)
         repository.create(
