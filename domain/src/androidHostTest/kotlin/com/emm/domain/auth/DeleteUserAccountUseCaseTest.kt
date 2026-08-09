@@ -12,11 +12,15 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class DeleteUserAccountUseCaseTest {
 
@@ -127,5 +131,52 @@ class DeleteUserAccountUseCaseTest {
 
         coVerify(exactly = 1) { authRepository.deleteAccount() }
         coVerify(exactly = 1) { claimLocalDataRepository.unclaimAll(userId) }
+    }
+
+    // ── Bounded session resolution ────────────────────────────────────────────
+
+    /**
+     * A session that never leaves [SessionStatus.Initializing] used to park the collector forever
+     * WHILE HOLDING the shared [SyncMutex]: the UI stayed on its "deleting" state and every sync
+     * cycle was blocked for the rest of the process lifetime. The wait is now bounded.
+     */
+    @Test
+    fun `a session stuck in Initializing fails with NetworkUnavailable and releases the sync mutex`() = runTest {
+        every { authRepository.sessionStatus } returns MutableStateFlow(SessionStatus.Initializing)
+
+        assertFailsWith<DomainException.NetworkUnavailable> { useCase() }
+
+        coVerify(exactly = 0) { authRepository.deleteAccount() }
+        coVerify(exactly = 0) { claimLocalDataRepository.unclaimAll(any()) }
+        verify(exactly = 0) { syncCursorStore.clear(any()) }
+
+        // The point of the bound: sync must be able to run again after a stuck session.
+        assertTrue(syncMutex.withLock { true }, "The shared SyncMutex must be free again")
+    }
+
+    /**
+     * `TimeoutCancellationException` IS a `CancellationException`, so the timeout branch must catch
+     * that exact type. A genuine cancellation of the caller has to stay a cancellation — converting
+     * it would report a failed deletion for a screen the user simply left.
+     */
+    @Test
+    fun `cancelling the caller while the session is still resolving does not surface as a DomainException`() = runTest {
+        every { authRepository.sessionStatus } returns MutableStateFlow(SessionStatus.Initializing)
+        var domainFailure: DomainException? = null
+
+        val job = launch {
+            try {
+                useCase()
+            } catch (e: DomainException) {
+                domainFailure = e
+            }
+        }
+        // runCurrent, NOT advanceUntilIdle: parks the caller inside the collector without letting
+        // virtual time reach the timeout, so the cancellation below is the only thing under test.
+        testScheduler.runCurrent()
+        job.cancelAndJoin()
+
+        assertNull(domainFailure, "Cancellation must propagate as cancellation, got $domainFailure")
+        coVerify(exactly = 0) { authRepository.deleteAccount() }
     }
 }
