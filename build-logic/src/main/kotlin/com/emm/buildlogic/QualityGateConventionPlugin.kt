@@ -16,6 +16,7 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin
  *
  * What lands on the gate per module:
  *  - the detekt tasks in [DETEKT_GATE_TASKS] that this module actually has
+ *  - the compile-only tasks in [COMPILE_GATE_TASKS] that this module actually has
  *  - its host test suite, contributed by [KmpLibraryConventionPlugin] or the module's build file
  *  - the iOS compile, on macOS hosts only, contributed by [KmpLibraryConventionPlugin]
  */
@@ -30,7 +31,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
 
             // Lazy and existence-safe: a module only contributes the tasks it actually has, and
             // tasks registered after this plugin still land on the gate.
-            dependsOn(target.tasks.matching { it.name in DETEKT_GATE_TASKS })
+            dependsOn(target.tasks.matching { it.name in DETEKT_GATE_TASKS || it.name in COMPILE_GATE_TASKS })
         }
     }
 
@@ -61,6 +62,18 @@ class QualityGateConventionPlugin : Plugin<Project> {
             // :androidApp: fans out across all four build variants.
             "detektMain",
         )
+
+        /**
+         * Compile-only tasks for source sets nothing else on the gate builds.
+         *
+         * The instrumented tests in `:data/src/androidDeviceTest` need a device to RUN, so they
+         * cannot join the gate as tests — but they still have to compile. `detekt` over that
+         * source set is not enough: detekt downgrades unresolvable code to a "compiler errors
+         * found during analysis" warning and passes anyway, so a domain signature change could
+         * break the instrumented suite and the gate would stay green until someone plugged in a
+         * phone. Compiling costs a second and needs no device.
+         */
+        val COMPILE_GATE_TASKS = setOf("compileAndroidDeviceTest")
 
         /**
          * Kotlin/Native only produces iOS binaries on an Apple host, so the iOS compile joins the
