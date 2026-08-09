@@ -25,4 +25,7 @@ interface RecurringMovementRepository {
     fun allWithDetails(): Flow<List<RecurringMovementDetails>>
 
     suspend fun confirm(insert: TransactionInsert, recurringId: RecurringMovementId, period: String)
+
+    /** Advances the high-water mark to [period] without creating a transaction. */
+    suspend fun skip(recurringId: RecurringMovementId, period: String)
 }

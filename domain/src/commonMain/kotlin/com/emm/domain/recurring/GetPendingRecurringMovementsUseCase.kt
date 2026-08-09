@@ -1,23 +1,30 @@
 package com.emm.domain.recurring
 
-import com.emm.domain.shared.YearMonth
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 
-class GetPendingRecurringMovementsUseCase(private val repository: RecurringMovementRepository) {
+class GetPendingRecurringMovementsUseCase(
+    private val repository: RecurringMovementRepository,
+    private val timeZone: TimeZone = TimeZone.currentSystemDefault(),
+) {
 
     /**
-     * Returns active recurring movements that are due for [yearMonth] as of [today].
+     * Every period every active template still owes as of [today], oldest period first.
      *
-     * The caller supplies [today] so the clock is never read internally — testable
-     * without fakes for the clock.
+     * The caller supplies [today] so the clock is never read internally — testable without a fake
+     * clock.
      *
-     * Does NOT produce results for past or future months — the caller is responsible
-     * for passing the current period. No retroactive catch-up.
+     * Ordering matters: [ConfirmRecurringMovementUseCase] only accepts a period newer than the
+     * template's high-water mark, so a template's own periods must be settled oldest-first. Across
+     * templates the order is by period, then by name, so the list reads as a chronological queue.
      */
-    operator fun invoke(today: LocalDate, yearMonth: YearMonth): Flow<List<RecurringMovement>> =
-        repository.allActive().map { list ->
-            list.filter { rm -> isPending(rm, yearMonth, today) }
-        }
+    operator fun invoke(today: LocalDate): Flow<List<PendingRecurring>> = repository.allActive().map { movements ->
+        movements
+            .flatMap { movement ->
+                pendingPeriods(movement, today, timeZone).map { PendingRecurring(movement, it) }
+            }
+            .sortedWith(compareBy({ it.period }, { it.movement.name }))
+    }
 }

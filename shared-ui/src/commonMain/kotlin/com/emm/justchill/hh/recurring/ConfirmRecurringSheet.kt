@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.recurring
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.domain.shared.Money
@@ -50,19 +52,24 @@ private const val DIGIT_SHIFT = 10L
  *
  * Sheet dismissal on success is driven by the caller (via [HomeEffect.CloseConfirmSheet]).
  * [onDismiss] is only invoked when the user swipes down or taps outside (user-initiated).
+ *
+ * [onSkip] settles the period without booking anything. Periods are confirmed oldest-first, so a
+ * month the user genuinely did not pay needs a way out or it blocks every month behind it.
  */
 @Composable
 fun ConfirmRecurringSheet(
     item: PendingRecurringUi,
-    onConfirm: (templateId: String, callerAmount: Money?) -> Unit,
+    onConfirm: (callerAmount: Money?) -> Unit,
+    onSkip: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     // Cents accumulator — starts at the fixed amount (if any) or 0 for variable.
-    // Keyed by templateId so the amount resets when a different item is shown.
-    var amountCents by rememberSaveable(item.templateId) { mutableLongStateOf(item.fixedAmountCents ?: 0L) }
+    // Keyed by item.id (template + period) so the amount resets between items AND between two
+    // pending months of the same template.
+    var amountCents by rememberSaveable(item.id) { mutableLongStateOf(item.fixedAmountCents ?: 0L) }
 
     val amountDouble = amountCents.toDouble() / 100.0
     val tone = when (item.type) {
@@ -122,6 +129,21 @@ fun ConfirmRecurringSheet(
                             fontWeight = FontWeight.W500,
                         ),
                         color = colors.textPrimary,
+                    )
+                }
+
+                Spacer(Modifier.width(8.dp))
+                Column {
+                    Eyebrow(text = if (item.isCatchUp) "Mes atrasado" else "Mes")
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = item.periodLabel,
+                        style = TextStyle(
+                            fontFamily = InterFontFamily,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.W500,
+                        ),
+                        color = if (item.isCatchUp) colors.danger else colors.textPrimary,
                     )
                 }
 
@@ -187,17 +209,39 @@ fun ConfirmRecurringSheet(
             val confirmEnabled = amountCents > 0L
             StickyCTA(
                 label = "Confirmar",
-                sublabel = if (!confirmEnabled && item.isVariableAmount) "Ingresá el monto" else null,
+                sublabel = if (!confirmEnabled && item.isVariableAmount) "Ingresa el monto" else null,
                 interaction = if (confirmEnabled) CtaInteraction.Enabled else CtaInteraction.Disabled,
-                onClick = {
-                    onConfirm(
-                        item.templateId,
-                        if (item.isVariableAmount) Money(amountCents) else null,
-                    )
-                },
+                onClick = { onConfirm(if (item.isVariableAmount) Money(amountCents) else null) },
             )
+
+            SkipPeriodAction(periodLabel = item.periodLabel, onSkip = onSkip)
         }
     }
+}
+
+/**
+ * Escape hatch out of the oldest-first queue: marks the period settled with nothing booked.
+ *
+ * Deliberately plain text under the CTA, not a second button — it is the rare path, and giving it
+ * equal weight would invite tapping it past a month that should have been recorded.
+ */
+@Composable
+private fun SkipPeriodAction(periodLabel: String, onSkip: () -> Unit) {
+    val colors = LocalEmmColors.current
+    Text(
+        text = "No lo pagué en $periodLabel",
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onSkip)
+            .padding(vertical = 14.dp),
+        textAlign = TextAlign.Center,
+        style = TextStyle(
+            fontFamily = InterFontFamily,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.W500,
+        ),
+        color = colors.textSecondary,
+    )
 }
 
 @Composable

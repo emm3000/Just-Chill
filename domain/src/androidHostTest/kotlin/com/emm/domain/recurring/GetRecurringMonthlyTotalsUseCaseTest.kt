@@ -52,6 +52,7 @@ class GetRecurringMonthlyTotalsUseCaseTest {
             dayOfMonth = 1,
             isActive = isActive,
             lastConfirmedPeriod = null,
+            createdAt = 0L,
         )
 
     // ---- R4.1 — Mixed active fixed + variable templates ----

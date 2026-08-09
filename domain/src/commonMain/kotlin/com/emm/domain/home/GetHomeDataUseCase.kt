@@ -1,7 +1,7 @@
 package com.emm.domain.home
 
 import com.emm.domain.recurring.GetPendingRecurringMovementsUseCase
-import com.emm.domain.recurring.RecurringMovement
+import com.emm.domain.recurring.PendingRecurring
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionRepository
@@ -27,7 +27,7 @@ class GetHomeDataUseCase(
         return combine(
             flow = transactionRepository.fetchAllWithCategory(),
             flow2 = transactionRepository.fetchAllWithCategoryInRange(startOfMonth, startOfNextMonth),
-            flow3 = getPendingRecurringMovements(today, yearMonth),
+            flow3 = getPendingRecurringMovements(today),
             transform = { allTransactions, currentMonth, pending ->
                 computeFinancialSummary(allTransactions, currentMonth, pending)
             },
@@ -37,7 +37,7 @@ class GetHomeDataUseCase(
     private fun computeFinancialSummary(
         allTransactions: List<TransactionWithCategory>,
         currentMonthTransactions: List<TransactionWithCategory>,
-        pendingRecurringMovements: List<RecurringMovement>,
+        pendingRecurringMovements: List<PendingRecurring>,
     ): HomeData {
         val lastTransactions: List<TransactionWithCategory> = currentMonthTransactions.take(7)
         val income: Money = currentMonthTransactions

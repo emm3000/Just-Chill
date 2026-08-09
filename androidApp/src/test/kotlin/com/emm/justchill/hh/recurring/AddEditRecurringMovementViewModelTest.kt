@@ -64,6 +64,7 @@ class AddEditRecurringMovementViewModelTest {
         dayOfMonth = 15,
         isActive = true,
         lastConfirmedPeriod = null,
+        createdAt = 0L,
     )
 
     @Before

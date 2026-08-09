@@ -55,6 +55,7 @@ fun RecurringMovementEntity.asExternalModelOrNull(): RecurringMovement? {
         dayOfMonth = dayOfMonth.toInt(),
         isActive = isActive != 0L,
         lastConfirmedPeriod = lastConfirmedPeriod,
+        createdAt = createdAt,
     )
 }
 

@@ -6,6 +6,7 @@ import com.emm.domain.recurring.DeleteRecurringMovementUseCase
 import com.emm.domain.recurring.GetAllRecurringMovementDetailsUseCase
 import com.emm.domain.recurring.GetPendingRecurringMovementsUseCase
 import com.emm.domain.recurring.GetRecurringMonthlyTotalsUseCase
+import com.emm.domain.recurring.SkipRecurringMovementUseCase
 import com.emm.domain.recurring.UpdateRecurringMovementUseCase
 import com.emm.justchill.hh.recurring.AddEditRecurringMovementViewModel
 import com.emm.justchill.hh.recurring.RecurringMovementsViewModel
@@ -19,6 +20,7 @@ import org.koin.dsl.module
 val recurringModule = module {
     factoryOf(::GetPendingRecurringMovementsUseCase)
     factoryOf(::ConfirmRecurringMovementUseCase)
+    factoryOf(::SkipRecurringMovementUseCase)
     factoryOf(::GetAllRecurringMovementDetailsUseCase)
     factoryOf(::GetRecurringMonthlyTotalsUseCase)
     factoryOf(::CreateRecurringMovementUseCase)

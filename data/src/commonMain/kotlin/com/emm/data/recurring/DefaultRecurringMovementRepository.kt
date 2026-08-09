@@ -8,6 +8,7 @@ import com.emm.domain.recurring.RecurringMovementInsert
 import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.RecurringMovementId
+import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.transaction.TransactionInsert
 import kotlinx.coroutines.flow.Flow
 
@@ -45,4 +46,8 @@ class DefaultRecurringMovementRepository(private val localDataSource: RecurringM
         safeDbCall {
             localDataSource.confirm(insert, recurringId.value, period)
         }
+
+    override suspend fun skip(recurringId: RecurringMovementId, period: String): Unit = safeDbCall {
+        localDataSource.skip(recurringId.value, period, currentTimeInMillis())
+    }
 }

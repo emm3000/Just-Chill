@@ -32,10 +32,12 @@ class ConfirmRecurringMovementUseCaseTest {
 
     private val utc = TimeZone.UTC
     private val may2026 = YearMonth(2026, Month.MAY)
-    private val today = LocalDate(2026, 5, 20)
 
-    // 2026-05-20T00:00:00Z in epoch millis (fixed UTC timezone)
-    private val expectedDateMillis = today.atStartOfDayIn(utc).toEpochMilliseconds()
+    // The fixed template is due on the 15th, so confirming May books it on 2026-05-15, NOT on the
+    // day the user happened to tap confirm.
+    private val expectedDateMillis = LocalDate(2026, 5, 15).atStartOfDayIn(utc).toEpochMilliseconds()
+
+    private val createdAt = LocalDate(2026, 1, 1).atStartOfDayIn(utc).toEpochMilliseconds()
 
     private val fixedTemplate = RecurringMovement(
         id = RecurringMovementId("rm-fixed"),
@@ -49,6 +51,7 @@ class ConfirmRecurringMovementUseCaseTest {
         dayOfMonth = 15,
         isActive = true,
         lastConfirmedPeriod = null,
+        createdAt = createdAt,
     )
 
     private val variableTemplate = RecurringMovement(
@@ -63,6 +66,7 @@ class ConfirmRecurringMovementUseCaseTest {
         dayOfMonth = 1,
         isActive = true,
         lastConfirmedPeriod = null,
+        createdAt = createdAt,
     )
 
     @Before
@@ -81,7 +85,6 @@ class ConfirmRecurringMovementUseCaseTest {
         useCase(
             templateId = RecurringMovementId("rm-fixed"),
             yearMonth = may2026,
-            today = today,
             callerAmount = null,
         )
         assertEquals(1, repository.confirmCount)
@@ -110,7 +113,6 @@ class ConfirmRecurringMovementUseCaseTest {
             uc(
                 templateId = RecurringMovementId("rm-fixed"),
                 yearMonth = may2026,
-                today = today,
                 callerAmount = null,
             )
         }
@@ -125,7 +127,6 @@ class ConfirmRecurringMovementUseCaseTest {
         useCase(
             templateId = RecurringMovementId("rm-variable"),
             yearMonth = may2026,
-            today = today,
             callerAmount = Money(350_000L),
         )
         assertEquals(1, repository.confirmCount)
@@ -142,7 +143,6 @@ class ConfirmRecurringMovementUseCaseTest {
             useCase(
                 templateId = RecurringMovementId("rm-variable"),
                 yearMonth = may2026,
-                today = today,
                 callerAmount = Money(0L),
             )
         }
@@ -156,7 +156,6 @@ class ConfirmRecurringMovementUseCaseTest {
             useCase(
                 templateId = RecurringMovementId("rm-variable"),
                 yearMonth = may2026,
-                today = today,
                 callerAmount = null,
             )
         }
@@ -169,7 +168,6 @@ class ConfirmRecurringMovementUseCaseTest {
             useCase(
                 templateId = RecurringMovementId("rm-variable"),
                 yearMonth = may2026,
-                today = today,
                 callerAmount = Money(-1L),
             )
         }
@@ -186,7 +184,6 @@ class ConfirmRecurringMovementUseCaseTest {
         useCase(
             templateId = RecurringMovementId("rm-fixed"),
             yearMonth = may2026,
-            today = today,
             callerAmount = null,
         )
         assertEquals(1, repository.confirmCount)
@@ -196,7 +193,6 @@ class ConfirmRecurringMovementUseCaseTest {
             useCase(
                 templateId = RecurringMovementId("rm-fixed"),
                 yearMonth = may2026,
-                today = today,
                 callerAmount = null,
             )
         }
@@ -210,7 +206,6 @@ class ConfirmRecurringMovementUseCaseTest {
             useCase(
                 templateId = RecurringMovementId("ghost"),
                 yearMonth = may2026,
-                today = today,
                 callerAmount = null,
             )
         }
@@ -218,15 +213,13 @@ class ConfirmRecurringMovementUseCaseTest {
     }
 
     /**
-     * Verifies the exact epoch millis for the transaction date.
-     * With injected UTC timezone: 2026-05-20T00:00:00Z = 1748044800000L
+     * The transaction lands on the period's own due day, at start of day in the injected timezone.
      */
     @Test
-    fun `invoke date on TransactionInsert matches today at start of day in injected timezone`() = runTest {
+    fun `invoke dates the transaction on the period's due day`() = runTest {
         useCase(
             templateId = RecurringMovementId("rm-fixed"),
             yearMonth = may2026,
-            today = today,
             callerAmount = null,
         )
         val insert = repository.lastConfirmInsert
@@ -234,12 +227,59 @@ class ConfirmRecurringMovementUseCaseTest {
         assertEquals(expectedDateMillis, insert.date)
     }
 
+    // ── catch-up ──────────────────────────────────────────────────────────────
+
+    @Test
+    fun `a caught-up period is booked in its own month, not in the current one`() = runTest {
+        // Settling March while it is May has to date the transaction in March, or Home and Reporte
+        // disagree about the month the money moved.
+        useCase(
+            templateId = RecurringMovementId("rm-fixed"),
+            yearMonth = YearMonth(2026, Month.MARCH),
+            callerAmount = null,
+        )
+
+        val expectedMarch = LocalDate(2026, 3, 15).atStartOfDayIn(utc).toEpochMilliseconds()
+        assertEquals(expectedMarch, repository.lastConfirmInsert?.date)
+        assertEquals("2026-03", repository.lastConfirmPeriod)
+    }
+
+    @Test
+    fun `two missed months are settled oldest first`() = runTest {
+        useCase(RecurringMovementId("rm-fixed"), YearMonth(2026, Month.MARCH), null)
+        useCase(RecurringMovementId("rm-fixed"), YearMonth(2026, Month.APRIL), null)
+
+        assertEquals(2, repository.confirmCount)
+        assertEquals("2026-04", repository.lastConfirmPeriod)
+    }
+
+    @Test
+    fun `confirming a period at or before the mark is rejected`() = runTest {
+        useCase(RecurringMovementId("rm-fixed"), YearMonth(2026, Month.APRIL), null)
+
+        // March is now behind the mark. Accepting it would rewind the mark and resurrect April.
+        assertFailsWith<DomainException.ValidationError> {
+            useCase(RecurringMovementId("rm-fixed"), YearMonth(2026, Month.MARCH), null)
+        }
+        assertEquals(1, repository.confirmCount)
+    }
+
+    @Test
+    fun `the due day is clamped to short months when catching up`() = runTest {
+        val endOfMonth = fixedTemplate.copy(id = RecurringMovementId("rm-eom"), dayOfMonth = 31)
+        repository.addTemplate(endOfMonth)
+
+        useCase(RecurringMovementId("rm-eom"), YearMonth(2026, Month.FEBRUARY), null)
+
+        val expectedFeb = LocalDate(2026, 2, 28).atStartOfDayIn(utc).toEpochMilliseconds()
+        assertEquals(expectedFeb, repository.lastConfirmInsert?.date)
+    }
+
     @Test
     fun `invoke description from template is copied to transaction`() = runTest {
         useCase(
             templateId = RecurringMovementId("rm-fixed"),
             yearMonth = may2026,
-            today = today,
             callerAmount = null,
         )
         assertEquals("Netflix mensual", repository.lastConfirmInsert?.description)

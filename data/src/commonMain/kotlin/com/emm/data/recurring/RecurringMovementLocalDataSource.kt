@@ -95,7 +95,7 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData)
      * 2. Insert the transaction record
      * 3. Mark the recurring movement confirmed with a caller-supplied [updatedAt]
      *
-     * If the template is already confirmed for [period] (TOCTOU race), throws
+     * If the template is already settled at or past [period] (TOCTOU race), throws
      * [DomainException.ValidationError] which causes the SQLDelight transaction to roll back,
      * reverting the just-inserted transaction row.
      *
@@ -105,13 +105,7 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData)
     suspend fun confirm(insert: TransactionInsert, recurringId: String, period: String) = withContext(ioDispatcher) {
         emmDatabase.transaction {
             // DB-level idempotency guard: re-check inside the transaction to close the TOCTOU window.
-            val current = rmq.find(recurringId).executeAsOneOrNull()
-            if (current?.lastConfirmedPeriod == period) {
-                throw DomainException.ValidationError(
-                    "Template '$recurringId' already confirmed for period $period (concurrent write detected)",
-                    ValidationCode.RecurringAlreadyConfirmed,
-                )
-            }
+            ensureNotSettled(recurringId, period)
 
             emmDatabase.transactionsQueries.insert(
                 transactionId = insert.id.value,
@@ -131,5 +125,35 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData)
             )
         }
         Unit
+    }
+
+    /**
+     * Advances the high-water mark to [period] with no transaction attached.
+     *
+     * Same guard as [confirm], for the same reason: a concurrent write must not be able to rewind
+     * the mark and resurrect periods the user already settled.
+     */
+    suspend fun skip(recurringId: String, period: String, updatedAt: Long) = withContext(ioDispatcher) {
+        emmDatabase.transaction {
+            ensureNotSettled(recurringId, period)
+            rmq.markConfirmed(lastConfirmedPeriod = period, updatedAt = updatedAt, id = recurringId)
+        }
+        Unit
+    }
+
+    /**
+     * Throws unless [period] is strictly newer than the stored mark.
+     *
+     * Period keys are zero-padded "YYYY-MM", so string ordering is chronological ordering and the
+     * comparison needs no parsing.
+     */
+    private fun ensureNotSettled(recurringId: String, period: String) {
+        val settledThrough = rmq.find(recurringId).executeAsOneOrNull()?.lastConfirmedPeriod ?: return
+        if (settledThrough >= period) {
+            throw DomainException.ValidationError(
+                "Template '$recurringId' is already settled through $settledThrough (concurrent write detected)",
+                ValidationCode.RecurringAlreadyConfirmed,
+            )
+        }
     }
 }

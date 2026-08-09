@@ -158,8 +158,9 @@ private fun HomeWithData(
         confirmSheetItem = null
     }
 
+    // Keyed by id (template + period), not by templateId: one template can owe several months.
     val pendingMap = remember(homeData.pendingRecurringMovements) {
-        homeData.pendingRecurringMovements.associateBy { it.templateId }
+        homeData.pendingRecurringMovements.associateBy { it.id }
     }
 
     LazyColumn(
@@ -198,11 +199,11 @@ private fun HomeWithData(
                         .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 8.dp),
                 )
             }
-            items(homeData.pendingRecurringMovements, PendingRecurringUi::templateId) { pending ->
+            items(homeData.pendingRecurringMovements, PendingRecurringUi::id) { pending ->
                 PendingRecurringRow(
                     item = pending,
                     onClick = {
-                        confirmSheetItem = pending.templateId
+                        confirmSheetItem = pending.id
                         onConfirmSheetOpenChange(true)
                     },
                 )
@@ -231,12 +232,21 @@ private fun HomeWithData(
     // Sheet closes ONLY via CloseConfirmSheet effect (success) → onConfirmSheetOpenChange(false).
     // On error the sheet stays open so the snackbar is still visible with the sheet.
     if (confirmSheetOpen) {
-        confirmSheetItem?.let { templateId ->
-            pendingMap[templateId]?.let { item ->
+        confirmSheetItem?.let { pendingId ->
+            pendingMap[pendingId]?.let { item ->
                 ConfirmRecurringSheet(
                     item = item,
-                    onConfirm = { id, callerAmount ->
-                        onIntent(HomeIntent.ConfirmRecurring(templateId = id, callerAmount = callerAmount))
+                    onConfirm = { callerAmount ->
+                        onIntent(
+                            HomeIntent.ConfirmRecurring(
+                                templateId = item.templateId,
+                                period = item.period,
+                                callerAmount = callerAmount,
+                            ),
+                        )
+                    },
+                    onSkip = {
+                        onIntent(HomeIntent.SkipRecurring(templateId = item.templateId, period = item.period))
                     },
                     onDismiss = {
                         confirmSheetItem = null
@@ -288,14 +298,16 @@ private fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit) {
                 ),
                 color = colors.textPrimary,
             )
+            // The month is only worth naming when it is not the current one — otherwise every row
+            // would repeat today's month for no reason.
             Text(
-                text = "Día ${item.dayOfMonth}",
+                text = if (item.isCatchUp) "Día ${item.dayOfMonth} · ${item.periodLabel}" else "Día ${item.dayOfMonth}",
                 style = TextStyle(
                     fontFamily = InterFontFamily,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.W400,
                 ),
-                color = colors.textTertiary,
+                color = if (item.isCatchUp) colors.danger else colors.textTertiary,
             )
         }
         Text(

@@ -7,6 +7,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * A year + month, without day. Used to query and report on a calendar
@@ -14,7 +15,9 @@ import kotlin.time.Clock
  *
  * kotlinx-datetime doesn't ship a YearMonth type, so we roll our own.
  */
-data class YearMonth(val year: Int, val month: Month) {
+data class YearMonth(val year: Int, val month: Month) : Comparable<YearMonth> {
+
+    override fun compareTo(other: YearMonth): Int = compareValuesBy(this, other, { it.year }, { it.month.ordinal })
 
     fun previous(): YearMonth {
         val prevOrdinal = month.ordinal - 1
@@ -53,5 +56,10 @@ data class YearMonth(val year: Int, val month: Month) {
             val today: LocalDateTime = clock.now().toLocalDateTime(timeZone)
             return YearMonth(year = today.year, month = today.month)
         }
+
+        fun of(date: LocalDate): YearMonth = YearMonth(year = date.year, month = date.month)
+
+        fun of(epochMillis: Long, timeZone: TimeZone = TimeZone.currentSystemDefault()): YearMonth =
+            of(Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(timeZone).date)
     }
 }

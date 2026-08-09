@@ -17,5 +17,11 @@ data class RecurringMovement(
     val frequency: Frequency,
     val dayOfMonth: Int,
     val isActive: Boolean,
+    /**
+     * The newest period ("YYYY-MM") confirmed or skipped. A high-water mark, not a log: every
+     * period after it and up to the current month is still owed. See [pendingPeriods].
+     */
     val lastConfirmedPeriod: String?,
+    /** Epoch millis. Floors the catch-up window — a template owes nothing from before it existed. */
+    val createdAt: Long,
 )

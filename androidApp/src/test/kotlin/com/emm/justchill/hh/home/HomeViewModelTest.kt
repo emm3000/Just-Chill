@@ -4,10 +4,13 @@ import com.emm.domain.home.GetHomeDataUseCase
 import com.emm.domain.home.HomeData
 import com.emm.domain.recurring.ConfirmRecurringMovementUseCase
 import com.emm.domain.recurring.Frequency
+import com.emm.domain.recurring.PendingRecurring
 import com.emm.domain.recurring.RecurringMovement
+import com.emm.domain.recurring.SkipRecurringMovementUseCase
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.RecurringMovementId
+import com.emm.domain.shared.YearMonth
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.MainDispatcherRule
@@ -20,6 +23,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Month
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -36,6 +40,7 @@ class HomeViewModelTest {
 
     private val getHomeData = mockk<GetHomeDataUseCase>()
     private val confirmRecurring = mockk<ConfirmRecurringMovementUseCase>()
+    private val skipRecurring = mockk<SkipRecurringMovementUseCase>()
 
     private lateinit var viewModel: HomeViewModel
 
@@ -47,6 +52,15 @@ class HomeViewModelTest {
         hasAnyTransaction = false,
         pendingRecurringMovements = emptyList(),
     )
+
+    private val period = YearMonth(2026, Month.MAY)
+
+    private fun pending(
+        id: String = "rm-1",
+        name: String = "Netflix",
+        amount: Money? = Money(1800L),
+        period: YearMonth = this.period,
+    ) = PendingRecurring(recurringMovement(id = id, name = name, amount = amount), period)
 
     private fun recurringMovement(
         id: String = "rm-1",
@@ -66,12 +80,13 @@ class HomeViewModelTest {
         dayOfMonth = dayOfMonth,
         isActive = true,
         lastConfirmedPeriod = null,
+        createdAt = 0L,
     )
 
     @Before
     fun setUp() {
         every { getHomeData(any()) } returns flowOf(emptyHomeData)
-        viewModel = HomeViewModel(getHomeData, confirmRecurring)
+        viewModel = HomeViewModel(getHomeData, confirmRecurring, skipRecurring)
     }
 
     // ---- Scenario 10.1: No pending → section absent ----
@@ -79,7 +94,7 @@ class HomeViewModelTest {
     @Test
     fun `10_1 empty pending list maps to empty pendingRecurringMovements in state`() = runTest {
         every { getHomeData(any()) } returns flowOf(emptyHomeData)
-        viewModel = HomeViewModel(getHomeData, confirmRecurring)
+        viewModel = HomeViewModel(getHomeData, confirmRecurring, skipRecurring)
 
         advanceUntilIdle()
 
@@ -92,12 +107,12 @@ class HomeViewModelTest {
     fun `10_2 two pending items map to two PendingRecurringUi entries`() = runTest {
         val homeData = emptyHomeData.copy(
             pendingRecurringMovements = listOf(
-                recurringMovement("rm-1", "Netflix"),
-                recurringMovement("rm-2", "Spotify", amount = null),
+                pending("rm-1", "Netflix"),
+                pending("rm-2", "Spotify", amount = null),
             ),
         )
         every { getHomeData(any()) } returns flowOf(homeData)
-        viewModel = HomeViewModel(getHomeData, confirmRecurring)
+        viewModel = HomeViewModel(getHomeData, confirmRecurring, skipRecurring)
 
         advanceUntilIdle()
 
@@ -113,17 +128,17 @@ class HomeViewModelTest {
 
     @Test
     fun `4_1 ConfirmRecurring intent with fixed amount calls use case and emits CloseSheet effect`() = runTest {
-        coEvery { confirmRecurring(any(), any(), any(), any()) } returns Unit
+        coEvery { confirmRecurring(any(), any(), any()) } returns Unit
         every { getHomeData(any()) } returns flowOf(emptyHomeData)
-        viewModel = HomeViewModel(getHomeData, confirmRecurring)
+        viewModel = HomeViewModel(getHomeData, confirmRecurring, skipRecurring)
 
         val effects = mutableListOf<HomeEffect>()
         val job = launch { viewModel.effect.collect { effects.add(it) } }
 
-        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-1", Money(1800L)))
+        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-1", period, Money(1800L)))
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { confirmRecurring(any(), any(), any(), eq(Money(1800L))) }
+        coVerify(exactly = 1) { confirmRecurring(any(), any(), eq(Money(1800L))) }
         assertTrue(effects.any { it is HomeEffect.CloseConfirmSheet })
         job.cancel()
     }
@@ -133,14 +148,14 @@ class HomeViewModelTest {
     @Test
     fun `4_2 ConfirmRecurring propagates DomainException as ShowSnackbar effect`() = runTest {
         val error = DomainException.DatabaseError(RuntimeException("DB fail"))
-        coEvery { confirmRecurring(any(), any(), any(), any()) } throws error
+        coEvery { confirmRecurring(any(), any(), any()) } throws error
         every { getHomeData(any()) } returns flowOf(emptyHomeData)
-        viewModel = HomeViewModel(getHomeData, confirmRecurring)
+        viewModel = HomeViewModel(getHomeData, confirmRecurring, skipRecurring)
 
         val effects = mutableListOf<HomeEffect>()
         val job = launch { viewModel.effect.collect { effects.add(it) } }
 
-        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-1", Money(1800L)))
+        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-1", period, Money(1800L)))
         advanceUntilIdle()
 
         assertTrue(effects.any { it is HomeEffect.ShowError })
@@ -150,14 +165,14 @@ class HomeViewModelTest {
     @Test
     fun `4_2b ConfirmRecurring DatabaseError ShowError carries toUserMessage string not raw exception`() = runTest {
         val error = DomainException.DatabaseError(RuntimeException("raw internal message"))
-        coEvery { confirmRecurring(any(), any(), any(), any()) } throws error
+        coEvery { confirmRecurring(any(), any(), any()) } throws error
         every { getHomeData(any()) } returns flowOf(emptyHomeData)
-        viewModel = HomeViewModel(getHomeData, confirmRecurring)
+        viewModel = HomeViewModel(getHomeData, confirmRecurring, skipRecurring)
 
         val effects = mutableListOf<HomeEffect>()
         val job = launch { viewModel.effect.collect { effects.add(it) } }
 
-        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-1", Money(1800L)))
+        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-1", period, Money(1800L)))
         advanceUntilIdle()
 
         val showError = effects.filterIsInstance<HomeEffect.ShowError>().firstOrNull()
@@ -170,14 +185,14 @@ class HomeViewModelTest {
 
     @Test
     fun `4_1b ConfirmRecurring success emits CloseConfirmSheet — not ShowError`() = runTest {
-        coEvery { confirmRecurring(any(), any(), any(), any()) } returns Unit
+        coEvery { confirmRecurring(any(), any(), any()) } returns Unit
         every { getHomeData(any()) } returns flowOf(emptyHomeData)
-        viewModel = HomeViewModel(getHomeData, confirmRecurring)
+        viewModel = HomeViewModel(getHomeData, confirmRecurring, skipRecurring)
 
         val effects = mutableListOf<HomeEffect>()
         val job = launch { viewModel.effect.collect { effects.add(it) } }
 
-        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-1", Money(1800L)))
+        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-1", period, Money(1800L)))
         advanceUntilIdle()
 
         assertTrue(effects.any { it is HomeEffect.CloseConfirmSheet }, "Expected CloseConfirmSheet but got: $effects")
@@ -193,14 +208,14 @@ class HomeViewModelTest {
 
     @Test
     fun `5_1 ConfirmRecurring with variable amount forwards callerAmount null to use case`() = runTest {
-        coEvery { confirmRecurring(any(), any(), any(), null) } returns Unit
+        coEvery { confirmRecurring(any(), any(), null) } returns Unit
         every { getHomeData(any()) } returns flowOf(emptyHomeData)
-        viewModel = HomeViewModel(getHomeData, confirmRecurring)
+        viewModel = HomeViewModel(getHomeData, confirmRecurring, skipRecurring)
 
-        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-2", null))
+        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-2", period, null))
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { confirmRecurring(any(), any(), any(), null) }
+        coVerify(exactly = 1) { confirmRecurring(any(), any(), null) }
     }
 
     // ---- Scenario 5.3: Variable amount zero rejected by use case ----
@@ -208,14 +223,14 @@ class HomeViewModelTest {
     @Test
     fun `5_3 ConfirmRecurring with zero callerAmount propagates ValidationError as ShowError effect`() = runTest {
         val error = DomainException.ValidationError("Amount must be > 0")
-        coEvery { confirmRecurring(any(), any(), any(), Money(0L)) } throws error
+        coEvery { confirmRecurring(any(), any(), Money(0L)) } throws error
         every { getHomeData(any()) } returns flowOf(emptyHomeData)
-        viewModel = HomeViewModel(getHomeData, confirmRecurring)
+        viewModel = HomeViewModel(getHomeData, confirmRecurring, skipRecurring)
 
         val effects = mutableListOf<HomeEffect>()
         val job = launch { viewModel.effect.collect { effects.add(it) } }
 
-        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-2", Money(0L)))
+        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-2", period, Money(0L)))
         advanceUntilIdle()
 
         assertTrue(effects.any { it is HomeEffect.ShowError })
@@ -227,14 +242,65 @@ class HomeViewModelTest {
     @Test
     fun `6_1 ConfirmRecurring already-confirmed period propagates ValidationError as ShowError`() = runTest {
         val error = DomainException.ValidationError("Already confirmed for this period")
-        coEvery { confirmRecurring(any(), any(), any(), any()) } throws error
+        coEvery { confirmRecurring(any(), any(), any()) } throws error
         every { getHomeData(any()) } returns flowOf(emptyHomeData)
-        viewModel = HomeViewModel(getHomeData, confirmRecurring)
+        viewModel = HomeViewModel(getHomeData, confirmRecurring, skipRecurring)
 
         val effects = mutableListOf<HomeEffect>()
         val job = launch { viewModel.effect.collect { effects.add(it) } }
 
-        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-1", Money(1800L)))
+        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-1", period, Money(1800L)))
+        advanceUntilIdle()
+
+        assertTrue(effects.any { it is HomeEffect.ShowError })
+        job.cancel()
+    }
+
+    // ---- Catch-up: the period travels with the intent ----
+
+    @Test
+    fun `ConfirmRecurring forwards the intent's period, not the month on screen`() = runTest {
+        coEvery { confirmRecurring(any(), any(), any()) } returns Unit
+        every { getHomeData(any()) } returns flowOf(emptyHomeData)
+        viewModel = HomeViewModel(getHomeData, confirmRecurring, skipRecurring)
+
+        val backdated = YearMonth(2026, Month.MARCH)
+        viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-1", backdated, Money(1800L)))
+        advanceUntilIdle()
+
+        // Reading the period off the selected month is what lost the missed month in the first place.
+        coVerify(exactly = 1) { confirmRecurring(RecurringMovementId("rm-1"), backdated, Money(1800L)) }
+    }
+
+    @Test
+    fun `SkipRecurring settles the period and closes the sheet`() = runTest {
+        coEvery { skipRecurring(any(), any()) } returns Unit
+        every { getHomeData(any()) } returns flowOf(emptyHomeData)
+        viewModel = HomeViewModel(getHomeData, confirmRecurring, skipRecurring)
+
+        val effects = mutableListOf<HomeEffect>()
+        val job = launch { viewModel.effect.collect { effects.add(it) } }
+
+        viewModel.onIntent(HomeIntent.SkipRecurring("rm-1", period))
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { skipRecurring(RecurringMovementId("rm-1"), period) }
+        coVerify(exactly = 0) { confirmRecurring(any(), any(), any()) }
+        assertTrue(effects.any { it is HomeEffect.CloseConfirmSheet })
+        job.cancel()
+    }
+
+    @Test
+    fun `SkipRecurring surfaces a domain failure as ShowError`() = runTest {
+        coEvery { skipRecurring(any(), any()) } throws
+            DomainException.DatabaseError(RuntimeException("DB fail"))
+        every { getHomeData(any()) } returns flowOf(emptyHomeData)
+        viewModel = HomeViewModel(getHomeData, confirmRecurring, skipRecurring)
+
+        val effects = mutableListOf<HomeEffect>()
+        val job = launch { viewModel.effect.collect { effects.add(it) } }
+
+        viewModel.onIntent(HomeIntent.SkipRecurring("rm-1", period))
         advanceUntilIdle()
 
         assertTrue(effects.any { it is HomeEffect.ShowError })

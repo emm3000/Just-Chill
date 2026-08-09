@@ -4,7 +4,8 @@ import androidx.lifecycle.viewModelScope
 import com.emm.domain.home.GetHomeDataUseCase
 import com.emm.domain.home.HomeData
 import com.emm.domain.recurring.ConfirmRecurringMovementUseCase
-import com.emm.domain.recurring.RecurringMovement
+import com.emm.domain.recurring.PendingRecurring
+import com.emm.domain.recurring.SkipRecurringMovementUseCase
 import com.emm.domain.shared.RecurringMovementId
 import com.emm.domain.shared.YearMonth
 import com.emm.justchill.core.error.toUserMessage
@@ -16,19 +17,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 class HomeViewModel(
     private val getHomeData: GetHomeDataUseCase,
     private val confirmRecurringMovement: ConfirmRecurringMovementUseCase,
+    private val skipRecurringMovement: SkipRecurringMovementUseCase,
     private val clock: kotlin.time.Clock = kotlin.time.Clock.System,
 ) : MviViewModel<HomeUiState, HomeIntent, HomeEffect>() {
 
     override val initialState = HomeUiState()
 
-    private val selectedMonth = MutableStateFlow(YearMonth.current())
+    private val selectedMonth = MutableStateFlow(YearMonth.current(clock))
 
     init {
         selectedMonth
@@ -42,17 +41,26 @@ class HomeViewModel(
             HomeIntent.PreviousMonth -> selectedMonth.value = selectedMonth.value.previous()
             HomeIntent.NextMonth -> selectedMonth.value = selectedMonth.value.next()
             is HomeIntent.ConfirmRecurring -> onConfirmRecurring(intent)
+            is HomeIntent.SkipRecurring -> onSkipRecurring(intent)
         }
     }
 
     private fun onConfirmRecurring(intent: HomeIntent.ConfirmRecurring) {
         launchSafe(onError = { e -> HomeEffect.ShowError(e.toUserMessage()) }) {
-            val today: LocalDate = clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
             confirmRecurringMovement(
                 templateId = RecurringMovementId(intent.templateId),
-                yearMonth = selectedMonth.value,
-                today = today,
+                yearMonth = intent.period,
                 callerAmount = intent.callerAmount,
+            )
+            sendEffect(HomeEffect.CloseConfirmSheet)
+        }
+    }
+
+    private fun onSkipRecurring(intent: HomeIntent.SkipRecurring) {
+        launchSafe(onError = { e -> HomeEffect.ShowError(e.toUserMessage()) }) {
+            skipRecurringMovement(
+                templateId = RecurringMovementId(intent.templateId),
+                yearMonth = intent.period,
             )
             sendEffect(HomeEffect.CloseConfirmSheet)
         }
@@ -68,5 +76,10 @@ class HomeViewModel(
         pendingRecurringMovements = data.pendingRecurringMovements.toPendingUi(),
     )
 
-    private fun List<RecurringMovement>.toPendingUi(): List<PendingRecurringUi> = map { it.toPendingRecurringUi() }
+    // Current month comes from the clock, not from the selected month: it is what marks a pending
+    // item as catch-up, and browsing to March must not relabel March's own pending row.
+    private fun List<PendingRecurring>.toPendingUi(): List<PendingRecurringUi> {
+        val currentMonth = YearMonth.current(clock)
+        return map { it.toPendingRecurringUi(currentMonth) }
+    }
 }

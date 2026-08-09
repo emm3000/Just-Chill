@@ -20,34 +20,38 @@ class ConfirmRecurringMovementUseCase(
 ) {
 
     /**
-     * Confirms a recurring movement for [yearMonth].
+     * Confirms a recurring movement for [yearMonth], creating the transaction it stands for.
      *
      * Logic:
      * 1. find(id) → NotFound if absent
-     * 2. idempotency guard: if lastConfirmedPeriod == periodKey(yearMonth) → ValidationError
+     * 2. monotonic guard: [yearMonth] must be newer than the template's high-water mark
      * 3. resolve amount: template.amount if non-null, else callerAmount (null → ValidationError)
      * 4. validate resolved amount > 0
-     * 5. build TransactionInsert — date = today.atStartOfDayIn(timeZone); timestamps from single now
-     * 6. repo.confirm(insert, id, periodKey) — atomic in data layer
+     * 5. build TransactionInsert — date = the period's own due day; timestamps from a single now
+     * 6. repo.confirm(insert, id, periodKey) — atomic in the data layer
+     *
+     * The transaction is dated on [yearMonth]'s due day, not on today. Catching up on July while
+     * it is August has to book July's rent in July, or Home and Reporte disagree about the month
+     * the money moved. It cannot land in the future either: [pendingPeriods] does not offer the
+     * current month until its due day has arrived.
+     *
+     * The guard is monotonic rather than an equality check because [RecurringMovement.lastConfirmedPeriod]
+     * is a high-water mark. Accepting a period at or before it would strand every period in
+     * between — confirm August with July still owed and July vanishes. Callers settle oldest-first.
      *
      * Does NOT call CreateTransactionUseCase (Option A atomicity).
      * [timeZone] is injected so tests can assert exact epoch millis without hidden clock reads.
      */
     @OptIn(ExperimentalUuidApi::class)
-    suspend operator fun invoke(
-        templateId: RecurringMovementId,
-        yearMonth: YearMonth,
-        today: LocalDate,
-        callerAmount: Money?,
-    ) {
+    suspend operator fun invoke(templateId: RecurringMovementId, yearMonth: YearMonth, callerAmount: Money?) {
         val template = repository.find(templateId)
             ?: throw DomainException.NotFound("RecurringMovement(${templateId.value})")
 
-        val currentPeriod = periodKey(yearMonth)
+        val mark: YearMonth? = template.lastConfirmedPeriod?.let(::parsePeriodKey)
         ensure(
-            template.lastConfirmedPeriod != currentPeriod,
+            mark == null || yearMonth > mark,
             DomainException.ValidationError(
-                "Template '${template.name}' already confirmed for period $currentPeriod",
+                "Template '${template.name}' is already settled through ${template.lastConfirmedPeriod}",
                 ValidationCode.RecurringAlreadyConfirmed,
             ),
         )
@@ -61,7 +65,6 @@ class ConfirmRecurringMovementUseCase(
             ),
         )
 
-        val dateMillis: Long = today.atStartOfDayIn(timeZone).toEpochMilliseconds()
         val now = currentTimeInMillis()
         val insert = TransactionInsert(
             id = TransactionId(Uuid.random().toString()),
@@ -69,14 +72,22 @@ class ConfirmRecurringMovementUseCase(
             amount = resolvedAmount,
             description = template.description,
             categoryId = template.categoryId,
-            date = dateMillis,
+            date = template.dueDateMillis(yearMonth, timeZone),
             accountId = template.accountId,
             updatedAt = now,
             createdAt = now,
         )
 
-        repository.confirm(insert, templateId, currentPeriod)
+        repository.confirm(insert, templateId, periodKey(yearMonth))
     }
+}
+
+/** Start of the template's due day within [yearMonth], clamped to short months. */
+private fun RecurringMovement.dueDateMillis(yearMonth: YearMonth, timeZone: TimeZone): Long {
+    val dueDay = when (frequency) {
+        Frequency.Monthly -> effectiveDueDay(dayOfMonth, yearMonth)
+    }
+    return LocalDate(yearMonth.year, yearMonth.month, dueDay).atStartOfDayIn(timeZone).toEpochMilliseconds()
 }
 
 private fun resolveAmount(template: RecurringMovement, callerAmount: Money?): Money = template.amount

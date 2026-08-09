@@ -23,6 +23,10 @@ class FakeRecurringMovementRepository : RecurringMovementRepository {
         private set
     var lastConfirmPeriod: String? = null
         private set
+    var skipCount = 0
+        private set
+    var lastSkipPeriod: String? = null
+        private set
 
     fun addTemplate(vararg templates: RecurringMovement) {
         val map = store.value.toMutableMap()
@@ -87,12 +91,20 @@ class FakeRecurringMovementRepository : RecurringMovementRepository {
         confirmCount++
         lastConfirmInsert = insert
         lastConfirmPeriod = period
-        // Simulate marking confirmed so idempotency can be tested
+        markSettled(recurringId, period)
+    }
+
+    override suspend fun skip(recurringId: RecurringMovementId, period: String) {
+        skipCount++
+        lastSkipPeriod = period
+        markSettled(recurringId, period)
+    }
+
+    /** Moves the high-water mark, so the monotonic guard can be exercised. */
+    private fun markSettled(recurringId: RecurringMovementId, period: String) {
         val map = store.value.toMutableMap()
-        val existing = map[recurringId.value]
-        if (existing != null) {
-            map[recurringId.value] = existing.copy(lastConfirmedPeriod = period)
-        }
+        val existing = map[recurringId.value] ?: return
+        map[recurringId.value] = existing.copy(lastConfirmedPeriod = period)
         store.value = map
     }
 }
