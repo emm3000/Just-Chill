@@ -46,15 +46,21 @@ git rev-list --count --merges origin/trunk..trunk   # debe dar 0
 permisos de admin y el push directo lo hace, pero entonces esos checks **no corrieron**: la única
 verificación de ese push es la que corriste local.
 
-⚠️ **Sin verificar, verificalo antes de confiar en un PR verde**: este doc decía "3 status checks"
-y `buildDev.yml` no tiene tres jobs desde que se unificó el gate; una sesión anterior registró que
-renombrar los jobs rompió los checks requeridos. Si siguen apuntando a nombres viejos, exigen
-contextos que ningún workflow reporta y ningún PR puede mergear. Los nombres que `buildDev.yml`
-reporta hoy son **`quality-gate`** e **`ios-compile`**. Comprobalo:
+Los checks requeridos estuvieron rotos y se arreglaron el 2026-08-09. Exigían `build`, `lint` y
+`unit-test` — los tres jobs que la unificación del gate había borrado — así que ningún PR podía
+mergear y por eso todo iba por push directo con bypass de admin. Ahora exigen **`quality-gate`** e
+**`ios-compile`**, atados al app de GitHub Actions (`app_id 15368`). Si volvés a renombrar un job
+de `buildDev.yml`, esto se rompe igual y en silencio: el PR queda esperando un contexto que nadie
+reporta. Comprobalo con
 
 ```bash
 gh api repos/emm3000/Just-Chill/branches/trunk/protection --jq '.required_status_checks.contexts'
 ```
+
+Quedan dos flojeras del lado del servidor, decididas a conciencia y todavía sin tocar:
+`required_linear_history: false` (nada impide un merge commit salvo tu disciplina) y
+`allow_force_pushes: true` (se puede volar historia de trunk). Cambiarlas exige un `PUT` del objeto
+de protección completo, no un PATCH parcial.
 
 ---
 
