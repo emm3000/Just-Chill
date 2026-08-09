@@ -3,7 +3,7 @@
 > Punto de re-entrada canónico. Si retomás el proyecto después de un context
 > reset, leé esto primero y después el `CLAUDE.md` del módulo que vayas a tocar.
 >
-> **Última actualización**: 2026-08-08 · trunk `eb8f034`
+> **Última actualización**: 2026-08-08 · trunk `ff12fb3`
 >
 > Este doc se reescribió el 2026-08-08 porque quedó dos meses desactualizado y
 > se perdió toda la migración KMP. El detalle histórico previo (sprints S0-S5,
@@ -30,9 +30,10 @@ Tres tracks grandes cerrados o casi:
 | Producto (Fases 1-5: discovery → post-v1) | ✅ cerrado, docs en `docs/` |
 | Local-first sync (slices 1-5) | slices 1-4 ✅ · slice 5 ⏳ bloqueado por tareas humanas |
 | Migración KMP / Compose Multiplatform | ✅ completa y mergeada a trunk |
+| Auditoría de funcionalidades | 4 CRÍTICOS ✅ · 4 ALTOS y 3 MEDIOS ⏳ |
 
-**Git**: `trunk` está **muy adelantado respecto de `origin/trunk` y sin pushear**.
-La historia es lineal (0 merge commits). Nunca mergear sin `--ff-only`.
+**Git**: `origin/trunk` está en `2fad0ba`; `trunk` tiene **6 commits sin pushear**
+por encima. La historia es lineal (0 merge commits). Nunca mergear sin `--ff-only`.
 
 ---
 
@@ -88,6 +89,48 @@ Después de eso: tag + AAB.
 
 ---
 
+## Track: auditoría de funcionalidades (en curso)
+
+Auditoría de lectura sobre `:domain`, las queries `.sq` y los ViewModels clave.
+Todo verificado contra el código. Los 4 CRÍTICOS están cerrados; el resto sigue
+abierto y **solo diagnosticado**.
+
+Cerrados (6 commits, `c94e290`..`ff12fb3`):
+
+- **C1** Home y Reporte daban totales distintos del mismo mes. `monthlyAmountByCategory`
+  usaba `INNER JOIN categories`, así que los movimientos sin categoría no entraban al
+  reporte. Ahora `LEFT JOIN` con un bucket "Sin categoría". Arregló de paso
+  `GetMonthlyComparisonUseCase` y `GetSavingsRateUseCase`, que pliegan la misma query.
+- **C2** Importar respaldo era un `DELETE` físico: los borrados no se propagaban y el
+  próximo pull los resucitaba, y encima reventaba por `ON DELETE RESTRICT` en cualquier
+  device con un movimiento recurrente. Ahora tombstones + `INSERT OR IGNORE` + `UPDATE`,
+  con diálogo de confirmación.
+- **C3** Borrar una categoría nuleaba `categoryId` en todo el historial vivo. Ahora solo
+  se tombstonea la categoría; el vínculo sobrevive y el export nulea ids colgados.
+- **C4** La tasa de ahorro negativa se mostraba como 0%. Se sacó el clamp.
+
+Pendientes, en orden de daño:
+
+| | Hallazgo |
+|---|---|
+| A5 | 24 mensajes de `ValidationError` en inglés llegan crudos al snackbar |
+| A6 | Recurrentes: un mes sin abrir la app se pierde para siempre (`lastConfirmedPeriod` es escalar) |
+| A7 | Borrar cuenta con movimientos dice "Delete or move them first" — mover no existe |
+| A8 | El "promedio mensual" divide siempre entre 6, sin importar cuántos meses tienen data |
+| M9 | El balance de Home pliega la tabla entera en memoria en cada emisión |
+| M10 | Reporte dispara ~30 queries suspend secuenciales al abrir |
+| M11 | LWW compara relojes de cliente: un device con la fecha adelantada gana siempre |
+
+Tres afirmaciones de la auditoría **no sobrevivieron a la verificación** — cotejar
+contra el código antes de actuar sobre las que quedan:
+
+- "Importar deja las filas sin reclamar y mata el sync": falso. `observeUnclaimedCount()`
+  es un flow reactivo de SQLDelight; el claim corre solo.
+- "Después de importar no se dispara sync": falso. El trigger (c) del orquestador observa
+  el pending-count con debounce de 3s.
+- "Borrar categoría es irreversible **y sin advertencia**": el diálogo ya existía. Lo que
+  faltaba era el conteo de movimientos afectados.
+
 ## Regresiones y deuda abiertas
 
 - 🟡 `SyncOrchestrator` no tiene trigger de reconexión: si un sync falla offline y
@@ -95,6 +138,12 @@ Después de eso: tag + AAB.
   No hay pérdida de data (local-first, se auto-cura), solo latencia.
 - 🟡 Deps huérfanas en `libs.versions.toml` (entre ellas `firebase-analytics`,
   declarada pero sin usar).
+- 🟡 Los baselines de detekt tienen ~47 entradas de `UnusedPrivateFunction` para
+  composables `@Preview`. Desde `c94e290` la regla los ignora por anotación, así que
+  esas entradas quedaron inertes y se pueden purgar.
+- 🟡 `:shared-ui:detektMainAndroid` reporta "There were N compiler errors found during
+  analysis" (45 medidos en trunk limpio). Preexistente, degrada la precisión del
+  análisis pero no rompe el gate. Sin diagnosticar.
 - 🟡 Pasada de performance de Compose pendiente: `derivedStateOf`, lambdas
   recordadas, `contentType` en `LazyColumn`.
 - 🔵 Las modales de iOS (export/import/share/email) están verificadas solo a nivel
@@ -132,6 +181,11 @@ siguen en el repo como marcadores históricos.
   UI van en español.
 - Historia lineal: siempre `--ff-only`, rebase si divergió, nunca merge commits.
 - Nunca pushear sin confirmación explícita en ese momento.
+- `./gradlew qualityGate` es el gate. Si tocás una firma de dominio, acordate de que
+  el gate incluye `:data:compileAndroidDeviceTest` desde `12ecb2b` — antes de eso los
+  tests instrumentados podían quedar rotos con el gate en verde.
+- Los tests instrumentados (`:data:connectedAndroidDeviceTest`, 16 tests) no corren en
+  el gate: necesitan device. Corrélos antes de shipear un cambio de schema o de dominio.
 - Trabajo de KMP / shared-ui: **un writer, review inline**. El ritual de writer +
   reviewer como sub-agentes Opus separados por slice se retiró en
   [ADR 003](adr/003-freeze-ios-keep-the-compile-gate.md) — estaba calibrado para
