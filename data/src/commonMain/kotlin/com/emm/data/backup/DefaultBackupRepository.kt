@@ -58,49 +58,22 @@ class DefaultBackupRepository(
         return safeDbCall {
             val now = Clock.System.now().toEpochMilliseconds()
             db.transaction {
-                // ORDER MATTERS: transactions reference accounts + categories via FK.
-                // Delete child tables first, then parents, to satisfy ON DELETE RESTRICT.
-                db.transactionsQueries.deleteAll()
-                db.categoriesQueries.deleteAll()
-                db.accountsQueries.deleteAll()
+                // "Replace everything" expressed as tombstones instead of physical deletes.
+                // Every live row is tombstoned first, then the backup brings back exactly what it
+                // carries. Rows the file does not mention keep their tombstone, so the removal
+                // pushes to the server and reaches the other devices — a physical DELETE left no
+                // trace, and the next pull simply downloaded the rows again.
+                //
+                // Recurring movements are deliberately untouched: the export format does not
+                // include them, so wiping them would destroy data that no backup can restore.
+                db.transactionsQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
+                db.categoriesQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
+                db.accountsQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
 
-                payload.accounts.forEach { dto ->
-                    db.accountsQueries.insert(
-                        accountId = dto.accountId,
-                        name = dto.name,
-                        type = dto.type,
-                        currency = dto.currency,
-                        updatedAt = now,
-                        createdAt = now,
-                    )
-                }
-
-                payload.categories.forEach { dto ->
-                    db.categoriesQueries.insert(
-                        categoryId = dto.categoryId,
-                        name = dto.name,
-                        icon = dto.icon,
-                        color = dto.color,
-                        categoryType = dto.categoryType,
-                        isDefault = false,
-                        updatedAt = now,
-                        createdAt = now,
-                    )
-                }
-
-                payload.transactions.forEach { dto ->
-                    db.transactionsQueries.insert(
-                        transactionId = dto.transactionId,
-                        type = dto.type,
-                        amount = dto.amountCents,
-                        description = dto.description,
-                        date = dto.date,
-                        categoryId = dto.categoryId,
-                        accountId = dto.accountId,
-                        createdAt = now,
-                        updatedAt = now,
-                    )
-                }
+                // ORDER MATTERS: a restored transaction references its account and category.
+                payload.accounts.forEach { dto -> restore(dto, now) }
+                payload.categories.forEach { dto -> restore(dto, now) }
+                payload.transactions.forEach { dto -> restore(dto, now) }
             }
 
             ImportStats(
@@ -109,5 +82,71 @@ class DefaultBackupRepository(
                 transactions = payload.transactions.size,
             )
         }
+    }
+
+    // Insert-then-update rather than INSERT OR REPLACE: see the comment block in accounts.sq.
+    // updatedAt is stamped with the import time on purpose — restoring a backup is an explicit
+    // "make everything look like this file" action, so it must win LWW against the other devices.
+
+    private fun restore(dto: AccountDto, now: Long) {
+        db.accountsQueries.insertOrIgnoreFromBackup(
+            accountId = dto.accountId,
+            name = dto.name,
+            type = dto.type,
+            currency = dto.currency,
+            updatedAt = now,
+            createdAt = now,
+        )
+        db.accountsQueries.restoreFromBackup(
+            name = dto.name,
+            type = dto.type,
+            currency = dto.currency,
+            updatedAt = now,
+            accountId = dto.accountId,
+        )
+    }
+
+    private fun restore(dto: CategoryDto, now: Long) {
+        db.categoriesQueries.insertOrIgnoreFromBackup(
+            categoryId = dto.categoryId,
+            name = dto.name,
+            icon = dto.icon,
+            color = dto.color,
+            categoryType = dto.categoryType,
+            updatedAt = now,
+            createdAt = now,
+        )
+        db.categoriesQueries.restoreFromBackup(
+            name = dto.name,
+            icon = dto.icon,
+            color = dto.color,
+            categoryType = dto.categoryType,
+            updatedAt = now,
+            categoryId = dto.categoryId,
+        )
+    }
+
+    private fun restore(dto: TransactionDto, now: Long) {
+        db.transactionsQueries.insertOrIgnoreFromBackup(
+            transactionId = dto.transactionId,
+            type = dto.type,
+            amount = dto.amountCents,
+            description = dto.description,
+            date = dto.date,
+            categoryId = dto.categoryId,
+            accountId = dto.accountId,
+            createdAt = now,
+            updatedAt = now,
+        )
+        db.transactionsQueries.restoreFromBackup(
+            type = dto.type,
+            amount = dto.amountCents,
+            description = dto.description,
+            date = dto.date,
+            categoryId = dto.categoryId,
+            accountId = dto.accountId,
+            updatedAt = now,
+            transactionId = dto.transactionId,
+        )
     }
 }

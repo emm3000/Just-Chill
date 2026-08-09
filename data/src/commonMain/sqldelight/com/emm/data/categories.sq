@@ -30,8 +30,23 @@ UPDATE categories
 SET deletedAt = ?, updatedAt = ?, syncState = 'Pending'
 WHERE categoryId = ?;
 
-deleteAll:
-DELETE FROM categories;
+-- Backup restore — see the equivalent block in accounts.sq for why this is a tombstone plus
+-- INSERT OR IGNORE + UPDATE rather than a DELETE plus INSERT OR REPLACE. For categories the
+-- OR REPLACE variant is worse still: the physical delete fires ON DELETE SET NULL and silently
+-- strips the category off every transaction that referenced it.
+softDeleteAllLive:
+UPDATE categories
+SET deletedAt = :deletedAt, updatedAt = :updatedAt, syncState = 'Pending'
+WHERE deletedAt IS NULL;
+
+insertOrIgnoreFromBackup:
+INSERT OR IGNORE INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt, syncState)
+VALUES (?, ?, ?, ?, ?, 0, ?, ?, 'Pending');
+
+restoreFromBackup:
+UPDATE categories
+SET name = ?, icon = ?, color = ?, categoryType = ?, isDefault = 0, updatedAt = ?, deletedAt = NULL, syncState = 'Pending'
+WHERE categoryId = ?;
 
 find:
 SELECT * FROM categories WHERE categoryId = ? AND deletedAt IS NULL;

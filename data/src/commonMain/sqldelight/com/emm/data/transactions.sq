@@ -100,8 +100,20 @@ UPDATE transactions
 SET deletedAt = ?, updatedAt = ?, syncState = 'Pending'
 WHERE transactionId = ?;
 
-deleteAll:
-DELETE FROM transactions;
+-- Backup restore — see the equivalent block in accounts.sq for the reasoning.
+softDeleteAllLive:
+UPDATE transactions
+SET deletedAt = :deletedAt, updatedAt = :updatedAt, syncState = 'Pending'
+WHERE deletedAt IS NULL;
+
+insertOrIgnoreFromBackup:
+INSERT OR IGNORE INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt, syncState)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending');
+
+restoreFromBackup:
+UPDATE transactions
+SET type = ?, amount = ?, description = ?, date = ?, categoryId = ?, accountId = ?, updatedAt = ?, deletedAt = NULL, syncState = 'Pending'
+WHERE transactionId = ?;
 
 monthlyStats:
 SELECT COUNT(*) AS movementCount, COALESCE(SUM(amount), 0) AS totalAmount

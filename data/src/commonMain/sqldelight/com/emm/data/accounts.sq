@@ -28,8 +28,29 @@ UPDATE accounts
 SET deletedAt = ?, updatedAt = ?, syncState = 'Pending'
 WHERE accountId = ?;
 
-deleteAll:
-DELETE FROM accounts;
+-- ── Backup restore ────────────────────────────────────────────────────────────
+-- Restoring a backup tombstones every live row and then brings back exactly what the file
+-- carries. Two rules hold this together:
+--   1. Tombstone instead of DELETE, so the removal reaches the server and the other devices
+--      instead of being resurrected by the next pull.
+--   2. INSERT OR IGNORE + UPDATE instead of INSERT OR REPLACE. OR REPLACE physically deletes
+--      the old row first, which ON DELETE RESTRICT rejects while any transaction or recurring
+--      movement still references this account.
+-- userId is deliberately never written here: a new row stays unclaimed for the claim observer
+-- to pick up, and an existing row keeps the user it already belongs to.
+softDeleteAllLive:
+UPDATE accounts
+SET deletedAt = :deletedAt, updatedAt = :updatedAt, syncState = 'Pending'
+WHERE deletedAt IS NULL;
+
+insertOrIgnoreFromBackup:
+INSERT OR IGNORE INTO accounts(accountId, name, type, currency, updatedAt, createdAt, syncState)
+VALUES (?, ?, ?, ?, ?, ?, 'Pending');
+
+restoreFromBackup:
+UPDATE accounts
+SET name = ?, type = ?, currency = ?, updatedAt = ?, deletedAt = NULL, syncState = 'Pending'
+WHERE accountId = ?;
 
 update:
 UPDATE accounts

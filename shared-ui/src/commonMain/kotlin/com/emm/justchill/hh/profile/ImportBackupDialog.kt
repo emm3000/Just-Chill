@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,8 +28,15 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
 
+/**
+ * Confirmation for restoring a backup — the most destructive action in the app.
+ *
+ * It used to have none at all, while "Eliminar cuenta" did. Restoring replaces every movement,
+ * category and account with what the file carries, and while signed in the replacement is pushed
+ * to the other devices too, so [isSignedIn] decides how far the warning has to reach.
+ */
 @Composable
-internal fun DeleteAccountDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+internal fun ImportBackupDialog(isSignedIn: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
     val typography = LocalEmmType.current
 
@@ -54,7 +61,7 @@ internal fun DeleteAccountDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
                     .border(1.dp, colors.border, RoundedCornerShape(12.dp)),
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.Delete,
+                    imageVector = Icons.Outlined.FileUpload,
                     contentDescription = null,
                     tint = colors.danger,
                     modifier = Modifier.size(20.dp),
@@ -64,7 +71,7 @@ internal fun DeleteAccountDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
             Spacer(Modifier.height(16.dp))
 
             Text(
-                text = "¿Eliminar tu cuenta?",
+                text = "¿Reemplazar todo con el respaldo?",
                 style = typography.headlineM,
                 color = colors.textPrimary,
             )
@@ -72,8 +79,14 @@ internal fun DeleteAccountDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
             Spacer(Modifier.height(6.dp))
 
             Text(
-                text = "Se borra tu cuenta y todos tus datos en la nube. " +
-                    "Tu plata sigue acá, en este teléfono — eso no se toca.",
+                text = if (isSignedIn) {
+                    "Tus movimientos, categorías y cuentas quedan tal cual el archivo. " +
+                        "Lo que no esté ahí se borra, y como tenés sesión iniciada también se " +
+                        "borra en tus otros dispositivos. No se puede deshacer."
+                } else {
+                    "Tus movimientos, categorías y cuentas quedan tal cual el archivo. " +
+                        "Lo que no esté ahí se borra. No se puede deshacer."
+                },
                 style = typography.bodyM,
                 color = colors.textSecondary,
             )
@@ -91,7 +104,7 @@ internal fun DeleteAccountDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
                     modifier = Modifier.weight(1f),
                 )
                 DialogActionButton(
-                    label = "Eliminar cuenta",
+                    label = "Reemplazar",
                     style = colors.destructiveDialogAction(),
                     onClick = onConfirm,
                     modifier = Modifier.weight(1f),
@@ -103,11 +116,16 @@ internal fun DeleteAccountDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
 
 @Preview
 @Composable
-private fun DeleteAccountDialogPreview() {
+private fun ImportBackupDialogSignedInPreview() {
     EmmTheme {
-        DeleteAccountDialog(
-            onConfirm = {},
-            onDismiss = {},
-        )
+        ImportBackupDialog(isSignedIn = true, onConfirm = {}, onDismiss = {})
+    }
+}
+
+@Preview
+@Composable
+private fun ImportBackupDialogSignedOutPreview() {
+    EmmTheme {
+        ImportBackupDialog(isSignedIn = false, onConfirm = {}, onDismiss = {})
     }
 }

@@ -83,6 +83,18 @@ fun ProfileScreen(
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
+    var showImportDialog by remember { mutableStateOf(false) }
+
+    if (showImportDialog) {
+        ImportBackupDialog(
+            isSignedIn = state.session is SessionUiState.SignedIn,
+            onConfirm = {
+                showImportDialog = false
+                onImportClick()
+            },
+            onDismiss = { showImportDialog = false },
+        )
+    }
 
     Column(
         modifier = modifier
@@ -154,7 +166,9 @@ fun ProfileScreen(
                 label = "Importar respaldo",
                 meta = "Reemplaza todo",
                 metaIsPrimary = false,
-                onClick = onImportClick,
+                // Confirm before the file picker: by the time a file is chosen the user has
+                // already decided, and this is the only irreversible action left unguarded.
+                onClick = { if (state.op != ProfileOp.Importing) showImportDialog = true },
             )
         }
 

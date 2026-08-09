@@ -1,5 +1,6 @@
 package com.emm.data.backup
 
+import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
@@ -20,13 +21,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-// Uses an in-memory JVM SQLite driver (app.cash.sqldelight:sqlite-driver) to exercise
-// the full SQLDelight schema — including the FK-ordered delete, the atomicity of the
-// transaction block, and the actual insert queries.
-// Trade-off: the in-memory driver bootstraps from EmmDatabaseData.Schema.create(), so it
-// picks up all table definitions. The Android-specific callback (foreign key PRAGMA, seed
-// data) is not run here — FK enforcement is therefore NOT active in this test environment.
-// The delete-order logic is still exercised; FK errors would only surface with enforcement on.
+// Uses an in-memory JVM SQLite driver (app.cash.sqldelight:sqlite-driver) to exercise the full
+// SQLDelight schema — the atomicity of the transaction block and the actual queries.
+//
+// FK enforcement is switched ON here via PRAGMA, matching the Android driver callback. It used to
+// be off, which is why the import path could physically DELETE parent rows for years without any
+// test noticing that ON DELETE RESTRICT would reject it on a real device.
 class DefaultBackupRepositoryImportTest {
 
     private lateinit var driver: SqlDriver
@@ -49,6 +49,7 @@ class DefaultBackupRepositoryImportTest {
         driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         EmmDatabaseData.Schema.create(driver)
         db = EmmDatabaseData(driver)
+        exec("PRAGMA foreign_keys=ON")
         repository = DefaultBackupRepository(
             transactions = transactionRepo,
             categories = categoryRepo,
@@ -86,7 +87,7 @@ class DefaultBackupRepositoryImportTest {
     }
 
     @Test
-    fun `importing twice replaces all rows - deleteAll then re-insert`() = runTest {
+    fun `importing twice leaves only the rows of the second backup live`() = runTest {
         val firstJson = buildPayloadJson(accounts = 2, categories = 3, transactions = 4)
         val secondJson = buildPayloadJson(accounts = 1, categories = 1, transactions = 1)
 
@@ -106,9 +107,7 @@ class DefaultBackupRepositoryImportTest {
         // Seed some data first
         repository.importFromJson(buildPayloadJson(accounts = 1, categories = 1, transactions = 1))
 
-        val emptyJson = """{"schemaVersion":1,"exportedAt":0,"appVersion":"1.0.0",""" +
-            """"accounts":[],"categories":[],"transactions":[]}"""
-        val stats = repository.importFromJson(emptyJson)
+        val stats = repository.importFromJson(EMPTY_PAYLOAD_JSON)
 
         assertEquals(ImportStats(accounts = 0, categories = 0, transactions = 0), stats)
         assertTrue(db.accountsQueries.all().executeAsList().isEmpty())
@@ -140,7 +139,81 @@ class DefaultBackupRepositoryImportTest {
         assertEquals(beforeAccounts, db.accountsQueries.all().executeAsList().size)
     }
 
+    // ── replace semantics: tombstones, not physical deletes ───────────────────
+
+    @Test
+    fun `rows missing from the backup are tombstoned so the deletion can sync`() = runTest {
+        repository.importFromJson(buildPayloadJson(accounts = 2, categories = 2, transactions = 2))
+
+        repository.importFromJson(buildPayloadJson(accounts = 1, categories = 1, transactions = 1))
+
+        // Still physically present, but tombstoned and queued for push.
+        assertEquals(2, rawCount("SELECT COUNT(*) FROM accounts"))
+        assertEquals(
+            1,
+            rawCount("SELECT COUNT(*) FROM accounts WHERE accountId = 'acc-2' AND deletedAt IS NOT NULL"),
+        )
+        assertEquals(
+            1,
+            rawCount("SELECT COUNT(*) FROM transactions WHERE transactionId = 'tx-2' AND syncState = 'Pending'"),
+        )
+    }
+
+    @Test
+    fun `a row that comes back in a later backup is resurrected`() = runTest {
+        repository.importFromJson(buildPayloadJson(accounts = 1, categories = 1, transactions = 1))
+        repository.importFromJson(EMPTY_PAYLOAD_JSON)
+        assertEquals(1, rawCount("SELECT COUNT(*) FROM accounts WHERE deletedAt IS NOT NULL"))
+
+        repository.importFromJson(buildPayloadJson(accounts = 1, categories = 1, transactions = 1))
+
+        assertEquals(0, rawCount("SELECT COUNT(*) FROM accounts WHERE deletedAt IS NOT NULL"))
+        assertEquals(1, db.accountsQueries.all().executeAsList().size)
+        assertEquals(1, db.transactionsQueries.all().executeAsList().size)
+    }
+
+    @Test
+    fun `import does not break when a recurring movement references an account`() = runTest {
+        repository.importFromJson(buildPayloadJson(accounts = 1, categories = 1, transactions = 1))
+        exec(
+            "INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, " +
+                "accountId, dayOfMonth, createdAt, updatedAt) " +
+                "VALUES ('rec-1', 'Alquiler', 'Spend', 5000, '', 'cat-1', 'acc-1', 5, 1, 1)",
+        )
+
+        // A physical DELETE of acc-1 would be rejected here by ON DELETE RESTRICT.
+        repository.importFromJson(EMPTY_PAYLOAD_JSON)
+
+        assertEquals(1, rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'rec-1'"))
+    }
+
+    @Test
+    fun `an already claimed row keeps its userId through an import`() = runTest {
+        repository.importFromJson(buildPayloadJson(accounts = 1, categories = 1, transactions = 1))
+        exec("UPDATE accounts SET userId = 'user-1', syncState = 'Synced'")
+
+        repository.importFromJson(buildPayloadJson(accounts = 1, categories = 1, transactions = 1))
+
+        assertEquals(1, rawCount("SELECT COUNT(*) FROM accounts WHERE userId = 'user-1'"))
+        // Re-queued for push: the restore is the newer write and must win LWW.
+        assertEquals(1, rawCount("SELECT COUNT(*) FROM accounts WHERE syncState = 'Pending'"))
+    }
+
     // ── helpers ───────────────────────────────────────────────────────────────
+
+    private fun exec(sql: String) {
+        driver.execute(identifier = null, sql = sql, parameters = 0)
+    }
+
+    private fun rawCount(sql: String): Long = driver.executeQuery(
+        identifier = null,
+        sql = sql,
+        mapper = { cursor ->
+            cursor.next()
+            QueryResult.Value(cursor.getLong(0) ?: 0L)
+        },
+        parameters = 0,
+    ).value
 
     /**
      * Builds a minimal valid JSON payload. Account IDs are sequential to ensure uniqueness.
@@ -167,5 +240,10 @@ class DefaultBackupRepositoryImportTest {
                 "transactions": [$transactionsJson]
             }
         """.trimIndent()
+    }
+
+    private companion object {
+        const val EMPTY_PAYLOAD_JSON = """{"schemaVersion":1,"exportedAt":0,"appVersion":"1.0.0",""" +
+            """"accounts":[],"categories":[],"transactions":[]}"""
     }
 }
