@@ -11,7 +11,8 @@ import androidx.compose.ui.graphics.Color
  */
 @Immutable
 data class CategoryShare(
-    val categoryId: String,
+    /** Null for the uncategorized bucket, which has no category behind it. */
+    val categoryId: String?,
     val name: String,
     val amountFormatted: String,
     val percentage: Int,

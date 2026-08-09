@@ -111,6 +111,10 @@ WHERE type = :type
   AND date < :endExclusive
   AND deletedAt IS NULL;
 
+-- LEFT JOIN, not INNER: a transaction with no category (or one whose category was
+-- soft-deleted) must still be counted. The Report folds these rows into its month total
+-- while Home folds the raw transactions, so an INNER JOIN made the two screens disagree.
+-- All such rows collapse into a single bucket with a NULL categoryId, which the UI labels.
 monthlyAmountByCategory:
 SELECT
     c.categoryId AS categoryId,
@@ -119,7 +123,7 @@ SELECT
     c.color      AS categoryColor,
     SUM(t.amount) AS totalAmount
 FROM transactions t
-INNER JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
+LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
 WHERE t.type = :type
   AND t.date >= :startInclusive
   AND t.date < :endExclusive

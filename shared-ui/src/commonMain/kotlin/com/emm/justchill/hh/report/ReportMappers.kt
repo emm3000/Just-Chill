@@ -3,6 +3,7 @@ package com.emm.justchill.hh.report
 import com.emm.domain.report.CategoryAggregate
 import com.emm.domain.report.CategoryAmount
 import com.emm.domain.shared.Money
+import com.emm.justchill.hh.shared.UiStrings
 
 // ── Mapping helpers ───────────────────────────────────────────────────
 
@@ -15,8 +16,8 @@ internal fun buildShares(amounts: List<CategoryAmount>, total: Money): List<Cate
 }
 
 internal fun CategoryAmount.toCategoryShare(percentage: Int) = CategoryShare(
-    categoryId = categoryId.value,
-    name = categoryName,
+    categoryId = categoryId?.value,
+    name = categoryName ?: UiStrings.UNCATEGORIZED,
     amountFormatted = formatSoles(amount.cents),
     percentage = percentage,
     tint = domainColorToUi(categoryColor),

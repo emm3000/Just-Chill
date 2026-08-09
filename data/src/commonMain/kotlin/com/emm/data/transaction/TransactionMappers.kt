@@ -144,7 +144,7 @@ fun MonthlyAmountByCategory.asEntity() = MonthlyAmountByCategoryEntity(
 )
 
 fun MonthlyAmountByCategoryEntity.toDomain() = CategoryAmount(
-    categoryId = CategoryId(categoryId),
+    categoryId = categoryId?.let(::CategoryId),
     categoryName = categoryName,
     categoryIcon = categoryIcon,
     categoryColor = categoryColor,

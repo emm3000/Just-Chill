@@ -17,13 +17,17 @@ class GetTopCategoriesOverMonthsUseCase(private val transactionStatsRepository: 
     ): List<CategoryAggregate> {
         val current = YearMonth.current(clock)
 
-        // Collect per-month results oldest-first
+        // Collect per-month results oldest-first.
+        // The uncategorized bucket is dropped here: this is a ranking OF categories, and a
+        // bucket with no name, icon or color cannot occupy one of the top-N slots. Month
+        // totals still include it — see [CategoryAmount].
         val monthlyResults = mutableListOf<List<CategoryAmount>>()
         var ym = current
         repeat(months) {
             val start = ym.startInclusiveMillis()
             val end = ym.endExclusiveMillis()
             val items = transactionStatsRepository.monthlyAmountByCategory(type, start, end)
+                .filter { amount -> amount.categoryId != null }
             monthlyResults.add(0, items)
             ym = ym.previous()
         }
@@ -34,14 +38,19 @@ class GetTopCategoriesOverMonthsUseCase(private val transactionStatsRepository: 
 
         monthlyResults.forEach { items ->
             items.forEach { item ->
-                totals[item.categoryId] = (totals[item.categoryId] ?: Money.Zero) + item.amount
-                meta[item.categoryId] = Triple(item.categoryName, item.categoryColor, item.categoryIcon)
+                val id: CategoryId = item.categoryId ?: return@forEach
+                totals[id] = (totals[id] ?: Money.Zero) + item.amount
+                meta[id] = Triple(
+                    item.categoryName.orEmpty(),
+                    item.categoryColor.orEmpty(),
+                    item.categoryIcon.orEmpty(),
+                )
             }
         }
 
         // For each month, identify the local top-N categoryIds
         val localTopSets: List<Set<CategoryId>> = monthlyResults.map { items ->
-            items.sortedByDescending { it.amount.cents }.take(topN).map { it.categoryId }.toSet()
+            items.sortedByDescending { it.amount.cents }.take(topN).mapNotNull { it.categoryId }.toSet()
         }
 
         // Count how many months each aggregated category appeared in the local top-N
