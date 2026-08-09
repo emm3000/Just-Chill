@@ -41,6 +41,28 @@ class ReportShareFormatterTest {
         )
     }
 
+    @Test
+    fun `buildContextSentence with a negative rate says what was overspent`() {
+        val result = ReportShareFormatter.buildContextSentence(ratePercent = -50, deltaPoints = null)
+        // "ahorraste S/ -50" is not a sentence. At -50% the user spent 150 for every 100 earned.
+        assertEquals("De cada S/ 100 que entró, gastaste S/ 150.", result)
+    }
+
+    @Test
+    fun `buildContextSentence with a negative rate still appends the comparison`() {
+        val result = ReportShareFormatter.buildContextSentence(ratePercent = -20, deltaPoints = 8)
+        assertEquals(
+            "De cada S/ 100 que entró, gastaste S/ 120. Mejoraste vs. los 6 meses previos.",
+            result,
+        )
+    }
+
+    @Test
+    fun `buildContextSentence at exactly zero still reads as savings`() {
+        val result = ReportShareFormatter.buildContextSentence(ratePercent = 0, deltaPoints = null)
+        assertEquals("De cada S/ 100 que entró, ahorraste S/ 0.", result)
+    }
+
     // ── buildTopMetaText ──────────────────────────────────────────────────
 
     @Test

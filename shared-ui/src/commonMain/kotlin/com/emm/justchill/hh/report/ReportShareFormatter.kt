@@ -3,6 +3,9 @@ package com.emm.justchill.hh.report
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.shared.shortLabel
 
+/** The "de cada S/ 100" reference amount the context sentence is built around. */
+private const val PERCENT_BASE = 100
+
 /**
  * Stateless formatter for share-report text.
  *
@@ -19,9 +22,16 @@ internal object ReportShareFormatter {
      *   deltaPoints=5    → appends " Mejoraste vs. los 6 meses previos."
      *   deltaPoints=-2   → appends " Empeoraste vs. los 6 meses previos."
      *   deltaPoints=0    → appends " Mantuviste el mismo ritmo que los 6 meses previos."
+     *
+     * A negative rate flips the verb: the rate no longer describes savings, and
+     * "ahorraste S/ -50" is not a sentence. At -50% the user spent 150 per 100 earned.
      */
     fun buildContextSentence(ratePercent: Int, deltaPoints: Int?): String {
-        val base = "De cada S/ 100 que entró, ahorraste S/ $ratePercent."
+        val base = if (ratePercent < 0) {
+            "De cada S/ 100 que entró, gastaste S/ ${PERCENT_BASE - ratePercent}."
+        } else {
+            "De cada S/ 100 que entró, ahorraste S/ $ratePercent."
+        }
         if (deltaPoints == null) return base
         val comparison = when {
             deltaPoints > 0 -> " Mejoraste vs. los 6 meses previos."

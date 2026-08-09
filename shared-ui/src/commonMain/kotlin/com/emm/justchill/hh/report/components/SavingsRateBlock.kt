@@ -55,9 +55,12 @@ fun SavingsRateBlock(
             horizontalArrangement = Arrangement.spacedBy(spacing.s3),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Big rate number: "26" in amountHero + "%" in amountL textTertiary
+            // Big rate number: "26" in amountHero + "%" in amountL textTertiary.
+            // A negative rate means the user spent more than they earned — it reads in danger,
+            // not in the same neutral tone as a healthy one.
+            val rateColor = if (ratePercent < 0) colors.danger else colors.textPrimary
             val rateAnnotated: AnnotatedString = buildAnnotatedString {
-                withStyle(SpanStyle(color = colors.textPrimary)) {
+                withStyle(SpanStyle(color = rateColor)) {
                     append("$ratePercent")
                 }
                 withStyle(SpanStyle(color = colors.textTertiary, fontSize = type.amountL.fontSize)) {

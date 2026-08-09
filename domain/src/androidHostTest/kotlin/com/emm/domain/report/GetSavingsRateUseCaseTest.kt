@@ -94,15 +94,54 @@ class GetSavingsRateUseCaseTest {
     }
 
     @Test
-    fun `rate is clamped to 0 when expenses exceed income`() = runTest {
+    fun `overspending reports a negative rate instead of hiding it as zero`() = runTest {
         stubAllMonthsBlank()
         val ym = YearMonth(2026, Month.MAY)
         stubMonth(ym, TransactionType.Income, 100_000L)
-        stubMonth(ym, TransactionType.Spend, 500_000L)
+        stubMonth(ym, TransactionType.Spend, 150_000L)
 
         val result = useCase(months = 6, clock = fixedClock)
 
-        assertEquals(0, result.currentRatePercent)
+        // (1000 - 1500) / 1000 = -50%. Clamping this to 0 hid the exact situation the
+        // savings rate exists to surface.
+        assertEquals(-50, result.currentRatePercent)
+    }
+
+    @Test
+    fun `rate reaches 100 when nothing is spent`() = runTest {
+        stubAllMonthsBlank()
+        val ym = YearMonth(2026, Month.MAY)
+        stubMonth(ym, TransactionType.Income, 100_000L)
+
+        val result = useCase(months = 6, clock = fixedClock)
+
+        assertEquals(100, result.currentRatePercent)
+    }
+
+    @Test
+    fun `delta compares real rates, not clamped ones`() = runTest {
+        stubAllMonthsBlank(12)
+        // Current 6 months: overspending, true rate -50.
+        var ym = YearMonth(2026, Month.MAY)
+        repeat(6) {
+            stubMonth(ym, TransactionType.Income, 100_000L)
+            stubMonth(ym, TransactionType.Spend, 150_000L)
+            ym = ym.previous()
+        }
+        // Prior 6 months: worse still, true rate -150.
+        var pm = ym
+        repeat(6) {
+            stubMonth(pm, TransactionType.Income, 100_000L)
+            stubMonth(pm, TransactionType.Spend, 250_000L)
+            pm = pm.previous()
+        }
+
+        val result = useCase(months = 6, clock = fixedClock)
+
+        // Both rates used to clamp to 0, so the delta read 0 — "same pace" while the user
+        // had in fact cut their overspend by a third of their income.
+        assertEquals(-50, result.currentRatePercent)
+        assertEquals(100, result.deltaPointsVsPrior)
     }
 
     @Test

@@ -6,7 +6,7 @@ import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
 import kotlin.time.Clock
 
-private const val MAX_RATE_PERCENT = 100
+private const val PERCENT_MULTIPLIER = 100
 
 class GetSavingsRateUseCase(private val transactionStatsRepository: TransactionStatsRepository) {
 
@@ -61,9 +61,18 @@ class GetSavingsRateUseCase(private val transactionStatsRepository: TransactionS
         return result
     }
 
+    /**
+     * Share of income left after expenses, in percentage points.
+     *
+     * Deliberately NOT floored at zero. Spending more than you earn is exactly what a savings
+     * rate exists to surface, and clamping it to 0% hid that — an overspending user saw the same
+     * number as one who broke even, and the delta against the prior window, built from two
+     * clamped values, reported "same pace" while the gap was closing or widening.
+     *
+     * There is no upper clamp either: with a non-negative expense the result cannot exceed 100.
+     */
     private fun savingsRate(income: Money, expense: Money): Int {
         if (income.cents == 0L) return 0
-        val rate = ((income.cents - expense.cents).toDouble() / income.cents * MAX_RATE_PERCENT).toInt()
-        return rate.coerceIn(0, MAX_RATE_PERCENT)
+        return ((income.cents - expense.cents).toDouble() / income.cents * PERCENT_MULTIPLIER).toInt()
     }
 }
