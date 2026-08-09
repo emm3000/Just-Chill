@@ -20,20 +20,29 @@ inputs:
 runs:
   using: composite
   steps:
+    # Secrets reach the shell through env, never through ${{ }} interpolated into `run:`.
+    # Interpolation splices the value into the script text before bash parses it, so any character
+    # that means something to bash is executed rather than written.
     - name: Create keystore.properties file
       shell: bash
-      run: echo "${{ inputs.keystore-properties }}" > keystore.properties
+      env:
+        KEYSTORE_PROPERTIES: ${{ inputs.keystore-properties }}
+      run: printf '%s\n' "$KEYSTORE_PROPERTIES" > keystore.properties
 
     - name: Create supabase.properties file
       if: inputs.supabase-properties != ''
       shell: bash
-      run: echo "${{ inputs.supabase-properties }}" > supabase.properties
+      env:
+        SUPABASE_PROPERTIES: ${{ inputs.supabase-properties }}
+      run: printf '%s\n' "$SUPABASE_PROPERTIES" > supabase.properties
 
     - name: Decode signing key
       shell: bash
+      env:
+        SIGNING_KEY_BASE64: ${{ inputs.signing-key-base64 }}
       run: |
         mkdir -p key
-        echo "${{ inputs.signing-key-base64 }}" | base64 --decode > key/just_chill_key.p12
+        printf '%s\n' "$SIGNING_KEY_BASE64" | base64 --decode > key/just_chill_key.p12
 
     - name: Set Up JDK
       uses: actions/setup-java@v5
@@ -41,7 +50,11 @@ runs:
         distribution: zulu
         java-version: '17'
 
+    # Pinned to a commit, not a floating tag. setup-gradle wraps every Gradle invocation in every
+    # job, including the ones holding the signing key and the Play service account, and a floating
+    # tag can be repointed at new code by whoever controls the upstream repo.
+    # Dependabot (.github/dependabot.yml) proposes the bumps.
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v6
+      uses: gradle/actions/setup-gradle@4733eaac7c1b0da527e4206b7671e0061de1ce37 # v6
       with:
         cache-read-only: ${{ inputs.cache-read-only }}

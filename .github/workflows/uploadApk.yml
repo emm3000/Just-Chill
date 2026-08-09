@@ -14,12 +14,21 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  # Gate and distribute in one job. They were split, but the second job re-ran the same setup and
+  # the same Gradle configuration only to assemble what it could not have assembled in parallel
+  # anyway — it needed the gate to pass first.
+  #
+  # The gate runs here even though the PR workflow already ran it on the same tree: trunk accepts
+  # direct pushes (admin bypass), and for those this is the only gate that runs off the author's
+  # machine. Remove it only if direct pushes to trunk stop.
+  distribute:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
         with:
+          # versionCode is the commit count and versionName the latest v* tag, both read from git
+          # at configure time. A shallow clone silently produces wrong values for both.
           fetch-depth: 0
 
       - uses: ./.github/actions/setup-android
@@ -28,42 +37,27 @@ jobs:
           signing-key-base64: ${{ secrets.JUST_CHILL }}
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
 
-      - name: Run tests
-        run: ./gradlew qualityGate
-
-  upload:
-    needs: [ test ]
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - uses: ./.github/actions/setup-android
-        with:
-          keystore-properties: ${{ secrets.JUST_VERONICA }}
-          signing-key-base64: ${{ secrets.JUST_CHILL }}
-          supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
+      - name: Quality gate + builds
+        run: ./gradlew qualityGate assembleDevDebug assembleProdRelease
 
       - name: Set current date
-        run: echo "date_today=$(date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_ENV
+        run: echo "date_today=$(date +'%Y-%m-%d-%H-%M-%S')" >> "$GITHUB_ENV"
 
       - name: Resolve release notes
         id: notes
-        run: echo "msg=$(git log -1 --pretty=%s)" >> $GITHUB_OUTPUT
-
-      - name: Build Dev Debug + Prod Release
-        run: ./gradlew assembleDevDebug assembleProdRelease
+        run: echo "msg=$(git log -1 --pretty=%s)" >> "$GITHUB_OUTPUT"
 
       - name: Resolve APK paths
         id: paths
         run: |
-          echo "devDebug=$(find androidApp/build/outputs/apk/dev/debug -name '*.apk' | head -n1)" >> $GITHUB_OUTPUT
-          echo "prodRelease=$(find androidApp/build/outputs/apk/prod/release -name '*.apk' | head -n1)" >> $GITHUB_OUTPUT
+          echo "devDebug=$(find androidApp/build/outputs/apk/dev/debug -name '*.apk' | head -n1)" >> "$GITHUB_OUTPUT"
+          echo "prodRelease=$(find androidApp/build/outputs/apk/prod/release -name '*.apk' | head -n1)" >> "$GITHUB_OUTPUT"
 
+      # Third-party actions are pinned to a commit, not to a floating tag. They receive the Firebase
+      # service credentials, and a floating tag can be repointed at new code by anyone who controls
+      # the upstream repo. Dependabot (.github/dependabot.yml) proposes the bumps.
       - name: Distribute Dev Debug to Firebase
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        uses: wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6 # v1.7.1
         with:
           appId: ${{ secrets.FIREBASE_DEV_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
@@ -72,7 +66,7 @@ jobs:
           releaseNotes: ${{ steps.notes.outputs.msg }}
 
       - name: Distribute Prod Release to Firebase
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        uses: wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6 # v1.7.1
         with:
           appId: ${{ secrets.FIREBASE_PROD_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}

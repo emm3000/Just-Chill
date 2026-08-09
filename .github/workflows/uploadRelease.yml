@@ -6,34 +6,29 @@ on:
       - 'v*.*.*'
   workflow_dispatch:
 
+# Never cancel a run that may already have reached the Play API. Two tags pushed back to back
+# queue instead of racing.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
 jobs:
-  verify:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - uses: ./.github/actions/setup-android
-        with:
-          keystore-properties: ${{ secrets.JUST_VERONICA }}
-          signing-key-base64: ${{ secrets.JUST_CHILL }}
-          supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
-
-      - name: Run tests + lint
-        run: ./gradlew qualityGate lintProdRelease
-
+  # Verify and publish in one job. Splitting them re-ran setup and Gradle configuration to build a
+  # bundle the second job could not have started earlier anyway. If this ever needs a human between
+  # the two, split it again and put the approval on a job `environment:` — that is what gates a
+  # deploy, not a `needs:` edge.
   publish:
-    needs: [ verify ]
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
         with:
+          # versionCode is the commit count and versionName the latest v* tag, both read from git
+          # at configure time. A shallow clone silently produces wrong values for both — and here
+          # they are what Play stores permanently.
           fetch-depth: 0
 
       - uses: ./.github/actions/setup-android
@@ -42,8 +37,8 @@ jobs:
           signing-key-base64: ${{ secrets.JUST_CHILL }}
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
 
-      - name: Build Prod Release Bundle
-        run: ./gradlew bundleProdRelease
+      - name: Verify and build the release bundle
+        run: ./gradlew qualityGate lintProdRelease bundleProdRelease
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v7
@@ -52,12 +47,20 @@ jobs:
           path: androidApp/build/outputs/bundle/prodRelease/
           retention-days: 90
 
+      # Pinned to a commit, not a floating tag: this step receives the Play service account and a
+      # floating tag can be repointed at new code by whoever controls the upstream repo.
+      # Dependabot (.github/dependabot.yml) proposes the bumps.
       - name: Publish to Play Store
-        uses: r0adkll/upload-google-play@v1
+        uses: r0adkll/upload-google-play@eb49699984a39f23558439581660aa6f088acfd6 # v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: com.emm.justchill
-          releaseFiles: androidApp/build/outputs/bundle/prodRelease/androidApp-prod-release.aab
-          status: completed
+          releaseFiles: androidApp/build/outputs/bundle/prodRelease/*.aab
+          # R8 and resource shrinking are on for prodRelease. Without the mapping, Play Vitals
+          # reports every ANR and crash against obfuscated frames.
+          mappingFile: androidApp/build/outputs/mapping/prodRelease/mapping.txt
+          # draft, not completed: the tag push should stage the release, not ship it. Promote from
+          # the Play Console after checking the upload. `completed` left no window to abort a bad AAB.
+          status: draft
           track: alpha
           releaseName: ${{ github.ref_name }}
