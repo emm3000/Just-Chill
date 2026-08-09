@@ -3,7 +3,7 @@
 > Punto de re-entrada canónico. Si retomás el proyecto después de un context
 > reset, leé esto primero y después el `CLAUDE.md` del módulo que vayas a tocar.
 >
-> **Última actualización**: 2026-08-08 · trunk `ff12fb3`
+> **Última actualización**: 2026-08-08 · trunk `9227a0f`
 >
 > Este doc se reescribió el 2026-08-08 porque quedó dos meses desactualizado y
 > se perdió toda la migración KMP. El detalle histórico previo (sprints S0-S5,
@@ -30,9 +30,9 @@ Tres tracks grandes cerrados o casi:
 | Producto (Fases 1-5: discovery → post-v1) | ✅ cerrado, docs en `docs/` |
 | Local-first sync (slices 1-5) | slices 1-4 ✅ · slice 5 ⏳ bloqueado por tareas humanas |
 | Migración KMP / Compose Multiplatform | ✅ completa y mergeada a trunk |
-| Auditoría de funcionalidades | 4 CRÍTICOS ✅ · 4 ALTOS y 3 MEDIOS ⏳ |
+| Auditoría de funcionalidades | 4 CRÍTICOS y 4 ALTOS ✅ · 3 MEDIOS ⏳ |
 
-**Git**: `origin/trunk` está en `2fad0ba`; `trunk` tiene **6 commits sin pushear**
+**Git**: `origin/trunk` está en `2fad0ba`; `trunk` tiene **10 commits sin pushear**
 por encima. La historia es lineal (0 merge commits). Nunca mergear sin `--ff-only`.
 
 ---
@@ -92,10 +92,10 @@ Después de eso: tag + AAB.
 ## Track: auditoría de funcionalidades (en curso)
 
 Auditoría de lectura sobre `:domain`, las queries `.sq` y los ViewModels clave.
-Todo verificado contra el código. Los 4 CRÍTICOS están cerrados; el resto sigue
-abierto y **solo diagnosticado**.
+Todo verificado contra el código. Los 4 CRÍTICOS y los 4 ALTOS están cerrados; los
+3 MEDIOS siguen abiertos y **solo diagnosticados**.
 
-Cerrados (6 commits, `c94e290`..`ff12fb3`):
+Cerrados (9 commits, `c94e290`..`9227a0f`):
 
 - **C1** Home y Reporte daban totales distintos del mismo mes. `monthlyAmountByCategory`
   usaba `INNER JOIN categories`, así que los movimientos sin categoría no entraban al
@@ -108,22 +108,33 @@ Cerrados (6 commits, `c94e290`..`ff12fb3`):
 - **C3** Borrar una categoría nuleaba `categoryId` en todo el historial vivo. Ahora solo
   se tombstonea la categoría; el vínculo sobrevive y el export nulea ids colgados.
 - **C4** La tasa de ahorro negativa se mostraba como 0%. Se sacó el clamp.
+- **A5** Los 24 mensajes de `ValidationError` en inglés llegaban crudos al snackbar porque
+  `toUserMessage()` devolvía `message ?: fallback`. Ahora `ValidationError` lleva un
+  `ValidationCode`; el `message` queda en inglés para logs y el código es lo que traduce
+  `shared-ui`. Los 28 call sites están etiquetados.
+- **A6** Los recurrentes solo eran pendientes del mes actual, así que un mes sin abrir la app se
+  perdía para siempre. `lastConfirmedPeriod` ahora se lee como marca de agua: `pendingPeriods`
+  devuelve todos los períodos desde después de la marca hasta hoy, con piso en `createdAt` y tope
+  de `MAX_CATCH_UP_MONTHS`. Se confirma del más viejo al más nuevo (guard monótono) y hay un
+  "no lo pagué" (`SkipRecurringMovementUseCase`) para no bloquear la cola. La transacción de un
+  mes atrasado se fecha en **su** día de vencimiento, no hoy. Sin cambio de schema ni de sync.
+- **A8** El promedio mensual dividía siempre entre 6. Ahora divide entre los meses de la ventana
+  que tienen movimientos; ingresos y gastos comparten divisor a propósito.
 
 Pendientes, en orden de daño:
 
 | | Hallazgo |
 |---|---|
-| A5 | 24 mensajes de `ValidationError` en inglés llegan crudos al snackbar |
-| A6 | Recurrentes: un mes sin abrir la app se pierde para siempre (`lastConfirmedPeriod` es escalar) |
-| A7 | Borrar cuenta con movimientos dice "Delete or move them first" — mover no existe |
-| A8 | El "promedio mensual" divide siempre entre 6, sin importar cuántos meses tienen data |
 | M9 | El balance de Home pliega la tabla entera en memoria en cada emisión |
 | M10 | Reporte dispara ~30 queries suspend secuenciales al abrir |
 | M11 | LWW compara relojes de cliente: un device con la fecha adelantada gana siempre |
 
-Tres afirmaciones de la auditoría **no sobrevivieron a la verificación** — cotejar
+Cuatro afirmaciones de la auditoría **no sobrevivieron a la verificación** — cotejar
 contra el código antes de actuar sobre las que quedan:
 
+- **A7** "Borrar cuenta dice 'Delete or move them first' y mover no existe": falso. Mover sí existe
+  — `EditTransaction.kt` tiene `AccountPickerSheet` y `TransactionUpdate` lleva `accountId`. El
+  único defecto real era el inglés, y se cerró con A5.
 - "Importar deja las filas sin reclamar y mata el sync": falso. `observeUnclaimedCount()`
   es un flow reactivo de SQLDelight; el claim corre solo.
 - "Después de importar no se dispara sync": falso. El trigger (c) del orquestador observa
