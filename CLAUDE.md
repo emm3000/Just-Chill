@@ -125,6 +125,19 @@ introducing a new exception type.
   (on macOS only) the iOS compile. Change the plugin, not the callers.
 - **Never gate on plain `./gradlew detekt`** — it is `NO-SOURCE` on all three KMP modules and only
   lints `:androidApp`.
+- **Third-party actions in `.github/` are pinned to a commit SHA on purpose** — they hold the
+  signing key, the Firebase credentials and the Play service account, and a floating `@v1` can be
+  repointed at new code by whoever owns the upstream repo. Do not "tidy" them back into tags;
+  dependabot proposes the bumps. GitHub's own `actions/*` stay on tags: trusting them is not an
+  extra trust decision, they already own the runner and the secret store.
+- **`versionName` is `git describe --match "v[0-9]*"`, and the filter is load-bearing.** The repo
+  carries non-release tags (`pre-kmp`, `post-s5`, `pre-redesign`) and a bare `describe` returns the
+  nearest one — that is how builds shipped `versionName = "pre-kmp"`. Same filter in `/release`.
+- **A tag push does not ship.** `uploadRelease.yml` uploads the AAB to the alpha track as a
+  **draft**; publishing it is a manual step in Play Console. A green workflow reached no one.
+- `run:` blocks take secrets through `env:`, never `${{ }}` spliced into the script text. Validate
+  workflow edits with `actionlint` before pushing — it catches expression and input errors that a
+  YAML parse cannot.
 - Every route the nav host can push MUST be registered in `NavSavedStateConfiguration.kt`
   (commonMain), else `rememberNavBackStack` crashes on process-death restore. Invisible to the compiler.
 

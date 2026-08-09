@@ -3,7 +3,8 @@
 > Punto de re-entrada canónico. Si retomás el proyecto después de un context
 > reset, leé esto primero y después el `CLAUDE.md` del módulo que vayas a tocar.
 >
-> **Última actualización**: 2026-08-09 · trunk `df7f704`
+> **Última actualización**: 2026-08-09. No se anota el hash de trunk acá: el commit que lo
+> escribe ya lo deja viejo, igual que pasó con el conteo de commits.
 >
 > Este doc se reescribió el 2026-08-08 porque quedó dos meses desactualizado y
 > se perdió toda la migración KMP. El detalle histórico previo (sprints S0-S5,
@@ -32,19 +33,27 @@ Tres tracks grandes cerrados o casi:
 | Migración KMP / Compose Multiplatform | ✅ completa y mergeada a trunk |
 | Auditoría de funcionalidades | ✅ cerrada — 4 CRÍTICOS, 4 ALTOS, 3 MEDIOS |
 
-**Git**: `trunk` y `origin/trunk` están a la par. La historia es lineal (0 merge commits).
-Nunca mergear sin `--ff-only`.
-
-`trunk` tiene reglas de protección (PR obligatorio + 3 status checks). Se pueden bypassear con
-permisos de admin y el push directo lo hace, pero entonces esos checks **no corrieron**: la única
-verificación de ese push es la que corriste local. Preferí el PR salvo que el gate esté verde.
-
-No pongas el conteo acá: el propio commit que lo escribe lo deja viejo, y ya pasó dos veces.
-Sacalo del repo cuando lo necesites:
+**Git**: la historia es lineal (0 merge commits). Nunca mergear sin `--ff-only`. No pongas acá
+cuántos commits faltan pushear ni desde qué hash: el propio commit que lo escribe lo deja viejo, y
+ya pasó dos veces. Sacalo del repo cuando lo necesites:
 
 ```bash
 git rev-list --count origin/trunk..trunk   # cuántos faltan pushear
 git rev-list --count --merges origin/trunk..trunk   # debe dar 0
+```
+
+`trunk` tiene reglas de protección (PR obligatorio + status checks). Se pueden bypassear con
+permisos de admin y el push directo lo hace, pero entonces esos checks **no corrieron**: la única
+verificación de ese push es la que corriste local.
+
+⚠️ **Sin verificar, verificalo antes de confiar en un PR verde**: este doc decía "3 status checks"
+y `buildDev.yml` no tiene tres jobs desde que se unificó el gate; una sesión anterior registró que
+renombrar los jobs rompió los checks requeridos. Si siguen apuntando a nombres viejos, exigen
+contextos que ningún workflow reporta y ningún PR puede mergear. Los nombres que `buildDev.yml`
+reporta hoy son **`quality-gate`** e **`ios-compile`**. Comprobalo:
+
+```bash
+gh api repos/emm3000/Just-Chill/branches/trunk/protection --jq '.required_status_checks.contexts'
 ```
 
 ---
@@ -97,11 +106,15 @@ sigue siendo el default: sign-in es opt-in desde Perfil, sin gate. Decisiones en
 4. Checklist QA multi-device: clean install, semana offline-first, sign-in tardío,
    dos devices, sign-out, y **upgrade real con APK viejo + `adb install -r`**.
 
-Después de eso: tag + AAB.
+Después de eso, el camino de release es `/release` → tag `vX.Y.Z` → `uploadRelease.yml`. Ese
+workflow **no publica**: sube el AAB a la pista alpha como **borrador**, con el `mapping.txt` para
+que Play Vitals no reporte frames ofuscados. Un workflow verde no significa que llegó a nadie —
+hay que publicar el borrador a mano en Play Console, y recién ahí promover a producción. Se dejó
+así a propósito: con `status: completed` un push de tag mandaba el build sin ventana para abortarlo.
 
 ---
 
-## Track: auditoría de funcionalidades (en curso)
+## Track: auditoría de funcionalidades (cerrada)
 
 Auditoría de lectura sobre `:domain`, las queries `.sq` y los ViewModels clave.
 Todo verificado contra el código. Los 4 CRÍTICOS, los 4 ALTOS y 2 de los 3 MEDIOS están
