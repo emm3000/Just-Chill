@@ -1,30 +1,26 @@
 package com.emm.domain.category
 
-import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.CategoryId
-import com.emm.domain.transaction.TransactionRepository
 
 /**
- * Tombstones a category and enforces referential integrity in the domain layer.
+ * Tombstones a category, and only that.
  *
- * SQL ON DELETE SET NULL only fires on hard DELETE rows, not on soft-delete UPDATEs.
- * This use case replicates that integrity rule:
- *   1. Null categoryId on all live (non-tombstoned) transactions referencing this category.
- *   2. Null categoryId on all live recurring_movements referencing this category.
- *   3. Tombstone (soft-delete) the category itself.
+ * This used to also null categoryId on every live transaction and recurring movement pointing at
+ * the category, mirroring what SQL ON DELETE SET NULL would have done on a hard delete. Applied to
+ * a soft delete, that rewrote history: a user removing a category they had stopped using also
+ * erased the categorization of every past movement, permanently and across devices.
  *
- * All nulled rows are also marked syncState = 'Pending' so the de-link propagates
- * to other devices on next sync (DECISION 4).
+ * Nothing is gained by it. Every read path joins categories with `c.deletedAt IS NULL`, so rows
+ * pointing at a tombstoned category already render as "Sin categoría" whether the column is nulled
+ * or not. Keeping the link costs nothing, survives the delete, and is what a future undo or
+ * "restore category" would need. It also cuts the sync traffic of a delete from one row per
+ * affected movement down to the single category tombstone.
+ *
+ * The one place that has to care is the backup export: a transaction may now carry a categoryId
+ * whose category is tombstoned and therefore not in the exported category list, so the export
+ * drops those dangling ids to keep the file self-consistent.
  */
-class DeleteCategoryUseCase(
-    private val repository: CategoryRepository,
-    private val transactionRepository: TransactionRepository,
-    private val recurringMovementRepository: RecurringMovementRepository,
-) {
+class DeleteCategoryUseCase(private val repository: CategoryRepository) {
 
-    suspend operator fun invoke(categoryId: CategoryId) {
-        transactionRepository.nullCategoryOnLiveRows(categoryId)
-        recurringMovementRepository.nullCategoryOnLiveRows(categoryId)
-        repository.delete(categoryId)
-    }
+    suspend operator fun invoke(categoryId: CategoryId) = repository.delete(categoryId)
 }

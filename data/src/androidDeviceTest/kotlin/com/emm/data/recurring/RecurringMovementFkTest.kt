@@ -12,7 +12,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 /**
@@ -109,57 +108,26 @@ class RecurringMovementFkTest {
     }
 
     /**
-     * nullCategoryOnLiveRows updates categoryId to NULL and sets syncState='Pending'
-     * only on live (deletedAt IS NULL) rows.
-     */
-    @Test
-    fun null_category_on_live_rows_sets_category_to_null_and_marks_pending() = runTest {
-        database.recurring_movementsQueries.nullCategoryOnLiveRows(
-            updatedAt = 3_000L,
-            categoryId = "C1",
-        )
-
-        // Row T1 is live — categoryId should now be null.
-        val template = database.recurring_movementsQueries.find("T1").executeAsOneOrNull()
-        assertNotNull(template)
-        assertNull(template.categoryId, "categoryId must be nulled on live rows")
-        assertEquals("Pending", template.syncState)
-    }
-
-    /**
-     * nullCategoryOnLiveRows does NOT touch tombstoned rows.
+     * Deleting a category leaves the recurring movement's categoryId alone.
      *
-     * The assertion uses a raw SQL query that bypasses the deletedAt IS NULL filter
-     * so the test is meaningful even if the guard were removed from nullCategoryOnLiveRows.
+     * The de-linking pass this file used to cover is gone: a category delete is now only the
+     * category's own tombstone. The read path is what hides it — selectAllWithDetails LEFT JOINs
+     * categories with `c.deletedAt IS NULL`, so the movement stays visible with no category name
+     * rather than losing the reference for good.
      */
     @Test
-    fun null_category_on_live_rows_skips_tombstoned_rows() = runTest {
-        // Tombstone T1 first.
-        database.recurring_movementsQueries.softDelete(
-            deletedAt = 2_000L,
-            updatedAt = 2_000L,
-            id = "T1",
-        )
+    fun tombstoned_category_leaves_the_recurring_movement_linked_but_unnamed() = runTest {
+        database.categoriesQueries.softDelete(deletedAt = 2_000L, updatedAt = 2_000L, categoryId = "C1")
 
-        // Run nullCategoryOnLiveRows — T1 is tombstoned so it should be untouched.
-        database.recurring_movementsQueries.nullCategoryOnLiveRows(
-            updatedAt = 3_000L,
-            categoryId = "C1",
-        )
-
-        // Raw read that bypasses the tombstone filter — categoryId must still be 'C1'.
-        // This is the meaningful assertion: if nullCategoryOnLiveRows lost its
-        // WHERE deletedAt IS NULL guard, the categoryId would be NULL here instead.
         val rawCategoryId = driver.executeQuery(
             null,
             "SELECT categoryId FROM recurring_movements WHERE id = 'T1'",
             { cursor -> QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null) },
             0,
         ).value
-        assertEquals("C1", rawCategoryId, "tombstoned row's categoryId must not be touched")
+        assertEquals("C1", rawCategoryId, "the link to the deleted category must survive")
 
-        // Also confirm the live-rows view returns nothing (T1 is tombstoned).
-        val liveRows = database.recurring_movementsQueries.selectAll().executeAsList()
-        assertEquals(0, liveRows.size, "tombstoned row must not appear in selectAll")
+        val row = database.recurring_movementsQueries.selectAllWithDetails().executeAsList().single()
+        assertNull(row.categoryName, "a tombstoned category must not lend its name")
     }
 }

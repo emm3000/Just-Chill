@@ -31,12 +31,25 @@ class DefaultBackupRepository(
 ) : BackupRepository {
 
     override suspend fun exportToJson(exportedAt: Long, appVersion: String): String {
+        val exportedCategories = categories.all().first().map { it.toDto() }
+        val liveCategoryIds = exportedCategories.mapTo(mutableSetOf()) { it.categoryId }
+
+        // Deleting a category tombstones it without touching the movements filed under it, so a
+        // live transaction can still carry the id of a category that is not exported. Keeping that
+        // id would produce a backup whose own import fails on the categoryId foreign key, so the
+        // dangling reference is dropped here — the movement restores as uncategorized, which is
+        // exactly how it already reads on screen.
+        val exportedTransactions = transactions.all().first().map { transaction ->
+            val dto = transaction.toDto()
+            if (dto.categoryId != null && dto.categoryId !in liveCategoryIds) dto.copy(categoryId = null) else dto
+        }
+
         val payload = ExportPayloadDto(
             exportedAt = exportedAt,
             appVersion = appVersion,
             accounts = accounts.all().first().map { it.toDto() },
-            categories = categories.all().first().map { it.toDto() },
-            transactions = transactions.all().first().map { it.toDto() },
+            categories = exportedCategories,
+            transactions = exportedTransactions,
         )
         return exportJson.encodeToString(payload)
     }

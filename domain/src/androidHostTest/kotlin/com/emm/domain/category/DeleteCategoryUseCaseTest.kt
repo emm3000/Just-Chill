@@ -1,9 +1,7 @@
 package com.emm.domain.category
 
-import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.error.DomainException
-import com.emm.domain.transaction.TransactionRepository
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -16,45 +14,23 @@ import kotlin.test.assertFailsWith
 class DeleteCategoryUseCaseTest {
 
     private val repository = mockk<CategoryRepository>()
-    private val transactionRepository = mockk<TransactionRepository>()
-    private val recurringMovementRepository = mockk<RecurringMovementRepository>()
-    private val useCase = DeleteCategoryUseCase(
-        repository,
-        transactionRepository,
-        recurringMovementRepository,
-    )
+    private val useCase = DeleteCategoryUseCase(repository)
 
     @Test
-    fun `delete nulls categoryId on live transactions and then tombstones category`() = runTest {
-        coEvery { transactionRepository.nullCategoryOnLiveRows(any()) } just Runs
-        coEvery { recurringMovementRepository.nullCategoryOnLiveRows(any()) } just Runs
+    fun `delete tombstones the category and nothing else`() = runTest {
         coEvery { repository.delete(any()) } just Runs
 
         useCase(CategoryId("cat-1"))
 
-        coVerify(exactly = 1) { transactionRepository.nullCategoryOnLiveRows(CategoryId("cat-1")) }
-        coVerify(exactly = 1) { recurringMovementRepository.nullCategoryOnLiveRows(CategoryId("cat-1")) }
+        // Deleting a category used to also null categoryId on every live transaction and
+        // recurring movement referencing it, rewriting history the user never asked to touch.
+        // The tombstone alone is now the whole operation — the transaction and recurring
+        // repositories are gone from the constructor, so this no longer compiles otherwise.
         coVerify(exactly = 1) { repository.delete(CategoryId("cat-1")) }
     }
 
     @Test
-    fun `delete calls nullCategoryOnLiveRows before tombstoning category`() = runTest {
-        val callOrder = mutableListOf<String>()
-        coEvery { transactionRepository.nullCategoryOnLiveRows(any()) } answers { callOrder += "txn-null" }
-        coEvery { recurringMovementRepository.nullCategoryOnLiveRows(any()) } answers { callOrder += "rm-null" }
-        coEvery { repository.delete(any()) } answers { callOrder += "category-delete" }
-
-        useCase(CategoryId("cat-2"))
-
-        // Integrity must be enforced before the category is tombstoned.
-        assert(callOrder.indexOf("category-delete") > callOrder.indexOf("txn-null"))
-        assert(callOrder.indexOf("category-delete") > callOrder.indexOf("rm-null"))
-    }
-
-    @Test
     fun `delete should propagate DomainException from repository`() = runTest {
-        coEvery { transactionRepository.nullCategoryOnLiveRows(any()) } just Runs
-        coEvery { recurringMovementRepository.nullCategoryOnLiveRows(any()) } just Runs
         coEvery { repository.delete(any()) } throws DomainException.DatabaseError(RuntimeException("nope"))
 
         assertFailsWith<DomainException.DatabaseError> { useCase(CategoryId("cat-1")) }

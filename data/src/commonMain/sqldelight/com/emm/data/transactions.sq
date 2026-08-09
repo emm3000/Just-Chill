@@ -76,11 +76,6 @@ SELECT COUNT(*) FROM transactions WHERE accountId = :accountId;
 countLiveByAccount:
 SELECT COUNT(*) FROM transactions WHERE accountId = :accountId AND deletedAt IS NULL;
 
-nullCategoryOnLiveRows:
-UPDATE transactions
-SET categoryId = NULL, updatedAt = :updatedAt, syncState = 'Pending'
-WHERE categoryId = :categoryId AND deletedAt IS NULL;
-
 searchTransactions:
 SELECT
     t.*,

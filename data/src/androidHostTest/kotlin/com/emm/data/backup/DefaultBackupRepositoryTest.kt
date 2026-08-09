@@ -21,6 +21,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class DefaultBackupRepositoryTest {
@@ -93,6 +94,28 @@ class DefaultBackupRepositoryTest {
         assertEquals(2, payload.transactions.size)
         assertEquals(4500_00L, payload.transactions[0].amountCents)
         assertEquals(150_00L, payload.transactions[1].amountCents)
+    }
+
+    @Test
+    fun `a categoryId whose category is gone is exported as null`() = runTest {
+        // Deleting a category no longer nulls the column on its movements, so a live transaction
+        // can point at a tombstoned category. Tombstoned categories are not exported, so leaving
+        // the id in the file would produce a backup that fails its own import on the FK.
+        val orphan = transactionWithCategory.copy(
+            transactionId = TransactionId("tx-3"),
+            categoryId = CategoryId("cat-deleted"),
+        )
+        every { accountRepo.all() } returns flowOf(listOf(account))
+        every { categoryRepo.all() } returns flowOf(listOf(categoryIncome))
+        every { transactionRepo.all() } returns flowOf(listOf(transactionWithCategory, orphan))
+
+        val json = repository.exportToJson(exportedAt = 0L, appVersion = "1.0.0")
+
+        val payload = Json.decodeFromString<ExportPayloadDto>(json)
+        val exportedIds = payload.categories.map { it.categoryId }
+        assertEquals(listOf("cat-1"), exportedIds)
+        assertEquals("cat-1", payload.transactions.single { it.transactionId == "tx-1" }.categoryId)
+        assertNull(payload.transactions.single { it.transactionId == "tx-3" }.categoryId)
     }
 
     @Test

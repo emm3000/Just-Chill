@@ -135,6 +135,7 @@ fun CategoriesScreen(
     state.pendingDelete?.let { category ->
         DeleteCategoryDialog(
             categoryName = category.name,
+            affectedCount = state.txCountByCategory[category.categoryId] ?: 0,
             onConfirm = { onIntent(CategoriesIntent.OnDeleteConfirm) },
             onDismiss = { onIntent(CategoriesIntent.OnDeleteDismiss) },
         )
@@ -288,17 +289,17 @@ private fun EditCategoryDialog(
 }
 
 @Composable
-private fun DeleteCategoryDialog(categoryName: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+private fun DeleteCategoryDialog(
+    categoryName: String,
+    affectedCount: Int,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
     val colors = LocalEmmColors.current
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("¿Borrar «$categoryName»?") },
-        text = {
-            Text(
-                "Los movimientos asociados pasarán a «Sin categoría». " +
-                    "Esta acción no se puede deshacer.",
-            )
-        },
+        text = { Text(buildDeleteCategoryMessage(affectedCount)) },
         confirmButton = {
             TextButton(onClick = onConfirm) {
                 Text(text = "Borrar", color = colors.danger)

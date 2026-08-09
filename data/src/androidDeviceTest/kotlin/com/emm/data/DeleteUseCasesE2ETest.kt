@@ -92,7 +92,7 @@ class DeleteUseCasesE2ETest {
         recurringRepo = DefaultRecurringMovementRepository(recurringDs)
 
         deleteTransaction = DeleteTransactionUseCase(transactionRepo)
-        deleteCategory = DeleteCategoryUseCase(categoryRepo, transactionRepo, recurringRepo)
+        deleteCategory = DeleteCategoryUseCase(categoryRepo)
         deleteAccount = DeleteAccountUseCase(accountRepo, transactionRepo, recurringRepo)
         deleteRecurring = DeleteRecurringMovementUseCase(recurringRepo)
     }
@@ -253,11 +253,15 @@ class DeleteUseCasesE2ETest {
     // ─── DeleteCategoryUseCase ────────────────────────────────────────────────
 
     /**
-     * Test 2: live transactions referencing the category get categoryId=NULL +
-     * syncState='Pending'; the category itself is tombstoned.
+     * Test 2: the category is tombstoned and the movements filed under it keep their link.
+     *
+     * The use case used to null categoryId on every live transaction as well, which erased the
+     * user's categorization of their whole history to remove one category. Nothing needed it:
+     * every read path joins categories with `c.deletedAt IS NULL`, so those movements already
+     * read as uncategorized whether the column is nulled or not.
      */
     @Test
-    fun deleteCategory_nullsLiveTransactions_and_tombstonesCategory() = runTest {
+    fun deleteCategory_tombstonesCategory_andLeavesTransactionsLinked() = runTest {
         val accountId = insertAccount("A2")
         val categoryId = insertCategory("C2")
         insertTransaction("TX2", accountId, categoryId)
@@ -267,21 +271,18 @@ class DeleteUseCasesE2ETest {
         // Category tombstoned
         val catDeletedAt = rawCategoryDeletedAt("C2")
         assertTrue(catDeletedAt != null && catDeletedAt > 0L, "category deletedAt must be set")
-        // Live transaction de-linked
-        assertNull(rawTransactionCategoryId("TX2"), "categoryId on live transaction must be nulled")
-        assertEquals("Pending", rawTransactionSyncState("TX2"), "de-linked transaction must be Pending")
-        // Transaction itself is still live (not tombstoned)
+        // The transaction keeps its link and is not re-queued for sync
+        assertEquals("C2", rawTransactionCategoryId("TX2"), "the link to the deleted category must survive")
         assertNull(rawTransactionDeletedAt("TX2"), "live transaction must not be tombstoned")
         // Category no longer visible via repository
         assertNull(categoryRepo.find(categoryId), "tombstoned category must not be returned by find()")
     }
 
     /**
-     * Test 3: tombstoned transactions referencing the category keep their categoryId
-     * (the de-link only applies to live rows).
+     * Test 3: tombstoned transactions are equally untouched.
      */
     @Test
-    fun deleteCategory_skipsTombstonedTransactions_preservingCategoryId() = runTest {
+    fun deleteCategory_leavesTombstonedTransactionsUntouched() = runTest {
         val accountId = insertAccount("A3")
         val categoryId = insertCategory("C3")
         val txId = insertTransaction("TX3", accountId, categoryId)
@@ -292,22 +293,21 @@ class DeleteUseCasesE2ETest {
         // Now delete the category
         deleteCategory(categoryId)
 
-        // The tombstoned transaction's categoryId must be unchanged
         assertEquals("C3", rawTransactionCategoryId("TX3"), "tombstoned transaction's categoryId must not be touched")
     }
 
     /**
-     * Test 4: live recurring_movements referencing the category also get categoryId=NULL.
+     * Test 4: recurring movements keep their link too — selectAllWithDetails hides the name.
      */
     @Test
-    fun deleteCategory_nullsLiveRecurringMovements() = runTest {
+    fun deleteCategory_leavesRecurringMovementsLinked() = runTest {
         val accountId = insertAccount("A4")
         val categoryId = insertCategory("C4")
         insertRecurring("REC4", accountId, categoryId)
 
         deleteCategory(categoryId)
 
-        assertNull(rawRecurringCategoryId("REC4"), "categoryId on live recurring movement must be nulled")
+        assertEquals("C4", rawRecurringCategoryId("REC4"), "the link to the deleted category must survive")
     }
 
     // ─── DeleteAccountUseCase ─────────────────────────────────────────────────

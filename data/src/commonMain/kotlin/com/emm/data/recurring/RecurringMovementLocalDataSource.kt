@@ -88,10 +88,6 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData)
         rmq.countLiveByAccount(accountId).executeAsOne()
     }
 
-    suspend fun nullCategoryOnLiveRows(categoryId: String) = withContext(ioDispatcher) {
-        rmq.nullCategoryOnLiveRows(updatedAt = currentTimeInMillis(), categoryId = categoryId)
-    }
-
     /**
      * Atomically:
      * 1. Re-read lastConfirmedPeriod inside the transaction (DB-level idempotency guard)

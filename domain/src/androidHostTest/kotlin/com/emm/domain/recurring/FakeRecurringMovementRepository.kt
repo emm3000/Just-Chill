@@ -1,7 +1,6 @@
 package com.emm.domain.recurring
 
 import com.emm.domain.shared.AccountId
-import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.RecurringMovementId
 import com.emm.domain.transaction.TransactionInsert
 import kotlinx.coroutines.flow.Flow
@@ -32,10 +31,6 @@ class FakeRecurringMovementRepository : RecurringMovementRepository {
     }
 
     override suspend fun countLiveByAccount(accountId: AccountId): Long = 0L
-
-    override suspend fun nullCategoryOnLiveRows(categoryId: CategoryId) {
-        // no-op in fake — tests verify via MockK when needed
-    }
 
     override suspend fun create(insert: RecurringMovementInsert) {
         createCount++

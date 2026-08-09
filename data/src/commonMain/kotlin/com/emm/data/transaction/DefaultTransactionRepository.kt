@@ -3,7 +3,6 @@ package com.emm.data.transaction
 import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.safeDbCall
 import com.emm.domain.shared.AccountId
-import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionFilter
@@ -45,11 +44,6 @@ class DefaultTransactionRepository(private val localDataSource: TransactionLocal
 
     override suspend fun countLiveByAccount(accountId: AccountId): Long = safeDbCall {
         localDataSource.countLiveByAccount(accountId.value)
-    }
-
-    override suspend fun nullCategoryOnLiveRows(categoryId: CategoryId): Unit = safeDbCall {
-        localDataSource.nullCategoryOnLiveRows(categoryId.value)
-        Unit
     }
 
     override suspend fun delete(transactionId: TransactionId): Unit = safeDbCall {

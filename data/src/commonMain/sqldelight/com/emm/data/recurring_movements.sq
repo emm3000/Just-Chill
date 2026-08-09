@@ -67,11 +67,6 @@ WHERE id = ?;
 countLiveByAccount:
 SELECT COUNT(*) FROM recurring_movements WHERE accountId = :accountId AND deletedAt IS NULL;
 
-nullCategoryOnLiveRows:
-UPDATE recurring_movements
-SET categoryId = NULL, updatedAt = :updatedAt, syncState = 'Pending'
-WHERE categoryId = :categoryId AND deletedAt IS NULL;
-
 claimAll:
 UPDATE recurring_movements SET userId = :userId, syncState = 'Pending' WHERE userId IS NULL;
 
