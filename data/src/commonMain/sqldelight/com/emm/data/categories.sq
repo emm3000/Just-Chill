@@ -74,8 +74,9 @@ UPDATE categories SET syncState = 'Synced' WHERE categoryId = ? AND updatedAt = 
 markPendingForResync:
 UPDATE categories SET syncState = 'Pending' WHERE categoryId = ?;
 
-findForSync:
-SELECT updatedAt FROM categories WHERE categoryId = ?;
+-- See accounts.sq:accountSyncRevision for why syncState is selected and why the name is per-table.
+categorySyncRevision:
+SELECT updatedAt, syncState FROM categories WHERE categoryId = ?;
 
 insertOrIgnoreFromRemote:
 INSERT OR IGNORE INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt, userId, deletedAt, syncState)

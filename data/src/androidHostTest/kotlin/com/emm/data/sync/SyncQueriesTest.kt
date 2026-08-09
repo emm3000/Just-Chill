@@ -322,47 +322,62 @@ class SyncQueriesTest {
     }
 
     // =========================================================================
-    // findForSync: returns updatedAt even for tombstoned (deletedAt set) rows
+    // *SyncRevision: the conflict inputs — updatedAt AND syncState, tombstones included
     // =========================================================================
 
     @Test
-    fun `findForSync returns updatedAt for a live row`() {
+    fun `transactionSyncRevision returns updatedAt and syncState for a live row`() {
         insertAccount("acc-1")
-        insertTransaction("tx-1", updatedAt = 2000L)
+        insertTransaction("tx-1", syncState = "Pending", updatedAt = 2000L)
 
-        val result = db.transactionsQueries.findForSync("tx-1").executeAsOneOrNull()
+        val result = db.transactionsQueries.transactionSyncRevision("tx-1").executeAsOneOrNull()
 
         assertNotNull(result)
-        assertEquals(2000L, result)
+        assertEquals(2000L, result.updatedAt)
+        assertEquals("Pending", result.syncState)
     }
 
     @Test
-    fun `findForSync returns updatedAt for a tombstoned row`() {
+    fun `transactionSyncRevision reports a synced row as Synced`() {
+        // The resolver reads this to tell "the user changed this" from "this is just the
+        // server's own copy". Getting it wrong here re-arms the clock-skew overwrite loop.
+        insertAccount("acc-1")
+        insertTransaction("tx-1", syncState = "Pending", updatedAt = 2000L)
+        db.transactionsQueries.markSynced("tx-1", 2000L)
+
+        val result = db.transactionsQueries.transactionSyncRevision("tx-1").executeAsOneOrNull()
+
+        assertNotNull(result)
+        assertEquals("Synced", result.syncState)
+    }
+
+    @Test
+    fun `transactionSyncRevision returns a tombstoned row`() {
         // Tombstones must be visible to the LWW sync engine — they carry the deletion
         // timestamp as updatedAt so the conflict resolver can apply them correctly.
         insertAccount("acc-1")
         insertTransaction("tx-1", updatedAt = 3000L, deletedAt = 3000L)
 
-        val result = db.transactionsQueries.findForSync("tx-1").executeAsOneOrNull()
+        val result = db.transactionsQueries.transactionSyncRevision("tx-1").executeAsOneOrNull()
 
-        assertNotNull(result, "findForSync must return tombstoned rows — they are sync-visible")
-        assertEquals(3000L, result)
+        assertNotNull(result, "tombstoned rows are sync-visible")
+        assertEquals(3000L, result.updatedAt)
     }
 
     @Test
-    fun `findForSync returns null for a non-existent row`() {
-        val result = db.transactionsQueries.findForSync("nonexistent").executeAsOneOrNull()
+    fun `transactionSyncRevision returns null for a non-existent row`() {
+        val result = db.transactionsQueries.transactionSyncRevision("nonexistent").executeAsOneOrNull()
         assertNull(result)
     }
 
     @Test
-    fun `findForSync accounts version — tombstoned row is visible`() {
+    fun `accountSyncRevision sees a tombstoned row`() {
         insertAccount("acc-1", updatedAt = 5000L, deletedAt = 5000L)
 
-        val result = db.accountsQueries.findForSync("acc-1").executeAsOneOrNull()
+        val result = db.accountsQueries.accountSyncRevision("acc-1").executeAsOneOrNull()
 
-        assertNotNull(result, "findForSync must see tombstoned account rows")
-        assertEquals(5000L, result)
+        assertNotNull(result, "tombstoned account rows are sync-visible")
+        assertEquals(5000L, result.updatedAt)
     }
 
     // =========================================================================

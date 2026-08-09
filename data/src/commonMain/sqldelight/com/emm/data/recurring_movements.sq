@@ -82,8 +82,9 @@ UPDATE recurring_movements SET syncState = 'Synced' WHERE id = ? AND updatedAt =
 markPendingForResync:
 UPDATE recurring_movements SET syncState = 'Pending' WHERE id = ?;
 
-findForSync:
-SELECT updatedAt FROM recurring_movements WHERE id = ?;
+-- See accounts.sq:accountSyncRevision for why syncState is selected and why the name is per-table.
+recurringMovementSyncRevision:
+SELECT updatedAt, syncState FROM recurring_movements WHERE id = ?;
 
 insertOrIgnoreFromRemote:
 INSERT OR IGNORE INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, lastConfirmedPeriod, createdAt, updatedAt, userId, deletedAt, syncState)

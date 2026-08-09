@@ -3,6 +3,7 @@ package com.emm.data.sync
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.safeDbCall
 import com.emm.domain.sync.ConflictResolver
+import com.emm.domain.sync.LocalRevision
 import com.emm.domain.sync.Resolution
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.query.filter.PostgrestFilterBuilder
@@ -22,7 +23,7 @@ data class PullPageKey(val serverUpdatedAt: String, val pk: String)
  *   - [pkOf]                  — extracts the primary key String from a [DTO]
  *   - [markSynced]            — marks a single row Synced after a successful push (called inside tx)
  *   - [fetchRemotePage]       — performs the reified decodeList Postgrest call for this table
- *   - [localUpdatedAt]        — reads the local updatedAt for a PK (for LWW conflict resolution)
+ *   - [localRevision]         — reads the local updatedAt + syncState for a PK (conflict inputs)
  *   - [applyRemoteRow]        — two-statement INSERT OR IGNORE + UPDATE; returns false on FK miss
  *   - [markPendingForResync]  — re-flags a local row Pending so a newer local revision re-pushes
  *
@@ -122,8 +123,13 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
         limit: Int,
     ): List<DTO>
 
-    /** Read the local `updatedAt` Long for [pk], or null when the row is unknown locally. */
-    protected abstract fun localUpdatedAt(pk: String): Long?
+    /**
+     * Read the local row's conflict inputs for [pk], or null when the row is unknown locally.
+     *
+     * Carries `syncState` as well as `updatedAt`: without it the resolver cannot tell an unpushed
+     * local edit from an untouched copy of the server's own row, and arbitrates both by clock.
+     */
+    protected abstract fun localRevision(pk: String): LocalRevision?
 
     /**
      * Two-statement upsert: INSERT OR IGNORE + UPDATE. Neither statement triggers an implicit
@@ -233,8 +239,7 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
                         return@forEach
                     }
 
-                    val localTs = localUpdatedAt(pkOf(remote))
-                    val resolution = resolver.resolve(localTs, remote.updatedAt)
+                    val resolution = resolver.resolve(localRevision(pkOf(remote)), remote.updatedAt)
                     when (resolution) {
                         Resolution.ApplyRemote ->
                             if (!applyRemoteRow(remote)) {
@@ -281,8 +286,21 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
 }
 
 // ---------------------------------------------------------------------------
-// Shared filter helper — top-level to stay within TooManyFunctions budget
+// Shared helpers — top-level to stay within TooManyFunctions budget
 // ---------------------------------------------------------------------------
+
+/** The one `syncState` value that means the server already holds this exact revision. */
+private const val SYNCED = "Synced"
+
+/**
+ * Builds the resolver's input from a local `(updatedAt, syncState)` pair.
+ *
+ * Anything that is not [SYNCED] counts as an unpushed edit. An unrecognised state therefore
+ * protects the local row rather than letting the server overwrite it — the safe direction when
+ * the alternative is discarding something the user typed.
+ */
+internal fun localRevisionOf(updatedAt: Long, syncState: String): LocalRevision =
+    LocalRevision(updatedAt = updatedAt, hasUnpushedEdit = syncState != SYNCED)
 
 /**
  * Applies the standard pull filters to a [PostgrestFilterBuilder].

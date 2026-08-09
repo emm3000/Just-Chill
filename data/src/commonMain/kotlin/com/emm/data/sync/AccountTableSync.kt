@@ -6,6 +6,7 @@ import com.emm.data.EmmDatabaseData
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.isSqliteConstraintViolation
 import com.emm.data.shared.safeDbCall
+import com.emm.domain.sync.LocalRevision
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Order
@@ -74,7 +75,10 @@ class AccountTableSync(private val db: EmmDatabaseData, client: SupabaseClient) 
         limit(limit.toLong())
     }.decodeList()
 
-    override fun localUpdatedAt(pk: String): Long? = db.accountsQueries.findForSync(pk).executeAsOneOrNull()
+    override fun localRevision(pk: String): LocalRevision? = db.accountsQueries
+        .accountSyncRevision(pk)
+        .executeAsOneOrNull()
+        ?.let { localRevisionOf(it.updatedAt, it.syncState) }
 
     /**
      * Two-statement upsert: INSERT OR IGNORE handles new rows; UPDATE handles existing ones —

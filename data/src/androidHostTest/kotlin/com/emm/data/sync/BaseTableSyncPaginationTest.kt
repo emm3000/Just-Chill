@@ -1,6 +1,7 @@
 package com.emm.data.sync
 
 import com.emm.domain.sync.ConflictResolver
+import com.emm.domain.sync.LocalRevision
 import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -94,8 +95,8 @@ class BaseTableSyncPaginationTest {
         val applied = mutableListOf<TestDto>()
         val resynced = mutableListOf<String>()
 
-        /** Pre-populate to make the resolver return KeepLocal for a given pk. */
-        val localTimestamps = mutableMapOf<String, Long>()
+        /** What this device already holds locally, per pk. Absent = the row is unknown here. */
+        val localRows = mutableMapOf<String, LocalRevision>()
 
         /** Ids that [applyRemoteRow] should reject (FK miss simulation). */
         val failIds = mutableSetOf<String>()
@@ -113,7 +114,7 @@ class BaseTableSyncPaginationTest {
             return true
         }
 
-        override fun localUpdatedAt(pk: String): Long? = localTimestamps[pk]
+        override fun localRevision(pk: String): LocalRevision? = localRows[pk]
 
         override fun markPendingForResync(pk: String) {
             resynced += pk
@@ -418,13 +419,29 @@ class BaseTableSyncPaginationTest {
             dto("b", "2026-01-01T00:00:02Z", updatedAt = 100L),
         )
         val sync = FakeTableSync(KeysetStore(rows), pageSize = 5)
-        // local "a" is newer → KeepLocal
-        sync.localTimestamps["a"] = 999L
+        // local "a" holds an unpushed edit that is newer → KeepLocal
+        sync.localRows["a"] = LocalRevision(updatedAt = 999L, hasUnpushedEdit = true)
 
         val result = sync.pull(userId, cursor = null, resolver = resolver)
 
         assertEquals(listOf("b"), sync.applied.map { it.id })
         assertEquals(listOf("a"), sync.resynced)
+        assertFalse(result.skippedRows)
+    }
+
+    @Test
+    fun `a synced local row is overwritten however far ahead its clock ran`() = runTest {
+        val rows = listOf(dto("a", "2026-01-01T00:00:01Z", updatedAt = 100L))
+        val sync = FakeTableSync(KeysetStore(rows), pageSize = 5)
+        // Nothing unpushed here — this is just this device's copy of the server's row, stamped by
+        // a clock two hours fast. It used to win, get re-pushed, and clobber the real newer edit
+        // on the other device, every cycle, silently.
+        sync.localRows["a"] = LocalRevision(updatedAt = 7_200_000L, hasUnpushedEdit = false)
+
+        val result = sync.pull(userId, cursor = null, resolver = resolver)
+
+        assertEquals(listOf("a"), sync.applied.map { it.id })
+        assertTrue(sync.resynced.isEmpty(), "a synced row must never be re-pushed: ${sync.resynced}")
         assertFalse(result.skippedRows)
     }
 

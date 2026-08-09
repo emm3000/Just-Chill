@@ -215,8 +215,9 @@ UPDATE transactions SET syncState = 'Synced' WHERE transactionId = ? AND updated
 markPendingForResync:
 UPDATE transactions SET syncState = 'Pending' WHERE transactionId = ?;
 
-findForSync:
-SELECT updatedAt FROM transactions WHERE transactionId = ?;
+-- See accounts.sq:accountSyncRevision for why syncState is selected and why the name is per-table.
+transactionSyncRevision:
+SELECT updatedAt, syncState FROM transactions WHERE transactionId = ?;
 
 insertOrIgnoreFromRemote:
 INSERT OR IGNORE INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt, userId, deletedAt, syncState)

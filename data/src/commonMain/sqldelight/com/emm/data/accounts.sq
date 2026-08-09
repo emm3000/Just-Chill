@@ -72,8 +72,11 @@ UPDATE accounts SET syncState = 'Synced' WHERE accountId = ? AND updatedAt = ?;
 markPendingForResync:
 UPDATE accounts SET syncState = 'Pending' WHERE accountId = ?;
 
-findForSync:
-SELECT updatedAt FROM accounts WHERE accountId = ?;
+-- Conflict input for one row. syncState is what separates "the user changed this and the server
+-- has not seen it yet" from "this is just the server's copy", and only the first is a conflict.
+-- Named per table: four queries called findForSync would generate four colliding result classes.
+accountSyncRevision:
+SELECT updatedAt, syncState FROM accounts WHERE accountId = ?;
 
 insertOrIgnoreFromRemote:
 INSERT OR IGNORE INTO accounts(accountId, name, type, currency, updatedAt, createdAt, userId, deletedAt, syncState)
