@@ -3,7 +3,7 @@
 > Punto de re-entrada canónico. Si retomás el proyecto después de un context
 > reset, leé esto primero y después el `CLAUDE.md` del módulo que vayas a tocar.
 >
-> **Última actualización**: 2026-08-08 · trunk `9227a0f`
+> **Última actualización**: 2026-08-09 · trunk `df7f704`
 >
 > Este doc se reescribió el 2026-08-08 porque quedó dos meses desactualizado y
 > se perdió toda la migración KMP. El detalle histórico previo (sprints S0-S5,
@@ -32,8 +32,16 @@ Tres tracks grandes cerrados o casi:
 | Migración KMP / Compose Multiplatform | ✅ completa y mergeada a trunk |
 | Auditoría de funcionalidades | 4 CRÍTICOS y 4 ALTOS ✅ · 3 MEDIOS ⏳ |
 
-**Git**: `origin/trunk` está en `2fad0ba`; `trunk` tiene **10 commits sin pushear**
-por encima. La historia es lineal (0 merge commits). Nunca mergear sin `--ff-only`.
+**Git**: `origin/trunk` está en `2fad0ba`; **todo lo que hay por encima en `trunk` es local
+y sin pushear**. La historia es lineal (0 merge commits). Nunca mergear sin `--ff-only`.
+
+No pongas el conteo acá: el propio commit que lo escribe lo deja viejo, y ya pasó dos veces.
+Sacalo del repo cuando lo necesites:
+
+```bash
+git rev-list --count origin/trunk..trunk   # cuántos faltan pushear
+git rev-list --count --merges origin/trunk..trunk   # debe dar 0
+```
 
 ---
 
@@ -129,6 +137,12 @@ Pendientes, en orden de daño:
 | M10 | Reporte dispara ~30 queries suspend secuenciales al abrir |
 | M11 | LWW compara relojes de cliente: un device con la fecha adelantada gana siempre |
 
+M9 y M10 son performance acotada, sin cambio de semántica. **M11 no**: cambia la resolución de
+conflictos del motor de sync, que ya está device-verificado y con el slice 5 a medio camino.
+Arreglarlo bien implica decidir entre el reloj del servidor (`server_updated_at` ya existe, ver
+`docs/adr/002`) y el del cliente. Es una decisión de diseño, no un fix — no lo empieces sin
+acordarlo primero.
+
 Cuatro afirmaciones de la auditoría **no sobrevivieron a la verificación** — cotejar
 contra el código antes de actuar sobre las que quedan:
 
@@ -197,6 +211,7 @@ siguen en el repo como marcadores históricos.
   tests instrumentados podían quedar rotos con el gate en verde.
 - Los tests instrumentados (`:data:connectedAndroidDeviceTest`, 15 tests) no corren en
   el gate: necesitan device. Corrélos antes de shipear un cambio de schema o de dominio.
+  Última corrida: 2026-08-09, 15/15 verde en `medium_phone` (emulator-5554), después de A6.
 - Trabajo de KMP / shared-ui: **un writer, review inline**. El ritual de writer +
   reviewer como sub-agentes Opus separados por slice se retiró en
   [ADR 003](adr/003-freeze-ios-keep-the-compile-gate.md) — estaba calibrado para
