@@ -52,8 +52,9 @@ Crashlytics is declared for all variants, but `src/dev/AndroidManifest.xml` sets
 flavor for a telemetry-free app" claim true. Firebase **Analytics is not used** — the catalog entry
 `firebase-analytics` is an orphan.
 
-`versionCode` is the git commit count, `versionName` the latest git tag — both computed at
-configure time in `build.gradle.kts`.
+`versionCode` is the git commit count, `versionName` the latest **release** tag (`git describe
+--match "v[0-9]*"` — the filter is load-bearing, the repo is full of non-release tags like
+`pre-kmp`) — both computed at configure time in `build.gradle.kts`.
 
 ## Testing
 

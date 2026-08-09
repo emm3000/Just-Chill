@@ -28,9 +28,11 @@ fun gitCommitCount(): Int = runCatching {
     }.standardOutput.asText.get().trim().toInt()
 }.getOrDefault(1)
 
+// --match is not optional: the repo carries non-release tags (pre-kmp, post-s5, pre-redesign)
+// and a bare `describe` returns whichever one is nearest, so builds shipped versionName "pre-kmp".
 fun gitLatestTag(): String = runCatching {
     providers.exec {
-        commandLine("git", "describe", "--tags", "--abbrev=0")
+        commandLine("git", "describe", "--tags", "--abbrev=0", "--match", "v[0-9]*")
     }.standardOutput.asText.get().trim().removePrefix("v")
 }.getOrDefault("0.0.0-dev")
 
