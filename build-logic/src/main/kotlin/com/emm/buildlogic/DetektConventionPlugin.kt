@@ -46,7 +46,14 @@ class DetektConventionPlugin : Plugin<Project> {
             // Generated sources are not ours to style. Compose's resource generator and the iOS
             // Supabase config generator both write into build/, and linting them produced 13
             // findings about indentation in a file no human will ever edit.
+            //
+            // Both excludes are needed. Ant patterns are matched against the path RELATIVE to each
+            // source root, so `**/build/**` never fires for a root that is itself inside build/ —
+            // SQLDelight registers `<module>/build/generated/sqldelight/code/<db>/<sourceSet>` as a
+            // root, leaving relative paths like `com/emm/data/TransactionsQueries.kt`. The spec below
+            // sees the absolute path and catches those.
             exclude("**/build/**")
+            exclude { element -> BuildConventions.isGeneratedSource(element.file.invariantSeparatorsPath) }
             jvmTarget.set(BuildConventions.JVM_TARGET)
             reports {
                 html.required.set(true)

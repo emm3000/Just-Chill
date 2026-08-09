@@ -807,6 +807,10 @@ style:
     active: true
     aliases: ['unused']
     allowedNames: ''
+    # A @Preview composable is an entry point for the IDE preview pane, never called from code.
+    # Without this every new preview is a finding, which is why the baselines accumulated ~47
+    # suppressions for them. Those entries are now inert and can be dropped on the next refresh.
+    ignoreAnnotated: ['Preview']
   UnusedPrivateProperty:
     active: true
     aliases: ['unused']

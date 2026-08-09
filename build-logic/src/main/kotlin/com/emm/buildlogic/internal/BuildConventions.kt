@@ -10,4 +10,10 @@ package com.emm.buildlogic.internal
 internal object BuildConventions {
     const val COMPILE_SDK = 37
     const val JVM_TARGET = "17"
+
+    /**
+     * True when [path] sits under a Gradle build directory, i.e. it was written by a code generator
+     * rather than by a human. Expects `/` separators — pass `File.invariantSeparatorsPath`.
+     */
+    fun isGeneratedSource(path: String): Boolean = path.contains("/build/")
 }
