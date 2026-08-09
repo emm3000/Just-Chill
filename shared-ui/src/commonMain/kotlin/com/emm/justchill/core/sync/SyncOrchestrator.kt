@@ -14,17 +14,15 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.concurrent.Volatile
@@ -46,7 +44,9 @@ import kotlin.time.Duration.Companion.seconds
  * Failure posture: [DomainException.Unauthorized] → sign out + emit [SyncEvent.SessionExpired].
  * All other [DomainException] subtypes are swallowed silently for automatic triggers — the next
  * trigger is the retry. Manually-requested cycles (see [requestSync]) emit [SyncEvent.SyncFailed].
- * [CancellationException] is never caught.
+ * [CancellationException] is never caught. [events] is buffered, so an event raised before the UI
+ * exists — the very first cycle runs from `bootstrapAppGraph`, ahead of any composition — waits for
+ * its collector instead of being dropped.
  *
  * Sync is a background convenience, never a reason to lose the app. Nothing here is allowed to
  * escape into [externalScope], because that scope carries no handler and an escaped throwable is
@@ -85,8 +85,14 @@ class SyncOrchestrator(
     private val _status = MutableStateFlow(SyncStatus())
     override val status: StateFlow<SyncStatus> = _status.asStateFlow()
 
-    private val _events = MutableSharedFlow<SyncEvent>()
-    override val events: SharedFlow<SyncEvent> = _events.asSharedFlow()
+    // Channel, not MutableSharedFlow: the first sync cycle runs from bootstrapAppGraph in
+    // Application.onCreate, before any composition exists to collect. A shared flow with no
+    // subscribers drops what it emits, so a SessionExpired raised in that window was lost for good.
+    // A buffered channel holds the event until SyncEventsHandler attaches. replay is deliberately
+    // NOT the fix — it would re-deliver stale one-shot events on every re-subscription, re-showing
+    // the snackbar after a config change. Same trade-off, same shape as MviViewModel's effects.
+    private val _events = Channel<SyncEvent>(Channel.BUFFERED)
+    override val events: Flow<SyncEvent> = _events.receiveAsFlow()
 
     // CONFLATED: overlapping requests collapse; only one extra run queues behind the active cycle.
     private val requestChannel = Channel<Unit>(Channel.CONFLATED)
@@ -273,20 +279,20 @@ class SyncOrchestrator(
                 // swallowed outright: a sign-out that keeps failing leaves stale local credentials.
                 logger.warn("best-effort signOut failed: ${signOutError::class.simpleName}", signOutError)
             }
-            _events.emit(SyncEvent.SessionExpired)
+            _events.send(SyncEvent.SessionExpired)
         } catch (e: DomainException) {
             // Silent-retry posture for automatic triggers: swallow, the next trigger will retry.
             // lastSyncFailed is always set so the Perfil row can show the error state regardless
             // of whether the failure was manual or automatic.
             logger.warn("sync cycle failed ($cycleKind): ${e::class.simpleName}", e)
             _status.value = _status.value.copy(isSyncing = false, lastSyncFailed = true)
-            if (manual) _events.emit(SyncEvent.SyncFailed(e))
+            if (manual) _events.send(SyncEvent.SyncFailed(e))
         } catch (e: Exception) {
             // Last resort: keep the consumer loop alive. Same user-facing posture as the branch
             // above, wrapped in Unknown so a manual tap still gets a translated message.
             logger.warn("sync cycle failed (unmapped, $cycleKind): ${e::class.simpleName}", e)
             _status.value = _status.value.copy(isSyncing = false, lastSyncFailed = true)
-            if (manual) _events.emit(SyncEvent.SyncFailed(DomainException.Unknown(e)))
+            if (manual) _events.send(SyncEvent.SyncFailed(DomainException.Unknown(e)))
         }
     }
 

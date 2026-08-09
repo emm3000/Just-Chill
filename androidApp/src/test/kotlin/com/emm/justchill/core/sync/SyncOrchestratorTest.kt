@@ -423,4 +423,38 @@ class SyncOrchestratorTest {
 
             collectJob.cancel()
         }
+
+    // ── (14) Events emitted with no collector attached survive until one arrives ──
+
+    /**
+     * The first sync cycle starts from `bootstrapAppGraph` in Application.onCreate — before any
+     * composition exists, so before [com.emm.justchill.hh.shared.SyncEventsHandler] subscribes.
+     * A [MutableSharedFlow] with no subscribers discards emissions, so a SessionExpired or a manual
+     * SyncFailed raised in that window used to vanish. Buffering is what makes the event survive
+     * until the UI is there to show it.
+     */
+    @Test
+    fun `events emitted before any collector attaches are delivered to the first collector`() =
+        runTest(testDispatcher) {
+            val networkError = DomainException.NetworkUnavailable(RuntimeException("no net"))
+            coEvery { syncData.invoke() } throws networkError
+
+            val orchestrator = buildOrchestrator()
+            orchestrator.start()
+
+            // Nobody is collecting yet — this is the cold-start window.
+            orchestrator.requestSync(manual = true)
+            advanceUntilIdle()
+
+            val events = mutableListOf<SyncEvent>()
+            val collectJob = launch { orchestrator.events.collect { events.add(it) } }
+            advanceUntilIdle()
+
+            assertTrue(
+                events.any { it is SyncEvent.SyncFailed && it.error === networkError },
+                "The buffered SyncFailed must reach the first collector, got $events",
+            )
+
+            collectJob.cancel()
+        }
 }

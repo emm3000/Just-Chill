@@ -24,6 +24,11 @@ import com.emm.justchill.core.ui.atoms.showEmmSnackbar
  * same manual failure BY DESIGN — the snackbar is immediate feedback, the row is the persistent
  * recovery point.
  *
+ * This is the ONLY collector of [SyncController.events], and that is load-bearing: the events are
+ * buffered and delivered to exactly one collector, so a second one would steal them rather than
+ * receive a copy. It also means an event raised before this composable exists (the cold-start
+ * cycle) is still waiting here when the collection starts.
+ *
  * Navigation stays injected via [onNavigateToSignIn] so this composable has no direct dependency
  * on the back stack.
  */

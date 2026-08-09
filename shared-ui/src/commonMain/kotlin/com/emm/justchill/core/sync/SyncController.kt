@@ -1,6 +1,6 @@
 package com.emm.justchill.core.sync
 
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -16,8 +16,19 @@ interface SyncController {
     /** Current sync status, hot. */
     val status: StateFlow<SyncStatus>
 
-    /** One-shot events that require top-level UI handling (session expiry, manual-sync failure). */
-    val events: SharedFlow<SyncEvent>
+    /**
+     * One-shot events that require top-level UI handling (session expiry, manual-sync failure).
+     *
+     * Buffered until a collector attaches: the first sync cycle runs from `bootstrapAppGraph` in
+     * Application.onCreate, long before any composition exists, and an event raised in that window
+     * must still reach the user rather than being dropped on the floor.
+     *
+     * **Single-collector by contract.** Each event is delivered to exactly one collector — there is
+     * exactly one, [com.emm.justchill.hh.shared.SyncEventsHandler] in the single shared nav host.
+     * The backing channel cannot fan out, so a second collector would not duplicate events, it would
+     * steal them. Anything else that needs to react to sync outcomes should observe [status].
+     */
+    val events: Flow<SyncEvent>
 
     /**
      * Offer a sync request. Overlapping calls collapse safely.
