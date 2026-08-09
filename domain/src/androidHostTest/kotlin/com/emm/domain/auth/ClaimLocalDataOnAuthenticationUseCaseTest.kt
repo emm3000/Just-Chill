@@ -1,13 +1,16 @@
 package com.emm.domain.auth
 
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.sync.SyncLogger
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
@@ -18,6 +21,7 @@ class ClaimLocalDataOnAuthenticationUseCaseTest {
     private val observeSession = mockk<ObserveSessionUseCase>()
     private val claimLocalDataRepository = mockk<ClaimLocalDataRepository>(relaxed = true)
     private val claimLocalData = ClaimLocalDataUseCase(claimLocalDataRepository)
+    private val logger = mockk<SyncLogger>(relaxed = true)
 
     // Controllable unclaimed-count flow pushed into per-test.
     private val unclaimedCount = MutableStateFlow(0L)
@@ -26,6 +30,7 @@ class ClaimLocalDataOnAuthenticationUseCaseTest {
         observeSession,
         claimLocalData,
         claimLocalDataRepository,
+        logger,
     )
 
     private fun authenticated(userId: String) =
@@ -95,6 +100,7 @@ class ClaimLocalDataOnAuthenticationUseCaseTest {
                 observeSession,
                 fakeClaimUseCase,
                 fakeRepo,
+                logger,
             )
 
             // Launch in background scope (won't block runTest completion) and drain so it subscribes.
@@ -133,5 +139,45 @@ class ClaimLocalDataOnAuthenticationUseCaseTest {
         useCase()
 
         coVerify(exactly = 2) { claimLocalDataRepository.claimAll("uid-1") }
+    }
+
+    /**
+     * A throw from the unclaimed-count QUERY (not from the claim) used to terminate the observer
+     * for the rest of the process lifetime: nothing was ever claimed again, and nothing was
+     * logged. `retryWhen` re-subscribes after a delay, so the next successful collection claims.
+     *
+     * The stateful stub makes the first collection fail and the second succeed; `runTest` skips
+     * the 5 s retry delay in virtual time.
+     */
+    @Test
+    fun `a failing unclaimed-count flow is retried and the claim still runs`() = runTest {
+        every { observeSession.invoke() } returns flowOf(authenticated("uid-1"))
+        var collections = 0
+        every { claimLocalDataRepository.observeUnclaimedCount() } answers {
+            collections++
+            if (collections == 1) {
+                flow { throw DomainException.DatabaseError(RuntimeException("disk full")) }
+            } else {
+                flowOf(1L)
+            }
+        }
+        coEvery { claimLocalDataRepository.claimAll("uid-1") } just Runs
+
+        useCase()
+
+        coVerify(exactly = 1) { claimLocalDataRepository.claimAll("uid-1") }
+        verify(atLeast = 1) { logger.warn(any(), any()) }
+    }
+
+    @Test
+    fun `a swallowed claim failure is logged`() = runTest {
+        every { observeSession.invoke() } returns flowOf(authenticated("uid-1"))
+        every { claimLocalDataRepository.observeUnclaimedCount() } returns flowOf(1L)
+        coEvery { claimLocalDataRepository.claimAll("uid-1") }
+            .throws(DomainException.DatabaseError(RuntimeException("locked")))
+
+        useCase()
+
+        verify(atLeast = 1) { logger.warn(any(), any()) }
     }
 }

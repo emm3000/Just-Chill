@@ -7,17 +7,20 @@ import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.sync.ObservePendingSyncCountUseCase
 import com.emm.domain.sync.SyncDataUseCase
+import com.emm.domain.sync.SyncLogger
 import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.preferences.AppPreferences
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -42,6 +45,7 @@ class SyncOrchestratorTest {
     private val observePendingCount = mockk<ObservePendingSyncCountUseCase>(relaxed = true)
     private val signOut = mockk<SignOutUseCase>(relaxed = true)
     private val prefs = mockk<AppPreferences>(relaxed = true)
+    private val logger = mockk<SyncLogger>(relaxed = true)
 
     // Fake injectable flows
     private val sessionFlow = MutableStateFlow<SessionStatus>(SessionStatus.Initializing)
@@ -67,6 +71,7 @@ class SyncOrchestratorTest {
             prefs = prefs,
             externalScope = CoroutineScope(sharedDispatcher + SupervisorJob()),
             resumeEvents = resumeFlow,
+            logger = logger,
         )
     }
 
@@ -146,6 +151,7 @@ class SyncOrchestratorTest {
             prefs = prefs,
             externalScope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()),
             resumeEvents = resumeFlow,
+            logger = logger,
         )
         orchestrator.start()
 
@@ -310,4 +316,111 @@ class SyncOrchestratorTest {
 
         collectJob.cancel()
     }
+
+    // ── (11) A throwing pending-count flow restarts the trigger instead of killing it ──
+
+    /**
+     * The write trigger collects a SQLDelight-backed flow. A mid-observe database failure used to
+     * propagate out of the collector into an application scope with no handler — process death.
+     * Now the trigger absorbs it and re-subscribes, so a later write still syncs.
+     */
+    @Test
+    fun `a throwing pending-count flow does not crash and the trigger restarts`() = runTest(testDispatcher) {
+        var pendingCountCollections = 0
+        every { observeSession.invoke() } returns sessionFlow
+        every { observePendingCount.invoke() } answers {
+            pendingCountCollections++
+            if (pendingCountCollections == 1) {
+                flow { throw DomainException.DatabaseError(RuntimeException("disk full")) }
+            } else {
+                pendingCountFlow
+            }
+        }
+        every { prefs.lastSyncedAt(any()) } returns null
+        coEvery { syncData.invoke() } returns Unit
+
+        val orchestrator = SyncOrchestrator(
+            syncData = syncData,
+            observeSession = observeSession,
+            observePendingCount = observePendingCount,
+            signOut = signOut,
+            prefs = prefs,
+            externalScope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()),
+            resumeEvents = resumeFlow,
+            logger = logger,
+        )
+        orchestrator.start()
+
+        // Sign-in sync fires; the write trigger blows up on its first collection and backs off.
+        sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = "uid11", email = "k@l.com"))
+        advanceUntilIdle()
+
+        verify(atLeast = 1) { logger.warn(any(), any()) }
+        assertTrue(
+            pendingCountCollections >= 2,
+            "Trigger must have re-subscribed after the failure; collections=$pendingCountCollections",
+        )
+
+        // The restarted trigger is live: a write still debounces into a sync.
+        pendingCountFlow.value = 4L
+        advanceTimeBy(3_500)
+        advanceUntilIdle()
+
+        coVerify(atLeast = 2) { syncData.invoke() }
+    }
+
+    // ── (12) A non-DomainException does not kill the sequential consumer ──────────
+
+    @Test
+    fun `a non-DomainException failure does not kill the sync consumer`() = runTest(testDispatcher) {
+        coEvery { syncData.invoke() } throws RuntimeException("boom")
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+
+        sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = "uid12", email = "l@m.com"))
+        advanceUntilIdle()
+
+        assertTrue(orchestrator.status.value.lastSyncFailed, "lastSyncFailed must be set")
+        assertFalse(orchestrator.status.value.isSyncing, "isSyncing must be cleared")
+
+        // The consumer loop must still be draining the channel.
+        coEvery { syncData.invoke() } returns Unit
+        orchestrator.requestSync()
+        advanceUntilIdle()
+
+        coVerify(atLeast = 2) { syncData.invoke() }
+        assertFalse(orchestrator.status.value.lastSyncFailed, "A later successful cycle must clear the flag")
+    }
+
+    // ── (13) Manual cycle + non-DomainException surfaces as SyncFailed(Unknown) ───
+
+    @Test
+    fun `manual cycle failing with a non-DomainException emits SyncFailed carrying Unknown`() =
+        runTest(testDispatcher) {
+            val boom = RuntimeException("boom")
+            coEvery { syncData.invoke() } throws boom
+
+            val orchestrator = buildOrchestrator()
+            orchestrator.start()
+
+            val events = mutableListOf<SyncEvent>()
+            val collectJob = launch { orchestrator.events.collect { events.add(it) } }
+
+            sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = "uid13", email = "m@n.com"))
+            advanceUntilIdle()
+
+            events.clear()
+            orchestrator.requestSync(manual = true)
+            advanceUntilIdle()
+
+            val failures = events.filterIsInstance<SyncEvent.SyncFailed>()
+            assertTrue(failures.isNotEmpty(), "Expected SyncFailed for a manual cycle, got $events")
+            assertTrue(
+                failures.any { it.error is DomainException.Unknown && it.error.cause === boom },
+                "SyncFailed must carry DomainException.Unknown wrapping the original cause, got $failures",
+            )
+
+            collectJob.cancel()
+        }
 }

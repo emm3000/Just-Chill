@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.os.Build
 import com.emm.data.provideDb
 import com.emm.data.provideSqlDriver
+import com.emm.domain.sync.SyncLogger
 import com.emm.justchill.BuildConfig
 import com.emm.justchill.core.platform.CurrentActivityHolder
 import com.emm.justchill.hh.auth.ActivityGoogleSignInLauncher
@@ -36,6 +37,10 @@ val androidPlatformModule = module {
     single<DispatchersProvider> { DefaultDispatcher() }
     single<Settings> { SharedPreferencesSettings(provideSharedPreferences(androidContext())) }
     single { CurrentActivityHolder() }
+
+    // Sync observability sink. Platform-specific because it reports to Crashlytics (Android-only);
+    // iOS binds a println implementation of the same port in KoinIos.kt.
+    single<SyncLogger> { CrashReportingSyncLogger() }
 
     // Platform-provided app version (no BuildConfig in commonMain). Consumed by ProfileViewModel
     // via the "appVersion" qualifier; stamped into exported backups.

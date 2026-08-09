@@ -10,12 +10,14 @@ import com.emm.domain.sync.ConflictResolver
 import com.emm.domain.sync.ObservePendingSyncCountUseCase
 import com.emm.domain.sync.SyncCursorStore
 import com.emm.domain.sync.SyncDataUseCase
+import com.emm.domain.sync.SyncLogger
 import com.emm.domain.sync.SyncMutex
 import com.emm.domain.sync.SyncRepository
 import com.emm.justchill.core.sync.DefaultSyncCursorStore
 import com.emm.justchill.core.sync.SyncController
 import com.emm.justchill.core.sync.SyncOrchestrator
 import com.emm.justchill.core.sync.resumeEvents
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -40,11 +42,12 @@ val appScopeQualifier = named("appScope")
 // here. The connectivity-regained trigger is absent on both platforms (shared cross-platform debt).
 val syncModule = module {
     // Per-table sync units — qualified so DefaultSyncRepository can distinguish the four TableSync
-    // slots even though they share the interface type. Each takes (EmmDatabaseData, SupabaseClient).
-    factory<TableSync>(accountSyncQualifier) { AccountTableSync(get(), get()) }
-    factory<TableSync>(categorySyncQualifier) { CategoryTableSync(get(), get()) }
-    factory<TableSync>(transactionSyncQualifier) { TransactionTableSync(get(), get()) }
-    factory<TableSync>(recurringSyncQualifier) { RecurringMovementTableSync(get(), get()) }
+    // slots even though they share the interface type. Each takes (EmmDatabaseData, SupabaseClient,
+    // SyncLogger); the logger is the platform single that makes their silent row skips visible.
+    factory<TableSync>(accountSyncQualifier) { AccountTableSync(get(), get(), get()) }
+    factory<TableSync>(categorySyncQualifier) { CategoryTableSync(get(), get(), get()) }
+    factory<TableSync>(transactionSyncQualifier) { TransactionTableSync(get(), get(), get()) }
+    factory<TableSync>(recurringSyncQualifier) { RecurringMovementTableSync(get(), get(), get()) }
 
     // Domain port: cursor store over AppPreferences (a stateless adapter; cursor state lives in prefs).
     factoryOf(::DefaultSyncCursorStore) { bind<SyncCursorStore>() }
@@ -72,8 +75,16 @@ val syncModule = module {
     singleOf(::SyncDataUseCase)
 
     // Application-lifetime scope for SyncOrchestrator long-lived jobs and the claim observer.
+    // The handler is a backstop, not the primary defence: SyncOrchestrator and the claim observer
+    // both catch their own failures. Without it, anything they miss reaches the default handler,
+    // which on Android is a crash — for a feature the app is fully usable without. The logger is
+    // resolved once, up front, so the handler never has to touch Koin while unwinding a failure.
     single<CoroutineScope>(appScopeQualifier) {
-        CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val logger = get<SyncLogger>()
+        val handler = CoroutineExceptionHandler { _, throwable ->
+            logger.warn("uncaught in appScope", throwable)
+        }
+        CoroutineScope(SupervisorJob() + Dispatchers.Default + handler)
     }
 
     factoryOf(::ObservePendingSyncCountUseCase)
@@ -89,6 +100,7 @@ val syncModule = module {
             prefs = get(),
             externalScope = get(appScopeQualifier),
             resumeEvents = resumeEvents(),
+            logger = get(),
         )
     }
 

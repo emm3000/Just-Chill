@@ -2,6 +2,7 @@ package com.emm.data.sync
 
 import com.emm.domain.sync.ConflictResolver
 import com.emm.domain.sync.LocalRevision
+import com.emm.domain.sync.SyncLogger
 import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -75,6 +76,22 @@ class BaseTableSyncPaginationTest {
     }
 
     // -------------------------------------------------------------------------
+    // Recording logger
+    // -------------------------------------------------------------------------
+
+    /**
+     * Captures what the pull path reported. The skips it logs are the only trace a user-visible
+     * data gap leaves behind, so they are asserted like any other observable behaviour.
+     */
+    class RecordingSyncLogger : SyncLogger {
+        val warnings = mutableListOf<String>()
+
+        override fun warn(message: String, throwable: Throwable?) {
+            warnings += message
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Concrete BaseTableSync subclass for tests
     // -------------------------------------------------------------------------
 
@@ -84,12 +101,17 @@ class BaseTableSyncPaginationTest {
      * [transact] is a plain pass-through: `{ body -> body() }`.
      * [fetchRemotePage] delegates to a [RemotePageFetcher].
      */
-    inner class FakeTableSync(private val fetcher: RemotePageFetcher, pageSize: Int = DEFAULT_TEST_PAGE_SIZE) :
-        BaseTableSync<TestDto>(
-            client = mockk(relaxed = true),
-            transact = { body -> body() },
-            pageSize = pageSize,
-        ) {
+    inner class FakeTableSync(
+        private val fetcher: RemotePageFetcher,
+        pageSize: Int = DEFAULT_TEST_PAGE_SIZE,
+        val recordingLogger: RecordingSyncLogger = RecordingSyncLogger(),
+    ) : BaseTableSync<TestDto>(
+        client = mockk(relaxed = true),
+        transact = { body -> body() },
+        logger = recordingLogger,
+        tableName = TEST_TABLE,
+        pageSize = pageSize,
+    ) {
         override val pkColumn: String = "id"
 
         val applied = mutableListOf<TestDto>()
@@ -374,6 +396,56 @@ class BaseTableSyncPaginationTest {
         assertEquals(listOf("a", "b", "d"), sync.applied.map { it.id })
     }
 
+    /**
+     * A foreign row reaching this device means RLS is misconfigured server-side. The skip alone is
+     * silent, so the only way that ever surfaces is this log line. Ids only — never row contents.
+     */
+    @Test
+    fun `userId mismatch row is logged with its table and pk`() = runTest {
+        val rowA = dto("a", "2026-01-01T00:00:01Z", uid = "other-user")
+        val sync = FakeTableSync(
+            fetcher = RemotePageFetcher { _, _, _, _ -> listOf(rowA) },
+            pageSize = 5,
+        )
+
+        val result = sync.pull(userId, cursor = null, resolver = resolver)
+
+        assertTrue(result.skippedRows)
+        assertTrue(sync.applied.isEmpty(), "The foreign row must not be applied: ${sync.applied}")
+        assertTrue(
+            sync.recordingLogger.warnings.any { it.contains("table=$TEST_TABLE") && it.contains("pk=a") },
+            "Expected a foreign-row warning naming table and pk, got: ${sync.recordingLogger.warnings}",
+        )
+    }
+
+    /** An FK miss defers the row to a later cycle; if the parent never arrives, this is the trace. */
+    @Test
+    fun `FK-miss skip is logged with its table and pk`() = runTest {
+        val sync = FakeTableSync(store(dto("a", "2026-01-01T00:00:01Z")), pageSize = 5)
+        sync.failIds += "a"
+
+        val result = sync.pull(userId, cursor = null, resolver = resolver)
+
+        assertTrue(result.skippedRows)
+        assertTrue(
+            sync.recordingLogger.warnings.any { it.contains("table=$TEST_TABLE") && it.contains("pk=a") },
+            "Expected an FK-miss warning naming table and pk, got: ${sync.recordingLogger.warnings}",
+        )
+    }
+
+    /** A clean pull must stay quiet — logging per applied row would drown the signal above. */
+    @Test
+    fun `a clean pull logs nothing`() = runTest {
+        val sync = FakeTableSync(
+            store(dto("a", "2026-01-01T00:00:01Z"), dto("b", "2026-01-01T00:00:02Z")),
+            pageSize = 5,
+        )
+
+        sync.pull(userId, cursor = null, resolver = resolver)
+
+        assertEquals(emptyList(), sync.recordingLogger.warnings)
+    }
+
     @Test
     fun `overlapCursor is applied on first page and matching rows are included`() = runTest {
         // cursor = T+10s → overlapCursor = T+0s (OVERLAP_SECONDS = 10L subtracted, see SyncCursorUtils)
@@ -447,5 +519,6 @@ class BaseTableSyncPaginationTest {
 
     companion object {
         private const val DEFAULT_TEST_PAGE_SIZE = 3
+        private const val TEST_TABLE = "test_table"
     }
 }

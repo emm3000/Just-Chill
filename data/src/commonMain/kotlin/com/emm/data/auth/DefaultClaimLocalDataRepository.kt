@@ -3,9 +3,10 @@ package com.emm.data.auth
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOne
 import com.emm.data.EmmDatabaseData
+import com.emm.data.shared.catchAsDomainException
+import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.safeDbCall
 import com.emm.domain.auth.ClaimLocalDataRepository
-import com.emm.data.shared.ioDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.withContext
@@ -45,10 +46,13 @@ class DefaultClaimLocalDataRepository(private val db: EmmDatabaseData) : ClaimLo
         }
     }
 
+    // catchAsDomainException, like every other observe flow in this module: this one is collected
+    // by the claim observer on the application scope, where a raw SQLite throw is an uncaught
+    // exception rather than a failed call.
     override fun observeUnclaimedCount(): Flow<Long> = combine(
         db.accountsQueries.countUnclaimed().asFlow().mapToOne(ioDispatcher),
         db.categoriesQueries.countUnclaimed().asFlow().mapToOne(ioDispatcher),
         db.transactionsQueries.countUnclaimed().asFlow().mapToOne(ioDispatcher),
         db.recurring_movementsQueries.countUnclaimed().asFlow().mapToOne(ioDispatcher),
-    ) { acc, cat, txn, rec -> acc + cat + txn + rec }
+    ) { acc, cat, txn, rec -> acc + cat + txn + rec }.catchAsDomainException()
 }

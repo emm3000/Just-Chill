@@ -4,6 +4,7 @@ import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
 import com.emm.data.provideDb
+import com.emm.domain.sync.SyncLogger
 import com.emm.justchill.hh.auth.GoogleSignInLauncher
 import com.emm.justchill.hh.auth.GoogleSignInResult
 import com.russhwolf.settings.MapSettings
@@ -46,6 +47,11 @@ val testPlatformModule: Module = module {
     // NSUserDefaultsSettings. AppPreferences sits on top of it in commonCoreModule.
     single<Settings> { MapSettings() }
 
+    // Stands in for CrashReportingSyncLogger / PrintlnSyncLogger. The graph resolves it eagerly
+    // (the appScope single reads it to build its CoroutineExceptionHandler), so it must be bound
+    // here even though this test never logs anything.
+    single<SyncLogger> { NoOpSyncLogger() }
+
     // Stamped into exported backups and shown in the Profile footer; a literal is enough off-device.
     single(named("appVersion")) { "0.0.0-test" }
 
@@ -72,4 +78,9 @@ val testPlatformModule: Module = module {
 private class NoOpGoogleSignInLauncher : GoogleSignInLauncher {
     override suspend fun signIn(serverClientId: String): GoogleSignInResult =
         GoogleSignInResult.Failure(IllegalStateException("Google Sign-In is not available in tests"))
+}
+
+/** Discards everything: this test asserts wiring, and a real sink would only add console noise. */
+private class NoOpSyncLogger : SyncLogger {
+    override fun warn(message: String, throwable: Throwable?) = Unit
 }

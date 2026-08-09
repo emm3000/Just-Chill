@@ -5,6 +5,7 @@ import com.emm.data.shared.safeDbCall
 import com.emm.domain.sync.ConflictResolver
 import com.emm.domain.sync.LocalRevision
 import com.emm.domain.sync.Resolution
+import com.emm.domain.sync.SyncLogger
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.query.filter.PostgrestFilterBuilder
 import kotlinx.coroutines.withContext
@@ -64,6 +65,16 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
      * Pass `{ body -> db.transaction { body() } }`. Keeps the base class free of db coupling.
      */
     private val transact: (() -> Unit) -> Unit,
+    /**
+     * Where the silent row skips below become visible. Every skip is a row this device decided not
+     * to apply — a data gap the user cannot see and the algorithm never reports upward.
+     */
+    protected val logger: SyncLogger,
+    /**
+     * Remote table name, used only to identify this instance in log lines (all four subclasses
+     * share this class, so a message without it is unattributable).
+     */
+    protected val tableName: String,
     /** Number of rows to request per page. Override in tests to use a smaller value. */
     private val pageSize: Int = DEFAULT_PULL_PAGE_SIZE,
 ) : TableSync {
@@ -235,6 +246,10 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
                 page.forEach { remote ->
                     // Defence-in-depth against RLS misconfig: never apply another user's row.
                     if (remote.userId != userId) {
+                        // A foreign row reaching this device means the server-side policy let it
+                        // through. Loud on purpose — the skip below is otherwise invisible. Ids
+                        // only: the row belongs to someone else, so none of it may be logged.
+                        logger.warn("pull skipped foreign row table=$tableName pk=${pkOf(remote)}")
                         skipped = true
                         return@forEach
                     }
@@ -243,6 +258,10 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
                     when (resolution) {
                         Resolution.ApplyRemote ->
                             if (!applyRemoteRow(remote)) {
+                                // FK parent absent locally. Expected transiently; permanent only if
+                                // the parent never arrives — which is exactly what this line makes
+                                // diagnosable after the fact.
+                                logger.warn("pull skipped fk miss table=$tableName pk=${pkOf(remote)}")
                                 skipped = true
                                 return@forEach
                             }
@@ -266,6 +285,11 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
         // defensively: hold the cursor so the next cycle re-pulls this window.
         val lastSat = page.last().serverUpdatedAt
         val nullSatGuard = lastSat == null
+        if (nullSatGuard) {
+            // Reaching this means the remote schema no longer matches what the cursor math assumes,
+            // and the cursor will now be held every cycle. Never silently.
+            logger.warn("pull hit null serverUpdatedAt table=$tableName pk=${pkOf(page.last())}")
+        }
         val isLastPage = page.size < pageSize || nullSatGuard
 
         // The next page key is always built from the last FETCHED row, even if that row was

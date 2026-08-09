@@ -3,10 +3,12 @@ package com.emm.data.sync
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOne
 import com.emm.data.EmmDatabaseData
+import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.isSqliteConstraintViolation
 import com.emm.data.shared.safeDbCall
 import com.emm.domain.sync.LocalRevision
+import com.emm.domain.sync.SyncLogger
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Order
@@ -14,10 +16,12 @@ import kotlinx.coroutines.flow.Flow
 
 private const val TABLE = "categories"
 
-class CategoryTableSync(private val db: EmmDatabaseData, client: SupabaseClient) :
+class CategoryTableSync(private val db: EmmDatabaseData, client: SupabaseClient, logger: SyncLogger) :
     BaseTableSync<CategoryRowDto>(
         client = client,
         transact = { body -> db.transaction { body() } },
+        logger = logger,
+        tableName = TABLE,
     ) {
 
     // ---------------------------------------------------------------------------
@@ -123,5 +127,11 @@ class CategoryTableSync(private val db: EmmDatabaseData, client: SupabaseClient)
         db.categoriesQueries.markPendingForResync(pk)
     }
 
-    override fun pendingCount(): Flow<Long> = db.categoriesQueries.countPending().asFlow().mapToOne(ioDispatcher)
+    // Wrapped like every other observe flow in this module: this one feeds the orchestrator's
+    // debounced-write trigger, so an unwrapped SQLite throw would escape into an application-scope
+    // coroutine instead of arriving as a DomainException.
+    override fun pendingCount(): Flow<Long> = db.categoriesQueries.countPending()
+        .asFlow()
+        .mapToOne(ioDispatcher)
+        .catchAsDomainException()
 }
