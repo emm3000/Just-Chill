@@ -30,7 +30,7 @@ Tres tracks grandes cerrados o casi:
 | Producto (Fases 1-5: discovery → post-v1) | ✅ cerrado, docs en `docs/` |
 | Local-first sync (slices 1-5) | slices 1-4 ✅ · slice 5 ⏳ bloqueado por tareas humanas |
 | Migración KMP / Compose Multiplatform | ✅ completa y mergeada a trunk |
-| Auditoría de funcionalidades | 4 CRÍTICOS, 4 ALTOS y M9-M10 ✅ · M11 ⏳ decisión de diseño |
+| Auditoría de funcionalidades | ✅ cerrada — 4 CRÍTICOS, 4 ALTOS, 3 MEDIOS |
 
 **Git**: `trunk` y `origin/trunk` están a la par. La historia es lineal (0 merge commits).
 Nunca mergear sin `--ff-only`.
@@ -145,16 +145,21 @@ Cerrados:
   la base nunca tuvo. Los buckets **no** se calculan en SQL a propósito: el límite entre dos meses
   es hora local y `strftime` sobre epoch daría UTC, que es la misma clase de bug que C1.
 
-Pendiente:
+- **M11** LWW comparaba relojes de cliente en **todas** las filas del pull, no solo en las que
+  tenían conflicto. Un device adelantado ganaba con su propia copia ya sincronizada, la re-pusheaba
+  y destruía la edición nueva del otro device, en cada ciclo y en silencio. Ahora
+  `ConflictResolver` recibe `LocalRevision(updatedAt, hasUnpushedEdit)`: si la fila local no tiene
+  ediciones sin pushear gana el servidor sin mirar ningún reloj. El `updatedAt` de cliente decide
+  solo el conflicto genuino de dos lados. Ver [ADR 004](adr/004-conflict-resolution-only-arbitrates-unpushed-edits.md).
 
-| | Hallazgo |
-|---|---|
-| M11 | LWW compara relojes de cliente: un device con la fecha adelantada gana siempre |
+La auditoría queda **cerrada**. Lo que la sugerencia original de M11 pedía —cambiar el LWW a
+`server_updated_at`— se descartó con evidencia: el schema local no tiene esa columna y, si se
+agregara, no responde la pregunta (una edición local sin pushear no tiene timestamp de servidor).
+El razonamiento completo está en el ADR 004.
 
-**M11 no es un fix**: cambia la resolución de conflictos del motor de sync, que ya está
-device-verificado y con el slice 5 a medio camino. Arreglarlo bien implica decidir entre el reloj
-del servidor (`server_updated_at` ya existe, ver `docs/adr/002`) y el del cliente. Es una decisión
-de diseño — no lo empieces sin acordarlo primero.
+Residuo aceptado a conciencia: si dos devices editan la misma fila antes de sincronizar, el reloj
+de cliente sigue desempatando y un device desfasado gana esa carrera. Ahí el costo sí es una sola
+edición pisada — el riesgo que ADR 001 aceptó sabiendo lo que aceptaba.
 
 Cuatro afirmaciones de la auditoría **no sobrevivieron a la verificación** — cotejar
 contra el código antes de actuar sobre las que quedan:
@@ -204,7 +209,8 @@ siguen en el repo como marcadores históricos.
 - `docs/kmp/ORCHESTRATION.md` — workflow de slices + ledger. **Vigente.**
 - `docs/sync/PLAN.md` — slices de sync + SQL de Supabase.
 - `docs/adr/` — 001 (reversa a local-first con sync opcional), 002 (cursor de pull),
-  003 (iOS congelado: se mantiene solo el compile gate, se retira el ritual).
+  003 (iOS congelado: se mantiene solo el compile gate, se retira el ritual),
+  004 (el resolver de conflictos solo arbitra ediciones sin pushear; enmienda al 002).
 - `docs/PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `ROADMAP_V1.md`,
   `POST_V1_PLAN.md` — definición de producto, Fases 1-5.
 - `docs/DESIGN_SYSTEM.md` — tokens y componentes.

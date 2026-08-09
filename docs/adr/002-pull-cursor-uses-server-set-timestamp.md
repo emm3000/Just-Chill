@@ -1,6 +1,6 @@
 # ADR 002 — Pull cursor uses a server-set timestamp, never client clocks
 
-- **Status**: Accepted
+- **Status**: Accepted, Decision point 4 amended by [ADR 004](004-conflict-resolution-only-arbitrates-unpushed-edits.md)
 - **Date**: 2026-06-09
 - **Deciders**: Edgardo Muñoz
 - **Amends**: [ADR 001](001-reverse-local-only-to-local-first-optional-sync.md), Decision point 5 (change detection / pull cursor).
@@ -26,6 +26,7 @@ ADR 001 accepted client-clock skew as a risk — but that acceptance is only sou
 2. **Pulls fetch by `server_updated_at`**, with a small overlap window (`>= lastPulledAt - 10s`) to cover the commit-ordering race inherent to `now()` being transaction-start time. Re-pulled rows are no-ops because the LWW upsert is idempotent.
 3. **`lastPulledAt` stores the max `server_updated_at` seen** as an ISO-8601 string (was a client epoch `Long`). An empty/lost cursor triggers a full re-pull, which is safe and idempotent.
 4. **LWW conflict resolution is unchanged**: `ConflictResolver` still compares client-written `updatedAt`. The server column never decides a winner.
+   > **Amended by [ADR 004](004-conflict-resolution-only-arbitrates-unpushed-edits.md) (2026-08-09).** The server column still never decides a winner, but the resolver no longer compares clocks at all on rows with no unpushed local edit — running LWW there let a fast-clocked device re-push its own synced copy and destroy the other device's newer edit on every cycle. Client `updatedAt` now decides only genuine two-sided conflicts.
 
 ## Alternatives considered
 

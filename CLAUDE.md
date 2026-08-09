@@ -144,7 +144,8 @@ Compose BOM `2026.05.01` · Compose Multiplatform `1.11.1` · detekt `2.0.0-alph
 ## Docs map (`docs/`)
 
 - `kmp/ORCHESTRATION.md` — shared-UI slice workflow + ledger. Current and trustworthy.
-- `adr/` — 001 local-first reversal, 002 pull cursor, 003 iOS frozen (compile gate only).
+- `adr/` — 001 local-first reversal, 002 pull cursor, 003 iOS frozen (compile gate only),
+  004 conflicts are arbitrated only on unpushed edits (amends 002).
   `sync/PLAN.md` — sync slices.
 - `PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `ROADMAP_V1.md`, `POST_V1_PLAN.md` — Fases 1-5.
 - `DESIGN_SYSTEM.md` — tokens and components (its paths still point at the pre-KMP `app/` module).
