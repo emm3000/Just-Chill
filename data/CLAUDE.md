@@ -75,7 +75,7 @@ exception type here.
 - Platform-neutral tests in `data/src/commonTest/kotlin/` (`kotlin.test`), e.g. `SyncCursorUtilsTest`.
 - Instrumented tests in `data/src/androidDeviceTest/`: `MigrationV1ToV2Test`, `MigrationV2ToV3Test`,
   `DeleteUseCasesE2ETest`, `RecurringMovementFkTest`, `SyncFkExceptionTest`. Run them with
-  `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator; 16 tests). They are the
+  `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator; 15 tests). They are the
   only thing that exercises migrations against the real `AndroidSqliteDriver` — **run them before
   shipping any schema change.** Gotcha: `kotlin.assert()` is a no-op on ART; always use
   `kotlin.test.assertTrue`.

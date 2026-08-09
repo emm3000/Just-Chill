@@ -195,7 +195,7 @@ siguen en el repo como marcadores históricos.
 - `./gradlew qualityGate` es el gate. Si tocás una firma de dominio, acordate de que
   el gate incluye `:data:compileAndroidDeviceTest` desde `12ecb2b` — antes de eso los
   tests instrumentados podían quedar rotos con el gate en verde.
-- Los tests instrumentados (`:data:connectedAndroidDeviceTest`, 16 tests) no corren en
+- Los tests instrumentados (`:data:connectedAndroidDeviceTest`, 15 tests) no corren en
   el gate: necesitan device. Corrélos antes de shipear un cambio de schema o de dominio.
 - Trabajo de KMP / shared-ui: **un writer, review inline**. El ritual de writer +
   reviewer como sub-agentes Opus separados por slice se retiró en
