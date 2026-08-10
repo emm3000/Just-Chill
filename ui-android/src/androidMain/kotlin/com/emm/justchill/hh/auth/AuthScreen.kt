@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.auth
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,14 +43,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -70,10 +72,7 @@ import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.OutlinedCta
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
-import com.emm.justchill.shared.generated.resources.Res
-import com.emm.justchill.shared.generated.resources.ic_google
-import org.jetbrains.compose.resources.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import com.emm.justchill.shared.R
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -236,7 +235,7 @@ private fun AuthFormStep(
                         // Image, not Icon — the official multicolor G must never be tinted
                         // (Google sign-in branding guidelines).
                         Image(
-                            painter = painterResource(Res.drawable.ic_google),
+                            painter = painterResource(R.drawable.ic_google),
                             contentDescription = null,
                             modifier = Modifier.size(18.dp),
                         )

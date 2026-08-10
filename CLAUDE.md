@@ -125,7 +125,11 @@ tests in `:data`, not on the default gate). Both are documented where they live.
 ## Tooling Versions
 
 Kotlin `2.4.0` · AGP `9.2.1` · Gradle wrapper `9.5.1` · Koin BOM `4.2.1` · SQLDelight `2.3.2` ·
-Compose BOM `2026.05.01` · Compose Multiplatform `1.11.1` · detekt `2.0.0-alpha.3` · Supabase BOM `3.6.0`.
+Compose BOM `2026.05.01` · detekt `2.0.0-alpha.3` · Supabase BOM `3.6.0`.
+
+Compose Multiplatform is **gone**: `:ui-android` renders on Google's Compose under the BOM, and the
+CMP Gradle plugin is applied nowhere. `:presentation` still uses JetBrains' multiplatform
+`lifecycle-viewmodel` — that one has to compile for iOS.
 
 ## Open tech debt
 

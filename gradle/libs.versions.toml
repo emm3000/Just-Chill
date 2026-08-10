@@ -33,37 +33,18 @@ ktorClientOkhttp = "3.5.2"
 # in ui-android commonMain (SharedPreferences on Android, NSUserDefaults on iOS). Latest stable 1.x.
 multiplatformSettings = "1.3.0"
 
-# KMP / Compose Multiplatform (declared in phase 0, applied per-module in later phases).
-# Compose MP 1.11.1 is the release built against Kotlin 2.4.0 (see docs/kmp/BASELINE.md); the
-# pairing was re-verified against Kotlin 2.4.10 when that bump landed (full gate, iOS leg included).
-composeMultiplatform = "1.11.1"
 # SKIE rewrites the JustChillKit framework's Swift interface: sealed -> Swift enums, Flow ->
 # AsyncSequence, suspend -> async. 0.10.14 officially supports Kotlin 2.0.0-2.4.10.
 skie = "0.10.14"
-# CMP material3 is versioned independently of the umbrella composeMultiplatform version, so
-# Dependabot will keep proposing 1.12.x while composeMultiplatform stays on 1.11.1. HOLD IT HERE:
-# material3 1.12.x targets the CMP 1.12 runtime/foundation, and the mismatch compiles clean but can
-# fail at runtime (NoSuchMethodError) — the build gate would not catch it. Bump this only together
-# with composeMultiplatform. The project reaches for JetBrains' Compose artifacts at all only
-# because :ui-android keeps its UI in commonMain; see that module's CLAUDE.md.
-composeMaterial3 = "1.11.0-alpha07"
-# material-icons-extended is frozen by JetBrains at 1.7.3 (icons no longer updated upstream).
-composeMaterialIcons = "1.7.3"
 
-# nav
+# nav. :ui-android is Android-only (ADR 005) and renders on Google's navigation3 — runtime AND UI.
+# Slice F had put the UI on the JetBrains Compose Multiplatform port so one commonMain host could
+# drive Android and iOS; iOS left for SwiftUI, so the port lost its reason to exist and Android went
+# back to the artifacts Google publishes.
 nav3Core = "1.1.2"
 lifecycleViewmodelNav3 = "2.11.0"
 
-# navigation3 UI for BOTH platforms. The "Option A" Android/iOS host split this once described was
-# reversed in slice F (186d3b6): one commonMain AppNavHost drives Android and iOS on the JetBrains
-# Compose Multiplatform port (org.jetbrains.androidx.navigation3:navigation3-ui). The runtime
-# (NavKey, NavBackStack, entryProvider) comes from androidx.navigation3:navigation3-runtime, itself
-# multiplatform since 1.0.0-rc01.
-jetbrainsNav3Ui = "1.1.1"
-nav3RuntimeKmp = "1.1.2"
-jetbrainsLifecycleViewmodelNav3 = "2.11.0"
-
-# JetBrains multiplatform lifecycle (ui-android commonMain ViewModel) — aligned with Compose MP 1.11.1.
+# JetBrains multiplatform lifecycle — :presentation's ViewModel, which must still compile for iOS.
 jetbrainsLifecycle = "2.11.0"
 
 [libraries]
@@ -81,22 +62,13 @@ androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-material3 = { module = "androidx.compose.material3:material3" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+# Compose artifacts below are BOM-managed (androidx-compose-bom) — do not add a version.ref.
+androidx-foundation = { module = "androidx.compose.foundation:foundation" }
+androidx-runtime = { module = "androidx.compose.runtime:runtime" }
 androidx-ui = { module = "androidx.compose.ui:ui" }
 androidx-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
-compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
-compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeMultiplatform" }
-compose-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "composeMaterialIcons" }
-compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "composeMaterial3" }
-compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
-compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
-# Multiplatform BackHandler — not pulled in transitively by compose-ui; AuthScreen's CheckEmail needs it.
-compose-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version.ref = "composeMultiplatform" }
-# CMP 1.10+ multiplatform @Preview (provides androidx.compose.ui.tooling.preview.Preview).
-compose-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
-# @Preview RENDERING in the IDE (not just compilation), per the CMP preview docs.
-compose-ui-tooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "composeMultiplatform" }
 coroutines-extensions = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
@@ -148,15 +120,10 @@ androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", vers
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodelNav3" }
 androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycleLivedataKtx" }
 
-# JetBrains multiplatform lifecycle-viewmodel — provides ViewModel + viewModelScope in commonMain (ui-android).
-jetbrains-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "jetbrainsLifecycle" }
-# Compose-free variant for :presentation — same ViewModel/viewModelScope without the compose runtime.
+# JetBrains multiplatform lifecycle-viewmodel — ViewModel + viewModelScope in :presentation's
+# commonMain, which compiles for iOS. The compose-flavoured variant left with :ui-android's move to
+# androidx (androidx-lifecycle-viewmodel-compose covers Android).
 jetbrains-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "jetbrainsLifecycle" }
-
-# navigation3 UI + viewmodel for the unified commonMain nav host (Android AND iOS, since slice F).
-# Runtime comes from androidx-navigation3-runtime above; these are the JetBrains CMP ports.
-jetbrains-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "jetbrainsNav3Ui" }
-jetbrains-lifecycle-viewmodel-navigation3 = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "jetbrainsLifecycleViewmodelNav3" }
 
 [plugins]
 
@@ -173,6 +140,5 @@ detekt = { id = "dev.detekt", version.ref = "detekt" }
 # composeCompiler reuses the existing `kotlin-compose` alias (org.jetbrains.kotlin.plugin.compose).
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlinVersion" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "androidApplication" }
-compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 # Applied by :presentation alone — the module that publishes the JustChillKit framework.
 skie = { id = "co.touchlab.skie", version.ref = "skie" }
