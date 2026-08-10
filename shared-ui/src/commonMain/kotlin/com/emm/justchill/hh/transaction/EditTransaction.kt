@@ -167,7 +167,7 @@ private fun EditTransactionContent(
             QuickChip(
                 eyebrow = "CATEGORÍA",
                 value = state.categorySelected?.name ?: "—",
-                dotColor = state.categorySelected?.color?.primary,
+                dotColor = state.categorySelected?.resolvedColor?.primary,
                 onClick = { showCategorySheet = true },
                 modifier = Modifier.weight(1f),
             )
@@ -261,7 +261,7 @@ private fun EditTransactionContent(
             amountCents = state.amount,
             accountName = state.accountSelected?.name,
             categoryName = state.categorySelected?.name,
-            categoryColor = state.categorySelected?.color?.primary,
+            categoryColor = state.categorySelected?.resolvedColor?.primary,
             onConfirm = {
                 showDeleteDialog = false
                 onIntent(EditTransactionIntent.OnDelete)

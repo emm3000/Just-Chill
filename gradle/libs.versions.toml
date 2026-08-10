@@ -98,6 +98,9 @@ koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koinBom" }
 koin-compose = { module = "io.insert-koin:koin-compose" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel" }
 koin-core = { module = "io.insert-koin:koin-core" }
+# viewModelOf/viewModel DSL without compose — :presentation's DI modules use it; koin-compose-viewmodel
+# (shared-ui) sits on top of it.
+koin-core-viewmodel = { module = "io.insert-koin:koin-core-viewmodel" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
@@ -138,6 +141,8 @@ androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", 
 
 # JetBrains multiplatform lifecycle-viewmodel — provides ViewModel + viewModelScope in commonMain (shared-ui).
 jetbrains-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "jetbrainsLifecycle" }
+# Compose-free variant for :presentation — same ViewModel/viewModelScope without the compose runtime.
+jetbrains-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "jetbrainsLifecycle" }
 
 # navigation3 UI + viewmodel for the unified commonMain nav host (Android AND iOS, since slice F).
 # Runtime comes from androidx-navigation3-runtime above; these are the JetBrains CMP ports.

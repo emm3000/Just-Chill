@@ -64,6 +64,7 @@ import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.emmSwitchColors
 import com.emm.justchill.hh.transaction.centsToSoles
+import com.emm.justchill.hh.transaction.resolvedColor
 import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
 import com.emm.justchill.hh.transaction.sheets.CategoryPickerSheet
 import org.koin.compose.viewmodel.koinViewModel
@@ -540,7 +541,7 @@ private fun SelectorPillsRow(
     onOpenDay: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
-    val categoryDotColor = state.selectedCategory?.color?.primary ?: colors.accent
+    val categoryDotColor = state.selectedCategory?.resolvedColor?.primary ?: colors.accent
 
     Row(
         modifier = Modifier.fillMaxWidth(),

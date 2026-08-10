@@ -23,6 +23,8 @@ import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.hh.transaction.TransactionUi
+import com.emm.justchill.hh.transaction.resolvedColor
+import com.emm.justchill.hh.transaction.resolvedIcon
 
 @Composable
 fun TransactionRow(tx: TransactionUi, showDate: Boolean, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
@@ -44,10 +46,10 @@ fun TransactionRow(tx: TransactionUi, showDate: Boolean, onClick: (() -> Unit)?,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         IconTile(
-            icon = tx.category.categoryIcon,
+            icon = tx.category.resolvedIcon,
             size = IconTileSize.Sm,
             tone = IconTileTone.Swatch,
-            swatch = tx.category.categoryColor.primary,
+            swatch = tx.category.resolvedColor.primary,
         )
 
         Column(modifier = Modifier.weight(1f)) {

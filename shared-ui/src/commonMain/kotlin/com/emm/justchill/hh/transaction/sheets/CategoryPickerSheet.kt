@@ -52,6 +52,8 @@ import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.hh.transaction.SelectableCategory
+import com.emm.justchill.hh.transaction.resolvedColor
+import com.emm.justchill.hh.transaction.resolvedIcon
 
 private const val LIST_MAX_HEIGHT_FRACTION = 0.55f
 
@@ -312,10 +314,10 @@ private fun CategoryRow(
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         IconTile(
-            icon = category.icon.icon,
+            icon = category.resolvedIcon,
             size = IconTileSize.Sm,
             tone = IconTileTone.Swatch,
-            swatch = category.color.primary,
+            swatch = category.resolvedColor.primary,
         )
 
         Text(

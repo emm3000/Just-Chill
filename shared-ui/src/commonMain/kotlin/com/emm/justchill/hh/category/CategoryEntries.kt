@@ -80,7 +80,7 @@ fun EntryProviderScope<NavKey>.categoryEntries(
 private fun Category.toSelectableCategory(): SelectableCategory = SelectableCategory(
     categoryId = categoryId,
     name = name,
-    icon = AppIconCatalog.findById(icon),
-    color = findById(color),
+    iconId = icon,
+    colorId = color,
     categoryType = categoryType,
 )

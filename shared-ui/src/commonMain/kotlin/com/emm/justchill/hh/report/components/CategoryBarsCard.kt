@@ -106,9 +106,9 @@ private fun CategoryBarsCardPreview() {
         ) {
             CategoryBarsCard(
                 shares = listOf(
-                    CategoryShare("1", "Sueldo", "S/ 4,500", 60, colors.catSlate),
-                    CategoryShare("2", "Freelance", "S/ 1,200", 19, colors.catSage),
-                    CategoryShare("3", "Ventas", "S/ 400", 6, colors.catTerracotta),
+                    CategoryShare("1", "Sueldo", "S/ 4,500", 60, "blue"),
+                    CategoryShare("2", "Freelance", "S/ 1,200", 19, "green"),
+                    CategoryShare("3", "Ventas", "S/ 400", 6, "red"),
                 ),
                 movementCount = 5,
                 averageFormatted = "S/ 1,233",

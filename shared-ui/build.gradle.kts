@@ -45,6 +45,10 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            // The compose-free presentation layer (MVI core, ViewModels, DI, formatters) — extracted
+            // in slice S1 of docs/swiftui/PLAN.md. api: :androidApp reaches appModules/AppGraph and
+            // the iosMain KoinIos wiring reaches SupabaseConfig through this module.
+            api(project(":presentation"))
             implementation(project(":domain"))
             // :data is now a full KMP library (android + ios targets), so commonMain depends on it
             // directly. This REVERSES the earlier ":domain-only in commonMain" rule (slice H): the Koin
@@ -129,6 +133,13 @@ kotlin {
 compose.resources {
     publicResClass = true
     packageOfResClass = "com.emm.justchill.shared.generated.resources"
+}
+
+composeCompiler {
+    // :presentation's state classes are external to this compose compilation unit and carry no
+    // stability annotations (the module is compose-free by design). This file declares them — and
+    // the :domain values they embed — stable, replacing what @Stable/@Immutable did before S1.
+    stabilityConfigurationFiles.add(layout.projectDirectory.file("compose_stability.conf"))
 }
 
 dependencies {

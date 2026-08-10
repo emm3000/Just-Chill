@@ -29,6 +29,7 @@ import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.report.TopCategoryItem
+import com.emm.justchill.hh.report.domainColorToUi
 
 /**
  * §7.4 card showing top expense categories over the 6-month window.
@@ -89,7 +90,7 @@ private fun TopCategoryRow(item: TopCategoryItem) {
             icon = icon,
             size = IconTileSize.Md,
             tone = IconTileTone.Swatch,
-            swatch = item.tint,
+            swatch = domainColorToUi(item.colorKey),
         )
 
         Column(
@@ -133,7 +134,7 @@ private fun TopExpensesCardPreview() {
                         categoryId = "1",
                         name = "Comida",
                         iconKey = "Fastfood",
-                        tint = colors.catTerracotta,
+                        colorKey = "red",
                         totalFormatted = "S/ 1,840",
                         topMetaText = "Top en 4 de 6 meses",
                     ),
@@ -141,7 +142,7 @@ private fun TopExpensesCardPreview() {
                         categoryId = "2",
                         name = "Transporte",
                         iconKey = "DirectionsBus",
-                        tint = colors.catSlate,
+                        colorKey = "blue",
                         totalFormatted = "S/ 960",
                         topMetaText = "Top en 3 de 6 meses",
                     ),
@@ -149,7 +150,7 @@ private fun TopExpensesCardPreview() {
                         categoryId = "3",
                         name = "Alquiler",
                         iconKey = "Home",
-                        tint = colors.catMauve,
+                        colorKey = "purple",
                         totalFormatted = "S/ 900",
                         topMetaText = "Top en 6 de 6 meses",
                     ),

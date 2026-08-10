@@ -28,7 +28,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,6 +48,7 @@ import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.hh.account.accountDotColor
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.allColors
+import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.transaction.components.FrequentComboChip
 import com.emm.justchill.hh.transaction.components.NoteRow
 import com.emm.justchill.hh.transaction.components.QuickChip
@@ -189,7 +189,7 @@ private fun AddTransactionScreenContent(
             QuickChip(
                 eyebrow = "CATEGORÍA",
                 value = state.categorySelected?.name ?: "—",
-                dotColor = state.categorySelected?.color?.primary,
+                dotColor = state.categorySelected?.resolvedColor?.primary,
                 onClick = { showCategorySheet = true },
                 modifier = Modifier.weight(1f),
             )
@@ -222,7 +222,7 @@ private fun AddTransactionScreenContent(
                 items(state.frequentCombos) { combo ->
                     FrequentComboChip(
                         label = combo.label,
-                        dotColor = combo.dotColor?.let { Color(it) },
+                        dotColor = combo.colorId?.let { findById(it).primary },
                         onClick = { onIntent(AddTransactionIntent.OnFrequentComboSelected(combo)) },
                     )
                 }
@@ -311,8 +311,8 @@ private fun AddTransactionPreview() {
                         SelectableCategory(
                             categoryId = CategoryId("$it"),
                             name = "Categoría $it",
-                            icon = AppIconCatalog.catalog[it],
-                            color = allColors[it],
+                            iconId = AppIconCatalog.catalog[it].id,
+                            colorId = allColors[it].id,
                             categoryType = CategoryType.Income,
                         ),
                     )

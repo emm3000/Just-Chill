@@ -445,7 +445,6 @@ private fun EmptyState(type: TransactionType, onAddTransaction: () -> Unit) {
 @Composable
 private fun ReportScreenMesPreview() {
     EmmTheme {
-        val colors = LocalEmmColors.current
         ReportScreen(
             state = ReportUiState(
                 month = YearMonth(2026, Month.MAY),
@@ -458,10 +457,10 @@ private fun ReportScreenMesPreview() {
                 comparisonAmountFormatted = "S/ 660",
                 comparisonPercent = 12,
                 shares = listOf(
-                    CategoryShare("1", "Sueldo", "S/ 4,500.00", 73, colors.catTerracotta),
-                    CategoryShare("2", "Freelance", "S/ 1,200.00", 19, colors.catSlate),
-                    CategoryShare("3", "Ventas IG", "S/ 380.00", 6, colors.catSage),
-                    CategoryShare("4", "Yapes", "S/ 120.00", 2, colors.catOchre),
+                    CategoryShare("1", "Sueldo", "S/ 4,500.00", 73, "red"),
+                    CategoryShare("2", "Freelance", "S/ 1,200.00", 19, "blue"),
+                    CategoryShare("3", "Ventas IG", "S/ 380.00", 6, "green"),
+                    CategoryShare("4", "Yapes", "S/ 120.00", 2, "orange"),
                 ),
                 isEmpty = false,
                 movementCount = 12,
@@ -484,7 +483,6 @@ private fun ReportScreenMesPreview() {
 @Composable
 private fun ReportScreenMesGastosPreview() {
     EmmTheme {
-        val colors = LocalEmmColors.current
         ReportScreen(
             state = ReportUiState(
                 month = YearMonth(2026, Month.MARCH),
@@ -497,12 +495,12 @@ private fun ReportScreenMesGastosPreview() {
                 comparisonAmountFormatted = "S/ 220",
                 comparisonPercent = 5,
                 shares = listOf(
-                    CategoryShare("1", "Comida", "S/ 1,840.00", 40, colors.catTerracotta),
-                    CategoryShare("2", "Transporte", "S/ 920.00", 20, colors.catSlate),
-                    CategoryShare("3", "Ocio", "S/ 680.00", 15, colors.catMauve),
-                    CategoryShare("4", "Servicios", "S/ 540.00", 12, colors.catOchre),
-                    CategoryShare("5", "Salud", "S/ 340.00", 7, colors.catSage),
-                    CategoryShare("6", "Sin categoría", "S/ 260.00", 6, colors.catGraphite),
+                    CategoryShare("1", "Comida", "S/ 1,840.00", 40, "red"),
+                    CategoryShare("2", "Transporte", "S/ 920.00", 20, "blue"),
+                    CategoryShare("3", "Ocio", "S/ 680.00", 15, "purple"),
+                    CategoryShare("4", "Servicios", "S/ 540.00", 12, "orange"),
+                    CategoryShare("5", "Salud", "S/ 340.00", 7, "green"),
+                    CategoryShare("6", "Sin categoría", "S/ 260.00", 6, "gray"),
                 ),
                 isEmpty = false,
                 movementCount = 26,

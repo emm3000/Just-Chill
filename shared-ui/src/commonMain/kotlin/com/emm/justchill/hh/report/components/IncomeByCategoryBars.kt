@@ -31,6 +31,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.hh.report.CategoryShare
+import com.emm.justchill.hh.report.domainColorToUi
 import kotlinx.coroutines.delay
 
 /**
@@ -92,7 +93,7 @@ private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
                 modifier = Modifier
                     .size(6.dp)
                     .clip(CircleShape)
-                    .background(share.tint),
+                    .background(domainColorToUi(share.colorKey)),
             )
             Spacer(Modifier.width(spacing.s2))
             Text(
@@ -124,7 +125,7 @@ private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
                     .fillMaxWidth(animatedFraction.value)
                     .height(2.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(share.tint),
+                    .background(domainColorToUi(share.colorKey)),
             )
         }
     }
@@ -143,10 +144,10 @@ private fun IncomeByCategoryBarsPreview() {
         ) {
             IncomeByCategoryBars(
                 shares = listOf(
-                    CategoryShare("1", "Sueldo", "S/ 4,500.00", 73, colors.catTerracotta),
-                    CategoryShare("2", "Freelance", "S/ 1,200.00", 19, colors.catSlate),
-                    CategoryShare("3", "Ventas IG", "S/ 380.00", 6, colors.catSage),
-                    CategoryShare("4", "Yapes", "S/ 120.00", 2, colors.catOchre),
+                    CategoryShare("1", "Sueldo", "S/ 4,500.00", 73, "red"),
+                    CategoryShare("2", "Freelance", "S/ 1,200.00", 19, "blue"),
+                    CategoryShare("3", "Ventas IG", "S/ 380.00", 6, "green"),
+                    CategoryShare("4", "Yapes", "S/ 120.00", 2, "orange"),
                 ),
             )
         }

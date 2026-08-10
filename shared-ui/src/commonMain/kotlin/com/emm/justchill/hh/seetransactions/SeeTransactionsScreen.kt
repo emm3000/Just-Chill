@@ -124,9 +124,10 @@ private fun SeeTransactionsContent(
             onMore = { showFilterSheet = true },
         )
 
-        if (state.activeCategory != null) {
+        val activeCategory = state.activeCategory
+        if (activeCategory != null) {
             ActiveFilterBanner(
-                categoryName = state.activeCategory.name,
+                categoryName = activeCategory.name,
                 query = state.query.takeIf { it.isNotBlank() },
                 onClear = { onIntent(SeeTransactionsIntent.OnClearCategoryFilter) },
             )
@@ -645,7 +646,7 @@ private fun SeeTransactionsPopulatedPreview() {
                     date = 0,
                     readableDate = "HOY",
                     readableTime = "14:30",
-                    category = CategoryUi(Icons.Rounded.Category, findById("green")),
+                    category = CategoryUi(iconId = null, colorId = "green"),
                 ),
                 TransactionUi(
                     transactionId = Uuid.random().toString(),
@@ -655,7 +656,7 @@ private fun SeeTransactionsPopulatedPreview() {
                     date = 0,
                     readableDate = "HOY",
                     readableTime = "09:00",
-                    category = CategoryUi(Icons.Rounded.Category, findById("gray")),
+                    category = CategoryUi(iconId = null, colorId = "gray"),
                 ),
             )
         }

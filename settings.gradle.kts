@@ -42,5 +42,6 @@ rootProject.name = "JustChill"
 // Dependency order, top of the graph down: androidApp -> shared-ui -> data -> domain.
 include(":androidApp")
 include(":shared-ui")
+include(":presentation")
 include(":data")
 include(":domain")

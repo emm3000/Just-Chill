@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ArgumentListWrapping:SpanishDateFormat.kt:SpanishDateFormat$( "", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo", )</ID>
+    <ID>BlankLineBetweenWhenConditions:DayGroup.kt:DayGroup$when (date) { today -&gt; "HOY" yesterday -&gt; "AYER" else -&gt; SpanishDateFormat.monthDayPadded(date).uppercase() }</ID>
+    <ID>BlankLineBetweenWhenConditions:NumberFormatEs.kt:NumberFormatEs$when { diff &lt; 0.5 -&gt; floorLong diff &gt; 0.5 -&gt; floorLong + 1 // Exactly .5 → round to the nearest even integer. floorLong % 2 == 0L -&gt; floorLong else -&gt; floorLong + 1 }</ID>
+    <ID>ClassSignature:SupabaseConfig.kt:SupabaseConfig</ID>
+    <ID>FunctionSignature:CentsFormatter.kt:fun formatCentsForDisplay: String</ID>
+    <ID>FunctionSignature:DateUtils.kt:DateUtils$private fun today: LocalDate</ID>
+    <ID>FunctionSignature:SpanishDateFormat.kt:SpanishDateFormat$fun longDate: String</ID>
+    <ID>FunctionSignature:SpanishDateFormat.kt:fun String.titlecaseFirstChar: String</ID>
+    <ID>FunctionSignature:SpanishSearch.kt:fun String.stripSpanishAccents: String</ID>
+    <ID>InjectDispatcher:SyncModule.kt:Default</ID>
+    <ID>InvalidPackageDeclaration:AccountModule.kt:package com.emm.justchill.hh.di</ID>
+    <ID>InvalidPackageDeclaration:AuthModule.kt:package com.emm.justchill.hh.di</ID>
+    <ID>InvalidPackageDeclaration:BackupModule.kt:package com.emm.justchill.hh.di</ID>
+    <ID>InvalidPackageDeclaration:CategoryModule.kt:package com.emm.justchill.hh.di</ID>
+    <ID>InvalidPackageDeclaration:DataModule.kt:package com.emm.justchill.hh.di</ID>
+    <ID>InvalidPackageDeclaration:HomeModule.kt:package com.emm.justchill.hh.di</ID>
+    <ID>InvalidPackageDeclaration:ProfileModule.kt:package com.emm.justchill.hh.di</ID>
+    <ID>InvalidPackageDeclaration:RecurringModule.kt:package com.emm.justchill.hh.di</ID>
+    <ID>InvalidPackageDeclaration:ReportModule.kt:package com.emm.justchill.hh.di</ID>
+    <ID>InvalidPackageDeclaration:SeeTransactionsModule.kt:package com.emm.justchill.hh.di</ID>
+    <ID>InvalidPackageDeclaration:SharedModule.kt:package com.emm.justchill.hh.di</ID>
+    <ID>InvalidPackageDeclaration:SupabaseModule.kt:package com.emm.justchill.hh.di</ID>
+    <ID>InvalidPackageDeclaration:SyncModule.kt:package com.emm.justchill.hh.di</ID>
+    <ID>InvalidPackageDeclaration:TransactionModule.kt:package com.emm.justchill.hh.di</ID>
+    <ID>LongParameterList:EditTransactionViewModel.kt:EditTransactionViewModel</ID>
+    <ID>MagicNumber:NumberFormatEs.kt:NumberFormatEs$0.5</ID>
+    <ID>MagicNumber:NumberFormatEs.kt:NumberFormatEs$100.0</ID>
+    <ID>MagicNumber:NumberFormatEs.kt:NumberFormatEs$3</ID>
+    <ID>UnsafeCallOnNullableType:RecurringMovementUi.kt:amount!!</ID>
+    <ID>UseOrEmpty:AddEditRecurringMovementViewModel.kt:AddEditRecurringMovementViewModel$s.selectedAccount?.accountId?.value ?: ""</ID>
+    <ID>UseOrEmpty:EditTransactionViewModel.kt:EditTransactionViewModel$accountRepository.all().firstOrNull() ?: emptyList()</ID>
+    <ID>UseOrEmpty:RecurringMovementUi.kt:accountName ?: ""</ID>
+  </CurrentIssues>
+</SmellBaseline>

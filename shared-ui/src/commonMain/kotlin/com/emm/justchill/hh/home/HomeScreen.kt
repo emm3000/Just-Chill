@@ -26,7 +26,6 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Insights
-import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -57,7 +56,6 @@ import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.MoneyInline
 import com.emm.justchill.core.ui.atoms.MonthSelector
-import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.recurring.ConfirmRecurringSheet
 import com.emm.justchill.hh.recurring.PendingRecurringUi
 import com.emm.justchill.hh.shared.formatExpense
@@ -694,7 +692,7 @@ private fun HomeScreenPreview() {
                         date = 0,
                         readableDate = "Hoy",
                         readableTime = "14:30",
-                        category = CategoryUi(Icons.Rounded.Category, findById("green")),
+                        category = CategoryUi(iconId = null, colorId = "green"),
                     ),
                     TransactionUi(
                         transactionId = "2",
@@ -704,7 +702,7 @@ private fun HomeScreenPreview() {
                         date = 0,
                         readableDate = "Hoy",
                         readableTime = "09:00",
-                        category = CategoryUi(Icons.Rounded.Category, findById("gray")),
+                        category = CategoryUi(iconId = null, colorId = "gray"),
                     ),
                     TransactionUi(
                         transactionId = "3",
@@ -714,7 +712,7 @@ private fun HomeScreenPreview() {
                         date = 0,
                         readableDate = "Ayer",
                         readableTime = "16:48",
-                        category = CategoryUi(Icons.Rounded.Category, findById("pink")),
+                        category = CategoryUi(iconId = null, colorId = "pink"),
                     ),
                 ),
             ),

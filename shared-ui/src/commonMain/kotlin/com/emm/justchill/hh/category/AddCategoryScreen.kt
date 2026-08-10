@@ -153,6 +153,10 @@ private fun AddCategoryContent(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
+            // State carries catalog ids only (:presentation is compose-free); resolve them here.
+            val selectedIcon = AppIconCatalog.findById(state.iconId)
+            val selectedColor = findById(state.colorId)
+
             Spacer(Modifier.height(6.dp))
 
             Box(
@@ -161,8 +165,8 @@ private fun AddCategoryContent(
             ) {
                 PreviewChip(
                     name = state.name,
-                    icon = state.icon,
-                    color = state.color,
+                    icon = selectedIcon,
+                    color = selectedColor,
                     type = state.categoryType,
                 )
             }
@@ -185,16 +189,16 @@ private fun AddCategoryContent(
 
             Section(eyebrow = "ÍCONO") {
                 IconGrid(
-                    selected = state.icon,
-                    accent = state.color.primary,
-                    onSelect = { onIntent(AddCategoryIntent.OnIconChange(it)) },
+                    selected = selectedIcon,
+                    accent = selectedColor.primary,
+                    onSelect = { onIntent(AddCategoryIntent.OnIconChange(it.id)) },
                 )
             }
 
             Section(eyebrow = "COLOR") {
                 ColorRow(
-                    selected = state.color,
-                    onSelect = { onIntent(AddCategoryIntent.OnColorChange(it)) },
+                    selected = selectedColor,
+                    onSelect = { onIntent(AddCategoryIntent.OnColorChange(it.id)) },
                 )
             }
 
