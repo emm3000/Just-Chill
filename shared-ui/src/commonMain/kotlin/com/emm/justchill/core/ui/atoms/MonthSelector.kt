@@ -1,42 +1,87 @@
 package com.emm.justchill.core.ui.atoms
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.theme.LocalEmmSpacing
+import com.emm.justchill.core.theme.LocalEmmType
 
 /**
  * Month navigation control — prev/next arrows flanking a centered label.
  *
- * Arrow zones: 36dp × 36dp, rounded [EmmRadii.rFull].
- * Outer pill: surface1 background + border, 4dp vertical padding.
- * Label: 13sp w600 Inter.
+ * The one month selector for every screen. It renders one of two established looks,
+ * chosen by [onLabelClick]:
  *
- * @param label   Formatted month string e.g. "Mayo 2026".
- * @param onPrev  Called when the left chevron is tapped.
- * @param onNext  Called when the right chevron is tapped.
+ * - `onLabelClick == null` — plain variant (Home): transparent pill with a hairline
+ *   border, 13sp w600 Inter label, ripple on the arrow zones. The label is not clickable.
+ * - `onLabelClick != null` — picker variant (Report): `surface1` pill, 44dp tall,
+ *   `labelL` label with an [Icons.Outlined.ExpandMore] caret, indication-free press zones.
+ *   Tapping the label invokes [onLabelClick] (month picker sheet).
+ *
+ * @param label        Formatted month string e.g. "Mayo 2026".
+ * @param onPrevious   Called when the left chevron is tapped.
+ * @param onNext       Called when the right chevron is tapped.
+ * @param onLabelClick Called when the label is tapped; `null` keeps the label inert.
  */
 @Composable
-fun MonthSelector(label: String, onPrev: () -> Unit, onNext: () -> Unit, modifier: Modifier = Modifier) {
+fun MonthSelector(
+    label: String,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    modifier: Modifier = Modifier,
+    onLabelClick: (() -> Unit)? = null,
+) {
+    if (onLabelClick == null) {
+        PlainMonthSelector(label = label, onPrevious = onPrevious, onNext = onNext, modifier = modifier)
+    } else {
+        PickerMonthSelector(
+            label = label,
+            onPrevious = onPrevious,
+            onNext = onNext,
+            onLabelClick = onLabelClick,
+            modifier = modifier,
+        )
+    }
+}
+
+/**
+ * Plain variant — arrow zones 36dp × 36dp rounded [com.emm.justchill.core.theme.EmmRadii.rFull],
+ * outer pill border + 4dp padding, 13sp w600 Inter label.
+ */
+@Composable
+private fun PlainMonthSelector(
+    label: String,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
 
@@ -53,7 +98,7 @@ fun MonthSelector(label: String, onPrev: () -> Unit, onNext: () -> Unit, modifie
             modifier = Modifier
                 .size(36.dp)
                 .clip(radii.rFull)
-                .clickable(onClick = onPrev),
+                .clickable(onClick = onPrevious),
         ) {
             Icon(
                 imageVector = Icons.Outlined.ChevronLeft,
@@ -85,5 +130,94 @@ fun MonthSelector(label: String, onPrev: () -> Unit, onNext: () -> Unit, modifie
                 modifier = Modifier.size(20.dp),
             )
         }
+    }
+}
+
+/**
+ * Picker variant — self-contained pill (`surface1` bg, hairline border, 44dp height).
+ * The caller composes a "Hoy" shortcut as a sibling pill when needed — this atom does not
+ * render the jump-to-today affordance internally, mirroring the designer's handoff layout
+ * (selector + "Hoy" side-by-side).
+ */
+@Composable
+private fun PickerMonthSelector(
+    label: String,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onLabelClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+    val shape = RoundedCornerShape(999.dp)
+
+    Row(
+        modifier = modifier
+            .height(44.dp)
+            .clip(shape)
+            .background(colors.surface1)
+            .border(width = 1.dp, color = colors.border, shape = shape)
+            .padding(horizontal = spacing.s1),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spacing.s1),
+    ) {
+        ChevronButton(
+            icon = Icons.Outlined.ChevronLeft,
+            contentDescription = "Mes anterior",
+            onClick = onPrevious,
+        )
+        Row(
+            modifier = Modifier
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onLabelClick,
+                )
+                .padding(horizontal = spacing.s2),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = label,
+                style = type.labelL,
+                color = colors.textPrimary,
+            )
+            Icon(
+                imageVector = Icons.Outlined.ExpandMore,
+                contentDescription = null,
+                tint = colors.textTertiary,
+                modifier = Modifier.size(14.dp),
+            )
+        }
+        ChevronButton(
+            icon = Icons.Outlined.ChevronRight,
+            contentDescription = "Mes siguiente",
+            onClick = onNext,
+        )
+    }
+}
+
+@Composable
+private fun ChevronButton(icon: ImageVector, contentDescription: String, onClick: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = colors.textSecondary,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }

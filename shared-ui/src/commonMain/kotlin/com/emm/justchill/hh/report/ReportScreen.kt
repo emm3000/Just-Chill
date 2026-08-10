@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.shared.YearMonth
@@ -46,12 +47,12 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.atoms.MonthSelector
 import com.emm.justchill.core.ui.atoms.SegmentOption
 import com.emm.justchill.core.ui.atoms.Segmented
 import com.emm.justchill.hh.report.components.CategoryBarsCard
 import com.emm.justchill.hh.report.components.ComparisonPill
 import com.emm.justchill.hh.report.components.MonthPickerSheet
-import com.emm.justchill.hh.report.components.MonthSelector
 import com.emm.justchill.hh.report.components.ShareReportButton
 import com.emm.justchill.hh.report.components.TodayPill
 import com.emm.justchill.hh.report.components.ToggleIncomeExpense
@@ -60,7 +61,6 @@ import com.emm.justchill.hh.report.components.TrendsContent
 import com.emm.justchill.hh.shared.fullLabel
 import com.emm.justchill.hh.shared.shortLabel
 import kotlinx.datetime.Month
-import androidx.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable

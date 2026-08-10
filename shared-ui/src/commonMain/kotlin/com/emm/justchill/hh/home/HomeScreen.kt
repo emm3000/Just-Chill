@@ -175,7 +175,7 @@ private fun HomeWithData(
             ) {
                 MonthSelector(
                     label = homeData.month.fullLabel(),
-                    onPrev = onPreviousMonth,
+                    onPrevious = onPreviousMonth,
                     onNext = onNextMonth,
                     modifier = Modifier.align(Alignment.Center),
                 )
@@ -477,7 +477,7 @@ private fun MonthEmpty(
         ) {
             MonthSelector(
                 label = month.fullLabel(),
-                onPrev = onPreviousMonth,
+                onPrevious = onPreviousMonth,
                 onNext = onNextMonth,
             )
         }
