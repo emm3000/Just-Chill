@@ -646,7 +646,7 @@ private fun EmptyMonth(modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "Cambiá de mes con las flechas de arriba.",
+            text = "Cambia de mes con las flechas de arriba.",
             style = type.caption.copy(lineHeight = 18.sp),
             color = colors.textTertiary,
             textAlign = TextAlign.Center,
@@ -716,7 +716,7 @@ private fun EmptyFilteredNoResults(
         }
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "Probá con otro nombre, otro monto, o limpiá los filtros activos.",
+            text = "Prueba con otro nombre, otro monto, o limpia los filtros activos.",
             style = type.caption.copy(lineHeight = 18.sp),
             color = colors.textTertiary,
             textAlign = TextAlign.Center,

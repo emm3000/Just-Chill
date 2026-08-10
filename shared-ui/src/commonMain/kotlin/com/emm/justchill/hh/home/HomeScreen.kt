@@ -442,7 +442,7 @@ private fun FirstLaunchEmpty(onAddClick: () -> Unit) {
             Spacer(Modifier.height(28.dp))
             EmptyTitle(text = "Tu plata empieza acá.")
             Spacer(Modifier.height(10.dp))
-            EmptyBody(text = "Anotá tu primer Yape, sueldo o gasto.\nTe toma 15 segundos.")
+            EmptyBody(text = "Anota tu primer Yape, sueldo o gasto.\nTe toma 15 segundos.")
             Spacer(Modifier.height(28.dp))
             FilledAccentCta(
                 label = "Anotar el primero",
