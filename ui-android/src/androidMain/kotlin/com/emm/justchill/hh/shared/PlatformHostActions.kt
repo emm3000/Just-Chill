@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,13 +22,55 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-// Android actual of the unified host's platform seams. Owns every android.*/SAF/Intent dependency so
-// they never leak into commonMain. Behavior is byte-for-byte the former Hh.kt: SAF CreateDocument for
-// export (with success/failure snackbar), SAF OpenDocument for import (feeds onImport), ACTION_SEND
-// share chooser, and ACTION_MAIN/CATEGORY_APP_EMAIL with a missing-app snackbar fallback.
+// The host's platform seams. This was an expect/actual pair while the module still compiled for iOS;
+// the module is Android-only, so the two halves collapsed into this single declaration. Behavior is
+// unchanged: SAF CreateDocument for export (with success/failure snackbar), SAF OpenDocument for
+// import (feeds onImport), ACTION_SEND share chooser, and ACTION_MAIN/CATEGORY_APP_EMAIL with a
+// missing-app snackbar fallback.
 
+/**
+ * Holder of the host actions + capability flags consumed by [AppNavHost] entries.
+ *
+ * The capability flags gate navigation / view-model calls that a platform may not be able to
+ * complete. With Android as the only target they are all constant — the seam survives because the
+ * entries read it, not because it still varies. Collapsing it is a separate change.
+ */
+@Stable
+interface PlatformHostActions {
+    /** Whether the debug-only Profile section is shown (Android debug build). */
+    val isDebug: Boolean
+
+    /** Whether the "Continuar con Google" button is shown on the auth screen. */
+    val showGoogleSignIn: Boolean
+
+    /** Whether the privacy-policy screen can be opened. */
+    val supportsPrivacyPolicy: Boolean
+
+    /** Whether backup export/import is available (Android SAF). */
+    val supportsBackup: Boolean
+
+    /** Shares plain text via the platform share sheet (Android chooser). */
+    val onShareText: (String) -> Unit
+
+    /** Opens the platform email app (Android intent + missing-app snackbar). */
+    val onOpenEmailApp: () -> Unit
+
+    /** Writes the backup [json] to a user-picked destination and reports success/failure (Android SAF). */
+    val requestExport: (json: String) -> Unit
+
+    /** Opens the platform document picker and feeds the chosen file's contents to `onImport`. */
+    val requestImport: () -> Unit
+}
+
+/**
+ * Builds the [PlatformHostActions] for the app. Called once at the [AppNavHost] root so the SAF
+ * launchers (which must be registered in composition) live above the [androidx.navigation3]
+ * NavDisplay and survive entry recomposition.
+ *
+ * @param onImport invoked with the imported file contents.
+ */
 @Composable
-actual fun rememberPlatformHostActions(
+fun rememberPlatformHostActions(
     snackbarHostState: SnackbarHostState,
     scope: CoroutineScope,
     onImport: (String) -> Unit,
@@ -118,7 +161,11 @@ actual fun rememberPlatformHostActions(
     }
 }
 
-actual val startTab: BottomBarRoute = SeeTransactionRoute
+/**
+ * The bottom-bar tab the back stack is rooted at (the "exit through home" base) and the route the
+ * first-launch Manifesto gate lands on.
+ */
+val startTab: BottomBarRoute = SeeTransactionRoute
 
 private fun suggestedExportFilename(): String {
     val date = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)

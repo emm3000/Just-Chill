@@ -14,10 +14,16 @@ This is where Android feature UI happens. `:androidApp` is a thin shell around i
 
 ## Where things live
 
-Everything is in `commonMain` (kept as commonMain so a second Compose target stays possible; today
-it compiles for exactly one). A feature owns `hh/<feature>/` — its Screens plus `<Feature>Entries.kt`
-for nav wiring. Cross-feature: `hh/shared/` (nav host, bottom bar, atoms), `core/theme/`,
-`components/`. `androidMain/` holds UI-only actuals.
+Everything is in `androidMain` — there is no `commonMain`. The UI sat in `commonMain` until the
+module went Android-only, on the theory that a second Compose target might arrive; ADR 005 sent iOS
+to SwiftUI and no other target ever claimed it. A KMP `commonMain` can only resolve artifacts that
+publish multiplatform metadata, so keeping it there forced the JetBrains Compose Multiplatform
+ports — and with them a material3 **alpha** in the production UI. `androidMain` takes Google's own
+BOM-managed artifacts instead. **Do not move code back to `commonMain`**: it silently drags the CMP
+ports back in.
+
+A feature owns `hh/<feature>/` — its Screens plus `<Feature>Entries.kt` for nav wiring.
+Cross-feature: `hh/shared/` (nav host, bottom bar, atoms), `core/theme/`, `components/`.
 
 ## DI
 
@@ -26,16 +32,18 @@ None here. `appModules(platformModule)` / `bootstrapAppGraph` live in `:presenta
 its Koin module in `:presentation`'s `appModules()`, never here — and its ViewModel goes into
 `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS` (now in `:presentation`'s androidHostTest).
 
-## expect/actual — keep it to one
+## No expect/actual
 
-`hh/shared/PlatformHostActions.kt` (export / import / share / email / open-privacy-policy) is the
-only one. With Android as the sole target the actual is a formality; the expect stays so the
-declaration survives a future second target. Do not add a second without a real platform reason.
+There is none — one target, one source set. `hh/shared/PlatformHostActions.kt` was the last pair and
+collapsed into a single declaration when the sources moved. Its capability flags
+(`supportsBackup`, `showGoogleSignIn`, …) are now constants; the seam survives because the nav
+entries read it, and collapsing that is a separate change.
 
 ## Navigation
 
-`AppNavHost` (commonMain) on the JetBrains nav3-UI port — Android-only now, but the explicit
-SavedState config stays load-bearing:
+`AppNavHost` on Google's navigation3, runtime **and** UI. Slice F had put the UI on the JetBrains
+CMP port so one host could drive Android and iOS; iOS left for SwiftUI, so the port went too. The
+explicit SavedState config stays load-bearing:
 
 **Landmine:** every route the host can push MUST be registered in `NavSavedStateConfiguration.kt`,
 else `rememberNavBackStack` crashes on process-death restore — invisible to the compiler and the
@@ -59,9 +67,14 @@ ever stutters, check compose compiler metrics before blaming the pattern.
 
 ## UI conventions
 
-- Compose Multiplatform `1.11.1` with JetBrains Material3 `1.11.0-alpha07`. Tokens in `core/theme/`
-  are the source of truth.
-- Compose resources under `commonMain/composeResources/`.
+- Google's Compose, every artifact governed by `androidx-compose-bom` — **never add a `version.ref`
+  to a Compose library**, the BOM decides. material3 resolves stable (`1.4.0` at the time of the
+  move), not the alpha the CMP port pinned. Tokens in `core/theme/` are the source of truth.
+- Resources are ordinary Android resources under `androidMain/res/` (`font/`, `drawable/`), reached
+  through `com.emm.justchill.shared.R` — not `composeResources` / `Res.*`.
+- `koin-compose` still pulls a handful of `org.jetbrains.compose.*` artifacts. They are shims whose
+  only dependency is the matching `androidx.compose.*` one, so nothing extra ships; swapping to
+  `koin-androidx-compose` would remove them and touches 14 files.
 - User-facing strings are **Spanish** (from `:presentation`'s `UiStrings`); code, comments and
   identifiers are **English**.
 - Errors reach the user through `DomainException.toUserMessage()` (`:presentation` `core/error/`),
