@@ -41,6 +41,10 @@ compile iOS vive ahora en `:domain`/`:data`/`:presentation`.
 
 La pestaña de transacciones ahora es mensual: lista acotada al mes elegido con resumen
 (ingresos/gastos/balance) y búsqueda global con tope en SQL, en vez de streamear la tabla completa.
+La búsqueda y el filtro de categoría viven detrás de dos íconos en la cabecera —el sheet de
+categorías se ordena por uso—, así que la pantalla arranca la lista mucho más arriba. Cuál de los
+estados vacíos gana lo decide `:presentation` (`ListDisplayState`), no el `when` de Compose: es lo
+que hace que la pantalla SwiftUI de S3 herede el mismo comportamiento en vez de redescubrirlo.
 
 **Git**: la historia es lineal (0 merge commits). Nunca mergear sin `--ff-only`. No pongas acá
 cuántos commits faltan pushear ni desde qué hash: el propio commit que lo escribe lo deja viejo, y
