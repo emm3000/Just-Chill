@@ -18,7 +18,21 @@ class IosSupabaseConfigConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
         val generate = tasks.register<GenerateIosSupabaseConfigTask>("generateIosSupabaseConfig") {
             description = "Generates IosSupabaseConfig.kt from root supabase.properties."
-            propertiesFile.set(rootProject.layout.projectDirectory.file("supabase.properties"))
+            // Set only when the file is really there. `@Optional` on the task's `@InputFile` means
+            // the property may be UNSET; it does not mean the path may point at nothing. Once a
+            // path is assigned, Gradle validates its existence and fails with "An input file was
+            // expected to be present but it doesn't exist" before the task ever runs — so the
+            // fallback GenerateIosSupabaseConfigTask already implements was unreachable.
+            //
+            // The file is absent on a fresh clone and on every Dependabot PR (those runs get no
+            // repo secrets at all, so the setup action writes nothing). This failure sat hidden
+            // behind the keystore crash in androidApp/build.gradle.kts and only surfaced once that
+            // one was fixed. It reaches the Linux gate too, not just the iOS compile: the task's
+            // output is an iosMain srcDir, so detektIosMainSourceSet realises it.
+            val supabaseProperties = rootProject.layout.projectDirectory.file("supabase.properties")
+            if (supabaseProperties.asFile.exists()) {
+                propertiesFile.set(supabaseProperties)
+            }
             outputDirectory.set(layout.buildDirectory.dir("generated/iosSupabaseConfig/kotlin"))
         }
 
