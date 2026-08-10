@@ -8,6 +8,7 @@ import com.emm.justchill.core.SupabaseConfig
 import com.emm.justchill.core.appModules
 import com.emm.justchill.core.bootstrapAppGraph
 import com.emm.justchill.hh.auth.GoogleSignInLauncher
+import com.emm.justchill.hh.seetransactions.SeeTransactionsViewModel
 import com.russhwolf.settings.NSUserDefaultsSettings
 import com.russhwolf.settings.Settings
 import org.koin.core.context.startKoin
@@ -15,6 +16,7 @@ import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import org.koin.mp.KoinPlatform
 import platform.Foundation.NSUserDefaults
 
 // iOS platform Koin module — the iOS analogue of androidPlatformModule, and the ONLY place iOS-specific
@@ -72,3 +74,9 @@ fun initKoin() {
     }
     bootstrapAppGraph(koinApp.koin)
 }
+
+// Swift-facing resolver for the S2 bootstrap smoke view (ContentView.swift). SwiftUI has no
+// Koin integration, so each ViewModel the Swift side needs gets a tiny typed accessor here —
+// Swift cannot call Koin's reified get() itself. The bootstrap resolves one VM and renders one
+// state field; the real per-screen wiring pattern arrives with slice S3's VM bridge.
+fun seeTransactionsViewModel(): SeeTransactionsViewModel = KoinPlatform.getKoin().get()
