@@ -33,10 +33,15 @@ jobs:
           # at configure time. A shallow clone silently produces wrong values for both.
           fetch-depth: 0
 
+      # No signing credentials here. assembleProdRelease still runs R8, resource shrinking, manifest
+      # merging and lint — everything that can actually break — and only skips the final signing
+      # step, which proves nothing about the code. Withholding the key keeps it out of every
+      # PR-triggered run and is what lets Dependabot PRs pass at all: GitHub gives them no repo
+      # secrets, so any job that REQUIRES one can never go green.
+      # supabase-properties stays: the anon key is embedded in the shipped client by design, so it
+      # is public, and populating it keeps the gate closer to a real build.
       - uses: ./.github/actions/setup-android
         with:
-          keystore-properties: ${{ secrets.JUST_VERONICA }}
-          signing-key-base64: ${{ secrets.JUST_CHILL }}
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
           cache-read-only: 'true'
 
@@ -92,11 +97,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      # This job compiles Kotlin/Native. It signs nothing, builds no Android artifact, and reads no
+      # Supabase config — GenerateIosSupabaseConfigTask treats the properties file as optional and
+      # falls back to the localhost placeholder. It needs no secrets at all.
       - uses: ./.github/actions/setup-android
         with:
-          keystore-properties: ${{ secrets.JUST_VERONICA }}
-          signing-key-base64: ${{ secrets.JUST_CHILL }}
-          supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
           cache-read-only: 'true'
 
       # ~/.konan is the Kotlin/Native toolchain, and setup-gradle does not cache it. Without this

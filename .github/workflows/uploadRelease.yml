@@ -31,6 +31,27 @@ jobs:
           # they are what Play stores permanently.
           fetch-depth: 0
 
+      # The build script no longer dies when the signing credentials are missing — it degrades to an
+      # unsigned artifact so that validation jobs and Dependabot PRs can run without the release
+      # key. That degradation must NOT be silent here: this is the one workflow where an unsigned
+      # build is a defect, so the requirement is asserted explicitly, before any work happens,
+      # instead of being an accidental side effect of a cast in androidApp/build.gradle.kts.
+      # Secrets reach the script through env, never spliced into the run: text.
+      - name: Require release signing credentials
+        env:
+          KEYSTORE_PROPERTIES: ${{ secrets.JUST_VERONICA }}
+          SIGNING_KEY_BASE64: ${{ secrets.JUST_CHILL }}
+        run: |
+          # Plain `if`, not `[ ... ] && ...`: the runner uses `bash -eo pipefail`, where a trailing
+          # `&&` chain whose test is false makes the whole line exit non-zero and kills the step.
+          missing=''
+          if [ -z "$KEYSTORE_PROPERTIES" ]; then missing="$missing JUST_VERONICA"; fi
+          if [ -z "$SIGNING_KEY_BASE64" ]; then missing="$missing JUST_CHILL"; fi
+          if [ -n "$missing" ]; then
+            echo "::error::Missing release signing secret(s):$missing. Refusing to build an unsigned release."
+            exit 1
+          fi
+
       - uses: ./.github/actions/setup-android
         with:
           keystore-properties: ${{ secrets.JUST_VERONICA }}

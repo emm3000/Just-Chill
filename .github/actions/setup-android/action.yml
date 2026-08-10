@@ -2,12 +2,19 @@ name: Setup Android Build Environment
 description: Decode secrets, configure JDK 17 and Gradle with caching. Caller must checkout first.
 
 inputs:
+  # Both signing inputs are optional on purpose. Only the job that publishes needs them; a job that
+  # validates does not, and a Dependabot-triggered run cannot have them at all (GitHub keeps repo
+  # secrets away from Dependabot). Passing them everywhere put the release key in jobs that never
+  # sign, and writing the file unconditionally left an EMPTY keystore.properties that crashed
+  # Gradle configuration. Empty input now means "no file", not "a file full of nulls".
   keystore-properties:
-    description: Contents of keystore.properties (passed from secrets)
-    required: true
+    description: Contents of keystore.properties (passed from secrets). When empty, the file is not created and release artifacts are unsigned.
+    required: false
+    default: ''
   signing-key-base64:
-    description: Base64-encoded signing key .p12 file
-    required: true
+    description: Base64-encoded signing key .p12 file. When empty, no key is decoded.
+    required: false
+    default: ''
   supabase-properties:
     description: Contents of supabase.properties (passed from secrets). When empty, the file is not created and builds use the non-functional placeholder URL.
     required: false
@@ -24,6 +31,7 @@ runs:
     # Interpolation splices the value into the script text before bash parses it, so any character
     # that means something to bash is executed rather than written.
     - name: Create keystore.properties file
+      if: inputs.keystore-properties != ''
       shell: bash
       env:
         KEYSTORE_PROPERTIES: ${{ inputs.keystore-properties }}
@@ -37,6 +45,7 @@ runs:
       run: printf '%s\n' "$SUPABASE_PROPERTIES" > supabase.properties
 
     - name: Decode signing key
+      if: inputs.signing-key-base64 != ''
       shell: bash
       env:
         SIGNING_KEY_BASE64: ${{ inputs.signing-key-base64 }}
