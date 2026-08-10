@@ -167,17 +167,21 @@ Compose BOM `2026.05.01` · Compose Multiplatform `1.11.1` · detekt `2.0.0-alph
 
 ## Docs map (`docs/`)
 
-- `kmp/ORCHESTRATION.md` — shared-UI slice workflow + ledger. Current and trustworthy.
+- `kmp/ORCHESTRATION.md` — `:ui-android` slice workflow + ledger. Current and trustworthy.
 - `adr/` — 001 local-first reversal, 002 pull cursor, 003 iOS frozen (compile gate only),
   004 conflicts are arbitrated only on unpushed edits (amends 002),
   005 native SwiftUI iOS over the KMP core (supersedes 003's frozen-UI scope).
   `sync/PLAN.md` — sync slices. `swiftui/PLAN.md` — iOS SwiftUI slices + ledger.
 - `PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `ROADMAP_V1.md`, `POST_V1_PLAN.md` — Fases 1-5.
 - `DESIGN_SYSTEM.md` — tokens and components (its paths still point at the pre-KMP `app/` module).
+- `PLAY_ADVERTISING_ID.md` — the app does not use the advertising ID, with the commands that prove
+  it on any AAB. Read it before answering Play's declaration; the console currently says "Yes",
+  which is wrong.
 - `archive/` — closed tracks kept for history.
 - `PROGRESS.md` — canonical "where are we now". Rewritten 2026-08-08; pre-KMP sprint detail is in
   git history, not in the file.
 
-Latest tags: `v2.2.0`, `pre-kmp` (rollback point before the KMP migration).
+Latest tags: `v2.4.0`, `pre-kmp` (rollback point before the KMP migration). `v2.4.0` is tagged and
+built but has NOT reached the alpha track — its Play upload was rejected, see `PLAY_ADVERTISING_ID.md`.
 
 Use case naming convention: **`[Verb][Noun]UseCase`** (e.g. `CreateTransactionUseCase`, `DeleteCategoryUseCase`).

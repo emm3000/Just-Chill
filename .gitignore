@@ -40,6 +40,7 @@ docs/*
 !docs/DESIGN_SYSTEM.md
 !docs/PROGRESS.md
 !docs/PLAY_STORE_LISTING.md
+!docs/PLAY_ADVERTISING_ID.md
 !docs/PRIVACY_POLICY.md
 !docs/AUTH_SYNC_UI_BLUEPRINT.md
 # Supabase
