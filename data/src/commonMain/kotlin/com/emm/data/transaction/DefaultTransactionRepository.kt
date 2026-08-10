@@ -3,6 +3,7 @@ package com.emm.data.transaction
 import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.safeDbCall
 import com.emm.domain.shared.AccountId
+import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionFilter
@@ -14,6 +15,8 @@ import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+// Implements the domain interface one-to-one; the count is the contract's, not this class's.
+@Suppress("TooManyFunctions")
 class DefaultTransactionRepository(private val localDataSource: TransactionLocalDataSource) : TransactionRepository {
 
     override suspend fun create(transactionInsert: TransactionInsert) = safeDbCall {
@@ -35,6 +38,10 @@ class DefaultTransactionRepository(private val localDataSource: TransactionLocal
             .catchAsDomainException()
 
     override fun observeTotals(): Flow<TransactionTotals> = localDataSource.liveTotals()
+        .map { it.toDomain() }
+        .catchAsDomainException()
+
+    override fun observeCategoryUsageCounts(): Flow<Map<CategoryId, Int>> = localDataSource.countPerCategory()
         .map { it.toDomain() }
         .catchAsDomainException()
 

@@ -192,3 +192,6 @@ fun TransactionTotalsEntity.toDomain() = TransactionTotals(
     balance = Money(cents = balance),
     movementCount = movementCount,
 )
+
+fun List<CategoryUsageCountEntity>.toDomain(): Map<CategoryId, Int> =
+    associate { CategoryId(it.categoryId) to it.usageCount.toInt() }

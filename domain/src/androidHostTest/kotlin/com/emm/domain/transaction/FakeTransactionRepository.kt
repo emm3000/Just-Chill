@@ -1,6 +1,7 @@
 package com.emm.domain.transaction
 
 import com.emm.domain.shared.AccountId
+import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.TransactionId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -18,6 +19,7 @@ class FakeTransactionRepository : TransactionRepository {
     var countByAccountToReturn: Long = 0L
     var countLiveByAccountToReturn: Long = 0L
     var totalsToReturn: TransactionTotals = TransactionTotals.Empty
+    var categoryUsageCountsToReturn: Map<CategoryId, Int> = emptyMap()
 
     override suspend fun create(transactionInsert: TransactionInsert) {
         lastCreated = transactionInsert
@@ -35,6 +37,8 @@ class FakeTransactionRepository : TransactionRepository {
     ): Flow<List<TransactionWithCategory>> = flowOf(rangeWithCategory)
 
     override fun observeTotals(): Flow<TransactionTotals> = flowOf(totalsToReturn)
+
+    override fun observeCategoryUsageCounts(): Flow<Map<CategoryId, Int>> = flowOf(categoryUsageCountsToReturn)
 
     override suspend fun update(transactionId: TransactionId, transactionUpdate: TransactionUpdate) {
         lastUpdatedId = transactionId

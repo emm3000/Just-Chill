@@ -16,6 +16,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
+/**
+ * Upper bound on search results. Search is global (cross-month) by design, so this is the only
+ * read path without a date window; the cap keeps its worst case at a fixed size.
+ */
+private const val SEARCH_RESULT_CAP = 200L
+
+// One entity, one data source: the function count mirrors the transaction table's operation
+// surface, and splitting it would scatter the queries without removing any.
+@Suppress("TooManyFunctions")
 class TransactionLocalDataSource(private val tq: TransactionsQueries) {
 
     suspend fun create(transactionInsert: TransactionInsert) = withContext(ioDispatcher) {
@@ -57,6 +66,15 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
         .mapToOne(ioDispatcher)
         .map { row -> TransactionTotalsEntity(balance = row.balance, movementCount = row.movementCount) }
 
+    // The generated categoryId is non-null: SQLDelight narrows the nullable column through the
+    // query's `categoryId IS NOT NULL` filter.
+    fun countPerCategory(): Flow<List<CategoryUsageCountEntity>> = tq.countPerCategory()
+        .asFlow()
+        .mapToList(ioDispatcher)
+        .map { list ->
+            list.map { row -> CategoryUsageCountEntity(categoryId = row.categoryId, usageCount = row.usageCount) }
+        }
+
     fun searchTransactions(query: String, categoryIds: Set<String>): Flow<List<TransactionWithCategoryEntity>> {
         val queryEmpty: Long = if (query.isBlank()) 1L else 0L
         val categoryFilterEmpty: Long = if (categoryIds.isEmpty()) 1L else 0L
@@ -68,6 +86,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             query = query.trim(),
             categoryFilterEmpty = categoryFilterEmpty,
             categoryIds = safeCategoryIds,
+            limit = SEARCH_RESULT_CAP,
         )
             .asFlow()
             .mapToList(ioDispatcher)

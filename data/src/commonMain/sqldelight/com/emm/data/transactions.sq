@@ -89,6 +89,8 @@ SELECT COUNT(*) FROM transactions WHERE accountId = :accountId;
 countLiveByAccount:
 SELECT COUNT(*) FROM transactions WHERE accountId = :accountId AND deletedAt IS NULL;
 
+-- LIMIT keeps the global (cross-month) search bounded: without it this is the one query
+-- left that can stream the whole table into memory. Newest rows win the cut (date DESC).
 searchTransactions:
 SELECT
     t.*,
@@ -101,7 +103,16 @@ LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
 WHERE t.deletedAt IS NULL
   AND (:queryEmpty = 1 OR LOWER(t.description) LIKE '%' || LOWER(:query) || '%')
   AND (:categoryFilterEmpty = 1 OR t.categoryId IN :categoryIds)
-ORDER BY t.date DESC;
+ORDER BY t.date DESC
+LIMIT :limit;
+
+-- Chip ranking for the transactions tab. Counting here replaces folding the whole table in
+-- memory on every emission; soft-deleted and uncategorized rows never rank a chip.
+countPerCategory:
+SELECT categoryId, COUNT(*) AS usageCount
+FROM transactions
+WHERE deletedAt IS NULL AND categoryId IS NOT NULL
+GROUP BY categoryId;
 
 softDelete:
 UPDATE transactions
