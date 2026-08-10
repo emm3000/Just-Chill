@@ -14,7 +14,7 @@
 >
 > **Module names below predate the KMP migration.** `:app` is now `:androidApp`,
 > and everything it is credited with here (Koin wiring, auth/profile UI,
-> `SyncOrchestrator`, `SyncCursorStore`) lives in `:shared-ui` commonMain,
+> `SyncOrchestrator`, `SyncCursorStore`) lives in `:ui-android` commonMain,
 > shared with iOS. The sync engine itself is unchanged and still in `:data`.
 
 ## Status

@@ -82,7 +82,7 @@ de protección completo, no un PATCH parcial.
 La app pasó de 3 módulos Android a 4 módulos Kotlin Multiplatform con **una sola
 base Compose** para Android e iOS. 67 commits, fast-forward a trunk.
 
-- `:shared-ui` (nuevo) tiene toda la UI, los ViewModels y el wiring de Koin.
+- `:ui-android` (nuevo) tiene toda la UI, los ViewModels y el wiring de Koin.
 - `:androidApp` (ex `:app`) quedó como entry point delgado; `iosApp/` es el
   proyecto Xcode que lo consume.
 - iOS está **congelado, no cerrado** — ver
@@ -155,7 +155,7 @@ Cerrados:
 - **A5** Los 24 mensajes de `ValidationError` en inglés llegaban crudos al snackbar porque
   `toUserMessage()` devolvía `message ?: fallback`. Ahora `ValidationError` lleva un
   `ValidationCode`; el `message` queda en inglés para logs y el código es lo que traduce
-  `shared-ui`. Los 28 call sites están etiquetados.
+  `ui-android`. Los 28 call sites están etiquetados.
 - **A6** Los recurrentes solo eran pendientes del mes actual, así que un mes sin abrir la app se
   perdía para siempre. `lastConfirmedPeriod` ahora se lee como marca de agua: `pendingPeriods`
   devuelve todos los períodos desde después de la marca hasta hoy, con piso en `createdAt` y tope
@@ -216,7 +216,7 @@ contra el código antes de actuar sobre las que quedan:
 - 🟡 Los baselines de detekt tienen ~47 entradas de `UnusedPrivateFunction` para
   composables `@Preview`. Desde `c94e290` la regla los ignora por anotación, así que
   esas entradas quedaron inertes y se pueden purgar.
-- 🟡 `:shared-ui:detektMainAndroid` reporta "There were N compiler errors found during
+- 🟡 `:ui-android:detektMainAndroid` reporta "There were N compiler errors found during
   analysis" (45 medidos en trunk limpio). Preexistente, degrada la precisión del
   análisis pero no rompe el gate. Sin diagnosticar.
 - 🟡 Pasada de performance de Compose pendiente: `derivedStateOf`, lambdas
@@ -263,7 +263,7 @@ siguen en el repo como marcadores históricos.
 - Los tests instrumentados (`:data:connectedAndroidDeviceTest`, 15 tests) no corren en
   el gate: necesitan device. Corrélos antes de shipear un cambio de schema o de dominio.
   Última corrida: 2026-08-09, 15/15 verde en `medium_phone` (emulator-5554), después de A6.
-- Trabajo de KMP / shared-ui: **un writer, review inline**. El ritual de writer +
+- Trabajo de KMP / ui-android: **un writer, review inline**. El ritual de writer +
   reviewer como sub-agentes Opus separados por slice se retiró en
   [ADR 003](adr/003-freeze-ios-keep-the-compile-gate.md) — estaba calibrado para
   usuarios en producción que no existen. El gate reforzado de

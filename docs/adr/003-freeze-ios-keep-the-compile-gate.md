@@ -5,7 +5,7 @@
 - **Deciders**: Edgardo Muñoz
 
 > Resumen (es): iOS pasa a estado **congelado**, no cerrado. Se mantiene una sola cosa del ritual —
-> `:shared-ui:compileKotlinIosSimulatorArm64` en el gate, 12.9s medidos — porque es lo único que impide
+> `:ui-android:compileKotlinIosSimulatorArm64` en el gate, 12.9s medidos — porque es lo único que impide
 > que `commonMain` se llene de `java.*` y convierta un futuro regreso a iOS en un rewrite en vez de un
 > "abro Xcode". Se suelta el resto de la ceremonia por slice (writer+reviewer ambos Opus, verificación
 > humana en simulador), que estaba calibrada para usuarios en producción que no existen. Se agrega un
@@ -27,12 +27,12 @@ Three facts, as of 2026-08-08:
 
    | Metric | Value |
    |---|---|
-   | `shared-ui/commonMain` | 20,119 LOC · 203 files |
-   | `shared-ui/androidMain` | 155 LOC · 2 files (0.8%) |
-   | `shared-ui/iosMain` | 376 LOC · 5 files (1.8%) |
+   | `ui-android/commonMain` | 20,119 LOC · 203 files |
+   | `ui-android/androidMain` | 155 LOC · 2 files (0.8%) |
+   | `ui-android/iosMain` | 376 LOC · 5 files (1.8%) |
    | `expect`/`actual` across the whole repo | 6 declarations |
    | Swift shell | 2 files, ~30 lines |
-   | `:shared-ui:compileKotlinIosSimulatorArm64 --rerun` | **12.9s** |
+   | `:ui-android:compileKotlinIosSimulatorArm64 --rerun` | **12.9s** |
 
 Point 3 is the one that reframes the problem. Compose Multiplatform is not the friction — 98% of the
 UI is a single codebase and a full Kotlin/Native recompile of it costs thirteen seconds. The friction
@@ -48,7 +48,7 @@ The maintainer explicitly asked not to close iOS: an iPhone may arrive later.
 
 1. **iOS is frozen, not removed.** The `iosArm64` / `iosSimulatorArm64` targets, `iosMain` source
    sets, and `iosApp/` Xcode project all stay in the repository.
-2. **`:shared-ui:compileKotlinIosSimulatorArm64` stays in every gate run. Non-negotiable.** It is the
+2. **`:ui-android:compileKotlinIosSimulatorArm64` stays in every gate run. Non-negotiable.** It is the
    only mechanical guarantee that `commonMain` remains free of `java.*` / `android.*`. Without it,
    `commonMain` drifts JVM-ward silently, and thawing iOS stops being "open Xcode" and becomes a
    migration.
@@ -56,7 +56,7 @@ The maintainer explicitly asked not to close iOS: an iPhone may arrive later.
    not change, the task is `UP-TO-DATE` and costs effectively nothing.
 4. **The 6 `expect`/`actual` declarations are a budget, not a coincidence.** Adding a seventh requires
    a deliberate decision; the default is to hoist the platform bit into a callback the nav host
-   supplies, as `shared-ui/CLAUDE.md` already prescribes.
+   supplies, as `ui-android/CLAUDE.md` already prescribes.
 5. **Drop the per-slice writer + reviewer (both Opus) requirement.** One writer, reviewed inline.
 6. **Drop per-slice human simulator verification.** Frozen means compile-verified only.
 7. **Stop asserting iOS parity in docs.** It creates a maintenance obligation that will not be met.
@@ -108,7 +108,7 @@ Ordered by what fails first and most silently.
    (`ORCHESTRATION.md:185`): UIKit holds a Kotlin/Native `NSObject` delegate by *weak* reference, so
    it is collected mid-flow unless retained; the fix used was a module-level `mutableSetOf<NSObject>()`.
 3. **Decide Google Sign-In.** Today it is `UnavailableGoogleSignInLauncher`
-   (`shared-ui/src/iosMain/.../IosLocalFirstStubs.kt`) and `AuthScreen` hides the button
+   (`ui-android/src/iosMain/.../IosLocalFirstStubs.kt`) and `AuthScreen` hides the button
    (`showGoogleSignIn = false`). Either wire `GIDSignIn` behind the same interface or ship
    email/password only and say so.
 4. **Add a `macos-*` CI runner.** All three workflows run on `ubuntu-latest`, which cannot compile

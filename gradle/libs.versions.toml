@@ -30,7 +30,7 @@ supabaseBom = "3.6.0"
 ktorClientOkhttp = "3.5.0"
 
 # multiplatform-settings: the standard KMP key-value preferences abstraction. Backs AppPreferences
-# in shared-ui commonMain (SharedPreferences on Android, NSUserDefaults on iOS). Latest stable 1.x.
+# in ui-android commonMain (SharedPreferences on Android, NSUserDefaults on iOS). Latest stable 1.x.
 multiplatformSettings = "1.3.0"
 
 # KMP / Compose Multiplatform (declared in phase 0, applied per-module in later phases).
@@ -57,7 +57,7 @@ jetbrainsNav3Ui = "1.1.1"
 nav3RuntimeKmp = "1.1.2"
 jetbrainsLifecycleViewmodelNav3 = "2.10.0"
 
-# JetBrains multiplatform lifecycle (shared-ui commonMain ViewModel) — aligned with Compose MP 1.11.1.
+# JetBrains multiplatform lifecycle (ui-android commonMain ViewModel) — aligned with Compose MP 1.11.1.
 jetbrainsLifecycle = "2.10.0"
 
 [libraries]
@@ -102,7 +102,7 @@ koin-compose = { module = "io.insert-koin:koin-compose" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel" }
 koin-core = { module = "io.insert-koin:koin-core" }
 # viewModelOf/viewModel DSL without compose — :presentation's DI modules use it; koin-compose-viewmodel
-# (shared-ui) sits on top of it.
+# (ui-android) sits on top of it.
 koin-core-viewmodel = { module = "io.insert-koin:koin-core-viewmodel" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
@@ -125,7 +125,7 @@ sqldelight-native-driver = { module = "app.cash.sqldelight:native-driver", versi
 # common Settings interface plus SharedPreferencesSettings (Android) and NSUserDefaultsSettings (iOS).
 multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatformSettings" }
 # Official in-memory Settings double (MapSettings) from the same release train. Test-only: it backs
-# the fake platform module of the shared-ui Koin graph test, so no SharedPreferences/Context is needed.
+# the fake platform module of the ui-android Koin graph test, so no SharedPreferences/Context is needed.
 multiplatform-settings-test = { module = "com.russhwolf:multiplatform-settings-test", version.ref = "multiplatformSettings" }
 # Already on the RUNTIME classpath transitively (supabase-kt's Auth plugin builds its default
 # SettingsSessionManager through the no-arg Settings() factory). Declared explicitly for host tests
@@ -142,7 +142,7 @@ androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", vers
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodelNav3" }
 androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycleLivedataKtx" }
 
-# JetBrains multiplatform lifecycle-viewmodel — provides ViewModel + viewModelScope in commonMain (shared-ui).
+# JetBrains multiplatform lifecycle-viewmodel — provides ViewModel + viewModelScope in commonMain (ui-android).
 jetbrains-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "jetbrainsLifecycle" }
 # Compose-free variant for :presentation — same ViewModel/viewModelScope without the compose runtime.
 jetbrains-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "jetbrainsLifecycle" }
@@ -158,7 +158,7 @@ android-application = { id = "com.android.application", version.ref = "androidAp
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServicesVersion" }
 google-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleCrashlyticsVersion" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinVersion" }
-# Generates KSerializer for @Serializable nav routes and sync DTOs. Applied by :androidApp, :data, :shared-ui.
+# Generates KSerializer for @Serializable nav routes and sync DTOs. Applied by :androidApp, :data, :ui-android.
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinVersion" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }

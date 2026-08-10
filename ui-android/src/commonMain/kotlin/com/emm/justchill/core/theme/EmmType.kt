@@ -26,7 +26,7 @@ import org.jetbrains.compose.resources.Font
  * Compose Multiplatform loads bundled fonts via [org.jetbrains.compose.resources.Font],
  * which is `@Composable`. The font families and [emmType] are therefore exposed as
  * `@Composable get()` properties so existing call sites (which read them inside
- * composables) keep working unchanged after the move to `shared-ui`.
+ * composables) keep working unchanged after the move to `ui-android`.
  */
 val InterFontFamily: FontFamily
     @Composable get() = FontFamily(

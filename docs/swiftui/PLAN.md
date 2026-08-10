@@ -19,7 +19,7 @@ from that commit.
 
 ## Starting point
 
-- `shared-ui/commonMain` = 21,050 lines: ~2,503 portable presentation
+- `ui-android/commonMain` = 21,050 lines: ~2,503 portable presentation
   (ViewModels + UiState/Intent/Effect + MVI core), ~18,000 Compose UI,
   510 Koin DI (14 modules in `hh/di/`).
 - `:domain` and `:data` are already pure KMP. **Zero work there.**
@@ -32,7 +32,7 @@ from that commit.
   `viewModelScope`; effects via `Channel.receiveAsFlow()`. Works on
   iOS targets; lifecycle on iOS is manual (see VM-bridge pattern, S3).
 - iOS framework today: `binaries.framework { baseName = "Shared" }` declared
-  in `shared-ui/build.gradle.kts`, consumed by `iosApp/` (`iOSApp.swift` +
+  in `ui-android/build.gradle.kts`, consumed by `iosApp/` (`iOSApp.swift` +
   `ContentView.swift` hosting the CMP controller).
 - Convention plugin `justchill.kmp.library` (build-logic) gives any new
   module android + iosArm64 + iosSimulatorArm64 + detekt + qualityGate wiring.
@@ -46,7 +46,7 @@ from that commit.
                  UiStrings, formatters, error mapping, preferences, sync port.
                  Declares the iOS framework (baseName "JustChillKit",
                  export :domain + :data) + SKIE.
-:shared-ui       Compose UI only. Depends on :presentation. Drops iOS targets
+:ui-android       Compose UI only. Depends on :presentation. Drops iOS targets
                  in S2 → becomes Android-only.
 :androidApp      unchanged (thin shell)
 iosApp/          SwiftUI app consuming JustChillKit. CMP entry retired in S2.
@@ -54,20 +54,20 @@ iosApp/          SwiftUI app consuming JustChillKit. CMP entry retired in S2.
 
 Kotlin packages do NOT change when files move to `:presentation` — same
 `com.emm.justchill.*` packages, different module. No import churn in
-`:shared-ui` screens or `:androidApp` tests.
+`:ui-android` screens or `:androidApp` tests.
 
 ## Decisions locked up front
 
 1. **Strip `@Stable`/`@Immutable` from UiState** instead of adding
    compose-runtime to `:presentation`. A compose dep in the framework module
    drags the compose runtime klib into the iOS binary for two annotations.
-   Compose compiler in `:shared-ui` then sees cross-module classes without
+   Compose compiler in `:ui-android` then sees cross-module classes without
    annotations → treats them as unstable → gratuitous recomposition. Fix:
-   `compose.stabilityConfigurationFile` in `:shared-ui` declaring
+   `compose.stabilityConfigurationFile` in `:ui-android` declaring
    `com.emm.justchill.**` state classes stable. Verify with compose compiler
    metrics if a screen feels off afterwards.
-2. **The framework is declared by `:presentation`, never `:shared-ui`.**
-   Exporting shared-ui would embed the Compose/Skia runtime in the binary.
+2. **The framework is declared by `:presentation`, never `:ui-android`.**
+   Exporting ui-android would embed the Compose/Skia runtime in the binary.
 3. **SKIE is non-negotiable** for sealed→Swift enums (exhaustive `onEnum(of:)`)
    and Flow→AsyncSequence. Raw Kotlin/Native interop for this MVI surface is
    not worth learning around. Check the SKIE↔Kotlin 2.4.0 compatibility
@@ -92,8 +92,8 @@ compiles and runs, trunk shippable. One slice ≈ 1-3 side-project sessions.
 
 | # | Slice | Content | SwiftUI/interop skill it teaches |
 |---|-------|---------|----------------------------------|
-| S1 | Extract `:presentation` | Move: `core/mvi`, `core/error`, `core/format`, `core/preferences`, `core/sync`, per-feature VMs + State + Intent + Effect + `toUi` mappers + `SelectableCategory`, all 14 `hh/di` modules, `AppGraph.kt`, `UiStrings.kt`, formatters. Strip stability annotations + stability config file in shared-ui. Move `AppGraphKoinTest` + `MviViewModelTest` + VM host tests to `:presentation` androidHostTest. `:shared-ui` gets `api(project(":presentation"))`. | None yet — pure Gradle/KMP surgery. |
-| S2 | Framework + SKIE + Swift bootstrap | `:presentation` declares `JustChillKit` framework (export domain+data) + SKIE plugin. Move `KoinIos.kt`, `IosLocalFirstStubs.kt` (review what it stubs), `PrintlnSyncLogger.kt`, iOS platform module → `presentation/iosMain`. Replace `ContentView.swift` CMP host with a bare SwiftUI `App` that starts Koin, resolves one VM, renders its state as `Text`. `shared-ui` drops iOS targets; gate's iOS leg moves to `:presentation:compileKotlinIosSimulatorArm64`. Write ADR 005. | Xcode target setup, embedAndSign, SKIE codegen, Koin from Swift. |
+| S1 | Extract `:presentation` | Move: `core/mvi`, `core/error`, `core/format`, `core/preferences`, `core/sync`, per-feature VMs + State + Intent + Effect + `toUi` mappers + `SelectableCategory`, all 14 `hh/di` modules, `AppGraph.kt`, `UiStrings.kt`, formatters. Strip stability annotations + stability config file in ui-android. Move `AppGraphKoinTest` + `MviViewModelTest` + VM host tests to `:presentation` androidHostTest. `:ui-android` gets `api(project(":presentation"))`. | None yet — pure Gradle/KMP surgery. |
+| S2 | Framework + SKIE + Swift bootstrap | `:presentation` declares `JustChillKit` framework (export domain+data) + SKIE plugin. Move `KoinIos.kt`, `IosLocalFirstStubs.kt` (review what it stubs), `PrintlnSyncLogger.kt`, iOS platform module → `presentation/iosMain`. Replace `ContentView.swift` CMP host with a bare SwiftUI `App` that starts Koin, resolves one VM, renders its state as `Text`. `ui-android` drops iOS targets; gate's iOS leg moves to `:presentation:compileKotlinIosSimulatorArm64`. Write ADR 005. | Xcode target setup, embedAndSign, SKIE codegen, Koin from Swift. |
 | S3 | First vertical: SeeTransactions (read-only) | `NavigationStack` skeleton, minimal `Theme.swift`, the **VM-bridge pattern** (decision 4), transaction list + search + date filters. | The pattern everything else reuses: StateFlow→`@Observable`, intents, effect collection, List, searchable. |
 | S4 | Home + tabs | `TabView` with the bottom-bar tabs, home summary screen, tab-switch navigation (no nav3 `switchTab` semantics — native TabView state). | TabView, per-tab NavigationStack, formatters through the framework. |
 | S5 | Transaction add/edit | Forms, decimal input/keyboard, date picker, category selection via closure (decision 6), edit flow. | Form, sheets, focus/keyboard management, returning results without a result channel. |
@@ -117,7 +117,7 @@ needs everything else for the parity audit).
   a real run.
 - `./gradlew assembleDevDebug` + forced host suites (`:presentation` joins
   via the convention plugin).
-- `:presentation:compileKotlinIosSimulatorArm64` (replaces the shared-ui leg
+- `:presentation:compileKotlinIosSimulatorArm64` (replaces the ui-android leg
   from S2 on).
 - `xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp build` for the
   SwiftUI app (manual from Xcode is fine; automating it into the macOS gate
@@ -135,7 +135,7 @@ needs everything else for the parity audit).
   device.
 - **VM host tests moving modules** (S1) — the androidApp MockK suite
   (`testDevDebugUnitTest`) stays put and keeps passing (packages unchanged);
-  only shared-ui host tests move. If a test needs MockK it stays in an
+  only ui-android host tests move. If a test needs MockK it stays in an
   `androidHostTest` source set, never commonTest.
 - **Motivation** — the real risk of a side project. Every slice ships a
   visible screen; never two slices of pure plumbing after S2.

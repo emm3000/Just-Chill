@@ -1,6 +1,6 @@
 # JustChill — Design System
 
-> v0.1 · Living document. Every token here is the source of truth; implementations in `shared-ui/src/commonMain/kotlin/com/emm/justchill/core/theme/` must mirror it.
+> v0.1 · Living document. Every token here is the source of truth; implementations in `ui-android/src/commonMain/kotlin/com/emm/justchill/core/theme/` must mirror it.
 
 ---
 
@@ -547,7 +547,7 @@ Non-negotiable floor:
 
 ## 11 · Naming convention (Kotlin tokens)
 
-When implementing in `shared-ui/src/commonMain/kotlin/com/emm/justchill/core/theme/`:
+When implementing in `ui-android/src/commonMain/kotlin/com/emm/justchill/core/theme/`:
 
 ```kotlin
 object EmmColors {

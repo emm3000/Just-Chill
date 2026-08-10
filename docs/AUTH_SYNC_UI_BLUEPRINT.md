@@ -5,7 +5,7 @@
 > `DESIGN_SYSTEM.md`, and what is coming next — so the redesign happens once, with full context.
 >
 > **Stale in two places** (2026-08): §7 describes Google sign-in as upcoming — it shipped, and the
-> screens now live in `:shared-ui` commonMain shared with iOS. The UI critique in §6 has not been
+> screens now live in `:ui-android` commonMain shared with iOS. The UI critique in §6 has not been
 > re-verified since. Treat §1–§5 as a map of intent, not a current screenshot.
 
 **TL;DR for design:** the auth/sync UI was built engineering-first. It works, but it uses bespoke
@@ -228,6 +228,6 @@ Designing AuthScreen with the Google button from the start avoids a second redes
 - Product framing: account is optional, local-first is the manifesto
   (`docs/PRODUCT_DISCOVERY.md`).
 - Source of truth for behavior described here (post-KMP paths):
-  `shared-ui/src/commonMain/kotlin/com/emm/justchill/hh/auth/`, `hh/profile/`,
+  `ui-android/src/commonMain/kotlin/com/emm/justchill/hh/auth/`, `hh/profile/`,
   `hh/shared/AppNavHost.kt`, `core/sync/SyncOrchestrator.kt`. The Android-only Google
   credential plumbing is in `androidApp/src/main/kotlin/com/emm/justchill/hh/auth/`.

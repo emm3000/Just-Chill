@@ -1,10 +1,10 @@
 # :androidApp — CLAUDE.md
 
 Thin Android entry point. Since the KMP migration, **the UI, ViewModels and Koin wiring live in
-`:shared-ui`** — read `shared-ui/CLAUDE.md` before adding a feature. Almost nothing belongs here.
+`:ui-android`** — read `ui-android/CLAUDE.md` before adding a feature. Almost nothing belongs here.
 
 Root package: `com.emm.justchill`. `minSdk = 28`, `compileSdk = 37`.
-Depends on `:shared-ui` (and transitively `:domain`, `:data`).
+Depends on `:ui-android` (and transitively `:domain`, `:data`).
 
 ## What actually lives here
 
@@ -37,7 +37,7 @@ nothing belongs in them anymore.
 `EmmApp` calls `startKoin { modules(appModules(androidPlatformModule) + experiencesModule) }` then
 `bootstrapAppGraph(koin)`. `startKoin` can't be shared — it needs `androidContext()` /
 `androidLogger()` from koin-android. A new **feature** module is registered in `appModules()` in
-`shared-ui/commonMain/core/AppGraph.kt`, **not** here.
+`ui-android/commonMain/core/AppGraph.kt`, **not** here.
 
 ## Product flavors
 
@@ -61,13 +61,13 @@ flavor for a telemetry-free app" claim true. Firebase **Analytics is not used** 
 - `./gradlew :androidApp:testDevDebugUnitTest`
 - `MainDispatcherRule` at `androidApp/src/test/kotlin/com/emm/justchill/MainDispatcherRule.kt` —
   **use it in every ViewModel test that touches `viewModelScope`**.
-- **The MockK ViewModel tests live here, not in `shared-ui`**, even though the ViewModels themselves
+- **The MockK ViewModel tests live here, not in `ui-android`**, even though the ViewModels themselves
   are in commonMain: they sit in the same package (`hh/home/HomeViewModelTest.kt`, etc.) and rely on
   MockK's JVM engine. That placement is deliberate — keep it unless you move the whole suite.
 - No instrumented tests: `androidApp/src/androidTest/` does not exist.
 
 ## Anything UI
 
-Screens, ViewModels, navigation, theme, MVI base classes, feature DI — all in `:shared-ui`.
+Screens, ViewModels, navigation, theme, MVI base classes, feature DI — all in `:ui-android`.
 If you find yourself adding a composable here, it is either a `@Preview` host or it is in the
 wrong module.

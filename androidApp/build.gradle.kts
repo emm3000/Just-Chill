@@ -147,7 +147,7 @@ dependencies {
 
     implementation(projects.domain)
     implementation(projects.data)
-    implementation(projects.sharedUi)
+    implementation(projects.uiAndroid)
 
     implementation(libs.androidx.core.ktx)
     // Material Components is NOT dead code: res/values/themes.xml inherits from
@@ -195,7 +195,7 @@ dependencies {
 
     testImplementation(libs.mockk)
 
-    // nav3 (runtime + UI) is inherited transitively from :shared-ui commonMain, which now hosts the
+    // nav3 (runtime + UI) is inherited transitively from :ui-android commonMain, which now hosts the
     // unified AppNavHost. :androidApp no longer references androidx.navigation3 types directly.
 
     implementation(libs.androidx.credentials)
@@ -203,7 +203,7 @@ dependencies {
     implementation(libs.google.identity.googleid)
 
     // multiplatform-settings: CoreModule builds the SharedPreferencesSettings that backs the
-    // shared-ui AppPreferences. shared-ui consumes it as `implementation`, so it is not exposed
+    // ui-android AppPreferences. ui-android consumes it as `implementation`, so it is not exposed
     // transitively — this module references Settings/SharedPreferencesSettings directly.
     implementation(libs.multiplatform.settings)
 }

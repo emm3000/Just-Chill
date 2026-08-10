@@ -9,8 +9,8 @@
 #
 # `./gradlew qualityGate` covers, across all four modules:
 #   - detekt over every source set that holds code (NOT plain `./gradlew detekt`, which is
-#     NO-SOURCE on :domain, :data and :shared-ui and only ever linted :androidApp)
-#   - the JVM host test suites, including :shared-ui — which is where AppGraphKoinTest lives, the
+#     NO-SOURCE on :domain, :data and :ui-android and only ever linted :androidApp)
+#   - the JVM host test suites, including :ui-android — which is where AppGraphKoinTest lives, the
 #     only mechanical guard against a missing Koin binding
 #   - Android lint on the dev variant
 #   - the iOS compile, which proves commonMain stays free of java.* / android.* (docs/adr/003).

@@ -54,7 +54,7 @@ Before delegating, map the slice cheaply so the writer prompt is precise:
 
 ### 3. Cheap-verify (orchestrator, inline)
 - `git log --oneline` — commit landed.
-- `rg -l 'import (java|javax|android)\.' shared-ui/src/commonMain` — must be empty.
+- `rg -l 'import (java|javax|android)\.' ui-android/src/commonMain` — must be empty.
 - Confirm the moved dir is gone from `androidApp/src/main`.
 - Do NOT re-run the full build here (expensive) — the reviewer does that.
 
@@ -82,7 +82,7 @@ Before delegating, map the slice cheaply so the writer prompt is precise:
 
 **Do not maintain a task list here.** This section used to spell one out, and it drifted: it was
 missing `:data:detektAndroidDeviceTestSourceSet`, while the pre-push hook was missing every test
-and CI was missing `:shared-ui:testAndroidHostTest`. Four hand-written lists, none a superset of
+and CI was missing `:ui-android:testAndroidHostTest`. Four hand-written lists, none a superset of
 the others. The gate now has exactly one definition —
 `build-logic/src/main/kotlin/com/emm/buildlogic/QualityGateConventionPlugin.kt` — and the hook, the
 three workflows and this doc all invoke it.
@@ -101,7 +101,7 @@ Two properties worth knowing:
   analysis, though, so it runs on any host — including CI.
 
 A green gate still does NOT catch a missing Koin binding at the DI graph level; that is what
-`shared-ui/androidHostTest/core/AppGraphKoinTest.kt` is for, and it is now on the gate (it never
+`ui-android/androidHostTest/core/AppGraphKoinTest.kt` is for, and it is now on the gate (it never
 ran in CI before).
 
 Never gate on plain `./gradlew detekt`: it is **NO-SOURCE on every KMP module** and only ever
@@ -134,7 +134,7 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
   need explicit imports added (implicit same-package resolution stops at the
   module boundary).
 - **Tests**: MockK is JVM-only → MockK VM tests stay in `:app`. Pure
-  `kotlin-test`/JUnit tests can move to `shared-ui/commonTest`.
+  `kotlin-test`/JUnit tests can move to `ui-android/commonTest`.
 
 ## Slice ledger
 | Slice | Feature | Commit | Status |
@@ -162,7 +162,7 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
 | Slice | What | Commit | Status |
 |---|---|---|---|
 | A | platform-neutral core/components shell → commonMain | `c849091` | ✅ |
-| B | `expect/actual resumeEvents()` + establish shared-ui/androidMain | `d251760` | ✅ |
+| B | `expect/actual resumeEvents()` + establish ui-android/androidMain | `d251760` | ✅ |
 | C | AppPreferences + cursor store → commonMain over multiplatform-settings (keystone) | `402c26d` | ✅ |
 | D | merge 2 SyncOrchestrators → 1 commonMain class + `SyncController.events` | `352a97c` | ✅ |
 | E1 | nav route keys + BottomBar + ProfileMessage → commonMain; nav3-runtime → common | `a02c09b` | ✅ |
@@ -198,7 +198,7 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
   to the compile gate. The export/import/share/email/mail modals are compile- +
   launch-verified only — their live round-trips MUST be driven on the iOS simulator
   by a human (no idb/XCUITest here).
-- **commonMain → :data layering REVERSED (slice H `56314ba`).** Was `:domain`-only (a pre-KMP rail). shared-ui/commonMain now depends on `:data`, so the DI wiring (`syncModule`/`authModule`/`dataModule`/`supabaseModule`) is ONE commonMain copy parameterized by a per-platform `platformModule` (DB single + seed, `Settings` backend, `SupabaseConfig`, `GoogleSignInLauncher`, `appVersion`, `googleServerClientId`). Tradeoff: lost the compile-time guardrail that blocked a ViewModel importing `Default*Repository`/SQLDelight types — VM purity is now CONVENTION only. `startKoin{}` itself can't be shared (Android needs koin-android `androidContext`/`androidLogger`, absent in commonMain); only the module list (`appModules`) + post-start `bootstrapAppGraph` (claim observer + `orchestrator.start()`) are shared. Koin failures are RUNTIME-ONLY (invisible to the compiler AND the Android gate) — iOS `initKoin()` runtime resolution STILL needs a human simulator run; static bind-trace + `compileKotlinIosSimulatorArm64` are green but that is not a device launch.
+- **commonMain → :data layering REVERSED (slice H `56314ba`).** Was `:domain`-only (a pre-KMP rail). ui-android/commonMain now depends on `:data`, so the DI wiring (`syncModule`/`authModule`/`dataModule`/`supabaseModule`) is ONE commonMain copy parameterized by a per-platform `platformModule` (DB single + seed, `Settings` backend, `SupabaseConfig`, `GoogleSignInLauncher`, `appVersion`, `googleServerClientId`). Tradeoff: lost the compile-time guardrail that blocked a ViewModel importing `Default*Repository`/SQLDelight types — VM purity is now CONVENTION only. `startKoin{}` itself can't be shared (Android needs koin-android `androidContext`/`androidLogger`, absent in commonMain); only the module list (`appModules`) + post-start `bootstrapAppGraph` (claim observer + `orchestrator.start()`) are shared. Koin failures are RUNTIME-ONLY (invisible to the compiler AND the Android gate) — iOS `initKoin()` runtime resolution STILL needs a human simulator run; static bind-trace + `compileKotlinIosSimulatorArm64` are green but that is not a device launch.
 - **detekt 2.0 per-task baseline scheme (how to keep the gate green).** detekt 2.0
   derives a SEPARATE baseline file per analysis task from the extension stem
   `config/detekt/baseline-<module>.xml` (set once in the root `build.gradle.kts`
@@ -211,9 +211,9 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
   path, two baseline tasks for the same module never overwrite each other (the
   feared 2.0 overwrite landmine does not apply here). To grandfather pre-existing
   issues for a source set, run the matching baseline task and COMMIT the generated
-  file, e.g. `./gradlew :shared-ui:detektBaselineMainAndroid
-  :shared-ui:detektBaselineIosMainSourceSet` → commit `baseline-shared-ui-main.xml`
-  + `baseline-shared-ui-iosMainSourceSet.xml`. NEVER baseline to dodge a NEW
+  file, e.g. `./gradlew :ui-android:detektBaselineMainAndroid
+  :ui-android:detektBaselineIosMainSourceSet` → commit `baseline-ui-android-main.xml`
+  + `baseline-ui-android-iosMainSourceSet.xml`. NEVER baseline to dodge a NEW
   violation a slice introduces — fix it; baselines only grandfather what predates
-  the detekt gate (initial counts: shared-ui main 154 / iosMain 10, data main 589 /
+  the detekt gate (initial counts: ui-android main 154 / iosMain 10, data main 589 /
   iosMain 2, domain main 1, androidApp devDebug 136 / prodDebug 8).

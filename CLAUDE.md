@@ -3,10 +3,10 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 Per-module guidance lives in `domain/CLAUDE.md`, `data/CLAUDE.md`, `presentation/CLAUDE.md`,
-`shared-ui/CLAUDE.md`, and `androidApp/CLAUDE.md`; Claude loads each one automatically when working
+`ui-android/CLAUDE.md`, and `androidApp/CLAUDE.md`; Claude loads each one automatically when working
 in that module.
 
-> **KMP everywhere; each platform owns its UI.** Android renders Compose (`:shared-ui`); iOS is a
+> **KMP everywhere; each platform owns its UI.** Android renders Compose (`:ui-android`); iOS is a
 > native SwiftUI app over the `JustChillKit` framework that `:presentation` exports with SKIE —
 > [ADR 005](docs/adr/005-native-swiftui-ios-over-the-kmp-core.md) unfroze iOS as a *learning
 > track* (supersedes ADR 003's frozen-UI scope; the compile-gate invariant survives, relocated).
@@ -28,7 +28,7 @@ in that module.
 
 # Unit tests (JVM host tests — no device)
 ./gradlew test                             # Everything
-./gradlew :domain:testAndroidHostTest      # also :data:, :presentation:, :shared-ui:
+./gradlew :domain:testAndroidHostTest      # also :data:, :presentation:, :ui-android:
 ./gradlew :androidApp:testDevDebugUnitTest # the MockK ViewModel suite lives here
 ./gradlew :domain:testAndroidHostTest --tests "com.emm.domain.transaction.CreateTransactionUseCaseTest"
 
@@ -44,8 +44,8 @@ There is no `:domain:test` and no `connectedDevDebugAndroidTest`; both died with
 
 ## Project Layout
 
-- Modules in `settings.gradle.kts`: `:androidApp`, `:shared-ui`, `:presentation`, `:domain`, `:data`.
-- Java toolchain 17 everywhere. `compileSdk = 37`. `minSdk = 28` (`:androidApp`, `:shared-ui`,
+- Modules in `settings.gradle.kts`: `:androidApp`, `:ui-android`, `:presentation`, `:domain`, `:data`.
+- Java toolchain 17 everywhere. `compileSdk = 37`. `minSdk = 28` (`:androidApp`, `:ui-android`,
   `:presentation`) / `26` (`:domain`, `:data`).
 - `iosApp/` — Xcode project: SwiftUI app consuming `:presentation`'s `JustChillKit` framework.
   `supabase/` — CLI migrations for the server schema.
@@ -61,13 +61,13 @@ Clean Architecture, five KMP modules. Dependency direction is top to bottom:
 | Module | Role | Root package |
 |---|---|---|
 | `:androidApp` | thin Android entry point (Activity, platform Koin module) | `com.emm.justchill.*` |
-| `:shared-ui` | Android-only Compose UI (screens, nav, theme) | `com.emm.justchill.{hh.<feature>, core, components}` |
-| `:presentation` | compose-free MVI core, ViewModels, Koin DI, formatters; exports `JustChillKit` (SKIE) to iOS | same packages as `:shared-ui` on purpose |
+| `:ui-android` | Android-only Compose UI (screens, nav, theme) | `com.emm.justchill.{hh.<feature>, core, components}` |
+| `:presentation` | compose-free MVI core, ViewModels, Koin DI, formatters; exports `JustChillKit` (SKIE) to iOS | same packages as `:ui-android` on purpose |
 | `:data` | implements domain interfaces (commonMain/androidMain/iosMain) | `com.emm.data.<entity>` |
 | `:domain` | pure Kotlin, no framework deps | `com.emm.domain.<entity>` |
 
-The iOS SwiftUI app (`iosApp/`) sits on `:presentation` directly; `:shared-ui` sits on it as a
-Gradle dependency. Same Kotlin packages across the `:shared-ui`/`:presentation` boundary — explicit
+The iOS SwiftUI app (`iosApp/`) sits on `:presentation` directly; `:ui-android` sits on it as a
+Gradle dependency. Same Kotlin packages across the `:ui-android`/`:presentation` boundary — explicit
 imports are required where same-package symbols crossed modules.
 
 The app is **local-first**: SQLDelight on-device is the single source of truth and the app is fully

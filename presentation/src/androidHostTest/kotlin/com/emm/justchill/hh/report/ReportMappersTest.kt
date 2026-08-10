@@ -16,7 +16,7 @@ class ReportMappersTest {
 
         assertNull(share.categoryId)
         assertEquals(UiStrings.UNCATEGORIZED, share.name)
-        // The neutral-graphite fallthrough happens at render time (domainColorToUi in :shared-ui).
+        // The neutral-graphite fallthrough happens at render time (domainColorToUi in :ui-android).
         assertNull(share.colorKey)
     }
 

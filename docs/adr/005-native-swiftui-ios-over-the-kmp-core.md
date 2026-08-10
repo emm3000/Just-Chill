@@ -9,7 +9,7 @@
 > framework `JustChillKit` con SKIE). La motivación es explícita: **aprendizaje** (SwiftUI + interop
 > KMP↔Swift contra una app real, con cero usuarios y cero riesgo). Compose Multiplatform sigue
 > siendo la UI de Android sin cambios; lo que se retira es el entry point CMP de iOS. El gate de
-> compile de iOS sobrevive — se muda de `:shared-ui` a `:presentation`.
+> compile de iOS sobrevive — se muda de `:ui-android` a `:presentation`.
 
 ## Context
 
@@ -31,7 +31,7 @@ in `docs/swiftui/PLAN.md`.
 2. **iOS UI is native SwiftUI consuming `JustChillKit`** — the framework `:presentation` declares
    (static, SKIE-processed, exporting `:domain` + `:data`). The CMP-on-iOS entry
    (`MainViewController`, `ComposeView`) is deleted, not preserved.
-3. **Android keeps Compose Multiplatform unchanged.** `:shared-ui` becomes Android-only
+3. **Android keeps Compose Multiplatform unchanged.** `:ui-android` becomes Android-only
    (`justchill.kmp.ios=false`); nothing about the Android app's architecture, gate, or behavior
    changes.
 4. **The compile gate survives, relocated.** ADR 003's non-negotiable —
@@ -43,7 +43,7 @@ in `docs/swiftui/PLAN.md`.
    interop for this MVI surface was rejected.
 6. **ADR 003's standing constraint 8 stays**: platform-neutral logic lives in the KMP core even for
    Android-only features. It matters *more* now — a SwiftUI iOS app reuses exactly what lives below
-   `:shared-ui`.
+   `:ui-android`.
 
 ## Alternatives considered
 
@@ -59,7 +59,7 @@ in `docs/swiftui/PLAN.md`.
 ### Positive
 - Every slice of `docs/swiftui/PLAN.md` leaves trunk green and Android untouched; abandoning the
   track at any point costs nothing.
-- The iOS gate leg shrinks: `:presentation` compiles ~2.5k lines instead of `:shared-ui`'s ~21k.
+- The iOS gate leg shrinks: `:presentation` compiles ~2.5k lines instead of `:ui-android`'s ~21k.
 - `:presentation` being compose-free is now enforced by the Swift consumer, not just the module
   graph — a Compose type in a ViewModel's signature would surface in the framework's interface.
 

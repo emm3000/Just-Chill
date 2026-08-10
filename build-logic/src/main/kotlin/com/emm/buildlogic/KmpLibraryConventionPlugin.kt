@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 /**
- * The "what am I" half of the three KMP library modules: :domain, :data and :shared-ui.
+ * The "what am I" half of the three KMP library modules: :domain, :data and :ui-android.
  *
  * Targets, compile SDK, JVM target and the host-test source set live here once instead of being
  * copy-pasted into three build files. Each module keeps the half that genuinely differs — its
@@ -29,7 +29,7 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
         // hook used to run detekt and no tests at all.
         contributeToQualityGate("testAndroidHostTest")
 
-        // :shared-ui opted out in slice S2 (docs/swiftui/PLAN.md): its Compose UI is Android-only;
+        // :ui-android opted out in slice S2 (docs/swiftui/PLAN.md): its Compose UI is Android-only;
         // iOS consumes :presentation through the JustChillKit framework instead. The property lives
         // in the module's own gradle.properties, so the opt-out is visible next to the build file.
         val hasIosTargets = findProperty("justchill.kmp.ios") != "false"

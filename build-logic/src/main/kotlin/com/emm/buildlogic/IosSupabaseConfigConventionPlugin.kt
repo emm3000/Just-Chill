@@ -9,7 +9,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 /**
  * Registers [GenerateIosSupabaseConfigTask] and feeds its output into iosMain.
  *
- * Applied by :presentation alone (home of KoinIos.kt, the config's only consumer — :shared-ui
+ * Applied by :presentation alone (home of KoinIos.kt, the config's only consumer — :ui-android
  * until slice S2). That is deliberate: the point is separation, not reuse — a code generator does
  * not belong in a file whose job is declaring dependencies.
  */
@@ -27,7 +27,7 @@ class IosSupabaseConfigConventionPlugin : Plugin<Project> {
             // carries the task dependency through the source set's declared outputs, so EVERY
             // consumer of iosMain — Kotlin/Native compiles, detekt, detekt baseline, IDE sync —
             // depends on the generator implicitly. Registering the plain directory instead makes
-            // Gradle 9 fail with "uses this output of task ':shared-ui:generateIosSupabaseConfig'
+            // Gradle 9 fail with "uses this output of task ':ui-android:generateIosSupabaseConfig'
             // without declaring an explicit or implicit dependency" for any consumer lacking its own
             // dependsOn (detektIosMainSourceSet hit exactly that once it joined the KMP gate).
             //

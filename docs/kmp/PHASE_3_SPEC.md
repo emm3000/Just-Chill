@@ -1,4 +1,4 @@
-# Phase 3 — `shared-ui` (Compose Multiplatform) — Execution Spec
+# Phase 3 — `ui-android` (Compose Multiplatform) — Execution Spec
 
 > Companion to `MIGRATION_PLAN.md §Phase 3`. This is the sliced, gated
 > execution plan derived from a full `:app` audit (2026-06-13).
@@ -13,27 +13,27 @@
 >   be nil — the app never opted into the gesture.
 > - **`:app` means `:androidApp`** everywhere below (renamed in Phase 4).
 > - The commonMain **`:domain`-only rule was reversed** by slice H (`56314ba`):
->   `shared-ui/commonMain` now depends on `:data` so the Koin wiring exists once.
+>   `ui-android/commonMain` now depends on `:data` so the Koin wiring exists once.
 > Everything after §"Resolved decisions" is a per-slice execution record — accurate
 > as history, not as a description of the current tree.
 
 ## Resolved decisions
 
-1. **Module name** = `shared-ui` (typesafe accessor `projects.sharedUi`).
+1. **Module name** = `ui-android` (typesafe accessor `projects.uiAndroid`).
    Matches the wizard + the plan text. (Open decision #4 → closed.)
 2. **Navigation** = **Option A** (defer iOS nav). Android keeps its current
    **stable** `androidx.navigation3:*`. The nav host (`Hh.kt`, `HhRoutes.kt`,
    `ObjectsRoutes.kt`) **stays in `:app`/androidApp**. Feature screens move to
-   `shared-ui/commonMain` as **callback-driven** composables (already MVI:
+   `ui-android/commonMain` as **callback-driven** composables (already MVI:
    they take `state` + `onIntent`, no navigation3 imports). iOS builds its own
    nav in Phase 5; it may adopt the JetBrains nav3 CMP fork
    (`org.jetbrains.androidx.navigation3:navigation3-ui`, currently `alpha05`)
    when it matures. Rationale: the CMP nav3 UI artifact is alpha; swapping
    Android's working nav mid-migration violates the prime directive.
 
-## What moves to `shared-ui/commonMain` vs stays in `:app`
+## What moves to `ui-android/commonMain` vs stays in `:app`
 
-### Moves → `shared-ui/commonMain`
+### Moves → `ui-android/commonMain`
 - **MVI base** (`core/mvi/`): `UiState`, `UiIntent`, `UiEffect`, `MviViewModel`.
   All portable once `lifecycle-viewmodel` is the JetBrains KMP artifact. No
   `android.*` imports.
@@ -74,7 +74,7 @@
 
 ## Dependency mapping (Jetpack → Compose Multiplatform)
 
-| Current (`:app`) | `shared-ui/commonMain` |
+| Current (`:app`) | `ui-android/commonMain` |
 |---|---|
 | `androidx.compose.ui:ui` / `ui-graphics` | `compose.ui` (CMP plugin DSL) |
 | `androidx.compose.material3:material3` | `compose.material3` |
@@ -87,16 +87,16 @@
 | `androidx.navigation3:*`, `lifecycle-viewmodel-navigation3` | stays in androidApp (Option A) |
 | Compose Resources (fonts/drawables) | `compose.components.resources` |
 
-Compose for `shared-ui` is driven by the `org.jetbrains.compose` plugin
+Compose for `ui-android` is driven by the `org.jetbrains.compose` plugin
 (already in the catalog as `compose-multiplatform = 1.11.1`) + the
 `kotlin-compose` compiler plugin. The Android `composeBom` is NOT used by
-`shared-ui` (CMP versions its own Compose).
+`ui-android` (CMP versions its own Compose).
 
 ## Slices (each = one Android-green gate: `./gradlew assembleDevDebug`)
 
 > **STATUS (updated 2026-06-13): ✅ PHASE 3 COMPLETE.**
 > All slices 0–8b done (full ledger in `ORCHESTRATION.md`). All shared UI lives in
-> `shared-ui` commonMain; `:app` holds only the nav host + platform Koin modules +
+> `ui-android` commonMain; `:app` holds only the nav host + platform Koin modules +
 > MainActivity/EmmApp. `assembleDevDebug` + iOS compile + all tests green.
 > **Post-phase cleanup also done** (not slices, separate commits):
 > - `8afe740` — dedup `Clock` binding (keep commonMain `sharedModule` provider).
@@ -135,29 +135,29 @@ Compose for `shared-ui` is driven by the `org.jetbrains.compose` plugin
 > Strip CMP-incompatible `@Preview` params; `LocalConfiguration`→`LocalWindowInfo`
 > +`LocalDensity`. Golden test (`SpanishFormatGoldenTest`) guards Spanish output.
 >
-> **Reinforced gate (every slice):** `./gradlew :shared-ui:compileAndroidMain`
+> **Reinforced gate (every slice):** `./gradlew :ui-android:compileAndroidMain`
 > (note: NOT `compileDebugKotlinAndroid` — the new android KMP plugin renamed it)
-> + `:shared-ui:compileKotlinIosSimulatorArm64` (proves zero `java.*` leak)
-> + `assembleDevDebug` + `:app:testDevDebugUnitTest` + `:shared-ui:testAndroidHostTest`.
+> + `:ui-android:compileKotlinIosSimulatorArm64` (proves zero `java.*` leak)
+> + `assembleDevDebug` + `:app:testDevDebugUnitTest` + `:ui-android:testAndroidHostTest`.
 
 ### Slice 0 — module scaffold + foundation (LOW risk) — ✅ DONE (`7d66e54`)
-- Create `shared-ui/build.gradle.kts`: `kotlin.multiplatform` +
+- Create `ui-android/build.gradle.kts`: `kotlin.multiplatform` +
   `android.kotlin.multiplatform.library` + `iosArm64()` + `iosSimulatorArm64()`
   + `org.jetbrains.compose` + `kotlin-compose`. Framework `baseName = "Shared"`,
   `isStatic = true`. Android `namespace = "com.emm.justchill.shared"`,
   `compileSdk = 37`, `minSdk = 28` (matches `:app`), JVM 17. Mirror the shape of
   `data/build.gradle.kts`. **Do NOT apply `google-services`/`crashlytics`.**
-- `settings.gradle.kts`: `include(":shared-ui")`; enable
+- `settings.gradle.kts`: `include(":ui-android")`; enable
   `TYPESAFE_PROJECT_ACCESSORS` if not on.
 - Add CMP catalog entries: `compose.components.resources`,
   `org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose` (KMP),
   `io.insert-koin:koin-compose`.
-- Move `core/mvi/*` → `shared-ui/src/commonMain/kotlin/.../core/mvi/`. Swap the
+- Move `core/mvi/*` → `ui-android/src/commonMain/kotlin/.../core/mvi/`. Swap the
   `androidx.lifecycle` import to the JetBrains KMP `lifecycle-viewmodel`.
 - Move `core/theme/*` → `commonMain`. Move `res/font/*.ttf` →
-  `shared-ui/src/commonMain/composeResources/font/`. Rewrite `EmmType` to use
+  `ui-android/src/commonMain/composeResources/font/`. Rewrite `EmmType` to use
   `Res.font.*` (CMP) instead of `Font(R.font.*)`.
-- `:app` adds `implementation(projects.sharedUi)`, deletes its `core/mvi/` and
+- `:app` adds `implementation(projects.uiAndroid)`, deletes its `core/mvi/` and
   `core/theme/` copies, re-imports from the shared package (keep the SAME package
   path `com.emm.justchill.core.{mvi,theme}` so imports across `:app` don't churn).
 - **Gate**: `./gradlew :data:compileDebugKotlinAndroid` + `assembleDevDebug`
@@ -172,7 +172,7 @@ Moved `transaction/`, `seetransactions/`, `transactionModule`. Reality: ~62 file
 `category/{CategoryColor,ColorsAll,IconCatalog,IconsAll}`, `account/AccountPalette`,
 `hh/shared/{CurrencyFormat,Utils}` + new `hh/shared/{SpanishDateFormat,NumberFormatEs,
 SpanishSearch}.kt`. `HhModule` stays in `:app` (nav host). `CentsFormatterTest`
-moved to `shared-ui/commonTest` (pure JUnit); MockK VM tests stayed in `:app`.
+moved to `ui-android/commonTest` (pure JUnit); MockK VM tests stayed in `:app`.
 
 ### Slice 2 — categories — ✅ DONE (`1f35f32`)
 Moved category screens/VMs + `categoryModule` (use cases only; `DefaultCategoryRepository`
@@ -215,13 +215,13 @@ VM. Hoisted open-email intent → `onOpenEmailApp()` callback in nav host. `ic_g
 `@OptIn(ExperimentalComposeUiApi)`). `authModule` stays in `:app`. **Reviewer caught a
 RED gate** the writer falsely reported green: co-moving `EmmSnackbar.kt` (holds
 `internal highlightQuoted`) orphaned `HighlightQuotedTest.kt` in `:app` (can't see a
-`shared-ui` internal). Fixed by moving the test to `commonTest` (junit→kotlin.test).
+`ui-android` internal). Fixed by moving the test to `commonTest` (junit→kotlin.test).
 **Lesson: co-moving a file with an `internal` symbol breaks its test if the test
 stays behind — move the test too.**
 
 #### Slice 7b — profile — ✅ DONE
 Moved `profile/` (`ProfileScreen/ViewModel/UiState/Intent/Effect`, `DeleteAccountDialog`,
-`PrivacyPolicyScreen`, `RetryPill`) to `shared-ui` commonMain. Resolved work:
+`PrivacyPolicyScreen`, `RetryPill`) to `ui-android` commonMain. Resolved work:
 - **Export contract**: `ProfileIntent.ExportToStream(OutputStream)` → `ExportRequested` (object).
   VM generates the JSON and emits it via new `ProfileEffect.ExportReady(json)`; the nav host
   owns the SAF write (and now the disk-space `ExportFailed` hint, which used to live in the VM —
@@ -239,7 +239,7 @@ Moved `profile/` (`ProfileScreen/ViewModel/UiState/Intent/Effect`, `DeleteAccoun
 - `ProfileViewModel` wired with an explicit `viewModel { }` block (qualified `appVersion` can't go
   through the constructor-DSL); `clock` omitted to use its `Clock.System` default.
 
-Verified: `assembleDevDebug` green, `:app` + `shared-ui` host unit tests green, `commonMain`
+Verified: `assembleDevDebug` green, `:app` + `ui-android` host unit tests green, `commonMain`
 compiles for `iosSimulatorArm64` (no JVM leak). MockK VM tests stay in `:app` `test/` (same package).
 
 > **Deferred to Slice 8**: the "move the remaining agnostic part of `hhModule`" sweep is a
@@ -250,7 +250,7 @@ Platform Koin modules (`DbModule`, `SupabaseModule`, `AuthModule`, `SyncModule`)
 ### Slice 8 — cleanup (SPLIT into 8a / 8b — coupling too complex for one review, mirrors 7a/7b)
 
 #### Slice 8a — agnostic shared atoms + orphan deletion + fonts drop — ✅ DONE
-Moved the remaining agnostic `hh/shared/` atoms/utils to `shared-ui/commonMain`:
+Moved the remaining agnostic `hh/shared/` atoms/utils to `ui-android/commonMain`:
 `LabelTextField`, `UiStrings` (as-is), `EmmDropDown`, `EmmPrimaryButton`, `Filters`
 (`@PreviewLightDark`/`@Preview(showBackground=true)` → CMP param-less
 `org.jetbrains.compose.ui.tooling.preview.Preview`, preview functions kept), and
@@ -268,7 +268,7 @@ pieces: `Hh.kt`, `HhRoutes.kt`, `ObjectsRoutes.kt`, `SyncEventsHandler.kt`. Gate
 Split `:app`'s `hhModule` into `commonMain` per-feature Koin modules. Domain use cases +
 ViewModels (which depend on `:domain` repository INTERFACES, not `Default` impls) moved to
 `commonMain`; `:data` repository binds + `LocalDataSource`s stayed in `:app` `hhModule`.
-New `commonMain` modules (`shared-ui/.../hh/di/`): `reportModule` (5 report use cases +
+New `commonMain` modules (`ui-android/.../hh/di/`): `reportModule` (5 report use cases +
 `ReportViewModel`), `recurringModule` (7 recurring use cases + `RecurringMovementsViewModel`
 + explicit `AddEditRecurringMovementViewModel` param block), `homeModule` (`HomeViewModel`;
 its use cases live in transaction/recurring/dbModule and resolve globally), `seetransactionsModule`
@@ -294,13 +294,13 @@ the infix one. Gate green (incl. iOS compile — zero `java.*` leak). This CLOSE
 - **MockK tests**: any moved VM tests that use MockK stay in `:app`
   `androidUnitTest` (MockK is JVM-only) until rewritten as `commonTest` fakes.
   Do NOT force MockK into `commonTest`.
-- **`google-services` plugin**: NEVER applied to `shared-ui` (breaks native).
+- **`google-services` plugin**: NEVER applied to `ui-android` (breaks native).
 - **Per-slice commit**: one feature group per commit, each `assembleDevDebug`
   green, mirroring the slice-per-commit history of the redesign track.
-- **No iOS run yet**: Phase 3 only proves Android still builds from `shared-ui`.
+- **No iOS run yet**: Phase 3 only proves Android still builds from `ui-android`.
   iOS first run is Phase 5.
 
 ## Done-when
-All shared UI lives in `shared-ui`; `:app` holds only the nav host + platform
+All shared UI lives in `ui-android`; `:app` holds only the nav host + platform
 Koin modules + MainActivity/EmmApp + launcher resources; `assembleDevDebug`
 green; the running Android app is visually + behaviorally identical to pre-Phase-3.

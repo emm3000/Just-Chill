@@ -1,9 +1,9 @@
 # :presentation — CLAUDE.md
 
-The compose-free presentation layer, extracted from `:shared-ui` in slice S1 of
+The compose-free presentation layer, extracted from `:ui-android` in slice S1 of
 `docs/swiftui/PLAN.md` (ADR 005): MVI core, every feature's ViewModel/UiState/Intent/Effect,
 the Koin DI modules, formatters, `UiStrings` and the sync/preferences ports. Both UIs sit on it —
-`:shared-ui` (Android Compose) as a Gradle dependency, the SwiftUI iOS app through the
+`:ui-android` (Android Compose) as a Gradle dependency, the SwiftUI iOS app through the
 **JustChillKit** framework this module declares (static, SKIE-processed, exports `:domain` +
 `:data`).
 
@@ -16,11 +16,11 @@ Root packages: `com.emm.justchill.{core, hh.<feature>}` — unchanged from the e
 the structural guarantee (lost in slice H) that ViewModels never touch UI types, and it is what
 makes the module exportable to Swift. Models carry semantic ids (`iconId`, `colorId`), never
 `ImageVector`/`Color` — resolution happens at render time in each UI
-(`shared-ui .../CategoryResolve.kt` on Android). If a state class needs something visual, it
+(`ui-android .../CategoryResolve.kt` on Android). If a state class needs something visual, it
 carries the id and the UI resolves it.
 
-Stability note: `:shared-ui` compensates the missing `@Stable`/`@Immutable` annotations via
-`shared-ui/compose_stability.conf` (`stabilityConfigurationFiles`) — state classes here are
+Stability note: `:ui-android` compensates the missing `@Stable`/`@Immutable` annotations via
+`ui-android/compose_stability.conf` (`stabilityConfigurationFiles`) — state classes here are
 declared stable there. Keep state classes immutable (`val` + immutable collections) or that
 declaration becomes a lie.
 
@@ -71,4 +71,4 @@ iosMain/            KoinIos.kt (initKoin + iosPlatformModule + Swift-facing VM r
 
 On the standard `qualityGate` via the convention plugin: detekt (main/iosMain source sets), host
 tests, and — on macOS — the iOS compiles. This module now carries the compile-gate invariant that
-`:shared-ui` used to (ADR 003 → ADR 005): the exported core stays free of `java.*`/`android.*`.
+`:ui-android` used to (ADR 003 → ADR 005): the exported core stays free of `java.*`/`android.*`.

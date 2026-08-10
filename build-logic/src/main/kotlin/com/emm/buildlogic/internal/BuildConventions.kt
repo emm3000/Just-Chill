@@ -5,7 +5,7 @@ package com.emm.buildlogic.internal
  * bumping one meant editing all three and remembering all three.
  *
  * `minSdk` is deliberately absent: the modules genuinely disagree (26 for :domain and :data, 28 for
- * :shared-ui) and a shared default would hide a real difference.
+ * :ui-android) and a shared default would hide a real difference.
  */
 internal object BuildConventions {
     const val COMPILE_SDK = 37

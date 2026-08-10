@@ -17,11 +17,11 @@ Run once per clone.
 The hook runs these five tasks:
 
 ```bash
-./gradlew detektMainAndroid                          # KMP modules: commonMain + androidMain, with type resolution
-./gradlew detektIosMainSourceSet                     # KMP modules: iosMain, no type resolution (Native has none)
-./gradlew :androidApp:detektMain                     # androidApp, all variants, with type resolution
-./gradlew :shared-ui:detektAndroidHostTestSourceSet  # shared-ui host tests
-./gradlew :data:detektAndroidDeviceTestSourceSet     # data instrumented tests
+./gradlew detektMainAndroid                           # KMP modules: commonMain + androidMain, with type resolution
+./gradlew detektIosMainSourceSet                      # KMP modules: iosMain, no type resolution (Native has none)
+./gradlew :androidApp:detektMain                      # androidApp, all variants, with type resolution
+./gradlew :ui-android:detektAndroidHostTestSourceSet  # ui-android host tests
+./gradlew :data:detektAndroidDeviceTestSourceSet      # data instrumented tests
 ```
 
 ## Why not plain `./gradlew detekt`
@@ -30,16 +30,16 @@ That is what the hook used to run, and after the KMP migration it stopped meanin
 anything:
 
 ```
-> Task :detekt           NO-SOURCE
-> Task :data:detekt      NO-SOURCE
-> Task :shared-ui:detekt NO-SOURCE
-> Task :domain:detekt    NO-SOURCE
-> Task :androidApp:detekt          ← the only one that ran
+> Task :detekt            NO-SOURCE
+> Task :data:detekt       NO-SOURCE
+> Task :ui-android:detekt NO-SOURCE
+> Task :domain:detekt     NO-SOURCE
+> Task :androidApp:detekt           ← the only one that ran
 ```
 
 detekt's plain task does not see KMP source sets, so the gate silently shrank to
 `:androidApp` — nine files, none of them the UI, ViewModels or Koin wiring that
-now live in `:shared-ui`.
+now live in `:ui-android`.
 
 The plain `detekt` task still exists and still works; it just is not a gate. Its
 stem baselines (`config/detekt/baseline-<module>.xml`, no source-set suffix)

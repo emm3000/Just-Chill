@@ -1,4 +1,4 @@
-# :shared-ui — CLAUDE.md
+# :ui-android — CLAUDE.md
 
 Android's Compose UI module: screens, navigation, theme and widgets. **Android-only since slice S2**
 (`justchill.kmp.ios=false` in this module's gradle.properties — ADR 005): the iOS app is native
@@ -85,7 +85,7 @@ ever stutters, check compose compiler metrics before blaming the pattern.
 
 ## Testing
 
-- `./gradlew :shared-ui:testAndroidHostTest` — JVM host tests. `--rerun` is a **per-task** option:
+- `./gradlew :ui-android:testAndroidHostTest` — JVM host tests. `--rerun` is a **per-task** option:
   with several tasks in one invocation it forces only the task it follows.
 - Lives here: `AppNavigatorTest`, `NavSavedStateConfigurationTest`, `HighlightQuotedTest`.
   The Koin graph test and the formatter/mapper suites moved to `:presentation`.

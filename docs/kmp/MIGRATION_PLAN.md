@@ -6,7 +6,7 @@
 > iOS is added as *new targets*, never at the cost of what already works.
 >
 > **Status**: ✅ **COMPLETE AND MERGED TO TRUNK.** Phases 0–6 are done: all four
-> modules are KMP, `:app` was renamed `:androidApp`, `shared-ui` holds one shared
+> modules are KMP, `:app` was renamed `:androidApp`, `ui-android` holds one shared
 > Compose base for both platforms, and iOS reached parity (auth + sync
 > runtime-validated against a local Supabase stack). The branch
 > `kmp/phase-0-scaffolding` fast-forwarded into `trunk` (67 commits, linear).
@@ -65,7 +65,7 @@ JustChill/
 │                    commonMain: repos, SQLDelight, Supabase, sync logic
 │                    androidMain: AndroidSqliteDriver, OkHttp engine
 │                    iosMain:     NativeSqliteDriver, Darwin engine
-├── shared-ui/     NEW — Compose Multiplatform UI + ViewModels + MVI + Koin modules
+├── ui-android/     NEW — Compose Multiplatform UI + ViewModels + MVI + Koin modules
 │                    (extracted from today's :app)
 ├── androidApp/    Thin Android entry point (was :app, gutted)
 │                    Activity, Application, Firebase, Crashlytics,
@@ -116,7 +116,7 @@ KMP-ready already (no change to the libs, just where they're declared):
 - **Android-only, stays in `androidApp`**: Firebase BOM + Crashlytics,
   `google-services` plugin, Google Sign-In (`google-identity-googleid` =
   Credential Manager), Google Fonts (`androidx.ui.text.google.fonts`).
-- MVI base (`app/core/mvi/MviViewModel`) → moves to `shared-ui` commonMain
+- MVI base (`app/core/mvi/MviViewModel`) → moves to `ui-android` commonMain
   (StateFlow/Flow/coroutines are all KMP). `androidx.lifecycle.viewmodel`
   has KMP artifacts now (`lifecycle-viewmodel-compose` multiplatform).
 
@@ -147,7 +147,7 @@ KMP-ready already (no change to the libs, just where they're declared):
 - [ ] Rewrite `domain/build.gradle.kts`: `java-library` + `kotlin.jvm`
       → `kotlin.multiplatform` with `androidLibrary{}` (KMP DSL) +
       `iosArm64()` + `iosSimulatorArm64()`. Framework `baseName = "Shared"` is
-      configured at the `shared-ui` level later; domain just exposes its API.
+      configured at the `ui-android` level later; domain just exposes its API.
 - [ ] Move `domain/src/main/kotlin` → `domain/src/commonMain/kotlin`.
 - [ ] Move tests: **MockK tests stay in `androidHostTest` (JVM)**, NOT
       `commonTest`. `commonTest` only for pure `kotlin-test`. This keeps the
@@ -218,19 +218,19 @@ The meat. Do as **several small PRs**, each Android-green.
 
 ---
 
-### Phase 3 — `shared-ui` (Compose Multiplatform) — HIGH RISK / LARGEST
+### Phase 3 — `ui-android` (Compose Multiplatform) — HIGH RISK / LARGEST
 **Scope:** extract Compose UI + ViewModels + MVI + Koin modules from `:app` into
 a shared module. 196 files don't move in one PR — slice by feature.
-- [ ] Create `shared-ui` module: `kotlin.multiplatform` + `androidLibrary{}` +
+- [ ] Create `ui-android` module: `kotlin.multiplatform` + `androidLibrary{}` +
       ios targets + `composeMultiplatform` + `composeCompiler`. Framework
       `baseName = "Shared"`, `isStatic = true` (as in the wizard).
 - [ ] Swap Jetpack Compose artifacts → Compose Multiplatform
       (`org.jetbrains.compose.*` / `compose.material3`, `compose.foundation`, etc.).
-- [ ] Move MVI base (`core/mvi/`) → `shared-ui/commonMain` first (foundation).
+- [ ] Move MVI base (`core/mvi/`) → `ui-android/commonMain` first (foundation).
 - [ ] Move features in slices (one PR per feature group), each gated:
       transactions → categories → recurring → home → auth/sync UI.
       Use `lifecycle-viewmodel-compose` multiplatform for ViewModels.
-- [ ] Move the 9 Koin modules that are platform-agnostic into `shared-ui`;
+- [ ] Move the 9 Koin modules that are platform-agnostic into `ui-android`;
       platform-specific bindings (driver context, Firebase) stay in `androidApp`.
 - [ ] **Compose Resources**: migrate `res/` strings/drawables used by shared
       screens into `commonMain/composeResources/`. Spanish UI strings stay
@@ -238,7 +238,7 @@ a shared module. 196 files don't move in one PR — slice by feature.
       — needs a Compose Multiplatform font strategy (bundle the font, or
       `expect/actual` the FontFamily).
 - **Gate per slice:** `./gradlew assembleDevDebug` green; the app still runs
-  with the moved screens served from `shared-ui`.
+  with the moved screens served from `ui-android`.
 
 ---
 
@@ -249,8 +249,8 @@ a shared module. 196 files don't move in one PR — slice by feature.
       Crashlytics, Google Sign-In, `AndroidManifest`, Android Koin bootstrap,
       nav host `Hh.kt`, `SyncOrchestrator`, launcher/theme resources. (No
       further code moved — Phase 3 already extracted shared UI.)
-- [x] `androidApp` depends on `shared-ui`/`data`/`domain` via typesafe accessors
-      (`projects.sharedUi`, `projects.data`, `projects.domain`);
+- [x] `androidApp` depends on `ui-android`/`data`/`domain` via typesafe accessors
+      (`projects.uiAndroid`, `projects.data`, `projects.domain`);
       `TYPESAFE_PROJECT_ACCESSORS` enabled in `settings.gradle.kts`.
 - [x] `settings.gradle.kts` + CI workflows + `CLAUDE.md` updated; prod AAB is
       now `androidApp-prod-release.aab`.
@@ -264,11 +264,11 @@ a shared module. 196 files don't move in one PR — slice by feature.
 ### Phase 5 — `iosApp` first run — iOS APPEARS — MEDIUM RISK ✅ DONE (5a `dffba01`, 5b `42f3ecd`)
 **Scope:** get Compose UI rendering on an iOS simulator.
 - [x] Wire the wizard's `iosApp/` Xcode project to link the `Shared` framework
-      produced by `shared-ui` (`FRAMEWORK_SEARCH_PATHS` in pbxproj).
+      produced by `ui-android` (`FRAMEWORK_SEARCH_PATHS` in pbxproj).
 - [x] Implement iOS actuals confirmed working: `NativeSqliteDriver` (2b),
       exception mapping (2d), Clock (2c). (Darwin engine (2e) wired, first
       exercised by sync in Phase 6.)
-- [x] `MainViewController()` entry point in `shared-ui/iosMain` returning the
+- [x] `MainViewController()` entry point in `ui-android/iosMain` returning the
       root Compose screen (`IosApp()` nav host); `ContentView.swift` hosts it.
 - [x] Koin init for iOS (no Android Context — provide iOS driver/paths).
 - **Gate:** ✅ met — user-validated on the simulator (5b). App launches, local-first
@@ -322,7 +322,7 @@ a shared module. 196 files don't move in one PR — slice by feature.
   `:domain:test` may become `:domain:testDebugUnitTest` or `iosTest`). Update
   CI, detekt config, and `CLAUDE.md` build commands at the end of each phase.
 - **Firebase google-services plugin:** must NOT be applied to KMP library
-  modules — only `androidApp`. Applying it to `shared-ui`/`data` breaks the
+  modules — only `androidApp`. Applying it to `ui-android`/`data` breaks the
   iOS/native compilation.
 
 ---
@@ -344,7 +344,7 @@ a shared module. 196 files don't move in one PR — slice by feature.
 3. **Compose vs native SwiftUI (architectural):** confirmed **shared Compose UI**
    for now. Revisit only if iOS UX feels non-native enough to justify the
    `sharedLogic`+`sharedUI` split.
-4. **Module naming:** `shared-ui` vs `app-shared` vs `presentation` — pick a name
+4. **Module naming:** `ui-android` vs `app-shared` vs `presentation` — pick a name
    before Phase 3.
 
 ---
@@ -355,7 +355,7 @@ a shared module. 196 files don't move in one PR — slice by feature.
 Phase 0  scaffolding        ── Android green (no-op)
 Phase 1  domain → KMP       ── Android green + iOS compiles
 Phase 2  data → KMP (2a-2e) ── Android green at each sub-PR + iOS compiles
-Phase 3  shared-ui (Compose)── Android green per feature slice
+Phase 3  ui-android (Compose)── Android green per feature slice
 Phase 4  split → androidApp ── Android app intact from new entry point
 Phase 5  iosApp first run   ── iOS local-first works in simulator
 Phase 6  iOS parity         ── sync/auth/telemetry per agreed scope

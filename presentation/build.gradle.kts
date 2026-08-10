@@ -2,7 +2,7 @@ plugins {
     id("justchill.kmp.library")
     // Generates IosSupabaseConfig into iosMain from root supabase.properties. iOS has no
     // BuildConfig, so this is the counterpart of :androidApp's buildConfigField block. Moved here
-    // from :shared-ui in slice S2: the config's only consumer is KoinIos.kt, which lives here now.
+    // from :ui-android in slice S2: the config's only consumer is KoinIos.kt, which lives here now.
     id("justchill.ios.supabase.config")
     // SKIE rewrites the framework's Swift interface: sealed -> Swift enums (exhaustive
     // onEnum(of:)), Flow/StateFlow -> AsyncSequence, suspend -> async. Without it the MVI surface
@@ -11,7 +11,7 @@ plugins {
 }
 
 // The compose-free presentation layer: MVI core, every feature's ViewModel/UiState/Intent/Effect,
-// the Koin DI modules and the shared formatters/strings. :shared-ui (Compose) sits on top of it;
+// the Koin DI modules and the shared formatters/strings. :ui-android (Compose) sits on top of it;
 // the iOS SwiftUI app will consume it through the exported framework (slice S2 of
 // docs/swiftui/PLAN.md). NO compose dependency may ever appear here — that is the whole point
 // of the module.
@@ -46,12 +46,12 @@ kotlin {
             // api: the ViewModels' public signatures expose domain types (use cases, entities).
             api(project(":domain"))
             // The DI modules bind :data implementations (Default* repositories, SQLDelight wiring)
-            // to :domain interfaces — same layering as shared-ui had since slice H. ViewModel
+            // to :domain interfaces — same layering as ui-android had since slice H. ViewModel
             // purity (VMs take :domain interfaces only) stays a convention, reviewed not enforced.
             // api (not implementation) because the framework block export()s :data — export
             // requires the exported project on the api configuration.
             api(projects.data)
-            // Multiplatform ViewModel + viewModelScope WITHOUT the compose runtime (shared-ui uses
+            // Multiplatform ViewModel + viewModelScope WITHOUT the compose runtime (ui-android uses
             // the -compose variant of the same artifact).
             implementation(libs.jetbrains.lifecycle.viewmodel)
             // Supabase's KotlinXSerializer config in supabaseModule needs kotlinx-serialization-json

@@ -37,7 +37,7 @@ framework. Example: `TransactionRepository` lives here; its `DefaultTransactionR
 The app is local-first with **optional** multi-device sync: auth ports live in `auth/`
 (`AuthRepository`, `ObserveSessionUseCase`, `SessionStatus`, claim use cases) and sync ports in
 `sync/` (`SyncRepository`, `SyncCursorStore`, `SyncDataUseCase`, `ConflictResolver` — pure LWW).
-Supabase implementations live in `:data`; the `SyncCursorStore` adapter lives in `shared-ui`.
+Supabase implementations live in `:data`; the `SyncCursorStore` adapter lives in `ui-android`.
 See `docs/sync/PLAN.md` and `docs/adr/001` / `docs/adr/002`.
 
 ## Testing
