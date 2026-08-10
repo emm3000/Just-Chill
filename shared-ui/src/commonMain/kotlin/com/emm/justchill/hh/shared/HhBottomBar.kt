@@ -32,16 +32,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.dropUnlessResumed
-import androidx.navigation3.runtime.NavBackStack
-import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 
 // Shared bottom navigation bar for both nav hosts (Android Hh.kt + iOS IosApp.kt). The tab labels are
-// Spanish UI copy and are preserved verbatim. `dropUnlessResumed` is baked into the click handlers so
-// BOTH platforms get the double-tap nav guard (iOS previously used plain lambdas and gained the guard
-// in this slice — a strict improvement that prevents nav races during transitions).
+// Spanish UI copy and are preserved verbatim.
+//
+// This bar composes in the Scaffold's bottomBar slot — OUTSIDE NavDisplay — so a lifecycle-based
+// transition guard cannot work here: `LocalLifecycleOwner` is the Activity's and stays RESUMED for the
+// whole of in-app navigation. The `dropUnlessResumed` wrappers that used to sit on these click
+// handlers were inert and are gone. Double taps are stopped instead by `AppNavigator.push`, which
+// refuses a route already on top and needs no lifecycle to do it.
 
 private data class BottomTab(
     val route: BottomBarRoute?, // null = add pseudo-tab
@@ -84,7 +85,7 @@ fun HhBottomBar(current: BottomBarRoute?, onTabClick: (BottomBarRoute) -> Unit, 
                 if (tab.isAdd) {
                     AddBottomBarItem(
                         label = tab.label,
-                        onClick = dropUnlessResumed(block = onAddClick),
+                        onClick = onAddClick,
                         modifier = Modifier.weight(1f),
                     )
                 } else {
@@ -93,7 +94,7 @@ fun HhBottomBar(current: BottomBarRoute?, onTabClick: (BottomBarRoute) -> Unit, 
                         label = tab.label,
                         icon = tab.icon,
                         isActive = isActive,
-                        onClick = dropUnlessResumed { tab.route?.let(onTabClick) },
+                        onClick = { tab.route?.let(onTabClick) },
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -187,35 +188,4 @@ private fun AddBottomBarItem(label: String, onClick: () -> Unit, modifier: Modif
             maxLines = 1,
         )
     }
-}
-
-/**
- * Switches to a bottom-bar tab using the "exit through home" pattern:
- * back stack always starts at [startTab], with the selected tab on top (if different).
- * Each nav host passes its own START_TAB ([SeeTransactionRoute] on Android, [HomeRoute] on iOS).
- */
-fun NavBackStack<NavKey>.switchTab(target: BottomBarRoute, startTab: BottomBarRoute) {
-    clear()
-    add(startTab)
-    if (target != startTab) add(target)
-}
-
-/**
- * Pop intermediate routes (`CategoryRoute` and any legacy in-between) until
- * the transaction screen is at the top, so it receives `pendingCategory`
- * via its `LaunchedEffect` and the user lands back where they were.
- */
-fun NavBackStack<NavKey>.popToTransactionScreen() {
-    while (isNotEmpty() && last() !is AddTransactionRoute && last() !is EditTransactionRoute) {
-        removeLastOrNull()
-    }
-}
-
-/**
- * Replaces the entire back stack with [route]. Used for auth transitions, logout, and the
- * Manifesto first-launch gate to land on START_TAB.
- */
-fun NavBackStack<NavKey>.replaceAll(route: NavKey) {
-    clear()
-    add(route)
 }

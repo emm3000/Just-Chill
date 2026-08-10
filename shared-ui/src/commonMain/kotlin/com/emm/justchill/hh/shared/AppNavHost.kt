@@ -25,7 +25,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -110,6 +109,10 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         // host, one call). iOS needs it (no K/N reflection serializer discovery); Android tolerates it.
         val backStack: NavBackStack<NavKey> =
             rememberNavBackStack(navSavedStateConfiguration, startRoute)
+        // Host-level navigator for the two call sites that compose OUTSIDE NavDisplay: the bottom bar
+        // and SyncEventsHandler. Only its duplicate-key guard is live here — see AppNavigator. Every
+        // entry below builds its own, in-scene, where the transition guard works too.
+        val hostNav: AppNavigator = rememberAppNavigator(backStack)
         var pendingCategory by remember { mutableStateOf<SelectableCategory?>(null) }
         // Holds the JSON contents of an imported backup file until the user confirms the destructive
         // replace. Hoisted to the host so the Android SAF import launcher (created in
@@ -130,8 +133,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         SyncEventsHandler(
             syncController = syncController,
             snackbarHostState = snackbarHostState,
-            // Guard: only push AuthRoute if it is not anywhere in the back stack.
-            onNavigateToSignIn = { if (backStack.none { it is AuthRoute }) backStack.add(AuthRoute) },
+            onNavigateToSignIn = { hostNav.push(AuthRoute) },
         )
 
         val currentRoute: NavKey? = backStack.lastOrNull()
@@ -148,8 +150,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 ) {
                     HhBottomBar(
                         current = currentRoute as? BottomBarRoute,
-                        onTabClick = { tab -> backStack.switchTab(tab, startTab) },
-                        onAddClick = { backStack.add(AddTransactionRoute) },
+                        onTabClick = { tab -> hostNav.switchTab(tab) },
+                        onAddClick = { hostNav.push(AddTransactionRoute) },
                     )
                 }
             },
@@ -162,21 +164,21 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     .background(colors.bg)
                     .padding(padding),
                 backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
                 entryDecorators = listOf(
                     rememberSaveableStateHolderNavEntryDecorator(),
                     rememberViewModelStoreNavEntryDecorator(),
                 ),
                 entryProvider = entryProvider {
                     entry<ManifestoRoute> { key ->
+                        val nav: AppNavigator = rememberAppNavigator(backStack)
                         ManifestoScreen(
                             isRevisit = key.isRevisit,
                             onStart = {
                                 if (key.isRevisit) {
-                                    backStack.removeLastOrNull()
+                                    nav.pop()
                                 } else {
                                     appPrefs.firstLaunchSeen = true
-                                    backStack.replaceAll(startTab)
+                                    nav.replaceAll(startTab)
                                 }
                             },
                         )
@@ -184,14 +186,16 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
                     entry<PrivacyPolicyRoute> {
                         // Registered on both platforms; iOS never navigates here (privacy click is inert).
+                        val nav: AppNavigator = rememberAppNavigator(backStack)
                         PrivacyPolicyScreen(
-                            onBack = { backStack.removeLastOrNull() },
+                            onBack = { nav.pop() },
                         )
                     }
 
                     entry<AuthRoute> {
+                        val nav: AppNavigator = rememberAppNavigator(backStack)
                         AuthScreen(
-                            onBack = { backStack.removeLastOrNull() },
+                            onBack = { nav.pop() },
                             snackbarHostState = snackbarHostState,
                             onOpenEmailApp = platform.onOpenEmailApp,
                             showGoogleSignIn = platform.showGoogleSignIn,
@@ -199,26 +203,27 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     }
 
                     entry<HomeRoute> {
+                        val nav: AppNavigator = rememberAppNavigator(backStack)
                         HomeEntry(
-                            navigateToAll = dropUnlessResumed {
-                                backStack.switchTab(SeeTransactionRoute, startTab)
-                            },
-                            navigateToAdd = { backStack.add(AddTransactionRoute) },
-                            navigateToEdit = { id -> backStack.add(EditTransactionRoute(id)) },
-                            navigateToReport = { backStack.add(ReportRoute) },
+                            navigateToAll = { nav.switchTab(SeeTransactionRoute) },
+                            navigateToAdd = { nav.push(AddTransactionRoute) },
+                            navigateToEdit = { id -> nav.push(EditTransactionRoute(id)) },
+                            navigateToReport = { nav.push(ReportRoute) },
                             snackbarHostState = snackbarHostState,
                         )
                     }
 
                     entry<SeeTransactionRoute> {
+                        val nav: AppNavigator = rememberAppNavigator(backStack)
                         SeeTransactionsScreen(
                             onEditTransaction = { id ->
-                                backStack.add(EditTransactionRoute(id))
+                                nav.push(EditTransactionRoute(id))
                             },
                         )
                     }
 
                     entry<AccountsRoute> {
+                        val nav: AppNavigator = rememberAppNavigator(backStack)
                         val vm: AccountsViewModel = koinViewModel()
                         val accountsState by vm.state.collectAsStateWithLifecycle()
 
@@ -233,13 +238,14 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         AccountsScreen(
                             state = accountsState,
                             onIntent = vm::onIntent,
-                            addCategory = { backStack.add(CategoryRoute()) },
-                            addAccount = { backStack.add(AddAccountRoute) },
+                            addCategory = { nav.push(CategoryRoute()) },
+                            addAccount = { nav.push(AddAccountRoute) },
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
 
                     entry<CategoriesListRoute> {
+                        val nav: AppNavigator = rememberAppNavigator(backStack)
                         val vm: CategoriesViewModel = koinViewModel()
                         val categoriesState by vm.state.collectAsStateWithLifecycle()
 
@@ -254,13 +260,14 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         CategoriesScreen(
                             state = categoriesState,
                             onIntent = vm::onIntent,
-                            onAddCategory = { backStack.add(CategoryRoute()) },
-                            onBack = { backStack.removeLastOrNull() },
+                            onAddCategory = { nav.push(CategoryRoute()) },
+                            onBack = { nav.pop() },
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
 
                     entry<ProfileRoute> {
+                        val nav: AppNavigator = rememberAppNavigator(backStack)
                         val vm: ProfileViewModel = koinViewModel()
                         val profileState by vm.state.collectAsStateWithLifecycle()
 
@@ -322,18 +329,18 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                             state = profileState,
                             appVersion = appVersion,
                             isDebug = platform.isDebug,
-                            onCategoriesClick = { backStack.add(CategoriesListRoute) },
-                            onAccountsClick = { backStack.add(AccountsRoute) },
-                            onRecurringClick = { backStack.add(RecurringMovementsRoute) },
-                            onAboutClick = { backStack.add(ManifestoRoute(isRevisit = true)) },
+                            onCategoriesClick = { nav.push(CategoriesListRoute) },
+                            onAccountsClick = { nav.push(AccountsRoute) },
+                            onRecurringClick = { nav.push(RecurringMovementsRoute) },
+                            onAboutClick = { nav.push(ManifestoRoute(isRevisit = true)) },
                             onExportClick = {
                                 if (platform.supportsBackup) vm.onIntent(ProfileIntent.ExportRequested)
                             },
                             onImportClick = { if (platform.supportsBackup) platform.requestImport() },
                             onPrivacyClick = {
-                                if (platform.supportsPrivacyPolicy) backStack.add(PrivacyPolicyRoute)
+                                if (platform.supportsPrivacyPolicy) nav.push(PrivacyPolicyRoute)
                             },
-                            onSignInClick = { backStack.add(AuthRoute) },
+                            onSignInClick = { nav.push(AuthRoute) },
                             onSignOutClick = { vm.onIntent(ProfileIntent.SignOut) },
                             onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccount) },
                             onSyncNowClick = { vm.onIntent(ProfileIntent.SyncNow) },
@@ -341,14 +348,16 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     }
 
                     entry<ReportRoute> {
+                        val nav: AppNavigator = rememberAppNavigator(backStack)
                         ReportScreen(
-                            onBack = { backStack.removeLastOrNull() },
-                            onAddTransaction = { backStack.add(AddTransactionRoute) },
+                            onBack = { nav.pop() },
+                            onAddTransaction = { nav.push(AddTransactionRoute) },
                             onShareText = platform.onShareText,
                         )
                     }
 
                     entry<AddTransactionRoute> {
+                        val nav: AppNavigator = rememberAppNavigator(backStack)
                         val vm: AddTransactionViewModel = koinViewModel()
 
                         LaunchedEffect(pendingCategory) {
@@ -360,33 +369,35 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
                         AddTransactionScreen(
                             vm = vm,
-                            popBackStack = { backStack.removeLastOrNull() },
+                            popBackStack = { nav.pop() },
                             snackbarHostState = snackbarHostState,
                             onAddNewCategory = {
-                                backStack.add(
+                                nav.push(
                                     CategoryRoute(
                                         propagateToTransaction = true,
                                     ),
                                 )
                             },
                             onAddNewAccount = {
-                                backStack.add(AddAccountRoute)
+                                nav.push(AddAccountRoute)
                             },
                         )
                     }
 
                     entry<EditTransactionRoute> { key ->
+                        val nav: AppNavigator = rememberAppNavigator(backStack)
                         EditTransaction(
                             transactionId = key.transactionId,
-                            onBack = { backStack.removeLastOrNull() },
+                            onBack = { nav.pop() },
                             snackbarHostState = snackbarHostState,
-                            onAddNewAccount = { backStack.add(AddAccountRoute) },
+                            onAddNewAccount = { nav.push(AddAccountRoute) },
                         )
                     }
 
                     entry<CategoryRoute> { key ->
+                        val nav: AppNavigator = rememberAppNavigator(backStack)
                         AddCategoryScreen(
-                            onBack = { backStack.removeLastOrNull() },
+                            onBack = { nav.pop() },
                             snackbarHostState = snackbarHostState,
                             onCategorySave = { created ->
                                 if (key.propagateToTransaction) {
@@ -397,10 +408,10 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                                         color = findById(created.color),
                                         categoryType = created.categoryType,
                                     )
-                                    backStack.popToTransactionScreen()
+                                    nav.popToTransaction()
                                 } else {
                                     showRootMessage("Categoría «${created.name}» creada")
-                                    backStack.removeLastOrNull()
+                                    nav.pop()
                                 }
                             },
                             vm = koinViewModel(
@@ -410,22 +421,25 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     }
 
                     entry<AddAccountRoute> {
+                        val nav: AppNavigator = rememberAppNavigator(backStack)
                         AddAccountScreen(
-                            onBack = { backStack.removeLastOrNull() },
+                            onBack = { nav.pop() },
                             snackbarHostState = snackbarHostState,
                         )
                     }
 
                     entry<RecurringMovementsRoute> {
+                        val nav: AppNavigator = rememberAppNavigator(backStack)
                         RecurringMovementsEntry(
-                            onNavigateToAddEdit = { id -> backStack.add(AddEditRecurringMovementRoute(id)) },
+                            onNavigateToAddEdit = { id -> nav.push(AddEditRecurringMovementRoute(id)) },
                             onShowError = showRootMessage,
                         )
                     }
 
                     entry<AddEditRecurringMovementRoute> { key ->
+                        val nav: AppNavigator = rememberAppNavigator(backStack)
                         AddEditRecurringMovementScreen(
-                            onBack = { backStack.removeLastOrNull() },
+                            onBack = { nav.pop() },
                             snackbarHostState = snackbarHostState,
                             id = key.id,
                         )
