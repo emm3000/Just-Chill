@@ -12,3 +12,23 @@ updates:
       actions:
         patterns:
           - "*"
+
+  # Gradle catalog (libs.versions.toml). Grouped into one monthly PR that the
+  # quality gate validates in CI. Majors are excluded on purpose: AGP/Kotlin/Compose
+  # major bumps are migration projects, not routine updates — Dependabot alerts
+  # still surface a CVE even when the ignore rule suppresses its update PR.
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      gradle:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
