@@ -5,8 +5,6 @@ import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
 import com.emm.justchill.core.mvi.UiState
 
-data class CategoryChipUi(val id: String, val name: String, val colorId: String, val selected: Boolean)
-
 data class CategorySheetItem(
     val id: String,
     val name: String,
@@ -59,9 +57,8 @@ data class SeeTransactionsUiState(
      */
     val movementCount: Long? = null,
     val query: String = "",
-    val topChips: List<CategoryChipUi> = emptyList(),
-    val overflowCount: Int = 0,
     val activeCategory: ActiveCategoryInfo? = null,
+    /** Every category, most-used first — the filter sheet is the only way into a category filter. */
     val sheetItems: List<CategorySheetItem> = emptyList(),
     val incomeCount: Int = 0,
     val spendCount: Int = 0,

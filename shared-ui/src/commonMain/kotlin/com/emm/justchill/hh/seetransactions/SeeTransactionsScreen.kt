@@ -18,18 +18,18 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,15 +41,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -71,7 +70,6 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.MoneyInline
 import com.emm.justchill.core.ui.atoms.MonthSelector
-import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.shared.fullLabel
@@ -105,6 +103,18 @@ private fun SeeTransactionsContent(
     val colors = LocalEmmColors.current
 
     var showFilterSheet by rememberSaveable { mutableStateOf(false) }
+    var searchRequested by rememberSaveable { mutableStateOf(false) }
+
+    // A query outstanding with the field hidden would filter the list from nowhere — the state
+    // survives a tab switch, `searchRequested` does not — so the query itself also opens the bar.
+    val isSearchOpen = searchRequested || state.query.isNotBlank()
+
+    fun closeSearch() {
+        searchRequested = false
+        onIntent(SeeTransactionsIntent.OnQueryChanged(""))
+    }
+
+    BackHandler(enabled = isSearchOpen) { closeSearch() }
 
     Column(
         modifier = Modifier
@@ -112,12 +122,19 @@ private fun SeeTransactionsContent(
             .background(colors.bg)
             .statusBarsPadding(),
     ) {
-        ScreenHeader()
-
-        SearchInput(
-            query = state.query,
-            onQueryChange = { onIntent(SeeTransactionsIntent.OnQueryChanged(it)) },
-        )
+        if (isSearchOpen) {
+            SearchBar(
+                query = state.query,
+                onQueryChange = { onIntent(SeeTransactionsIntent.OnQueryChanged(it)) },
+                onClose = { closeSearch() },
+            )
+        } else {
+            ScreenHeader(
+                isCategoryFilterActive = state.activeCategory != null,
+                onSearch = { searchRequested = true },
+                onFilter = { showFilterSheet = true },
+            )
+        }
 
         // Month context lives here; an active filter means global results, so it steps aside.
         if (state.isMonthSelectorVisible) {
@@ -127,14 +144,6 @@ private fun SeeTransactionsContent(
                 onNextMonth = { onIntent(SeeTransactionsIntent.OnNextMonth) },
             )
         }
-
-        CategoryChipsRow(
-            chips = state.topChips,
-            overflowCount = state.overflowCount,
-            onToggle = { onIntent(SeeTransactionsIntent.OnCategoryToggled(it)) },
-            onTodas = { onIntent(SeeTransactionsIntent.OnClearCategoryFilter) },
-            onMore = { showFilterSheet = true },
-        )
 
         val activeCategory = state.activeCategory
         if (activeCategory != null) {
@@ -189,19 +198,91 @@ private fun SeeTransactionsContent(
     }
 }
 
+/**
+ * Title plus the two chrome affordances. Search and category filtering used to occupy two
+ * permanent bands above the list — a text field nobody types in most sessions, and a horizontally
+ * scrolling chip row — which left the rows about 60% of the screen. Both are one tap away now.
+ */
 @Composable
-private fun ScreenHeader() {
+private fun ScreenHeader(isCategoryFilterActive: Boolean, onSearch: () -> Unit, onFilter: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
 
-    Text(
-        text = "Transacciones",
-        style = type.headlineM.copy(fontSize = 22.sp, letterSpacing = (-0.44).sp),
-        color = colors.textPrimary,
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 18.dp, start = 24.dp, end = 24.dp, bottom = 12.dp),
-    )
+            .padding(top = 12.dp, start = 24.dp, end = 24.dp, bottom = 14.dp),
+    ) {
+        Text(
+            text = "Transacciones",
+            style = type.headlineM.copy(fontSize = 22.sp, letterSpacing = (-0.44).sp),
+            color = colors.textPrimary,
+            modifier = Modifier.weight(1f),
+        )
+        HeaderAction(
+            icon = Icons.Outlined.Search,
+            contentDescription = "Buscar transacciones",
+            onClick = onSearch,
+        )
+        Spacer(Modifier.width(8.dp))
+        HeaderAction(
+            icon = Icons.Outlined.FilterList,
+            contentDescription = if (isCategoryFilterActive) {
+                "Filtrar por categoría, filtro activo"
+            } else {
+                "Filtrar por categoría"
+            },
+            onClick = onFilter,
+            showBadge = isCategoryFilterActive,
+        )
+    }
+}
+
+/**
+ * The header's 44dp tile, matching the Reporte top bar's. The badge is the only signal that a
+ * category filter is on while the sheet is closed — [ActiveFilterBanner] says which one.
+ */
+@Composable
+private fun HeaderAction(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+    showBadge: Boolean = false,
+) {
+    val colors = LocalEmmColors.current
+    val shape = RoundedCornerShape(12.dp)
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(44.dp)
+            .clip(shape)
+            .background(colors.surface1)
+            .border(1.dp, colors.border, shape)
+            .clickable(onClick = onClick),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = colors.textPrimary,
+            modifier = Modifier.size(20.dp),
+        )
+        if (showBadge) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 9.dp, end = 9.dp)
+                    // The ring keeps the dot legible where it overlaps the icon's strokes.
+                    .size(9.dp)
+                    .clip(CircleShape)
+                    .background(colors.surface1)
+                    .padding(1.5.dp)
+                    .clip(CircleShape)
+                    .background(colors.accent),
+            )
+        }
+    }
 }
 
 @Composable
@@ -282,17 +363,53 @@ private fun SummaryDivider() {
     )
 }
 
+/**
+ * The expanded search field, standing in for the header row while it is open. It takes the header's
+ * slot rather than stacking below it so opening search costs no vertical space.
+ *
+ * [onClose] both clears the query and collapses the bar; the in-field X still only clears the text,
+ * so correcting a typo does not throw the user out of search.
+ */
 @Composable
-private fun SearchInput(query: String, onQueryChange: (String) -> Unit) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
+private fun SearchBar(query: String, onQueryChange: (String) -> Unit, onClose: () -> Unit) {
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 0.dp)
-            .padding(bottom = 14.dp)
+            .padding(top = 12.dp, start = 24.dp, end = 24.dp, bottom = 14.dp),
+    ) {
+        SearchInput(
+            query = query,
+            onQueryChange = onQueryChange,
+            focusRequester = focusRequester,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(Modifier.width(8.dp))
+        HeaderAction(
+            icon = Icons.Outlined.Close,
+            contentDescription = "Cerrar búsqueda",
+            onClick = onClose,
+        )
+    }
+}
+
+@Composable
+private fun SearchInput(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    focusRequester: FocusRequester,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .background(colors.surface1)
             .border(1.dp, colors.border, RoundedCornerShape(12.dp))
@@ -328,7 +445,9 @@ private fun SearchInput(query: String, onQueryChange: (String) -> Unit) {
                 }
                 inner()
             },
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .focusRequester(focusRequester),
         )
         if (query.isNotEmpty()) {
             Spacer(Modifier.width(8.dp))
@@ -341,112 +460,6 @@ private fun SearchInput(query: String, onQueryChange: (String) -> Unit) {
                     .clickable { onQueryChange("") },
             )
         }
-    }
-}
-
-@Composable
-private fun CategoryChipsRow(
-    chips: List<CategoryChipUi>,
-    overflowCount: Int,
-    onToggle: (String) -> Unit,
-    onTodas: () -> Unit,
-    onMore: () -> Unit,
-) {
-    val anySelected = chips.any { it.selected }
-    val todasActive = !anySelected
-
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 14.dp),
-    ) {
-        item(key = "todas") {
-            CategoryChip(
-                label = "Todas",
-                selected = todasActive,
-                onClick = onTodas,
-            )
-        }
-
-        items(chips, key = { it.id }) { chip ->
-            CategoryChip(
-                label = chip.name,
-                selected = chip.selected,
-                onClick = { onToggle(chip.id) },
-            )
-        }
-
-        if (overflowCount > 0) {
-            item(key = "more") {
-                MoreChip(count = overflowCount, onClick = onMore)
-            }
-        }
-    }
-}
-
-@Composable
-private fun CategoryChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-
-    val bgColor = if (selected) colors.textPrimary else colors.bg
-    val borderColor = if (selected) colors.textPrimary else colors.border
-    val textColor = if (selected) colors.bg else colors.textSecondary
-
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(bgColor)
-            .border(1.dp, borderColor, RoundedCornerShape(999.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-    ) {
-        Text(
-            text = label,
-            style = type.labelM.copy(fontSize = 12.sp, letterSpacing = 0.sp),
-            color = textColor,
-        )
-    }
-}
-
-@Composable
-private fun MoreChip(count: Int, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .clickable(onClick = onClick)
-            .drawBehind {
-                val stroke = Stroke(
-                    width = 1.dp.toPx(),
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(7f, 5f)),
-                )
-                drawRoundRect(
-                    color = colors.borderFocus,
-                    style = stroke,
-                    cornerRadius = CornerRadius(size.height / 2f),
-                )
-            }
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-    ) {
-        Text(
-            text = "Más ",
-            style = type.labelM.copy(fontSize = 12.sp, letterSpacing = 0.sp),
-            color = colors.textTertiary,
-        )
-        Text(
-            text = "$count",
-            style = type.labelM.copy(
-                fontSize = 12.sp,
-                letterSpacing = 0.sp,
-            ),
-            color = colors.textTertiary,
-        )
     }
 }
 
@@ -819,18 +832,10 @@ private fun SeeTransactionsPopulatedPreview() {
                 ),
             )
         }
-        val chips = listOf(
-            CategoryChipUi(id = "1", name = "Comida", colorId = "green", selected = false),
-            CategoryChipUi(id = "2", name = "Transporte", colorId = "blue", selected = false),
-            CategoryChipUi(id = "3", name = "Servicios", colorId = "orange", selected = false),
-            CategoryChipUi(id = "4", name = "Ocio", colorId = "pink", selected = true),
-        )
         SeeTransactionsContent(
             state = SeeTransactionsUiState(
                 days = listOf(previewDayGroup(txs)),
                 movementCount = 1,
-                topChips = chips,
-                overflowCount = 15,
                 activeCategory = ActiveCategoryInfo("4", "Ocio"),
             ),
             onIntent = {},

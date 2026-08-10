@@ -32,9 +32,6 @@ import kotlin.time.Instant
 
 private const val SEARCH_DEBOUNCE_MS = 250L
 
-private const val TOP_N = 5
-private const val SHOW_MORE_THRESHOLD = 8
-
 class SeeTransactionsViewModel(
     private val searchTransactions: SearchTransactionsUseCase,
     categoryRepository: CategoryRepository,
@@ -56,23 +53,21 @@ class SeeTransactionsViewModel(
             }
         }.launchIn(viewModelScope)
 
-        // Top chips + overflow + sheet items + counts, ranked by the DB-side usage aggregate.
+        // Sheet items + counts + the active category, ranked by the DB-side usage aggregate.
         combine(
             categoryRepository.all(),
             transactionRepository.observeCategoryUsageCounts(),
             filter,
         ) { categories, usageCounts, current ->
-            buildChipsState(categories, usageCounts, current)
+            buildCategoryFilterState(categories, usageCounts, current)
         }
-            .onEach { chips ->
+            .onEach { categoryFilter ->
                 updateState {
                     copy(
-                        topChips = chips.topChips,
-                        overflowCount = chips.overflowCount,
-                        activeCategory = chips.activeCategory,
-                        sheetItems = chips.sheetItems,
-                        incomeCount = chips.incomeCount,
-                        spendCount = chips.spendCount,
+                        activeCategory = categoryFilter.activeCategory,
+                        sheetItems = categoryFilter.sheetItems,
+                        incomeCount = categoryFilter.incomeCount,
+                        spendCount = categoryFilter.spendCount,
                     )
                 }
             }
@@ -172,37 +167,23 @@ class SeeTransactionsViewModel(
      */
     private fun today(): LocalDate = clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 
-    private fun buildChipsState(
+    /**
+     * The sheet is the only entry point into a category filter, and it lists every category the
+     * user owns — 23 of them on a stock install. Alphabetical made the common pick a scroll; the
+     * `countPerCategory` aggregate already knows which ones actually get used, so it orders them.
+     *
+     * The sort is global but the sheet segments by type, and a stable ordering restricted to a
+     * subset keeps that subset's relative order — so "most used first" holds inside Ingresos and
+     * inside Gastos without sorting each half separately. Name breaks ties so the order is
+     * deterministic: an unused category has no usage row at all, and two of them at count 0 must
+     * not swap places between emissions.
+     */
+    private fun buildCategoryFilterState(
         categories: List<Category>,
         usageCounts: Map<CategoryId, Int>,
         current: TransactionFilter,
-    ): ChipsState {
-        val rankedByUsage = categories.sortedByDescending { usageCounts[it.categoryId] ?: 0 }
+    ): CategoryFilterState {
         val activeId: CategoryId? = current.categoryIds.firstOrNull()
-
-        val showAll = categories.size <= SHOW_MORE_THRESHOLD
-        val visibleBase = if (showAll) rankedByUsage else rankedByUsage.take(TOP_N)
-
-        // Always surface the active chip even if it's not in the top.
-        val visibleCategories: List<Category> = if (activeId != null &&
-            visibleBase.none { it.categoryId == activeId }
-        ) {
-            val active = categories.firstOrNull { it.categoryId == activeId }
-            if (active != null) listOf(active) + visibleBase.dropLast(1) else visibleBase
-        } else {
-            visibleBase
-        }
-
-        val topChips = visibleCategories.map { cat ->
-            CategoryChipUi(
-                id = cat.categoryId.value,
-                name = cat.name,
-                colorId = cat.color,
-                selected = cat.categoryId == activeId,
-            )
-        }
-
-        val overflowCount = if (showAll) 0 else categories.size - visibleCategories.size
 
         val activeInfo = activeId?.let { id ->
             categories.firstOrNull { it.categoryId == id }?.let {
@@ -211,7 +192,10 @@ class SeeTransactionsViewModel(
         }
 
         val sheetItems = categories
-            .sortedBy { it.name.lowercase() }
+            .sortedWith(
+                compareByDescending<Category> { usageCounts[it.categoryId] ?: 0 }
+                    .thenBy { it.name.lowercase() },
+            )
             .map { cat ->
                 CategorySheetItem(
                     id = cat.categoryId.value,
@@ -226,12 +210,10 @@ class SeeTransactionsViewModel(
         val incomeCount = categories.count { it.categoryType == CategoryType.Income }
         val spendCount = categories.count { it.categoryType == CategoryType.Spend }
 
-        return ChipsState(topChips, overflowCount, activeInfo, sheetItems, incomeCount, spendCount)
+        return CategoryFilterState(activeInfo, sheetItems, incomeCount, spendCount)
     }
 
-    private data class ChipsState(
-        val topChips: List<CategoryChipUi>,
-        val overflowCount: Int,
+    private data class CategoryFilterState(
         val activeCategory: ActiveCategoryInfo?,
         val sheetItems: List<CategorySheetItem>,
         val incomeCount: Int,

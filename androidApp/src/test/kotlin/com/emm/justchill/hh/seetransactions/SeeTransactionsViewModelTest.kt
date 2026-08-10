@@ -96,9 +96,13 @@ class SeeTransactionsViewModelTest {
         } returns flow
     }
 
-    private fun category(id: String, type: CategoryType = CategoryType.Spend) = Category(
+    private fun category(
+        id: String,
+        type: CategoryType = CategoryType.Spend,
+        name: String = "Categoria $id",
+    ) = Category(
         categoryId = CategoryId(id),
-        name = "Categoria $id",
+        name = name,
         icon = "icon",
         color = "green",
         categoryType = type,
@@ -381,17 +385,56 @@ class SeeTransactionsViewModelTest {
         assertEquals(ListDisplayState.EmptyLedger, vm.state.value.listDisplayState)
     }
 
-    // ---- Chip ranking ----
+    // ---- Sheet ranking ----
+    //
+    // The filter sheet is now the only way into a category filter, and it lists 23 of them. Usage
+    // order is what makes it fast to use, so the order is part of the contract, not a detail.
 
     @Test
-    fun `chips rank by the usage counts map, not by folding transactions`() = runTest(testDispatcher) {
+    fun `sheet items rank by the usage counts map, not by folding transactions`() = runTest(testDispatcher) {
+        // Names are alphabetical in id order here, so an alphabetical sort would answer a, b, c —
+        // only a usage-ranked sort answers b, c, a.
         categoriesFlow.value = listOf(category("cat-a"), category("cat-b"), category("cat-c"))
         usageCountsFlow.value = mapOf(CategoryId("cat-b") to 5, CategoryId("cat-c") to 2)
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        assertEquals(listOf("cat-b", "cat-c", "cat-a"), vm.state.value.topChips.map { it.id })
+        assertEquals(listOf("cat-b", "cat-c", "cat-a"), vm.state.value.sheetItems.map { it.id })
         verify(exactly = 0) { transactionRepository.fetchAllWithCategory() }
+    }
+
+    @Test
+    fun `categories tied on usage fall back to their name, ascending`() = runTest(testDispatcher) {
+        // Emission order is Zapatos, Almuerzo, Mercado: a sort on usage alone would leave the tied
+        // pair in that order. Only the name tiebreak puts Almuerzo before Zapatos.
+        categoriesFlow.value = listOf(
+            category("cat-1", name = "Zapatos"),
+            category("cat-2", name = "Almuerzo"),
+            category("cat-3", name = "Mercado"),
+        )
+        usageCountsFlow.value = mapOf(
+            CategoryId("cat-1") to 4,
+            CategoryId("cat-2") to 4,
+            CategoryId("cat-3") to 9,
+        )
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertEquals(listOf("Mercado", "Almuerzo", "Zapatos"), vm.state.value.sheetItems.map { it.name })
+    }
+
+    @Test
+    fun `a category nobody has used yet is still offered in the sheet`() = runTest(testDispatcher) {
+        // Ranking must reorder the list, never shorten it: a brand-new category has no usage row
+        // at all, and dropping it would make it unreachable from the only filter entry point.
+        categoriesFlow.value = listOf(category("used"), category("never-used"))
+        usageCountsFlow.value = mapOf(CategoryId("used") to 3)
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        val sheetItems = vm.state.value.sheetItems
+        assertEquals(2, sheetItems.size)
+        assertTrue(sheetItems.any { it.id == "never-used" })
     }
 
     // ---- Filter plumbing (behavior carried over from the pre-window list) ----
