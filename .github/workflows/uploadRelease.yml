@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # versionCode is the commit count and versionName the latest v* tag, both read from git
           # at configure time. A shallow clone silently produces wrong values for both — and here
@@ -72,7 +72,7 @@ jobs:
       # floating tag can be repointed at new code by whoever controls the upstream repo.
       # Dependabot (.github/dependabot.yml) proposes the bumps.
       - name: Publish to Play Store
-        uses: r0adkll/upload-google-play@eb49699984a39f23558439581660aa6f088acfd6 # v1
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: com.emm.justchill
