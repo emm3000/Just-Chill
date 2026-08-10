@@ -51,6 +51,7 @@ jobs:
           path: |
             domain/build/reports/tests/testAndroidHostTest/
             data/build/reports/tests/testAndroidHostTest/
+            presentation/build/reports/tests/testAndroidHostTest/
             shared-ui/build/reports/tests/testAndroidHostTest/
             androidApp/build/reports/tests/testDevDebugUnitTest/
           retention-days: 7
@@ -63,6 +64,7 @@ jobs:
           path: |
             androidApp/build/reports/detekt/
             shared-ui/build/reports/detekt/
+            presentation/build/reports/detekt/
             data/build/reports/detekt/
             domain/build/reports/detekt/
           retention-days: 7
@@ -107,4 +109,6 @@ jobs:
           restore-keys: konan-${{ runner.os }}-
 
       - name: Compile iOS simulator target
-        run: ./gradlew :shared-ui:compileKotlinIosSimulatorArm64
+        # :presentation is the top of the exported iOS core — compiling it pulls :domain and
+        # :data transitively. :shared-ui is Android-only since ADR 005 and has no iOS targets.
+        run: ./gradlew :presentation:compileKotlinIosSimulatorArm64
