@@ -9,8 +9,9 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 /**
  * Registers [GenerateIosSupabaseConfigTask] and feeds its output into iosMain.
  *
- * Applied by :shared-ui alone. That is deliberate: the point is separation, not reuse — a code
- * generator does not belong in a file whose job is declaring dependencies.
+ * Applied by :presentation alone (home of KoinIos.kt, the config's only consumer — :shared-ui
+ * until slice S2). That is deliberate: the point is separation, not reuse — a code generator does
+ * not belong in a file whose job is declaring dependencies.
  */
 class IosSupabaseConfigConventionPlugin : Plugin<Project> {
 

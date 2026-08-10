@@ -3,10 +3,9 @@ package com.emm.justchill
 import com.emm.justchill.hh.auth.GoogleSignInLauncher
 import com.emm.justchill.hh.auth.GoogleSignInResult
 
-// iOS-only placeholders for platform features that are deferred. Multi-device sync is now REAL
-// (slice 6b: IosSyncCursorStore + IosSyncOrchestrator, wired in KoinIos.kt's iosSyncModule), so the
-// former NoOpSyncCursorStore / NoOpSyncController are gone. What remains here is the Google Sign-In
-// launcher placeholder (native GIDSignIn deferred post-v1).
+// The one remaining iOS placeholder (the file was IosLocalFirstStubs.kt while it held several;
+// multi-device sync became real in slice 6b, and slice S2 renamed the file after its single class).
+// Native GIDSignIn stays deferred — see docs/swiftui/PLAN.md, slice S10.
 
 /**
  * iOS [GoogleSignInLauncher] placeholder. Native Google Sign-In is deferred post-v1 (the iOS GIDSignIn

@@ -1,8 +1,5 @@
 plugins {
     id("justchill.kmp.library")
-    // Generates IosSupabaseConfig into iosMain from root supabase.properties. iOS has no
-    // BuildConfig, so this is the counterpart of :androidApp's buildConfigField block.
-    id("justchill.ios.supabase.config")
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.compose)
     // Generates KSerializer for the @Serializable NavKey routes (HhRoutes.kt). Without it,
@@ -33,15 +30,9 @@ kotlin {
         androidResources { enable = true }
     }
 
-    // The iOS targets themselves come from the convention plugin; only this module publishes a
-    // framework from them, so the binaries config stays here. Consumed by iosApp/. Built by the
-    // iOS link tasks only — the Android gate (assembleDevDebug) is unaffected.
-    listOf(iosArm64(), iosSimulatorArm64()).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "Shared"
-            isStatic = true
-        }
-    }
+    // Android-only since slice S2 (docs/swiftui/PLAN.md): the iOS app consumes :presentation
+    // through the JustChillKit framework, so this module dropped its iOS targets — see
+    // gradle.properties (justchill.kmp.ios=false) and docs/adr/005.
 
     sourceSets {
         commonMain.dependencies {
@@ -100,11 +91,6 @@ kotlin {
             // (rememberLauncherForActivityResult + ActivityResultContracts) for backup export/import.
             implementation(libs.androidx.activity.compose)
         }
-        // iOS no longer needs an explicit :data dependency — it is inherited from commonMain (the
-        // layering reversal above, slice H). The SQLDelight native driver still reaches the Shared
-        // framework transitively via :data, and nav3 (runtime + JetBrains CMP UI port) is likewise
-        // inherited from commonMain. The iOS-only generated-config source dir is registered in the
-        // iosMain { } sourceSets block further below.
         commonTest.dependencies {
             implementation(kotlin("test"))
         }

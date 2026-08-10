@@ -29,22 +29,31 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
         // hook used to run detekt and no tests at all.
         contributeToQualityGate("testAndroidHostTest")
 
-        if (QualityGateConventionPlugin.isMacOsHost) {
-            // The iOS compile is the only mechanical proof that commonMain stays free of java.* /
-            // android.* — see docs/adr/003. ~13s, and it is why iOS can stay frozen but revivable.
-            tasks.named(QualityGateConventionPlugin.GATE_TASK) {
-                dependsOn(tasks.matching { it.name.startsWith("compileKotlinIos") })
+        // :shared-ui opted out in slice S2 (docs/swiftui/PLAN.md): its Compose UI is Android-only;
+        // iOS consumes :presentation through the JustChillKit framework instead. The property lives
+        // in the module's own gradle.properties, so the opt-out is visible next to the build file.
+        val hasIosTargets = findProperty("justchill.kmp.ios") != "false"
+
+        if (hasIosTargets) {
+            if (QualityGateConventionPlugin.isMacOsHost) {
+                // The iOS compile is the only mechanical proof that commonMain stays free of java.* /
+                // android.* — see docs/adr/003 (gate relocated to :presentation by docs/adr/005).
+                tasks.named(QualityGateConventionPlugin.GATE_TASK) {
+                    dependsOn(tasks.matching { it.name.startsWith("compileKotlinIos") })
+                }
+            } else {
+                logger.lifecycle(
+                    "qualityGate($path): iOS compile skipped — Kotlin/Native needs a macOS host. " +
+                        "detekt still covers iosMain.",
+                )
             }
-        } else {
-            logger.lifecycle(
-                "qualityGate($path): iOS compile skipped — Kotlin/Native needs a macOS host. " +
-                    "detekt still covers iosMain.",
-            )
         }
 
         extensions.configure<KotlinMultiplatformExtension> {
-            iosArm64()
-            iosSimulatorArm64()
+            if (hasIosTargets) {
+                iosArm64()
+                iosSimulatorArm64()
+            }
 
             // `android`, not the deprecated `androidLibrary` alias (AGP 9 marks that one
             // @Deprecated with ReplaceWith("android")). From a Plugin<Project> class there is no
