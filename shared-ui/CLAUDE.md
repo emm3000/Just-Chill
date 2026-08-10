@@ -1,98 +1,97 @@
 # :shared-ui — CLAUDE.md
 
-Compose Multiplatform module: **all** the app's UI, ViewModels, and Koin wiring, shared by Android
-and iOS. Targets `android` (host tests only) + `iosArm64` + `iosSimulatorArm64`.
+Android's Compose UI module: screens, navigation, theme and widgets. **Android-only since slice S2**
+(`justchill.kmp.ios=false` in this module's gradle.properties — ADR 005): the iOS app is native
+SwiftUI over `:presentation`'s JustChillKit framework. The ViewModels, MVI core, Koin DI, formatters
+and `UiStrings` this module used to own live in `:presentation` since slice S1; this module renders
+what `:presentation` exposes.
 
-Root package: `com.emm.justchill.{hh.<feature>, core, components}`. `minSdk = 28`.
-Depends on `:domain` and `:data`.
+Root package: `com.emm.justchill.{hh.<feature>, core, components}` — the SAME packages as
+`:presentation` (the extraction never renamed packages), so same-package symbols across the module
+boundary need explicit imports. `minSdk = 28`. Depends on `:presentation` (api), `:domain`, `:data`.
 
-This is where feature work happens. `:androidApp` and `iosApp/` are thin shells around it.
+This is where Android feature UI happens. `:androidApp` is a thin shell around it.
 
 ## Where things live
 
 ```
 commonMain/
-  hh/<feature>/     account auth category home onboarding profile
-                    recurring report seetransactions transaction
-  hh/shared/        AppNavHost, HhRoutes, HhBottomBar, NavSavedStateConfiguration,
-                    PlatformHostActions (expect), formatters, UiStrings
-  hh/di/            one Koin module per feature + supabase/sync/auth/data wiring
-  core/             AppGraph, mvi/, theme/, error/, format/, preferences/, sync/, ui/atoms/
+  hh/<feature>/     Screens + <Feature>Entries.kt (nav wiring) for: account auth category
+                    home onboarding profile recurring report seetransactions transaction
+  hh/shared/        AppNavHost, AppNavigator, HhRoutes, NavSavedStateConfiguration,
+                    NavHostBindings, HhBottomBar, SyncEventsHandler,
+                    PlatformHostActions (expect), UI atoms (EmmDropDown, LabelTextField…)
+  hh/<feature>/CategoryResolve.kt   render-time resolution of :presentation's semantic
+                    iconId/colorId into ImageVector/CategoryColor
+  core/             theme/, ui/atoms/
   components/       cross-feature widgets
-androidMain/        Android actuals only
-iosMain/            MainViewController, KoinIos, iOS actuals
+androidMain/        PlatformHostActions.android.kt (SAF launchers), ResumeEvents android actual
+                    lives in :presentation — this module has UI-only actuals
 ```
 
-## DI (`core/AppGraph.kt`)
+("commonMain" survives the Android-only flip so a future second Compose target stays possible;
+today it compiles for exactly one target.)
 
-`appModules(platformModule)` returns the ONE shared module list; `bootstrapAppGraph(koin)` runs the
-shared post-`startKoin` sequence (claim-on-sign-in observer + `SyncOrchestrator.start()`). Both
-platforms call them.
+## DI
 
-`startKoin {}` itself is NOT shared — Android needs `androidContext()` / `androidLogger()` from
-koin-android, absent in commonMain. Only the module list and the bootstrap are common.
+None here. `appModules(platformModule)` / `bootstrapAppGraph` live in `:presentation`
+(`core/AppGraph.kt`); the Android platform module lives in `:androidApp`. A new feature registers
+its Koin module in `:presentation`'s `appModules()`, never here — and its ViewModel goes into
+`AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS` (now in `:presentation`'s androidHostTest).
 
-A new feature registers its module in `appModules()`, **never** in `EmmApp` or `KoinIos`.
-
-Platform-specific singles live in the injected `platformModule` (`AndroidPlatformModule.kt` /
-`KoinIos.kt`): DB driver + seed, `Settings` backend, `SupabaseConfig`, `appVersion`,
-`googleServerClientId`, `GoogleSignInLauncher`, `DispatchersProvider`, `CurrentActivityHolder`.
-
-**Koin failures are runtime-only** — a missing or wrongly qualified binding compiles clean and
-passes `assembleDevDebug`, then crashes when the user opens the screen.
-`androidHostTest/core/AppGraphKoinTest.kt` resolves the entire graph off-device to catch exactly
-that. Add every new ViewModel to its `EXPECTED_VIEW_MODELS` list.
-
-## expect/actual — keep it to two
+## expect/actual — keep it to one
 
 | Declaration | Why |
 |---|---|
 | `hh/shared/PlatformHostActions.kt` | export / import / share / email / open-privacy-policy |
-| `core/sync/ResumeEvents.kt` | Android `ProcessLifecycleOwner` vs iOS `NSNotificationCenter` |
 
-Everything else is common. Before adding a third, hoist the platform bit to a callback the nav host
-supplies instead.
+(`ResumeEvents` moved to `:presentation` with the sync port.) With Android as the only target the
+actual is a formality; the expect stays so the declaration survives a future second target.
 
 ## Navigation
 
-ONE commonMain `AppNavHost` on the JetBrains nav3-UI port, for both platforms (slice F `186d3b6`
-reversed the earlier Android/iOS split — ignore the "Option A" text in `docs/kmp/PHASE_3_SPEC.md`).
+`AppNavHost` (commonMain) on the JetBrains nav3-UI port — Android-only now, but the explicit
+SavedState config stays load-bearing:
 
-**Landmine:** every route the host can push MUST be registered in `NavSavedStateConfiguration.kt`.
-Kotlin/Native has no reflective serializer discovery, and Android now uses the same explicit config,
-so a missing entry crashes `rememberNavBackStack` on process-death restore — invisible to the
-compiler and to the Android build gate.
+**Landmine:** every route the host can push MUST be registered in `NavSavedStateConfiguration.kt`,
+else `rememberNavBackStack` crashes on process-death restore — invisible to the compiler and the
+build gate. `NavSavedStateConfigurationTest` reflects over sealed `AppRoute` to catch it.
 
-## MVI
+**Landmine (nav3 entry caching):** `NavEntry.content` closures are cached until the back stack
+changes. Host state an entry reads must arrive as `() -> T` accessors, never by value — see the
+result channels in `AppNavHost.kt` (`pendingCategory`, `pendingImportJson`).
 
-ViewModels extend `MviViewModel<S, I, E>` (`core/mvi/`). Per feature: `XxxViewModel`, `XxxUiState`,
-`XxxIntent`, `XxxEffect`. Screens are callback-driven composables taking `state` + `onIntent`.
-`SnackbarHostState` lives in the root `Scaffold` of `AppNavHost.kt`.
+## MVI (consumed, not owned)
 
-ViewModel purity — VMs take `:domain` interfaces, never SQLDelight or `Default*` types — is
-**convention only** since commonMain gained the `:data` dependency (slice H). The module boundary no
-longer enforces it. Review for it.
+ViewModels extend `MviViewModel<S, I, E>` from `:presentation` (`core/mvi/`). Screens are
+callback-driven composables taking `state` + `onIntent`; `SnackbarHostState` lives in the root
+`Scaffold` of `AppNavHost.kt`. State classes carry semantic ids (`iconId`/`colorId`) — resolve
+them at render time via `CategoryResolve.kt`, never in a mapper.
+
+**Stability:** `:presentation`'s state classes are external to this module's compose compilation
+and carry no `@Stable`/`@Immutable`. `compose_stability.conf` (wired via
+`stabilityConfigurationFiles`) declares them — and `:domain` values — stable. If a list screen
+ever stutters, check compose compiler metrics before blaming the pattern.
 
 ## UI conventions
 
 - Compose Multiplatform `1.11.1` with JetBrains Material3 `1.11.0-alpha07`. Tokens in `core/theme/`
   are the source of truth.
 - Compose resources under `commonMain/composeResources/`.
-- User-facing strings are **Spanish**; code, comments and identifiers are **English**.
-- Errors reach the user through `core/error/DomainExceptionExt.kt` (`toUserMessage()`), never a raw
-  exception message.
+- User-facing strings are **Spanish** (from `:presentation`'s `UiStrings`); code, comments and
+  identifiers are **English**.
+- Errors reach the user through `DomainException.toUserMessage()` (`:presentation` `core/error/`),
+  never a raw exception message.
 
 ## Testing
 
-- `./gradlew :shared-ui:testAndroidHostTest` — JVM host tests (JUnit4, MockK, coroutines-test).
-  Add `--rerun`; the task goes `UP-TO-DATE` across sessions.
-- `commonTest/` for platform-neutral assertions (`kotlin.test`); `androidHostTest/` for anything
-  needing MockK, a JDBC SQLite driver, or `Dispatchers.setMain`.
-- Nothing in `androidHostTest/` may leak into commonMain — it is JVM-only and would break the iOS compile.
+- `./gradlew :shared-ui:testAndroidHostTest` — JVM host tests. `--rerun` is a **per-task** option:
+  with several tasks in one invocation it forces only the task it follows.
+- Lives here: `AppNavigatorTest`, `NavSavedStateConfigurationTest`, `HighlightQuotedTest`.
+  The Koin graph test and the formatter/mapper suites moved to `:presentation`.
 
 ## Gate
 
-Before shipping a slice, run the reinforced gate in `docs/kmp/ORCHESTRATION.md`. The two that matter
-most here: `:shared-ui:compileKotlinIosSimulatorArm64` (proves zero `java.*`/`android.*` leak) and
-`:shared-ui:testAndroidHostTest` (proves the Koin graph resolves). The pre-push hook does NOT cover
-this module — plain `./gradlew detekt` is `NO-SOURCE` on every KMP module.
+On the standard `qualityGate` (detekt + host tests + dev lint). The iOS compile leg left with the
+iOS targets — it runs through `:domain`/`:data`/`:presentation` now. Never gate on plain
+`./gradlew detekt`: it is `NO-SOURCE` on every KMP module.

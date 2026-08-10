@@ -32,6 +32,12 @@ Tres tracks grandes cerrados o casi:
 | Local-first sync (slices 1-5) | slices 1-4 ✅ · slice 5 ⏳ bloqueado por tareas humanas |
 | Migración KMP / Compose Multiplatform | ✅ completa y mergeada a trunk |
 | Auditoría de funcionalidades | ✅ cerrada — 4 CRÍTICOS, 4 ALTOS, 3 MEDIOS |
+| iOS nativo SwiftUI sobre el core KMP | ⏳ S1-S2 de 11 ✅ — plan en `docs/swiftui/PLAN.md`, ADR 005 |
+
+**Track iOS SwiftUI** (abierto 2026-08-10, motivación: aprendizaje — ADR 005): `:presentation`
+extraído (MVI + ViewModels + DI, compose-free), framework `JustChillKit` + SKIE, bootstrap SwiftUI
+compilando contra el core real. CMP-iOS retirado; Android sigue en Compose sin cambios. El gate de
+compile iOS vive ahora en `:domain`/`:data`/`:presentation`.
 
 **Git**: la historia es lineal (0 merge commits). Nunca mergear sin `--ff-only`. No pongas acá
 cuántos commits faltan pushear ni desde qué hash: el propio commit que lo escribe lo deja viejo, y
