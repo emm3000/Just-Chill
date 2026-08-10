@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Search
@@ -43,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -58,6 +60,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.category.CategoryType
+import com.emm.domain.shared.Money
+import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
@@ -65,22 +69,21 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
+import com.emm.justchill.core.ui.atoms.MoneyInline
+import com.emm.justchill.core.ui.atoms.MonthSelector
 import com.emm.justchill.hh.category.findById
-import com.emm.justchill.hh.shared.SpanishDateFormat
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
+import com.emm.justchill.hh.shared.fullLabel
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.components.TransactionRow
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.isoDayNumber
-import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
+import org.koin.compose.viewmodel.koinViewModel
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
-import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun SeeTransactionsScreen(onEditTransaction: (String) -> Unit, vm: SeeTransactionsViewModel = koinViewModel()) {
@@ -116,6 +119,15 @@ private fun SeeTransactionsContent(
             onQueryChange = { onIntent(SeeTransactionsIntent.OnQueryChanged(it)) },
         )
 
+        // Month context lives here; an active filter means global results, so it steps aside.
+        if (state.isMonthSelectorVisible) {
+            MonthSection(
+                state = state,
+                onPreviousMonth = { onIntent(SeeTransactionsIntent.OnPreviousMonth) },
+                onNextMonth = { onIntent(SeeTransactionsIntent.OnNextMonth) },
+            )
+        }
+
         CategoryChipsRow(
             chips = state.topChips,
             overflowCount = state.overflowCount,
@@ -135,18 +147,26 @@ private fun SeeTransactionsContent(
 
         Hairline()
 
-        when {
-            state.hasNoTransactionsAtAll -> EmptyNoTransactionsAtAll(modifier = Modifier.fillMaxSize())
+        // One value, no precedence here: :presentation owns which of the overlapping empty
+        // states wins, so the SwiftUI screen inherits the same answer.
+        when (state.listDisplayState) {
+            // Nothing is claimed until the ledger count lands — an empty area, never empty copy.
+            ListDisplayState.Loading -> Spacer(Modifier.fillMaxSize())
 
-            state.hasNoResultsForFilter -> EmptyFilteredNoResults(
+            ListDisplayState.EmptyLedger -> EmptyNoTransactionsAtAll(modifier = Modifier.fillMaxSize())
+
+            ListDisplayState.EmptyMonth -> EmptyMonth(modifier = Modifier.fillMaxSize())
+
+            ListDisplayState.NoSearchResults -> EmptyFilteredNoResults(
                 query = state.query,
                 activeCategoryName = state.activeCategory?.name,
                 onClear = { onIntent(SeeTransactionsIntent.OnClearFilters) },
                 modifier = Modifier.fillMaxSize(),
             )
 
-            else -> DayGroupedList(
+            ListDisplayState.Content -> DayGroupedList(
                 days = state.days,
+                showMonthYearCaption = state.isFilterActive,
                 onItemClick = navigateToEdit,
             )
         }
@@ -181,6 +201,84 @@ private fun ScreenHeader() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 18.dp, start = 24.dp, end = 24.dp, bottom = 12.dp),
+    )
+}
+
+@Composable
+private fun MonthSection(state: SeeTransactionsUiState, onPreviousMonth: () -> Unit, onNextMonth: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 14.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        MonthSelector(
+            label = state.month.fullLabel(),
+            onPrevious = onPreviousMonth,
+            onNext = onNextMonth,
+        )
+    }
+
+    val summary = state.summary
+    if (summary != null && state.listDisplayState == ListDisplayState.Content) {
+        MonthSummaryStrip(summary = summary)
+    }
+}
+
+@Composable
+private fun MonthSummaryStrip(summary: MonthSummaryUi) {
+    val colors = LocalEmmColors.current
+
+    val netCents = summary.net.cents
+    val netColor = when {
+        netCents > 0L -> colors.success
+        netCents < 0L -> colors.danger
+        else -> colors.textSecondary
+    }
+
+    Row(
+        modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        SummaryCell(
+            label = "Ingresos",
+            value = summary.income.cents.toDouble() / 100.0,
+            valueColor = colors.textPrimary,
+        )
+        SummaryDivider()
+        SummaryCell(
+            label = "Gastos",
+            value = summary.spend.cents.toDouble() / 100.0,
+            valueColor = colors.textSecondary,
+        )
+        SummaryDivider()
+        SummaryCell(
+            label = "Balance",
+            value = netCents.toDouble() / 100.0,
+            valueColor = netColor,
+        )
+    }
+}
+
+@Composable
+private fun SummaryCell(label: String, value: Double, valueColor: Color) {
+    val colors = LocalEmmColors.current
+    Column {
+        Eyebrow(text = label, color = colors.textDisabled)
+        Spacer(Modifier.height(4.dp))
+        MoneyInline(value = value, color = valueColor)
+    }
+}
+
+@Composable
+private fun SummaryDivider() {
+    val colors = LocalEmmColors.current
+    Box(
+        modifier = Modifier
+            .width(1.dp)
+            .height(28.dp)
+            .background(colors.border),
     )
 }
 
@@ -430,7 +528,7 @@ private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: ()
 }
 
 @Composable
-private fun DayGroupedList(days: List<DayGroup>, onItemClick: (String) -> Unit) {
+private fun DayGroupedList(days: List<DayGroup>, showMonthYearCaption: Boolean, onItemClick: (String) -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val listState = rememberLazyListState()
@@ -445,36 +543,31 @@ private fun DayGroupedList(days: List<DayGroup>, onItemClick: (String) -> Unit) 
         contentPadding = PaddingValues(bottom = 16.dp),
     ) {
         days.forEach { dayGroup ->
-            val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-            val yesterday = today.minus(1, DateTimeUnit.DAY)
-            val dayLabel = when (dayGroup.date) {
-                today -> "HOY"
-
-                yesterday -> "AYER"
-
-                else ->
-                    SpanishDateFormat.fullWeekday(dayGroup.date.dayOfWeek.isoDayNumber).uppercase()
-            }
-            val dateCaption = "${dayGroup.date.dayOfMonth} ${SpanishDateFormat.fullMonth(dayGroup.date.month)}"
-
-            item(key = "header-${dayGroup.date}") {
+            stickyHeader(key = "header-${dayGroup.date}", contentType = "day-header") {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .background(colors.bg)
                         .padding(top = 14.dp, start = 24.dp, end = 24.dp, bottom = 8.dp),
                 ) {
-                    Eyebrow(text = dayLabel)
-                    Text(
-                        text = dateCaption,
-                        style = type.eyebrow.copy(fontSize = 11.sp, letterSpacing = 1.0.sp),
-                        color = colors.textDisabled,
-                    )
+                    Eyebrow(text = dayGroup.primaryLabel)
+                    if (showMonthYearCaption) {
+                        Text(
+                            text = dayGroup.monthYearCaption,
+                            style = type.eyebrow.copy(fontSize = 11.sp, letterSpacing = 1.0.sp),
+                            color = colors.textDisabled,
+                        )
+                    }
                 }
             }
 
-            items(dayGroup.transactions, key = TransactionUi::transactionId) { tx ->
+            items(
+                items = dayGroup.transactions,
+                key = TransactionUi::transactionId,
+                contentType = { "transaction" },
+            ) { tx ->
                 TransactionRow(
                     tx = tx,
                     showDate = false,
@@ -524,6 +617,40 @@ private fun EmptyNoTransactionsAtAll(modifier: Modifier = Modifier) {
             color = colors.textTertiary,
             textAlign = TextAlign.Center,
             modifier = Modifier.widthIn(max = 260.dp),
+        )
+    }
+}
+
+@Composable
+private fun EmptyMonth(modifier: Modifier = Modifier) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+
+    Column(
+        modifier = modifier.padding(horizontal = 24.dp, vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.CalendarMonth,
+            contentDescription = null,
+            tint = colors.textTertiary,
+            modifier = Modifier.size(26.dp),
+        )
+        Spacer(Modifier.height(18.dp))
+        Text(
+            text = "Sin movimientos este mes",
+            style = type.titleL.copy(fontSize = 15.sp, letterSpacing = (-0.075).sp),
+            color = colors.textPrimary,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Cambiá de mes con las flechas de arriba.",
+            style = type.caption.copy(lineHeight = 18.sp),
+            color = colors.textTertiary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.widthIn(max = 240.dp),
         )
     }
 }
@@ -625,7 +752,8 @@ private fun EmptyFilteredNoResults(
 private fun SeeTransactionsEmptyPreview() {
     EmmTheme {
         SeeTransactionsContent(
-            state = SeeTransactionsUiState(),
+            // An explicit zero: the default count is null, which is "not known yet", not "empty".
+            state = SeeTransactionsUiState(movementCount = 0L),
             onIntent = {},
             navigateToEdit = {},
         )
@@ -634,7 +762,7 @@ private fun SeeTransactionsEmptyPreview() {
 
 @Preview
 @Composable
-private fun SeeTransactionsPopulatedPreview() {
+private fun SeeTransactionsMonthPreview() {
     EmmTheme {
         val txs: List<TransactionUi> = remember {
             listOf(
@@ -660,6 +788,37 @@ private fun SeeTransactionsPopulatedPreview() {
                 ),
             )
         }
+        SeeTransactionsContent(
+            state = SeeTransactionsUiState(
+                month = YearMonth.current(),
+                days = listOf(previewDayGroup(txs)),
+                summary = MonthSummaryUi(income = Money(320_000L), spend = Money(8_420L)),
+                movementCount = 2,
+            ),
+            onIntent = {},
+            navigateToEdit = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun SeeTransactionsPopulatedPreview() {
+    EmmTheme {
+        val txs: List<TransactionUi> = remember {
+            listOf(
+                TransactionUi(
+                    transactionId = Uuid.random().toString(),
+                    type = TransactionType.Spend,
+                    amount = formatExpense("84.20"),
+                    description = "Mercado del lunes",
+                    date = 0,
+                    readableDate = "HOY",
+                    readableTime = "14:30",
+                    category = CategoryUi(iconId = null, colorId = "green"),
+                ),
+            )
+        }
         val chips = listOf(
             CategoryChipUi(id = "1", name = "Comida", colorId = "green", selected = false),
             CategoryChipUi(id = "2", name = "Transporte", colorId = "blue", selected = false),
@@ -668,7 +827,8 @@ private fun SeeTransactionsPopulatedPreview() {
         )
         SeeTransactionsContent(
             state = SeeTransactionsUiState(
-                days = listOf(DayGroup(previewToday(), txs)),
+                days = listOf(previewDayGroup(txs)),
+                movementCount = 1,
                 topChips = chips,
                 overflowCount = 15,
                 activeCategory = ActiveCategoryInfo("4", "Ocio"),
@@ -686,6 +846,7 @@ private fun SeeTransactionsNoResultsPreview() {
         SeeTransactionsContent(
             state = SeeTransactionsUiState(
                 days = emptyList(),
+                movementCount = 5,
                 query = "café",
                 activeCategory = ActiveCategoryInfo("1", "Comida"),
             ),
@@ -695,5 +856,7 @@ private fun SeeTransactionsNoResultsPreview() {
     }
 }
 
-private fun previewToday(): LocalDate =
-    Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+private fun previewDayGroup(transactions: List<TransactionUi>): DayGroup {
+    val today: LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    return DayGroup(date = today, today = today, transactions = transactions)
+}

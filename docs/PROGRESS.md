@@ -39,6 +39,9 @@ extraído (MVI + ViewModels + DI, compose-free), framework `JustChillKit` + SKIE
 compilando contra el core real. CMP-iOS retirado; Android sigue en Compose sin cambios. El gate de
 compile iOS vive ahora en `:domain`/`:data`/`:presentation`.
 
+La pestaña de transacciones ahora es mensual: lista acotada al mes elegido con resumen
+(ingresos/gastos/balance) y búsqueda global con tope en SQL, en vez de streamear la tabla completa.
+
 **Git**: la historia es lineal (0 merge commits). Nunca mergear sin `--ff-only`. No pongas acá
 cuántos commits faltan pushear ni desde qué hash: el propio commit que lo escribe lo deja viejo, y
 ya pasó dos veces. Sacalo del repo cuando lo necesites:

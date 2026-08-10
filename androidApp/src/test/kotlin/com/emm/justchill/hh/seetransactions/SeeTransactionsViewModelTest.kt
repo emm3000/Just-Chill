@@ -1,26 +1,42 @@
 package com.emm.justchill.hh.seetransactions
 
+import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
+import com.emm.domain.category.CategoryType
+import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.CategoryId
+import com.emm.domain.shared.Money
+import com.emm.domain.shared.TransactionId
+import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.SearchTransactionsUseCase
 import com.emm.domain.transaction.TransactionFilter
 import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionTotals
+import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Month
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
+
+private const val DAY_MILLIS = 86_400_000L
 
 class SeeTransactionsViewModelTest {
 
@@ -29,20 +45,356 @@ class SeeTransactionsViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
-    private val categoriesFlow = MutableStateFlow(emptyList<com.emm.domain.category.Category>())
-    private val allTransactionsFlow = MutableStateFlow(emptyList<TransactionWithCategory>())
+    // Mid-month noon UTC: YearMonth.current(fixedClock) is August 2026 in every timezone.
+    private val fixedClock = object : Clock {
+        override fun now(): Instant = Instant.parse("2026-08-15T12:00:00Z")
+    }
+    private val currentMonth = YearMonth(2026, Month.AUGUST)
+
+    private val categoriesFlow = MutableStateFlow(emptyList<Category>())
+    private val usageCountsFlow = MutableStateFlow(emptyMap<CategoryId, Int>())
+    private val totalsFlow = MutableStateFlow(TransactionTotals.Empty)
+    private val monthTransactionsFlow = MutableStateFlow(emptyList<TransactionWithCategory>())
+
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns categoriesFlow
     }
     private val transactionRepository = mockk<TransactionRepository> {
-        every { fetchAllWithCategory() } returns allTransactionsFlow
+        every { observeCategoryUsageCounts() } returns usageCountsFlow
+        every { observeTotals() } returns totalsFlow
+        every { fetchAllWithCategoryInRange(any(), any()) } returns monthTransactionsFlow
     }
     private val searchTransactions = mockk<SearchTransactionsUseCase>()
 
     private fun buildViewModel(): SeeTransactionsViewModel {
         every { searchTransactions.invoke(any()) } returns flowOf(emptyList())
-        return SeeTransactionsViewModel(searchTransactions, categoryRepository, transactionRepository)
+        return SeeTransactionsViewModel(searchTransactions, categoryRepository, transactionRepository, fixedClock)
     }
+
+    private fun tx(
+        id: String,
+        type: TransactionType,
+        cents: Long,
+        daysIntoMonth: Int = 5,
+        month: YearMonth = currentMonth,
+    ) = TransactionWithCategory(
+        transactionId = TransactionId(id),
+        type = type,
+        amount = Money(cents),
+        description = "movimiento $id",
+        date = month.startInclusiveMillis() + daysIntoMonth * DAY_MILLIS,
+        accountId = AccountId("acc-1"),
+        category = null,
+    )
+
+    private fun stubRange(month: YearMonth, flow: Flow<List<TransactionWithCategory>>) {
+        every {
+            transactionRepository.fetchAllWithCategoryInRange(
+                month.startInclusiveMillis(),
+                month.endExclusiveMillis(),
+            )
+        } returns flow
+    }
+
+    private fun category(id: String, type: CategoryType = CategoryType.Spend) = Category(
+        categoryId = CategoryId(id),
+        name = "Categoria $id",
+        icon = "icon",
+        color = "green",
+        categoryType = type,
+    )
+
+    // ---- Month window ----
+
+    @Test
+    fun `initial month is the clock's current month and the list queries its exact bounds`() =
+        runTest(testDispatcher) {
+            val vm = buildViewModel()
+            advanceUntilIdle()
+
+            assertEquals(currentMonth, vm.state.value.month)
+            verify {
+                transactionRepository.fetchAllWithCategoryInRange(
+                    currentMonth.startInclusiveMillis(),
+                    currentMonth.endExclusiveMillis(),
+                )
+            }
+        }
+
+    @Test
+    fun `OnNextMonth requeries with the next month's bounds`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnNextMonth)
+        advanceUntilIdle()
+
+        val next = currentMonth.next()
+        assertEquals(next, vm.state.value.month)
+        verify {
+            transactionRepository.fetchAllWithCategoryInRange(
+                next.startInclusiveMillis(),
+                next.endExclusiveMillis(),
+            )
+        }
+    }
+
+    @Test
+    fun `OnNextMonth moves the label without waiting for the database`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnNextMonth)
+
+        // No advanceUntilIdle on purpose: nothing has been collected and no query has answered,
+        // yet the arrow the user tapped must already be reflected in the selector's label.
+        assertEquals(currentMonth.next(), vm.state.value.month)
+    }
+
+    @Test
+    fun `OnPreviousMonth moves the label without waiting for the database`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnPreviousMonth)
+
+        assertEquals(currentMonth.previous(), vm.state.value.month)
+    }
+
+    @Test
+    fun `the rows on screen belong to the month the label names`() = runTest(testDispatcher) {
+        val next = currentMonth.next()
+        stubRange(currentMonth, MutableStateFlow(listOf(tx("t-aug", TransactionType.Spend, 1_000))))
+        stubRange(next, MutableStateFlow(listOf(tx("t-sep", TransactionType.Spend, 2_000, month = next))))
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        vm.onIntent(SeeTransactionsIntent.OnNextMonth)
+        advanceUntilIdle()
+
+        val state = vm.state.value
+        assertEquals(next, state.month)
+        assertEquals(listOf("t-sep"), state.days.flatMap { day -> day.transactions.map { it.transactionId } })
+    }
+
+    @Test
+    fun `OnPreviousMonth requeries with the previous month's bounds`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnPreviousMonth)
+        advanceUntilIdle()
+
+        val previous = currentMonth.previous()
+        assertEquals(previous, vm.state.value.month)
+        verify {
+            transactionRepository.fetchAllWithCategoryInRange(
+                previous.startInclusiveMillis(),
+                previous.endExclusiveMillis(),
+            )
+        }
+    }
+
+    // ---- Month mode vs global search mode ----
+
+    @Test
+    fun `an active filter switches the stream to global search and leaves the month window`() =
+        runTest(testDispatcher) {
+            val vm = buildViewModel()
+            advanceUntilIdle()
+
+            vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
+            advanceTimeBy(300L)
+            advanceUntilIdle()
+
+            verify { searchTransactions.invoke(TransactionFilter(query = "café")) }
+            // flatMapLatest switched away: the range query ran only for the initial subscription.
+            verify(exactly = 1) { transactionRepository.fetchAllWithCategoryInRange(any(), any()) }
+        }
+
+    @Test
+    fun `clearing filters returns to month mode and requeries the range`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
+        advanceTimeBy(300L)
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnClearFilters)
+        advanceUntilIdle()
+
+        verify(exactly = 2) { transactionRepository.fetchAllWithCategoryInRange(any(), any()) }
+    }
+
+    // ---- Monthly summary ----
+
+    @Test
+    fun `month rows produce income, spend, and net totals in the summary`() = runTest(testDispatcher) {
+        monthTransactionsFlow.value = listOf(
+            tx("t-1", TransactionType.Income, cents = 10_000),
+            tx("t-2", TransactionType.Spend, cents = 3_000),
+            tx("t-3", TransactionType.Income, cents = 500),
+        )
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        val summary = vm.state.value.summary
+        assertEquals(Money(10_500), summary?.income)
+        assertEquals(Money(3_000), summary?.spend)
+        assertEquals(Money(7_500), summary?.net)
+    }
+
+    @Test
+    fun `search mode has no summary`() = runTest(testDispatcher) {
+        monthTransactionsFlow.value = listOf(tx("t-1", TransactionType.Income, cents = 10_000))
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
+        advanceTimeBy(300L)
+        advanceUntilIdle()
+
+        assertNull(vm.state.value.summary)
+    }
+
+    // ---- A broken query must not kill the screen ----
+
+    @Test
+    fun `a failing month query degrades to an empty list and the next month still loads`() =
+        runTest(testDispatcher) {
+            val next = currentMonth.next()
+            stubRange(currentMonth, flow { error("range query exploded") })
+            stubRange(next, MutableStateFlow(listOf(tx("t-sep", TransactionType.Spend, 2_000, month = next))))
+            totalsFlow.value = TransactionTotals(balance = Money(10_000), movementCount = 3)
+
+            val vm = buildViewModel()
+            advanceUntilIdle()
+
+            assertTrue(vm.state.value.days.isEmpty())
+
+            // The collector has to have survived the failure, or the arrows are dead for good.
+            vm.onIntent(SeeTransactionsIntent.OnNextMonth)
+            advanceUntilIdle()
+
+            verify {
+                transactionRepository.fetchAllWithCategoryInRange(
+                    next.startInclusiveMillis(),
+                    next.endExclusiveMillis(),
+                )
+            }
+            assertEquals(listOf("t-sep"), vm.state.value.days.flatMap { d -> d.transactions.map { it.transactionId } })
+        }
+
+    @Test
+    fun `a failing search degrades to an empty list and clearing the filter still loads the month`() =
+        runTest(testDispatcher) {
+            every { searchTransactions.invoke(any()) } returns flow { error("search exploded") }
+            monthTransactionsFlow.value = listOf(tx("t-aug", TransactionType.Spend, 1_000))
+            totalsFlow.value = TransactionTotals(balance = Money(10_000), movementCount = 3)
+
+            val vm = SeeTransactionsViewModel(
+                searchTransactions,
+                categoryRepository,
+                transactionRepository,
+                fixedClock,
+            )
+            advanceUntilIdle()
+
+            vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
+            advanceTimeBy(300L)
+            advanceUntilIdle()
+
+            assertTrue(vm.state.value.days.isEmpty())
+
+            vm.onIntent(SeeTransactionsIntent.OnClearFilters)
+            advanceUntilIdle()
+
+            assertEquals(listOf("t-aug"), vm.state.value.days.flatMap { d -> d.transactions.map { it.transactionId } })
+        }
+
+    // ---- Empty-state split ----
+
+    @Test
+    fun `before any emission the screen claims nothing and still offers the month selector`() =
+        runTest(testDispatcher) {
+            val vm = buildViewModel()
+
+            // Deliberately not advanced: this is the very first composition.
+            val state = vm.state.value
+            assertEquals(ListDisplayState.Loading, state.listDisplayState)
+            assertTrue(state.isMonthSelectorVisible)
+        }
+
+    @Test
+    fun `a failing totals aggregate leaves the count unknown instead of claiming an empty ledger`() =
+        runTest(testDispatcher) {
+            every { transactionRepository.observeTotals() } returns flow { error("totals exploded") }
+            val vm = buildViewModel()
+            advanceUntilIdle()
+
+            val state = vm.state.value
+            assertNull(state.movementCount)
+            assertFalse(state.listDisplayState == ListDisplayState.EmptyLedger)
+        }
+
+    @Test
+    fun `empty DB with no filter shows the empty ledger`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertEquals(ListDisplayState.EmptyLedger, vm.state.value.listDisplayState)
+    }
+
+    @Test
+    fun `an empty month with movements elsewhere shows the empty month, not the empty ledger`() =
+        runTest(testDispatcher) {
+            totalsFlow.value = TransactionTotals(balance = Money(10_000), movementCount = 3)
+            val vm = buildViewModel()
+            advanceUntilIdle()
+
+            assertEquals(ListDisplayState.EmptyMonth, vm.state.value.listDisplayState)
+        }
+
+    @Test
+    fun `empty results with active filter shows no search results`() = runTest(testDispatcher) {
+        totalsFlow.value = TransactionTotals(balance = Money(10_000), movementCount = 3)
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnQueryChanged("nada"))
+        advanceTimeBy(300L)
+        advanceUntilIdle()
+
+        assertEquals(ListDisplayState.NoSearchResults, vm.state.value.listDisplayState)
+    }
+
+    @Test
+    fun `searching a ledger that holds nothing stays on the empty ledger`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnQueryChanged("nada"))
+        advanceTimeBy(300L)
+        advanceUntilIdle()
+
+        assertEquals(ListDisplayState.EmptyLedger, vm.state.value.listDisplayState)
+    }
+
+    // ---- Chip ranking ----
+
+    @Test
+    fun `chips rank by the usage counts map, not by folding transactions`() = runTest(testDispatcher) {
+        categoriesFlow.value = listOf(category("cat-a"), category("cat-b"), category("cat-c"))
+        usageCountsFlow.value = mapOf(CategoryId("cat-b") to 5, CategoryId("cat-c") to 2)
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertEquals(listOf("cat-b", "cat-c", "cat-a"), vm.state.value.topChips.map { it.id })
+        verify(exactly = 0) { transactionRepository.fetchAllWithCategory() }
+    }
+
+    // ---- Filter plumbing (behavior carried over from the pre-window list) ----
 
     @Test
     fun `initial state has empty days, empty query, and filter not active`() = runTest(testDispatcher) {
@@ -53,8 +405,7 @@ class SeeTransactionsViewModelTest {
         assertTrue(state.days.isEmpty())
         assertEquals("", state.query)
         assertFalse(state.isFilterActive)
-        assertTrue(state.hasNoTransactionsAtAll)
-        assertFalse(state.hasNoResultsForFilter)
+        assertEquals(ListDisplayState.EmptyLedger, state.listDisplayState)
     }
 
     @Test
@@ -113,21 +464,22 @@ class SeeTransactionsViewModelTest {
     }
 
     @Test
-    fun `OnCategoryToggled twice with same id toggles off`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
-        advanceUntilIdle()
+    fun `OnCategoryToggled twice with same id toggles off and returns to month mode`() =
+        runTest(testDispatcher) {
+            // The category must exist, or the deleted-category auto-reset clears the filter
+            // between the two toggles and the second one re-activates instead of toggling off.
+            categoriesFlow.value = listOf(category("cat-1"))
+            val vm = buildViewModel()
+            advanceUntilIdle()
 
-        vm.onIntent(SeeTransactionsIntent.OnCategoryToggled("cat-1"))
-        advanceUntilIdle()
-        vm.onIntent(SeeTransactionsIntent.OnCategoryToggled("cat-1"))
-        advanceUntilIdle()
+            vm.onIntent(SeeTransactionsIntent.OnCategoryToggled("cat-1"))
+            advanceUntilIdle()
+            vm.onIntent(SeeTransactionsIntent.OnCategoryToggled("cat-1"))
+            advanceUntilIdle()
 
-        verify {
-            searchTransactions.invoke(
-                match { it.categoryIds.isEmpty() },
-            )
+            // An empty filter no longer searches: it re-subscribes the month window.
+            verify(exactly = 2) { transactionRepository.fetchAllWithCategoryInRange(any(), any()) }
         }
-    }
 
     @Test
     fun `OnClearFilters resets query and filter`() = runTest(testDispatcher) {
@@ -144,31 +496,5 @@ class SeeTransactionsViewModelTest {
         val state = vm.state.value
         assertEquals("", state.query)
         assertFalse(state.isFilterActive)
-    }
-
-    @Test
-    fun `empty DB with no filter shows hasNoTransactionsAtAll`() = runTest(testDispatcher) {
-        every { searchTransactions.invoke(any()) } returns flowOf(emptyList())
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        val state = vm.state.value
-        assertTrue(state.hasNoTransactionsAtAll)
-        assertFalse(state.hasNoResultsForFilter)
-    }
-
-    @Test
-    fun `empty results with active filter shows hasNoResultsForFilter`() = runTest(testDispatcher) {
-        every { searchTransactions.invoke(any()) } returns flowOf(emptyList())
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        vm.onIntent(SeeTransactionsIntent.OnQueryChanged("nada"))
-        advanceTimeBy(300L)
-        advanceUntilIdle()
-
-        val state = vm.state.value
-        assertFalse(state.hasNoTransactionsAtAll)
-        assertTrue(state.hasNoResultsForFilter)
     }
 }
