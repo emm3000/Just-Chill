@@ -51,8 +51,8 @@ Almost everything lives in `commonMain`. `androidMain` / `iosMain` hold exactly 
   never on soft-delete**. Referential integrity is enforced in domain use cases
   (`DeleteAccountUseCase`, `DeleteCategoryUseCase`), not by these clauses.
 - `app.cash.sqldelight:coroutines-extensions` is exported (`api`) from this module for `asFlow()`.
-- This module also `api`-exposes the Supabase auth/postgrest SDK and the Ktor engines, so
-  `ui-android` inherits them transitively.
+- This module also `api`-exposes the Supabase auth/postgrest SDK and the Ktor engines. The consumer
+  that actually uses them is `:presentation` (`hh/di/SupabaseModule.kt`).
 
 ## Sync engine (`sync/`)
 
@@ -63,7 +63,7 @@ Almost everything lives in `commonMain`. `androidMain` / `iosMain` hold exactly 
   transactions → recurring_movements), holds the pull cursor when any table skips rows, and funnels
   remote/ktor errors through `toSyncDomainException()`.
 - Cursor semantics (server-set `server_updated_at`, 10s overlap window) are defined in
-  `docs/adr/002`; the `SyncCursorStore` port is implemented in `ui-android`.
+  `docs/adr/002`; the `SyncCursorStore` port is implemented in `:presentation`.
 
 ## Error handling
 
