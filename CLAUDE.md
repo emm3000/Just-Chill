@@ -1,23 +1,18 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-Per-module guidance lives in `domain/CLAUDE.md`, `data/CLAUDE.md`, `presentation/CLAUDE.md`,
-`ui-android/CLAUDE.md`, and `androidApp/CLAUDE.md`; Claude loads each one automatically when working
-in that module.
+Per-module guidance lives in each module's own `CLAUDE.md`; Claude loads it automatically when
+working in that module.
 
 > **KMP everywhere; each platform owns its UI.** Android renders Compose (`:ui-android`); iOS is a
-> native SwiftUI app over the `JustChillKit` framework that `:presentation` exports with SKIE —
-> [ADR 005](docs/adr/005-native-swiftui-ios-over-the-kmp-core.md) unfroze iOS as a *learning
-> track* (supersedes ADR 003's frozen-UI scope; the compile-gate invariant survives, relocated).
-> The slice plan and ledger live in `docs/swiftui/PLAN.md`. `docs/kmp/ORCHESTRATION.md` keeps the
-> KMP landmines and gate rationale; `PHASE_3_SPEC.MD` / `MIGRATION_PLAN.md` are historical.
+> native SwiftUI app over the `JustChillKit` framework that `:presentation` exports with SKIE
+> ([ADR 005](docs/adr/005-native-swiftui-ios-over-the-kmp-core.md); slice plan in
+> `docs/swiftui/PLAN.md`).
 >
 > Keep the iOS compile (`:presentation:compileKotlinIosSimulatorArm64`, plus `:domain`/`:data`) in
 > every gate run — it is the only thing stopping the exported core from silently filling with
 > `java.*`. One writer per slice, review inline. Android-only *capabilities* may live in
-> `:androidApp`, but their platform-neutral *logic* stays in the KMP core (ADR 003 constraint 8,
-> alive in ADR 005). **There are no users on either platform** — see `docs/PROGRESS.md`.
+> `:androidApp`, but their platform-neutral *logic* stays in the KMP core.
+> **There are no users on either platform** — see `docs/PROGRESS.md`.
 
 ## Build & Development Commands
 
@@ -71,62 +66,37 @@ Gradle dependency. Same Kotlin packages across the `:ui-android`/`:presentation`
 imports are required where same-package symbols crossed modules.
 
 The app is **local-first**: SQLDelight on-device is the single source of truth and the app is fully
-usable with no account and no network. Optional multi-device sync via Supabase (opt-in
-email/password or Google sign-in, LWW) — slices 1-4 are done and device-verified; slice 5
-(compliance + release gate) is in progress. See `docs/sync/PLAN.md`, `docs/adr/001`, `docs/adr/002`.
+usable with no account and no network. Multi-device sync via Supabase is opt-in and LWW — status in
+`docs/sync/PLAN.md`, rationale in `docs/adr/001` and `docs/adr/002`.
 
-`:presentation` depending on `:data` is deliberate (slice H's layering, inherited by the S1
-extraction) — it lets the Koin wiring exist once instead of per platform. ViewModel purity (VMs
-take `:domain` interfaces, never SQLDelight or `Default*` types) stays a reviewed convention
-inside `:presentation`; what IS structural again since S1 is that ViewModels cannot touch Compose
-(`:presentation` has no compose dependency, and the Swift framework would expose the leak).
+`:presentation` depending on `:data` is deliberate: it lets the Koin wiring exist once instead of
+per platform. ViewModel purity (VMs take `:domain` interfaces, never SQLDelight or `Default*`
+types) is a reviewed convention, not a structural guarantee. What IS structural: ViewModels cannot
+touch Compose — `:presentation` has no compose dependency, and the Swift framework would expose
+the leak.
 
 ### Data flow
 
-`Screen` collects `StateFlow<UiState>` from `ViewModel` → `ViewModel` calls a domain use case →
-use case calls a `Repository` interface → `Default{Entity}Repository` delegates to a
+`Screen` → `ViewModel` → use case → `Repository` interface → `Default{Entity}Repository` →
 `LocalDataSource` (SQLDelight).
 
-### MVI pattern (`presentation/commonMain/core/mvi/`)
+### Contracts that span modules
 
-All ViewModels extend `MviViewModel<S : UiState, I : UiIntent, E : UiEffect>`. The base class provides:
+Each module's own CLAUDE.md owns its half; only the chain is documented here.
 
-- `state: StateFlow<S>` — collected in the Screen with `collectAsStateWithLifecycle()`
-- `effect: Flow<E>` — one-shot side-effects (navigation, snackbars) collected in
-  `LaunchedEffect(vm) { vm.effect.collect { } }`
-- `updateState(reducer: S.() -> S)` — atomic state update
-- `sendEffect(effect: E)` — fires a one-shot effect
-- `abstract fun onIntent(intent: I)` — single entry point for user actions
+- **MVI** — `MviViewModel<S, I, E>` plus every ViewModel/UiState/Intent/Effect live in
+  `:presentation` (`core/mvi/`); the Screens that consume them live in `:ui-android`.
+- **Errors** — sealed `DomainException` (`:domain/shared/error/`) → `:data/shared/SafeCall.kt`
+  translates SQLDelight exceptions into it → `:presentation/core/error/DomainExceptionExt.kt`
+  turns it into a Spanish message via `toUserMessage()`. Add failure modes by extending
+  `DomainException`, never by introducing a new exception type.
 
-Per feature, alongside the ViewModel: `XxxUiState.kt` (`data class`, no navigation flags or message
-strings), `XxxIntent.kt` and `XxxEffect.kt` (`sealed interface`s — navigation targets, `ShowError`).
+## Testing
 
-`SnackbarHostState` lives in the root `Scaffold` of `hh/shared/AppNavHost.kt` (commonMain) and is
-passed down to each Screen that needs it.
-
-### Error model (cross-module)
-
-- Sealed `DomainException` in `:domain/shared/error/` with subtypes: `NotFound`, `ValidationError`,
-  `NetworkUnavailable`, `DatabaseError`, `Unauthorized`, `Unknown`.
-- `:data/shared/SafeCall.kt` wraps local DB calls and translates SQLDelight exceptions into
-  `DomainException`. Repositories funnel I/O through it instead of throwing raw SQLDelight errors.
-- `:presentation/core/error/DomainExceptionExt.kt` maps each subtype to a user-facing Spanish string
-  via `DomainException.toUserMessage()`.
-
-When adding a new failure mode, prefer extending `DomainException` (and `toUserMessage`) over
-introducing a new exception type.
-
-## Testing (cross-module)
-
-- JUnit4 + MockK + `kotlinx-coroutines-test`, running as JVM host tests (`androidHostTest`).
-- Domain use-case tests are the primary unit-test surface. They use `runTest`, `mockk()`,
-  `coEvery`, `coVerify`.
-- `presentation/androidHostTest/core/AppGraphKoinTest.kt` resolves the whole Koin graph off-device.
-  A missing binding compiles clean and passes `assembleDevDebug` — this test is the only thing
-  that catches it before a user does. Keep it green.
-- Instrumented tests live in `data/src/androidDeviceTest/` (15 tests, schema migrations + FK
-  behaviour). Run with `./gradlew :data:connectedAndroidDeviceTest` on a device or emulator. They
-  are not part of the default gate — run them before shipping a schema change.
+JUnit4 + MockK + `kotlinx-coroutines-test` as JVM host tests (`androidHostTest`); `:domain` use
+cases are the primary surface. Two suites are the ONLY net for their failure mode — a missing Koin
+binding (`AppGraphKoinTest`, in `:presentation`) and a missing schema migration (the instrumented
+tests in `:data`, not on the default gate). Both are documented where they live.
 
 ## Gotchas
 
@@ -167,21 +137,13 @@ Compose BOM `2026.05.01` · Compose Multiplatform `1.11.1` · detekt `2.0.0-alph
 
 ## Docs map (`docs/`)
 
-- `kmp/ORCHESTRATION.md` — `:ui-android` slice workflow + ledger. Current and trustworthy.
-- `adr/` — 001 local-first reversal, 002 pull cursor, 003 iOS frozen (compile gate only),
-  004 conflicts are arbitrated only on unpushed edits (amends 002),
-  005 native SwiftUI iOS over the KMP core (supersedes 003's frozen-UI scope).
-  `sync/PLAN.md` — sync slices. `swiftui/PLAN.md` — iOS SwiftUI slices + ledger.
-- `PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `ROADMAP_V1.md`, `POST_V1_PLAN.md` — Fases 1-5.
-- `DESIGN_SYSTEM.md` — tokens and components (its paths still point at the pre-KMP `app/` module).
+- `PROGRESS.md` — canonical "where are we now". Read it first.
+- `adr/` — filenames state the decision; 004 amends 002, 005 supersedes 003's frozen-UI scope.
+- `kmp/ORCHESTRATION.md` — slice workflow + ledger. `sync/PLAN.md`, `swiftui/PLAN.md` — slice status.
 - `PLAY_ADVERTISING_ID.md` — the app does not use the advertising ID, with the commands that prove
-  it on any AAB. Read it before answering Play's declaration; the console currently says "Yes",
-  which is wrong.
-- `archive/` — closed tracks kept for history.
-- `PROGRESS.md` — canonical "where are we now". Rewritten 2026-08-08; pre-KMP sprint detail is in
-  git history, not in the file.
+  it on any AAB. Read before answering Play's declaration; the console currently says "Yes", wrongly.
+- `DESIGN_SYSTEM.md` — tokens and components (its paths still point at the pre-KMP `app/` module).
+- `PRODUCT_*.md`, `ROADMAP_V1.md`, `POST_V1_PLAN.md` — Fases 1-5. `archive/` — closed tracks.
 
 Latest tags: `v2.4.0`, `pre-kmp` (rollback point before the KMP migration). `v2.4.0` is tagged and
 built but has NOT reached the alpha track — its Play upload was rejected, see `PLAY_ADVERTISING_ID.md`.
-
-Use case naming convention: **`[Verb][Noun]UseCase`** (e.g. `CreateTransactionUseCase`, `DeleteCategoryUseCase`).

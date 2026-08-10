@@ -1,8 +1,7 @@
 # :presentation — CLAUDE.md
 
-The compose-free presentation layer, extracted from `:ui-android` in slice S1 of
-`docs/swiftui/PLAN.md` (ADR 005): MVI core, every feature's ViewModel/UiState/Intent/Effect,
-the Koin DI modules, formatters, `UiStrings` and the sync/preferences ports. Both UIs sit on it —
+The compose-free presentation layer: MVI core, every feature's ViewModel/UiState/Intent/Effect, the
+Koin DI modules, formatters, `UiStrings` and the sync/preferences ports. Both UIs sit on it —
 `:ui-android` (Android Compose) as a Gradle dependency, the SwiftUI iOS app through the
 **JustChillKit** framework this module declares (static, SKIE-processed, exports `:domain` +
 `:data`).
@@ -12,9 +11,9 @@ Root packages: `com.emm.justchill.{core, hh.<feature>}` — unchanged from the e
 
 ## The one rule
 
-**NO Compose dependency may ever appear here.** That is the module's reason to exist: it restored
-the structural guarantee (lost in slice H) that ViewModels never touch UI types, and it is what
-makes the module exportable to Swift. Models carry semantic ids (`iconId`, `colorId`), never
+**NO Compose dependency may ever appear here.** That is the module's reason to exist: it is the
+structural guarantee that ViewModels never touch UI types, and it is what makes the module
+exportable to Swift. Models carry semantic ids (`iconId`, `colorId`), never
 `ImageVector`/`Color` — resolution happens at render time in each UI
 (`ui-android .../CategoryResolve.kt` on Android). If a state class needs something visual, it
 carries the id and the UI resolves it.
@@ -26,20 +25,13 @@ declaration becomes a lie.
 
 ## Where things live
 
-```
-commonMain/
-  core/             AppGraph (appModules/bootstrapAppGraph), mvi/, error/, format/,
-                    preferences/, sync/ (incl. expect resumeEvents), Result/FlowResult,
-                    SupabaseConfig, DispatchersProvider
-  hh/<feature>/     XxxViewModel + XxxUiState + XxxIntent + XxxEffect + toUi mappers
-  hh/di/            one Koin module per feature + data/supabase/sync/auth wiring
-  hh/shared/        UiStrings, CurrencyFormat, NumberFormatEs, SpanishDateFormat,
-                    SpanishSearch, MonthLabels, DefaultUniqueIdProvider, pure helpers
-androidMain/        ResumeEvents.android.kt (ProcessLifecycleOwner)
-iosMain/            KoinIos.kt (initKoin + iosPlatformModule + Swift-facing VM resolvers),
-                    ResumeEvents.ios.kt, PrintlnSyncLogger, UnavailableGoogleSignInLauncher,
-                    generated IosSupabaseConfig (justchill.ios.supabase.config)
-```
+`commonMain/core/` holds `AppGraph` (`appModules`/`bootstrapAppGraph`), `mvi/`, `error/`, `format/`,
+`preferences/`, `sync/` and `DispatchersProvider`. A feature owns `hh/<feature>/` (ViewModel +
+UiState + Intent + Effect + `toUi` mappers) and one Koin module in `hh/di/`; pure helpers and
+`UiStrings` sit in `hh/shared/`.
+
+`androidMain/` and `iosMain/` hold only platform actuals plus `KoinIos.kt` — the iOS entry point
+(`initKoin`, `iosPlatformModule`, and one typed resolver per Swift-facing ViewModel).
 
 ## Framework / SKIE
 
@@ -70,5 +62,5 @@ iosMain/            KoinIos.kt (initKoin + iosPlatformModule + Swift-facing VM r
 ## Gate
 
 On the standard `qualityGate` via the convention plugin: detekt (main/iosMain source sets), host
-tests, and — on macOS — the iOS compiles. This module now carries the compile-gate invariant that
-`:ui-android` used to (ADR 003 → ADR 005): the exported core stays free of `java.*`/`android.*`.
+tests, and — on macOS — the iOS compiles. This module carries the compile-gate invariant (ADR 005):
+the exported core stays free of `java.*`/`android.*`.
