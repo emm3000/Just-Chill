@@ -188,7 +188,6 @@ private fun MesContent(
     onLabelClick: () -> Unit,
 ) {
     val spacing = LocalEmmSpacing.current
-    val isCurrentMonth = state.month == YearMonth.current()
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -201,7 +200,9 @@ private fun MesContent(
             onNext = onNextMonth,
             onLabelClick = onLabelClick,
         )
-        if (!isCurrentMonth) {
+        // Answered by the ViewModel, which holds the injected clock and zone. Resolving "what month
+        // is it" here read the device instead, so the pill could disagree with the month beside it.
+        if (!state.isCurrentMonth) {
             Spacer(Modifier.size(spacing.s2))
             TodayPill(onClick = onJumpToCurrent)
         }

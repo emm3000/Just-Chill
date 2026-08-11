@@ -5,17 +5,23 @@ import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
+import kotlinx.datetime.TimeZone
 import kotlin.time.Clock
 
 class GetTopCategoriesOverMonthsUseCase(private val transactionStatsRepository: TransactionStatsRepository) {
 
+    /**
+     * [clock] and [zone] have no defaults on purpose — see [GetSavingsRateUseCase.invoke]. The
+     * window ends at the month the caller's [zone] is in, not the month the machine is in.
+     */
     suspend operator fun invoke(
         type: TransactionType,
+        clock: Clock,
+        zone: TimeZone,
         months: Int = 6,
         topN: Int = 3,
-        clock: Clock = Clock.System,
     ): List<CategoryAggregate> {
-        val window = YearMonth.windowEndingAt(YearMonth.current(clock), months)
+        val window = YearMonth.windowEndingAt(YearMonth.current(clock, zone), months)
 
         // Per-month results oldest-first, fetched in one round-trip.
         // The uncategorized bucket is dropped here: this is a ranking OF categories, and a

@@ -1,10 +1,16 @@
 package com.emm.justchill.hh.report
 
+import com.emm.domain.shared.YearMonth
+import kotlinx.datetime.Month
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ReportShareFormatterTest {
+
+    // Which month it is does not matter to a formatter — that it is STATED does. ReportUiState used
+    // to default it to YearMonth.current(), so these tests silently ran against the wall clock.
+    private val may2026 = YearMonth(2026, Month.MAY)
 
     // ── buildContextSentence ──────────────────────────────────────────────
 
@@ -84,21 +90,21 @@ class ReportShareFormatterTest {
 
     @Test
     fun `buildMesShareText contains JustChill footer`() {
-        val state = ReportUiState()
+        val state = ReportUiState(month = may2026)
         val result = ReportShareFormatter.buildMesShareText(state)
         assertTrue(result.contains("— JustChill"), "Footer missing from: $result")
     }
 
     @Test
     fun `buildMesShareText includes singular movimiento when count is 1`() {
-        val state = ReportUiState(movementCount = 1, averageFormatted = "S/ 500")
+        val state = ReportUiState(month = may2026, movementCount = 1, averageFormatted = "S/ 500")
         val result = ReportShareFormatter.buildMesShareText(state)
         assertTrue(result.contains("1 movimiento"), "Expected singular 'movimiento' in: $result")
     }
 
     @Test
     fun `buildMesShareText includes plural movimientos when count is not 1`() {
-        val state = ReportUiState(movementCount = 5, averageFormatted = "S/ 200")
+        val state = ReportUiState(month = may2026, movementCount = 5, averageFormatted = "S/ 200")
         val result = ReportShareFormatter.buildMesShareText(state)
         assertTrue(result.contains("5 movimientos"), "Expected plural 'movimientos' in: $result")
     }
@@ -107,7 +113,7 @@ class ReportShareFormatterTest {
 
     @Test
     fun `buildTrendsShareText contains JustChill footer`() {
-        val state = ReportUiState()
+        val state = ReportUiState(month = may2026)
         val result = ReportShareFormatter.buildTrendsShareText(state)
         assertTrue(result.contains("— JustChill"), "Footer missing from: $result")
     }
@@ -115,6 +121,7 @@ class ReportShareFormatterTest {
     @Test
     fun `buildTrendsShareText includes savings rate percent`() {
         val state = ReportUiState(
+            month = may2026,
             trends = TrendsUiData(savingsRatePercent = 35),
         )
         val result = ReportShareFormatter.buildTrendsShareText(state)
@@ -127,9 +134,11 @@ class ReportShareFormatterTest {
         // glyph. Shared text has no icon to lean on: "(10 pts vs. 6 meses previos)" would not
         // say whether the user improved or slipped.
         val worse = ReportUiState(
+            month = may2026,
             trends = TrendsUiData(savingsRatePercent = 20, deltaText = "10 pts", deltaIsPositive = false),
         )
         val better = ReportUiState(
+            month = may2026,
             trends = TrendsUiData(savingsRatePercent = 40, deltaText = "10 pts", deltaIsPositive = true),
         )
 
@@ -145,7 +154,7 @@ class ReportShareFormatterTest {
 
     @Test
     fun `buildTrendsShareText omits the delta entirely when there is no baseline`() {
-        val state = ReportUiState(trends = TrendsUiData(savingsRatePercent = 20, deltaText = null))
+        val state = ReportUiState(month = may2026, trends = TrendsUiData(savingsRatePercent = 20, deltaText = null))
         val result = ReportShareFormatter.buildTrendsShareText(state)
         assertTrue(!result.contains("6 meses previos"), "Unexpected comparison in: $result")
     }
@@ -153,6 +162,7 @@ class ReportShareFormatterTest {
     @Test
     fun `buildTrendsShareText omits Mayores gastos section when topExpenses is empty`() {
         val state = ReportUiState(
+            month = may2026,
             trends = TrendsUiData(topExpenses = emptyList()),
         )
         val result = ReportShareFormatter.buildTrendsShareText(state)
