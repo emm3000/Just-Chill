@@ -35,6 +35,12 @@ import kotlin.test.assertTrue
  *      column would fail inside onUpgrade, leave user_version at 3, and fail identically on every
  *      subsequent open. That is a permanent open-crash, not a bad row.
  *
+ * Migrates to `EmmDatabaseData.Schema.version`, never to a hardcoded 4 — the rule in
+ * `data/CLAUDE.md`, written down after `MigrationV2ToV3Test` stopped at 3 and broke the moment a 4
+ * existed. Every assertion below goes through generated queries, and those only ever match the
+ * CURRENT schema; a run that stops mid-chain would be asserting against a shape it never reached.
+ * It is also what a real device does: one open, the whole chain.
+ *
  * Requires a device/emulator. Run with: `./gradlew :data:connectedAndroidDeviceTest`.
  */
 @RunWith(AndroidJUnit4::class)
@@ -189,7 +195,7 @@ class MigrationV3ToV4Test {
         // 1_754_000_000_000 ms is 2025-07-31 22:13:20 UTC, which is 17:13:20 in Lima.
         insertV3Transaction(id = "TX1", date = 1_754_000_000_000L)
 
-        EmmDatabaseData.Schema.migrate(driver, oldVersion = 3, newVersion = 4)
+        EmmDatabaseData.Schema.migrate(driver, oldVersion = 3, newVersion = EmmDatabaseData.Schema.version)
 
         val tx = database.transactionsQueries.find("TX1").executeAsOneOrNull()
         assertNotNull(tx, "transaction must survive the rebuild")
@@ -209,7 +215,7 @@ class MigrationV3ToV4Test {
         repeat(ROW_COUNT) { index -> insertV3Transaction(id = "TX$index", date = 1_754_000_000_000L + index) }
         val before = rawCount("SELECT COUNT(*) FROM transactions")
 
-        EmmDatabaseData.Schema.migrate(driver, oldVersion = 3, newVersion = 4)
+        EmmDatabaseData.Schema.migrate(driver, oldVersion = 3, newVersion = EmmDatabaseData.Schema.version)
 
         assertEquals(ROW_COUNT.toLong(), before)
         assertEquals(before, rawCount("SELECT COUNT(*) FROM transactions"))
@@ -221,7 +227,7 @@ class MigrationV3ToV4Test {
         // were gone — the app would just get slower, on the owner's device, silently.
         insertV3Transaction(id = "TX1", date = 1_754_000_000_000L)
 
-        EmmDatabaseData.Schema.migrate(driver, oldVersion = 3, newVersion = 4)
+        EmmDatabaseData.Schema.migrate(driver, oldVersion = 3, newVersion = EmmDatabaseData.Schema.version)
 
         val indexes = indexNames()
         listOf(
@@ -244,7 +250,7 @@ class MigrationV3ToV4Test {
         insertV3Transaction(id = "TX-OK", date = 1_754_000_000_000L)
         insertV3Transaction(id = "TX-BROKEN", date = Long.MAX_VALUE)
 
-        EmmDatabaseData.Schema.migrate(driver, oldVersion = 3, newVersion = 4)
+        EmmDatabaseData.Schema.migrate(driver, oldVersion = 3, newVersion = EmmDatabaseData.Schema.version)
 
         val broken = database.transactionsQueries.find("TX-BROKEN").executeAsOneOrNull()
         assertNotNull(broken, "the unreadable row must survive rather than abort the migration")
@@ -259,7 +265,7 @@ class MigrationV3ToV4Test {
     fun migration_v3_to_v4_leaves_the_other_tables_alone() {
         insertV3Transaction(id = "TX1", date = 1_754_000_000_000L)
 
-        EmmDatabaseData.Schema.migrate(driver, oldVersion = 3, newVersion = 4)
+        EmmDatabaseData.Schema.migrate(driver, oldVersion = 3, newVersion = EmmDatabaseData.Schema.version)
 
         assertNotNull(database.accountsQueries.find("A1").executeAsOneOrNull())
         assertNotNull(database.categoriesQueries.find("C1").executeAsOneOrNull())
