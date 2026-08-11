@@ -1,26 +1,14 @@
 package com.emm.justchill.hh.shared
 
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Month
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
 
 class DayLabelsTest {
 
-    /** UTC-5. Local evenings fall on the next UTC day. */
-    private val lima = TimeZone.of("America/Lima")
-
-    /** UTC+5. Local midnight falls on the previous UTC day. */
-    private val karachi = TimeZone.of("Asia/Karachi")
-
     private val today = LocalDate(2026, Month.AUGUST, 10)
-
-    private fun LocalDate.at(hour: Int, minute: Int, zone: TimeZone): Long =
-        (atStartOfDayIn(zone) + hour.hours + minute.minutes).toEpochMilliseconds()
 
     // ── relativeDayLabel ──────────────────────────────────────────────────────
 
@@ -61,45 +49,25 @@ class DayLabelsTest {
         assertEquals("Ayer", relativeDayLabel(date, LocalDate(2026, Month.AUGUST, 11)))
     }
 
-    // ── localDateOf ───────────────────────────────────────────────────────────
-
-    @Test
-    fun localDateOf_resolves_the_day_in_the_given_zone() {
-        // 23:30 in Lima is already the 11th in UTC. Reading the day in UTC is the bug this guards.
-        val limaEvening = today.at(hour = 23, minute = 30, zone = lima)
-
-        assertEquals(LocalDate(2026, Month.AUGUST, 10), localDateOf(limaEvening, lima))
-        assertEquals(LocalDate(2026, Month.AUGUST, 11), localDateOf(limaEvening, TimeZone.UTC))
-    }
-
-    @Test
-    fun localDateOf_resolves_the_day_in_zones_ahead_of_UTC() {
-        val karachiMidnight = today.atStartOfDayIn(karachi).toEpochMilliseconds()
-
-        assertEquals(LocalDate(2026, Month.AUGUST, 10), localDateOf(karachiMidnight, karachi))
-        assertEquals(LocalDate(2026, Month.AUGUST, 9), localDateOf(karachiMidnight, TimeZone.UTC))
-    }
-
     // ── timeLabel ─────────────────────────────────────────────────────────────
 
     @Test
-    fun timeLabel_renders_the_clock_time_of_the_given_zone() {
-        assertEquals("9:05 a. m.", timeLabel(today.at(hour = 9, minute = 5, zone = lima), lima))
-        assertEquals("3:45 p. m.", timeLabel(today.at(hour = 15, minute = 45, zone = lima), lima))
+    fun timeLabel_renders_the_wall_clock_time_it_is_given() {
+        // No zone, no conversion: the label shows the hour the movement was recorded at, and it
+        // shows the same hour on a phone in Lima and a phone in Karachi. That used to depend on
+        // where the device was, because the row carried an instant and this had to guess a zone.
+        assertEquals("9:05 a. m.", timeLabel(LocalTime(9, 5)))
+        assertEquals("3:45 p. m.", timeLabel(LocalTime(15, 45)))
     }
 
     @Test
     fun timeLabel_renders_midnight_and_noon_with_the_right_marker() {
-        assertEquals("12:00 a. m.", timeLabel(today.at(hour = 0, minute = 0, zone = lima), lima))
-        assertEquals("12:00 p. m.", timeLabel(today.at(hour = 12, minute = 0, zone = lima), lima))
+        assertEquals("12:00 a. m.", timeLabel(LocalTime(0, 0)))
+        assertEquals("12:00 p. m.", timeLabel(LocalTime(12, 0)))
     }
 
-    // ── startOfDayMillis ──────────────────────────────────────────────────────
-
     @Test
-    fun startOfDayMillis_is_local_midnight_not_UTC_midnight() {
-        assertEquals(today.atStartOfDayIn(lima).toEpochMilliseconds(), startOfDayMillis(today, lima))
-        assertEquals(today, localDateOf(startOfDayMillis(today, lima), lima))
-        assertEquals(today, localDateOf(startOfDayMillis(today, karachi), karachi))
+    fun timeLabel_ignores_the_seconds_the_column_carries() {
+        assertEquals("9:05 a. m.", timeLabel(LocalTime(9, 5, 33)))
     }
 }

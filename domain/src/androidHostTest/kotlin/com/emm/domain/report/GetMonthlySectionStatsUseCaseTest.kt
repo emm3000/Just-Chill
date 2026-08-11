@@ -21,7 +21,7 @@ class GetMonthlySectionStatsUseCaseTest {
     private fun stubStats(count: Long, totalCents: Long) {
         val average = if (count == 0L) Money.Zero else Money(totalCents / count)
         coEvery {
-            repository.monthlyStats(any(), month.startInclusiveMillis(), month.endExclusiveMillis())
+            repository.monthlyStats(any(), month.startInclusiveDay(), month.endExclusiveDay())
         } returns MonthlySectionStats(movementCount = count.toInt(), averageAmount = average)
     }
 

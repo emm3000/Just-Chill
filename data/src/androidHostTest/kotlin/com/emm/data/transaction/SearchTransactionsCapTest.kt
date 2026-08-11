@@ -45,7 +45,7 @@ class SearchTransactionsCapTest {
     @Test
     fun `search returns at most 200 rows even when more match`() = runTest {
         repeat(205) { index ->
-            insert(id = "t-$index", description = "pollo a la brasa $index", date = index.toLong())
+            insert(id = "t-$index", description = "pollo a la brasa $index", order = index)
         }
 
         val results = dataSource.searchTransactions(query = "pollo", categoryIds = emptySet()).first()
@@ -55,20 +55,24 @@ class SearchTransactionsCapTest {
 
     @Test
     fun `the cap keeps the newest matches`() = runTest {
+        // 205 rows, one per minute. The cap of 200 has to cut exactly the five oldest.
         repeat(205) { index ->
-            insert(id = "t-$index", description = "pollo a la brasa $index", date = index.toLong())
+            insert(id = "t-$index", description = "pollo a la brasa $index", order = index)
         }
 
         val results = dataSource.searchTransactions(query = "pollo", categoryIds = emptySet()).first()
 
-        // The query orders by date DESC, so the LIMIT must trim the oldest rows, not the newest.
-        assertTrue(results.none { it.date < 5L })
+        // ORDER BY occurredAt DESC is plain lexicographic order on the stored text, which is why
+        // the format is fixed-width — so the LIMIT trims the oldest rows, not the newest.
+        assertEquals(200, results.size)
+        assertTrue(results.none { it.occurredAt < "2026-08-01T00:05:00" })
+        assertTrue(results.any { it.occurredAt == "2026-08-04T00:24:00" }, "the newest row must survive")
     }
 
     @Test
     fun `fewer matches than the cap come back complete`() = runTest {
         repeat(3) { index ->
-            insert(id = "t-$index", description = "pollo a la brasa $index", date = index.toLong())
+            insert(id = "t-$index", description = "pollo a la brasa $index", order = index)
         }
 
         val results = dataSource.searchTransactions(query = "pollo", categoryIds = emptySet()).first()
@@ -80,11 +84,17 @@ class SearchTransactionsCapTest {
         driver.execute(identifier = null, sql = sql, parameters = 0)
     }
 
-    private fun insert(id: String, description: String, date: Long) {
+    /**
+     * [order] doubles as the row's position in time: one row per minute, rolling into the next day
+     * every hour. A larger [order] is always a later movement — and, because the column is ISO
+     * local text, always a larger string too.
+     */
+    private fun insert(id: String, description: String, order: Int) {
+        val occurredAt = "2026-08-%02dT00:%02d:00".format(1 + order / 60, order % 60)
         exec(
-            "INSERT INTO transactions(transactionId, type, amount, description, date, categoryId, " +
+            "INSERT INTO transactions(transactionId, type, amount, description, occurredAt, categoryId, " +
                 "accountId, createdAt, updatedAt) " +
-                "VALUES ('$id', 'Spend', 100, '$description', $date, NULL, 'acc-1', 1, 1)",
+                "VALUES ('$id', 'Spend', 100, '$description', '$occurredAt', NULL, 'acc-1', 1, 1)",
         )
     }
 }

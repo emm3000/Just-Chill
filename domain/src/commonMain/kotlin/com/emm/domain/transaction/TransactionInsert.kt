@@ -6,11 +6,12 @@ import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.TransactionId
+import kotlinx.datetime.LocalDateTime
 import kotlin.uuid.Uuid
 
 /**
- * What the user is asking to record. [date] is the day the money moved — the only date here that
- * is theirs.
+ * What the user is asking to record. [occurredAt] is when the money moved — the only date here
+ * that is theirs, and the caller's value is written verbatim.
  *
  * `createdAt` and `updatedAt` are deliberately absent. They are storage metadata, not user input:
  * the row's age and the key LWW conflict resolution reads. `:data` stamps them at the write, which
@@ -27,6 +28,7 @@ data class TransactionInsert(
     val amount: Money,
     val description: String,
     val categoryId: CategoryId?,
-    val date: Long,
+    /** When the money moved: calendar day + wall-clock time, no timezone. See [Transaction]. */
+    val occurredAt: LocalDateTime,
     val accountId: AccountId,
 )

@@ -6,7 +6,11 @@ import com.emm.data.EmmDatabaseData
 import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.isSqliteConstraintViolation
+import com.emm.data.shared.localDateTimeFromFixedPeru
 import com.emm.data.shared.safeDbCall
+import com.emm.data.shared.toFixedPeruEpochMillis
+import com.emm.data.shared.toOccurredAtOrNull
+import com.emm.data.shared.toOccurredAtText
 import com.emm.domain.sync.LocalRevision
 import com.emm.domain.sync.SyncLogger
 import io.github.jan.supabase.SupabaseClient
@@ -34,13 +38,21 @@ class TransactionTableSync(private val db: EmmDatabaseData, client: SupabaseClie
         // filters userId IS NOT NULL, but a row claimed by a different account must never leak.
         return pending
             .filter { it.userId == userId }
-            .map { row ->
+            .mapNotNull { row ->
+                // A row whose stored occurredAt does not parse is already invisible on every
+                // screen (the mappers drop it); pushing an invented date for it would make the
+                // damage spread to the other devices. It stays Pending and stays local.
+                val occurredAt = row.occurredAt.toOccurredAtOrNull()
+                if (occurredAt == null) {
+                    logger.warn("push skipped unreadable occurredAt table=$TABLE pk=${row.transactionId}")
+                    return@mapNotNull null
+                }
                 TransactionRowDto(
                     transactionId = row.transactionId,
                     type = row.type,
                     amount = row.amount,
                     description = row.description,
-                    date = row.date,
+                    date = occurredAt.toFixedPeruEpochMillis(),
                     categoryId = row.categoryId,
                     accountId = row.accountId,
                     createdAt = row.createdAt,
@@ -91,39 +103,51 @@ class TransactionTableSync(private val db: EmmDatabaseData, client: SupabaseClie
      * Two-statement upsert: INSERT OR IGNORE handles new rows; UPDATE handles existing ones —
      * neither triggers an implicit DELETE, so child-table FK constraints (ON DELETE RESTRICT/SET NULL)
      * are safe. Returns false if the row was skipped because of an FK constraint failure (the parent
-     * account/category has not been pulled/pushed yet — it will retry next cycle once it arrives).
+     * account/category has not been pulled/pushed yet — it will retry next cycle once it arrives),
+     * or because the remote `date` is outside the range a local datetime can represent.
      */
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
-    override fun applyRemoteRow(remote: TransactionRowDto): Boolean = try {
-        db.transactionsQueries.insertOrIgnoreFromRemote(
-            transactionId = remote.transactionId,
-            type = remote.type,
-            amount = remote.amount,
-            description = remote.description,
-            date = remote.date,
-            categoryId = remote.categoryId,
-            accountId = remote.accountId,
-            createdAt = remote.createdAt,
-            updatedAt = remote.updatedAt,
-            userId = remote.userId,
-            deletedAt = remote.deletedAt,
-        )
-        db.transactionsQueries.updateFromRemote(
-            type = remote.type,
-            amount = remote.amount,
-            description = remote.description,
-            date = remote.date,
-            categoryId = remote.categoryId,
-            accountId = remote.accountId,
-            createdAt = remote.createdAt,
-            updatedAt = remote.updatedAt,
-            userId = remote.userId,
-            deletedAt = remote.deletedAt,
-            transactionId = remote.transactionId,
-        )
-        true
-    } catch (e: Exception) {
-        if (e.isSqliteConstraintViolation()) false else throw e
+    override fun applyRemoteRow(remote: TransactionRowDto): Boolean {
+        // Untrusted input: the wire still carries an instant, and this client has already had to
+        // survive a server timestamp it could not read. One unreadable row is skipped and logged;
+        // it does not take the pull down with it.
+        val occurredAt = localDateTimeFromFixedPeru(remote.date)
+        if (occurredAt == null) {
+            logger.warn("pull skipped unreadable date table=$TABLE pk=${remote.transactionId}")
+            return false
+        }
+        val occurredAtText = occurredAt.toOccurredAtText()
+        return try {
+            db.transactionsQueries.insertOrIgnoreFromRemote(
+                transactionId = remote.transactionId,
+                type = remote.type,
+                amount = remote.amount,
+                description = remote.description,
+                occurredAt = occurredAtText,
+                categoryId = remote.categoryId,
+                accountId = remote.accountId,
+                createdAt = remote.createdAt,
+                updatedAt = remote.updatedAt,
+                userId = remote.userId,
+                deletedAt = remote.deletedAt,
+            )
+            db.transactionsQueries.updateFromRemote(
+                type = remote.type,
+                amount = remote.amount,
+                description = remote.description,
+                occurredAt = occurredAtText,
+                categoryId = remote.categoryId,
+                accountId = remote.accountId,
+                createdAt = remote.createdAt,
+                updatedAt = remote.updatedAt,
+                userId = remote.userId,
+                deletedAt = remote.deletedAt,
+                transactionId = remote.transactionId,
+            )
+            true
+        } catch (e: Exception) {
+            if (e.isSqliteConstraintViolation()) false else throw e
+        }
     }
 
     override fun markPendingForResync(pk: String) {

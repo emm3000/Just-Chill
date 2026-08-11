@@ -38,8 +38,8 @@ class GetMonthlyComparisonUseCaseTest {
         coEvery {
             repository.monthlyAmountByCategory(
                 any(),
-                yearMonth.startInclusiveMillis(),
-                yearMonth.endExclusiveMillis(),
+                yearMonth.startInclusiveDay(),
+                yearMonth.endExclusiveDay(),
             )
         } returns items
     }

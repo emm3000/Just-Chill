@@ -108,9 +108,10 @@ class LiveTotalsQueryTest {
 
     private fun insert(id: String, type: String, amount: Long, deletedAt: Long? = null) {
         exec(
-            "INSERT INTO transactions(transactionId, type, amount, description, date, categoryId, " +
+            "INSERT INTO transactions(transactionId, type, amount, description, occurredAt, categoryId, " +
                 "accountId, createdAt, updatedAt, deletedAt) " +
-                "VALUES ('$id', '$type', $amount, '', 1000, NULL, 'acc-1', 1, 1, ${deletedAt ?: "NULL"})",
+                "VALUES ('$id', '$type', $amount, '', '2026-08-10T12:00:00', NULL, 'acc-1', 1, 1, " +
+                "${deletedAt ?: "NULL"})",
         )
     }
 }

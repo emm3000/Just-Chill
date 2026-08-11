@@ -150,7 +150,8 @@ class AddTransactionViewModelTest {
 
             val insert = slot<TransactionInsert>()
             coVerify { createTransaction.invoke(capture(insert)) }
-            assertEquals(tomorrow.atStartOfDayIn(lima).toEpochMilliseconds(), insert.captured.date)
+            // The day the save happened on, at the hour it happened at.
+            assertEquals(LocalDateTime(tomorrow, LocalTime(0, 5)), insert.captured.occurredAt)
         }
 
     @Test
@@ -170,7 +171,8 @@ class AddTransactionViewModelTest {
 
         val insert = slot<TransactionInsert>()
         coVerify { createTransaction.invoke(capture(insert)) }
-        assertEquals(picked.atStartOfDayIn(lima).toEpochMilliseconds(), insert.captured.date)
+        // The picked day survives the rollover; only the hour comes from the save.
+        assertEquals(LocalDateTime(picked, LocalTime(0, 5)), insert.captured.occurredAt)
     }
 
     @Test
@@ -217,7 +219,7 @@ class AddTransactionViewModelTest {
     }
 
     @Test
-    fun `save sends the picked day as local midnight`() = runTest(testDispatcher) {
+    fun `save sends the picked day with the hour it was recorded at`() = runTest(testDispatcher) {
         val vm = buildViewModel()
         advanceUntilIdle()
 
@@ -231,7 +233,8 @@ class AddTransactionViewModelTest {
 
         val insert = slot<TransactionInsert>()
         coVerify { createTransaction.invoke(capture(insert)) }
-        assertEquals(picked.atStartOfDayIn(lima).toEpochMilliseconds(), insert.captured.date)
+        // The day is the user's, the hour is the clock's — one value, composed once, at the save.
+        assertEquals(LocalDateTime(picked, LocalTime(14, 30)), insert.captured.occurredAt)
     }
 
     @Test

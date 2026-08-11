@@ -5,17 +5,17 @@ import com.emm.domain.transaction.TransactionWithCategory
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
-import com.emm.justchill.hh.shared.localDateOf
 import com.emm.justchill.hh.shared.relativeDayLabel
 import com.emm.justchill.hh.shared.timeLabel
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 
 data class TransactionUi(
     val transactionId: String,
     val type: TransactionType,
     val amount: String,
     val description: String,
-    val date: Long,
+    val occurredAt: LocalDateTime,
     val readableDate: String,
     val readableTime: String,
     val category: CategoryUi,
@@ -31,9 +31,9 @@ private fun TransactionWithCategory.toUi(today: LocalDate): TransactionUi {
             TransactionType.Spend -> formatExpense(formattedNumber)
         },
         description = description,
-        date = date,
-        readableDate = relativeDayLabel(localDateOf(date), today),
-        readableTime = timeLabel(date),
+        occurredAt = occurredAt,
+        readableDate = relativeDayLabel(occurredAt.date, today),
+        readableTime = timeLabel(occurredAt.time),
         category = CategoryUi(
             iconId = category?.icon,
             colorId = category?.color,

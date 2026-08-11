@@ -31,6 +31,7 @@ import com.emm.domain.transaction.DeleteTransactionUseCase
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDateTime
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -134,7 +135,7 @@ class DeleteUseCasesE2ETest {
                 amount = Money(1_000L),
                 description = "",
                 categoryId = categoryId,
-                date = 1_000L,
+                occurredAt = LocalDateTime(2026, 8, 10, 12, 0),
                 accountId = accountId,
             ),
         )

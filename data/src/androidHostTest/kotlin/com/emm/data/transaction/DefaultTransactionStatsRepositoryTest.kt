@@ -28,7 +28,7 @@ class DefaultTransactionStatsRepositoryTest {
             TopUsedCombos(accountId = "acc-3", categoryId = "cat-3", type = "Spend"),
         )
 
-        val result = repository.topUsedCombos(TransactionType.Income, 0L, 10)
+        val result = repository.topUsedCombos(TransactionType.Income, "2026-01-01", 10)
 
         assertEquals(2, result.size)
         assertEquals("acc-1", result[0].accountId.value)
@@ -42,7 +42,7 @@ class DefaultTransactionStatsRepositoryTest {
             TopUsedCombos(accountId = "acc-2", categoryId = "cat-2", type = "Transfer"),
         )
 
-        val result = repository.topUsedCombos(TransactionType.Income, 0L, 10)
+        val result = repository.topUsedCombos(TransactionType.Income, "2026-01-01", 10)
 
         assertEquals(emptyList(), result)
     }
@@ -54,7 +54,7 @@ class DefaultTransactionStatsRepositoryTest {
             TopUsedCombos(accountId = "acc-2", categoryId = "cat-2", type = "Spend"),
         )
 
-        val result = repository.topUsedCombos(TransactionType.Income, 0L, 10)
+        val result = repository.topUsedCombos(TransactionType.Income, "2026-01-01", 10)
 
         assertEquals(2, result.size)
         assertEquals(TransactionType.Income, result[0].type)
@@ -73,7 +73,7 @@ class DefaultTransactionStatsRepositoryTest {
             ),
         )
 
-        val result = repository.monthlyAmountByCategoryForRanges(listOf(MonthRange(0L, 1L)))
+        val result = repository.monthlyAmountByCategoryForRanges(listOf(MonthRange("2026-01-01", "2026-02-01")))
 
         val month = result.single()
         assertEquals(listOf(Money(4_000L)), month.income.map { it.amount })
@@ -91,7 +91,11 @@ class DefaultTransactionStatsRepositoryTest {
         )
 
         val result = repository.monthlyAmountByCategoryForRanges(
-            listOf(MonthRange(0L, 1L), MonthRange(1L, 2L), MonthRange(2L, 3L)),
+            listOf(
+                MonthRange("2026-01-01", "2026-02-01"),
+                MonthRange("2026-02-01", "2026-03-01"),
+                MonthRange("2026-03-01", "2026-04-01"),
+            ),
         )
 
         // The caller pairs these back up with its own month list by index; dropping an empty month
@@ -112,7 +116,7 @@ class DefaultTransactionStatsRepositoryTest {
             ),
         )
 
-        val result = repository.monthlyAmountByCategoryForRanges(listOf(MonthRange(0L, 1L)))
+        val result = repository.monthlyAmountByCategoryForRanges(listOf(MonthRange("2026-01-01", "2026-02-01")))
 
         assertEquals(Money(1_000L), result.single().expense.single().amount)
         assertEquals(emptyList(), result.single().income)

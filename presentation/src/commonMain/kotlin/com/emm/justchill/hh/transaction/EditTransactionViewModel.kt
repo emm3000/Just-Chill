@@ -19,11 +19,10 @@ import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.UpdateTransactionUseCase
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
-import com.emm.justchill.hh.shared.localDateOf
-import com.emm.justchill.hh.shared.startOfDayMillis
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
@@ -125,7 +124,7 @@ class EditTransactionViewModel(
 
         oldTransaction = findTransaction(TransactionId(transactionId)) ?: return@launch
         val account = findAccount(oldTransaction.accountId) ?: return@launch
-        val storedDay: LocalDate = localDateOf(oldTransaction.date, zone)
+        val storedDay: LocalDate = oldTransaction.occurredAt.date
 
         val selectedCategory: SelectableCategory? = oldTransaction.categoryId?.let { id ->
             categoriesList.firstOrNull { it.categoryId == id }
@@ -165,13 +164,17 @@ class EditTransactionViewModel(
         sendEffect(EditTransactionEffect.TransactionUpdated)
     }
 
-    // The one place the picked day becomes an instant. UpdateTransactionUseCase then carries the
-    // original time of day back over this midnight, so moving a transaction to another day does
-    // not restamp the hour it was recorded at.
+    // The day the user is looking at, carrying the hour the transaction was already recorded at:
+    // moving a movement to another day must not restamp when it happened.
+    //
+    // No timezone and no instant, which is the whole point. If the user did not touch the date,
+    // `currentState.date` still IS `oldTransaction.occurredAt.date`, so this rebuilds the stored
+    // value exactly — an amount-only edit writes back identical bytes by construction, not because
+    // some branch remembered to leave the date alone. That branch is what corrupted the date twice.
     private fun createTransactionUpdate(): TransactionUpdate = TransactionUpdate(
         type = currentState.transactionType,
         description = currentState.description,
-        date = startOfDayMillis(currentState.date, zone),
+        occurredAt = LocalDateTime(currentState.date, oldTransaction.occurredAt.time),
         amount = centsToMoney(currentState.amount),
         accountId = currentState.accountSelected?.accountId
             ?: error("accountSelected required to build TransactionUpdate — UI should have disabled save"),

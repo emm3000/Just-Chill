@@ -77,6 +77,7 @@ import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.components.TransactionRow
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel
@@ -784,7 +785,7 @@ private fun SeeTransactionsMonthPreview() {
                     type = TransactionType.Spend,
                     amount = formatExpense("84.20"),
                     description = "Mercado del lunes",
-                    date = 0,
+                    occurredAt = PREVIEW_OCCURRED_AT,
                     readableDate = "HOY",
                     readableTime = "14:30",
                     category = CategoryUi(iconId = null, colorId = "green"),
@@ -794,7 +795,7 @@ private fun SeeTransactionsMonthPreview() {
                     type = TransactionType.Income,
                     amount = formatIncome("3,200.00"),
                     description = "Sueldo",
-                    date = 0,
+                    occurredAt = PREVIEW_OCCURRED_AT,
                     readableDate = "HOY",
                     readableTime = "09:00",
                     category = CategoryUi(iconId = null, colorId = "gray"),
@@ -825,7 +826,7 @@ private fun SeeTransactionsPopulatedPreview() {
                     type = TransactionType.Spend,
                     amount = formatExpense("84.20"),
                     description = "Mercado del lunes",
-                    date = 0,
+                    occurredAt = PREVIEW_OCCURRED_AT,
                     readableDate = "HOY",
                     readableTime = "14:30",
                     category = CategoryUi(iconId = null, colorId = "green"),
@@ -865,3 +866,6 @@ private fun previewDayGroup(transactions: List<TransactionUi>): DayGroup {
     val today: LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     return DayGroup(date = today, today = today, transactions = transactions)
 }
+
+/** Any fixed local datetime — previews render the pre-formatted labels, never this value. */
+private val PREVIEW_OCCURRED_AT = LocalDateTime(2026, 8, 10, 14, 30)

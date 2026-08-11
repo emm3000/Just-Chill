@@ -17,12 +17,12 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.shared.Empty
-import com.emm.justchill.hh.shared.startOfDayMillis
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
@@ -209,21 +209,25 @@ class AddTransactionViewModel(
         sendEffect(AddTransactionEffect.TransactionSaved)
     }
 
-    // The one place the picked day becomes an instant. CreateTransactionUseCase then swaps this
-    // midnight for the current time of day — the day is what the user chose, the hour is when it
-    // was recorded.
+    // The day is the user's, the hour is the moment of the save — and both are decided HERE,
+    // where the save happens, not against the state's `today`. Resolving them earlier is what
+    // booked a screen opened at 23:59 and saved at 00:01 on the previous day.
     //
-    // An unset day resolves against the clock HERE, not against the state's `today`: this is the
-    // moment the transaction gets a date, and it is the only reading that cannot already be stale.
-    private fun createTransactionInsert(): TransactionInsert = TransactionInsert(
-        type = currentState.transactionType,
-        description = currentState.description,
-        date = startOfDayMillis(currentState.date ?: today(), zone),
-        amount = centsToMoney(currentState.amount),
-        categoryId = currentState.categorySelected?.categoryId,
-        accountId = currentState.accountSelected?.accountId
-            ?: error("accountSelected required to build TransactionInsert — UI should have disabled save"),
-    )
+    // This is one of the two legitimate reads of a timezone left in the app: "what is the local
+    // date and time for this user, right now". Everything downstream carries the answer, not the
+    // question — the use case validates it and the column stores it, neither converts it.
+    private fun createTransactionInsert(): TransactionInsert {
+        val now: LocalDateTime = clock.now().toLocalDateTime(zone)
+        return TransactionInsert(
+            type = currentState.transactionType,
+            description = currentState.description,
+            occurredAt = LocalDateTime(currentState.date ?: now.date, now.time),
+            amount = centsToMoney(currentState.amount),
+            categoryId = currentState.categorySelected?.categoryId,
+            accountId = currentState.accountSelected?.accountId
+                ?: error("accountSelected required to build TransactionInsert — UI should have disabled save"),
+        )
+    }
 
     private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
 }

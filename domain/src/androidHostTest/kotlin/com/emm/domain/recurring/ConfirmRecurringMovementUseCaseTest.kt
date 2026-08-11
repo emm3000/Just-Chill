@@ -9,6 +9,7 @@ import com.emm.domain.shared.error.DomainException
 import com.emm.domain.transaction.TransactionType
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -35,7 +36,7 @@ class ConfirmRecurringMovementUseCaseTest {
 
     // The fixed template is due on the 15th, so confirming May books it on 2026-05-15, NOT on the
     // day the user happened to tap confirm.
-    private val expectedDateMillis = LocalDate(2026, 5, 15).atStartOfDayIn(utc).toEpochMilliseconds()
+    private val expectedOccurredAt = LocalDateTime(2026, 5, 15, 0, 0)
 
     private val createdAt = LocalDate(2026, 1, 1).atStartOfDayIn(utc).toEpochMilliseconds()
 
@@ -73,7 +74,7 @@ class ConfirmRecurringMovementUseCaseTest {
     fun setUp() {
         repository = FakeRecurringMovementRepository()
         repository.addTemplate(fixedTemplate, variableTemplate)
-        useCase = ConfirmRecurringMovementUseCase(repository, utc)
+        useCase = ConfirmRecurringMovementUseCase(repository)
     }
 
     /**
@@ -108,7 +109,7 @@ class ConfirmRecurringMovementUseCaseTest {
         io.mockk.coEvery {
             failingRepo.confirm(any(), any(), any())
         } throws DomainException.DatabaseError(RuntimeException("atomic fail"))
-        val uc = ConfirmRecurringMovementUseCase(failingRepo, utc)
+        val uc = ConfirmRecurringMovementUseCase(failingRepo)
         assertFailsWith<DomainException.DatabaseError> {
             uc(
                 templateId = RecurringMovementId("rm-fixed"),
@@ -213,7 +214,8 @@ class ConfirmRecurringMovementUseCaseTest {
     }
 
     /**
-     * The transaction lands on the period's own due day, at start of day in the injected timezone.
+     * The transaction lands at midnight on the period's own due day — a calendar fact that needs
+     * no clock and no timezone to state.
      */
     @Test
     fun `invoke dates the transaction on the period's due day`() = runTest {
@@ -224,7 +226,7 @@ class ConfirmRecurringMovementUseCaseTest {
         )
         val insert = repository.lastConfirmInsert
         assertNotNull(insert)
-        assertEquals(expectedDateMillis, insert.date)
+        assertEquals(expectedOccurredAt, insert.occurredAt)
     }
 
     // ── catch-up ──────────────────────────────────────────────────────────────
@@ -239,8 +241,7 @@ class ConfirmRecurringMovementUseCaseTest {
             callerAmount = null,
         )
 
-        val expectedMarch = LocalDate(2026, 3, 15).atStartOfDayIn(utc).toEpochMilliseconds()
-        assertEquals(expectedMarch, repository.lastConfirmInsert?.date)
+        assertEquals(LocalDateTime(2026, 3, 15, 0, 0), repository.lastConfirmInsert?.occurredAt)
         assertEquals("2026-03", repository.lastConfirmPeriod)
     }
 
@@ -271,8 +272,7 @@ class ConfirmRecurringMovementUseCaseTest {
 
         useCase(RecurringMovementId("rm-eom"), YearMonth(2026, Month.FEBRUARY), null)
 
-        val expectedFeb = LocalDate(2026, 2, 28).atStartOfDayIn(utc).toEpochMilliseconds()
-        assertEquals(expectedFeb, repository.lastConfirmInsert?.date)
+        assertEquals(LocalDateTime(2026, 2, 28, 0, 0), repository.lastConfirmInsert?.occurredAt)
     }
 
     @Test

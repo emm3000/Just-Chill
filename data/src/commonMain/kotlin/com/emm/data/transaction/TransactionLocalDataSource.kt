@@ -9,6 +9,7 @@ import com.emm.data.SearchTransactions
 import com.emm.data.TransactionsQueries
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.nowMillis
+import com.emm.data.shared.toOccurredAtText
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionUpdate
@@ -35,7 +36,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries, private va
             type = transactionInsert.type.name,
             amount = transactionInsert.amount.cents,
             description = transactionInsert.description,
-            date = transactionInsert.date,
+            occurredAt = transactionInsert.occurredAt.toOccurredAtText(),
             categoryId = transactionInsert.categoryId?.value,
             accountId = transactionInsert.accountId.value,
             updatedAt = now,
@@ -56,8 +57,8 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries, private va
         .map { list -> list.map(CompleteTransactions::asEntity) }
 
     fun completeTransactionsByDateRange(
-        startInclusive: Long,
-        endExclusive: Long,
+        startInclusive: String,
+        endExclusive: String,
     ): Flow<List<TransactionWithCategoryEntity>> = tq.completeTransactionsByDateRange(startInclusive, endExclusive)
         .asFlow()
         .mapToList(ioDispatcher)
@@ -116,7 +117,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries, private va
             type = transactionUpdate.type.name,
             amount = transactionUpdate.amount.cents,
             description = transactionUpdate.description,
-            date = transactionUpdate.date,
+            occurredAt = transactionUpdate.occurredAt.toOccurredAtText(),
             transactionId = transactionId,
             accountId = transactionUpdate.accountId.value,
             categoryId = transactionUpdate.categoryId?.value,

@@ -18,6 +18,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -60,7 +61,7 @@ class DefaultBackupRepositoryTest {
         type = TransactionType.Income,
         amount = Money(4500_00L),
         description = "Sueldo mayo",
-        date = 1_748_000_000_000L,
+        occurredAt = LocalDateTime(2026, 5, 23, 9, 33, 20),
         accountId = AccountId("acc-1"),
         categoryId = CategoryId("cat-1"),
     )
@@ -70,7 +71,7 @@ class DefaultBackupRepositoryTest {
         type = TransactionType.Spend,
         amount = Money(150_00L),
         description = "Almuerzo",
-        date = 1_748_100_000_000L,
+        occurredAt = LocalDateTime(2026, 5, 24, 13, 20, 0),
         accountId = AccountId("acc-1"),
         categoryId = null,
     )
@@ -84,7 +85,7 @@ class DefaultBackupRepositoryTest {
         val json = repository.exportToJson(exportedAt = 1_748_000_000_000L, appVersion = "1.0.0")
 
         val payload = Json.decodeFromString<ExportPayloadDto>(json)
-        assertEquals(1, payload.schemaVersion)
+        assertEquals(2, payload.schemaVersion)
         assertEquals(1_748_000_000_000L, payload.exportedAt)
         assertEquals("1.0.0", payload.appVersion)
         assertEquals(1, payload.accounts.size)
@@ -119,7 +120,7 @@ class DefaultBackupRepositoryTest {
     }
 
     @Test
-    fun `empty state - produces valid JSON with schemaVersion 1 and empty arrays`() = runTest {
+    fun `empty state - produces valid JSON with the current schemaVersion and empty arrays`() = runTest {
         every { accountRepo.all() } returns flowOf(emptyList())
         every { categoryRepo.all() } returns flowOf(emptyList())
         every { transactionRepo.all() } returns flowOf(emptyList())
@@ -127,7 +128,7 @@ class DefaultBackupRepositoryTest {
         val json = repository.exportToJson(exportedAt = 0L, appVersion = "1.0.0")
 
         val payload = Json.decodeFromString<ExportPayloadDto>(json)
-        assertEquals(1, payload.schemaVersion)
+        assertEquals(2, payload.schemaVersion)
         assertTrue(payload.accounts.isEmpty())
         assertTrue(payload.categories.isEmpty())
         assertTrue(payload.transactions.isEmpty())

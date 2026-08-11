@@ -1,7 +1,6 @@
 package com.emm.domain.transaction
 
 import com.emm.domain.shared.AccountId
-import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.shared.error.DomainException
@@ -9,17 +8,14 @@ import com.emm.domain.shared.error.ValidationCode
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toInstant
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -30,12 +26,13 @@ import kotlin.time.Instant
 class UpdateTransactionUseCaseTest {
 
     private val repository = mockk<TransactionRepository>()
-    private val dateAndTimeCombiner = mockk<DateAndTimeCombiner>()
-    private val useCase = UpdateTransactionUseCase(repository, dateAndTimeCombiner)
+    private val useCase = UpdateTransactionUseCase(repository)
+
+    private val storedOccurredAt = LocalDateTime(2026, Month.MARCH, 3, 21, 47, 33)
 
     private val oldTransaction = Transaction.Empty.copy(
         transactionId = TransactionId("tx-1"),
-        date = 1_500L,
+        occurredAt = storedOccurredAt,
     )
     private val anyUpdate = TransactionUpdate(
         type = TransactionType.Spend,
@@ -43,42 +40,45 @@ class UpdateTransactionUseCaseTest {
         description = "updated",
         accountId = AccountId("acc-1"),
         categoryId = null,
-        date = 2_000L,
+        occurredAt = storedOccurredAt,
     )
 
     @Test
-    fun `update should call repository with combined date and original transactionId`() = runTest {
-        every { dateAndTimeCombiner.combineKeepingTimeOf(2_000L, 1_500L) } returns 7_777L
+    fun `update writes occurredAt verbatim against the original transactionId`() = runTest {
         coEvery { repository.update(any(), any()) } just Runs
 
-        useCase(oldTransaction, anyUpdate)
+        val movedToAnotherDay = anyUpdate.copy(
+            occurredAt = LocalDateTime(LocalDate(2026, Month.MARCH, 5), storedOccurredAt.time),
+        )
+        useCase(oldTransaction, movedToAnotherDay)
 
         coVerify(exactly = 1) {
             repository.update(
                 transactionId = TransactionId("tx-1"),
-                transactionUpdate = anyUpdate.copy(date = 7_777L),
+                transactionUpdate = movedToAnotherDay,
             )
         }
     }
 
     @Test
-    fun `update should take the time of day from the stored transaction, not from the update`() = runTest {
-        every { dateAndTimeCombiner.combineKeepingTimeOf(any(), any()) } returns 0L
+    fun `an edit that does not touch the date writes back the stored value unchanged`() = runTest {
+        // The regression this whole change exists to make impossible. There is no conversion left
+        // to be non-inverse with itself: an amount-only edit carries the same LocalDateTime it was
+        // loaded with, so what reaches the repository is identical to what is stored.
         coEvery { repository.update(any(), any()) } just Runs
 
-        useCase(oldTransaction, anyUpdate)
+        useCase(oldTransaction, anyUpdate.copy(amount = Money(999L)))
 
-        verify(exactly = 1) {
-            dateAndTimeCombiner.combineKeepingTimeOf(
-                dateInMillis = anyUpdate.date,
-                timeSourceInMillis = oldTransaction.date,
+        coVerify {
+            repository.update(
+                transactionId = any(),
+                transactionUpdate = match { it.occurredAt == oldTransaction.occurredAt },
             )
         }
     }
 
     @Test
     fun `update should keep other update fields intact`() = runTest {
-        every { dateAndTimeCombiner.combineKeepingTimeOf(any(), any()) } returns 0L
         coEvery { repository.update(any(), any()) } just Runs
 
         useCase(oldTransaction, anyUpdate)
@@ -99,7 +99,6 @@ class UpdateTransactionUseCaseTest {
 
     @Test
     fun `update should propagate DomainException from repository`() = runTest {
-        every { dateAndTimeCombiner.combineKeepingTimeOf(any(), any()) } returns 0L
         coEvery { repository.update(any(), any()) } throws DomainException.NotFound("transaction")
 
         assertFailsWith<DomainException.NotFound> { useCase(oldTransaction, anyUpdate) }
@@ -128,16 +127,30 @@ class UpdateTransactionUseCaseTest {
         val clock = object : Clock {
             override fun now(): Instant = LocalDateTime(today, LocalTime(9, 0)).toInstant(lima)
         }
-        val tomorrow = LocalDate(2026, Month.AUGUST, 12).atStartOfDayIn(lima).toEpochMilliseconds()
-        val guarded = UpdateTransactionUseCase(repository, dateAndTimeCombiner, clock, lima)
-
-        every { dateAndTimeCombiner.combineKeepingTimeOf(any(), any()) } returns tomorrow
+        val guarded = UpdateTransactionUseCase(repository, clock, lima)
 
         val ex = assertFailsWith<DomainException.ValidationError> {
-            guarded(oldTransaction, anyUpdate)
+            guarded(oldTransaction, anyUpdate.copy(occurredAt = LocalDateTime(2026, Month.AUGUST, 12, 0, 0)))
         }
 
         assertEquals(ValidationCode.DateInTheFuture, ex.code)
         coVerify(exactly = 0) { repository.update(any(), any()) }
+    }
+
+    @Test
+    fun `update accepts a transaction stamped later today than the clock reads`() = runTest {
+        // The Edit path carries the original hour over, so this is the ordinary case for a
+        // movement recorded in the evening and edited the next morning — not a future date.
+        val lima = TimeZone.of("America/Lima")
+        val today = LocalDate(2026, Month.AUGUST, 11)
+        val clock = object : Clock {
+            override fun now(): Instant = LocalDateTime(today, LocalTime(9, 0)).toInstant(lima)
+        }
+        val guarded = UpdateTransactionUseCase(repository, clock, lima)
+        coEvery { repository.update(any(), any()) } just Runs
+
+        guarded(oldTransaction, anyUpdate.copy(occurredAt = LocalDateTime(today, LocalTime(23, 0))))
+
+        coVerify(exactly = 1) { repository.update(any(), any()) }
     }
 }

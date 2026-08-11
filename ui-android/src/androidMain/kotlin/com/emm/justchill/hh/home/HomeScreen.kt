@@ -65,6 +65,7 @@ import com.emm.justchill.hh.shared.monthYearLabel
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.components.TransactionRow
+import kotlinx.datetime.LocalDateTime
 
 /**
  * VM-owning overload used by [HomeEntry] in Hh.kt.
@@ -689,7 +690,7 @@ private fun HomeScreenPreview() {
                         type = TransactionType.Spend,
                         amount = formatExpense("84.20"),
                         description = "Mercado",
-                        date = 0,
+                        occurredAt = PREVIEW_OCCURRED_AT,
                         readableDate = "Hoy",
                         readableTime = "14:30",
                         category = CategoryUi(iconId = null, colorId = "green"),
@@ -699,7 +700,7 @@ private fun HomeScreenPreview() {
                         type = TransactionType.Income,
                         amount = formatIncome("3,200.00"),
                         description = "Sueldo",
-                        date = 0,
+                        occurredAt = PREVIEW_OCCURRED_AT,
                         readableDate = "Hoy",
                         readableTime = "09:00",
                         category = CategoryUi(iconId = null, colorId = "gray"),
@@ -709,7 +710,7 @@ private fun HomeScreenPreview() {
                         type = TransactionType.Spend,
                         amount = formatExpense("12.00"),
                         description = "Café con Sofía",
-                        date = 0,
+                        occurredAt = PREVIEW_OCCURRED_AT,
                         readableDate = "Ayer",
                         readableTime = "16:48",
                         category = CategoryUi(iconId = null, colorId = "pink"),
@@ -727,3 +728,6 @@ private fun HomeScreenEmptyPreview() {
         HomeScreen(HomeUiState())
     }
 }
+
+/** Any fixed local datetime — previews render the pre-formatted labels, never this value. */
+private val PREVIEW_OCCURRED_AT = LocalDateTime(2026, 8, 10, 14, 30)

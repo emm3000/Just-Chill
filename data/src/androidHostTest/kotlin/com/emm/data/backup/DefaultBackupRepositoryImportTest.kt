@@ -228,11 +228,12 @@ class DefaultBackupRepositoryImportTest {
         }
         val transactionsJson = (1..transactions).joinToString(",") { i ->
             """{"transactionId":"tx-$i","type":"Spend","amountCents":1000,""" +
-                """"description":"Tx $i","date":0,"accountId":"acc-1","categoryId":null}"""
+                """"description":"Tx $i","occurredAt":"2026-05-23T09:33:20",""" +
+                """"accountId":"acc-1","categoryId":null}"""
         }
         return """
             {
-                "schemaVersion": 1,
+                "schemaVersion": 2,
                 "exportedAt": 0,
                 "appVersion": "1.0.0",
                 "accounts": [$accountsJson],
@@ -243,7 +244,7 @@ class DefaultBackupRepositoryImportTest {
     }
 
     private companion object {
-        const val EMPTY_PAYLOAD_JSON = """{"schemaVersion":1,"exportedAt":0,"appVersion":"1.0.0",""" +
+        const val EMPTY_PAYLOAD_JSON = """{"schemaVersion":2,"exportedAt":0,"appVersion":"1.0.0",""" +
             """"accounts":[],"categories":[],"transactions":[]}"""
     }
 }

@@ -10,10 +10,12 @@ import com.emm.domain.shared.Money
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionType
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class BackupMappersTest {
@@ -131,7 +133,7 @@ class BackupMappersTest {
             type = TransactionType.Income,
             amount = Money(4500_00L),
             description = "Sueldo quincenal",
-            date = 1_748_000_000_000L,
+            occurredAt = LocalDateTime(2026, 5, 23, 9, 33, 20),
             accountId = AccountId("acc-1"),
             categoryId = CategoryId("cat-1"),
         )
@@ -139,7 +141,7 @@ class BackupMappersTest {
         val dto = original.toDto()
         val jsonStr = json.encodeToString(dto)
         val decoded = json.decodeFromString<TransactionDto>(jsonStr)
-        val restored = decoded.toEntity()
+        val restored = decoded.toEntityOrNull()
 
         assertEquals(original, restored)
     }
@@ -151,15 +153,16 @@ class BackupMappersTest {
             type = TransactionType.Spend,
             amount = Money(50_00L),
             description = "Misceláneos",
-            date = 1_748_100_000_000L,
+            occurredAt = LocalDateTime(2026, 5, 24, 13, 20, 0),
             accountId = AccountId("acc-1"),
             categoryId = null,
         )
 
         val restored = json.decodeFromString<TransactionDto>(
             json.encodeToString(original.toDto()),
-        ).toEntity()
+        ).toEntityOrNull()
 
+        assertNotNull(restored)
         assertNull(restored.categoryId)
         assertEquals(original, restored)
     }
@@ -172,15 +175,16 @@ class BackupMappersTest {
             type = TransactionType.Income,
             amount = Money(exactCents),
             description = "",
-            date = 0L,
+            occurredAt = LocalDateTime(1970, 1, 1, 0, 0),
             accountId = AccountId("acc-1"),
             categoryId = null,
         )
 
         val restored = json.decodeFromString<TransactionDto>(
             json.encodeToString(original.toDto()),
-        ).toEntity()
+        ).toEntityOrNull()
 
+        assertNotNull(restored)
         assertEquals(exactCents, restored.amount.cents)
     }
 
@@ -192,13 +196,14 @@ class BackupMappersTest {
                 type = txType,
                 amount = Money(100L),
                 description = "",
-                date = 0L,
+                occurredAt = LocalDateTime(1970, 1, 1, 0, 0),
                 accountId = AccountId("acc-1"),
                 categoryId = null,
             )
             val restored = json.decodeFromString<TransactionDto>(
                 json.encodeToString(original.toDto()),
-            ).toEntity()
+            ).toEntityOrNull()
+            assertNotNull(restored)
             assertEquals(txType, restored.type)
         }
     }

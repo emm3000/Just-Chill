@@ -2,26 +2,15 @@ package com.emm.justchill.hh.shared
 
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
-import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Instant
 
-// The two conversions between an instant and the calendar day it belongs to, plus the labels the
-// UI puts on them.
+// The labels the UI puts on a day and on a time of day.
 //
-// `transactions.date` is stored as epoch millis — an instant — so which day it falls on is a
-// question only a timezone can answer, and every crossing of that boundary goes through here.
-
-/** The calendar day the instant at [epochMillis] falls on, as read in [zone]. */
-fun localDateOf(epochMillis: Long, zone: TimeZone = TimeZone.currentSystemDefault()): LocalDate =
-    Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(zone).date
-
-/** Midnight at the start of [date] in [zone], as epoch millis. Inverse of [localDateOf]. */
-fun startOfDayMillis(date: LocalDate, zone: TimeZone = TimeZone.currentSystemDefault()): Long =
-    date.atStartOfDayIn(zone).toEpochMilliseconds()
+// There is nothing to convert here any more. A transaction's `occurredAt` is already a calendar
+// day and a wall-clock time, so rendering it needs no timezone — it shows the day and the hour the
+// user recorded, wherever the device happens to be now.
 
 /**
  * "Hoy" / "Ayer" / "Mañana" for the three days nobody needs a calendar for, otherwise "13 ago".
@@ -38,8 +27,5 @@ fun relativeDayLabel(date: LocalDate, today: LocalDate): String = when (date) {
     else -> SpanishDateFormat.dayShortMonth(date).titlecaseFirstChar()
 }
 
-/** "9:05 a. m." — the clock time of [epochMillis] as read in [zone]. */
-fun timeLabel(epochMillis: Long, zone: TimeZone = TimeZone.currentSystemDefault()): String {
-    val time = Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(zone).time
-    return SpanishDateFormat.readableTime(time.hour, time.minute)
-}
+/** "9:05 a. m." — the wall-clock time the transaction was recorded at. */
+fun timeLabel(time: LocalTime): String = SpanishDateFormat.readableTime(time.hour, time.minute)

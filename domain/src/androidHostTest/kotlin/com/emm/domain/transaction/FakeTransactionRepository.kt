@@ -32,8 +32,8 @@ class FakeTransactionRepository : TransactionRepository {
     override fun fetchAllWithCategory(): Flow<List<TransactionWithCategory>> = flowOf(allWithCategory)
 
     override fun fetchAllWithCategoryInRange(
-        startInclusive: Long,
-        endExclusive: Long,
+        startInclusive: String,
+        endExclusive: String,
     ): Flow<List<TransactionWithCategory>> = flowOf(rangeWithCategory)
 
     override fun observeTotals(): Flow<TransactionTotals> = flowOf(totalsToReturn)

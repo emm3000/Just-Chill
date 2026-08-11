@@ -1,9 +1,26 @@
+-- `occurredAt` is WHEN THE MONEY MOVED, as the user means it: a calendar day with a wall-clock
+-- time, and no timezone. It is stored as ISO local text, 'YYYY-MM-DDTHH:MM:SS'.
+--
+-- It is deliberately NOT an instant. A personal-finance movement is a calendar-day event; asking
+-- which physical moment it happened at only ever produced bugs here — the same row read as two
+-- different days on two devices, and a "keep the day, change the hour" edit that had to hold an
+-- instant and a day in agreement by hand. There is one field now, so there is nothing to desync.
+--
+-- The text format is what makes SQL able to answer every question without a zone:
+--   • lexicographic order == chronological order, so ORDER BY occurredAt DESC is correct as-is
+--   • a month is a half-open string window: >= '2026-08-01' AND < '2026-09-01'. A 'YYYY-MM-DD'
+--     bound compares correctly against a full 'YYYY-MM-DDTHH:MM:SS' value because 'T' sorts after
+--     every digit, so the last instant of the 31st still falls inside the month
+--   • the calendar day alone is substr(occurredAt, 1, 10)
+--
+-- createdAt / updatedAt / deletedAt stay epoch millis on purpose: those ARE instants — storage
+-- metadata and the ordering LWW conflict resolution reads.
 CREATE TABLE transactions (
     transactionId  TEXT NOT NULL PRIMARY KEY,
     type           TEXT NOT NULL,
     amount         INTEGER NOT NULL,
     description    TEXT NOT NULL DEFAULT '',
-    date           INTEGER NOT NULL,
+    occurredAt     TEXT NOT NULL,
     categoryId     TEXT REFERENCES categories(categoryId) ON DELETE SET NULL,
     accountId      TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
     createdAt      INTEGER NOT NULL,
@@ -14,13 +31,13 @@ CREATE TABLE transactions (
 );
 
 CREATE INDEX IF NOT EXISTS transactions_account_idx  ON transactions(accountId);
-CREATE INDEX IF NOT EXISTS transactions_date_idx     ON transactions(date);
+CREATE INDEX IF NOT EXISTS transactions_occurred_idx ON transactions(occurredAt);
 CREATE INDEX IF NOT EXISTS transactions_category_idx ON transactions(categoryId);
 CREATE INDEX IF NOT EXISTS transactions_syncstate_idx ON transactions(syncState);
 CREATE INDEX IF NOT EXISTS transactions_user_deleted_idx ON transactions(userId, deletedAt);
 
 all:
-SELECT * FROM transactions WHERE deletedAt IS NULL ORDER BY date DESC;
+SELECT * FROM transactions WHERE deletedAt IS NULL ORDER BY occurredAt DESC;
 
 completeTransactions:
 SELECT
@@ -32,7 +49,7 @@ SELECT
 FROM transactions t
 LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
 WHERE t.deletedAt IS NULL
-ORDER BY t.date DESC;
+ORDER BY t.occurredAt DESC;
 
 completeTransactionsByDateRange:
 SELECT
@@ -44,9 +61,9 @@ SELECT
 FROM transactions t
 LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
 WHERE t.deletedAt IS NULL
-  AND t.date >= :startOfMonth
-  AND t.date < :startOfNextMonth
-ORDER BY t.date DESC;
+  AND t.occurredAt >= :startOfMonth
+  AND t.occurredAt < :startOfNextMonth
+ORDER BY t.occurredAt DESC;
 
 -- Unknown type values (e.g. from a newer app version on another device) contribute 0,
 -- consistent with the mapper skip-row policy: a row the app cannot interpret is invisible
@@ -72,7 +89,7 @@ FROM transactions
 WHERE deletedAt IS NULL;
 
 insert:
-INSERT OR REPLACE INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt, syncState)
+INSERT OR REPLACE INTO transactions(transactionId, type, amount, description, occurredAt, categoryId, accountId, createdAt, updatedAt, syncState)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending');
 
 find:
@@ -80,7 +97,7 @@ SELECT * FROM transactions WHERE transactionId = ? AND deletedAt IS NULL;
 
 update:
 UPDATE transactions
-SET type = ?, amount = ?, description = ?, date = ?, accountId = ?, categoryId = ?, updatedAt = ?, syncState = 'Pending'
+SET type = ?, amount = ?, description = ?, occurredAt = ?, accountId = ?, categoryId = ?, updatedAt = ?, syncState = 'Pending'
 WHERE transactionId = ?;
 
 countByAccount:
@@ -90,7 +107,7 @@ countLiveByAccount:
 SELECT COUNT(*) FROM transactions WHERE accountId = :accountId AND deletedAt IS NULL;
 
 -- LIMIT keeps the global (cross-month) search bounded: without it this is the one query
--- left that can stream the whole table into memory. Newest rows win the cut (date DESC).
+-- left that can stream the whole table into memory. Newest rows win the cut (occurredAt DESC).
 searchTransactions:
 SELECT
     t.*,
@@ -103,7 +120,7 @@ LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
 WHERE t.deletedAt IS NULL
   AND (:queryEmpty = 1 OR LOWER(t.description) LIKE '%' || LOWER(:query) || '%')
   AND (:categoryFilterEmpty = 1 OR t.categoryId IN :categoryIds)
-ORDER BY t.date DESC
+ORDER BY t.occurredAt DESC
 LIMIT :limit;
 
 -- Chip ranking for the transactions tab. Counting here replaces folding the whole table in
@@ -126,20 +143,20 @@ SET deletedAt = :deletedAt, updatedAt = :updatedAt, syncState = 'Pending'
 WHERE deletedAt IS NULL;
 
 insertOrIgnoreFromBackup:
-INSERT OR IGNORE INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt, syncState)
+INSERT OR IGNORE INTO transactions(transactionId, type, amount, description, occurredAt, categoryId, accountId, createdAt, updatedAt, syncState)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending');
 
 restoreFromBackup:
 UPDATE transactions
-SET type = ?, amount = ?, description = ?, date = ?, categoryId = ?, accountId = ?, updatedAt = ?, deletedAt = NULL, syncState = 'Pending'
+SET type = ?, amount = ?, description = ?, occurredAt = ?, categoryId = ?, accountId = ?, updatedAt = ?, deletedAt = NULL, syncState = 'Pending'
 WHERE transactionId = ?;
 
 monthlyStats:
 SELECT COUNT(*) AS movementCount, COALESCE(SUM(amount), 0) AS totalAmount
 FROM transactions
 WHERE type = :type
-  AND date >= :startInclusive
-  AND date < :endExclusive
+  AND occurredAt >= :startInclusive
+  AND occurredAt < :endExclusive
   AND deletedAt IS NULL;
 
 -- LEFT JOIN, not INNER: a transaction with no category (or one whose category was
@@ -156,8 +173,8 @@ SELECT
 FROM transactions t
 LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
 WHERE t.type = :type
-  AND t.date >= :startInclusive
-  AND t.date < :endExclusive
+  AND t.occurredAt >= :startInclusive
+  AND t.occurredAt < :endExclusive
   AND t.deletedAt IS NULL
 GROUP BY c.categoryId
 ORDER BY totalAmount DESC;
@@ -176,8 +193,8 @@ SELECT
     SUM(t.amount) AS totalAmount
 FROM transactions t
 LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
-WHERE t.date >= :startInclusive
-  AND t.date < :endExclusive
+WHERE t.occurredAt >= :startInclusive
+  AND t.occurredAt < :endExclusive
   AND t.deletedAt IS NULL
 GROUP BY t.type, c.categoryId
 ORDER BY totalAmount DESC;
@@ -187,10 +204,10 @@ SELECT categoryId
 FROM transactions
 WHERE categoryId IS NOT NULL
   AND type = :type
-  AND date >= :startInclusive
+  AND occurredAt >= :startInclusive
   AND deletedAt IS NULL
 GROUP BY categoryId
-ORDER BY COUNT(*) DESC, MAX(date) DESC
+ORDER BY COUNT(*) DESC, MAX(occurredAt) DESC
 LIMIT :limit;
 
 topUsedCombos:
@@ -198,17 +215,17 @@ SELECT accountId, categoryId, type
 FROM transactions
 WHERE categoryId IS NOT NULL
   AND type = :type
-  AND date >= :startInclusive
+  AND occurredAt >= :startInclusive
   AND deletedAt IS NULL
 GROUP BY accountId, categoryId, type
-ORDER BY COUNT(*) DESC, MAX(date) DESC
+ORDER BY COUNT(*) DESC, MAX(occurredAt) DESC
 LIMIT :limit;
 
 lastUsedAccountId:
 SELECT accountId
 FROM transactions
 WHERE deletedAt IS NULL
-ORDER BY date DESC, createdAt DESC
+ORDER BY occurredAt DESC, createdAt DESC
 LIMIT 1;
 
 claimAll:
@@ -231,12 +248,12 @@ transactionSyncRevision:
 SELECT updatedAt, syncState FROM transactions WHERE transactionId = ?;
 
 insertOrIgnoreFromRemote:
-INSERT OR IGNORE INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt, userId, deletedAt, syncState)
+INSERT OR IGNORE INTO transactions(transactionId, type, amount, description, occurredAt, categoryId, accountId, createdAt, updatedAt, userId, deletedAt, syncState)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Synced');
 
 updateFromRemote:
 UPDATE transactions
-SET type = ?, amount = ?, description = ?, date = ?, categoryId = ?, accountId = ?, createdAt = ?, updatedAt = ?, userId = ?, deletedAt = ?, syncState = 'Synced'
+SET type = ?, amount = ?, description = ?, occurredAt = ?, categoryId = ?, accountId = ?, createdAt = ?, updatedAt = ?, userId = ?, deletedAt = ?, syncState = 'Synced'
 WHERE transactionId = ?;
 
 countPending:

@@ -56,6 +56,11 @@ data class TransactionRowDto(
     @SerialName("type") val type: String,
     @SerialName("amount") val amount: Long,
     @SerialName("description") val description: String,
+    /**
+     * The wire still carries the occurrence as epoch millis, because the server column is
+     * `date bigint not null`. It is NOT what the app stores — see `FixedPeruOffset.kt`, which owns
+     * both directions of the conversion until phase two changes the column.
+     */
     @SerialName("date") val date: Long,
     @SerialName("category_id") val categoryId: String? = null,
     @SerialName("account_id") val accountId: String,

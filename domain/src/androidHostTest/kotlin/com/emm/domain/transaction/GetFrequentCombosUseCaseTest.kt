@@ -22,7 +22,7 @@ class GetFrequentCombosUseCaseTest {
         coEvery {
             repo.topUsedCombos(
                 type = TransactionType.Spend,
-                startInclusive = any<Long>(),
+                startInclusive = any<String>(),
                 limit = any<Int>(),
             )
         } returns listOf(combo1, combo2)
@@ -38,7 +38,7 @@ class GetFrequentCombosUseCaseTest {
         coEvery {
             repo.topUsedCombos(
                 type = TransactionType.Spend,
-                startInclusive = any<Long>(),
+                startInclusive = any<String>(),
                 limit = any<Int>(),
             )
         } returns emptyList()
@@ -54,7 +54,7 @@ class GetFrequentCombosUseCaseTest {
         coEvery {
             repo.topUsedCombos(
                 type = TransactionType.Spend,
-                startInclusive = any<Long>(),
+                startInclusive = any<String>(),
                 limit = any<Int>(),
             )
         } returns emptyList()
@@ -69,7 +69,7 @@ class GetFrequentCombosUseCaseTest {
         coEvery {
             repo.topUsedCombos(
                 type = TransactionType.Spend,
-                startInclusive = any<Long>(),
+                startInclusive = any<String>(),
                 limit = any<Int>(),
             )
         } returns emptyList()
@@ -84,7 +84,7 @@ class GetFrequentCombosUseCaseTest {
         coEvery {
             repo.topUsedCombos(
                 type = any(),
-                startInclusive = any<Long>(),
+                startInclusive = any<String>(),
                 limit = any<Int>(),
             )
         } returns emptyList()
@@ -94,7 +94,7 @@ class GetFrequentCombosUseCaseTest {
         coVerify {
             repo.topUsedCombos(
                 type = TransactionType.Income,
-                startInclusive = any<Long>(),
+                startInclusive = any<String>(),
                 limit = any<Int>(),
             )
         }

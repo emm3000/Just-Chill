@@ -28,7 +28,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
-import kotlin.time.Instant
 
 private const val SEARCH_DEBOUNCE_MS = 250L
 
@@ -95,7 +94,7 @@ class SeeTransactionsViewModel(
                 // one broken query degrades to an empty slice and the next tap queries again.
                 if (currentFilter.isEmpty) {
                     transactionRepository
-                        .fetchAllWithCategoryInRange(month.startInclusiveMillis(), month.endExclusiveMillis())
+                        .fetchAllWithCategoryInRange(month.startInclusiveDay(), month.endExclusiveDay())
                         .map { transactions ->
                             ListSlice(
                                 month = month,
@@ -245,11 +244,13 @@ internal fun SeeTransactionsUiState.withListSlice(slice: ListSlice, selectedMont
     return if (isStale) this else copy(days = slice.days, summary = slice.summary)
 }
 
-private fun List<TransactionWithCategory>.toDayGroups(today: LocalDate): List<DayGroup> = groupBy { transaction ->
-    Instant.fromEpochMilliseconds(transaction.date)
-        .toLocalDateTime(TimeZone.currentSystemDefault())
-        .date
-}.map { (date, transactions) -> DayGroup(date = date, today = today, transactions = transactions.toUi(today)) }
+// The day a row belongs under is the day it carries. No zone, no conversion, nothing that can put
+// the same transaction under a different header on a different device.
+private fun List<TransactionWithCategory>.toDayGroups(today: LocalDate): List<DayGroup> =
+    groupBy { transaction -> transaction.occurredAt.date }
+        .map { (date, transactions) ->
+            DayGroup(date = date, today = today, transactions = transactions.toUi(today))
+        }
 
 // Single pass over the month's raw amounts, before any toUi mapping. The window bounds the
 // input to one month's rows, so this stays cheap on every emission.

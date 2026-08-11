@@ -19,7 +19,7 @@ interface TransactionRepository {
 
     fun fetchAllWithCategory(): Flow<List<TransactionWithCategory>>
 
-    fun fetchAllWithCategoryInRange(startInclusive: Long, endExclusive: Long): Flow<List<TransactionWithCategory>>
+    fun fetchAllWithCategoryInRange(startInclusive: String, endExclusive: String): Flow<List<TransactionWithCategory>>
 
     /**
      * Whole-ledger balance and movement count, aggregated by the database.
