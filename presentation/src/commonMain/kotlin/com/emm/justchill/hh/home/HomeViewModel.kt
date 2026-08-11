@@ -26,6 +26,7 @@ class HomeViewModel(
     private val confirmRecurringMovement: ConfirmRecurringMovementUseCase,
     private val skipRecurringMovement: SkipRecurringMovementUseCase,
     private val clock: kotlin.time.Clock = kotlin.time.Clock.System,
+    private val zone: TimeZone = TimeZone.currentSystemDefault(),
 ) : MviViewModel<HomeUiState, HomeIntent, HomeEffect>() {
 
     override val initialState = HomeUiState()
@@ -82,9 +83,10 @@ class HomeViewModel(
     /**
      * The reference date the row labels resolve Hoy/Ayer against, read once per mapping pass so
      * every row in one emission agrees — and so the branch runs off this ViewModel's injected
-     * clock instead of an ambient one buried in the mapper.
+     * clock instead of an ambient one buried in the mapper. The zone is injected alongside it for
+     * the same reason: a zone read from the environment is a zone no test can put a boundary on.
      */
-    private fun today(): LocalDate = clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
 
     // Current month comes from the clock, not from the selected month: it is what marks a pending
     // item as catch-up, and browsing to March must not relabel March's own pending row.

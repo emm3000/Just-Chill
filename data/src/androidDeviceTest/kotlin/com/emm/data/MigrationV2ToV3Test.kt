@@ -17,7 +17,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 /**
- * Migration test: schema version 2 → 3 (adds userId, deletedAt, syncState columns).
+ * Migration test: a database at schema version 2 (adds userId, deletedAt, syncState columns).
  *
  * Guarantees that existing user data is preserved when rolling out the soft-delete /
  * sync-metadata schema. Builds a v2 database (all 4 tables as they exist after the
@@ -153,10 +153,13 @@ class MigrationV2ToV3Test {
 
     @Test
     fun migration_v2_to_v3_preserves_rows_and_adds_sync_columns() {
-        // Run the REAL migration (executes 2.sqm).
-        EmmDatabaseData.Schema.migrate(driver, oldVersion = 2, newVersion = 3)
+        // Run the REAL migrations, all the way to the current version — which is what a device
+        // sitting at v2 actually does when it opens a newer build. Stopping at 3 would leave the
+        // database on a schema the generated query classes no longer describe, and every
+        // assertion below would fail on a column that has since been renamed.
+        EmmDatabaseData.Schema.migrate(driver, oldVersion = 2, newVersion = EmmDatabaseData.Schema.version)
 
-        // After migrate(2,3) the schema IS v3 — the generated query classes now match.
+        // The schema is now current, so the generated query classes match.
         // All inserted rows have deletedAt = NULL so the IS NULL filter passes.
 
         // 1. accounts — row survives; new columns have expected defaults.

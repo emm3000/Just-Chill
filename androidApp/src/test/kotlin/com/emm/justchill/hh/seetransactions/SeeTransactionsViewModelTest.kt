@@ -30,6 +30,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Month
+import kotlinx.datetime.TimeZone
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -319,6 +320,44 @@ class SeeTransactionsViewModelTest {
             advanceUntilIdle()
 
             assertEquals(listOf("t-aug"), vm.state.value.days.flatMap { d -> d.transactions.map { it.transactionId } })
+        }
+
+    // ---- "today" is a question about a zone ----
+
+    @Test
+    fun `the day header resolves HOY against the injected zone, not the machine's`() =
+        runTest(testDispatcher) {
+            // One instant, two answers. 2026-08-15 22:00 in Lima is already 2026-08-16 08:00 in
+            // Karachi, so a movement on the 15th is HOY for one user and AYER for the other.
+            //
+            // Finding #7 in docs/DATE_AUDIT.md was that no test could ever assert this, because
+            // the zone was read from the environment while the clock was injected. It is injected
+            // now, and this is the assertion that was previously impossible to write.
+            val eveningInLima = object : Clock {
+                override fun now(): Instant = Instant.parse("2026-08-16T03:00:00Z")
+            }
+            monthTransactionsFlow.value = listOf(
+                tx("t-1", TransactionType.Spend, 1_000, daysIntoMonth = 15),
+            )
+
+            val lima = SeeTransactionsViewModel(
+                searchTransactions,
+                categoryRepository,
+                transactionRepository,
+                eveningInLima,
+                TimeZone.of("America/Lima"),
+            )
+            val karachi = SeeTransactionsViewModel(
+                searchTransactions,
+                categoryRepository,
+                transactionRepository,
+                eveningInLima,
+                TimeZone.of("Asia/Karachi"),
+            )
+            advanceUntilIdle()
+
+            assertEquals("HOY", lima.state.value.days.single().primaryLabel)
+            assertEquals("AYER", karachi.state.value.days.single().primaryLabel)
         }
 
     // ---- Empty-state split ----

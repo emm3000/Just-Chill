@@ -3,6 +3,10 @@
 End-to-end audit of dates, from the picker down to the column, run on 2026-08-10. Thirteen findings.
 This file is the tracker; the reasoning for each fix lives in its PR.
 
+All thirteen are closed. One follow-up survives them, recorded under #5: the sync wire and the
+Supabase column still carry the occurrence as epoch millis, because changing a column on a live
+server is a human step. Nothing on the device depends on it any more.
+
 Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
 
 ## P0 — visible to the user
@@ -22,16 +26,26 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
 
 ## P1 — modelling
 
-- [ ] **5. The model confuses an instant with a calendar day.** `transactions.date` is epoch millis —
-  an instant — but the domain treats it as a day. This does not break on one device. It breaks with
+- [x] **5. The model confused an instant with a calendar day.** `transactions.date` was epoch millis —
+  an instant — but the domain treated it as a day. This did not break on one device. It broke with
   **sync**: a device in Lima records "10 Aug 23:30", a device in Madrid pulls it and shows 11 Aug,
   and at a month boundary it moves between months and changes the Reporte. LWW does not help — it is
-  not a conflict, it is the same instant rendered differently. `docs/sync/PLAN.md` does not cover it.
+  not a conflict, it is the same instant rendered differently.
 
-  Suggested direction: store the calendar day the transaction *means* (`'YYYY-MM-DD'`) alongside the
-  instant, and window every month query on that. `RecurringDueRules.periodKey` already proves the
-  pattern works in this codebase. **Needs a product decision and a migration — the only finding here
-  that touches the schema, and the one that gets expensive once there are users.**
+  **Closed by collapsing the two representations into one, not by adding the second one.** The
+  suggestion recorded here was to store the calendar day *alongside* the instant — that was tried,
+  and it is what produced the defect that made this rewrite necessary: two fields that had to agree,
+  kept agreeing by hand at each write site, until a fix to one end relocated the corruption onto the
+  other. The lesson is in the fix: `transactions.occurredAt TEXT` is a `LocalDateTime` with no
+  timezone and no companion field, so the desync is not something to remember — it is inexpressible.
+
+  Schema v4 (`3.sqm`) rebuilds the table and converts the stored instant at a fixed America/Lima
+  offset. Month windows, ordering and day grouping are now plain string operations on
+  `'YYYY-MM-DDTHH:MM:SS'`. See `MigrationV3ToV4Test` and `TransactionDateEndToEndTest`.
+
+  **Phase two, still open:** the sync wire and the Supabase column still carry `date bigint`.
+  `data/shared/FixedPeruOffset.kt` converts both directions at the same fixed offset in the
+  meantime — an interim adapter, deleted when the server column becomes text.
 
 - [x] **6. A global clock hidden in entity constructors.** `currentTimeInMillis()` was called from
   **19 sites**, including the default arguments of `TransactionInsert`, `AccountUpsert` and
@@ -43,11 +57,20 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
   column. `:data` now takes an injected `Clock` and reads it once per write.
   `currentTimeInMillis()` is gone. → commits `f7b493b`, `6d10a8c`
 
-- [~] **7. The timezone is ambient where the clock is injected.** `YearMonth.startInclusiveMillis`,
-  `GetHomeDataUseCase` and the `TransactionUi` read path all resolve days through
-  `TimeZone.currentSystemDefault()`. The clock can be faked in tests; the zone cannot, so no test can
-  cover a month boundary in another zone. *Partially closed:* the transaction write path and the
-  frequency-window use cases take an injected `TimeZone` (#71, #74).
+- [x] **7. The timezone was ambient where the clock was injected.** `YearMonth.startInclusiveMillis`,
+  `GetHomeDataUseCase` and the `TransactionUi` read path all resolved days through
+  `TimeZone.currentSystemDefault()`. The clock could be faked in tests; the zone could not, so no
+  test could cover a month boundary in another zone.
+
+  Most of it did not need closing so much as deleting: with #5 fixed, `YearMonth` and the read path
+  resolve no days at all — the value already is one. What is left is the single question that
+  genuinely needs a zone, "what is today for this user", and every place that asks it now takes the
+  zone next to the clock it already took: `GetHomeDataUseCase`, `HomeViewModel`,
+  `SeeTransactionsViewModel`, both transaction write paths and the frequency windows.
+
+  Still ambient, and deliberately: `DatePickerSheet` and the Compose previews, which have no
+  injected clock either, and `ProfileScreen`'s last-sync stamp, which renders a real instant and is
+  supposed to move with the device.
 
 - [x] **8. A "last 90 days" window measured in fixed milliseconds.** `now - days * 24h` is a
   duration, not a number of days; it drifts by an hour across a DST change and starts mid-morning
@@ -79,12 +102,15 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
 
 Worth keeping in view, because these are the patterns the fixes above copied:
 
-- `DateAndTimeCombiner` — the "why" is in the kdoc, `combineKeepingTimeOf` is idempotent, and the
-  tests run on both sides of UTC (`America/Lima`, `Asia/Karachi`).
 - `YearMonth` / `MonthRange` — month bounds are half-open and computed in Kotlin, never in SQL, with
-  the comment explaining why that matters for anyone off UTC.
+  the comment explaining why that matters for anyone off UTC. (Since #5 they need no timezone at
+  all: the bounds are ISO day strings.)
 - `DayGroup` — takes `today` as an input rather than reading a clock. This is the shape the rest of
   the date code was moved to.
+
+`DateAndTimeCombiner` used to be listed here — idempotent, well-documented, tested on both sides of
+UTC. It was all of that and it still could not be safe, because its job was to hold two
+representations of one fact in agreement. It is gone; the job does not exist any more.
 - `RecurringDueRules.periodKey` — zero-padded so string order matches chronological order, and
   `parsePeriodKey` treats the stored value as untrusted because it arrives from other devices.
 - `ConflictResolver` — does not consult a clock where it does not need one, and says why.

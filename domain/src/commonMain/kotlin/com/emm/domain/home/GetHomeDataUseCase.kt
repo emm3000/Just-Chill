@@ -19,12 +19,15 @@ class GetHomeDataUseCase(
     private val transactionRepository: TransactionRepository,
     private val getPendingRecurringMovements: GetPendingRecurringMovementsUseCase,
     private val clock: Clock = Clock.System,
+    private val zone: TimeZone = TimeZone.currentSystemDefault(),
 ) {
 
     operator fun invoke(yearMonth: YearMonth = YearMonth.current(clock)): Flow<HomeData> {
         val startOfMonth = yearMonth.startInclusiveDay()
         val startOfNextMonth = yearMonth.endExclusiveDay()
-        val today: LocalDate = clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        // Injected next to the clock, not read ambiently: "what is today" is the one date
+        // question left that needs a zone, and a zone no test can vary is a zone no test covers.
+        val today: LocalDate = clock.now().toLocalDateTime(zone).date
         return combine(
             flow = transactionRepository.observeTotals(),
             flow2 = transactionRepository.fetchAllWithCategoryInRange(startOfMonth, startOfNextMonth),
