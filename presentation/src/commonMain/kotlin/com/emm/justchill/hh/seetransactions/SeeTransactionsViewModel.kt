@@ -36,6 +36,7 @@ class SeeTransactionsViewModel(
     categoryRepository: CategoryRepository,
     transactionRepository: TransactionRepository,
     private val clock: Clock = Clock.System,
+    private val zone: TimeZone = TimeZone.currentSystemDefault(),
 ) : MviViewModel<SeeTransactionsUiState, SeeTransactionsIntent, SeeTransactionsEffect>() {
 
     override val initialState = SeeTransactionsUiState(month = YearMonth.current(clock))
@@ -162,9 +163,11 @@ class SeeTransactionsViewModel(
 
     /**
      * The reference date the day headers resolve HOY/AYER against, read once per mapping pass so
-     * every group in one emission agrees — and so the branch is testable through the injected clock.
+     * every group in one emission agrees — and so the branch is testable through the injected
+     * clock. The zone rides along with it: it is the only thing left that "what day is it" needs,
+     * and reading it from the environment would put it back out of every test's reach.
      */
-    private fun today(): LocalDate = clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
 
     /**
      * The sheet is the only entry point into a category filter, and it lists every category the

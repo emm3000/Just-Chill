@@ -30,7 +30,11 @@ Almost everything lives in `commonMain`. `androidMain` / `iosMain` hold exactly 
 ## Persistence (SQLDelight 2.x)
 
 - Schema in `data/src/commonMain/sqldelight/com/emm/data/`: `accounts.sq`, `categories.sq`,
-  `transactions.sq`, `recurring_movements.sq`. Migrations `0.sqm`, `1.sqm`, `2.sqm` (current schema v3).
+  `transactions.sq`, `recurring_movements.sq`. Migrations `0.sqm`…`3.sqm` (current schema v4).
+- **`transactions.occurredAt` is ISO local text, not an instant** — `'2026-08-10T21:47:33'`, no
+  timezone. Ordering, month windows and day grouping are all plain string operations on it; see the
+  header comment in `transactions.sq` for why that works and `docs/DATE_AUDIT.md` #5 for why it had
+  to. `createdAt` / `updatedAt` / `deletedAt` stay epoch millis: those are genuine instants.
 - **Migrations are MANDATORY for every schema change.** Never edit a `.sq` CREATE TABLE without a
   matching `.sqm`, and never reset the schema. There IS real data to lose: no third-party users, but
   the author runs the release build daily off Firebase App Distribution, and every push to trunk
@@ -81,11 +85,14 @@ exception type here.
   pagination, enum parsing, backup. Run with `./gradlew :data:testAndroidHostTest`.
 - Platform-neutral tests in `data/src/commonTest/kotlin/` (`kotlin.test`), e.g. `SyncCursorUtilsTest`.
 - Instrumented tests in `data/src/androidDeviceTest/`: `MigrationV1ToV2Test`, `MigrationV2ToV3Test`,
-  `DeleteUseCasesE2ETest`, `RecurringMovementFkTest`, `SyncFkExceptionTest`. Run them with
-  `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator; 15 tests). They are the
-  only thing that exercises migrations against the real `AndroidSqliteDriver` — **run them before
-  shipping any schema change.** Gotcha: `kotlin.assert()` is a no-op on ART; always use
-  `kotlin.test.assertTrue`.
+  `MigrationV3ToV4Test`, `DeleteUseCasesE2ETest`, `RecurringMovementFkTest`, `SyncFkExceptionTest`.
+  Run them with `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator; 20 tests).
+  They are the only thing that exercises migrations against the real `AndroidSqliteDriver` —
+  **run them before shipping any schema change.** Gotcha: `kotlin.assert()` is a no-op on ART;
+  always use `kotlin.test.assertTrue`.
+- `3.sqm` is the first **destructive** migration here: SQLite cannot change a column's type, so it
+  rebuilds the transactions table. `MigrationV3ToV4Test` is what says the rows, the indexes and the
+  ability to open the app at all survive it.
 
 ### Migration tests: use raw SQL against historical schemas
 
@@ -98,4 +105,8 @@ Pattern (see `MigrationV1ToV2Test`, `MigrationV2ToV3Test`):
 - Set-up inserts against the historical schema: `driver.execute(null, "INSERT INTO ... raw SQL ...", 0)`.
 - Reads within the historical window: `driver.executeQuery(null, sql, { cursor -> QueryResult.Value(...) }, 0).value`
   — the mapper must return `QueryResult<T>`, not `T`.
-- After `Schema.migrate(...)` completes, the schema IS current — generated queries work for assertions.
+- **Migrate to `EmmDatabaseData.Schema.version`, not to the next one.** Generated queries only match
+  the CURRENT schema, so a test that stops mid-chain cannot use them for its assertions — and that
+  is also what a real device does, since it runs the whole chain in one open. `MigrationV2ToV3Test`
+  stopped at 3 and started failing the moment a 4 existed.
+- After `Schema.migrate(...)` reaches the current version, generated queries work for assertions.
