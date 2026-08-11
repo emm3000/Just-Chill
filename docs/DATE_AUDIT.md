@@ -45,19 +45,19 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
   `GetHomeDataUseCase` and the `TransactionUi` read path all resolve days through
   `TimeZone.currentSystemDefault()`. The clock can be faked in tests; the zone cannot, so no test can
   cover a month boundary in another zone. *Partially closed:* the transaction write path and the
-  frequency-window use cases take an injected `TimeZone` (#71, #73).
+  frequency-window use cases take an injected `TimeZone` (#71, #74).
 
 - [x] **8. A "last 90 days" window measured in fixed milliseconds.** `now - days * 24h` is a
   duration, not a number of days; it drifts by an hour across a DST change and starts mid-morning
-  otherwise. Duplicated in two use cases. → **#73**
+  otherwise. Duplicated in two use cases. → **#74**
 
 ## P2 — consistency and hardening
 
 - [x] **9. Deprecated `kotlinx.datetime.Instant`** in four `data/sync` files while the rest of the
-  repo used `kotlin.time.Instant`. → **#73**
+  repo used `kotlin.time.Instant`. → **#74**
 - [x] **10. `Instant.parse` on server input with no guard**, inside the per-page database
   transaction. The class guarded a *missing* `server_updated_at` but not an unreadable one, so a
-  malformed value took down the whole pull. → **#73**
+  malformed value took down the whole pull. → **#74**
 - [ ] **11. Nothing guards a future date.** The picker navigates forward without a limit and the
   schema accepts anything; `relativeDayLabel` already has a "Mañana" branch, so this was known. A
   transaction dated in 2030 enters the balance and captures `lastUsedAccountId`, which orders by
@@ -67,7 +67,7 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
   tests and living under `hh.transaction` while half the app used it. Deleted; its clock-free parts
   are `hh/shared/DayLabels.kt`. → **#71**
 - [x] **13. Stale documentation on `SpanishDateFormat`** — it pointed at a test in `:app`, a module
-  that no longer exists, and described a Compose Multiplatform setup that was retired. → **#73**
+  that no longer exists, and described a Compose Multiplatform setup that was retired. → **#74**
 
 ## What was already right
 
