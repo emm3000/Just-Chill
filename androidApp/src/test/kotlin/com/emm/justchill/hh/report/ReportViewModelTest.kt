@@ -15,6 +15,7 @@ import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
@@ -22,10 +23,16 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Month
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.UtcOffset
+import kotlinx.datetime.asTimeZone
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class ReportViewModelTest {
 
@@ -40,12 +47,25 @@ class ReportViewModelTest {
     private val getSavingsRate = mockk<GetSavingsRateUseCase>()
     private val getTopCategories = mockk<GetTopCategoriesOverMonthsUseCase>()
 
-    private fun buildViewModel(): ReportViewModel = ReportViewModel(
+    // Mid-month noon UTC: YearMonth.current(fixedClock, zone) is May 2026 in every timezone, so no
+    // test below depends on where the machine running it happens to be.
+    private val fixedClock: Clock = object : Clock {
+        override fun now(): Instant = Instant.parse("2026-05-15T12:00:00Z")
+    }
+
+    private val currentMonth = YearMonth(2026, Month.MAY)
+
+    private fun buildViewModel(
+        clock: Clock = fixedClock,
+        zone: TimeZone = TimeZone.UTC,
+    ): ReportViewModel = ReportViewModel(
         getMonthlyAmountByCategory = getMonthlyAmountByCategory,
         getMonthlyComparison = getMonthlyComparison,
         getMonthlySectionStats = getMonthlySectionStats,
         getSavingsRate = getSavingsRate,
         getTopCategories = getTopCategories,
+        clock = clock,
+        zone = zone,
     )
 
     /** Returns a minimal SavingsRate with no data months. */
@@ -63,8 +83,8 @@ class ReportViewModelTest {
         coEvery { getMonthlyAmountByCategory(any(), any()) } returns emptyList()
         coEvery { getMonthlyComparison(any(), any()) } returns null
         coEvery { getMonthlySectionStats(any(), any()) } returns MonthlySectionStats(0, Money.Zero)
-        coEvery { getSavingsRate(any()) } returns emptySavingsRate()
-        coEvery { getTopCategories(any(), any(), any()) } returns emptyList()
+        coEvery { getSavingsRate(any(), any(), any()) } returns emptySavingsRate()
+        coEvery { getTopCategories(any(), any(), any(), any(), any()) } returns emptyList()
     }
 
     // ── Init smoke test ───────────────────────────────────────────────────
@@ -75,8 +95,119 @@ class ReportViewModelTest {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        assertEquals(YearMonth.current(), vm.state.value.month)
+        assertEquals(currentMonth, vm.state.value.month)
         assertEquals(TransactionType.Income, vm.state.value.selectedType)
+    }
+
+    // ── Timezone ──────────────────────────────────────────────────────────
+
+    @Test
+    fun `the month it opens on is read in the injected zone, not the device's`() = runTest(testDispatcher) {
+        // One instant, two zones, two different months: 2026-09-01T02:00Z is already September at
+        // UTC and still 31 August at UTC-5. Which month Reporte opens on is therefore a question
+        // about the zone, and the zone that answers it has to be the injected one — a zone read off
+        // the machine is a zone no test can put a boundary on, which is how a user near a month
+        // boundary could see a different month than the data says.
+        //
+        // Both zones are asserted because one proves nothing: on a machine whose own clock sits in
+        // that zone the ambient read agrees, and the test stays green straight through the bug.
+        // The dev machine here is America/Lima, which is exactly UTC-5.
+        stubEmptyReport()
+        val nearMidnight: Clock = object : Clock {
+            override fun now(): Instant = Instant.parse("2026-09-01T02:00:00Z")
+        }
+
+        val atLima = buildViewModel(nearMidnight, UtcOffset(hours = -5).asTimeZone())
+        advanceUntilIdle()
+        assertEquals(YearMonth(2026, Month.AUGUST), atLima.state.value.month)
+
+        val atUtc = buildViewModel(nearMidnight, UtcOffset(hours = 0).asTimeZone())
+        advanceUntilIdle()
+        assertEquals(YearMonth(2026, Month.SEPTEMBER), atUtc.state.value.month)
+    }
+
+    @Test
+    fun `the trends window is asked for in the injected zone too`() = runTest(testDispatcher) {
+        // Half a screen answering for the device and half for the injection is the same defect at a
+        // smaller scale: the Tendencias window has to end on the month the rest of the screen shows.
+        stubEmptyReport()
+        val zone = UtcOffset(hours = -5).asTimeZone()
+
+        buildViewModel(fixedClock, zone)
+        advanceUntilIdle()
+
+        coVerify { getSavingsRate(fixedClock, zone, any()) }
+        coVerify { getTopCategories(any(), fixedClock, zone, any(), any()) }
+    }
+
+    @Test
+    fun `state says whether the shown month is the current one`() = runTest(testDispatcher) {
+        // The screen used to answer this itself, with an ambient YearMonth.current(). Compose has
+        // no injected zone to ask, so the "Hoy" pill was the one part of Reporte that could still
+        // disagree with the month next to it.
+        stubEmptyReport()
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.isCurrentMonth, "The month it opens on IS the current one")
+
+        vm.onIntent(ReportIntent.PreviousMonth)
+        advanceUntilIdle()
+        assertFalse(vm.state.value.isCurrentMonth)
+
+        vm.onIntent(ReportIntent.JumpToCurrent)
+        advanceUntilIdle()
+        assertTrue(vm.state.value.isCurrentMonth)
+
+        // The month picker is a third way in, and it can land on any month — including this one.
+        vm.onIntent(ReportIntent.SelectMonth(YearMonth(2024, Month.MARCH)))
+        advanceUntilIdle()
+        assertFalse(vm.state.value.isCurrentMonth)
+
+        vm.onIntent(ReportIntent.SelectMonth(currentMonth))
+        advanceUntilIdle()
+        assertTrue(vm.state.value.isCurrentMonth, "Picking the current month is not a special case")
+    }
+
+    @Test
+    fun `a month rollover corrects isCurrentMonth with no month move`() = runTest(testDispatcher) {
+        // The check this replaced lived in Compose, where recomposition re-evaluated it for free.
+        // A flag written into state has no such refresh: computed once when the screen opened, it
+        // would keep calling August the current month after midnight on 1 September, and TodayPill
+        // — the only one-tap way back — would stay suppressed for the rest of the session.
+        //
+        // So every path that refreshes state re-reads the clock, not only a user-initiated move.
+        stubEmptyReport()
+        val clock = MovingClock(Instant.parse("2026-08-31T12:00:00Z"))
+
+        val vm = buildViewModel(clock, TimeZone.UTC)
+        advanceUntilIdle()
+        assertTrue(vm.state.value.isCurrentMonth, "August IS the current month on 31 August")
+
+        // Midnight passes. The user has touched nothing; the shown month must not move on its own.
+        clock.instant = Instant.parse("2026-09-01T12:00:00Z")
+
+        // The Mes reload draws the pill, so it is the load-bearing path.
+        vm.onIntent(ReportIntent.SelectType(TransactionType.Spend))
+        advanceUntilIdle()
+        assertFalse(vm.state.value.isCurrentMonth, "the Mes reload must re-read the clock")
+        assertEquals(YearMonth(2026, Month.AUGUST), vm.state.value.month, "the month must not move")
+
+        // Back to a state where the flag is true, to prove the Tendencias reload independently.
+        vm.onIntent(ReportIntent.JumpToCurrent)
+        advanceUntilIdle()
+        assertTrue(vm.state.value.isCurrentMonth)
+
+        clock.instant = Instant.parse("2026-10-01T12:00:00Z")
+        vm.onIntent(ReportIntent.SelectTab(ReportTab.Tendencias))
+        advanceUntilIdle()
+        assertFalse(vm.state.value.isCurrentMonth, "the Tendencias reload must re-read it too")
+        assertEquals(YearMonth(2026, Month.SEPTEMBER), vm.state.value.month, "the month must not move")
+    }
+
+    /** A clock the test can move, so a month boundary can pass under a running ViewModel. */
+    private class MovingClock(var instant: Instant) : Clock {
+        override fun now(): Instant = instant
     }
 
     // ── Month navigation ──────────────────────────────────────────────────
@@ -119,7 +250,7 @@ class ReportViewModelTest {
         vm.onIntent(ReportIntent.JumpToCurrent)
         advanceUntilIdle()
 
-        assertEquals(YearMonth.current(), vm.state.value.month)
+        assertEquals(currentMonth, vm.state.value.month)
     }
 
     @Test
@@ -170,7 +301,7 @@ class ReportViewModelTest {
         // The pill renders a leading ArrowUpward/ArrowDownward from deltaIsPositive. A glyph in
         // the text too showed the user "↓ ↓ 10 pts".
         stubEmptyReport()
-        coEvery { getSavingsRate(any()) } returns emptySavingsRate().copy(
+        coEvery { getSavingsRate(any(), any(), any()) } returns emptySavingsRate().copy(
             currentRatePercent = 20,
             deltaPointsVsPrior = -10,
         )
@@ -185,7 +316,7 @@ class ReportViewModelTest {
     @Test
     fun `an improving delta reports the magnitude and a positive direction`() = runTest(testDispatcher) {
         stubEmptyReport()
-        coEvery { getSavingsRate(any()) } returns emptySavingsRate().copy(
+        coEvery { getSavingsRate(any(), any(), any()) } returns emptySavingsRate().copy(
             currentRatePercent = 40,
             deltaPointsVsPrior = 7,
         )
@@ -208,8 +339,8 @@ class ReportViewModelTest {
         coEvery { getMonthlyAmountByCategory(any(), TransactionType.Spend) } returns emptyList()
         coEvery { getMonthlyComparison(any(), any()) } returns null
         coEvery { getMonthlySectionStats(any(), any()) } returns MonthlySectionStats(1, Money(450_000L))
-        coEvery { getSavingsRate(any()) } returns emptySavingsRate()
-        coEvery { getTopCategories(any(), any(), any()) } returns emptyList()
+        coEvery { getSavingsRate(any(), any(), any()) } returns emptySavingsRate()
+        coEvery { getTopCategories(any(), any(), any(), any(), any()) } returns emptyList()
 
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -227,8 +358,8 @@ class ReportViewModelTest {
         coEvery { getMonthlyAmountByCategory(any(), any()) } returns emptyList()
         coEvery { getMonthlyComparison(any(), any()) } returns null
         coEvery { getMonthlySectionStats(any(), any()) } returns MonthlySectionStats(0, Money.Zero)
-        coEvery { getSavingsRate(any()) } returns emptySavingsRate()
-        coEvery { getTopCategories(any(), any(), any()) } returns emptyList()
+        coEvery { getSavingsRate(any(), any(), any()) } returns emptySavingsRate()
+        coEvery { getTopCategories(any(), any(), any(), any(), any()) } returns emptyList()
 
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -246,8 +377,8 @@ class ReportViewModelTest {
             absoluteDelta = Money(20_00L),
         )
         coEvery { getMonthlySectionStats(any(), any()) } returns MonthlySectionStats(0, Money.Zero)
-        coEvery { getSavingsRate(any()) } returns emptySavingsRate()
-        coEvery { getTopCategories(any(), any(), any()) } returns emptyList()
+        coEvery { getSavingsRate(any(), any(), any()) } returns emptySavingsRate()
+        coEvery { getTopCategories(any(), any(), any(), any(), any()) } returns emptyList()
 
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -299,8 +430,8 @@ class ReportViewModelTest {
         }
         coEvery { getMonthlyComparison(any(), any()) } returns null
         coEvery { getMonthlySectionStats(any(), any()) } returns MonthlySectionStats(0, Money.Zero)
-        coEvery { getSavingsRate(any()) } returns emptySavingsRate()
-        coEvery { getTopCategories(any(), any(), any()) } returns emptyList()
+        coEvery { getSavingsRate(any(), any(), any()) } returns emptySavingsRate()
+        coEvery { getTopCategories(any(), any(), any(), any(), any()) } returns emptyList()
 
         val vm = buildViewModel()
         // init triggers reloadReport — it will suspend at gate.await()
@@ -380,8 +511,8 @@ class ReportViewModelTest {
     @Test
     fun `use case error emits ShowError effect`() = runTest(testDispatcher) {
         coEvery { getMonthlyAmountByCategory(any(), any()) } throws RuntimeException("db error")
-        coEvery { getSavingsRate(any()) } returns emptySavingsRate()
-        coEvery { getTopCategories(any(), any(), any()) } returns emptyList()
+        coEvery { getSavingsRate(any(), any(), any()) } returns emptySavingsRate()
+        coEvery { getTopCategories(any(), any(), any(), any(), any()) } returns emptyList()
 
         val vm = buildViewModel()
         val effects = mutableListOf<ReportEffect>()

@@ -3,16 +3,23 @@ package com.emm.domain.report
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionStatsRepository
+import kotlinx.datetime.TimeZone
 import kotlin.time.Clock
 
 private const val PERCENT_MULTIPLIER = 100
 
 class GetSavingsRateUseCase(private val transactionStatsRepository: TransactionStatsRepository) {
 
-    suspend operator fun invoke(months: Int = 6, clock: Clock = Clock.System): SavingsRate {
+    /**
+     * [clock] and [zone] have no defaults on purpose. "Which month is it" is a question about a
+     * place, and a default that reads the machine lets a caller answer it for the wrong one without
+     * saying so — which is exactly how Reporte ended up resolving its months against the ambient
+     * zone while every other screen took an injected one. Callers state where they are asking from.
+     */
+    suspend operator fun invoke(clock: Clock, zone: TimeZone, months: Int = 6): SavingsRate {
         // Both windows are contiguous and end at the current month, so they are one fetch:
         // the prior window is the older half of a 2 * months span.
-        val span = buildSpan(YearMonth.current(clock), months * 2)
+        val span = buildSpan(YearMonth.current(clock, zone), months * 2)
         val priorWindow = span.take(months)
         val currentWindow = span.drop(months)
 
