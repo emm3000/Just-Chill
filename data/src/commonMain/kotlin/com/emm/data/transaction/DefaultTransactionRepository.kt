@@ -30,8 +30,8 @@ class DefaultTransactionRepository(private val localDataSource: TransactionLocal
         .catchAsDomainException()
 
     override fun fetchAllWithCategoryInRange(
-        startInclusive: Long,
-        endExclusive: Long,
+        startInclusive: String,
+        endExclusive: String,
     ): Flow<List<TransactionWithCategory>> =
         localDataSource.completeTransactionsByDateRange(startInclusive, endExclusive)
             .map { it.toDomain() }

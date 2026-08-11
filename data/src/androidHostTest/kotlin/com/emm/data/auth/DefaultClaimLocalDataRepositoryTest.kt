@@ -53,12 +53,14 @@ class DefaultClaimLocalDataRepositoryTest {
         )
 
         exec(
-            "INSERT INTO transactions(transactionId, type, amount, date, createdAt, updatedAt, accountId, userId) " +
-                "VALUES ('tx-null', 'Spend', 100, 0, 0, 0, 'acc-null', NULL)",
+            "INSERT INTO transactions(transactionId, type, amount, occurredAt, createdAt, updatedAt, " +
+                "accountId, userId) " +
+                "VALUES ('tx-null', 'Spend', 100, '2026-08-10T12:00:00', 0, 0, 'acc-null', NULL)",
         )
         exec(
-            "INSERT INTO transactions(transactionId, type, amount, date, createdAt, updatedAt, accountId, userId) " +
-                "VALUES ('tx-other', 'Spend', 100, 0, 0, 0, 'acc-null', 'other-user')",
+            "INSERT INTO transactions(transactionId, type, amount, occurredAt, createdAt, updatedAt, " +
+                "accountId, userId) " +
+                "VALUES ('tx-other', 'Spend', 100, '2026-08-10T12:00:00', 0, 0, 'acc-null', 'other-user')",
         )
 
         exec(
@@ -161,8 +163,8 @@ class DefaultClaimLocalDataRepositoryTest {
     fun `unclaimAll also unclaims tombstones (deletedAt NOT NULL)`() = runTest {
         exec(
             "INSERT INTO transactions" +
-                "(transactionId, type, amount, date, createdAt, updatedAt, accountId, userId, deletedAt) " +
-                "VALUES ('tx-tombstone', 'Spend', 100, 0, 0, 0, 'acc-null', 'other-user', 5)",
+                "(transactionId, type, amount, occurredAt, createdAt, updatedAt, accountId, userId, deletedAt) " +
+                "VALUES ('tx-tombstone', 'Spend', 100, '2026-08-10T12:00:00', 0, 0, 'acc-null', 'other-user', 5)",
         )
 
         repository.unclaimAll("other-user")

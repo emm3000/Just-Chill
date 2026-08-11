@@ -18,8 +18,8 @@ class DefaultTransactionStatsRepository(private val localDataSource: Transaction
 
     override suspend fun monthlyAmountByCategory(
         type: TransactionType,
-        startInclusive: Long,
-        endExclusive: Long,
+        startInclusive: String,
+        endExclusive: String,
     ): List<CategoryAmount> = safeDbCall {
         localDataSource.monthlyAmountByCategory(type, startInclusive, endExclusive)
             .map { it.toDomain() }
@@ -33,8 +33,8 @@ class DefaultTransactionStatsRepository(private val localDataSource: Transaction
 
     override suspend fun monthlyStats(
         type: TransactionType,
-        startInclusive: Long,
-        endExclusive: Long,
+        startInclusive: String,
+        endExclusive: String,
     ): MonthlySectionStats = safeDbCall {
         val (count, total) = localDataSource.monthlyStats(type, startInclusive, endExclusive)
         val average = if (count == 0L) Money.Zero else Money(total / count)
@@ -44,24 +44,30 @@ class DefaultTransactionStatsRepository(private val localDataSource: Transaction
         )
     }
 
-    override suspend fun topUsedCategoryIds(type: TransactionType, startInclusive: Long, limit: Int): List<CategoryId> =
-        safeDbCall {
-            localDataSource.topUsedCategoryIds(type, startInclusive, limit.toLong())
-                .map { CategoryId(it) }
-        }
+    override suspend fun topUsedCategoryIds(
+        type: TransactionType,
+        startInclusive: String,
+        limit: Int,
+    ): List<CategoryId> = safeDbCall {
+        localDataSource.topUsedCategoryIds(type, startInclusive, limit.toLong())
+            .map { CategoryId(it) }
+    }
 
-    override suspend fun topUsedCombos(type: TransactionType, startInclusive: Long, limit: Int): List<FrequentCombo> =
-        safeDbCall {
-            localDataSource.topUsedCombos(type, startInclusive, limit.toLong())
-                .mapNotNull { row ->
-                    val parsedType = enumValueOrNull<TransactionType>(row.type) ?: return@mapNotNull null
-                    FrequentCombo(
-                        accountId = AccountId(row.accountId),
-                        categoryId = CategoryId(row.categoryId),
-                        type = parsedType,
-                    )
-                }
-        }
+    override suspend fun topUsedCombos(
+        type: TransactionType,
+        startInclusive: String,
+        limit: Int,
+    ): List<FrequentCombo> = safeDbCall {
+        localDataSource.topUsedCombos(type, startInclusive, limit.toLong())
+            .mapNotNull { row ->
+                val parsedType = enumValueOrNull<TransactionType>(row.type) ?: return@mapNotNull null
+                FrequentCombo(
+                    accountId = AccountId(row.accountId),
+                    categoryId = CategoryId(row.categoryId),
+                    type = parsedType,
+                )
+            }
+    }
 
     override suspend fun lastUsedAccountId(): AccountId? = safeDbCall {
         localDataSource.lastUsedAccountId()?.let { AccountId(it) }

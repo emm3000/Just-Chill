@@ -6,6 +6,7 @@ import com.emm.data.EmmDatabaseData
 import com.emm.data.Recurring_movementsQueries
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.nowMillis
+import com.emm.data.shared.toOccurredAtText
 import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.recurring.RecurringMovementDetails
 import com.emm.domain.recurring.RecurringMovementInsert
@@ -115,7 +116,7 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData,
                 type = insert.type.name,
                 amount = insert.amount.cents,
                 description = insert.description,
-                date = insert.date,
+                occurredAt = insert.occurredAt.toOccurredAtText(),
                 categoryId = insert.categoryId?.value,
                 accountId = insert.accountId.value,
                 createdAt = now,

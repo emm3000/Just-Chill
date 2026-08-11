@@ -22,8 +22,8 @@ class GetHomeDataUseCase(
 ) {
 
     operator fun invoke(yearMonth: YearMonth = YearMonth.current(clock)): Flow<HomeData> {
-        val startOfMonth = yearMonth.startInclusiveMillis()
-        val startOfNextMonth = yearMonth.endExclusiveMillis()
+        val startOfMonth = yearMonth.startInclusiveDay()
+        val startOfNextMonth = yearMonth.endExclusiveDay()
         val today: LocalDate = clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         return combine(
             flow = transactionRepository.observeTotals(),

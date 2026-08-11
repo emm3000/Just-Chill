@@ -11,6 +11,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import org.junit.Before
 import org.junit.Test
@@ -38,7 +39,7 @@ class GetSavingsRateUseCaseTest {
         // it asked for them, so the fake resolves each range independently.
         coEvery { repository.monthlyAmountByCategoryForRanges(any()) } answers {
             firstArg<List<MonthRange>>().map { range ->
-                val ym = YearMonth.of(range.startInclusive)
+                val ym = YearMonth.of(LocalDate.parse(range.startInclusive))
                 val (income, expense) = amountsByMonth[ym] ?: (0L to 0L)
                 MonthCategoryAmounts(income = amounts(ym, income), expense = amounts(ym, expense))
             }
@@ -100,7 +101,7 @@ class GetSavingsRateUseCaseTest {
         // type, per window. They are contiguous, so they are one request.
         coVerify(exactly = 1) { repository.monthlyAmountByCategoryForRanges(capture(ranges)) }
         assertEquals(12, ranges.captured.size)
-        val months = ranges.captured.map { YearMonth.of(it.startInclusive) }
+        val months = ranges.captured.map { YearMonth.of(LocalDate.parse(it.startInclusive)) }
         assertEquals(YearMonth(2025, Month.JUNE), months.first())
         assertEquals(YearMonth(2026, Month.MAY), months.last())
         assertEquals(months.sorted(), months)
@@ -114,9 +115,9 @@ class GetSavingsRateUseCaseTest {
 
         coVerify { repository.monthlyAmountByCategoryForRanges(capture(ranges)) }
         ranges.captured.forEach { range ->
-            val ym = YearMonth.of(range.startInclusive)
-            assertEquals(ym.startInclusiveMillis(), range.startInclusive)
-            assertEquals(ym.endExclusiveMillis(), range.endExclusive)
+            val ym = YearMonth.of(LocalDate.parse(range.startInclusive))
+            assertEquals(ym.startInclusiveDay(), range.startInclusive)
+            assertEquals(ym.endExclusiveDay(), range.endExclusive)
         }
         // Half-open and contiguous: no gap and no overlap between consecutive months.
         ranges.captured.zipWithNext { earlier, later ->

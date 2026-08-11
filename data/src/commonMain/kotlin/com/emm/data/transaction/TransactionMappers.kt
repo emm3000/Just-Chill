@@ -7,6 +7,7 @@ import com.emm.data.MonthlyAmountByCategoryAndType
 import com.emm.data.SearchTransactions
 import com.emm.data.Transactions
 import com.emm.data.shared.enumValueOrNull
+import com.emm.data.shared.toOccurredAtOrNull
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryType
 import com.emm.domain.report.CategoryAmount
@@ -25,7 +26,7 @@ fun Transactions.asEntity() = TransactionEntity(
     type = type,
     amount = amount,
     description = description,
-    date = date,
+    occurredAt = occurredAt,
     categoryId = categoryId,
     accountId = accountId,
     createdAt = createdAt,
@@ -34,17 +35,25 @@ fun Transactions.asEntity() = TransactionEntity(
 
 fun List<Transactions>.asEntity() = map(Transactions::asEntity)
 
+// A row whose type or whose occurredAt the app cannot read is dropped, not guessed at — the same
+// skip-the-row policy the whole module applies, so an uninterpretable row stays invisible
+// everywhere rather than turning up misclassified or dated at some invented fallback.
 fun TransactionEntity.asExternalModelOrNull(): Transaction? {
-    val parsedType = enumValueOrNull<TransactionType>(type) ?: return null
-    return Transaction(
-        transactionId = TransactionId(transactionId),
-        type = parsedType,
-        amount = Money(cents = amount),
-        description = description,
-        date = date,
-        categoryId = categoryId?.let(::CategoryId),
-        accountId = AccountId(accountId),
-    )
+    val parsedType = enumValueOrNull<TransactionType>(type)
+    val parsedOccurredAt = occurredAt.toOccurredAtOrNull()
+    return if (parsedType == null || parsedOccurredAt == null) {
+        null
+    } else {
+        Transaction(
+            transactionId = TransactionId(transactionId),
+            type = parsedType,
+            amount = Money(cents = amount),
+            description = description,
+            occurredAt = parsedOccurredAt,
+            categoryId = categoryId?.let(::CategoryId),
+            accountId = AccountId(accountId),
+        )
+    }
 }
 
 fun List<TransactionEntity>.asExternalModel() = mapNotNull(TransactionEntity::asExternalModelOrNull)
@@ -54,7 +63,7 @@ fun CompleteTransactions.asEntity() = TransactionWithCategoryEntity(
     type = type,
     amount = amount,
     description = description,
-    date = date,
+    occurredAt = occurredAt,
     accountId = accountId,
     categoryId = categoryId,
     categoryName = categoryName,
@@ -68,7 +77,7 @@ fun CompleteTransactionsByDateRange.asEntity() = TransactionWithCategoryEntity(
     type = type,
     amount = amount,
     description = description,
-    date = date,
+    occurredAt = occurredAt,
     accountId = accountId,
     categoryId = categoryId,
     categoryName = categoryName,
@@ -82,7 +91,7 @@ fun SearchTransactions.asEntity() = TransactionWithCategoryEntity(
     type = type,
     amount = amount,
     description = description,
-    date = date,
+    occurredAt = occurredAt,
     accountId = accountId,
     categoryId = categoryId,
     categoryName = categoryName,
@@ -92,16 +101,21 @@ fun SearchTransactions.asEntity() = TransactionWithCategoryEntity(
 )
 
 fun TransactionWithCategoryEntity.toDomainOrNull(): TransactionWithCategory? {
-    val parsedType = enumValueOrNull<TransactionType>(type) ?: return null
-    return TransactionWithCategory(
-        transactionId = TransactionId(transactionId),
-        type = parsedType,
-        amount = Money(cents = amount),
-        description = description,
-        date = date,
-        accountId = AccountId(accountId),
-        category = resolveCategory(),
-    )
+    val parsedType = enumValueOrNull<TransactionType>(type)
+    val parsedOccurredAt = occurredAt.toOccurredAtOrNull()
+    return if (parsedType == null || parsedOccurredAt == null) {
+        null
+    } else {
+        TransactionWithCategory(
+            transactionId = TransactionId(transactionId),
+            type = parsedType,
+            amount = Money(cents = amount),
+            description = description,
+            occurredAt = parsedOccurredAt,
+            accountId = AccountId(accountId),
+            category = resolveCategory(),
+        )
+    }
 }
 
 // Unknown categoryType keeps the transaction alive but sets category = null.

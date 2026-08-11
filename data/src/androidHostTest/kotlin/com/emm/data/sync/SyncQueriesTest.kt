@@ -97,8 +97,10 @@ class SyncQueriesTest {
         val userIdSql = if (userId != null) "'$userId'" else "NULL"
         exec(
             "INSERT INTO transactions" +
-                "(transactionId, type, amount, date, createdAt, updatedAt, accountId, userId, deletedAt, syncState) " +
-                "VALUES ('$id', 'Spend', 100, 0, 0, $updatedAt, '$accountId', $userIdSql, $deletedAtSql, '$syncState')",
+                "(transactionId, type, amount, occurredAt, createdAt, updatedAt, accountId, userId, " +
+                "deletedAt, syncState) " +
+                "VALUES ('$id', 'Spend', 100, '2026-08-10T12:00:00', 0, $updatedAt, '$accountId', $userIdSql, " +
+                "$deletedAtSql, '$syncState')",
         )
     }
 
@@ -187,7 +189,7 @@ class SyncQueriesTest {
                 type = "Spend",
                 amount = 100L,
                 description = "",
-                date = 0L,
+                occurredAt = "2026-08-10T21:47:33",
                 categoryId = null,
                 accountId = "missing-acc",
                 createdAt = 0L,
@@ -216,18 +218,21 @@ class SyncQueriesTest {
         insertAccount("acc-balance")
         // Income row: +500
         exec(
-            "INSERT INTO transactions(transactionId, type, amount, date, createdAt, updatedAt, accountId, syncState) " +
-                "VALUES ('tx-income', 'Income', 500, 0, 0, 0, 'acc-balance', 'Synced')",
+            "INSERT INTO transactions(transactionId, type, amount, occurredAt, createdAt, updatedAt, accountId, " +
+                "syncState) " +
+                "VALUES ('tx-income', 'Income', 500, '2026-08-10T12:00:00', 0, 0, 'acc-balance', 'Synced')",
         )
         // Spend row: -200
         exec(
-            "INSERT INTO transactions(transactionId, type, amount, date, createdAt, updatedAt, accountId, syncState) " +
-                "VALUES ('tx-spend', 'Spend', 200, 0, 0, 0, 'acc-balance', 'Synced')",
+            "INSERT INTO transactions(transactionId, type, amount, occurredAt, createdAt, updatedAt, accountId, " +
+                "syncState) " +
+                "VALUES ('tx-spend', 'Spend', 200, '2026-08-10T12:00:00', 0, 0, 'acc-balance', 'Synced')",
         )
         // Unknown-casing row: must contribute 0, not -300 (the old ELSE -amount behaviour)
         exec(
-            "INSERT INTO transactions(transactionId, type, amount, date, createdAt, updatedAt, accountId, syncState) " +
-                "VALUES ('tx-unknown', 'INCOME', 300, 0, 0, 0, 'acc-balance', 'Synced')",
+            "INSERT INTO transactions(transactionId, type, amount, occurredAt, createdAt, updatedAt, accountId, " +
+                "syncState) " +
+                "VALUES ('tx-unknown', 'INCOME', 300, '2026-08-10T12:00:00', 0, 0, 'acc-balance', 'Synced')",
         )
 
         val balance = db.transactionsQueries.getAccountBalance("acc-balance").executeAsOne()

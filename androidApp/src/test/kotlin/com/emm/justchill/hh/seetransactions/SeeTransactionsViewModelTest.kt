@@ -26,6 +26,9 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Month
 import org.junit.Rule
 import org.junit.Test
@@ -36,7 +39,8 @@ import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-private const val DAY_MILLIS = 86_400_000L
+/** Midday, so nothing in these tests depends on where a day boundary falls. */
+private val NOON = LocalTime(12, 0)
 
 class SeeTransactionsViewModelTest {
 
@@ -82,7 +86,7 @@ class SeeTransactionsViewModelTest {
         type = type,
         amount = Money(cents),
         description = "movimiento $id",
-        date = month.startInclusiveMillis() + daysIntoMonth * DAY_MILLIS,
+        occurredAt = LocalDateTime(LocalDate(month.year, month.month, daysIntoMonth), NOON),
         accountId = AccountId("acc-1"),
         category = null,
     )
@@ -90,8 +94,8 @@ class SeeTransactionsViewModelTest {
     private fun stubRange(month: YearMonth, flow: Flow<List<TransactionWithCategory>>) {
         every {
             transactionRepository.fetchAllWithCategoryInRange(
-                month.startInclusiveMillis(),
-                month.endExclusiveMillis(),
+                month.startInclusiveDay(),
+                month.endExclusiveDay(),
             )
         } returns flow
     }
@@ -119,8 +123,8 @@ class SeeTransactionsViewModelTest {
             assertEquals(currentMonth, vm.state.value.month)
             verify {
                 transactionRepository.fetchAllWithCategoryInRange(
-                    currentMonth.startInclusiveMillis(),
-                    currentMonth.endExclusiveMillis(),
+                    currentMonth.startInclusiveDay(),
+                    currentMonth.endExclusiveDay(),
                 )
             }
         }
@@ -137,8 +141,8 @@ class SeeTransactionsViewModelTest {
         assertEquals(next, vm.state.value.month)
         verify {
             transactionRepository.fetchAllWithCategoryInRange(
-                next.startInclusiveMillis(),
-                next.endExclusiveMillis(),
+                next.startInclusiveDay(),
+                next.endExclusiveDay(),
             )
         }
     }
@@ -193,8 +197,8 @@ class SeeTransactionsViewModelTest {
         assertEquals(previous, vm.state.value.month)
         verify {
             transactionRepository.fetchAllWithCategoryInRange(
-                previous.startInclusiveMillis(),
-                previous.endExclusiveMillis(),
+                previous.startInclusiveDay(),
+                previous.endExclusiveDay(),
             )
         }
     }
@@ -283,8 +287,8 @@ class SeeTransactionsViewModelTest {
 
             verify {
                 transactionRepository.fetchAllWithCategoryInRange(
-                    next.startInclusiveMillis(),
-                    next.endExclusiveMillis(),
+                    next.startInclusiveDay(),
+                    next.endExclusiveDay(),
                 )
             }
             assertEquals(listOf("t-sep"), vm.state.value.days.flatMap { d -> d.transactions.map { it.transactionId } })

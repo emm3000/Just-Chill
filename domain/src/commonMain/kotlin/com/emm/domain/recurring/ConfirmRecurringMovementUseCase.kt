@@ -8,15 +8,12 @@ import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 import com.emm.domain.transaction.TransactionInsert
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-class ConfirmRecurringMovementUseCase(
-    private val repository: RecurringMovementRepository,
-    private val timeZone: TimeZone = TimeZone.currentSystemDefault(),
-) {
+class ConfirmRecurringMovementUseCase(private val repository: RecurringMovementRepository) {
 
     /**
      * Confirms a recurring movement for [yearMonth], creating the transaction it stands for.
@@ -26,7 +23,7 @@ class ConfirmRecurringMovementUseCase(
      * 2. monotonic guard: [yearMonth] must be newer than the template's high-water mark
      * 3. resolve amount: template.amount if non-null, else callerAmount (null → ValidationError)
      * 4. validate resolved amount > 0
-     * 5. build TransactionInsert — date = the period's own due day; `:data` stamps the timestamps
+     * 5. build TransactionInsert — occurredAt = the period's own due day; `:data` stamps the timestamps
      * 6. repo.confirm(insert, id, periodKey) — atomic in the data layer
      *
      * The transaction is dated on [yearMonth]'s due day, not on today. Catching up on July while
@@ -39,7 +36,9 @@ class ConfirmRecurringMovementUseCase(
      * between — confirm August with July still owed and July vanishes. Callers settle oldest-first.
      *
      * Does NOT call CreateTransactionUseCase (Option A atomicity).
-     * [timeZone] is injected so tests can assert exact epoch millis without hidden clock reads.
+     *
+     * No clock and no timezone: the due day is a calendar fact derived from [yearMonth] and the
+     * template's `dayOfMonth`, and the value it produces carries no zone either.
      */
     @OptIn(ExperimentalUuidApi::class)
     suspend operator fun invoke(templateId: RecurringMovementId, yearMonth: YearMonth, callerAmount: Money?) {
@@ -70,7 +69,7 @@ class ConfirmRecurringMovementUseCase(
             amount = resolvedAmount,
             description = template.description,
             categoryId = template.categoryId,
-            date = template.dueDateMillis(yearMonth, timeZone),
+            occurredAt = LocalDateTime(template.dueDate(yearMonth), MIDNIGHT),
             accountId = template.accountId,
         )
 
@@ -78,13 +77,20 @@ class ConfirmRecurringMovementUseCase(
     }
 }
 
-/** Start of the template's due day within [yearMonth], clamped to short months. */
-private fun RecurringMovement.dueDateMillis(yearMonth: YearMonth, timeZone: TimeZone): Long {
+/**
+ * The template's due day within [yearMonth], clamped to short months.
+ *
+ * A confirmed movement lands at midnight on that day. That is pre-existing behaviour and it is
+ * unchanged here: the template knows which day it falls on and nothing about what time.
+ */
+private fun RecurringMovement.dueDate(yearMonth: YearMonth): LocalDate {
     val dueDay = when (frequency) {
         Frequency.Monthly -> effectiveDueDay(dayOfMonth, yearMonth)
     }
-    return LocalDate(yearMonth.year, yearMonth.month, dueDay).atStartOfDayIn(timeZone).toEpochMilliseconds()
+    return LocalDate(yearMonth.year, yearMonth.month, dueDay)
 }
+
+private val MIDNIGHT = LocalTime(0, 0)
 
 private fun resolveAmount(template: RecurringMovement, callerAmount: Money?): Money = template.amount
     ?: callerAmount

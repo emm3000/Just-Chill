@@ -80,7 +80,7 @@ class MonthlyAmountByCategoryQueryTest {
         insertTransaction(id = "t-2", categoryId = null, amount = 500)
         insertTransaction(id = "t-3", categoryId = "cat-gone", amount = 300)
         insertTransaction(id = "t-4", categoryId = "cat-live", amount = 200, deletedAt = 900L)
-        insertTransaction(id = "t-5", categoryId = "cat-live", amount = 700, date = MONTH_END)
+        insertTransaction(id = "t-5", categoryId = "cat-live", amount = 700, occurredAt = MONTH_END)
 
         val reportTotal = monthRows().sumOf { it.totalAmount ?: 0L }
         val monthTotal = db.transactionsQueries
@@ -130,20 +130,25 @@ class MonthlyAmountByCategoryQueryTest {
         id: String,
         categoryId: String?,
         amount: Long,
-        date: Long = MONTH_START + 1,
+        occurredAt: String = IN_MONTH,
         deletedAt: Long? = null,
     ) {
         val category = categoryId?.let { "'$it'" } ?: "NULL"
         exec(
-            "INSERT INTO transactions(transactionId, type, amount, description, date, categoryId, " +
+            "INSERT INTO transactions(transactionId, type, amount, description, occurredAt, categoryId, " +
                 "accountId, createdAt, updatedAt, deletedAt) " +
-                "VALUES ('$id', 'Spend', $amount, '', $date, $category, 'acc-1', 1, 1, ${deletedAt ?: "NULL"})",
+                "VALUES ('$id', 'Spend', $amount, '', '$occurredAt', $category, 'acc-1', 1, 1, " +
+                "${deletedAt ?: "NULL"})",
         )
     }
 
     private companion object {
         const val SPEND = "Spend"
-        const val MONTH_START = 1_754_000_000_000L
-        const val MONTH_END = 1_756_000_000_000L
+
+        // Half-open day bounds over August 2026, and a movement inside it. Plain strings: the
+        // window is a string comparison in SQL now, with no timezone to make it ambiguous.
+        const val MONTH_START = "2026-08-01"
+        const val MONTH_END = "2026-09-01"
+        const val IN_MONTH = "2026-08-10T21:47:33"
     }
 }

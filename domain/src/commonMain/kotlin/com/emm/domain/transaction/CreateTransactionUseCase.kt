@@ -1,6 +1,5 @@
 package com.emm.domain.transaction
 
-import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.shared.UniqueIdProvider
 import com.emm.domain.shared.error.DomainException
@@ -10,12 +9,16 @@ import kotlin.time.Clock
 
 class CreateTransactionUseCase(
     private val transactionRepository: TransactionRepository,
-    private val dateAndTimeCombiner: DateAndTimeCombiner,
     private val uniqueIdProvider: UniqueIdProvider,
     private val clock: Clock = Clock.System,
     private val zone: TimeZone = TimeZone.currentSystemDefault(),
 ) {
 
+    /**
+     * [transactionInsert]`.occurredAt` is stored exactly as given. Nothing here derives, combines
+     * or re-resolves it — that derivation is what the two representations of "when" used to need,
+     * and it is what kept breaking.
+     */
     suspend operator fun invoke(transactionInsert: TransactionInsert) {
         if (transactionInsert.amount.cents <= 0) {
             throw DomainException.ValidationError(
@@ -23,12 +26,8 @@ class CreateTransactionUseCase(
                 ValidationCode.AmountMustBePositive,
             )
         }
-        val dateAndTimeCombined: Long = dateAndTimeCombiner.combineWithCurrentTime(transactionInsert.date)
-        ensureNotFutureDated(dateAndTimeCombined, clock, zone)
-        val transaction: TransactionInsert = transactionInsert.copy(
-            id = TransactionId(uniqueIdProvider.id),
-            date = dateAndTimeCombined,
-        )
+        ensureNotFutureDated(transactionInsert.occurredAt, clock, zone)
+        val transaction: TransactionInsert = transactionInsert.copy(id = TransactionId(uniqueIdProvider.id))
         transactionRepository.create(transaction)
     }
 }

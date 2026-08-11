@@ -30,8 +30,8 @@ class GetMonthlyComparisonUseCase(private val transactionStatsRepository: Transa
     }
 
     private suspend fun totalFor(yearMonth: YearMonth, type: TransactionType): Money {
-        val start = yearMonth.startInclusiveMillis()
-        val end = yearMonth.endExclusiveMillis()
+        val start = yearMonth.startInclusiveDay()
+        val end = yearMonth.endExclusiveDay()
         val items = transactionStatsRepository.monthlyAmountByCategory(type, start, end)
         return items.fold(Money.Zero) { acc, item -> acc + item.amount }
     }

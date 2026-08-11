@@ -69,8 +69,8 @@ class GetMonthlyAmountByCategoryUseCaseTest {
 
         useCase(yearMonth, TransactionType.Spend)
 
-        val expectedStart = yearMonth.startInclusiveMillis()
-        val expectedEnd = yearMonth.endExclusiveMillis()
+        val expectedStart = yearMonth.startInclusiveDay()
+        val expectedEnd = yearMonth.endExclusiveDay()
         coVerify(exactly = 1) {
             repository.monthlyAmountByCategory(TransactionType.Spend, expectedStart, expectedEnd)
         }

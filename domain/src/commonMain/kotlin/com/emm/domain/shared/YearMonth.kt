@@ -4,7 +4,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -38,25 +37,22 @@ data class YearMonth(val year: Int, val month: Month) : Comparable<YearMonth> {
     }
 
     /**
-     * Inclusive start-of-month epoch millis in the given timezone.
+     * Inclusive lower bound of the month as an ISO day string, `'2026-08-01'`.
+     *
+     * No timezone: the value it filters carries none either. The boundary between two months is a
+     * calendar fact, and this is the calendar fact written down.
      */
-    fun startInclusiveMillis(timeZone: TimeZone = TimeZone.currentSystemDefault()): Long {
-        val firstDay = LocalDate(year, month, 1)
-        return firstDay.atStartOfDayIn(timeZone).toEpochMilliseconds()
-    }
+    fun startInclusiveDay(): String = LocalDate(year, month, 1).toString()
 
-    /**
-     * Exclusive end-of-month epoch millis (= start of next month).
-     */
-    fun endExclusiveMillis(timeZone: TimeZone = TimeZone.currentSystemDefault()): Long =
-        next().startInclusiveMillis(timeZone)
+    /** Exclusive upper bound of the month (= the first day of the next one). */
+    fun endExclusiveDay(): String = next().startInclusiveDay()
 
     /**
      * Both bounds at once, for callers that query a window of months in one batch.
      */
-    fun range(timeZone: TimeZone = TimeZone.currentSystemDefault()): MonthRange = MonthRange(
-        startInclusive = startInclusiveMillis(timeZone),
-        endExclusive = endExclusiveMillis(timeZone),
+    fun range(): MonthRange = MonthRange(
+        startInclusive = startInclusiveDay(),
+        endExclusive = endExclusiveDay(),
     )
 
     companion object {
@@ -67,6 +63,11 @@ data class YearMonth(val year: Int, val month: Month) : Comparable<YearMonth> {
 
         fun of(date: LocalDate): YearMonth = YearMonth(year = date.year, month = date.month)
 
+        /**
+         * The month an INSTANT falls in, as read in [timeZone]. The only callers are the ones that
+         * genuinely hold an instant — `createdAt` and friends. A transaction's own occurrence is
+         * not one of them; it already knows its calendar month without being asked where it is.
+         */
         fun of(epochMillis: Long, timeZone: TimeZone = TimeZone.currentSystemDefault()): YearMonth =
             of(Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(timeZone).date)
 

@@ -73,7 +73,7 @@ class DefaultBackupRepository(
             )
         }
 
-        if (payload.schemaVersion != 1) {
+        if (payload.schemaVersion != BACKUP_SCHEMA_VERSION) {
             throw DomainException.ValidationError(
                 "Unsupported file version.",
                 ValidationCode.BackupVersionUnsupported,
@@ -157,7 +157,7 @@ class DefaultBackupRepository(
             type = dto.type,
             amount = dto.amountCents,
             description = dto.description,
-            date = dto.date,
+            occurredAt = dto.occurredAt,
             categoryId = dto.categoryId,
             accountId = dto.accountId,
             createdAt = now,
@@ -167,7 +167,7 @@ class DefaultBackupRepository(
             type = dto.type,
             amount = dto.amountCents,
             description = dto.description,
-            date = dto.date,
+            occurredAt = dto.occurredAt,
             categoryId = dto.categoryId,
             accountId = dto.accountId,
             updatedAt = now,

@@ -100,9 +100,10 @@ class CategoryUsageCountsTest {
     private fun insert(id: String, categoryId: String?, deletedAt: Long? = null) {
         val categoryValue = if (categoryId == null) "NULL" else "'$categoryId'"
         exec(
-            "INSERT INTO transactions(transactionId, type, amount, description, date, categoryId, " +
+            "INSERT INTO transactions(transactionId, type, amount, description, occurredAt, categoryId, " +
                 "accountId, createdAt, updatedAt, deletedAt) " +
-                "VALUES ('$id', 'Spend', 100, '', 1000, $categoryValue, 'acc-1', 1, 1, ${deletedAt ?: "NULL"})",
+                "VALUES ('$id', 'Spend', 100, '', '2026-08-10T12:00:00', $categoryValue, 'acc-1', 1, 1, " +
+                "${deletedAt ?: "NULL"})",
         )
     }
 }

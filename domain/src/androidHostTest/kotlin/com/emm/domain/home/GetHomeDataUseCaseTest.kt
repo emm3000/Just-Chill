@@ -16,9 +16,7 @@ import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.LocalDateTime
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -33,12 +31,17 @@ class GetHomeDataUseCaseTest {
 
     private val useCase = GetHomeDataUseCase(transactionRepository, getPendingRecurringMovements)
 
-    private fun tx(id: String, type: TransactionType, amount: Long, date: Long = 0L) = TransactionWithCategory(
+    private fun tx(
+        id: String,
+        type: TransactionType,
+        amount: Long,
+        occurredAt: LocalDateTime = LocalDateTime(2026, 5, 16, 0, 0),
+    ) = TransactionWithCategory(
         transactionId = TransactionId(id),
         type = type,
         amount = Money(amount),
         description = "",
-        date = date,
+        occurredAt = occurredAt,
         accountId = AccountId("acc-1"),
         category = null,
     )
@@ -142,8 +145,8 @@ class GetHomeDataUseCaseTest {
         val fixedClock = fixedClock("2026-05-16T12:34:56Z")
         val repo = mockk<TransactionRepository>()
         val pendingUc = mockk<GetPendingRecurringMovementsUseCase>()
-        val startSlot = slot<Long>()
-        val endSlot = slot<Long>()
+        val startSlot = slot<String>()
+        val endSlot = slot<String>()
 
         every { repo.observeTotals() } returns flowOf(TransactionTotals.Empty)
         every { repo.fetchAllWithCategoryInRange(capture(startSlot), capture(endSlot)) } returns flowOf(emptyList())
@@ -151,12 +154,9 @@ class GetHomeDataUseCaseTest {
 
         GetHomeDataUseCase(repo, pendingUc, fixedClock).invoke().first()
 
-        val zone = TimeZone.currentSystemDefault()
-        val expectedStart = LocalDate(2026, 5, 1).atStartOfDayIn(zone).toEpochMilliseconds()
-        val expectedEnd = LocalDate(2026, 6, 1).atStartOfDayIn(zone).toEpochMilliseconds()
-
-        assertEquals(expectedStart, startSlot.captured)
-        assertEquals(expectedEnd, endSlot.captured)
+        // Half-open day bounds, no timezone anywhere: the window is the month, spelled out.
+        assertEquals("2026-05-01", startSlot.captured)
+        assertEquals("2026-06-01", endSlot.captured)
     }
 
     @Test

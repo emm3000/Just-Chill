@@ -11,8 +11,8 @@ interface TransactionStatsRepository {
 
     suspend fun monthlyAmountByCategory(
         type: TransactionType,
-        startInclusive: Long,
-        endExclusive: Long,
+        startInclusive: String,
+        endExclusive: String,
     ): List<CategoryAmount>
 
     /**
@@ -25,11 +25,11 @@ interface TransactionStatsRepository {
      */
     suspend fun monthlyAmountByCategoryForRanges(ranges: List<MonthRange>): List<MonthCategoryAmounts>
 
-    suspend fun monthlyStats(type: TransactionType, startInclusive: Long, endExclusive: Long): MonthlySectionStats
+    suspend fun monthlyStats(type: TransactionType, startInclusive: String, endExclusive: String): MonthlySectionStats
 
-    suspend fun topUsedCategoryIds(type: TransactionType, startInclusive: Long, limit: Int): List<CategoryId>
+    suspend fun topUsedCategoryIds(type: TransactionType, startInclusive: String, limit: Int): List<CategoryId>
 
-    suspend fun topUsedCombos(type: TransactionType, startInclusive: Long, limit: Int): List<FrequentCombo>
+    suspend fun topUsedCombos(type: TransactionType, startInclusive: String, limit: Int): List<FrequentCombo>
 
     suspend fun lastUsedAccountId(): AccountId?
 }

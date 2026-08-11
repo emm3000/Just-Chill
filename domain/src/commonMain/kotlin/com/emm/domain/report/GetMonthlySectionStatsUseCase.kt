@@ -7,8 +7,8 @@ import com.emm.domain.transaction.TransactionType
 class GetMonthlySectionStatsUseCase(private val transactionStatsRepository: TransactionStatsRepository) {
 
     suspend operator fun invoke(yearMonth: YearMonth, type: TransactionType): MonthlySectionStats {
-        val start = yearMonth.startInclusiveMillis()
-        val end = yearMonth.endExclusiveMillis()
+        val start = yearMonth.startInclusiveDay()
+        val end = yearMonth.endExclusiveDay()
         return transactionStatsRepository.monthlyStats(type, start, end)
     }
 }

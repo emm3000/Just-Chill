@@ -10,8 +10,8 @@ class TransactionStatsLocalDataSource(private val tq: TransactionsQueries) {
 
     suspend fun monthlyAmountByCategory(
         type: TransactionType,
-        startInclusive: Long,
-        endExclusive: Long,
+        startInclusive: String,
+        endExclusive: String,
     ): List<MonthlyAmountByCategoryEntity> = withContext(ioDispatcher) {
         tq.monthlyAmountByCategory(
             type = type.name,
@@ -39,7 +39,7 @@ class TransactionStatsLocalDataSource(private val tq: TransactionsQueries) {
             }
         }
 
-    suspend fun monthlyStats(type: TransactionType, startInclusive: Long, endExclusive: Long): Pair<Long, Long> =
+    suspend fun monthlyStats(type: TransactionType, startInclusive: String, endExclusive: String): Pair<Long, Long> =
         withContext(ioDispatcher) {
             val row = tq.monthlyStats(
                 type = type.name,
@@ -49,7 +49,7 @@ class TransactionStatsLocalDataSource(private val tq: TransactionsQueries) {
             row.movementCount to row.totalAmount
         }
 
-    suspend fun topUsedCategoryIds(type: TransactionType, startInclusive: Long, limit: Long): List<String> =
+    suspend fun topUsedCategoryIds(type: TransactionType, startInclusive: String, limit: Long): List<String> =
         withContext(ioDispatcher) {
             tq.topUsedCategoryIds(
                 type = type.name,
@@ -60,7 +60,7 @@ class TransactionStatsLocalDataSource(private val tq: TransactionsQueries) {
 
     suspend fun topUsedCombos(
         type: TransactionType,
-        startInclusive: Long,
+        startInclusive: String,
         limit: Long,
     ): List<com.emm.data.TopUsedCombos> = withContext(ioDispatcher) {
         tq.topUsedCombos(

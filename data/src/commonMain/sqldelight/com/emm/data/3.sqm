@@ -1,0 +1,74 @@
+-- Migration 3 → 4: a transaction's occurrence stops being an instant.
+--
+-- `transactions.date INTEGER` (epoch millis) becomes `transactions.occurredAt TEXT`, ISO local
+-- text 'YYYY-MM-DDTHH:MM:SS' with no zone. See the header of transactions.sq for the model and
+-- for why the text format answers every query without a timezone.
+--
+-- DESTRUCTIVE AND NOT REVERSIBLE. This is the first migration in this repository that rebuilds a
+-- table instead of adding to one. SQLite at minSdk has no DROP COLUMN, no RENAME COLUMN and no
+-- way to change a column's type, so the standard 12-step rebuild is the only route:
+-- create the new table, copy across converting, drop the old one, rename, recreate the indexes.
+--
+-- Safe to drop `transactions` here:
+--   • no table declares a foreign key REFERENCING transactions, so nothing cascades;
+--   • DatabaseDriver.android.kt turns foreign keys on in onOpen, which runs AFTER onUpgrade, so
+--     the copy is not validated against accounts/categories mid-flight either;
+--   • the indexes are recreated after the rename rather than carried through it, which keeps
+--     their names and definitions exactly what transactions.sq declares on every SQLite version.
+--
+-- THE CONVERSION AND ITS ASSUMPTION
+--
+-- '-5 hours' is a fixed America/Lima offset. 2.sqm's predecessors made the same assumption and it
+-- holds for the same reason: Peru has had no DST since 1994 and every row that exists was written
+-- on a Lima device. What is NEW here is that the claim now covers the TIME OF DAY as well as the
+-- calendar day — an instant recorded elsewhere would land at the Lima wall clock, not its own.
+-- That is accepted: the alternative is keeping a zone on a value the app never means as an instant.
+--
+-- WHY THE COALESCE — this migration must not be able to brick the app.
+--
+-- strftime() returns NULL for a value outside its representable range, and a NULL into a NOT NULL
+-- column aborts onUpgrade, leaves user_version at 3, and fails identically on every subsequent
+-- open: a permanent open-crash with no way out but reinstalling. This app has already had to
+-- survive a timestamp it could not read (commit c9492e3), so an out-of-range value is not
+-- hypothetical. An unreadable date therefore becomes the epoch under the same offset —
+-- visibly wrong, trivially findable, and never fatal. Never silently plausible.
+CREATE TABLE transactions_new (
+    transactionId  TEXT NOT NULL PRIMARY KEY,
+    type           TEXT NOT NULL,
+    amount         INTEGER NOT NULL,
+    description    TEXT NOT NULL DEFAULT '',
+    occurredAt     TEXT NOT NULL,
+    categoryId     TEXT REFERENCES categories(categoryId) ON DELETE SET NULL,
+    accountId      TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
+    createdAt      INTEGER NOT NULL,
+    updatedAt      INTEGER NOT NULL,
+    userId         TEXT,
+    deletedAt      INTEGER,
+    syncState      TEXT NOT NULL DEFAULT 'Pending'
+);
+
+INSERT INTO transactions_new(transactionId, type, amount, description, occurredAt, categoryId, accountId, createdAt, updatedAt, userId, deletedAt, syncState)
+SELECT
+    transactionId,
+    type,
+    amount,
+    description,
+    COALESCE(strftime('%Y-%m-%dT%H:%M:%S', date / 1000, 'unixepoch', '-5 hours'), '1969-12-31T19:00:00'),
+    categoryId,
+    accountId,
+    createdAt,
+    updatedAt,
+    userId,
+    deletedAt,
+    syncState
+FROM transactions;
+
+DROP TABLE transactions;
+
+ALTER TABLE transactions_new RENAME TO transactions;
+
+CREATE INDEX IF NOT EXISTS transactions_account_idx  ON transactions(accountId);
+CREATE INDEX IF NOT EXISTS transactions_occurred_idx ON transactions(occurredAt);
+CREATE INDEX IF NOT EXISTS transactions_category_idx ON transactions(categoryId);
+CREATE INDEX IF NOT EXISTS transactions_syncstate_idx ON transactions(syncState);
+CREATE INDEX IF NOT EXISTS transactions_user_deleted_idx ON transactions(userId, deletedAt);

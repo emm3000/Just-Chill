@@ -11,6 +11,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import org.junit.Before
 import org.junit.Test
@@ -35,7 +36,7 @@ class GetTopCategoriesOverMonthsUseCaseTest {
     fun setUp() {
         coEvery { repository.monthlyAmountByCategoryForRanges(any()) } answers {
             firstArg<List<MonthRange>>().map { range ->
-                val ym = YearMonth.of(range.startInclusive)
+                val ym = YearMonth.of(LocalDate.parse(range.startInclusive))
                 MonthCategoryAmounts(
                     income = incomeByMonth[ym].orEmpty(),
                     expense = spendByMonth[ym].orEmpty(),
@@ -89,7 +90,7 @@ class GetTopCategoriesOverMonthsUseCaseTest {
 
         coVerify(exactly = 1) { repository.monthlyAmountByCategoryForRanges(capture(ranges)) }
         assertEquals(6, ranges.captured.size)
-        val months = ranges.captured.map { YearMonth.of(it.startInclusive) }
+        val months = ranges.captured.map { YearMonth.of(LocalDate.parse(it.startInclusive)) }
         assertEquals(YearMonth(2025, Month.DECEMBER), months.first())
         assertEquals(YearMonth(2026, Month.MAY), months.last())
     }
