@@ -1,11 +1,11 @@
 package com.emm.data.sync
 
-import kotlinx.datetime.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 
 /**
  * Pins [parseServerInstant] and [overlapCursor] behaviour.
@@ -68,8 +68,29 @@ class SyncCursorUtilsTest {
     fun `parseServerInstant round-trip offset input produces Z form toString`() {
         // After parse the Instant.toString() must be in canonical Z form, never "+00:00".
         val input = "2026-06-10T01:23:45.123456+00:00"
-        val result = parseServerInstant(input).toString()
+        val result = assertNotNull(parseServerInstant(input)).toString()
         assertTrue(result.endsWith("Z"), "Expected Z-terminated string, got: $result")
+    }
+
+    // -------------------------------------------------------------------------
+    // parseServerInstant — input the client cannot read
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `parseServerInstant returns null rather than throwing on a malformed value`() {
+        // The parse runs inside the per-page database transaction in BaseTableSync. Throwing there
+        // takes down the whole pull; returning null lets the row be skipped and the cursor held.
+        assertNull(parseServerInstant("not a timestamp"))
+        assertNull(parseServerInstant(""))
+        assertNull(parseServerInstant("2026-06-10"))
+        assertNull(parseServerInstant("2026-13-45T99:99:99Z"))
+    }
+
+    @Test
+    fun `overlapCursor returns null for a cursor the client cannot parse`() {
+        // A stored cursor that cannot be read means "start from the beginning" rather than "fail
+        // forever": the full re-pull is idempotent, and LWW makes the re-applied rows a no-op.
+        assertNull(overlapCursor("not a timestamp"))
     }
 
     // -------------------------------------------------------------------------

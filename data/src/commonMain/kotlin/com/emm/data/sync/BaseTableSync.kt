@@ -9,7 +9,7 @@ import com.emm.domain.sync.SyncLogger
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.query.filter.PostgrestFilterBuilder
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /** Composite keyset position used to paginate through a remote table. */
 data class PullPageKey(val serverUpdatedAt: String, val pk: String)
@@ -238,7 +238,7 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
         val page = fetchRemotePage(userId, overlapCursor, after, pageSize)
         if (page.isEmpty()) return PageResult(null, false, null, stop = true)
 
-        var maxInstant: Instant? = null
+        val mark = CursorHighWaterMark()
         var skipped = false
 
         safeDbCall {
@@ -273,9 +273,12 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
                             markPendingForResync(pkOf(remote))
                     }
 
-                    remote.serverUpdatedAt?.let { sat ->
-                        val inst = parseServerInstant(sat)
-                        if (maxInstant == null || inst > maxInstant!!) maxInstant = inst
+                    if (!mark.offer(remote.serverUpdatedAt)) {
+                        // Same class of problem as the null serverUpdatedAt guard below, and just
+                        // as invisible: the row applied, but it cannot advance the cursor. Holding
+                        // the cursor re-pulls this window next cycle.
+                        logger.warn("pull hit unparseable serverUpdatedAt table=$tableName pk=${pkOf(remote)}")
+                        skipped = true
                     }
                 }
             }
@@ -300,7 +303,31 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
         // arrives is therefore deferred to subsequent cycles by design (same posture as the
         // pre-pagination cursor-hold semantics).
         val nextKey = if (isLastPage) null else PullPageKey(serverUpdatedAt = lastSat!!, pk = pkOf(page.last()))
-        return PageResult(maxInstant, skipped || nullSatGuard, nextKey, stop = isLastPage)
+        return PageResult(mark.value, skipped || nullSatGuard, nextKey, stop = isLastPage)
+    }
+
+    /**
+     * Highest `server_updated_at` seen while applying a page — the value the pull cursor advances
+     * to. Its own type so the parse, the comparison and the unreadable-value case stay out of the
+     * row loop, which reads one branch per policy decision and is complexity-capped.
+     */
+    private class CursorHighWaterMark {
+
+        var value: Instant? = null
+            private set
+
+        /**
+         * Offers one row's raw `server_updated_at`. Returns false only when a value was present and
+         * could not be parsed — an absent one is normal for a row this page did not advance past.
+         */
+        fun offer(raw: String?): Boolean {
+            val parsed = raw?.let(::parseServerInstant)
+            if (parsed != null) {
+                val current = value
+                if (current == null || parsed > current) value = parsed
+            }
+            return raw == null || parsed != null
+        }
     }
 
     companion object {
