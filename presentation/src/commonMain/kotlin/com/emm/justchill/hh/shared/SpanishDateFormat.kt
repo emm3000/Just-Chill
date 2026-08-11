@@ -6,11 +6,16 @@ import kotlinx.datetime.Month
 import kotlinx.datetime.number
 
 /**
- * Hand-rolled Spanish (es / es-PE) date and number formatting for Compose Multiplatform
- * commonMain. Replaces the JVM `java.time.format.DateTimeFormatter` + `java.text.*` localized
- * formatters that cannot run on iOS. The app is Spanish-only, so the locale tables are hardcoded
- * to match — byte-for-byte — the strings the JVM `es`/`es-PE` formatters produced (verified on the
- * build JDK). See `SpanishDateFormatTest` in `:app` for the golden assertions.
+ * Hand-rolled Spanish (es / es-PE) date formatting for `commonMain`. Replaces the JVM
+ * `java.time.format.DateTimeFormatter` + `java.text.*` localized formatters, which cannot run on
+ * iOS and would leak `java.*` into the exported framework. The app is Spanish-only, so the locale
+ * tables are hardcoded to match — byte-for-byte — the strings the JVM `es`/`es-PE` formatters
+ * produced (verified on the build JDK); `SpanishFormatGoldenTest` in this module's `commonTest`
+ * holds those assertions.
+ *
+ * **This is the only Spanish month table in the app.** A second one lived in `MonthLabels.kt` and
+ * the two disagreed on the screen for months; every label there delegates here now, and
+ * `MonthLabelsTest` fails the build if that stops being true.
  */
 object SpanishDateFormat {
 
