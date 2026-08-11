@@ -64,10 +64,9 @@ class EditTransactionViewModelTest {
         override fun now(): Instant = instant
     }
 
-    private fun instantAt(date: LocalDate, hour: Int, minute: Int): Instant =
-        Instant.fromEpochMilliseconds(
-            LocalDateTime(date, LocalTime(hour, minute)).toInstant(lima).toEpochMilliseconds(),
-        )
+    private fun instantAt(date: LocalDate, hour: Int, minute: Int): Instant = Instant.fromEpochMilliseconds(
+        LocalDateTime(date, LocalTime(hour, minute)).toInstant(lima).toEpochMilliseconds(),
+    )
 
     private val fixedClock = MovableClock(instantAt(today, hour = 14, minute = 30))
 
@@ -238,43 +237,41 @@ class EditTransactionViewModelTest {
     // ── what the save actually sends ──────────────────────────────────────────
 
     @Test
-    fun `moving the transaction to another day carries its recorded hour across`() =
-        runTest(testDispatcher) {
-            val vm = buildViewModel()
-            advanceUntilIdle()
+    fun `moving the transaction to another day carries its recorded hour across`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
 
-            val newDay = LocalDate(2026, Month.JUNE, 13)
-            vm.onIntent(EditTransactionIntent.OnDateSelected(newDay))
-            advanceUntilIdle()
+        val newDay = LocalDate(2026, Month.JUNE, 13)
+        vm.onIntent(EditTransactionIntent.OnDateSelected(newDay))
+        advanceUntilIdle()
 
-            vm.onIntent(EditTransactionIntent.OnSave)
-            advanceUntilIdle()
+        vm.onIntent(EditTransactionIntent.OnSave)
+        advanceUntilIdle()
 
-            val update = slot<TransactionUpdate>()
-            coVerify { updateTransaction.invoke(storedTransaction, capture(update)) }
-            // The day the user picked, at the hour the movement was recorded — 09:15:33, down to
-            // the second. Moving a movement to another day must not restamp when it happened.
-            assertEquals(LocalDateTime(newDay, LocalTime(9, 15, 33)), update.captured.occurredAt)
-        }
+        val update = slot<TransactionUpdate>()
+        coVerify { updateTransaction.invoke(storedTransaction, capture(update)) }
+        // The day the user picked, at the hour the movement was recorded — 09:15:33, down to
+        // the second. Moving a movement to another day must not restamp when it happened.
+        assertEquals(LocalDateTime(newDay, LocalTime(9, 15, 33)), update.captured.occurredAt)
+    }
 
     @Test
-    fun `an edit that does not touch the date sends back the stored value, byte for byte`() =
-        runTest(testDispatcher) {
-            // THE regression. Twice now, an amount-only edit has silently moved the date: first by
-            // a day, then — when that was patched at one end — by re-deriving the instant at the
-            // other. There is one field left and the ViewModel hands it straight back, so equality
-            // here is structural, not a conversion that happens to round-trip today.
-            val vm = buildViewModel()
-            advanceUntilIdle()
+    fun `an edit that does not touch the date sends back the stored value, byte for byte`() = runTest(testDispatcher) {
+        // THE regression. Twice now, an amount-only edit has silently moved the date: first by
+        // a day, then — when that was patched at one end — by re-deriving the instant at the
+        // other. There is one field left and the ViewModel hands it straight back, so equality
+        // here is structural, not a conversion that happens to round-trip today.
+        val vm = buildViewModel()
+        advanceUntilIdle()
 
-            vm.onIntent(EditTransactionIntent.OnAmountChange("9000"))
-            advanceUntilIdle()
+        vm.onIntent(EditTransactionIntent.OnAmountChange("9000"))
+        advanceUntilIdle()
 
-            vm.onIntent(EditTransactionIntent.OnSave)
-            advanceUntilIdle()
+        vm.onIntent(EditTransactionIntent.OnSave)
+        advanceUntilIdle()
 
-            val update = slot<TransactionUpdate>()
-            coVerify { updateTransaction.invoke(storedTransaction, capture(update)) }
-            assertEquals(storedTransaction.occurredAt, update.captured.occurredAt)
-        }
+        val update = slot<TransactionUpdate>()
+        coVerify { updateTransaction.invoke(storedTransaction, capture(update)) }
+        assertEquals(storedTransaction.occurredAt, update.captured.occurredAt)
+    }
 }

@@ -94,6 +94,11 @@ class HomeViewModelTest {
         viewModel = HomeViewModel(getHomeData, confirmRecurring, skipRecurring)
     }
 
+    // The two `verify { }` calls below record an expectation instead of consuming a result, so
+    // IgnoredReturnValue fires on them and means nothing. Suppressed on this function rather than
+    // on the class: outside a verification block, "called it and dropped the result" is a real bug
+    // in a test, and the rule should keep catching it everywhere else in this file.
+    @Suppress("IgnoredReturnValue")
     @Test
     fun `the month it loads is read in the injected zone, not the device's`() = runTest {
         // One instant, two zones, two different months: 2026-09-01T02:00Z is already September at
