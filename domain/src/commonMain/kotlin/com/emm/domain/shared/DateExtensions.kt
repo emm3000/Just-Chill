@@ -7,8 +7,6 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
-fun currentTimeInMillis(): Long = Clock.System.now().toEpochMilliseconds()
-
 /**
  * Epoch millis at the start of the day [days] calendar days before today in [zone] — the inclusive
  * lower bound of a "last N days" window.

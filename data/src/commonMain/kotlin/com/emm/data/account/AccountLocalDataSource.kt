@@ -36,13 +36,14 @@ class AccountLocalDataSource(private val emmDatabase: EmmDatabaseData, private v
         }
 
     suspend fun create(account: AccountUpsert) = withContext(ioDispatcher) {
+        val now = clock.nowMillis()
         aq.insert(
             accountId = account.accountId.value,
             name = account.name,
             type = account.type.name,
             currency = "PEN",
-            updatedAt = account.updatedAt,
-            createdAt = account.createdAt,
+            updatedAt = now,
+            createdAt = now,
         )
     }
 

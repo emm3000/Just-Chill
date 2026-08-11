@@ -94,16 +94,18 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData,
      * Atomically:
      * 1. Re-read lastConfirmedPeriod inside the transaction (DB-level idempotency guard)
      * 2. Insert the transaction record
-     * 3. Mark the recurring movement confirmed with a caller-supplied [updatedAt]
+     * 3. Mark the recurring movement confirmed with the same timestamp
      *
      * If the template is already settled at or past [period] (TOCTOU race), throws
      * [DomainException.ValidationError] which causes the SQLDelight transaction to roll back,
      * reverting the just-inserted transaction row.
      *
-     * [updatedAt] is supplied by the caller (from a single captured `now`) so this method
-     * never reads the clock independently.
+     * The clock is read ONCE, before the transaction opens, and the value stamps the new row and
+     * the template's high-water mark alike. Two rows written atomically that disagree about when
+     * would be a lie about an operation that either happened or did not.
      */
     suspend fun confirm(insert: TransactionInsert, recurringId: String, period: String) = withContext(ioDispatcher) {
+        val now = clock.nowMillis()
         emmDatabase.transaction {
             // DB-level idempotency guard: re-check inside the transaction to close the TOCTOU window.
             ensureNotSettled(recurringId, period)
@@ -116,12 +118,12 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData,
                 date = insert.date,
                 categoryId = insert.categoryId?.value,
                 accountId = insert.accountId.value,
-                createdAt = insert.createdAt,
-                updatedAt = insert.updatedAt,
+                createdAt = now,
+                updatedAt = now,
             )
             rmq.markConfirmed(
                 lastConfirmedPeriod = period,
-                updatedAt = insert.updatedAt,
+                updatedAt = now,
                 id = recurringId,
             )
         }

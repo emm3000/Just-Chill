@@ -3,7 +3,6 @@ package com.emm.data.account
 import com.emm.data.Accounts
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountType
-import com.emm.domain.account.AccountUpsert
 import com.emm.domain.shared.AccountId
 
 // SQLDelight -> Entity (internal, stays within data source)
@@ -29,12 +28,3 @@ fun AccountEntity.asExternalModel() = Account(
 )
 
 fun List<AccountEntity>.asExternalModel() = map(AccountEntity::asExternalModel)
-
-// Domain upsert -> Entity
-fun AccountUpsert.asEntity() = AccountEntity(
-    accountId = accountId.value,
-    name = name,
-    type = type.name,
-    updatedAt = updatedAt,
-    createdAt = createdAt,
-)

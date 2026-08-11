@@ -16,7 +16,6 @@ import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.Transaction
-import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionTotals
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
@@ -49,18 +48,6 @@ fun TransactionEntity.asExternalModelOrNull(): Transaction? {
 }
 
 fun List<TransactionEntity>.asExternalModel() = mapNotNull(TransactionEntity::asExternalModelOrNull)
-
-fun TransactionInsert.asEntity() = TransactionEntity(
-    transactionId = id.value,
-    type = type.name,
-    amount = amount.cents,
-    description = description,
-    date = date,
-    categoryId = categoryId?.value,
-    accountId = accountId.value,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-)
 
 fun CompleteTransactions.asEntity() = TransactionWithCategoryEntity(
     transactionId = transactionId,
