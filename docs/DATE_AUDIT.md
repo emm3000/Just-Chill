@@ -72,10 +72,12 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
   the zone and the month window would not notice; `YearMonth.current`'s `timeZone` parameter
   defaults to the ambient zone, and the default was being taken.
 
-  **Reporte closed last, and the interesting part is what it cost.** `ReportViewModel` now takes the
-  same `clock` and `zone` its two neighbours do — with no defaults on either — and its four
-  `YearMonth.current()` calls take both.
-  That alone would have been cosmetic: `GetSavingsRateUseCase` and `GetTopCategoriesOverMonthsUseCase`
+  **Reporte closed last, and the interesting part is what it cost.** `ReportViewModel` now takes an
+  injected `clock` and `zone`, as `HomeViewModel` and `SeeTransactionsViewModel` already did, and
+  its four `YearMonth.current()` calls take both. Reporte then goes one step further than those two:
+  its `clock` and `zone` have **no defaults at all**. Home and Movimientos still default theirs —
+  that gap is the follow-up recorded at the end of this finding.
+  Injecting alone would have been cosmetic: `GetSavingsRateUseCase` and `GetTopCategoriesOverMonthsUseCase`
   each accepted a `Clock` and then resolved the window's end month through the ambient zone anyway,
   so a test could fake the clock and still not say which month a report covered. Both now take a
   `zone` beside the `clock` — and **neither parameter keeps a default**. An ambient default is the
@@ -96,16 +98,22 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
   Written once at open, it would have kept calling August the current month after midnight on
   1 September and kept the pill — the only one-tap way back — suppressed for the rest of the
   session. So **every** path that writes state re-derives it, both reloads included, not only a
-  user-initiated month move. The honest limit: that is not the same as continuously. A screen
-  sitting idle with nothing loading still will not notice a rollover until the next intent arrives.
-  Reporte has no resume hook to hang a refresh on; adding one is a separate change.
+  user-initiated month move.
+
+  The honest limit, and it applies to **two** markers, not one: `ReportUiState.isCurrentMonth`
+  behind the pill, and `MonthlyBarItem.isCurrentMonth`, which draws one bar of the Tendencias chart
+  bold. Both come off a clock read taken per load, so both refresh together and both go stale
+  together — refreshing on every state write is not the same as refreshing continuously. A screen
+  sitting idle with nothing loading will not notice a rollover until the next intent arrives.
+  Reporte has no resume hook to hang a refresh on; adding one is a separate change. Each marker has
+  its own test that moves a clock across a boundary under a running ViewModel, because a limit
+  disclosed for only one of its two symptoms is how this file misled a reader once already.
 
   What proves it: one instant, two zones, two different months. `2026-09-01T02:00Z` is already
   September at UTC and still 31 August at UTC-5, and `ReportViewModelTest`,
   `GetSavingsRateUseCaseTest` and `GetTopCategoriesOverMonthsUseCaseTest` each assert **both** — one
   zone proves nothing, because on a machine sitting in it the ambient read agrees by accident and
-  the test stays green straight through the bug. The staleness above has its own test, on a clock
-  the test moves across a boundary under a running ViewModel.
+  the test stays green straight through the bug.
 
   **Still open, and the reason this finding leaves a follow-up:** the rule now holds for
   `ReportViewModel` and the two report use cases, not for the codebase. `HomeViewModel`,
