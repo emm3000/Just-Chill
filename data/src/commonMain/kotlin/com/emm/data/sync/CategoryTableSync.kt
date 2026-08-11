@@ -89,11 +89,11 @@ class CategoryTableSync(private val db: EmmDatabaseData, client: SupabaseClient,
     /**
      * Two-statement upsert: INSERT OR IGNORE handles new rows; UPDATE handles existing ones —
      * neither triggers an implicit DELETE, so child-table FK constraints (ON DELETE RESTRICT/SET NULL)
-     * are safe. Returns false if the row was skipped because of an FK constraint failure (a parent
-     * row absent locally — it will retry next cycle once the parent arrives).
+     * are safe. Defers the row on an FK constraint failure (a parent row absent locally — it will
+     * retry next cycle once the parent arrives).
      */
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
-    override fun applyRemoteRow(remote: CategoryRowDto): Boolean = try {
+    override fun applyRemoteRow(remote: CategoryRowDto): RemoteRowOutcome = try {
         db.categoriesQueries.insertOrIgnoreFromRemote(
             categoryId = remote.categoryId,
             name = remote.name,
@@ -118,9 +118,9 @@ class CategoryTableSync(private val db: EmmDatabaseData, client: SupabaseClient,
             deletedAt = remote.deletedAt,
             categoryId = remote.categoryId,
         )
-        true
+        RemoteRowOutcome.Applied
     } catch (e: Exception) {
-        if (e.isSqliteConstraintViolation()) false else throw e
+        if (e.isSqliteConstraintViolation()) RemoteRowOutcome.Deferred else throw e
     }
 
     override fun markPendingForResync(pk: String) {

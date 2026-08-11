@@ -20,7 +20,11 @@ import kotlinx.coroutines.flow.Flow
 
 private const val TABLE = "transactions"
 
-class TransactionTableSync(private val db: EmmDatabaseData, client: SupabaseClient, logger: SyncLogger) :
+// `open` for one reason: [fetchRemotePage] is the only seam through which a test can drive the
+// REAL pull — this class's own applyRemoteRow, the shared page loop, and a real SQLite database —
+// with a chosen page of remote rows. A fake table sync instead would have to re-implement the very
+// branch under test, which is how a green suite once coexisted with a broken write path here.
+open class TransactionTableSync(private val db: EmmDatabaseData, client: SupabaseClient, logger: SyncLogger) :
     BaseTableSync<TransactionRowDto>(
         client = client,
         transact = { body -> db.transaction { body() } },
@@ -102,19 +106,30 @@ class TransactionTableSync(private val db: EmmDatabaseData, client: SupabaseClie
     /**
      * Two-statement upsert: INSERT OR IGNORE handles new rows; UPDATE handles existing ones —
      * neither triggers an implicit DELETE, so child-table FK constraints (ON DELETE RESTRICT/SET NULL)
-     * are safe. Returns false if the row was skipped because of an FK constraint failure (the parent
-     * account/category has not been pulled/pushed yet — it will retry next cycle once it arrives),
-     * or because the remote `date` is outside the range a local datetime can represent.
+     * are safe.
+     *
+     * Two things can stop a row landing, and they are NOT the same thing:
+     *  - an FK constraint failure — the parent account/category has not been pulled/pushed yet, so
+     *    the row is [RemoteRowOutcome.Deferred] and holds the cursor until the parent arrives;
+     *  - a remote `date` outside the range a local datetime can represent — that row is
+     *    [RemoteRowOutcome.Dropped], because re-reading it next cycle produces the same answer.
      */
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
-    override fun applyRemoteRow(remote: TransactionRowDto): Boolean {
+    override fun applyRemoteRow(remote: TransactionRowDto): RemoteRowOutcome {
         // Untrusted input: the wire still carries an instant, and this client has already had to
-        // survive a server timestamp it could not read. One unreadable row is skipped and logged;
-        // it does not take the pull down with it.
+        // survive a server timestamp it could not read.
+        //
+        // Dropped, not deferred. Retrying an unreadable value is not a retry, it is a freeze: a
+        // held cursor is shared across all four tables, so one row this client can never parse
+        // would stop every remote change from ever reaching the device again — silently, and
+        // logged as an FK miss, which is not what happened. Clamping it to a sentinel is worse
+        // still: an invented occurredAt corrupts the lexicographic ordering the table depends on.
+        // So the row stays local-nothing and the pull moves past it. If the server ever corrects
+        // it, `server_updated_at` bumps and it comes back on its own.
         val occurredAt = localDateTimeFromFixedPeru(remote.date)
         if (occurredAt == null) {
-            logger.warn("pull skipped unreadable date table=$TABLE pk=${remote.transactionId}")
-            return false
+            logger.warn("pull dropped unreadable date table=$TABLE pk=${remote.transactionId}")
+            return RemoteRowOutcome.Dropped
         }
         val occurredAtText = occurredAt.toOccurredAtText()
         return try {
@@ -144,9 +159,9 @@ class TransactionTableSync(private val db: EmmDatabaseData, client: SupabaseClie
                 deletedAt = remote.deletedAt,
                 transactionId = remote.transactionId,
             )
-            true
+            RemoteRowOutcome.Applied
         } catch (e: Exception) {
-            if (e.isSqliteConstraintViolation()) false else throw e
+            if (e.isSqliteConstraintViolation()) RemoteRowOutcome.Deferred else throw e
         }
     }
 
