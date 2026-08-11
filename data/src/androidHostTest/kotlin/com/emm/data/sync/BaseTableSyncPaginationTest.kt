@@ -123,6 +123,9 @@ class BaseTableSyncPaginationTest {
         /** Ids that [applyRemoteRow] should reject (FK miss simulation). */
         val failIds = mutableSetOf<String>()
 
+        /** Ids [applyRemoteRow] can never apply — the unreadable-value simulation. */
+        val unapplicableIds = mutableSetOf<String>()
+
         override suspend fun fetchRemotePage(
             userId: String,
             overlapCursor: String?,
@@ -130,10 +133,19 @@ class BaseTableSyncPaginationTest {
             limit: Int,
         ): List<TestDto> = fetcher.fetchPage(userId, overlapCursor, after, limit)
 
-        override fun applyRemoteRow(remote: TestDto): Boolean {
-            if (remote.id in failIds) return false
-            applied += remote
-            return true
+        override fun applyRemoteRow(remote: TestDto): RemoteRowOutcome = when (remote.id) {
+            in failIds -> RemoteRowOutcome.Deferred
+
+            in unapplicableIds -> {
+                // Whoever drops a row owns its log line; the base class deliberately adds none.
+                recordingLogger.warn("pull dropped unreadable row table=$TEST_TABLE pk=${remote.id}")
+                RemoteRowOutcome.Dropped
+            }
+
+            else -> {
+                applied += remote
+                RemoteRowOutcome.Applied
+            }
         }
 
         override fun localRevision(pk: String): LocalRevision? = localRows[pk]
@@ -268,6 +280,70 @@ class BaseTableSyncPaginationTest {
 
         assertTrue(result.skippedRows, "skippedRows must stay true from page-1 FK miss")
         assertEquals(listOf("b", "c", "d"), sync.applied.map { it.id })
+    }
+
+    /**
+     * The difference between waiting and freezing.
+     *
+     * `skippedRows` holds the pull cursor, and the cursor is shared by all four tables — so a row
+     * reported as skipped is a promise that re-pulling it will eventually work. An FK miss keeps
+     * that promise: the parent arrives and the row lands. A row this client can never read does
+     * not, and reporting it the same way pins the cursor forever, for every table, silently.
+     */
+    @Test
+    fun `a row that can never be applied does not hold the cursor`() = runTest {
+        val rows = listOf(
+            dto("a", "2026-01-01T00:00:01Z"),
+            dto("b", "2026-01-01T00:00:02Z"), // unreadable value — can never be applied
+            dto("c", "2026-01-01T00:00:03Z"),
+        )
+        val sync = FakeTableSync(KeysetStore(rows), pageSize = 5)
+        sync.unapplicableIds += "b"
+
+        val result = sync.pull(userId, cursor = null, resolver = resolver)
+
+        assertFalse(result.skippedRows, "an unapplicable row must not hold the cursor")
+        assertEquals(listOf("a", "c"), sync.applied.map { it.id }, "the row itself must not land")
+        // And the cursor advances PAST it, rather than stopping at the last row before it.
+        assertEquals(
+            java.time.Instant.parse("2026-01-01T00:00:03Z"),
+            java.time.Instant.parse(result.maxServerUpdatedAt!!),
+        )
+    }
+
+    @Test
+    fun `the cursor advances even when every row on the page is unapplicable`() = runTest {
+        // The worst shape of the same bug: nothing lands, so there is nothing to "retry" — and the
+        // old code would have held the cursor at this exact window for as long as the app existed.
+        val rows = listOf(
+            dto("a", "2026-01-01T00:00:01Z"),
+            dto("b", "2026-01-01T00:00:02Z"),
+        )
+        val sync = FakeTableSync(KeysetStore(rows), pageSize = 5)
+        sync.unapplicableIds += listOf("a", "b")
+
+        val result = sync.pull(userId, cursor = null, resolver = resolver)
+
+        assertFalse(result.skippedRows)
+        assertEquals(emptyList(), sync.applied)
+        assertEquals(
+            java.time.Instant.parse("2026-01-01T00:00:02Z"),
+            java.time.Instant.parse(result.maxServerUpdatedAt!!),
+        )
+    }
+
+    @Test
+    fun `an unapplicable row is still reported, and not as an FK miss`() = runTest {
+        // The skip is invisible to the user either way; the log line is the only trace it leaves,
+        // and calling it an FK miss sends whoever reads it looking for a parent row that is fine.
+        val sync = FakeTableSync(KeysetStore(listOf(dto("b", "2026-01-01T00:00:02Z"))), pageSize = 5)
+        sync.unapplicableIds += "b"
+
+        sync.pull(userId, cursor = null, resolver = resolver)
+
+        assertEquals(1, sync.recordingLogger.warnings.size, "exactly one line, not zero and not two")
+        assertTrue(sync.recordingLogger.warnings.single().contains("dropped"))
+        assertFalse(sync.recordingLogger.warnings.single().contains("fk miss"))
     }
 
     @Test

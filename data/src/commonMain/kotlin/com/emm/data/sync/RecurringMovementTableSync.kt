@@ -101,11 +101,11 @@ class RecurringMovementTableSync(private val db: EmmDatabaseData, client: Supaba
      * isActive / dayOfMonth type notes: SQLDelight maps INTEGER columns to Long; the DTO
      * carries Boolean / Int, so we convert before calling the generated queries.
      *
-     * Returns false if the row was skipped because of an FK constraint failure (the parent
-     * account/category has not been pulled/pushed yet — it will retry next cycle once it arrives).
+     * Defers the row on an FK constraint failure (the parent account/category has not been
+     * pulled/pushed yet — it will retry next cycle once it arrives).
      */
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
-    override fun applyRemoteRow(remote: RecurringMovementRowDto): Boolean = try {
+    override fun applyRemoteRow(remote: RecurringMovementRowDto): RemoteRowOutcome = try {
         // SQLDelight generated INTEGER column; Long parameter expected.
         val dayOfMonthLong = remote.dayOfMonth.toLong()
         // SQLDelight generated INTEGER AS Boolean column needs Long (0/1).
@@ -145,9 +145,9 @@ class RecurringMovementTableSync(private val db: EmmDatabaseData, client: Supaba
             deletedAt = remote.deletedAt,
             id = remote.id,
         )
-        true
+        RemoteRowOutcome.Applied
     } catch (e: Exception) {
-        if (e.isSqliteConstraintViolation()) false else throw e
+        if (e.isSqliteConstraintViolation()) RemoteRowOutcome.Deferred else throw e
     }
 
     override fun markPendingForResync(pk: String) {

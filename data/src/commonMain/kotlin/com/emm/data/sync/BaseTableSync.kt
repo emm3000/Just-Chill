@@ -15,6 +15,36 @@ import kotlin.time.Instant
 data class PullPageKey(val serverUpdatedAt: String, val pk: String)
 
 /**
+ * What one remote row did when the pull tried to apply it.
+ *
+ * The distinction that matters is [Deferred] versus [Dropped], and it is the difference between a
+ * wait and a freeze. A [Deferred] row holds the pull cursor so the next cycle re-pulls it; that is
+ * correct only for something that can still resolve on its own. Reporting a row that can NEVER be
+ * applied the same way pins the cursor permanently — and because the cursor is shared, it pins it
+ * for every table, so nothing remote ever reaches the device again. Silently.
+ */
+enum class RemoteRowOutcome {
+    /** Written locally. */
+    Applied,
+
+    /**
+     * Not applied YET, and it can be: the FK parent has not been pulled or pushed yet. Holds the
+     * cursor so the next cycle retries it once the parent arrives.
+     */
+    Deferred,
+
+    /**
+     * Never applicable: the row carries a value this client cannot represent, and re-pulling it
+     * would produce the same answer forever. Dropped locally, and the cursor advances past it. If
+     * the server later corrects the row its `server_updated_at` bumps and it comes back on its own.
+     *
+     * Whoever returns this MUST log why — the base class cannot know the reason, and a skipped row
+     * that leaves no trace is a data gap nobody can diagnose after the fact.
+     */
+    Dropped,
+}
+
+/**
  * Shared push/pull algorithm for a single Supabase table.
  *
  * Subclasses supply only the table-specific wiring:
@@ -25,7 +55,7 @@ data class PullPageKey(val serverUpdatedAt: String, val pk: String)
  *   - [markSynced]            — marks a single row Synced after a successful push (called inside tx)
  *   - [fetchRemotePage]       — performs the reified decodeList Postgrest call for this table
  *   - [localRevision]         — reads the local updatedAt + syncState for a PK (conflict inputs)
- *   - [applyRemoteRow]        — two-statement INSERT OR IGNORE + UPDATE; returns false on FK miss
+ *   - [applyRemoteRow]        — two-statement INSERT OR IGNORE + UPDATE; reports a [RemoteRowOutcome]
  *   - [markPendingForResync]  — re-flags a local row Pending so a newer local revision re-pushes
  *
  * The algorithm (ordering, user-id filter, cursor math, transaction boundaries, skippedRows
@@ -145,9 +175,12 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
     /**
      * Two-statement upsert: INSERT OR IGNORE + UPDATE. Neither statement triggers an implicit
      * DELETE, so child-table FK constraints (ON DELETE RESTRICT/SET NULL) are never fired.
-     * Returns false when a [SQLiteConstraintException] fires (orphan FK — retry next cycle).
+     *
+     * Returns [RemoteRowOutcome.Deferred] when a [SQLiteConstraintException] fires (orphan FK —
+     * retry next cycle), and [RemoteRowOutcome.Dropped] for a row this client will never be able to
+     * apply. See [RemoteRowOutcome] for why those two must not be reported the same way.
      */
-    protected abstract fun applyRemoteRow(remote: DTO): Boolean
+    protected abstract fun applyRemoteRow(remote: DTO): RemoteRowOutcome
 
     /** Re-flag the row with [pk] as Pending so its newer local revision re-pushes next cycle. */
     protected abstract fun markPendingForResync(pk: String)
@@ -256,15 +289,24 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
 
                     val resolution = resolver.resolve(localRevision(pkOf(remote)), remote.updatedAt)
                     when (resolution) {
-                        Resolution.ApplyRemote ->
-                            if (!applyRemoteRow(remote)) {
-                                // FK parent absent locally. Expected transiently; permanent only if
-                                // the parent never arrives — which is exactly what this line makes
-                                // diagnosable after the fact.
+                        Resolution.ApplyRemote -> when (applyRemoteRow(remote)) {
+                            RemoteRowOutcome.Applied -> Unit
+
+                            // FK parent absent locally. Expected transiently; permanent only if
+                            // the parent never arrives — which is exactly what this line makes
+                            // diagnosable after the fact. Holding the cursor IS the retry.
+                            RemoteRowOutcome.Deferred -> {
                                 logger.warn("pull skipped fk miss table=$tableName pk=${pkOf(remote)}")
                                 skipped = true
                                 return@forEach
                             }
+
+                            // Unapplicable forever, so it must NOT hold the cursor: fall through to
+                            // the high-water mark below and let the pull move past it. Already
+                            // logged, with its reason, by whoever dropped it — only that code knows
+                            // why, and a second generic line here would double-count the skip.
+                            RemoteRowOutcome.Dropped -> Unit
+                        }
 
                         // Local row is newer than what the server holds: re-flag it Pending so the
                         // newer local revision re-pushes next cycle. Without this, a stale remote
