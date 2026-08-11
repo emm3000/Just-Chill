@@ -80,7 +80,7 @@ class MonthlyAmountByCategoryQueryTest {
         insertTransaction(id = "t-2", categoryId = null, amount = 500)
         insertTransaction(id = "t-3", categoryId = "cat-gone", amount = 300)
         insertTransaction(id = "t-4", categoryId = "cat-live", amount = 200, deletedAt = 900L)
-        insertTransaction(id = "t-5", categoryId = "cat-live", amount = 700, occurredAt = MONTH_END)
+        insertTransaction(id = "t-5", categoryId = "cat-live", amount = 700, occurredAt = JUST_AFTER_MONTH)
 
         val reportTotal = monthRows().sumOf { it.totalAmount ?: 0L }
         val monthTotal = db.transactionsQueries
@@ -150,5 +150,12 @@ class MonthlyAmountByCategoryQueryTest {
         const val MONTH_START = "2026-08-01"
         const val MONTH_END = "2026-09-01"
         const val IN_MONTH = "2026-08-10T21:47:33"
+
+        // The first movement OUTSIDE the window, written the way a movement is actually written.
+        // A bound is not a value: no path in the app can store a bare '2026-09-01' — every write
+        // goes through the encoder, which always emits the seconds — and the read mappers would
+        // drop it if one somehow did. Pinning the boundary with a value the system cannot hold
+        // pins nothing.
+        const val JUST_AFTER_MONTH = "2026-09-01T00:00:00"
     }
 }
