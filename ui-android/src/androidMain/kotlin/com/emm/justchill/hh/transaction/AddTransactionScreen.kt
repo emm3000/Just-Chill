@@ -285,7 +285,7 @@ private fun AddTransactionScreenContent(
 
     if (showDateSheet) {
         DatePickerSheet(
-            currentDate = state.date,
+            currentDate = state.pickerDate,
             onConfirm = { date -> onIntent(AddTransactionIntent.OnDateSelected(date)) },
             onDismiss = { showDateSheet = false },
         )
@@ -321,7 +321,6 @@ private fun AddTransactionPreview() {
         }
         AddTransactionScreenContent(
             state = AddTransactionUiState(
-                date = LocalDate(2026, Month.AUGUST, 10),
                 today = LocalDate(2026, Month.AUGUST, 10),
                 categories = categories,
                 amount = "8540",
