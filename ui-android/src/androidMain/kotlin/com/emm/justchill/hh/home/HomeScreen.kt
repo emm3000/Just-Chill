@@ -60,8 +60,8 @@ import com.emm.justchill.hh.recurring.ConfirmRecurringSheet
 import com.emm.justchill.hh.recurring.PendingRecurringUi
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
-import com.emm.justchill.hh.shared.fullLabel
-import com.emm.justchill.hh.shared.shortLabel
+import com.emm.justchill.hh.shared.monthLabel
+import com.emm.justchill.hh.shared.monthYearLabel
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.components.TransactionRow
@@ -174,7 +174,7 @@ private fun HomeWithData(
                     .padding(top = 14.dp, start = 20.dp, end = 20.dp),
             ) {
                 MonthSelector(
-                    label = homeData.month.fullLabel(),
+                    label = homeData.month.monthYearLabel(),
                     onPrevious = onPreviousMonth,
                     onNext = onNextMonth,
                     modifier = Modifier.align(Alignment.Center),
@@ -461,7 +461,7 @@ private fun MonthEmpty(
     onAddClick: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
-    val prevName = remember(month) { month.previous().shortLabel().lowercase() }
+    val prevName = remember(month) { month.previous().monthLabel().lowercase() }
 
     Column(
         modifier = Modifier
@@ -476,7 +476,7 @@ private fun MonthEmpty(
             contentAlignment = Alignment.Center,
         ) {
             MonthSelector(
-                label = month.fullLabel(),
+                label = month.monthYearLabel(),
                 onPrevious = onPreviousMonth,
                 onNext = onNextMonth,
             )
@@ -496,7 +496,7 @@ private fun MonthEmpty(
                     modifier = Modifier.size(26.dp),
                 )
                 Spacer(Modifier.height(20.dp))
-                EmptyTitle(text = "${month.shortLabel()} aún vacío.")
+                EmptyTitle(text = "${month.monthLabel()} aún vacío.")
                 Spacer(Modifier.height(10.dp))
                 EmptyBody(text = "No registraste nada en este mes\ntodavía.")
                 Spacer(Modifier.height(22.dp))

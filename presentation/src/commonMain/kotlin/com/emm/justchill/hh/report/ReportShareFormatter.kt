@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.report
 
 import com.emm.domain.transaction.TransactionType
-import com.emm.justchill.hh.shared.shortLabel
+import com.emm.justchill.hh.shared.monthLabel
 
 /** The "de cada S/ 100" reference amount the context sentence is built around. */
 private const val PERCENT_BASE = 100
@@ -48,7 +48,7 @@ internal object ReportShareFormatter {
 
     /** Formats the full share text for the "Mes" tab. */
     fun buildMesShareText(state: ReportUiState): String = buildString {
-        appendLine("Reporte de ${state.month.shortLabel()} ${state.month.year}")
+        appendLine("Reporte de ${state.month.monthLabel()} ${state.month.year}")
         val typeLabel = when (state.selectedType) {
             TransactionType.Income -> "Ingresos"
             TransactionType.Spend -> "Gastos"

@@ -41,7 +41,7 @@ import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
-import com.emm.justchill.hh.shared.shortLabel3
+import com.emm.justchill.hh.shared.monthAbbrevLabel
 import kotlinx.datetime.Month
 
 @Composable
@@ -160,7 +160,7 @@ fun MonthPickerSheet(current: YearMonth, onSelect: (YearMonth) -> Unit, onDismis
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = YearMonth(displayYear, month).shortLabel3(),
+                        text = YearMonth(displayYear, month).monthAbbrevLabel(),
                         style = type.labelL,
                         color = if (isActive) colors.textPrimary else colors.textSecondary,
                     )

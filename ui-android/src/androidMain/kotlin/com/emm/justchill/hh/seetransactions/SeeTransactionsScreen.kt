@@ -72,7 +72,7 @@ import com.emm.justchill.core.ui.atoms.MoneyInline
 import com.emm.justchill.core.ui.atoms.MonthSelector
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
-import com.emm.justchill.hh.shared.fullLabel
+import com.emm.justchill.hh.shared.monthYearLabel
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.components.TransactionRow
@@ -294,7 +294,7 @@ private fun MonthSection(state: SeeTransactionsUiState, onPreviousMonth: () -> U
         contentAlignment = Alignment.Center,
     ) {
         MonthSelector(
-            label = state.month.fullLabel(),
+            label = state.month.monthYearLabel(),
             onPrevious = onPreviousMonth,
             onNext = onNextMonth,
         )

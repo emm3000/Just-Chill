@@ -9,7 +9,7 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
-import com.emm.justchill.hh.shared.fullLabel
+import com.emm.justchill.hh.shared.monthYearLabel
 
 /**
  * UI representation of one pending recurring movement, for one period, in the Home "Pendientes"
@@ -56,7 +56,7 @@ fun PendingRecurring.toPendingRecurringUi(currentMonth: YearMonth): PendingRecur
         id = "${movement.id.value}@${periodKey(period)}",
         templateId = movement.id.value,
         period = period,
-        periodLabel = period.fullLabel(),
+        periodLabel = period.monthYearLabel(),
         isCatchUp = period < currentMonth,
         name = movement.name,
         type = movement.type,

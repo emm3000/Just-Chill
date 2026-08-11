@@ -58,8 +58,8 @@ import com.emm.justchill.hh.report.components.TodayPill
 import com.emm.justchill.hh.report.components.ToggleIncomeExpense
 import com.emm.justchill.hh.report.components.TotalAmountHero
 import com.emm.justchill.hh.report.components.TrendsContent
-import com.emm.justchill.hh.shared.fullLabel
-import com.emm.justchill.hh.shared.shortLabel
+import com.emm.justchill.hh.shared.monthLabel
+import com.emm.justchill.hh.shared.monthYearLabel
 import kotlinx.datetime.Month
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -196,7 +196,7 @@ private fun MesContent(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         MonthSelector(
-            label = state.month.fullLabel(),
+            label = state.month.monthYearLabel(),
             onPrevious = onPreviousMonth,
             onNext = onNextMonth,
             onLabelClick = onLabelClick,
@@ -208,7 +208,7 @@ private fun MesContent(
     }
 
     if (state.isMonthEmpty) {
-        MonthEmptyState(month = state.month.fullLabel())
+        MonthEmptyState(month = state.month.monthYearLabel())
     } else {
         ToggleIncomeExpense(
             selected = state.selectedType,
@@ -241,8 +241,8 @@ private fun TotalHeroBlock(state: ReportUiState) {
     val spacing = LocalEmmSpacing.current
 
     val eyebrowText = when (state.selectedType) {
-        TransactionType.Income -> "TOTAL INGRESOS · ${state.month.shortLabel().uppercase()}"
-        TransactionType.Spend -> "TOTAL GASTOS · ${state.month.shortLabel().uppercase()}"
+        TransactionType.Income -> "TOTAL INGRESOS · ${state.month.monthLabel().uppercase()}"
+        TransactionType.Spend -> "TOTAL GASTOS · ${state.month.monthLabel().uppercase()}"
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {

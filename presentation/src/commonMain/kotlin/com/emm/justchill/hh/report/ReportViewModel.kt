@@ -11,8 +11,8 @@ import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
-import com.emm.justchill.hh.shared.shortLabel
-import com.emm.justchill.hh.shared.shortLabel3
+import com.emm.justchill.hh.shared.monthAbbrevLabel
+import com.emm.justchill.hh.shared.monthLabel
 import kotlinx.coroutines.Job
 import kotlin.math.abs
 
@@ -109,7 +109,7 @@ class ReportViewModel(
 
             val total: Money = amounts.fold(Money.Zero) { acc, item -> acc + item.amount }
 
-            val comparisonText = comparison?.let { "vs ${month.previous().shortLabel()}" }
+            val comparisonText = comparison?.let { "vs ${month.previous().monthLabel()}" }
             val comparisonAmountFormatted = comparison?.let { mc ->
                 val abs = if (mc.absoluteDelta.cents < 0) -mc.absoluteDelta else mc.absoluteDelta
                 formatSoles(abs.cents)
@@ -167,7 +167,7 @@ class ReportViewModel(
 
             val barItems = savingsRate.monthly.map { m ->
                 MonthlyBarItem(
-                    monthShortLabel = m.yearMonth.shortLabel3(),
+                    monthShortLabel = m.yearMonth.monthAbbrevLabel(),
                     isCurrentMonth = m.yearMonth == currentYm,
                     incomeAmount = m.income.cents,
                     expenseAmount = m.expense.cents,
