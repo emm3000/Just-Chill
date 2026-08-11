@@ -18,11 +18,21 @@
 
 App Android de finanzas personales, **local-first**, en Play Store alpha cerrada.
 
-**No hay usuarios todavía** — ni en Android ni en iOS. La alpha cerrada no tiene
-instalaciones reales más allá del device del autor. Este doc afirmaba lo contrario
-("hay usuarios reales con data en el device desde `4e6de6c`"); era falso y se
-corrigió el 2026-08-08. La diferencia importa: sin usuarios se puede romper data
-local, rehacer la navegación y postergar compliance sin costo para nadie.
+**No hay usuarios terceros** — ni en Android ni en iOS. Pero **el autor sí usa la app
+a diario**, sobre la release que se distribuye por Firebase App Distribution, y esa
+instalación tiene data real y acumulada.
+
+Esa distinción es la que importa y este doc la perdió dos veces. Primero afirmó
+"hay usuarios reales con data en el device desde `4e6de6c`", que era falso y se
+corrigió el 2026-08-08. La corrección se pasó de largo: quedó como "no hay
+usuarios", y de ahí se leyó una licencia para **romper data local sin costo para
+nadie**. No es cierto — hay un device con data que a nadie le gustaría perder.
+
+Lo que sí sigue siendo barato, porque no hay terceros: rehacer navegación, cambiar
+UI y postergar compliance. Lo que NO es barato es una migración destructiva. Toda
+migración de schema tiene que preservar, y se prueba contra
+`:data:connectedAndroidDeviceTest` antes de tocar trunk — recordar que un push a
+trunk distribuye por App Distribution al device del autor.
 
 Tres tracks grandes cerrados o casi:
 
