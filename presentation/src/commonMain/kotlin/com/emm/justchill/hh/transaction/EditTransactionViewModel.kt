@@ -172,7 +172,7 @@ class EditTransactionViewModel(
 
     private fun updateCurrentDate(millis: Long?) = millis?.let {
         dateInLong = it
-        updateState { copy(date = DateUtils.friendlyDateUTC(it)).recompute() }
+        updateState { copy(date = DateUtils.friendlyDate(it)).recompute() }
     }
 
     private data class Snapshot(

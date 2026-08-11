@@ -1,24 +1,37 @@
 package com.emm.domain.shared
 
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-class DateAndTimeCombiner {
+/**
+ * Builds a timestamp out of a calendar day taken from one value and a time of day taken from
+ * another. Both ends are resolved in [zone]; reading the day in UTC instead would shift it by one
+ * whenever the local time of day sits on the other side of UTC midnight.
+ */
+class DateAndTimeCombiner(private val zone: TimeZone = TimeZone.currentSystemDefault()) {
 
-    fun combineWithUtc(dateInMillis: Long): Long {
-        val selectedDateTime: kotlinx.datetime.LocalDateTime = Instant
-            .fromEpochMilliseconds(dateInMillis)
-            .toLocalDateTime(TimeZone.UTC)
+    /**
+     * Day from [dateInMillis], time of day from the clock. For transactions being created, where
+     * the picker only carries a day and "now" is the best guess at when it happened.
+     */
+    fun combineWithCurrentTime(dateInMillis: Long): Long =
+        combine(dateInMillis, Clock.System.now().toLocalDateTime(zone).time)
 
-        val systemZone: TimeZone = TimeZone.currentSystemDefault()
-        val currentTime = Clock.System.now().toLocalDateTime(systemZone).time
+    /**
+     * Day from [dateInMillis], time of day from [timeSourceInMillis]. For transactions being
+     * edited: moving one to another day must not restamp the hour it was recorded at. Passing the
+     * same value twice returns it unchanged, so re-saving an untouched date is a no-op.
+     */
+    fun combineKeepingTimeOf(dateInMillis: Long, timeSourceInMillis: Long): Long =
+        combine(dateInMillis, timeSourceInMillis.localDateTime().time)
 
-        val combinedDateTime = LocalDateTime(selectedDateTime.date, currentTime)
+    private fun combine(dateInMillis: Long, time: LocalTime): Long =
+        LocalDateTime(dateInMillis.localDateTime().date, time).toInstant(zone).toEpochMilliseconds()
 
-        return combinedDateTime.toInstant(systemZone).toEpochMilliseconds()
-    }
+    private fun Long.localDateTime(): LocalDateTime = Instant.fromEpochMilliseconds(this).toLocalDateTime(zone)
 }

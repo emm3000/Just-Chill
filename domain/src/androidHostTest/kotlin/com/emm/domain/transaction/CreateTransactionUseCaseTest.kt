@@ -36,7 +36,7 @@ class CreateTransactionUseCaseTest {
     @Test
     fun `create should call repository with combined date and provided id`() = runTest {
         every { idProvider.id } returns "fixed-id"
-        every { dateAndTimeCombiner.combineWithUtc(1_000L) } returns 9_999L
+        every { dateAndTimeCombiner.combineWithCurrentTime(1_000L) } returns 9_999L
         coEvery { repository.create(any()) } just Runs
 
         useCase(anyInsert)
@@ -51,7 +51,7 @@ class CreateTransactionUseCaseTest {
     @Test
     fun `create should overwrite caller-provided id with idProvider`() = runTest {
         every { idProvider.id } returns "generated"
-        every { dateAndTimeCombiner.combineWithUtc(any()) } returns 0L
+        every { dateAndTimeCombiner.combineWithCurrentTime(any()) } returns 0L
         coEvery { repository.create(any()) } just Runs
 
         useCase(anyInsert.copy(id = TransactionId("caller-tried-this")))
@@ -64,7 +64,7 @@ class CreateTransactionUseCaseTest {
     @Test
     fun `create should propagate DomainException from repository`() = runTest {
         every { idProvider.id } returns "id"
-        every { dateAndTimeCombiner.combineWithUtc(any()) } returns 0L
+        every { dateAndTimeCombiner.combineWithCurrentTime(any()) } returns 0L
         coEvery { repository.create(any()) } throws DomainException.DatabaseError(RuntimeException("boom"))
 
         val ex = assertFailsWith<DomainException.DatabaseError> { useCase(anyInsert) }

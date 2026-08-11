@@ -19,7 +19,7 @@ class CreateTransactionUseCase(
                 ValidationCode.AmountMustBePositive,
             )
         }
-        val dateAndTimeCombined: Long = dateAndTimeCombiner.combineWithUtc(transactionInsert.date)
+        val dateAndTimeCombined: Long = dateAndTimeCombiner.combineWithCurrentTime(transactionInsert.date)
         val transaction: TransactionInsert = transactionInsert.copy(
             id = TransactionId(uniqueIdProvider.id),
             date = dateAndTimeCombined,
