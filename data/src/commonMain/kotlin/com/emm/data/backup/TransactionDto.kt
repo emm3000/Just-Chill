@@ -1,5 +1,6 @@
 package com.emm.data.backup
 
+import com.emm.data.shared.enumValueOrNull
 import com.emm.data.shared.toOccurredAtOrNull
 import com.emm.data.shared.toOccurredAtText
 import com.emm.domain.shared.AccountId
@@ -39,18 +40,28 @@ fun Transaction.toDto() = TransactionDto(
 )
 
 /**
- * Null when the file carries an `occurredAt` that is not a local datetime — a corrupted or
- * hand-edited row is dropped rather than restored at an invented date.
+ * Null when the file carries a row this app cannot interpret — an `occurredAt` that is not a local
+ * datetime, or a `type` that is not one of ours. A corrupted or hand-edited row is dropped rather
+ * than restored at an invented date or under a guessed type.
+ *
+ * Null for the type too, not a throw: this runs inside the import's database transaction, and the
+ * same skip-the-row policy the storage mappers apply (`TransactionEntity.asExternalModelOrNull`)
+ * costs one row, where a throw would abort the whole restore and report the user's file as broken.
  */
 fun TransactionDto.toEntityOrNull(): Transaction? {
-    val parsedOccurredAt: LocalDateTime = occurredAt.toOccurredAtOrNull() ?: return null
-    return Transaction(
-        transactionId = TransactionId(transactionId),
-        type = TransactionType.valueOf(type),
-        amount = Money(amountCents),
-        description = description,
-        occurredAt = parsedOccurredAt,
-        accountId = AccountId(accountId),
-        categoryId = categoryId?.let { CategoryId(it) },
-    )
+    val parsedOccurredAt: LocalDateTime? = occurredAt.toOccurredAtOrNull()
+    val parsedType: TransactionType? = enumValueOrNull<TransactionType>(type)
+    return if (parsedOccurredAt == null || parsedType == null) {
+        null
+    } else {
+        Transaction(
+            transactionId = TransactionId(transactionId),
+            type = parsedType,
+            amount = Money(amountCents),
+            description = description,
+            occurredAt = parsedOccurredAt,
+            accountId = AccountId(accountId),
+            categoryId = categoryId?.let { CategoryId(it) },
+        )
+    }
 }

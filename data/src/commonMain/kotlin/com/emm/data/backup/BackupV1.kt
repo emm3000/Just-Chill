@@ -24,7 +24,12 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 internal data class ExportPayloadV1Dto(
-    val schemaVersion: Int,
+    /**
+     * Defaulted exactly as v1's own DTO defaulted it. A file with no `schemaVersion` key is a v1
+     * file — the field only started being written when there was a second version to distinguish —
+     * and this default is what lets that file deserialize instead of failing on a missing field.
+     */
+    val schemaVersion: Int = BACKUP_SCHEMA_VERSION_V1,
     val exportedAt: Long,
     val appVersion: String,
     val accounts: List<AccountDto>,
