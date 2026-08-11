@@ -17,7 +17,6 @@
     <ID>FunctionNaming:Font0.commonMain.kt:@InternalResourceApi internal fun _collectCommonMainFont0Resources</ID>
     <ID>FunctionSignature:AuthScreen.kt:@Composable private fun AuthContent</ID>
     <ID>FunctionSignature:CentsFormatter.kt:fun formatCentsForDisplay: String</ID>
-    <ID>FunctionSignature:DateUtils.kt:DateUtils$private fun today: LocalDate</ID>
     <ID>FunctionSignature:IconsAll.kt:fun String.normalizeForSearch: String</ID>
     <ID>FunctionSignature:Res.kt:Res$public fun getUri: String</ID>
     <ID>FunctionSignature:Res.kt:Res$public suspend fun readBytes: ByteArray</ID>

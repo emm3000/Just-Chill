@@ -5,6 +5,10 @@ import com.emm.domain.transaction.TransactionWithCategory
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
+import com.emm.justchill.hh.shared.localDateOf
+import com.emm.justchill.hh.shared.relativeDayLabel
+import com.emm.justchill.hh.shared.timeLabel
+import kotlinx.datetime.LocalDate
 
 data class TransactionUi(
     val transactionId: String,
@@ -17,7 +21,7 @@ data class TransactionUi(
     val category: CategoryUi,
 )
 
-private fun TransactionWithCategory.toUi(): TransactionUi {
+private fun TransactionWithCategory.toUi(today: LocalDate): TransactionUi {
     val formattedNumber: String = fromCentsToSolesWith(amount)
     return TransactionUi(
         transactionId = transactionId.value,
@@ -28,8 +32,8 @@ private fun TransactionWithCategory.toUi(): TransactionUi {
         },
         description = description,
         date = date,
-        readableDate = DateUtils.friendlyDate(date),
-        readableTime = DateUtils.readableTime(date),
+        readableDate = relativeDayLabel(localDateOf(date), today),
+        readableTime = timeLabel(date),
         category = CategoryUi(
             iconId = category?.icon,
             colorId = category?.color,
@@ -37,4 +41,9 @@ private fun TransactionWithCategory.toUi(): TransactionUi {
     )
 }
 
-fun List<TransactionWithCategory>.toUi() = map(TransactionWithCategory::toUi)
+/**
+ * [today] is threaded in from the caller's clock rather than read here, so every row in one mapping
+ * pass resolves its Hoy/Ayer against the same day — and so a ViewModel's injected clock reaches the
+ * label instead of being bypassed by an ambient one.
+ */
+fun List<TransactionWithCategory>.toUi(today: LocalDate) = map { it.toUi(today) }

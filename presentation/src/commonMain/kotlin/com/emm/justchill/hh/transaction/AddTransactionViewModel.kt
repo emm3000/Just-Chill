@@ -17,11 +17,17 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.shared.Empty
+import com.emm.justchill.hh.shared.startOfDayMillis
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 
+@Suppress("LongParameterList")
 class AddTransactionViewModel(
     private val createTransaction: CreateTransactionUseCase,
     private val getTopUsedCategoryIds: GetTopUsedCategoryIdsUseCase,
@@ -29,11 +35,12 @@ class AddTransactionViewModel(
     private val getLastUsedAccountId: GetLastUsedAccountIdUseCase,
     accountRepository: AccountRepository,
     categoryRepository: CategoryRepository,
+    private val clock: Clock = Clock.System,
+    private val zone: TimeZone = TimeZone.currentSystemDefault(),
 ) : MviViewModel<AddTransactionUiState, AddTransactionIntent, AddTransactionEffect>() {
 
-    override val initialState = AddTransactionUiState()
+    override val initialState = AddTransactionUiState(date = today(), today = today())
 
-    private var dateInLong: Long = DateUtils.currentDateInMillis()
     private val allCategories: MutableMap<CategoryType, List<SelectableCategory>> = mutableMapOf()
 
     // Cached last-used account id — resolved before the combine flow fires.
@@ -73,13 +80,11 @@ class AddTransactionViewModel(
         when (intent) {
             is AddTransactionIntent.OnAmountChange -> updateState { copy(amount = intent.value).touched() }
 
-            is AddTransactionIntent.OnDateChange -> updateState { copy(date = intent.value).touched() }
-
             is AddTransactionIntent.OnDescriptionChange -> updateState { copy(description = intent.value).touched() }
 
             is AddTransactionIntent.OnTransactionTypeChange -> changeTransactionType(intent.value)
 
-            is AddTransactionIntent.OnDateChangeInMillis -> updateCurrentDate(intent.value)
+            is AddTransactionIntent.OnDateSelected -> updateState { copy(date = intent.value).touched() }
 
             AddTransactionIntent.OnSave -> addTransaction()
 
@@ -125,13 +130,15 @@ class AddTransactionViewModel(
     }
 
     private fun reset() {
-        dateInLong = DateUtils.currentDateInMillis()
         updateState {
             val defaultType = TransactionType.Income
+            // The clock is re-read here, not reused from construction: the add screen is reset
+            // after every save and can outlive the day it was opened on.
             copy(
                 amount = "",
                 description = String.Empty,
-                date = DateUtils.friendlyDate(dateInLong),
+                date = today(),
+                today = today(),
                 transactionType = defaultType,
                 categories = allCategories[defaultType.categoryType].orEmpty(),
                 categorySelected = allCategories[defaultType.categoryType]?.firstOrNull(),
@@ -200,20 +207,20 @@ class AddTransactionViewModel(
         sendEffect(AddTransactionEffect.TransactionSaved)
     }
 
+    // The one place the picked day becomes an instant. CreateTransactionUseCase then swaps this
+    // midnight for the current time of day — the day is what the user chose, the hour is when it
+    // was recorded.
     private fun createTransactionInsert(): TransactionInsert = TransactionInsert(
         type = currentState.transactionType,
         description = currentState.description,
-        date = dateInLong,
+        date = startOfDayMillis(currentState.date, zone),
         amount = centsToMoney(currentState.amount),
         categoryId = currentState.categorySelected?.categoryId,
         accountId = currentState.accountSelected?.accountId
             ?: error("accountSelected required to build TransactionInsert — UI should have disabled save"),
     )
 
-    private fun updateCurrentDate(millis: Long?) = millis?.let {
-        dateInLong = it
-        updateState { copy(date = DateUtils.friendlyDate(it)).touched() }
-    }
+    private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
 }
 
 private fun mapToUi(categories: List<Category>): List<SelectableCategory> = categories.map {

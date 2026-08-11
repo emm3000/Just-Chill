@@ -47,15 +47,13 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
-import kotlin.time.Instant
 
-private data class Shortcut(val label: String, val millis: Long)
+private data class Shortcut(val label: String, val date: LocalDate)
 
 /**
  * Bottom sheet for picking a date.
@@ -63,37 +61,33 @@ private data class Shortcut(val label: String, val millis: Long)
  * Shortcut pills (Hoy / Ayer / Esta semana / Este mes) call [onConfirm] directly.
  * The day grid updates in-memory selection; only the CTA commits it.
  *
- * @param currentMillis  Currently selected date in epoch-millis (device time-zone).
- * @param onConfirm      Delivers the selected epoch-millis to the caller.
- * @param onDismiss      Dismisses the sheet.
+ * The sheet speaks [LocalDate] in both directions. It always did internally — it took epoch millis
+ * only to convert them to a day on the first line and back on the last — and that round trip was
+ * what let both call sites hand it `DateUtils.currentDateInMillis()` instead of the date actually
+ * selected, so it reopened on today whatever the user had chosen.
+ *
+ * @param currentDate  The day currently selected, which the grid opens on.
+ * @param onConfirm    Delivers the chosen day to the caller.
+ * @param onDismiss    Dismisses the sheet.
  */
 @Composable
-fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: () -> Unit) {
+fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val zone = TimeZone.currentSystemDefault()
     val today: LocalDate = Clock.System.now().toLocalDateTime(zone).date
 
-    val initialDate: LocalDate = remember(currentMillis) {
-        Instant.fromEpochMilliseconds(currentMillis).toLocalDateTime(zone).date
-    }
-    var selectedDate: LocalDate by remember { mutableStateOf(initialDate) }
+    var selectedDate: LocalDate by remember(currentDate) { mutableStateOf(currentDate) }
     // First day of the currently displayed month.
-    var displayedMonth: LocalDate by remember { mutableStateOf(initialDate.firstOfMonth()) }
+    var displayedMonth: LocalDate by remember(currentDate) { mutableStateOf(currentDate.firstOfMonth()) }
 
     val shortcuts: List<Shortcut> = remember(today) {
         listOf(
-            Shortcut("Hoy", today.atStartOfDayIn(zone).toEpochMilliseconds()),
-            Shortcut("Ayer", today.minus(1, DateTimeUnit.DAY).atStartOfDayIn(zone).toEpochMilliseconds()),
-            Shortcut(
-                "Esta semana",
-                today.startOfWeekMonday().atStartOfDayIn(zone).toEpochMilliseconds(),
-            ),
-            Shortcut(
-                "Este mes",
-                today.firstOfMonth().atStartOfDayIn(zone).toEpochMilliseconds(),
-            ),
+            Shortcut("Hoy", today),
+            Shortcut("Ayer", today.minus(1, DateTimeUnit.DAY)),
+            Shortcut("Esta semana", today.startOfWeekMonday()),
+            Shortcut("Este mes", today.firstOfMonth()),
         )
     }
 
@@ -145,7 +139,7 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
                         .background(if (isActive) activePillBg else Color.Transparent)
                         .border(BorderStroke(1.dp, if (isActive) activePillBg else colors.border), pillShape)
                         .clickable {
-                            onConfirm(shortcut.millis)
+                            onConfirm(shortcut.date)
                             onDismiss()
                         }
                         .padding(horizontal = 14.dp, vertical = 6.dp),
@@ -268,8 +262,7 @@ fun DatePickerSheet(currentMillis: Long, onConfirm: (Long) -> Unit, onDismiss: (
                 .clip(confirmShape)
                 .background(colors.textPrimary)
                 .clickable {
-                    val millis = selectedDate.atStartOfDayIn(zone).toEpochMilliseconds()
-                    onConfirm(millis)
+                    onConfirm(selectedDate)
                     onDismiss()
                 },
             verticalAlignment = Alignment.CenterVertically,
