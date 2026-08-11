@@ -4,11 +4,14 @@ import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
+import com.emm.data.transaction.asEntity
+import com.emm.data.transaction.asExternalModel
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.error.ValidationCode
 import com.emm.domain.transaction.TransactionRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -139,6 +142,124 @@ class DefaultBackupRepositoryImportTest {
         assertEquals(beforeAccounts, db.accountsQueries.all().executeAsList().size)
     }
 
+    // ── an untrusted file: rows the app cannot interpret ──────────────────────
+
+    /**
+     * The file is plain JSON in storage the user chose. It can have been hand-edited, truncated, or
+     * written by something else — so a row in it is not automatically a row this app can hold.
+     *
+     * Writing one anyway is the worst of the available options, and it is what used to happen: the
+     * column is NOT NULL so the INSERT succeeds, but every mapper on the read path drops the row.
+     * The movement is then invisible on every screen AND counted in the balance, which is precisely
+     * the "the total disagrees with the list" defect the whole occurredAt model exists to remove.
+     */
+    @Test
+    fun `a movement the app cannot read is not restored, and the balance still matches the ledger`() = runTest {
+        val json = payloadWithTransactions(
+            """{"transactionId":"tx-ok","type":"Income","amountCents":10000,"description":"Sueldo",""" +
+                """"occurredAt":"2026-05-23T09:33:20","accountId":"acc-1","categoryId":null}""",
+            // A hand-edited date: one-digit month and day, a space instead of the 'T'. No writer in
+            // the app can produce it, and nothing on the read path can parse it.
+            """{"transactionId":"tx-broken","type":"Income","amountCents":777700,"description":"Roto",""" +
+                """"occurredAt":"2026-8-1 12:00","accountId":"acc-1","categoryId":null}""",
+        )
+
+        repository.importFromJson(json)
+
+        assertEquals(0, rawCount("SELECT COUNT(*) FROM transactions WHERE transactionId = 'tx-broken'"))
+        // The two numbers Home puts next to each other: the balance aggregate reads the column
+        // directly, the ledger goes through the mappers. They must fold the same rows.
+        val balance = db.transactionsQueries.liveTotals().executeAsOne().balance
+        val visible = db.transactionsQueries.all().executeAsList().asEntity().asExternalModel()
+        assertEquals(visible.sumOf { it.amount.cents }, balance)
+        assertEquals(10_000L, balance)
+    }
+
+    @Test
+    fun `the reported count is what landed, not what the file held`() = runTest {
+        val json = payloadWithTransactions(
+            """{"transactionId":"tx-ok","type":"Income","amountCents":10000,"description":"Sueldo",""" +
+                """"occurredAt":"2026-05-23T09:33:20","accountId":"acc-1","categoryId":null}""",
+            """{"transactionId":"tx-broken","type":"Income","amountCents":7777,"description":"Roto",""" +
+                """"occurredAt":"not a date at all","accountId":"acc-1","categoryId":null}""",
+        )
+
+        val stats = repository.importFromJson(json)
+
+        // "2 movimientos importados" for a file whose second movement is nowhere is a lie the user
+        // has no way to check — and the count is the only feedback the import gives.
+        assertEquals(1, stats.transactions)
+    }
+
+    @Test
+    fun `a movement with a type the app does not know is dropped rather than failing the import`() = runTest {
+        val json = payloadWithTransactions(
+            """{"transactionId":"tx-ok","type":"Spend","amountCents":5000,"description":"Mercado",""" +
+                """"occurredAt":"2026-05-23T09:33:20","accountId":"acc-1","categoryId":null}""",
+            """{"transactionId":"tx-weird","type":"Transfer","amountCents":5000,"description":"?",""" +
+                """"occurredAt":"2026-05-23T09:33:20","accountId":"acc-1","categoryId":null}""",
+        )
+
+        val stats = repository.importFromJson(json)
+
+        // Same skip-the-row policy the storage mappers apply. One uninterpretable movement costs
+        // one movement — never the whole restore, and never a file reported as corrupt.
+        assertEquals(1, stats.transactions)
+        assertEquals(1, db.transactionsQueries.all().executeAsList().size)
+    }
+
+    @Test
+    fun `a movement written without seconds restores in the canonical shape`() = runTest {
+        // The lenient parser accepts it, so it must not be dropped — but it is re-encoded on the
+        // way in, so two writes of the same moment cannot end up as two different strings.
+        val json = payloadWithTransactions(
+            """{"transactionId":"tx-short","type":"Income","amountCents":10000,"description":"Sueldo",""" +
+                """"occurredAt":"2026-05-23T09:33","accountId":"acc-1","categoryId":null}""",
+        )
+
+        repository.importFromJson(json)
+
+        assertEquals("2026-05-23T09:33:00", db.transactionsQueries.find("tx-short").executeAsOne().occurredAt)
+    }
+
+    // ── the version probe ─────────────────────────────────────────────────────
+
+    @Test
+    fun `a file with no schemaVersion reads as version 1 rather than as an unreadable version`() = runTest {
+        // The key only started being written when there was a second version to tell apart, so its
+        // absence means "old file", not "from the future". Saying otherwise blames the wrong thing.
+        val json = """{"exportedAt":0,"appVersion":"2.4.0","accounts":[""" +
+            """{"accountId":"acc-1","name":"BCP","type":"Bank","currency":"PEN"}],"categories":[],""" +
+            """"transactions":[{"transactionId":"tx-1","type":"Income","amountCents":450000,""" +
+            """"description":"Sueldo","date":1748000000000,"accountId":"acc-1","categoryId":null}]}"""
+
+        val stats = repository.importFromJson(json)
+
+        assertEquals(1, stats.transactions)
+        assertEquals("2025-05-23T06:33:20", db.transactionsQueries.find("tx-1").executeAsOne().occurredAt)
+    }
+
+    @Test
+    fun `a file whose root is not an object is reported as corrupt, not as a raw crash`() = runTest {
+        val ex = assertFailsWith<DomainException.ValidationError> {
+            repository.importFromJson("""[{"schemaVersion":2}]""")
+        }
+
+        assertEquals(ValidationCode.BackupFileInvalid, ex.code)
+    }
+
+    @Test
+    fun `a schemaVersion that is not a number is reported as corrupt, not as an unsupported version`() = runTest {
+        // It used to escape the guard entirely: the probe ran outside it, so the accessor's own
+        // throw reached the caller and the user got the generic failure instead of this one.
+        listOf("""{"schemaVersion":{}}""", """{"schemaVersion":[]}""", """{"schemaVersion":"dos"}""").forEach { root ->
+            val ex = assertFailsWith<DomainException.ValidationError>("root was $root") {
+                repository.importFromJson(root)
+            }
+            assertEquals(ValidationCode.BackupFileInvalid, ex.code, "root was $root")
+        }
+    }
+
     // ── replace semantics: tombstones, not physical deletes ───────────────────
 
     @Test
@@ -242,6 +363,18 @@ class DefaultBackupRepositoryImportTest {
             }
         """.trimIndent()
     }
+
+    /** One account, no categories, and exactly the transaction JSON the test wrote by hand. */
+    private fun payloadWithTransactions(vararg transactionsJson: String): String = """
+        {
+            "schemaVersion": 2,
+            "exportedAt": 0,
+            "appVersion": "1.0.0",
+            "accounts": [{"accountId":"acc-1","name":"Cuenta","type":"Cash","currency":"PEN"}],
+            "categories": [],
+            "transactions": [${transactionsJson.joinToString(",")}]
+        }
+    """.trimIndent()
 
     private companion object {
         const val EMPTY_PAYLOAD_JSON = """{"schemaVersion":2,"exportedAt":0,"appVersion":"1.0.0",""" +
