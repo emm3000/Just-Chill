@@ -4,7 +4,6 @@ import com.emm.domain.shared.Money
 import com.emm.domain.shared.RecurringMovementId
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.shared.YearMonth
-import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 import com.emm.domain.transaction.TransactionInsert
@@ -27,7 +26,7 @@ class ConfirmRecurringMovementUseCase(
      * 2. monotonic guard: [yearMonth] must be newer than the template's high-water mark
      * 3. resolve amount: template.amount if non-null, else callerAmount (null → ValidationError)
      * 4. validate resolved amount > 0
-     * 5. build TransactionInsert — date = the period's own due day; timestamps from a single now
+     * 5. build TransactionInsert — date = the period's own due day; `:data` stamps the timestamps
      * 6. repo.confirm(insert, id, periodKey) — atomic in the data layer
      *
      * The transaction is dated on [yearMonth]'s due day, not on today. Catching up on July while
@@ -65,7 +64,6 @@ class ConfirmRecurringMovementUseCase(
             ),
         )
 
-        val now = currentTimeInMillis()
         val insert = TransactionInsert(
             id = TransactionId(Uuid.random().toString()),
             type = template.type,
@@ -74,8 +72,6 @@ class ConfirmRecurringMovementUseCase(
             categoryId = template.categoryId,
             date = template.dueDateMillis(yearMonth, timeZone),
             accountId = template.accountId,
-            updatedAt = now,
-            createdAt = now,
         )
 
         repository.confirm(insert, templateId, periodKey(yearMonth))

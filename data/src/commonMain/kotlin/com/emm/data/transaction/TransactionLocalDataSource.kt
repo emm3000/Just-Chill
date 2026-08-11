@@ -29,6 +29,7 @@ private const val SEARCH_RESULT_CAP = 200L
 class TransactionLocalDataSource(private val tq: TransactionsQueries, private val clock: Clock) {
 
     suspend fun create(transactionInsert: TransactionInsert) = withContext(ioDispatcher) {
+        val now = clock.nowMillis()
         tq.insert(
             transactionId = transactionInsert.id.value,
             type = transactionInsert.type.name,
@@ -37,8 +38,8 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries, private va
             date = transactionInsert.date,
             categoryId = transactionInsert.categoryId?.value,
             accountId = transactionInsert.accountId.value,
-            updatedAt = transactionInsert.updatedAt,
-            createdAt = transactionInsert.createdAt,
+            updatedAt = now,
+            createdAt = now,
         )
         Unit
     }
