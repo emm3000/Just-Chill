@@ -3,10 +3,14 @@ package com.emm.domain.transaction
 import com.emm.domain.shared.DateAndTimeCombiner
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
+import kotlinx.datetime.TimeZone
+import kotlin.time.Clock
 
 class UpdateTransactionUseCase(
     private val repository: TransactionRepository,
     private val dateAndTimeCombiner: DateAndTimeCombiner,
+    private val clock: Clock = Clock.System,
+    private val zone: TimeZone = TimeZone.currentSystemDefault(),
 ) {
 
     suspend operator fun invoke(oldTransaction: Transaction, transactionUpdate: TransactionUpdate) {
@@ -20,6 +24,7 @@ class UpdateTransactionUseCase(
             dateInMillis = transactionUpdate.date,
             timeSourceInMillis = oldTransaction.date,
         )
+        ensureNotFutureDated(dateAndTimeCombined, clock, zone)
         val updatedTransaction: TransactionUpdate = transactionUpdate.copy(date = dateAndTimeCombined)
         repository.update(
             transactionId = oldTransaction.transactionId,

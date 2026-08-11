@@ -15,6 +15,7 @@ enum class ValidationCode {
     AccountRequired,
     AmountRequired,
     AmountMustBePositive,
+    DateInTheFuture,
     DayOfMonthOutOfRange,
     RecurringAlreadyConfirmed,
     AccountHasTransactions,
