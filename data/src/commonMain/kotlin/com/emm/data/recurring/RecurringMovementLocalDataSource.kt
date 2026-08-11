@@ -5,20 +5,21 @@ import app.cash.sqldelight.coroutines.mapToList
 import com.emm.data.EmmDatabaseData
 import com.emm.data.Recurring_movementsQueries
 import com.emm.data.shared.ioDispatcher
+import com.emm.data.shared.nowMillis
 import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.recurring.RecurringMovementDetails
 import com.emm.domain.recurring.RecurringMovementInsert
-import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 import com.emm.domain.transaction.TransactionInsert
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData) {
+class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData, private val clock: Clock) {
 
     private val rmq: Recurring_movementsQueries
         get() = emmDatabase.recurring_movementsQueries
@@ -44,7 +45,7 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData)
 
     @OptIn(ExperimentalUuidApi::class)
     suspend fun create(insert: RecurringMovementInsert) = withContext(ioDispatcher) {
-        val entity = insert.toPersistParams(id = Uuid.random().toString())
+        val entity = insert.toPersistParams(id = Uuid.random().toString(), now = clock.nowMillis())
         rmq.insert(
             id = entity.id,
             name = entity.name,
@@ -73,14 +74,14 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData)
             accountId = insert.accountId.value,
             dayOfMonth = insert.dayOfMonth.toLong(),
             isActive = if (insert.isActive) 1L else 0L,
-            updatedAt = currentTimeInMillis(),
+            updatedAt = clock.nowMillis(),
             id = id,
         )
         Unit
     }
 
     suspend fun softDelete(id: String) = withContext(ioDispatcher) {
-        val now = currentTimeInMillis()
+        val now = clock.nowMillis()
         rmq.softDelete(deletedAt = now, updatedAt = now, id = id)
         Unit
     }

@@ -9,6 +9,7 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Pins the SQL-side cap on search results against a real in-memory SQLite schema.
@@ -28,7 +29,7 @@ class SearchTransactionsCapTest {
         driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         EmmDatabaseData.Schema.create(driver)
         val db = EmmDatabaseData(driver)
-        dataSource = TransactionLocalDataSource(db.transactionsQueries)
+        dataSource = TransactionLocalDataSource(db.transactionsQueries, Clock.System)
         exec("PRAGMA foreign_keys=ON")
         exec(
             "INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt) " +

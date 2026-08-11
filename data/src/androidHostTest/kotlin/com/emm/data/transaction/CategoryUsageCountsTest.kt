@@ -10,6 +10,7 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Pins `countPerCategory` and its mapping to the domain usage map against a real in-memory
@@ -29,7 +30,7 @@ class CategoryUsageCountsTest {
         driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         EmmDatabaseData.Schema.create(driver)
         val db = EmmDatabaseData(driver)
-        repository = DefaultTransactionRepository(TransactionLocalDataSource(db.transactionsQueries))
+        repository = DefaultTransactionRepository(TransactionLocalDataSource(db.transactionsQueries, Clock.System))
         exec("PRAGMA foreign_keys=ON")
         exec(
             "INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt) " +
