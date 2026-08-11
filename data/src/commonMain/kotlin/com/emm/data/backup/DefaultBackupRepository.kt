@@ -13,6 +13,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.time.Clock
 
 private val exportJson = Json {
@@ -23,6 +27,8 @@ private val exportJson = Json {
 private val importJson = Json {
     ignoreUnknownKeys = true
 }
+
+private const val SCHEMA_VERSION_KEY = "schemaVersion"
 
 class DefaultBackupRepository(
     private val transactions: TransactionRepository,
@@ -56,29 +62,7 @@ class DefaultBackupRepository(
     }
 
     override suspend fun importFromJson(json: String): ImportStats {
-        val payload = try {
-            importJson.decodeFromString<ExportPayloadDto>(json)
-        } catch (e: SerializationException) {
-            throw DomainException.ValidationError(
-                "Invalid or corrupted file",
-                ValidationCode.BackupFileInvalid,
-                cause = e,
-            )
-        } catch (e: IllegalArgumentException) {
-            // Enum value not found when deserializing DTOs
-            throw DomainException.ValidationError(
-                "Invalid or corrupted file",
-                ValidationCode.BackupFileInvalid,
-                cause = e,
-            )
-        }
-
-        if (payload.schemaVersion != BACKUP_SCHEMA_VERSION) {
-            throw DomainException.ValidationError(
-                "Unsupported file version.",
-                ValidationCode.BackupVersionUnsupported,
-            )
-        }
+        val payload = decodePayload(json)
 
         return safeDbCall {
             val now = Clock.System.now().toEpochMilliseconds()
@@ -107,6 +91,58 @@ class DefaultBackupRepository(
                 transactions = payload.transactions.size,
             )
         }
+    }
+
+    /**
+     * Reads the file at whichever format version it declares.
+     *
+     * The version is read FIRST, from the raw JSON, and only then is the payload decoded as the
+     * shape that version actually had. Decoding optimistically and falling back would mean a v1
+     * file was parsed by v2's rules first, which is exactly the mistake that makes an old file
+     * report itself as corrupt.
+     */
+    private fun decodePayload(json: String): ExportPayloadDto {
+        val root = parse { importJson.parseToJsonElement(json).jsonObject }
+        val version = root[SCHEMA_VERSION_KEY]?.jsonPrimitive?.intOrNull
+
+        return when (version) {
+            BACKUP_SCHEMA_VERSION -> parse {
+                importJson.decodeFromJsonElement<ExportPayloadDto>(root)
+            }
+
+            // Files already on the user's disk, written before a transaction's occurrence stopped
+            // being an instant. They restore, and they always will — see BackupV1.kt.
+            BACKUP_SCHEMA_VERSION_V1 -> parse {
+                importJson.decodeFromJsonElement<ExportPayloadV1Dto>(root).toCurrent()
+            }
+
+            else -> throw DomainException.ValidationError(
+                "Unsupported file version.",
+                ValidationCode.BackupVersionUnsupported,
+            )
+        }
+    }
+
+    /**
+     * Anything the deserializer rejects is the same answer to the user: this file is not one of
+     * ours. Both throw types are caught — kotlinx-serialization raises [SerializationException]
+     * for a shape mismatch and [IllegalArgumentException] for an enum value it does not know.
+     */
+    @Suppress("SwallowedException")
+    private inline fun <T> parse(block: () -> T): T = try {
+        block()
+    } catch (e: SerializationException) {
+        throw DomainException.ValidationError(
+            "Invalid or corrupted file",
+            ValidationCode.BackupFileInvalid,
+            cause = e,
+        )
+    } catch (e: IllegalArgumentException) {
+        throw DomainException.ValidationError(
+            "Invalid or corrupted file",
+            ValidationCode.BackupFileInvalid,
+            cause = e,
+        )
     }
 
     // Insert-then-update rather than INSERT OR REPLACE: see the comment block in accounts.sq.
