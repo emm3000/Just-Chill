@@ -12,7 +12,9 @@ working in that module.
 > every gate run — it is the only thing stopping the exported core from silently filling with
 > `java.*`. One writer per slice, review inline. Android-only *capabilities* may live in
 > `:androidApp`, but their platform-neutral *logic* stays in the KMP core.
-> **There are no users on either platform** — see `docs/PROGRESS.md`.
+> **No third-party users on either platform, but the author uses the release build daily** via
+> Firebase App Distribution, on a device holding real accumulated data. UI and navigation are cheap
+> to redo; a destructive migration is not. See `docs/PROGRESS.md`.
 
 ## Build & Development Commands
 

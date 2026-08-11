@@ -32,10 +32,11 @@ Almost everything lives in `commonMain`. `androidMain` / `iosMain` hold exactly 
 - Schema in `data/src/commonMain/sqldelight/com/emm/data/`: `accounts.sq`, `categories.sq`,
   `transactions.sq`, `recurring_movements.sq`. Migrations `0.sqm`, `1.sqm`, `2.sqm` (current schema v3).
 - **Migrations are MANDATORY for every schema change.** Never edit a `.sq` CREATE TABLE without a
-  matching `.sqm`, and never reset the schema. This file used to justify that with "real user data
-  exists on devices since `4e6de6c`" — that claim was false and `docs/PROGRESS.md` retracted it on
-  2026-08-08. The rule stands on its own: a missing migration is the one defect this repo cannot
-  test its way out of, because it only fires when an already-installed app opens a newer schema.
+  matching `.sqm`, and never reset the schema. There IS real data to lose: no third-party users, but
+  the author runs the release build daily off Firebase App Distribution, and every push to trunk
+  distributes to that device. The rule also stands on its own — a missing migration is the one
+  defect this repo cannot test its way out of, because it only fires when an already-installed app
+  opens a newer schema.
   The snapshot lives in `src/commonMain/sqldelight/databases/`; regenerate with
   `./gradlew :data:generateCommonMainEmmDatabaseDataSchema` when bumping the version.
   `./gradlew :data:verifySqlDelightMigration` replays the `.sqm` files over that snapshot and

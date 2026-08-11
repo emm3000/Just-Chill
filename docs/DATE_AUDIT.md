@@ -33,13 +33,15 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
   pattern works in this codebase. **Needs a product decision and a migration — the only finding here
   that touches the schema, and the one that gets expensive once there are users.**
 
-- [ ] **6. A global clock hidden in entity constructors.** `currentTimeInMillis()`
-  (`domain/shared/DateExtensions.kt`) is called from **19 sites**, including the default arguments of
-  `TransactionInsert`, `AccountUpsert` and `Transaction.Empty`. An entity that reads the wall clock
-  on construction is doing hidden I/O: it is not injectable, not testable, and `createdAt` and
-  `updatedAt` are two separate reads that can differ by a millisecond.
+- [x] **6. A global clock hidden in entity constructors.** `currentTimeInMillis()` was called from
+  **19 sites**, including the default arguments of `TransactionInsert`, `AccountUpsert` and
+  `Transaction.Empty`. An entity that reads the wall clock on construction is doing hidden I/O.
 
-  Mechanical but wide. The `Clock` seam the transaction ViewModels now use is the shape to copy.
+  The timestamps were **removed** from both entity types rather than threaded through: they are
+  storage metadata, and `:data` already stamped them at the write on the `update` and `softDelete`
+  paths — only `insert` trusted the caller, so the layer disagreed with itself about who owned the
+  column. `:data` now takes an injected `Clock` and reads it once per write.
+  `currentTimeInMillis()` is gone. → commits `f7b493b`, `6d10a8c`
 
 - [~] **7. The timezone is ambient where the clock is injected.** `YearMonth.startInclusiveMillis`,
   `GetHomeDataUseCase` and the `TransactionUi` read path all resolve days through
@@ -58,11 +60,15 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
 - [x] **10. `Instant.parse` on server input with no guard**, inside the per-page database
   transaction. The class guarded a *missing* `server_updated_at` but not an unreadable one, so a
   malformed value took down the whole pull. → **#74**
-- [ ] **11. Nothing guards a future date.** The picker navigates forward without a limit and the
-  schema accepts anything; `relativeDayLabel` already has a "Mañana" branch, so this was known. A
-  transaction dated in 2030 enters the balance and captures `lastUsedAccountId`, which orders by
-  `date DESC`. Decide whether the cap belongs in the picker, in `CreateTransactionUseCase`, or
-  nowhere.
+- [x] **11. Nothing guards a future date.** The picker navigated forward without a limit and the
+  schema accepts anything, so a transaction dated in 2030 entered the balance and captured
+  `lastUsedAccountId`, which orders by `date DESC`.
+
+  The rule lives in `TransactionDateRules.ensureNotFutureDated`, called by both write paths after
+  the date is combined — it belongs to the transaction, not to creating or editing one. It compares
+  calendar days, not instants, because the Edit path keeps the original transaction's time of day.
+  The picker mirrors it as an affordance (future days dimmed, forward chevron stopped at the current
+  month) but does not own it. → commits `01990d9`, `408ef4c`
 - [x] **12. `DateUtils` was a static object reading the ambient clock and zone**, unreachable from
   tests and living under `hh.transaction` while half the app used it. Deleted; its clock-free parts
   are `hh/shared/DayLabels.kt`. → **#71**
