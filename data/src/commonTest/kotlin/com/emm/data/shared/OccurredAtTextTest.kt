@@ -61,8 +61,11 @@ class OccurredAtTextTest {
 
     @Test
     fun a_bare_day_bound_covers_the_whole_day() {
-        // The month window is `>= 'YYYY-MM-01' AND < 'YYYY-MM-01'` against full values. It works
-        // because 'T' sorts after every digit, so the last second of the 31st is still inside.
+        // The month window is `>= 'YYYY-MM-01' AND < the next month's 'YYYY-MM-01'`, compared
+        // against full values. It works because the date part is FIXED WIDTH and each bound is
+        // exactly that part: the upper bound is settled on the month digit inside the first ten
+        // characters (8 < 9, never reaching the 'T'), and the lower bound by the prefix rule (a
+        // string sorts after any prefix of itself). Not because of where 'T' sits in the charset.
         val start = "2026-08-01"
         val end = "2026-09-01"
 

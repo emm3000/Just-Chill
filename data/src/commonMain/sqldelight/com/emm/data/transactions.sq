@@ -9,8 +9,13 @@
 -- The text format is what makes SQL able to answer every question without a zone:
 --   • lexicographic order == chronological order, so ORDER BY occurredAt DESC is correct as-is
 --   • a month is a half-open string window: >= '2026-08-01' AND < '2026-09-01'. A 'YYYY-MM-DD'
---     bound compares correctly against a full 'YYYY-MM-DDTHH:MM:SS' value because 'T' sorts after
---     every digit, so the last instant of the 31st still falls inside the month
+--     bound compares correctly against a full 'YYYY-MM-DDTHH:MM:SS' value because the date part is
+--     FIXED WIDTH and each bound is exactly that part. The upper bound is settled inside the first
+--     ten characters — '2026-08-31T23:59:59' < '2026-09-01' on the month digit, 8 < 9, so the last
+--     instant of the 31st is inside and the comparison never reaches the 'T'. The lower bound is
+--     settled by the prefix rule — '2026-08-01T00:00:00' starts with '2026-08-01' and is longer,
+--     so it sorts after it. Where 'T' falls in the character set has nothing to do with either;
+--     what the whole thing rests on is the width never varying
 --   • the calendar day alone is substr(occurredAt, 1, 10)
 --
 -- createdAt / updatedAt / deletedAt stay epoch millis on purpose: those ARE instants — storage
