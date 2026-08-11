@@ -78,6 +78,7 @@ import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.components.TransactionRow
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel
@@ -767,7 +768,7 @@ private fun SeeTransactionsEmptyPreview() {
     EmmTheme {
         SeeTransactionsContent(
             // An explicit zero: the default count is null, which is "not known yet", not "empty".
-            state = SeeTransactionsUiState(movementCount = 0L),
+            state = SeeTransactionsUiState(month = PREVIEW_MONTH, movementCount = 0L),
             onIntent = {},
             navigateToEdit = {},
         )
@@ -804,7 +805,7 @@ private fun SeeTransactionsMonthPreview() {
         }
         SeeTransactionsContent(
             state = SeeTransactionsUiState(
-                month = YearMonth.current(),
+                month = PREVIEW_MONTH,
                 days = listOf(previewDayGroup(txs)),
                 summary = MonthSummaryUi(income = Money(320_000L), spend = Money(8_420L)),
                 movementCount = 2,
@@ -835,6 +836,7 @@ private fun SeeTransactionsPopulatedPreview() {
         }
         SeeTransactionsContent(
             state = SeeTransactionsUiState(
+                month = PREVIEW_MONTH,
                 days = listOf(previewDayGroup(txs)),
                 movementCount = 1,
                 activeCategory = ActiveCategoryInfo("4", "Ocio"),
@@ -851,6 +853,7 @@ private fun SeeTransactionsNoResultsPreview() {
     EmmTheme {
         SeeTransactionsContent(
             state = SeeTransactionsUiState(
+                month = PREVIEW_MONTH,
                 days = emptyList(),
                 movementCount = 5,
                 query = "café",
@@ -869,3 +872,6 @@ private fun previewDayGroup(transactions: List<TransactionUi>): DayGroup {
 
 /** Any fixed local datetime — previews render the pre-formatted labels, never this value. */
 private val PREVIEW_OCCURRED_AT = LocalDateTime(2026, 8, 10, 14, 30)
+
+/** Fixed, matching [PREVIEW_OCCURRED_AT]. A preview that read the clock would drift with the day. */
+private val PREVIEW_MONTH = YearMonth(2026, Month.AUGUST)

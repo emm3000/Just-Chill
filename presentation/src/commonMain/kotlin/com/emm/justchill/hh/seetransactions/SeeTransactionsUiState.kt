@@ -47,8 +47,13 @@ enum class ListDisplayState {
     Content,
 }
 
+/**
+ * [month] carries no default — see [com.emm.justchill.hh.home.HomeUiState]. A wall-clock default
+ * makes every construction site an unannounced ambient read; the ViewModel supplies the month from
+ * its injected clock and zone, and tests and previews name one.
+ */
 data class SeeTransactionsUiState(
-    val month: YearMonth = YearMonth.current(),
+    val month: YearMonth,
     val days: List<DayGroup> = emptyList(),
     val summary: MonthSummaryUi? = null,
     /**

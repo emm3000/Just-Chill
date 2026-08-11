@@ -29,9 +29,11 @@ class HomeViewModel(
     private val zone: TimeZone = TimeZone.currentSystemDefault(),
 ) : MviViewModel<HomeUiState, HomeIntent, HomeEffect>() {
 
-    override val initialState = HomeUiState()
-
+    // Declared before initialState on purpose: property initializers run in order, so the state can
+    // only borrow the month from here if here already exists. One read, one source of truth.
     private val selectedMonth = MutableStateFlow(YearMonth.current(clock, zone))
+
+    override val initialState = HomeUiState(month = selectedMonth.value)
 
     init {
         selectedMonth
