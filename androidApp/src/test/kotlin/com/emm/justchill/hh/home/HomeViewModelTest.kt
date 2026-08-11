@@ -18,18 +18,23 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Month
+import kotlinx.datetime.UtcOffset
+import kotlinx.datetime.asTimeZone
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class HomeViewModelTest {
 
@@ -87,6 +92,30 @@ class HomeViewModelTest {
     fun setUp() {
         every { getHomeData(any()) } returns flowOf(emptyHomeData)
         viewModel = HomeViewModel(getHomeData, confirmRecurring, skipRecurring)
+    }
+
+    @Test
+    fun `the month it loads is read in the injected zone, not the device's`() = runTest {
+        // One instant, two zones, two different months: 2026-09-01T02:00Z is already September at
+        // UTC and still 31 August at UTC-5. Which month Home opens on is therefore a question about
+        // the zone, and the zone that answers it has to be the injected one — the same one this
+        // ViewModel already uses for its Hoy/Ayer labels. Otherwise half the screen answers for the
+        // device and half for the injection.
+        //
+        // Both zones are asserted because one proves nothing: on a machine whose own clock sits in
+        // that zone the ambient read agrees, and the test stays green straight through the bug.
+        // The dev machine here is America/Lima, which is exactly UTC-5.
+        val nearMidnight = object : Clock {
+            override fun now(): Instant = Instant.parse("2026-09-01T02:00:00Z")
+        }
+
+        HomeViewModel(getHomeData, confirmRecurring, skipRecurring, nearMidnight, UtcOffset(hours = -5).asTimeZone())
+        advanceUntilIdle()
+        verify { getHomeData(YearMonth(2026, Month.AUGUST)) }
+
+        HomeViewModel(getHomeData, confirmRecurring, skipRecurring, nearMidnight, UtcOffset(hours = 0).asTimeZone())
+        advanceUntilIdle()
+        verify { getHomeData(YearMonth(2026, Month.SEPTEMBER)) }
     }
 
     // ---- Scenario 10.1: No pending → section absent ----

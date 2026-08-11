@@ -3,9 +3,11 @@
 End-to-end audit of dates, from the picker down to the column, run on 2026-08-10. Thirteen findings.
 This file is the tracker; the reasoning for each fix lives in its PR.
 
-All thirteen are closed. One follow-up survives them, recorded under #5: the sync wire and the
-Supabase column still carry the occurrence as epoch millis, because changing a column on a live
-server is a human step. Nothing on the device depends on it any more.
+Twelve are closed; **#7 is partially closed** — Home and Movimientos take the injected timezone,
+Reporte still reads the ambient one. Two follow-ups survive: the one recorded under #5 (the sync
+wire and the Supabase column still carry the occurrence as epoch millis, because changing a column
+on a live server is a human step — nothing on the device depends on it any more), and the rest of
+#7.
 
 Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
 
@@ -57,16 +59,26 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
   column. `:data` now takes an injected `Clock` and reads it once per write.
   `currentTimeInMillis()` is gone. → commits `f7b493b`, `6d10a8c`
 
-- [x] **7. The timezone was ambient where the clock was injected.** `YearMonth.startInclusiveMillis`,
+- [~] **7. The timezone was ambient where the clock was injected.** `YearMonth.startInclusiveMillis`,
   `GetHomeDataUseCase` and the `TransactionUi` read path all resolved days through
   `TimeZone.currentSystemDefault()`. The clock could be faked in tests; the zone could not, so no
   test could cover a month boundary in another zone.
 
   Most of it did not need closing so much as deleting: with #5 fixed, `YearMonth` and the read path
   resolve no days at all — the value already is one. What is left is the single question that
-  genuinely needs a zone, "what is today for this user", and every place that asks it now takes the
-  zone next to the clock it already took: `GetHomeDataUseCase`, `HomeViewModel`,
-  `SeeTransactionsViewModel`, both transaction write paths and the frequency windows.
+  genuinely needs a zone, "what is today for this user", and it is asked at two grains: which
+  calendar day it is, and which month. Home and Movimientos now take the injected zone for **both**
+  — `GetHomeDataUseCase`, `HomeViewModel`, `SeeTransactionsViewModel`, both transaction write paths
+  and the frequency windows. They briefly took it only for the day, which meant a test could vary
+  the zone and the month window would not notice; `YearMonth.current`'s `timeZone` parameter
+  defaults to the ambient zone, and the default was being taken.
+
+  **Not closed: Reporte.** `ReportViewModel` takes no clock and no zone at all, so its three
+  `YearMonth.current()` calls, `GetSavingsRateUseCase`, `GetTopCategoriesOverMonthsUseCase` and
+  `ReportScreen`'s "is this the current month" check all still read the ambient zone. The three
+  `UiState.month` defaults do too, though every ViewModel overwrites them before first render. None
+  of it is wrong on a device — it is the same zone Koin injects — but it is the same untestable
+  boundary this finding is about, so the finding stays open until Reporte takes the injection.
 
   Still ambient, and deliberately: `DatePickerSheet` and the Compose previews, which have no
   injected clock either, and `ProfileScreen`'s last-sync stamp, which renders a real instant and is
@@ -107,10 +119,10 @@ Worth keeping in view, because these are the patterns the fixes above copied:
   all: the bounds are ISO day strings.)
 - `DayGroup` — takes `today` as an input rather than reading a clock. This is the shape the rest of
   the date code was moved to.
+- `RecurringDueRules.periodKey` — zero-padded so string order matches chronological order, and
+  `parsePeriodKey` treats the stored value as untrusted because it arrives from other devices.
+- `ConflictResolver` — does not consult a clock where it does not need one, and says why.
 
 `DateAndTimeCombiner` used to be listed here — idempotent, well-documented, tested on both sides of
 UTC. It was all of that and it still could not be safe, because its job was to hold two
 representations of one fact in agreement. It is gone; the job does not exist any more.
-- `RecurringDueRules.periodKey` — zero-padded so string order matches chronological order, and
-  `parsePeriodKey` treats the stored value as untrusted because it arrives from other devices.
-- `ConflictResolver` — does not consult a clock where it does not need one, and says why.

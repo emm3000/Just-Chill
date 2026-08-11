@@ -22,7 +22,10 @@ class GetHomeDataUseCase(
     private val zone: TimeZone = TimeZone.currentSystemDefault(),
 ) {
 
-    operator fun invoke(yearMonth: YearMonth = YearMonth.current(clock)): Flow<HomeData> {
+    // The zone goes to `current` as well as to `today` below. Both answer the same question —
+    // "where is this user, so what date is it there" — and letting one of them read the ambient
+    // zone means a test can move the device and only half the screen notices.
+    operator fun invoke(yearMonth: YearMonth = YearMonth.current(clock, zone)): Flow<HomeData> {
         val startOfMonth = yearMonth.startInclusiveDay()
         val startOfNextMonth = yearMonth.endExclusiveDay()
         // Injected next to the clock, not read ambiently: "what is today" is the one date

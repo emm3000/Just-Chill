@@ -31,6 +31,8 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.UtcOffset
+import kotlinx.datetime.asTimeZone
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -71,9 +73,12 @@ class SeeTransactionsViewModelTest {
     }
     private val searchTransactions = mockk<SearchTransactionsUseCase>()
 
-    private fun buildViewModel(): SeeTransactionsViewModel {
+    private fun buildViewModel(
+        clock: Clock = fixedClock,
+        zone: TimeZone = TimeZone.currentSystemDefault(),
+    ): SeeTransactionsViewModel {
         every { searchTransactions.invoke(any()) } returns flowOf(emptyList())
-        return SeeTransactionsViewModel(searchTransactions, categoryRepository, transactionRepository, fixedClock)
+        return SeeTransactionsViewModel(searchTransactions, categoryRepository, transactionRepository, clock, zone)
     }
 
     private fun tx(
@@ -129,6 +134,40 @@ class SeeTransactionsViewModelTest {
                 )
             }
         }
+
+    @Test
+    fun `the initial month is read in the injected zone, not the device's`() = runTest(testDispatcher) {
+        // One instant, two zones, two different months: 2026-09-01T02:00Z is already September at
+        // UTC and still 31 August at UTC-5. Which month the list opens on is therefore a question
+        // about the zone, not only about the clock — and the zone this ViewModel already takes for
+        // its HOY/AYER headers has to be the one that answers it. While the month read the ambient
+        // zone, varying the zone in a test moved the labels and left the window alone.
+        //
+        // Both zones are asserted because one proves nothing: on a machine sitting in that zone the
+        // ambient read agrees. This one is America/Lima, i.e. exactly UTC-5.
+        val nearMidnight = object : Clock {
+            override fun now(): Instant = Instant.parse("2026-09-01T02:00:00Z")
+        }
+        val august = YearMonth(2026, Month.AUGUST)
+        val september = YearMonth(2026, Month.SEPTEMBER)
+        stubRange(august, flowOf(emptyList()))
+        stubRange(september, flowOf(emptyList()))
+        every { searchTransactions.invoke(any()) } returns flowOf(emptyList())
+
+        val inLima = buildViewModel(nearMidnight, UtcOffset(hours = -5).asTimeZone())
+        val inUtc = buildViewModel(nearMidnight, UtcOffset(hours = 0).asTimeZone())
+        advanceUntilIdle()
+
+        assertEquals(august, inLima.state.value.month)
+        assertEquals(september, inUtc.state.value.month)
+        verify {
+            transactionRepository.fetchAllWithCategoryInRange(august.startInclusiveDay(), august.endExclusiveDay())
+            transactionRepository.fetchAllWithCategoryInRange(
+                september.startInclusiveDay(),
+                september.endExclusiveDay(),
+            )
+        }
+    }
 
     @Test
     fun `OnNextMonth requeries with the next month's bounds`() = runTest(testDispatcher) {
