@@ -66,6 +66,11 @@ private data class Shortcut(val label: String, val date: LocalDate)
  * what let both call sites hand it `DateUtils.currentDateInMillis()` instead of the date actually
  * selected, so it reopened on today whatever the user had chosen.
  *
+ * Today is the last selectable day: later days render dimmed and take no tap, and the forward
+ * chevron stops at the current month. This mirrors the domain rule rather than replacing it —
+ * `TransactionDateRules` is what actually guarantees it, since this sheet is not the only way a
+ * date reaches a transaction. Here it just keeps the user away from an error they cannot act on.
+ *
  * @param currentDate  The day currently selected, which the grid opens on.
  * @param onConfirm    Delivers the chosen day to the caller.
  * @param onDismiss    Dismisses the sheet.
@@ -178,10 +183,15 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                 color = colors.textPrimary,
                 letterSpacing = (-0.15).sp,
             )
+            // A transaction records money that already moved, so there is no month after this one
+            // to browse. The domain rejects a future date outright (TransactionDateRules); stopping
+            // the chevron here means the user never reaches the error in the first place.
+            val canGoForward = displayedMonth < today.firstOfMonth()
             IconBtn(
                 icon = Icons.Outlined.ChevronRight,
                 onClick = { displayedMonth = displayedMonth.plus(1, DateTimeUnit.MONTH) },
                 modifier = Modifier.size(36.dp),
+                enabled = canGoForward,
             )
         }
 
@@ -226,12 +236,13 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                         ) {
                             if (date != null) {
                                 val isSelected = date == selectedDate
+                                val isFuture = date > today
                                 Box(
                                     modifier = Modifier
                                         .size(40.dp)
                                         .clip(CircleShape)
                                         .background(if (isSelected) colors.accent else Color.Transparent)
-                                        .clickable { selectedDate = date },
+                                        .clickable(enabled = !isFuture) { selectedDate = date },
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Text(
@@ -239,7 +250,11 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.W500,
                                         fontFamily = InterFontFamily,
-                                        color = if (isSelected) Color.White else colors.textPrimary,
+                                        color = when {
+                                            isSelected -> Color.White
+                                            isFuture -> colors.textTertiary
+                                            else -> colors.textPrimary
+                                        },
                                     )
                                 }
                             }
