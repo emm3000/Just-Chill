@@ -31,7 +31,7 @@ class HomeViewModel(
 
     override val initialState = HomeUiState()
 
-    private val selectedMonth = MutableStateFlow(YearMonth.current(clock))
+    private val selectedMonth = MutableStateFlow(YearMonth.current(clock, zone))
 
     init {
         selectedMonth
@@ -89,9 +89,11 @@ class HomeViewModel(
     private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
 
     // Current month comes from the clock, not from the selected month: it is what marks a pending
-    // item as catch-up, and browsing to March must not relabel March's own pending row.
+    // item as catch-up, and browsing to March must not relabel March's own pending row. Same clock
+    // AND same zone as [today] — "what month is it" and "what day is it" cannot answer for two
+    // different places, and reading the zone ambiently here is how they used to be able to.
     private fun List<PendingRecurring>.toPendingUi(): List<PendingRecurringUi> {
-        val currentMonth = YearMonth.current(clock)
+        val currentMonth = YearMonth.current(clock, zone)
         return map { it.toPendingRecurringUi(currentMonth) }
     }
 }

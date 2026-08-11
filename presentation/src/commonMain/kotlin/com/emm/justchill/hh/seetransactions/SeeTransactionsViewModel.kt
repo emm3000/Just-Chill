@@ -39,10 +39,13 @@ class SeeTransactionsViewModel(
     private val zone: TimeZone = TimeZone.currentSystemDefault(),
 ) : MviViewModel<SeeTransactionsUiState, SeeTransactionsIntent, SeeTransactionsEffect>() {
 
-    override val initialState = SeeTransactionsUiState(month = YearMonth.current(clock))
+    // Both take the injected zone, not just the injected clock. "What month is it" is the same
+    // question as "what day is it" asked at a coarser grain, and answering one from the device's
+    // ambient zone while the other honours the injected one is a boundary no test can reach.
+    override val initialState = SeeTransactionsUiState(month = YearMonth.current(clock, zone))
 
     private val filter = MutableStateFlow(TransactionFilter.None)
-    private val selectedMonth = MutableStateFlow(YearMonth.current(clock))
+    private val selectedMonth = MutableStateFlow(YearMonth.current(clock, zone))
 
     init {
         // Auto-reset filter if the active category got deleted out from under us.
