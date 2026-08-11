@@ -45,10 +45,15 @@ class ReportViewModel(
 ) : MviViewModel<ReportUiState, ReportIntent, ReportEffect>() {
 
     override val initialState: ReportUiState = run {
-        // Both fields come off one read, so the month and the flag describing it cannot disagree.
         val opening = YearMonth.current(clock, zone)
         ReportUiState(
             month = opening,
+            // A second read of the same clock, not the same read — [isCurrent] asks again, and
+            // nothing here stops the two landing either side of midnight. Deriving it beats
+            // hardcoding `true`, which would be correct only by coincidence of the line above; and
+            // if the two reads ever did disagree the flag comes out false, which is the harmless
+            // direction: a spurious TodayPill offers a jump that is already a no-op, where a
+            // spurious `true` would hide the only one-tap way back.
             isCurrentMonth = isCurrent(opening),
             selectedType = TransactionType.Income,
         )
@@ -178,6 +183,8 @@ class ReportViewModel(
                 topN = TOP_EXPENSES_SHOWN,
             )
 
+            // Read per load, not per ViewModel: this may be the first thing to run after a month
+            // rolled over under an open screen. Feeds both the bars and the state flag below.
             val currentYm = YearMonth.current(clock, zone)
             val isEarlyState = savingsRate.monthsWithData < MONTHS_FOR_A_MEANINGFUL_TREND
 

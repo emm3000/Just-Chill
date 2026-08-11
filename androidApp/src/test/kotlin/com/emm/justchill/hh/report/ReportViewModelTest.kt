@@ -8,6 +8,7 @@ import com.emm.domain.report.GetSavingsRateUseCase
 import com.emm.domain.report.GetTopCategoriesOverMonthsUseCase
 import com.emm.domain.report.MonthlyComparison
 import com.emm.domain.report.MonthlySectionStats
+import com.emm.domain.report.MonthlyTotal
 import com.emm.domain.report.SavingsRate
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
@@ -204,6 +205,43 @@ class ReportViewModelTest {
         assertFalse(vm.state.value.isCurrentMonth, "the Tendencias reload must re-read it too")
         assertEquals(YearMonth(2026, Month.SEPTEMBER), vm.state.value.month, "the month must not move")
     }
+
+    @Test
+    fun `a month rollover moves the trends bar marker, not just the pill`() = runTest(testDispatcher) {
+        // TodayPill is not the only thing keyed to "which month is now": MonthlyBarItem.isCurrentMonth
+        // draws one bar of the Tendencias chart bold. It comes off the same clock read, so it carries
+        // the same limit — and a limit disclosed for only one of its two symptoms is how this audit
+        // misled us once already. Both symptoms are now covered by a test.
+        val august = YearMonth(2026, Month.AUGUST)
+        val september = YearMonth(2026, Month.SEPTEMBER)
+        stubEmptyReport()
+        coEvery { getSavingsRate(any(), any(), any()) } returns emptySavingsRate().copy(
+            monthly = listOf(monthlyTotal(august), monthlyTotal(september)),
+        )
+        val clock = MovingClock(Instant.parse("2026-08-31T12:00:00Z"))
+
+        val vm = buildViewModel(clock, TimeZone.UTC)
+        advanceUntilIdle()
+        assertEquals(
+            listOf(true, false),
+            vm.state.value.trends.monthlyBars.map { it.isCurrentMonth },
+            "on 31 August the August bar is the marked one",
+        )
+
+        // Midnight passes with the screen open and the month untouched.
+        clock.instant = Instant.parse("2026-09-01T12:00:00Z")
+        vm.onIntent(ReportIntent.SelectTab(ReportTab.Tendencias))
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(false, true),
+            vm.state.value.trends.monthlyBars.map { it.isCurrentMonth },
+            "the Tendencias reload must re-read the clock, or the chart keeps bolding August",
+        )
+    }
+
+    private fun monthlyTotal(month: YearMonth) =
+        MonthlyTotal(yearMonth = month, income = Money.Zero, expense = Money.Zero)
 
     /** A clock the test can move, so a month boundary can pass under a running ViewModel. */
     private class MovingClock(var instant: Instant) : Clock {

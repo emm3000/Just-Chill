@@ -449,6 +449,9 @@ private fun ReportScreenMesPreview() {
         ReportScreen(
             state = ReportUiState(
                 month = YearMonth(2026, Month.MAY),
+                // Stated, not inherited: the default is false, which would draw TodayPill on every
+                // canvas regardless of the month above. May is this preview set's "now".
+                isCurrentMonth = true,
                 selectedType = TransactionType.Income,
                 selectedTab = ReportTab.Mes,
                 totalFormatted = "S/ 6,200.00",
@@ -487,6 +490,9 @@ private fun ReportScreenMesGastosPreview() {
         ReportScreen(
             state = ReportUiState(
                 month = YearMonth(2026, Month.MARCH),
+                // March against a "now" of May: a browsed past month, so TodayPill belongs on this
+                // canvas. The one preview that renders it.
+                isCurrentMonth = false,
                 selectedType = TransactionType.Spend,
                 selectedTab = ReportTab.Mes,
                 totalFormatted = "S/ 4,580.00",
@@ -527,6 +533,8 @@ private fun ReportScreenEmptyPreview() {
         ReportScreen(
             state = ReportUiState(
                 month = YearMonth(2026, Month.MAY),
+                // The current month, and empty — landing on a month with nothing in it yet.
+                isCurrentMonth = true,
                 selectedType = TransactionType.Income,
                 shares = emptyList(),
                 isEmpty = true,
