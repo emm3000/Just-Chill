@@ -66,6 +66,7 @@ import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.components.TransactionRow
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Month
 
 /**
  * VM-owning overload used by [HomeEntry] in Hh.kt.
@@ -681,6 +682,7 @@ private fun HomeScreenPreview() {
     EmmTheme {
         HomeScreen(
             HomeUiState(
+                month = PREVIEW_MONTH,
                 balance = Money(48200000L),
                 income = Money(32000000L),
                 spend = Money(8400000L),
@@ -725,9 +727,12 @@ private fun HomeScreenPreview() {
 @Composable
 private fun HomeScreenEmptyPreview() {
     EmmTheme {
-        HomeScreen(HomeUiState())
+        HomeScreen(HomeUiState(month = PREVIEW_MONTH))
     }
 }
 
 /** Any fixed local datetime — previews render the pre-formatted labels, never this value. */
 private val PREVIEW_OCCURRED_AT = LocalDateTime(2026, 8, 10, 14, 30)
+
+/** Fixed, matching [PREVIEW_OCCURRED_AT]. A preview that read the clock would drift with the day. */
+private val PREVIEW_MONTH = YearMonth(2026, Month.AUGUST)
