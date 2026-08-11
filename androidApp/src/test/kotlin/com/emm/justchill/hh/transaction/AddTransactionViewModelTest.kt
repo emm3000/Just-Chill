@@ -50,13 +50,23 @@ class AddTransactionViewModelTest {
 
     private val lima = TimeZone.of("America/Lima")
     private val today = LocalDate(2026, Month.AUGUST, 10)
+    private val tomorrow = LocalDate(2026, Month.AUGUST, 11)
 
-    /** Fixed at 2026-08-10 14:30 Lima, so "today" never depends on when the suite runs. */
-    private val fixedClock = object : Clock {
-        override fun now(): Instant = Instant.fromEpochMilliseconds(
-            LocalDateTime(today, LocalTime(14, 30)).toInstant(lima).toEpochMilliseconds(),
-        )
+    /**
+     * Movable so a test can hold a ViewModel across midnight — the case that made the add screen
+     * write the wrong day. Starts at 2026-08-10 14:30 Lima, so "today" never depends on when the
+     * suite runs.
+     */
+    private class MovableClock(var instant: Instant) : Clock {
+        override fun now(): Instant = instant
     }
+
+    private fun instantAt(date: LocalDate, hour: Int, minute: Int): Instant =
+        Instant.fromEpochMilliseconds(
+            LocalDateTime(date, LocalTime(hour, minute)).toInstant(lima).toEpochMilliseconds(),
+        )
+
+    private val fixedClock = MovableClock(instantAt(today, hour = 14, minute = 30))
 
     private val account1 = Account(AccountId("yape"), "Yape")
     private val account2 = Account(AccountId("bcp"), "BCP")
@@ -110,13 +120,88 @@ class AddTransactionViewModelTest {
     // ── the selected date lives in the state ──────────────────────────────────
 
     @Test
-    fun `date defaults to today from the injected clock`() = runTest(testDispatcher) {
+    fun `date starts unset and reads as Hoy`() = runTest(testDispatcher) {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        assertEquals(today, vm.state.value.date)
+        // Unset, not "today resolved at construction": nobody has picked a day yet, and which day
+        // "Hoy" is has no answer until the transaction is actually saved.
+        assertNull(vm.state.value.date)
         assertEquals(today, vm.state.value.today)
         assertEquals("Hoy", vm.state.value.dateLabel)
+    }
+
+    // ── the day is resolved when saving, not when the screen opened ───────────
+
+    @Test
+    fun `an untouched date saves as the day it is saved on, not the day the screen opened`() =
+        runTest(testDispatcher) {
+            val vm = buildViewModel()
+            advanceUntilIdle()
+
+            // The screen was opened just before midnight and sat there. Resolving "Hoy" at
+            // construction booked the movement on the previous day, silently.
+            fixedClock.instant = instantAt(tomorrow, hour = 0, minute = 5)
+
+            vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
+            advanceUntilIdle()
+            vm.onIntent(AddTransactionIntent.OnSave)
+            advanceUntilIdle()
+
+            val insert = slot<TransactionInsert>()
+            coVerify { createTransaction.invoke(capture(insert)) }
+            assertEquals(tomorrow.atStartOfDayIn(lima).toEpochMilliseconds(), insert.captured.date)
+        }
+
+    @Test
+    fun `a picked date is not re-resolved when the clock rolls over`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        val picked = LocalDate(2026, Month.JUNE, 13)
+        vm.onIntent(AddTransactionIntent.OnDateSelected(picked))
+        vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
+        advanceUntilIdle()
+
+        fixedClock.instant = instantAt(tomorrow, hour = 0, minute = 5)
+
+        vm.onIntent(AddTransactionIntent.OnSave)
+        advanceUntilIdle()
+
+        val insert = slot<TransactionInsert>()
+        coVerify { createTransaction.invoke(capture(insert)) }
+        assertEquals(picked.atStartOfDayIn(lima).toEpochMilliseconds(), insert.captured.date)
+    }
+
+    @Test
+    fun `today catches up on the next interaction after midnight`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        assertEquals(today, vm.state.value.today)
+
+        fixedClock.instant = instantAt(tomorrow, hour = 0, minute = 5)
+        vm.onIntent(AddTransactionIntent.OnAmountChange("1"))
+        advanceUntilIdle()
+
+        // Every intent re-reads the clock, so a screen left open overnight stops claiming that
+        // yesterday is "Hoy" as soon as the user touches anything.
+        assertEquals(tomorrow, vm.state.value.today)
+    }
+
+    @Test
+    fun `a date picked yesterday reads as Ayer once the day rolls over`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(AddTransactionIntent.OnDateSelected(today))
+        advanceUntilIdle()
+        assertEquals("Hoy", vm.state.value.dateLabel)
+
+        fixedClock.instant = instantAt(tomorrow, hour = 0, minute = 5)
+        vm.onIntent(AddTransactionIntent.OnAmountChange("1"))
+        advanceUntilIdle()
+
+        assertEquals("Ayer", vm.state.value.dateLabel)
     }
 
     @Test
@@ -150,7 +235,7 @@ class AddTransactionViewModelTest {
     }
 
     @Test
-    fun `OnReset returns the date to today`() = runTest(testDispatcher) {
+    fun `OnReset puts the date back to unset`() = runTest(testDispatcher) {
         val vm = buildViewModel()
         advanceUntilIdle()
 
@@ -160,7 +245,9 @@ class AddTransactionViewModelTest {
         vm.onIntent(AddTransactionIntent.OnReset)
         advanceUntilIdle()
 
-        assertEquals(today, vm.state.value.date)
+        // Unset rather than today: the next transaction is dated when it is saved, and the add
+        // screen is reset after every save, so it can easily outlive the day it was opened on.
+        assertNull(vm.state.value.date)
         assertEquals("Hoy", vm.state.value.dateLabel)
     }
 

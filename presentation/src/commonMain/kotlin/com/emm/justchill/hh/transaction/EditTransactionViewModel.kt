@@ -54,6 +54,10 @@ class EditTransactionViewModel(
     }
 
     override fun onIntent(intent: EditTransactionIntent) {
+        // Every interaction re-reads the clock, so a screen left open overnight stops labelling
+        // yesterday's transaction "Hoy". StateFlow drops the emission when the day has not changed.
+        // Only the label moves: `date` is the transaction's own day and is never re-resolved.
+        updateState { copy(today = today()) }
         when (intent) {
             is EditTransactionIntent.OnAmountChange -> updateState { copy(amount = intent.value).recompute() }
 

@@ -57,12 +57,20 @@ class EditTransactionViewModelTest {
     private val lima = TimeZone.of("America/Lima")
     private val today = LocalDate(2026, Month.AUGUST, 10)
 
-    /** Fixed at 2026-08-10 14:30 Lima, so "today" never depends on when the suite runs. */
-    private val fixedClock = object : Clock {
-        override fun now(): Instant = Instant.fromEpochMilliseconds(
-            LocalDateTime(today, LocalTime(14, 30)).toInstant(lima).toEpochMilliseconds(),
-        )
+    /**
+     * Movable so a test can hold the screen across midnight. Starts at 2026-08-10 14:30 Lima, so
+     * "today" never depends on when the suite runs.
+     */
+    private class MovableClock(var instant: Instant) : Clock {
+        override fun now(): Instant = instant
     }
+
+    private fun instantAt(date: LocalDate, hour: Int, minute: Int): Instant =
+        Instant.fromEpochMilliseconds(
+            LocalDateTime(date, LocalTime(hour, minute)).toInstant(lima).toEpochMilliseconds(),
+        )
+
+    private val fixedClock = MovableClock(instantAt(today, hour = 14, minute = 30))
 
     private val account = Account(AccountId("bcp"), "BCP")
 
@@ -144,6 +152,25 @@ class EditTransactionViewModelTest {
         advanceUntilIdle()
 
         assertEquals(today, vm.state.value.today)
+    }
+
+    @Test
+    fun `today catches up on the next interaction after midnight`() = runTest(testDispatcher) {
+        coEvery { findTransaction.invoke(TransactionId("tx-1")) } returns
+            storedTransaction.copy(date = LocalDateTime(today, LocalTime(9, 15)).toInstant(lima).toEpochMilliseconds())
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        assertEquals("Hoy", vm.state.value.dateLabel)
+
+        fixedClock.instant = instantAt(LocalDate(2026, Month.AUGUST, 11), hour = 0, minute = 5)
+        vm.onIntent(EditTransactionIntent.OnAmountChange("9000"))
+        advanceUntilIdle()
+
+        // The transaction did not move; the day under it did. A screen left open overnight must
+        // stop calling yesterday "Hoy" as soon as the user touches anything.
+        assertEquals(today, vm.state.value.date)
+        assertEquals("Ayer", vm.state.value.dateLabel)
     }
 
     @Test

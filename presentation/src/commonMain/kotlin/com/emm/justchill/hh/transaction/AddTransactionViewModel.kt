@@ -39,7 +39,7 @@ class AddTransactionViewModel(
     private val zone: TimeZone = TimeZone.currentSystemDefault(),
 ) : MviViewModel<AddTransactionUiState, AddTransactionIntent, AddTransactionEffect>() {
 
-    override val initialState = AddTransactionUiState(date = today(), today = today())
+    override val initialState = AddTransactionUiState(today = today())
 
     private val allCategories: MutableMap<CategoryType, List<SelectableCategory>> = mutableMapOf()
 
@@ -77,6 +77,10 @@ class AddTransactionViewModel(
     }
 
     override fun onIntent(intent: AddTransactionIntent) {
+        // Every interaction re-reads the clock, so a screen left open overnight stops claiming that
+        // yesterday is "Hoy". StateFlow drops the emission when the day has not changed, which is
+        // every intent but the handful that cross midnight.
+        updateState { copy(today = today()) }
         when (intent) {
             is AddTransactionIntent.OnAmountChange -> updateState { copy(amount = intent.value).touched() }
 
@@ -132,12 +136,10 @@ class AddTransactionViewModel(
     private fun reset() {
         updateState {
             val defaultType = TransactionType.Income
-            // The clock is re-read here, not reused from construction: the add screen is reset
-            // after every save and can outlive the day it was opened on.
             copy(
                 amount = "",
                 description = String.Empty,
-                date = today(),
+                date = null,
                 today = today(),
                 transactionType = defaultType,
                 categories = allCategories[defaultType.categoryType].orEmpty(),
@@ -210,10 +212,13 @@ class AddTransactionViewModel(
     // The one place the picked day becomes an instant. CreateTransactionUseCase then swaps this
     // midnight for the current time of day — the day is what the user chose, the hour is when it
     // was recorded.
+    //
+    // An unset day resolves against the clock HERE, not against the state's `today`: this is the
+    // moment the transaction gets a date, and it is the only reading that cannot already be stale.
     private fun createTransactionInsert(): TransactionInsert = TransactionInsert(
         type = currentState.transactionType,
         description = currentState.description,
-        date = startOfDayMillis(currentState.date, zone),
+        date = startOfDayMillis(currentState.date ?: today(), zone),
         amount = centsToMoney(currentState.amount),
         categoryId = currentState.categorySelected?.categoryId,
         accountId = currentState.accountSelected?.accountId
