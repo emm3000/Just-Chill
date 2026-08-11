@@ -5,6 +5,7 @@ import kotlinx.datetime.Month
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * The interim adapter between the app's zoneless `occurredAt` and the epoch millis the sync wire
@@ -64,12 +65,47 @@ class FixedPeruOffsetTest {
         // A remote row is untrusted input, and this client has already had to survive a server
         // timestamp it could not read. Null lets the caller skip one row instead of failing a pull.
         //
-        // Note what these actually do: `Instant.fromEpochMilliseconds` clamps instead of throwing,
-        // so without the year bound this returns a perfectly real datetime in year 292278994 —
-        // which the storage format writes with a signed ten-digit year and which would break the
-        // string ordering the whole table depends on. One bad remote row, every list reordered.
+        // What actually happens: `Instant.fromEpochMilliseconds` clamps instead of throwing, so
+        // the conversion succeeds and hands back a perfectly real datetime in year 292278994 —
+        // which the storage format would write with a signed ten-digit year and which would break
+        // the string ordering the whole table depends on. One bad remote row, every list
+        // reordered. The year bound is what stops it.
         assertNull(localDateTimeFromFixedPeru(Long.MAX_VALUE))
         assertNull(localDateTimeFromFixedPeru(Long.MIN_VALUE))
+    }
+
+    @Test
+    fun no_long_whatsoever_makes_the_conversion_throw() {
+        // The contract is "returns null", not "returns null for the values we thought of": the
+        // call site is outside the pull's per-row try/catch, so a throw does not skip one row, it
+        // aborts the whole pull.
+        //
+        // Run this suite on BOTH targets — `./gradlew :data:testAndroidHostTest` and
+        // `./gradlew :data:iosSimulatorArm64Test`. The gate compiles iOS but runs no iOS test, and
+        // the year range of a `LocalDateTime` is the kind of thing that has differed per target
+        // before. Measured on kotlinx-datetime 0.8.0 both agree, and nothing here says they must
+        // keep agreeing — only that whatever they do, the answer is a value or null.
+        val values = listOf(
+            Long.MIN_VALUE,
+            Long.MIN_VALUE + 1,
+            Long.MIN_VALUE / 2,
+            -1_000_000_000_000_000L,
+            -253_402_318_800_000L,
+            0L,
+            253_402_318_800_000L,
+            1_000_000_000_000_000L,
+            Long.MAX_VALUE / 2,
+            Long.MAX_VALUE - 1,
+            Long.MAX_VALUE,
+        )
+
+        values.forEach { millis ->
+            val decoded = localDateTimeFromFixedPeru(millis)
+            assertTrue(
+                decoded == null || decoded.year in 1..9999,
+                "$millis decoded to $decoded, which the storage format cannot hold",
+            )
+        }
     }
 
     @Test

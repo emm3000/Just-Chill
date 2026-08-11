@@ -1,5 +1,6 @@
 package com.emm.data.shared
 
+import kotlinx.datetime.DateTimeArithmeticException
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.UtcOffset
@@ -36,25 +37,40 @@ private val fixedPeruZone: TimeZone = UtcOffset(hours = -5).asTimeZone()
 internal fun LocalDateTime.toFixedPeruEpochMillis(): Long = toInstant(fixedPeruZone).toEpochMilliseconds()
 
 /**
- * Null when [epochMillis] cannot become a value this app can store.
+ * Null when [epochMillis] cannot become a value this app can store. Total on every target: it
+ * returns, it never throws.
  *
  * A remote row is untrusted input; this repository has already had to survive a server timestamp
  * the client could not read (commit `c9492e3`). Null lets the caller skip that one row instead of
  * taking down the whole pull.
  *
- * The year bound is not cosmetic. `Instant.fromEpochMilliseconds` CLAMPS rather than throws, so an
- * absurd value arrives as a real datetime in year 292278994 — which the storage format writes with
- * a signed ten-digit year, and that single row would break the lexicographic ordering the whole
- * table's `ORDER BY` and month windows depend on. A four-digit year is what the format can hold,
- * so anything else is not a date this app can store.
+ * Two different things can go wrong, and BOTH have to end in null:
+ *
+ *  - **The year is one the storage format cannot hold.** This is the case that actually fires.
+ *    `Instant.fromEpochMilliseconds` clamps rather than throws, so `Long.MAX_VALUE` arrives as a
+ *    perfectly real datetime in year 292278994 — which the storage format would write with a signed
+ *    ten-digit year, and that single row would break the lexicographic ordering the whole table's
+ *    `ORDER BY` and month windows depend on. A four-digit year is what the format can hold, so
+ *    anything else is not a date this app can store. The year bound is what catches it, on every
+ *    target: measured on kotlinx-datetime 0.8.0, the widest year any `Long` of millis can reach is
+ *    ±292278994, and both the JVM and the Apple targets convert that without complaint.
+ *  - **The conversion refuses the value outright.** Not reachable from a `Long` today — see above,
+ *    the whole millis range converts — but `Instant.toLocalDateTime` is documented to signal it,
+ *    and it signals it with [DateTimeArithmeticException]. That is a plain `RuntimeException`, NOT
+ *    an [IllegalArgumentException], so a guard that named only the latter would not have caught it.
+ *    Both types are named because this function's contract is "returns null", not "returns null on
+ *    the ranges we happened to measure": the call site is OUTSIDE `applyRemoteRow`'s try/catch, so
+ *    a throw here does not skip a row, it aborts the entire pull.
  */
 internal fun localDateTimeFromFixedPeru(epochMillis: Long): LocalDateTime? {
     val local = try {
         Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(fixedPeruZone)
+    } catch (_: DateTimeArithmeticException) {
+        null
     } catch (_: IllegalArgumentException) {
-        return null
+        null
     }
-    return local.takeIf { it.year in STORABLE_YEARS }
+    return local?.takeIf { it.year in STORABLE_YEARS }
 }
 
 private val STORABLE_YEARS = 1..9999
