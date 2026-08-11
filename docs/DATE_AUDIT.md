@@ -3,11 +3,10 @@
 End-to-end audit of dates, from the picker down to the column, run on 2026-08-10. Thirteen findings.
 This file is the tracker; the reasoning for each fix lives in its PR.
 
-Twelve are closed; **#7 is partially closed** — Home and Movimientos take the injected timezone,
-Reporte still reads the ambient one. Two follow-ups survive: the one recorded under #5 (the sync
-wire and the Supabase column still carry the occurrence as epoch millis, because changing a column
-on a live server is a human step — nothing on the device depends on it any more), and the rest of
-#7.
+All thirteen are closed. Two follow-ups survive, both recorded in full below: the sync wire and the
+Supabase column still carry the occurrence as epoch millis (#5 — changing a column on a live server
+is a human step, and nothing on the device depends on it any more), and everything outside Reporte
+still lets its injected `Clock`/`TimeZone` fall back to an ambient default (#7).
 
 Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
 
@@ -59,7 +58,7 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
   column. `:data` now takes an injected `Clock` and reads it once per write.
   `currentTimeInMillis()` is gone. → commits `f7b493b`, `6d10a8c`
 
-- [~] **7. The timezone was ambient where the clock was injected.** `YearMonth.startInclusiveMillis`,
+- [x] **7. The timezone was ambient where the clock was injected.** `YearMonth.startInclusiveMillis`,
   `GetHomeDataUseCase` and the `TransactionUi` read path all resolved days through
   `TimeZone.currentSystemDefault()`. The clock could be faked in tests; the zone could not, so no
   test could cover a month boundary in another zone.
@@ -73,12 +72,53 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
   the zone and the month window would not notice; `YearMonth.current`'s `timeZone` parameter
   defaults to the ambient zone, and the default was being taken.
 
-  **Not closed: Reporte.** `ReportViewModel` takes no clock and no zone at all, so its three
-  `YearMonth.current()` calls, `GetSavingsRateUseCase`, `GetTopCategoriesOverMonthsUseCase` and
-  `ReportScreen`'s "is this the current month" check all still read the ambient zone. The three
-  `UiState.month` defaults do too, though every ViewModel overwrites them before first render. None
-  of it is wrong on a device — it is the same zone Koin injects — but it is the same untestable
-  boundary this finding is about, so the finding stays open until Reporte takes the injection.
+  **Reporte closed last, and the interesting part is what it cost.** `ReportViewModel` now takes the
+  same `clock` and `zone` its two neighbours do — with no defaults on either — and its four
+  `YearMonth.current()` calls take both.
+  That alone would have been cosmetic: `GetSavingsRateUseCase` and `GetTopCategoriesOverMonthsUseCase`
+  each accepted a `Clock` and then resolved the window's end month through the ambient zone anyway,
+  so a test could fake the clock and still not say which month a report covered. Both now take a
+  `zone` beside the `clock` — and **neither parameter keeps a default**. An ambient default is the
+  defect, not a convenience: it lets a caller read the machine without saying so, which is precisely
+  how Reporte drifted while every other caller was migrated. Deleting the defaults turned the silent
+  drift into a compile error naming the two call sites.
+
+  The wall-clock `UiState.month` defaults went with it — all three of them, in `ReportUiState`,
+  `HomeUiState` and `SeeTransactionsUiState`. A default that reads the clock is the same bug at
+  rest: it answers "which month is it" from the machine, at construction, for whoever forgot to
+  say. Deleting them made the compiler name every construction site; each now states a month — a
+  literal in tests and previews, the ViewModel's injected value in production.
+
+  `ReportScreen` also stopped computing "is this the current month" itself — Compose has no
+  injected zone to ask, so the `TodayPill` could disagree with the month printed beside it. Moving
+  the answer into `ReportUiState.isCurrentMonth` cost something that is worth writing down: the
+  Compose version was re-evaluated by recomposition for free, and a flag stored in state is not.
+  Written once at open, it would have kept calling August the current month after midnight on
+  1 September and kept the pill — the only one-tap way back — suppressed for the rest of the
+  session. So **every** path that writes state re-derives it, both reloads included, not only a
+  user-initiated month move. The honest limit: that is not the same as continuously. A screen
+  sitting idle with nothing loading still will not notice a rollover until the next intent arrives.
+  Reporte has no resume hook to hang a refresh on; adding one is a separate change.
+
+  What proves it: one instant, two zones, two different months. `2026-09-01T02:00Z` is already
+  September at UTC and still 31 August at UTC-5, and `ReportViewModelTest`,
+  `GetSavingsRateUseCaseTest` and `GetTopCategoriesOverMonthsUseCaseTest` each assert **both** — one
+  zone proves nothing, because on a machine sitting in it the ambient read agrees by accident and
+  the test stays green straight through the bug. The staleness above has its own test, on a clock
+  the test moves across a boundary under a running ViewModel.
+
+  **Still open, and the reason this finding leaves a follow-up:** the rule now holds for
+  `ReportViewModel` and the two report use cases, not for the codebase. `HomeViewModel`,
+  `SeeTransactionsViewModel`, `AddTransactionViewModel`, `EditTransactionViewModel` and
+  `ProfileViewModel` (clock only) still default their constructor parameters to the ambient ones, as
+  do `GetHomeDataUseCase`, `CreateTransactionUseCase`, `UpdateTransactionUseCase`,
+  `GetFrequentCombosUseCase`, `GetTopUsedCategoryIdsUseCase`, `GetPendingRecurringMovementsUseCase`,
+  the helpers in `DateExtensions.kt`, and `YearMonth.current` / `YearMonth.of(epochMillis)`
+  themselves — the last pair being the one that matters most, since it is what every other default
+  ultimately reaches. None of them is wrong on a device — Koin's
+  constructor DSL ignores Kotlin defaults and injects every time — but each is a place a future
+  caller can read the machine without saying so, which is exactly how Reporte drifted. Sweeping
+  them is mechanical and touches far more call sites than this change should.
 
   Still ambient, and deliberately: `DatePickerSheet` and the Compose previews, which have no
   injected clock either, and `ProfileScreen`'s last-sync stamp, which renders a real instant and is
