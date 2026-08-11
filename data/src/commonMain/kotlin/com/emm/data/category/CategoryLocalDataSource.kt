@@ -5,15 +5,16 @@ import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.data.CategoriesQueries
 import com.emm.data.EmmDatabaseData
+import com.emm.data.shared.ioDispatcher
+import com.emm.data.shared.nowMillis
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryUpsert
-import com.emm.domain.shared.currentTimeInMillis
-import com.emm.data.shared.ioDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import kotlin.time.Clock
 
-class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
+class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData, private val clock: Clock) {
 
     private val cq: CategoriesQueries
         get() = emmDatabase.categoriesQueries
@@ -35,6 +36,7 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
     }
 
     suspend fun create(categoryUpsert: CategoryUpsert) = withContext(ioDispatcher) {
+        val now = clock.nowMillis()
         cq.insert(
             categoryId = categoryUpsert.categoryId.value,
             name = categoryUpsert.name,
@@ -42,8 +44,8 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
             color = categoryUpsert.color,
             categoryType = categoryUpsert.categoryType.name,
             isDefault = false,
-            createdAt = currentTimeInMillis(),
-            updatedAt = currentTimeInMillis(),
+            createdAt = now,
+            updatedAt = now,
         )
     }
 
@@ -51,12 +53,12 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData) {
         cq.updateValues(
             name = categoryUpsert.name,
             categoryId = categoryId,
-            updatedAt = currentTimeInMillis(),
+            updatedAt = clock.nowMillis(),
         )
     }
 
     suspend fun softDelete(categoryId: String) = withContext(ioDispatcher) {
-        val now = currentTimeInMillis()
+        val now = clock.nowMillis()
         cq.softDelete(deletedAt = now, updatedAt = now, categoryId = categoryId)
     }
 }

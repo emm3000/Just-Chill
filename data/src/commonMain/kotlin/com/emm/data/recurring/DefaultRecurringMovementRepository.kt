@@ -1,6 +1,7 @@
 package com.emm.data.recurring
 
 import com.emm.data.shared.catchAsDomainException
+import com.emm.data.shared.nowMillis
 import com.emm.data.shared.safeDbCall
 import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.recurring.RecurringMovementDetails
@@ -8,12 +9,14 @@ import com.emm.domain.recurring.RecurringMovementInsert
 import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.RecurringMovementId
-import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.transaction.TransactionInsert
 import kotlinx.coroutines.flow.Flow
+import kotlin.time.Clock
 
-class DefaultRecurringMovementRepository(private val localDataSource: RecurringMovementLocalDataSource) :
-    RecurringMovementRepository {
+class DefaultRecurringMovementRepository(
+    private val localDataSource: RecurringMovementLocalDataSource,
+    private val clock: Clock,
+) : RecurringMovementRepository {
 
     override fun all(): Flow<List<RecurringMovement>> = localDataSource.all().catchAsDomainException()
 
@@ -48,6 +51,6 @@ class DefaultRecurringMovementRepository(private val localDataSource: RecurringM
         }
 
     override suspend fun skip(recurringId: RecurringMovementId, period: String): Unit = safeDbCall {
-        localDataSource.skip(recurringId.value, period, currentTimeInMillis())
+        localDataSource.skip(recurringId.value, period, clock.nowMillis())
     }
 }

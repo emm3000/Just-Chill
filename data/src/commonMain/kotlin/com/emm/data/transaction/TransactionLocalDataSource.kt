@@ -8,13 +8,14 @@ import com.emm.data.CompleteTransactionsByDateRange
 import com.emm.data.SearchTransactions
 import com.emm.data.TransactionsQueries
 import com.emm.data.shared.ioDispatcher
-import com.emm.domain.shared.currentTimeInMillis
+import com.emm.data.shared.nowMillis
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionUpdate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import kotlin.time.Clock
 
 /**
  * Upper bound on search results. Search is global (cross-month) by design, so this is the only
@@ -25,7 +26,7 @@ private const val SEARCH_RESULT_CAP = 200L
 // One entity, one data source: the function count mirrors the transaction table's operation
 // surface, and splitting it would scatter the queries without removing any.
 @Suppress("TooManyFunctions")
-class TransactionLocalDataSource(private val tq: TransactionsQueries) {
+class TransactionLocalDataSource(private val tq: TransactionsQueries, private val clock: Clock) {
 
     suspend fun create(transactionInsert: TransactionInsert) = withContext(ioDispatcher) {
         tq.insert(
@@ -102,7 +103,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
     }
 
     suspend fun softDelete(transactionId: String) = withContext(ioDispatcher) {
-        val now = currentTimeInMillis()
+        val now = clock.nowMillis()
         tq.softDelete(deletedAt = now, updatedAt = now, transactionId = transactionId)
     }
 
@@ -118,7 +119,7 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries) {
             transactionId = transactionId,
             accountId = transactionUpdate.accountId.value,
             categoryId = transactionUpdate.categoryId?.value,
-            updatedAt = currentTimeInMillis(),
+            updatedAt = clock.nowMillis(),
         )
     }
 }

@@ -11,7 +11,6 @@ import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.RecurringMovementId
-import com.emm.domain.shared.currentTimeInMillis
 import com.emm.domain.transaction.TransactionType
 
 // SQLDelight row → Entity (stays within data source)
@@ -81,22 +80,21 @@ fun SelectAllWithDetails.asExternalModelOrNull(): RecurringMovementDetails? {
     )
 }
 
-// Domain insert → flat params for LocalDataSource
-fun RecurringMovementInsert.toPersistParams(id: String): RecurringMovementEntity {
-    val now = currentTimeInMillis()
-    return RecurringMovementEntity(
-        id = id,
-        name = name,
-        type = type.name,
-        amount = amount?.cents,
-        description = description,
-        categoryId = categoryId?.value,
-        accountId = accountId.value,
-        frequency = Frequency.Monthly.name,
-        dayOfMonth = dayOfMonth.toLong(),
-        isActive = if (isActive) 1L else 0L,
-        lastConfirmedPeriod = null,
-        createdAt = now,
-        updatedAt = now,
-    )
-}
+// Domain insert → flat params for LocalDataSource.
+// [now] is passed in rather than read here: a mapper that reads a clock is a pure function that
+// is not, and the caller already holds the write's single timestamp.
+fun RecurringMovementInsert.toPersistParams(id: String, now: Long) = RecurringMovementEntity(
+    id = id,
+    name = name,
+    type = type.name,
+    amount = amount?.cents,
+    description = description,
+    categoryId = categoryId?.value,
+    accountId = accountId.value,
+    frequency = Frequency.Monthly.name,
+    dayOfMonth = dayOfMonth.toLong(),
+    isActive = if (isActive) 1L else 0L,
+    lastConfirmedPeriod = null,
+    createdAt = now,
+    updatedAt = now,
+)

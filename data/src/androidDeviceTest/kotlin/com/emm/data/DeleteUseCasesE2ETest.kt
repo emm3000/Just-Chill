@@ -39,6 +39,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * End-to-end instrumented tests for the four soft-delete use cases.
@@ -81,15 +82,15 @@ class DeleteUseCasesE2ETest {
         )
         database = EmmDatabaseData(driver)
 
-        val accountDs = AccountLocalDataSource(database)
-        val categoryDs = CategoryLocalDataSource(database)
-        val transactionDs = TransactionLocalDataSource(database.transactionsQueries)
-        val recurringDs = RecurringMovementLocalDataSource(database)
+        val accountDs = AccountLocalDataSource(database, Clock.System)
+        val categoryDs = CategoryLocalDataSource(database, Clock.System)
+        val transactionDs = TransactionLocalDataSource(database.transactionsQueries, Clock.System)
+        val recurringDs = RecurringMovementLocalDataSource(database, Clock.System)
 
         accountRepo = DefaultAccountRepository(accountDs)
         categoryRepo = DefaultCategoryRepository(categoryDs)
         transactionRepo = DefaultTransactionRepository(transactionDs)
-        recurringRepo = DefaultRecurringMovementRepository(recurringDs)
+        recurringRepo = DefaultRecurringMovementRepository(recurringDs, Clock.System)
 
         deleteTransaction = DeleteTransactionUseCase(transactionRepo)
         deleteCategory = DeleteCategoryUseCase(categoryRepo)
