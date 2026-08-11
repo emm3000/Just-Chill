@@ -144,6 +144,9 @@ CMP Gradle plugin is applied nowhere. `:presentation` still uses JetBrains' mult
 - `PROGRESS.md` — canonical "where are we now". Read it first.
 - `adr/` — filenames state the decision; 004 amends 002, 005 supersedes 003's frozen-UI scope.
 - `kmp/ORCHESTRATION.md` — slice workflow + ledger. `sync/PLAN.md`, `swiftui/PLAN.md` — slice status.
+- `DATE_AUDIT.md` — the 13 date-handling findings and what closed each. Read before touching dates;
+  #5 (the schema stores an instant where the app means a calendar day) is still open and is the one
+  that gets expensive after launch.
 - `PLAY_ADVERTISING_ID.md` — the app does not use the advertising ID, with the commands that prove
   it on any AAB. Read before answering Play's declaration; the console currently says "Yes", wrongly.
 - `DESIGN_SYSTEM.md` — tokens and components (its paths still point at the pre-KMP `app/` module).
