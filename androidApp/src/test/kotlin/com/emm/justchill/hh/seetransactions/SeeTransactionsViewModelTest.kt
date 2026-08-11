@@ -45,6 +45,11 @@ import kotlin.time.Instant
 /** Midday, so nothing in these tests depends on where a day boundary falls. */
 private val NOON = LocalTime(12, 0)
 
+// Every call inside a MockK `verify { }` block records an expectation instead of consuming a
+// result, so IgnoredReturnValue fires on all 14 of them here and means nothing. Suppressed on
+// this class rather than repo-wide: outside a verification block, "called it and dropped the
+// result" is a real bug in a test, and the rule should keep catching it everywhere else.
+@Suppress("IgnoredReturnValue")
 class SeeTransactionsViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
@@ -106,34 +111,30 @@ class SeeTransactionsViewModelTest {
         } returns flow
     }
 
-    private fun category(
-        id: String,
-        type: CategoryType = CategoryType.Spend,
-        name: String = "Categoria $id",
-    ) = Category(
-        categoryId = CategoryId(id),
-        name = name,
-        icon = "icon",
-        color = "green",
-        categoryType = type,
-    )
+    private fun category(id: String, type: CategoryType = CategoryType.Spend, name: String = "Categoria $id") =
+        Category(
+            categoryId = CategoryId(id),
+            name = name,
+            icon = "icon",
+            color = "green",
+            categoryType = type,
+        )
 
     // ---- Month window ----
 
     @Test
-    fun `initial month is the clock's current month and the list queries its exact bounds`() =
-        runTest(testDispatcher) {
-            val vm = buildViewModel()
-            advanceUntilIdle()
+    fun `initial month is the clock's current month and the list queries its exact bounds`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
 
-            assertEquals(currentMonth, vm.state.value.month)
-            verify {
-                transactionRepository.fetchAllWithCategoryInRange(
-                    currentMonth.startInclusiveDay(),
-                    currentMonth.endExclusiveDay(),
-                )
-            }
+        assertEquals(currentMonth, vm.state.value.month)
+        verify {
+            transactionRepository.fetchAllWithCategoryInRange(
+                currentMonth.startInclusiveDay(),
+                currentMonth.endExclusiveDay(),
+            )
         }
+    }
 
     @Test
     fun `the initial month is read in the injected zone, not the device's`() = runTest(testDispatcher) {
@@ -309,30 +310,29 @@ class SeeTransactionsViewModelTest {
     // ---- A broken query must not kill the screen ----
 
     @Test
-    fun `a failing month query degrades to an empty list and the next month still loads`() =
-        runTest(testDispatcher) {
-            val next = currentMonth.next()
-            stubRange(currentMonth, flow { error("range query exploded") })
-            stubRange(next, MutableStateFlow(listOf(tx("t-sep", TransactionType.Spend, 2_000, month = next))))
-            totalsFlow.value = TransactionTotals(balance = Money(10_000), movementCount = 3)
+    fun `a failing month query degrades to an empty list and the next month still loads`() = runTest(testDispatcher) {
+        val next = currentMonth.next()
+        stubRange(currentMonth, flow { error("range query exploded") })
+        stubRange(next, MutableStateFlow(listOf(tx("t-sep", TransactionType.Spend, 2_000, month = next))))
+        totalsFlow.value = TransactionTotals(balance = Money(10_000), movementCount = 3)
 
-            val vm = buildViewModel()
-            advanceUntilIdle()
+        val vm = buildViewModel()
+        advanceUntilIdle()
 
-            assertTrue(vm.state.value.days.isEmpty())
+        assertTrue(vm.state.value.days.isEmpty())
 
-            // The collector has to have survived the failure, or the arrows are dead for good.
-            vm.onIntent(SeeTransactionsIntent.OnNextMonth)
-            advanceUntilIdle()
+        // The collector has to have survived the failure, or the arrows are dead for good.
+        vm.onIntent(SeeTransactionsIntent.OnNextMonth)
+        advanceUntilIdle()
 
-            verify {
-                transactionRepository.fetchAllWithCategoryInRange(
-                    next.startInclusiveDay(),
-                    next.endExclusiveDay(),
-                )
-            }
-            assertEquals(listOf("t-sep"), vm.state.value.days.flatMap { d -> d.transactions.map { it.transactionId } })
+        verify {
+            transactionRepository.fetchAllWithCategoryInRange(
+                next.startInclusiveDay(),
+                next.endExclusiveDay(),
+            )
         }
+        assertEquals(listOf("t-sep"), vm.state.value.days.flatMap { d -> d.transactions.map { it.transactionId } })
+    }
 
     @Test
     fun `a failing search degrades to an empty list and clearing the filter still loads the month`() =
@@ -364,40 +364,39 @@ class SeeTransactionsViewModelTest {
     // ---- "today" is a question about a zone ----
 
     @Test
-    fun `the day header resolves HOY against the injected zone, not the machine's`() =
-        runTest(testDispatcher) {
-            // One instant, two answers. 2026-08-15 22:00 in Lima is already 2026-08-16 08:00 in
-            // Karachi, so a movement on the 15th is HOY for one user and AYER for the other.
-            //
-            // Finding #7 in docs/DATE_AUDIT.md was that no test could ever assert this, because
-            // the zone was read from the environment while the clock was injected. It is injected
-            // now, and this is the assertion that was previously impossible to write.
-            val eveningInLima = object : Clock {
-                override fun now(): Instant = Instant.parse("2026-08-16T03:00:00Z")
-            }
-            monthTransactionsFlow.value = listOf(
-                tx("t-1", TransactionType.Spend, 1_000, daysIntoMonth = 15),
-            )
-
-            val lima = SeeTransactionsViewModel(
-                searchTransactions,
-                categoryRepository,
-                transactionRepository,
-                eveningInLima,
-                TimeZone.of("America/Lima"),
-            )
-            val karachi = SeeTransactionsViewModel(
-                searchTransactions,
-                categoryRepository,
-                transactionRepository,
-                eveningInLima,
-                TimeZone.of("Asia/Karachi"),
-            )
-            advanceUntilIdle()
-
-            assertEquals("HOY", lima.state.value.days.single().primaryLabel)
-            assertEquals("AYER", karachi.state.value.days.single().primaryLabel)
+    fun `the day header resolves HOY against the injected zone, not the machine's`() = runTest(testDispatcher) {
+        // One instant, two answers. 2026-08-15 22:00 in Lima is already 2026-08-16 08:00 in
+        // Karachi, so a movement on the 15th is HOY for one user and AYER for the other.
+        //
+        // Finding #7 in docs/DATE_AUDIT.md was that no test could ever assert this, because
+        // the zone was read from the environment while the clock was injected. It is injected
+        // now, and this is the assertion that was previously impossible to write.
+        val eveningInLima = object : Clock {
+            override fun now(): Instant = Instant.parse("2026-08-16T03:00:00Z")
         }
+        monthTransactionsFlow.value = listOf(
+            tx("t-1", TransactionType.Spend, 1_000, daysIntoMonth = 15),
+        )
+
+        val lima = SeeTransactionsViewModel(
+            searchTransactions,
+            categoryRepository,
+            transactionRepository,
+            eveningInLima,
+            TimeZone.of("America/Lima"),
+        )
+        val karachi = SeeTransactionsViewModel(
+            searchTransactions,
+            categoryRepository,
+            transactionRepository,
+            eveningInLima,
+            TimeZone.of("Asia/Karachi"),
+        )
+        advanceUntilIdle()
+
+        assertEquals("HOY", lima.state.value.days.single().primaryLabel)
+        assertEquals("AYER", karachi.state.value.days.single().primaryLabel)
+    }
 
     // ---- Empty-state split ----
 
@@ -589,22 +588,21 @@ class SeeTransactionsViewModelTest {
     }
 
     @Test
-    fun `OnCategoryToggled twice with same id toggles off and returns to month mode`() =
-        runTest(testDispatcher) {
-            // The category must exist, or the deleted-category auto-reset clears the filter
-            // between the two toggles and the second one re-activates instead of toggling off.
-            categoriesFlow.value = listOf(category("cat-1"))
-            val vm = buildViewModel()
-            advanceUntilIdle()
+    fun `OnCategoryToggled twice with same id toggles off and returns to month mode`() = runTest(testDispatcher) {
+        // The category must exist, or the deleted-category auto-reset clears the filter
+        // between the two toggles and the second one re-activates instead of toggling off.
+        categoriesFlow.value = listOf(category("cat-1"))
+        val vm = buildViewModel()
+        advanceUntilIdle()
 
-            vm.onIntent(SeeTransactionsIntent.OnCategoryToggled("cat-1"))
-            advanceUntilIdle()
-            vm.onIntent(SeeTransactionsIntent.OnCategoryToggled("cat-1"))
-            advanceUntilIdle()
+        vm.onIntent(SeeTransactionsIntent.OnCategoryToggled("cat-1"))
+        advanceUntilIdle()
+        vm.onIntent(SeeTransactionsIntent.OnCategoryToggled("cat-1"))
+        advanceUntilIdle()
 
-            // An empty filter no longer searches: it re-subscribes the month window.
-            verify(exactly = 2) { transactionRepository.fetchAllWithCategoryInRange(any(), any()) }
-        }
+        // An empty filter no longer searches: it re-subscribes the month window.
+        verify(exactly = 2) { transactionRepository.fetchAllWithCategoryInRange(any(), any()) }
+    }
 
     @Test
     fun `OnClearFilters resets query and filter`() = runTest(testDispatcher) {

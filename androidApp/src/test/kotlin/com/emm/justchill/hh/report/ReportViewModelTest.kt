@@ -307,7 +307,6 @@ class ReportViewModelTest {
         // Let the coroutine start but stay suspended.
         testDispatcher.scheduler.runCurrent()
 
-        val firstMonth = vm.state.value.month
         val secondMonth = YearMonth(2024, Month.JANUARY)
 
         // Trigger first change: moves to previous, cancels the init load, starts a new load (also suspends).

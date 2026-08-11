@@ -39,6 +39,8 @@ class RecurringMovementsViewModelTest {
 
     private lateinit var viewModel: RecurringMovementsViewModel
 
+    // A test data factory: every parameter past the first two is a defaulted knob one test flips.
+    @Suppress("LongParameterList")
     private fun details(
         id: String,
         name: String,

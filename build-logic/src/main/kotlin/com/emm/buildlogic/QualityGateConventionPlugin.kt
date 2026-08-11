@@ -68,6 +68,13 @@ class QualityGateConventionPlugin : Plugin<Project> {
             "detektAndroidDeviceTestSourceSet",
             // :androidApp: fans out across all four build variants.
             "detektMain",
+            // :androidApp: the unit tests. `detektMain` covers production classes ONLY, so without
+            // this the MockK ViewModel suite in androidApp/src/test — the largest test source set in
+            // the repo — was the one body of code the gate never linted. It was carrying 24 findings
+            // when this joined. It fans out to the debug variants only (dev + prod): detekt registers
+            // no test task for a release variant, and every variant reads the same `src/test` folder,
+            // so the source set is fully covered anyway.
+            "detektTest",
         )
 
         /**

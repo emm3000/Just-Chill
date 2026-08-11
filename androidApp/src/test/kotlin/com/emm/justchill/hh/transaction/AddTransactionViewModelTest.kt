@@ -60,10 +60,9 @@ class AddTransactionViewModelTest {
         override fun now(): Instant = instant
     }
 
-    private fun instantAt(date: LocalDate, hour: Int, minute: Int): Instant =
-        Instant.fromEpochMilliseconds(
-            LocalDateTime(date, LocalTime(hour, minute)).toInstant(lima).toEpochMilliseconds(),
-        )
+    private fun instantAt(date: LocalDate, hour: Int, minute: Int): Instant = Instant.fromEpochMilliseconds(
+        LocalDateTime(date, LocalTime(hour, minute)).toInstant(lima).toEpochMilliseconds(),
+    )
 
     private val fixedClock = MovableClock(instantAt(today, hour = 14, minute = 30))
 
@@ -133,25 +132,24 @@ class AddTransactionViewModelTest {
     // ── the day is resolved when saving, not when the screen opened ───────────
 
     @Test
-    fun `an untouched date saves as the day it is saved on, not the day the screen opened`() =
-        runTest(testDispatcher) {
-            val vm = buildViewModel()
-            advanceUntilIdle()
+    fun `an untouched date saves as the day it is saved on, not the day the screen opened`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
 
-            // The screen was opened just before midnight and sat there. Resolving "Hoy" at
-            // construction booked the movement on the previous day, silently.
-            fixedClock.instant = instantAt(tomorrow, hour = 0, minute = 5)
+        // The screen was opened just before midnight and sat there. Resolving "Hoy" at
+        // construction booked the movement on the previous day, silently.
+        fixedClock.instant = instantAt(tomorrow, hour = 0, minute = 5)
 
-            vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
-            advanceUntilIdle()
-            vm.onIntent(AddTransactionIntent.OnSave)
-            advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnSave)
+        advanceUntilIdle()
 
-            val insert = slot<TransactionInsert>()
-            coVerify { createTransaction.invoke(capture(insert)) }
-            // The day the save happened on, at the hour it happened at.
-            assertEquals(LocalDateTime(tomorrow, LocalTime(0, 5)), insert.captured.occurredAt)
-        }
+        val insert = slot<TransactionInsert>()
+        coVerify { createTransaction.invoke(capture(insert)) }
+        // The day the save happened on, at the hour it happened at.
+        assertEquals(LocalDateTime(tomorrow, LocalTime(0, 5)), insert.captured.occurredAt)
+    }
 
     @Test
     fun `a picked date is not re-resolved when the clock rolls over`() = runTest(testDispatcher) {
