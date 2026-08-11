@@ -50,6 +50,8 @@ import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
 import com.emm.justchill.hh.transaction.sheets.CategoryPickerSheet
 import com.emm.justchill.hh.transaction.sheets.DatePickerSheet
 import com.emm.justchill.hh.transaction.sheets.NoteSheet
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -174,7 +176,7 @@ private fun EditTransactionContent(
 
             QuickChip(
                 eyebrow = "FECHA",
-                value = state.date,
+                value = state.dateLabel,
                 dotColor = null,
                 onClick = { showDateSheet = true },
                 modifier = Modifier.weight(1f),
@@ -241,8 +243,8 @@ private fun EditTransactionContent(
 
     if (showDateSheet) {
         DatePickerSheet(
-            currentMillis = DateUtils.currentDateInMillis(),
-            onConfirm = { millis -> onIntent(EditTransactionIntent.OnDateChangeInMillis(millis)) },
+            currentDate = state.date,
+            onConfirm = { date -> onIntent(EditTransactionIntent.OnDateSelected(date)) },
             onDismiss = { showDateSheet = false },
         )
     }
@@ -277,6 +279,8 @@ private fun EditTransactionPreview() {
     EmmTheme {
         EditTransactionContent(
             state = EditTransactionUiState(
+                date = LocalDate(2026, Month.AUGUST, 10),
+                today = LocalDate(2026, Month.AUGUST, 10),
                 amount = "8540",
                 transactionType = TransactionType.Spend,
                 description = "Mercado Vea — pollo y verduras",

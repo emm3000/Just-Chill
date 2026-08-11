@@ -19,9 +19,16 @@ import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.UpdateTransactionUseCase
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.hh.shared.localDateOf
+import com.emm.justchill.hh.shared.startOfDayMillis
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 
+@Suppress("LongParameterList")
 class EditTransactionViewModel(
     private val transactionId: String,
     private val accountRepository: AccountRepository,
@@ -31,12 +38,13 @@ class EditTransactionViewModel(
     private val deleteTransaction: DeleteTransactionUseCase,
     private val findAccount: FindAccountUseCase,
     private val getTopUsedCategoryIds: GetTopUsedCategoryIdsUseCase,
+    private val clock: Clock = Clock.System,
+    private val zone: TimeZone = TimeZone.currentSystemDefault(),
 ) : MviViewModel<EditTransactionUiState, EditTransactionIntent, EditTransactionEffect>() {
 
-    override val initialState = EditTransactionUiState()
+    override val initialState = EditTransactionUiState(date = today(), today = today())
 
     private var oldTransaction: Transaction = Transaction.Empty
-    private var dateInLong: Long = DateUtils.currentDateInMillis()
 
     private var snapshot: Snapshot? = null
     private val allCategories: MutableMap<CategoryType, List<SelectableCategory>> = mutableMapOf()
@@ -53,7 +61,7 @@ class EditTransactionViewModel(
 
             is EditTransactionIntent.OnTransactionTypeChange -> changeTransactionType(intent.value)
 
-            is EditTransactionIntent.OnDateChangeInMillis -> updateCurrentDate(intent.value)
+            is EditTransactionIntent.OnDateSelected -> updateState { copy(date = intent.value).recompute() }
 
             is EditTransactionIntent.OnAccountSelected -> updateState {
                 copy(
@@ -95,7 +103,7 @@ class EditTransactionViewModel(
         val snap = snapshot ?: return copy(isEnabled = false, hasChanges = false)
         val changed = amount != snap.amount ||
             description != snap.description ||
-            dateInLong != snap.dateMillis ||
+            date != snap.date ||
             transactionType != snap.type ||
             accountSelected?.accountId != snap.accountId ||
             categorySelected?.categoryId != snap.categoryId
@@ -113,7 +121,7 @@ class EditTransactionViewModel(
 
         oldTransaction = findTransaction(TransactionId(transactionId)) ?: return@launch
         val account = findAccount(oldTransaction.accountId) ?: return@launch
-        dateInLong = oldTransaction.date
+        val storedDay: LocalDate = localDateOf(oldTransaction.date, zone)
 
         val selectedCategory: SelectableCategory? = oldTransaction.categoryId?.let { id ->
             categoriesList.firstOrNull { it.categoryId == id }
@@ -123,7 +131,7 @@ class EditTransactionViewModel(
         snapshot = Snapshot(
             amount = moneyCentsString(oldTransaction.amount),
             description = oldTransaction.description,
-            dateMillis = oldTransaction.date,
+            date = storedDay,
             type = oldTransaction.type,
             accountId = account.accountId,
             categoryId = oldTransaction.categoryId,
@@ -133,7 +141,7 @@ class EditTransactionViewModel(
             copy(
                 amount = moneyCentsString(oldTransaction.amount),
                 description = oldTransaction.description,
-                date = DateUtils.friendlyDate(oldTransaction.date),
+                date = storedDay,
                 transactionType = oldTransaction.type,
                 accounts = accounts,
                 accountSelected = account,
@@ -153,10 +161,13 @@ class EditTransactionViewModel(
         sendEffect(EditTransactionEffect.TransactionUpdated)
     }
 
+    // The one place the picked day becomes an instant. UpdateTransactionUseCase then carries the
+    // original time of day back over this midnight, so moving a transaction to another day does
+    // not restamp the hour it was recorded at.
     private fun createTransactionUpdate(): TransactionUpdate = TransactionUpdate(
         type = currentState.transactionType,
         description = currentState.description,
-        date = dateInLong,
+        date = startOfDayMillis(currentState.date, zone),
         amount = centsToMoney(currentState.amount),
         accountId = currentState.accountSelected?.accountId
             ?: error("accountSelected required to build TransactionUpdate — UI should have disabled save"),
@@ -170,15 +181,12 @@ class EditTransactionViewModel(
         sendEffect(EditTransactionEffect.TransactionDeleted)
     }
 
-    private fun updateCurrentDate(millis: Long?) = millis?.let {
-        dateInLong = it
-        updateState { copy(date = DateUtils.friendlyDate(it)).recompute() }
-    }
+    private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
 
     private data class Snapshot(
         val amount: String,
         val description: String,
-        val dateMillis: Long,
+        val date: LocalDate,
         val type: TransactionType,
         val accountId: AccountId,
         val categoryId: CategoryId?,

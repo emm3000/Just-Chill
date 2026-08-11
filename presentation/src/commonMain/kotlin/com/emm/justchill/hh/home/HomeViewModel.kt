@@ -17,6 +17,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class HomeViewModel(
     private val getHomeData: GetHomeDataUseCase,
@@ -68,13 +71,20 @@ class HomeViewModel(
 
     private fun HomeUiState.mapToUiState(data: HomeData): HomeUiState = copy(
         month = selectedMonth.value,
-        lastTransactions = data.lastTransactions.toUi(),
+        lastTransactions = data.lastTransactions.toUi(today()),
         income = data.income,
         spend = data.spend,
         balance = data.balance,
         hasAnyTransaction = data.hasAnyTransaction,
         pendingRecurringMovements = data.pendingRecurringMovements.toPendingUi(),
     )
+
+    /**
+     * The reference date the row labels resolve Hoy/Ayer against, read once per mapping pass so
+     * every row in one emission agrees — and so the branch runs off this ViewModel's injected
+     * clock instead of an ambient one buried in the mapper.
+     */
+    private fun today(): LocalDate = clock.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 
     // Current month comes from the clock, not from the selected month: it is what marks a pending
     // item as catch-up, and browsing to March must not relabel March's own pending row.

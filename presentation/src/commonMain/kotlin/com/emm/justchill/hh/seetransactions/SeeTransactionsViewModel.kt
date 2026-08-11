@@ -249,7 +249,7 @@ private fun List<TransactionWithCategory>.toDayGroups(today: LocalDate): List<Da
     Instant.fromEpochMilliseconds(transaction.date)
         .toLocalDateTime(TimeZone.currentSystemDefault())
         .date
-}.map { (date, transactions) -> DayGroup(date = date, today = today, transactions = transactions.toUi()) }
+}.map { (date, transactions) -> DayGroup(date = date, today = today, transactions = transactions.toUi(today)) }
 
 // Single pass over the month's raw amounts, before any toUi mapping. The window bounds the
 // input to one month's rows, so this stays cheap on every emission.

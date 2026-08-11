@@ -12,23 +12,34 @@ import com.emm.domain.transaction.FrequentCombo
 import com.emm.domain.transaction.GetFrequentCombosUseCase
 import com.emm.domain.transaction.GetLastUsedAccountIdUseCase
 import com.emm.domain.transaction.GetTopUsedCategoryIdsUseCase
+import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.Month
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toInstant
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class AddTransactionViewModelTest {
 
@@ -36,6 +47,16 @@ class AddTransactionViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
+
+    private val lima = TimeZone.of("America/Lima")
+    private val today = LocalDate(2026, Month.AUGUST, 10)
+
+    /** Fixed at 2026-08-10 14:30 Lima, so "today" never depends on when the suite runs. */
+    private val fixedClock = object : Clock {
+        override fun now(): Instant = Instant.fromEpochMilliseconds(
+            LocalDateTime(today, LocalTime(14, 30)).toInstant(lima).toEpochMilliseconds(),
+        )
+    }
 
     private val account1 = Account(AccountId("yape"), "Yape")
     private val account2 = Account(AccountId("bcp"), "BCP")
@@ -82,7 +103,66 @@ class AddTransactionViewModelTest {
         getLastUsedAccountId = getLastUsedAccountId,
         accountRepository = accountRepository,
         categoryRepository = categoryRepository,
+        clock = fixedClock,
+        zone = lima,
     )
+
+    // ── the selected date lives in the state ──────────────────────────────────
+
+    @Test
+    fun `date defaults to today from the injected clock`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertEquals(today, vm.state.value.date)
+        assertEquals(today, vm.state.value.today)
+        assertEquals("Hoy", vm.state.value.dateLabel)
+    }
+
+    @Test
+    fun `OnDateSelected replaces the day in the state`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(AddTransactionIntent.OnDateSelected(LocalDate(2026, Month.JUNE, 13)))
+        advanceUntilIdle()
+
+        assertEquals(LocalDate(2026, Month.JUNE, 13), vm.state.value.date)
+        assertEquals("13 jun", vm.state.value.dateLabel)
+    }
+
+    @Test
+    fun `save sends the picked day as local midnight`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        val picked = LocalDate(2026, Month.JUNE, 13)
+        vm.onIntent(AddTransactionIntent.OnDateSelected(picked))
+        vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
+        advanceUntilIdle()
+
+        vm.onIntent(AddTransactionIntent.OnSave)
+        advanceUntilIdle()
+
+        val insert = slot<TransactionInsert>()
+        coVerify { createTransaction.invoke(capture(insert)) }
+        assertEquals(picked.atStartOfDayIn(lima).toEpochMilliseconds(), insert.captured.date)
+    }
+
+    @Test
+    fun `OnReset returns the date to today`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(AddTransactionIntent.OnDateSelected(LocalDate(2026, Month.JUNE, 13)))
+        advanceUntilIdle()
+
+        vm.onIntent(AddTransactionIntent.OnReset)
+        advanceUntilIdle()
+
+        assertEquals(today, vm.state.value.date)
+        assertEquals("Hoy", vm.state.value.dateLabel)
+    }
 
     // ── frequentCombos state ──────────────────────────────────────────────────
 

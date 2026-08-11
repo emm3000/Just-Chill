@@ -57,6 +57,8 @@ import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
 import com.emm.justchill.hh.transaction.sheets.CategoryPickerSheet
 import com.emm.justchill.hh.transaction.sheets.DatePickerSheet
 import com.emm.justchill.hh.transaction.sheets.NoteSheet
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
 
 @Composable
 fun AddTransactionScreen(
@@ -196,7 +198,7 @@ private fun AddTransactionScreenContent(
 
             QuickChip(
                 eyebrow = "FECHA",
-                value = state.date,
+                value = state.dateLabel,
                 dotColor = null,
                 onClick = { showDateSheet = true },
                 modifier = Modifier.weight(1f),
@@ -283,10 +285,8 @@ private fun AddTransactionScreenContent(
 
     if (showDateSheet) {
         DatePickerSheet(
-            currentMillis = DateUtils.currentDateInMillis(),
-            onConfirm = { millis ->
-                onIntent(AddTransactionIntent.OnDateChangeInMillis(millis))
-            },
+            currentDate = state.date,
+            onConfirm = { date -> onIntent(AddTransactionIntent.OnDateSelected(date)) },
             onDismiss = { showDateSheet = false },
         )
     }
@@ -321,6 +321,8 @@ private fun AddTransactionPreview() {
         }
         AddTransactionScreenContent(
             state = AddTransactionUiState(
+                date = LocalDate(2026, Month.AUGUST, 10),
+                today = LocalDate(2026, Month.AUGUST, 10),
                 categories = categories,
                 amount = "8540",
                 transactionType = TransactionType.Spend,
