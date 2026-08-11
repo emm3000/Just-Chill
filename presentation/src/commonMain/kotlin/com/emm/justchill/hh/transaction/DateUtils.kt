@@ -19,13 +19,6 @@ object DateUtils {
         return SpanishDateFormat.longDate(today)
     }
 
-    fun millisToReadableFormatUTC(millis: Long): String {
-        val date: LocalDate = Instant.fromEpochMilliseconds(millis)
-            .toLocalDateTime(TimeZone.UTC)
-            .date
-        return SpanishDateFormat.longDate(date)
-    }
-
     fun currentDateInMillis(): Long {
         val zone = TimeZone.currentSystemDefault()
         return today(zone).atStartOfDayIn(zone).toEpochMilliseconds()
@@ -41,8 +34,6 @@ object DateUtils {
             else -> SpanishDateFormat.dayShortMonth(date).titlecaseFirstChar()
         }
     }
-
-    fun friendlyDateUTC(millis: Long): String = friendlyDate(millis, TimeZone.UTC)
 
     fun readableTime(millis: Long): String {
         val time = Instant.fromEpochMilliseconds(millis)

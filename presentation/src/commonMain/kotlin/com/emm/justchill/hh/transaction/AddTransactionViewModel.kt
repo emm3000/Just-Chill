@@ -212,7 +212,7 @@ class AddTransactionViewModel(
 
     private fun updateCurrentDate(millis: Long?) = millis?.let {
         dateInLong = it
-        updateState { copy(date = DateUtils.friendlyDateUTC(it)).touched() }
+        updateState { copy(date = DateUtils.friendlyDate(it)).touched() }
     }
 }
 

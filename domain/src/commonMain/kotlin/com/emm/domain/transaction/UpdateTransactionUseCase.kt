@@ -16,7 +16,10 @@ class UpdateTransactionUseCase(
                 ValidationCode.AmountMustBePositive,
             )
         }
-        val dateAndTimeCombined: Long = dateAndTimeCombiner.combineWithUtc(transactionUpdate.date)
+        val dateAndTimeCombined: Long = dateAndTimeCombiner.combineKeepingTimeOf(
+            dateInMillis = transactionUpdate.date,
+            timeSourceInMillis = oldTransaction.date,
+        )
         val updatedTransaction: TransactionUpdate = transactionUpdate.copy(date = dateAndTimeCombined)
         repository.update(
             transactionId = oldTransaction.transactionId,
