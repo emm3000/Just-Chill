@@ -6,6 +6,7 @@ import com.emm.domain.shared.Money
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.shared.UniqueIdProvider
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.error.ValidationCode
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -13,9 +14,18 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.Month
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toInstant
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class CreateTransactionUseCaseTest {
 
@@ -84,6 +94,25 @@ class CreateTransactionUseCaseTest {
         assertFailsWith<DomainException.ValidationError> {
             useCase(anyInsert.copy(amount = Money(-100L)))
         }
+        coVerify(exactly = 0) { repository.create(any()) }
+    }
+
+    @Test
+    fun `create should reject a date in the future and persist nothing`() = runTest {
+        val lima = TimeZone.of("America/Lima")
+        val today = LocalDate(2026, Month.AUGUST, 11)
+        val clock = object : Clock {
+            override fun now(): Instant = LocalDateTime(today, LocalTime(9, 0)).toInstant(lima)
+        }
+        val tomorrow = LocalDate(2026, Month.AUGUST, 12).atStartOfDayIn(lima).toEpochMilliseconds()
+        val guarded = CreateTransactionUseCase(repository, dateAndTimeCombiner, idProvider, clock, lima)
+
+        every { idProvider.id } returns "id"
+        every { dateAndTimeCombiner.combineWithCurrentTime(any()) } returns tomorrow
+
+        val ex = assertFailsWith<DomainException.ValidationError> { guarded(anyInsert) }
+
+        assertEquals(ValidationCode.DateInTheFuture, ex.code)
         coVerify(exactly = 0) { repository.create(any()) }
     }
 }

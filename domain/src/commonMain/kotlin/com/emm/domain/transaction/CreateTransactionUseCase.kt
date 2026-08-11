@@ -5,11 +5,15 @@ import com.emm.domain.shared.TransactionId
 import com.emm.domain.shared.UniqueIdProvider
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
+import kotlinx.datetime.TimeZone
+import kotlin.time.Clock
 
 class CreateTransactionUseCase(
     private val transactionRepository: TransactionRepository,
     private val dateAndTimeCombiner: DateAndTimeCombiner,
     private val uniqueIdProvider: UniqueIdProvider,
+    private val clock: Clock = Clock.System,
+    private val zone: TimeZone = TimeZone.currentSystemDefault(),
 ) {
 
     suspend operator fun invoke(transactionInsert: TransactionInsert) {
@@ -20,6 +24,7 @@ class CreateTransactionUseCase(
             )
         }
         val dateAndTimeCombined: Long = dateAndTimeCombiner.combineWithCurrentTime(transactionInsert.date)
+        ensureNotFutureDated(dateAndTimeCombined, clock, zone)
         val transaction: TransactionInsert = transactionInsert.copy(
             id = TransactionId(uniqueIdProvider.id),
             date = dateAndTimeCombined,

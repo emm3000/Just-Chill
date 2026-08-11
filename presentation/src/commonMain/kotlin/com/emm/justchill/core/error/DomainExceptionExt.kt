@@ -32,6 +32,7 @@ private fun ValidationCode.toUserMessage(): String = when (this) {
     ValidationCode.AccountRequired -> "Selecciona una cuenta"
     ValidationCode.AmountRequired -> "Ingresa un monto"
     ValidationCode.AmountMustBePositive -> "El monto debe ser mayor a cero"
+    ValidationCode.DateInTheFuture -> "No puedes registrar un movimiento con fecha futura"
     ValidationCode.DayOfMonthOutOfRange -> "El día del mes debe estar entre $MIN_DAY_OF_MONTH y $MAX_DAY_OF_MONTH"
     ValidationCode.RecurringAlreadyConfirmed -> "Ya confirmaste este movimiento para este mes"
     ValidationCode.AccountHasTransactions -> "Esta cuenta tiene movimientos. Bórralos o muévelos antes de eliminarla"
