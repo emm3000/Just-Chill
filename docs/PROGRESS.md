@@ -116,11 +116,12 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [x] Fase 0: qué apareció en pantalla al presionar borrar la cuenta. Resuelto **sin identificar
   cuál de los cuatro candidatos disparó** — el autor no lo recuerda, y el binario original de "nada
   o un error" nunca pudo haberlo decidido: era demasiado grueso para partir los cuatro candidatos.
-  "Un error" no separa el guard de `launchOp` (fila 2, sesión vencida) de la excepción client-side
-  de postgrest (fila 3) — mensajes y causas distintas, ambos "un error" — y el binario no tenía
-  ningún casillero para el `syncMutex` sin timeout (fila 4), que ni es "nada" ni es "un error" sino
-  un estado atascado a medio camino ("Eliminando…" para siempre). Se cerraron los cuatro y el
-  camino ahora es observable en vez de intentar identificar al culpable. AUDIT §8.
+  "Un error" no separa la `Unauthorized` que lanza `DeleteUserAccountUseCase` (fila 2, sesión
+  vencida) de la excepción client-side de postgrest (fila 3) — mensajes y causas distintas, ambos
+  "un error" — y el binario no tenía ningún casillero para el `syncMutex` sin timeout (fila 4), que
+  ni es "nada" ni es "un error" sino un estado atascado a medio camino ("Eliminando…" para siempre).
+  Se cerraron los cuatro y el camino ahora es observable en vez de intentar identificar al culpable.
+  AUDIT §8.
 - [x] Fase 0: que el borrado reporte su falla; rama faltante de `SessionRequiredException` en
   `toAuthDomainException`. AUDIT §8.
 - [ ] Fase 0: decidir qué se hace con los dos tenants. AUDIT §8, §10.
@@ -237,7 +238,7 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [ ] Entrada `ImportOrdering:ProfileScreen.kt` en `config/detekt/baseline-ui-android-main.xml:37`,
   probablemente muerta desde que `253e170` tocó esos imports. **No verificado**: correr la tarea y
   ver si el issue reaparece antes de borrarla.
-- [ ] Sacar el `@Suppress("CyclomaticComplexMethod")` de `ui-android/.../ProfileScreen.kt:226` al
+- [ ] Sacar el `@Suppress("CyclomaticComplexMethod")` de `ui-android/.../ProfileScreen.kt:233` al
   borrar el kill switch — cubre todo `AccountSection` en vez de solo las ramas de sync. Única
   SUGGESTION del Judgment Day de `253e170`.
 - [ ] **Burn-down de los 7 `TooManyFunctions` con amnistía** en

@@ -32,7 +32,7 @@ never authoritative.
 | Gate 1 | `core/AppGraph.kt:67` — `SyncOrchestrator.start()` never called, so no trigger and no request consumer; that consumer is the only caller of the private `runSync()` |
 | Gate 2 | `hh/profile/ProfileViewModel.kt:144` — manual path returns at its origin |
 | Not gated | `ClaimLocalDataOnAuthenticationUseCase` (`AppGraph.kt:59-63`) — stamps ownership, no network, so flipping back needs no catch-up |
-| Review | Judgment Day round 1: 0 SEVERE, 0 corrections, 1 SUGGESTION (`ProfileScreen.kt:226` suppression too wide). `qualityGate --rerun-tasks` green |
+| Review | Judgment Day round 1: 0 SEVERE, 0 corrections, 1 SUGGESTION (`ProfileScreen.kt:233` suppression too wide). `qualityGate --rerun-tasks` green |
 
 Nothing was removed; every binding, test and engine class is still wired. Profile reads
 "Sincronización en pausa". **The only runtime observation of the bug:** the owner signed out and the
@@ -209,7 +209,7 @@ failure does not repeat this dead end.**
 
 | Candidate | Evidence | Predicts on screen |
 |---|---|---|
-| 1 — `ProfileViewModel.kt:106` (`launchOp`'s `if (currentState.op != ProfileOp.None)` guard) silently discarded a confirmed intent: no effect, no snackbar, no state change, and the delete path had no logging of its own (`CrashReportingSyncLogger` covered only sync) | the guard fires on ANY concurrent op, not just delete — e.g. an in-flight Export, Import, or SignOut racing the delete tap | nothing |
+| 1 — `ProfileViewModel.kt:110` (`launchOp`'s `if (currentState.op != ProfileOp.None)` guard) silently discarded a confirmed intent: no effect, no snackbar, no state change, and the delete path had no logging of its own (`CrashReportingSyncLogger` covered only sync) | the guard fires on ANY concurrent op, not just delete — e.g. an in-flight Export, Import, or SignOut racing the delete tap | nothing |
 | 2 — `DeleteUserAccountUseCase.kt:101` throws `Unauthorized("No authenticated session")` when the session is not `Authenticated` — this includes `RefreshFailure`, which `SupabaseSessionStatus.toDomain()` (`DefaultAuthRepository.kt:166`) maps to `NotAuthenticated` | zero traffic, a real branch a stale token can hit | "Credenciales incorrectas o sesión expirada" |
 | 3 — `client.postgrest.rpc("delete_account")` (`DefaultAuthRepository.kt:105`) throws `SessionRequiredException` client-side; `toAuthDomainException` (`:205-227`, pre-fix) had no branch for it, so it fell to `else -> Unknown` | zero traffic, and the same exception's sibling branch already existed on the sync path (`DefaultSyncRepository.kt:157`, mapped to `NetworkUnavailable` there) | "Algo se rompió — capaz reinicia la app?" |
 | 4 — the whole flow runs under `syncMutex.withLock` (`DeleteUserAccountUseCase.kt:51`, no timeout on the lock itself), shared as a Koin `single` (`SyncModule.kt:72`) with `SyncDataUseCase` — a stuck sync cycle blocks the delete forever | zero traffic, indefinitely, not just once | "Eliminando…" forever (the row's `op` never leaves `DeletingAccount`) |
@@ -220,15 +220,15 @@ no, client yes — before this commit, all four candidates were live.
 
 **What this commit closed, all four at once, instead of picking a culprit:**
 - Row 1: `launchOp`'s guard now emits `ProfileEffect.Notify(ProfileMessage.OperationInProgress)`
-  before returning, instead of returning silently (`ProfileViewModel.kt:106-109`). One generic
+  before returning, instead of returning silently (`ProfileViewModel.kt:110-113`). One generic
   message for all four ops — the guard is shared and must not grow a per-op branch.
 - Row 2: unchanged behavior (a stale/refreshing session genuinely is not authenticated), but no
   longer silent — see the "Rows 2–4" logging fix below (row 3 below is the `SessionRequiredException`
   mapping, not the logging fix), which also covers this branch's `Unauthorized`.
 - Row 3: `toAuthDomainException` now maps `SessionRequiredException` to `DomainException.Unauthorized`
-  (`DefaultAuthRepository.kt:231-234`). This deliberately diverges from the sync mapper, which keeps
+  (`DefaultAuthRepository.kt:236-239`). This deliberately diverges from the sync mapper, which keeps
   mapping the same exception to `NetworkUnavailable` for a different reason (KDoc at
-  `DefaultAuthRepository.kt:206-212`) — the divergence is tracked in `docs/PROGRESS.md`, not fixed here.
+  `DefaultAuthRepository.kt:206-217`) — the divergence is tracked in `docs/PROGRESS.md`, not fixed here.
 - Rows 2–4: `DeleteUserAccountUseCase` now takes a `SyncLogger` and logs every failing step
   (`session resolve`, `remote delete`, `unclaim`, `cursor clear`) via `logger.warn(...)` before
   rethrowing the original exception unchanged; `CancellationException` is never logged as a failure.
