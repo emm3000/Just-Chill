@@ -56,18 +56,16 @@ class ReportViewModelTest {
 
     private val currentMonth = YearMonth(2026, Month.MAY)
 
-    private fun buildViewModel(
-        clock: Clock = fixedClock,
-        zone: TimeZone = TimeZone.UTC,
-    ): ReportViewModel = ReportViewModel(
-        getMonthlyAmountByCategory = getMonthlyAmountByCategory,
-        getMonthlyComparison = getMonthlyComparison,
-        getMonthlySectionStats = getMonthlySectionStats,
-        getSavingsRate = getSavingsRate,
-        getTopCategories = getTopCategories,
-        clock = clock,
-        zone = zone,
-    )
+    private fun buildViewModel(clock: Clock = fixedClock, zone: TimeZone = TimeZone.UTC): ReportViewModel =
+        ReportViewModel(
+            getMonthlyAmountByCategory = getMonthlyAmountByCategory,
+            getMonthlyComparison = getMonthlyComparison,
+            getMonthlySectionStats = getMonthlySectionStats,
+            getSavingsRate = getSavingsRate,
+            getTopCategories = getTopCategories,
+            clock = clock,
+            zone = zone,
+        )
 
     /** Returns a minimal SavingsRate with no data months. */
     private fun emptySavingsRate(): SavingsRate = SavingsRate(
