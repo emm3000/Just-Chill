@@ -4,9 +4,17 @@
 > Purpose: give design a complete, accurate map of what exists today, where it deviates from
 > `DESIGN_SYSTEM.md`, and what is coming next — so the redesign happens once, with full context.
 >
-> **Stale in two places** (2026-08): §7 describes Google sign-in as upcoming — it shipped, and the
-> screens now live in `:ui-android` commonMain shared with iOS. The UI critique in §6 has not been
-> re-verified since. Treat §1–§5 as a map of intent, not a current screenshot.
+> **Archived (2026-08-11).** Both reasons this file existed are spent. §7's "coming next" —
+> Google sign-in — shipped (`androidApp/.../auth/GoogleCredentialClient.kt`). All three of its
+> **P0** items shipped too: the error-tone snackbar (`core/ui/atoms/EmmSnackbar.kt`), the CTA
+> loading spinner (`StickyCTA.kt`, `FilledCta.kt`) and the dedicated "Revisa tu correo" state
+> (`AuthScreen.kt`). What is left is P1/P2 cosmetic polish that nobody scheduled.
+>
+> Its §8 paths point at `ui-android/src/commonMain/`, a source set ADR 005 deleted — the screens
+> are Android-only now and iOS is native SwiftUI. Deviation #7 in §6 (DESIGN_SYSTEM §13 still
+> claiming the app has no auth screens) was carried over and fixed in `docs/DESIGN_SYSTEM.md`
+> before this was archived. Kept for the reasoning; treat §1–§5 as a map of intent, not a
+> current screenshot.
 
 **TL;DR for design:** the auth/sync UI was built engineering-first. It works, but it uses bespoke
 components where design-system atoms exist, has missing states (loading, focus, pending-email),

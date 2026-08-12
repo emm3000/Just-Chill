@@ -160,8 +160,13 @@ CMP Gradle plugin is applied nowhere. `:presentation` still uses JetBrains' mult
   regenerates the list — tests and the dev `experiences/` playground are out of its scope.
 - `PLAY_ADVERTISING_ID.md` — the app does not use the advertising ID, with the commands that prove
   it on any AAB. Read before answering Play's declaration; the console currently says "Yes", wrongly.
-- `DESIGN_SYSTEM.md` — tokens and components (its paths still point at the pre-KMP `app/` module).
-- `PRODUCT_*.md`, `ROADMAP_V1.md`, `POST_V1_PLAN.md` — Fases 1-5. `archive/` — closed tracks.
+- `DESIGN_SYSTEM.md` — tokens and components. Its paths were corrected on 2026-08-11; they point
+  at `ui-android/src/androidMain/`, which is the only source set `:ui-android` has.
+- `PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `POST_V1_PLAN.md` — Fases 1-5, still live:
+  the first two are the product definition ADR 001 amends by row id, the third is unstarted growth
+  work. `archive/` — closed tracks, kept for the reasoning. `ROADMAP_V1.md` moved there on
+  2026-08-11 (its 8 sprints all shipped), as did the four `kmp/` migration docs
+  (`archive/kmp/`) and `AUTH_SYNC_UI_BLUEPRINT.md`.
 
 Latest tags: `v2.4.0`, `pre-kmp` (rollback point before the KMP migration). `v2.4.0` is tagged and
 built but has NOT reached the alpha track — its Play upload was rejected, see `PLAY_ADVERTISING_ID.md`.

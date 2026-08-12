@@ -1,5 +1,12 @@
 # ROADMAP — JustChill v1 alpha
 
+> **Archivado.** Plan calendarizado con fechas que ya vencieron (arrancaba el 2026-05-17 y
+> apuntaba a alpha el 2026-07-26): los 8 sprints se ejecutaron y la app está en alpha cerrada.
+> Se conserva por el razonamiento y por el gate pre-alpha que definió, no como checklist viva.
+> Lo que sigue abierto está en el checklist de `docs/PROGRESS.md`. La definición de producto que
+> este roadmap implementa sigue vigente en `docs/PRODUCT_DISCOVERY.md` y
+> `docs/PRODUCT_REQUIREMENTS.md`.
+
 **Fase**: 4 de 5 (Roadmap a Play Store alpha)
 **Bloquea**: Fase 5 (Post-v1 + growth).
 **Depende de**: PRODUCT_DISCOVERY.md (Fase 1), PRODUCT_REQUIREMENTS.md (Fase 2),

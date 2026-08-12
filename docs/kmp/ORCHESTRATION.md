@@ -1,8 +1,10 @@
 # KMP Migration — Orchestration Workflow
 
 > How we execute each slice of the KMP / Compose Multiplatform migration.
-> Carved out after Slices 1–3 proved the loop. Companion to
-> `MIGRATION_PLAN.md` and `PHASE_3_SPEC.md`.
+> Carved out after Slices 1–3 proved the loop. Its two companions were archived once
+> the migration merged — `../archive/kmp/MIGRATION_PLAN.md` and
+> `../archive/kmp/PHASE_3_SPEC.md`, both historical and both carrying decisions that
+> were later reversed. This file is the one that stays current.
 
 ## Roles
 
@@ -40,7 +42,7 @@ Before delegating, map the slice cheaply so the writer prompt is precise:
 
 ### 2. Writer prompt must include
 - Repo root, branch (`kmp/phase-0-scaffolding`), "commit here, do NOT branch/push".
-- Pointers to read: `PHASE_3_SPEC.md` STATUS banner + the slice, the relevant
+- Pointers to read: `../archive/kmp/PHASE_3_SPEC.md` STATUS banner + the slice, the relevant
   engram memos (`kmp/phase-3/slice-N-*`), the previous slice's commit hash.
 - Exact file list to move, package-paths-unchanged rule.
 - Pre-scoped blockers from step 1 (Preview strip, koin swap, Koin split, de-JVM).

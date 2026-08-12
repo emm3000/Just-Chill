@@ -1,7 +1,12 @@
 # Phase 2 — `:data` → KMP — Execution Spec
 
+> **Archived.** This contract was executed: `:data` is Kotlin Multiplatform on trunk and
+> `data/src/commonMain/` exists. Every `git mv` and build-file body below has already landed,
+> so nothing here is actionable. Kept for the reasoning. Live KMP doc:
+> `docs/kmp/ORCHESTRATION.md`; current state: `docs/PROGRESS.md`.
+
 > Contract for converting `:data` to Kotlin Multiplatform. Android MUST stay green;
-> iOS target MUST compile. Companion to `docs/kmp/MIGRATION_PLAN.md`.
+> iOS target MUST compile. Companion to `docs/archive/kmp/MIGRATION_PLAN.md`.
 > Branch: `kmp/phase-0-scaffolding` (continuation). Language: English. No Co-Authored-By.
 
 ## Surface audit (complete — verified 2026-06-12)

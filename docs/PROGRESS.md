@@ -229,8 +229,9 @@ base Compose** para Android e iOS. 67 commits, fast-forward a trunk.
   nav host, Koin, preferencias y orquestador de sync en commonMain.
 
 El workflow, el ledger de slices con hashes y los landmines carry-forward están
-en `docs/kmp/ORCHESTRATION.md` — **es el doc vigente**. `MIGRATION_PLAN.md` y
-`PHASE_3_SPEC.md` son históricos y tienen decisiones que después se revirtieron.
+en `docs/kmp/ORCHESTRATION.md` — **es el doc vigente y el único que quedó en `docs/kmp/`**.
+`MIGRATION_PLAN.md`, `PHASE_2_SPEC.md`, `PHASE_3_SPEC.md` y `BASELINE.md` se archivaron en
+`docs/archive/kmp/`: son históricos y los dos specs tienen decisiones que después se revirtieron.
 
 ---
 
@@ -354,11 +355,18 @@ siguen en el repo como marcadores históricos.
 - `docs/adr/` — 001 (reversa a local-first con sync opcional), 002 (cursor de pull),
   003 (iOS congelado: se mantiene solo el compile gate, se retira el ritual),
   004 (el resolver de conflictos solo arbitra ediciones sin pushear; enmienda al 002).
-- `docs/PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `ROADMAP_V1.md`,
-  `POST_V1_PLAN.md` — definición de producto, Fases 1-5.
-- `docs/DESIGN_SYSTEM.md` — tokens y componentes.
-- `docs/PLAY_STORE_LISTING.md`, `docs/PRIVACY_POLICY.md` — material de publicación.
-- `docs/archive/` — tracks cerrados que se conservan por el razonamiento.
+- `docs/PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `POST_V1_PLAN.md` — definición de
+  producto, Fases 1-5. Siguen vigentes: discovery es la persona y el manifesto, requirements tiene
+  los Won't que todavía acotan alcance (y que el ADR 001 enmienda por id de fila), y el post-v1
+  es crecimiento sin arrancar.
+- `docs/DESIGN_SYSTEM.md` — tokens y componentes. Rutas corregidas el 2026-08-11.
+- `docs/PLAY_STORE_LISTING.md`, `docs/PRIVACY_POLICY.md` — material de publicación. El listing
+  todavía promete "Sin login. Sin servidor." — lo contradice el ADR 001 y hay que reescribirlo
+  antes de subir.
+- `docs/archive/` — tracks cerrados que se conservan por el razonamiento. El 2026-08-11 se
+  sumaron `ROADMAP_V1.md` (sus 8 sprints se ejecutaron), `AUTH_SYNC_UI_BLUEPRINT.md` (todos sus
+  P0 shipearon) y `archive/kmp/` con los cuatro docs de la migración —
+  `BASELINE.md`, `MIGRATION_PLAN.md`, `PHASE_2_SPEC.md`, `PHASE_3_SPEC.md`.
 
 ---
 

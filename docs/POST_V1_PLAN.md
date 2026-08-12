@@ -372,8 +372,8 @@ hay miles parecidas y mejores, qué de nuevo estoy haciendo T.T"*.
 |---|---|---|
 | 1 | `PRODUCT_DISCOVERY.md` | Sebastián, peruano 25-35 con sueldo + ingresos extras. Manifesto anti-complejidad. |
 | 2 | `PRODUCT_REQUIREMENTS.md` | 15 Must, 12 Won't explícitos, métrica norte retención sem 4. |
-| 3 | `ARCHITECTURE_REVIEW.md` | 9 quick wins, 5 big rocks, ~1,600 LOC para llegar. |
-| 4 | `ROADMAP_V1.md` | 10 semanas, 8 sprints, gate pre-alpha. |
+| 3 | `archive/ARCHITECTURE_REVIEW.md` | 9 quick wins, 5 big rocks, ~1,600 LOC para llegar. |
+| 4 | `archive/ROADMAP_V1.md` | 10 semanas, 8 sprints, gate pre-alpha. |
 | 5 | `POST_V1_PLAN.md` | Embudo 12 meses, 4 caminos de monetización, triggers de pivot. |
 
 JustChill ya no es "una app simplona más". Es una apuesta deliberada
