@@ -3,10 +3,10 @@
 End-to-end audit of dates, from the picker down to the column, run on 2026-08-10. Thirteen findings.
 This file is the tracker; the reasoning for each fix lives in its PR.
 
-All thirteen are closed. Two follow-ups survive, both recorded in full below: the sync wire and the
+All thirteen are closed. One follow-up survives, recorded in full below: the sync wire and the
 Supabase column still carry the occurrence as epoch millis (#5 — changing a column on a live server
-is a human step, and nothing on the device depends on it any more), and everything outside Reporte
-still lets its injected `Clock`/`TimeZone` fall back to an ambient default (#7).
+is a human step, and nothing on the device depends on it any more). #7's sweep is done: no `Clock`
+or `TimeZone` parameter anywhere in `:domain` or `:presentation` defaults to an ambient read.
 
 Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
 
@@ -58,6 +58,18 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
   column. `:data` now takes an injected `Clock` and reads it once per write.
   `currentTimeInMillis()` is gone. → commits `f7b493b`, `6d10a8c`
 
+  **That last sentence was not true when it was written, and the exception outlived it.**
+  `DefaultBackupRepository` kept calling `Clock.System.now()` directly while its five siblings
+  (`AccountLocalDataSource`, `CategoryLocalDataSource`, `TransactionLocalDataSource`,
+  `RecurringMovementLocalDataSource`, `DefaultRecurringMovementRepository`) all took
+  `private val clock` — and it was the writer where it mattered most, because an import re-stamps
+  `createdAt`/`updatedAt` on **every** row the user owns, in one transaction, and those stamps are
+  what LWW arbitrates on when the restore reaches another device. It was found by the #7 sweep,
+  which was looking for something else. It now takes a `clock` in last position like the rest and
+  reads it once through `Clock.nowMillis()`; `DefaultBackupRepositoryImportTest` pins what an import
+  writes, across all three tables and across two imports at two instants. The rule this finding
+  states now holds for every writer in the module, with no exception.
+
 - [x] **7. The timezone was ambient where the clock was injected.** `YearMonth.startInclusiveMillis`,
   `GetHomeDataUseCase` and the `TransactionUi` read path all resolved days through
   `TimeZone.currentSystemDefault()`. The clock could be faked in tests; the zone could not, so no
@@ -74,9 +86,9 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
 
   **Reporte closed last, and the interesting part is what it cost.** `ReportViewModel` now takes an
   injected `clock` and `zone`, as `HomeViewModel` and `SeeTransactionsViewModel` already did, and
-  its four `YearMonth.current()` calls take both. Reporte then goes one step further than those two:
-  its `clock` and `zone` have **no defaults at all**. Home and Movimientos still default theirs —
-  that gap is the follow-up recorded at the end of this finding.
+  its four `YearMonth.current()` calls take both. Reporte was also the first place where the two
+  parameters carried **no defaults at all** — the rule the sweep at the end of this finding then
+  applied to the rest of the codebase.
   Injecting alone would have been cosmetic: `GetSavingsRateUseCase` and `GetTopCategoriesOverMonthsUseCase`
   each accepted a `Clock` and then resolved the window's end month through the ambient zone anyway,
   so a test could fake the clock and still not say which month a report covered. Both now take a
@@ -115,22 +127,112 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
   zone proves nothing, because on a machine sitting in it the ambient read agrees by accident and
   the test stays green straight through the bug.
 
-  **Still open, and the reason this finding leaves a follow-up:** the rule now holds for
-  `ReportViewModel` and the two report use cases, not for the codebase. `HomeViewModel`,
-  `SeeTransactionsViewModel`, `AddTransactionViewModel`, `EditTransactionViewModel` and
-  `ProfileViewModel` (clock only) still default their constructor parameters to the ambient ones, as
-  do `GetHomeDataUseCase`, `CreateTransactionUseCase`, `UpdateTransactionUseCase`,
-  `GetFrequentCombosUseCase`, `GetTopUsedCategoryIdsUseCase`, `GetPendingRecurringMovementsUseCase`,
-  the helpers in `DateExtensions.kt`, and `YearMonth.current` / `YearMonth.of(epochMillis)`
-  themselves — the last pair being the one that matters most, since it is what every other default
-  ultimately reaches. None of them is wrong on a device — Koin's
-  constructor DSL ignores Kotlin defaults and injects every time — but each is a place a future
-  caller can read the machine without saying so, which is exactly how Reporte drifted. Sweeping
-  them is mechanical and touches far more call sites than this change should.
+  **The sweep that followed, and what it found.** The rule above held for `ReportViewModel` and the
+  two report use cases; everywhere else the same parameters still fell back to `Clock.System` /
+  `TimeZone.currentSystemDefault()`. Fourteen declarations lost twenty-five defaults between them:
+  `YearMonth.current` and `YearMonth.of(epochMillis)` — the root, since every other default
+  ultimately reached them — `startOfDayDaysAgo`, `GetHomeDataUseCase`, `CreateTransactionUseCase`,
+  `UpdateTransactionUseCase`, `GetFrequentCombosUseCase`, `GetTopUsedCategoryIdsUseCase`,
+  `GetPendingRecurringMovementsUseCase` (zone only), `HomeViewModel`, `SeeTransactionsViewModel`,
+  `AddTransactionViewModel`, `EditTransactionViewModel` and `ProfileViewModel` (clock only).
+  `GetHomeDataUseCase.invoke(yearMonth = YearMonth.current(clock, zone))` keeps its default: that
+  one is computed from the injected pair, which is the shape the rest was moved to, not the defect.
 
-  Still ambient, and deliberately: `DatePickerSheet` and the Compose previews, which have no
-  injected clock either, and `ProfileScreen`'s last-sync stamp, which renders a real instant and is
-  supposed to move with the device.
+  **Twenty-four of the twenty-five were never evaluated in production**, so deleting them changed
+  nothing at runtime: Koin's constructor DSL ignores Kotlin defaults and injects every time, and the
+  three plain functions were already called with every argument spelled out.
+
+  The twenty-fifth *was* evaluated, and it is worth being exact about what that did and did not
+  mean. `ProfileModule` builds `ProfileViewModel` by hand (its `appVersion` is a qualified `String`
+  the constructor DSL cannot resolve by type) and never passed a clock, so `ProfileViewModel.clock`
+  came from its `= Clock.System` default rather than from the graph. **No wrong value was ever
+  produced.** `SharedModule` binds `factory<Clock> { Clock.System }` — the same stdlib singleton —
+  so `exportedAt` is byte-identical before and after this change, and no backup file on anyone's
+  disk needs a second look. Reached is not the same claim as wrong, and this file should not blur
+  them.
+
+  What the deletion bought is a *guarantee*: omitting the clock in that block is now a compile
+  error. The trap it closes is the day someone rebinds `Clock` in `SharedModule` — to an offset
+  clock, a server-synced one, anything — and Profile alone keeps reading `Clock.System` while every
+  other consumer moves, silently, because a default answered for it.
+
+  A compile error is only a guarantee for as long as no default comes back, though, and it covers
+  nothing for a dependency that never had one to lose. So the property is now **tested**, in
+  `AppGraphKoinTest.every graph-built class holds the Clock and TimeZone the graph bound`: it
+  rebuilds the real graph with a sentinel clock and a sentinel zone bound, resolves every
+  definition, and asserts by identity that every `Clock`/`TimeZone` field on a `com.emm.` class
+  holds the bound instance — 28 fields today. Identity and not equality is the whole point: two
+  `Clock.System` references are equal, and only `assertSame` separates "injected" from "defaulted".
+  It generalises past the two hand-written blocks it was written for, so converting any class to a
+  hand-written `viewModel { }` later inherits the guard.
+
+  Reproducing the original defect proves it: restore the `= Clock.System` default, delete
+  `clock = get()` from `ProfileModule`, and that one test fails with
+  `ProfileViewModel.clock holds kotlin.time.Clock$System instead of the bound instance` — while all
+  828 other tests, `ProfileViewModelTest` included, stay green. That is the measure of the gap that
+  existed: the whole suite passed through this bug for the life of the class.
+
+  One thing that is **not** evidence for any of the above, and an earlier draft of this paragraph
+  claimed it was: `ProfileViewModelTest.ExportRequested stamps exportedAt from the injected clock`.
+  It is worth having — the export's timestamp had no test at all — but a Kotlin default never blocks
+  an explicit argument, so it constructs the ViewModel directly, passes `clock = fixedClock`, and
+  compiles and passes against the pre-change constructor too. Verified by restoring the default and
+  re-running it, not by reasoning about it.
+
+  The composition root is where reading the machine belongs, and `hh/di/SharedModule.kt` is now the
+  only way a clock or a zone enters the injected graph: two factories, one `Clock.System` and one
+  `TimeZone.currentSystemDefault()`, feeding every date question in `:domain` and `:presentation`.
+
+  **What still reads the machine, named rather than counted.** This list has been wrong twice, both
+  times because it carried a number that went stale while the code moved. There is no number now.
+  It covers **production code only** — `androidHostTest`/`commonTest`/`test`/`androidDeviceTest`
+  sources and the dev-flavor `androidApp/src/dev/.../experiences/` playground are outside it and
+  read the clock freely; the playground is not part of the product.
+
+  This command regenerates the list, and its output **is** the list — currently eight lines: the two
+  `SharedModule` factories, `SyncOrchestrator`, and the five `:ui-android` lines making up the four
+  deliberate entries below (`DatePickerSheet` accounts for two of them).
+
+  ```
+  rg -n --type kotlin \
+    -e 'LocalDate\.now\(\)' -e 'LocalDateTime\.now\(\)' -e 'Instant\.now\(\)' \
+    -e 'System\.currentTimeMillis' -e 'Clock\.System' -e 'currentSystemDefault\(\)' \
+    -g '!build/' -g '!**/src/*[Tt]est*/**' -g '!androidApp/src/dev/**' \
+    | rg -v ':[0-9]+: *(//|\*)'
+  ```
+
+  Two things to know before trusting it. The second `rg` drops lines whose first non-space character
+  begins a comment, which is what keeps at least six KDoc mentions of `Clock.System` out of the
+  output (`DayLabels`, `DayGroup`, `DefaultBackupRepository`, `ClockExtensions`, `DateExtensions`,
+  `ProfileModule` — prose *about* ambient reads, not ambient reads). It is a heuristic, not a
+  parser: a trailing comment on a code line would still show up. And an earlier revision of this
+  file published a looser version of this command while calling it authoritative; run verbatim it
+  returned sixteen lines for an eight-line list. Skim the output; do not paste the count anywhere.
+
+  Deliberate, all in `:ui-android`, none with a value that outlives the screen:
+
+  - `DatePickerSheet` — the calendar's "today" and the zone it dims future days in. A composable
+    with no ViewModel behind it; the day it picks is passed down as a value, not read back.
+  - `ProfileScreen`'s last-sync stamp — renders a real past instant and is *supposed* to move with
+    the device.
+  - `SeeTransactionsScreen`'s `@Preview` helper — never runs in the app.
+  - `PlatformHostActions.suggestedExportFilename` — `justchill-backup-YYYY-MM-DD.json`, the name the
+    SAF picker pre-fills. **The date the user is standing in is the correct answer here**, and the
+    value never leaves the picker: the user can rename the file, and nothing derived from it enters
+    the payload, the database or sync. Note it is an *independent* read from the `exportedAt` inside
+    that payload, which comes from the injected clock — in production both are `Clock.System` in the
+    device zone and agree, but they are two reads, not one, and only the payload's is pinned by a
+    test. This module does have `koin-compose`, so the honest reason not to inject is that it would
+    buy no assertion, not that it cannot be done.
+
+  Not deliberate — one read, `SyncOrchestrator.runSync`, which stamps `lastSyncedAt`. **It is not a
+  date defect.** It resolves no calendar day and consults no timezone, so nothing in this finding
+  applies to it: it is an instant, and it is rendered as one. What it is, is injection debt — a
+  writer that could take a `Clock` and does not, so no test can pin the value it records. Listed
+  here because it is the last ambient read outside `:ui-android`, not because it is a timezone bug.
+  Do not "fix" it as one.
+
+  `DefaultBackupRepository.importFromJson` used to be on that second list. It is gone — see #6.
 
 - [x] **8. A "last 90 days" window measured in fixed milliseconds.** `now - days * 24h` is a
   duration, not a number of days; it drifts by an hour across a DST change and starts mid-morning

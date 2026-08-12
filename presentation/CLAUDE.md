@@ -55,6 +55,10 @@ UiState + Intent + Effect + `toUi` mappers) and one Koin module in `hh/di/`; pur
   `core/AppGraphKoinTest.kt`, which resolves the WHOLE Koin graph off-device against
   `TestPlatformModule`. A missing binding compiles clean and passes the Android build — this test
   is the only net before a user hits it. Register every new ViewModel there.
+  It also guards what a definition *receives*, not just that it resolves: with a sentinel `Clock`
+  and `TimeZone` bound, every `Clock`/`TimeZone` field on a `com.emm.` class must be the bound
+  instance. That is the net for a hand-written `viewModel { }`/`factory { }` block forgetting a
+  `get()` — `profileModule` did exactly that, and resolution-only tests never noticed.
 - `commonTest/` — pure `kotlin.test` suites (formatters, mappers, copy).
 - MockK is JVM-only: nothing from `androidHostTest` may leak into `commonMain` (the iOS compile
   gate breaks).

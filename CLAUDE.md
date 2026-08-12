@@ -147,11 +147,14 @@ CMP Gradle plugin is applied nowhere. `:presentation` still uses JetBrains' mult
 - `adr/` — filenames state the decision; 004 amends 002, 005 supersedes 003's frozen-UI scope.
 - `kmp/ORCHESTRATION.md` — slice workflow + ledger. `sync/PLAN.md`, `swiftui/PLAN.md` — slice status.
 - `DATE_AUDIT.md` — the 13 date-handling findings and what closed each. Read before touching dates.
-  All are closed, with two follow-ups: #5 (the schema stored an instant where the app meant a
-  calendar day) took a destructive migration to schema v4 and the sync wire still carries millis,
-  and #7 left a sweep. #7's rule is the live one — whatever asks "what day/month is it" takes both
-  a `Clock` and a `TimeZone`, injected. Reporte is the only corner where they carry no default yet;
-  everywhere else the default is still the ambient read, which is the sweep #7 records.
+  All are closed, with one follow-up: #5 (the schema stored an instant where the app meant a
+  calendar day) took a destructive migration to schema v4 and the sync wire still carries millis.
+  #7's rule is the live one — whatever asks "what day/month is it" takes both a `Clock` and a
+  `TimeZone`, injected, and **neither carries a default**: `hh/di/SharedModule.kt` is the only way
+  either one enters the graph. #7 names every production read that survives — the deliberate ones
+  in `:ui-android`, and `SyncOrchestrator`'s `lastSyncedAt` as injection debt (an instant, so **not**
+  a date bug; #7 says so). It names them instead of counting them, and carries the grep that
+  regenerates the list — tests and the dev `experiences/` playground are out of its scope.
 - `PLAY_ADVERTISING_ID.md` — the app does not use the advertising ID, with the commands that prove
   it on any AAB. Read before answering Play's declaration; the console currently says "Yes", wrongly.
 - `DESIGN_SYSTEM.md` — tokens and components (its paths still point at the pre-KMP `app/` module).
