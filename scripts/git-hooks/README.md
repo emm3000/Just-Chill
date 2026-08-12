@@ -21,7 +21,7 @@ The hook runs exactly one command:
 ```
 
 It used to hold its own list of five detekt tasks and no tests at all. That list drifted from the
-three GitHub workflows and from `docs/kmp/ORCHESTRATION.md`, and none of the four was a superset of
+three GitHub workflows and from `docs/WORKFLOW.md`, and none of the four was a superset of
 the others. The gate is now defined once, in
 `build-logic/src/main/kotlin/com/emm/buildlogic/QualityGateConventionPlugin.kt`, and this hook runs
 exactly what CI runs. **Change the plugin, not the callers** — that is the whole point of there
@@ -50,4 +50,4 @@ belong to it and are now unused by the hook. They are kept rather than deleted s
 a manual `./gradlew detekt` keeps behaving as before.
 
 Baseline scheme (which file belongs to which task) is documented in
-`docs/kmp/ORCHESTRATION.md`.
+`docs/archive/kmp/ORCHESTRATION.md`.

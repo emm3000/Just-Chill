@@ -15,8 +15,8 @@
 > the current state. Several decisions in it were later reversed — most notably
 > the Option A navigation split (see `PHASE_3_SPEC.md §Resolved decisions`), which
 > slice F undid in favour of a single commonMain `AppNavHost`. For what is true
-> today read `ORCHESTRATION.md` (workflow + slice ledger + carry-forward
-> landmines) and the per-module `CLAUDE.md` files.
+> today read `docs/WORKFLOW.md` (workflow) and `docs/archive/kmp/ORCHESTRATION.md` (slice ledger +
+> carry-forward landmines) and the per-module `CLAUDE.md` files.
 >
 > **Date**: 2026-06-12 (plan) · status updated 2026-08-08
 > **Owner**: @emm

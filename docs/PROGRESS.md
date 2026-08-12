@@ -300,10 +300,11 @@ base Compose** para Android e iOS. 67 commits, fast-forward a trunk.
 - Después de la migración se hizo un programa de dedup (slices A→H) que unificó
   nav host, Koin, preferencias y orquestador de sync en commonMain.
 
-El workflow, el ledger de slices con hashes y los landmines carry-forward están
-en `docs/kmp/ORCHESTRATION.md` — **es el doc vigente y el único que quedó en `docs/kmp/`**.
-`MIGRATION_PLAN.md`, `PHASE_2_SPEC.md`, `PHASE_3_SPEC.md` y `BASELINE.md` se archivaron en
-`docs/archive/kmp/`: son históricos y los dos specs tienen decisiones que después se revirtieron.
+El workflow está en `docs/WORKFLOW.md` (vigente para todo el repo, no solo KMP, desde 2026-08-12);
+el ledger de slices con hashes y los landmines carry-forward quedaron en
+`docs/archive/kmp/ORCHESTRATION.md`. `MIGRATION_PLAN.md`, `PHASE_2_SPEC.md`, `PHASE_3_SPEC.md` y
+`BASELINE.md` también están en `docs/archive/kmp/`: son históricos y los dos specs tienen decisiones
+que después se revirtieron.
 
 ---
 
@@ -424,7 +425,8 @@ siguen en el repo como marcadores históricos.
 
 ## Mapa de docs
 
-- `docs/kmp/ORCHESTRATION.md` — workflow de slices + ledger. **Vigente.**
+- `docs/WORKFLOW.md` — loop writer/reviewer + gate + tiers de modelo, para todo el repo. **Vigente.**
+  `docs/archive/kmp/ORCHESTRATION.md` — el ledger de slices de KMP + landmines. **Cerrado.**
 - `docs/sync/AUDIT.md` — **la auditoría consolidada de sync (2026-08-12)**: causa raíz, forense de
   producción, qué retira el backup-only, forma objetivo y plan por fases. Leerlo antes de tocar sync.
 - `docs/sync/PLAN.md` — slices de sync + SQL de Supabase. **Pausado**; slices 1-4 son el registro de
@@ -433,9 +435,10 @@ siguen en el repo como marcadores históricos.
   003 (iOS congelado: se mantiene solo el compile gate, se retira el ritual),
   004 (el resolver de conflictos solo arbitra ediciones sin pushear; enmienda al 002),
   005 (iOS nativo SwiftUI sobre el core KMP; supersede el alcance de UI congelada del 003),
-  **006** (el sync es backup, un device a la vez; supersede la premisa multi-device del 001 y deja
-  dormido al 004). Son registros históricos: no se archivan ni se reescriben, se enmiendan con otro
-  ADR.
+  006 (el sync es backup, un device a la vez; supersede la premisa multi-device del 001 y deja
+  dormido al 004), **007** (writer + reviewer separados y tiers de modelo para todo el repo; enmienda
+  el punto 5 del 003). Son registros históricos: no se archivan ni se reescriben, se enmiendan con
+  otro ADR.
 - `docs/DATE_AUDIT.md` — los 13 hallazgos de fechas y qué cerró cada uno. Leer antes de tocar fechas.
 - `docs/PLAY_ADVERTISING_ID.md` — la app no usa advertising ID, con los comandos que lo prueban.
 - `docs/swiftui/PLAN.md` — las 11 slices del track iOS y su estado.
@@ -466,9 +469,9 @@ siguen en el repo como marcadores históricos.
 - Los tests instrumentados (`:data:connectedAndroidDeviceTest`, 15 tests) no corren en
   el gate: necesitan device. Corrélos antes de shipear un cambio de schema o de dominio.
   Última corrida: 2026-08-09, 15/15 verde en `medium_phone` (emulator-5554), después de A6.
-- Trabajo de KMP / ui-android: **un writer, review inline**. El ritual de writer +
-  reviewer como sub-agentes Opus separados por slice se retiró en
-  [ADR 003](adr/003-freeze-ios-keep-the-compile-gate.md) — estaba calibrado para
-  usuarios en producción que no existen. El gate reforzado de
-  `docs/kmp/ORCHESTRATION.md` sigue vigente, compile de iOS incluido.
+- Writer y reviewer son siempre agentes delegados separados, para **todo el repo** (no solo
+  KMP/iOS): el reviewer corre en contexto fresco y nunca escribió el código que revisa —
+  [ADR 007](adr/007-one-way-of-working-writer-reviewer-and-model-tiers.md) retira el "un writer,
+  review inline" del ADR 003 punto 5, que se apoyaba en una premisa ("no hay usuarios") ya corregida.
+  Loop completo y tiers de modelo en `docs/WORKFLOW.md`.
 - Los planes de sprint (`PLAN_S*_*.md`) son efímeros y gitignored.

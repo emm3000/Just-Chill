@@ -18,8 +18,9 @@ import org.gradle.kotlin.dsl.withType
  * from the outside rather than letting each one opt in. Each module now applies `justchill.detekt`.
  *
  * Note for the gate: plain `./gradlew detekt` is NO-SOURCE on the KMP modules. Real coverage comes
- * from the per-source-set tasks (detektMainAndroid, detektIosMainSourceSet, ...) — see
- * docs/kmp/ORCHESTRATION.md and the pre-push hook.
+ * from the per-source-set tasks (detektMainAndroid, detektIosMainSourceSet, ...) — the per-task
+ * baseline mapping is in docs/archive/kmp/ORCHESTRATION.md; the gate itself is docs/WORKFLOW.md
+ * and the pre-push hook.
  */
 class DetektConventionPlugin : Plugin<Project> {
 

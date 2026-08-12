@@ -8,7 +8,7 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin
  * The single definition of "is this code good enough to push".
  *
  * Before this existed there were four hand-maintained lists — the pre-push hook, the reinforced
- * gate in docs/kmp/ORCHESTRATION.md, and the three GitHub workflows — and none was a superset of
+ * gate in docs/WORKFLOW.md, and the three GitHub workflows — and none was a superset of
  * the others. The hook ran five detekt tasks and zero tests; CI ran three test suites and a
  * `detekt` task that is NO-SOURCE on three of four modules; the doc listed a set that was missing
  * `:data:detektAndroidDeviceTestSourceSet`. Every consumer now runs `./gradlew qualityGate`, so

@@ -16,7 +16,7 @@ permissions:
 jobs:
   # One job, one Gradle invocation. This used to be three jobs (lint / unit-test / detekt), each
   # with its own hand-written task list, and all three had drifted from the pre-push hook and from
-  # the gate documented in docs/kmp/ORCHESTRATION.md. `qualityGate` is defined once in build-logic
+  # the gate documented in docs/WORKFLOW.md. `qualityGate` is defined once in build-logic
   # (QualityGateConventionPlugin) and is the same thing the hook runs, so the lists cannot diverge.
   #
   # The assemble tasks were folded in for the reason that collapsed the gate in the first place: a

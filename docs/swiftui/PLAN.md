@@ -102,7 +102,7 @@ compiles and runs, trunk shippable. One slice ≈ 1-3 side-project sessions.
 | S8 | Reports | Charts + period selection + share. | **Swift Charts**, `ShareLink`/`UIActivityViewController`. |
 | S9 | Profile + backup | Export/import via `fileExporter`/`fileImporter` (replaces SAF flow; destructive-replace confirmation dialog), delete account, privacy policy link, app version. | File pickers, destructive flows, `Link`. |
 | S10 | Auth + sync UI | Supabase email/password + Google Sign-In (native iOS SDK) + claim-on-sign-in + sync status/snackbar equivalents. `ResumeEvents` iOS actual already exists (`NSNotificationCenter`). | Third-party SDK integration, async auth flows, app-lifecycle events. |
-| S11 | Onboarding + closure | Manifesto first-launch gate (`AppPreferences` shared), parity audit vs Android, delete CMP leftovers, finalize ADR 005, update `PROGRESS.md` + `ORCHESTRATION.md` + module CLAUDE.md files. | Scene phases, state restoration audit. |
+| S11 | Onboarding + closure | Manifesto first-launch gate (`AppPreferences` shared), parity audit vs Android, delete CMP leftovers, finalize ADR 005, update `PROGRESS.md` + `WORKFLOW.md` + module CLAUDE.md files. | Scene phases, state restoration audit. |
 
 Order rationale: read-only vertical first (pattern with least surface), forms
 second (most reused skill), platform APIs (files/charts/share) third, external

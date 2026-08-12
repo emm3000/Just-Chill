@@ -5,7 +5,8 @@
 > **Prime directive: Android build stays green at every slice.**
 >
 > ⚠️ **HISTORICAL — Phase 3 is done and some decisions below were later reversed.**
-> Read `ORCHESTRATION.md` for what is true today. Specifically:
+> Read `docs/archive/kmp/ORCHESTRATION.md` (Carry-forward decisions / landmines) for what is true
+> today. Specifically:
 > - **Decision 2 (Navigation = Option A) was REVERSED** by slice F (`186d3b6`).
 >   There is no longer a per-platform nav host and `Hh.kt` no longer exists: both
 >   platforms run ONE commonMain `hh/shared/AppNavHost.kt` on the JetBrains
@@ -95,7 +96,7 @@ Compose for `ui-android` is driven by the `org.jetbrains.compose` plugin
 ## Slices (each = one Android-green gate: `./gradlew assembleDevDebug`)
 
 > **STATUS (updated 2026-06-13): ✅ PHASE 3 COMPLETE.**
-> All slices 0–8b done (full ledger in `ORCHESTRATION.md`). All shared UI lives in
+> All slices 0–8b done (full ledger in `docs/archive/kmp/ORCHESTRATION.md`). All shared UI lives in
 > `ui-android` commonMain; `:app` holds only the nav host + platform Koin modules +
 > MainActivity/EmmApp. `assembleDevDebug` + iOS compile + all tests green.
 > **Post-phase cleanup also done** (not slices, separate commits):

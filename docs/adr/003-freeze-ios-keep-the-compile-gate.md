@@ -3,6 +3,12 @@
 - **Status**: Accepted
 - **Date**: 2026-08-08
 - **Deciders**: Edgardo Muñoz
+- **Amended by**: [ADR 007](007-one-way-of-working-writer-reviewer-and-model-tiers.md), Decision point
+  5 (restores writer + reviewer as separate delegated agents, repo-wide — Fact 1 below is stated
+  correctly, but this point discounted the maintainer's own device to zero risk, an inference the
+  repo corrected on 2026-08-11 in `043cace`).
+- **Scope superseded by**: [ADR 005](005-native-swiftui-ios-over-the-kmp-core.md) (frozen UI, thaw
+  checklist), which keeps this ADR's compile-gate invariant (point 2) and constraint 8 intact.
 
 > Resumen (es): iOS pasa a estado **congelado**, no cerrado. Se mantiene una sola cosa del ritual —
 > `:ui-android:compileKotlinIosSimulatorArm64` en el gate, 12.9s medidos — porque es lo único que impide
@@ -101,11 +107,11 @@ The maintainer explicitly asked not to close iOS: an iPhone may arrive later.
 Ordered by what fails first and most silently.
 
 1. **Run in the simulator and confirm `initKoin()` resolves.** Koin failures are runtime-only,
-   invisible to the compiler *and* to the iOS compile gate (`docs/kmp/ORCHESTRATION.md:193`). A static
-   bind trace plus a green compile is not a launch.
+   invisible to the compiler *and* to the iOS compile gate (`docs/archive/kmp/ORCHESTRATION.md:99`).
+   A static bind trace plus a green compile is not a launch.
 2. **Exercise the four modals end to end** — export, import, share, email. They are compile- and
-   launch-verified only (`ORCHESTRATION.md:191`). Watch the UIKit delegate-retention landmine
-   (`ORCHESTRATION.md:185`): UIKit holds a Kotlin/Native `NSObject` delegate by *weak* reference, so
+   launch-verified only (`docs/archive/kmp/ORCHESTRATION.md:96`). Watch the UIKit delegate-retention
+   landmine (`docs/archive/kmp/ORCHESTRATION.md:91`): UIKit holds a Kotlin/Native `NSObject` delegate by *weak* reference, so
    it is collected mid-flow unless retained; the fix used was a module-level `mutableSetOf<NSObject>()`.
 3. **Decide Google Sign-In.** Today it is `UnavailableGoogleSignInLauncher`
    (`ui-android/src/iosMain/.../IosLocalFirstStubs.kt`) and `AuthScreen` hides the button
@@ -124,8 +130,8 @@ Ordered by what fails first and most silently.
 
 - This ADR does not amend ADR 001 or ADR 002; the local-first architecture and the sync cursor are
   unaffected.
-- `docs/kmp/ORCHESTRATION.md` keeps its ledger, landmines, and reinforced-gate definition, all of
-  which stay accurate and useful. What this ADR retires is the per-slice *sub-agent protocol* around
-  that gate, not the gate itself.
+- `docs/archive/kmp/ORCHESTRATION.md` keeps its ledger and landmines, and `docs/WORKFLOW.md` keeps the
+  reinforced-gate definition, both of which stay accurate and useful. What this ADR retires is the
+  per-slice *sub-agent protocol* around that gate, not the gate itself.
 - Reversing this ADR is cheap in the direction of more rigour: reinstating the ceremony is a docs
   change. That asymmetry is deliberate.

@@ -2,8 +2,9 @@
 
 > **Archived.** The migration this is a baseline for is merged, so nothing measures itself
 > against these numbers any more. Kept for the reasoning and for the rollback hash. The live
-> KMP doc is `docs/kmp/ORCHESTRATION.md`; current state is `docs/PROGRESS.md`. Module names
-> below are pre-migration (`:app` is now `:androidApp`, and the UI lives in `:ui-android`).
+> workflow doc is `docs/WORKFLOW.md`; the closed KMP ledger is `docs/archive/kmp/ORCHESTRATION.md`;
+> current state is `docs/PROGRESS.md`. Module names below are pre-migration (`:app` is now
+> `:androidApp`, and the UI lives in `:ui-android`).
 
 > The known-good Android reference captured **before** any KMP change.
 > Every later phase claims "Android still green" relative to THIS.

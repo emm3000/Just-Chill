@@ -29,8 +29,6 @@ docs/*
 !docs/archive/**
 !docs/sync/
 !docs/sync/**
-!docs/kmp/
-!docs/kmp/**
 !docs/swiftui/
 !docs/swiftui/**
 !docs/PRODUCT_DISCOVERY.md
@@ -44,6 +42,7 @@ docs/*
 !docs/PRIVACY_POLICY.md
 !docs/AUTH_SYNC_UI_BLUEPRINT.md
 !docs/DATE_AUDIT.md
+!docs/WORKFLOW.md
 # Supabase
 supabase.properties
 supabase/.temp/

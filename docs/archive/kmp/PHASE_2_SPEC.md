@@ -2,8 +2,8 @@
 
 > **Archived.** This contract was executed: `:data` is Kotlin Multiplatform on trunk and
 > `data/src/commonMain/` exists. Every `git mv` and build-file body below has already landed,
-> so nothing here is actionable. Kept for the reasoning. Live KMP doc:
-> `docs/kmp/ORCHESTRATION.md`; current state: `docs/PROGRESS.md`.
+> so nothing here is actionable. Kept for the reasoning. Live workflow doc: `docs/WORKFLOW.md`;
+> closed KMP ledger: `docs/archive/kmp/ORCHESTRATION.md`; current state: `docs/PROGRESS.md`.
 
 > Contract for converting `:data` to Kotlin Multiplatform. Android MUST stay green;
 > iOS target MUST compile. Companion to `docs/archive/kmp/MIGRATION_PLAN.md`.
