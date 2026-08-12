@@ -120,6 +120,10 @@ Medido el 2026-08-11 contra el código, no copiado de la versión anterior de es
   la evidencia y los comandos que la reproducen sobre cualquier AAB — leelo antes de flipear.
 - [ ] `v2.4.0` está tagueado y construido pero **nunca llegó a la pista alpha**. Un workflow verde
   no publica nada; el borrador se publica a mano en Play Console.
+- [ ] Reescribir la ficha de `docs/PLAY_STORE_LISTING.md`: la descripción larga todavía promete
+  "Sin login. Sin servidor." y "No te sincroniza con la nube", y el ADR 001 lo contradice — hoy hay
+  sync opcional con Supabase y cuenta. Publicar eso tal cual sería declarar algo falso en la ficha,
+  justo al lado del Data Safety form.
 
 ### Detekt y gate
 
@@ -132,8 +136,10 @@ Medido el 2026-08-11 contra el código, no copiado de la versión anterior de es
   `:data` tiene tres pares (`shared/Dispatchers.kt`, y dos en `shared/SqliteExceptions.kt`) y
   `:presentation` uno (`core/sync/ResumeEvents.kt`), cada uno con su contraparte `.android.kt`.
 - [ ] **13 errores más en `:androidApp:detektDevDebug` y `detektDevRelease`**, sin diagnosticar y
-  sin cambio antes y después del trabajo del 2026-08-11. Las variantes `prod*` reportan 10: la
-  diferencia son nueve archivos que solo existen en `dev`.
+  sin cambio antes y después del trabajo del 2026-08-11. Las variantes `prod*` reportan 10. Los tres
+  de diferencia salen del flavor `dev` — probablemente del playground `experiences/`, que solo
+  existe ahí — pero eso **no está verificado**: detekt no imprime los mensajes sin `debug = true`
+  y con eso tampoco los soltó. Diagnosticar es parte de esta tarea, no un dato ya conocido.
 - [ ] **El gate no falla con errores de compilación de detekt.** detekt los degrada a warning y la
   tarea termina en `BUILD SUCCESSFUL` — medido. Lo que importa no es el ruido en consola sino que
   cualquier regla que dependa de type resolution puede no dispararse, en silencio.
@@ -354,7 +360,12 @@ siguen en el repo como marcadores históricos.
 - `docs/sync/PLAN.md` — slices de sync + SQL de Supabase.
 - `docs/adr/` — 001 (reversa a local-first con sync opcional), 002 (cursor de pull),
   003 (iOS congelado: se mantiene solo el compile gate, se retira el ritual),
-  004 (el resolver de conflictos solo arbitra ediciones sin pushear; enmienda al 002).
+  004 (el resolver de conflictos solo arbitra ediciones sin pushear; enmienda al 002),
+  005 (iOS nativo SwiftUI sobre el core KMP; supersede el alcance de UI congelada del 003).
+  Son registros históricos: no se archivan ni se reescriben, se enmiendan con otro ADR.
+- `docs/DATE_AUDIT.md` — los 13 hallazgos de fechas y qué cerró cada uno. Leer antes de tocar fechas.
+- `docs/PLAY_ADVERTISING_ID.md` — la app no usa advertising ID, con los comandos que lo prueban.
+- `docs/swiftui/PLAN.md` — las 11 slices del track iOS y su estado.
 - `docs/PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `POST_V1_PLAN.md` — definición de
   producto, Fases 1-5. Siguen vigentes: discovery es la persona y el manifesto, requirements tiene
   los Won't que todavía acotan alcance (y que el ADR 001 enmienda por id de fila), y el post-v1
