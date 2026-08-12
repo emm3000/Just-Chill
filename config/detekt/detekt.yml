@@ -152,7 +152,7 @@ complexity:
   TooManyFunctions:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/androidInstrumentedTest/**', '**/jsTest/**', '**/iosTest/**']
-    allowedFunctionsPerFile: 11
+    allowedFunctionsPerFile: 8
     allowedFunctionsPerClass: 11
     allowedFunctionsPerInterface: 11
     allowedFunctionsPerObject: 11
@@ -161,7 +161,7 @@ complexity:
     ignorePrivate: false
     ignoreInternal: false
     ignoreOverridden: false
-    ignoreAnnotatedFunctions: []
+    ignoreAnnotatedFunctions: ['Preview', 'PreviewLightDark']
 
 coroutines:
   active: true

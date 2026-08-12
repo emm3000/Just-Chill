@@ -82,7 +82,10 @@
     <ID>ParameterNaming:PlatformHostActions.kt:onImported: (String) -&gt; Unit</ID>
     <ID>TooManyFunctions:AccountsScreen.kt:com.emm.justchill.hh.account.AccountsScreen.kt</ID>
     <ID>TooManyFunctions:AddCategoryScreen.kt:com.emm.justchill.hh.category.AddCategoryScreen.kt</ID>
+    <ID>TooManyFunctions:AddEditRecurringMovementScreen.kt:com.emm.justchill.hh.recurring.AddEditRecurringMovementScreen.kt</ID>
     <ID>TooManyFunctions:HomeScreen.kt:com.emm.justchill.hh.home.HomeScreen.kt</ID>
+    <ID>TooManyFunctions:ProfileScreen.kt:com.emm.justchill.hh.profile.ProfileScreen.kt</ID>
+    <ID>TooManyFunctions:RecurringMovementsScreen.kt:com.emm.justchill.hh.recurring.RecurringMovementsScreen.kt</ID>
     <ID>TooManyFunctions:SeeTransactionsScreen.kt:com.emm.justchill.hh.seetransactions.SeeTransactionsScreen.kt</ID>
     <ID>UnnecessaryComposable:AccountPickerSheet.kt:@Composable internal fun accountSwatchColor: Color</ID>
     <ID>UnnecessarySafeCall:TopExpensesCard.kt:AppIconCatalog.findById(item.iconKey)?.icon</ID>
