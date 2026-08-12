@@ -66,6 +66,8 @@ Before delegating, map the unit cheaply so the writer prompt is precise:
 ### 4. Reviewer prompt must include
 - "FRESH context, adversarial, do NOT trust the writer's self-report."
 - The commit hash + what the unit was supposed to do.
+- `docs/CODE_QUALITY.md` — the reviewer owns its second half (SRP, DIP, YAGNI, DRY-over-knowledge,
+  the use-case admission rule); detekt cannot see any of it, so a green gate says nothing about it.
 - Checklist: diff scope sane; no duplicates/leftovers; DI graph bound exactly once where DI is
   touched (zero = runtime crash the build gate misses, double = also wrong); leak grep where it
   applies; behavior preservation (moved/changed bodies match except documented swaps); cross-module
