@@ -30,7 +30,11 @@ class ProfileViewModel(
     // Stamped into the backup payload. Injected (no BuildConfig in commonMain) by the
     // platform Koin module via the "appVersion" qualifier.
     private val appVersion: String,
-    private val clock: Clock = Clock.System,
+    // Stamps `exportedAt` on the backup payload. No default, because ProfileModule builds this
+    // class by hand and a default is one the wiring can silently keep using instead of the bound
+    // Clock — which is exactly what happened here. AppGraphKoinTest now fails if it happens again.
+    // Tests were never the reason for removing it: they can pass a clock either way.
+    private val clock: Clock,
 ) : MviViewModel<ProfileUiState, ProfileIntent, ProfileEffect>() {
 
     override val initialState = ProfileUiState()

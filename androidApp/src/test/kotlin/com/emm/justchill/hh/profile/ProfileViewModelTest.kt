@@ -17,6 +17,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +31,8 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class ProfileViewModelTest {
 
@@ -56,6 +59,13 @@ class ProfileViewModelTest {
     private val sessionFlow = MutableSharedFlow<SessionStatus>(replay = 1)
     private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
 
+    // The instant an export is stamped with. Stated here rather than read from the machine, which
+    // is what makes the assertion below possible at all.
+    private val fixedNow = Instant.parse("2026-08-11T15:04:05Z")
+    private val fixedClock = object : Clock {
+        override fun now(): Instant = fixedNow
+    }
+
     private fun buildViewModel(): ProfileViewModel {
         every { observeSession.invoke() } returns sessionFlow
         return ProfileViewModel(
@@ -68,6 +78,7 @@ class ProfileViewModelTest {
             accountRepository = accountRepository,
             observeSession = observeSession,
             appVersion = "1.0.0",
+            clock = fixedClock,
         )
     }
 
@@ -174,6 +185,27 @@ class ProfileViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { exportData(any(), "1.0.0") }
+    }
+
+    @Test
+    fun `ExportRequested stamps exportedAt from the injected clock`() = runTest(testDispatcher) {
+        // The other half of the same stamp as the appVersion test above: what goes into the backup
+        // as `exportedAt`. It had no test at all, which is reason enough for this one.
+        //
+        // What it does NOT prove — an earlier comment here claimed otherwise — is anything about
+        // the deleted `= Clock.System` default. A Kotlin default never blocks an explicit argument,
+        // so this exact test compiles and passes against the old constructor too. The default's
+        // removal is a wiring guarantee (ProfileModule can no longer omit the clock without a
+        // compile error), and nothing in this file exercises it. See docs/DATE_AUDIT.md #7.
+        val exportedAt = slot<Long>()
+        coEvery { exportData(capture(exportedAt), any()) } returns "{}"
+
+        val vm = buildViewModel()
+
+        vm.onIntent(ProfileIntent.ExportRequested)
+        advanceUntilIdle()
+
+        assertEquals(fixedNow.toEpochMilliseconds(), exportedAt.captured)
     }
 
     @Test

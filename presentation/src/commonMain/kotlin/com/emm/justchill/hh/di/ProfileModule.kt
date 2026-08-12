@@ -10,7 +10,12 @@ import org.koin.dsl.module
 // (androidPlatformModule / iosPlatformModule).
 val profileModule = module {
     // Explicit block (not viewModelOf): appVersion is a qualified String the constructor-DSL
-    // can't resolve by type. clock is omitted so it falls back to its Clock.System default.
+    // can't resolve by type. That is a reason to name every argument here, not a reason to leave
+    // one out. The clock used to be omitted, and it was the only place in the app where a Kotlin
+    // default was actually evaluated at runtime — harmlessly, since it was Clock.System and that
+    // is exactly what sharedModule binds. The reason it had to go is drift: rebind Clock there and
+    // this one consumer would have kept reading Clock.System, silently. Now it cannot compile, and
+    // AppGraphKoinTest fails if a default ever comes back and lets it.
     viewModel {
         ProfileViewModel(
             exportData = get(),
@@ -22,6 +27,7 @@ val profileModule = module {
             accountRepository = get(),
             observeSession = get(),
             appVersion = get(named("appVersion")),
+            clock = get(),
         )
     }
 }

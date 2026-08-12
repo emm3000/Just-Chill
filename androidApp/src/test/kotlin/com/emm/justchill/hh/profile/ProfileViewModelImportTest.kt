@@ -26,6 +26,8 @@ import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class ProfileViewModelImportTest {
 
@@ -49,6 +51,13 @@ class ProfileViewModelImportTest {
         every { all() } returns flowOf(emptyList())
     }
 
+    // Nothing here asserts the export stamp — that lives in ProfileViewModelTest — but the clock is
+    // still stated rather than read: no test in this repo should reintroduce the ambient default
+    // the constructor just lost.
+    private val fixedClock = object : Clock {
+        override fun now(): Instant = Instant.parse("2026-08-11T15:04:05Z")
+    }
+
     private fun buildViewModel() = ProfileViewModel(
         exportData = exportData,
         importData = importData,
@@ -59,6 +68,7 @@ class ProfileViewModelImportTest {
         accountRepository = accountRepository,
         observeSession = observeSession,
         appVersion = "1.0.0",
+        clock = fixedClock,
     )
 
     @Test

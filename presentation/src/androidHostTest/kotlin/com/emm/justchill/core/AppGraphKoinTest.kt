@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -22,9 +23,13 @@ import org.koin.core.parameter.ParametersDefinition
 import org.koin.core.parameter.parametersOf
 import org.koin.core.qualifier.Qualifier
 import org.koin.dsl.koinApplication
+import org.koin.dsl.module
+import java.lang.reflect.Field
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Whole-graph Koin resolution test — the CI guard for the project's highest runtime risk.
@@ -130,6 +135,98 @@ class AppGraphKoinTest {
     }
 
     /**
+     * Every `Clock` and `TimeZone` a graph-built class holds is the instance the graph BOUND.
+     *
+     * Resolution succeeding is not the same as resolution being correct, and the two tests above
+     * only prove the first. A class can resolve perfectly while holding a clock nobody injected:
+     * `sharedModule` binds `Clock.System`, and a Kotlin default of `Clock.System` produces an
+     * indistinguishable value — so the wiring can be wrong and every assertion in this file stays
+     * green. That is not hypothetical. `ProfileModule` omitted `clock = get()` for the whole life
+     * of the class and nothing here noticed; it was found by reading, not by failing.
+     *
+     * The two hand-written blocks are where this can go wrong, because they list arguments by hand
+     * and a hand-written list can forget one: `profileModule`'s `viewModel { }` and
+     * `transactionModule`'s parametrised `EditTransactionViewModel` block. The constructor DSL
+     * cannot forget. The sweep is not limited to those two, though — it checks every definition, so
+     * converting any class to a hand-written block later inherits the guard for free.
+     *
+     * Binding sentinels is what makes the difference observable: a clock at a fixed instant and a
+     * zone the machine is not in. `assertSame`, not `assertEquals` — two `Clock.System` references
+     * are equal and only identity separates "injected" from "defaulted".
+     *
+     * Scoped to `com.emm.` classes on purpose: third-party singles in the graph (Supabase, Ktor)
+     * legitimately hold clocks of their own that this project does not bind.
+     */
+    @Test
+    fun `every graph-built class holds the Clock and TimeZone the graph bound`() {
+        val boundClock = object : Clock {
+            override fun now(): Instant = Instant.parse("2026-08-11T15:04:05Z")
+        }
+        val boundZone: TimeZone = TimeZone.of("Asia/Karachi")
+
+        val overridden: Koin = koinApplication {
+            modules(
+                appModules(testPlatformModule) + module {
+                    factory<Clock> { boundClock }
+                    factory { boundZone }
+                },
+            )
+        }.koin
+
+        // Resolution needs the graph; reading the fields afterwards does not, so the graph is closed
+        // as soon as the sweep has collected them.
+        val timeFields: List<Pair<Any, Field>> = try {
+            overridden.ownTimeFields()
+        } finally {
+            overridden.close()
+        }
+
+        val mismatches: List<String> = timeFields
+            .filter { (owner, field) -> field.get(owner) !== expectedFor(field, boundClock, boundZone) }
+            .map { (owner, field) ->
+                "${owner::class.java.simpleName}.${field.name} holds " +
+                    "${field.get(owner)?.let { it::class.java.name }} instead of the bound instance"
+            }
+
+        assertTrue(
+            mismatches.isEmpty(),
+            "${mismatches.size} class(es) did not receive the bound Clock/TimeZone — the Koin block " +
+                "that builds them passes a default or its own instance instead of get():\n" +
+                mismatches.joinToString("\n") { "  - $it" },
+        )
+        // Floor guard, same reasoning as the sweep above: if reflection stops finding fields (a
+        // rename, a Kotlin change to how constructor vals are stored) the check passes vacuously.
+        assertTrue(
+            timeFields.size >= MIN_EXPECTED_TIME_FIELDS,
+            "Only ${timeFields.size} Clock/TimeZone fields were inspected; the reflection sweep looks broken.",
+        )
+    }
+
+    /**
+     * Every `Clock`/`TimeZone` field held by a `com.emm.` object the graph can build, paired with
+     * the instance that holds it. Third-party singles are skipped: Supabase and Ktor carry clocks
+     * of their own that this project does not bind and has no business asserting on.
+     */
+    private fun Koin.ownTimeFields(): List<Pair<Any, Field>> = definitions().flatMap { definition ->
+        val instance: Any = get(
+            definition.primaryType,
+            definition.qualifier,
+            runtimeParametersFor(definition.primaryType),
+        )
+        if (!instance::class.java.name.startsWith(OWN_PACKAGE_PREFIX)) {
+            emptyList()
+        } else {
+            instance::class.java.declaredFields
+                .filter { it.type == Clock::class.java || it.type == TimeZone::class.java }
+                .onEach { it.isAccessible = true }
+                .map { instance to it }
+        }
+    }
+
+    private fun expectedFor(field: Field, boundClock: Clock, boundZone: TimeZone): Any =
+        if (field.type == Clock::class.java) boundClock else boundZone
+
+    /**
      * Every distinct (type, qualifier) pair a consumer could ask Koin for: each definition's primary
      * type plus every interface it is `bind`-ed to, since consumers inject the interface.
      */
@@ -166,6 +263,11 @@ class AppGraphKoinTest {
     private companion object {
 
         const val MIN_EXPECTED_BINDINGS = 80
+
+        const val OWN_PACKAGE_PREFIX = "com.emm."
+
+        /** The graph currently exposes 28 injected Clock/TimeZone fields across :domain/:data/:presentation. */
+        const val MIN_EXPECTED_TIME_FIELDS = 20
 
         val EXPECTED_VIEW_MODELS = sortedSetOf(
             "AccountsViewModel",
