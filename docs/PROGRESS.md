@@ -2,8 +2,11 @@
 
 > Punto de re-entrada canónico. Si retomás el proyecto después de un context
 > reset, leé esto primero y después el `CLAUDE.md` del módulo que vayas a tocar.
+> Si lo único que buscás es qué falta, andá directo al
+> [checklist de trabajo abierto](#checklist-de-trabajo-abierto) — es la lista única, y no hay
+> ningún `OPEN_WORK.md` compitiendo con ella a propósito.
 >
-> **Última actualización**: 2026-08-09. No se anota el hash de trunk acá: el commit que lo
+> **Última actualización**: 2026-08-11. No se anota el hash de trunk acá: el commit que lo
 > escribe ya lo deja viejo, igual que pasó con el conteo de commits.
 >
 > Este doc se reescribió el 2026-08-08 porque quedó dos meses desactualizado y
@@ -87,6 +90,126 @@ de protección completo, no un PATCH parcial.
 
 ---
 
+## Checklist de trabajo abierto
+
+Todo lo que sigue abierto, en un solo lugar. Los tracks de abajo explican el **por qué** de cada
+cosa; acá está el **qué falta**. Cuando cierres algo, marcalo acá y sacalo del track — dos listas
+diciendo lo mismo se desincronizan, que es exactamente cómo este doc se rompió antes.
+
+Medido el 2026-08-11 contra el código, no copiado de la versión anterior de este doc.
+
+### Fechas — lo único abierto que toca el servidor y la data real
+
+- [ ] **Fase dos del hallazgo #5**: el wire de sync y la columna de Supabase todavía llevan
+  `date bigint`. `data/shared/FixedPeruOffset.kt` es el adaptador interino que convierte en ambas
+  direcciones al offset fijo de Lima, y se borra cuando la columna del server pase a `text`. Los
+  trece hallazgos de `docs/DATE_AUDIT.md` están cerrados; este es el único follow-up que sobrevive,
+  y es paso humano — cambiar una columna en un server vivo con data acumulada no lo hace el gate.
+
+### Release y compliance — bloqueantes del alpha, solo los puede hacer un humano
+
+- [ ] Crear el proyecto Supabase cloud de prod (`supabase link` + `supabase db push`) y llenar los
+  `prod.*` en `supabase.properties`.
+- [ ] Hostear `docs/PRIVACY_POLICY.md` como URL pública (Play la exige para apps con eliminación
+  de cuenta).
+- [ ] Completar el Google Play Data Safety form.
+- [ ] Checklist QA multi-device: clean install, semana offline-first, sign-in tardío, dos devices,
+  sign-out, y **upgrade real con APK viejo + `adb install -r`**.
+- [ ] Corregir la declaración de advertising ID en Play Console: hoy dice "Yes" y es falso. Se puso
+  así durante la subida de `v2.4.0` para destrabar un rechazo. `docs/PLAY_ADVERTISING_ID.md` tiene
+  la evidencia y los comandos que la reproducen sobre cualquier AAB — leelo antes de flipear.
+- [ ] `v2.4.0` está tagueado y construido pero **nunca llegó a la pista alpha**. Un workflow verde
+  no publica nada; el borrador se publica a mano en Play Console.
+
+### Detekt y gate
+
+- [x] Los **15** errores de compilación de `:ui-android:detektMainAndroid`, cerrados el 2026-08-11
+  borrando el registry de SavedState de navegación (`3105d91`, `bb9e6d5`, `57fe356`). La tarea
+  ahora reporta cero.
+- [ ] **12 errores de expect/actual**: `:data` (9) y `:presentation` (3). detekt analiza commonMain
+  y androidMain como una sola unidad, sin la estructura de fragmentos de HMPP, así que el compilador
+  ve el `expect` y su `actual` juntos. Son exactamente **3 errores por par**, no una estimación:
+  `:data` tiene tres pares (`shared/Dispatchers.kt`, y dos en `shared/SqliteExceptions.kt`) y
+  `:presentation` uno (`core/sync/ResumeEvents.kt`), cada uno con su contraparte `.android.kt`.
+- [ ] **13 errores más en `:androidApp:detektDevDebug` y `detektDevRelease`**, sin diagnosticar y
+  sin cambio antes y después del trabajo del 2026-08-11. Las variantes `prod*` reportan 10: la
+  diferencia son nueve archivos que solo existen en `dev`.
+- [ ] **El gate no falla con errores de compilación de detekt.** detekt los degrada a warning y la
+  tarea termina en `BUILD SUCCESSFUL` — medido. Lo que importa no es el ruido en consola sino que
+  cualquier regla que dependa de type resolution puede no dispararse, en silencio.
+- [ ] El modo compiler-plugin de detekt sería el arreglo de raíz y hoy no es viable: el plugin id
+  `dev.detekt.gradle.compiler-plugin` declara configuration-cache `UNDECLARED` y este build tiene
+  `org.gradle.configuration-cache=true` (`gradle.properties:24`). No está aplicado en ningún lado
+  del repo, así que esto es una vía cerrada, no una regresión.
+- [ ] Purgar las **47** entradas muertas de `UnusedPrivateFunction` en
+  `config/detekt/baseline-ui-android-main.xml` (sobre 151 entradas en total). Desde `c94e290` la
+  regla ignora los `@Preview` por anotación, así que esas entradas quedaron inertes.
+- [ ] `:ui-android:detektAndroidMainSourceSet` reporta **21** issues. Preexistente y deliberadamente
+  fuera del gate: `detektMainAndroid` cubre los mismos archivos **con** type resolution, así que
+  sumarlo serían más tareas y no más cobertura — el razonamiento está en `QualityGateConventionPlugin`.
+
+### Docs y comentarios que afirman cosas falsas
+
+- [ ] `ui-android/src/androidMain/kotlin/com/emm/justchill/hh/shared/AppNavHost.kt:50-66` — diecisiete
+  líneas de cabecera que describen un host que ya no existe. Las tres afirmaciones son falsas:
+  no es un "single Compose Multiplatform nav host for both Android and iOS" (`:ui-android` solo
+  tiene `androidMain` y `androidHostTest`); no corre sobre el port navigation3-UI de JetBrains
+  (`ui-android/build.gradle.kts:50-52` dice que el port "lost its reason to exist" y que runtime y
+  UI son de Google); y `PlatformHostActions + startTab` no están detrás de `expect/actual` — son
+  una `interface` y un `val` planos en `hh/shared/PlatformHostActions.kt:39` y `:168`. Es código,
+  no doc: queda anotado acá y el archivo no se tocó.
+
+### Bugs
+
+- [ ] **Crear una categoría desde un movimiento de Ingreso abre el formulario en Gasto.** Confirmado
+  en emulador y contra la base: una categoría de prueba quedó guardada con `categoryType=Spend`
+  colgando de una transacción `Income`. Sale de `CategoryRoute.initialType`, que default-ea a
+  `CategoryType.Spend` en `ui-android/src/androidMain/kotlin/com/emm/justchill/hh/shared/HhRoutes.kt:72`;
+  el push desde el formulario de transacción
+  (`hh/transaction/TransactionEntries.kt:46-49`) pasa solo `propagateToTransaction = true` y nunca
+  dice de qué tipo es el movimiento que la pidió. El tipo ya lo tiene `AddTransactionViewModel`, así
+  que el arreglo es propagarlo en el push — **no** cambiar el default, que rompería los otros dos
+  call sites (`CategoryEntries.kt:47` y `AccountEntries.kt:36`) donde `Spend` sí es lo correcto.
+
+### Deuda técnica
+
+- [ ] `SyncOrchestrator` no tiene trigger de reconexión: si un sync falla offline y vuelve la red sin
+  escrituras nuevas, no reintenta hasta el próximo `ON_RESUME`. No hay pérdida de data — local-first
+  se auto-cura — solo latencia.
+- [ ] Pasada de performance de Compose: `derivedStateOf`, lambdas recordadas, `contentType` en
+  `LazyColumn`.
+- [ ] Flake preexistente en `MviViewModelTest` (~1 de cada 5 corridas, `Dispatchers.Main was
+  accessed`). El test ya hace `Dispatchers.setMain(StandardTestDispatcher())` en el `@Before` y
+  `resetMain()` en el `@After` (`presentation/src/androidHostTest/.../MviViewModelTest.kt:38` y `:43`),
+  así que la fuga es de otro test de la misma JVM, no de este.
+- [x] Deps huérfanas en `libs.versions.toml`: **no quedan**. La entrada anterior decía "entre ellas
+  `firebase-analytics`, declarada pero sin usar" y eso hoy es falso — el catálogo solo declara
+  `firebase-bom` y `firebase-crashlytics`, y las dos se usan en `androidApp/build.gradle.kts:214-215`.
+  Los únicos alias que no aparecen en ningún `.gradle.kts` son `detekt-ktlint-wrapper` y
+  `detekt-compose-rules`, y entran por `libs.library(...)` desde
+  `build-logic/.../DetektConventionPlugin.kt:41-42`.
+
+### Infraestructura
+
+- [ ] Decidir si la protección de `trunk` tiene que alcanzar también a admin. Hoy
+  `enforce_admins: false`, así que la cuenta del autor la bypassea y el push directo entra con un
+  warning — y en ese push los checks requeridos **no corrieron**.
+- [ ] Las dos flojeras del servidor ya descritas arriba: `required_linear_history: false` y
+  `allow_force_pushes: true`.
+
+### iOS SwiftUI — track de aprendizaje, sin urgencia
+
+- [ ] S3 a S11: dos de once hechos. Plan y alcance por slice en `docs/swiftui/PLAN.md`, motivación
+  en [ADR 005](adr/005-native-swiftui-ios-over-the-kmp-core.md).
+
+### Cerrado y verificado como tal
+
+- [x] Las modales de iOS (export/import/share/email) estaban verificadas solo a nivel de compilación
+  y arranque. Ya no cuenta como deuda: el track iOS pasó a SwiftUI nativo por ADR 005 y esas
+  pantallas se rehacen en sus slices, no se descongelan.
+
+---
+
 ## Track: migración KMP (cerrado)
 
 La app pasó de 3 módulos Android a 4 módulos Kotlin Multiplatform con **una sola
@@ -127,13 +250,9 @@ sigue siendo el default: sign-in es opt-in desde Perfil, sin gate. Decisiones en
 
 ### Bloqueantes del alpha — solo los puede hacer un humano
 
-1. Crear el proyecto Supabase cloud de prod (`supabase link` + `supabase db push`)
-   y llenar los `prod.*` en `supabase.properties`.
-2. Hostear `docs/PRIVACY_POLICY.md` como URL pública (Play la exige para apps con
-   eliminación de cuenta).
-3. Completar el Google Play Data Safety form.
-4. Checklist QA multi-device: clean install, semana offline-first, sign-in tardío,
-   dos devices, sign-out, y **upgrade real con APK viejo + `adb install -r`**.
+Los cuatro viven como checkboxes en el [checklist de trabajo abierto](#release-y-compliance--bloqueantes-del-alpha-solo-los-puede-hacer-un-humano):
+proyecto Supabase de prod, hostear la política de privacidad, el Data Safety form y el QA
+multi-device. No se repiten acá para que no haya dos listas que se desincronicen.
 
 Después de eso, el camino de release es `/release` → tag `vX.Y.Z` → `uploadRelease.yml`. Ese
 workflow **no publica**: sube el AAB a la pista alpha como **borrador**, con el `mapping.txt` para
@@ -146,8 +265,10 @@ así a propósito: con `status: completed` un push de tag mandaba el build sin v
 ## Track: auditoría de funcionalidades (cerrada)
 
 Auditoría de lectura sobre `:domain`, las queries `.sq` y los ViewModels clave.
-Todo verificado contra el código. Los 4 CRÍTICOS, los 4 ALTOS y 2 de los 3 MEDIOS están
-cerrados; queda M11, que **no es un fix sino una decisión de diseño**.
+Todo verificado contra el código. Los 4 CRÍTICOS, los 4 ALTOS y los 3 MEDIOS están cerrados.
+M11 se cerró con una **decisión de diseño**, no con el fix que pedía la sugerencia original —
+el razonamiento está en [ADR 004](adr/004-conflict-resolution-only-arbitrates-unpushed-edits.md)
+y más abajo.
 
 Cerrados:
 
@@ -215,26 +336,6 @@ contra el código antes de actuar sobre las que quedan:
   el pending-count con debounce de 3s.
 - "Borrar categoría es irreversible **y sin advertencia**": el diálogo ya existía. Lo que
   faltaba era el conteo de movimientos afectados.
-
-## Regresiones y deuda abiertas
-
-- 🟡 `SyncOrchestrator` no tiene trigger de reconexión: si un sync falla offline y
-  vuelve la red sin escrituras nuevas, no reintenta hasta el próximo `ON_RESUME`.
-  No hay pérdida de data (local-first, se auto-cura), solo latencia.
-- 🟡 Deps huérfanas en `libs.versions.toml` (entre ellas `firebase-analytics`,
-  declarada pero sin usar).
-- 🟡 Los baselines de detekt tienen ~47 entradas de `UnusedPrivateFunction` para
-  composables `@Preview`. Desde `c94e290` la regla los ignora por anotación, así que
-  esas entradas quedaron inertes y se pueden purgar.
-- 🟡 `:ui-android:detektMainAndroid` reporta "There were N compiler errors found during
-  analysis" (45 medidos en trunk limpio). Preexistente, degrada la precisión del
-  análisis pero no rompe el gate. Sin diagnosticar.
-- 🟡 Pasada de performance de Compose pendiente: `derivedStateOf`, lambdas
-  recordadas, `contentType` en `LazyColumn`.
-- 🔵 Las modales de iOS (export/import/share/email) están verificadas solo a nivel
-  de compilación y arranque. **Ya no cuenta como deuda**: iOS está congelado y esto
-  pasó al checklist de deshielo de
-  [ADR 003](adr/003-freeze-ios-keep-the-compile-gate.md).
 
 ---
 
