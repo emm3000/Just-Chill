@@ -5,8 +5,10 @@ import com.emm.domain.sync.SyncCursorStore
 import com.emm.domain.sync.SyncLogger
 import com.emm.domain.sync.SyncMutex
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration.Companion.seconds
 
@@ -23,6 +25,14 @@ import kotlin.time.Duration.Companion.seconds
  *    all rows belonging to [userId]. Local data survives as anonymous-local rows.
  * 3. [SyncCursorStore.clear] — removes stale pull-cursor and last-synced-at metadata for [userId]
  *    so it does not interfere if the same device registers again in the future.
+ *
+ * Steps 2 and 3 run inside `withContext(NonCancellable)`. Step 1 is left fully cancellable —
+ * cancelling before the remote RPC succeeds is safe, nothing irreversible has happened yet — but
+ * once it succeeds the account is gone server-side, so a cancellation landing after it (e.g. the
+ * caller popping the Perfil screen mid-flight, cancelling `viewModelScope`) must not skip the local
+ * cleanup. Skipping it would leave local rows tagged with the userId of an account that no longer
+ * exists on the server, which `docs/sync/AUDIT.md` §3 names as the precondition of the production
+ * sync loop this whole use case exists to close.
  *
  * Resolving the session is bounded by [SESSION_RESOLVE_TIMEOUT]. The whole flow holds the shared
  * [SyncMutex], so an unbounded wait there would not just hang this deletion — it would block every
@@ -51,14 +61,21 @@ class DeleteUserAccountUseCase(
     suspend operator fun invoke() = syncMutex.withLock {
         val userId = withStepLogging("session resolve") { resolveAuthenticatedUserId() }
 
-        // Step 1: remote delete + local sign-out. On failure, local data is untouched.
+        // Step 1: remote delete + local sign-out. On failure, local data is untouched. Fully
+        // cancellable — cancelling before the RPC succeeds is safe, nothing irreversible yet.
         withStepLogging("remote delete") { authRepository.deleteAccount() }
 
-        // Step 2: revert owned local rows to anonymous-local (userId = NULL, syncState = Pending).
-        withStepLogging("unclaim") { claimLocalDataRepository.unclaimAll(userId) }
+        // Steps 2-3 run under NonCancellable: once step 1 has succeeded the account is gone
+        // server-side, so a cancellation landing here (e.g. the caller leaving the screen) must
+        // not leave local rows still tagged with a userId that no longer exists remotely — see the
+        // class KDoc and `docs/sync/AUDIT.md` §3.
+        withContext(NonCancellable) {
+            // Step 2: revert owned local rows to anonymous-local (userId = NULL, syncState = Pending).
+            withStepLogging("unclaim") { claimLocalDataRepository.unclaimAll(userId) }
 
-        // Step 3: clear stale pull-cursor and last-synced-at timestamp for this user.
-        withStepLogging("cursor clear") { syncCursorStore.clear(userId) }
+            // Step 3: clear stale pull-cursor and last-synced-at timestamp for this user.
+            withStepLogging("cursor clear") { syncCursorStore.clear(userId) }
+        }
     }
 
     /**

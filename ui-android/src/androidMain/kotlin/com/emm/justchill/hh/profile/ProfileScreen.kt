@@ -166,9 +166,13 @@ fun ProfileScreen(
                 // already reset, so a label claiming "Exportando…" here would outlive its own scope.
                 meta = if (state.op == ProfileOp.Exporting) "Preparando…" else "Guardar como archivo",
                 metaIsPrimary = true,
-                enabled = state.op == ProfileOp.None,
-                onClick = { if (state.op == ProfileOp.None) onExportClick() },
-                trailing = { ChevronTrailing(enabled = state.op == ProfileOp.None) },
+                // Dimmed only when a DIFFERENT op is running — this row's own op keeps full
+                // emphasis so its progress copy stays readable.
+                enabled = state.op == ProfileOp.None || state.op == ProfileOp.Exporting,
+                onClick = onExportClick.takeIf { state.op == ProfileOp.None },
+                trailing = {
+                    ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.Exporting)
+                },
             )
             HairlineDivider()
             ProfileRowWithTrailing(
@@ -176,11 +180,13 @@ fun ProfileScreen(
                 label = "Importar respaldo",
                 meta = if (state.op == ProfileOp.Importing) "Importando…" else "Reemplaza todo",
                 metaIsPrimary = false,
-                enabled = state.op == ProfileOp.None,
+                enabled = state.op == ProfileOp.None || state.op == ProfileOp.Importing,
                 // Confirm before the file picker: by the time a file is chosen the user has
                 // already decided, and this is the only irreversible action left unguarded.
-                onClick = { if (state.op == ProfileOp.None) showImportDialog = true },
-                trailing = { ChevronTrailing(enabled = state.op == ProfileOp.None) },
+                onClick = { showImportDialog = true }.takeIf { state.op == ProfileOp.None },
+                trailing = {
+                    ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.Importing)
+                },
             )
         }
 
@@ -334,9 +340,13 @@ private fun AccountSection(
                             "Tus datos siguen en este teléfono"
                         },
                         metaIsPrimary = false,
-                        enabled = state.op == ProfileOp.None,
-                        onClick = { if (state.op == ProfileOp.None) onSignOutClick() },
-                        trailing = { ChevronTrailing(enabled = state.op == ProfileOp.None) },
+                        // Dimmed only when a DIFFERENT op is running — this row's own op keeps
+                        // full emphasis so its progress copy stays readable.
+                        enabled = state.op == ProfileOp.None || state.op == ProfileOp.SigningOut,
+                        onClick = onSignOutClick.takeIf { state.op == ProfileOp.None },
+                        trailing = {
+                            ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.SigningOut)
+                        },
                     )
                     HairlineDivider()
                     ProfileRowWithTrailing(
@@ -348,11 +358,15 @@ private fun AccountSection(
                             "Borra tu cuenta y tus datos en la nube"
                         },
                         metaIsPrimary = false,
-                        enabled = state.op == ProfileOp.None,
-                        onClick = {
-                            if (state.op == ProfileOp.None) showDeleteAccountDialog = true
+                        // Dimmed only when a DIFFERENT op is running — this row's own op keeps
+                        // full emphasis so its progress copy stays readable.
+                        enabled = state.op == ProfileOp.None || state.op == ProfileOp.DeletingAccount,
+                        onClick = { showDeleteAccountDialog = true }.takeIf { state.op == ProfileOp.None },
+                        trailing = {
+                            ChevronTrailing(
+                                enabled = state.op == ProfileOp.None || state.op == ProfileOp.DeletingAccount,
+                            )
                         },
-                        trailing = { ChevronTrailing(enabled = state.op == ProfileOp.None) },
                     )
                 }
             }

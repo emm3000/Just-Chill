@@ -145,6 +145,41 @@ class DeleteUserAccountUseCaseTest {
         verify(exactly = 0) { logger.warn(any(), any()) }
     }
 
+    // ── Cancellation after the irreversible remote delete (NonCancellable cleanup) ────────────
+
+    /**
+     * Once [AuthRepository.deleteAccount] has succeeded the account is gone server-side, so a
+     * cancellation landing after it (e.g. the caller popping the Perfil screen mid-flight) must
+     * not skip the local cleanup — otherwise local rows keep the userId of an account that no
+     * longer exists remotely (`docs/sync/AUDIT.md` §3, the precondition of the production sync
+     * loop).
+     */
+    @Test
+    fun `cancellation arriving after deleteAccount returns still runs unclaimAll and clear`() = runTest {
+        val userId = "uid-7"
+        every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
+        coEvery { authRepository.deleteAccount() } just Runs
+        val unclaimGate = CompletableDeferred<Unit>()
+        coEvery { claimLocalDataRepository.unclaimAll(userId) } coAnswers { unclaimGate.await() }
+        every { syncCursorStore.clear(userId) } just Runs
+
+        val job = launch { useCase() }
+        testScheduler.advanceUntilIdle() // deleteAccount succeeded; now parked inside unclaimAll's gate
+
+        job.cancel() // caller cancelled (e.g. left the screen) after the irreversible remote delete
+        testScheduler.advanceUntilIdle()
+
+        // clear must not have run yet — NonCancellable does not skip ahead, it keeps unclaimAll
+        // parked on its own gate exactly like an uncancelled run would.
+        verify(exactly = 0) { syncCursorStore.clear(userId) }
+
+        unclaimGate.complete(Unit)
+        job.join()
+
+        coVerify(exactly = 1) { claimLocalDataRepository.unclaimAll(userId) }
+        verify(exactly = 1) { syncCursorStore.clear(userId) }
+    }
+
     // ── Initializing then Authenticated ──────────────────────────────────────
 
     @Test
