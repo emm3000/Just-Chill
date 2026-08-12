@@ -25,8 +25,8 @@ class HomeViewModel(
     private val getHomeData: GetHomeDataUseCase,
     private val confirmRecurringMovement: ConfirmRecurringMovementUseCase,
     private val skipRecurringMovement: SkipRecurringMovementUseCase,
-    private val clock: kotlin.time.Clock = kotlin.time.Clock.System,
-    private val zone: TimeZone = TimeZone.currentSystemDefault(),
+    private val clock: kotlin.time.Clock,
+    private val zone: TimeZone,
 ) : MviViewModel<HomeUiState, HomeIntent, HomeEffect>() {
 
     // Declared before initialState on purpose: property initializers run in order, so the state can

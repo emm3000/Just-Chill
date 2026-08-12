@@ -35,8 +35,8 @@ class SeeTransactionsViewModel(
     private val searchTransactions: SearchTransactionsUseCase,
     categoryRepository: CategoryRepository,
     transactionRepository: TransactionRepository,
-    private val clock: Clock = Clock.System,
-    private val zone: TimeZone = TimeZone.currentSystemDefault(),
+    private val clock: Clock,
+    private val zone: TimeZone,
 ) : MviViewModel<SeeTransactionsUiState, SeeTransactionsIntent, SeeTransactionsEffect>() {
 
     // Both take the injected zone, not just the injected clock. "What month is it" is the same

@@ -39,9 +39,9 @@ val transactionModule = module {
             categoryRepository = get(),
             findAccount = get(),
             getTopUsedCategoryIds = get(),
-            // Explicit because the parametrised DSL builds the constructor by hand: Koin never
-            // applies Kotlin default arguments, so an omitted clock would not fall back — it
-            // would not compile, and a defaulted zone would silently ignore sharedModule's.
+            // The parametrised DSL builds the constructor by hand, so these two are passed like
+            // any other dependency. Neither carries a default any more, so omitting one is a
+            // compile error rather than a silent read of the device.
             clock = get(),
             zone = get(),
         )

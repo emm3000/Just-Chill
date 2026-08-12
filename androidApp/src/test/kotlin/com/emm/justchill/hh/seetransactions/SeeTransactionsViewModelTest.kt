@@ -78,10 +78,12 @@ class SeeTransactionsViewModelTest {
     }
     private val searchTransactions = mockk<SearchTransactionsUseCase>()
 
-    private fun buildViewModel(
-        clock: Clock = fixedClock,
-        zone: TimeZone = TimeZone.currentSystemDefault(),
-    ): SeeTransactionsViewModel {
+    // The zone defaults to UTC, not to the machine's. It used to read
+    // `TimeZone.currentSystemDefault()`, which is the very defect finding #7 is about: the suite
+    // would then pass or fail depending on where it ran, and the tests below that DO vary the zone
+    // would be comparing against a moving baseline. At this clock (noon UTC) UTC and the dev
+    // machine's America/Lima are the same calendar day, so nothing below changed meaning.
+    private fun buildViewModel(clock: Clock = fixedClock, zone: TimeZone = TimeZone.UTC): SeeTransactionsViewModel {
         every { searchTransactions.invoke(any()) } returns flowOf(emptyList())
         return SeeTransactionsViewModel(searchTransactions, categoryRepository, transactionRepository, clock, zone)
     }
@@ -341,11 +343,14 @@ class SeeTransactionsViewModelTest {
             monthTransactionsFlow.value = listOf(tx("t-aug", TransactionType.Spend, 1_000))
             totalsFlow.value = TransactionTotals(balance = Money(10_000), movementCount = 3)
 
+            // Built by hand rather than through buildViewModel: the helper re-stubs
+            // searchTransactions, which would undo the failing stub this test is about.
             val vm = SeeTransactionsViewModel(
                 searchTransactions,
                 categoryRepository,
                 transactionRepository,
                 fixedClock,
+                TimeZone.UTC,
             )
             advanceUntilIdle()
 

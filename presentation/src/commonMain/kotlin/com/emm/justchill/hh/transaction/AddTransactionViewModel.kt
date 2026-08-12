@@ -35,8 +35,8 @@ class AddTransactionViewModel(
     private val getLastUsedAccountId: GetLastUsedAccountIdUseCase,
     accountRepository: AccountRepository,
     categoryRepository: CategoryRepository,
-    private val clock: Clock = Clock.System,
-    private val zone: TimeZone = TimeZone.currentSystemDefault(),
+    private val clock: Clock,
+    private val zone: TimeZone,
 ) : MviViewModel<AddTransactionUiState, AddTransactionIntent, AddTransactionEffect>() {
 
     override val initialState = AddTransactionUiState(today = today())

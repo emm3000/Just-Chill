@@ -37,8 +37,8 @@ class EditTransactionViewModel(
     private val deleteTransaction: DeleteTransactionUseCase,
     private val findAccount: FindAccountUseCase,
     private val getTopUsedCategoryIds: GetTopUsedCategoryIdsUseCase,
-    private val clock: Clock = Clock.System,
-    private val zone: TimeZone = TimeZone.currentSystemDefault(),
+    private val clock: Clock,
+    private val zone: TimeZone,
 ) : MviViewModel<EditTransactionUiState, EditTransactionIntent, EditTransactionEffect>() {
 
     override val initialState = EditTransactionUiState(date = today(), today = today())
