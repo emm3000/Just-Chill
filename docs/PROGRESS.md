@@ -238,16 +238,21 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [ ] Entrada `ImportOrdering:ProfileScreen.kt` en `config/detekt/baseline-ui-android-main.xml:37`,
   probablemente muerta desde que `253e170` tocó esos imports. **No verificado**: correr la tarea y
   ver si el issue reaparece antes de borrarla.
-- [ ] Sacar el `@Suppress("CyclomaticComplexMethod")` de `ui-android/.../ProfileScreen.kt:233` al
+- [ ] Sacar el `@Suppress("CyclomaticComplexMethod")` de `ui-android/.../ProfileScreen.kt:239` al
   borrar el kill switch — cubre todo `AccountSection` en vez de solo las ramas de sync. Única
   SUGGESTION del Judgment Day de `253e170`.
 - [ ] **Burn-down de los 7 `TooManyFunctions` con amnistía** en
   `config/detekt/baseline-ui-android-main.xml`, contra el umbral de 8 funciones top-level no-`@Preview`
   por archivo: `SeeTransactionsScreen` (16), `HomeScreen` (16), `AddCategoryScreen` (13),
-  `AccountsScreen` (11), `AddEditRecurringMovementScreen` (10), `ProfileScreen` (10),
+  `AccountsScreen` (11), `AddEditRecurringMovementScreen` (10), `ProfileScreen` (11),
   `RecurringMovementsScreen` (9). La entrada del baseline no lleva el conteo, así que **el gate no los
   va a volver a reportar nunca**, crezcan lo que crezcan: si no se bajan acá, no se bajan.
   Criterio y método de conteo en `docs/CODE_QUALITY.md`.
+- [ ] `LongParameterList:ProfileScreen.kt:@Composable private fun ProfileRowWithTrailing` en
+  `config/detekt/baseline-ui-android-main.xml:65` — 8 parámetros contra el tope de 5 para funciones
+  (`config/detekt/detekt.yml`), name-keyed y sin conteo, misma amnistía permanente que el punto
+  anterior. Burn-down requerido por `docs/CODE_QUALITY.md` (arbitraje: crecimiento de baseline solo
+  entra junto con esta línea).
 - [ ] `:ui-android:detektAndroidMainSourceSet` reporta **21** issues. Preexistente y deliberadamente
   fuera del gate: `detektMainAndroid` cubre los mismos archivos **con** type resolution, así que
   sumarlo serían más tareas y no más cobertura — el razonamiento está en `QualityGateConventionPlugin`.
@@ -277,6 +282,12 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 
 ### Deuda técnica
 
+- [ ] `SyncLogger` (`domain/.../sync/SyncLogger.kt`) está nombrado para el sync path, pero ya es el
+  canal general de diagnóstico: lo usan también `DeleteUserAccountUseCase` (borrado de cuenta) y
+  `ClaimLocalDataOnAuthenticationUseCase` (claim al autenticarse), ninguno de los dos estrictamente
+  sync. `docs/sync/AUDIT.md:115` ya lo lista como un segundo canal de error sin tipar, paralelo a
+  `DomainException` — el nombre desalineado es la misma deuda vista desde otro ángulo. Renombrar o
+  reubicar el port toca ~18 archivos y es su propia unidad de trabajo, no se hizo acá.
 - [ ] `SyncOrchestrator` no tiene trigger de reconexión: si un sync falla offline y vuelve la red sin
   escrituras nuevas, no reintenta hasta el próximo `ON_RESUME`. No hay pérdida de data — local-first
   se auto-cura — solo latencia.

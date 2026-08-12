@@ -32,7 +32,7 @@ never authoritative.
 | Gate 1 | `core/AppGraph.kt:67` — `SyncOrchestrator.start()` never called, so no trigger and no request consumer; that consumer is the only caller of the private `runSync()` |
 | Gate 2 | `hh/profile/ProfileViewModel.kt:157` — manual path returns at its origin |
 | Not gated | `ClaimLocalDataOnAuthenticationUseCase` (`AppGraph.kt:59-63`) — stamps ownership, no network, so flipping back needs no catch-up |
-| Review | Judgment Day round 1: 0 SEVERE, 0 corrections, 1 SUGGESTION (`ProfileScreen.kt:233` suppression too wide). `qualityGate --rerun-tasks` green |
+| Review | Judgment Day round 1: 0 SEVERE, 0 corrections, 1 SUGGESTION (`ProfileScreen.kt:239` suppression too wide — `:233` at review time, shifted since). `qualityGate --rerun-tasks` green |
 
 Nothing was removed; every binding, test and engine class is still wired. Profile reads
 "Sincronización en pausa". **The only runtime observation of the bug:** the owner signed out and the
@@ -97,7 +97,7 @@ backup destination becomes routine.
 | Where | Defect | Consequence |
 |---|---|---|
 | all four `.sq` files | **No read query filters by `userId`** — `all:`, `completeTransactions:`, `liveTotals:`, `getAccountBalance:`, `monthlyStats:` filter only `deletedAt IS NULL` | One account's money appears in another account's Home balance and Reporte |
-| `DefaultAuthRepository.kt:88-89`, `AndroidPlatformModule.kt:34` | `signOut()` calls `client.auth.signOut()` and nothing else. One SQLite file per device, no per-user DB, no wipe on user change | The next account inherits the previous one's rows |
+| `DefaultAuthRepository.kt:89-90`, `AndroidPlatformModule.kt:34` | `signOut()` calls `client.auth.signOut()` and nothing else. One SQLite file per device, no per-user DB, no wipe on user change | The next account inherits the previous one's rows |
 | `transactions.sq:261`, `categories.sq:87`, `accounts.sq:87` | `updateFromRemote` sets `userId` unconditionally; default categories carry fixed identical UUIDs on every install | The same 23 PKs exist on every device that ever ran the app |
 
 ### Architecture
@@ -128,7 +128,7 @@ and vocabulary, not imports.
 | `:265` | `currentUserId` read **after** `syncData()` returns | A cycle spanning an account switch stamps the wrong user's `lastSyncedAt` |
 | `_events` = `Channel(BUFFERED)` (64); `iosApp/iosApp/ContentView.swift` | `send` suspends inside the single consumer loop, and iOS has no collector yet still calls `bootstrapAppGraph` → `start()` | After 64 events sync wedges permanently on iOS |
 | `:198-199` | `filter` sits before `debounce` | A transition to 0 cannot cancel an in-flight window |
-| triggers (a) and (c); `DefaultAuthRepository.kt:32-34` | `flatMapLatest` over `observeSession()` with no `distinctUntilChanged`; mapping a StateFlow drops de-duplication, and re-subscribing `resumeEvents` replays `onResume` because `LifecycleRegistry` replays to current state | Spurious cycles. Trigger (b) at `:159-164` is correctly guarded — copy it |
+| triggers (a) and (c); `DefaultAuthRepository.kt:33-36` | `flatMapLatest` over `observeSession()` with no `distinctUntilChanged`; mapping a StateFlow drops de-duplication, and re-subscribing `resumeEvents` replays `onResume` because `LifecycleRegistry` replays to current state | Spurious cycles. Trigger (b) at `:159-164` is correctly guarded — copy it |
 | `SyncModule.kt:82-88` | No cycle-level retry or backoff; the app scope is never cancelled and there is no `stop()` | — |
 | `SyncOrchestrator` triggers | **No connectivity-regained trigger** — only on-resume, sign-in and debounced writes | A sync that fails offline waits for the next `ON_RESUME`. No data loss, just latency. Fix: `callbackFlow` over `ConnectivityManager.NetworkCallback.onAvailable`, filtered by authenticated + (`pendingCount > 0` or `lastSyncFailed`), injected like `resumeEvents`. Do **not** fix it in isolation: the debounced-writes trigger is half the loop in §3, and these triggers are being replaced by the pure `SyncSchedule` of §9 |
 | `data/.../shared/Dispatchers.kt:5` | `ioDispatcher` is a global `expect val` that cannot be redirected in a test, while a real `DispatchersProvider` exists (`presentation/.../core/DispatchersProvider.kt:5`) used only by the dev `experiences/` playground | Engine code is untestable off the IO dispatcher |
@@ -195,8 +195,8 @@ Project `pievwpleqmrjwszuuivr` ("Justtt"). Two tenants. **No data merged, no PK 
 
 **The RPC was never sent.** Zero `/rest/v1/rpc/*` requests in the full 24h log window, zero
 executions in `postgres_logs` — a client-side failure before the HTTP call. Sign-out is not the
-cause: `DefaultAuthRepository.kt:103-106` runs the RPC at `:104` and `signOut(SignOutScope.LOCAL)`
-at `:105`, in that order.
+cause: `DefaultAuthRepository.kt:104-107` runs the RPC at `:105` and `signOut(SignOutScope.LOCAL)`
+at `:106`, in that order.
 
 **Correction (2026-08-12): the original version of this section framed the question as a binary —
 "nothing, or an error?" — and asked the author to settle it from memory. He does not remember, and
@@ -221,7 +221,12 @@ no, client yes — before this commit, all four candidates were live.
 **What this commit closed, all four at once, instead of picking a culprit:**
 - Row 1: `launchOp`'s guard now emits `ProfileEffect.Notify(ProfileMessage.OperationInProgress)`
   before returning, instead of returning silently (`ProfileViewModel.kt:110-113`). One generic
-  message for all four ops — the guard is shared and must not grow a per-op branch.
+  message for all four ops — the guard is shared and must not grow a per-op branch. This is the
+  `:presentation` half of the closure; on Android, `ProfileScreen.kt`'s four `ProfileRowWithTrailing`
+  call sites additionally pass `onClick = null` while a DIFFERENT op is in flight, so a tap during
+  an in-flight op never reaches the ViewModel at all on that platform — the production incident
+  being post-mortemed here was Android. The ViewModel guard is the shared backstop iOS slice S9
+  will rely on, since SwiftUI has no equivalent composable-level guard yet.
 - Row 2: unchanged behavior (a stale/refreshing session genuinely is not authenticated), but no
   longer silent — see the "Rows 2–4" logging fix below (row 3 below is the `SessionRequiredException`
   mapping, not the logging fix), which also covers this branch's `Unauthorized`.
@@ -270,5 +275,5 @@ by `BaseTableSync.kt:81-85` and ADR 002 Decision 3 — one slow sync, not data l
 **Hard prerequisite:** verify a local export works and the device's SQLite is intact *before*
 touching the server.
 
-For scale on how much runtime evidence exists at all: `docs/PROGRESS.md:237` records the sync paths
-were validated against a local Supabase stack exactly **once**, on 2026-06-10.
+For scale on how much runtime evidence exists at all: `docs/PROGRESS.md:370-371` records the sync
+paths were validated against a local Supabase stack exactly **once**, on 2026-06-10.
