@@ -22,4 +22,11 @@ sealed interface ProfileMessage {
     data object ExportFailed : ProfileMessage
     data class ImportDone(val transactions: Int) : ProfileMessage
     data object ImportFailed : ProfileMessage
+
+    /**
+     * [ProfileViewModel.launchOp]'s re-entry guard fired: another op was already in flight. One
+     * generic message for all four ops on purpose — see the guard's own doc for why it does not
+     * grow a per-op branch.
+     */
+    data object OperationInProgress : ProfileMessage
 }

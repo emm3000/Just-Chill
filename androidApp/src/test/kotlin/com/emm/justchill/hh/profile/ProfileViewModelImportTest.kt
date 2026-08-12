@@ -144,7 +144,7 @@ class ProfileViewModelImportTest {
     }
 
     @Test
-    fun `ImportJson while export in flight is a no-op`() = runTest(testDispatcher) {
+    fun `ImportJson while export in flight is a no-op that reports OperationInProgress`() = runTest(testDispatcher) {
         val gate = CompletableDeferred<Unit>()
         coEvery { backupRepository.exportToJson(any(), any()) } coAnswers {
             gate.await()
@@ -164,7 +164,12 @@ class ProfileViewModelImportTest {
         vm.onIntent(ProfileIntent.ImportJson("{}"))
         advanceUntilIdle()
 
-        assertTrue(effects.isEmpty(), "Import while export in flight must be a no-op, got: $effects")
+        // The guard no longer swallows silently (docs/sync/AUDIT.md §8) — it still runs no import,
+        // but it now reports through the shared OperationInProgress notify.
+        assertTrue(
+            effects.singleOrNull() == ProfileEffect.Notify(ProfileMessage.OperationInProgress),
+            "Expected exactly one OperationInProgress notify, got: $effects",
+        )
 
         gate.cancel()
         job.cancel()

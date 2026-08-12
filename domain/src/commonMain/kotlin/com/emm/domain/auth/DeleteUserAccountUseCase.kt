@@ -2,7 +2,9 @@ package com.emm.domain.auth
 
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.sync.SyncCursorStore
+import com.emm.domain.sync.SyncLogger
 import com.emm.domain.sync.SyncMutex
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeout
@@ -27,6 +29,12 @@ import kotlin.time.Duration.Companion.seconds
  * sync cycle for the rest of the process lifetime. A session that never settles surfaces as
  * [DomainException.NetworkUnavailable]: retryable, and the lock is released on the way out.
  *
+ * Every step is logged through [SyncLogger] on failure, naming which one broke, before the
+ * original exception is rethrown unchanged. This flow used to fail completely silently in
+ * production with zero trace of which step (or the caller's UI guard) ate the failure — see
+ * `docs/sync/AUDIT.md` §8. [CancellationException] is never logged as a failure: the user simply
+ * leaving the screen is not a deletion failure.
+ *
  * NOTE: [DeleteAccountUseCase] in `com.emm.domain.account` handles FINANCIAL account deletion
  * (a bank/wallet account entity). This use case is for the AUTH user account.
  */
@@ -35,21 +43,37 @@ class DeleteUserAccountUseCase(
     private val claimLocalDataRepository: ClaimLocalDataRepository,
     private val syncCursorStore: SyncCursorStore,
     private val syncMutex: SyncMutex,
+    private val logger: SyncLogger,
 ) {
     // The whole flow runs under the shared SyncMutex: an in-flight push finishing AFTER the
     // delete_account RPC would re-upsert rows the server just wiped (stateless JWT + no FK to
     // auth.users + RLS uid claim still matching). See SyncMutex for the full rationale.
     suspend operator fun invoke() = syncMutex.withLock {
-        val userId = resolveAuthenticatedUserId()
+        val userId = withStepLogging(STEP_SESSION_RESOLVE) { resolveAuthenticatedUserId() }
 
         // Step 1: remote delete + local sign-out. On failure, local data is untouched.
-        authRepository.deleteAccount()
+        withStepLogging(STEP_REMOTE_DELETE) { authRepository.deleteAccount() }
 
         // Step 2: revert owned local rows to anonymous-local (userId = NULL, syncState = Pending).
-        claimLocalDataRepository.unclaimAll(userId)
+        withStepLogging(STEP_UNCLAIM) { claimLocalDataRepository.unclaimAll(userId) }
 
         // Step 3: clear stale pull-cursor and last-synced-at timestamp for this user.
-        syncCursorStore.clear(userId)
+        withStepLogging(STEP_CURSOR_CLEAR) { syncCursorStore.clear(userId) }
+    }
+
+    /**
+     * Runs [block], logging any failure via [logger] with [step] naming which part of the flow
+     * broke, then rethrows it unchanged. [CancellationException] is never logged — it is not a
+     * failure, and re-wrapping it here would also break structured concurrency.
+     */
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun <T> withStepLogging(step: String, block: suspend () -> T): T = try {
+        block()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Throwable) {
+        logger.warn("Account deletion failed at step: $step", e)
+        throw e
     }
 
     /**
@@ -84,5 +108,10 @@ class DeleteUserAccountUseCase(
          * shared [SyncMutex] instead of holding it for the process lifetime.
          */
         val SESSION_RESOLVE_TIMEOUT = 10.seconds
+
+        const val STEP_SESSION_RESOLVE = "session resolve"
+        const val STEP_REMOTE_DELETE = "remote delete"
+        const val STEP_UNCLAIM = "unclaim"
+        const val STEP_CURSOR_CLEAR = "cursor clear"
     }
 }

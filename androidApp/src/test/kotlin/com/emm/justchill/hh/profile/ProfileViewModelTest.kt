@@ -253,31 +253,37 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `ExportRequested while import in flight is a no-op`() = runTest(testDispatcher) {
-        val gate = CompletableDeferred<Unit>()
-        coEvery { importData(any()) } coAnswers {
-            gate.await()
-            error("unreachable")
+    fun `ExportRequested while import in flight is a no-op that reports OperationInProgress`() =
+        runTest(testDispatcher) {
+            val gate = CompletableDeferred<Unit>()
+            coEvery { importData(any()) } coAnswers {
+                gate.await()
+                error("unreachable")
+            }
+
+            val vm = buildViewModel()
+
+            vm.onIntent(ProfileIntent.ImportJson("{}"))
+            advanceUntilIdle() // suspended at gate — op == Importing
+
+            assertEquals(ProfileOp.Importing, vm.state.value.op)
+
+            val effects = mutableListOf<ProfileEffect>()
+            val job = launch { vm.effect.collect { effects.add(it) } }
+
+            vm.onIntent(ProfileIntent.ExportRequested)
+            advanceUntilIdle()
+
+            // The guard no longer swallows silently (docs/sync/AUDIT.md §8) — it still runs no
+            // export, but it now reports through the shared OperationInProgress notify.
+            assertTrue(
+                effects.singleOrNull() == ProfileEffect.Notify(ProfileMessage.OperationInProgress),
+                "Expected exactly one OperationInProgress notify, got: $effects",
+            )
+
+            gate.cancel()
+            job.cancel()
         }
-
-        val vm = buildViewModel()
-
-        vm.onIntent(ProfileIntent.ImportJson("{}"))
-        advanceUntilIdle() // suspended at gate — op == Importing
-
-        assertEquals(ProfileOp.Importing, vm.state.value.op)
-
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
-
-        vm.onIntent(ProfileIntent.ExportRequested)
-        advanceUntilIdle()
-
-        assertTrue(effects.isEmpty(), "Export while import in flight must be a no-op, got: $effects")
-
-        gate.cancel()
-        job.cancel()
-    }
 
     @Test
     fun `ExportRequested re-entry guard — second export while first in flight is a no-op`() = runTest(testDispatcher) {
@@ -365,6 +371,37 @@ class ProfileViewModelTest {
         advanceUntilIdle()
         assertEquals(ProfileOp.None, vm.state.value.op, "op must reset after the delete completes")
     }
+
+    /**
+     * `docs/sync/AUDIT.md` §8, candidate 1: the `launchOp` guard used to return silently on a
+     * confirmed re-entry — indistinguishable on screen from the delete_account RPC never firing at
+     * all. It now reports instead of swallowing.
+     */
+    @Test
+    fun `DeleteAccount re-fire while in flight emits OperationInProgress and does not re-invoke`() =
+        runTest(testDispatcher) {
+            val gate = CompletableDeferred<Unit>()
+            coEvery { deleteUserAccount.invoke() } coAnswers { gate.await() }
+
+            val vm = buildViewModel()
+            val effects = mutableListOf<ProfileEffect>()
+            val job = launch { vm.effect.collect { effects.add(it) } }
+
+            vm.onIntent(ProfileIntent.DeleteAccount)
+            advanceUntilIdle() // first call is suspended at the gate
+
+            vm.onIntent(ProfileIntent.DeleteAccount)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { deleteUserAccount.invoke() }
+            assertTrue(
+                effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.OperationInProgress },
+                "Expected OperationInProgress notify not found in $effects",
+            )
+
+            gate.cancel()
+            job.cancel()
+        }
 
     // ── SyncRowUi mapping tests ────────────────────────────────────────────
 

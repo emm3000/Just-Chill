@@ -12,6 +12,7 @@ import io.github.jan.supabase.auth.SignOutScope
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.exception.AuthErrorCode
 import io.github.jan.supabase.auth.exception.AuthRestException
+import io.github.jan.supabase.auth.exception.SessionRequiredException
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.providers.builtin.IDToken
@@ -201,6 +202,14 @@ private val VALIDATION_AUTH_CODES: Map<AuthErrorCode, ValidationCode> = mapOf(
  * so the UI shows a corrective hint instead of the misleading "wrong credentials" message. The
  * server's `errorDescription` is English, so the [ValidationCode] — not the message — is what the
  * UI translates.
+ *
+ * [SessionRequiredException] maps to [DomainException.Unauthorized] here, which diverges from
+ * `DefaultSyncRepository.toSyncDomainException` (`DefaultSyncRepository.kt:157`), where the same
+ * exception maps to [DomainException.NetworkUnavailable] because it can only mean "session not
+ * ready yet" on that path. On the auth path there is no equivalent readiness gate, so the same
+ * exception is a real authorization failure. The divergence is deliberate, not a bug: unifying it
+ * would require the sync path to sign the user out on a transient postgrest race. Tracked as a
+ * follow-up in `docs/PROGRESS.md`; the sync mapper is not changed by this commit.
  */
 internal fun Throwable.toAuthDomainException(): DomainException = when (this) {
     is AuthRestException -> VALIDATION_AUTH_CODES[errorCode]?.let { validationCode ->
@@ -216,6 +225,11 @@ internal fun Throwable.toAuthDomainException(): DomainException = when (this) {
 
     is UnauthorizedRestException -> DomainException.Unauthorized(
         message = description ?: "Unauthorized",
+        cause = this,
+    )
+
+    is SessionRequiredException -> DomainException.Unauthorized(
+        message = "Postgrest call required a session but none was attached",
         cause = this,
     )
 

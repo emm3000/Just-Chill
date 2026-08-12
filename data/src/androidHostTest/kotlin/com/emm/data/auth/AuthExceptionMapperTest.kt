@@ -3,6 +3,7 @@ package com.emm.data.auth
 import com.emm.domain.shared.error.DomainException
 import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.auth.exception.AuthWeakPasswordException
+import io.github.jan.supabase.auth.exception.SessionRequiredException
 import io.github.jan.supabase.exceptions.HttpRequestException
 import io.github.jan.supabase.exceptions.RestException
 import io.github.jan.supabase.exceptions.UnauthorizedRestException
@@ -69,6 +70,12 @@ class AuthExceptionMapperTest {
     fun `UnauthorizedRestException maps to Unauthorized`() {
         val response = mockk<HttpResponse>(relaxed = true)
         val ex = UnauthorizedRestException(error = "unauthorized", response = response)
+        assertIs<DomainException.Unauthorized>(ex.toAuthDomainException())
+    }
+
+    @Test
+    fun `SessionRequiredException maps to Unauthorized`() {
+        val ex = SessionRequiredException(url = "https://example.supabase.co/rest/v1/rpc/delete_account")
         assertIs<DomainException.Unauthorized>(ex.toAuthDomainException())
     }
 

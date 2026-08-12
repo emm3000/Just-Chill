@@ -2,6 +2,7 @@ package com.emm.domain.auth
 
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.sync.SyncCursorStore
+import com.emm.domain.sync.SyncLogger
 import com.emm.domain.sync.SyncMutex
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -28,12 +29,14 @@ class DeleteUserAccountUseCaseTest {
     private val claimLocalDataRepository = mockk<ClaimLocalDataRepository>()
     private val syncCursorStore = mockk<SyncCursorStore>()
     private val syncMutex = SyncMutex()
+    private val logger = mockk<SyncLogger>(relaxed = true)
 
     private val useCase = DeleteUserAccountUseCase(
         authRepository = authRepository,
         claimLocalDataRepository = claimLocalDataRepository,
         syncCursorStore = syncCursorStore,
         syncMutex = syncMutex,
+        logger = logger,
     )
 
     private fun authenticated(userId: String) =
@@ -85,6 +88,44 @@ class DeleteUserAccountUseCaseTest {
 
         coVerify(exactly = 0) { claimLocalDataRepository.unclaimAll(any()) }
         verify(exactly = 0) { syncCursorStore.clear(any()) }
+    }
+
+    // ── Failure observability (docs/sync/AUDIT.md §8) ─────────────────────────
+
+    /**
+     * The failure this whole change exists for: a broken step used to be indistinguishable from a
+     * swallowed intent. The step name proves WHICH of the three post-resolve steps broke, and the
+     * original exception must still reach the caller unchanged.
+     */
+    @Test
+    fun `deleteAccount throwing logs the remote delete step and rethrows the original exception unchanged`() = runTest {
+        val userId = "uid-5"
+        every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
+        val original = DomainException.NetworkUnavailable(RuntimeException("timeout"))
+        coEvery { authRepository.deleteAccount() } throws original
+
+        val thrown = assertFailsWith<DomainException.NetworkUnavailable> { useCase() }
+
+        assertTrue(thrown === original, "The original exception instance must reach the caller unchanged")
+        verify(exactly = 1) { logger.warn(match { it.contains("remote delete") }, original) }
+    }
+
+    /**
+     * `CancellationException` (the user leaving the screen) must never be logged as a deletion
+     * failure — logging it would misreport a clean cancellation as a broken step.
+     */
+    @Test
+    fun `cancelling the caller during the remote delete step is not logged as a failure`() = runTest {
+        val userId = "uid-6"
+        every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
+        val gate = CompletableDeferred<Unit>()
+        coEvery { authRepository.deleteAccount() } coAnswers { gate.await() }
+
+        val job = launch { useCase() }
+        testScheduler.advanceUntilIdle()
+        job.cancelAndJoin()
+
+        verify(exactly = 0) { logger.warn(any(), any()) }
     }
 
     // ── Initializing then Authenticated ──────────────────────────────────────

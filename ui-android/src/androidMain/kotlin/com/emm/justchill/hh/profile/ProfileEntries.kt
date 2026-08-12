@@ -96,6 +96,7 @@ private fun ProfileEntry(
                     tone = when (effect.message) {
                         ProfileMessage.ExportFailed,
                         ProfileMessage.ImportFailed,
+                        ProfileMessage.OperationInProgress,
                         -> EmmSnackbarTone.Error
 
                         else -> EmmSnackbarTone.Success

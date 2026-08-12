@@ -95,9 +95,18 @@ class ProfileViewModel(
      * concurrent op, raise [ProfileUiState.op], run [block], always reset.
      * try/finally guarantees the reset on success, domain error (rethrown to
      * launchSafe's handler), and coroutine cancellation.
+     *
+     * The guard reports instead of swallowing: a confirmed intent arriving while another op is in
+     * flight used to return silently with no effect and no state change — indistinguishable on
+     * screen from the delete-account RPC never firing at all (`docs/sync/AUDIT.md` §8, candidate 1).
+     * One generic [ProfileMessage.OperationInProgress] covers all four ops here on purpose — this
+     * guard is shared, and must not grow a per-op branch.
      */
     private fun launchOp(op: ProfileOp, onError: (DomainException) -> ProfileEffect, block: suspend () -> Unit) {
-        if (currentState.op != ProfileOp.None) return
+        if (currentState.op != ProfileOp.None) {
+            sendEffect(ProfileEffect.Notify(ProfileMessage.OperationInProgress))
+            return
+        }
         updateState { copy(op = op) }
         launchSafe(onError = onError) {
             try {
