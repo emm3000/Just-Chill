@@ -105,9 +105,6 @@ UPDATE transactions
 SET type = ?, amount = ?, description = ?, occurredAt = ?, accountId = ?, categoryId = ?, updatedAt = ?, syncState = 'Pending'
 WHERE transactionId = ?;
 
-countByAccount:
-SELECT COUNT(*) FROM transactions WHERE accountId = :accountId;
-
 countLiveByAccount:
 SELECT COUNT(*) FROM transactions WHERE accountId = :accountId AND deletedAt IS NULL;
 

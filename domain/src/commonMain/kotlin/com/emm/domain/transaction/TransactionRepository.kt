@@ -5,10 +5,6 @@ import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.TransactionId
 import kotlinx.coroutines.flow.Flow
 
-// The repository is the transaction entity's whole persistence contract; every function is a
-// distinct read or write shape a caller depends on, so the count grows with the product, not
-// with disorder.
-@Suppress("TooManyFunctions")
 interface TransactionRepository {
 
     suspend fun create(transactionInsert: TransactionInsert)
@@ -39,8 +35,6 @@ interface TransactionRepository {
     fun observeCategoryUsageCounts(): Flow<Map<CategoryId, Int>>
 
     suspend fun update(transactionId: TransactionId, transactionUpdate: TransactionUpdate)
-
-    suspend fun countByAccount(accountId: AccountId): Long
 
     /** Count live (non-tombstoned) transactions for the given account. */
     suspend fun countLiveByAccount(accountId: AccountId): Long

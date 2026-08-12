@@ -24,9 +24,6 @@ import kotlin.time.Clock
  */
 private const val SEARCH_RESULT_CAP = 200L
 
-// One entity, one data source: the function count mirrors the transaction table's operation
-// surface, and splitting it would scatter the queries without removing any.
-@Suppress("TooManyFunctions")
 class TransactionLocalDataSource(private val tq: TransactionsQueries, private val clock: Clock) {
 
     suspend fun create(transactionInsert: TransactionInsert) = withContext(ioDispatcher) {
@@ -94,10 +91,6 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries, private va
             .asFlow()
             .mapToList(ioDispatcher)
             .map { list -> list.map(SearchTransactions::asEntity) }
-    }
-
-    suspend fun countByAccount(accountId: String): Long = withContext(ioDispatcher) {
-        tq.countByAccount(accountId).executeAsOne()
     }
 
     suspend fun countLiveByAccount(accountId: String): Long = withContext(ioDispatcher) {

@@ -25,11 +25,6 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData,
     private val rmq: Recurring_movementsQueries
         get() = emmDatabase.recurring_movementsQueries
 
-    fun all(): Flow<List<RecurringMovement>> = rmq.selectAll()
-        .asFlow()
-        .mapToList(ioDispatcher)
-        .map { list -> list.asEntity().asExternalModel() }
-
     fun allActive(): Flow<List<RecurringMovement>> = rmq.selectActive()
         .asFlow()
         .mapToList(ioDispatcher)

@@ -18,8 +18,6 @@ class DefaultRecurringMovementRepository(
     private val clock: Clock,
 ) : RecurringMovementRepository {
 
-    override fun all(): Flow<List<RecurringMovement>> = localDataSource.all().catchAsDomainException()
-
     override fun allActive(): Flow<List<RecurringMovement>> = localDataSource.allActive().catchAsDomainException()
 
     override fun allWithDetails(): Flow<List<RecurringMovementDetails>> =

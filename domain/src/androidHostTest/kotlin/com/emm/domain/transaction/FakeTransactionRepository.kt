@@ -16,7 +16,6 @@ class FakeTransactionRepository : TransactionRepository {
     var allWithCategory: List<TransactionWithCategory> = emptyList()
     var rangeWithCategory: List<TransactionWithCategory> = emptyList()
     var searchWithCategoryToReturn: List<TransactionWithCategory> = emptyList()
-    var countByAccountToReturn: Long = 0L
     var countLiveByAccountToReturn: Long = 0L
     var totalsToReturn: TransactionTotals = TransactionTotals.Empty
     var categoryUsageCountsToReturn: Map<CategoryId, Int> = emptyMap()
@@ -44,8 +43,6 @@ class FakeTransactionRepository : TransactionRepository {
         lastUpdatedId = transactionId
         lastUpdate = transactionUpdate
     }
-
-    override suspend fun countByAccount(accountId: AccountId): Long = countByAccountToReturn
 
     override suspend fun countLiveByAccount(accountId: AccountId): Long = countLiveByAccountToReturn
 

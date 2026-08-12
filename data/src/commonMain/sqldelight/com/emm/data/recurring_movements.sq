@@ -21,9 +21,6 @@ CREATE INDEX IF NOT EXISTS recurring_active_idx ON recurring_movements(isActive,
 CREATE INDEX IF NOT EXISTS recurring_movements_syncstate_idx ON recurring_movements(syncState);
 CREATE INDEX IF NOT EXISTS recurring_movements_user_deleted_idx ON recurring_movements(userId, deletedAt);
 
-selectAll:
-SELECT * FROM recurring_movements WHERE deletedAt IS NULL ORDER BY name;
-
 selectActive:
 SELECT * FROM recurring_movements WHERE isActive = 1 AND deletedAt IS NULL ORDER BY name;
 

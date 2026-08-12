@@ -18,8 +18,6 @@ interface RecurringMovementRepository {
 
     suspend fun find(id: RecurringMovementId): RecurringMovement?
 
-    fun all(): Flow<List<RecurringMovement>>
-
     fun allActive(): Flow<List<RecurringMovement>>
 
     fun allWithDetails(): Flow<List<RecurringMovementDetails>>

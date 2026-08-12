@@ -15,8 +15,6 @@ import com.emm.domain.transaction.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-// Implements the domain interface one-to-one; the count is the contract's, not this class's.
-@Suppress("TooManyFunctions")
 class DefaultTransactionRepository(private val localDataSource: TransactionLocalDataSource) : TransactionRepository {
 
     override suspend fun create(transactionInsert: TransactionInsert) = safeDbCall {
@@ -48,10 +46,6 @@ class DefaultTransactionRepository(private val localDataSource: TransactionLocal
     override suspend fun update(transactionId: TransactionId, transactionUpdate: TransactionUpdate): Unit = safeDbCall {
         localDataSource.update(transactionId.value, transactionUpdate)
         Unit
-    }
-
-    override suspend fun countByAccount(accountId: AccountId): Long = safeDbCall {
-        localDataSource.countByAccount(accountId.value)
     }
 
     override suspend fun countLiveByAccount(accountId: AccountId): Long = safeDbCall {
