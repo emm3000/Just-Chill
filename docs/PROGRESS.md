@@ -216,6 +216,13 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [ ] Sacar el `@Suppress("CyclomaticComplexMethod")` de `ui-android/.../ProfileScreen.kt:226` al
   borrar el kill switch — cubre todo `AccountSection` en vez de solo las ramas de sync. Única
   SUGGESTION del Judgment Day de `253e170`.
+- [ ] **Burn-down de los 7 `TooManyFunctions` con amnistía** en
+  `config/detekt/baseline-ui-android-main.xml`, contra el umbral de 8 funciones top-level no-`@Preview`
+  por archivo: `SeeTransactionsScreen` (16), `HomeScreen` (16), `AddCategoryScreen` (13),
+  `AccountsScreen` (11), `AddEditRecurringMovementScreen` (10), `ProfileScreen` (10),
+  `RecurringMovementsScreen` (9). La entrada del baseline no lleva el conteo, así que **el gate no los
+  va a volver a reportar nunca**, crezcan lo que crezcan: si no se bajan acá, no se bajan.
+  Criterio y método de conteo en `docs/CODE_QUALITY.md`.
 - [ ] `:ui-android:detektAndroidMainSourceSet` reporta **21** issues. Preexistente y deliberadamente
   fuera del gate: `detektMainAndroid` cubre los mismos archivos **con** type resolution, así que
   sumarlo serían más tareas y no más cobertura — el razonamiento está en `QualityGateConventionPlugin`.

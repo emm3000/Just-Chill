@@ -69,7 +69,7 @@ device at a time** ([ADR 006](docs/adr/006-sync-is-backup-only-one-device-at-a-t
 001's multi-device premise). **Read `docs/sync/AUDIT.md` before touching anything under
 `data/.../sync/` or `presentation/.../core/sync/`.**
 
-**Data flow:** `Screen` → `ViewModel` → use case → `Repository` interface → `Default{Entity}Repository` → `LocalDataSource` (SQLDelight).
+**Data flow:** `Screen` → `ViewModel` → use case → `Repository` interface → `Default{Entity}Repository` → `LocalDataSource` (SQLDelight). The use case is there **only where there is domain logic** — a pure read goes from `ViewModel` straight to the `Repository` interface. Rationale + the measurement: `docs/CODE_QUALITY.md`.
 
 ### Contracts that span modules
 
@@ -96,8 +96,7 @@ not on the default gate). Both are documented where they live.
 | Main thread | Decides, delegates, verifies conclusions — never reads raw tool output |
 
 Tiebreaker: Sonnet writes where the compiler/a test catches the error; Opus writes where nothing does
-(that "nothing" list is `## Gotchas` below). The reviewer is always Opus, no exception — the Sonnet carve-out belongs only to Judgment Day's judges, for low blast radius.
-`model` passed explicitly every time, never relying on agent-file frontmatter. Loop + reasoning: `docs/WORKFLOW.md`.
+(that "nothing" list is `## Gotchas` below). The reviewer is always Opus, no exception — the Sonnet carve-out belongs only to Judgment Day's judges, for low blast radius. `model` passed explicitly every time, never relying on agent-file frontmatter. Loop + reasoning: `docs/WORKFLOW.md`.
 
 ## Gotchas
 
@@ -140,6 +139,7 @@ still uses JetBrains' multiplatform `lifecycle-viewmodel`, which has to compile 
   default** (`hh/di/SharedModule.kt` is the only way in). Follow-up: #5 phase two.
 - `PLAY_ADVERTISING_ID.md` — proof the app does not use the advertising ID. **Read before answering Play's declaration**; the console says "Yes", wrongly.
 - `DESIGN_SYSTEM.md` — tokens and components. **Read before adding UI**; paths point at `ui-android/src/androidMain/`, the only source set `:ui-android` has.
+- `CODE_QUALITY.md` — the two halves of the convention: detekt's real thresholds and its blind spots, and what only a reviewer can judge. **Read before adding a lint rule, a `@Suppress`, or a use case.**
 - `WORKFLOW.md` — the writer/reviewer loop, the reinforced gate, the model-tier policy. **Required before
   any unit of work**, not just KMP. `archive/kmp/ORCHESTRATION.md` — the closed KMP slice ledger +
   landmines, historical. `swiftui/PLAN.md` — the 11 iOS slices and their status.

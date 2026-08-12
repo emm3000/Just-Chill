@@ -43,6 +43,7 @@ docs/*
 !docs/AUTH_SYNC_UI_BLUEPRINT.md
 !docs/DATE_AUDIT.md
 !docs/WORKFLOW.md
+!docs/CODE_QUALITY.md
 # Supabase
 supabase.properties
 supabase/.temp/
