@@ -18,6 +18,11 @@ exportable to Swift. Models carry semantic ids (`iconId`, `colorId`), never
 (`ui-android .../CategoryResolve.kt` on Android). If a state class needs something visual, it
 carries the id and the UI resolves it.
 
+**ViewModel purity** is the convention that sits beside it: a ViewModel takes `:domain` interfaces,
+never SQLDelight types or a `Default*` implementation. Unlike the no-Compose rule this one is only
+reviewed, not structural — the module *does* depend on `:data`, deliberately, so the Koin wiring can
+exist once instead of once per platform.
+
 Stability note: `:ui-android` compensates the missing `@Stable`/`@Immutable` annotations via
 `ui-android/compose_stability.conf` (`stabilityConfigurationFiles`) — state classes here are
 declared stable there. Keep state classes immutable (`val` + immutable collections) or that

@@ -6,8 +6,14 @@
 > [checklist de trabajo abierto](#checklist-de-trabajo-abierto) — es la lista única, y no hay
 > ningún `OPEN_WORK.md` compitiendo con ella a propósito.
 >
-> **Última actualización**: 2026-08-11. No se anota el hash de trunk acá: el commit que lo
+> **Última actualización**: 2026-08-12. No se anota el hash de trunk acá: el commit que lo
 > escribe ya lo deja viejo, igual que pasó con el conteo de commits.
+>
+> **El sync está APAGADO en producción desde el 2026-08-12.** Kill switch
+> `SYNC_TEMPORARILY_DISABLED` en `presentation/.../core/sync/SyncKillSwitch.kt:16`. La auditoría
+> completa —el bug vivo, el forense de producción, el borrado de cuenta que nunca salió del
+> teléfono, y la decisión de producto que retira medio diseño— está en
+> [`docs/sync/AUDIT.md`](sync/AUDIT.md). Leelo antes de tocar cualquier cosa de sync.
 >
 > Este doc se reescribió el 2026-08-08 porque quedó dos meses desactualizado y
 > se perdió toda la migración KMP. El detalle histórico previo (sprints S0-S5,
@@ -42,7 +48,7 @@ Tres tracks grandes cerrados o casi:
 | Track | Estado |
 |---|---|
 | Producto (Fases 1-5: discovery → post-v1) | ✅ cerrado, docs en `docs/` |
-| Local-first sync (slices 1-5) | slices 1-4 ✅ · slice 5 ⏳ bloqueado por tareas humanas |
+| Local-first sync (slices 1-5) | ⏸ **apagado y en rediseño** desde el 2026-08-12 — `docs/sync/AUDIT.md` |
 | Migración KMP / Compose Multiplatform | ✅ completa y mergeada a trunk |
 | Auditoría de funcionalidades | ✅ cerrada — 4 CRÍTICOS, 4 ALTOS, 3 MEDIOS |
 | iOS nativo SwiftUI sobre el core KMP | ⏳ S1-S2 de 11 ✅ — plan en `docs/swiftui/PLAN.md`, ADR 005 |
@@ -96,25 +102,71 @@ Todo lo que sigue abierto, en un solo lugar. Los tracks de abajo explican el **p
 cosa; acá está el **qué falta**. Cuando cierres algo, marcalo acá y sacalo del track — dos listas
 diciendo lo mismo se desincronizan, que es exactamente cómo este doc se rompió antes.
 
-Medido el 2026-08-11 contra el código, no copiado de la versión anterior de este doc.
+Medido el 2026-08-11 contra el código, no copiado de la versión anterior de este doc. La sección de
+sync y las dos correcciones marcadas se agregaron el 2026-08-12.
+
+### Sync — apagado en producción, en rediseño
+
+Apagado el 2026-08-12 por un loop de sync en producción. **El sync es BACKUP, no replicación: un
+device a la vez.** Eso retira `ConflictResolver`, el upsert condicional del server y todo el
+arbitraje de conflictos. La causa raíz, el forense de los dos tenants, los ~25 hallazgos vivos y el
+plan por fases están en [`docs/sync/AUDIT.md`](sync/AUDIT.md) — acá va solo qué falta, y si esta
+lista y el AUDIT se contradicen, gana el AUDIT.
+
+- [ ] **Fase 0 (bloqueante): responder qué apareció en pantalla al presionar borrar la cuenta —
+  nada, o un error.** Solo lo puede contestar el autor y decide entre las dos causas. AUDIT §8.
+- [ ] Fase 0: que el borrado reporte su falla; ramas faltantes en `toAuthDomainException`; decidir
+  qué se hace con los dos tenants. AUDIT §8.
+- [ ] **Fase 1: decidir el fork de scoping por usuario** — DB por usuario, filtro `userId` en cada
+  lectura, o wipe al cambiar de cuenta. Sin decidir. AUDIT §5 (Identity).
+- [ ] Fase 1: la app tiene que decir en pantalla que iniciar sesión con otro correo re-apunta el
+  backup y sube el ledger de este device ahí.
+- [ ] Fase 2 (upsert condicional del server): **despriorizado** por backup-only, no cancelado.
+- [ ] Fase 3: rediseño de bordes — tipos en `:domain`, colapsar los cuatro `*TableSync`, cursor a
+  SQLDelight. **Restricción vinculante**: cero cambios de `CREATE TABLE`, una sola migración
+  aditiva al final. AUDIT §9.
+- [ ] Arreglar los hallazgos vivos que sobreviven al backup-only: cursor único para cuatro tablas,
+  push sin batching (con un punto **sin verificar** sobre el timeout), livelock de
+  `MAX_PULL_PAGES`, pérdida silenciosa por fecha fuera de rango, tres carreras en
+  `SyncOrchestrator`, iOS sin collector de `_events`. AUDIT §5.
+- [ ] Cero tests de push, tres tests tautológicos, y hacer escribible el test que lo habría
+  cachado. AUDIT §5 (Tests).
+- [ ] Limpieza de tenants, **no ejecutada**: limpiar los dos y volver a subir desde el device.
+  Prerrequisito duro: verificar antes que el export local funciona y el SQLite del device está
+  intacto. AUDIT §10.
+- [ ] Detector de drift en CI con el md5 normalizado del schema del server, y mover el guard de
+  `relreplident` después del `continue` de idempotencia en
+  `supabase/migrations/20260812051050_composite_primary_keys.sql` (ambos de antes de esta sesión).
 
 ### Fechas — lo único abierto que toca el servidor y la data real
 
 - [ ] **Fase dos del hallazgo #5**: el wire de sync y la columna de Supabase todavía llevan
-  `date bigint`. `data/shared/FixedPeruOffset.kt` es el adaptador interino que convierte en ambas
-  direcciones al offset fijo de Lima, y se borra cuando la columna del server pase a `text`. Los
-  trece hallazgos de `docs/DATE_AUDIT.md` están cerrados; este es el único follow-up que sobrevive,
-  y es paso humano — cambiar una columna en un server vivo con data acumulada no lo hace el gate.
+  `date bigint`. `data/src/commonMain/kotlin/com/emm/data/shared/FixedPeruOffset.kt` convierte en
+  ambas direcciones al offset fijo de Lima. Los trece hallazgos de `docs/DATE_AUDIT.md` están
+  cerrados; este es el único follow-up que sobrevive, y es paso humano — cambiar una columna en un
+  server vivo con data acumulada no lo hace el gate.
+
+  **Corregido el 2026-08-12: `FixedPeruOffset.kt` NO se borra cuando la columna pase a `text`.**
+  Esta línea decía que sí y es falso — el archivo tiene dos callers (su propia cabecera, `:16-27`) y
+  solo uno es el wire de sync; el otro, leer un backup v1 de disco, es **permanente**. La fase dos
+  borra un caller, no el archivo. La conversión va con UTC-5, **no** con `AT TIME ZONE 'UTC'`
+  (`3.sqm` ya aplicó ese supuesto a la data histórica local): SQL ensayado en verde, 7/7 vectores,
+  falta decidir el secuenciamiento. Ver [`docs/sync/AUDIT.md`](sync/AUDIT.md) §5.
 
 ### Release y compliance — bloqueantes del alpha, solo los puede hacer un humano
 
-- [ ] Crear el proyecto Supabase cloud de prod (`supabase link` + `supabase db push`) y llenar los
-  `prod.*` en `supabase.properties`.
+- [x] **El proyecto Supabase cloud de prod ya existe** — corregido el 2026-08-12; esta línea decía
+  que faltaba crearlo. Es `pievwpleqmrjwszuuivr` ("Justtt"), linkeado desde el 2026-06-10
+  (`supabase/.temp/linked-project.json`), con las tres migraciones aplicadas y los `prod.*`
+  poblados en `supabase.properties`. La confusión no era gratuita: ese server tiene dos tenants con
+  data real y filas cruzadas. Ver [`docs/sync/AUDIT.md`](sync/AUDIT.md) §7.
 - [ ] Hostear `docs/PRIVACY_POLICY.md` como URL pública (Play la exige para apps con eliminación
   de cuenta).
 - [ ] Completar el Google Play Data Safety form.
-- [ ] Checklist QA multi-device: clean install, semana offline-first, sign-in tardío, dos devices,
-  sign-out, y **upgrade real con APK viejo + `adb install -r`**.
+- [ ] Checklist QA: clean install, semana offline-first, sign-in tardío, sign-out, y **upgrade real
+  con APK viejo + `adb install -r`**. La parte de "dos devices" queda **sin objeto**: la decisión de
+  backup-only del 2026-08-12 dice un device a la vez, así que no hay convergencia multi-device que
+  probar.
 - [ ] Corregir la declaración de advertising ID en Play Console: hoy dice "Yes" y es falso. Se puso
   así durante la subida de `v2.4.0` para destrabar un rechazo. `docs/PLAY_ADVERTISING_ID.md` tiene
   la evidencia y los comandos que la reproducen sobre cualquier AAB — leelo antes de flipear.
@@ -158,6 +210,12 @@ Medido el 2026-08-11 contra el código, no copiado de la versión anterior de es
 - [ ] Purgar las **47** entradas muertas de `UnusedPrivateFunction` en
   `config/detekt/baseline-ui-android-main.xml` (sobre 151 entradas en total). Desde `c94e290` la
   regla ignora los `@Preview` por anotación, así que esas entradas quedaron inertes.
+- [ ] Entrada `ImportOrdering:ProfileScreen.kt` en `config/detekt/baseline-ui-android-main.xml:37`,
+  probablemente muerta desde que `253e170` tocó esos imports. **No verificado**: correr la tarea y
+  ver si el issue reaparece antes de borrarla.
+- [ ] Sacar el `@Suppress("CyclomaticComplexMethod")` de `ui-android/.../ProfileScreen.kt:226` al
+  borrar el kill switch — cubre todo `AccountSection` en vez de solo las ramas de sync. Única
+  SUGGESTION del Judgment Day de `253e170`.
 - [ ] `:ui-android:detektAndroidMainSourceSet` reporta **21** issues. Preexistente y deliberadamente
   fuera del gate: `detektMainAndroid` cubre los mismos archivos **con** type resolution, así que
   sumarlo serían más tareas y no más cobertura — el razonamiento está en `QualityGateConventionPlugin`.
@@ -249,25 +307,27 @@ en `docs/kmp/ORCHESTRATION.md` — **es el doc vigente y el único que quedó en
 
 ---
 
-## Track: local-first sync (slice 5 en curso)
+## Track: local-first sync (APAGADO — en rediseño desde el 2026-08-12)
 
-Sync multi-dispositivo **opcional** vía Supabase (LWW propio). Anónimo-local
-sigue siendo el default: sign-in es opt-in desde Perfil, sin gate. Decisiones en
-`docs/adr/001` y `docs/adr/002`; plan operativo en `docs/sync/PLAN.md`.
+**Apagado en producción** por kill switch (`SyncKillSwitch.kt:16`), con dos gates: `AppGraph.kt:67`
+no llama a `SyncOrchestrator.start()` y `ProfileViewModel.kt:144` corta el path manual. No se borró
+nada — todo binding, test y clase del motor sigue cableado.
 
-- Slice 1 ✅ schema v3: soft-delete + metadata de sync.
-- Slice 2 ✅ auth opt-in (correo/contraseña, después Google) + claim-on-sign-in.
-- Slice 3 ✅ motor de sync: push/pull LWW + cursor server-side.
-- Slice 4 ✅ lifecycle de sync: triggers, status UI. Verificado en device.
-- Slice 5 ⏳ compliance + release gate. Código hecho (parseo defensivo de enums,
-  paginación con keyset, eliminación de cuenta in-app vía RPC `delete_account`,
-  Crashlytics apagado en `dev`). Falta lo de abajo.
+Por qué: el push descartaba toda fila con un `userId` viejo mientras `countPending` las seguía
+contando, así que el trigger de escrituras debounceadas re-disparaba cada pocos segundos para
+siempre, y los ciclos que sí llegaban a Supabase escribían filas cruzadas entre tenants.
 
-### Bloqueantes del alpha — solo los puede hacer un humano
+**La decisión que enmarca el rediseño: el sync es BACKUP, no replicación.** Un device a la vez; la
+data es del device y la cuenta solo un destino. Retira `ConflictResolver` y el ADR 004 (dormidos, no
+borrados), el upsert condicional del server y el arbitraje de relojes, y vuelve **sin objeto** el
+pendiente de "convergencia multi-device sin probar" que este doc arrastraba.
 
-Los cuatro viven como checkboxes en el [checklist de trabajo abierto](#release-y-compliance--bloqueantes-del-alpha-solo-los-puede-hacer-un-humano):
-proyecto Supabase de prod, hostear la política de privacidad, el Data Safety form y el QA
-multi-device. No se repiten acá para que no haya dos listas que se desincronicen.
+Slices 1-4 ✅ shipearon (schema v3, auth opt-in + claim, motor push/pull, lifecycle); slice 5 ⏸. Ojo
+con esa lista: "verificado en device" significa **una vez, contra un stack Supabase local**, el
+2026-06-10 — el borrado de cuenta pasó esa verificación y después falló en producción sin enviar su
+RPC. Todo el detalle en [`docs/sync/AUDIT.md`](sync/AUDIT.md); lo que falta, en el
+[checklist](#sync--apagado-en-producción-en-rediseño). Decisiones en `docs/adr/001` y `002`; el plan
+de slices original en `docs/sync/PLAN.md`, **pausado**.
 
 Después de eso, el camino de release es `/release` → tag `vX.Y.Z` → `uploadRelease.yml`. Ese
 workflow **no publica**: sube el AAB a la pista alpha como **borrador**, con el `mapping.txt` para
@@ -365,12 +425,17 @@ siguen en el repo como marcadores históricos.
 ## Mapa de docs
 
 - `docs/kmp/ORCHESTRATION.md` — workflow de slices + ledger. **Vigente.**
-- `docs/sync/PLAN.md` — slices de sync + SQL de Supabase.
+- `docs/sync/AUDIT.md` — **la auditoría consolidada de sync (2026-08-12)**: causa raíz, forense de
+  producción, qué retira el backup-only, forma objetivo y plan por fases. Leerlo antes de tocar sync.
+- `docs/sync/PLAN.md` — slices de sync + SQL de Supabase. **Pausado**; slices 1-4 son el registro de
+  lo que shipeó, el resto lo reemplaza `AUDIT.md`.
 - `docs/adr/` — 001 (reversa a local-first con sync opcional), 002 (cursor de pull),
   003 (iOS congelado: se mantiene solo el compile gate, se retira el ritual),
   004 (el resolver de conflictos solo arbitra ediciones sin pushear; enmienda al 002),
-  005 (iOS nativo SwiftUI sobre el core KMP; supersede el alcance de UI congelada del 003).
-  Son registros históricos: no se archivan ni se reescriben, se enmiendan con otro ADR.
+  005 (iOS nativo SwiftUI sobre el core KMP; supersede el alcance de UI congelada del 003),
+  **006** (el sync es backup, un device a la vez; supersede la premisa multi-device del 001 y deja
+  dormido al 004). Son registros históricos: no se archivan ni se reescriben, se enmiendan con otro
+  ADR.
 - `docs/DATE_AUDIT.md` — los 13 hallazgos de fechas y qué cerró cada uno. Leer antes de tocar fechas.
 - `docs/PLAY_ADVERTISING_ID.md` — la app no usa advertising ID, con los comandos que lo prueban.
 - `docs/swiftui/PLAN.md` — las 11 slices del track iOS y su estado.

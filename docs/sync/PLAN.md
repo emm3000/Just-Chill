@@ -12,10 +12,21 @@
 > `5c0e471` (Supabase client + auth), `906d55c`⁻¹ (auth layers),
 > `d322a2d`⁻¹ (auth screens), `ff7afc8`⁻¹ (remote/sync layer).
 >
-> **Module names below predate the KMP migration.** `:app` is now `:androidApp`,
-> and everything it is credited with here (Koin wiring, auth/profile UI,
-> `SyncOrchestrator`, `SyncCursorStore`) lives in `:ui-android` commonMain,
-> shared with iOS. The sync engine itself is unchanged and still in `:data`.
+> **Module names below predate the KMP migration.** `:app` is now `:androidApp`.
+> Corrected 2026-08-12: the Koin wiring, `SyncOrchestrator` and the `SyncCursorStore`
+> implementation live in **`:presentation`** commonMain
+> (`presentation/src/commonMain/kotlin/com/emm/justchill/core/sync/`), not in
+> `:ui-android` commonMain as this paragraph used to say — `:ui-android` has only
+> `androidMain` and `androidHostTest`, no commonMain at all, and holds just the
+> Compose UI. The `SyncCursorStore` port is in `:domain`; the engine is still in `:data`.
+>
+> **⏸ PAUSED 2026-08-12 — sync is switched off in production** (`253e170`,
+> `SYNC_TEMPORARILY_DISABLED`). Do not resume the slices below as written: the
+> decision of record is now **backup only, one device at a time**, which retires
+> the conflict-convergence design this plan assumes. Read
+> [`docs/sync/AUDIT.md`](AUDIT.md) first — it carries the root cause, the
+> production forensics, and the phased plan that replaces slice 5. Slices 1-4 stay
+> as the record of what shipped.
 
 ## Status
 
@@ -24,8 +35,8 @@
 | 1 | Schema v3: soft-delete + sync metadata | ✅ trunk `59b8adf` |
 | 2 | Auth opt-in (email/password) + claim local data | ✅ trunk `700d28b` |
 | 3 | Sync engine: push/pull + LWW + cursor | ✅ trunk (hardened, device-verified 2026-06-10) |
-| 4 | Sync lifecycle: triggers, realtime, status UI | ✅ trunk (device-verified on emulator 2026-06-10) |
-| 5 | Compliance + multi-device QA + release gate | ⏳ in progress |
+| 4 | Sync lifecycle: triggers + status UI | ✅ trunk (device-verified on emulator 2026-06-10) — realtime was never built, see slice 4 item 2 below |
+| 5 | Compliance + multi-device QA + release gate | ⏸ paused 2026-08-12 — superseded by `AUDIT.md` |
 
 ## Environments
 
@@ -271,9 +282,12 @@ Tasks:
 
 1. Triggers: on-resume reconcile (app start / `ON_RESUME`), debounced
    push after local writes, sync-on-sign-in (right after claim).
-2. Realtime (`realtime-kt`) for foreground remote changes — optional
-   within the slice; on-resume reconcile alone covers v1 if realtime
-   fights the 400-line budget.
+2. ~~Realtime (`realtime-kt`) for foreground remote changes — optional
+   within the slice.~~ **Never taken; out of scope permanently**
+   (corrected 2026-08-12). No `realtime-kt` dependency exists anywhere in
+   the repo; the only `realtime` string in Kotlin is
+   `SyncOrchestrator.kt:33` saying there is none. Backup-only sync has no
+   use for it.
 3. Profile "Cuenta" section: last-synced timestamp + lightweight
    syncing indicator. No sync settings screen — it just works.
 4. Failure posture: sync errors are silent-retry-later, NEVER block UI;
@@ -282,7 +296,13 @@ Tasks:
 5. Edge case to test: device B signs in with pre-existing anonymous
    local data → claim + LWW merge against server data converges.
 
-## Slice 5 — Compliance + release gate (~doc-heavy) ⏳ in progress
+## Slice 5 — Compliance + release gate (~doc-heavy) ⏸ paused 2026-08-12
+
+> The DONE list still holds; the REMAINING list is replaced by
+> [`AUDIT.md` §10](AUDIT.md#10-phased-plan). "Multi-device QA" is **moot** under
+> backup-only, and the account deletion credited to `359b9ce` was verified against
+> a *local* stack, then failed in production without ever sending its RPC
+> (`AUDIT.md` §8).
 
 Items DONE (2026-06-10):
 - `34cca18` — defensive enum parsing: unknown remote enum values skip
