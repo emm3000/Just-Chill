@@ -143,10 +143,18 @@ Medido el 2026-08-11 contra el código, no copiado de la versión anterior de es
 - [ ] **El gate no falla con errores de compilación de detekt.** detekt los degrada a warning y la
   tarea termina en `BUILD SUCCESSFUL` — medido. Lo que importa no es el ruido en consola sino que
   cualquier regla que dependa de type resolution puede no dispararse, en silencio.
-- [ ] El modo compiler-plugin de detekt sería el arreglo de raíz y hoy no es viable: el plugin id
+- [ ] El modo compiler-plugin de detekt sería el arreglo de raíz —correría dentro de la compilación
+  real, con el frontend de verdad, así que los errores de arriba desaparecerían por construcción— y
+  hoy no es viable, por dos motivos independientes. **Uno:** el plugin id
   `dev.detekt.gradle.compiler-plugin` declara configuration-cache `UNDECLARED` y este build tiene
-  `org.gradle.configuration-cache=true` (`gradle.properties:24`). No está aplicado en ningún lado
-  del repo, así que esto es una vía cerrada, no una regresión.
+  `org.gradle.configuration-cache=true` (`gradle.properties:24`). **Dos:** está roto de fábrica en
+  `2.0.0-alpha.6`. El dato no se ve grepeando el repo, hay que sacarlo del jar del plugin
+  (`javap` sobre `dev/detekt/detekt_gradle_plugin/BuildConfig.class` en el cache de Gradle):
+  `DETEKT_COMPILER_PLUGIN_VERSION = "2.0.0-alpha.6"`, y ese artefacto no existe —
+  `dev/detekt/detekt-compiler-plugin/2.0.0-alpha.6/…pom` responde **404** en Maven Central,
+  mientras que el publicado de verdad es `2.4.10-2.0.0-alpha.6` (**200**). Aplicarlo tal cual
+  falla al resolver `kotlinCompilerPluginClasspath`; haría falta forzar la versión por
+  substitución. Vía cerrada, no una regresión.
 - [ ] Purgar las **47** entradas muertas de `UnusedPrivateFunction` en
   `config/detekt/baseline-ui-android-main.xml` (sobre 151 entradas en total). Desde `c94e290` la
   regla ignora los `@Preview` por anotación, así que esas entradas quedaron inertes.
