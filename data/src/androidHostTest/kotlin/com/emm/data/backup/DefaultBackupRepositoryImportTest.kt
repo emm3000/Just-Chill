@@ -22,7 +22,11 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
 
 // Uses an in-memory JVM SQLite driver (app.cash.sqldelight:sqlite-driver) to exercise the full
 // SQLDelight schema — the atomicity of the transaction block and the actual queries.
@@ -47,17 +51,36 @@ class DefaultBackupRepositoryImportTest {
 
     private lateinit var repository: DefaultBackupRepository
 
+    /**
+     * Returns a DIFFERENT instant on every read — the current one, then a millisecond later.
+     *
+     * A clock that returns a constant cannot tell "read once" from "read per row": move the read
+     * inside the restore loop and every assertion still passes, because every read answers the
+     * same. Ticking makes the two observable, which is the only way a test can hold #6's
+     * once-per-write rule rather than just the weaker "the clock is injected".
+     *
+     * [instant] is settable so a test can put the next import at a chosen time instead of
+     * whatever the ticks have reached.
+     */
+    private class TickingClock(var instant: Instant) : Clock {
+        override fun now(): Instant = instant.also { instant += 1.milliseconds }
+    }
+
+    private val clock = TickingClock(FIRST_IMPORT)
+
     @Before
     fun setUp() {
         driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         EmmDatabaseData.Schema.create(driver)
         db = EmmDatabaseData(driver)
         exec("PRAGMA foreign_keys=ON")
+        clock.instant = FIRST_IMPORT
         repository = DefaultBackupRepository(
             transactions = transactionRepo,
             categories = categoryRepo,
             accounts = accountRepo,
             db = db,
+            clock = clock,
         )
     }
 
@@ -260,6 +283,68 @@ class DefaultBackupRepositoryImportTest {
         }
     }
 
+    // ── the stamp an import writes ────────────────────────────────────────────
+
+    /**
+     * Every row an import restores carries the SAME stamp, and it is the first tick of the
+     * injected clock — so the clock is read once for the whole import, not once per row.
+     *
+     * Both halves matter and the second is the one with teeth. `docs/DATE_AUDIT.md` #6 states that
+     * `:data` reads an injected `Clock` **once per write**; every other writer in the module already
+     * did, and this one was the exception, on the single path that rewrites every row the user owns
+     * at once. A constant fake clock cannot hold that rule — it answers the same however often it is
+     * asked — so [TickingClock] moves a millisecond per read and the equality below is what fails if
+     * the read migrates into the restore loop.
+     *
+     * The whole assertion was impossible before: the repository read `Clock.System` directly, so the
+     * timestamps an import produced were whatever the machine said while the suite ran.
+     */
+    @Test
+    fun `an import reads the clock once and stamps every restored row with it`() = runTest {
+        repository.importFromJson(buildPayloadJson(accounts = 1, categories = 1, transactions = 1))
+
+        // The FIRST tick, and the only one: three tables, six columns, one value.
+        val expected = FIRST_IMPORT.toEpochMilliseconds()
+        assertEquals(expected, rawStamp("SELECT createdAt FROM accounts WHERE accountId = 'acc-1'"))
+        assertEquals(expected, rawStamp("SELECT updatedAt FROM accounts WHERE accountId = 'acc-1'"))
+        assertEquals(expected, rawStamp("SELECT createdAt FROM categories WHERE categoryId = 'cat-1'"))
+        assertEquals(expected, rawStamp("SELECT updatedAt FROM categories WHERE categoryId = 'cat-1'"))
+        assertEquals(expected, rawStamp("SELECT createdAt FROM transactions WHERE transactionId = 'tx-1'"))
+        assertEquals(expected, rawStamp("SELECT updatedAt FROM transactions WHERE transactionId = 'tx-1'"))
+    }
+
+    /**
+     * The tombstone an import leaves behind carries the same instant as the rows it restores.
+     *
+     * The other half of reading the clock once, across the tombstone/restore boundary rather than
+     * across rows: the sweep and the restores are one atomic "make everything look like this file",
+     * so a row the file dropped must not sort before or after a row it kept. Against a ticking
+     * clock, a per-statement read would give them different values and this fails.
+     *
+     * It also pins what a re-import does NOT change — `createdAt` survives, because the insert is
+     * `INSERT OR IGNORE` and only `restoreFromBackup` writes `updatedAt`.
+     */
+    @Test
+    fun `a second import stamps its own instant, and the tombstone it leaves shares it`() = runTest {
+        repository.importFromJson(buildPayloadJson(accounts = 2, categories = 1, transactions = 1))
+        clock.instant = SECOND_IMPORT
+
+        repository.importFromJson(buildPayloadJson(accounts = 1, categories = 1, transactions = 1))
+
+        val second = SECOND_IMPORT.toEpochMilliseconds()
+        // acc-2 is missing from the second file: tombstoned, stamped at the second import.
+        assertEquals(second, rawStamp("SELECT deletedAt FROM accounts WHERE accountId = 'acc-2'"))
+        assertEquals(second, rawStamp("SELECT updatedAt FROM accounts WHERE accountId = 'acc-2'"))
+        // acc-1 survives it and is re-stamped with the same instant, so the restore wins LWW.
+        assertEquals(second, rawStamp("SELECT updatedAt FROM accounts WHERE accountId = 'acc-1'"))
+        assertNull(rawStamp("SELECT deletedAt FROM accounts WHERE accountId = 'acc-1'"))
+        // ...but keeps the createdAt of the import that first brought it in — INSERT OR IGNORE.
+        assertEquals(
+            FIRST_IMPORT.toEpochMilliseconds(),
+            rawStamp("SELECT createdAt FROM accounts WHERE accountId = 'acc-1'"),
+        )
+    }
+
     // ── replace semantics: tombstones, not physical deletes ───────────────────
 
     @Test
@@ -326,12 +411,20 @@ class DefaultBackupRepositoryImportTest {
         driver.execute(identifier = null, sql = sql, parameters = 0)
     }
 
-    private fun rawCount(sql: String): Long = driver.executeQuery(
+    private fun rawCount(sql: String): Long = rawStamp(sql) ?: 0L
+
+    /**
+     * The first column of the first row as a NULLABLE Long — for reading a stamp back off a row.
+     *
+     * Nullable on purpose: `deletedAt` is null on a live row, and collapsing that to 0 would let
+     * "this row was never tombstoned" pass an assertion about when it was.
+     */
+    private fun rawStamp(sql: String): Long? = driver.executeQuery(
         identifier = null,
         sql = sql,
         mapper = { cursor ->
             cursor.next()
-            QueryResult.Value(cursor.getLong(0) ?: 0L)
+            QueryResult.Value(cursor.getLong(0))
         },
         parameters = 0,
     ).value
@@ -379,5 +472,10 @@ class DefaultBackupRepositoryImportTest {
     private companion object {
         const val EMPTY_PAYLOAD_JSON = """{"schemaVersion":2,"exportedAt":0,"appVersion":"1.0.0",""" +
             """"accounts":[],"categories":[],"transactions":[]}"""
+
+        // Two instants an hour apart. Stated, so the rows an import writes have a value to be
+        // compared against rather than whatever the machine happened to read.
+        val FIRST_IMPORT: Instant = Instant.parse("2026-08-11T15:04:05Z")
+        val SECOND_IMPORT: Instant = Instant.parse("2026-08-11T16:04:05Z")
     }
 }

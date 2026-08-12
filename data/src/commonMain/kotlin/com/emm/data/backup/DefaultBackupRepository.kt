@@ -1,6 +1,7 @@
 package com.emm.data.backup
 
 import com.emm.data.EmmDatabaseData
+import com.emm.data.shared.nowMillis
 import com.emm.data.shared.safeDbCall
 import com.emm.data.shared.toOccurredAtText
 import com.emm.domain.account.AccountRepository
@@ -37,6 +38,7 @@ class DefaultBackupRepository(
     private val categories: CategoryRepository,
     private val accounts: AccountRepository,
     private val db: EmmDatabaseData,
+    private val clock: Clock,
 ) : BackupRepository {
 
     override suspend fun exportToJson(exportedAt: Long, appVersion: String): String {
@@ -67,7 +69,11 @@ class DefaultBackupRepository(
         val payload = decodePayload(json)
 
         return safeDbCall {
-            val now = Clock.System.now().toEpochMilliseconds()
+            // One read, reused by the tombstone sweep and by every row restored after it — the
+            // discipline the rest of :data already follows. It used to be `Clock.System.now()`,
+            // which made this the only writer in the module a test could not pin, on the one path
+            // that rewrites every row the user owns at once.
+            val now = clock.nowMillis()
             var restoredTransactions = 0
             db.transaction {
                 // "Replace everything" expressed as tombstones instead of physical deletes.

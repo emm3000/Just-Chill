@@ -19,6 +19,8 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * A backup file written by the app BEFORE a transaction's occurrence stopped being an instant must
@@ -52,6 +54,12 @@ class BackupV1CompatibilityTest {
             categories = mockk<CategoryRepository> { every { all() } returns flowOf(emptyList()) },
             accounts = mockk<AccountRepository> { every { all() } returns flowOf(emptyList<Account>()) },
             db = db,
+            // Stated, not read. This suite asserts `occurredAt`, which comes off the file — but the
+            // storage stamps beside it come off this clock, and none of them should move with the
+            // machine the suite runs on.
+            clock = object : Clock {
+                override fun now(): Instant = Instant.parse("2026-08-11T15:04:05Z")
+            },
         )
     }
 

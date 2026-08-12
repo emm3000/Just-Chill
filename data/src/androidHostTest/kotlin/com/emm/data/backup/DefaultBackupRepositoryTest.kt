@@ -24,6 +24,8 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class DefaultBackupRepositoryTest {
 
@@ -32,7 +34,14 @@ class DefaultBackupRepositoryTest {
     private val accountRepo = mockk<AccountRepository>()
     private val db = mockk<EmmDatabaseData>(relaxed = true)
 
-    private val repository = DefaultBackupRepository(transactionRepo, categoryRepo, accountRepo, db)
+    // Export takes its `exportedAt` from the caller, so nothing in this suite reads the clock —
+    // but it is stated rather than left to the machine all the same. What an import stamps is
+    // asserted in DefaultBackupRepositoryImportTest, which has a real database to read it back from.
+    private val clock = object : Clock {
+        override fun now(): Instant = Instant.parse("2026-08-11T15:04:05Z")
+    }
+
+    private val repository = DefaultBackupRepository(transactionRepo, categoryRepo, accountRepo, db, clock)
 
     private val account = Account(
         accountId = AccountId("acc-1"),
