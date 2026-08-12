@@ -113,10 +113,15 @@ arbitraje de conflictos. La causa raíz, el forense de los dos tenants, los ~25 
 plan por fases están en [`docs/sync/AUDIT.md`](sync/AUDIT.md) — acá va solo qué falta, y si esta
 lista y el AUDIT se contradicen, gana el AUDIT.
 
-- [ ] **Fase 0 (bloqueante): responder qué apareció en pantalla al presionar borrar la cuenta —
-  nada, o un error.** Solo lo puede contestar el autor y decide entre las dos causas. AUDIT §8.
-- [ ] Fase 0: que el borrado reporte su falla; ramas faltantes en `toAuthDomainException`; decidir
-  qué se hace con los dos tenants. AUDIT §8.
+- [x] Fase 0: qué apareció en pantalla al presionar borrar la cuenta. Resuelto **sin identificar
+  cuál de los cuatro candidatos disparó** — el autor no lo recuerda, y el binario original de "nada
+  o un error" nunca pudo haberlo decidido: solo modelaba dos de los cuatro, y dos de esos cuatro
+  (guard de `launchOp` + `syncMutex` sin timeout) predicen exactamente lo mismo en pantalla. Se
+  cerraron los cuatro y el camino ahora es observable en vez de intentar identificar al culpable.
+  AUDIT §8.
+- [x] Fase 0: que el borrado reporte su falla; rama faltante de `SessionRequiredException` en
+  `toAuthDomainException`. AUDIT §8.
+- [ ] Fase 0: decidir qué se hace con los dos tenants. AUDIT §8, §10.
 - [ ] **Fase 1: decidir el fork de scoping por usuario** — DB por usuario, filtro `userId` en cada
   lectura, o wipe al cambiar de cuenta. Sin decidir. AUDIT §5 (Identity).
 - [ ] Fase 1: la app tiene que decir en pantalla que iniciar sesión con otro correo re-apunta el
@@ -137,6 +142,12 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [ ] Detector de drift en CI con el md5 normalizado del schema del server, y mover el guard de
   `relreplident` después del `continue` de idempotencia en
   `supabase/migrations/20260812051050_composite_primary_keys.sql` (ambos de antes de esta sesión).
+- [ ] `SyncMutex.withLock` no tiene timeout: un ciclo de sync trabado bloquea el borrado de cuenta
+  indefinidamente (AUDIT §8, candidato 4). **Hoy es inerte** — el sync está apagado por el kill
+  switch — pero hay que cerrarlo antes de reactivar el sync.
+- [ ] `toSyncDomainException` mapea `SessionRequiredException` a `NetworkUnavailable`
+  (`DefaultSyncRepository.kt:157`), mostrando "Sin conexión" para lo que en realidad es un problema
+  de sesión. Divergencia deliberada con `toAuthDomainException` (AUDIT §8), no corregida acá.
 
 ### Fechas — lo único abierto que toca el servidor y la data real
 

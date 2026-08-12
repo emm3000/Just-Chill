@@ -198,22 +198,45 @@ executions in `postgres_logs` — a client-side failure before the HTTP call. Si
 cause: `DefaultAuthRepository.kt:103-106` runs the RPC at `:104` and `signOut(SignOutScope.LOCAL)`
 at `:105`, in that order.
 
+**Correction (2026-08-12): the original version of this section framed the question as a binary —
+"nothing, or an error?" — and asked the author to settle it from memory. He does not remember, and
+the binary could never have settled it anyway: it only modeled two of the four candidates that
+actually predict a client-side no-op, and two of those four (rows 1 and 4 below) both predict
+"nothing", so even a perfect memory of "I saw nothing" would not have picked between them. The
+resolution here is not identifying which one fired — it is closing all four and making the path
+observable, so the next failure does not repeat this dead end.**
+
 | Candidate | Evidence | Predicts on screen |
 |---|---|---|
-| **Leading** — `ProfileViewModel.kt:99` `if (currentState.op != ProfileOp.None) return` silently discards a confirmed intent: no effect, no snackbar, no state change, and the delete path has no logging of its own (`CrashReportingSyncLogger` covers only sync) | the only candidate producing **both** zero traffic and zero feedback | nothing |
-| Runner-up — `DeleteUserAccountUseCase.kt:77` throws `Unauthorized("No authenticated session")` | zero traffic | "Credenciales incorrectas o sesión expirada" |
+| 1 — `ProfileViewModel.kt:106` (`launchOp`'s `if (currentState.op != ProfileOp.None)` guard) silently discarded a confirmed intent: no effect, no snackbar, no state change, and the delete path had no logging of its own (`CrashReportingSyncLogger` covered only sync) | the guard fires on ANY concurrent op, not just delete — e.g. a stuck sync cycle (row 4) racing the delete tap | nothing |
+| 2 — `DeleteUserAccountUseCase.kt:101` throws `Unauthorized("No authenticated session")` when the session is not `Authenticated` — this includes `RefreshFailure`, which `SupabaseSessionStatus.toDomain()` (`DefaultAuthRepository.kt:165`) maps to `NotAuthenticated` | zero traffic, a real branch a stale token can hit | "Credenciales incorrectas o sesión expirada" |
+| 3 — `client.postgrest.rpc("delete_account")` (`DefaultAuthRepository.kt:105`) throws `SessionRequiredException` client-side; `toAuthDomainException` (`:205-227`, pre-fix) had no branch for it, so it fell to `else -> Unknown` | zero traffic, and the same exception's sibling branch already existed on the sync path (`DefaultSyncRepository.kt:157`, mapped to `NetworkUnavailable` there) | "Algo se rompió — capaz reinicia la app?" |
+| 4 — the whole flow runs under `syncMutex.withLock` (`DeleteUserAccountUseCase.kt:51`, no timeout on the lock itself), shared as a Koin `single` (`SyncModule.kt:72`) with `SyncDataUseCase` — a stuck sync cycle blocks the delete forever | zero traffic, indefinitely, not just once | "Eliminando…" forever (the row's `op` never leaves `DeletingAccount`) |
 
-> **Open question, only the owner can settle it: what appeared on screen when he pressed delete —
-> nothing, or an error?** That answer picks between the two rows.
+**The server is healthy** — function exists, `security definer`, `authenticated` has EXECUTE,
+`postgres` has DELETE on `auth.users`, all three migrations applied. **Would recur today:** server
+no, client yes — before this commit, all four candidates were live.
 
-The success message (`hh/shared/ProfileMessageText.kt:9`) is emitted at `ProfileViewModel.kt:124`
-only after all three steps succeed. **The server is healthy** — function exists, `security
-definer`, `authenticated` has EXECUTE, `postgres` has DELETE on `auth.users`, all three migrations
-applied. **Would recur today:** server no, client yes, the guard is unchanged.
+**What this commit closed, all four at once, instead of picking a culprit:**
+- Row 1: `launchOp`'s guard now emits `ProfileEffect.Notify(ProfileMessage.OperationInProgress)`
+  before returning, instead of returning silently (`ProfileViewModel.kt:106-109`). One generic
+  message for all four ops — the guard is shared and must not grow a per-op branch.
+- Row 2: unchanged behavior (a stale/refreshing session genuinely is not authenticated), but no
+  longer silent — see the row-3 logging fix, which also covers this branch's `Unauthorized`.
+- Row 3: `toAuthDomainException` now maps `SessionRequiredException` to `DomainException.Unauthorized`
+  (`DefaultAuthRepository.kt:231-234`). This deliberately diverges from the sync mapper, which keeps
+  mapping the same exception to `NetworkUnavailable` for a different reason (KDoc at
+  `DefaultAuthRepository.kt:206-212`) — the divergence is tracked in `docs/PROGRESS.md`, not fixed here.
+- Rows 2–4: `DeleteUserAccountUseCase` now takes a `SyncLogger` and logs every failing step
+  (`session resolve`, `remote delete`, `unclaim`, `cursor clear`) via `logger.warn(...)` before
+  rethrowing the original exception unchanged; `CancellationException` is never logged as a failure.
+- Row 4 itself (the missing timeout on `syncMutex.withLock`) is **not fixed** — see the two
+  follow-ups recorded in `docs/PROGRESS.md`.
 
-**Fix regardless:** `toAuthDomainException` (`DefaultAuthRepository.kt:205-227`) has no
-`RestException` or `SessionRequiredException` branch, so both fall to `DomainException.Unknown`.
-`toSyncDomainException` (`DefaultSyncRepository.kt:145-166`) has both.
+**No `RestException` branch was added to `toAuthDomainException`.** The existing `else ->
+DomainException.Unknown(this)` already produces exactly that result and `AuthExceptionMapperTest`
+already asserts it (`generic RestException maps to Unknown`); an explicit branch would be
+behaviorally inert.
 
 ## 9. Target shape
 
