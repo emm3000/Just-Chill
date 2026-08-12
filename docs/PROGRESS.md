@@ -115,10 +115,12 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 
 - [x] Fase 0: qué apareció en pantalla al presionar borrar la cuenta. Resuelto **sin identificar
   cuál de los cuatro candidatos disparó** — el autor no lo recuerda, y el binario original de "nada
-  o un error" nunca pudo haberlo decidido: solo modelaba dos de los cuatro, y dos de esos cuatro
-  (guard de `launchOp` + `syncMutex` sin timeout) predicen exactamente lo mismo en pantalla. Se
-  cerraron los cuatro y el camino ahora es observable en vez de intentar identificar al culpable.
-  AUDIT §8.
+  o un error" nunca pudo haberlo decidido: era demasiado grueso para partir los cuatro candidatos.
+  "Un error" no separa el guard de `launchOp` (fila 2, sesión vencida) de la excepción client-side
+  de postgrest (fila 3) — mensajes y causas distintas, ambos "un error" — y el binario no tenía
+  ningún casillero para el `syncMutex` sin timeout (fila 4), que ni es "nada" ni es "un error" sino
+  un estado atascado a medio camino ("Eliminando…" para siempre). Se cerraron los cuatro y el
+  camino ahora es observable en vez de intentar identificar al culpable. AUDIT §8.
 - [x] Fase 0: que el borrado reporte su falla; rama faltante de `SessionRequiredException` en
   `toAuthDomainException`. AUDIT §8.
 - [ ] Fase 0: decidir qué se hace con los dos tenants. AUDIT §8, §10.
@@ -146,8 +148,19 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   indefinidamente (AUDIT §8, candidato 4). **Hoy es inerte** — el sync está apagado por el kill
   switch — pero hay que cerrarlo antes de reactivar el sync.
 - [ ] `toSyncDomainException` mapea `SessionRequiredException` a `NetworkUnavailable`
-  (`DefaultSyncRepository.kt:157`), mostrando "Sin conexión" para lo que en realidad es un problema
-  de sesión. Divergencia deliberada con `toAuthDomainException` (AUDIT §8), no corregida acá.
+  (`DefaultSyncRepository.kt:157`), mostrando "Sin conexión" para lo que en el auth path se trata
+  como un problema de sesión. Es intencional, no un olvido — el propio comentario en
+  `DefaultSyncRepository.kt:151-156` explica por qué (transitorio, no debe cerrar la sesión) — pero
+  sigue siendo una divergencia con `toAuthDomainException` (AUDIT §8). Revisar y confirmar que sigue
+  siendo la divergencia deseada, no "corregirla" como si fuera un defecto.
+- [ ] `toAuthDomainException` mapea `SessionRequiredException` a `Unauthorized` asumiendo que el
+  delete path ya está gateado igual que el de sync, pero no lo está: le falta el
+  `observeSession.awaitInitialization()` que `DefaultSyncRepository.currentUserId()` sí llama
+  (`DefaultSyncRepository.kt:125`) para cerrar la carrera de Kotlin/Native documentada en
+  `DefaultSyncRepository.kt:119-124` (postgrest lee el JWT sincrónicamente de un `StateFlow` que se
+  llena async). Hoy esa carrera sigue abierta en el delete path y la nueva mapping la muestra como
+  error de credenciales en vez de algo reintentable. No se agrega `awaitInitialization()` al delete
+  path en este commit — es un cambio de comportamiento, va aparte. `DefaultAuthRepository.kt:206-217`.
 
 ### Fechas — lo único abierto que toca el servidor y la data real
 

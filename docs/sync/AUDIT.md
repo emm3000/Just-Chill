@@ -200,16 +200,17 @@ at `:105`, in that order.
 
 **Correction (2026-08-12): the original version of this section framed the question as a binary —
 "nothing, or an error?" — and asked the author to settle it from memory. He does not remember, and
-the binary could never have settled it anyway: it only modeled two of the four candidates that
-actually predict a client-side no-op, and two of those four (rows 1 and 4 below) both predict
-"nothing", so even a perfect memory of "I saw nothing" would not have picked between them. The
-resolution here is not identifying which one fired — it is closing all four and making the path
-observable, so the next failure does not repeat this dead end.**
+the binary could never have settled it anyway: it is too COARSE to partition the four candidates
+below. "An error" does not separate row 2 from row 3 — different messages, different root causes,
+both just "an error" — and the binary has no bucket at all for row 4, which is neither "nothing" nor
+"an error" but a stuck in-progress state (`"Eliminando…"` forever). The resolution here is not
+identifying which one fired — it is closing all four and making the path observable, so the next
+failure does not repeat this dead end.**
 
 | Candidate | Evidence | Predicts on screen |
 |---|---|---|
-| 1 — `ProfileViewModel.kt:106` (`launchOp`'s `if (currentState.op != ProfileOp.None)` guard) silently discarded a confirmed intent: no effect, no snackbar, no state change, and the delete path had no logging of its own (`CrashReportingSyncLogger` covered only sync) | the guard fires on ANY concurrent op, not just delete — e.g. a stuck sync cycle (row 4) racing the delete tap | nothing |
-| 2 — `DeleteUserAccountUseCase.kt:101` throws `Unauthorized("No authenticated session")` when the session is not `Authenticated` — this includes `RefreshFailure`, which `SupabaseSessionStatus.toDomain()` (`DefaultAuthRepository.kt:165`) maps to `NotAuthenticated` | zero traffic, a real branch a stale token can hit | "Credenciales incorrectas o sesión expirada" |
+| 1 — `ProfileViewModel.kt:106` (`launchOp`'s `if (currentState.op != ProfileOp.None)` guard) silently discarded a confirmed intent: no effect, no snackbar, no state change, and the delete path had no logging of its own (`CrashReportingSyncLogger` covered only sync) | the guard fires on ANY concurrent op, not just delete — e.g. an in-flight Export, Import, or SignOut racing the delete tap | nothing |
+| 2 — `DeleteUserAccountUseCase.kt:101` throws `Unauthorized("No authenticated session")` when the session is not `Authenticated` — this includes `RefreshFailure`, which `SupabaseSessionStatus.toDomain()` (`DefaultAuthRepository.kt:166`) maps to `NotAuthenticated` | zero traffic, a real branch a stale token can hit | "Credenciales incorrectas o sesión expirada" |
 | 3 — `client.postgrest.rpc("delete_account")` (`DefaultAuthRepository.kt:105`) throws `SessionRequiredException` client-side; `toAuthDomainException` (`:205-227`, pre-fix) had no branch for it, so it fell to `else -> Unknown` | zero traffic, and the same exception's sibling branch already existed on the sync path (`DefaultSyncRepository.kt:157`, mapped to `NetworkUnavailable` there) | "Algo se rompió — capaz reinicia la app?" |
 | 4 — the whole flow runs under `syncMutex.withLock` (`DeleteUserAccountUseCase.kt:51`, no timeout on the lock itself), shared as a Koin `single` (`SyncModule.kt:72`) with `SyncDataUseCase` — a stuck sync cycle blocks the delete forever | zero traffic, indefinitely, not just once | "Eliminando…" forever (the row's `op` never leaves `DeletingAccount`) |
 
@@ -222,7 +223,8 @@ no, client yes — before this commit, all four candidates were live.
   before returning, instead of returning silently (`ProfileViewModel.kt:106-109`). One generic
   message for all four ops — the guard is shared and must not grow a per-op branch.
 - Row 2: unchanged behavior (a stale/refreshing session genuinely is not authenticated), but no
-  longer silent — see the row-3 logging fix, which also covers this branch's `Unauthorized`.
+  longer silent — see the "Rows 2–4" logging fix below (row 3 below is the `SessionRequiredException`
+  mapping, not the logging fix), which also covers this branch's `Unauthorized`.
 - Row 3: `toAuthDomainException` now maps `SessionRequiredException` to `DomainException.Unauthorized`
   (`DefaultAuthRepository.kt:231-234`). This deliberately diverges from the sync mapper, which keeps
   mapping the same exception to `NetworkUnavailable` for a different reason (KDoc at
