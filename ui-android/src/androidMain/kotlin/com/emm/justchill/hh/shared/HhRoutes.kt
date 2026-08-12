@@ -4,26 +4,27 @@ import androidx.navigation3.runtime.NavKey
 import com.emm.domain.category.CategoryType
 import kotlinx.serialization.Serializable
 
-// Nav route keys for the unified host (AppNavHost). The whole nav stack is now commonMain: the
-// androidx.navigation3:navigation3-runtime artifact (NavKey/NavBackStack) is multiplatform, and the
-// JetBrains Compose Multiplatform navigation3-UI port (NavDisplay) drives BOTH platforms.
+// Nav route keys for AppNavHost, on Google's androidx.navigation3 (NavKey/NavBackStack). This module
+// is Android-only (ADR 005), so the host takes the 1-arg rememberNavBackStack — the overload that
+// persists the back stack by JVM reflection, with no subtype registry to keep in sync.
 //
-// Kotlin/Native has no reflection-based serializer discovery, so every @Serializable route the host can
-// push MUST also be registered in navSavedStateConfiguration (NavSavedStateConfiguration.kt). Android
-// resolves serializers via JVM reflection and tolerates the explicit registration.
+// The one obligation left is @Serializable on every route: NavKeySerializer stores each entry as its
+// class name plus its own serializer, and re-resolves it with Class.forName(name).kotlin.serializer()
+// on restore. Miss the annotation (or give a route a field that cannot serialize) and the app dies on
+// process-death restore ONLY — the compiler, assembleDevDebug and lint all see nothing wrong.
 //
 // The route set is CLOSED: every route here descends from the sealed AppRoute, and
-// NavSavedStateConfigurationTest (androidHostTest) enumerates those subclasses by reflection and fails
-// when one of them is missing from navSavedStateConfiguration. Declaring a new route as anything other
-// than an AppRoute subtype opts it out of that guard — don't.
+// RouteSerializationTest (androidHostTest) enumerates those subclasses by reflection and round-trips
+// each one through that same serializer. Declaring a new route as anything other than an AppRoute
+// subtype opts it out of that guard — don't.
 
 /**
  * Closed set of every navigation key [AppNavHost] can push.
  *
- * Sealed on purpose: `NavSavedStateConfigurationTest` enumerates the subclasses by reflection and
- * fails when a route is not registered in [navSavedStateConfiguration]. Kotlin/Native has no
- * reflective serializer discovery, so an unregistered route crashes `rememberNavBackStack` on
- * process-death restore — a failure no compiler and no build gate can see.
+ * Sealed on purpose: `RouteSerializationTest` enumerates the subclasses by reflection, so the guard
+ * covers the whole route set instead of a hand-copied list — a route that is not `@Serializable`
+ * fails there rather than on a user's process-death restore, which is the only place it would
+ * otherwise surface.
  */
 sealed interface AppRoute : NavKey
 

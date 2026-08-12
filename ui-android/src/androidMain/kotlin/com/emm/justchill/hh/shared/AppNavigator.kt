@@ -66,7 +66,7 @@ class AppNavigator internal constructor(
      * distinct keys and both belong on the stack. Racing pushes of distinct keys are [isReady]'s job.
      *
      * Typed on [AppRoute] rather than `NavKey` so a key outside the closed route set — one that
-     * `NavSavedStateConfigurationTest` therefore never checked — cannot reach the back stack.
+     * `RouteSerializationTest` therefore never checked — cannot reach the back stack.
      */
     fun push(route: AppRoute) {
         if (!isReady()) return

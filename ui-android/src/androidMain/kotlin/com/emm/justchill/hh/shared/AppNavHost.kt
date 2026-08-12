@@ -80,10 +80,15 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         val startRoute: NavKey = remember {
             if (appPrefs.firstLaunchSeen) startTab else ManifestoRoute()
         }
-        // 2-arg rememberNavBackStack with an explicit SavedStateConfiguration on BOTH platforms (one
-        // host, one call). iOS needs it (no K/N reflection serializer discovery); Android tolerates it.
-        val backStack: NavBackStack<NavKey> =
-            rememberNavBackStack(navSavedStateConfiguration, startRoute)
+        // 1-arg rememberNavBackStack: the Android-only overload, which persists the stack through
+        // NavKeySerializer and resolves each entry by JVM reflection. Google documents it as the path
+        // to take when you are on Android only and your keys are open-polymorphic (AppRoute is a
+        // NavKey interface), and this module IS Android-only since ADR 005 — iOS is native SwiftUI over
+        // :presentation. Slice F's explicit SavedStateConfiguration existed solely because one
+        // Compose Multiplatform host also drove Kotlin/Native, which has no reflective serializer
+        // discovery; that host is gone. Routes still have to be @Serializable — RouteSerializationTest
+        // enforces it against this very serializer.
+        val backStack: NavBackStack<NavKey> = rememberNavBackStack(startRoute)
         // Host-level navigator for the two call sites that compose OUTSIDE NavDisplay: the bottom bar
         // and SyncEventsHandler. Only its duplicate-key guard is live here — see AppNavigator. Every
         // entry below builds its own, in-scene, where the transition guard works too.
