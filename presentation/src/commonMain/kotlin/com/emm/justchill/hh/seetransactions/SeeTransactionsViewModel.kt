@@ -7,7 +7,6 @@ import com.emm.domain.category.CategoryType
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
-import com.emm.domain.transaction.SearchTransactionsUseCase
 import com.emm.domain.transaction.TransactionFilter
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionTotals
@@ -32,7 +31,6 @@ import kotlin.time.Clock
 private const val SEARCH_DEBOUNCE_MS = 250L
 
 class SeeTransactionsViewModel(
-    private val searchTransactions: SearchTransactionsUseCase,
     categoryRepository: CategoryRepository,
     transactionRepository: TransactionRepository,
     private val clock: Clock,
@@ -108,7 +106,7 @@ class SeeTransactionsViewModel(
                         }
                         .catch { emit(ListSlice.emptyFor(month)) }
                 } else {
-                    searchTransactions(currentFilter)
+                    transactionRepository.searchWithCategory(currentFilter)
                         .map { transactions ->
                             ListSlice(month = null, days = transactions.toDayGroups(today()), summary = null)
                         }

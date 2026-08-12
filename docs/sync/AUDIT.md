@@ -142,9 +142,10 @@ verifies #7's claim to name every surviving production read.
 ~70% of the code is exercised and ~0% of the behaviour that produced the bug: every suite stops at a
 module boundary and sync is *entirely* an inter-module protocol. **Zero push tests exist** — only
 `TransactionTableSync` is `open`, the other three are final. Tautologies to fix:
-`SyncOrchestratorTest.kt:112` (`coVerify(atLeast = 1)` already satisfied by the sign-in sync),
-`:140` (`MutableStateFlow(0L).value = 0L` never emits), and both tests in
-`ObservePendingSyncCountUseCaseTest`.
+`SyncOrchestratorTest.kt:112` (`coVerify(atLeast = 1)` already satisfied by the sign-in sync) and
+`:140` (`MutableStateFlow(0L).value = 0L` never emits) are still open. The third — both tests in
+`ObservePendingSyncCountUseCaseTest` — closed on its own: `ObservePendingSyncCountUseCase` had no
+production caller and was deleted along with its test file, not fixed.
 
 **The test that would have caught it:** *given a pending count that never reaches 0 and a cycle that
 always writes, when the orchestrator runs 60 virtual seconds with no input, then `syncData` is

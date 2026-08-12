@@ -5,7 +5,7 @@ import com.emm.domain.auth.DeleteUserAccountUseCase
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.category.CategoryRepository
-import com.emm.domain.shared.backup.ExportDataUseCase
+import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
@@ -36,7 +36,7 @@ class ProfileViewModelImportTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
-    private val exportData = mockk<ExportDataUseCase>(relaxed = true)
+    private val backupRepository = mockk<BackupRepository>(relaxed = true)
     private val importData = mockk<ImportDataUseCase>()
     private val signOut = mockk<SignOutUseCase>(relaxed = true)
     private val deleteUserAccount = mockk<DeleteUserAccountUseCase>(relaxed = true)
@@ -59,7 +59,7 @@ class ProfileViewModelImportTest {
     }
 
     private fun buildViewModel() = ProfileViewModel(
-        exportData = exportData,
+        backupRepository = backupRepository,
         importData = importData,
         signOut = signOut,
         deleteUserAccount = deleteUserAccount,
@@ -146,7 +146,7 @@ class ProfileViewModelImportTest {
     @Test
     fun `ImportJson while export in flight is a no-op`() = runTest(testDispatcher) {
         val gate = CompletableDeferred<Unit>()
-        coEvery { exportData(any(), any()) } coAnswers {
+        coEvery { backupRepository.exportToJson(any(), any()) } coAnswers {
             gate.await()
             ""
         }

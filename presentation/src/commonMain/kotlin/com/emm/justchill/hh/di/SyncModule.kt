@@ -7,7 +7,6 @@ import com.emm.data.sync.RecurringMovementTableSync
 import com.emm.data.sync.TableSync
 import com.emm.data.sync.TransactionTableSync
 import com.emm.domain.sync.ConflictResolver
-import com.emm.domain.sync.ObservePendingSyncCountUseCase
 import com.emm.domain.sync.SyncCursorStore
 import com.emm.domain.sync.SyncDataUseCase
 import com.emm.domain.sync.SyncLogger
@@ -87,15 +86,13 @@ val syncModule = module {
         CoroutineScope(SupervisorJob() + Dispatchers.Default + handler)
     }
 
-    factoryOf(::ObservePendingSyncCountUseCase)
-
     // Single: owns long-lived coroutine jobs launched in externalScope. Does NOT self-start — start()
     // is called by bootstrapAppGraph after the graph is built (same lifecycle on both platforms).
     single {
         SyncOrchestrator(
             syncData = get(),
             observeSession = get(),
-            observePendingCount = get(),
+            syncRepository = get(),
             signOut = get(),
             prefs = get(),
             externalScope = get(appScopeQualifier),

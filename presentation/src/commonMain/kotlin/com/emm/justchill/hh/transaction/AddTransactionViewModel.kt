@@ -10,9 +10,9 @@ import com.emm.domain.shared.AccountId
 import com.emm.domain.transaction.CreateTransactionUseCase
 import com.emm.domain.transaction.FrequentCombo
 import com.emm.domain.transaction.GetFrequentCombosUseCase
-import com.emm.domain.transaction.GetLastUsedAccountIdUseCase
 import com.emm.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.domain.transaction.TransactionInsert
+import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
@@ -32,7 +32,7 @@ class AddTransactionViewModel(
     private val createTransaction: CreateTransactionUseCase,
     private val getTopUsedCategoryIds: GetTopUsedCategoryIdsUseCase,
     private val getFrequentCombos: GetFrequentCombosUseCase,
-    private val getLastUsedAccountId: GetLastUsedAccountIdUseCase,
+    private val transactionStatsRepository: TransactionStatsRepository,
     accountRepository: AccountRepository,
     categoryRepository: CategoryRepository,
     private val clock: Clock,
@@ -51,7 +51,7 @@ class AddTransactionViewModel(
 
     init {
         viewModelScope.launch {
-            cachedLastUsedAccountId = runCatching { getLastUsedAccountId() }.getOrNull()
+            cachedLastUsedAccountId = runCatching { transactionStatsRepository.lastUsedAccountId() }.getOrNull()
 
             combine(
                 flow = accountRepository.all(),

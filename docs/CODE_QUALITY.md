@@ -93,7 +93,7 @@ Each **in** row carries the test that makes a finding falsifiable:
 | **SOLID D** | **in** | DIP is why `:domain` does not know `:data`. **Test:** mechanical — a DIP finding must point at a forbidden import line or a module dependency that should not exist. No import, no finding. |
 | **SOLID O** | weak | Open/Closed is the usual excuse for premature abstraction. |
 | **SOLID L** | weak | Almost no inheritance hierarchies here to violate it. |
-| **SOLID I** | weak | Across the 9 `:domain` `*Repository` interfaces, **69 method-uses over 61 consumers = 1.13** (consumers = production classes taking the interface as a constructor parameter; `:data` implementations and Koin modules excluded). **Six of the nine sit at exactly 1.00**; the widest three are `TransactionRepository` 1.27, `AuthRepository` 1.29, `RecurringMovementRepository` 1.33, and there are **zero role clusters**. Strictly ISP is violated; splitting buys no decoupling. |
+| **SOLID I** | weak | Across the 9 `:domain` `*Repository` interfaces, **67 method-uses over 57 consumers = 1.18** (measured at `92c6d2cb`; consumers = production classes taking the interface as a constructor parameter; `:data` implementations and Koin modules excluded). **Five of the nine sit at exactly 1.00** — `AccountRepository` dropped off that floor when `EditTransactionViewModel` started using both `all` and `find`; the widest three are now `TransactionRepository` 1.44, `RecurringMovementRepository` 1.33, `AuthRepository` 1.29, and there are **zero role clusters**. Strictly ISP is violated; splitting buys no decoupling. |
 | **YAGNI** | **in, and it bites** | Solo developer, no third-party users. Every abstraction built for a future is pure cost. |
 | **DRY** | **in — about knowledge, not text** | Two blocks that change for different reasons must not be unified. *Duplication is far cheaper than the wrong abstraction.* |
 | **KISS** | **out** | Unfalsifiable. Nobody ever chose the complex option on purpose, so nothing can be reviewed against it. |
@@ -128,13 +128,13 @@ decomposition happens two ways here, both counting:
 **A use case exists where there is domain logic. A pure read may go from ViewModel to repository.**
 The measurement behind that rule:
 
-- **7 ViewModels** in `:presentation` already inject `:domain` repositories directly.
-- **14 of 44** use cases in `:domain` are pure delegation, counting strictly: one member whose whole
-  body is a single `repository.x(...)` call and nothing else. That is where the boundary sits —
-  `ObserveSessionUseCase` (two members, both bare delegations) makes it 15, `SyncDataUseCase`
-  (delegation wrapped in `syncMutex.withLock`) makes it 16.
-- The three worst are `FindTransactionUseCase`, `FindAccountUseCase` and `FindCategoryUseCase` —
-  eight-line classes whose only contribution is renaming `repository.find`.
+- **8 ViewModels** in `:presentation` already inject `:domain` repositories directly (measured at `92c6d2cb`; `RecurringMovementsViewModel` joined).
+- **5 of 35** use cases in `:domain` are pure delegation, counting strictly: one member whose whole body
+  is a single `repository.x(...)` call and nothing else (measured at `92c6d2cb`). `ObserveSessionUseCase`
+  (two bare delegations) makes it 6, `SyncDataUseCase` (mutex-wrapped delegation) makes it 7. The 5
+  strict survivors — `ClaimLocalDataUseCase`, `SignOutUseCase`, `DeleteCategoryUseCase`,
+  `DeleteTransactionUseCase`, `ImportDataUseCase` — are all WRITES, exactly what the rule predicts.
+- `FindTransactionUseCase`, `FindAccountUseCase` and `FindCategoryUseCase` were the three worst — eight-line classes renaming `repository.find` — and all three are now deleted (measured at `92c6d2cb`); `CategoryRepository.find` itself had gone dead and was deleted too.
 
 The leak stops at `:presentation`: `:ui-android` and `:androidApp` production code import no
 `:domain` repository (only `androidApp/src/test`, which mocks them).

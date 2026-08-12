@@ -7,7 +7,7 @@ import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.category.CategoryRepository
-import com.emm.domain.shared.backup.ExportDataUseCase
+import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.core.mvi.MviViewModel
@@ -20,7 +20,7 @@ import kotlin.time.Clock
 
 @Suppress("LongParameterList")
 class ProfileViewModel(
-    private val exportData: ExportDataUseCase,
+    private val backupRepository: BackupRepository,
     private val importData: ImportDataUseCase,
     private val signOut: SignOutUseCase,
     private val deleteUserAccount: DeleteUserAccountUseCase,
@@ -131,7 +131,7 @@ class ProfileViewModel(
         // The disk-space / write failure is the platform layer's concern and is surfaced there.
         onError = { e -> ProfileEffect.ShowError(e) },
     ) {
-        val json = exportData(
+        val json = backupRepository.exportToJson(
             exportedAt = clock.now().toEpochMilliseconds(),
             appVersion = appVersion,
         )

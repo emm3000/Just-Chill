@@ -2,7 +2,6 @@ package com.emm.data.category
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.data.CategoriesQueries
 import com.emm.data.EmmDatabaseData
 import com.emm.data.shared.ioDispatcher
@@ -23,13 +22,6 @@ class CategoryLocalDataSource(private val emmDatabase: EmmDatabaseData, private 
         .asFlow()
         .mapToList(ioDispatcher)
         .map { list -> list.asEntity().asExternalModel() }
-
-    fun find(categoryId: String): Flow<Category?> = cq.find(categoryId)
-        .asFlow()
-        .mapToOneOrNull(ioDispatcher)
-        .map { category ->
-            category?.asEntity()?.asExternalModelOrNull()
-        }
 
     suspend fun countDefaults(): Long = withContext(ioDispatcher) {
         cq.countDefaultCategories().executeAsOne()

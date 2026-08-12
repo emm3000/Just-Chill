@@ -98,7 +98,7 @@ class AppGraphKoinTest {
         )
         // Floor guard: if the registry sweep ever stops seeing definitions (a Koin internals change,
         // an empty module list) the loop above would pass vacuously. The graph currently exposes
-        // ~105 (type, qualifier) pairs, so anything below 80 means the sweep itself broke.
+        // ~97 (type, qualifier) pairs, so anything below 80 means the sweep itself broke.
         assertTrue(
             boundTypes.size >= MIN_EXPECTED_BINDINGS,
             "Only ${boundTypes.size} bindings were discovered; the registry sweep looks broken.",

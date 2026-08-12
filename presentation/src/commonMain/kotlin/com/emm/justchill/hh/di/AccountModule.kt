@@ -2,7 +2,6 @@ package com.emm.justchill.hh.di
 
 import com.emm.domain.account.CreateAccountUseCase
 import com.emm.domain.account.DeleteAccountUseCase
-import com.emm.domain.account.FindAccountUseCase
 import com.emm.domain.account.UpdateAccountUseCase
 import com.emm.justchill.hh.account.AccountsViewModel
 import com.emm.justchill.hh.account.AddAccountViewModel
@@ -16,7 +15,6 @@ import org.koin.dsl.module
 val accountModule = module {
     factoryOf(::CreateAccountUseCase)
     factoryOf(::DeleteAccountUseCase)
-    factoryOf(::FindAccountUseCase)
     factoryOf(::UpdateAccountUseCase)
 
     viewModelOf(::AccountsViewModel)

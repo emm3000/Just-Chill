@@ -7,8 +7,6 @@ interface CategoryRepository {
 
     fun all(): Flow<List<Category>>
 
-    suspend fun find(categoryId: CategoryId): Category?
-
     suspend fun create(categoryUpsert: CategoryUpsert)
 
     suspend fun count(): Long

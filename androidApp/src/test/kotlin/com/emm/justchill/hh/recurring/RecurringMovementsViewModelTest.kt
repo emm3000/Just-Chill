@@ -1,10 +1,10 @@
 package com.emm.justchill.hh.recurring
 
 import com.emm.domain.recurring.DeleteRecurringMovementUseCase
-import com.emm.domain.recurring.GetAllRecurringMovementDetailsUseCase
 import com.emm.domain.recurring.GetRecurringMonthlyTotalsUseCase
 import com.emm.domain.recurring.RecurringMonthlyTotals
 import com.emm.domain.recurring.RecurringMovementDetails
+import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.RecurringMovementId
 import com.emm.domain.shared.error.DomainException
@@ -33,7 +33,7 @@ class RecurringMovementsViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
-    private val getAllDetails = mockk<GetAllRecurringMovementDetailsUseCase>()
+    private val recurringMovementRepository = mockk<RecurringMovementRepository>()
     private val getTotals = mockk<GetRecurringMonthlyTotalsUseCase>()
     private val deleteRecurring = mockk<DeleteRecurringMovementUseCase>()
 
@@ -62,16 +62,16 @@ class RecurringMovementsViewModelTest {
 
     @Before
     fun setUp() {
-        every { getAllDetails() } returns flowOf(emptyList())
+        every { recurringMovementRepository.allWithDetails() } returns flowOf(emptyList())
         every { getTotals(any()) } returns RecurringMonthlyTotals.Empty
-        viewModel = RecurringMovementsViewModel(getAllDetails, getTotals, deleteRecurring)
+        viewModel = RecurringMovementsViewModel(recurringMovementRepository, getTotals, deleteRecurring)
     }
 
     // ---- R7.1 — Active and paused templates partitioned correctly and sorted ----
 
     @Test
     fun `R7_1 active and paused items are partitioned and sorted by day of month`() = runTest {
-        every { getAllDetails() } returns flowOf(
+        every { recurringMovementRepository.allWithDetails() } returns flowOf(
             listOf(
                 details("rm-a", "Netflix", isActive = true, dayOfMonth = 3),
                 details("rm-b", "Agua", isActive = false, dayOfMonth = 20),
@@ -79,7 +79,7 @@ class RecurringMovementsViewModelTest {
             ),
         )
         every { getTotals(any()) } returns RecurringMonthlyTotals.Empty
-        viewModel = RecurringMovementsViewModel(getAllDetails, getTotals, deleteRecurring)
+        viewModel = RecurringMovementsViewModel(recurringMovementRepository, getTotals, deleteRecurring)
 
         advanceUntilIdle()
 
@@ -93,14 +93,14 @@ class RecurringMovementsViewModelTest {
 
     @Test
     fun `R7_2 all active templates result in empty pausedItems`() = runTest {
-        every { getAllDetails() } returns flowOf(
+        every { recurringMovementRepository.allWithDetails() } returns flowOf(
             listOf(
                 details("rm-1", "Netflix", isActive = true),
                 details("rm-2", "Spotify", isActive = true),
             ),
         )
         every { getTotals(any()) } returns RecurringMonthlyTotals.Empty
-        viewModel = RecurringMovementsViewModel(getAllDetails, getTotals, deleteRecurring)
+        viewModel = RecurringMovementsViewModel(recurringMovementRepository, getTotals, deleteRecurring)
 
         advanceUntilIdle()
 
@@ -113,14 +113,14 @@ class RecurringMovementsViewModelTest {
 
     @Test
     fun `R7_3 all paused templates result in empty activeItems`() = runTest {
-        every { getAllDetails() } returns flowOf(
+        every { recurringMovementRepository.allWithDetails() } returns flowOf(
             listOf(
                 details("rm-1", "Netflix", isActive = false),
                 details("rm-2", "Agua", isActive = false),
             ),
         )
         every { getTotals(any()) } returns RecurringMonthlyTotals.Empty
-        viewModel = RecurringMovementsViewModel(getAllDetails, getTotals, deleteRecurring)
+        viewModel = RecurringMovementsViewModel(recurringMovementRepository, getTotals, deleteRecurring)
 
         advanceUntilIdle()
 
@@ -133,9 +133,9 @@ class RecurringMovementsViewModelTest {
 
     @Test
     fun `R8_2 and R12_1 empty list yields empty state with zero variableCount`() = runTest {
-        every { getAllDetails() } returns flowOf(emptyList())
+        every { recurringMovementRepository.allWithDetails() } returns flowOf(emptyList())
         every { getTotals(any()) } returns RecurringMonthlyTotals.Empty
-        viewModel = RecurringMovementsViewModel(getAllDetails, getTotals, deleteRecurring)
+        viewModel = RecurringMovementsViewModel(recurringMovementRepository, getTotals, deleteRecurring)
 
         advanceUntilIdle()
 
@@ -149,11 +149,11 @@ class RecurringMovementsViewModelTest {
 
     @Test
     fun `R9_1 variableCount is propagated from totals to state`() = runTest {
-        every { getAllDetails() } returns flowOf(
+        every { recurringMovementRepository.allWithDetails() } returns flowOf(
             listOf(details("rm-1", "Salario", amount = null, isActive = true)),
         )
         every { getTotals(any()) } returns RecurringMonthlyTotals(Money.Zero, Money.Zero, activeVariableCount = 1)
-        viewModel = RecurringMovementsViewModel(getAllDetails, getTotals, deleteRecurring)
+        viewModel = RecurringMovementsViewModel(recurringMovementRepository, getTotals, deleteRecurring)
 
         advanceUntilIdle()
 
@@ -164,7 +164,7 @@ class RecurringMovementsViewModelTest {
 
     @Test
     fun `R8_3 formatted amounts use neutral currency format without directional sign`() = runTest {
-        every { getAllDetails() } returns flowOf(
+        every { recurringMovementRepository.allWithDetails() } returns flowOf(
             listOf(details("rm-1", "Sueldo", type = TransactionType.Income, amount = Money(350000L))),
         )
         every { getTotals(any()) } returns RecurringMonthlyTotals(
@@ -172,7 +172,7 @@ class RecurringMovementsViewModelTest {
             expenseTotal = Money(180000L),
             activeVariableCount = 0,
         )
-        viewModel = RecurringMovementsViewModel(getAllDetails, getTotals, deleteRecurring)
+        viewModel = RecurringMovementsViewModel(recurringMovementRepository, getTotals, deleteRecurring)
 
         advanceUntilIdle()
 
@@ -268,14 +268,14 @@ class RecurringMovementsViewModelTest {
 
     @Test
     fun `pendingDelete can reference an item in pausedItems`() = runTest {
-        every { getAllDetails() } returns flowOf(
+        every { recurringMovementRepository.allWithDetails() } returns flowOf(
             listOf(
                 details("active-1", "Netflix", isActive = true),
                 details("paused-1", "Agua", isActive = false),
             ),
         )
         every { getTotals(any()) } returns RecurringMonthlyTotals.Empty
-        viewModel = RecurringMovementsViewModel(getAllDetails, getTotals, deleteRecurring)
+        viewModel = RecurringMovementsViewModel(recurringMovementRepository, getTotals, deleteRecurring)
         advanceUntilIdle()
 
         viewModel.onIntent(RecurringMovementsIntent.RequestDelete("paused-1"))

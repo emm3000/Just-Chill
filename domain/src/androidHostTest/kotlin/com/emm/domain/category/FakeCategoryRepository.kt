@@ -10,12 +10,9 @@ class FakeCategoryRepository : CategoryRepository {
     var lastUpdatedId: CategoryId? = null
     var lastUpdate: CategoryUpsert? = null
     var lastDeleted: CategoryId? = null
-    var categoryToReturn: Category? = null
     var countToReturn: Long = 0L
 
     override fun all(): Flow<List<Category>> = flowOf(emptyList())
-
-    override suspend fun find(categoryId: CategoryId): Category? = categoryToReturn
 
     override suspend fun create(categoryUpsert: CategoryUpsert) {
         lastCreated = categoryUpsert

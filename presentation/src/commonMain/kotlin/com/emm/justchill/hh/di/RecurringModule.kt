@@ -3,7 +3,6 @@ package com.emm.justchill.hh.di
 import com.emm.domain.recurring.ConfirmRecurringMovementUseCase
 import com.emm.domain.recurring.CreateRecurringMovementUseCase
 import com.emm.domain.recurring.DeleteRecurringMovementUseCase
-import com.emm.domain.recurring.GetAllRecurringMovementDetailsUseCase
 import com.emm.domain.recurring.GetPendingRecurringMovementsUseCase
 import com.emm.domain.recurring.GetRecurringMonthlyTotalsUseCase
 import com.emm.domain.recurring.SkipRecurringMovementUseCase
@@ -21,7 +20,6 @@ val recurringModule = module {
     factoryOf(::GetPendingRecurringMovementsUseCase)
     factoryOf(::ConfirmRecurringMovementUseCase)
     factoryOf(::SkipRecurringMovementUseCase)
-    factoryOf(::GetAllRecurringMovementDetailsUseCase)
     factoryOf(::GetRecurringMonthlyTotalsUseCase)
     factoryOf(::CreateRecurringMovementUseCase)
     factoryOf(::UpdateRecurringMovementUseCase)

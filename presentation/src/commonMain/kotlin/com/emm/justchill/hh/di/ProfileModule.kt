@@ -18,7 +18,7 @@ val profileModule = module {
     // AppGraphKoinTest fails if a default ever comes back and lets it.
     viewModel {
         ProfileViewModel(
-            exportData = get(),
+            backupRepository = get(),
             importData = get(),
             signOut = get(),
             deleteUserAccount = get(),

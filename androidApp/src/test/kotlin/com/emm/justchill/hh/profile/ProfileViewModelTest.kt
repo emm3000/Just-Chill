@@ -7,7 +7,7 @@ import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.category.CategoryRepository
-import com.emm.domain.shared.backup.ExportDataUseCase
+import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.MainDispatcherRule
@@ -41,7 +41,7 @@ class ProfileViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
-    private val exportData = mockk<ExportDataUseCase>()
+    private val backupRepository = mockk<BackupRepository>()
     private val importData = mockk<ImportDataUseCase>(relaxed = true)
     private val signOut = mockk<SignOutUseCase>(relaxed = true)
     private val deleteUserAccount = mockk<DeleteUserAccountUseCase>(relaxed = true)
@@ -69,7 +69,7 @@ class ProfileViewModelTest {
     private fun buildViewModel(): ProfileViewModel {
         every { observeSession.invoke() } returns sessionFlow
         return ProfileViewModel(
-            exportData = exportData,
+            backupRepository = backupRepository,
             importData = importData,
             signOut = signOut,
             deleteUserAccount = deleteUserAccount,
@@ -159,7 +159,7 @@ class ProfileViewModelTest {
     @Test
     fun `ExportRequested happy path emits ExportReady with the generated json`() = runTest(testDispatcher) {
         val expectedJson = """{"version":"1.0","data":[]}"""
-        coEvery { exportData(any(), any()) } returns expectedJson
+        coEvery { backupRepository.exportToJson(any(), any()) } returns expectedJson
 
         val vm = buildViewModel()
         val effects = mutableListOf<ProfileEffect>()
@@ -177,14 +177,14 @@ class ProfileViewModelTest {
 
     @Test
     fun `ExportRequested stamps the injected app version into the backup`() = runTest(testDispatcher) {
-        coEvery { exportData(any(), any()) } returns "{}"
+        coEvery { backupRepository.exportToJson(any(), any()) } returns "{}"
 
         val vm = buildViewModel()
 
         vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { exportData(any(), "1.0.0") }
+        coVerify(exactly = 1) { backupRepository.exportToJson(any(), "1.0.0") }
     }
 
     @Test
@@ -198,7 +198,7 @@ class ProfileViewModelTest {
         // removal is a wiring guarantee (ProfileModule can no longer omit the clock without a
         // compile error), and nothing in this file exercises it. See docs/DATE_AUDIT.md #7.
         val exportedAt = slot<Long>()
-        coEvery { exportData(capture(exportedAt), any()) } returns "{}"
+        coEvery { backupRepository.exportToJson(capture(exportedAt), any()) } returns "{}"
 
         val vm = buildViewModel()
 
@@ -211,7 +211,7 @@ class ProfileViewModelTest {
     @Test
     fun `ExportRequested on DatabaseError emits ShowError effect`() = runTest(testDispatcher) {
         val cause = RuntimeException("db failure")
-        coEvery { exportData(any(), any()) } throws DomainException.DatabaseError(cause)
+        coEvery { backupRepository.exportToJson(any(), any()) } throws DomainException.DatabaseError(cause)
 
         val vm = buildViewModel()
         val effects = mutableListOf<ProfileEffect>()
@@ -233,7 +233,8 @@ class ProfileViewModelTest {
     fun `ExportRequested on Unknown error emits ShowError effect`() = runTest(testDispatcher) {
         // The disk-space ExportFailed hint now lives in the platform write layer; the VM only
         // generates the JSON, so any domain failure here surfaces uniformly as ShowError.
-        coEvery { exportData(any(), any()) } throws DomainException.Unknown(RuntimeException("serialize error"))
+        coEvery { backupRepository.exportToJson(any(), any()) } throws
+            DomainException.Unknown(RuntimeException("serialize error"))
 
         val vm = buildViewModel()
         val effects = mutableListOf<ProfileEffect>()
@@ -281,7 +282,7 @@ class ProfileViewModelTest {
     @Test
     fun `ExportRequested re-entry guard — second export while first in flight is a no-op`() = runTest(testDispatcher) {
         val gate = CompletableDeferred<Unit>()
-        coEvery { exportData(any(), any()) } coAnswers {
+        coEvery { backupRepository.exportToJson(any(), any()) } coAnswers {
             gate.await()
             ""
         }
@@ -297,7 +298,7 @@ class ProfileViewModelTest {
         advanceUntilIdle()
 
         // exportData must still have been called exactly once
-        coVerify(exactly = 1) { exportData(any(), any()) }
+        coVerify(exactly = 1) { backupRepository.exportToJson(any(), any()) }
 
         gate.cancel()
     }

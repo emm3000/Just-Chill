@@ -10,9 +10,9 @@ import com.emm.domain.shared.CategoryId
 import com.emm.domain.transaction.CreateTransactionUseCase
 import com.emm.domain.transaction.FrequentCombo
 import com.emm.domain.transaction.GetFrequentCombosUseCase
-import com.emm.domain.transaction.GetLastUsedAccountIdUseCase
 import com.emm.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.domain.transaction.TransactionInsert
+import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.coEvery
@@ -95,20 +95,20 @@ class AddTransactionViewModelTest {
     private val createTransaction = mockk<CreateTransactionUseCase>(relaxed = true)
     private val getTopUsedCategoryIds = mockk<GetTopUsedCategoryIdsUseCase>()
     private val getFrequentCombos = mockk<GetFrequentCombosUseCase>()
-    private val getLastUsedAccountId = mockk<GetLastUsedAccountIdUseCase>()
+    private val transactionStatsRepository = mockk<TransactionStatsRepository>()
 
     @Before
     fun setupDefaults() {
         coEvery { getTopUsedCategoryIds.invoke(any<TransactionType>(), any<Int>(), any<Int>()) } returns emptyList()
         coEvery { getFrequentCombos.invoke(any<TransactionType>(), any<Int>(), any<Int>()) } returns emptyList()
-        coEvery { getLastUsedAccountId.invoke() } returns null
+        coEvery { transactionStatsRepository.lastUsedAccountId() } returns null
     }
 
     private fun buildViewModel(): AddTransactionViewModel = AddTransactionViewModel(
         createTransaction = createTransaction,
         getTopUsedCategoryIds = getTopUsedCategoryIds,
         getFrequentCombos = getFrequentCombos,
-        getLastUsedAccountId = getLastUsedAccountId,
+        transactionStatsRepository = transactionStatsRepository,
         accountRepository = accountRepository,
         categoryRepository = categoryRepository,
         clock = fixedClock,
@@ -379,7 +379,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `accountSelected is last-used account on init when history exists`() = runTest(testDispatcher) {
-        coEvery { getLastUsedAccountId.invoke() } returns AccountId("bcp")
+        coEvery { transactionStatsRepository.lastUsedAccountId() } returns AccountId("bcp")
 
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -400,7 +400,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `accountSelected falls back to firstOrNull when last-used account was deleted`() = runTest(testDispatcher) {
-        coEvery { getLastUsedAccountId.invoke() } returns AccountId("deleted-account")
+        coEvery { transactionStatsRepository.lastUsedAccountId() } returns AccountId("deleted-account")
 
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -411,7 +411,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `OnReset restores last-used account pre-selection`() = runTest(testDispatcher) {
-        coEvery { getLastUsedAccountId.invoke() } returns AccountId("bcp")
+        coEvery { transactionStatsRepository.lastUsedAccountId() } returns AccountId("bcp")
 
         val vm = buildViewModel()
         advanceUntilIdle()

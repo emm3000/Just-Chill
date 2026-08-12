@@ -16,7 +16,7 @@ interface SyncRepository {
      * Emits the total count of locally-pending rows across all tables (accounts, categories,
      * transactions, recurring_movements) that have syncState = 'Pending' and a non-null userId.
      *
-     * Used by [ObservePendingSyncCountUseCase] to trigger a debounced sync after local writes.
+     * Used by SyncOrchestrator to trigger a debounced sync after local writes.
      * Emits 0 when every row is synced or no user is signed in.
      */
     fun observePendingCount(): Flow<Long>

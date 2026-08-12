@@ -8,7 +8,6 @@ import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.shared.YearMonth
-import com.emm.domain.transaction.SearchTransactionsUseCase
 import com.emm.domain.transaction.TransactionFilter
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionTotals
@@ -76,7 +75,6 @@ class SeeTransactionsViewModelTest {
         every { observeTotals() } returns totalsFlow
         every { fetchAllWithCategoryInRange(any(), any()) } returns monthTransactionsFlow
     }
-    private val searchTransactions = mockk<SearchTransactionsUseCase>()
 
     // The zone defaults to UTC, not to the machine's. It used to read
     // `TimeZone.currentSystemDefault()`, which is the very defect finding #7 is about: the suite
@@ -84,8 +82,8 @@ class SeeTransactionsViewModelTest {
     // would be comparing against a moving baseline. At this clock (noon UTC) UTC and the dev
     // machine's America/Lima are the same calendar day, so nothing below changed meaning.
     private fun buildViewModel(clock: Clock = fixedClock, zone: TimeZone = TimeZone.UTC): SeeTransactionsViewModel {
-        every { searchTransactions.invoke(any()) } returns flowOf(emptyList())
-        return SeeTransactionsViewModel(searchTransactions, categoryRepository, transactionRepository, clock, zone)
+        every { transactionRepository.searchWithCategory(any()) } returns flowOf(emptyList())
+        return SeeTransactionsViewModel(categoryRepository, transactionRepository, clock, zone)
     }
 
     private fun tx(
@@ -155,7 +153,7 @@ class SeeTransactionsViewModelTest {
         val september = YearMonth(2026, Month.SEPTEMBER)
         stubRange(august, flowOf(emptyList()))
         stubRange(september, flowOf(emptyList()))
-        every { searchTransactions.invoke(any()) } returns flowOf(emptyList())
+        every { transactionRepository.searchWithCategory(any()) } returns flowOf(emptyList())
 
         val inLima = buildViewModel(nearMidnight, UtcOffset(hours = -5).asTimeZone())
         val inUtc = buildViewModel(nearMidnight, UtcOffset(hours = 0).asTimeZone())
@@ -258,7 +256,7 @@ class SeeTransactionsViewModelTest {
             advanceTimeBy(300L)
             advanceUntilIdle()
 
-            verify { searchTransactions.invoke(TransactionFilter(query = "café")) }
+            verify { transactionRepository.searchWithCategory(TransactionFilter(query = "café")) }
             // flatMapLatest switched away: the range query ran only for the initial subscription.
             verify(exactly = 1) { transactionRepository.fetchAllWithCategoryInRange(any(), any()) }
         }
@@ -339,14 +337,13 @@ class SeeTransactionsViewModelTest {
     @Test
     fun `a failing search degrades to an empty list and clearing the filter still loads the month`() =
         runTest(testDispatcher) {
-            every { searchTransactions.invoke(any()) } returns flow { error("search exploded") }
+            every { transactionRepository.searchWithCategory(any()) } returns flow { error("search exploded") }
             monthTransactionsFlow.value = listOf(tx("t-aug", TransactionType.Spend, 1_000))
             totalsFlow.value = TransactionTotals(balance = Money(10_000), movementCount = 3)
 
             // Built by hand rather than through buildViewModel: the helper re-stubs
-            // searchTransactions, which would undo the failing stub this test is about.
+            // searchWithCategory, which would undo the failing stub this test is about.
             val vm = SeeTransactionsViewModel(
-                searchTransactions,
                 categoryRepository,
                 transactionRepository,
                 fixedClock,
@@ -384,14 +381,12 @@ class SeeTransactionsViewModelTest {
         )
 
         val lima = SeeTransactionsViewModel(
-            searchTransactions,
             categoryRepository,
             transactionRepository,
             eveningInLima,
             TimeZone.of("America/Lima"),
         )
         val karachi = SeeTransactionsViewModel(
-            searchTransactions,
             categoryRepository,
             transactionRepository,
             eveningInLima,
@@ -556,7 +551,7 @@ class SeeTransactionsViewModelTest {
         advanceTimeBy(300L)
         advanceUntilIdle()
 
-        verify { searchTransactions.invoke(TransactionFilter(query = "café")) }
+        verify { transactionRepository.searchWithCategory(TransactionFilter(query = "café")) }
     }
 
     @Test
@@ -572,9 +567,9 @@ class SeeTransactionsViewModelTest {
         advanceTimeBy(300L)
         advanceUntilIdle()
 
-        verify(exactly = 0) { searchTransactions.invoke(TransactionFilter(query = "c")) }
-        verify(exactly = 0) { searchTransactions.invoke(TransactionFilter(query = "ca")) }
-        verify(atLeast = 1) { searchTransactions.invoke(TransactionFilter(query = "caf")) }
+        verify(exactly = 0) { transactionRepository.searchWithCategory(TransactionFilter(query = "c")) }
+        verify(exactly = 0) { transactionRepository.searchWithCategory(TransactionFilter(query = "ca")) }
+        verify(atLeast = 1) { transactionRepository.searchWithCategory(TransactionFilter(query = "caf")) }
     }
 
     @Test
@@ -586,7 +581,7 @@ class SeeTransactionsViewModelTest {
         advanceUntilIdle()
 
         verify {
-            searchTransactions.invoke(
+            transactionRepository.searchWithCategory(
                 match { it.categoryIds.contains(CategoryId("cat-1")) },
             )
         }

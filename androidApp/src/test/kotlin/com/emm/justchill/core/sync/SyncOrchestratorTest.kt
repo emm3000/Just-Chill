@@ -5,9 +5,9 @@ import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.shared.error.DomainException
-import com.emm.domain.sync.ObservePendingSyncCountUseCase
 import com.emm.domain.sync.SyncDataUseCase
 import com.emm.domain.sync.SyncLogger
+import com.emm.domain.sync.SyncRepository
 import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.preferences.AppPreferences
 import io.mockk.coEvery
@@ -42,7 +42,7 @@ class SyncOrchestratorTest {
 
     private val syncData = mockk<SyncDataUseCase>(relaxed = true)
     private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
-    private val observePendingCount = mockk<ObservePendingSyncCountUseCase>(relaxed = true)
+    private val syncRepository = mockk<SyncRepository>(relaxed = true)
     private val signOut = mockk<SignOutUseCase>(relaxed = true)
     private val prefs = mockk<AppPreferences>(relaxed = true)
     private val logger = mockk<SyncLogger>(relaxed = true)
@@ -60,13 +60,13 @@ class SyncOrchestratorTest {
      */
     private fun TestScope.buildOrchestrator(): SyncOrchestrator {
         every { observeSession.invoke() } returns sessionFlow
-        every { observePendingCount.invoke() } returns pendingCountFlow
+        every { syncRepository.observePendingCount() } returns pendingCountFlow
         every { prefs.lastSyncedAt(any()) } returns null
         val sharedDispatcher = StandardTestDispatcher(testScheduler)
         return SyncOrchestrator(
             syncData = syncData,
             observeSession = observeSession,
-            observePendingCount = observePendingCount,
+            syncRepository = syncRepository,
             signOut = signOut,
             prefs = prefs,
             externalScope = CoroutineScope(sharedDispatcher + SupervisorJob()),
@@ -141,12 +141,12 @@ class SyncOrchestratorTest {
         // Use a fresh syncData mock so we can count from zero cleanly.
         val localSyncData = mockk<SyncDataUseCase>(relaxed = true)
         every { observeSession.invoke() } returns sessionFlow
-        every { observePendingCount.invoke() } returns pendingCountFlow
+        every { syncRepository.observePendingCount() } returns pendingCountFlow
         every { prefs.lastSyncedAt(any()) } returns null
         val orchestrator = SyncOrchestrator(
             syncData = localSyncData,
             observeSession = observeSession,
-            observePendingCount = observePendingCount,
+            syncRepository = syncRepository,
             signOut = signOut,
             prefs = prefs,
             externalScope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()),
@@ -328,7 +328,7 @@ class SyncOrchestratorTest {
     fun `a throwing pending-count flow does not crash and the trigger restarts`() = runTest(testDispatcher) {
         var pendingCountCollections = 0
         every { observeSession.invoke() } returns sessionFlow
-        every { observePendingCount.invoke() } answers {
+        every { syncRepository.observePendingCount() } answers {
             pendingCountCollections++
             if (pendingCountCollections == 1) {
                 flow { throw DomainException.DatabaseError(RuntimeException("disk full")) }
@@ -342,7 +342,7 @@ class SyncOrchestratorTest {
         val orchestrator = SyncOrchestrator(
             syncData = syncData,
             observeSession = observeSession,
-            observePendingCount = observePendingCount,
+            syncRepository = syncRepository,
             signOut = signOut,
             prefs = prefs,
             externalScope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()),

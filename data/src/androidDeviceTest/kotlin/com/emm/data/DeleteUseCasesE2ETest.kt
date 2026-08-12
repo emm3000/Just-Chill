@@ -30,6 +30,7 @@ import com.emm.domain.shared.error.DomainException
 import com.emm.domain.transaction.DeleteTransactionUseCase
 import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionType
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime
 import org.junit.After
@@ -277,7 +278,10 @@ class DeleteUseCasesE2ETest {
         assertEquals("C2", rawTransactionCategoryId("TX2"), "the link to the deleted category must survive")
         assertNull(rawTransactionDeletedAt("TX2"), "live transaction must not be tombstoned")
         // Category no longer visible via repository
-        assertNull(categoryRepo.find(categoryId), "tombstoned category must not be returned by find()")
+        assertTrue(
+            categoryRepo.all().first().none { it.categoryId == categoryId },
+            "tombstoned category must not appear in all()",
+        )
     }
 
     /**

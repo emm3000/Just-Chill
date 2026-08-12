@@ -6,16 +6,15 @@ import com.emm.data.transaction.DefaultTransactionRepository
 import com.emm.data.transaction.TransactionLocalDataSource
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
-import com.emm.domain.account.FindAccountUseCase
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.shared.UniqueIdProvider
 import com.emm.domain.transaction.CreateTransactionUseCase
 import com.emm.domain.transaction.DeleteTransactionUseCase
-import com.emm.domain.transaction.FindTransactionUseCase
 import com.emm.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.UpdateTransactionUseCase
 import io.mockk.coEvery
 import io.mockk.every
@@ -76,7 +75,10 @@ class TransactionDateEndToEndTest {
     private val clock = MovableClock(instantAt(today, hour = 14, minute = 30))
 
     private val account = Account(AccountId("acc-1"), "BCP")
-    private val accountRepository = mockk<AccountRepository> { every { all() } returns flowOf(listOf(account)) }
+    private val accountRepository = mockk<AccountRepository> {
+        every { all() } returns flowOf(listOf(account))
+        coEvery { find(account.accountId) } returns account
+    }
     private val categoryRepository = mockk<CategoryRepository> { every { all() } returns flowOf(emptyList()) }
     private val getTopUsedCategoryIds = mockk<GetTopUsedCategoryIdsUseCase> {
         coEvery { this@mockk.invoke(any(), any(), any()) } returns emptyList()
@@ -217,7 +219,9 @@ class TransactionDateEndToEndTest {
         ),
         getTopUsedCategoryIds = getTopUsedCategoryIds,
         getFrequentCombos = mockk { coEvery { this@mockk.invoke(any(), any(), any()) } returns emptyList() },
-        getLastUsedAccountId = mockk { coEvery { this@mockk.invoke() } returns null },
+        transactionStatsRepository = mockk<TransactionStatsRepository> {
+            coEvery { lastUsedAccountId() } returns null
+        },
         accountRepository = accountRepository,
         categoryRepository = categoryRepository,
         clock = clock,
@@ -229,18 +233,12 @@ class TransactionDateEndToEndTest {
         accountRepository = accountRepository,
         categoryRepository = categoryRepository,
         updateTransaction = UpdateTransactionUseCase(transactionRepository, clock, zone),
-        findTransaction = FindTransactionUseCase(transactionRepository),
+        transactionRepository = transactionRepository,
         deleteTransaction = mockk<DeleteTransactionUseCase>(relaxed = true),
-        findAccount = FindAccountUseCase(accountRepositoryReturning(account)),
         getTopUsedCategoryIds = getTopUsedCategoryIds,
         clock = clock,
         zone = zone,
     )
-
-    private fun accountRepositoryReturning(account: Account): AccountRepository = mockk {
-        every { all() } returns flowOf(listOf(account))
-        coEvery { find(account.accountId) } returns account
-    }
 
     /**
      * The writes run on `Dispatchers.IO`, which the test scheduler does not drive — so these wait

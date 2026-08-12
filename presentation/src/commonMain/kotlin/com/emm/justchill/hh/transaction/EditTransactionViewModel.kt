@@ -3,7 +3,6 @@ package com.emm.justchill.hh.transaction
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
-import com.emm.domain.account.FindAccountUseCase
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryType
@@ -11,9 +10,9 @@ import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.DeleteTransactionUseCase
-import com.emm.domain.transaction.FindTransactionUseCase
 import com.emm.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.domain.transaction.Transaction
+import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.UpdateTransactionUseCase
@@ -33,9 +32,8 @@ class EditTransactionViewModel(
     private val accountRepository: AccountRepository,
     private val categoryRepository: CategoryRepository,
     private val updateTransaction: UpdateTransactionUseCase,
-    private val findTransaction: FindTransactionUseCase,
+    private val transactionRepository: TransactionRepository,
     private val deleteTransaction: DeleteTransactionUseCase,
-    private val findAccount: FindAccountUseCase,
     private val getTopUsedCategoryIds: GetTopUsedCategoryIdsUseCase,
     private val clock: Clock,
     private val zone: TimeZone,
@@ -122,8 +120,8 @@ class EditTransactionViewModel(
         allCategories.clear()
         allCategories.putAll(categoriesList.groupBy(SelectableCategory::categoryType))
 
-        oldTransaction = findTransaction(TransactionId(transactionId)) ?: return@launch
-        val account = findAccount(oldTransaction.accountId) ?: return@launch
+        oldTransaction = transactionRepository.find(TransactionId(transactionId)) ?: return@launch
+        val account = accountRepository.find(oldTransaction.accountId) ?: return@launch
         val storedDay: LocalDate = oldTransaction.occurredAt.date
 
         val selectedCategory: SelectableCategory? = oldTransaction.categoryId?.let { id ->

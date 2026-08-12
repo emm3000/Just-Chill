@@ -2,7 +2,6 @@ package com.emm.justchill.hh.transaction
 
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
-import com.emm.domain.account.FindAccountUseCase
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryType
@@ -11,9 +10,9 @@ import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.TransactionId
 import com.emm.domain.transaction.DeleteTransactionUseCase
-import com.emm.domain.transaction.FindTransactionUseCase
 import com.emm.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.domain.transaction.Transaction
+import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.UpdateTransactionUseCase
@@ -100,16 +99,15 @@ class EditTransactionViewModelTest {
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns flowOf(listOf(category))
     }
+    private val transactionRepository = mockk<TransactionRepository>()
     private val updateTransaction = mockk<UpdateTransactionUseCase>(relaxed = true)
-    private val findTransaction = mockk<FindTransactionUseCase>()
     private val deleteTransaction = mockk<DeleteTransactionUseCase>(relaxed = true)
-    private val findAccount = mockk<FindAccountUseCase>()
     private val getTopUsedCategoryIds = mockk<GetTopUsedCategoryIdsUseCase>()
 
     @Before
     fun setupDefaults() {
-        coEvery { findTransaction.invoke(TransactionId("tx-1")) } returns storedTransaction
-        coEvery { findAccount.invoke(account.accountId) } returns account
+        coEvery { transactionRepository.find(TransactionId("tx-1")) } returns storedTransaction
+        coEvery { accountRepository.find(account.accountId) } returns account
         coEvery { getTopUsedCategoryIds.invoke(any(), any(), any()) } returns emptyList()
     }
 
@@ -118,9 +116,8 @@ class EditTransactionViewModelTest {
         accountRepository = accountRepository,
         categoryRepository = categoryRepository,
         updateTransaction = updateTransaction,
-        findTransaction = findTransaction,
+        transactionRepository = transactionRepository,
         deleteTransaction = deleteTransaction,
-        findAccount = findAccount,
         getTopUsedCategoryIds = getTopUsedCategoryIds,
         clock = fixedClock,
         zone = lima,
@@ -154,7 +151,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `today catches up on the next interaction after midnight`() = runTest(testDispatcher) {
-        coEvery { findTransaction.invoke(TransactionId("tx-1")) } returns
+        coEvery { transactionRepository.find(TransactionId("tx-1")) } returns
             storedTransaction.copy(occurredAt = LocalDateTime(today, LocalTime(9, 15)))
 
         val vm = buildViewModel()
@@ -177,16 +174,15 @@ class EditTransactionViewModelTest {
         // day, and an edit shifted the date forward by one. The stored value carries no zone now,
         // so there is no zone to read it in wrongly — this holds with the device anywhere.
         val evening = storedTransaction.copy(occurredAt = LocalDateTime(marchDay, LocalTime(23, 30)))
-        coEvery { findTransaction.invoke(TransactionId("tx-1")) } returns evening
+        coEvery { transactionRepository.find(TransactionId("tx-1")) } returns evening
 
         val vm = EditTransactionViewModel(
             transactionId = "tx-1",
             accountRepository = accountRepository,
             categoryRepository = categoryRepository,
             updateTransaction = updateTransaction,
-            findTransaction = findTransaction,
+            transactionRepository = transactionRepository,
             deleteTransaction = deleteTransaction,
-            findAccount = findAccount,
             getTopUsedCategoryIds = getTopUsedCategoryIds,
             clock = fixedClock,
             zone = TimeZone.of("Asia/Karachi"),

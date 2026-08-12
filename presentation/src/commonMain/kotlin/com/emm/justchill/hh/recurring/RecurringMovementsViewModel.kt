@@ -2,8 +2,8 @@ package com.emm.justchill.hh.recurring
 
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.recurring.DeleteRecurringMovementUseCase
-import com.emm.domain.recurring.GetAllRecurringMovementDetailsUseCase
 import com.emm.domain.recurring.GetRecurringMonthlyTotalsUseCase
+import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.RecurringMovementId
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class RecurringMovementsViewModel(
-    getAllDetails: GetAllRecurringMovementDetailsUseCase,
+    recurringMovementRepository: RecurringMovementRepository,
     private val getTotals: GetRecurringMonthlyTotalsUseCase,
     private val deleteRecurring: DeleteRecurringMovementUseCase,
 ) : MviViewModel<RecurringMovementsUiState, RecurringMovementsIntent, RecurringMovementsEffect>() {
@@ -23,7 +23,7 @@ class RecurringMovementsViewModel(
     init {
         // Single allWithDetails() subscription — totals are derived in-memory from the same list
         // (Decision 2: no second DB query / Flow to keep consistent with the row data).
-        getAllDetails()
+        recurringMovementRepository.allWithDetails()
             .onEach { list ->
                 val activeItems = list
                     .filter { it.isActive }

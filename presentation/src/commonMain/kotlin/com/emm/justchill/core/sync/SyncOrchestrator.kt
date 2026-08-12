@@ -4,9 +4,9 @@ import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.shared.error.DomainException
-import com.emm.domain.sync.ObservePendingSyncCountUseCase
 import com.emm.domain.sync.SyncDataUseCase
 import com.emm.domain.sync.SyncLogger
+import com.emm.domain.sync.SyncRepository
 import com.emm.justchill.core.preferences.AppPreferences
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -60,7 +60,7 @@ import kotlin.time.Duration.Companion.seconds
  *
  * @param syncData            serialized push+pull use case.
  * @param observeSession      session-status flow from auth port.
- * @param observePendingCount pending-row count across all tables.
+ * @param syncRepository      source of the pending-row count across all tables.
  * @param signOut             sign-out use case; called only on Unauthorized.
  * @param prefs               SharedPreferences adapter; persists last-synced-at per user.
  * @param externalScope       application-lifetime [CoroutineScope]; owns all launched jobs.
@@ -74,7 +74,7 @@ import kotlin.time.Duration.Companion.seconds
 class SyncOrchestrator(
     private val syncData: SyncDataUseCase,
     private val observeSession: ObserveSessionUseCase,
-    private val observePendingCount: ObservePendingSyncCountUseCase,
+    private val syncRepository: SyncRepository,
     private val signOut: SignOutUseCase,
     private val prefs: AppPreferences,
     private val externalScope: CoroutineScope,
@@ -190,7 +190,7 @@ class SyncOrchestrator(
         launchResilientTrigger("writes") {
             observeSession().flatMapLatest { sessionStatus ->
                 if (sessionStatus is SessionStatus.Authenticated) {
-                    observePendingCount()
+                    syncRepository.observePendingCount()
                 } else {
                     flowOf(0L)
                 }
