@@ -158,22 +158,29 @@ fun ProfileScreen(
 
         SectionHeader(text = "Respaldo")
         ProfileGroup {
-            ProfileRow(
+            ProfileRowWithTrailing(
                 icon = Icons.Outlined.FileDownload,
                 label = "Exportar mi data",
-                meta = if (state.op == ProfileOp.Exporting) "Exportando…" else "Guardar como archivo",
+                // "Preparando…": covers only the JSON generation. The SAF write that follows
+                // (ProfileEntries.kt's ExportReady -> platform.requestExport) runs after `op`
+                // already reset, so a label claiming "Exportando…" here would outlive its own scope.
+                meta = if (state.op == ProfileOp.Exporting) "Preparando…" else "Guardar como archivo",
                 metaIsPrimary = true,
+                enabled = state.op == ProfileOp.None,
                 onClick = { if (state.op == ProfileOp.None) onExportClick() },
+                trailing = { ChevronTrailing(enabled = state.op == ProfileOp.None) },
             )
             HairlineDivider()
-            ProfileRow(
+            ProfileRowWithTrailing(
                 icon = Icons.Outlined.FileUpload,
                 label = "Importar respaldo",
                 meta = if (state.op == ProfileOp.Importing) "Importando…" else "Reemplaza todo",
                 metaIsPrimary = false,
+                enabled = state.op == ProfileOp.None,
                 // Confirm before the file picker: by the time a file is chosen the user has
                 // already decided, and this is the only irreversible action left unguarded.
                 onClick = { if (state.op == ProfileOp.None) showImportDialog = true },
+                trailing = { ChevronTrailing(enabled = state.op == ProfileOp.None) },
             )
         }
 
@@ -318,7 +325,7 @@ private fun AccountSection(
                         },
                     )
                     HairlineDivider()
-                    ProfileRow(
+                    ProfileRowWithTrailing(
                         icon = Icons.Outlined.Shield,
                         label = "Cerrar sesión",
                         meta = if (state.op == ProfileOp.SigningOut) {
@@ -327,10 +334,12 @@ private fun AccountSection(
                             "Tus datos siguen en este teléfono"
                         },
                         metaIsPrimary = false,
+                        enabled = state.op == ProfileOp.None,
                         onClick = { if (state.op == ProfileOp.None) onSignOutClick() },
+                        trailing = { ChevronTrailing(enabled = state.op == ProfileOp.None) },
                     )
                     HairlineDivider()
-                    ProfileRow(
+                    ProfileRowWithTrailing(
                         icon = Icons.Outlined.Delete,
                         label = "Eliminar cuenta",
                         meta = if (state.op == ProfileOp.DeletingAccount) {
@@ -339,9 +348,11 @@ private fun AccountSection(
                             "Borra tu cuenta y tus datos en la nube"
                         },
                         metaIsPrimary = false,
+                        enabled = state.op == ProfileOp.None,
                         onClick = {
                             if (state.op == ProfileOp.None) showDeleteAccountDialog = true
                         },
+                        trailing = { ChevronTrailing(enabled = state.op == ProfileOp.None) },
                     )
                 }
             }
@@ -397,14 +408,21 @@ private fun ProfileRow(icon: ImageVector, label: String, meta: String, metaIsPri
         meta = meta,
         metaIsPrimary = metaIsPrimary,
         onClick = onClick,
-        trailing = {
-            Icon(
-                imageVector = Icons.Outlined.ChevronRight,
-                contentDescription = null,
-                tint = LocalEmmColors.current.textTertiary,
-                modifier = Modifier.size(16.dp),
-            )
-        },
+        trailing = { ChevronTrailing(enabled = true) },
+    )
+}
+
+// Kept separate from ProfileRow's default parameter list on purpose: LongParameterList caps
+// composables at 5 params (config/detekt/detekt.yml), and ProfileRowWithTrailing already carries
+// the `enabled` lever for the few rows that need it (docs/sync/AUDIT.md §8, candidate 4).
+@Composable
+private fun ChevronTrailing(enabled: Boolean) {
+    val colors = LocalEmmColors.current
+    Icon(
+        imageVector = Icons.Outlined.ChevronRight,
+        contentDescription = null,
+        tint = if (enabled) colors.textTertiary else colors.textDisabled,
+        modifier = Modifier.size(16.dp),
     )
 }
 
@@ -419,6 +437,9 @@ private fun ProfileRowWithTrailing(
     trailing: @Composable () -> Unit,
     // When non-null, overrides the default meta text color derived from [metaIsPrimary].
     metaColor: Color? = null,
+    // Dims icon/label/meta to `colors.textDisabled` — the same token EmmButton/OutlinedCta use for
+    // their disabled state. Purely visual; callers still own whether onClick actually fires.
+    enabled: Boolean = true,
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -447,12 +468,12 @@ private fun ProfileRowWithTrailing(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        IconTileSmall(icon = icon)
+        IconTileSmall(icon = icon, tint = if (enabled) colors.textSecondary else colors.textDisabled)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
                 style = type.bodyL.copy(fontWeight = FontWeight.W500),
-                color = colors.textPrimary,
+                color = if (enabled) colors.textPrimary else colors.textDisabled,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -463,7 +484,11 @@ private fun ProfileRowWithTrailing(
                 lineHeight = 18.sp,
                 fontFamily = InterFontFamily,
                 fontWeight = FontWeight.W400,
-                color = metaColor ?: if (metaIsPrimary) colors.textSecondary else colors.textTertiary,
+                color = if (enabled) {
+                    metaColor ?: if (metaIsPrimary) colors.textSecondary else colors.textTertiary
+                } else {
+                    colors.textDisabled
+                },
             )
         }
         trailing()
@@ -471,7 +496,7 @@ private fun ProfileRowWithTrailing(
 }
 
 @Composable
-private fun IconTileSmall(icon: ImageVector) {
+private fun IconTileSmall(icon: ImageVector, tint: Color = LocalEmmColors.current.textSecondary) {
     val colors = LocalEmmColors.current
     Box(
         contentAlignment = Alignment.Center,
@@ -483,7 +508,7 @@ private fun IconTileSmall(icon: ImageVector) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = colors.textSecondary,
+            tint = tint,
             modifier = Modifier.size(17.dp),
         )
     }

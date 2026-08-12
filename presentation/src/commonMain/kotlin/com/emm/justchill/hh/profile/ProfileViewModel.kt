@@ -103,6 +103,10 @@ class ProfileViewModel(
      * guard is shared, and must not grow a per-op branch.
      */
     private fun launchOp(op: ProfileOp, onError: (DomainException) -> ProfileEffect, block: suspend () -> Unit) {
+        // Near-unreachable on Android by hand: all four entry points also gate on `state.op` in
+        // ProfileScreen.kt, so only a sub-frame double-dispatch race reaches this. Keep it anyway —
+        // those Compose guards are per-platform, this is the shared `:presentation` backstop, and
+        // iOS slice S9 consumes this ViewModel with none of them.
         if (currentState.op != ProfileOp.None) {
             sendEffect(ProfileEffect.Notify(ProfileMessage.OperationInProgress))
             return
