@@ -7,7 +7,7 @@ import kotlinx.datetime.TimeZone
 
 class GetPendingRecurringMovementsUseCase(
     private val repository: RecurringMovementRepository,
-    private val timeZone: TimeZone = TimeZone.currentSystemDefault(),
+    private val timeZone: TimeZone,
 ) {
 
     /**

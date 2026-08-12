@@ -20,12 +20,11 @@ import kotlin.time.Clock
  *
  * [zone] is here to answer one question — what today's local date is. The bound it produces
  * carries no zone at all.
+ *
+ * Neither [clock] nor [zone] has a default: a window that starts wherever the machine happens to be
+ * is a window no test can pin, and a caller that meant to say so can still pass `Clock.System`.
  */
-fun startOfDayDaysAgo(
-    days: Int,
-    clock: Clock = Clock.System,
-    zone: TimeZone = TimeZone.currentSystemDefault(),
-): String {
+fun startOfDayDaysAgo(days: Int, clock: Clock, zone: TimeZone): String {
     val today = clock.now().toLocalDateTime(zone).date
     return today.minus(days, DateTimeUnit.DAY).toString()
 }

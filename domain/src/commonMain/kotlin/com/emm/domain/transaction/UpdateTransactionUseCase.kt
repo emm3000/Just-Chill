@@ -7,8 +7,8 @@ import kotlin.time.Clock
 
 class UpdateTransactionUseCase(
     private val repository: TransactionRepository,
-    private val clock: Clock = Clock.System,
-    private val zone: TimeZone = TimeZone.currentSystemDefault(),
+    private val clock: Clock,
+    private val zone: TimeZone,
 ) {
 
     /**

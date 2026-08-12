@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.UtcOffset
 import kotlinx.datetime.asTimeZone
 import org.junit.Test
@@ -31,7 +32,14 @@ class GetHomeDataUseCaseTest {
     private val transactionRepository = mockk<TransactionRepository>()
     private val getPendingRecurringMovements = mockk<GetPendingRecurringMovementsUseCase>()
 
-    private val useCase = GetHomeDataUseCase(transactionRepository, getPendingRecurringMovements)
+    // Stated, not inherited: the use case takes no defaults, so the suite names the instant its
+    // default month window is derived from. 16 May 2026 at UTC — the day the fixtures below carry.
+    private val useCase = GetHomeDataUseCase(
+        transactionRepository,
+        getPendingRecurringMovements,
+        fixedClock("2026-05-16T12:34:56Z"),
+        TimeZone.UTC,
+    )
 
     private fun tx(
         id: String,
@@ -154,7 +162,7 @@ class GetHomeDataUseCaseTest {
         every { repo.fetchAllWithCategoryInRange(capture(startSlot), capture(endSlot)) } returns flowOf(emptyList())
         every { pendingUc(any()) } returns flowOf(emptyList())
 
-        GetHomeDataUseCase(repo, pendingUc, fixedClock).invoke().first()
+        GetHomeDataUseCase(repo, pendingUc, fixedClock, TimeZone.UTC).invoke().first()
 
         // Half-open day bounds, no timezone anywhere: the window is the month, spelled out.
         assertEquals("2026-05-01", startSlot.captured)

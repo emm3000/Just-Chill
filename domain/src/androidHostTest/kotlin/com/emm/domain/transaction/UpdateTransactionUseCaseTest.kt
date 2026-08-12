@@ -26,7 +26,16 @@ import kotlin.time.Instant
 class UpdateTransactionUseCaseTest {
 
     private val repository = mockk<TransactionRepository>()
-    private val useCase = UpdateTransactionUseCase(repository)
+
+    // Stated, not inherited. The use case takes no defaults, so "now" is a fact of this suite:
+    // 09:00 on 11 August 2026 in Lima. The stored March dates below are past against it.
+    private val lima = TimeZone.of("America/Lima")
+    private val today = LocalDate(2026, Month.AUGUST, 11)
+    private val clock = object : Clock {
+        override fun now(): Instant = LocalDateTime(today, LocalTime(9, 0)).toInstant(lima)
+    }
+
+    private val useCase = UpdateTransactionUseCase(repository, clock, lima)
 
     private val storedOccurredAt = LocalDateTime(2026, Month.MARCH, 3, 21, 47, 33)
 
@@ -122,15 +131,8 @@ class UpdateTransactionUseCaseTest {
 
     @Test
     fun `update should reject moving a transaction into the future and persist nothing`() = runTest {
-        val lima = TimeZone.of("America/Lima")
-        val today = LocalDate(2026, Month.AUGUST, 11)
-        val clock = object : Clock {
-            override fun now(): Instant = LocalDateTime(today, LocalTime(9, 0)).toInstant(lima)
-        }
-        val guarded = UpdateTransactionUseCase(repository, clock, lima)
-
         val ex = assertFailsWith<DomainException.ValidationError> {
-            guarded(oldTransaction, anyUpdate.copy(occurredAt = LocalDateTime(2026, Month.AUGUST, 12, 0, 0)))
+            useCase(oldTransaction, anyUpdate.copy(occurredAt = LocalDateTime(2026, Month.AUGUST, 12, 0, 0)))
         }
 
         assertEquals(ValidationCode.DateInTheFuture, ex.code)
@@ -141,15 +143,9 @@ class UpdateTransactionUseCaseTest {
     fun `update accepts a transaction stamped later today than the clock reads`() = runTest {
         // The Edit path carries the original hour over, so this is the ordinary case for a
         // movement recorded in the evening and edited the next morning — not a future date.
-        val lima = TimeZone.of("America/Lima")
-        val today = LocalDate(2026, Month.AUGUST, 11)
-        val clock = object : Clock {
-            override fun now(): Instant = LocalDateTime(today, LocalTime(9, 0)).toInstant(lima)
-        }
-        val guarded = UpdateTransactionUseCase(repository, clock, lima)
         coEvery { repository.update(any(), any()) } just Runs
 
-        guarded(oldTransaction, anyUpdate.copy(occurredAt = LocalDateTime(today, LocalTime(23, 0))))
+        useCase(oldTransaction, anyUpdate.copy(occurredAt = LocalDateTime(today, LocalTime(23, 0))))
 
         coVerify(exactly = 1) { repository.update(any(), any()) }
     }

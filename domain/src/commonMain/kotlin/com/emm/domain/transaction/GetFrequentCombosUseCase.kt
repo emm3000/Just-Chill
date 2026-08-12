@@ -6,8 +6,8 @@ import kotlin.time.Clock
 
 class GetFrequentCombosUseCase(
     private val transactionStatsRepository: TransactionStatsRepository,
-    private val clock: Clock = Clock.System,
-    private val zone: TimeZone = TimeZone.currentSystemDefault(),
+    private val clock: Clock,
+    private val zone: TimeZone,
 ) {
     suspend operator fun invoke(
         type: TransactionType,

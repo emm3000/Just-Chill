@@ -10,8 +10,8 @@ import kotlin.time.Clock
 class CreateTransactionUseCase(
     private val transactionRepository: TransactionRepository,
     private val uniqueIdProvider: UniqueIdProvider,
-    private val clock: Clock = Clock.System,
-    private val zone: TimeZone = TimeZone.currentSystemDefault(),
+    private val clock: Clock,
+    private val zone: TimeZone,
 ) {
 
     /**

@@ -18,8 +18,8 @@ import kotlin.time.Clock
 class GetHomeDataUseCase(
     private val transactionRepository: TransactionRepository,
     private val getPendingRecurringMovements: GetPendingRecurringMovementsUseCase,
-    private val clock: Clock = Clock.System,
-    private val zone: TimeZone = TimeZone.currentSystemDefault(),
+    private val clock: Clock,
+    private val zone: TimeZone,
 ) {
 
     // The zone goes to `current` as well as to `today` below. Both answer the same question —

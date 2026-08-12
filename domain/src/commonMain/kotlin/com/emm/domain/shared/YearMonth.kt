@@ -56,7 +56,15 @@ data class YearMonth(val year: Int, val month: Month) : Comparable<YearMonth> {
     )
 
     companion object {
-        fun current(clock: Clock = Clock.System, timeZone: TimeZone = TimeZone.currentSystemDefault()): YearMonth {
+        /**
+         * The month it currently is for a user at [timeZone], read off [clock].
+         *
+         * Neither parameter has a default, and that is the point. "Which month is it" is a question
+         * about a person, not about the machine the code runs on; a default here would answer it
+         * from the device without the caller ever saying so, and every ambient date read the app
+         * used to make ultimately arrived at this function.
+         */
+        fun current(clock: Clock, timeZone: TimeZone): YearMonth {
             val today: LocalDateTime = clock.now().toLocalDateTime(timeZone)
             return YearMonth(year = today.year, month = today.month)
         }
@@ -67,8 +75,11 @@ data class YearMonth(val year: Int, val month: Month) : Comparable<YearMonth> {
          * The month an INSTANT falls in, as read in [timeZone]. The only callers are the ones that
          * genuinely hold an instant — `createdAt` and friends. A transaction's own occurrence is
          * not one of them; it already knows its calendar month without being asked where it is.
+         *
+         * [timeZone] is required for the same reason as in [current]: an instant has no month until
+         * somebody says where it is being read.
          */
-        fun of(epochMillis: Long, timeZone: TimeZone = TimeZone.currentSystemDefault()): YearMonth =
+        fun of(epochMillis: Long, timeZone: TimeZone): YearMonth =
             of(Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(timeZone).date)
 
         /**

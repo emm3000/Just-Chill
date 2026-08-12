@@ -29,7 +29,17 @@ class CreateTransactionUseCaseTest {
 
     private val repository = mockk<TransactionRepository>()
     private val idProvider = mockk<UniqueIdProvider>()
-    private val useCase = CreateTransactionUseCase(repository, idProvider)
+
+    // Stated, not inherited. The use case takes no defaults, so "now" is a fact of this suite:
+    // 09:00 on 11 August 2026 in Lima. Every date below is read against it, including the ones
+    // the future-date guard rejects.
+    private val lima = TimeZone.of("America/Lima")
+    private val today = LocalDate(2026, Month.AUGUST, 11)
+    private val clock = object : Clock {
+        override fun now(): Instant = LocalDateTime(today, LocalTime(9, 0)).toInstant(lima)
+    }
+
+    private val useCase = CreateTransactionUseCase(repository, idProvider, clock, lima)
 
     private val occurredAt = LocalDateTime(2026, Month.AUGUST, 10, 21, 47, 33)
 
@@ -106,17 +116,10 @@ class CreateTransactionUseCaseTest {
 
     @Test
     fun `create should reject a date in the future and persist nothing`() = runTest {
-        val lima = TimeZone.of("America/Lima")
-        val today = LocalDate(2026, Month.AUGUST, 11)
-        val clock = object : Clock {
-            override fun now(): Instant = LocalDateTime(today, LocalTime(9, 0)).toInstant(lima)
-        }
-        val guarded = CreateTransactionUseCase(repository, idProvider, clock, lima)
-
         every { idProvider.id } returns "id"
 
         val ex = assertFailsWith<DomainException.ValidationError> {
-            guarded(anyInsert.copy(occurredAt = LocalDateTime(2026, Month.AUGUST, 12, 0, 0)))
+            useCase(anyInsert.copy(occurredAt = LocalDateTime(2026, Month.AUGUST, 12, 0, 0)))
         }
 
         assertEquals(ValidationCode.DateInTheFuture, ex.code)
@@ -126,17 +129,10 @@ class CreateTransactionUseCaseTest {
     @Test
     fun `create accepts a movement stamped later today than the clock reads`() = runTest {
         // The rule compares days. 23:00 today is not the future at 09:00 today.
-        val lima = TimeZone.of("America/Lima")
-        val today = LocalDate(2026, Month.AUGUST, 11)
-        val clock = object : Clock {
-            override fun now(): Instant = LocalDateTime(today, LocalTime(9, 0)).toInstant(lima)
-        }
-        val guarded = CreateTransactionUseCase(repository, idProvider, clock, lima)
-
         every { idProvider.id } returns "id"
         coEvery { repository.create(any()) } just Runs
 
-        guarded(anyInsert.copy(occurredAt = LocalDateTime(today, LocalTime(23, 0))))
+        useCase(anyInsert.copy(occurredAt = LocalDateTime(today, LocalTime(23, 0))))
 
         coVerify(exactly = 1) { repository.create(any()) }
     }
