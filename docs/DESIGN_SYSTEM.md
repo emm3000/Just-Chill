@@ -1,6 +1,6 @@
 # JustChill — Design System
 
-> v0.1 · Living document. Every token here is the source of truth; implementations in `ui-android/src/commonMain/kotlin/com/emm/justchill/core/theme/` must mirror it.
+> v0.1 · Living document. Every token here is the source of truth; implementations in `ui-android/src/androidMain/kotlin/com/emm/justchill/core/theme/` must mirror it.
 
 ---
 
@@ -528,7 +528,7 @@ Two atoms used together on the Reporte screen.
   - `motion.short` = 200ms (button feedback, micro-interactions).
   - `motion.medium` = 300ms (sheet open, nav transitions, AnimatedVisibility).
   - `motion.long` = 500ms (rare — onboarding intros, hero entry).
-- Bottom nav hide/show on secondary screens: 300ms enter / 250ms exit (already implemented in `hh/shared/AppNavHost.kt`).
+- Bottom nav hide/show on secondary screens: 300ms enter / 250ms exit (already implemented in `ui-android/src/androidMain/kotlin/com/emm/justchill/hh/shared/AppNavHost.kt`).
 - All motion can be disabled if `Settings.Global.ANIMATOR_DURATION_SCALE = 0`.
 
 ---
@@ -547,7 +547,7 @@ Non-negotiable floor:
 
 ## 11 · Naming convention (Kotlin tokens)
 
-When implementing in `ui-android/src/commonMain/kotlin/com/emm/justchill/core/theme/`:
+When implementing in `ui-android/src/androidMain/kotlin/com/emm/justchill/core/theme/`:
 
 ```kotlin
 object EmmColors {
@@ -601,10 +601,10 @@ Not references:
 
 ## 13 · Roadmap (implementation order)
 
-Aligned with ROADMAP_V1.md sprints. The design system grows as each
-sprint lands its screen.
+Aligned with the sprints in `docs/archive/ROADMAP_V1.md` — all ten steps below landed, and that
+roadmap is archived. Kept as the order the system grew in, not as a plan.
 
-1. **Foundations layer** — `Color.kt`, `Type.kt`, add `Spacing.kt`, `Radii.kt`. Import Inter font. (Already in place — verify against §2-5 before S1.)
+1. **Foundations layer** — `Color.kt`, `Type.kt`, `EmmSpacing.kt`, `EmmRadii.kt`. Import Inter font. (Already in place — verify against §2-5 before S1.)
 2. **Core components** — Button variants, TextInput, ListItem (transaction row), Card. (Mostly in place — verify before S1.)
 3. **`SeeTransactionsScreen`** — exercises ListItem + headers + empty state. (Done.)
 4. **`HomeScreen`** — exercises amount.hero, balance hero, month navigation chevrons (added in S1 / US-09).
@@ -617,9 +617,17 @@ sprint lands its screen.
 
 Each step ends with a commit that updates this doc if the implementation forced a token change.
 
-> **Not in this roadmap**: any Auth / Login / Register screen. The app
-> has been local-only since the migration that removed Supabase/Ktor/auth.
-> References to auth in earlier drafts of this doc are legacy.
+> **Auth screens exist and this section used to deny it.** It said "Not in this roadmap: any Auth /
+> Login / Register screen. The app has been local-only since the migration that removed
+> Supabase/Ktor/auth." [ADR 001](adr/001-reverse-local-only-to-local-first-optional-sync.md)
+> reversed that: the app is local-**first** with opt-in Supabase sync, and `AuthScreen.kt`,
+> the CUENTA block in `ProfileScreen.kt` and Google sign-in all ship today.
+>
+> The now-archived `docs/archive/AUTH_SYNC_UI_BLUEPRINT.md` flagged this exact contradiction as its
+> deviation #7 and it went unactioned for months, which is why it is spelled out here rather than
+> quietly deleted. That blueprint is the screen-by-screen map of the auth/sync UI as built; the
+> tokens it should be measured against are the ones in this doc. Auth has no section of its own
+> here yet — that is the real gap.
 
 ---
 

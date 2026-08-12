@@ -30,8 +30,12 @@ declaration becomes a lie.
 UiState + Intent + Effect + `toUi` mappers) and one Koin module in `hh/di/`; pure helpers and
 `UiStrings` sit in `hh/shared/`.
 
-`androidMain/` and `iosMain/` hold only platform actuals plus `KoinIos.kt` — the iOS entry point
-(`initKoin`, `iosPlatformModule`, and one typed resolver per Swift-facing ViewModel).
+`androidMain/` holds one actual, `core/sync/ResumeEvents.android.kt`. `iosMain/` holds its
+counterpart, `KoinIos.kt` — the iOS entry point (`initKoin`, `iosPlatformModule`, and one typed
+resolver per Swift-facing ViewModel) — and, unlike `androidMain`, two ordinary port implementations
+that Android satisfies from `:androidApp` instead: `PrintlnSyncLogger` for `SyncLogger` and
+`UnavailableGoogleSignInLauncher` for the still-deferred iOS Google sign-in. Both are bound in
+`iosPlatformModule`.
 
 ## Framework / SKIE
 

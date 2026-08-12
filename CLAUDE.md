@@ -49,7 +49,9 @@ There is no `:domain:test` and no `connectedDevDebugAndroidTest`; both died with
 - Two product flavors on dimension `tier` (`:androidApp` only):
   - `dev` — `applicationIdSuffix = ".dev"`.
   - `prod` — release signing via `keystore.properties`, Firebase Crashlytics (dev disables
-    collection via manifest meta-data; Firebase Analytics is NOT used, only declared in the catalog).
+    collection via manifest meta-data). Firebase Analytics is not used and is **not** declared
+    either — the catalog holds only `firebase-bom` and `firebase-crashlytics`, both consumed in
+    `androidApp/build.gradle.kts`.
 
 ## Architecture
 
@@ -129,8 +131,12 @@ tests in `:data`, not on the default gate). Both are documented where they live.
 
 ## Tooling Versions
 
-Kotlin `2.4.0` · AGP `9.2.1` · Gradle wrapper `9.5.1` · Koin BOM `4.2.1` · SQLDelight `2.3.2` ·
-Compose BOM `2026.05.01` · detekt `2.0.0-alpha.3` · Supabase BOM `3.6.0`.
+Kotlin `2.4.10` · AGP `9.3.1` · Gradle wrapper `9.7.0` · Koin BOM `4.2.2` · SQLDelight `2.3.2` ·
+Compose BOM `2026.06.01` · detekt `2.0.0-alpha.6` · Supabase BOM `3.7.0`.
+
+Seven of these eight drifted before 2026-08-11, so do not trust this line over the source: the
+versions live in `gradle/libs.versions.toml` (AGP under the `androidApplication` key) and the
+wrapper in `gradle/wrapper/gradle-wrapper.properties`.
 
 Compose Multiplatform is **gone**: `:ui-android` renders on Google's Compose under the BOM, and the
 CMP Gradle plugin is applied nowhere. `:presentation` still uses JetBrains' multiplatform

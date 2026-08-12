@@ -111,8 +111,9 @@ adb shell screencap -p /sdcard/sc.png && adb pull /sdcard/sc.png home1.png
 
 ## Ícono de Play Store
 
-Ya existe: `app/src/prod/ic_launcher_first-playstore.png` (512×512).
-Usa ese — no hay que regenerar.
+Ya existe: `androidApp/src/prod/ic_launcher_first-playstore.png` (512×512).
+Usa ese — no hay que regenerar. (El módulo `:app` pasó a llamarse `:androidApp` en la migración KMP;
+hay una copia equivalente en `androidApp/src/dev/`.)
 
 ## Notas estratégicas
 

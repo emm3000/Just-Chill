@@ -12,17 +12,20 @@ Run once per clone.
 
 | Hook | What it does | Skip with |
 |---|---|---|
-| `pre-push` | Runs detekt over every source set that holds code (~40s warm). Blocks the push on any new finding (one not in `config/detekt/baseline-*.xml`). | `git push --no-verify` |
+| `pre-push` | Runs `./gradlew qualityGate` — detekt over every source set that holds code, the JVM host test suites, dev lint, and (on macOS) the iOS compile. Blocks the push on any new finding, one not in `config/detekt/baseline-*.xml`. | `git push --no-verify` |
 
-The hook runs these five tasks:
+The hook runs exactly one command:
 
 ```bash
-./gradlew detektMainAndroid                           # KMP modules: commonMain + androidMain, with type resolution
-./gradlew detektIosMainSourceSet                      # KMP modules: iosMain, no type resolution (Native has none)
-./gradlew :androidApp:detektMain                      # androidApp, all variants, with type resolution
-./gradlew :ui-android:detektAndroidHostTestSourceSet  # ui-android host tests
-./gradlew :data:detektAndroidDeviceTestSourceSet      # data instrumented tests
+./gradlew --quiet --console=plain qualityGate
 ```
+
+It used to hold its own list of five detekt tasks and no tests at all. That list drifted from the
+three GitHub workflows and from `docs/kmp/ORCHESTRATION.md`, and none of the four was a superset of
+the others. The gate is now defined once, in
+`build-logic/src/main/kotlin/com/emm/buildlogic/QualityGateConventionPlugin.kt`, and this hook runs
+exactly what CI runs. **Change the plugin, not the callers** — that is the whole point of there
+being one definition. The task list it expands to is documented in the plugin's KDoc.
 
 ## Why not plain `./gradlew detekt`
 

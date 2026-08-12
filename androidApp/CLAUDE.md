@@ -1,10 +1,13 @@
 # :androidApp — CLAUDE.md
 
-Thin Android entry point. Since the KMP migration, **the UI, ViewModels and Koin wiring live in
-`:ui-android`** — read `ui-android/CLAUDE.md` before adding a feature. Almost nothing belongs here.
+Thin Android entry point. Almost nothing belongs here. Since the S1 extraction the split is two
+layers, not one: **the ViewModels, the MVI core and the whole Koin graph live in `:presentation`**,
+and only the Compose UI lives in `:ui-android`. Read `presentation/CLAUDE.md` before adding a
+feature, `ui-android/CLAUDE.md` before adding a screen.
 
 Root package: `com.emm.justchill`. `minSdk = 28`, `compileSdk = 37`.
-Depends on `:ui-android` (and transitively `:domain`, `:data`).
+Depends on `:ui-android`, `:domain` and `:data` — the last two **directly**, not transitively,
+because `AndroidPlatformModule` constructs the SQLDelight driver itself.
 
 ## What actually lives here
 
@@ -12,7 +15,9 @@ Depends on `:ui-android` (and transitively `:domain`, `:data`).
 MainActivity.kt                        edgeToEdge + setContent { AppNavHost() }
 EmmApp.kt                              Application: startKoin + bootstrapAppGraph
 core/AndroidPlatformModule.kt          the injected platformModule
-core/DefaultDispatcher.kt              DispatchersProvider actual
+core/DefaultDispatcher.kt              Android impl of :presentation's DispatchersProvider
+                                       interface — Koin-bound, NOT an expect/actual
+core/CrashReportingSyncLogger.kt       SyncLogger sink → Crashlytics (iOS binds a println one)
 core/platform/CurrentActivityHolder.kt
 hh/auth/ActivityGoogleSignInLauncher.kt + GoogleCredentialClient.kt
 components/EmmAmountChill.kt + EmmComponentsPreview.kt   (Android-only @Preview surface)
@@ -33,11 +38,15 @@ nothing belongs in them anymore.
 - `GoogleSignInLauncher` (+ `GoogleCredentialClient`)
 - `appVersion` / `googleServerClientId` — named `String`s from `BuildConfig`
 - `DispatchersProvider`, `CurrentActivityHolder`
+- `SyncLogger` → `CrashReportingSyncLogger` (Crashlytics is Android-only; iOS binds
+  `PrintlnSyncLogger` in `KoinIos.kt`)
 
 `EmmApp` calls `startKoin { modules(appModules(androidPlatformModule) + experiencesModule) }` then
 `bootstrapAppGraph(koin)`. `startKoin` can't be shared — it needs `androidContext()` /
 `androidLogger()` from koin-android. A new **feature** module is registered in `appModules()` in
-`ui-android/commonMain/core/AppGraph.kt`, **not** here.
+`presentation/src/commonMain/kotlin/com/emm/justchill/core/AppGraph.kt`, **not** here — and its
+ViewModel goes into `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`, which is the only mechanical guard
+against a missing binding. It is not in `:ui-android`: that module has no `commonMain` at all.
 
 ## Product flavors
 
@@ -49,8 +58,9 @@ Dimension `tier`:
 
 Crashlytics is declared for all variants, but `src/dev/AndroidManifest.xml` sets
 `firebase_crashlytics_collection_enabled=false`, which keeps the privacy policy's "build the dev
-flavor for a telemetry-free app" claim true. Firebase **Analytics is not used** — the catalog entry
-`firebase-analytics` is an orphan.
+flavor for a telemetry-free app" claim true. Firebase **Analytics is not used**, and contrary to what
+this file used to say it is not declared either: the catalog holds only `firebase-bom` and
+`firebase-crashlytics`, and both are consumed in `build.gradle.kts`. There is no orphan to remove.
 
 `versionCode` is the git commit count, `versionName` the latest **release** tag (`git describe
 --match "v[0-9]*"` — the filter is load-bearing, the repo is full of non-release tags like
@@ -61,13 +71,14 @@ flavor for a telemetry-free app" claim true. Firebase **Analytics is not used** 
 - `./gradlew :androidApp:testDevDebugUnitTest`
 - `MainDispatcherRule` at `androidApp/src/test/kotlin/com/emm/justchill/MainDispatcherRule.kt` —
   **use it in every ViewModel test that touches `viewModelScope`**.
-- **The MockK ViewModel tests live here, not in `ui-android`**, even though the ViewModels themselves
-  are in commonMain: they sit in the same package (`hh/home/HomeViewModelTest.kt`, etc.) and rely on
-  MockK's JVM engine. That placement is deliberate — keep it unless you move the whole suite.
+- **The MockK ViewModel tests live here, not in `:presentation`**, even though the ViewModels
+  themselves are in `presentation/src/commonMain`: they sit in the same package
+  (`hh/home/HomeViewModelTest.kt`, etc.) and rely on MockK's JVM engine. That placement is
+  deliberate — keep it unless you move the whole suite.
 - No instrumented tests: `androidApp/src/androidTest/` does not exist.
 
 ## Anything UI
 
-Screens, ViewModels, navigation, theme, MVI base classes, feature DI — all in `:ui-android`.
-If you find yourself adding a composable here, it is either a `@Preview` host or it is in the
-wrong module.
+Screens, navigation and theme are in `:ui-android`; ViewModels, MVI base classes and feature DI are
+one layer further down, in `:presentation`. If you find yourself adding a composable here, it is
+either a `@Preview` host or it is in the wrong module.

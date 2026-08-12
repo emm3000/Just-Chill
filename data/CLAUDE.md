@@ -6,14 +6,19 @@ optional auth (`auth/`) and multi-device sync (`sync/`) implementations.
 
 Root package: `com.emm.data.<entity>`. `minSdk = 26`. Depends on `:domain` only.
 
-Almost everything lives in `commonMain`. `androidMain` / `iosMain` hold exactly three
-`expect/actual` pairs — do not add a fourth without a real platform reason:
+Almost everything lives in `commonMain`. Only three concerns are platform-split, and only **two** of
+them are genuine `expect/actual` pairs — do not add a third without a real platform reason:
 
-| File | Why it needs a platform actual |
+| File | Why it is platform-split |
 |---|---|
-| `DatabaseDriver` | `AndroidSqliteDriver` vs `NativeSqliteDriver` (+ `DefaultCategorySeed` on iOS) |
-| `shared/Dispatchers.kt` | `Dispatchers.IO` is JVM-only; absent in commonMain |
-| `shared/SqliteExceptions.kt` | `SQLiteException` / `SQLiteConstraintException` are Android types |
+| `DatabaseDriver` | `AndroidSqliteDriver` vs `NativeSqliteDriver`. **Not** an `expect/actual` pair, and structurally cannot be: Android's `provideSqlDriver` takes a `Context` and iOS's takes nothing, so the signatures cannot match. They are two independent platform-only files, each picked by its own Koin module (+ `DefaultCategorySeed.ios.kt`, iOS-only, because there is no `onCreate` hook to seed from). |
+| `shared/Dispatchers.kt` | `expect val ioDispatcher` — `Dispatchers.IO` is JVM-only, absent in commonMain. |
+| `shared/SqliteExceptions.kt` | Two `expect fun`s — `SQLiteException` / `SQLiteConstraintException` are Android types. |
+
+Those three `expect` declarations are also why `:data:detektMainAndroid` reports nine compiler
+errors: detekt analyses commonMain and androidMain as one unit, so it sees each `expect` and its
+`actual` together. Three errors per pair, and the same effect gives `:presentation` three. Tracked
+in `docs/PROGRESS.md`; it does not fail the gate.
 
 ## Layer conventions
 
