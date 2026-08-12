@@ -111,6 +111,23 @@ class DeleteUserAccountUseCaseTest {
     }
 
     /**
+     * The step this whole change most needed to make visible: the `Unauthorized("No authenticated
+     * session")` throw inside [DeleteUserAccountUseCase.resolveAuthenticatedUserId] used to be
+     * indistinguishable from every other silent no-op. The step name proves it broke at session
+     * resolve, not at one of the three steps after it, and the original exception must still reach
+     * the caller unchanged.
+     */
+    @Test
+    fun `NotAuthenticated session logs the session resolve step and rethrows Unauthorized unchanged`() = runTest {
+        every { authRepository.sessionStatus } returns
+            flowOf(SessionStatus.Initializing, SessionStatus.NotAuthenticated)
+
+        val thrown = assertFailsWith<DomainException.Unauthorized> { useCase() }
+
+        verify(exactly = 1) { logger.warn(match { it.contains("session resolve") }, thrown) }
+    }
+
+    /**
      * `CancellationException` (the user leaving the screen) must never be logged as a deletion
      * failure — logging it would misreport a clean cancellation as a broken step.
      */

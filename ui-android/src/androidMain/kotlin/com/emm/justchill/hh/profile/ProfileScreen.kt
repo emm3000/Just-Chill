@@ -161,19 +161,19 @@ fun ProfileScreen(
             ProfileRow(
                 icon = Icons.Outlined.FileDownload,
                 label = "Exportar mi data",
-                meta = "Guardar como archivo",
+                meta = if (state.op == ProfileOp.Exporting) "Exportando…" else "Guardar como archivo",
                 metaIsPrimary = true,
-                onClick = onExportClick,
+                onClick = { if (state.op == ProfileOp.None) onExportClick() },
             )
             HairlineDivider()
             ProfileRow(
                 icon = Icons.Outlined.FileUpload,
                 label = "Importar respaldo",
-                meta = "Reemplaza todo",
+                meta = if (state.op == ProfileOp.Importing) "Importando…" else "Reemplaza todo",
                 metaIsPrimary = false,
                 // Confirm before the file picker: by the time a file is chosen the user has
                 // already decided, and this is the only irreversible action left unguarded.
-                onClick = { if (state.op != ProfileOp.Importing) showImportDialog = true },
+                onClick = { if (state.op == ProfileOp.None) showImportDialog = true },
             )
         }
 
@@ -321,9 +321,13 @@ private fun AccountSection(
                     ProfileRow(
                         icon = Icons.Outlined.Shield,
                         label = "Cerrar sesión",
-                        meta = "Tus datos siguen en este teléfono",
+                        meta = if (state.op == ProfileOp.SigningOut) {
+                            "Cerrando sesión…"
+                        } else {
+                            "Tus datos siguen en este teléfono"
+                        },
                         metaIsPrimary = false,
-                        onClick = onSignOutClick,
+                        onClick = { if (state.op == ProfileOp.None) onSignOutClick() },
                     )
                     HairlineDivider()
                     ProfileRow(
@@ -336,7 +340,7 @@ private fun AccountSection(
                         },
                         metaIsPrimary = false,
                         onClick = {
-                            if (state.op != ProfileOp.DeletingAccount) showDeleteAccountDialog = true
+                            if (state.op == ProfileOp.None) showDeleteAccountDialog = true
                         },
                     )
                 }

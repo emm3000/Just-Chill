@@ -49,16 +49,16 @@ class DeleteUserAccountUseCase(
     // delete_account RPC would re-upsert rows the server just wiped (stateless JWT + no FK to
     // auth.users + RLS uid claim still matching). See SyncMutex for the full rationale.
     suspend operator fun invoke() = syncMutex.withLock {
-        val userId = withStepLogging(STEP_SESSION_RESOLVE) { resolveAuthenticatedUserId() }
+        val userId = withStepLogging("session resolve") { resolveAuthenticatedUserId() }
 
         // Step 1: remote delete + local sign-out. On failure, local data is untouched.
-        withStepLogging(STEP_REMOTE_DELETE) { authRepository.deleteAccount() }
+        withStepLogging("remote delete") { authRepository.deleteAccount() }
 
         // Step 2: revert owned local rows to anonymous-local (userId = NULL, syncState = Pending).
-        withStepLogging(STEP_UNCLAIM) { claimLocalDataRepository.unclaimAll(userId) }
+        withStepLogging("unclaim") { claimLocalDataRepository.unclaimAll(userId) }
 
         // Step 3: clear stale pull-cursor and last-synced-at timestamp for this user.
-        withStepLogging(STEP_CURSOR_CLEAR) { syncCursorStore.clear(userId) }
+        withStepLogging("cursor clear") { syncCursorStore.clear(userId) }
     }
 
     /**
@@ -108,10 +108,5 @@ class DeleteUserAccountUseCase(
          * shared [SyncMutex] instead of holding it for the process lifetime.
          */
         val SESSION_RESOLVE_TIMEOUT = 10.seconds
-
-        const val STEP_SESSION_RESOLVE = "session resolve"
-        const val STEP_REMOTE_DELETE = "remote delete"
-        const val STEP_UNCLAIM = "unclaim"
-        const val STEP_CURSOR_CLEAR = "cursor clear"
     }
 }

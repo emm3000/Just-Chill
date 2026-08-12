@@ -206,10 +206,15 @@ private val VALIDATION_AUTH_CODES: Map<AuthErrorCode, ValidationCode> = mapOf(
  * [SessionRequiredException] maps to [DomainException.Unauthorized] here, which diverges from
  * `DefaultSyncRepository.toSyncDomainException` (`DefaultSyncRepository.kt:157`), where the same
  * exception maps to [DomainException.NetworkUnavailable] because it can only mean "session not
- * ready yet" on that path. On the auth path there is no equivalent readiness gate, so the same
- * exception is a real authorization failure. The divergence is deliberate, not a bug: unifying it
- * would require the sync path to sign the user out on a transient postgrest race. Tracked as a
- * follow-up in `docs/PROGRESS.md`; the sync mapper is not changed by this commit.
+ * ready yet" on that path. The delete path does gate on the session leaving
+ * [com.emm.domain.auth.SessionStatus.Initializing] before this call (`DeleteUserAccountUseCase.kt:95`),
+ * but it does not additionally call `observeSession.awaitInitialization()` the way
+ * `DefaultSyncRepository.currentUserId()` does (`DefaultSyncRepository.kt:125`) — the guard against
+ * the Kotlin/Native race documented at `DefaultSyncRepository.kt:119-124`, where postgrest reads the
+ * JWT synchronously from a session `StateFlow` that is populated asynchronously. That race is still
+ * open on the delete path, so this mapping can surface it as a credentials error instead of
+ * something retryable. Tracked as a follow-up in `docs/PROGRESS.md`; the sync mapper is not changed
+ * by this commit.
  */
 internal fun Throwable.toAuthDomainException(): DomainException = when (this) {
     is AuthRestException -> VALIDATION_AUTH_CODES[errorCode]?.let { validationCode ->

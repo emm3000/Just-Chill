@@ -286,28 +286,36 @@ class ProfileViewModelTest {
         }
 
     @Test
-    fun `ExportRequested re-entry guard — second export while first in flight is a no-op`() = runTest(testDispatcher) {
-        val gate = CompletableDeferred<Unit>()
-        coEvery { backupRepository.exportToJson(any(), any()) } coAnswers {
-            gate.await()
-            ""
+    fun `ExportRequested re-fire while in flight emits OperationInProgress and does not re-invoke`() =
+        runTest(testDispatcher) {
+            val gate = CompletableDeferred<Unit>()
+            coEvery { backupRepository.exportToJson(any(), any()) } coAnswers {
+                gate.await()
+                ""
+            }
+
+            val vm = buildViewModel()
+            val effects = mutableListOf<ProfileEffect>()
+            val job = launch { vm.effect.collect { effects.add(it) } }
+
+            vm.onIntent(ProfileIntent.ExportRequested)
+            advanceUntilIdle() // suspended at gate — op == Exporting
+
+            assertEquals(ProfileOp.Exporting, vm.state.value.op)
+
+            vm.onIntent(ProfileIntent.ExportRequested)
+            advanceUntilIdle()
+
+            // exportData must still have been called exactly once
+            coVerify(exactly = 1) { backupRepository.exportToJson(any(), any()) }
+            assertTrue(
+                effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.OperationInProgress },
+                "Expected OperationInProgress notify not found in $effects",
+            )
+
+            gate.cancel()
+            job.cancel()
         }
-
-        val vm = buildViewModel()
-
-        vm.onIntent(ProfileIntent.ExportRequested)
-        advanceUntilIdle() // suspended at gate — op == Exporting
-
-        assertEquals(ProfileOp.Exporting, vm.state.value.op)
-
-        vm.onIntent(ProfileIntent.ExportRequested)
-        advanceUntilIdle()
-
-        // exportData must still have been called exactly once
-        coVerify(exactly = 1) { backupRepository.exportToJson(any(), any()) }
-
-        gate.cancel()
-    }
 
     // ── DeleteAccount tests ────────────────────────────────────────────────
 
