@@ -359,34 +359,14 @@ class ProfileViewModelTest {
         job.cancel()
     }
 
-    @Test
-    fun `DeleteAccount re-fire while in flight is ignored`() = runTest(testDispatcher) {
-        val gate = CompletableDeferred<Unit>()
-        coEvery { deleteUserAccount.invoke() } coAnswers { gate.await() }
-
-        val vm = buildViewModel()
-
-        vm.onIntent(ProfileIntent.DeleteAccount)
-        advanceUntilIdle() // first call is suspended at the gate
-        assertEquals(ProfileOp.DeletingAccount, vm.state.value.op, "op must be DeletingAccount while in flight")
-
-        vm.onIntent(ProfileIntent.DeleteAccount)
-        advanceUntilIdle()
-
-        coVerify(exactly = 1) { deleteUserAccount.invoke() }
-
-        gate.complete(Unit)
-        advanceUntilIdle()
-        assertEquals(ProfileOp.None, vm.state.value.op, "op must reset after the delete completes")
-    }
-
     /**
      * `docs/sync/AUDIT.md` §8, candidate 1: the `launchOp` guard used to return silently on a
      * confirmed re-entry — indistinguishable on screen from the delete_account RPC never firing at
-     * all. It now reports instead of swallowing.
+     * all. It now reports instead of swallowing, still invokes the use case exactly once, and
+     * resets `op` once the in-flight call completes.
      */
     @Test
-    fun `DeleteAccount re-fire while in flight emits OperationInProgress and does not re-invoke`() =
+    fun `DeleteAccount re-fire while in flight emits OperationInProgress, ignores the re-fire, and resets op`() =
         runTest(testDispatcher) {
             val gate = CompletableDeferred<Unit>()
             coEvery { deleteUserAccount.invoke() } coAnswers { gate.await() }
@@ -397,6 +377,7 @@ class ProfileViewModelTest {
 
             vm.onIntent(ProfileIntent.DeleteAccount)
             advanceUntilIdle() // first call is suspended at the gate
+            assertEquals(ProfileOp.DeletingAccount, vm.state.value.op, "op must be DeletingAccount while in flight")
 
             vm.onIntent(ProfileIntent.DeleteAccount)
             advanceUntilIdle()
@@ -407,7 +388,10 @@ class ProfileViewModelTest {
                 "Expected OperationInProgress notify not found in $effects",
             )
 
-            gate.cancel()
+            gate.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(ProfileOp.None, vm.state.value.op, "op must reset after the delete completes")
+
             job.cancel()
         }
 
