@@ -42,12 +42,17 @@ entries read it, and collapsing that is a separate change.
 ## Navigation
 
 `AppNavHost` on Google's navigation3, runtime **and** UI. Slice F had put the UI on the JetBrains
-CMP port so one host could drive Android and iOS; iOS left for SwiftUI, so the port went too. The
-explicit SavedState config stays load-bearing:
+CMP port so one host could drive Android and iOS; iOS left for SwiftUI, so the port went too — and
+so did slice F's explicit `SavedStateConfiguration`, which only ever existed because Kotlin/Native
+has no reflective serializer discovery. The host now calls the Android-only 1-arg
+`rememberNavBackStack(startRoute)`: `NavKeySerializer` stores each entry as its class name and
+re-resolves it with `Class.forName(name).kotlin.serializer()`, so there is no subtype registry to
+keep in sync.
 
-**Landmine:** every route the host can push MUST be registered in `NavSavedStateConfiguration.kt`,
-else `rememberNavBackStack` crashes on process-death restore — invisible to the compiler and the
-build gate. `NavSavedStateConfigurationTest` reflects over sealed `AppRoute` to catch it.
+**Landmine:** every route the host can push MUST be `@Serializable` (and so must its fields). An
+unserializable route crashes `rememberNavBackStack` on process-death restore and nowhere else —
+invisible to the compiler and the build gate. `RouteSerializationTest` reflects over sealed
+`AppRoute` and round-trips each route through that exact serializer pair to catch it.
 
 **Landmine (nav3 entry caching):** `NavEntry.content` closures are cached until the back stack
 changes. Host state an entry reads must arrive as `() -> T` accessors, never by value — see the
@@ -84,7 +89,7 @@ ever stutters, check compose compiler metrics before blaming the pattern.
 
 - `./gradlew :ui-android:testAndroidHostTest` — JVM host tests. `--rerun` is a **per-task** option:
   with several tasks in one invocation it forces only the task it follows.
-- Lives here: `AppNavigatorTest`, `NavSavedStateConfigurationTest`, `HighlightQuotedTest`. The Koin
+- Lives here: `AppNavigatorTest`, `RouteSerializationTest`, `HighlightQuotedTest`. The Koin
   graph test and the formatter/mapper suites belong to `:presentation`.
 
 ## Gate

@@ -121,8 +121,11 @@ tests in `:data`, not on the default gate). Both are documented where they live.
 - `run:` blocks take secrets through `env:`, never `${{ }}` spliced into the script text. Validate
   workflow edits with `actionlint` before pushing — it catches expression and input errors that a
   YAML parse cannot.
-- Every route the nav host can push MUST be registered in `NavSavedStateConfiguration.kt`
-  (commonMain), else `rememberNavBackStack` crashes on process-death restore. Invisible to the compiler.
+- Every route the nav host can push MUST be `@Serializable`. `:ui-android` is Android-only, so
+  `AppNavHost` uses the reflective 1-arg `rememberNavBackStack`, which re-resolves each entry with
+  `Class.forName(name).kotlin.serializer()` — miss the annotation and the app dies on process-death
+  restore and nowhere else, invisible to the compiler. `RouteSerializationTest` reflects over sealed
+  `AppRoute` and round-trips every route through that same serializer.
 
 ## Tooling Versions
 

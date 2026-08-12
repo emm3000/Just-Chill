@@ -181,12 +181,17 @@ review pass. Confirmed worth it on Slice 3 (DI was the single highest-risk spot)
   nothing to regress. Device process-death restore verified on both the spike and
   slice F. The 5 platform-divergent capabilities (export/import/share/email/privacy)
   live behind `expect/actual PlatformHostActions`.
-- **Nav-state landmine (now BOTH platforms):** since slice F, Android also uses the
-  2-arg `rememberNavBackStack(navSavedStateConfiguration, …)`. Every route the host
-  can push MUST be registered in `NavSavedStateConfiguration.kt` (commonMain), else
-  `rememberNavBackStack` crashes on process-death restore. K/N has no reflection
-  serializer discovery; Android's explicit config must stay complete too. Invisible
-  to the compiler + the Android compile gate — only process-death restore catches it.
+- **Nav-state landmine — REVERSED, the registry is gone.** Slice F had put Android on
+  the 2-arg `rememberNavBackStack(navSavedStateConfiguration, …)` and required every
+  route to be registered in `NavSavedStateConfiguration.kt`, because the ONE shared
+  host also ran on K/N, which has no reflection serializer discovery. ADR 005 sent
+  iOS to native SwiftUI and `:ui-android` went Android-only, so that host — and the
+  registry's only reason to exist — is gone. `AppNavHost` now takes the Android-only
+  1-arg `rememberNavBackStack(startRoute)` and resolves entries by JVM reflection.
+  What survives is the weaker obligation: every route MUST be `@Serializable`, still
+  invisible to the compiler + the compile gate, still only caught by process-death
+  restore — and now by `RouteSerializationTest`, which round-trips every sealed
+  `AppRoute` through the very serializer the host runs.
 - **Build.ID prefs bug FIXED** (`4d2e204`): the SharedPreferences file was named
   after `Build.ID` → wiped on every OS update. Now stable `justchill_prefs` +
   one-time migration. (Not a dedup slice; Android-only `CoreModule`.)
