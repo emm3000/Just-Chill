@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.SyncDisabled
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -47,8 +48,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.sync.SYNC_TEMPORARILY_DISABLED
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
@@ -59,7 +62,9 @@ import com.emm.justchill.hh.shared.SpanishDateFormat
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
-import androidx.compose.ui.tooling.preview.Preview
+
+/** Meta copy for the sync rows while [SYNC_TEMPORARILY_DISABLED] is on. Spanish, like all UI copy. */
+private const val SYNC_PAUSED_META = "Sincronización en pausa"
 
 @Composable
 fun ProfileScreen(
@@ -197,7 +202,12 @@ fun ProfileScreen(
                 ProfileRow(
                     icon = Icons.Outlined.Repeat,
                     label = "Sincronizar ahora",
-                    meta = if (state.isSyncing) "Sincronizando…" else "Push + Pull manual",
+                    // The tap is already a no-op (ProfileViewModel.syncNow returns early); say so.
+                    meta = when {
+                        SYNC_TEMPORARILY_DISABLED -> "$SYNC_PAUSED_META · este botón no hace nada"
+                        state.isSyncing -> "Sincronizando…"
+                        else -> "Push + Pull manual"
+                    },
                     metaIsPrimary = state.isSyncing,
                     onClick = onSyncNowClick,
                 )
@@ -210,6 +220,10 @@ fun ProfileScreen(
     }
 }
 
+// CyclomaticComplexMethod: this composable sat exactly on the limit before SYNC_TEMPORARILY_DISABLED
+// added a branch to each of its sync-facing decisions. Every one of those branches disappears when
+// the kill switch does — drop this suppression with it instead of restructuring around it.
+@Suppress("CyclomaticComplexMethod")
 @Composable
 private fun AccountSection(
     state: ProfileUiState,
@@ -241,7 +255,13 @@ private fun AccountSection(
                     ProfileRow(
                         icon = Icons.Outlined.Shield,
                         label = "Iniciar sesión",
-                        meta = "Sincroniza tus datos entre dispositivos",
+                        // Signing in no longer buys multi-device sync while the switch is on, so it
+                        // must not be promised here either.
+                        meta = if (SYNC_TEMPORARILY_DISABLED) {
+                            SYNC_PAUSED_META
+                        } else {
+                            "Sincroniza tus datos entre dispositivos"
+                        },
                         metaIsPrimary = false,
                         onClick = onSignInClick,
                     )
@@ -251,30 +271,49 @@ private fun AccountSection(
                     ProfileRowWithTrailing(
                         icon = Icons.Outlined.AccountCircle,
                         label = session.email ?: "Tu cuenta",
-                        meta = when (val row = state.syncRow) {
-                            SyncRowUi.Syncing -> "Sincronizando…"
-                            SyncRowUi.Failed -> "No se pudo sincronizar"
-                            is SyncRowUi.Idle -> syncStatusLabel(row.lastSyncedAtMillis)
+                        // While the kill switch is on the row must not report a status it cannot
+                        // have: no cycle runs, so `syncRow` would sit on a stale, flattering Idle.
+                        meta = if (SYNC_TEMPORARILY_DISABLED) {
+                            SYNC_PAUSED_META
+                        } else {
+                            when (val row = state.syncRow) {
+                                SyncRowUi.Syncing -> "Sincronizando…"
+                                SyncRowUi.Failed -> "No se pudo sincronizar"
+                                is SyncRowUi.Idle -> syncStatusLabel(row.lastSyncedAtMillis)
+                            }
                         },
                         metaIsPrimary = true,
-                        metaColor = if (state.syncRow is SyncRowUi.Failed) colors.danger else null,
+                        metaColor = when {
+                            SYNC_TEMPORARILY_DISABLED -> colors.warning
+                            state.syncRow is SyncRowUi.Failed -> colors.danger
+                            else -> null
+                        },
                         onClick = null,
                         trailing = {
-                            when (state.syncRow) {
-                                SyncRowUi.Syncing -> CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
-                                    strokeWidth = 2.dp,
-                                    color = colors.textTertiary,
-                                )
-
-                                SyncRowUi.Failed -> RetryPill(onClick = onSyncNowClick)
-
-                                is SyncRowUi.Idle -> Icon(
-                                    imageVector = Icons.Outlined.ChevronRight,
+                            if (SYNC_TEMPORARILY_DISABLED) {
+                                Icon(
+                                    imageVector = Icons.Outlined.SyncDisabled,
                                     contentDescription = null,
-                                    tint = colors.textTertiary,
+                                    tint = colors.warning,
                                     modifier = Modifier.size(16.dp),
                                 )
+                            } else {
+                                when (state.syncRow) {
+                                    SyncRowUi.Syncing -> CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp,
+                                        color = colors.textTertiary,
+                                    )
+
+                                    SyncRowUi.Failed -> RetryPill(onClick = onSyncNowClick)
+
+                                    is SyncRowUi.Idle -> Icon(
+                                        imageVector = Icons.Outlined.ChevronRight,
+                                        contentDescription = null,
+                                        tint = colors.textTertiary,
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                }
                             }
                         },
                     )

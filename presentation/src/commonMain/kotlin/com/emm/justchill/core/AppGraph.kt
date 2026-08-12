@@ -1,6 +1,7 @@
 package com.emm.justchill.core
 
 import com.emm.domain.auth.ClaimLocalDataOnAuthenticationUseCase
+import com.emm.justchill.core.sync.SYNC_TEMPORARILY_DISABLED
 import com.emm.justchill.core.sync.SyncOrchestrator
 import com.emm.justchill.hh.di.accountModule
 import com.emm.justchill.hh.di.appScopeQualifier
@@ -55,6 +56,13 @@ fun appModules(platformModule: Module): List<Module> = listOf(
 fun bootstrapAppGraph(koin: Koin) {
     val appScope = koin.get<CoroutineScope>(appScopeQualifier)
     val claimOnAuthentication = koin.get<ClaimLocalDataOnAuthenticationUseCase>()
+    // Deliberately NOT gated by SYNC_TEMPORARILY_DISABLED: claiming stamps the signed-in userId onto
+    // local rows — ownership, not transport — and never touches the network. Leaving it on keeps row
+    // ownership correct while sync is off, so flipping the switch back needs no catch-up pass. The
+    // rows it marks Pending are inert as long as nothing pushes.
     appScope.launch { claimOnAuthentication() }
-    koin.get<SyncOrchestrator>().start()
+    // Kill switch. Skipping start() launches no trigger (resume / sign-in / debounced writes) and no
+    // request consumer — and that consumer is the only caller of the private runSync(), so no cycle
+    // can reach the network. The single stays bound and lazily resolvable; only its loops are off.
+    if (!SYNC_TEMPORARILY_DISABLED) koin.get<SyncOrchestrator>().start()
 }

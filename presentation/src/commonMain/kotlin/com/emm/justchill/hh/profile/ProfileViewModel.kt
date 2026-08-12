@@ -11,6 +11,7 @@ import com.emm.domain.shared.backup.ExportDataUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.core.sync.SYNC_TEMPORARILY_DISABLED
 import com.emm.justchill.core.sync.SyncController
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
@@ -138,6 +139,9 @@ class ProfileViewModel(
     }
 
     private fun syncNow() {
+        // Kill switch: the manual path stops at its origin instead of enqueueing a request that no
+        // consumer exists to drain. See SyncKillSwitch.kt.
+        if (SYNC_TEMPORARILY_DISABLED) return
         syncController.requestSync(manual = true)
     }
 
