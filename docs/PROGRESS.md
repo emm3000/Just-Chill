@@ -343,7 +343,7 @@ que después se revirtieron.
 ## Track: local-first sync (APAGADO — en rediseño desde el 2026-08-12)
 
 **Apagado en producción** por kill switch (`SyncKillSwitch.kt:16`), con dos gates: `AppGraph.kt:67`
-no llama a `SyncOrchestrator.start()` y `ProfileViewModel.kt:144` corta el path manual. No se borró
+no llama a `SyncOrchestrator.start()` y `ProfileViewModel.kt:157` corta el path manual. No se borró
 nada — todo binding, test y clase del motor sigue cableado.
 
 Por qué: el push descartaba toda fila con un `userId` viejo mientras `countPending` las seguía

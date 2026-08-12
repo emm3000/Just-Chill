@@ -30,7 +30,7 @@ never authoritative.
 |---|---|
 | Kill switch | `SYNC_TEMPORARILY_DISABLED` — `presentation/.../core/sync/SyncKillSwitch.kt:16` |
 | Gate 1 | `core/AppGraph.kt:67` — `SyncOrchestrator.start()` never called, so no trigger and no request consumer; that consumer is the only caller of the private `runSync()` |
-| Gate 2 | `hh/profile/ProfileViewModel.kt:144` — manual path returns at its origin |
+| Gate 2 | `hh/profile/ProfileViewModel.kt:157` — manual path returns at its origin |
 | Not gated | `ClaimLocalDataOnAuthenticationUseCase` (`AppGraph.kt:59-63`) — stamps ownership, no network, so flipping back needs no catch-up |
 | Review | Judgment Day round 1: 0 SEVERE, 0 corrections, 1 SUGGESTION (`ProfileScreen.kt:233` suppression too wide). `qualityGate --rerun-tasks` green |
 
