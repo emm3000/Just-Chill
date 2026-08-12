@@ -1,32 +1,39 @@
 package com.emm.justchill.hh.shared
 
+import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.serialization.NavBackStackSerializer
+import androidx.navigation3.runtime.serialization.NavKeySerializer
 import com.emm.domain.category.CategoryType
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.PolymorphicSerializer
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import org.junit.Test
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
- * Guards the landmine documented in `NavSavedStateConfiguration.kt`: a route the nav host can push but
- * that nobody registered in [navSavedStateConfiguration]. Kotlin/Native has no reflective serializer
- * discovery, so such a route crashes `rememberNavBackStack` on process-death restore — a failure the
- * compiler, `assembleDevDebug` and the iOS compile all wave through.
+ * Guards the one invariant `AppNavHost`'s back stack depends on: every concrete [AppRoute] is
+ * `@Serializable` AND its serializer is reachable the way the Android reflection path reaches it.
+ *
+ * `rememberNavBackStack(startRoute)` — the Android-only 1-arg overload — persists the stack with
+ * `NavBackStackSerializer(elementSerializer = NavKeySerializer())`. `NavKeySerializer` writes
+ * `value::class.java.name` and reads it back through `Class.forName(name).kotlin.serializer()`, so a
+ * route that is not `@Serializable` (or whose fields are not) blows up on process-death restore and
+ * nowhere else — the compiler, `assembleDevDebug` and lint all wave it through. This test drives that
+ * exact serializer pair instead of a stand-in, so what passes here is what the host runs.
  *
  * The guard is automatic rather than a hand-copied list: [AppRoute] is sealed, so [concreteRoutesUnder]
  * enumerates the whole route set by reflection and the first test fails until a new route gets a sample.
  *
  * What this does NOT cover: the `SavedState`/`Bundle` encoder path that actually writes the back stack
- * (that needs Robolectric or a device). It covers the `serializersModule` lookup and the serializers it
- * hands back — and the documented crash IS a `serializersModule` lookup failure, so the gap is narrow.
+ * (that needs Robolectric or a device). [Json] stands in as the format. The failure mode this guards —
+ * an unresolvable or missing element serializer — is format-independent, so the gap is narrow.
  *
- * Lives in `androidHostTest` rather than `commonTest` because `KClass.sealedSubclasses` is JVM-only.
+ * Lives in `androidHostTest` rather than a shared source set because `KClass.sealedSubclasses` and the
+ * `Class.forName` path under test are both JVM-only. So is this module (ADR 005).
  */
-class NavSavedStateConfigurationTest {
+class RouteSerializationTest {
 
     @Test
     fun `every concrete route has a sample`() {
@@ -42,37 +49,21 @@ class NavSavedStateConfigurationTest {
         )
     }
 
-    // getPolymorphic(baseClass, value) is the exact lookup SavedState performs on restore, and it is
-    // still marked experimental. Opting in here keeps the test honest instead of asserting on a proxy.
-    @OptIn(ExperimentalSerializationApi::class)
     @Test
-    fun `every route is registered for NavKey polymorphism`() {
-        val serializersModule = navSavedStateConfiguration.serializersModule
+    fun `every route survives a round trip through the Android reflection serializer`() {
+        // The exact pair rememberNavBackStack(vararg NavKey) builds internally on Android.
+        val serializer: KSerializer<NavBackStack<NavKey>> =
+            NavBackStackSerializer(elementSerializer = NavKeySerializer())
 
         samples.forEach { (routeClass, route) ->
-            val name: String = routeClass.render()
-            assertNotNull(
-                serializersModule.getPolymorphic(NavKey::class, route),
-                "$name is not registered for NavKey polymorphism, so rememberNavBackStack will crash " +
-                    "on process-death restore. Add `subclass($name::class, $name.serializer())` to " +
-                    "navSavedStateConfiguration in NavSavedStateConfiguration.kt.",
-            )
-        }
-    }
-
-    @Test
-    fun `every route survives a polymorphic round trip`() {
-        val json = Json { serializersModule = navSavedStateConfiguration.serializersModule }
-        val serializer = PolymorphicSerializer(NavKey::class)
-
-        samples.forEach { (routeClass, route) ->
-            val encoded: String = json.encodeToString(serializer, route)
-            val decoded: NavKey = json.decodeFromString(serializer, encoded)
+            val encoded: String = Json.encodeToString(serializer, NavBackStack<NavKey>(route))
+            val decoded: NavBackStack<NavKey> = Json.decodeFromString(serializer, encoded)
 
             assertEquals(
-                route,
-                decoded,
-                "${routeClass.render()} does not survive a polymorphic round trip. Encoded as $encoded.",
+                listOf<NavKey>(route),
+                decoded.toList(),
+                "${routeClass.render()} does not survive the reflective NavKey round trip, so " +
+                    "rememberNavBackStack will fail on process-death restore. Encoded as $encoded.",
             )
         }
     }
