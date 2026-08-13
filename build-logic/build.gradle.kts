@@ -19,6 +19,11 @@ fun marker(plugin: Provider<PluginDependency>): String = plugin.get().run {
 dependencies {
     implementation(marker(libs.plugins.kotlin.multiplatform))
     implementation(marker(libs.plugins.android.kotlin.multiplatform.library))
+    // BuildInfoConventionPlugin configures ApplicationAndroidComponentsExtension, which the
+    // application plugin defines. The type used to arrive transitively through the KMP-library
+    // marker above — same AGP artifact, undeclared — so this build compiled against something it
+    // never asked for. Declared here, the compile classpath states what the code actually uses.
+    implementation(marker(libs.plugins.android.application))
     implementation(marker(libs.plugins.detekt))
 }
 
