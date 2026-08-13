@@ -295,6 +295,17 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   Dos de los trece migran con foreign keys ON — la configuración de iOS, la única bajo la que el
   orden de `4.sqm` importa: invertirlo (reconstruir antes de reparar) hace fallar exactamente esos
   dos y deja verdes a los otros once.
+  Ensayo extra sobre un archivo `.db` real (no un fixture): la base v4 del emulador, con sus 23
+  categorías y sus índices, migrada con `PRAGMA foreign_keys=ON` — sin error, `foreign_key_check`
+  vacío, conteos intactos, FK compuesta declarada y los 12 índices presentes.
+  **EL BACKUP NO ES RED COMPLETA PARA ESTA MIGRACIÓN.** `ExportPayloadDto`
+  (`data/.../backup/ExportPayloadDto.kt:15-22`) lleva `accounts`, `categories` y `transactions`, y
+  **no lleva `recurringMovements`** — verificado exportando desde la 2.4.0 en el emulador: el JSON
+  no tiene la clave. Pero `4.sqm:60-65` sí nullea `recurring_movements.categoryId`. O sea: la
+  categoría que pierda una plantilla recurrente **no está en ningún backup y no se puede recuperar**,
+  y hasta que alguien la re-asigne a mano cada confirmación mensual acuña un movimiento sin categoría.
+  Los movimientos recurrentes con el par mismatched tampoco se pueden CONTAR desde el backup, por lo
+  mismo. La única medición previa posible es a ojo, en la pantalla de recurrentes, antes de instalar.
 
 - [ ] **Editar un movimiento de una categoría borrada lo re-archiva bajo otra, sin que nadie lo elija.**
   `EditTransactionViewModel.resolveSelection` (`:109-112`) corta en `snapshot?.categoryId ?: return null`,
