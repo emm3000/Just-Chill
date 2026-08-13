@@ -554,6 +554,13 @@ class DefaultBackupRepositoryImportTest {
     /**
      * Builds a minimal valid JSON payload. Account IDs are sequential to ensure uniqueness.
      * Transaction accountId always references "acc-1" which is in the accounts list.
+     *
+     * **`schemaVersion` here must track [BACKUP_SCHEMA_VERSION].** This suite is what covers the
+     * current reader branch; the per-version fixtures frozen in `BackupV1CompatibilityTest` and
+     * `BackupV2CompatibilityTest` cover the old ones. Leaving a stale number here does not fail —
+     * the old branch still restores it — it just quietly moves every test in this file onto a frozen
+     * reader, which is how the current branch ends up with no coverage at all. The number is written
+     * out rather than interpolated so the next bump has to look at these bytes.
      */
     private fun buildPayloadJson(accounts: Int, categories: Int, transactions: Int): String {
         val accountsJson = (1..accounts).joinToString(",") { i ->

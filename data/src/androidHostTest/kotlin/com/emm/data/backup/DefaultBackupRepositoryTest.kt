@@ -94,6 +94,9 @@ class DefaultBackupRepositoryTest {
         val json = repository.exportToJson(exportedAt = 1_748_000_000_000L, appVersion = "1.0.0")
 
         val payload = Json.decodeFromString<ExportPayloadDto>(json)
+        // The literal, deliberately, and not BACKUP_SCHEMA_VERSION: asserting the constant against
+        // itself only says `encodeDefaults` works. This number is the one written into files other
+        // versions of the app have to read, so bumping it must cost a deliberate edit here.
         assertEquals(2, payload.schemaVersion)
         assertEquals(1_748_000_000_000L, payload.exportedAt)
         assertEquals("1.0.0", payload.appVersion)
