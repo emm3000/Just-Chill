@@ -293,6 +293,21 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   **Sin correr en device.** `MigrationV4ToV5Test` (13 tests, dos de ellos migrando con foreign keys ON — la configuración de iOS, la única bajo la que el orden de `4.sqm` importa) está escrito y compila, pero no había
   device conectado; corré `:data:connectedAndroidDeviceTest` antes de shipear esto.
 
+- [ ] **Editar un movimiento de una categoría borrada lo re-archiva bajo otra, sin que nadie lo elija.**
+  `EditTransactionViewModel.resolveSelection` (`:109-112`) corta en `snapshot?.categoryId ?: return null`,
+  así que ya no auto-selecciona cuando el movimiento nunca tuvo categoría. Pero la lista viene de
+  `categories.sq:all`, que filtra `deletedAt IS NULL`: un movimiento archivado bajo una categoría
+  **tombstoneada** tiene `storedId` no-nulo que no está en la lista, y cae en `?: list.firstOrNull()`.
+  Abrís un gasto viejo de "Café" (borrada) para corregirle la descripción, el picker muestra "Alquiler"
+  seleccionado, `recompute()` ve el cambio, habilita Guardar, y el guardado escribe `categoryId = alquiler`.
+  El vínculo que `DeleteCategoryUseCase` preserva **a propósito** (ver su KDoc, y `RecurringMovementFkTest:119-132`)
+  se pierde, y el monto queda atribuido a otra categoría en Tendencias.
+  Preexistente, no lo introdujo el FK compuesto. El fix del FK adoptó el principio correcto
+  ("una etiqueta que nadie eligió") y lo aplicó solo al caso `categoryId == null`; el límite quedó en
+  el lado equivocado, porque en los dos casos el usuario no tocó la categoría.
+  El otro branch —`changeTransactionType` sobre un movimiento que sí tenía categoría— es defendible:
+  ahí el usuario cambió el tipo a propósito.
+
 ### Deuda técnica
 
 - [ ] `SyncLogger` (`domain/.../sync/SyncLogger.kt`) está nombrado para el sync path, pero ya es el
