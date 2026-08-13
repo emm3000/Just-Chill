@@ -74,6 +74,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         // sync-event snackbars. Android binds SyncOrchestrator to SyncController; iOS binds it too.
         val syncController: SyncController = koinInject()
         val appVersion: String = koinInject(named("appVersion"))
+        // Full sha the APK was built from; the profile footer shows the first 7 and copies all 40.
+        val commitHash: String = koinInject(named("commitHash"))
 
         // First-launch Manifesto gate: show the manifesto once, then land on startTab on every
         // subsequent launch.
@@ -174,6 +176,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     profileEntries(
                         bindings = bindings,
                         appVersion = appVersion,
+                        commitHash = commitHash,
                         pendingImportJson = { pendingImportJson },
                         onImportHandled = { pendingImportJson = null },
                     )

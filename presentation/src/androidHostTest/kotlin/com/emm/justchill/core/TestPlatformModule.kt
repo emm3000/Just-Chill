@@ -26,10 +26,12 @@ import org.koin.dsl.onClose
  * SQLDelight schema on an in-memory JDBC driver, a real Settings store, a real Supabase client —
  * because the whole point is proving the production graph actually wires up, not that mocks do.
  *
- * ONE binding is deliberately absent: `DispatchersProvider`. `androidPlatformModule` binds it, but
- * its only consumer is the Android dev-flavor `experiencesModule`, which is appended by `:androidApp`
- * and is not part of `appModules()`. `iosPlatformModule` omits it for the same reason, so binding it
- * here would assert wiring that no shared consumer resolves.
+ * TWO bindings are deliberately absent, for the same reason: their consumers are not part of
+ * `appModules()`, so binding them here would assert wiring no shared consumer resolves.
+ *  - `DispatchersProvider` — `androidPlatformModule` binds it, but its only consumer is the Android
+ *    dev-flavor `experiencesModule`, appended by `:androidApp`. `iosPlatformModule` omits it too.
+ *  - `named("commitHash")` — Android-only, consumed by `AppNavHost` in `:ui-android` (the profile
+ *    footer). iOS is native SwiftUI and has no counterpart.
  */
 val testPlatformModule: Module = module {
 
