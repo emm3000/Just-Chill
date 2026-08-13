@@ -1,5 +1,6 @@
 package com.emm.justchill
 
+import com.emm.justchill.hh.profile.UNKNOWN_COMMIT_HASH
 import org.junit.Test
 import kotlin.test.assertTrue
 
@@ -15,9 +16,14 @@ import kotlin.test.assertTrue
  *
  * It asserts the SHAPE only. What the footer then MAKES of that shape — the abbreviation and the
  * "git could not answer" state — belongs to `commitHashUi()` in `:ui-android` and is asserted by
- * `CommitHashUiTest`, next to the constant that drives it. A second copy of that constant lived
- * here and was deleted: it could not fail without this test failing first, and it let the real
- * length change with both suites green.
+ * `CommitHashUiTest`, next to the constant that drives it.
+ *
+ * The fallback it compares against is `:ui-android`'s [UNKNOWN_COMMIT_HASH], the same declaration
+ * `commitHashUi()` classifies, reachable because `:androidApp` depends on `:ui-android`. It used to
+ * be a private literal here, a third copy of the word. Note what this pairing does and does not do:
+ * it asserts that whatever the generator wrote is a shape the footer can handle, and on a machine
+ * where git answers that branch is never the one taken. It is `CommitHashUiTest` that pins the
+ * sentinel's spelling.
  */
 class BuildInfoTest {
 
@@ -25,12 +31,8 @@ class BuildInfoTest {
     fun `commit hash is a full lowercase sha or the unknown fallback`() {
         val hash = BuildInfo.commitHash
         assertTrue(
-            hash == UNKNOWN || hash.matches(Regex("[0-9a-f]{40}")),
-            "BuildInfo.commitHash is neither a 40-char sha nor \"$UNKNOWN\": \"$hash\"",
+            hash == UNKNOWN_COMMIT_HASH || hash.matches(Regex("[0-9a-f]{40}")),
+            "BuildInfo.commitHash is neither a 40-char sha nor \"$UNKNOWN_COMMIT_HASH\": \"$hash\"",
         )
-    }
-
-    private companion object {
-        const val UNKNOWN = "unknown"
     }
 }

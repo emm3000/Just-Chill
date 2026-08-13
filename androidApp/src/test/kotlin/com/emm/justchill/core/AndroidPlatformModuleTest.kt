@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 /**
- * Guards the one binding in `androidPlatformModule` that nothing else can reach.
+ * Guards the `commitHash` binding in `androidPlatformModule`.
  *
  * `AppGraphKoinTest` (`:presentation`) builds `appModules(testPlatformModule)` and cannot see this
  * module at all — `androidPlatformModule` lives here, and `:presentation` does not depend on
@@ -18,6 +18,9 @@ import kotlin.test.assertNotNull
  * `named(COMMIT_HASH_QUALIFIER)` is resolved by `AppNavHost` in `:ui-android`, on every launch of
  * every build, before the first screen renders. Deleting the binding compiles clean, passes lint
  * and passes every other suite; it crashes the app at startup. This test is the net.
+ *
+ * It is a net for that one binding, not for the module. `DispatchersProvider` is equally invisible
+ * to `AppGraphKoinTest` and equally unasserted here; nothing below covers it.
  *
  * ### Why definitions and not resolution
  *

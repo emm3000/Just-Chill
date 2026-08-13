@@ -76,8 +76,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         val syncController: SyncController = koinInject()
         val appVersion: String = koinInject(named("appVersion"))
         // Full sha the APK was built from; the profile footer shows the first 7 and copies all 40.
-        // The qualifier is the shared constant, not a literal: androidPlatformModule binds it from
-        // :androidApp, and two literals let a rename on either side compile and crash at launch.
+        // androidPlatformModule (:androidApp) binds it under the same COMMIT_HASH_QUALIFIER
+        // declaration. Keep the constant here: no test observes this line, so a literal typed in
+        // its place compiles green and crashes at launch. Tracked in docs/PROGRESS.md.
         val commitHash: String = koinInject(named(COMMIT_HASH_QUALIFIER))
 
         // First-launch Manifesto gate: show the manifesto once, then land on startTab on every

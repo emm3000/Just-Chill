@@ -27,8 +27,15 @@ Cross-feature: `hh/shared/` (nav host, bottom bar, atoms), `core/theme/`, `compo
 
 ## DI
 
-None here. `appModules(platformModule)` / `bootstrapAppGraph` live in `:presentation`
-(`core/AppGraph.kt`); the Android platform module lives in `:androidApp`. A new feature registers
+No modules here. `appModules(platformModule)` / `bootstrapAppGraph` live in `:presentation`
+(`core/AppGraph.kt`); the Android platform module lives in `:androidApp`.
+
+One exception, and it is a qualifier, not a module: `COMMIT_HASH_QUALIFIER` (`hh/profile/CommitHashUi.kt`)
+is declared here and imported by `:androidApp`'s `AndroidPlatformModule`, so producer and consumer
+read one string. It sits in a feature package rather than in `:presentation`, where the DI lives —
+tracked in `docs/PROGRESS.md`.
+
+A new feature registers
 its Koin module in `:presentation`'s `appModules()`, never here — and its ViewModel goes into
 `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS` (now in `:presentation`'s androidHostTest).
 
@@ -92,7 +99,10 @@ ever stutters, check compose compiler metrics before blaming the pattern.
 - Lives here: `AppNavigatorTest`, `RouteSerializationTest`, `HighlightQuotedTest`,
   `CommitHashUiTest`. The Koin graph test and the formatter/mapper suites belong to
   `:presentation`. Pure UI logic gets a plain function next to the screen and a test here — that
-  is what `commitHashUi()` is, and why the constant behind it has no second copy in another module.
+  is what `commitHashUi()` is. Its sentinel still has a second copy in `build-logic`
+  (`GenerateBuildInfoTask.UNKNOWN_COMMIT`), which cannot be on the app's compile classpath;
+  `CommitHashUiTest` spells that word out so retyping `UNKNOWN_COMMIT_HASH` goes red, and nothing
+  catches the reverse.
 
 ## Gate
 

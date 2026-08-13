@@ -53,7 +53,7 @@ adding it buys tasks, not coverage (`QualityGateConventionPlugin`; item in `docs
 that string says "11 functions". The file is exempt at *any* size, forever. **Seven files
 hold that amnesty today**, at these non-preview top-level function counts against a threshold of 8:
 `SeeTransactionsScreen` 16, `HomeScreen` 16, `AddCategoryScreen` 13, `AccountsScreen` 11,
-`AddEditRecurringMovementScreen` 10, `ProfileScreen` 11, `RecurringMovementsScreen` 9. The baseline
+`AddEditRecurringMovementScreen` 10, `ProfileScreen` 12, `RecurringMovementsScreen` 9. The baseline
 stops new bleeding and creates **zero** pressure on old code, so the burn-down list lives in
 `docs/PROGRESS.md` — the baseline will never ask.
 
@@ -115,8 +115,8 @@ decomposition happens two ways here, both counting:
 - **Dedicated component packages** — `core/ui/atoms/` (20 files, the design system per
   `DESIGN_SYSTEM.md`), `hh/report/components/` (12), `com/emm/justchill/components/` (5 legacy
   `Emm*` widgets, *not* the design system), `hh/transaction/sheets/` (4),
-  `hh/transaction/components/` (2). **43 of the 108 `androidMain` Kotlin files** — files in a
-  component package over files in that one source set (`androidHostTest` holds the other 3).
+  `hh/transaction/components/` (2). **43 of the 109 `androidMain` Kotlin files** — files in a
+  component package over files in that one source set (`androidHostTest` holds another 4).
 - **Sibling files in the feature package** — `hh/profile/` (`DeleteAccountDialog`,
   `ImportBackupDialog`, `RetryPill`, …), `hh/recurring/` (three sheets) and `hh/seetransactions/`
   (`CategoryFilterSheet`, `InfinityScroll`) extract this way, without a `components/` directory.

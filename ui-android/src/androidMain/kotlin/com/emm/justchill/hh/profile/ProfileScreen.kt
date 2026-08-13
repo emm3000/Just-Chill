@@ -1,7 +1,6 @@
 package com.emm.justchill.hh.profile
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -605,7 +604,6 @@ private fun CopyableCommitRow(label: String, onCopyClick: () -> Unit) {
             fontSize = 12.sp,
             fontFamily = InterFontFamily,
             color = colors.textTertiary,
-            textAlign = TextAlign.Center,
         )
         Icon(
             imageVector = Icons.Outlined.ContentCopy,
