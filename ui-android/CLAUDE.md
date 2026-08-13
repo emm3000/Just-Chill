@@ -30,10 +30,9 @@ Cross-feature: `hh/shared/` (nav host, bottom bar, atoms), `core/theme/`, `compo
 No modules here. `appModules(platformModule)` / `bootstrapAppGraph` live in `:presentation`
 (`core/AppGraph.kt`); the Android platform module lives in `:androidApp`.
 
-One exception, and it is a qualifier, not a module: `COMMIT_HASH_QUALIFIER` (`hh/profile/CommitHashUi.kt`)
-is declared here and imported by `:androidApp`'s `AndroidPlatformModule`, so producer and consumer
-read one string. It sits in a feature package rather than in `:presentation`, where the DI lives —
-tracked in `docs/PROGRESS.md`.
+No exception either: the commit-hash contract used to live here as a `COMMIT_HASH_QUALIFIER` string
+and is now `:presentation`'s `core/CommitHash.kt`, bound and resolved by type. `AppNavHost` unwraps
+it at the injection point; `hh/profile/CommitHashUi.kt` keeps only the footer's presentation state.
 
 A new feature registers
 its Koin module in `:presentation`'s `appModules()`, never here — and its ViewModel goes into

@@ -37,15 +37,15 @@ nothing belongs in them anymore.
 - `SupabaseConfig`
 - `GoogleSignInLauncher` (+ `GoogleCredentialClient`)
 - `appVersion` / `googleServerClientId` — named `String`s from `BuildConfig`
-- `commitHash` — named `String` from the **generated** `BuildInfo`, not `BuildConfig`. Its only
-  consumer is `AppNavHost` in `:ui-android`, outside `appModules()`, so `AppGraphKoinTest` cannot
-  see it: `AndroidPlatformModuleTest` asserts the binding here instead — delete the `single` and
-  that test goes red. The qualifier is `:ui-android`'s `COMMIT_HASH_QUALIFIER`, imported by both
-  sites, so the two strings cannot differ. **Nothing checks the consumer still asks for it**: a
-  literal typed over `koinInject(named(...))` in `AppNavHost` compiles green and crashes at launch.
+- `CommitHash` — `:presentation`'s value type over the **generated** `BuildInfo`, not `BuildConfig`.
+  Bound and resolved **by type**, no qualifier: producer and consumer are in different modules, so a
+  named `String` was a contract two sites had to spell alike. Its only consumer is `AppNavHost` in
+  `:ui-android`, outside `appModules()`, so `AppGraphKoinTest` cannot see it —
+  `AndroidPlatformModuleTest` resolves it out of this module instead; deleting the `single` throws
+  `NoDefinitionFoundException` there (verified by mutation).
   The fallback word is a separate matter: `UNKNOWN_COMMIT_HASH` is not referenced anywhere under
   `androidApp/src/main`, only by `BuildInfoTest`, which asserts the shipped hash is that word or a
-  40-hex sha. Both gaps are in `docs/PROGRESS.md`.
+  40-hex sha. That gap is in `docs/PROGRESS.md`.
 - `DispatchersProvider`, `CurrentActivityHolder`
 - `SyncLogger` → `CrashReportingSyncLogger` (Crashlytics is Android-only; iOS binds
   `PrintlnSyncLogger` in `KoinIos.kt`)
