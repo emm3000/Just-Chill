@@ -6,7 +6,8 @@ import org.junit.Test
 import kotlin.test.assertEquals
 
 /**
- * The first tests build-logic has ever had, and they exist for one function.
+ * The first tests build-logic has ever had. Almost all of them exist for one function; the
+ * remaining one pins the spelling of [UNKNOWN_COMMIT], whose twin lives in another Gradle build.
  *
  * [normalizeCommitHash] is the only thing standing between `git rev-parse HEAD` and a Kotlin string
  * literal written into a generated file. Every other suite in the repo runs against code that is
@@ -18,6 +19,16 @@ import kotlin.test.assertEquals
  * depends on `:build-logic:test` explicitly (see [QualityGateConventionPlugin]).
  */
 class GenerateBuildInfoTaskTest {
+
+    @Test
+    fun `the sentinel is the exact word the app side spells out`() {
+        // build-logic is not on the app's compile classpath, so UNKNOWN_COMMIT and :ui-android's
+        // UNKNOWN_COMMIT_HASH cannot be one constant. This spells the word out rather than reading
+        // it, which is what makes retyping the constant fail here instead of at runtime, in a
+        // git-less build rendering a footer nobody is watching. CommitHashUiTest does the same on
+        // the consuming side, via its GENERATOR_SENTINEL.
+        assertEquals("unknown", UNKNOWN_COMMIT)
+    }
 
     @Test
     fun `a full lowercase sha passes through unchanged`() {

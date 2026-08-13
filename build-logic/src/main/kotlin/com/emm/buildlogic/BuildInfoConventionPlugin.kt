@@ -30,7 +30,7 @@ import org.gradle.kotlin.dsl.register
  * The KMP modules keep `kotlin.srcDir(taskProvider)` (see [IosSupabaseConfigConventionPlugin]):
  * that is the Kotlin Multiplatform extension, which AGP's source-set rule does not govern.
  *
- * ### Why `withPlugin` and not a plain `extensions.configure`
+ * ### Why `withPlugin`, and why it is followed by an assertion
  *
  * `ApplicationAndroidComponentsExtension` is registered by the application plugin, so configuring it
  * straight out of `apply()` reads whatever is registered at that instant — which made this plugin
@@ -39,6 +39,14 @@ import org.gradle.kotlin.dsl.register
  * androidApp/build.gradle.kts fails configuration with *"Extension of type
  * 'ApplicationAndroidComponentsExtension' does not exist"*. With `withPlugin` the block runs when
  * the application plugin arrives, and both orders generate `BuildInfo.kt` — both were built.
+ *
+ * Deferring costs the failure the eager call gave for free: on a module that is NOT an Android
+ * application the block simply never runs, so nothing is registered, nothing is generated, and the
+ * first thing anyone hears is `Unresolved reference: BuildInfo` from the Kotlin compiler. The
+ * `afterEvaluate` check below puts that failure back where it belongs — configuration of the module
+ * that misapplied the plugin — without taking the ordering fragility back. Same reason
+ * `variant.sources.kotlin` is asserted rather than null-safe-called: a variant with no Kotlin source
+ * container would otherwise register a generator whose output nothing compiles.
  *
  * The AGP application marker is declared in build-logic/build.gradle.kts for the same reason. The
  * type used to arrive transitively through the `android.kotlin.multiplatform.library` marker, so
@@ -57,7 +65,7 @@ import org.gradle.kotlin.dsl.register
 class BuildInfoConventionPlugin : Plugin<Project> {
 
     override fun apply(target: Project) = with(target) {
-        pluginManager.withPlugin("com.android.application") {
+        pluginManager.withPlugin(APPLICATION_PLUGIN) {
             // Read once, not once per variant: four execs would be four chances to disagree, and
             // the hash is a property of the checkout, not of the variant.
             val hash = gitCommitHash()
@@ -72,11 +80,25 @@ class BuildInfoConventionPlugin : Plugin<Project> {
                         description = "Generates BuildInfo.kt from the git commit HEAD points at."
                         commitHash.set(hash)
                     }
-                    variant.sources.kotlin?.addGeneratedSourceDirectory(
+                    val kotlinSources = checkNotNull(variant.sources.kotlin) {
+                        "Variant '${variant.name}' of $path has no Kotlin source container, so " +
+                            "the generated BuildInfo.kt would never be compiled. The " +
+                            "justchill.build.info plugin needs the Kotlin plugin on this module."
+                    }
+                    kotlinSources.addGeneratedSourceDirectory(
                         generate,
                         GenerateBuildInfoTask::outputDirectory,
                     )
                 }
+            }
+        }
+
+        afterEvaluate {
+            check(pluginManager.hasPlugin(APPLICATION_PLUGIN)) {
+                "The justchill.build.info plugin generates BuildInfo.kt through the Android " +
+                    "APPLICATION variant API, but $path never applied '$APPLICATION_PLUGIN', so " +
+                    "nothing was registered and no BuildInfo.kt exists. Apply it to an Android " +
+                    "application module or remove it from this build file."
             }
         }
     }
@@ -93,4 +115,8 @@ class BuildInfoConventionPlugin : Plugin<Project> {
             commandLine("git", "rev-parse", "HEAD")
         }.standardOutput.asText.get().trim()
     }.getOrDefault(GenerateBuildInfoTask.UNKNOWN_COMMIT)
+
+    private companion object {
+        const val APPLICATION_PLUGIN = "com.android.application"
+    }
 }

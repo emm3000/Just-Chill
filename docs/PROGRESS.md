@@ -256,12 +256,17 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [ ] `:ui-android:detektAndroidMainSourceSet` reporta **21** issues. Preexistente y deliberadamente
   fuera del gate: `detektMainAndroid` cubre los mismos archivos **con** type resolution, así que
   sumarlo serían más tareas y no más cobertura — el razonamiento está en `QualityGateConventionPlugin`.
-- [ ] `GenerateBuildInfoTask.UNKNOWN_COMMIT` es la tercera copia de la palabra `"unknown"` y
-  cambiarla ahí sigue sin poner en rojo nada. `CommitHashUiTest` fija el lado de `:ui-android`
-  escribiendo la palabra a mano; el lado del generador no lo puede fijar nadie, porque `build-logic`
-  no está en el compile classpath de la app y `GenerateBuildInfoTaskTest` **lee** la constante en vez
-  de deletrearla, así que se mueve con ella. Un test de build-logic no puede cerrar esta mitad.
-  La otra mitad **sí se cerró**: `build-logic` ya tiene source set de tests y cuelga de
+- [x] `GenerateBuildInfoTask.UNKNOWN_COMMIT` es la tercera copia de la palabra `"unknown"`, y ahora
+  **cada copia tiene su propio test que la deletrea**: `CommitHashUiTest` (`GENERATOR_SENTINEL`) fija
+  el lado de `:ui-android`, y `GenerateBuildInfoTaskTest.the sentinel is the exact word the app side
+  spells out` fija el del generador con un `assertEquals("unknown", UNKNOWN_COMMIT)`. La entrada
+  anterior decía que un test de build-logic "no puede cerrar esta mitad" porque `GenerateBuildInfoTaskTest`
+  **lee** la constante en vez de deletrearla — eso describía los tests que había, no un límite: un
+  test puede deletrear la palabra igual que lo hace el otro módulo. Sigue sin haber nada que **linkee**
+  las dos constantes (`build-logic` no está en el compile classpath de la app), así que cambiar la
+  palabra de verdad son cuatro ediciones: las dos constantes y los dos tests. Verificado por
+  mutación: escribir `"unknwon"` en `UNKNOWN_COMMIT` pone `:build-logic:test` en `FAILED`.
+  La otra mitad **también está cerrada**: `build-logic` ya tiene source set de tests y cuelga de
   `qualityGate`. `normalizeCommitHash` tiene ocho tests —sha válido, mayúsculas, newline final,
   whitespace alrededor, comillas/backslash/`$`/newline, sufijo `-dirty`, sha corto, vacío— y el gate
   los corre como `:build-logic:test` (`build.gradle.kts` raíz aplica `justchill.quality.gate` solo
@@ -281,14 +286,16 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 
 ### Docs y comentarios que afirman cosas falsas
 
-- [ ] `ui-android/src/androidMain/kotlin/com/emm/justchill/hh/shared/AppNavHost.kt:50-66` — diecisiete
+- [ ] `ui-android/src/androidMain/kotlin/com/emm/justchill/hh/shared/AppNavHost.kt:51-67` — diecisiete
   líneas de cabecera que describen un host que ya no existe. Las tres afirmaciones son falsas:
   no es un "single Compose Multiplatform nav host for both Android and iOS" (`:ui-android` solo
   tiene `androidMain` y `androidHostTest`); no corre sobre el port navigation3-UI de JetBrains
   (`ui-android/build.gradle.kts:50-52` dice que el port "lost its reason to exist" y que runtime y
   UI son de Google); y `PlatformHostActions + startTab` no están detrás de `expect/actual` — son
   una `interface` y un `val` planos en `hh/shared/PlatformHostActions.kt:39` y `:168`. Es código,
-  no doc: queda anotado acá y el archivo no se tocó.
+  no doc: queda anotado acá y **la cabecera sigue sin tocarse**. El archivo sí se tocó por otro
+  motivo (el import de `CommitHash` y el comentario del footer de commit, `:29` y `:78-85`), lo que
+  desplazó la cabecera de `:50-66` a `:51-67` — este pin se re-verifica en cada edición del archivo.
 - [ ] `docs/DESIGN_SYSTEM.md` §5 documenta 5 radios con otro esquema de nombres (`radius.0`,
   `radius.s` 6dp, `radius.m`, `radius.l`, `radius.full`); `EmmRadii.kt` ships **9** (`r0`, `rXS` 8dp,
   `rS` 10dp, `rM`, `rL`, `rXL`, `rXXL`, `rLTop`, `rFull`) y `rXS` —el que usa el footer de commit— no
@@ -409,10 +416,10 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   así que la fuga es de otro test de la misma JVM, no de este.
 - [x] Deps huérfanas en `libs.versions.toml`: **no quedan**. La entrada anterior decía "entre ellas
   `firebase-analytics`, declarada pero sin usar" y eso hoy es falso — el catálogo solo declara
-  `firebase-bom` y `firebase-crashlytics`, y las dos se usan en `androidApp/build.gradle.kts:214-215`.
+  `firebase-bom` y `firebase-crashlytics`, y las dos se usan en `androidApp/build.gradle.kts:217-218`.
   Los únicos alias que no aparecen en ningún `.gradle.kts` son `detekt-ktlint-wrapper` y
   `detekt-compose-rules`, y entran por `libs.library(...)` desde
-  `build-logic/.../DetektConventionPlugin.kt:41-42`.
+  `build-logic/.../DetektConventionPlugin.kt:42-43`.
 
 ### Infraestructura
 

@@ -6,7 +6,8 @@ plugins {
     // The KMP modules get these via justchill.kmp.library; this module applies them directly.
     id("justchill.detekt")
     id("justchill.quality.gate")
-    // Generates BuildInfo.kt (the commit HEAD points at) into the main source set.
+    // Generates BuildInfo.kt (the commit HEAD points at), once per variant, into a directory AGP
+    // owns and adds to that variant's Kotlin sources. There is no `main` source set involved.
     id("justchill.build.info")
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.services)
