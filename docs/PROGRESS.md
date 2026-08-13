@@ -355,18 +355,24 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [ ] La escritura al portapapeles del commit, el split short-en-pantalla/40-al-copiar y la rama
   `SDK_INT < TIRAMISU` del snackbar (`ProfileEntries.kt`) no tienen cobertura automática en ninguna
   tarea del gate. `commitHashUi()` sí la tiene; lo que la rodea, no.
-- [ ] Lo que `AppNavHost` **pide** no lo observa ningún test. `AndroidPlatformModuleTest` lee los
-  `mappings` del propio `androidPlatformModule`, así que ve el binding y nada de la petición del
-  consumidor: reemplazar `koinInject(named(COMMIT_HASH_QUALIFIER))` por un
-  literal escrito a mano compila, pasa el gate entero y revienta la app al arrancar (`AppNavHost.kt:82`).
-  Cerrarlo pide un
-  test de runtime de Compose que `:ui-android` hoy no tiene (no hay `androidTest` en el módulo, y el
-  host test es JVM puro).
-- [ ] `COMMIT_HASH_QUALIFIER` vive en un paquete de feature de UI (`hh/profile/CommitHashUi.kt`)
-  cuando `:presentation` —donde vive el DI del proyecto— es igual de visible para `:androidApp` y
-  para `:ui-android` (`ui-android/build.gradle.kts:38` declara `api(project(":presentation"))`, y
-  `AndroidPlatformModule.kt` ya consume `DispatchersProvider` y `SupabaseConfig` de ahí). El archivo
-  queda con dos razones para cambiar: el contrato de DI y el estado de presentación del footer.
+- [x] **El contrato productor/consumidor del commit hash ya no es un string.** `COMMIT_HASH_QUALIFIER`
+  se borró; `androidPlatformModule` bindea `CommitHash` (value class sobre `String`) y `AppNavHost`
+  lo pide por tipo (`koinInject<CommitHash>().value`). No queda ningún literal que escribir mal:
+  cualquier desacuerdo entre los dos sitios es un `unresolved reference` del compilador, no un crash
+  al arrancar. `AndroidPlatformModuleTest` pasó de leer los `mappings` del propio módulo a **resolver**
+  el tipo contra un `koinApplication { }`, o sea le hace a Koin la misma pregunta que `AppNavHost`;
+  borrar el `single` lo pone en rojo con `NoDefinitionFoundException` (verificado por mutación).
+  Lo que **no** cambió: sigue sin haber test que observe la línea 82 de `AppNavHost` en sí. Eso solo
+  importaría si alguien reescribiera esa línea para pedir *otro* tipo existente, que es un rewrite,
+  no un typo.
+- [x] **El contrato de DI salió del paquete de feature de UI.** Vive en
+  `presentation/src/commonMain/.../core/CommitHash.kt`, al lado de `SupabaseConfig` —
+  `:presentation` es visible para `:androidApp` y para `:ui-android`
+  (`ui-android/build.gradle.kts:38` declara `api(project(":presentation"))`). commonMain se exporta a
+  iOS como `JustChillKit` y un holder sobre `String` no arrastra Compose, `java.*` ni `android.*`:
+  `compileKotlinIosSimulatorArm64` y `linkDebugFrameworkIosSimulatorArm64` (SKIE) verdes.
+  `hh/profile/CommitHashUi.kt` queda con una sola razón para cambiar: el estado de presentación del
+  footer.
 - [ ] `CommitHashUi.Available.fullHash` no lo lee ningún código de producción: `ProfileScreen`
   consume solo `label`, y el camino del portapapeles copia el string inyectado crudo, no el valor
   clasificado. Hoy solo lo miran el `equals` de la data class y `CommitHashUiTest`.

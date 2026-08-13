@@ -1,53 +1,48 @@
 package com.emm.justchill.core
 
-import com.emm.justchill.hh.profile.COMMIT_HASH_QUALIFIER
+import com.emm.justchill.BuildInfo
 import org.junit.Test
-import org.koin.core.annotation.KoinInternalApi
-import org.koin.core.qualifier.named
+import org.koin.dsl.koinApplication
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 /**
- * Guards the `commitHash` binding in `androidPlatformModule`.
+ * Guards the [CommitHash] binding in `androidPlatformModule`.
  *
  * `AppGraphKoinTest` (`:presentation`) builds `appModules(testPlatformModule)` and cannot see this
  * module at all — `androidPlatformModule` lives here, and `:presentation` does not depend on
  * `:androidApp`. It therefore proves nothing about production wiring, which is why the
  * `commitHash` assertion it used to hold was a fixture checking itself.
  *
- * `named(COMMIT_HASH_QUALIFIER)` is resolved by `AppNavHost` in `:ui-android`, on every launch of
- * every build, before the first screen renders. Deleting the binding compiles clean, passes lint
- * and passes every other suite; it crashes the app at startup. This test is the net.
+ * `CommitHash` is resolved by `AppNavHost` in `:ui-android`, on every launch of every build, before
+ * the first screen renders. Deleting the binding compiles clean, passes lint and passes every other
+ * suite; it crashes the app at startup. This test is the net.
  *
  * It is a net for that one binding, not for the module. `DispatchersProvider` is equally invisible
  * to `AppGraphKoinTest` and equally unasserted here; nothing below covers it.
  *
- * ### Why definitions and not resolution
+ * ### Why only this binding is resolved
  *
- * This module binds the SQLDelight driver, `SharedPreferencesSettings`, the sign-in launcher and
- * `CurrentActivityHolder` — all of which need a real `Context`. Resolving the graph here would need
- * an Android runtime this JVM test does not have. Koin's declared mappings answer the only question
- * that matters ("is it bound, under this qualifier, as a String?") without constructing anything:
- * the `single { }` lambdas are never invoked.
+ * This module also binds the SQLDelight driver, `SharedPreferencesSettings`, the sign-in launcher
+ * and `CurrentActivityHolder` — all of which need a real `Context`. Koin builds `single { }`
+ * definitions lazily, so resolving [CommitHash] alone invokes that one lambda and leaves the
+ * Context-dependent ones untouched; a `koinApplication { }` never starts the global registry
+ * either. Resolving is what makes this test see what `AppNavHost` sees: it asks Koin the same
+ * question, by type, rather than reading this module's own declared mappings back to itself.
  */
-@OptIn(KoinInternalApi::class)
 class AndroidPlatformModuleTest {
 
     @Test
-    fun `androidPlatformModule declares the commit hash the nav host resolves at launch`() {
-        val definition = androidPlatformModule.mappings.values
-            .map { it.beanDefinition }
-            .firstOrNull { it.qualifier == named(COMMIT_HASH_QUALIFIER) }
+    fun `androidPlatformModule binds the commit hash the nav host resolves at launch`() {
+        val koin = koinApplication { modules(androidPlatformModule) }.koin
 
-        assertNotNull(
-            definition,
-            "androidPlatformModule binds nothing under named(\"$COMMIT_HASH_QUALIFIER\"). AppNavHost " +
-                "resolves it before the first screen renders, so the app crashes at launch.",
-        )
-        assertEquals(
-            String::class,
-            definition.primaryType,
-            "named(\"$COMMIT_HASH_QUALIFIER\") is bound, but not as a String — koinInject<String> fails.",
-        )
+        try {
+            assertEquals(
+                CommitHash(BuildInfo.commitHash),
+                koin.get<CommitHash>(),
+                "androidPlatformModule no longer produces the generated commit hash as a CommitHash.",
+            )
+        } finally {
+            koin.close()
+        }
     }
 }

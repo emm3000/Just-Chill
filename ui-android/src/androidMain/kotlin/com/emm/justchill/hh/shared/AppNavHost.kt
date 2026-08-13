@@ -26,6 +26,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.emm.justchill.core.CommitHash
 import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.sync.SyncController
 import com.emm.justchill.core.theme.EmmTheme
@@ -37,7 +38,6 @@ import com.emm.justchill.hh.auth.authEntries
 import com.emm.justchill.hh.category.categoryEntries
 import com.emm.justchill.hh.home.homeEntries
 import com.emm.justchill.hh.onboarding.onboardingEntries
-import com.emm.justchill.hh.profile.COMMIT_HASH_QUALIFIER
 import com.emm.justchill.hh.profile.profileEntries
 import com.emm.justchill.hh.recurring.recurringEntries
 import com.emm.justchill.hh.report.reportEntries
@@ -76,10 +76,10 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         val syncController: SyncController = koinInject()
         val appVersion: String = koinInject(named("appVersion"))
         // Full sha the APK was built from; the profile footer shows the first 7 and copies all 40.
-        // androidPlatformModule (:androidApp) binds it under the same COMMIT_HASH_QUALIFIER
-        // declaration. Keep the constant here: no test observes this line, so a literal typed in
-        // its place compiles green and crashes at launch. Tracked in docs/PROGRESS.md.
-        val commitHash: String = koinInject(named(COMMIT_HASH_QUALIFIER))
+        // androidPlatformModule (:androidApp) binds the CommitHash type this asks for. Unwrapped
+        // here, at the DI boundary: the type exists so producer and consumer cannot disagree, and
+        // everything downstream of this line is footer plumbing that only needs the characters.
+        val commitHash: String = koinInject<CommitHash>().value
 
         // First-launch Manifesto gate: show the manifesto once, then land on startTab on every
         // subsequent launch.

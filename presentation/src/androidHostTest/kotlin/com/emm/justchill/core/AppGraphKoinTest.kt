@@ -52,7 +52,7 @@ import kotlin.time.Instant
  * `androidPlatformModule` in `:androidApp`, `iosPlatformModule` in `iosMain` — are not on this
  * source set's classpath and are never loaded, so nothing in this file says anything about what
  * they bind. A binding only they carry is guarded where it lives: `AndroidPlatformModuleTest`
- * (`:androidApp`) does that for `named("commitHash")`, which `AppNavHost` resolves at launch. An
+ * (`:androidApp`) does that for [CommitHash], which `AppNavHost` resolves at launch. An
  * assertion written here against [testPlatformModule]'s own literal would only be the fixture
  * checking itself — that is exactly what this test used to do.
  */

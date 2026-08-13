@@ -31,10 +31,10 @@ import org.koin.dsl.onClose
  * and is not part of `appModules()`. `iosPlatformModule` omits it for the same reason, so binding it
  * here would assert wiring that no shared consumer resolves.
  *
- * `named("commitHash")` is absent for the same reason. It is resolved by `AppNavHost` in
- * `:ui-android`, outside `appModules()`, so binding it here would have asserted nothing about the
- * production binding in `androidPlatformModule` — a module this source set cannot even import.
- * That binding is guarded by `AndroidPlatformModuleTest` in `:androidApp`, where it lives.
+ * [CommitHash] is absent for the same reason. It is resolved by `AppNavHost` in `:ui-android`,
+ * outside `appModules()`, so binding it here would have asserted nothing about the production
+ * binding in `androidPlatformModule` — a module this source set cannot even import. That binding is
+ * guarded by `AndroidPlatformModuleTest` in `:androidApp`, where it lives.
  */
 val testPlatformModule: Module = module {
 

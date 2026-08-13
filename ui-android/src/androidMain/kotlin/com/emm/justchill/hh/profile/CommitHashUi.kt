@@ -1,19 +1,6 @@
 package com.emm.justchill.hh.profile
 
 /**
- * Koin qualifier for the full 40-char sha the build came from.
- *
- * A constant, not a literal at each site, because the two sites live in different Gradle modules:
- * `androidPlatformModule` (`:androidApp`) binds it and `AppNavHost` (this module) resolves it. Both
- * read this one declaration, so the two strings cannot differ.
- *
- * That is all it buys. Nothing checks that either site still reads it: swapping the
- * `koinInject(named(...))` argument in `AppNavHost` for a hand-typed literal compiles, passes every
- * suite and crashes at launch. Tracked in `docs/PROGRESS.md`.
- */
-const val COMMIT_HASH_QUALIFIER: String = "commitHash"
-
-/**
  * What `generate<Variant>BuildInfo` writes when git cannot answer — a source tarball, a shallow
  * export, no git on PATH.
  *
