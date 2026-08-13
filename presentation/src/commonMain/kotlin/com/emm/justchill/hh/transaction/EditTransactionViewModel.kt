@@ -124,10 +124,12 @@ class EditTransactionViewModel(
         val account = accountRepository.find(oldTransaction.accountId) ?: return@launch
         val storedDay: LocalDate = oldTransaction.occurredAt.date
 
-        val selectedCategory: SelectableCategory? = oldTransaction.categoryId?.let { id ->
-            categoriesList.firstOrNull { it.categoryId == id }
-        }
+        // Resolved out of the movement's own type, not out of every category: the stored pair is a
+        // foreign key now, so anything else was never a state this screen could load or save.
         val categoriesForType = allCategories[oldTransaction.type.categoryType].orEmpty()
+        val selectedCategory: SelectableCategory? = oldTransaction.categoryId?.let { id ->
+            categoriesForType.firstOrNull { it.categoryId == id }
+        }
 
         snapshot = Snapshot(
             amount = moneyCentsString(oldTransaction.amount),

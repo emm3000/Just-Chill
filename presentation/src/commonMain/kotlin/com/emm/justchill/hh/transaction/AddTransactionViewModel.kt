@@ -121,7 +121,9 @@ class AddTransactionViewModel(
 
     private fun selectFrequentCombo(combo: FrequentComboUi) {
         val account = currentState.accounts.find { it.accountId.value == combo.accountId }
-        val category = allCategories.values.flatten()
+        // Scoped to the combo's own type, not to every category the app has: a combo carries the
+        // type it was recorded under, and the pair it restores has to be one the schema accepts.
+        val category = allCategories[combo.type.categoryType].orEmpty()
             .find { it.categoryId.value == combo.categoryId }
         if (account == null || category == null) return
         updateState {
@@ -151,8 +153,19 @@ class AddTransactionViewModel(
         }
     }
 
+    /**
+     * Takes the category the new-category screen just created and selects it here.
+     *
+     * Scoped to the movement's own type, twice over. The list it rebuilds used to be every category
+     * in the app flattened, so creating one from an Income movement replaced the Income picker with
+     * Income AND Spend entries; and a category of the other type is now a pair the schema refuses
+     * outright, so selecting it would only produce a failed save. The route carries the movement's
+     * type, so the guard should never fire — it is what keeps this correct if a caller forgets to.
+     */
     private fun addCategoryFromOthers(category: SelectableCategory) {
-        val updatedCategories = allCategories.values.flatten()
+        val categoryType = currentState.transactionType.categoryType
+        if (category.categoryType != categoryType) return
+        val updatedCategories = allCategories[categoryType].orEmpty()
             .filterNot { it.categoryId == category.categoryId }
             .toMutableList()
             .apply { add(0, category) }
@@ -189,7 +202,9 @@ class AddTransactionViewModel(
     ): List<FrequentComboUi> = combos.mapNotNull { combo ->
         val account = accounts.find { it.accountId == combo.accountId }
             ?: return@mapNotNull null
-        val category = categories.values.flatten()
+        // Same scoping as selectFrequentCombo: a chip that renders must be a chip that can be
+        // applied, and the pair behind it has to be one the schema accepts.
+        val category = categories[combo.type.categoryType].orEmpty()
             .find { it.categoryId == combo.categoryId }
             ?: return@mapNotNull null
         FrequentComboUi(

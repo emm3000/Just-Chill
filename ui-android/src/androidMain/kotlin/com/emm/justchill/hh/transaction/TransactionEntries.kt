@@ -42,9 +42,16 @@ fun EntryProviderScope<NavKey>.transactionEntries(
             vm = vm,
             popBackStack = { nav.pop() },
             snackbarHostState = bindings.snackbarHostState,
-            onAddNewCategory = {
+            // The movement's own type travels with the push. Without it the new-category screen
+            // fell back to CategoryRoute's Spend default, so a category created from an Income
+            // movement was born a Spend one — which the schema now refuses outright, and which is
+            // how an Income movement ended up carrying a Spend category in the first place. The
+            // default itself stays: the other two call sites open the screen with no movement
+            // asking, and Spend is right there.
+            onAddNewCategory = { categoryType ->
                 nav.push(
                     CategoryRoute(
+                        initialType = categoryType,
                         propagateToTransaction = true,
                     ),
                 )

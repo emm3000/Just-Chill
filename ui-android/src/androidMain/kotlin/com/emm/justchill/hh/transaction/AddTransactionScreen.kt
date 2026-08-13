@@ -65,7 +65,7 @@ fun AddTransactionScreen(
     vm: AddTransactionViewModel,
     popBackStack: () -> Unit,
     snackbarHostState: SnackbarHostState,
-    onAddNewCategory: () -> Unit = {},
+    onAddNewCategory: (CategoryType) -> Unit = {},
     onAddNewAccount: () -> Unit = {},
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -95,7 +95,7 @@ private fun AddTransactionScreenContent(
     state: AddTransactionUiState,
     onIntent: (AddTransactionIntent) -> Unit,
     popBackStack: () -> Unit,
-    onAddNewCategory: () -> Unit = {},
+    onAddNewCategory: (CategoryType) -> Unit = {},
     onAddNewAccount: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
@@ -277,7 +277,7 @@ private fun AddTransactionScreenContent(
             categories = state.categories,
             selectedCategoryId = state.categorySelected?.categoryId?.value,
             onSelect = { onIntent(AddTransactionIntent.OnCategorySelected(it)) },
-            onAddNew = { onAddNewCategory() },
+            onAddNew = { onAddNewCategory(state.transactionType.categoryType) },
             onDismiss = { showCategorySheet = false },
             frequentCategoryIds = state.frequentCategoryIds,
         )

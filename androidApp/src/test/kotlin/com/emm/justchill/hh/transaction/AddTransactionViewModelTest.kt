@@ -435,4 +435,63 @@ class AddTransactionViewModelTest {
 
         assertNull(vm.state.value.accountSelected)
     }
+
+    // ── a category created from this movement ─────────────────────────────────
+
+    /**
+     * The new-category screen hands its result back through [AddTransactionIntent.OnNewValueFromOthers],
+     * and what arrives has to be filed under the movement that asked for it.
+     *
+     * The offered list used to be rebuilt from EVERY category the app has, flattened: creating one
+     * from an Income movement replaced the Income picker with Income and Spend entries mixed
+     * together. `(categoryId, type)` is a foreign key since schema v5, so half of that list is now
+     * a pair the database refuses — a picker that offers them offers a failing save.
+     */
+    @Test
+    fun `a category created from an Income movement joins the Income list`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        val created = SelectableCategory(
+            categoryId = CategoryId("bonus"),
+            name = "Bono",
+            iconId = "money",
+            categoryType = CategoryType.Income,
+            colorId = "green",
+        )
+
+        vm.onIntent(AddTransactionIntent.OnNewValueFromOthers(created))
+        advanceUntilIdle()
+
+        val state = vm.state.value
+        assertEquals(TransactionType.Income, state.transactionType)
+        assertEquals(created, state.categorySelected)
+        assertEquals(created, state.categories.first(), "the new one is offered first")
+        assertTrue(
+            state.categories.all { it.categoryType == CategoryType.Income },
+            "an Income movement must not be offered Spend categories: ${'$'}{state.categories}",
+        )
+    }
+
+    @Test
+    fun `a category of the other type is not attached to the movement`() = runTest(testDispatcher) {
+        // The route carries the movement's type now, so this should be unreachable. It is the
+        // guard that keeps the screen correct if a future caller forgets to pass it — silently
+        // selecting the wrong type would produce a save the schema rejects.
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        val before = vm.state.value
+        val spendCategory = SelectableCategory(
+            categoryId = CategoryId("food"),
+            name = "Comida",
+            iconId = "food",
+            categoryType = CategoryType.Spend,
+            colorId = "blue",
+        )
+
+        vm.onIntent(AddTransactionIntent.OnNewValueFromOthers(spendCategory))
+        advanceUntilIdle()
+
+        assertEquals(before.categorySelected, vm.state.value.categorySelected)
+        assertTrue(vm.state.value.categories.all { it.categoryType == CategoryType.Income })
+    }
 }

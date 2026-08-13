@@ -307,4 +307,58 @@ class AddEditRecurringMovementViewModelTest {
         assertEquals("acc-1", vm.state.value.selectedAccount?.accountId?.value)
         assertNull(vm.state.value.pendingAccountId)
     }
+
+    // ---- The category belongs to the type ----
+
+    private val spendCategory = Category(CategoryId("cat-spend"), "Bar", "bar", "purple", CategoryType.Spend)
+    private val incomeCategory = Category(CategoryId("cat-income"), "Sueldo", "salary", "green", CategoryType.Income)
+
+    /**
+     * A template mints a transaction of its own type every month, and `(categoryId, type)` is a
+     * foreign key since schema v5 — so a template holding a category of the other type is not one
+     * bad row, it is a generator of rows the database refuses. The form used to offer every
+     * category regardless of the type selected.
+     */
+    @Test
+    fun `only the categories of the selected type are offered`() = runTest {
+        every { categoryRepository.all() } returns flowOf(listOf(spendCategory, incomeCategory))
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        // The form opens on Spend.
+        assertEquals(TransactionType.Spend, vm.state.value.type)
+        assertEquals(listOf("cat-spend"), vm.state.value.categories.map { it.categoryId.value })
+    }
+
+    @Test
+    fun `switching the type re-cuts the list and drops a selection that no longer fits`() = runTest {
+        every { categoryRepository.all() } returns flowOf(listOf(spendCategory, incomeCategory))
+        val vm = createViewModel()
+        advanceUntilIdle()
+        vm.onIntent(AddEditRecurringMovementIntent.OnCategorySelected(vm.state.value.categories.single()))
+        advanceUntilIdle()
+        assertNotNull(vm.state.value.selectedCategory)
+
+        vm.onIntent(AddEditRecurringMovementIntent.OnTypeChange(TransactionType.Income))
+        advanceUntilIdle()
+
+        // Keeping the Spend category on an Income template is exactly the pair the schema refuses,
+        // and it would only surface at save time as a generic database error.
+        assertNull(vm.state.value.selectedCategory)
+        assertEquals(listOf("cat-income"), vm.state.value.categories.map { it.categoryId.value })
+    }
+
+    @Test
+    fun `edit mode - an Income template is offered Income categories`() = runTest {
+        every { categoryRepository.all() } returns flowOf(listOf(spendCategory, incomeCategory))
+        val incomeTemplate = testTemplate.copy(type = TransactionType.Income, categoryId = CategoryId("cat-income"))
+        coEvery { recurringRepository.find(RecurringMovementId("rm-1")) } returns incomeTemplate
+
+        val vm = createViewModel(id = "rm-1")
+        advanceUntilIdle()
+
+        assertEquals("cat-income", vm.state.value.selectedCategory?.categoryId?.value)
+        assertEquals(listOf("cat-income"), vm.state.value.categories.map { it.categoryId.value })
+    }
 }

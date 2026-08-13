@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
+import com.emm.domain.category.CategoryType
 import com.emm.domain.recurring.CreateRecurringMovementUseCase
 import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.recurring.RecurringMovementInsert
@@ -13,6 +14,7 @@ import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.RecurringMovementId
+import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.transaction.SelectableCategory
@@ -34,6 +36,17 @@ class AddEditRecurringMovementViewModel(
 
     override val initialState = AddEditRecurringMovementUiState(isEdit = id != null)
 
+    /**
+     * Every category the app has, grouped by type — the source the state's own list is cut from.
+     *
+     * A template mints a transaction of its own type every month, and `(categoryId, type)` is a
+     * foreign key since schema v5, so a template holding a category of the other type is a
+     * generator of movements the database refuses. The form therefore only ever offers the
+     * categories of the type currently selected, and this map is what makes switching the type
+     * able to re-cut that list without another read.
+     */
+    private val allCategories: MutableMap<CategoryType, List<SelectableCategory>> = mutableMapOf()
+
     init {
         combine(
             accountRepository.all(),
@@ -42,6 +55,8 @@ class AddEditRecurringMovementViewModel(
             accounts to categories.map(::mapCategory)
         }
             .onEach { (accounts, categories) ->
+                allCategories.clear()
+                allCategories.putAll(categories.groupBy(SelectableCategory::categoryType))
                 updateState {
                     // Resolve the selected account from the loaded list.
                     // - Create mode: default to first account.
@@ -60,16 +75,19 @@ class AddEditRecurringMovementViewModel(
                     }
                     // Resolve the selected category the same way the account is resolved, so an
                     // edit-mode load-ordering race (categories not yet emitted) does not drop it.
+                    // Out of the type's own categories: a pending id of the other type is a pair
+                    // the schema refuses, so resolving it would only restore an unsavable form.
+                    val forType = categoriesFor(type)
                     val resolvedCategory = when {
                         pendingCategoryId != null ->
-                            categories.find { it.categoryId.value == pendingCategoryId }
+                            forType.find { it.categoryId.value == pendingCategoryId }
                                 ?: selectedCategory
 
                         else -> selectedCategory
                     }
                     copy(
                         accounts = accounts,
-                        categories = categories,
+                        categories = forType,
                         selectedAccount = resolved,
                         selectedCategory = resolvedCategory,
                         // Clear pending once resolved or if accounts loaded empty (will retry next emit).
@@ -91,9 +109,7 @@ class AddEditRecurringMovementViewModel(
                 updateState { copy(name = intent.value).recalcSaveEnabled() }
             }
 
-            is AddEditRecurringMovementIntent.OnTypeChange -> {
-                updateState { copy(type = intent.value) }
-            }
+            is AddEditRecurringMovementIntent.OnTypeChange -> changeType(intent.value)
 
             is AddEditRecurringMovementIntent.OnAmountChange -> {
                 updateState { copy(amountDigits = intent.digits).recalcSaveEnabled() }
@@ -127,6 +143,27 @@ class AddEditRecurringMovementViewModel(
         }
     }
 
+    /**
+     * Switching the type re-cuts the category list and DROPS the selection.
+     *
+     * Keeping it is the exact bug this whole change exists to remove: a template switched to
+     * Income while still holding a Spend category is a pair the schema refuses, and the failure
+     * would surface at save time as a generic database error rather than here, where the user can
+     * see what happened. The field is optional, so an empty selection is a state the form already
+     * renders ("Sin categoría").
+     */
+    private fun changeType(type: TransactionType) = updateState {
+        copy(
+            type = type,
+            categories = categoriesFor(type),
+            selectedCategory = null,
+            pendingCategoryId = null,
+        ).recalcSaveEnabled()
+    }
+
+    private fun categoriesFor(type: TransactionType): List<SelectableCategory> =
+        allCategories[type.categoryType].orEmpty()
+
     private suspend fun loadTemplate(templateId: String) {
         val template: RecurringMovement = recurringRepository.find(RecurringMovementId(templateId)) ?: return
         val fixedAmount: Money? = template.amount
@@ -135,12 +172,14 @@ class AddEditRecurringMovementViewModel(
             // If accounts have not yet been emitted by the combine flow, store the id in
             // pendingAccountId; the combine collector will resolve it on next emission.
             val resolvedAccount = accounts.find { it.accountId.value == template.accountId.value }
+            val forType = categoriesFor(template.type)
             val resolvedCategory = template.categoryId?.let { categoryId ->
-                categories.find { it.categoryId.value == categoryId.value }
+                forType.find { it.categoryId.value == categoryId.value }
             }
             copy(
                 name = template.name,
                 type = template.type,
+                categories = forType,
                 amountDigits = if (fixedAmount != null) moneyCentsString(fixedAmount) else "",
                 isVariableAmount = fixedAmount == null,
                 dayOfMonth = template.dayOfMonth,
