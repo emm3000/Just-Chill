@@ -22,6 +22,7 @@ import org.koin.core.definition.BeanDefinition
 import org.koin.core.parameter.ParametersDefinition
 import org.koin.core.parameter.parametersOf
 import org.koin.core.qualifier.Qualifier
+import org.koin.core.qualifier.named
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import java.lang.reflect.Field
@@ -132,6 +133,36 @@ class AppGraphKoinTest {
             )
             assertTrue(viewModel is ViewModel, "$name did not resolve to a ViewModel.")
         }
+    }
+
+    /**
+     * The qualified strings `AppNavHost` resolves directly are bound, and are not blank.
+     *
+     * The sweep above walks the definitions that EXIST, so it can only ever prove that what is
+     * bound resolves — never that something a consumer asks for was bound at all. For a ViewModel
+     * that gap is closed by [EXPECTED_VIEW_MODELS]; for these two it was not closed by anything.
+     *
+     * They are the only bindings the app resolves from OUTSIDE `appModules()`: `AppNavHost` is a
+     * `:ui-android` composable, invisible from this module, and it reads both with `koinInject`
+     * before the first screen renders — on every launch, including a prod release. Deleting either
+     * one from `androidPlatformModule` compiles clean, passes every other test in this file, and
+     * crashes the app at startup. Listed by literal name on purpose: the point is to name what a
+     * consumer this module cannot see depends on.
+     *
+     * Blank is checked as well as present, because an empty string is a binding that resolves and a
+     * footer that reports nothing.
+     */
+    @Test
+    fun `the qualified strings the Compose host injects are bound`() {
+        val missing: List<String> = HOST_INJECTED_STRINGS.filter { name ->
+            koin.getOrNull<String>(named(name)).isNullOrBlank()
+        }
+
+        assertTrue(
+            missing.isEmpty(),
+            "AppNavHost resolves these by qualifier and they are missing or blank in the graph: " +
+                "$missing. Bind them in androidPlatformModule (production) and testPlatformModule.",
+        )
     }
 
     /**
@@ -268,6 +299,12 @@ class AppGraphKoinTest {
 
         /** The graph currently exposes 28 injected Clock/TimeZone fields across :domain/:data/:presentation. */
         const val MIN_EXPECTED_TIME_FIELDS = 20
+
+        /**
+         * The qualifiers `ui-android/.../AppNavHost.kt` passes to `koinInject`. Keep in sync with
+         * that file — it is the only consumer, and it lives in a module this test cannot import.
+         */
+        val HOST_INJECTED_STRINGS = listOf("appVersion", "commitHash")
 
         val EXPECTED_VIEW_MODELS = sortedSetOf(
             "AccountsViewModel",

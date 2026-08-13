@@ -26,12 +26,17 @@ import org.koin.dsl.onClose
  * SQLDelight schema on an in-memory JDBC driver, a real Settings store, a real Supabase client —
  * because the whole point is proving the production graph actually wires up, not that mocks do.
  *
- * TWO bindings are deliberately absent, for the same reason: their consumers are not part of
- * `appModules()`, so binding them here would assert wiring no shared consumer resolves.
- *  - `DispatchersProvider` — `androidPlatformModule` binds it, but its only consumer is the Android
- *    dev-flavor `experiencesModule`, appended by `:androidApp`. `iosPlatformModule` omits it too.
- *  - `named("commitHash")` — Android-only, consumed by `AppNavHost` in `:ui-android` (the profile
- *    footer). iOS is native SwiftUI and has no counterpart.
+ * ONE binding is deliberately absent: `DispatchersProvider`. `androidPlatformModule` binds it, but
+ * its only consumer is the Android dev-flavor `experiencesModule`, which is appended by `:androidApp`
+ * and is not part of `appModules()`. `iosPlatformModule` omits it for the same reason, so binding it
+ * here would assert wiring that no shared consumer resolves.
+ *
+ * `named("commitHash")` looks like the same case and is NOT. It too is resolved outside
+ * `appModules()` — by `AppNavHost` in `:ui-android` — but that is the production Compose root, read
+ * on every launch of every prod release before a single screen renders, so a missing binding is a
+ * crash at launch rather than a broken dev-flavor playground. It is bound here, and
+ * [AppGraphKoinTest] asserts it by name: binding without asserting would buy nothing, since the
+ * whole-graph sweep only walks definitions that already exist.
  */
 val testPlatformModule: Module = module {
 
@@ -56,6 +61,10 @@ val testPlatformModule: Module = module {
 
     // Stamped into exported backups and shown in the Profile footer; a literal is enough off-device.
     single(named("appVersion")) { "0.0.0-test" }
+
+    // The commit the build came from, shown in the Profile footer. "unknown" is the same literal
+    // the generator falls back to when git cannot answer, and the shape the footer must survive.
+    single(named("commitHash")) { "unknown" }
 
     // Blank, exactly like iOS: AuthViewModel hides the Google button and short-circuits
     // submitWithGoogle on a blank id, so the launcher below is never actually invoked.

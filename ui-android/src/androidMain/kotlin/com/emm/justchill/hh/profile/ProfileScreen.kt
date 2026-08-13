@@ -47,6 +47,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -57,6 +60,7 @@ import com.emm.justchill.core.sync.SYNC_TEMPORARILY_DISABLED
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
@@ -70,8 +74,8 @@ private const val SYNC_PAUSED_META = "Sincronización en pausa"
 
 /**
  * How much of the commit sha the footer shows. Git's own abbreviation floor, and what GitHub
- * prints. The generator in build-logic derives the same prefix for `BuildInfo.shortCommitHash`;
- * this screen only ever receives the full hash, because the copy action needs all 40 characters.
+ * prints. The screen always receives the full hash — the copy action needs all 40 characters — so
+ * this is the one and only place the abbreviation happens.
  */
 private const val SHORT_COMMIT_HASH_LENGTH = 7
 
@@ -548,6 +552,7 @@ private fun IconTileSmall(icon: ImageVector, tint: Color = LocalEmmColors.curren
 private fun VersionFooter(appVersion: String, commitHash: String, onCopyClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
+    val radii = LocalEmmRadii.current
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -565,11 +570,14 @@ private fun VersionFooter(appVersion: String, commitHash: String, onCopyClick: (
         // form is the one a human can read back over a chat.
         //
         // The row, not the text, carries the 48dp touch floor DESIGN_SYSTEM §4.1 calls
-        // non-negotiable; the copy inside it stays at the footer's 12sp.
+        // non-negotiable; the copy inside it stays at the footer's 12sp. It also declares
+        // Role.Button — without it the whole thing announces as an unnamed clickable, the same
+        // treatment RetryPill in this package already applies.
         Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(6.dp))
+                .clip(radii.rXS)
                 .clickable(onClick = onCopyClick)
+                .semantics { role = Role.Button }
                 .heightIn(min = 48.dp)
                 .padding(horizontal = spacing.s4),
             verticalAlignment = Alignment.CenterVertically,
