@@ -294,7 +294,7 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   UI son de Google); y `PlatformHostActions + startTab` no están detrás de `expect/actual` — son
   una `interface` y un `val` planos en `hh/shared/PlatformHostActions.kt:39` y `:168`. Es código,
   no doc: queda anotado acá y **la cabecera sigue sin tocarse**. El archivo sí se tocó por otro
-  motivo (el import de `CommitHash` y el comentario del footer de commit, `:29` y `:78-85`), lo que
+  motivo (el import de `CommitHash` y el comentario del footer de commit, `:29` y `:78-87`), lo que
   desplazó la cabecera de `:50-66` a `:51-67` — este pin se re-verifica en cada edición del archivo.
 - [ ] `docs/DESIGN_SYSTEM.md` §5 documenta 5 radios con otro esquema de nombres (`radius.0`,
   `radius.s` 6dp, `radius.m`, `radius.l`, `radius.full`); `EmmRadii.kt` ships **9** (`r0`, `rXS` 8dp,
@@ -392,16 +392,11 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   (verificado por mutación). Lo que **no** cambió: sigue sin haber test que observe la línea de
   `AppNavHost` en sí.
 - [x] **El contrato de DI salió del paquete de feature de UI.** Vive en
-  `presentation/src/commonMain/.../core/CommitHash.kt`, al lado de `SupabaseConfig` —
-  `:presentation` es visible para `:androidApp` y para `:ui-android`
-  (`ui-android/build.gradle.kts:38` declara `api(project(":presentation"))`). commonMain es
-  compose-free y un holder sobre `String` no arrastra Compose, `java.*` ni `android.*`:
-  `compileKotlinIosSimulatorArm64` y `linkDebugFrameworkIosSimulatorArm64` (SKIE) verdes.
-  Al `JustChillKit.h` generado **no llega**: Kotlin/Native no exporta `@JvmInline value class` a
-  Obj-C y ninguna declaración exportada lo referencia (cero ocurrencias de `CommitHash` en el
-  header, contra `JCKSupabaseConfig` que sí está). Es a propósito — ninguna pantalla Swift muestra
-  el commit, así que un `data class` solo agregaría un símbolo que nadie del otro lado llama. El
-  KDoc del tipo dice qué hacer el día que iOS lo necesite.
+  `presentation/src/androidMain/.../core/CommitHash.kt`, al lado de donde vive el DI del proyecto.
+  `:ui-android` lo ve por `api(project(":presentation"))` (`ui-android/build.gradle.kts:38`) y
+  `:androidApp` a través de `:ui-android`. Está en `androidMain` y no en commonMain porque productor
+  y consumidor son los dos Android-only: así el tipo no entra a la compilación de Kotlin/Native y la
+  pregunta por la superficie exportada a iOS no existe.
   `hh/profile/CommitHashUi.kt` queda con una sola razón para cambiar: el estado de presentación del
   footer.
 - [ ] `CommitHashUi.Available.fullHash` no lo lee ningún código de producción: `ProfileScreen`

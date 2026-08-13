@@ -45,7 +45,8 @@ nothing belongs in them anymore.
   `NoDefinitionFoundException` there (verified by mutation).
   The fallback word is a separate matter: `UNKNOWN_COMMIT_HASH` is not referenced anywhere under
   `androidApp/src/main`, only by `BuildInfoTest`, which asserts the shipped hash is that word or a
-  40-hex sha. That gap is in `docs/PROGRESS.md`.
+  40-hex sha. The spelling itself is pinned on both sides — `CommitHashUiTest` for
+  `UNKNOWN_COMMIT_HASH`, `GenerateBuildInfoTaskTest` for `build-logic`'s `UNKNOWN_COMMIT`.
 - `DispatchersProvider`, `CurrentActivityHolder`
 - `SyncLogger` → `CrashReportingSyncLogger` (Crashlytics is Android-only; iOS binds
   `PrintlnSyncLogger` in `KoinIos.kt`)
