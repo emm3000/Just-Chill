@@ -140,41 +140,147 @@ Salvage of the 25 abandoned commits, decided per commit:
 
 ### Phase 1 — recurring_movements into the export format (v3)
 
-Commit order: ① freeze v2 → ② v3 with recurring → ③ versioned sweep.
+Commit order: ① freeze v2 → ② v3 with recurring → ③ versioned sweep. Nothing else ships until this
+phase is merged and green — without it, a snapshot restore loses recurring movements on device loss.
 
-- **Freeze v2 first.** `BACKUP_SCHEMA_VERSION` is currently 2 and v2 files are read by the
-  *current* DTO (`ExportPayloadDto`). Adding a field and bumping to 3 would silently reinterpret
-  v2 files with v3's shape — the exact failure `BackupV1` exists to prevent (read its KDoc).
-  Create `BackupV2` (own frozen type + hand-written fixture + `BackupV2CompatibilityTest`),
-  then make v3 the current shape with its own fixture and test.
-- `RecurringMovementDto` fields: id, name, type, amount, description, categoryId, accountId,
-  frequency, dayOfMonth, isActive, **lastConfirmedPeriod** — without the last one a restore
+**① Freeze v2 first.** `BACKUP_SCHEMA_VERSION` is currently 2 and v2 files are read by the *current*
+DTO (`ExportPayloadDto`). `decodePayload` dispatches with a `when` over the **declared** version Int
+— no sealed type, no migration chain, and an absent `schemaVersion` key means version 1 — and its
+branches are const-driven. So the moment that constant reads 3, a file declaring 2 matches no branch
+at all: it falls to `else` and is refused as `ValidationCode.BackupVersionUnsupported`. Not
+misread — **refused**. Every v2 file already sitting on a user's disk stops loading, and the app
+tells them an intact backup cannot be restored. That is precisely what `BackupV1` exists to prevent
+and its KDoc argues at length: a backup lives "in storage the user chose, outside the app, beyond
+the reach of any schema migration", and the ugliest failure mode is "telling the user their
+perfectly good file is corrupt". Create `BackupV2` — own frozen type, hand-written fixture,
+`BackupV2CompatibilityTest` — so that branch exists before anything can need it.
+
+**The version number moves with the shape, never before it.** Step ① lands the frozen v2 type, its
+fixture and its test, and nothing else; step ② adds the field, moves `BACKUP_SCHEMA_VERSION` to 3
+and wires the v2 branch, in one commit. Bump inside the freeze commit instead and the window between
+that commit and the shape landing writes **v2-shaped files stamped 3** — and the sweep in ③ keys off
+the declared version, so on restore those files take the v3 path, their absent recurring array reads
+as "this device had none", and the wipe runs with nothing to put back. No frozen reader rescues a
+file that self-declares 3.
+
+**The freeze is deliberately partial, and v3 inherits that.** `BackupV1` froze only what changed:
+`ExportPayloadV1Dto` holds `List<AccountDto>` and `List<CategoryDto>` — the live DTOs, not copies —
+and only the transaction shape was frozen. Its KDoc says so: *"Only the transaction changed between
+the two versions; accounts and categories are shared."* Decision taken: `BackupV2` follows the same
+pattern and shares the three item DTOs with v3. The coupling that buys is real — editing a shared
+item DTO edits what every version's reader parses — and it is safe only because the guard already
+exists and works: hand-written fixtures plus per-version compatibility tests turn red on both
+readers at once. Written down so nobody discovers it by breaking it.
+
+Two consequences of that bump — both land in ②, not ①, and no compiler flags either:
+
+- `DefaultBackupRepositoryTest` asserts the literal `2` against `payload.schemaVersion` in two
+  places, not the constant. The bump commit expects exactly those two reds — a suite that stays
+  green means the bump did not land.
+- `BACKUP_SCHEMA_VERSION` is public and `:presentation` does `export(project(":data"))`, so the
+  constant sits on `JustChillKit`'s ABI. Phase 5 revisits that export; here it only means the bump
+  is visible to iOS.
+
+**② v3 — `RecurringMovementDto`.** Fields: id, name, type, amount (nullable), description,
+categoryId, accountId, frequency, dayOfMonth, isActive, **lastConfirmedPeriod**, **createdAt**.
+
+The last two are behavior, not storage stamps, and dropping them loses data in **opposite**
+directions:
+
+- **`lastConfirmedPeriod`** — nullable TEXT holding a zero-padded `"YYYY-MM"` period key; string
+  ordering is chronological ordering and `ensureNotSettled` depends on that. Without it a restore
   re-mints the already-confirmed month.
-- **Extend the dangling-category scrub to recurring.** `exportToJson` nulls the categoryId of
-  transactions whose category is tombstoned (`DefaultBackupRepository`); recurring_movements
-  carries the same composite FK `(categoryId, type)`, so without the same scrub the exported file
-  fails its own import.
-- **Version the import sweep — the data-loss trap.** Today's import deliberately leaves
-  recurring untouched ("the export format does not include them, so wiping them would destroy
-  data that no backup can restore"). With v3 the sweep includes recurring **only for v3+
-  payloads**; importing a v1/v2 file must keep leaving local recurring intact. Pin both sides
-  with tests: *importing v1/v2 leaves recurring untouched; importing v3 replaces it*.
-- A new SELECT in `recurring_movements.sq`. Flat selects exist (`selectActive:`, `find:`,
-  `selectPending:`) but none returns every live row: `selectActive` filters `isActive = 1`, so
-  exporting through it would drop every paused template. Adding a SELECT is not a migration.
-- `ImportStats` gains a `recurring` count (today: accounts/categories/transactions only), plus
-  the UI message that reports it.
+- **`createdAt` — the one that deletes work in silence.** `RecurringDueRules.pendingPeriods` floors
+  the catch-up window at `max(createdMonth, oldestAllowed, afterMark)`, and `createdMonth` derives
+  from `rm.createdAt`. Every existing restore path stamps `createdAt = now`; applied to a recurring
+  movement that lifts the floor to the restore month and **every owed past period vanishes**. No
+  error, no row, nothing to notice.
 
-Nothing else ships until this phase is merged and green — without it, a snapshot restore loses
-recurring movements on device loss.
+Both need a test, and one test cannot cover both: they are opposite failures. *A restore does not
+re-mint a confirmed period; a restore does not swallow the owed ones.*
+
+`frequency` has a single enum member today, its column carries a DEFAULT, and `update:` never writes
+it — it is in the list because the file is a format, not a snapshot of today's cardinality.
+
+**Open — the export path has no all-live read for recurring.** Export reads through the three domain
+repository interfaces (`all()`) while import writes through `db` directly, and that asymmetry is
+what lets the repository test mock every read. `RecurringMovementRepository`'s only **all-row**
+reads are `allActive()` — filters `isActive = 1`, so exporting through it drops every paused
+template — and `allWithDetails()`, a joined details model; everything else on the interface is
+per-id or per-account work. So either the domain repository gains a method, or export reads `db`
+directly for this one table and the export test loses its mockability. Decide it in the commit
+that writes the export, not here.
+
+Correcting this plan's own earlier claim: `selectAllWithDetails:` **does** return every live row,
+paused templates included. What does not exist is a **flat** all-live select — that one is joined
+and carries three extra columns, and every flat select (`selectActive:`, `find:`, `selectPending:`)
+filters something out.
+
+**Extend the dangling-category scrub to recurring.** `exportToJson` nulls the categoryId of
+transactions whose category is tombstoned (`DefaultBackupRepository`); `recurring_movements` carries
+the same composite FK `(categoryId, type) → categories(categoryId, categoryType)`, identical to the
+one on `transactions`, so without the same scrub the exported file fails its own import.
+
+**③ The SQL is four statements, not one SELECT.** `recurring_movements.sq` declares
+`clearCategoryOnTypeChange:` and full soft-delete like the other three tables, but **none** of the
+three write statements the sweep and restore paths consume on those tables: `softDeleteAllLive:`,
+`insertOrIgnoreFromBackup:`, `restoreFromBackup:`. The insert-then-update restore idiom — chosen
+over `INSERT OR REPLACE`, which physically deletes the old row and is therefore refused by
+`ON DELETE RESTRICT` while anything still references it, with the reasoning in a comment block above
+those statements in `accounts.sq` — has no counterpart on this table at all. Those three plus the
+flat all-live select ② needs are the phase's SQL. New `.sq` statements are not a migration
+(constraint 1).
+
+**Version the import sweep — the data-loss trap.** With v3 the sweep includes recurring **only for
+v3+ payloads**; importing a v1/v2 file must keep leaving local recurring intact, since those formats
+carry none and wiping them would destroy data no backup can restore. Pin both sides with tests:
+*importing v1/v2 leaves recurring untouched; importing v3 replaces it.*
+
+**"The import leaves recurring untouched" is true of the sweep and false of the import.**
+`restore(dto: CategoryDto, …)` already calls `clearCategoryOnTypeChange` on
+`recurring_movementsQueries`, nulling `categoryId` on every recurring row whose `type` disagrees
+with the restored category's `categoryType`. Its KDoc explains why: SQLite otherwise refuses the
+parent-key change, and inside the one transaction wrapping the restore that is not one failed row —
+it is the whole import rolled back after the tombstone sweep. Only the narrow claim holds: the sweep
+neither wipes nor restores that table. Today.
+
+**Open — statement order inside the transaction.** Under a v3 sweep that also wipes and restores
+recurring rows, that detach and the recurring restore land in the **same transaction**, and their
+relative order becomes a correctness question: run the detach first and it scrubs rows about to be
+replaced anyway; run it after the restore and it may scrub the pairs the file just wrote. Name the
+invariant before writing the statements. This plan does not choose it.
+
+**Two stale KDocs, in scope because v3 makes them wrong on the destructive path.** In
+`DefaultBackupRepositoryImportTest`, the KDoc above the test for a backup that redefines a
+category's type asserts *"Import never touches `recurring_movements`"* — while the test directly
+beneath it asserts that exact mutation. `restore(dto: CategoryDto, …)`'s own KDoc says the same
+("the import deliberately never touches that table"). Both are defects now and worse after v3;
+correct them in the commit that changes the behavior.
+
+**`ImportBackupDialog` (`:ui-android`) is user-facing and goes stale.** Both its `isSignedIn`
+body-copy branches enumerate the tables in Spanish — *"Tus movimientos, categorías y cuentas quedan
+tal cual el archivo"* — and its KDoc makes the same list in English ("replaces every movement,
+category and account"). Both become incomplete the moment v3 sweeps recurring, on the one screen
+where the user consents to a destructive operation. Correctness, not copy polish, and in this
+phase's scope. The body copy stays Spanish; it is UI.
+
+**`ImportStats`** gains a `recurring` count (today `accounts` / `categories` / `transactions` only),
+plus the UI message that reports it.
+
+**Known downgrade behavior, recorded not fixed.** `importJson` is configured with
+`ignoreUnknownKeys = true`, so an older app build reading a v3 file drops `recurringMovements`
+silently instead of failing. Nothing here changes that — it is written down so a restore that comes
+back short on an old build is diagnosable rather than mysterious.
 
 ### Phase 2 — snapshot pipeline
 
 Three sub-phases, three PR series: the transactional refactor is its own risk and must be
 reviewable alone.
 
-**2a — transactional export.** `exportToJson` currently does three independent `Flow.first()`
-reads — a write between them corrupts the snapshot. SQLDelight transactions are synchronous
+**2a — transactional export.** `exportToJson` does three independent `Flow.first()` reads on
+trunk, and one more once Phase 1 adds recurring — whether that fourth read is a `Flow` or a
+direct `db` query depends on how Phase 1 settles its export-read question. A write landing
+between any two of them corrupts the snapshot. SQLDelight transactions are synchronous
 blocks, so `.first()` cannot run inside one: switch the export to direct queries
 (`executeAsList()`) inside a single `transactionWithResult`. `DefaultBackupRepository` already
 holds the `db`; the refactor is contained to that class.
