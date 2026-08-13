@@ -133,7 +133,7 @@ still uses JetBrains' multiplatform `lifecycle-viewmodel`, which has to compile 
 - `sync/AUDIT.md` — the consolidated sync audit. **Read before touching sync**, and before assuming
   anything about the Supabase project. `sync/PLAN.md` — the original slice plan, **paused**.
 - `adr/` — filenames state the decision. 004 amends 002; 005 supersedes 003's frozen-UI scope; 006
-  supersedes 001's multi-device premise and leaves 004 dormant; 007 amends 003's point 5 (writer + reviewer, repo-wide). **Read before changing anything an ADR decided** — ADRs are amended by a new ADR, never rewritten.
+  supersedes 001's multi-device premise and leaves 004 dormant; 007 amends 003's point 5 (writer + reviewer, repo-wide); 008 moves the category/type invariant into the schema. **Read before changing anything an ADR decided** — ADRs are amended by a new ADR, never rewritten.
 - `DATE_AUDIT.md` — the 13 date findings, all closed. **Read before touching dates.** Live rule #7:
   whatever asks "what day/month is it" takes an injected `Clock` **and** `TimeZone`, **neither carrying a
   default** (`hh/di/SharedModule.kt` is the only way in). Follow-up: #5 phase two.

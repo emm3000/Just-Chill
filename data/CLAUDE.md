@@ -35,7 +35,7 @@ in `docs/PROGRESS.md`; it does not fail the gate.
 ## Persistence (SQLDelight 2.x)
 
 - Schema in `data/src/commonMain/sqldelight/com/emm/data/`: `accounts.sq`, `categories.sq`,
-  `transactions.sq`, `recurring_movements.sq`. Migrations `0.sqm`…`3.sqm` (current schema v4).
+  `transactions.sq`, `recurring_movements.sq`. Migrations `0.sqm`…`4.sqm` (current schema v5).
 - **`transactions.occurredAt` is ISO local text, not an instant** — `'2026-08-10T21:47:33'`, no
   timezone. Ordering, month windows and day grouping are all plain string operations on it; see the
   header comment in `transactions.sq` for why that works and `docs/DATE_AUDIT.md` #5 for why it had
@@ -56,10 +56,20 @@ in `docs/PROGRESS.md`; it does not fail the gate.
 - **Soft-delete (tombstones)** since schema v3: deletes are `UPDATE ... SET deletedAt,
   syncState='Pending'`; every read query filters `deletedAt IS NULL`. Sync metadata columns on all
   4 tables: `userId` (nullable), `deletedAt` (nullable epoch ms), `syncState` (default `'Pending'`).
-- FK clauses still exist (`transactions.accountId → accounts ON DELETE RESTRICT`,
-  `transactions.categoryId → categories ON DELETE SET NULL`) but **only fire on physical DELETE —
-  never on soft-delete**. Referential integrity is enforced in domain use cases
-  (`DeleteAccountUseCase`, `DeleteCategoryUseCase`), not by these clauses.
+- **The category/type relation IS enforced by the schema**, and is the one exception to the line
+  below. Since v5 `transactions` and `recurring_movements` declare a COMPOSITE foreign key,
+  `(categoryId, type) → categories(categoryId, categoryType)`, so a movement can never carry a
+  category of the other type. It lives here and not in a use case because three writers reach the
+  database without passing through `:domain` — `DefaultBackupRepository` (import) and the
+  `TransactionTableSync` / `RecurringMovementTableSync` pulls. Full reasoning in the header of
+  `transactions.sq`; the decision and the rejected alternatives in
+  [ADR 008](../docs/adr/008-the-schema-owns-the-category-type-invariant.md).
+  Two properties of it that surprise people: a composite FK with any NULL column is SATISFIED, so an
+  uncategorized movement needs no special case; and it carries **no `ON DELETE` clause**, because
+  `SET NULL` on a composite key would try to null `type`, which is `NOT NULL`.
+- The remaining FK clauses (`transactions.accountId → accounts ON DELETE RESTRICT`, same on
+  `recurring_movements`) **only fire on physical DELETE — never on soft-delete**. Deletion integrity
+  is enforced in domain use cases (`DeleteAccountUseCase`, `DeleteCategoryUseCase`), not by them.
 - `app.cash.sqldelight:coroutines-extensions` is exported (`api`) from this module for `asFlow()`.
 - This module also `api`-exposes the Supabase auth/postgrest SDK and the Ktor engines. The consumer
   that actually uses them is `:presentation` (`hh/di/SupabaseModule.kt`).
@@ -90,14 +100,18 @@ exception type here.
   pagination, enum parsing, backup. Run with `./gradlew :data:testAndroidHostTest`.
 - Platform-neutral tests in `data/src/commonTest/kotlin/` (`kotlin.test`), e.g. `SyncCursorUtilsTest`.
 - Instrumented tests in `data/src/androidDeviceTest/`: `MigrationV1ToV2Test`, `MigrationV2ToV3Test`,
-  `MigrationV3ToV4Test`, `DeleteUseCasesE2ETest`, `RecurringMovementFkTest`, `SyncFkExceptionTest`.
-  Run them with `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator; 20 tests).
+  `MigrationV3ToV4Test`, `MigrationV4ToV5Test`, `DeleteUseCasesE2ETest`, `RecurringMovementFkTest`,
+  `SyncFkExceptionTest`.
+  Run them with `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator; 31 tests).
   They are the only thing that exercises migrations against the real `AndroidSqliteDriver` —
   **run them before shipping any schema change.** Gotcha: `kotlin.assert()` is a no-op on ART;
   always use `kotlin.test.assertTrue`.
-- `3.sqm` is the first **destructive** migration here: SQLite cannot change a column's type, so it
-  rebuilds the transactions table. `MigrationV3ToV4Test` is what says the rows, the indexes and the
-  ability to open the app at all survive it.
+- Two **destructive** migrations, and they are the reason that suite exists. `3.sqm` rebuilds
+  `transactions` because SQLite cannot change a column's type; `4.sqm` rebuilds `transactions` AND
+  `recurring_movements` because it cannot add a table constraint either, and repairs the data first
+  — on iOS the copy runs with foreign keys ON, so repairing afterwards would repair rows that never
+  crossed. `MigrationV3ToV4Test` and `MigrationV4ToV5Test` are what say the rows, the indexes, the
+  types and the ability to open the app at all survive them.
 
 ### Migration tests: use raw SQL against historical schemas
 

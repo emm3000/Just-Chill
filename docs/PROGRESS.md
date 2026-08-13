@@ -270,15 +270,28 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 
 ### Bugs
 
-- [ ] **Crear una categoría desde un movimiento de Ingreso abre el formulario en Gasto.** Confirmado
-  en emulador y contra la base: una categoría de prueba quedó guardada con `categoryType=Spend`
-  colgando de una transacción `Income`. Sale de `CategoryRoute.initialType`, que default-ea a
-  `CategoryType.Spend` en `ui-android/src/androidMain/kotlin/com/emm/justchill/hh/shared/HhRoutes.kt:72`;
-  el push desde el formulario de transacción
-  (`hh/transaction/TransactionEntries.kt:46-49`) pasa solo `propagateToTransaction = true` y nunca
-  dice de qué tipo es el movimiento que la pidió. El tipo ya lo tiene `AddTransactionViewModel`, así
-  que el arreglo es propagarlo en el push — **no** cambiar el default, que rompería los otros dos
-  call sites (`CategoryEntries.kt:47` y `AccountEntries.kt:36`) donde `Spend` sí es lo correcto.
+- [x] **Crear una categoría desde un movimiento de Ingreso abre el formulario en Gasto.** Cerrado por
+  schema, no por parche: la categoría de un movimiento ahora es **foreign key compuesta**
+  `(categoryId, type) → categories(categoryId, categoryType)` en `transactions` y en
+  `recurring_movements`, con la migración `4.sqm` (schema v5) y
+  [ADR 008](adr/008-the-schema-owns-the-category-type-invariant.md).
+  El default de `CategoryRoute.initialType` era el disparador, pero no la causa: **nueve** escritores
+  podían meter el par y **tres** ni siquiera pasan por `:domain` (`DefaultBackupRepository` en import,
+  `TransactionTableSync` y `RecurringMovementTableSync` en el pull), así que cualquier invariante
+  puesta en `:domain` tenía techo por diseño — por eso cuatro rondas de parches en runtime no lo
+  cerraron. Esos parches quedaron **descartados**, solo en el tag `patches-descartados-2026-08-12`;
+  no resucitarlos.
+  Lo que sí se hizo del lado UI: el push desde el formulario de transacción propaga el tipo del
+  movimiento, el picker y el formulario de recurrentes solo ofrecen categorías del tipo elegido, y
+  cambiar el tipo en recurrentes suelta la categoría que ya no aplica. Eso es UX — el mecanismo es
+  la base.
+  **Las filas corruptas SÍ se reparan**: la migración pone `categoryId = NULL` en todo movimiento
+  cuya categoría sea de otro tipo o no exista, en las dos tablas. Nunca toca `type` — el `type`
+  firma el `amount`, así que darlo vuelta reescribiría el balance del usuario. Y no marca las filas
+  como `Pending`: con el sync apagado y en rediseño backup-only (ADR 006) no hay a dónde propagar la
+  corrección, y solo inflaría el primer diff de backup.
+  **Sin correr en device.** `MigrationV4ToV5Test` (11 tests) está escrito y compila, pero no había
+  device conectado; corré `:data:connectedAndroidDeviceTest` antes de shipear esto.
 
 ### Deuda técnica
 
@@ -509,9 +522,11 @@ siguen en el repo como marcadores históricos.
 - `./gradlew qualityGate` es el gate. Si tocás una firma de dominio, acordate de que
   el gate incluye `:data:compileAndroidDeviceTest` desde `12ecb2b` — antes de eso los
   tests instrumentados podían quedar rotos con el gate en verde.
-- Los tests instrumentados (`:data:connectedAndroidDeviceTest`, 15 tests) no corren en
+- Los tests instrumentados (`:data:connectedAndroidDeviceTest`, **31 tests**) no corren en
   el gate: necesitan device. Corrélos antes de shipear un cambio de schema o de dominio.
-  Última corrida: 2026-08-09, 15/15 verde en `medium_phone` (emulator-5554), después de A6.
+  Última corrida: 2026-08-09, 15/15 verde en `medium_phone` (emulator-5554), después de A6 — el
+  conteo creció a 20 y después a 31 sin volver a correrlos, así que **`MigrationV4ToV5Test` (v4→v5,
+  la FK compuesta) nunca se ejecutó contra un driver real**.
 - Writer y reviewer son siempre agentes delegados separados, para **todo el repo** (no solo
   KMP/iOS): el reviewer corre en contexto fresco y nunca escribió el código que revisa —
   [ADR 007](adr/007-one-way-of-working-writer-reviewer-and-model-tiers.md) retira el "un writer,

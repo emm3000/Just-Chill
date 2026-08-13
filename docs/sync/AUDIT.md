@@ -38,6 +38,15 @@ Nothing was removed; every binding, test and engine class is still wired. Profil
 "Sincronización en pausa". **The only runtime observation of the bug:** the owner signed out and the
 loop stopped — proving an authenticated-session trigger drives it, not which one. All else is static.
 
+**Changed while off (2026-08-12, schema v5 / [ADR 008](../adr/008-the-schema-owns-the-category-type-invariant.md)):**
+`(categoryId, type)` is a composite foreign key now, and the three pull writers had to learn it
+before it could freeze them. `TransactionTableSync` and `RecurringMovementTableSync` write a
+mismatched remote row uncategorized instead of deferring it — a mismatch does not resolve by
+waiting, and the cursor is shared across all four tables. `CategoryTableSync` is the parent side of
+the same freeze: a remote row that changes a category's type strands the movements filed under it,
+so it detaches them first. Both paths are dormant while the switch is off; they are here so that
+flipping it back does not hand the redesign a silent, permanent cursor hold to diagnose.
+
 ## 3. Root cause of the loop
 
 Two predicates that must agree, and do not.
