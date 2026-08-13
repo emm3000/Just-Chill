@@ -197,7 +197,30 @@ class DefaultBackupRepository(
         )
     }
 
+    /**
+     * Restores one category, detaching first whatever the new type would strand.
+     *
+     * The parent half of the composite key, and the mirror of `CategoryTableSync.applyRemoteRow`.
+     * `restoreFromBackup` writes `categoryType`, and changing a category's type while a movement
+     * still holds the old pair is refused outright — not silently repaired, and not deferred:
+     * the statement throws inside the ONE transaction that wraps the whole restore, so the import
+     * rolls back after the tombstone sweep and reaches the user as a generic database error.
+     *
+     * `recurring_movements` is what makes it reachable rather than theoretical: the import
+     * deliberately never touches that table, so its rows still hold whatever pair they were
+     * created with while the file rewrites the category out from under them. And the file is
+     * untrusted — a hand-edited `categoryType` is all it takes, which is the same premise the
+     * movement restore below already works from.
+     */
     private fun restore(dto: CategoryDto, now: Long) {
+        db.transactionsQueries.clearCategoryOnTypeChange(
+            categoryId = dto.categoryId,
+            categoryType = dto.categoryType,
+        )
+        db.recurring_movementsQueries.clearCategoryOnTypeChange(
+            categoryId = dto.categoryId,
+            categoryType = dto.categoryType,
+        )
         db.categoriesQueries.insertOrIgnoreFromBackup(
             categoryId = dto.categoryId,
             name = dto.name,

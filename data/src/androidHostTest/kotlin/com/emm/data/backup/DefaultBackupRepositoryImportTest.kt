@@ -321,6 +321,52 @@ class DefaultBackupRepositoryImportTest {
         assertNull(db.transactionsQueries.find("tx-orphan").executeAsOne().categoryId)
     }
 
+    /**
+     * The parent half of the same problem, and the one the export cannot protect against.
+     *
+     * A recurring movement holds `(cat-1, Spend)`. The file redefines `cat-1` as an Income
+     * category. Import never touches `recurring_movements` — deliberately, since the format does
+     * not carry them — so the movement still holds the old pair when the category's type is
+     * rewritten, and SQLite refuses the parent-key change. Inside the single wrapping transaction
+     * that is not one failed row: it is the whole restore rolled back, after the tombstone sweep.
+     */
+    @Test
+    fun `a backup that redefines a category's type does not abort on the movements filed under it`() = runTest {
+        repository.importFromJson(
+            payloadWith(
+                categoriesJson = listOf(
+                    """{"categoryId":"cat-1","name":"Bar","icon":"i","color":"c","categoryType":"Spend"}""",
+                ),
+                transactionsJson = emptyList(),
+            ),
+        )
+        exec(
+            "INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, " +
+                "accountId, dayOfMonth, createdAt, updatedAt) " +
+                "VALUES ('rec-1', 'Alquiler', 'Spend', 5000, '', 'cat-1', 'acc-1', 5, 1, 1)",
+        )
+
+        val stats = repository.importFromJson(
+            payloadWith(
+                categoriesJson = listOf(
+                    """{"categoryId":"cat-1","name":"Sueldo","icon":"i","color":"c","categoryType":"Income"}""",
+                ),
+                transactionsJson = listOf(
+                    """{"transactionId":"tx-1","type":"Income","amountCents":10000,"description":"Sueldo",""" +
+                        """"occurredAt":"2026-05-23T09:33:20","accountId":"acc-1","categoryId":"cat-1"}""",
+                ),
+            ),
+        )
+
+        assertEquals(1, stats.transactions, "the import must complete, not roll back")
+        assertEquals("Income", db.categoriesQueries.find("cat-1").executeAsOne().categoryType)
+        assertEquals("cat-1", db.transactionsQueries.find("tx-1").executeAsOne().categoryId)
+        // The template survives, minus a label it can no longer hold. It is never deleted: the
+        // import does not own that table.
+        assertEquals(1, rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'rec-1'"))
+        assertNull(db.recurring_movementsQueries.find("rec-1").executeAsOne().categoryId)
+    }
+
     // ── the version probe ─────────────────────────────────────────────────────
 
     @Test
