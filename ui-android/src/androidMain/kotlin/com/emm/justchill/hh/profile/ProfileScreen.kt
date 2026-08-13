@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
@@ -66,12 +68,21 @@ import kotlin.time.Instant
 /** Meta copy for the sync rows while [SYNC_TEMPORARILY_DISABLED] is on. Spanish, like all UI copy. */
 private const val SYNC_PAUSED_META = "Sincronización en pausa"
 
+/**
+ * How much of the commit sha the footer shows. Git's own abbreviation floor, and what GitHub
+ * prints. The generator in build-logic derives the same prefix for `BuildInfo.shortCommitHash`;
+ * this screen only ever receives the full hash, because the copy action needs all 40 characters.
+ */
+private const val SHORT_COMMIT_HASH_LENGTH = 7
+
 @Composable
 fun ProfileScreen(
     state: ProfileUiState,
     modifier: Modifier = Modifier,
     // Injected from the platform layer (no BuildConfig in commonMain).
     appVersion: String = "",
+    // Full 40-char sha of the commit this build came from, or "unknown".
+    commitHash: String = "",
     isDebug: Boolean = false,
     onCategoriesClick: () -> Unit = {},
     onAccountsClick: () -> Unit = {},
@@ -84,6 +95,7 @@ fun ProfileScreen(
     onSignOutClick: () -> Unit = {},
     onDeleteAccountClick: () -> Unit = {},
     onSyncNowClick: () -> Unit = {},
+    onCopyCommitHashClick: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -228,7 +240,11 @@ fun ProfileScreen(
         }
 
         Spacer(Modifier.height(spacing.s6))
-        VersionFooter(appVersion = appVersion)
+        VersionFooter(
+            appVersion = appVersion,
+            commitHash = commitHash,
+            onCopyClick = onCopyCommitHashClick,
+        )
         Spacer(Modifier.height(spacing.s4))
     }
 }
@@ -529,8 +545,9 @@ private fun IconTileSmall(icon: ImageVector, tint: Color = LocalEmmColors.curren
 }
 
 @Composable
-private fun VersionFooter(appVersion: String) {
+private fun VersionFooter(appVersion: String, commitHash: String, onCopyClick: () -> Unit) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -542,6 +559,36 @@ private fun VersionFooter(appVersion: String) {
             color = colors.textTertiary,
             textAlign = TextAlign.Center,
         )
+        // versionName is the nearest release tag, so it is identical across every build between two
+        // releases — the commit is the only thing that tells two daily App Distribution builds
+        // apart. Short on screen, full 40 on the clipboard: the GitHub convention, and the short
+        // form is the one a human can read back over a chat.
+        //
+        // The row, not the text, carries the 48dp touch floor DESIGN_SYSTEM §4.1 calls
+        // non-negotiable; the copy inside it stays at the footer's 12sp.
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(6.dp))
+                .clickable(onClick = onCopyClick)
+                .heightIn(min = 48.dp)
+                .padding(horizontal = spacing.s4),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+        ) {
+            Text(
+                text = "Commit ${commitHash.take(SHORT_COMMIT_HASH_LENGTH)}",
+                fontSize = 12.sp,
+                fontFamily = InterFontFamily,
+                color = colors.textTertiary,
+                textAlign = TextAlign.Center,
+            )
+            Icon(
+                imageVector = Icons.Outlined.ContentCopy,
+                contentDescription = "Copiar el hash completo del commit",
+                tint = colors.textTertiary,
+                modifier = Modifier.size(14.dp),
+            )
+        }
     }
 }
 
@@ -552,6 +599,7 @@ private fun ProfileScreenPreview() {
         ProfileScreen(
             state = ProfileUiState(categoryCount = 12, accountCount = 5),
             appVersion = "1.0.0",
+            commitHash = "4e47828d1f2a3b4c5d6e7f8091a2b3c4d5e6f708",
         )
     }
 }

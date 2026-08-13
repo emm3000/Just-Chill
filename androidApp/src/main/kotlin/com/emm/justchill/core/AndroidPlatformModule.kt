@@ -7,6 +7,7 @@ import com.emm.data.provideDb
 import com.emm.data.provideSqlDriver
 import com.emm.domain.sync.SyncLogger
 import com.emm.justchill.BuildConfig
+import com.emm.justchill.BuildInfo
 import com.emm.justchill.core.platform.CurrentActivityHolder
 import com.emm.justchill.hh.auth.ActivityGoogleSignInLauncher
 import com.emm.justchill.hh.auth.GoogleCredentialClient
@@ -45,6 +46,14 @@ val androidPlatformModule = module {
     // Platform-provided app version (no BuildConfig in commonMain). Consumed by ProfileViewModel
     // via the "appVersion" qualifier; stamped into exported backups.
     single(named("appVersion")) { BuildConfig.VERSION_NAME }
+
+    // The git commit this APK was built from, FULL 40-char sha. Consumed by AppNavHost, which hands
+    // it to the profile footer; the footer shows the first 7 and copies all 40.
+    //
+    // Deliberately not in testPlatformModule / KoinIos: its only consumer is :ui-android's Compose
+    // host, which is Android-only and outside appModules(), so AppGraphKoinTest would be asserting
+    // wiring no shared consumer resolves — the same reason DispatchersProvider is absent there.
+    single(named("commitHash")) { BuildInfo.commitHash }
 
     // Google Sign-In web client id, consumed by AuthViewModel. Empty when supabase.properties is
     // absent; the Google button stays hidden so submitWithGoogle never reaches the launcher.

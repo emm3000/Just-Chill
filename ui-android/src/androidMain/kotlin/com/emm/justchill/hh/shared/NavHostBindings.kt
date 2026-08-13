@@ -15,9 +15,10 @@ import androidx.navigation3.runtime.NavKey
  *
  * detekt's `LongParameterList` allows five function parameters and does not exempt defaulted ones
  * (`ignoreDefaultParameters: false`). Passed loose, these four would leave a single slot, and the
- * profile entries alone need three more (`appVersion` plus the pending-import result channel) — six
- * parameters before any other feature is considered. Bundling the shared four is what keeps every
- * entries function under that ceiling without a suppression.
+ * profile entries alone need four more (`appVersion`, `commitHash` and the pending-import result
+ * channel) — eight parameters before any other feature is considered. Bundling the shared four is
+ * what keeps every entries function under that ceiling without a suppression, and `profileEntries`
+ * now sits exactly on it.
  *
  * ### Why it is not a god object
  *

@@ -1,11 +1,17 @@
 package com.emm.justchill.hh.profile
 
+import android.content.ClipData
+import android.os.Build
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.Clipboard
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.toClipEntry
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -24,12 +30,16 @@ import com.emm.justchill.hh.shared.ProfileRoute
 import com.emm.justchill.hh.shared.RecurringMovementsRoute
 import com.emm.justchill.hh.shared.rememberAppNavigator
 import com.emm.justchill.hh.shared.toText
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Registers the profile entries on the host: [ProfileRoute] and [PrivacyPolicyRoute].
  *
  * @param appVersion the version string shown in the profile footer, injected by the host.
+ * @param commitHash the full sha the build came from, injected by the host and shown abbreviated in
+ *   that same footer.
  * @param pendingImportJson reads the host's "backup file the user just picked" channel. It is a
  *   lambda, not a value, on purpose: `rememberDecoratedNavEntries` caches the built entries under
  *   `remember(backStack.toList())`, and the Android SAF import callback fires with no back-stack
@@ -41,15 +51,15 @@ import org.koin.compose.viewmodel.koinViewModel
 fun EntryProviderScope<NavKey>.profileEntries(
     bindings: NavHostBindings,
     appVersion: String,
+    commitHash: String,
     pendingImportJson: () -> String?,
     onImportHandled: () -> Unit,
 ) {
     entry<ProfileRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         ProfileEntry(
-            nav = nav,
             bindings = bindings,
             appVersion = appVersion,
+            commitHash = commitHash,
             pendingImportJson = pendingImportJson,
             clearPendingImport = onImportHandled,
         )
@@ -67,16 +77,25 @@ fun EntryProviderScope<NavKey>.profileEntries(
 // `clearPendingImport` rather than the caller's `onImportHandled`: compose-rules' ParameterNaming
 // rejects a past-tense lambda parameter on a composable, and this one is a command ("clear the
 // channel"), not an event, so it reads as one — same shape as NavHostBindings.showMessage.
+//
+// `nav` used to be a sixth parameter, built by the entry{} block above and handed down. It was
+// always derived from `bindings.backStack`, which is already here, and detekt caps a function at
+// five parameters — so it is built here instead. This composable IS the entry's body, so
+// rememberAppNavigator still runs inside the entry scope, which is the only thing that constraint
+// is about (see AppNavigator).
 @Composable
 private fun ProfileEntry(
-    nav: AppNavigator,
     bindings: NavHostBindings,
     appVersion: String,
+    commitHash: String,
     pendingImportJson: () -> String?,
     clearPendingImport: () -> Unit,
 ) {
+    val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
     val vm: ProfileViewModel = koinViewModel()
     val profileState by vm.state.collectAsStateWithLifecycle()
+    val clipboard: Clipboard = LocalClipboard.current
+    val clipboardScope: CoroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
@@ -119,6 +138,7 @@ private fun ProfileEntry(
     ProfileScreen(
         state = profileState,
         appVersion = appVersion,
+        commitHash = commitHash,
         isDebug = bindings.platform.isDebug,
         onCategoriesClick = { nav.push(CategoriesListRoute) },
         onAccountsClick = { nav.push(AccountsRoute) },
@@ -135,7 +155,28 @@ private fun ProfileEntry(
         onSignOutClick = { vm.onIntent(ProfileIntent.SignOut) },
         onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccount) },
         onSyncNowClick = { vm.onIntent(ProfileIntent.SyncNow) },
+        onCopyCommitHashClick = {
+            clipboardScope.launch { copyCommitHash(clipboard, commitHash, bindings) }
+        },
     )
+}
+
+/** Label the system attaches to the clip; never shown inside the app. */
+private const val COMMIT_HASH_CLIP_LABEL = "Commit hash"
+
+/**
+ * Puts the FULL sha on the clipboard and confirms it, on the versions that need confirming.
+ *
+ * Android 13 (TIRAMISU) added a system-drawn confirmation for every clipboard write, in the same
+ * corner of the screen the app's snackbar occupies. Showing both would be two popups saying the
+ * same thing, stacked. Below 33 nothing confirms the copy at all, so the app has to — through the
+ * root snackbar this screen already reports every other outcome on, not a mechanism of its own.
+ */
+private suspend fun copyCommitHash(clipboard: Clipboard, commitHash: String, bindings: NavHostBindings) {
+    clipboard.setClipEntry(ClipData.newPlainText(COMMIT_HASH_CLIP_LABEL, commitHash).toClipEntry())
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        bindings.snackbarHostState.showEmmSnackbar("Copiamos el hash del commit")
+    }
 }
 
 /**
