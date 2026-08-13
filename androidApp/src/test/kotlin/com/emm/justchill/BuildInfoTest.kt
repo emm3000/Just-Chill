@@ -12,6 +12,12 @@ import kotlin.test.assertTrue
  * everything under `build/`, and the profile footer would happily render a hash with a stray
  * newline. This is the only place the pipeline is checked end to end, and it runs on the gate
  * through `:androidApp:testDevDebugUnitTest`.
+ *
+ * It asserts the SHAPE only. What the footer then MAKES of that shape — the abbreviation and the
+ * "git could not answer" state — belongs to `commitHashUi()` in `:ui-android` and is asserted by
+ * `CommitHashUiTest`, next to the constant that drives it. A second copy of that constant lived
+ * here and was deleted: it could not fail without this test failing first, and it let the real
+ * length change with both suites green.
  */
 class BuildInfoTest {
 
@@ -24,21 +30,7 @@ class BuildInfoTest {
         )
     }
 
-    @Test
-    fun `the hash is long enough for the footer to abbreviate`() {
-        // ProfileScreen renders commitHash.take(7). `take` truncates silently, so a value shorter
-        // than that produces a short label rather than a failure — this is the assertion that
-        // stands behind it. It holds for a 40-char sha and for the "unknown" fallback, which is
-        // exactly seven characters for this reason.
-        assertTrue(
-            BuildInfo.commitHash.length >= SHORT_LENGTH,
-            "The footer abbreviates to $SHORT_LENGTH chars, but BuildInfo.commitHash is " +
-                "${BuildInfo.commitHash.length} long: \"${BuildInfo.commitHash}\"",
-        )
-    }
-
     private companion object {
-        const val SHORT_LENGTH = 7
         const val UNKNOWN = "unknown"
     }
 }

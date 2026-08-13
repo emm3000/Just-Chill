@@ -40,7 +40,7 @@ annotation escape and do fire on Composables**. Evidence in
 (`AddTransactionScreenContent`, `EmmButton`, `EmmTextInput`) and 24 `LongParameterList`, 22 of them
 on a `@Composable` (the two that are not are the `EditTransactionViewModel` and `SyncOrchestrator`
 constructors). Live in the source: `@Suppress("CyclomaticComplexMethod")` at
-`ui-android/.../ProfileScreen.kt:239`, tracked in `docs/PROGRESS.md`. So `TooManyFunctions` per file
+`ui-android/.../ProfileScreen.kt:251`, tracked in `docs/PROGRESS.md`. So `TooManyFunctions` per file
 is the rule the repo *leans on* for Compose — not the only one that reaches it.
 **What the gate does not cover:** `:ui-android:detektAndroidMainSourceSet` reports **21** issues
 deliberately left outside it — `detektMainAndroid` covers the same files *with* type resolution, so

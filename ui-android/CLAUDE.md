@@ -89,8 +89,10 @@ ever stutters, check compose compiler metrics before blaming the pattern.
 
 - `./gradlew :ui-android:testAndroidHostTest` — JVM host tests. `--rerun` is a **per-task** option:
   with several tasks in one invocation it forces only the task it follows.
-- Lives here: `AppNavigatorTest`, `RouteSerializationTest`, `HighlightQuotedTest`. The Koin
-  graph test and the formatter/mapper suites belong to `:presentation`.
+- Lives here: `AppNavigatorTest`, `RouteSerializationTest`, `HighlightQuotedTest`,
+  `CommitHashUiTest`. The Koin graph test and the formatter/mapper suites belong to
+  `:presentation`. Pure UI logic gets a plain function next to the screen and a test here — that
+  is what `commitHashUi()` is, and why the constant behind it has no second copy in another module.
 
 ## Gate
 

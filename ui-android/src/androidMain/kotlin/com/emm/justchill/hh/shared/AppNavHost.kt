@@ -37,6 +37,7 @@ import com.emm.justchill.hh.auth.authEntries
 import com.emm.justchill.hh.category.categoryEntries
 import com.emm.justchill.hh.home.homeEntries
 import com.emm.justchill.hh.onboarding.onboardingEntries
+import com.emm.justchill.hh.profile.COMMIT_HASH_QUALIFIER
 import com.emm.justchill.hh.profile.profileEntries
 import com.emm.justchill.hh.recurring.recurringEntries
 import com.emm.justchill.hh.report.reportEntries
@@ -75,7 +76,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         val syncController: SyncController = koinInject()
         val appVersion: String = koinInject(named("appVersion"))
         // Full sha the APK was built from; the profile footer shows the first 7 and copies all 40.
-        val commitHash: String = koinInject(named("commitHash"))
+        // The qualifier is the shared constant, not a literal: androidPlatformModule binds it from
+        // :androidApp, and two literals let a rename on either side compile and crash at launch.
+        val commitHash: String = koinInject(named(COMMIT_HASH_QUALIFIER))
 
         // First-launch Manifesto gate: show the manifesto once, then land on startTab on every
         // subsequent launch.

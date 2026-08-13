@@ -37,6 +37,10 @@ nothing belongs in them anymore.
 - `SupabaseConfig`
 - `GoogleSignInLauncher` (+ `GoogleCredentialClient`)
 - `appVersion` / `googleServerClientId` — named `String`s from `BuildConfig`
+- `commitHash` — named `String` from the **generated** `BuildInfo`, not `BuildConfig`. Its only
+  consumer is `AppNavHost` in `:ui-android`, outside `appModules()`, so `AppGraphKoinTest` cannot
+  see it: `AndroidPlatformModuleTest` guards it here instead. Qualifier and fallback are
+  `:ui-android`'s `COMMIT_HASH_QUALIFIER` / `UNKNOWN_COMMIT_HASH`, shared so a rename cannot compile.
 - `DispatchersProvider`, `CurrentActivityHolder`
 - `SyncLogger` → `CrashReportingSyncLogger` (Crashlytics is Android-only; iOS binds
   `PrintlnSyncLogger` in `KoinIos.kt`)
@@ -64,7 +68,9 @@ this file used to say it is not declared either: the catalog holds only `firebas
 
 `versionCode` is the git commit count, `versionName` the latest **release** tag (`git describe
 --match "v[0-9]*"` — the filter is load-bearing, the repo is full of non-release tags like
-`pre-kmp`) — both computed at configure time in `build.gradle.kts`.
+`pre-kmp`) — both computed at configure time in `build.gradle.kts`. The third git-derived value,
+`BuildInfo.commitHash`, is NOT here: the `justchill.build.info` convention plugin reads
+`git rev-parse HEAD` at configure time and generates `BuildInfo.kt` into `build/`, per variant.
 
 ## Testing
 
