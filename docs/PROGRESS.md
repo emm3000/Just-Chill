@@ -347,11 +347,14 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   se auto-cura — solo latencia.
 - [ ] Pasada de performance de Compose: `derivedStateOf`, lambdas recordadas, `contentType` en
   `LazyColumn`.
-- [ ] `BuildInfoConventionPlugin` no declara marker para `libs.plugins.android.application` (el tipo
-  de variante de AGP entra solo transitivamente) y llama a
-  `extensions.configure<ApplicationAndroidComponentsExtension>` de forma eager al aplicarse, en vez de
-  diferir con `pluginManager.withPlugin("com.android.application")`. Depende del orden del bloque
-  `plugins { }` en `androidApp/build.gradle.kts`.
+- [x] **`BuildInfoConventionPlugin` ya no depende del orden del bloque `plugins { }`.**
+  `build-logic/build.gradle.kts` declara el marker de `libs.plugins.android.application` (el tipo de
+  variante de AGP entraba solo transitivamente por el marker de KMP-library) y el plugin difiere con
+  `pluginManager.withPlugin("com.android.application")`. La fragilidad era real y está medida: con el
+  `extensions.configure` eager, subir `id("justchill.build.info")` arriba de
+  `alias(libs.plugins.android.application)` falla con *"Extension of type
+  'ApplicationAndroidComponentsExtension' does not exist"*; con `withPlugin`, los dos órdenes generan
+  `BuildInfo.kt` — los dos se construyeron.
 - [ ] La escritura al portapapeles del commit, el split short-en-pantalla/40-al-copiar y la rama
   `SDK_INT < TIRAMISU` del snackbar (`ProfileEntries.kt`) no tienen cobertura automática en ninguna
   tarea del gate. `commitHashUi()` sí la tiene; lo que la rodea, no.

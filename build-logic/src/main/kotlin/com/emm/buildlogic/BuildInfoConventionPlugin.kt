@@ -30,6 +30,20 @@ import org.gradle.kotlin.dsl.register
  * The KMP modules keep `kotlin.srcDir(taskProvider)` (see [IosSupabaseConfigConventionPlugin]):
  * that is the Kotlin Multiplatform extension, which AGP's source-set rule does not govern.
  *
+ * ### Why `withPlugin` and not a plain `extensions.configure`
+ *
+ * `ApplicationAndroidComponentsExtension` is registered by the application plugin, so configuring it
+ * straight out of `apply()` reads whatever is registered at that instant — which made this plugin
+ * depend on the order of the `plugins { }` block. Measured, not assumed: with the eager call, moving
+ * `id("justchill.build.info")` above `alias(libs.plugins.android.application)` in
+ * androidApp/build.gradle.kts fails configuration with *"Extension of type
+ * 'ApplicationAndroidComponentsExtension' does not exist"*. With `withPlugin` the block runs when
+ * the application plugin arrives, and both orders generate `BuildInfo.kt` — both were built.
+ *
+ * The AGP application marker is declared in build-logic/build.gradle.kts for the same reason. The
+ * type used to arrive transitively through the `android.kotlin.multiplatform.library` marker, so
+ * this build compiled against a dependency it never asked for.
+ *
  * ### Why the hash is read here and not in the task
  *
  * `providers.exec { }` resolved at configuration time is a configuration-cache *input*: Gradle
@@ -43,24 +57,26 @@ import org.gradle.kotlin.dsl.register
 class BuildInfoConventionPlugin : Plugin<Project> {
 
     override fun apply(target: Project) = with(target) {
-        // Read once, not once per variant: four execs would be four chances to disagree, and the
-        // hash is a property of the checkout, not of the variant.
-        val hash = gitCommitHash()
+        pluginManager.withPlugin("com.android.application") {
+            // Read once, not once per variant: four execs would be four chances to disagree, and
+            // the hash is a property of the checkout, not of the variant.
+            val hash = gitCommitHash()
 
-        extensions.configure<ApplicationAndroidComponentsExtension> {
-            onVariants { variant ->
-                // One task per variant because addGeneratedSourceDirectory assigns the output
-                // directory itself; a single shared task would have four variants fighting over it.
-                val generate = tasks.register<GenerateBuildInfoTask>(
-                    "generate${variant.name.replaceFirstChar(Char::uppercase)}BuildInfo",
-                ) {
-                    description = "Generates BuildInfo.kt from the git commit HEAD points at."
-                    commitHash.set(hash)
+            extensions.configure<ApplicationAndroidComponentsExtension> {
+                onVariants { variant ->
+                    // One task per variant because addGeneratedSourceDirectory assigns the output
+                    // directory itself; one shared task would have four variants fighting over it.
+                    val generate = tasks.register<GenerateBuildInfoTask>(
+                        "generate${variant.name.replaceFirstChar(Char::uppercase)}BuildInfo",
+                    ) {
+                        description = "Generates BuildInfo.kt from the git commit HEAD points at."
+                        commitHash.set(hash)
+                    }
+                    variant.sources.kotlin?.addGeneratedSourceDirectory(
+                        generate,
+                        GenerateBuildInfoTask::outputDirectory,
+                    )
                 }
-                variant.sources.kotlin?.addGeneratedSourceDirectory(
-                    generate,
-                    GenerateBuildInfoTask::outputDirectory,
-                )
             }
         }
     }
