@@ -11,6 +11,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -173,6 +174,46 @@ class TableSyncCategoryTypeTest {
         assertEquals("cat-income", db.recurring_movementsQueries.find("rm-ok").executeAsOne().categoryId)
     }
 
+    // ── the third branch: the parent is absent, not wrong ─────────────────────
+
+    /**
+     * An absent category must NOT be swallowed into a null — it is the FK-miss contract.
+     *
+     * This is the branch the mismatch repair could most easily have destroyed: nulling on "no local
+     * category" looks like the same fix and quietly converts every transaction pulled ahead of its
+     * category into an uncategorized one, permanently, because the pull never revisits an applied
+     * row. Passing the id through instead lets the key refuse the row, which on a device is
+     * `SQLiteConstraintException` → [RemoteRowOutcome.Deferred] → the cursor is held until the
+     * parent arrives.
+     *
+     * The host driver cannot show that last step: JDBC raises `java.sql.SQLException`, which is
+     * neither `SQLiteConstraintException` nor `SQLiteException`, so `isSqliteConstraintViolation()`
+     * says no and the throw escapes instead of becoming `Deferred`. Same caveat as the note at the
+     * foot of `TransactionTableSyncPullTest`; `SyncFkExceptionTest` pins the exception type against
+     * a real driver. What this CAN pin is the part that matters here — the row did not land
+     * uncategorized, so the id was passed through rather than repaired away.
+     */
+    @Test
+    fun `a remote transaction whose category is absent locally is not written uncategorized`() = runTest {
+        val page = listOf(remoteTransaction(id = "tx-early", type = "Spend", categoryId = "cat-not-here"))
+
+        assertFails { PagedTransactionSync(db, logger, page).pull(USER, null, ConflictResolver()) }
+
+        assertNull(
+            db.transactionsQueries.find("tx-early").executeAsOneOrNull(),
+            "the row must be refused by the key, not rewritten with no category",
+        )
+    }
+
+    @Test
+    fun `a remote recurring movement whose category is absent locally is not written uncategorized`() = runTest {
+        val page = listOf(remoteRecurring(id = "rm-early", type = "Spend", categoryId = "cat-not-here"))
+
+        assertFails { PagedRecurringSync(db, logger, page).pull(USER, null, ConflictResolver()) }
+
+        assertNull(db.recurring_movementsQueries.find("rm-early").executeAsOneOrNull())
+    }
+
     // ── the parent row ────────────────────────────────────────────────────────
 
     @Test
@@ -189,8 +230,6 @@ class TableSyncCategoryTypeTest {
         )
         val page = listOf(remoteCategory(id = "cat-spend", categoryType = "Income"))
 
-        // Without the detach this throws: the parent-key change orphans both children, SQLite
-        // refuses the UPDATE, and the pull reads that refusal as "the parent has not arrived yet".
         PagedCategorySync(db, logger, page).pull(USER, null, ConflictResolver())
 
         assertEquals("Income", db.categoriesQueries.find("cat-spend").executeAsOne().categoryType)
@@ -199,6 +238,38 @@ class TableSyncCategoryTypeTest {
         // Both movements survive: the label goes, the movement does not.
         assertEquals("Spend", db.transactionsQueries.find("tx-1").executeAsOne().type)
         assertEquals("Spend", db.recurring_movementsQueries.find("rm-1").executeAsOne().type)
+    }
+
+    /**
+     * The refusal the detach exists to avoid, executed rather than asserted in a comment.
+     *
+     * `updateFromRemote` is the exact statement `CategoryTableSync.applyRemoteRow` runs, called here
+     * WITHOUT the detach in front of it. SQLite refuses it, because changing the parent key strands
+     * the movement filed under the old pair — and the pull would read that refusal as "the parent
+     * has not arrived yet" and hold the shared cursor, for all four tables, forever.
+     */
+    @Test
+    fun `changing a category's type is refused while a movement still holds the old pair`() {
+        exec(
+            "INSERT INTO transactions(transactionId, type, amount, description, occurredAt, categoryId, " +
+                "accountId, createdAt, updatedAt) " +
+                "VALUES ('tx-1', 'Spend', 500, '', '2026-05-23T09:33:20', 'cat-spend', 'acc-1', 1, 1)",
+        )
+
+        assertFails {
+            db.categoriesQueries.updateFromRemote(
+                name = "Café",
+                icon = "coffee",
+                color = "brown",
+                categoryType = "Income",
+                isDefault = false,
+                updatedAt = 2L,
+                createdAt = 1L,
+                userId = USER,
+                deletedAt = null,
+                categoryId = "cat-spend",
+            )
+        }
     }
 
     @Test

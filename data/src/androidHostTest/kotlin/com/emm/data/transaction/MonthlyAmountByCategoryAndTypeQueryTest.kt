@@ -59,18 +59,30 @@ class MonthlyAmountByCategoryAndTypeQueryTest {
 
     @Test
     fun `the two types are never netted against each other`() {
-        // This used to file all three movements under one category and call that normal. Schema v5
-        // made it impossible: (categoryId, type) is a foreign key now, so a category is Income or
-        // Spend and never both. The property it was really protecting survives unchanged — the
-        // grouping is by type as well as category, so money in is never subtracted from money out.
+        // This used to file all three movements under ONE category and call that normal. Schema v5
+        // made it impossible — (categoryId, type) is a foreign key, so a category is Income or
+        // Spend and never both — and simply splitting them across two categories would have left
+        // the test unable to fail: with one category per type, `GROUP BY c.categoryId` alone
+        // produces identical output, so dropping `t.type` from the grouping goes unnoticed.
+        //
+        // The UNCATEGORIZED pair is what carries the property now. The LEFT JOIN collapses every
+        // null-category movement into a single group per type, so those two rows share a grouping
+        // key in everything except `t.type` — remove it and 900 in is netted against 500 out.
+        // 4.sqm manufactures exactly these rows, on both sides of the ledger, which is why this
+        // matters more after the change than before it.
         insertTransaction(id = "t-1", type = SPEND, categoryId = "cat-live", amount = 1_000)
         insertTransaction(id = "t-2", type = SPEND, categoryId = "cat-live", amount = 500)
         insertTransaction(id = "t-3", type = INCOME, categoryId = "cat-income", amount = 700)
+        insertTransaction(id = "t-4", type = SPEND, categoryId = null, amount = 500)
+        insertTransaction(id = "t-5", type = INCOME, categoryId = null, amount = 900)
 
         val rows = monthRows()
 
-        assertEquals(1_500L, rows.single { it.type == SPEND }.totalAmount)
-        assertEquals(700L, rows.single { it.type == INCOME }.totalAmount)
+        assertEquals(1_500L, rows.single { it.type == SPEND && it.categoryId == "cat-live" }.totalAmount)
+        assertEquals(700L, rows.single { it.type == INCOME && it.categoryId == "cat-income" }.totalAmount)
+        assertEquals(500L, rows.single { it.type == SPEND && it.categoryId == null }.totalAmount)
+        assertEquals(900L, rows.single { it.type == INCOME && it.categoryId == null }.totalAmount)
+        assertEquals(4, rows.size, "four groups: two categorized, and one uncategorized per type")
     }
 
     @Test

@@ -192,9 +192,10 @@ class MigrationV4ToV5Test {
             context = context,
             name = null,
             callback = object : AndroidSqliteDriver.Callback(schema = schemaV4) {
-                // Deliberately NOT enabling foreign keys: that is what a real Android upgrade sees
-                // (onOpen runs after onUpgrade), and case 3 needs to plant a row the old
-                // single-column FK would have rejected.
+                // Deliberately NOT enabling foreign keys HERE: seeding needs them off, because
+                // case 3 plants a row the old single-column FK would have rejected. The handle is
+                // captured instead so a test can flip them on at the moment it chooses — before
+                // migrating (the iOS configuration) or after it (to assert enforcement).
                 override fun onOpen(db: SupportSQLiteDatabase) {
                     openedDb = db
                 }
@@ -364,6 +365,60 @@ class MigrationV4ToV5Test {
         assertEquals(before, rawCount("SELECT COUNT(*) FROM recurring_movements"))
     }
 
+    // ── the iOS configuration: migrating with foreign keys already ON ─────────
+
+    /**
+     * The whole migration, run the way iOS runs it: **foreign keys enabled before it starts.**
+     *
+     * Every other test here migrates with them off, which is what Android does (`onOpen` runs after
+     * `onUpgrade`) — and under that configuration 4.sqm passes whatever order its statements are
+     * in. This is the test that holds the ordering argument in its header: the repair must come
+     * BEFORE the rebuild, because `INSERT INTO transactions_new SELECT` is validated against the
+     * new key as it copies. Move the repair after the rebuild and this fails while the other ten
+     * stay green.
+     *
+     * `DatabaseDriver.ios.kt` hands `NativeSqliteDriver` `foreignKeyConstraints = true`, which
+     * applies to the whole connection; there is no onOpen/onUpgrade split to hide behind and
+     * `PRAGMA foreign_keys` is a no-op inside a transaction. Android is the lenient platform here,
+     * not the strict one, so testing only Android tests the easy half.
+     */
+    @Test
+    fun the_migration_completes_with_foreign_keys_enabled_the_way_ios_runs_it() {
+        insertV4Transaction(id = "TX-MISMATCH", type = "Income", categoryId = "'C-SPEND'")
+        insertV4Transaction(id = "TX-OK", type = "Income", categoryId = "'C-INCOME'")
+        insertV4Transaction(id = "TX-ORPHAN", type = "Spend", categoryId = "'C-GONE'")
+        insertV4Transaction(id = "TX-NULL", type = "Spend", categoryId = "NULL")
+        insertV4Recurring(id = "RM-MISMATCH", type = "Spend", categoryId = "'C-INCOME'")
+        insertV4Recurring(id = "RM-OK", type = "Spend", categoryId = "'C-SPEND'")
+
+        enableForeignKeys()
+        migrate()
+
+        // Every repaired shape still repaired, with the constraint live throughout.
+        assertNull(database.transactionsQueries.find("TX-MISMATCH").executeAsOne().categoryId)
+        assertNull(database.transactionsQueries.find("TX-ORPHAN").executeAsOne().categoryId)
+        assertNull(database.transactionsQueries.find("TX-NULL").executeAsOne().categoryId)
+        assertEquals("C-INCOME", database.transactionsQueries.find("TX-OK").executeAsOne().categoryId)
+        assertNull(database.recurring_movementsQueries.find("RM-MISMATCH").executeAsOne().categoryId)
+        assertEquals("C-SPEND", database.recurring_movementsQueries.find("RM-OK").executeAsOne().categoryId)
+        assertEquals(4L, rawCount("SELECT COUNT(*) FROM transactions"))
+        assertEquals(2L, rawCount("SELECT COUNT(*) FROM recurring_movements"))
+    }
+
+    @Test
+    fun nothing_violates_the_new_key_once_the_migration_has_run() {
+        // `PRAGMA foreign_key_check` walks every row of every table against every key and returns
+        // one row per violation. Empty is the only acceptable answer, and it is a stronger
+        // statement than any per-row assertion above: it also covers the rows no test named.
+        insertV4Transaction(id = "TX-MISMATCH", type = "Income", categoryId = "'C-SPEND'")
+        insertV4Transaction(id = "TX-ORPHAN", type = "Spend", categoryId = "'C-GONE'")
+        insertV4Recurring(id = "RM-MISMATCH", type = "Spend", categoryId = "'C-INCOME'")
+
+        migrate()
+
+        assertEquals(emptyList(), foreignKeyViolations(), "no row may violate the schema it just migrated to")
+    }
+
     // ── structure ─────────────────────────────────────────────────────────────
 
     @Test
@@ -489,10 +544,34 @@ class MigrationV4ToV5Test {
     private fun migrate() =
         EmmDatabaseData.Schema.migrate(driver, oldVersion = 4, newVersion = EmmDatabaseData.Schema.version)
 
+    /**
+     * Turns foreign-key enforcement on for the rest of the test.
+     *
+     * Every other device test in this suite flips the flag inside `onOpen` and never moves it. This
+     * one has to move it, because the fixture must be seeded with the constraint OFF (the orphan
+     * row) and two tests need it ON afterwards — so the `SupportSQLiteDatabase` is captured in
+     * `onOpen` and flipped here instead. `setForeignKeyConstraintsEnabled` is documented as illegal
+     * inside a transaction; both call sites are outside one, and `Schema.migrate` opens none of its
+     * own (the real upgrade's transaction belongs to `SQLiteOpenHelper`, which this test bypasses).
+     */
     private fun enableForeignKeys() {
         val db = openedDb ?: error("onOpen never fired — the driver was never used")
         db.setForeignKeyConstraintsEnabled(true)
     }
+
+    /** One entry per row that violates any foreign key, as `table:rowid`. Empty means clean. */
+    private fun foreignKeyViolations(): List<String> = driver.executeQuery(
+        identifier = null,
+        sql = "PRAGMA foreign_key_check",
+        mapper = { cursor ->
+            val rows = mutableListOf<String>()
+            while (cursor.next().value) {
+                rows += "${cursor.getString(0)}:${cursor.getLong(1)}"
+            }
+            QueryResult.Value(rows.toList())
+        },
+        parameters = 0,
+    ).value
 
     private fun exec(sql: String) = driver.execute(null, sql, 0)
 

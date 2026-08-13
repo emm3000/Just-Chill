@@ -24,7 +24,12 @@ import kotlin.test.assertFailsWith
  *  1. an orphan FK insert via insertOrIgnoreFromRemote throws exactly SQLiteConstraintException
  *     (ON CONFLICT clauses do not apply to FOREIGN KEY constraints), and
  *  2. catching it inside db.transaction {} still commits sibling rows applied in the same
- *     transaction (statement-level ABORT, not transaction rollback).
+ *     transaction (statement-level ABORT, not transaction rollback), and
+ *  3. the same holds for the COMPOSITE (categoryId, type) key added in schema v5 — the pull's
+ *     absent-category branch deliberately lets that key fire so the row defers, and a composite
+ *     miss whose parent index were wrong would raise a plain SQLiteException ("foreign key
+ *     mismatch") that isSqliteConstraintViolation() does not recognise. Then the row would not
+ *     defer, it would abort the pull.
  *
  * Run with: ./gradlew :data:connectedDebugAndroidTest
  */
@@ -81,6 +86,29 @@ class SyncFkExceptionTest {
             )
         }
         assertEquals(0L, countTx("orphan-tx"), "orphan row must not be inserted")
+    }
+
+    @Test
+    fun orphan_composite_category_key_throws_the_same_type_the_pull_defers_on() {
+        // The categoryId half of the key, which is the one the sync pull leans on: a transaction
+        // pulled ahead of its category must raise the type applyRemoteRow catches, not a generic
+        // SQLiteException. Nothing else in the suite covers the composite key's exception type.
+        assertFailsWith<SQLiteConstraintException> {
+            database.transactionsQueries.insertOrIgnoreFromRemote(
+                transactionId = "early-tx",
+                type = "Spend",
+                amount = 100L,
+                description = "",
+                occurredAt = "2026-08-10T12:00:00",
+                categoryId = "not-pulled-yet",
+                accountId = "A1",
+                createdAt = 0L,
+                updatedAt = 1_000L,
+                userId = "user-1",
+                deletedAt = null,
+            )
+        }
+        assertEquals(0L, countTx("early-tx"), "the row must wait for its category, not land without one")
     }
 
     @Test
