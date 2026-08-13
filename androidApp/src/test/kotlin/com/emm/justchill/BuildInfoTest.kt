@@ -1,7 +1,6 @@
 package com.emm.justchill
 
 import org.junit.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
@@ -26,10 +25,16 @@ class BuildInfoTest {
     }
 
     @Test
-    fun `the unknown fallback survives the footer's abbreviation intact`() {
-        // ProfileScreen abbreviates whatever it is handed to seven characters. "unknown" is exactly
-        // seven, which is what stops a build with no git answer from reporting itself as "unknow".
-        assertEquals(SHORT_LENGTH, UNKNOWN.length)
+    fun `the hash is long enough for the footer to abbreviate`() {
+        // ProfileScreen renders commitHash.take(7). `take` truncates silently, so a value shorter
+        // than that produces a short label rather than a failure — this is the assertion that
+        // stands behind it. It holds for a 40-char sha and for the "unknown" fallback, which is
+        // exactly seven characters for this reason.
+        assertTrue(
+            BuildInfo.commitHash.length >= SHORT_LENGTH,
+            "The footer abbreviates to $SHORT_LENGTH chars, but BuildInfo.commitHash is " +
+                "${BuildInfo.commitHash.length} long: \"${BuildInfo.commitHash}\"",
+        )
     }
 
     private companion object {

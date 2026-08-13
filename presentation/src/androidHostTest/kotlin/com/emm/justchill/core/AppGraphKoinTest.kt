@@ -104,6 +104,29 @@ class AppGraphKoinTest {
             boundTypes.size >= MIN_EXPECTED_BINDINGS,
             "Only ${boundTypes.size} bindings were discovered; the registry sweep looks broken.",
         )
+
+        // Everything above walks the definitions that EXIST, so it proves that what is bound
+        // resolves and can never prove that what a consumer ASKS FOR was bound at all. For a
+        // ViewModel that gap is closed by EXPECTED_VIEW_MODELS; for a qualified String nothing
+        // closes it, so the keys below are named literally and checked by hand.
+        //
+        // Blank counts as missing: an empty string is a binding that resolves and a footer that
+        // reports nothing.
+        //
+        // Folded into this test rather than given its own @Test on purpose. JUnit4 runs @Before per
+        // method, and this class's @Before builds a real SupabaseClient and calls
+        // Dispatchers.setMain — the path behind the ~1-in-5 "Dispatchers.Main was accessed" flake
+        // recorded in docs/PROGRESS.md. A fourth method would be a fourth roll of that die for one
+        // extra assertion.
+        val missing: List<String> = UNSWEPT_QUALIFIED_STRINGS.filter { name ->
+            koin.getOrNull<String>(named(name)).isNullOrBlank()
+        }
+        assertTrue(
+            missing.isEmpty(),
+            "These qualified strings are resolved by a consumer the sweep cannot see, and are " +
+                "missing or blank in the graph: $missing. Bind them in androidPlatformModule " +
+                "(production) and in testPlatformModule.",
+        )
     }
 
     @Test
@@ -133,36 +156,6 @@ class AppGraphKoinTest {
             )
             assertTrue(viewModel is ViewModel, "$name did not resolve to a ViewModel.")
         }
-    }
-
-    /**
-     * The qualified strings `AppNavHost` resolves directly are bound, and are not blank.
-     *
-     * The sweep above walks the definitions that EXIST, so it can only ever prove that what is
-     * bound resolves — never that something a consumer asks for was bound at all. For a ViewModel
-     * that gap is closed by [EXPECTED_VIEW_MODELS]; for these two it was not closed by anything.
-     *
-     * They are the only bindings the app resolves from OUTSIDE `appModules()`: `AppNavHost` is a
-     * `:ui-android` composable, invisible from this module, and it reads both with `koinInject`
-     * before the first screen renders — on every launch, including a prod release. Deleting either
-     * one from `androidPlatformModule` compiles clean, passes every other test in this file, and
-     * crashes the app at startup. Listed by literal name on purpose: the point is to name what a
-     * consumer this module cannot see depends on.
-     *
-     * Blank is checked as well as present, because an empty string is a binding that resolves and a
-     * footer that reports nothing.
-     */
-    @Test
-    fun `the qualified strings the Compose host injects are bound`() {
-        val missing: List<String> = HOST_INJECTED_STRINGS.filter { name ->
-            koin.getOrNull<String>(named(name)).isNullOrBlank()
-        }
-
-        assertTrue(
-            missing.isEmpty(),
-            "AppNavHost resolves these by qualifier and they are missing or blank in the graph: " +
-                "$missing. Bind them in androidPlatformModule (production) and testPlatformModule.",
-        )
     }
 
     /**
@@ -301,10 +294,24 @@ class AppGraphKoinTest {
         const val MIN_EXPECTED_TIME_FIELDS = 20
 
         /**
-         * The qualifiers `ui-android/.../AppNavHost.kt` passes to `koinInject`. Keep in sync with
-         * that file — it is the only consumer, and it lives in a module this test cannot import.
+         * Qualified `String` bindings NO definition in `appModules()` consumes, so the sweep above
+         * cannot reach them. Exactly one today: `commitHash`, read by `AppNavHost` in `:ui-android`
+         * — a module this test cannot import — on every launch of every build, before the first
+         * screen renders. Deleting it from `androidPlatformModule` compiles clean and crashes the
+         * app at startup.
+         *
+         * `appVersion` is deliberately NOT here despite being read by the same `koinInject` call.
+         * `profileModule` also resolves it, at ProfileModule.kt's `appVersion = get(named(...))`,
+         * so removing that binding breaks `ProfileViewModel` and the sweep reports it on its own.
+         *
+         * Both arms were run, not reasoned about. Dropping `commitHash` from `testPlatformModule`
+         * fails this test and only this test, at the check below. Dropping `appVersion` fails ALL
+         * THREE tests in this class, and fails this one at the sweep above rather than here —
+         * `ProfileViewModel` is a definition, so every test that resolves definitions trips over
+         * it. Listing a key the sweep already covers would make this list look load-bearing where
+         * it is not.
          */
-        val HOST_INJECTED_STRINGS = listOf("appVersion", "commitHash")
+        val UNSWEPT_QUALIFIED_STRINGS = listOf("commitHash")
 
         val EXPECTED_VIEW_MODELS = sortedSetOf(
             "AccountsViewModel",
