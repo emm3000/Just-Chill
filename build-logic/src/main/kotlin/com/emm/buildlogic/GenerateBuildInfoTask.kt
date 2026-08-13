@@ -20,6 +20,17 @@ import org.gradle.api.tasks.TaskAction
  * cache can decide whether this task is up to date without running git during execution, and so
  * the task itself has no dependency on a git checkout being present.
  *
+ * ### Known limitation: a dirty working tree
+ *
+ * `git rev-parse HEAD` names the last commit, not the bytes that were compiled. A build made with
+ * uncommitted edits advertises a commit whose code it did not build, and the footer has no way to
+ * say so. `git describe --dirty` is the usual mitigation and is deliberately NOT used: the
+ * 40-hex-or-nothing rule in [normalizeCommitHash] would reduce a `-dirty` suffix to "unknown", and
+ * widening that regex to admit the suffix is the one change that would make the generated file
+ * unsafe again. The limitation is accepted. What ships through Firebase App Distribution is built
+ * by CI from a pushed commit, so the tree is clean exactly where the hash is load-bearing; a dirty
+ * local build is a build whose author already knows what is in it.
+ *
  * A typed task rather than an ad-hoc `doLast { }`, for the same reason as
  * [GenerateIosSupabaseConfigTask]: inputs and outputs are declared as properties, so incrementality
  * and configuration-cache compatibility come from the type instead of from remembering not to
@@ -38,7 +49,6 @@ abstract class GenerateBuildInfoTask : DefaultTask() {
     @TaskAction
     fun generate() {
         val full = normalizeCommitHash(commitHash.get())
-        val short = full.take(SHORT_COMMIT_HASH_LENGTH)
 
         val packageDir = outputDirectory.get().asFile.resolve("com/emm/justchill")
         packageDir.mkdirs()
@@ -55,7 +65,6 @@ abstract class GenerateBuildInfoTask : DefaultTask() {
             |// plus a getter: the hash moves, the ABI does not. Do not "optimize" this into a const.
             |object BuildInfo {
             |    val commitHash: String = "$full"
-            |    val shortCommitHash: String = "$short"
             |}
             |
             """.trimMargin(),
@@ -63,14 +72,12 @@ abstract class GenerateBuildInfoTask : DefaultTask() {
     }
 
     internal companion object {
-        /** Git's own abbreviation floor, and what GitHub shows. */
-        const val SHORT_COMMIT_HASH_LENGTH = 7
-
         /**
          * Stand-in when git cannot answer — a source tarball, a shallow export, no git on PATH.
          *
-         * Exactly [SHORT_COMMIT_HASH_LENGTH] characters long on purpose, so the short form degrades
-         * to the same word instead of a truncated "unknow".
+         * Exactly seven characters long on purpose: the profile footer abbreviates whatever it is
+         * given to seven, and this way the fallback degrades to the same word rather than to a
+         * truncated "unknow".
          */
         const val UNKNOWN_COMMIT = "unknown"
 
