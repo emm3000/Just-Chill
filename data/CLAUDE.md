@@ -102,7 +102,7 @@ exception type here.
 - Instrumented tests in `data/src/androidDeviceTest/`: `MigrationV1ToV2Test`, `MigrationV2ToV3Test`,
   `MigrationV3ToV4Test`, `MigrationV4ToV5Test`, `DeleteUseCasesE2ETest`, `RecurringMovementFkTest`,
   `SyncFkExceptionTest`.
-  Run them with `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator; 31 tests).
+  Run them with `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator; 34 tests).
   They are the only thing that exercises migrations against the real `AndroidSqliteDriver` —
   **run them before shipping any schema change.** Gotcha: `kotlin.assert()` is a no-op on ART;
   always use `kotlin.test.assertTrue`.
@@ -111,7 +111,10 @@ exception type here.
   `recurring_movements` because it cannot add a table constraint either, and repairs the data first
   — on iOS the copy runs with foreign keys ON, so repairing afterwards would repair rows that never
   crossed. `MigrationV3ToV4Test` and `MigrationV4ToV5Test` are what say the rows, the indexes, the
-  types and the ability to open the app at all survive them.
+  types and the ability to open the app at all survive them. Two of `MigrationV4ToV5Test`'s cases
+  migrate with **foreign keys ON** — the iOS configuration, and the only one under which statement
+  order in `4.sqm` matters at all. Android runs them off here (`onOpen` after `onUpgrade`), so a
+  suite that only tested Android would pass whatever order the migration were written in.
 
 ### Migration tests: use raw SQL against historical schemas
 

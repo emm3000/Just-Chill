@@ -86,9 +86,12 @@ class AccountTableSync(private val db: EmmDatabaseData, client: SupabaseClient, 
 
     /**
      * Two-statement upsert: INSERT OR IGNORE handles new rows; UPDATE handles existing ones —
-     * neither triggers an implicit DELETE, so child-table FK constraints (ON DELETE RESTRICT/SET NULL)
-     * are safe. Defers the row on an FK constraint failure (a parent row absent locally — it will
-     * retry next cycle once the parent arrives).
+     * neither triggers an implicit DELETE, so `ON DELETE RESTRICT` on the child tables that
+     * reference an account is never fired. (No `SET NULL` clause is left anywhere in the schema:
+     * the categoryId one went with the composite key in v5.)
+     *
+     * Defers the row on an FK constraint failure (a parent row absent locally — it will retry next
+     * cycle once the parent arrives).
      */
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override fun applyRemoteRow(remote: AccountRowDto): RemoteRowOutcome = try {

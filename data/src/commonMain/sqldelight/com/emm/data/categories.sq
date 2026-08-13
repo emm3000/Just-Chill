@@ -42,9 +42,18 @@ SET deletedAt = ?, updatedAt = ?, syncState = 'Pending'
 WHERE categoryId = ?;
 
 -- Backup restore — see the equivalent block in accounts.sq for why this is a tombstone plus
--- INSERT OR IGNORE + UPDATE rather than a DELETE plus INSERT OR REPLACE. For categories the
--- OR REPLACE variant is worse still: the physical delete fires ON DELETE SET NULL and silently
--- strips the category off every transaction that referenced it.
+-- INSERT OR IGNORE + UPDATE rather than a DELETE plus INSERT OR REPLACE.
+--
+-- For categories the DELETE variant is worse still, and what makes it worse CHANGED in v5. Under
+-- the old single-column key the physical delete fired ON DELETE SET NULL and silently stripped the
+-- category off every movement that referenced it. That clause is gone: the composite key has no
+-- ON DELETE action, so the same DELETE is now REFUSED outright while any movement still points at
+-- the row. Silent data loss became a hard failure — better, but still not something to route the
+-- restore through.
+--
+-- INSERT OR REPLACE specifically is no longer the hazard it was. SQLite checks a REPLACE's implied
+-- delete at the END of the statement, so reinstating the SAME (categoryId, categoryType) pair
+-- strips nothing; only a REPLACE that changes the type fails, and it fails loudly.
 softDeleteAllLive:
 UPDATE categories
 SET deletedAt = :deletedAt, updatedAt = :updatedAt, syncState = 'Pending'

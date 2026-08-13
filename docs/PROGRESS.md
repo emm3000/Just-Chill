@@ -290,7 +290,7 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   firma el `amount`, así que darlo vuelta reescribiría el balance del usuario. Y no marca las filas
   como `Pending`: con el sync apagado y en rediseño backup-only (ADR 006) no hay a dónde propagar la
   corrección, y solo inflaría el primer diff de backup.
-  **Sin correr en device.** `MigrationV4ToV5Test` (11 tests) está escrito y compila, pero no había
+  **Sin correr en device.** `MigrationV4ToV5Test` (13 tests, dos de ellos migrando con foreign keys ON — la configuración de iOS, la única bajo la que el orden de `4.sqm` importa) está escrito y compila, pero no había
   device conectado; corré `:data:connectedAndroidDeviceTest` antes de shipear esto.
 
 ### Deuda técnica
@@ -522,10 +522,10 @@ siguen en el repo como marcadores históricos.
 - `./gradlew qualityGate` es el gate. Si tocás una firma de dominio, acordate de que
   el gate incluye `:data:compileAndroidDeviceTest` desde `12ecb2b` — antes de eso los
   tests instrumentados podían quedar rotos con el gate en verde.
-- Los tests instrumentados (`:data:connectedAndroidDeviceTest`, **31 tests**) no corren en
+- Los tests instrumentados (`:data:connectedAndroidDeviceTest`, **34 tests**) no corren en
   el gate: necesitan device. Corrélos antes de shipear un cambio de schema o de dominio.
   Última corrida: 2026-08-09, 15/15 verde en `medium_phone` (emulator-5554), después de A6 — el
-  conteo creció a 20 y después a 31 sin volver a correrlos, así que **`MigrationV4ToV5Test` (v4→v5,
+  conteo creció a 20 y después a 34 sin volver a correrlos, así que **`MigrationV4ToV5Test` (v4→v5,
   la FK compuesta) nunca se ejecutó contra un driver real**.
 - Writer y reviewer son siempre agentes delegados separados, para **todo el repo** (no solo
   KMP/iOS): el reviewer corre en contexto fresco y nunca escribió el código que revisa —

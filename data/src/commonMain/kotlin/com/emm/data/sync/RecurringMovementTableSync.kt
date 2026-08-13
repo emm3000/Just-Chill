@@ -99,7 +99,7 @@ open class RecurringMovementTableSync(private val db: EmmDatabaseData, client: S
     /**
      * Two-statement upsert that never triggers an implicit DELETE.
      * INSERT OR IGNORE inserts new rows; UPDATE patches existing ones in-place.
-     * FK constraints (ON DELETE RESTRICT/SET NULL on child tables) are therefore never fired.
+     * `ON DELETE RESTRICT` is therefore never fired, and no table references this one.
      *
      * isActive / dayOfMonth type notes: SQLDelight maps INTEGER columns to Long; the DTO
      * carries Boolean / Int, so we convert before calling the generated queries.

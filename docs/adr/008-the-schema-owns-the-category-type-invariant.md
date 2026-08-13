@@ -56,8 +56,19 @@ rejects.
    key compares the columns as text.
 3. **Neither key carries an `ON DELETE` clause.** `ON DELETE SET NULL` on a composite key nulls
    every child column, `type` included, and `type` is `NOT NULL`, so the clause could only ever
-   abort the delete. Nothing is lost: no code path physically deletes a category — `DeleteCategoryUseCase`
-   tombstones, and preserves the dangling link on purpose — so the clause never fired.
+   abort the delete. It is structurally impossible here, not merely unwanted.
+
+   The clause it replaces was **not** dead code, and an earlier draft of this ADR said it was.
+   `DeleteCategoryUseCase` does only tombstone, but `CategoryLocalDataSource.create` writes through
+   `categories.sq:insert`, which is `INSERT OR REPLACE` — and a REPLACE that hits an existing
+   `categoryId` deletes the row before reinserting it, which fired `ON DELETE SET NULL` and stripped
+   the category off every movement pointing at it. (Verified against SQLite 3.51; the iOS re-seed
+   runs through the same query.) What justifies dropping it is that **the composite key answers the
+   same situations better**: SQLite checks a REPLACE's implied delete at the end of the statement,
+   so reinstating the same `(categoryId, categoryType)` pair now strips nothing at all; a REPLACE
+   that changes the type is refused instead of silently stripping; and a genuine physical `DELETE`
+   of a referenced category is refused too. Every path that used to lose data quietly now either
+   does nothing or fails loudly.
 4. **The migration repairs from the category side, never the type side.** `type` signs the amount
    (`getAccountBalance`, `liveTotals`), so rewriting a movement's type to resolve a mismatch would
    move the user's balance. Nulling the category loses a label the user can restore in two taps;
@@ -97,9 +108,14 @@ rejects.
   first open, on both platforms.
 
 ### Negative / costs
-- **A category can no longer serve both sides of the ledger.** It never really could — `categoryType`
-  is a single column — but a test asserted in a comment that it was normal, and it was seeded that
-  way. A user wanting "Préstamos" in and out needs two categories.
+- **A category can no longer serve both sides of the ledger, and it genuinely could before.**
+  `categoryType` was only ever a label on the category; nothing stopped a movement of either type
+  filing under it, and the frequent-combo and recurring paths both reached that state. The reports
+  screen would then show the one name under both headings.
+  From v5 the author needs **two categories** for something like "Préstamos" — one Income, one
+  Spend — and the two will show as two rows. `MonthlyAmountByCategoryAndTypeQueryTest` asserted in
+  a comment that the single-category shape was normal and seeded exactly it; that fixture is
+  corrected in the same commit.
 - The two enums' constant names are now a schema contract with no compiler check behind it. Renaming
   `TransactionType.Income` or `CategoryType.Income` breaks every write in the app; only the header
   comment in `transactions.sq` says so.

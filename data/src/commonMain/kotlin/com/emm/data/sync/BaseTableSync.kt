@@ -174,7 +174,11 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
 
     /**
      * Two-statement upsert: INSERT OR IGNORE + UPDATE. Neither statement triggers an implicit
-     * DELETE, so child-table FK constraints (ON DELETE RESTRICT/SET NULL) are never fired.
+     * DELETE, so `ON DELETE RESTRICT` on a child table is never fired.
+     *
+     * That is not the same as "no constraint can fire". An UPDATE that changes a PARENT KEY is
+     * checked like any other write, which is why `CategoryTableSync` detaches the movements filed
+     * under a category before changing its type — see the note on its `applyRemoteRow`.
      *
      * Returns [RemoteRowOutcome.Deferred] when a [SQLiteConstraintException] fires (orphan FK —
      * retry next cycle), and [RemoteRowOutcome.Dropped] for a row this client will never be able to

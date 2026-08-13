@@ -105,8 +105,8 @@ open class TransactionTableSync(private val db: EmmDatabaseData, client: Supabas
 
     /**
      * Two-statement upsert: INSERT OR IGNORE handles new rows; UPDATE handles existing ones —
-     * neither triggers an implicit DELETE, so child-table FK constraints (ON DELETE RESTRICT/SET NULL)
-     * are safe.
+     * neither triggers an implicit DELETE, so `ON DELETE RESTRICT` is never fired. No table
+     * references `transactions`, so this one has no children of its own to strand either.
      *
      * Two things can stop a row landing, and they are NOT the same thing:
      *  - an FK constraint failure — the parent account/category has not been pulled/pushed yet, so
