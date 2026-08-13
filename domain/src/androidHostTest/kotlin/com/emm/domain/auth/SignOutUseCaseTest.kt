@@ -1,13 +1,12 @@
 package com.emm.domain.auth
 
 import com.emm.domain.shared.error.DomainException
-import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class SignOutUseCaseTest {
 
@@ -15,12 +14,22 @@ class SignOutUseCaseTest {
     private val useCase = SignOutUseCase(repository)
 
     @Test
-    fun `invoke delegates signOut to repository`() = runTest {
-        coEvery { repository.signOut() } just Runs
+    fun `invoke delegates signOut to repository and returns Revoked unchanged`() = runTest {
+        coEvery { repository.signOut() } returns SignOutResult.Revoked
 
-        useCase()
+        val result = useCase()
 
+        assertEquals(SignOutResult.Revoked, result)
         coVerify(exactly = 1) { repository.signOut() }
+    }
+
+    @Test
+    fun `invoke propagates LocalOnly unchanged`() = runTest {
+        coEvery { repository.signOut() } returns SignOutResult.LocalOnly
+
+        val result = useCase()
+
+        assertEquals(SignOutResult.LocalOnly, result)
     }
 
     @Test

@@ -4,6 +4,7 @@ import com.emm.data.shared.ioDispatcher
 import com.emm.domain.auth.AuthRepository
 import com.emm.domain.auth.AuthUser
 import com.emm.domain.auth.SessionStatus
+import com.emm.domain.auth.SignOutResult
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 import io.github.jan.supabase.SupabaseClient
@@ -86,8 +87,41 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
         user.toDomain()
     }
 
-    override suspend fun signOut(): Unit = authCall {
-        client.auth.signOut()
+    /**
+     * Two steps with deliberately different failure contracts — see [AuthRepository.signOut] for
+     * why. Neither step is a guarantee; what differs is which failure the caller hears about.
+     *
+     * The server-side revoke ([SignOutScope.LOCAL] — it still narrows which sessions the server
+     * invalidates even though it does not shield the caller from a network failure) is attempted
+     * and any failure of it is swallowed, then [io.github.jan.supabase.auth.Auth.clearSession] runs
+     * UNCONDITIONALLY. That call is purely local: it deletes the code verifier, deletes the stored
+     * session, stops the auto-refresh job for the current session, and sets the status to
+     * NotAuthenticated. Nothing in it can fail on network.
+     *
+     * [io.github.jan.supabase.auth.Auth.clearSession] is deliberately OUTSIDE the swallow: if the
+     * session store itself breaks, the caller has to hear about it (it still propagates through
+     * [authCall]), because the user is still signed in.
+     *
+     * Calling `clearSession` again after a successful `signOut` re-runs all of the above — it is
+     * harmless, not literally a no-op. Nothing observes the duplicate: `SessionStatus.NotAuthenticated`
+     * is a data class and the session status is a `MutableStateFlow`, which conflates equal values,
+     * so setting it to an already-equal `NotAuthenticated` a second time does not re-emit to
+     * observers. The happy path pays nothing extra for this shape only because of that conflation.
+     */
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    override suspend fun signOut(): SignOutResult = authCall {
+        val revoked = try {
+            client.auth.signOut(SignOutScope.LOCAL)
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // Swallowed on purpose — see the KDoc above. The local clear below must run whether or
+            // not the server-side revoke was reachable, which is why it sits outside this try.
+            false
+        }
+        client.auth.clearSession()
+        if (revoked) SignOutResult.Revoked else SignOutResult.LocalOnly
     }
 
     override suspend fun resendConfirmationEmail(email: String): Unit = authCall {
@@ -95,11 +129,26 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
     }
 
     /**
-     * Calls the Supabase `delete_account` RPC to remove the auth user and all remote rows,
-     * then clears the on-device session via [SignOutScope.LOCAL].
+     * Calls the Supabase `delete_account` RPC to remove the auth user and all remote rows, then
+     * ATTEMPTS to clear the on-device session via [SignOutScope.LOCAL]. The clear is not guaranteed
+     * here the way it is in [signOut] — see below.
      *
-     * [SignOutScope.LOCAL] is intentional: the auth user no longer exists on the server after
-     * the RPC, so a server-side sign-out call would fail. LOCAL clears the on-device session only.
+     * [SignOutScope.LOCAL] is intentional: it is the narrowest scope, and the auth user no longer
+     * exists on the server after the RPC. What it does NOT do is make the call local. Exactly as
+     * documented on [signOut], supabase-kt 3.7.0's `AuthImpl.signOut` posts `logout` whenever a
+     * session exists — every scope, `LOCAL` included — and catches only
+     * [io.github.jan.supabase.exceptions.RestException]. The deleted user's JWT answers 401/403/404,
+     * which sits in the provider's `SIGN_OUT_IGNORE_CODES`, so the ordinary case does reach
+     * `clearSession()`. A network failure does not: [HttpRequestException] is an `IOException`, not
+     * a `RestException`, so it escapes the provider before the clear runs and [authCall] maps it to
+     * [DomainException.NetworkUnavailable] — leaving the device holding a session for a user that no
+     * longer exists server-side.
+     *
+     * Deliberately NOT repaired with [signOut]'s swallow-then-clear shape: whether a delete whose
+     * remote half already succeeded should still report a qualified success is its own contract
+     * question, deferred to Phase 5 of `docs/sync/ADR009_PLAN.md`. And unlike [signOut], no test
+     * covers this call shape — `DefaultAuthRepositorySignOutTest` exercises [signOut] only, so the
+     * defect above is read off the provider's source rather than off a red test.
      */
     override suspend fun deleteAccount(): Unit = authCall {
         client.postgrest.rpc("delete_account")
@@ -204,17 +253,16 @@ private val VALIDATION_AUTH_CODES: Map<AuthErrorCode, ValidationCode> = mapOf(
  * UI translates.
  *
  * [SessionRequiredException] maps to [DomainException.Unauthorized] here, which diverges from
- * `DefaultSyncRepository.toSyncDomainException` (`DefaultSyncRepository.kt:157`), where the same
- * exception maps to [DomainException.NetworkUnavailable] because it can only mean "session not
- * ready yet" on that path. The delete path does gate on the session leaving
- * [com.emm.domain.auth.SessionStatus.Initializing] before this call (`DeleteUserAccountUseCase.kt:95`),
- * but it does not additionally call `observeSession.awaitInitialization()` the way
- * `DefaultSyncRepository.currentUserId()` does (`DefaultSyncRepository.kt:125`) — the guard against
- * the Kotlin/Native race documented at `DefaultSyncRepository.kt:119-124`, where postgrest reads the
- * JWT synchronously from a session `StateFlow` that is populated asynchronously. That race is still
- * open on the delete path, so this mapping can surface it as a credentials error instead of
- * something retryable. Tracked as a follow-up in `docs/PROGRESS.md`; the sync mapper is not changed
- * by this commit.
+ * `toSyncDomainException` in `DefaultSyncRepository`, where the same exception maps to
+ * [DomainException.NetworkUnavailable] because it can only mean "session not ready yet" on that
+ * path. The delete path does gate on the session leaving [com.emm.domain.auth.SessionStatus.Initializing]
+ * before this call (`resolveAuthenticatedUserId` in `DeleteUserAccountUseCase`), but it does not
+ * additionally call `observeSession.awaitInitialization()` the way `currentUserId` in
+ * `DefaultSyncRepository` does — the guard against the Kotlin/Native race documented there, where
+ * postgrest reads the JWT synchronously from a session `StateFlow` that is populated asynchronously.
+ * That race is still open on the delete path, so this mapping can surface it as a credentials error
+ * instead of something retryable. Tracked as a follow-up in `docs/PROGRESS.md`; the sync mapper is
+ * not changed by this commit.
  */
 internal fun Throwable.toAuthDomainException(): DomainException = when (this) {
     is AuthRestException -> VALIDATION_AUTH_CODES[errorCode]?.let { validationCode ->

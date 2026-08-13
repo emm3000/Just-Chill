@@ -118,7 +118,17 @@ private fun ProfileEntry(
                         ProfileMessage.OperationInProgress,
                         -> EmmSnackbarTone.Error
 
-                        else -> EmmSnackbarTone.Success
+                        // A chosen branch, not a default: EmmSnackbarTone only has two values today,
+                        // so SessionClosedLocallyOnly (the server-side revoke was not reached) is a
+                        // deliberate Success here rather than an unclassified fallback — the sign-out
+                        // the user asked for did succeed locally. The next message added to
+                        // ProfileMessage has to extend this list explicitly; there is no `else`.
+                        ProfileMessage.SessionClosed,
+                        ProfileMessage.SessionClosedLocallyOnly,
+                        ProfileMessage.AccountDeleted,
+                        ProfileMessage.ExportDone,
+                        is ProfileMessage.ImportDone,
+                        -> EmmSnackbarTone.Success
                     },
                 )
             }

@@ -4,6 +4,7 @@ import com.emm.domain.auth.AuthRepository
 import com.emm.domain.auth.AuthUser
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
+import com.emm.domain.auth.SignOutResult
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.sync.ConflictResolver
 import com.emm.domain.sync.SyncCursorStore
@@ -82,7 +83,7 @@ class DefaultSyncRepositoryTest {
         override suspend fun signIn(email: String, password: String) = error("not used")
         override suspend fun signUp(email: String, password: String) = null
         override suspend fun signInWithGoogle(idToken: String, rawNonce: String) = error("not used")
-        override suspend fun signOut() = Unit
+        override suspend fun signOut() = SignOutResult.Revoked
         override suspend fun deleteAccount() = Unit
         override suspend fun resendConfirmationEmail(email: String) = Unit
     }
@@ -337,7 +338,7 @@ class DefaultSyncRepositoryTest {
             override suspend fun signIn(email: String, password: String) = error("not used")
             override suspend fun signUp(email: String, password: String) = null
             override suspend fun signInWithGoogle(idToken: String, rawNonce: String) = error("not used")
-            override suspend fun signOut() = Unit
+            override suspend fun signOut() = SignOutResult.Revoked
             override suspend fun deleteAccount() = Unit
             override suspend fun resendConfirmationEmail(email: String) = Unit
         }
@@ -386,7 +387,7 @@ class DefaultSyncRepositoryTest {
             override suspend fun signIn(email: String, password: String) = error("not used")
             override suspend fun signUp(email: String, password: String) = null
             override suspend fun signInWithGoogle(idToken: String, rawNonce: String) = error("not used")
-            override suspend fun signOut() = Unit
+            override suspend fun signOut() = SignOutResult.Revoked
             override suspend fun deleteAccount() = Unit
             override suspend fun resendConfirmationEmail(email: String) = Unit
         }

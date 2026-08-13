@@ -1,7 +1,7 @@
 package com.emm.domain.auth
 
 /**
- * Signs the user out by invalidating the remote session.
+ * Signs the user out. See [AuthRepository.signOut] for what the returned [SignOutResult] means.
  *
  * Local data is NOT wiped: rows are kept on-device and remain accessible while offline.
  * Removing or re-anonymising local rows on sign-out is a :data / :app concern and must
@@ -9,7 +9,5 @@ package com.emm.domain.auth
  */
 class SignOutUseCase(private val authRepository: AuthRepository) {
 
-    suspend operator fun invoke() {
-        authRepository.signOut()
-    }
+    suspend operator fun invoke(): SignOutResult = authRepository.signOut()
 }

@@ -5,6 +5,7 @@ import com.emm.domain.account.AccountRepository
 import com.emm.domain.auth.DeleteUserAccountUseCase
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
+import com.emm.domain.auth.SignOutResult
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.backup.BackupRepository
@@ -98,7 +99,7 @@ class ProfileViewModel(
      *
      * The guard reports instead of swallowing: a confirmed intent arriving while another op is in
      * flight used to return silently with no effect and no state change — indistinguishable on
-     * screen from the delete-account RPC never firing at all (`docs/sync/AUDIT.md` §8, candidate 1).
+     * screen from the delete-account RPC never firing at all (`docs/archive/sync/AUDIT.md` §8, candidate 1).
      * One generic [ProfileMessage.OperationInProgress] covers all four ops here on purpose — this
      * guard is shared, and must not grow a per-op branch.
      */
@@ -125,9 +126,12 @@ class ProfileViewModel(
         op = ProfileOp.SigningOut,
         onError = { e -> ProfileEffect.ShowError(e) },
     ) {
-        signOut.invoke()
         // Local data is intentionally NOT wiped on sign-out (see SignOutUseCase doc).
-        sendEffect(ProfileEffect.Notify(ProfileMessage.SessionClosed))
+        val message = when (signOut.invoke()) {
+            SignOutResult.Revoked -> ProfileMessage.SessionClosed
+            SignOutResult.LocalOnly -> ProfileMessage.SessionClosedLocallyOnly
+        }
+        sendEffect(ProfileEffect.Notify(message))
     }
 
     private fun deleteAccount() = launchOp(
