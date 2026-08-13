@@ -20,19 +20,44 @@
 --
 -- createdAt / updatedAt / deletedAt stay epoch millis on purpose: those ARE instants — storage
 -- metadata and the ordering LWW conflict resolution reads.
+--
+-- THE COMPOSITE FOREIGN KEY — why a movement's category cannot disagree with its type.
+--
+-- `type` and `categories.categoryType` used to be two unrelated TEXT columns that NINE writers had
+-- to keep in agreement by convention, three of them writing straight to :data without passing
+-- through any use case (backup import and two table syncs). A convention with nine enforcement
+-- points and three bypasses is not an invariant, and it did not hold: an Income movement shipped
+-- with a Spend category on it. Enforcing it in :domain has a ceiling BY DESIGN — the three :data
+-- writers never go through :domain — so it is enforced here, where every writer has to pass.
+--
+-- (categoryId, type) → (categoryId, categoryType) is the whole rule. What makes it work without a
+-- special case for uncategorized movements is SQLite's own composite-FK semantics: if ANY column
+-- of the child key is NULL the constraint is SATISFIED, so `categoryId IS NULL` stays legal.
+--
+-- NO `ON DELETE` CLAUSE, deliberately. `ON DELETE SET NULL` on a composite FK nulls EVERY child
+-- column, `type` included, and `type` is NOT NULL — the clause could only ever abort the delete.
+-- Dropping it changes nothing live: no code path physically deletes a category (DeleteCategoryUseCase
+-- tombstones, and preserves the dangling link on purpose), so the clause never fired.
+--
+-- LOAD-BEARING AND INVISIBLE TO THE COMPILER: the two columns are compared as TEXT, and they agree
+-- only because `TransactionType.Income/Spend` and `CategoryType.Income/Spend` have the SAME enum
+-- constant names — `TransactionType.categoryType` maps them one-to-one. Renaming a constant on
+-- either enum silently breaks every write in the app; the labels differ already and are safe to
+-- change, the names are not.
 CREATE TABLE transactions (
     transactionId  TEXT NOT NULL PRIMARY KEY,
     type           TEXT NOT NULL,
     amount         INTEGER NOT NULL,
     description    TEXT NOT NULL DEFAULT '',
     occurredAt     TEXT NOT NULL,
-    categoryId     TEXT REFERENCES categories(categoryId) ON DELETE SET NULL,
+    categoryId     TEXT,
     accountId      TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
     createdAt      INTEGER NOT NULL,
     updatedAt      INTEGER NOT NULL,
     userId         TEXT,
     deletedAt      INTEGER,
-    syncState      TEXT NOT NULL DEFAULT 'Pending'
+    syncState      TEXT NOT NULL DEFAULT 'Pending',
+    FOREIGN KEY (categoryId, type) REFERENCES categories(categoryId, categoryType)
 );
 
 CREATE INDEX IF NOT EXISTS transactions_account_idx  ON transactions(accountId);

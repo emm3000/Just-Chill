@@ -1,0 +1,166 @@
+-- Migration 4 → 5: a movement's category must share the movement's type, and the SCHEMA says so.
+--
+-- `transactions.type` and `categories.categoryType` were two unrelated TEXT columns kept in
+-- agreement by convention across nine writers, three of which write straight to :data without
+-- passing through any use case. The convention did not hold — an Income movement shipped with a
+-- Spend category on it. This migration replaces it with a composite foreign key,
+-- (categoryId, type) → categories(categoryId, categoryType), on `transactions` and on
+-- `recurring_movements`. The reasoning for the key itself is in the header of transactions.sq.
+--
+-- DESTRUCTIVE AND NOT REVERSIBLE, for the same reason 3.sqm was: SQLite at minSdk cannot add or
+-- drop a table constraint, so both tables get the standard 12-step rebuild — create the new table,
+-- copy across, drop the old one, rename, recreate the indexes.
+--
+-- ── THE ORDER IS LOAD-BEARING: REPAIR BEFORE REBUILD ──────────────────────────────────────────
+--
+-- The two repair UPDATEs run FIRST, while the old tables are still the ones with no composite key.
+-- Not a stylistic choice — on iOS this migration runs with foreign keys ENABLED. DatabaseDriver.ios.kt
+-- hands NativeSqliteDriver `foreignKeyConstraints = true`, which applies to the whole connection;
+-- iOS has no onOpen/onUpgrade split to hide behind, and `PRAGMA foreign_keys` is a no-op inside a
+-- transaction, which is where SQLDelight runs this. So on iOS the `INSERT INTO ..._new SELECT` is
+-- validated against the new key as it copies: repairing afterwards would be repairing rows that
+-- never made it across. Android disables FKs here by ordering (onOpen runs after onUpgrade, the
+-- property 3.sqm already leans on) and would not have noticed. Correct on both, not on one.
+--
+-- `NOT EXISTS` and not a type comparison, because it has to catch two different broken shapes with
+-- one statement: a categoryId whose category has the OTHER type (the bug this migration exists for)
+-- and a categoryId whose category is not in the table at all (an orphan — legal under the old
+-- single-column FK only because FKs were off during earlier upgrades, and fatal under the new one).
+--
+-- ── WHAT THE REPAIR MUST NOT DO ───────────────────────────────────────────────────────────────
+--
+-- It NEVER touches `type`. The sign and the meaning of `amount` follow the type: `getAccountBalance`
+-- and `liveTotals` add an Income and subtract a Spend. Flipping a movement's type to make it agree
+-- with its category would silently rewrite the user's financial history — the balance would move.
+-- Nulling the category loses a label the user can put back in two taps; flipping the type loses the
+-- truth. Only one of those is recoverable.
+--
+-- It does NOT bump `updatedAt` and does NOT set syncState = 'Pending'. Marking rows dirty is what a
+-- repair normally does so the correction propagates — but sync has been off in production since
+-- 2026-08-12 and is being redesigned as backup-only, one device at a time (ADR 006), so there is no
+-- second replica for a correction to reach. All it would buy is a first backup diff inflated by
+-- every row this migration touched, on the one path the owner relies on as a safety net.
+--
+-- ── AND WHAT IT LEAVES ALONE ──────────────────────────────────────────────────────────────────
+--
+-- Tombstoned categories still satisfy the key: a soft-deleted category is a row in `categories`
+-- like any other, so a movement filed under a deleted category keeps its id. That is deliberate and
+-- pre-existing — DeleteCategoryUseCase tombstones instead of deleting precisely so the link
+-- survives — and the composite key does not change it.
+
+-- Step 1 — repair, while the old tables are still in place. See above for why this is first.
+UPDATE transactions SET categoryId = NULL
+WHERE categoryId IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM categories c
+     WHERE c.categoryId = transactions.categoryId
+       AND c.categoryType = transactions.type
+  );
+
+UPDATE recurring_movements SET categoryId = NULL
+WHERE categoryId IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM categories c
+     WHERE c.categoryId = recurring_movements.categoryId
+       AND c.categoryType = recurring_movements.type
+  );
+
+-- Step 2 — the parent index the new key needs. It has to exist BEFORE any table declaring the key
+-- is written to: SQLite resolves a composite FK against a UNIQUE index over exactly the parent
+-- columns, and without one every insert fails with "foreign key mismatch" rather than at DDL time.
+CREATE UNIQUE INDEX IF NOT EXISTS categories_id_type_uidx ON categories(categoryId, categoryType);
+
+-- Step 3 — rebuild `transactions`. Safe to drop for the same three reasons 3.sqm listed: no table
+-- REFERENCES transactions, the data has just been repaired so the copy validates cleanly even with
+-- foreign keys on, and the indexes are recreated from scratch after the rename so their names and
+-- definitions are exactly what transactions.sq declares on every SQLite version.
+CREATE TABLE transactions_new (
+    transactionId  TEXT NOT NULL PRIMARY KEY,
+    type           TEXT NOT NULL,
+    amount         INTEGER NOT NULL,
+    description    TEXT NOT NULL DEFAULT '',
+    occurredAt     TEXT NOT NULL,
+    categoryId     TEXT,
+    accountId      TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
+    createdAt      INTEGER NOT NULL,
+    updatedAt      INTEGER NOT NULL,
+    userId         TEXT,
+    deletedAt      INTEGER,
+    syncState      TEXT NOT NULL DEFAULT 'Pending',
+    FOREIGN KEY (categoryId, type) REFERENCES categories(categoryId, categoryType)
+);
+
+INSERT INTO transactions_new(transactionId, type, amount, description, occurredAt, categoryId, accountId, createdAt, updatedAt, userId, deletedAt, syncState)
+SELECT
+    transactionId,
+    type,
+    amount,
+    description,
+    occurredAt,
+    categoryId,
+    accountId,
+    createdAt,
+    updatedAt,
+    userId,
+    deletedAt,
+    syncState
+FROM transactions;
+
+DROP TABLE transactions;
+
+ALTER TABLE transactions_new RENAME TO transactions;
+
+CREATE INDEX IF NOT EXISTS transactions_account_idx  ON transactions(accountId);
+CREATE INDEX IF NOT EXISTS transactions_occurred_idx ON transactions(occurredAt);
+CREATE INDEX IF NOT EXISTS transactions_category_idx ON transactions(categoryId);
+CREATE INDEX IF NOT EXISTS transactions_syncstate_idx ON transactions(syncState);
+CREATE INDEX IF NOT EXISTS transactions_user_deleted_idx ON transactions(userId, deletedAt);
+
+-- Step 4 — rebuild `recurring_movements`, same shape, same reasoning. Nothing REFERENCES it either.
+CREATE TABLE recurring_movements_new (
+    id                  TEXT NOT NULL PRIMARY KEY,
+    name                TEXT NOT NULL,
+    type                TEXT NOT NULL,
+    amount              INTEGER,
+    description         TEXT NOT NULL DEFAULT '',
+    categoryId          TEXT,
+    accountId           TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
+    frequency           TEXT NOT NULL DEFAULT 'Monthly',
+    dayOfMonth          INTEGER NOT NULL,
+    isActive            INTEGER NOT NULL DEFAULT 1,
+    lastConfirmedPeriod TEXT,
+    createdAt           INTEGER NOT NULL,
+    updatedAt           INTEGER NOT NULL,
+    userId              TEXT,
+    deletedAt           INTEGER,
+    syncState           TEXT NOT NULL DEFAULT 'Pending',
+    FOREIGN KEY (categoryId, type) REFERENCES categories(categoryId, categoryType)
+);
+
+INSERT INTO recurring_movements_new(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, lastConfirmedPeriod, createdAt, updatedAt, userId, deletedAt, syncState)
+SELECT
+    id,
+    name,
+    type,
+    amount,
+    description,
+    categoryId,
+    accountId,
+    frequency,
+    dayOfMonth,
+    isActive,
+    lastConfirmedPeriod,
+    createdAt,
+    updatedAt,
+    userId,
+    deletedAt,
+    syncState
+FROM recurring_movements;
+
+DROP TABLE recurring_movements;
+
+ALTER TABLE recurring_movements_new RENAME TO recurring_movements;
+
+CREATE INDEX IF NOT EXISTS recurring_active_idx ON recurring_movements(isActive, name);
+CREATE INDEX IF NOT EXISTS recurring_movements_syncstate_idx ON recurring_movements(syncState);
+CREATE INDEX IF NOT EXISTS recurring_movements_user_deleted_idx ON recurring_movements(userId, deletedAt);

@@ -1,10 +1,18 @@
+-- A template is a movement that has not happened yet, so it carries the same invariant as the
+-- movement it will produce: its category must be of its own type. Without it,
+-- ConfirmRecurringMovementUseCase copies the template's categoryId onto a transaction of the
+-- template's type — a mismatched template mints a mismatched movement every month, forever.
+--
+-- Same composite key, same NULL semantics, and the same reason for having no `ON DELETE` clause,
+-- as `transactions`. The full reasoning lives in the header of transactions.sq; it is not repeated
+-- here because it is one decision, not two.
 CREATE TABLE recurring_movements (
     id                  TEXT NOT NULL PRIMARY KEY,
     name                TEXT NOT NULL,
     type                TEXT NOT NULL,
     amount              INTEGER,
     description         TEXT NOT NULL DEFAULT '',
-    categoryId          TEXT REFERENCES categories(categoryId) ON DELETE SET NULL,
+    categoryId          TEXT,
     accountId           TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
     frequency           TEXT NOT NULL DEFAULT 'Monthly',
     dayOfMonth          INTEGER NOT NULL,
@@ -14,7 +22,8 @@ CREATE TABLE recurring_movements (
     updatedAt           INTEGER NOT NULL,
     userId              TEXT,
     deletedAt           INTEGER,
-    syncState           TEXT NOT NULL DEFAULT 'Pending'
+    syncState           TEXT NOT NULL DEFAULT 'Pending',
+    FOREIGN KEY (categoryId, type) REFERENCES categories(categoryId, categoryType)
 );
 
 CREATE INDEX IF NOT EXISTS recurring_active_idx ON recurring_movements(isActive, name);

@@ -15,6 +15,17 @@ CREATE TABLE categories (
 );
 
 CREATE INDEX IF NOT EXISTS categories_type_idx ON categories(categoryType);
+
+-- The parent key of the composite foreign key that `transactions` and `recurring_movements`
+-- declare on (categoryId, type). SQLite REQUIRES the parent columns of a composite FK to be
+-- covered by a UNIQUE index or a PK: without this index the child DDL parses fine and then every
+-- INSERT fails at runtime with "foreign key mismatch". `categoryId` alone being the PK does not
+-- satisfy it, and `categories_type_idx` is neither unique nor on both columns.
+--
+-- It is redundant as a uniqueness claim — categoryId is already the primary key, so no two rows
+-- can share it whatever their type — and that is fine: it exists to be the index SQLite looks up,
+-- not to constrain anything new.
+CREATE UNIQUE INDEX IF NOT EXISTS categories_id_type_uidx ON categories(categoryId, categoryType);
 CREATE INDEX IF NOT EXISTS categories_syncstate_idx ON categories(syncState);
 CREATE INDEX IF NOT EXISTS categories_user_deleted_idx ON categories(userId, deletedAt);
 
