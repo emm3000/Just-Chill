@@ -290,8 +290,11 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   firma el `amount`, así que darlo vuelta reescribiría el balance del usuario. Y no marca las filas
   como `Pending`: con el sync apagado y en rediseño backup-only (ADR 006) no hay a dónde propagar la
   corrección, y solo inflaría el primer diff de backup.
-  **Sin correr en device.** `MigrationV4ToV5Test` (13 tests, dos de ellos migrando con foreign keys ON — la configuración de iOS, la única bajo la que el orden de `4.sqm` importa) está escrito y compila, pero no había
-  device conectado; corré `:data:connectedAndroidDeviceTest` antes de shipear esto.
+  **Corrido en device: 34/34 verde**, el 2026-08-12 en `medium_phone` (emulator-5554, API 36).
+  `MigrationV4ToV5Test` 13/13, `SyncFkExceptionTest` 3/3, cero fallas, cero errores, cero ignorados.
+  Dos de los trece migran con foreign keys ON — la configuración de iOS, la única bajo la que el
+  orden de `4.sqm` importa: invertirlo (reconstruir antes de reparar) hace fallar exactamente esos
+  dos y deja verdes a los otros once.
 
 - [ ] **Editar un movimiento de una categoría borrada lo re-archiva bajo otra, sin que nadie lo elija.**
   `EditTransactionViewModel.resolveSelection` (`:109-112`) corta en `snapshot?.categoryId ?: return null`,
@@ -539,9 +542,11 @@ siguen en el repo como marcadores históricos.
   tests instrumentados podían quedar rotos con el gate en verde.
 - Los tests instrumentados (`:data:connectedAndroidDeviceTest`, **34 tests**) no corren en
   el gate: necesitan device. Corrélos antes de shipear un cambio de schema o de dominio.
-  Última corrida: 2026-08-09, 15/15 verde en `medium_phone` (emulator-5554), después de A6 — el
-  conteo creció a 20 y después a 34 sin volver a correrlos, así que **`MigrationV4ToV5Test` (v4→v5,
-  la FK compuesta) nunca se ejecutó contra un driver real**.
+  Última corrida: **2026-08-12, 34/34 verde** en `medium_phone` (emulator-5554, API 36), sobre
+  `1765e77b` — incluye `MigrationV4ToV5Test` (v4→v5, la FK compuesta) contra un driver real.
+  Precedente a tener presente: entre la corrida del 2026-08-09 (15/15) y esta, el conteo creció a 20
+  y después a 34 **sin volver a correrlos**, con el gate en verde todo el tiempo. El gate compila
+  esta suite, no la ejecuta.
 - Writer y reviewer son siempre agentes delegados separados, para **todo el repo** (no solo
   KMP/iOS): el reviewer corre en contexto fresco y nunca escribió el código que revisa —
   [ADR 007](adr/007-one-way-of-working-writer-reviewer-and-model-tiers.md) retira el "un writer,
