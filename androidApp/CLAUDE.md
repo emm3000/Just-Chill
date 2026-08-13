@@ -39,8 +39,13 @@ nothing belongs in them anymore.
 - `appVersion` / `googleServerClientId` — named `String`s from `BuildConfig`
 - `commitHash` — named `String` from the **generated** `BuildInfo`, not `BuildConfig`. Its only
   consumer is `AppNavHost` in `:ui-android`, outside `appModules()`, so `AppGraphKoinTest` cannot
-  see it: `AndroidPlatformModuleTest` guards it here instead. Qualifier and fallback are
-  `:ui-android`'s `COMMIT_HASH_QUALIFIER` / `UNKNOWN_COMMIT_HASH`, shared so a rename cannot compile.
+  see it: `AndroidPlatformModuleTest` asserts the binding here instead — delete the `single` and
+  that test goes red. The qualifier is `:ui-android`'s `COMMIT_HASH_QUALIFIER`, imported by both
+  sites, so the two strings cannot differ. **Nothing checks the consumer still asks for it**: a
+  literal typed over `koinInject(named(...))` in `AppNavHost` compiles green and crashes at launch.
+  The fallback word is a separate matter: `UNKNOWN_COMMIT_HASH` is not referenced anywhere under
+  `androidApp/src/main`, only by `BuildInfoTest`, which asserts the shipped hash is that word or a
+  40-hex sha. Both gaps are in `docs/PROGRESS.md`.
 - `DispatchersProvider`, `CurrentActivityHolder`
 - `SyncLogger` → `CrashReportingSyncLogger` (Crashlytics is Android-only; iOS binds
   `PrintlnSyncLogger` in `KoinIos.kt`)

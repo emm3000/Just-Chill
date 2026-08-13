@@ -55,7 +55,8 @@ val androidPlatformModule = module {
     // host, which is Android-only and outside appModules(), so AppGraphKoinTest would be asserting
     // wiring no shared consumer resolves — the same reason DispatchersProvider is absent there.
     // AndroidPlatformModuleTest is what guards this line instead: deleting it turns that test red.
-    // The qualifier is :ui-android's shared constant, so it cannot drift from the consumer's.
+    // It reads this module's own mappings, so it sees the binding and nothing about the request
+    // AppNavHost makes — a hand-typed literal there still compiles. Tracked in docs/PROGRESS.md.
     single(named(COMMIT_HASH_QUALIFIER)) { BuildInfo.commitHash }
 
     // Google Sign-In web client id, consumed by AuthViewModel. Empty when supabase.properties is

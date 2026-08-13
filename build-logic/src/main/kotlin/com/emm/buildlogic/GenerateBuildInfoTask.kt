@@ -77,9 +77,12 @@ abstract class GenerateBuildInfoTask : DefaultTask() {
          *
          * A sentinel, not a short hash: the footer matches this exact word and renders a distinct
          * "no commit" state instead of abbreviating it. `:ui-android`'s `UNKNOWN_COMMIT_HASH` holds
-         * the same literal on the consuming side (build-logic is not on the app's compile
-         * classpath, so they cannot be one constant); `BuildInfoTest` asserts the shipped value is
-         * this word or a 40-hex sha, which is what keeps the two honest.
+         * the same literal on the consuming side — build-logic is not on the app's compile
+         * classpath, so they cannot be one constant.
+         *
+         * Nothing links them. build-logic has no test source set, so editing this word compiles,
+         * ships, and leaves every suite green while a git-less build renders "Commit unknow" with
+         * a copy button. If you change it, change `UNKNOWN_COMMIT_HASH` by hand.
          */
         const val UNKNOWN_COMMIT = "unknown"
 

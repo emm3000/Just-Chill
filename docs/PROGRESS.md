@@ -244,7 +244,7 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [ ] **Burn-down de los 7 `TooManyFunctions` con amnistía** en
   `config/detekt/baseline-ui-android-main.xml`, contra el umbral de 8 funciones top-level no-`@Preview`
   por archivo: `SeeTransactionsScreen` (16), `HomeScreen` (16), `AddCategoryScreen` (13),
-  `AccountsScreen` (11), `AddEditRecurringMovementScreen` (10), `ProfileScreen` (11),
+  `AccountsScreen` (11), `AddEditRecurringMovementScreen` (10), `ProfileScreen` (12),
   `RecurringMovementsScreen` (9). La entrada del baseline no lleva el conteo, así que **el gate no los
   va a volver a reportar nunca**, crezcan lo que crezcan: si no se bajan acá, no se bajan.
   Criterio y método de conteo en `docs/CODE_QUALITY.md`.
@@ -257,8 +257,11 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   fuera del gate: `detektMainAndroid` cubre los mismos archivos **con** type resolution, así que
   sumarlo serían más tareas y no más cobertura — el razonamiento está en `QualityGateConventionPlugin`.
 - [ ] `build-logic` no tiene source set de tests y no cuelga de `qualityGate`, así que
-  `normalizeCommitHash` (`GenerateBuildInfoTask.kt:94`) —la única barrera contra inyectar texto en el
+  `normalizeCommitHash` (`GenerateBuildInfoTask.kt:99`) —la única barrera contra inyectar texto en el
   literal Kotlin que se genera— no tiene un solo test y su rama de rechazo no se ejecuta nunca.
+  Lo mismo cubre a `GenerateBuildInfoTask.UNKNOWN_COMMIT`: es la tercera copia de la palabra
+  `"unknown"` y cambiarla ahí no pone en rojo nada — `CommitHashUiTest` fija el lado de `:ui-android`
+  escribiendo la palabra a mano, pero el lado del generador no lo mira nadie.
 
 ### Docs y comentarios que afirman cosas falsas
 
@@ -273,7 +276,9 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [ ] `docs/DESIGN_SYSTEM.md` §5 documenta 5 radios con otro esquema de nombres (`radius.0`,
   `radius.s` 6dp, `radius.m`, `radius.l`, `radius.full`); `EmmRadii.kt` ships **9** (`r0`, `rXS` 8dp,
   `rS` 10dp, `rM`, `rL`, `rXL`, `rXXL`, `rLTop`, `rFull`) y `rXS` —el que usa el footer de commit— no
-  tiene fila en el doc. Ni los nombres ni los dp coinciden.
+  tiene fila en el doc. Los nombres no coinciden en ningún caso; los dp coinciden en tres de cinco
+  (`radius.0`/`r0` 0, `radius.m`/`rM` 12, `radius.full`/`rFull` 999) y divergen en dos:
+  `radius.s` 6 contra `rS` 10, y `radius.l` 20 contra `rL` 14 —los 20dp del doc son los de `rXXL`.
 
 ### Bugs
 
@@ -350,6 +355,21 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [ ] La escritura al portapapeles del commit, el split short-en-pantalla/40-al-copiar y la rama
   `SDK_INT < TIRAMISU` del snackbar (`ProfileEntries.kt`) no tienen cobertura automática en ninguna
   tarea del gate. `commitHashUi()` sí la tiene; lo que la rodea, no.
+- [ ] Lo que `AppNavHost` **pide** no lo observa ningún test. `AndroidPlatformModuleTest` lee los
+  `mappings` del propio `androidPlatformModule`, así que ve el binding y nada de la petición del
+  consumidor: reemplazar `koinInject(named(COMMIT_HASH_QUALIFIER))` por un
+  literal escrito a mano compila, pasa el gate entero y revienta la app al arrancar (`AppNavHost.kt:82`).
+  Cerrarlo pide un
+  test de runtime de Compose que `:ui-android` hoy no tiene (no hay `androidTest` en el módulo, y el
+  host test es JVM puro).
+- [ ] `COMMIT_HASH_QUALIFIER` vive en un paquete de feature de UI (`hh/profile/CommitHashUi.kt`)
+  cuando `:presentation` —donde vive el DI del proyecto— es igual de visible para `:androidApp` y
+  para `:ui-android` (`ui-android/build.gradle.kts:38` declara `api(project(":presentation"))`, y
+  `AndroidPlatformModule.kt` ya consume `DispatchersProvider` y `SupabaseConfig` de ahí). El archivo
+  queda con dos razones para cambiar: el contrato de DI y el estado de presentación del footer.
+- [ ] `CommitHashUi.Available.fullHash` no lo lee ningún código de producción: `ProfileScreen`
+  consume solo `label`, y el camino del portapapeles copia el string inyectado crudo, no el valor
+  clasificado. Hoy solo lo miran el `equals` de la data class y `CommitHashUiTest`.
 - [ ] La fila del footer de commit (`ProfileScreen.kt`, `CopyableCommitRow`) toma el ripple por
   defecto de Material mientras todas las demás filas interactivas de la pantalla lo apagan con
   `interactionSource` + `indication = null`, y hardcodea `12.sp`/`14.dp` en vez de leer `LocalEmmType`.

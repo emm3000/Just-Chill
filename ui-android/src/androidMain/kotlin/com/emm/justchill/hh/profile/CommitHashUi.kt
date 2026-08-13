@@ -4,17 +4,23 @@ package com.emm.justchill.hh.profile
  * Koin qualifier for the full 40-char sha the build came from.
  *
  * A constant, not a literal at each site, because the two sites live in different Gradle modules:
- * `androidPlatformModule` (`:androidApp`) binds it and `AppNavHost` (this module) resolves it. As
- * two literals a rename on either side compiled clean and crashed the app at launch; referenced
- * from here, a rename cannot compile. `:androidApp` depends on `:ui-android`, so this is the only
- * place both can see.
+ * `androidPlatformModule` (`:androidApp`) binds it and `AppNavHost` (this module) resolves it. Both
+ * read this one declaration, so the two strings cannot differ.
+ *
+ * That is all it buys. Nothing checks that either site still reads it: swapping the
+ * `koinInject(named(...))` argument in `AppNavHost` for a hand-typed literal compiles, passes every
+ * suite and crashes at launch. Tracked in `docs/PROGRESS.md`.
  */
 const val COMMIT_HASH_QUALIFIER: String = "commitHash"
 
 /**
  * What `generate<Variant>BuildInfo` writes when git cannot answer — a source tarball, a shallow
- * export, no git on PATH. Kept in sync with `GenerateBuildInfoTask.UNKNOWN_COMMIT` by
- * `BuildInfoTest`, which asserts the shipped value is this word or a 40-hex sha.
+ * export, no git on PATH.
+ *
+ * `GenerateBuildInfoTask.UNKNOWN_COMMIT` (build-logic, off the app's compile classpath) holds the
+ * same word as a separate literal. `CommitHashUiTest` spells that word out and asserts this
+ * constant classifies it as [CommitHashUi.Unavailable], so changing this value turns that test red.
+ * Changing the generator's copy turns nothing red — build-logic has no test source set.
  */
 const val UNKNOWN_COMMIT_HASH: String = "unknown"
 
