@@ -12,13 +12,12 @@ package com.emm.data.backup
 import kotlinx.serialization.Serializable
 
 /**
- * The backup payload shape at schema version 2, frozen ahead of the version that grows past it.
+ * The backup payload shape at schema version 2, frozen before the version that grew past it.
  *
- * Nothing reads this yet. `decodePayload` still decodes version 2 through the live [ExportPayloadDto]
- * because the two are the same shape and [BACKUP_SCHEMA_VERSION] is still 2. This type is here so
- * that the commit which adds `recurringMovements` and moves the number can wire a v2 branch in the
- * same breath, instead of shipping a window where version 2 has no reader — which is the whole
- * ordering the KDoc on [BACKUP_SCHEMA_VERSION] describes.
+ * `decodePayload` reads every file declaring version 2 through this type. It stopped being reachable
+ * through [ExportPayloadDto] the moment that payload gained `recurringMovements` and
+ * [BACKUP_SCHEMA_VERSION] moved to 3 — the same commit, deliberately, so version 2 never spent a
+ * build without a reader.
  *
  * **This has to keep working forever**, for the same reason [ExportPayloadV1Dto] does: backup files
  * are the data escape hatch, they live in storage the user chose, outside the app, beyond the reach
@@ -32,18 +31,18 @@ import kotlinx.serialization.Serializable
  * backup. That is the same failure [ExportPayloadV1Dto] exists to prevent, and the reason a frozen
  * reader has to exist before the number moves rather than after.
  *
- * It carries a second job once the current payload gains recurring movements and the import starts
- * sweeping that table: this branch is what keeps *"the file has nothing to say about them"* apart
- * from *"the file says there are none"*. A v2 file has no recurring movements to give and never did,
- * so restoring one must leave the templates already on the device alone — nothing older than v3 can
- * put them back. `BackupV2CompatibilityTest` pins exactly that.
+ * It carries a second job now that the current payload has recurring movements and the import is
+ * about to start sweeping that table: this branch is what keeps *"the file has nothing to say about
+ * them"* apart from *"the file says there are none"*. A v2 file has no recurring movements to give
+ * and never did, so restoring one must leave the templates already on the device alone — nothing
+ * older than v3 can put them back. `BackupV2CompatibilityTest` pins exactly that.
  *
  * ### The coupling this type deliberately accepts
  *
  * The three item lists below hold the **live** [AccountDto], [CategoryDto] and [TransactionDto], not
  * copies frozen at v2 — exactly as [ExportPayloadV1Dto] shares its accounts and categories. Only the
- * payload shell is frozen here, because only the shell is what the next version changes: it gains a
- * list, and no item shape moves with it.
+ * payload shell is frozen here, because only the shell is what version 3 changed: it gained a list,
+ * and no item shape moved with it.
  *
  * The cost is real, and it is not the same for all three:
  *
@@ -87,20 +86,22 @@ internal data class ExportPayloadV2Dto(
  * one, so a derived value would follow the current version upward and re-point a frozen branch at a
  * shape it was never written for. The number 2 is a fact about files already on disk; it cannot move.
  *
- * It equals [BACKUP_SCHEMA_VERSION] today, which is exactly why the v2 branch is not wired yet: two
- * equal branch conditions in the same `when` is a collision, not a reader. The next commit separates
- * them by moving [BACKUP_SCHEMA_VERSION], not this.
+ * It equalled [BACKUP_SCHEMA_VERSION] for exactly one commit — the freeze — and the branch stayed
+ * unwired through it, because two equal conditions in the same `when` is a collision, not a reader.
+ * They were separated by moving [BACKUP_SCHEMA_VERSION] to 3, not this.
  */
 internal const val BACKUP_SCHEMA_VERSION_V2: Int = 2
 
 /**
  * Reads a v2 payload as the current one.
  *
- * A field-for-field copy while the two shapes are still identical. It exists now so the conversion
- * has one home the moment the current payload grows a field version 2 never had — and what it will
- * then carry across is the *absence*: a v2 file contributes no recurring movements, and the import
- * has to read that as "this file has nothing to say about them" rather than as "this file says there
- * are none".
+ * Field for field on the three lists version 2 had, and the one field it did not have is the reason
+ * this function exists at all: what it carries across for `recurringMovements` is an *absence*. A v2
+ * file contributes no templates because the format had none to carry, and the import has to read
+ * that as "this file has nothing to say about them" rather than as "this file says there are none".
+ *
+ * The empty list here is not what says so — the declared version is, and the import gates its sweep
+ * on that. This list is empty because there is nothing truthful to put in it.
  */
 internal fun ExportPayloadV2Dto.toCurrent(): ExportPayloadDto = ExportPayloadDto(
     schemaVersion = BACKUP_SCHEMA_VERSION,
@@ -109,4 +110,5 @@ internal fun ExportPayloadV2Dto.toCurrent(): ExportPayloadDto = ExportPayloadDto
     accounts = accounts,
     categories = categories,
     transactions = transactions,
+    recurringMovements = emptyList(),
 )

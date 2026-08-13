@@ -33,6 +33,13 @@ CREATE INDEX IF NOT EXISTS recurring_movements_user_deleted_idx ON recurring_mov
 selectActive:
 SELECT * FROM recurring_movements WHERE isActive = 1 AND deletedAt IS NULL ORDER BY name;
 
+-- Every live row, flat and unfiltered beyond the tombstone — the shape the backup export needs.
+-- `selectActive:` above drops paused templates and `selectAllWithDetails:` below carries three
+-- joined columns a file has no use for, so neither could be reused. Adding a SELECT is not a schema
+-- change: nothing about the table moves, so no `.sqm` is owed.
+selectAllLive:
+SELECT * FROM recurring_movements WHERE deletedAt IS NULL ORDER BY name;
+
 find:
 SELECT * FROM recurring_movements WHERE id = ? AND deletedAt IS NULL;
 

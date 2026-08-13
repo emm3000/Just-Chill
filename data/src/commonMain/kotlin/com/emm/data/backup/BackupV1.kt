@@ -59,6 +59,11 @@ internal const val BACKUP_SCHEMA_VERSION_V1: Int = 1
  *
  * A `date` that offset cannot represent drops its row rather than restoring at an invented time.
  * The rest of the file still restores: one unreadable movement is not a reason to refuse a backup.
+ *
+ * The empty `recurringMovements` is a statement, not a shrug: version 1 predates the table entirely,
+ * so a v1 file has nothing to say about templates and the import must not read this list as "the
+ * file says there are none". What keeps those apart is the declared version, which the import gates
+ * its sweep on — never the emptiness of this list.
  */
 internal fun ExportPayloadV1Dto.toCurrent(): ExportPayloadDto = ExportPayloadDto(
     schemaVersion = BACKUP_SCHEMA_VERSION,
@@ -78,4 +83,5 @@ internal fun ExportPayloadV1Dto.toCurrent(): ExportPayloadDto = ExportPayloadDto
             categoryId = dto.categoryId,
         )
     },
+    recurringMovements = emptyList(),
 )

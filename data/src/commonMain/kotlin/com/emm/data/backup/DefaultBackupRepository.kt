@@ -6,6 +6,7 @@ import com.emm.data.shared.safeDbCall
 import com.emm.data.shared.toOccurredAtText
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.CategoryRepository
+import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
@@ -37,6 +38,14 @@ class DefaultBackupRepository(
     private val transactions: TransactionRepository,
     private val categories: CategoryRepository,
     private val accounts: AccountRepository,
+    /**
+     * Read through the domain interface like the other three, and NOT through [db].
+     *
+     * A direct query for this one table would leave the export mockable for three tables and not the
+     * fourth, which is the property `DefaultBackupRepositoryTest` is built on. `allLive()` exists on
+     * that interface for this caller: `allActive()` would silently drop every paused template.
+     */
+    private val recurring: RecurringMovementRepository,
     private val db: EmmDatabaseData,
     private val clock: Clock,
 ) : BackupRepository {
@@ -55,12 +64,21 @@ class DefaultBackupRepository(
             if (dto.categoryId != null && dto.categoryId !in liveCategoryIds) dto.copy(categoryId = null) else dto
         }
 
+        // The same scrub, for the same reason: `recurring_movements` carries the identical composite
+        // key (categoryId, type) -> categories(categoryId, categoryType), so a template pointing at a
+        // tombstoned category writes a file that fails its own import.
+        val exportedRecurring = recurring.allLive().first().map { template ->
+            val dto = template.toDto()
+            if (dto.categoryId != null && dto.categoryId !in liveCategoryIds) dto.copy(categoryId = null) else dto
+        }
+
         val payload = ExportPayloadDto(
             exportedAt = exportedAt,
             appVersion = appVersion,
             accounts = accounts.all().first().map { it.toDto() },
             categories = exportedCategories,
             transactions = exportedTransactions,
+            recurringMovements = exportedRecurring,
         )
         return exportJson.encodeToString(payload)
     }
@@ -82,8 +100,12 @@ class DefaultBackupRepository(
                 // pushes to the server and reaches the other devices — a physical DELETE left no
                 // trace, and the next pull simply downloaded the rows again.
                 //
-                // Recurring movements are deliberately untouched: the export format does not
-                // include them, so wiping them would destroy data that no backup can restore.
+                // Recurring movements are untouched here — not swept, not restored — even though
+                // the format now carries them. Adding the field and acting on it are two commits on
+                // purpose: the destructive half has to be version-gated, since a v1/v2 file has no
+                // templates to give and wiping on one would destroy data no backup can put back.
+                // Until that lands, a v3 file carries templates an import does not restore, and
+                // BackupV3CompatibilityTest pins that the rows already on the device survive it.
                 db.transactionsQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
                 db.categoriesQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
                 db.accountsQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
@@ -120,6 +142,12 @@ class DefaultBackupRepository(
         return when (schemaVersionOf(root)) {
             BACKUP_SCHEMA_VERSION -> parse {
                 importJson.decodeFromJsonElement<ExportPayloadDto>(root)
+            }
+
+            // The version every backup file that exists today was written in — the format before it
+            // carried recurring movements. They restore, and they always will — see BackupV2.kt.
+            BACKUP_SCHEMA_VERSION_V2 -> parse {
+                importJson.decodeFromJsonElement<ExportPayloadV2Dto>(root).toCurrent()
             }
 
             // Files already on the user's disk, written before a transaction's occurrence stopped

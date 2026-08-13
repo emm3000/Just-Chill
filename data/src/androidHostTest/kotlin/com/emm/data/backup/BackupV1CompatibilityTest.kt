@@ -1,11 +1,13 @@
 package com.emm.data.backup
 
+import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.CategoryRepository
+import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
@@ -53,6 +55,7 @@ class BackupV1CompatibilityTest {
             transactions = mockk<TransactionRepository> { every { all() } returns flowOf(emptyList()) },
             categories = mockk<CategoryRepository> { every { all() } returns flowOf(emptyList()) },
             accounts = mockk<AccountRepository> { every { all() } returns flowOf(emptyList<Account>()) },
+            recurring = mockk<RecurringMovementRepository> { every { allLive() } returns flowOf(emptyList()) },
             db = db,
             // Stated, not read. This suite asserts `occurredAt`, which comes off the file — but the
             // storage stamps beside it come off this clock, and none of them should move with the
@@ -119,6 +122,65 @@ class BackupV1CompatibilityTest {
 
         assertEquals(ValidationCode.BackupVersionUnsupported, ex.code)
     }
+
+    /**
+     * The twin of `BackupV2CompatibilityTest`'s recurring guard, and it is not redundant with it.
+     *
+     * The v1 *format* predates `recurring_movements`, which is a fact about the file and says nothing
+     * about the device. The rows are on the device either way: a v1 backup restored onto a phone full
+     * of templates is exactly as reachable as a v2 one, and it reaches a different `decodePayload`
+     * branch on the way. Once commit ③ makes the sweep version-gated, this is the test that says the
+     * gate covers version 1 too — a gate written as "not version 2" would pass its v2 twin and wipe
+     * here.
+     *
+     * The rule, narrow on purpose for the same reason as the v2 twin: **a file older than version 3
+     * neither tombstones nor deletes a recurring movement.** Not "leaves the table alone" — the
+     * category detach in `restore(dto: CategoryDto, …)` runs on every version, and this fixture avoids
+     * it the same way, by restoring `cat-spend` as the `Spend` the on-device row already holds.
+     */
+    @Test
+    fun `importing a version 1 file leaves the recurring movements already on the device alive`() = runTest {
+        // The account and category the template hangs off have to exist before it does: the FK to
+        // accounts is real, and so is the composite (categoryId, type) key into categories.
+        repository.importFromJson(V1_BACKUP)
+        exec(
+            "INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, " +
+                "accountId, dayOfMonth, createdAt, updatedAt) " +
+                "VALUES ('rec-1', 'Alquiler', 'Spend', 120000, '', 'cat-spend', 'acc-1', 5, 1, 1)",
+        )
+
+        repository.importFromJson(V1_BACKUP)
+
+        // The two destructive shapes first, through raw SQL that sees every row — `find` filters
+        // `deletedAt IS NULL`, so it cannot tell "physically deleted" from "tombstoned". Asserting
+        // these before the read is what makes each mode fail with its own message instead of both
+        // arriving as an NPE out of `executeAsOne`.
+        assertEquals(1, rawCount("SELECT COUNT(*) FROM recurring_movements"), "the row was deleted outright")
+        assertEquals(
+            0,
+            rawCount("SELECT COUNT(*) FROM recurring_movements WHERE deletedAt IS NOT NULL"),
+            "the row was tombstoned by the import's sweep",
+        )
+        val recurring = db.recurring_movementsQueries.find("rec-1").executeAsOne()
+        assertEquals("Alquiler", recurring.name)
+        assertEquals(120_000L, recurring.amount)
+        assertEquals("cat-spend", recurring.categoryId)
+        assertEquals(1L, recurring.isActive)
+    }
+
+    private fun exec(sql: String) {
+        driver.execute(identifier = null, sql = sql, parameters = 0)
+    }
+
+    private fun rawCount(sql: String): Long = driver.executeQuery(
+        identifier = null,
+        sql = sql,
+        mapper = { cursor ->
+            cursor.next()
+            QueryResult.Value(cursor.getLong(0))
+        },
+        parameters = 0,
+    ).value ?: 0L
 
     private companion object {
 

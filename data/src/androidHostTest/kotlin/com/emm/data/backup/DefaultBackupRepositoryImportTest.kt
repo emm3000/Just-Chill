@@ -9,6 +9,7 @@ import com.emm.data.transaction.asExternalModel
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.CategoryRepository
+import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
@@ -48,6 +49,9 @@ class DefaultBackupRepositoryImportTest {
     private val accountRepo = mockk<AccountRepository> {
         every { all() } returns flowOf(emptyList<Account>())
     }
+    private val recurringRepo = mockk<RecurringMovementRepository> {
+        every { allLive() } returns flowOf(emptyList())
+    }
 
     private lateinit var repository: DefaultBackupRepository
 
@@ -79,6 +83,7 @@ class DefaultBackupRepositoryImportTest {
             transactions = transactionRepo,
             categories = categoryRepo,
             accounts = accountRepo,
+            recurring = recurringRepo,
             db = db,
             clock = clock,
         )
@@ -576,12 +581,13 @@ class DefaultBackupRepositoryImportTest {
         }
         return """
             {
-                "schemaVersion": 2,
+                "schemaVersion": 3,
                 "exportedAt": 0,
                 "appVersion": "1.0.0",
                 "accounts": [$accountsJson],
                 "categories": [$categoriesJson],
-                "transactions": [$transactionsJson]
+                "transactions": [$transactionsJson],
+                "recurringMovements": []
             }
         """.trimIndent()
     }
@@ -593,18 +599,19 @@ class DefaultBackupRepositoryImportTest {
     /** One account, plus exactly the category and transaction JSON the test wrote by hand. */
     private fun payloadWith(categoriesJson: List<String>, transactionsJson: List<String>): String = """
         {
-            "schemaVersion": 2,
+            "schemaVersion": 3,
             "exportedAt": 0,
             "appVersion": "1.0.0",
             "accounts": [{"accountId":"acc-1","name":"Cuenta","type":"Cash","currency":"PEN"}],
             "categories": [${categoriesJson.joinToString(",")}],
-            "transactions": [${transactionsJson.joinToString(",")}]
+            "transactions": [${transactionsJson.joinToString(",")}],
+            "recurringMovements": []
         }
     """.trimIndent()
 
     private companion object {
-        const val EMPTY_PAYLOAD_JSON = """{"schemaVersion":2,"exportedAt":0,"appVersion":"1.0.0",""" +
-            """"accounts":[],"categories":[],"transactions":[]}"""
+        const val EMPTY_PAYLOAD_JSON = """{"schemaVersion":3,"exportedAt":0,"appVersion":"1.0.0",""" +
+            """"accounts":[],"categories":[],"transactions":[],"recurringMovements":[]}"""
 
         // Two instants an hour apart. Stated, so the rows an import writes have a value to be
         // compared against rather than whatever the machine happened to read.

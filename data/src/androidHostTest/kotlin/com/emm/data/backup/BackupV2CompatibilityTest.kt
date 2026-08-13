@@ -7,6 +7,7 @@ import com.emm.data.EmmDatabaseData
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.CategoryRepository
+import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
@@ -22,6 +23,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -30,24 +32,25 @@ import kotlin.time.Instant
  * not take the recurring movements already on the device with it.
  *
  * Version 2 is the format every file the author has on disk today was written in. Those files sit in
- * storage the user chose, outside the app, where no schema migration can ever reach them. Once
- * `BACKUP_SCHEMA_VERSION` moves to 3, `decodePayload` — which dispatches on the version the file
- * *declares* — stops having any branch that matches them, and refuses an intact backup as
- * `BackupVersionUnsupported`. That is the failure this suite exists to prevent, and the reason
- * `BackupV2.kt` freezes the v2 payload shape ahead of the bump.
+ * storage the user chose, outside the app, where no schema migration can ever reach them. Now that
+ * `BACKUP_SCHEMA_VERSION` is 3, `decodePayload` — which dispatches on the version the file
+ * *declares* — has exactly one branch that matches them, and losing it would refuse an intact backup
+ * as `BackupVersionUnsupported`. That is the failure this suite exists to prevent, and the reason
+ * `BackupV2.kt` froze the v2 payload shape ahead of the bump.
  *
- * ### Which half of this suite proves what, today
+ * ### Which half of this suite proves what
  *
- * `BACKUP_SCHEMA_VERSION` is still 2, so the two paths are not yet distinguishable at runtime:
+ * Every test here now runs frozen code; what differs is how it gets there.
  *
  *  - **The two `decodes`/`toCurrent` tests exercise the frozen reader directly**, by naming
- *    [ExportPayloadV2Dto] rather than going through the repository. They are the only assertions
- *    here that actually run frozen code, and they keep working unchanged after the bump.
- *  - **Every restore test below still reaches the database through the CURRENT branch**, because a
- *    file declaring 2 matches `BACKUP_SCHEMA_VERSION` today. They pin the behaviour a v2 file must
- *    produce, not the reader that produces it. When the next commit adds `recurringMovements`, moves
- *    the number and wires the v2 branch, these same assertions re-point onto the frozen reader with
- *    no edit — and the recurring-movement guard is the one that has to stay green through it.
+ *    [ExportPayloadV2Dto] rather than going through the repository. They are what says the frozen
+ *    shape parses real v2 bytes at all, independently of any dispatch.
+ *  - **Every restore test below reaches it through `decodePayload`'s version 2 branch**, which is
+ *    the path a real file takes. Before the bump these ran through the CURRENT branch — a file
+ *    declaring 2 matched the constant — so they pinned the behaviour a v2 file must produce without
+ *    touching the reader that produces it. Wiring the branch re-pointed them with no edit, which is
+ *    exactly what the freeze was ordered to make possible, and the recurring-movement guard at the
+ *    bottom is the one that had to stay green through it.
  *
  * **The fixture below is written out by hand and must never be generated from a DTO.** A fixture
  * built from the current types is the test that stays green straight through the breaking change it
@@ -71,6 +74,7 @@ class BackupV2CompatibilityTest {
             transactions = mockk<TransactionRepository> { every { all() } returns flowOf(emptyList()) },
             categories = mockk<CategoryRepository> { every { all() } returns flowOf(emptyList()) },
             accounts = mockk<AccountRepository> { every { all() } returns flowOf(emptyList<Account>()) },
+            recurring = mockk<RecurringMovementRepository> { every { allLive() } returns flowOf(emptyList()) },
             db = db,
             // Stated, not read. This suite asserts `occurredAt`, which comes off the file — but the
             // storage stamps beside it come off this clock, and none of them should move with the
@@ -87,10 +91,9 @@ class BackupV2CompatibilityTest {
     }
 
     // ── the frozen reader, exercised directly ─────────────────────────────────
-    // These two name ExportPayloadV2Dto rather than going through importFromJson, because the
-    // repository cannot reach it yet — BACKUP_SCHEMA_VERSION is still 2, so a v2 file matches the
-    // current branch. Until the bump they are the only proof the frozen shape parses real v2 bytes
-    // at all, and a frozen type nothing exercises is a frozen type that rots.
+    // These two name ExportPayloadV2Dto rather than going through importFromJson, so they hold even
+    // if the dispatch below them is rewired: they say the frozen shape parses real v2 bytes, which
+    // is a different claim from "the repository restores a v2 file".
 
     @Test
     fun `the frozen version 2 shape parses the bytes a version 2 export actually wrote`() {
@@ -110,7 +113,7 @@ class BackupV2CompatibilityTest {
     }
 
     @Test
-    fun `toCurrent hands every field of a version 2 payload through unchanged`() {
+    fun `toCurrent carries every version 2 field across and invents only the list version 2 lacked`() {
         val frozen = importJson.decodeFromString<ExportPayloadV2Dto>(V2_BACKUP)
 
         val current = frozen.toCurrent()
@@ -125,10 +128,16 @@ class BackupV2CompatibilityTest {
         assertEquals(frozen.accounts, current.accounts)
         assertEquals(frozen.categories, current.categories)
         assertEquals(frozen.transactions, current.transactions)
+        // The seventh field, and the only one with no source on the frozen side — the conversion
+        // invents it. Empty is the sole honest value: version 2 carried no templates, so there is
+        // nothing to hand across. What must NOT be read into this emptiness is "the file says there
+        // are none"; the declared version is what separates those, and the sweep gates on that.
+        assertTrue(current.recurringMovements.isEmpty())
     }
 
     // ── the whole restore ─────────────────────────────────────────────────────
-    // Still through the current branch today; see the class doc.
+    // Through decodePayload's version 2 branch, and therefore through ExportPayloadV2Dto.toCurrent();
+    // see the class doc.
 
     @Test
     fun `a version 2 file still restores everything it carries`() = runTest {
@@ -182,16 +191,22 @@ class BackupV2CompatibilityTest {
     }
 
     /**
-     * The assertion no older suite could make, and the one with the real teeth.
+     * The one with the real teeth: version 2 is the format every file on the author's disk was
+     * written in, and the table is fully populated on that device — so a v2 import is the exact
+     * moment where a v3-shaped sweep would destroy data no backup on disk can put back.
      *
-     * Version 1 predates recurring movements entirely, so `BackupV1CompatibilityTest` cannot say
-     * anything about them. Version 2 is the last format that does not carry them while the table is
-     * fully populated on the author's device — which makes a v2 import the exact moment where a
-     * v3-shaped sweep would destroy data no backup on disk can put back.
+     * The rule this pins: **a file older than version 3 neither tombstones nor deletes a recurring
+     * movement.** Not "restores them" — it has none to restore — but leaves the rows already there
+     * live, untombstoned and still active.
      *
-     * The rule this pins: **a file older than version 3 leaves `recurring_movements` alone.** Not
-     * "restores them" — it has none to restore — but leaves the rows that are already there live,
-     * untombstoned, and still active.
+     * Deliberately not "leaves the table alone", which would be false: `restore(dto: CategoryDto, …)`
+     * detaches a category from any recurring row whose `type` disagrees with the restored
+     * `categoryType`, on every version including this one. `BackupV3CompatibilityTest`'s twin of this
+     * test spells out that path and why neither fixture triggers it.
+     *
+     * `BackupV1CompatibilityTest` carries the same guard. The v1 *format* predating the table is not
+     * a reason to skip it — the rows are on the device either way, and a v1 file landing on a device
+     * full of templates is exactly as reachable as a v2 one.
      */
     @Test
     fun `importing a version 2 file leaves the recurring movements already on the device alive`() = runTest {
