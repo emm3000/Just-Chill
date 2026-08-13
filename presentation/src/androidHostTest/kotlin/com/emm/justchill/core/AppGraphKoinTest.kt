@@ -22,7 +22,6 @@ import org.koin.core.definition.BeanDefinition
 import org.koin.core.parameter.ParametersDefinition
 import org.koin.core.parameter.parametersOf
 import org.koin.core.qualifier.Qualifier
-import org.koin.core.qualifier.named
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import java.lang.reflect.Field
@@ -46,6 +45,16 @@ import kotlin.time.Instant
  * [every definition in the app graph resolves], but calling it would also start the orchestrator's
  * collectors, and the Android `resumeEvents()` actual needs `ProcessLifecycleOwner` — an Android
  * runtime this host test does not have.
+ *
+ * ### The boundary, stated so nobody assumes past it
+ *
+ * The graph here is `appModules(testPlatformModule)`. The REAL platform modules —
+ * `androidPlatformModule` in `:androidApp`, `iosPlatformModule` in `iosMain` — are not on this
+ * source set's classpath and are never loaded, so nothing in this file says anything about what
+ * they bind. A binding only they carry is guarded where it lives: `AndroidPlatformModuleTest`
+ * (`:androidApp`) does that for `named("commitHash")`, which `AppNavHost` resolves at launch. An
+ * assertion written here against [testPlatformModule]'s own literal would only be the fixture
+ * checking itself — that is exactly what this test used to do.
  */
 @OptIn(KoinInternalApi::class)
 class AppGraphKoinTest {
@@ -103,29 +112,6 @@ class AppGraphKoinTest {
         assertTrue(
             boundTypes.size >= MIN_EXPECTED_BINDINGS,
             "Only ${boundTypes.size} bindings were discovered; the registry sweep looks broken.",
-        )
-
-        // Everything above walks the definitions that EXIST, so it proves that what is bound
-        // resolves and can never prove that what a consumer ASKS FOR was bound at all. For a
-        // ViewModel that gap is closed by EXPECTED_VIEW_MODELS; for a qualified String nothing
-        // closes it, so the keys below are named literally and checked by hand.
-        //
-        // Blank counts as missing: an empty string is a binding that resolves and a footer that
-        // reports nothing.
-        //
-        // Folded into this test rather than given its own @Test on purpose. JUnit4 runs @Before per
-        // method, and this class's @Before builds a real SupabaseClient and calls
-        // Dispatchers.setMain — the path behind the ~1-in-5 "Dispatchers.Main was accessed" flake
-        // recorded in docs/PROGRESS.md. A fourth method would be a fourth roll of that die for one
-        // extra assertion.
-        val missing: List<String> = UNSWEPT_QUALIFIED_STRINGS.filter { name ->
-            koin.getOrNull<String>(named(name)).isNullOrBlank()
-        }
-        assertTrue(
-            missing.isEmpty(),
-            "These qualified strings are resolved by a consumer the sweep cannot see, and are " +
-                "missing or blank in the graph: $missing. Bind them in androidPlatformModule " +
-                "(production) and in testPlatformModule.",
         )
     }
 
@@ -292,26 +278,6 @@ class AppGraphKoinTest {
 
         /** The graph currently exposes 28 injected Clock/TimeZone fields across :domain/:data/:presentation. */
         const val MIN_EXPECTED_TIME_FIELDS = 20
-
-        /**
-         * Qualified `String` bindings NO definition in `appModules()` consumes, so the sweep above
-         * cannot reach them. Exactly one today: `commitHash`, read by `AppNavHost` in `:ui-android`
-         * — a module this test cannot import — on every launch of every build, before the first
-         * screen renders. Deleting it from `androidPlatformModule` compiles clean and crashes the
-         * app at startup.
-         *
-         * `appVersion` is deliberately NOT here despite being read by the same `koinInject` call.
-         * `profileModule` also resolves it, at ProfileModule.kt's `appVersion = get(named(...))`,
-         * so removing that binding breaks `ProfileViewModel` and the sweep reports it on its own.
-         *
-         * Both arms were run, not reasoned about. Dropping `commitHash` from `testPlatformModule`
-         * fails this test and only this test, at the check below. Dropping `appVersion` fails ALL
-         * THREE tests in this class, and fails this one at the sweep above rather than here —
-         * `ProfileViewModel` is a definition, so every test that resolves definitions trips over
-         * it. Listing a key the sweep already covers would make this list look load-bearing where
-         * it is not.
-         */
-        val UNSWEPT_QUALIFIED_STRINGS = listOf("commitHash")
 
         val EXPECTED_VIEW_MODELS = sortedSetOf(
             "AccountsViewModel",

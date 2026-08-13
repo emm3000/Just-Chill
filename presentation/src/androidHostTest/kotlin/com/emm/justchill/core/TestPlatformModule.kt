@@ -31,14 +31,10 @@ import org.koin.dsl.onClose
  * and is not part of `appModules()`. `iosPlatformModule` omits it for the same reason, so binding it
  * here would assert wiring that no shared consumer resolves.
  *
- * `named("commitHash")` looks like the same case and is NOT. It too is resolved outside
- * `appModules()` — by `AppNavHost` in `:ui-android` — but that is the production Compose root, read
- * on every launch of every prod release before a single screen renders, so a missing binding is a
- * crash at launch rather than a broken dev-flavor playground. It is bound here, and
- * [AppGraphKoinTest] names it in `UNSWEPT_QUALIFIED_STRINGS` and checks it by hand: binding without
- * asserting would buy nothing, since the whole-graph sweep only walks definitions that already
- * exist. It is the only binding in this file that needs that treatment — `appVersion` next door is
- * reached through `profileModule`'s `ProfileViewModel`.
+ * `named("commitHash")` is absent for the same reason. It is resolved by `AppNavHost` in
+ * `:ui-android`, outside `appModules()`, so binding it here would have asserted nothing about the
+ * production binding in `androidPlatformModule` — a module this source set cannot even import.
+ * That binding is guarded by `AndroidPlatformModuleTest` in `:androidApp`, where it lives.
  */
 val testPlatformModule: Module = module {
 
@@ -63,10 +59,6 @@ val testPlatformModule: Module = module {
 
     // Stamped into exported backups and shown in the Profile footer; a literal is enough off-device.
     single(named("appVersion")) { "0.0.0-test" }
-
-    // The commit the build came from, shown in the Profile footer. "unknown" is the same literal
-    // the generator falls back to when git cannot answer, and the shape the footer must survive.
-    single(named("commitHash")) { "unknown" }
 
     // Blank, exactly like iOS: AuthViewModel hides the Google button and short-circuits
     // submitWithGoogle on a blank id, so the launcher below is never actually invoked.

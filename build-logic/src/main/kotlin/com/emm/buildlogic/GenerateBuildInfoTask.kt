@@ -75,9 +75,11 @@ abstract class GenerateBuildInfoTask : DefaultTask() {
         /**
          * Stand-in when git cannot answer — a source tarball, a shallow export, no git on PATH.
          *
-         * Exactly seven characters long on purpose: the profile footer abbreviates whatever it is
-         * given to seven, and this way the fallback degrades to the same word rather than to a
-         * truncated "unknow".
+         * A sentinel, not a short hash: the footer matches this exact word and renders a distinct
+         * "no commit" state instead of abbreviating it. `:ui-android`'s `UNKNOWN_COMMIT_HASH` holds
+         * the same literal on the consuming side (build-logic is not on the app's compile
+         * classpath, so they cannot be one constant); `BuildInfoTest` asserts the shipped value is
+         * this word or a 40-hex sha, which is what keeps the two honest.
          */
         const val UNKNOWN_COMMIT = "unknown"
 

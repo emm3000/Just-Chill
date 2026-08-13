@@ -6,7 +6,7 @@
 > [checklist de trabajo abierto](#checklist-de-trabajo-abierto) — es la lista única, y no hay
 > ningún `OPEN_WORK.md` compitiendo con ella a propósito.
 >
-> **Última actualización**: 2026-08-12. No se anota el hash de trunk acá: el commit que lo
+> **Última actualización**: 2026-08-13. No se anota el hash de trunk acá: el commit que lo
 > escribe ya lo deja viejo, igual que pasó con el conteo de commits.
 >
 > **El sync está APAGADO en producción desde el 2026-08-12.** Kill switch
@@ -238,7 +238,7 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [ ] Entrada `ImportOrdering:ProfileScreen.kt` en `config/detekt/baseline-ui-android-main.xml:37`,
   probablemente muerta desde que `253e170` tocó esos imports. **No verificado**: correr la tarea y
   ver si el issue reaparece antes de borrarla.
-- [ ] Sacar el `@Suppress("CyclomaticComplexMethod")` de `ui-android/.../ProfileScreen.kt:239` al
+- [ ] Sacar el `@Suppress("CyclomaticComplexMethod")` de `ui-android/.../ProfileScreen.kt:251` al
   borrar el kill switch — cubre todo `AccountSection` en vez de solo las ramas de sync. Única
   SUGGESTION del Judgment Day de `253e170`.
 - [ ] **Burn-down de los 7 `TooManyFunctions` con amnistía** en
@@ -256,6 +256,9 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [ ] `:ui-android:detektAndroidMainSourceSet` reporta **21** issues. Preexistente y deliberadamente
   fuera del gate: `detektMainAndroid` cubre los mismos archivos **con** type resolution, así que
   sumarlo serían más tareas y no más cobertura — el razonamiento está en `QualityGateConventionPlugin`.
+- [ ] `build-logic` no tiene source set de tests y no cuelga de `qualityGate`, así que
+  `normalizeCommitHash` (`GenerateBuildInfoTask.kt:94`) —la única barrera contra inyectar texto en el
+  literal Kotlin que se genera— no tiene un solo test y su rama de rechazo no se ejecuta nunca.
 
 ### Docs y comentarios que afirman cosas falsas
 
@@ -267,6 +270,10 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   UI son de Google); y `PlatformHostActions + startTab` no están detrás de `expect/actual` — son
   una `interface` y un `val` planos en `hh/shared/PlatformHostActions.kt:39` y `:168`. Es código,
   no doc: queda anotado acá y el archivo no se tocó.
+- [ ] `docs/DESIGN_SYSTEM.md` §5 documenta 5 radios con otro esquema de nombres (`radius.0`,
+  `radius.s` 6dp, `radius.m`, `radius.l`, `radius.full`); `EmmRadii.kt` ships **9** (`r0`, `rXS` 8dp,
+  `rS` 10dp, `rM`, `rL`, `rXL`, `rXXL`, `rLTop`, `rFull`) y `rXS` —el que usa el footer de commit— no
+  tiene fila en el doc. Ni los nombres ni los dp coinciden.
 
 ### Bugs
 
@@ -335,6 +342,17 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   se auto-cura — solo latencia.
 - [ ] Pasada de performance de Compose: `derivedStateOf`, lambdas recordadas, `contentType` en
   `LazyColumn`.
+- [ ] `BuildInfoConventionPlugin` no declara marker para `libs.plugins.android.application` (el tipo
+  de variante de AGP entra solo transitivamente) y llama a
+  `extensions.configure<ApplicationAndroidComponentsExtension>` de forma eager al aplicarse, en vez de
+  diferir con `pluginManager.withPlugin("com.android.application")`. Depende del orden del bloque
+  `plugins { }` en `androidApp/build.gradle.kts`.
+- [ ] La escritura al portapapeles del commit, el split short-en-pantalla/40-al-copiar y la rama
+  `SDK_INT < TIRAMISU` del snackbar (`ProfileEntries.kt`) no tienen cobertura automática en ninguna
+  tarea del gate. `commitHashUi()` sí la tiene; lo que la rodea, no.
+- [ ] La fila del footer de commit (`ProfileScreen.kt`, `CopyableCommitRow`) toma el ripple por
+  defecto de Material mientras todas las demás filas interactivas de la pantalla lo apagan con
+  `interactionSource` + `indication = null`, y hardcodea `12.sp`/`14.dp` en vez de leer `LocalEmmType`.
 - [ ] Flake preexistente en `MviViewModelTest` (~1 de cada 5 corridas, `Dispatchers.Main was
   accessed`). El test ya hace `Dispatchers.setMain(StandardTestDispatcher())` en el `@Before` y
   `resetMain()` en el `@After` (`presentation/src/androidHostTest/.../MviViewModelTest.kt:38` y `:43`),

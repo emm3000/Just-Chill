@@ -71,13 +71,6 @@ import kotlin.time.Instant
 /** Meta copy for the sync rows while [SYNC_TEMPORARILY_DISABLED] is on. Spanish, like all UI copy. */
 private const val SYNC_PAUSED_META = "Sincronización en pausa"
 
-/**
- * How much of the commit sha the footer shows. Git's own abbreviation floor, and what GitHub
- * prints. The screen always receives the full hash — the copy action needs all 40 characters — so
- * this is the one and only place the abbreviation happens.
- */
-private const val SHORT_COMMIT_HASH_LENGTH = 7
-
 @Composable
 fun ProfileScreen(
     state: ProfileUiState,
@@ -552,7 +545,6 @@ private fun IconTileSmall(icon: ImageVector, tint: Color = LocalEmmColors.curren
 private fun VersionFooter(appVersion: String, commitHash: String, onCopyClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
-    val radii = LocalEmmRadii.current
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -569,34 +561,58 @@ private fun VersionFooter(appVersion: String, commitHash: String, onCopyClick: (
         // apart. Short on screen, full 40 on the clipboard: the GitHub convention, and the short
         // form is the one a human can read back over a chat.
         //
-        // The row, not the text, carries the 48dp touch floor DESIGN_SYSTEM §4.1 calls
-        // non-negotiable; the copy inside it stays at the footer's 12sp. It also declares
-        // Role.Button — without it the whole thing announces as an unnamed clickable, the same
-        // treatment RetryPill in this package already applies.
-        Row(
-            modifier = Modifier
-                .clip(radii.rXS)
-                .clickable(onClick = onCopyClick)
-                .semantics { role = Role.Button }
-                .heightIn(min = 48.dp)
-                .padding(horizontal = spacing.s4),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
-        ) {
-            Text(
-                text = "Commit ${commitHash.take(SHORT_COMMIT_HASH_LENGTH)}",
+        // Two states, not one string: with no hash there is nothing to copy, so the row loses the
+        // click, the Role.Button and the icon rather than offering to put the sentinel on the
+        // clipboard. commitHashUi() owns that decision and is unit-tested; this only renders it.
+        when (val commit = commitHashUi(commitHash)) {
+            is CommitHashUi.Available -> CopyableCommitRow(
+                label = commit.label,
+                onCopyClick = onCopyClick,
+            )
+
+            CommitHashUi.Unavailable -> Text(
+                text = commit.label,
                 fontSize = 12.sp,
                 fontFamily = InterFontFamily,
                 color = colors.textTertiary,
                 textAlign = TextAlign.Center,
-            )
-            Icon(
-                imageVector = Icons.Outlined.ContentCopy,
-                contentDescription = "Copiar el hash completo del commit",
-                tint = colors.textTertiary,
-                modifier = Modifier.size(14.dp),
+                modifier = Modifier.padding(horizontal = spacing.s4, vertical = spacing.s2),
             )
         }
+    }
+}
+
+// The row, not the text, carries the 48dp touch floor DESIGN_SYSTEM §4.1 calls non-negotiable; the
+// copy inside it stays at the footer's 12sp. It also declares Role.Button — without it the whole
+// thing announces as an unnamed clickable, the same treatment RetryPill in this package applies.
+@Composable
+private fun CopyableCommitRow(label: String, onCopyClick: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
+    val radii = LocalEmmRadii.current
+    Row(
+        modifier = Modifier
+            .clip(radii.rXS)
+            .clickable(onClick = onCopyClick)
+            .semantics { role = Role.Button }
+            .heightIn(min = 48.dp)
+            .padding(horizontal = spacing.s4),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+    ) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontFamily = InterFontFamily,
+            color = colors.textTertiary,
+            textAlign = TextAlign.Center,
+        )
+        Icon(
+            imageVector = Icons.Outlined.ContentCopy,
+            contentDescription = "Copiar el hash completo del commit",
+            tint = colors.textTertiary,
+            modifier = Modifier.size(14.dp),
+        )
     }
 }
 
