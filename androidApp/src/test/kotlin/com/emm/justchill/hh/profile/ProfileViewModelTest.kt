@@ -5,6 +5,7 @@ import com.emm.domain.auth.AuthUser
 import com.emm.domain.auth.DeleteUserAccountUseCase
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
+import com.emm.domain.auth.SignOutResult
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.backup.BackupRepository
@@ -116,24 +117,50 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `SignOut intent invokes SignOutUseCase and emits SessionClosed notify effect`() = runTest(testDispatcher) {
-        coEvery { signOut.invoke() } returns Unit
+    fun `SignOut intent invokes SignOutUseCase and emits SessionClosed notify effect on Revoked`() =
+        runTest(testDispatcher) {
+            coEvery { signOut.invoke() } returns SignOutResult.Revoked
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+            val vm = buildViewModel()
+            val effects = mutableListOf<ProfileEffect>()
+            val job = launch { vm.effect.collect { effects.add(it) } }
 
-        vm.onIntent(ProfileIntent.SignOut)
-        advanceUntilIdle()
+            vm.onIntent(ProfileIntent.SignOut)
+            advanceUntilIdle()
 
-        coVerify(exactly = 1) { signOut.invoke() }
-        assertTrue(
-            effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.SessionClosed },
-            "Expected SessionClosed notify not found in $effects",
-        )
+            coVerify(exactly = 1) { signOut.invoke() }
+            assertTrue(
+                effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.SessionClosed },
+                "Expected SessionClosed notify not found in $effects",
+            )
 
-        job.cancel()
-    }
+            job.cancel()
+        }
+
+    @Test
+    fun `SignOut intent emits SessionClosedLocallyOnly notify effect on LocalOnly, not SessionClosed`() =
+        runTest(testDispatcher) {
+            coEvery { signOut.invoke() } returns SignOutResult.LocalOnly
+
+            val vm = buildViewModel()
+            val effects = mutableListOf<ProfileEffect>()
+            val job = launch { vm.effect.collect { effects.add(it) } }
+
+            vm.onIntent(ProfileIntent.SignOut)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { signOut.invoke() }
+            assertTrue(
+                effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.SessionClosedLocallyOnly },
+                "Expected SessionClosedLocallyOnly notify not found in $effects",
+            )
+            assertTrue(
+                effects.none { it is ProfileEffect.Notify && it.message == ProfileMessage.SessionClosed },
+                "LocalOnly must not produce the SessionClosed (clean-revoke) notify: $effects",
+            )
+
+            job.cancel()
+        }
 
     @Test
     fun `SignOut failure emits ShowError effect`() = runTest(testDispatcher) {
@@ -274,7 +301,7 @@ class ProfileViewModelTest {
             vm.onIntent(ProfileIntent.ExportRequested)
             advanceUntilIdle()
 
-            // The guard no longer swallows silently (docs/sync/AUDIT.md §8) — it still runs no
+            // The guard no longer swallows silently (docs/archive/sync/AUDIT.md §8) — it still runs no
             // export, but it now reports through the shared OperationInProgress notify.
             assertTrue(
                 effects.singleOrNull() == ProfileEffect.Notify(ProfileMessage.OperationInProgress),
@@ -360,7 +387,7 @@ class ProfileViewModelTest {
     }
 
     /**
-     * `docs/sync/AUDIT.md` §8, candidate 1: the `launchOp` guard used to return silently on a
+     * `docs/archive/sync/AUDIT.md` §8, candidate 1: the `launchOp` guard used to return silently on a
      * confirmed re-entry — indistinguishable on screen from the delete_account RPC never firing at
      * all. It now reports instead of swallowing, still invokes the use case exactly once, and
      * resets `op` once the in-flight call completes.

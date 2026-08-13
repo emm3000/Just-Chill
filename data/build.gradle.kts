@@ -44,6 +44,11 @@ kotlin {
             implementation(libs.junit)
             // JVM in-memory SQLite for DB-integration unit tests (JdbcSqliteDriver).
             implementation(libs.sqlite.driver)
+            // Ktor MockEngine: lets DefaultAuthRepositorySignOutTest build a REAL SupabaseClient
+            // whose transport is scripted. Mocking the Auth plugin instead would only prove what
+            // this repository calls, not what the provider does to the session — and the provider's
+            // behaviour is the whole finding.
+            implementation(libs.ktor.client.mock)
         }
         // Instrumented tests run against the REAL AndroidSqliteDriver — that is the whole point for
         // the migration tests, which a JVM driver cannot exercise faithfully.

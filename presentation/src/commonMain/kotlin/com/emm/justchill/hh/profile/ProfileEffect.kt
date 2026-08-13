@@ -17,6 +17,14 @@ sealed interface ProfileEffect : UiEffect {
 
 sealed interface ProfileMessage {
     data object SessionClosed : ProfileMessage
+
+    /**
+     * [com.emm.domain.auth.SignOutUseCase] returned [com.emm.domain.auth.SignOutResult.LocalOnly]:
+     * the local session was cleared, but the server-side revoke could not be reached. Distinct from
+     * [SessionClosed] so the snackbar can say the server was not reached, rather than implying a
+     * clean revoke that did not happen.
+     */
+    data object SessionClosedLocallyOnly : ProfileMessage
     data object AccountDeleted : ProfileMessage
     data object ExportDone : ProfileMessage
     data object ExportFailed : ProfileMessage
