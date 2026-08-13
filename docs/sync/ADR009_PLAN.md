@@ -196,45 +196,56 @@ directions:
   movement that lifts the floor to the restore month and **every owed past period vanishes**. No
   error, no row, nothing to notice.
 
-Both need a test, and one test cannot cover both: they are opposite failures. *A restore does not
-re-mint a confirmed period; a restore does not swallow the owed ones.*
+② pins both, one test each — they are opposite failures and no single test covers them. Both run the
+exported bytes back through the real `pendingPeriods` rule instead of comparing a field to itself,
+so they fail on a value that still deserializes but no longer produces the right pending list.
+**They prove export, not restore** — the debt that leaves is ③'s, below.
 
 `frequency` has a single enum member today, its column carries a DEFAULT, and `update:` never writes
 it — it is in the list because the file is a format, not a snapshot of today's cardinality.
 
-**Open — the export path has no all-live read for recurring.** Export reads through the three domain
-repository interfaces (`all()`) while import writes through `db` directly, and that asymmetry is
-what lets the repository test mock every read. `RecurringMovementRepository`'s only **all-row**
-reads are `allActive()` — filters `isActive = 1`, so exporting through it drops every paused
-template — and `allWithDetails()`, a joined details model; everything else on the interface is
-per-id or per-account work. So either the domain repository gains a method, or export reads `db`
-directly for this one table and the export test loses its mockability. Decide it in the commit
-that writes the export, not here.
+**Settled in ② — export reads through a new `allLive()`.** `RecurringMovementRepository` gained
+`allLive()`, backed by a flat `selectAllLive:` (`WHERE deletedAt IS NULL ORDER BY name`) — the same
+`all:` convention the other three tables already follow.
 
-Correcting this plan's own earlier claim: `selectAllWithDetails:` **does** return every live row,
-paused templates included. What does not exist is a **flat** all-live select — that one is joined
-and carries three extra columns, and every flat select (`selectActive:`, `find:`, `selectPending:`)
-filters something out.
+What decided it, so the reasoning survives: `exportToJson` reads the other three tables through
+domain repository interfaces, and that symmetry is what lets `DefaultBackupRepositoryTest` mock
+every read. A direct `db` query for this one table would leave the export test mockable for three
+tables and not the fourth. Neither existing read fit either. `allActive()` filters `isActive = 1`
+and would drop every paused template — data the user still owns. `allWithDetails()` **does** return
+every live row, paused ones included (correcting this plan's earlier "none returns every live row"),
+but it is a joined model carrying three extra columns; what was actually missing was a **flat**
+all-live select, since every flat select that existed (`selectActive:`, `find:`, `selectPending:`)
+filters something out. Adding a SELECT is not a schema change (constraint 1), and
+`verifySqlDelightMigration` — on the gate — is the check that would say otherwise if it were.
 
 **Extend the dangling-category scrub to recurring.** `exportToJson` nulls the categoryId of
 transactions whose category is tombstoned (`DefaultBackupRepository`); `recurring_movements` carries
 the same composite FK `(categoryId, type) → categories(categoryId, categoryType)`, identical to the
 one on `transactions`, so without the same scrub the exported file fails its own import.
 
-**③ The SQL is four statements, not one SELECT.** `recurring_movements.sq` declares
-`clearCategoryOnTypeChange:` and full soft-delete like the other three tables, but **none** of the
-three write statements the sweep and restore paths consume on those tables: `softDeleteAllLive:`,
-`insertOrIgnoreFromBackup:`, `restoreFromBackup:`. The insert-then-update restore idiom — chosen
-over `INSERT OR REPLACE`, which physically deletes the old row and is therefore refused by
-`ON DELETE RESTRICT` while anything still references it, with the reasoning in a comment block above
-those statements in `accounts.sq` — has no counterpart on this table at all. Those three plus the
-flat all-live select ② needs are the phase's SQL. New `.sq` statements are not a migration
-(constraint 1).
+**③ The SQL is four statements, not one SELECT.** ② landed the first, `selectAllLive:`. The other
+three are the ones the sweep and restore paths consume on the other tables and that
+`recurring_movements.sq` declares **none** of: `softDeleteAllLive:`, `insertOrIgnoreFromBackup:`,
+`restoreFromBackup:`. That table already carries `clearCategoryOnTypeChange:` and full soft-delete
+like the other three, but the insert-then-update restore idiom — chosen over `INSERT OR REPLACE`,
+which physically deletes the old row and is therefore refused by `ON DELETE RESTRICT` while anything
+still references it, with the reasoning in a comment block above those statements in `accounts.sq` —
+has no counterpart on it at all. New `.sq` statements are not a migration (constraint 1).
 
 **Version the import sweep — the data-loss trap.** With v3 the sweep includes recurring **only for
 v3+ payloads**; importing a v1/v2 file must keep leaving local recurring intact, since those formats
 carry none and wiping them would destroy data no backup can restore. Pin both sides with tests:
 *importing v1/v2 leaves recurring untouched; importing v3 replaces it.*
+
+**③ must re-point ②'s two data-loss guards at the real restore.** ②'s `lastConfirmedPeriod` and
+`createdAt` tests rebuild the template from the exported DTO with a **test-local** reconstruction,
+because the production restore mapper does not exist until ③. They prove those two fields survive
+the *export*. They do not prove a restore honours them — and the exact failure this phase exists to
+prevent, a restore stamping `createdAt = now` and swallowing every owed past period, leaves both of
+them green. So the commit that writes the restore mapper re-points both guards at it. Until that
+happens the phase has export coverage and **no restore coverage** for the two opposite losses, and
+a green ② does not say otherwise.
 
 **"The import leaves recurring untouched" is true of the sweep and false of the import.**
 `restore(dto: CategoryDto, …)` already calls `clearCategoryOnTypeChange` on
@@ -267,20 +278,25 @@ phase's scope. The body copy stays Spanish; it is UI.
 **`ImportStats`** gains a `recurring` count (today `accounts` / `categories` / `transactions` only),
 plus the UI message that reports it.
 
-**Known downgrade behavior, recorded not fixed.** `importJson` is configured with
-`ignoreUnknownKeys = true`, so an older app build reading a v3 file drops `recurringMovements`
-silently instead of failing. Nothing here changes that — it is written down so a restore that comes
-back short on an old build is diagnosable rather than mysterious.
+**Downgrade behavior, and it is operational rather than cosmetic.** `decodePayload` reads the
+declared version **before** it deserializes anything — its KDoc: the version is read first, "and
+only then is the payload decoded as the shape that version actually had" — so `ignoreUnknownKeys`
+never gets the chance to drop an unknown array. A build still shipping `BACKUP_SCHEMA_VERSION = 2`
+has branches for 2 and 1 only, so a v3 file falls to `else` and is refused as
+`ValidationCode.BackupVersionUnsupported`. That refusal is loud and correct, and far better than a
+silent partial read. The consequence to plan around: **from the first build that ships ②, every file
+this app exports is unreadable on any older build still installed.** On a device that runs the
+release build daily off App Distribution, a rollback or a sideloaded older APK cannot read the
+backups the current build is writing.
 
 ### Phase 2 — snapshot pipeline
 
 Three sub-phases, three PR series: the transactional refactor is its own risk and must be
 reviewable alone.
 
-**2a — transactional export.** `exportToJson` does three independent `Flow.first()` reads on
-trunk, and one more once Phase 1 adds recurring — whether that fourth read is a `Flow` or a
-direct `db` query depends on how Phase 1 settles its export-read question. A write landing
-between any two of them corrupts the snapshot. SQLDelight transactions are synchronous
+**2a — transactional export.** After Phase 1, `exportToJson` does four independent `Flow.first()`
+reads — accounts, categories, transactions, and the `allLive()` recurring read ② added. A write
+landing between any two of them corrupts the snapshot. SQLDelight transactions are synchronous
 blocks, so `.first()` cannot run inside one: switch the export to direct queries
 (`executeAsList()`) inside a single `transactionWithResult`. `DefaultBackupRepository` already
 holds the `db`; the refactor is contained to that class.
