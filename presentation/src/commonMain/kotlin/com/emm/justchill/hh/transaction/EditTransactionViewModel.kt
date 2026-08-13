@@ -88,11 +88,27 @@ class EditTransactionViewModel(
             copy(
                 transactionType = type,
                 categories = list,
-                categorySelected = list.firstOrNull { it.categoryId == snapshot?.categoryId }
-                    ?: list.firstOrNull(),
+                categorySelected = resolveSelection(list),
             ).recompute()
         }
         loadFrequent(type)
+    }
+
+    /**
+     * The category to show for a newly-cut list — and **null when the movement never had one.**
+     *
+     * "Uncategorized" is a state the user chose, not a gap to fill. Falling back to the first
+     * category of the list writes a label nobody picked: [recompute] compares the selection against
+     * the snapshot, sees a change, enables Save, and the next tap on any unrelated field persists
+     * it. On an edit screen that reads as the app quietly filing the movement somewhere.
+     *
+     * It stopped being a corner case with schema v5: `4.sqm` nulls the category of every movement
+     * whose pair the new key refuses, so the author's device now holds a set of movements that open
+     * uncategorized — exactly the rows this would relabel, and they are real financial records.
+     */
+    private fun resolveSelection(list: List<SelectableCategory>): SelectableCategory? {
+        val storedId = snapshot?.categoryId ?: return null
+        return list.firstOrNull { it.categoryId == storedId } ?: list.firstOrNull()
     }
 
     private fun loadFrequent(type: TransactionType) = viewModelScope.launch {
@@ -149,7 +165,7 @@ class EditTransactionViewModel(
                 accounts = accounts,
                 accountSelected = account,
                 categories = categoriesForType,
-                categorySelected = selectedCategory ?: categoriesForType.firstOrNull(),
+                categorySelected = selectedCategory ?: resolveSelection(categoriesForType),
                 isEnabled = false,
                 hasChanges = false,
             )

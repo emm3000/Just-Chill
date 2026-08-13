@@ -36,6 +36,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -269,5 +271,73 @@ class EditTransactionViewModelTest {
         val update = slot<TransactionUpdate>()
         coVerify { updateTransaction.invoke(storedTransaction, capture(update)) }
         assertEquals(storedTransaction.occurredAt, update.captured.occurredAt)
+    }
+
+    // ── an uncategorized movement stays uncategorized ─────────────────────────
+
+    /**
+     * A movement recorded with no category must not acquire one just by being opened.
+     *
+     * The screen used to fall back to the first category of the list whenever the selection was
+     * empty. `recompute()` then compares that against the snapshot, sees a difference, and enables
+     * Save — so editing the amount of an uncategorized movement filed it under whatever category
+     * happened to sort first, without the user ever touching the field.
+     *
+     * `4.sqm` is what turns this from a corner case into a live one: it nulls the category of every
+     * movement whose `(categoryId, type)` pair the new key refuses, so the author's device holds a
+     * set of movements that now open exactly like this one. They are real financial records.
+     */
+    @Test
+    fun `an uncategorized movement does not acquire a category on load`() = runTest(testDispatcher) {
+        coEvery { transactionRepository.find(TransactionId("tx-1")) } returns
+            storedTransaction.copy(categoryId = null)
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertNull(vm.state.value.categorySelected, "nobody picked this")
+        assertFalse(vm.state.value.hasChanges, "opening a screen is not an edit")
+    }
+
+    @Test
+    fun `editing an uncategorized movement saves it still uncategorized`() = runTest(testDispatcher) {
+        val uncategorized = storedTransaction.copy(categoryId = null)
+        coEvery { transactionRepository.find(TransactionId("tx-1")) } returns uncategorized
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(EditTransactionIntent.OnAmountChange("9000"))
+        advanceUntilIdle()
+        vm.onIntent(EditTransactionIntent.OnSave)
+        advanceUntilIdle()
+
+        val update = slot<TransactionUpdate>()
+        coVerify { updateTransaction.invoke(uncategorized, capture(update)) }
+        assertNull(update.captured.categoryId, "an amount edit must not write a category")
+    }
+
+    @Test
+    fun `switching the type of an uncategorized movement still leaves it uncategorized`() = runTest(testDispatcher) {
+        // Changing the type IS an edit, so Save is expected to enable — but the category the user
+        // never had must not arrive with it. The Income category has to exist for this to be able
+        // to fail: with an empty list for the new type, `firstOrNull()` is null for the wrong reason.
+        val incomeCategory = Category(
+            categoryId = CategoryId("salary"),
+            name = "Sueldo",
+            icon = "money",
+            color = "green",
+            categoryType = CategoryType.Income,
+        )
+        every { categoryRepository.all() } returns flowOf(listOf(category, incomeCategory))
+        coEvery { transactionRepository.find(TransactionId("tx-1")) } returns
+            storedTransaction.copy(categoryId = null)
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(EditTransactionIntent.OnTransactionTypeChange(TransactionType.Income))
+        advanceUntilIdle()
+
+        assertEquals(1, vm.state.value.categories.size, "the Income category must be on offer")
+        assertNull(vm.state.value.categorySelected, "on offer, but not chosen for the user")
     }
 }
