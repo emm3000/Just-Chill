@@ -96,9 +96,12 @@ three workflows and this doc all invoke it.
 suites, Android lint on the dev variant, and the iOS compile. To change what the gate means, edit
 the plugin; everything downstream follows.
 
-One task is named rather than matched: `:build-logic:test`. `build-logic` is an **included build**,
-so task-name matching never reaches it — the root project applies `justchill.quality.gate` for that
-one line and nothing else.
+"Per module" means the five in `settings.gradle.kts`. `build-logic` is an **included build**, not a
+module, so task-name matching never reaches it: one task is named rather than matched,
+`:build-logic:test`, and the root project applies `justchill.quality.gate` for that line and nothing
+else. Tests only — `build-logic` applies no detekt (its build file applies just `kotlin-dsl`; the
+detekt entry there is an `implementation` marker so `DetektConventionPlugin` can be *written*), so
+its own sources are the one body of code the gate runs and never lints.
 
 Two properties worth knowing:
 

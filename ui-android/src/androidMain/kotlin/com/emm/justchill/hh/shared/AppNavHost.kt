@@ -76,9 +76,15 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         val syncController: SyncController = koinInject()
         val appVersion: String = koinInject(named("appVersion"))
         // Full sha the APK was built from; the profile footer shows the first 7 and copies all 40.
-        // androidPlatformModule (:androidApp) binds the CommitHash type this asks for. Unwrapped
-        // here, at the DI boundary: the type exists so producer and consumer cannot disagree, and
-        // everything downstream of this line is footer plumbing that only needs the characters.
+        // androidPlatformModule (:androidApp) binds the CommitHash type this asks for.
+        //
+        // What the type buys is exactly one thing: there is no string left to misspell. It does NOT
+        // make the two sides agree — `koinInject<String>()` written here compiles green and crashes
+        // at launch, the same as the old hand-typed qualifier did. The mechanism stops a typo, not
+        // a rewrite. Nothing observes this line.
+        //
+        // Unwrapped at the DI boundary: everything downstream is footer plumbing that only needs
+        // the characters.
         val commitHash: String = koinInject<CommitHash>().value
 
         // First-launch Manifesto gate: show the manifesto once, then land on startTab on every
