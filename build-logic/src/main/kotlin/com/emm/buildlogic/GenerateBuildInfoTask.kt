@@ -16,9 +16,12 @@ import org.gradle.work.DisableCachingByDefault
  * nearest release tag and stays identical across dozens of builds. The commit hash is the only
  * identifier that moves with the code.
  *
- * The hash arrives as a plain `@Input` string rather than being read here, so the configuration
- * cache can decide whether this task is up to date without running git during execution, and so
- * the task itself has no dependency on a git checkout being present.
+ * The hash arrives as a plain `@Input` string rather than being read here, so the task itself has
+ * no dependency on a git checkout being present and its up-to-date check is a comparison of that
+ * declared input — reading git inside the action instead would make the change invisible to it.
+ * Configuration caching is a second, separate mechanism: [BuildInfoConventionPlugin] reads git at
+ * configuration time, which registers the command as a configuration-cache input and is what
+ * invalidates the cached entry when HEAD moves.
  *
  * ### Known limitation: a dirty working tree
  *
@@ -88,10 +91,11 @@ abstract class GenerateBuildInfoTask : DefaultTask() {
          * the same literal on the consuming side — build-logic is not on the app's compile
          * classpath, so they cannot be one constant.
          *
-         * Nothing links them, and `GenerateBuildInfoTaskTest` cannot: it reads this constant, so it
-         * agrees with whatever this says. Editing this word therefore leaves every suite green
-         * while a git-less build renders "Commit unknow" with a copy button. If you change it,
-         * change `UNKNOWN_COMMIT_HASH` by hand.
+         * Nothing in the build links the two, so each side is pinned by a test that spells the
+         * word out instead of reading the constant: `GenerateBuildInfoTaskTest.the sentinel is the
+         * exact word the app side spells out` here, `CommitHashUiTest` there. Retyping this value
+         * turns the first red; retyping `UNKNOWN_COMMIT_HASH` turns the second red. Changing the
+         * word for real means editing four places: both constants and both tests.
          */
         const val UNKNOWN_COMMIT = "unknown"
 

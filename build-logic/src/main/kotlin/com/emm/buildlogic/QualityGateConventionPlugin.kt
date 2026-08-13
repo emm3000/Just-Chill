@@ -20,6 +20,14 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin
  *  - the schema checks in [SCHEMA_GATE_TASKS], for the module that has a SQLDelight schema
  *  - its host test suite, contributed by [KmpLibraryConventionPlugin] or the module's build file
  *  - the iOS compile, on macOS hosts only, contributed by [KmpLibraryConventionPlugin]
+ *
+ * And once, on the root project only: `:build-logic:test`, the suite of the included build. See
+ * the root branch in [apply].
+ *
+ * This plugin is repo-specific, not a general-purpose one: that root branch names the included
+ * build `build-logic` literally, so applying it to the root of a build that does not include one
+ * fails configuration. That is the intended outcome — a silently absent build-logic suite is the
+ * exact drift this class exists to stop.
  */
 class QualityGateConventionPlugin : Plugin<Project> {
 
@@ -27,8 +35,9 @@ class QualityGateConventionPlugin : Plugin<Project> {
         target.tasks.register(GATE_TASK) {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
             description =
-                "Runs every check that must pass before pushing: detekt, host tests, and " +
-                    "(on macOS) the iOS compile. Invoked by the pre-push hook and by CI."
+                "Runs every check that must pass before pushing: detekt, host tests, " +
+                    ":build-logic:test, and (on macOS) the iOS compile. Invoked by the pre-push " +
+                    "hook and by CI."
 
             // Lazy and existence-safe: a module only contributes the tasks it actually has, and
             // tasks registered after this plugin still land on the gate.
@@ -44,7 +53,11 @@ class QualityGateConventionPlugin : Plugin<Project> {
             // task-name matching only walks this build's projects. Its own suite has to be named,
             // and only once — hung off the root project, which applies this plugin for no other
             // reason. Everything else on the gate is a module contributing its own tasks.
-            if (target == target.rootProject) {
+            //
+            // `parent == null` rather than `== rootProject`: reaching for `rootProject` is
+            // cross-project access, which is what blocks Gradle's Project Isolation — the same
+            // thing the root build file stays thin for.
+            if (target.parent == null) {
                 dependsOn(target.gradle.includedBuild(BUILD_LOGIC_BUILD).task(":$TEST_TASK"))
             }
         }

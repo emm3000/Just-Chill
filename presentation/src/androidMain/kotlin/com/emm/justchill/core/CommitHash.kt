@@ -20,24 +20,18 @@ import kotlin.jvm.JvmInline
  * string either side can misspell. That is the whole of it — see `AppNavHost`'s injection site for
  * what this does NOT stop.
  *
- * ### Why it lives here
+ * ### Why it lives here, and in androidMain
  *
- * `:presentation` is where this project's DI contracts live (see [SupabaseConfig] next door), and
- * it is the one module both `:androidApp` and `:ui-android` can see — `ui-android/build.gradle.kts`
- * exposes it with `api(project(":presentation"))`. commonMain is compose-free, and a holder over a
- * `String` carries no Compose, `java.*` or `android.*`.
+ * `:presentation` is where this project's DI contracts live — [SupabaseConfig] is the one next
+ * door. `:ui-android` sees it through `api(project(":presentation"))`, and `:androidApp` sees it
+ * through `:ui-android`.
  *
- * ### It is NOT on the Swift surface, and that is the point of the value class
- *
- * Unlike [SupabaseConfig], which appears in the generated `JustChillKit.h` as `JCKSupabaseConfig`,
- * this type appears nowhere in it: Kotlin/Native does not export `@JvmInline value class` to
- * Obj-C, and no exported declaration references it. Checked by grepping the header after
- * `linkDebugFrameworkIosSimulatorArm64` — zero occurrences of `CommitHash`.
- *
- * Deliberate. No Swift screen shows the commit, so a `data class` here would only add a symbol to
- * `JustChillKit` that nothing on that side calls. If iOS ever needs this — a binding in
- * `KoinIos.kt`, a footer in SwiftUI — Swift will not be able to see the type, and that is the
- * moment to make it a `data class`, not a bug to debug.
+ * `androidMain` rather than `commonMain` because both sides of the contract are Android-only:
+ * `androidPlatformModule` (`:androidApp`) produces it, `AppNavHost` (`:ui-android`) consumes it,
+ * and no `iosMain` code — `KoinIos.kt` included — mentions it. Keeping it out of `commonMain`
+ * keeps it out of the Kotlin/Native compilation and out of the `JustChillKit` export. If iOS ever
+ * needs a commit footer, moving this back to `commonMain` is the first step, and it would then
+ * have to stop being a `@JvmInline value class`: Kotlin/Native does not export those to Obj-C.
  */
 @JvmInline
 value class CommitHash(val value: String)
