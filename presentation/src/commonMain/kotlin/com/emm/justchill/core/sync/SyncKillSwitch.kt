@@ -6,11 +6,12 @@ package com.emm.justchill.core.sync
  * Why it exists: the push dropped every row carrying a stale `userId` while `countPending` kept
  * counting them, so the debounced-writes trigger re-fired every few seconds forever, and the cycles
  * that did reach Supabase wrote dangling cross-tenant rows. The app is local-first, so switching
- * sync off costs nothing and stops the corruption. The sync layer is under redesign —
- * see `docs/sync/PLAN.md`.
+ * sync off costs nothing and stops the corruption.
  *
- * Temporary. To turn sync back on, flip this to `false`: nothing was removed, every Koin binding,
- * test and engine class is still wired. Grep this name to find every site it gates. Delete the
- * constant when the redesign lands.
+ * **This stays `true` forever.** `docs/adr/009-backup-is-a-snapshot-not-row-replication.md` replaces
+ * row replication with snapshot backup and deletes this engine rather than repairing it, so there
+ * is no "turn sync back on" any more — flipping this to `false` would re-enable the loop above.
+ * The constant and its gates are removed in the last phase of `docs/sync/ADR009_PLAN.md`, once
+ * nothing references the engine. Grep this name to find every site it gates.
  */
 const val SYNC_TEMPORARILY_DISABLED: Boolean = true

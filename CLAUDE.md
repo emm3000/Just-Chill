@@ -64,9 +64,10 @@ crossed modules. ViewModels cannot touch Compose; conventions around it (ViewMod
 
 The app is **local-first**: SQLDelight on-device is the single source of truth and the app is fully
 usable with no account and no network. **Sync is switched OFF in production since 2026-08-12**
-(`SYNC_TEMPORARILY_DISABLED`, `core/sync/SyncKillSwitch.kt:16`), under redesign as **backup only, one
-device at a time** ([ADR 006](docs/adr/006-sync-is-backup-only-one-device-at-a-time.md), superseding
-001's multi-device premise). **Read `docs/sync/AUDIT.md` before touching anything under
+(`SYNC_TEMPORARILY_DISABLED` in `core/sync/SyncKillSwitch.kt`) and is **being removed, not repaired**:
+[ADR 009](docs/adr/009-backup-is-a-snapshot-not-row-replication.md) replaces row replication with
+**snapshot backup** — the versioned JSON export, uploaded automatically — and deletes the engine while
+keeping the sync schema. **Read `docs/sync/ADR009_PLAN.md`, the single live sync doc, before touching
 `data/.../sync/` or `presentation/.../core/sync/`.**
 
 **Data flow:** `Screen` → `ViewModel` → use case → `Repository` interface → `Default{Entity}Repository` → `LocalDataSource` (SQLDelight). The use case is there **only where there is domain logic** — a pure read goes from `ViewModel` straight to the `Repository` interface. Rationale + the measurement: `docs/CODE_QUALITY.md`.
@@ -132,11 +133,12 @@ still uses JetBrains' multiplatform `lifecycle-viewmodel`, which has to compile 
 ## Docs map (`docs/`)
 
 - `PROGRESS.md` — "where are we now" plus the single open-work checklist (there is no tech-debt list here;
-  sync debt lives in `sync/AUDIT.md`). **Read it first.**
-- `sync/AUDIT.md` — the consolidated sync audit. **Read before touching sync**, and before assuming
-  anything about the Supabase project. `sync/PLAN.md` — the original slice plan, **paused**.
+  sync debt lives in `sync/ADR009_PLAN.md`). **Read it first.**
+- `sync/ADR009_PLAN.md` — the single live sync doc: the build order replacing row replication with
+  snapshot backup. **Read before touching sync.** Old audit + slice plan sit in `archive/sync/`, kept
+  for the reasoning, never for what to do next.
 - `adr/` — filenames state the decision. 004 amends 002; 005 supersedes 003's frozen-UI scope; 006
-  supersedes 001's multi-device premise and leaves 004 dormant; 007 amends 003's point 5 (writer + reviewer, repo-wide); 008 moves the category/type invariant into the schema. **Read before changing anything an ADR decided** — ADRs are amended by a new ADR, never rewritten.
+  supersedes 001's multi-device premise and leaves 004 dormant; 007 amends 003's point 5 (writer + reviewer, repo-wide); 008 moves the category/type invariant into the schema; 009 is the one to read first for anything sync-shaped — backup becomes a snapshot, the engine goes, the schema stays; it supersedes parts of 001 and 006 and renders 002 dormant, decision by decision in its header. **Read before changing anything an ADR decided** — ADRs are amended by a new ADR, never rewritten.
 - `DATE_AUDIT.md` — the 13 date findings, all closed. **Read before touching dates.** Live rule #7:
   whatever asks "what day/month is it" takes an injected `Clock` **and** `TimeZone`, **neither carrying a
   default** (`hh/di/SharedModule.kt` is the only way in). Follow-up: #5 phase two.

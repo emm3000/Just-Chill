@@ -31,7 +31,7 @@ import kotlin.time.Duration.Companion.seconds
  * once it succeeds the account is gone server-side, so a cancellation landing after it (e.g. the
  * caller popping the Perfil screen mid-flight, cancelling `viewModelScope`) must not skip the local
  * cleanup. Skipping it would leave local rows tagged with the userId of an account that no longer
- * exists on the server, which `docs/sync/AUDIT.md` §3 names as the precondition of the production
+ * exists on the server, which `docs/archive/sync/AUDIT.md` §3 names as the precondition of the production
  * sync loop this whole use case exists to close.
  *
  * Resolving the session is bounded by [SESSION_RESOLVE_TIMEOUT]. The whole flow holds the shared
@@ -42,7 +42,7 @@ import kotlin.time.Duration.Companion.seconds
  * Every step is logged through [SyncLogger] on failure, naming which one broke, before the
  * original exception is rethrown unchanged. This flow used to fail completely silently in
  * production with zero trace of which step (or the caller's UI guard) ate the failure — see
- * `docs/sync/AUDIT.md` §8. [CancellationException] is never logged as a failure: the user simply
+ * `docs/archive/sync/AUDIT.md` §8. [CancellationException] is never logged as a failure: the user simply
  * leaving the screen is not a deletion failure.
  *
  * NOTE: [DeleteAccountUseCase] in `com.emm.domain.account` handles FINANCIAL account deletion
@@ -68,7 +68,7 @@ class DeleteUserAccountUseCase(
         // Steps 2-3 run under NonCancellable: once step 1 has succeeded the account is gone
         // server-side, so a cancellation landing here (e.g. the caller leaving the screen) must
         // not leave local rows still tagged with a userId that no longer exists remotely — see the
-        // class KDoc and `docs/sync/AUDIT.md` §3.
+        // class KDoc and `docs/archive/sync/AUDIT.md` §3.
         withContext(NonCancellable) {
             // Step 2: revert owned local rows to anonymous-local (userId = NULL, syncState = Pending).
             withStepLogging("unclaim") { claimLocalDataRepository.unclaimAll(userId) }

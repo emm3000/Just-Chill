@@ -6,8 +6,8 @@ Read the row for the target before opening any source file.
 |---|---|---|
 | Feature / screen flow | `docs/DESIGN_SYSTEM.md`, then the screen, its ViewModel, its use cases | 15 |
 | Architecture / module | `CLAUDE.md` `## Architecture`, then that module's own `CLAUDE.md` (only `androidApp/`, `ui-android/`, `presentation/`, `domain/`, `data/` ship one; `build-logic/`, `iosApp/`, `supabase/` have none) | 20 |
-| Sync | `docs/sync/AUDIT.md` and `docs/adr/006-sync-is-backup-only-one-device-at-a-time.md` BEFORE any source file | 20 |
-| Supabase / SQLDelight migrations | `docs/sync/AUDIT.md`, then `supabase/migrations/` against the SQLDelight schema. Flag any drift — this is the class that broke production for two months (commit `72a9b03`) | 15 |
+| Sync | `docs/sync/ADR009_PLAN.md` and `docs/adr/009-backup-is-a-snapshot-not-row-replication.md` BEFORE any source file. The forensic audit is archived at `docs/archive/sync/AUDIT.md` — read it for *why*, never for what to do next | 20 |
+| Supabase / SQLDelight migrations | `docs/archive/sync/AUDIT.md`, then `supabase/migrations/` against the SQLDelight schema. Flag any drift — this is the class that broke production for two months (commit `72a9b03`) | 15 |
 | `:presentation` commonMain | the exported-iOS surface. Any `java.*` or `android.*` reference is CRITICAL; the only proof is `./gradlew :presentation:compileKotlinIosSimulatorArm64`, which the MAIN THREAD runs — the auditor reports the suspect imports it found and marks the finding UNPROVEN | 20 |
 | Dates | `docs/DATE_AUDIT.md`; live rule #7 is an injected `Clock` + `TimeZone`, neither carrying a default | 15 |
 | `.github/` pipelines | `CLAUDE.md` `## Gotchas` — pinned SHAs, the `git describe --match "v[0-9]*"` filter, secrets via `env:` | 10 |

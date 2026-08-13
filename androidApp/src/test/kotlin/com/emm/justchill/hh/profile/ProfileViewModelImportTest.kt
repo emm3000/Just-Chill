@@ -164,7 +164,7 @@ class ProfileViewModelImportTest {
         vm.onIntent(ProfileIntent.ImportJson("{}"))
         advanceUntilIdle()
 
-        // The guard no longer swallows silently (docs/sync/AUDIT.md §8) — it still runs no import,
+        // The guard no longer swallows silently (docs/archive/sync/AUDIT.md §8) — it still runs no import,
         // but it now reports through the shared OperationInProgress notify.
         assertTrue(
             effects.singleOrNull() == ProfileEffect.Notify(ProfileMessage.OperationInProgress),

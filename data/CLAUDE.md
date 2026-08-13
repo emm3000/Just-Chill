@@ -2,7 +2,7 @@
 
 Kotlin Multiplatform library (`android` + `iosArm64` + `iosSimulatorArm64`). Implements `:domain`
 repository interfaces. SQLDelight is the local source of truth; Supabase (`supabase-kt`) backs the
-optional auth (`auth/`) and multi-device sync (`sync/`) implementations.
+optional auth (`auth/`) and the sync engine (`sync/`) — scheduled for deletion, see below.
 
 Root package: `com.emm.data.<entity>`. `minSdk = 26`. Depends on `:domain` only.
 
@@ -74,7 +74,7 @@ in `docs/PROGRESS.md`; it does not fail the gate.
 - This module also `api`-exposes the Supabase auth/postgrest SDK and the Ktor engines. The consumer
   that actually uses them is `:presentation` (`hh/di/SupabaseModule.kt`).
 
-## Sync engine (`sync/`)
+## Sync engine (`sync/`) — scheduled for deletion, see `docs/sync/ADR009_PLAN.md`
 
 - The per-table push/pull algorithm lives once in `BaseTableSync<DTO : SyncRowDto>` (template
   method); each table class (`AccountTableSync`, etc.) supplies only generated-query adapters and

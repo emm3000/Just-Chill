@@ -163,8 +163,9 @@ GROUP BY categoryId;
 -- back, and without this the parent UPDATE is refused by the composite key — which the pull reads
 -- as "the parent has not arrived yet" and answers by holding the shared cursor forever.
 --
--- No `updatedAt` bump and no syncState flip, matching 4.sqm: sync is off in production and under
--- redesign as backup-only (ADR 006), so there is no second replica for the correction to reach.
+-- No `updatedAt` bump and no syncState flip, matching 4.sqm: sync is off in production and the
+-- engine is being deleted, not repaired, in favor of snapshot backup (ADR 009), so there is no
+-- second replica for the correction to reach.
 clearCategoryOnTypeChange:
 UPDATE transactions SET categoryId = NULL WHERE categoryId = :categoryId AND type != :categoryType;
 
