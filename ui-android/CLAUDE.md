@@ -100,8 +100,9 @@ ever stutters, check compose compiler metrics before blaming the pattern.
   `:presentation`. Pure UI logic gets a plain function next to the screen and a test here — that
   is what `commitHashUi()` is. Its sentinel still has a second copy in `build-logic`
   (`GenerateBuildInfoTask.UNKNOWN_COMMIT`), which cannot be on the app's compile classpath;
-  `CommitHashUiTest` spells that word out so retyping `UNKNOWN_COMMIT_HASH` goes red, and nothing
-  catches the reverse.
+  `CommitHashUiTest` spells that word out so retyping `UNKNOWN_COMMIT_HASH` goes red, and
+  `GenerateBuildInfoTaskTest.the sentinel is the exact word the app side spells out` pins the
+  `build-logic` side, so retyping `UNKNOWN_COMMIT` goes red too.
 
 ## Gate
 

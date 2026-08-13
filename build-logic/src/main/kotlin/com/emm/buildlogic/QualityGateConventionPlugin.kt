@@ -25,9 +25,10 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin
  * the root branch in [apply].
  *
  * This plugin is repo-specific, not a general-purpose one: that root branch names the included
- * build `build-logic` literally, so applying it to the root of a build that does not include one
- * fails configuration. That is the intended outcome — a silently absent build-logic suite is the
- * exact drift this class exists to stop.
+ * build `build-logic` literally. On a root project whose build includes no such build, Gradle's
+ * `gradle.includedBuild("build-logic")` throws `UnknownDomainObjectException` while the gate task
+ * is being configured. Failing there is preferable to skipping the suite silently, which is the
+ * drift this class exists to stop.
  */
 class QualityGateConventionPlugin : Plugin<Project> {
 
