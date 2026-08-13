@@ -88,9 +88,10 @@ abstract class GenerateBuildInfoTask : DefaultTask() {
          * the same literal on the consuming side — build-logic is not on the app's compile
          * classpath, so they cannot be one constant.
          *
-         * Nothing links them. build-logic has no test source set, so editing this word compiles,
-         * ships, and leaves every suite green while a git-less build renders "Commit unknow" with
-         * a copy button. If you change it, change `UNKNOWN_COMMIT_HASH` by hand.
+         * Nothing links them, and `GenerateBuildInfoTaskTest` cannot: it reads this constant, so it
+         * agrees with whatever this says. Editing this word therefore leaves every suite green
+         * while a git-less build renders "Commit unknow" with a copy button. If you change it,
+         * change `UNKNOWN_COMMIT_HASH` by hand.
          */
         const val UNKNOWN_COMMIT = "unknown"
 
@@ -103,6 +104,9 @@ abstract class GenerateBuildInfoTask : DefaultTask() {
          * a Kotlin string literal, and a quote, a backslash or the trailing newline `git` always
          * prints would break the build in a file no human ever opens. Rejecting outright beats
          * escaping — a hash is either 40 hex characters or it is not a hash.
+         *
+         * `GenerateBuildInfoTaskTest` covers both branches, including the `-dirty` suffix the KDoc
+         * above says must stay rejected; it runs on `./gradlew qualityGate` as `:build-logic:test`.
          */
         fun normalizeCommitHash(raw: String): String {
             val trimmed = raw.trim().lowercase()

@@ -25,6 +25,11 @@ dependencies {
     // never asked for. Declared here, the compile classpath states what the code actually uses.
     implementation(marker(libs.plugins.android.application))
     implementation(marker(libs.plugins.detekt))
+
+    // JUnit4 + kotlin.test, the same pair every other module's suites use. `test` is an associated
+    // compilation of `main`, so the tests reach `internal` declarations without widening them.
+    testImplementation(libs.junit)
+    testImplementation(kotlin("test"))
 }
 
 // Convention plugins are Plugin<Project> classes rather than precompiled .gradle.kts scripts: real
