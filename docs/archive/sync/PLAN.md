@@ -1,8 +1,8 @@
 # Local-first sync — execution plan (slices 1-5)
 
 > Operational plan for the local-first-sync track. Decisions live in
-> [ADR 001](../adr/001-reverse-local-only-to-local-first-optional-sync.md)
-> and [ADR 002](../adr/002-pull-cursor-uses-server-set-timestamp.md) —
+> [ADR 001](../../adr/001-reverse-local-only-to-local-first-optional-sync.md)
+> and [ADR 002](../../adr/002-pull-cursor-uses-server-set-timestamp.md) —
 > this doc only sequences the work and carries the re-derived Supabase
 > SQL. If this doc and an ADR disagree, the ADR wins.
 >
@@ -20,13 +20,12 @@
 > `androidMain` and `androidHostTest`, no commonMain at all, and holds just the
 > Compose UI. The `SyncCursorStore` port is in `:domain`; the engine is still in `:data`.
 >
-> **⏸ PAUSED 2026-08-12 — sync is switched off in production** (`253e170`,
-> `SYNC_TEMPORARILY_DISABLED`). Do not resume the slices below as written: the
-> decision of record is now **backup only, one device at a time**, which retires
-> the conflict-convergence design this plan assumes. Read
-> [`docs/sync/AUDIT.md`](AUDIT.md) first — it carries the root cause, the
-> production forensics, and the phased plan that replaces slice 5. Slices 1-4 stay
-> as the record of what shipped.
+> **ARCHIVED — closed by [ADR 009](../../adr/009-backup-is-a-snapshot-not-row-replication.md).**
+> Sync was switched off in production 2026-08-12 (`253e170`, `SYNC_TEMPORARILY_DISABLED`); do not
+> resume the slices below as written — ADR 009 deletes the row-replication engine this plan assumes
+> and replaces it with snapshot backup. Read [`docs/sync/ADR009_PLAN.md`](../../sync/ADR009_PLAN.md),
+> the single live sync doc, for the build order that replaces slice 5. Slices 1-4 stay as the record
+> of what shipped.
 
 ## Status
 

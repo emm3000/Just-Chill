@@ -21,7 +21,7 @@ That need was never exercised: there is one owner and one phone. What the multi-
 produce is the 2026-08-12 outage — a self-feeding sync loop, an account deletion that never reached
 the server, and two tenants in the cloud project with cross-referencing rows. Sync is switched off in
 production (`SYNC_TEMPORARILY_DISABLED`); the full findings are in
-[`docs/sync/AUDIT.md`](../sync/AUDIT.md).
+[`docs/archive/sync/AUDIT.md`](../archive/sync/AUDIT.md).
 
 The loop's proximate cause sits inside conflict resolution: `KeepLocal` → `markPendingForResync` is
 the only thing in the system that re-dirties an already-synced row, and it exists **only** to resolve
@@ -78,4 +78,4 @@ conflicts. Convergent bidirectional replication was built for a scenario the pro
 - ADR 002's `server_updated_at` cursor is **unaffected** — it orders pulls and never resolved
   conflicts. ADR 003/005 (iOS) are unrelated.
 - Findings, production forensics, target shape and the phased plan:
-  [`docs/sync/AUDIT.md`](../sync/AUDIT.md). Status: [`docs/PROGRESS.md`](../PROGRESS.md).
+  [`docs/archive/sync/AUDIT.md`](../archive/sync/AUDIT.md). Status: [`docs/PROGRESS.md`](../PROGRESS.md).

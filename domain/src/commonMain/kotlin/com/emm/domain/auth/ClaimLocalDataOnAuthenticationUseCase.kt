@@ -15,6 +15,10 @@ import kotlin.time.Duration.Companion.seconds
  * Long-running coordinator: whenever the session is [SessionStatus.Authenticated] AND there are
  * anonymous-local rows (userId IS NULL), claims those rows for the authenticated user immediately.
  *
+ * This is ownership, not transport — it stamps rows with a userId, it never pushes anything.
+ * Scheduled for deletion in Phase 5 of `docs/sync/ADR009_PLAN.md` along with the rest of the claim
+ * machinery: once the row-replication engine is gone there is no push left for that userId to enable.
+ *
  * Why reactive (observeUnclaimedCount) instead of triggering only on userId transition:
  * - Rows created WHILE already signed in get syncState='Pending' but userId=NULL (the insert
  *   queries never set userId; only claimAll does). The old distinctUntilChanged approach emitted

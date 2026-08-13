@@ -90,7 +90,7 @@ class DeleteUserAccountUseCaseTest {
         verify(exactly = 0) { syncCursorStore.clear(any()) }
     }
 
-    // ── Failure observability (docs/sync/AUDIT.md §8) ─────────────────────────
+    // ── Failure observability (docs/archive/sync/AUDIT.md §8) ─────────────────────────
 
     /**
      * The failure this whole change exists for: a broken step used to be indistinguishable from a
@@ -151,7 +151,7 @@ class DeleteUserAccountUseCaseTest {
      * Once [AuthRepository.deleteAccount] has succeeded the account is gone server-side, so a
      * cancellation landing after it (e.g. the caller popping the Perfil screen mid-flight) must
      * not skip the local cleanup — otherwise local rows keep the userId of an account that no
-     * longer exists remotely (`docs/sync/AUDIT.md` §3, the precondition of the production sync
+     * longer exists remotely (`docs/archive/sync/AUDIT.md` §3, the precondition of the production sync
      * loop).
      */
     @Test

@@ -48,6 +48,14 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
   `data/shared/FixedPeruOffset.kt` converts both directions at the same fixed offset in the
   meantime — an interim adapter, deleted when the server column becomes text.
 
+  **Confirmed by the sync audit (2026-08-13):** `FixedPeruOffset` and `OccurredAtText` round-trip
+  losslessly — same fixed UTC-5 offset both directions, second precision — so today's `date bigint`
+  value is not itself corrupt; it is the *stored* server value that misrepresents the instant.
+  Phase two's eventual server-side conversion must therefore use **UTC-5, not
+  `AT TIME ZONE 'UTC'`**: migration `3.sqm` already converted the historical local data under the
+  UTC-5 assumption, and the server-side conversion has to agree with it or the two disagree on the
+  same instant. Full reasoning: `docs/archive/sync/AUDIT.md`, §5 Protocol table.
+
 - [x] **6. A global clock hidden in entity constructors.** `currentTimeInMillis()` was called from
   **19 sites**, including the default arguments of `TransactionInsert`, `AccountUpsert` and
   `Transaction.Empty`. An entity that reads the wall clock on construction is doing hidden I/O.

@@ -57,7 +57,7 @@ A local fix belongs in the finding's `fix` field; `## Plan` is only for REFACTOR
 - `## Plan` — only on REFACTORIZAR/REHACER; ordered steps, one writer unit each.
 - `## Cobertura` — required if the budget was hit OR the target is the whole project: read vs unread.
 - Persist only if the user asks or findings exceed five; else chat. Write a NEW `docs/audits/<target-slug>.md`; if it exists, do not write — report the collision, stay in chat.
-- `docs/DATE_AUDIT.md` and `docs/sync/AUDIT.md` are PRIOR audits: read-only inputs, never write targets.
+- `docs/DATE_AUDIT.md` and `docs/archive/sync/AUDIT.md` are PRIOR audits: read-only inputs, never write targets.
 - Nothing else: no reading summary, no pleasantries.
 
 ## References

@@ -37,8 +37,8 @@
 --
 -- It does NOT bump `updatedAt` and does NOT set syncState = 'Pending'. Marking rows dirty is what a
 -- repair normally does so the correction propagates — but sync has been off in production since
--- 2026-08-12 and is being redesigned as backup-only, one device at a time (ADR 006), so there is no
--- second replica for a correction to reach. All it would buy is a first backup diff inflated by
+-- 2026-08-12 and is being deleted, not repaired, in favor of snapshot backup (ADR 009), so there is
+-- no second replica for a correction to reach. All it would buy is a first backup diff inflated by
 -- every row this migration touched, on the one path the owner relies on as a safety net.
 --
 -- ── AND WHAT IT LEAVES ALONE ──────────────────────────────────────────────────────────────────

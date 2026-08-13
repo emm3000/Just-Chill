@@ -1,16 +1,22 @@
 # Sync — consolidated audit
 
+> **ARCHIVED.** This is the forensic audit of the row-replication sync engine that
+> [ADR 009](../../adr/009-backup-is-a-snapshot-not-row-replication.md) deleted. Kept for *why* this
+> exists, not for what to do next: its surviving findings were absorbed into
+> [`docs/sync/ADR009_PLAN.md`](../../sync/ADR009_PLAN.md), the single live sync doc. Its `file:line`
+> citations are known-rotted — do not trust them.
+
 Sync is **off in production** since 2026-08-12 (`253e170`). This doc is the reference for the
 redesign: root cause, what the backup-only decision retires, what still has to be fixed, and what
-must survive the rewrite. Status lives in `docs/PROGRESS.md`; `docs/sync/PLAN.md` is the old slice
-plan, paused.
+must survive the rewrite. Status lives in `docs/PROGRESS.md`; `docs/archive/sync/PLAN.md` is the old
+slice plan, closed by ADR 009.
 
 All of it is static reading of code, SQL and server logs. **Nothing was executed against a device**
 except the one observation in §2. `file:line` refs were re-checked against trunk `253e170`.
 
 ## 1. The decision
 
-Recorded as [ADR 006](../adr/006-sync-is-backup-only-one-device-at-a-time.md), which supersedes ADR
+Recorded as [ADR 006](../../adr/006-sync-is-backup-only-one-device-at-a-time.md), which supersedes ADR
 001's multi-device premise and leaves ADR 004 dormant.
 
 **Sync is backup, not replication.** One device at a time; two devices never write concurrently. The
@@ -38,7 +44,7 @@ Nothing was removed; every binding, test and engine class is still wired. Profil
 "Sincronización en pausa". **The only runtime observation of the bug:** the owner signed out and the
 loop stopped — proving an authenticated-session trigger drives it, not which one. All else is static.
 
-**Changed while off (2026-08-12, schema v5 / [ADR 008](../adr/008-the-schema-owns-the-category-type-invariant.md)):**
+**Changed while off (2026-08-12, schema v5 / [ADR 008](../../adr/008-the-schema-owns-the-category-type-invariant.md)):**
 `(categoryId, type)` is a composite foreign key now, and the three pull writers had to learn it
 before it could freeze them. `TransactionTableSync` and `RecurringMovementTableSync` write a
 mismatched remote row uncategorized instead of deferring it — a mismatch does not resolve by

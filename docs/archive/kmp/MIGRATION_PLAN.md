@@ -375,4 +375,4 @@ Phase 6  iOS parity         ── sync/auth/telemetry per agreed scope
 - Wizard reference project: `~/Downloads/KotlinProject.zip`
   (unzipped audit at `/tmp/kp_extract/KotlinProject`)
 - Project ADRs: `docs/adr/001` (local-first), `docs/adr/002` (pull cursor)
-- Sync plan: `docs/sync/PLAN.md`
+- Sync plan (archived, closed by ADR 009): `docs/archive/sync/PLAN.md`

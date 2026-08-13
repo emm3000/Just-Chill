@@ -10,10 +10,10 @@
 > escribe ya lo deja viejo, igual que pasó con el conteo de commits.
 >
 > **El sync está APAGADO en producción desde el 2026-08-12.** Kill switch
-> `SYNC_TEMPORARILY_DISABLED` en `presentation/.../core/sync/SyncKillSwitch.kt:16`. La auditoría
-> completa —el bug vivo, el forense de producción, el borrado de cuenta que nunca salió del
-> teléfono, y la decisión de producto que retira medio diseño— está en
-> [`docs/sync/AUDIT.md`](sync/AUDIT.md). Leelo antes de tocar cualquier cosa de sync.
+> `SYNC_TEMPORARILY_DISABLED` en `presentation/.../core/sync/SyncKillSwitch.kt`. El único doc vivo
+> de sync es [`docs/sync/ADR009_PLAN.md`](sync/ADR009_PLAN.md) — leelo antes de tocar cualquier cosa
+> de sync. El forense completo —causa raíz del loop, el borrado de cuenta que nunca salió del
+> teléfono— es historia y vive en [`docs/archive/sync/AUDIT.md`](archive/sync/AUDIT.md).
 >
 > Este doc se reescribió el 2026-08-08 porque quedó dos meses desactualizado y
 > se perdió toda la migración KMP. El detalle histórico previo (sprints S0-S5,
@@ -48,7 +48,7 @@ Tres tracks grandes cerrados o casi:
 | Track | Estado |
 |---|---|
 | Producto (Fases 1-5: discovery → post-v1) | ✅ cerrado, docs en `docs/` |
-| Local-first sync (slices 1-5) | ⏸ **apagado y en rediseño** desde el 2026-08-12 — `docs/sync/AUDIT.md` |
+| Local-first sync (slices 1-5) | ⏸ apagado desde el 2026-08-12 y **en eliminación**, no en reparación — ADR 009 lo reemplaza por respaldo snapshot; plan en `docs/sync/ADR009_PLAN.md` |
 | Migración KMP / Compose Multiplatform | ✅ completa y mergeada a trunk |
 | Auditoría de funcionalidades | ✅ cerrada — 4 CRÍTICOS, 4 ALTOS, 3 MEDIOS |
 | iOS nativo SwiftUI sobre el core KMP | ⏳ S1-S2 de 11 ✅ — plan en `docs/swiftui/PLAN.md`, ADR 005 |
@@ -105,13 +105,20 @@ diciendo lo mismo se desincronizan, que es exactamente cómo este doc se rompió
 Medido el 2026-08-11 contra el código, no copiado de la versión anterior de este doc. La sección de
 sync y las dos correcciones marcadas se agregaron el 2026-08-12.
 
-### Sync — apagado en producción, en rediseño
+### Sync — apagado en producción, y en eliminación
 
-Apagado el 2026-08-12 por un loop de sync en producción. **El sync es BACKUP, no replicación: un
-device a la vez.** Eso retira `ConflictResolver`, el upsert condicional del server y todo el
-arbitraje de conflictos. La causa raíz, el forense de los dos tenants, los ~25 hallazgos vivos y el
-plan por fases están en [`docs/sync/AUDIT.md`](sync/AUDIT.md) — acá va solo qué falta, y si esta
-lista y el AUDIT se contradicen, gana el AUDIT.
+Apagado el 2026-08-12 por un loop de sync en producción. Desde el 2026-08-13,
+[ADR 009](adr/009-backup-is-a-snapshot-not-row-replication.md) decide que **el respaldo es un
+snapshot, no replicación de filas**: se sube el export JSON completo y versionado, y el motor de
+replicación se **borra** — el schema de sync se queda. ADR 006 había declarado "backup, no
+replicación" y dejado el motor en su lugar; de esa costura salió todo lo posterior.
+
+El orden de construcción por fases, las trampas verificadas, las compuertas de cada fase, el forense
+de los dos tenants y los hallazgos que sobreviven al motor están en
+[`docs/sync/ADR009_PLAN.md`](sync/ADR009_PLAN.md), el único doc vivo de sync. La causa raíz del loop
+y el resto de la maquinaria retirada quedan en
+[`docs/archive/sync/AUDIT.md`](archive/sync/AUDIT.md): donde el archivo y ADR 009 se contradigan,
+gana el ADR.
 
 - [x] Fase 0: qué apareció en pantalla al presionar borrar la cuenta. Resuelto **sin identificar
   cuál de los cuatro candidatos disparó** — el autor no lo recuerda, y el binario original de "nada
@@ -124,15 +131,28 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   AUDIT §8.
 - [x] Fase 0: que el borrado reporte su falla; rama faltante de `SessionRequiredException` en
   `toAuthDomainException`. AUDIT §8.
+- [ ] `DefaultAuthRepository.deleteAccount()` tiene el mismo defecto que Fase 0 corrigió en
+  `signOut()`: llama `client.auth.signOut(SignOutScope.LOCAL)` sin capturar el fallo de red después
+  del RPC `delete_account`, y su propio KDoc afirma que "clears the on-device session" — falso si la
+  red cae en el medio. No corregido en Fase 0 a propósito; ADR 009 Fase 5 ya reescribe
+  `DeleteUserAccountUseCase`, y es ahí donde entra.
 - [ ] Fase 0: decidir qué se hace con los dos tenants. AUDIT §8, §10.
 - [ ] **Fase 1: decidir el fork de scoping por usuario** — DB por usuario, filtro `userId` en cada
   lectura, o wipe al cambiar de cuenta. Sin decidir. AUDIT §5 (Identity).
-- [ ] Fase 1: la app tiene que decir en pantalla que iniciar sesión con otro correo re-apunta el
-  backup y sube el ledger de este device ahí.
-- [ ] Fase 2 (upsert condicional del server): **despriorizado** por backup-only, no cancelado.
-- [ ] Fase 3: rediseño de bordes — tipos en `:domain`, colapsar los cuatro `*TableSync`, cursor a
-  SQLDelight. **Restricción vinculante**: cero cambios de `CREATE TABLE`, una sola migración
-  aditiva al final. AUDIT §9.
+- [ ] ADR 009 Fase 1: `recurring_movements` al formato de export (v3), con v2 congelado y el barrido
+  del import versionado. **Precondición dura** — sin esto un restore pierde los movimientos
+  recurrentes, y restaurar un archivo v1/v2 los destruye.
+- [ ] ADR 009 Fases 2-5: pipeline de snapshot, visibilidad, confianza en el restore, y recién ahí
+  desmantelar el motor. Detalle y compuertas en `docs/sync/ADR009_PLAN.md`.
+- [ ] La app tiene que decir en pantalla, antes del primer upload a una cuenta nueva, que sube el
+  ledger entero de este device ahí — incluidas las filas de una cuenta anterior, porque `signOut()`
+  no borra nada. ADR 009 Decision 5; es aviso, no diálogo de confirmación.
+- [x] ~~Fase 2 (upsert condicional del server)~~ — **cancelado** por ADR 009 Decision 2: era el
+  arreglo de un protocolo de replicación que deja de existir.
+- [x] ~~Fase 3: rediseño de bordes, colapsar los cuatro `*TableSync`, cursor a SQLDelight~~ —
+  **cancelado** por ADR 009: el motor se borra en vez de rediseñarse. La restricción vinculante de
+  AUDIT §9 (cero cambios de `CREATE TABLE`, a lo sumo una migración aditiva) sigue en pie y ahora
+  la lleva ADR 009 Decision 9, para cuando algún día se reabra sync.
 - [ ] Arreglar los hallazgos vivos que sobreviven al backup-only: cursor único para cuatro tablas,
   push sin batching (con un punto **sin verificar** sobre el timeout), livelock de
   `MAX_PULL_PAGES`, pérdida silenciosa por fecha fuera de rango, tres carreras en
@@ -148,20 +168,21 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [ ] `SyncMutex.withLock` no tiene timeout: un ciclo de sync trabado bloquea el borrado de cuenta
   indefinidamente (AUDIT §8, candidato 4). **Hoy es inerte** — el sync está apagado por el kill
   switch — pero hay que cerrarlo antes de reactivar el sync.
-- [ ] `toSyncDomainException` mapea `SessionRequiredException` a `NetworkUnavailable`
-  (`DefaultSyncRepository.kt:157`), mostrando "Sin conexión" para lo que en el auth path se trata
-  como un problema de sesión. Es intencional, no un olvido — el propio comentario en
-  `DefaultSyncRepository.kt:151-156` explica por qué (transitorio, no debe cerrar la sesión) — pero
-  sigue siendo una divergencia con `toAuthDomainException` (AUDIT §8). Revisar y confirmar que sigue
-  siendo la divergencia deseada, no "corregirla" como si fuera un defecto.
+- [ ] `toSyncDomainException` (en `DefaultSyncRepository.kt`) mapea `SessionRequiredException` a
+  `NetworkUnavailable`, mostrando "Sin conexión" para lo que en el auth path se trata como un
+  problema de sesión. Es intencional, no un olvido — el comentario sobre esa rama explica por qué
+  (transitorio, no debe cerrar la sesión) — pero sigue siendo una divergencia con
+  `toAuthDomainException` (AUDIT §8). Revisar y confirmar que sigue siendo la divergencia deseada,
+  no "corregirla" como si fuera un defecto.
 - [ ] `toAuthDomainException` mapea `SessionRequiredException` a `Unauthorized` asumiendo que el
   delete path ya está gateado igual que el de sync, pero no lo está: le falta el
-  `observeSession.awaitInitialization()` que `DefaultSyncRepository.currentUserId()` sí llama
-  (`DefaultSyncRepository.kt:125`) para cerrar la carrera de Kotlin/Native documentada en
-  `DefaultSyncRepository.kt:119-124` (postgrest lee el JWT sincrónicamente de un `StateFlow` que se
-  llena async). Hoy esa carrera sigue abierta en el delete path y la nueva mapping la muestra como
-  error de credenciales en vez de algo reintentable. No se agrega `awaitInitialization()` al delete
-  path en este commit — es un cambio de comportamiento, va aparte. `DefaultAuthRepository.kt:206-217`.
+  `observeSession.awaitInitialization()` que `DefaultSyncRepository.currentUserId()` sí llama para
+  cerrar la carrera de Kotlin/Native que esa misma función documenta (postgrest lee el JWT
+  sincrónicamente de un `StateFlow` que se llena async). Hoy esa carrera sigue abierta en el delete
+  path y la nueva mapping la muestra como error de credenciales en vez de algo reintentable. No se
+  agrega `awaitInitialization()` al delete path en este commit — es un cambio de comportamiento, va
+  aparte. El razonamiento completo está en el KDoc de `toAuthDomainException`, en
+  `DefaultAuthRepository.kt`.
 
 ### Fechas — lo único abierto que toca el servidor y la data real
 
@@ -176,7 +197,7 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   solo uno es el wire de sync; el otro, leer un backup v1 de disco, es **permanente**. La fase dos
   borra un caller, no el archivo. La conversión va con UTC-5, **no** con `AT TIME ZONE 'UTC'`
   (`3.sqm` ya aplicó ese supuesto a la data histórica local): SQL ensayado en verde, 7/7 vectores,
-  falta decidir el secuenciamiento. Ver [`docs/sync/AUDIT.md`](sync/AUDIT.md) §5.
+  falta decidir el secuenciamiento. Ver [`docs/archive/sync/AUDIT.md`](archive/sync/AUDIT.md) §5.
 
 ### Release y compliance — bloqueantes del alpha, solo los puede hacer un humano
 
@@ -184,7 +205,8 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   que faltaba crearlo. Es `pievwpleqmrjwszuuivr` ("Justtt"), linkeado desde el 2026-06-10
   (`supabase/.temp/linked-project.json`), con las tres migraciones aplicadas y los `prod.*`
   poblados en `supabase.properties`. La confusión no era gratuita: ese server tiene dos tenants con
-  data real y filas cruzadas. Ver [`docs/sync/AUDIT.md`](sync/AUDIT.md) §7.
+  data real y filas cruzadas. Ver [`docs/sync/ADR009_PLAN.md`](sync/ADR009_PLAN.md), sección
+  "Production forensics".
 - [ ] Hostear `docs/PRIVACY_POLICY.md` como URL pública (Play la exige para apps con eliminación
   de cuenta).
 - [ ] Completar el Google Play Data Safety form.
@@ -362,9 +384,10 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [ ] `SyncLogger` (`domain/.../sync/SyncLogger.kt`) está nombrado para el sync path, pero ya es el
   canal general de diagnóstico: lo usan también `DeleteUserAccountUseCase` (borrado de cuenta) y
   `ClaimLocalDataOnAuthenticationUseCase` (claim al autenticarse), ninguno de los dos estrictamente
-  sync. `docs/sync/AUDIT.md:115` ya lo lista como un segundo canal de error sin tipar, paralelo a
-  `DomainException` — el nombre desalineado es la misma deuda vista desde otro ángulo. Renombrar o
-  reubicar el port toca ~18 archivos y es su propia unidad de trabajo, no se hizo acá.
+  sync. El audit archivado (`docs/archive/sync/AUDIT.md`) ya listaba `SyncLogger` como un segundo
+  canal de error sin tipar, paralelo a `DomainException` — el nombre desalineado es la misma deuda
+  vista desde otro ángulo. Renombrar o reubicar el port toca ~18 archivos y es su propia unidad de
+  trabajo, no se hizo acá.
 - [ ] `SyncOrchestrator` no tiene trigger de reconexión: si un sync falla offline y vuelve la red sin
   escrituras nuevas, no reintenta hasta el próximo `ON_RESUME`. No hay pérdida de data — local-first
   se auto-cura — solo latencia.
@@ -465,9 +488,10 @@ que después se revirtieron.
 
 ## Track: local-first sync (APAGADO — en rediseño desde el 2026-08-12)
 
-**Apagado en producción** por kill switch (`SyncKillSwitch.kt:16`), con dos gates: `AppGraph.kt:67`
-no llama a `SyncOrchestrator.start()` y `ProfileViewModel.kt:157` corta el path manual. No se borró
-nada — todo binding, test y clase del motor sigue cableado.
+**Apagado en producción** por el kill switch `SYNC_TEMPORARILY_DISABLED` (`SyncKillSwitch.kt`), con
+dos gates: `bootstrapAppGraph` en `AppGraph.kt` no llama a `SyncOrchestrator.start()`, y
+`ProfileViewModel.syncNow()` corta el path manual antes de encolar nada. No se borró nada — todo
+binding, test y clase del motor sigue cableado.
 
 Por qué: el push descartaba toda fila con un `userId` viejo mientras `countPending` las seguía
 contando, así que el trigger de escrituras debounceadas re-disparaba cada pocos segundos para
@@ -481,9 +505,9 @@ pendiente de "convergencia multi-device sin probar" que este doc arrastraba.
 Slices 1-4 ✅ shipearon (schema v3, auth opt-in + claim, motor push/pull, lifecycle); slice 5 ⏸. Ojo
 con esa lista: "verificado en device" significa **una vez, contra un stack Supabase local**, el
 2026-06-10 — el borrado de cuenta pasó esa verificación y después falló en producción sin enviar su
-RPC. Todo el detalle en [`docs/sync/AUDIT.md`](sync/AUDIT.md); lo que falta, en el
+RPC. Todo el detalle en [`docs/archive/sync/AUDIT.md`](archive/sync/AUDIT.md); lo que falta, en el
 [checklist](#sync--apagado-en-producción-en-rediseño). Decisiones en `docs/adr/001` y `002`; el plan
-de slices original en `docs/sync/PLAN.md`, **pausado**.
+de slices original en `docs/archive/sync/PLAN.md`, **cerrado por ADR 009**.
 
 Después de eso, el camino de release es `/release` → tag `vX.Y.Z` → `uploadRelease.yml`. Ese
 workflow **no publica**: sube el AAB a la pista alpha como **borrador**, con el `mapping.txt` para
@@ -582,10 +606,10 @@ siguen en el repo como marcadores históricos.
 
 - `docs/WORKFLOW.md` — loop writer/reviewer + gate + tiers de modelo, para todo el repo. **Vigente.**
   `docs/archive/kmp/ORCHESTRATION.md` — el ledger de slices de KMP + landmines. **Cerrado.**
-- `docs/sync/AUDIT.md` — **la auditoría consolidada de sync (2026-08-12)**: causa raíz, forense de
-  producción, qué retira el backup-only, forma objetivo y plan por fases. Leerlo antes de tocar sync.
-- `docs/sync/PLAN.md` — slices de sync + SQL de Supabase. **Pausado**; slices 1-4 son el registro de
-  lo que shipeó, el resto lo reemplaza `AUDIT.md`.
+- `docs/sync/ADR009_PLAN.md` — **el único doc vivo de sync**: la decisión de ADR 009 (el respaldo es
+  snapshot, no replicación), el forense de producción y el plan por fases. Leerlo antes de tocar sync.
+  La auditoría original y el plan de slices viejo quedan en `docs/archive/sync/`, para el *por qué*,
+  no para el *qué sigue*.
 - `docs/adr/` — 001 (reversa a local-first con sync opcional), 002 (cursor de pull),
   003 (iOS congelado: se mantiene solo el compile gate, se retira el ritual),
   004 (el resolver de conflictos solo arbitra ediciones sin pushear; enmienda al 002),

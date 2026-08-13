@@ -439,7 +439,7 @@ private fun ProfileRow(icon: ImageVector, label: String, meta: String, metaIsPri
 
 // Kept separate from ProfileRow's default parameter list on purpose: LongParameterList caps
 // composables at 5 params (config/detekt/detekt.yml), and ProfileRowWithTrailing already carries
-// the `enabled` lever for the few rows that need it (docs/sync/AUDIT.md §8, candidate 4).
+// the `enabled` lever for the few rows that need it (docs/archive/sync/AUDIT.md §8, candidate 4).
 @Composable
 private fun ChevronTrailing(enabled: Boolean) {
     val colors = LocalEmmColors.current
