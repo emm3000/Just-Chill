@@ -96,6 +96,10 @@ three workflows and this doc all invoke it.
 suites, Android lint on the dev variant, and the iOS compile. To change what the gate means, edit
 the plugin; everything downstream follows.
 
+One task is named rather than matched: `:build-logic:test`. `build-logic` is an **included build**,
+so task-name matching never reaches it — the root project applies `justchill.quality.gate` for that
+one line and nothing else.
+
 Two properties worth knowing:
 
 - **The iOS compile is host-gated.** Kotlin/Native only builds iOS binaries on macOS, so the gate

@@ -7,7 +7,8 @@ package com.emm.justchill.hh.profile
  * `GenerateBuildInfoTask.UNKNOWN_COMMIT` (build-logic, off the app's compile classpath) holds the
  * same word as a separate literal. `CommitHashUiTest` spells that word out and asserts this
  * constant classifies it as [CommitHashUi.Unavailable], so changing this value turns that test red.
- * Changing the generator's copy turns nothing red — build-logic has no test source set.
+ * Changing the generator's copy turns nothing red: `GenerateBuildInfoTaskTest` reads that constant
+ * instead of spelling it, so it moves with it.
  */
 const val UNKNOWN_COMMIT_HASH: String = "unknown"
 

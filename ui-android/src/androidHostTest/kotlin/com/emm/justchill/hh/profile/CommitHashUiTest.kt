@@ -19,7 +19,9 @@ import kotlin.test.assertEquals
  * `the generator's fallback is not a hash and says so in Spanish` red.
  *
  * The other direction is NOT covered: `GenerateBuildInfoTask.UNKNOWN_COMMIT` is a third copy of
- * this word in build-logic, which has no test source set, so editing it there breaks nothing here.
+ * this word, and build-logic is not on this module's compile classpath. `GenerateBuildInfoTaskTest`
+ * does not close it either — it reads that constant rather than spelling it, so it agrees with
+ * whatever the generator says. Editing the word there still breaks nothing here.
  *
  * `BuildInfoTest` keeps the other half: that the value the generator writes is one of the two
  * shapes classified below.

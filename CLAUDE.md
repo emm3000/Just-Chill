@@ -104,7 +104,8 @@ This is the Opus list (`docs/WORKFLOW.md` model-tier policy) — a Sonnet writer
 
 - **`./gradlew qualityGate` is the gate.** One definition, in `build-logic/.../QualityGateConventionPlugin.kt`;
   the pre-push hook and all three workflows invoke it. detekt over every source set holding code, the host
-  test suites, dev lint, and (macOS only) the iOS compile. Change the plugin, not the callers. **Never
+  test suites, dev lint, (macOS only) the iOS compile, and `:build-logic:test` — named explicitly on the
+  root project, because an included build is unreachable by task-name matching. Change the plugin, not the callers. **Never
   gate on plain `./gradlew detekt`** — it is `NO-SOURCE` on all three KMP modules and only lints `:androidApp`.
 - **Third-party actions in `.github/` are pinned to a commit SHA on purpose** — they hold the signing key,
   the Firebase credentials and the Play service account, and a floating `@v1` can be repointed by whoever

@@ -39,11 +39,23 @@ class QualityGateConventionPlugin : Plugin<Project> {
                         it.name in SCHEMA_GATE_TASKS
                 },
             )
+
+            // build-logic is an INCLUDED build, so `./gradlew qualityGate` never reaches its tasks:
+            // task-name matching only walks this build's projects. Its own suite has to be named,
+            // and only once — hung off the root project, which applies this plugin for no other
+            // reason. Everything else on the gate is a module contributing its own tasks.
+            if (target == target.rootProject) {
+                dependsOn(target.gradle.includedBuild(BUILD_LOGIC_BUILD).task(":$TEST_TASK"))
+            }
         }
     }
 
     companion object {
         const val GATE_TASK = "qualityGate"
+
+        /** The build wired in by `pluginManagement { includeBuild(...) }` — this very build. */
+        private const val BUILD_LOGIC_BUILD = "build-logic"
+        private const val TEST_TASK = "test"
 
         /**
          * The detekt tasks that constitute real coverage.

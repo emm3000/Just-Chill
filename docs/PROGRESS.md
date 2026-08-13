@@ -256,12 +256,18 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [ ] `:ui-android:detektAndroidMainSourceSet` reporta **21** issues. Preexistente y deliberadamente
   fuera del gate: `detektMainAndroid` cubre los mismos archivos **con** type resolution, así que
   sumarlo serían más tareas y no más cobertura — el razonamiento está en `QualityGateConventionPlugin`.
-- [ ] `build-logic` no tiene source set de tests y no cuelga de `qualityGate`, así que
-  `normalizeCommitHash` (`GenerateBuildInfoTask.kt:99`) —la única barrera contra inyectar texto en el
-  literal Kotlin que se genera— no tiene un solo test y su rama de rechazo no se ejecuta nunca.
-  Lo mismo cubre a `GenerateBuildInfoTask.UNKNOWN_COMMIT`: es la tercera copia de la palabra
-  `"unknown"` y cambiarla ahí no pone en rojo nada — `CommitHashUiTest` fija el lado de `:ui-android`
-  escribiendo la palabra a mano, pero el lado del generador no lo mira nadie.
+- [ ] `GenerateBuildInfoTask.UNKNOWN_COMMIT` es la tercera copia de la palabra `"unknown"` y
+  cambiarla ahí sigue sin poner en rojo nada. `CommitHashUiTest` fija el lado de `:ui-android`
+  escribiendo la palabra a mano; el lado del generador no lo puede fijar nadie, porque `build-logic`
+  no está en el compile classpath de la app y `GenerateBuildInfoTaskTest` **lee** la constante en vez
+  de deletrearla, así que se mueve con ella. Un test de build-logic no puede cerrar esta mitad.
+  La otra mitad **sí se cerró**: `build-logic` ya tiene source set de tests y cuelga de
+  `qualityGate`. `normalizeCommitHash` tiene ocho tests —sha válido, mayúsculas, newline final,
+  comillas/backslash/`$`/newline, sufijo `-dirty`, sha corto, vacío— y el gate los corre como
+  `:build-logic:test` (`build.gradle.kts` raíz aplica `justchill.quality.gate` solo para eso;
+  `build-logic` es un included build y el matcheo por nombre de tarea no lo alcanza). Verificado por
+  mutación: ensanchar el regex a `[0-9a-f]{40}(-dirty)?` pone `./gradlew qualityGate` en
+  `BUILD FAILED` con `Execution failed for task ':build-logic:test'`.
 
 ### Docs y comentarios que afirman cosas falsas
 
