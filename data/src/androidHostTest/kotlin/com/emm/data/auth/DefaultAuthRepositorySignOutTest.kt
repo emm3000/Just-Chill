@@ -60,8 +60,8 @@ import io.github.jan.supabase.auth.status.SessionStatus as SupabaseSessionStatus
  *   cancellation would be indistinguishable from "the revoke failed" and get swallowed into a
  *   [SignOutResult.LocalOnly] instead of propagating.
  *
- * The request timeout is therefore a per-test choice, never a shared default: see
- * [SHORT_REQUEST_TIMEOUT] and [NON_COMPETING_REQUEST_TIMEOUT].
+ * The request timeout is therefore a per-test choice, never a shared default, and the two choices
+ * are opposites: see [SHORT_REQUEST_TIMEOUT] and [DISABLED_REQUEST_TIMEOUT].
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultAuthRepositorySignOutTest {
@@ -136,15 +136,13 @@ class DefaultAuthRepositorySignOutTest {
      * `CompletableDeferred` to synchronize on that exact suspension point instead of racing a real
      * delay.
      *
-     * It also builds its transport with [NON_COMPETING_REQUEST_TIMEOUT], not the 500ms the
-     * hanging-transport test above uses. Sharing that 500ms made this test a wall-clock race against
-     * real [Dispatchers.IO] threads: ktor arms its timeout killer inside the `Send` phase, BEFORE
-     * the engine handler runs, so the half second had to cover engine dispatch, the mocked handler
-     * starting, [CompletableDeferred.complete], this coroutine resuming from `await()` and
-     * `cancel()` executing. Whenever that overran, the timeout won, the swallow path ran instead of
-     * the cancellation path, and the test failed for a reason that has nothing to do with the code
-     * under test. With a timeout that does not compete, cancellation is the only thing that can end
-     * the request, and the outcome no longer depends on how loaded the machine is.
+     * It builds its transport with [DISABLED_REQUEST_TIMEOUT] — no request timeout whatsoever, so
+     * cancellation is the only thing in existence that can end the request. Sharing the 500ms the
+     * hanging test uses, or any other finite value, makes this a wall-clock race: whenever the timer
+     * wins, the swallow path runs instead of the cancellation path and the test fails for a reason
+     * that has nothing to do with the code under test. Two finite values were tried and both lost;
+     * [DISABLED_REQUEST_TIMEOUT] records what they were and why the answer is not a third one. The
+     * test is instead bounded at [HANG_BOUND], which cannot race anything.
      *
      * The discriminating assertion below is deliberately NOT "does `deferred.await()` throw" —
      * verified empirically (by running this exact mutation) that it is not: cancelling a coroutine's
@@ -162,27 +160,29 @@ class DefaultAuthRepositorySignOutTest {
      * session ends up `NotAuthenticated` instead of staying `Authenticated`.
      */
     @Test
-    fun `signOut propagates CancellationException instead of swallowing it and clearing the session`() = runTest {
-        val requestStarted = CompletableDeferred<Unit>()
-        val client = hangingClientWithSession(
-            requestTimeout = NON_COMPETING_REQUEST_TIMEOUT,
-            onRequestStarted = { requestStarted.complete(Unit) },
-        )
-        val repository = DefaultAuthRepository(client)
+    fun `signOut propagates CancellationException instead of swallowing it and clearing the session`() =
+        runTest(timeout = HANG_BOUND) {
+            val requestStarted = CompletableDeferred<Unit>()
+            val client = hangingClientWithSession(
+                requestTimeout = DISABLED_REQUEST_TIMEOUT,
+                onRequestStarted = { requestStarted.complete(Unit) },
+            )
+            val repository = DefaultAuthRepository(client)
 
-        val deferred = async { repository.signOut() }
-        requestStarted.await()
-        deferred.cancel()
+            val deferred = async { repository.signOut() }
+            requestStarted.await()
+            deferred.cancel()
 
-        assertFailsWith<CancellationException> {
-            deferred.await()
+            assertFailsWith<CancellationException> {
+                deferred.await()
+            }
+            assertTrue(
+                client.auth.sessionStatus.value is SupabaseSessionStatus.Authenticated,
+                "A propagated cancellation must short-circuit before clearSession() runs — the " +
+                    "session must be left untouched, not cleared as an unintended side effect of " +
+                    "the swallow.",
+            )
         }
-        assertTrue(
-            client.auth.sessionStatus.value is SupabaseSessionStatus.Authenticated,
-            "A propagated cancellation must short-circuit before clearSession() runs — the session " +
-                "must be left untouched, not cleared as an unintended side effect of the swallow.",
-        )
-    }
 
     /**
      * A client holding a valid session whose transport always fails. [IOException] is what an
@@ -274,25 +274,64 @@ class DefaultAuthRepositorySignOutTest {
         /**
          * For the hanging-transport test, where the timeout expiry IS the mechanism under test:
          * stands in for supabase-kt's 10s default so that test costs half a second instead of ten.
+         *
+         * This one is a real, small, finite timeout and must stay that way. It is not covered by
+         * [DISABLED_REQUEST_TIMEOUT]'s reasoning below — there the expiry is the bug; here it is the
+         * subject.
          */
         val SHORT_REQUEST_TIMEOUT = 500.milliseconds
 
         /**
-         * For the cancellation test, where the timeout must NOT be what ends the request —
-         * cancellation is. That test never waits this long on the happy path, so the value is
-         * bounded from both sides rather than simply made large:
+         * For the cancellation test: **no request timeout at all**, not a large one.
          *
-         * - **Above the race.** ktor arms its timeout killer in the `Send` phase, before the engine
-         *   handler runs, so the window it must clear covers engine dispatch, the mocked handler,
-         *   the `CompletableDeferred` handoff and `cancel()` executing on real threads.
-         *   [SHORT_REQUEST_TIMEOUT] was demonstrably losable there; this is twenty times that, and
-         *   it also happens to be the timeout supabase-kt 3.7.0 defaults to, so the test is not
-         *   asking for anything exotic.
-         * - **Below `runTest`'s own 60s timeout.** If a future change ever stops cancellation from
-         *   ending the request, this expires first and the test fails on the session assertion in
-         *   ten seconds. Push it past sixty and the same regression degrades into an
-         *   `UncompletedCoroutinesError` that says nothing about sign-out.
+         * `Duration.INFINITE.inWholeMilliseconds` is `Long.MAX_VALUE`, supabase-kt passes it straight
+         * through as ktor's `requestTimeoutMillis`
+         * (`KtorSupabaseHttpClient.applyDefaultConfiguration`), and that value is exactly
+         * `HttpTimeoutConfig.INFINITE_TIMEOUT_MS`. ktor's `applyRequestTimeout` opens with
+         * `if (requestTimeout == null || requestTimeout == INFINITE_TIMEOUT_MS) return`, so the
+         * timeout-killer coroutine is **never launched**. There is no timer to lose to. That is the
+         * difference between removing this race and resizing it, and resizing it is what failed
+         * twice already.
+         *
+         * ### Why a number was tried, and why every number is wrong
+         *
+         * The killer's `delay` runs on real time, not `runTest`'s virtual clock — verified, not
+         * assumed: at one hour this test passed 12/12 under load, where 10 seconds did not. So the
+         * question for any finite value is only *how loaded a machine has to be to beat it*, and that
+         * question has no safe answer on CI.
+         *
+         * The window the value must clear is bigger than it looks: ktor arms the killer in the `Send`
+         * phase, BEFORE the engine handler runs, so it has to cover engine dispatch, the mocked
+         * handler starting, `CompletableDeferred.complete`, the test coroutine resuming from
+         * `await()` and `cancel()` executing — all on real threads.
+         *
+         *  - **500ms** (shared with the hanging test) lost routinely. Phase 0 moved it to 5 minutes.
+         *  - **5 minutes** was unreachable, but exceeded `runTest`'s 60s default, so a genuine
+         *    regression degraded from a clean assertion failure into `UncompletedCoroutinesError`.
+         *  - **10 seconds** was the attempt to get both. It lost: measured at **1 failure in 12 runs**
+         *    under 20 competing CPU-bound processes on a 10-core machine — i.e. exactly when the gate
+         *    runs it. An intermittent red is worse than a poor failure message, because the first
+         *    thing anyone does with one is re-run it and the second is stop believing it.
+         *
+         * **Do not put a number back here.** The fast-failure half of that trade is now bought
+         * separately and for free by [HANG_BOUND] on the test itself, which is where a bound on how
+         * long a test may run belongs — it does not have to be smuggled in as a network timeout that
+         * competes with the very mechanism under test.
          */
-        val NON_COMPETING_REQUEST_TIMEOUT = 10.seconds
+        val DISABLED_REQUEST_TIMEOUT = Duration.INFINITE
+
+        /**
+         * Bounds the cancellation test itself, replacing `runTest`'s 60s default.
+         *
+         * With no request timeout, a regression that stops cancellation from ending the request would
+         * hang instead of failing — so the bound moves here, where it cannot race anything. This is a
+         * ceiling on a test that normally finishes in milliseconds, not a timer the code under test
+         * competes with: nothing in the happy path waits on it, so making it generous costs nothing
+         * and shortening it buys nothing.
+         *
+         * Ten seconds and a `UncompletedCoroutinesError` naming the leaked coroutine beats sixty
+         * seconds of the same message.
+         */
+        val HANG_BOUND = 10.seconds
     }
 }
