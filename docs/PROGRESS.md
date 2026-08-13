@@ -263,11 +263,21 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   de deletrearla, así que se mueve con ella. Un test de build-logic no puede cerrar esta mitad.
   La otra mitad **sí se cerró**: `build-logic` ya tiene source set de tests y cuelga de
   `qualityGate`. `normalizeCommitHash` tiene ocho tests —sha válido, mayúsculas, newline final,
-  comillas/backslash/`$`/newline, sufijo `-dirty`, sha corto, vacío— y el gate los corre como
-  `:build-logic:test` (`build.gradle.kts` raíz aplica `justchill.quality.gate` solo para eso;
-  `build-logic` es un included build y el matcheo por nombre de tarea no lo alcanza). Verificado por
-  mutación: ensanchar el regex a `[0-9a-f]{40}(-dirty)?` pone `./gradlew qualityGate` en
-  `BUILD FAILED` con `Execution failed for task ':build-logic:test'`.
+  whitespace alrededor, comillas/backslash/`$`/newline, sufijo `-dirty`, sha corto, vacío— y el gate
+  los corre como `:build-logic:test` (`build.gradle.kts` raíz aplica `justchill.quality.gate` solo
+  para eso; `build-logic` es un included build y el matcheo por nombre de tarea no lo alcanza).
+  Verificado por mutación: ensanchar el regex a `[0-9a-f]{40}(-dirty)?` pone `./gradlew qualityGate`
+  en `BUILD FAILED` con `Execution failed for task ':build-logic:test'`.
+- [ ] El **template** de `GenerateBuildInfoTask.generate()` no tiene test: `normalizeCommitHash` ya
+  está cubierto, pero borrar las comillas de `"$full"` en el `trimMargin()` no pone en rojo nada
+  dentro de `build-logic`. Lo agarraría `:androidApp:compileDevDebugKotlin`, que no es lo mismo que
+  un test y no dice qué cambió. Cerrarlo pide invocar la tarea de verdad (`ProjectBuilder` o
+  `GradleRunner`) contra un directorio temporal y leer el archivo generado — más maquinaria de la
+  que correspondía meter en la limpieza que agregó el source set. Omisión elegida, no accidental.
+- [ ] `build-logic` **corre en el gate pero no se lintea**: no aplica detekt (su build file aplica
+  solo `kotlin-dsl`; la entrada de detekt ahí es un marker `implementation` para poder *escribir*
+  `DetektConventionPlugin`). `GenerateBuildInfoTaskTest.kt` es el único archivo que el gate ejecuta
+  y nunca analiza.
 
 ### Docs y comentarios que afirman cosas falsas
 
@@ -366,20 +376,25 @@ lista y el AUDIT se contradicen, gana el AUDIT.
   tarea del gate. `commitHashUi()` sí la tiene; lo que la rodea, no.
 - [x] **El contrato productor/consumidor del commit hash ya no es un string.** `COMMIT_HASH_QUALIFIER`
   se borró; `androidPlatformModule` bindea `CommitHash` (value class sobre `String`) y `AppNavHost`
-  lo pide por tipo (`koinInject<CommitHash>().value`). No queda ningún literal que escribir mal:
-  cualquier desacuerdo entre los dos sitios es un `unresolved reference` del compilador, no un crash
-  al arrancar. `AndroidPlatformModuleTest` pasó de leer los `mappings` del propio módulo a **resolver**
-  el tipo contra un `koinApplication { }`, o sea le hace a Koin la misma pregunta que `AppNavHost`;
-  borrar el `single` lo pone en rojo con `NoDefinitionFoundException` (verificado por mutación).
-  Lo que **no** cambió: sigue sin haber test que observe la línea 82 de `AppNavHost` en sí. Eso solo
-  importaría si alguien reescribiera esa línea para pedir *otro* tipo existente, que es un rewrite,
-  no un typo.
+  lo pide por tipo (`koinInject<CommitHash>().value`). Lo que compra es exactamente una cosa: **no
+  queda ningún string que escribir mal**. No hace que los dos lados no puedan discrepar —
+  `koinInject<String>()` escrito en esa línea compila verde y revienta al arrancar, igual que antes.
+  El mecanismo frena un typo, no un rewrite. `AndroidPlatformModuleTest` pasó de leer los `mappings`
+  del propio módulo a **resolver** el tipo contra un `koinApplication { }`, o sea le hace a Koin la
+  misma pregunta que `AppNavHost`; borrar el `single` lo pone en rojo con `NoDefinitionFoundException`
+  (verificado por mutación). Lo que **no** cambió: sigue sin haber test que observe la línea de
+  `AppNavHost` en sí.
 - [x] **El contrato de DI salió del paquete de feature de UI.** Vive en
   `presentation/src/commonMain/.../core/CommitHash.kt`, al lado de `SupabaseConfig` —
   `:presentation` es visible para `:androidApp` y para `:ui-android`
-  (`ui-android/build.gradle.kts:38` declara `api(project(":presentation"))`). commonMain se exporta a
-  iOS como `JustChillKit` y un holder sobre `String` no arrastra Compose, `java.*` ni `android.*`:
+  (`ui-android/build.gradle.kts:38` declara `api(project(":presentation"))`). commonMain es
+  compose-free y un holder sobre `String` no arrastra Compose, `java.*` ni `android.*`:
   `compileKotlinIosSimulatorArm64` y `linkDebugFrameworkIosSimulatorArm64` (SKIE) verdes.
+  Al `JustChillKit.h` generado **no llega**: Kotlin/Native no exporta `@JvmInline value class` a
+  Obj-C y ninguna declaración exportada lo referencia (cero ocurrencias de `CommitHash` en el
+  header, contra `JCKSupabaseConfig` que sí está). Es a propósito — ninguna pantalla Swift muestra
+  el commit, así que un `data class` solo agregaría un símbolo que nadie del otro lado llama. El
+  KDoc del tipo dice qué hacer el día que iOS lo necesite.
   `hh/profile/CommitHashUi.kt` queda con una sola razón para cambiar: el estado de presentación del
   footer.
 - [ ] `CommitHashUi.Available.fullHash` no lo lee ningún código de producción: `ProfileScreen`
