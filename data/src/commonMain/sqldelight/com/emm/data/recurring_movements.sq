@@ -45,6 +45,10 @@ UPDATE recurring_movements
 SET name = ?, type = ?, amount = ?, description = ?, categoryId = ?, accountId = ?, dayOfMonth = ?, isActive = ?, updatedAt = ?, syncState = 'Pending'
 WHERE id = ?;
 
+-- Same detach as transactions.sq:clearCategoryOnTypeChange, for the same reason. See it for why.
+clearCategoryOnTypeChange:
+UPDATE recurring_movements SET categoryId = NULL WHERE categoryId = :categoryId AND type != :categoryType;
+
 softDelete:
 UPDATE recurring_movements
 SET deletedAt = ?, updatedAt = ?, syncState = 'Pending'

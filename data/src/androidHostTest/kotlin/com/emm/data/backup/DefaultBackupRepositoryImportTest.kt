@@ -245,6 +245,82 @@ class DefaultBackupRepositoryImportTest {
         assertEquals("2026-05-23T09:33:00", db.transactionsQueries.find("tx-short").executeAsOne().occurredAt)
     }
 
+    // ── a file older than the composite key ───────────────────────────────────
+
+    /**
+     * **Every backup file that exists today predates the composite key**, and the export that wrote
+     * them copied whatever pair the app had stored — mismatches included, since nothing checked.
+     *
+     * Under the key those rows no longer insert. The whole restore runs inside ONE transaction, so
+     * a raw constraint violation does not cost one movement: it rolls the import back and leaves
+     * the owner with the tombstone sweep and nothing else. That is the only safety net on a device
+     * holding real accumulated data, which is why the row lands uncategorized instead.
+     */
+    @Test
+    fun `a movement filed under a category of the other type restores uncategorized`() = runTest {
+        val json = payloadWith(
+            categoriesJson = listOf(
+                """{"categoryId":"cat-spend","name":"Café","icon":"i","color":"c","categoryType":"Spend"}""",
+            ),
+            transactionsJson = listOf(
+                """{"transactionId":"tx-mismatch","type":"Income","amountCents":10000,"description":"Sueldo",""" +
+                    """"occurredAt":"2026-05-23T09:33:20","accountId":"acc-1","categoryId":"cat-spend"}""",
+            ),
+        )
+
+        val stats = repository.importFromJson(json)
+
+        // The movement, its amount and its type are the data. The category is a label.
+        assertEquals(1, stats.transactions)
+        val tx = db.transactionsQueries.find("tx-mismatch").executeAsOne()
+        assertNull(tx.categoryId)
+        assertEquals("Income", tx.type)
+        assertEquals(10_000L, tx.amount)
+    }
+
+    @Test
+    fun `one mismatched movement does not cost the rest of the file`() = runTest {
+        // The assertion that says a stale pair is a lost label and not a lost backup: without the
+        // repair the constraint violation aborts the enclosing transaction and tx-ok never lands.
+        val json = payloadWith(
+            categoriesJson = listOf(
+                """{"categoryId":"cat-income","name":"Sueldo","icon":"i","color":"c","categoryType":"Income"}""",
+            ),
+            transactionsJson = listOf(
+                """{"transactionId":"tx-mismatch","type":"Spend","amountCents":500,"description":"Café",""" +
+                    """"occurredAt":"2026-05-23T09:33:20","accountId":"acc-1","categoryId":"cat-income"}""",
+                """{"transactionId":"tx-ok","type":"Income","amountCents":10000,"description":"Sueldo",""" +
+                    """"occurredAt":"2026-05-23T09:33:20","accountId":"acc-1","categoryId":"cat-income"}""",
+            ),
+        )
+
+        val stats = repository.importFromJson(json)
+
+        assertEquals(2, stats.transactions)
+        assertNull(db.transactionsQueries.find("tx-mismatch").executeAsOne().categoryId)
+        // ...and the matching pair keeps its category: a repair that stripped every id would also
+        // have passed the test above.
+        assertEquals("cat-income", db.transactionsQueries.find("tx-ok").executeAsOne().categoryId)
+    }
+
+    @Test
+    fun `a movement pointing at a category the file never carried restores uncategorized`() = runTest {
+        // The export drops dangling ids, so this shape only reaches the app from a hand-edited or
+        // truncated file — where it used to abort the entire restore on the FK.
+        val json = payloadWith(
+            categoriesJson = emptyList(),
+            transactionsJson = listOf(
+                """{"transactionId":"tx-orphan","type":"Spend","amountCents":500,"description":"Café",""" +
+                    """"occurredAt":"2026-05-23T09:33:20","accountId":"acc-1","categoryId":"cat-gone"}""",
+            ),
+        )
+
+        val stats = repository.importFromJson(json)
+
+        assertEquals(1, stats.transactions)
+        assertNull(db.transactionsQueries.find("tx-orphan").executeAsOne().categoryId)
+    }
+
     // ── the version probe ─────────────────────────────────────────────────────
 
     @Test
@@ -458,13 +534,17 @@ class DefaultBackupRepositoryImportTest {
     }
 
     /** One account, no categories, and exactly the transaction JSON the test wrote by hand. */
-    private fun payloadWithTransactions(vararg transactionsJson: String): String = """
+    private fun payloadWithTransactions(vararg transactionsJson: String): String =
+        payloadWith(categoriesJson = emptyList(), transactionsJson = transactionsJson.toList())
+
+    /** One account, plus exactly the category and transaction JSON the test wrote by hand. */
+    private fun payloadWith(categoriesJson: List<String>, transactionsJson: List<String>): String = """
         {
             "schemaVersion": 2,
             "exportedAt": 0,
             "appVersion": "1.0.0",
             "accounts": [{"accountId":"acc-1","name":"Cuenta","type":"Cash","currency":"PEN"}],
-            "categories": [],
+            "categories": [${categoriesJson.joinToString(",")}],
             "transactions": [${transactionsJson.joinToString(",")}]
         }
     """.trimIndent()

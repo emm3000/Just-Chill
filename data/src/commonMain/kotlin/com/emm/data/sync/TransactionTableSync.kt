@@ -132,6 +132,7 @@ open class TransactionTableSync(private val db: EmmDatabaseData, client: Supabas
             return RemoteRowOutcome.Dropped
         }
         val occurredAtText = occurredAt.toOccurredAtText()
+        val categoryId = categoryIdFor(remote.categoryId, remote.type, remote.transactionId)
         return try {
             db.transactionsQueries.insertOrIgnoreFromRemote(
                 transactionId = remote.transactionId,
@@ -139,7 +140,7 @@ open class TransactionTableSync(private val db: EmmDatabaseData, client: Supabas
                 amount = remote.amount,
                 description = remote.description,
                 occurredAt = occurredAtText,
-                categoryId = remote.categoryId,
+                categoryId = categoryId,
                 accountId = remote.accountId,
                 createdAt = remote.createdAt,
                 updatedAt = remote.updatedAt,
@@ -151,7 +152,7 @@ open class TransactionTableSync(private val db: EmmDatabaseData, client: Supabas
                 amount = remote.amount,
                 description = remote.description,
                 occurredAt = occurredAtText,
-                categoryId = remote.categoryId,
+                categoryId = categoryId,
                 accountId = remote.accountId,
                 createdAt = remote.createdAt,
                 updatedAt = remote.updatedAt,
@@ -163,6 +164,34 @@ open class TransactionTableSync(private val db: EmmDatabaseData, client: Supabas
         } catch (e: Exception) {
             if (e.isSqliteConstraintViolation()) RemoteRowOutcome.Deferred else throw e
         }
+    }
+
+    /**
+     * The category id this remote row may be written with, given the composite key
+     * `(categoryId, type)`.
+     *
+     * Three answers, and the middle one is the whole point of asking instead of letting the key
+     * fire:
+     *  - the category is **absent locally** — pass the id through UNCHANGED. The key then refuses
+     *    the row, [applyRemoteRow] reports [RemoteRowOutcome.Deferred], and the cursor is held until
+     *    the parent arrives. That is the pre-existing FK-miss contract and it must not be traded
+     *    away for a null;
+     *  - the category **exists with the other type** — write the row uncategorized. Categories are
+     *    pulled before transactions in the same cycle, so the parent is already current: this is a
+     *    genuine mismatch, not a race, and deferring it would hold the shared cursor forever;
+     *  - the types **agree** — pass it through.
+     *
+     * A row with no category at all is the fourth, silent case, and it needs no branch: the lookup
+     * is null-safe and the pass-through returns the null it was given.
+     *
+     * Remote rows written before the composite key existed are the reason the middle case is not
+     * hypothetical: the server holds whatever pairs this device pushed while nothing checked them.
+     */
+    private fun categoryIdFor(categoryId: String?, type: String, pk: String): String? {
+        val storedType = categoryId?.let { db.categoriesQueries.typeOf(it).executeAsOneOrNull() }
+        if (storedType == null || storedType == type) return categoryId
+        logger.warn("pull dropped category of the wrong type table=$TABLE pk=$pk")
+        return null
     }
 
     override fun markPendingForResync(pk: String) {

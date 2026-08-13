@@ -32,8 +32,12 @@ class MonthlyAmountByCategoryAndTypeQueryTest {
             "INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt) " +
                 "VALUES ('acc-1', 'Cuenta', 'Bank', 'PEN', 1, 1)",
         )
-        insertCategory(id = "cat-live", name = "Comida", deletedAt = null)
-        insertCategory(id = "cat-gone", name = "Antigua", deletedAt = 500L)
+        insertCategory(id = "cat-live", name = "Comida", categoryType = SPEND, deletedAt = null)
+        insertCategory(id = "cat-gone", name = "Antigua", categoryType = SPEND, deletedAt = 500L)
+        // A category belongs to exactly ONE movement type since schema v5 — the composite key
+        // (categoryId, type) makes the same id on both sides impossible, which is why the income
+        // rows below file under their own category instead of borrowing the expense one.
+        insertCategory(id = "cat-income", name = "Sueldo", categoryType = INCOME, deletedAt = null)
     }
 
     @After
@@ -44,7 +48,7 @@ class MonthlyAmountByCategoryAndTypeQueryTest {
     @Test
     fun `income and expense come back as separate rows from one execution`() {
         insertTransaction(id = "t-1", type = SPEND, categoryId = "cat-live", amount = 1_000)
-        insertTransaction(id = "t-2", type = INCOME, categoryId = "cat-live", amount = 4_000)
+        insertTransaction(id = "t-2", type = INCOME, categoryId = "cat-income", amount = 4_000)
 
         val rows = monthRows()
 
@@ -54,14 +58,16 @@ class MonthlyAmountByCategoryAndTypeQueryTest {
     }
 
     @Test
-    fun `a category is never merged across types`() {
-        // Same category on both sides is normal — "Préstamos" is money in and money out. Grouping
-        // by category alone would net them against each other and report neither honestly.
+    fun `the two types are never netted against each other`() {
+        // This used to file all three movements under one category and call that normal. Schema v5
+        // made it impossible: (categoryId, type) is a foreign key now, so a category is Income or
+        // Spend and never both. The property it was really protecting survives unchanged — the
+        // grouping is by type as well as category, so money in is never subtracted from money out.
         insertTransaction(id = "t-1", type = SPEND, categoryId = "cat-live", amount = 1_000)
         insertTransaction(id = "t-2", type = SPEND, categoryId = "cat-live", amount = 500)
-        insertTransaction(id = "t-3", type = INCOME, categoryId = "cat-live", amount = 700)
+        insertTransaction(id = "t-3", type = INCOME, categoryId = "cat-income", amount = 700)
 
-        val rows = monthRows().filter { it.categoryId == "cat-live" }
+        val rows = monthRows()
 
         assertEquals(1_500L, rows.single { it.type == SPEND }.totalAmount)
         assertEquals(700L, rows.single { it.type == INCOME }.totalAmount)
@@ -120,7 +126,7 @@ class MonthlyAmountByCategoryAndTypeQueryTest {
         insertTransaction(id = "t-1", type = SPEND, categoryId = "cat-live", amount = 1_000)
         insertTransaction(id = "t-2", type = SPEND, categoryId = null, amount = 500)
         insertTransaction(id = "t-3", type = SPEND, categoryId = "cat-gone", amount = 300)
-        insertTransaction(id = "t-4", type = INCOME, categoryId = "cat-live", amount = 4_000)
+        insertTransaction(id = "t-4", type = INCOME, categoryId = "cat-income", amount = 4_000)
 
         val batched = monthRows()
             .filter { it.type == SPEND }
@@ -141,11 +147,11 @@ class MonthlyAmountByCategoryAndTypeQueryTest {
         driver.execute(identifier = null, sql = sql, parameters = 0)
     }
 
-    private fun insertCategory(id: String, name: String, deletedAt: Long?) {
+    private fun insertCategory(id: String, name: String, categoryType: String, deletedAt: Long?) {
         exec(
             "INSERT INTO categories(categoryId, name, icon, color, categoryType, isDefault, " +
                 "updatedAt, createdAt, deletedAt) " +
-                "VALUES ('$id', '$name', 'food', 'green', 'Spend', 0, 1, 1, ${deletedAt ?: "NULL"})",
+                "VALUES ('$id', '$name', 'food', 'green', '$categoryType', 0, 1, 1, ${deletedAt ?: "NULL"})",
         )
     }
 

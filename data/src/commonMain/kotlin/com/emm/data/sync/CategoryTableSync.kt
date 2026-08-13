@@ -16,7 +16,10 @@ import kotlinx.coroutines.flow.Flow
 
 private const val TABLE = "categories"
 
-class CategoryTableSync(private val db: EmmDatabaseData, client: SupabaseClient, logger: SyncLogger) :
+// `open` for the same single reason TransactionTableSync is: fetchRemotePage is the only seam
+// through which a test can drive the REAL pull — this class's own applyRemoteRow, the shared page
+// loop and a real SQLite database — with a chosen page of remote rows.
+open class CategoryTableSync(private val db: EmmDatabaseData, client: SupabaseClient, logger: SyncLogger) :
     BaseTableSync<CategoryRowDto>(
         client = client,
         transact = { body -> db.transaction { body() } },
@@ -88,12 +91,26 @@ class CategoryTableSync(private val db: EmmDatabaseData, client: SupabaseClient,
 
     /**
      * Two-statement upsert: INSERT OR IGNORE handles new rows; UPDATE handles existing ones —
-     * neither triggers an implicit DELETE, so child-table FK constraints (ON DELETE RESTRICT/SET NULL)
+     * neither triggers an implicit DELETE, so child-table FK constraints (ON DELETE RESTRICT)
      * are safe. Defers the row on an FK constraint failure (a parent row absent locally — it will
      * retry next cycle once the parent arrives).
+     *
+     * This table is the PARENT of the composite key `(categoryId, type)`, which is what the detach
+     * below is for. A remote row that changes a category's type strands every local movement filed
+     * under it: the UPDATE is then refused, and this class would read that refusal as an absent
+     * parent and hold the shared cursor — for all four tables — forever. Detaching first turns a
+     * silent freeze into a lost label on the movements that disagreed.
      */
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override fun applyRemoteRow(remote: CategoryRowDto): RemoteRowOutcome = try {
+        db.transactionsQueries.clearCategoryOnTypeChange(
+            categoryId = remote.categoryId,
+            categoryType = remote.categoryType,
+        )
+        db.recurring_movementsQueries.clearCategoryOnTypeChange(
+            categoryId = remote.categoryId,
+            categoryType = remote.categoryType,
+        )
         db.categoriesQueries.insertOrIgnoreFromRemote(
             categoryId = remote.categoryId,
             name = remote.name,

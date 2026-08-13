@@ -158,6 +158,16 @@ FROM transactions
 WHERE deletedAt IS NULL AND categoryId IS NOT NULL
 GROUP BY categoryId;
 
+-- Detaches every movement that would be left holding a category of the wrong type once that
+-- category's own type changes. Only the pull path changes a category's type behind the user's
+-- back, and without this the parent UPDATE is refused by the composite key — which the pull reads
+-- as "the parent has not arrived yet" and answers by holding the shared cursor forever.
+--
+-- No `updatedAt` bump and no syncState flip, matching 4.sqm: sync is off in production and under
+-- redesign as backup-only (ADR 006), so there is no second replica for the correction to reach.
+clearCategoryOnTypeChange:
+UPDATE transactions SET categoryId = NULL WHERE categoryId = :categoryId AND type != :categoryType;
+
 softDelete:
 UPDATE transactions
 SET deletedAt = ?, updatedAt = ?, syncState = 'Pending'

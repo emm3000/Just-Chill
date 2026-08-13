@@ -16,7 +16,10 @@ import kotlinx.coroutines.flow.Flow
 
 private const val TABLE = "recurring_movements"
 
-class RecurringMovementTableSync(private val db: EmmDatabaseData, client: SupabaseClient, logger: SyncLogger) :
+// `open` for the same single reason TransactionTableSync is: fetchRemotePage is the only seam
+// through which a test can drive the REAL pull — this class's own applyRemoteRow, the shared page
+// loop and a real SQLite database — with a chosen page of remote rows.
+open class RecurringMovementTableSync(private val db: EmmDatabaseData, client: SupabaseClient, logger: SyncLogger) :
     BaseTableSync<RecurringMovementRowDto>(
         client = client,
         transact = { body -> db.transaction { body() } },
@@ -110,6 +113,7 @@ class RecurringMovementTableSync(private val db: EmmDatabaseData, client: Supaba
         val dayOfMonthLong = remote.dayOfMonth.toLong()
         // SQLDelight generated INTEGER AS Boolean column needs Long (0/1).
         val isActiveLong = if (remote.isActive) 1L else 0L
+        val categoryId = categoryIdFor(remote.categoryId, remote.type, remote.id)
 
         db.recurring_movementsQueries.insertOrIgnoreFromRemote(
             id = remote.id,
@@ -117,7 +121,7 @@ class RecurringMovementTableSync(private val db: EmmDatabaseData, client: Supaba
             type = remote.type,
             amount = remote.amount,
             description = remote.description,
-            categoryId = remote.categoryId,
+            categoryId = categoryId,
             accountId = remote.accountId,
             frequency = remote.frequency,
             dayOfMonth = dayOfMonthLong,
@@ -133,7 +137,7 @@ class RecurringMovementTableSync(private val db: EmmDatabaseData, client: Supaba
             type = remote.type,
             amount = remote.amount,
             description = remote.description,
-            categoryId = remote.categoryId,
+            categoryId = categoryId,
             accountId = remote.accountId,
             frequency = remote.frequency,
             dayOfMonth = dayOfMonthLong,
@@ -148,6 +152,19 @@ class RecurringMovementTableSync(private val db: EmmDatabaseData, client: Supaba
         RemoteRowOutcome.Applied
     } catch (e: Exception) {
         if (e.isSqliteConstraintViolation()) RemoteRowOutcome.Deferred else throw e
+    }
+
+    /**
+     * Same three answers as `TransactionTableSync.categoryIdFor`, for the same composite key and
+     * the same reasons — absent means defer, mismatched means uncategorized, equal means keep.
+     * Written out rather than shared: the two classes have no common place to put it that is not
+     * [BaseTableSync], and two of the four tables have no category at all.
+     */
+    private fun categoryIdFor(categoryId: String?, type: String, pk: String): String? {
+        val storedType = categoryId?.let { db.categoriesQueries.typeOf(it).executeAsOneOrNull() }
+        if (storedType == null || storedType == type) return categoryId
+        logger.warn("pull dropped category of the wrong type table=$TABLE pk=$pk")
+        return null
     }
 
     override fun markPendingForResync(pk: String) {

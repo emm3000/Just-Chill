@@ -234,27 +234,51 @@ class DefaultBackupRepository(
     private fun restore(dto: TransactionDto, now: Long): Boolean {
         val transaction = dto.toEntityOrNull() ?: return false
         val occurredAt = transaction.occurredAt.toOccurredAtText()
+        val type = transaction.type.name
+        val categoryId = usableCategoryId(dto.categoryId, type)
         db.transactionsQueries.insertOrIgnoreFromBackup(
             transactionId = dto.transactionId,
-            type = transaction.type.name,
+            type = type,
             amount = dto.amountCents,
             description = dto.description,
             occurredAt = occurredAt,
-            categoryId = dto.categoryId,
+            categoryId = categoryId,
             accountId = dto.accountId,
             createdAt = now,
             updatedAt = now,
         )
         db.transactionsQueries.restoreFromBackup(
-            type = transaction.type.name,
+            type = type,
             amount = dto.amountCents,
             description = dto.description,
             occurredAt = occurredAt,
-            categoryId = dto.categoryId,
+            categoryId = categoryId,
             accountId = dto.accountId,
             updatedAt = now,
             transactionId = dto.transactionId,
         )
         return true
+    }
+
+    /**
+     * The category id this row may actually be written with — [categoryId] itself, or null.
+     *
+     * **Every backup file that exists today predates the composite key**, and the export before it
+     * carried whatever pair the app had stored, mismatches included. Under the key those rows no
+     * longer insert: the statement aborts with a constraint violation inside the single
+     * transaction that wraps the whole restore, so ONE stale row would roll back the entire import
+     * and leave the owner with nothing. That is the one safety net on a device holding real
+     * accumulated data, so the row lands uncategorized instead — the movement, its amount and its
+     * type are the data; the category is a label the user can put back in two taps.
+     *
+     * Absent and mismatched are both handled the same way here, unlike in `sync/`, and the reason
+     * is that the file is the whole world: categories are restored before transactions inside this
+     * same transaction, so a category still missing at this point is missing from the file, not
+     * late. There is no later arrival to wait for.
+     */
+    private fun usableCategoryId(categoryId: String?, type: String): String? {
+        if (categoryId == null) return null
+        val storedType = db.categoriesQueries.typeOf(categoryId).executeAsOneOrNull()
+        return if (storedType == type) categoryId else null
     }
 }

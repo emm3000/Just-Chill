@@ -62,6 +62,19 @@ WHERE categoryId = ?;
 find:
 SELECT * FROM categories WHERE categoryId = ? AND deletedAt IS NULL;
 
+-- The type stored against a category id, or no row at all when the id is unknown here.
+--
+-- Deliberately NOT filtered by `deletedAt`: this exists to answer exactly the question the
+-- composite foreign key on transactions/recurring_movements asks, and to SQLite a tombstoned
+-- category is a row like any other. Filtering would report a live movement's soft-deleted category
+-- as absent and strip a link the key is perfectly happy with — the link DeleteCategoryUseCase
+-- tombstones instead of deleting precisely in order to preserve.
+--
+-- The absent case and the mismatched case are different answers on purpose; the callers in
+-- `sync/` and `backup/` act on them differently. See the comments there.
+typeOf:
+SELECT categoryType FROM categories WHERE categoryId = ?;
+
 countDefaultCategories:
 SELECT COUNT(*) FROM categories WHERE isDefault = 1 AND deletedAt IS NULL;
 
