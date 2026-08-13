@@ -238,7 +238,7 @@ lista y el AUDIT se contradicen, gana el AUDIT.
 - [ ] Entrada `ImportOrdering:ProfileScreen.kt` en `config/detekt/baseline-ui-android-main.xml:37`,
   probablemente muerta desde que `253e170` tocó esos imports. **No verificado**: correr la tarea y
   ver si el issue reaparece antes de borrarla.
-- [ ] Sacar el `@Suppress("CyclomaticComplexMethod")` de `ui-android/.../ProfileScreen.kt:251` al
+- [ ] Sacar el `@Suppress("CyclomaticComplexMethod")` de `ui-android/.../ProfileScreen.kt:250` al
   borrar el kill switch — cubre todo `AccountSection` en vez de solo las ramas de sync. Única
   SUGGESTION del Judgment Day de `253e170`.
 - [ ] **Burn-down de los 7 `TooManyFunctions` con amnistía** en
