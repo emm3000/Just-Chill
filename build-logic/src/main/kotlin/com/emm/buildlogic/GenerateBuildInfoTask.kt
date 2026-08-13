@@ -3,10 +3,10 @@ package com.emm.buildlogic
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Writes `BuildInfo.kt`: the git commit the running app was built from.
@@ -35,8 +35,16 @@ import org.gradle.api.tasks.TaskAction
  * [GenerateIosSupabaseConfigTask]: inputs and outputs are declared as properties, so incrementality
  * and configuration-cache compatibility come from the type instead of from remembering not to
  * capture script state in the action.
+ *
+ * ### Why caching is off rather than on
+ *
+ * The output is reproducible and relocatable, so `@CacheableTask` would be *legal* — but that is not
+ * the criterion. Gradle's rule is whether the work benefits: hashing the inputs, querying the cache
+ * and unpacking an entry all cost more than writing these fourteen lines again. Up-to-date checking
+ * still applies and is what actually saves the work here, since [commitHash] only changes when HEAD
+ * does.
  */
-@CacheableTask
+@DisableCachingByDefault(because = "Writing one small file is cheaper than a build cache round trip")
 abstract class GenerateBuildInfoTask : DefaultTask() {
 
     /** Raw `git rev-parse HEAD` output, or [UNKNOWN_COMMIT] when git could not answer. */
