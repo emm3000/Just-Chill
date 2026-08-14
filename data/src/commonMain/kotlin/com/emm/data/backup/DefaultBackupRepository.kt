@@ -37,7 +37,9 @@ private val importJson = Json {
     ignoreUnknownKeys = true
 }
 
-private const val SCHEMA_VERSION_KEY = "schemaVersion"
+// `internal` rather than private: `buildBackupManifest` reads the same key out of the same file, and
+// the two must not drift into two spellings of one wire name.
+internal const val SCHEMA_VERSION_KEY = "schemaVersion"
 
 class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock: Clock) : BackupRepository {
 
