@@ -1,18 +1,23 @@
 package com.emm.data.backup
 
 import com.emm.data.EmmDatabaseData
+import com.emm.data.account.asEntity
+import com.emm.data.account.asExternalModel
+import com.emm.data.category.asEntity
+import com.emm.data.category.asExternalModel
+import com.emm.data.recurring.asEntity
+import com.emm.data.recurring.asExternalModel
+import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.nowMillis
 import com.emm.data.shared.safeDbCall
 import com.emm.data.shared.toOccurredAtText
-import com.emm.domain.account.AccountRepository
-import com.emm.domain.category.CategoryRepository
-import com.emm.domain.recurring.RecurringMovementRepository
+import com.emm.data.transaction.asEntity
+import com.emm.data.transaction.asExternalModel
 import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
-import com.emm.domain.transaction.TransactionRepository
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -35,51 +40,48 @@ private val importJson = Json {
 private const val SCHEMA_VERSION_KEY = "schemaVersion"
 
 class DefaultBackupRepository(
-    private val transactions: TransactionRepository,
-    private val categories: CategoryRepository,
-    private val accounts: AccountRepository,
-    /**
-     * Read through the domain interface like the other three, and NOT through [db].
-     *
-     * A direct query for this one table would leave the export mockable for three tables and not the
-     * fourth, which is the property `DefaultBackupRepositoryTest` is built on. `allLive()` exists on
-     * that interface for this caller: `allActive()` would silently drop every paused template.
-     */
-    private val recurring: RecurringMovementRepository,
     private val db: EmmDatabaseData,
     private val clock: Clock,
 ) : BackupRepository {
 
+    /**
+     * The whole ledger as ONE snapshot — four tables read inside a single transaction.
+     *
+     * **This used to be four independent `Flow.first()` reads through the four repository
+     * interfaces**, and a write landing between any two of them produced a file describing a
+     * database state that never existed: a transaction filed under a category the next read no
+     * longer returned, a template whose account the file does not carry. Nothing in the format can
+     * repair that afterwards, because the file is internally consistent — it is simply wrong.
+     *
+     * A SQLDelight transaction is a **synchronous** block, so `first()` cannot run inside one. That
+     * is the whole reason the reads are direct `executeAsList()` calls against [db] rather than
+     * calls through `TransactionRepository`, `CategoryRepository`, `AccountRepository` and
+     * `RecurringMovementRepository`, which this class no longer takes at all.
+     *
+     * **It reverses an earlier decision, deliberately.** The recurring read used to be argued for on
+     * the grounds that going through the domain interface kept the export uniform — three tables
+     * mockable and not a fourth — and `RecurringMovementRepository.allLive()` existed for this one
+     * caller. The uniformity survives; only its direction flipped. All four tables are now read the
+     * same way, through [db], and the suite that used to mock the four collaborators runs against a
+     * real in-memory database instead. `allLive()` went with the caller it was added for; the
+     * `selectAllLive` statement it wrapped is what this reads, so paused templates still travel —
+     * `selectActive` would drop them, which is data the owner still holds.
+     *
+     * The dispatcher hop is what `mapToList(ioDispatcher)` used to supply inside each
+     * `LocalDataSource`; `executeAsList()` has none of its own, so without it the four queries would
+     * run on the caller's dispatcher. [ioDispatcher] is referenced the way every other reader in
+     * this module references it — it is a platform `expect val`, not a Koin binding.
+     *
+     * [safeDbCall] replaces the `catchAsDomainException()` the repository interfaces applied: reading
+     * [db] directly took that translation off the path, and a raw SQLite exception reaching
+     * `ProfileViewModel` would be reported to the user as the generic unknown failure.
+     */
     override suspend fun exportToJson(exportedAt: Long, appVersion: String): String {
-        val exportedCategories = categories.all().first().map { it.toDto() }
-        val liveCategoryIds = exportedCategories.mapTo(mutableSetOf()) { it.categoryId }
-
-        // Deleting a category tombstones it without touching the movements filed under it, so a
-        // live transaction can still carry the id of a category that is not exported. Keeping that
-        // id would produce a backup whose own import fails on the categoryId foreign key, so the
-        // dangling reference is dropped here — the movement restores as uncategorized, which is
-        // exactly how it already reads on screen.
-        val exportedTransactions = transactions.all().first().map { transaction ->
-            val dto = transaction.toDto()
-            if (dto.categoryId != null && dto.categoryId !in liveCategoryIds) dto.copy(categoryId = null) else dto
+        val payload = safeDbCall {
+            withContext(ioDispatcher) {
+                db.transactionWithResult { db.snapshot(exportedAt, appVersion) }
+            }
         }
-
-        // The same scrub, for the same reason: `recurring_movements` carries the identical composite
-        // key (categoryId, type) -> categories(categoryId, categoryType), so a template pointing at a
-        // tombstoned category writes a file that fails its own import.
-        val exportedRecurring = recurring.allLive().first().map { template ->
-            val dto = template.toDto()
-            if (dto.categoryId != null && dto.categoryId !in liveCategoryIds) dto.copy(categoryId = null) else dto
-        }
-
-        val payload = ExportPayloadDto(
-            exportedAt = exportedAt,
-            appVersion = appVersion,
-            accounts = accounts.all().first().map { it.toDto() },
-            categories = exportedCategories,
-            transactions = exportedTransactions,
-            recurringMovements = exportedRecurring,
-        )
         return exportJson.encodeToString(payload)
     }
 
@@ -446,4 +448,50 @@ class DefaultBackupRepository(
         val storedType = db.categoriesQueries.typeOf(categoryId).executeAsOneOrNull()
         return if (storedType == type) categoryId else null
     }
+}
+
+/**
+ * The four reads and the scrub between them, as one synchronous body.
+ *
+ * Called only from inside [DefaultBackupRepository.exportToJson]'s `transactionWithResult`, and
+ * top-level rather than a member of that class for a mechanical reason: the class already sits
+ * exactly on detekt's `allowedFunctionsPerClass: 11`. It needs nothing but the database.
+ */
+private fun EmmDatabaseData.snapshot(exportedAt: Long, appVersion: String): ExportPayloadDto {
+    val exportedCategories = categoriesQueries.all().executeAsList()
+        .asEntity().asExternalModel().map { it.toDto() }
+    val liveCategoryIds = exportedCategories.mapTo(mutableSetOf()) { it.categoryId }
+
+    // Deleting a category tombstones it without touching the movements filed under it, so a
+    // live transaction can still carry the id of a category that is not exported. Keeping that
+    // id would produce a backup whose own import fails on the categoryId foreign key, so the
+    // dangling reference is dropped here — the movement restores as uncategorized, which is
+    // exactly how it already reads on screen.
+    //
+    // The scrub itself is unchanged. What changed is that `liveCategoryIds` and the rows below now
+    // come out of the SAME snapshot, so a category deleted mid-export can no longer be live for one
+    // of the two reads and gone for the other.
+    val exportedTransactions = transactionsQueries.all().executeAsList()
+        .asEntity().asExternalModel().map { transaction ->
+            val dto = transaction.toDto()
+            if (dto.categoryId != null && dto.categoryId !in liveCategoryIds) dto.copy(categoryId = null) else dto
+        }
+
+    // The same scrub, for the same reason: `recurring_movements` carries the identical composite
+    // key (categoryId, type) -> categories(categoryId, categoryType), so a template pointing at a
+    // tombstoned category writes a file that fails its own import.
+    val exportedRecurring = recurring_movementsQueries.selectAllLive().executeAsList()
+        .asEntity().asExternalModel().map { template ->
+            val dto = template.toDto()
+            if (dto.categoryId != null && dto.categoryId !in liveCategoryIds) dto.copy(categoryId = null) else dto
+        }
+
+    return ExportPayloadDto(
+        exportedAt = exportedAt,
+        appVersion = appVersion,
+        accounts = accountsQueries.all().executeAsList().asEntity().asExternalModel().map { it.toDto() },
+        categories = exportedCategories,
+        transactions = exportedTransactions,
+        recurringMovements = exportedRecurring,
+    )
 }

@@ -4,17 +4,9 @@ import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
-import com.emm.domain.account.Account
-import com.emm.domain.account.AccountRepository
-import com.emm.domain.category.CategoryRepository
-import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
-import com.emm.domain.transaction.TransactionRepository
-import io.mockk.every
-import io.mockk.mockk
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -54,10 +46,6 @@ class BackupV1CompatibilityTest {
         driver.execute(null, "PRAGMA foreign_keys=ON", 0)
         db = EmmDatabaseData(driver)
         repository = DefaultBackupRepository(
-            transactions = mockk<TransactionRepository> { every { all() } returns flowOf(emptyList()) },
-            categories = mockk<CategoryRepository> { every { all() } returns flowOf(emptyList()) },
-            accounts = mockk<AccountRepository> { every { all() } returns flowOf(emptyList<Account>()) },
-            recurring = mockk<RecurringMovementRepository> { every { allLive() } returns flowOf(emptyList()) },
             db = db,
             // Stated, not read. This suite asserts `occurredAt`, which comes off the file — but the
             // storage stamps beside it come off this clock, and none of them should move with the

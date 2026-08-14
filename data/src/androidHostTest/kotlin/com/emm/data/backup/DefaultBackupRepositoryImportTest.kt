@@ -8,13 +8,9 @@ import com.emm.data.recurring.asEntity
 import com.emm.data.recurring.asExternalModelOrNull
 import com.emm.data.transaction.asEntity
 import com.emm.data.transaction.asExternalModel
-import com.emm.domain.account.Account
-import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountType
-import com.emm.domain.category.CategoryRepository
 import com.emm.domain.recurring.Frequency
 import com.emm.domain.recurring.RecurringMovement
-import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.recurring.pendingPeriods
 import com.emm.domain.recurring.periodKey
 import com.emm.domain.shared.AccountId
@@ -23,11 +19,7 @@ import com.emm.domain.shared.RecurringMovementId
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
-import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionType
-import io.mockk.every
-import io.mockk.mockk
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -53,19 +45,6 @@ class DefaultBackupRepositoryImportTest {
 
     private lateinit var driver: SqlDriver
     private lateinit var db: EmmDatabaseData
-
-    private val transactionRepo = mockk<TransactionRepository> {
-        every { all() } returns flowOf(emptyList())
-    }
-    private val categoryRepo = mockk<CategoryRepository> {
-        every { all() } returns flowOf(emptyList())
-    }
-    private val accountRepo = mockk<AccountRepository> {
-        every { all() } returns flowOf(emptyList<Account>())
-    }
-    private val recurringRepo = mockk<RecurringMovementRepository> {
-        every { allLive() } returns flowOf(emptyList())
-    }
 
     private lateinit var repository: DefaultBackupRepository
 
@@ -93,14 +72,7 @@ class DefaultBackupRepositoryImportTest {
         db = EmmDatabaseData(driver)
         exec("PRAGMA foreign_keys=ON")
         clock.instant = FIRST_IMPORT
-        repository = DefaultBackupRepository(
-            transactions = transactionRepo,
-            categories = categoryRepo,
-            accounts = accountRepo,
-            recurring = recurringRepo,
-            db = db,
-            clock = clock,
-        )
+        repository = DefaultBackupRepository(db = db, clock = clock)
     }
 
     @After
@@ -829,10 +801,36 @@ class DefaultBackupRepositoryImportTest {
      *
      * Null when the restored row is one the production mapper refuses — the same answer the recurring
      * list screen would give, since it maps every row through this exact function.
+     *
+     * The template is written into the database rather than stubbed onto a repository mock: the
+     * export reads `db` inside one transaction and holds no collaborators to stub. Its account goes
+     * in first because `recurring_movements.accountId` is a real foreign key and this suite runs with
+     * enforcement on.
      */
     private suspend fun roundTrip(template: RecurringMovement): RecurringMovement? {
-        every { accountRepo.all() } returns flowOf(listOf(Account(AccountId("acc-1"), "Cuenta", AccountType.Cash)))
-        every { recurringRepo.allLive() } returns flowOf(listOf(template))
+        db.accountsQueries.insert(
+            accountId = template.accountId.value,
+            name = "Cuenta",
+            type = AccountType.Cash.name,
+            currency = "PEN",
+            updatedAt = 0L,
+            createdAt = 0L,
+        )
+        db.recurring_movementsQueries.insert(
+            id = template.id.value,
+            name = template.name,
+            type = template.type.name,
+            amount = template.amount?.cents,
+            description = template.description,
+            categoryId = template.categoryId?.value,
+            accountId = template.accountId.value,
+            frequency = template.frequency.name,
+            dayOfMonth = template.dayOfMonth.toLong(),
+            isActive = if (template.isActive) 1L else 0L,
+            lastConfirmedPeriod = template.lastConfirmedPeriod,
+            createdAt = template.createdAt,
+            updatedAt = 0L,
+        )
 
         repository.importFromJson(repository.exportToJson(exportedAt = 0L, appVersion = "1.0.0"))
 

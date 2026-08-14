@@ -1,119 +1,85 @@
 package com.emm.data.backup
 
+import app.cash.sqldelight.db.QueryResult
+import app.cash.sqldelight.db.SqlCursor
+import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.db.SqlPreparedStatement
+import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
-import com.emm.domain.account.Account
-import com.emm.domain.account.AccountRepository
-import com.emm.domain.account.AccountType
-import com.emm.domain.category.Category
-import com.emm.domain.category.CategoryRepository
-import com.emm.domain.category.CategoryType
-import com.emm.domain.recurring.Frequency
-import com.emm.domain.recurring.RecurringMovement
-import com.emm.domain.recurring.RecurringMovementRepository
-import com.emm.domain.shared.AccountId
-import com.emm.domain.shared.CategoryId
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.RecurringMovementId
-import com.emm.domain.shared.TransactionId
-import com.emm.domain.transaction.Transaction
-import com.emm.domain.transaction.TransactionRepository
-import com.emm.domain.transaction.TransactionType
-import io.mockk.every
-import io.mockk.mockk
-import kotlinx.coroutines.flow.flowOf
+import com.emm.domain.shared.error.DomainException
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 
+/**
+ * The EXPORT half, against a real in-memory SQLDelight database.
+ *
+ * **This suite used to mock the four repository interfaces the export read through.** It no longer
+ * can: the export is one `transactionWithResult` over direct queries, so the only collaborator left
+ * is the database itself. That is a straight upgrade rather than a cost — the mocks described a
+ * world in which `all()` returned whatever a test handed it, so nothing here could observe that the
+ * export reads the tombstone filter, or the `ORDER BY`, or the statement that keeps paused
+ * templates. Every one of those is now pinned below, and two of them (the ordering, and the
+ * dangling category reached by an actual soft-delete) were simply unreachable before.
+ *
+ * FK enforcement is ON, matching the driver callback the app runs with and the other two backup
+ * suites. It is what makes the "category is gone" fixtures honest: a movement can only point at a
+ * category that once existed, so the test has to tombstone one rather than invent an id.
+ */
 class DefaultBackupRepositoryTest {
 
-    private val transactionRepo = mockk<TransactionRepository>()
-    private val categoryRepo = mockk<CategoryRepository>()
-    private val accountRepo = mockk<AccountRepository>()
-    private val recurringRepo = mockk<RecurringMovementRepository> {
-        every { allLive() } returns flowOf(emptyList())
-    }
-    private val db = mockk<EmmDatabaseData>(relaxed = true)
+    private lateinit var driver: SqlDriver
+    private lateinit var db: EmmDatabaseData
+    private lateinit var repository: DefaultBackupRepository
 
     // Export takes its `exportedAt` from the caller, so nothing in this suite reads the clock —
     // but it is stated rather than left to the machine all the same. What an import stamps is
-    // asserted in DefaultBackupRepositoryImportTest, which has a real database to read it back from.
+    // asserted in DefaultBackupRepositoryImportTest, which reads it back from the same database.
     private val clock = object : Clock {
         override fun now(): Instant = Instant.parse("2026-08-11T15:04:05Z")
     }
 
-    private val repository =
-        DefaultBackupRepository(transactionRepo, categoryRepo, accountRepo, recurringRepo, db, clock)
+    @Before
+    fun setUp() {
+        driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        EmmDatabaseData.Schema.create(driver)
+        driver.execute(null, "PRAGMA foreign_keys=ON", 0)
+        db = EmmDatabaseData(driver)
+        repository = DefaultBackupRepository(db = db, clock = clock)
+    }
 
-    private val account = Account(
-        accountId = AccountId("acc-1"),
-        name = "Yape",
-        type = AccountType.Cash,
-    )
-
-    private val categoryIncome = Category(
-        categoryId = CategoryId("cat-1"),
-        name = "Sueldo",
-        icon = "work",
-        color = "#00FF00",
-        categoryType = CategoryType.Income,
-    )
-
-    private val categorySpend = Category(
-        categoryId = CategoryId("cat-2"),
-        name = "Comida",
-        icon = "food",
-        color = "#FF0000",
-        categoryType = CategoryType.Spend,
-    )
-
-    private val transactionWithCategory = Transaction(
-        transactionId = TransactionId("tx-1"),
-        type = TransactionType.Income,
-        amount = Money(4500_00L),
-        description = "Sueldo mayo",
-        occurredAt = LocalDateTime(2026, 5, 23, 9, 33, 20),
-        accountId = AccountId("acc-1"),
-        categoryId = CategoryId("cat-1"),
-    )
-
-    private val transactionNullCategory = Transaction(
-        transactionId = TransactionId("tx-2"),
-        type = TransactionType.Spend,
-        amount = Money(150_00L),
-        description = "Almuerzo",
-        occurredAt = LocalDateTime(2026, 5, 24, 13, 20, 0),
-        accountId = AccountId("acc-1"),
-        categoryId = null,
-    )
-
-    /** A template created in June 2026 and never settled. */
-    private val neverConfirmedTemplate = RecurringMovement(
-        id = RecurringMovementId("rec-1"),
-        name = "Alquiler",
-        type = TransactionType.Spend,
-        amount = Money(1200_00L),
-        description = "Depa",
-        categoryId = CategoryId("cat-2"),
-        accountId = AccountId("acc-1"),
-        frequency = Frequency.Monthly,
-        dayOfMonth = 5,
-        isActive = true,
-        lastConfirmedPeriod = null,
-        createdAt = TEMPLATE_CREATED,
-    )
+    @After
+    fun tearDown() {
+        driver.close()
+    }
 
     @Test
     fun `produces JSON containing all accounts, categories and transactions`() = runTest {
-        every { accountRepo.all() } returns flowOf(listOf(account))
-        every { categoryRepo.all() } returns flowOf(listOf(categoryIncome, categorySpend))
-        every { transactionRepo.all() } returns flowOf(listOf(transactionWithCategory, transactionNullCategory))
+        insertAccount()
+        insertCategory(categoryId = "cat-1", name = "Sueldo", categoryType = "Income")
+        insertCategory(categoryId = "cat-2", name = "Comida", categoryType = "Spend")
+        insertTransaction(
+            transactionId = "tx-1",
+            type = "Income",
+            amount = 4500_00L,
+            occurredAt = "2026-05-23T09:33:20",
+            categoryId = "cat-1",
+        )
+        insertTransaction(
+            transactionId = "tx-2",
+            type = "Spend",
+            amount = 150_00L,
+            occurredAt = "2026-05-24T13:20:00",
+            categoryId = null,
+        )
 
         val json = repository.exportToJson(exportedAt = 1_748_000_000_000L, appVersion = "1.0.0")
 
@@ -127,10 +93,13 @@ class DefaultBackupRepositoryTest {
         assertEquals(1, payload.accounts.size)
         assertEquals("acc-1", payload.accounts[0].accountId)
         assertEquals("Yape", payload.accounts[0].name)
-        assertEquals(2, payload.categories.size)
-        assertEquals(2, payload.transactions.size)
-        assertEquals(4500_00L, payload.transactions[0].amountCents)
-        assertEquals(150_00L, payload.transactions[1].amountCents)
+        assertEquals(setOf("cat-1", "cat-2"), payload.categories.mapTo(mutableSetOf()) { it.categoryId })
+        // `transactions.all:` is `ORDER BY occurredAt DESC`, so the file carries the newest movement
+        // first. The mocked suite this replaced returned whatever list it was handed and could not
+        // say what the app actually writes.
+        assertEquals(listOf("tx-2", "tx-1"), payload.transactions.map { it.transactionId })
+        assertEquals(150_00L, payload.transactions[0].amountCents)
+        assertEquals(4500_00L, payload.transactions[1].amountCents)
     }
 
     @Test
@@ -138,32 +107,24 @@ class DefaultBackupRepositoryTest {
         // Deleting a category no longer nulls the column on its movements, so a live transaction
         // can point at a tombstoned category. Tombstoned categories are not exported, so leaving
         // the id in the file would produce a backup that fails its own import on the FK.
-        val orphan = transactionWithCategory.copy(
-            transactionId = TransactionId("tx-3"),
-            categoryId = CategoryId("cat-deleted"),
-        )
-        every { accountRepo.all() } returns flowOf(listOf(account))
-        every { categoryRepo.all() } returns flowOf(listOf(categoryIncome))
-        every { transactionRepo.all() } returns flowOf(listOf(transactionWithCategory, orphan))
+        insertAccount()
+        insertCategory(categoryId = "cat-1", name = "Sueldo", categoryType = "Income")
+        insertCategory(categoryId = "cat-deleted", name = "Bono", categoryType = "Income")
+        insertTransaction(transactionId = "tx-1", type = "Income", categoryId = "cat-1")
+        insertTransaction(transactionId = "tx-3", type = "Income", categoryId = "cat-deleted")
+        db.categoriesQueries.softDelete(deletedAt = 1L, updatedAt = 1L, categoryId = "cat-deleted")
 
-        val json = repository.exportToJson(exportedAt = 0L, appVersion = "1.0.0")
+        val payload = exportedPayload()
 
-        val payload = Json.decodeFromString<ExportPayloadDto>(json)
-        val exportedIds = payload.categories.map { it.categoryId }
-        assertEquals(listOf("cat-1"), exportedIds)
+        assertEquals(listOf("cat-1"), payload.categories.map { it.categoryId })
         assertEquals("cat-1", payload.transactions.single { it.transactionId == "tx-1" }.categoryId)
         assertNull(payload.transactions.single { it.transactionId == "tx-3" }.categoryId)
     }
 
     @Test
     fun `empty state - produces valid JSON with the current schemaVersion and empty arrays`() = runTest {
-        every { accountRepo.all() } returns flowOf(emptyList())
-        every { categoryRepo.all() } returns flowOf(emptyList())
-        every { transactionRepo.all() } returns flowOf(emptyList())
+        val payload = exportedPayload()
 
-        val json = repository.exportToJson(exportedAt = 0L, appVersion = "1.0.0")
-
-        val payload = Json.decodeFromString<ExportPayloadDto>(json)
         assertEquals(3, payload.schemaVersion)
         assertTrue(payload.accounts.isEmpty())
         assertTrue(payload.categories.isEmpty())
@@ -173,44 +134,66 @@ class DefaultBackupRepositoryTest {
 
     @Test
     fun `JSON output is pretty-printed`() = runTest {
-        every { accountRepo.all() } returns flowOf(emptyList())
-        every { categoryRepo.all() } returns flowOf(emptyList())
-        every { transactionRepo.all() } returns flowOf(emptyList())
-
         val json = repository.exportToJson(exportedAt = 0L, appVersion = "1.0.0")
 
         assertTrue(json.contains('\n'))
     }
 
+    /**
+     * A backup is of what the device HOLDS, and a tombstone is not held any more.
+     *
+     * Newly reachable, and the reason it is worth its lines: the four statements the export reads
+     * used to be picked by the four `LocalDataSource` classes, and this suite mocked past them
+     * entirely. Now the export names them itself, so choosing one without `deletedAt IS NULL` —
+     * or `selectActive:` in place of `selectAllLive:` — is a one-word edit with nothing else in the
+     * repo to catch it.
+     */
+    @Test
+    fun `a tombstoned row is not exported, in any of the four tables`() = runTest {
+        insertAccount(accountId = "acc-1")
+        insertAccount(accountId = "acc-dead")
+        insertCategory(categoryId = "cat-1", name = "Sueldo", categoryType = "Income")
+        insertCategory(categoryId = "cat-dead", name = "Bono", categoryType = "Income")
+        insertTransaction(transactionId = "tx-1", type = "Income", categoryId = "cat-1")
+        insertTransaction(transactionId = "tx-dead", type = "Income", categoryId = "cat-1")
+        insertTemplate(id = "rec-1")
+        insertTemplate(id = "rec-dead")
+        db.accountsQueries.softDelete(deletedAt = 1L, updatedAt = 1L, accountId = "acc-dead")
+        db.categoriesQueries.softDelete(deletedAt = 1L, updatedAt = 1L, categoryId = "cat-dead")
+        db.transactionsQueries.softDelete(deletedAt = 1L, updatedAt = 1L, transactionId = "tx-dead")
+        db.recurring_movementsQueries.softDelete(deletedAt = 1L, updatedAt = 1L, id = "rec-dead")
+
+        val payload = exportedPayload()
+
+        assertEquals(listOf("acc-1"), payload.accounts.map { it.accountId })
+        assertEquals(listOf("cat-1"), payload.categories.map { it.categoryId })
+        assertEquals(listOf("tx-1"), payload.transactions.map { it.transactionId })
+        assertEquals(listOf("rec-1"), payload.recurringMovements.map { it.recurringMovementId })
+    }
+
     // ── recurring movements: what version 3 added ─────────────────────────────
     //
-    // This suite is the EXPORT half and only that: `db` is a mock here, so nothing below can observe
-    // a restore. The two data-loss guards that used to sit in this section — `lastConfirmedPeriod`
-    // and `createdAt`, the two fields that lose data in opposite directions — moved to
-    // `DefaultBackupRepositoryImportTest` when the restore mapper landed. They run the full round
-    // trip there, against a real database, which is the only place the claim their names make can
-    // actually be held.
+    // This suite is the EXPORT half and only that. The two data-loss guards that used to sit in this
+    // section — `lastConfirmedPeriod` and `createdAt`, the two fields that lose data in opposite
+    // directions — moved to `DefaultBackupRepositoryImportTest` when the restore mapper landed. They
+    // run the full round trip there, which is the only place the claim their names make can actually
+    // be held.
 
     /**
      * A paused template is data the user still owns, so the export reads every LIVE row — not every
      * ACTIVE one.
      *
-     * `RecurringMovementRepository` already had two all-row reads when this landed and neither fit:
-     * `allActive()` filters `isActive = 1`, which would drop this test's second template on the
-     * floor, and `allWithDetails()` is a joined model carrying three columns the format does not
-     * want. The read this asserts through is the third one, added for the export.
+     * `recurring_movements.sq` carries three all-row reads and only one of them fits: `selectActive:`
+     * filters `isActive = 1`, which would drop this test's second template on the floor, and
+     * `selectAllWithDetails:` is a joined shape carrying three columns the format does not want.
+     * `selectAllLive:` is the third, added for the export.
      */
     @Test
     fun `the export carries every live template, the paused ones included`() = runTest {
-        val paused = neverConfirmedTemplate.copy(
-            id = RecurringMovementId("rec-2"),
-            name = "Gimnasio",
-            isActive = false,
-        )
-        every { accountRepo.all() } returns flowOf(listOf(account))
-        every { categoryRepo.all() } returns flowOf(listOf(categoryIncome, categorySpend))
-        every { transactionRepo.all() } returns flowOf(emptyList())
-        every { recurringRepo.allLive() } returns flowOf(listOf(neverConfirmedTemplate, paused))
+        insertAccount()
+        insertCategory(categoryId = "cat-2", name = "Comida", categoryType = "Spend")
+        insertTemplate(id = "rec-1", name = "Alquiler", categoryId = "cat-2")
+        insertTemplate(id = "rec-2", name = "Gimnasio", categoryId = "cat-2", isActive = 0L)
 
         val payload = exportedPayload()
 
@@ -234,8 +217,8 @@ class DefaultBackupRepositoryTest {
         // The column is nullable and the two readings are different money: "no amount agreed yet"
         // is not "an alquiler of S/ 0.00", and a restore that turns one into the other writes a
         // number the user never entered.
-        stubEmptyLedger()
-        every { recurringRepo.allLive() } returns flowOf(listOf(neverConfirmedTemplate.copy(amount = null)))
+        insertAccount()
+        insertTemplate(id = "rec-1", amount = null)
 
         assertNull(exportedPayload().recurringMovements.single().amountCents)
     }
@@ -251,9 +234,8 @@ class DefaultBackupRepositoryTest {
      */
     @Test
     fun `the export carries a template's own settled mark and createdAt`() = runTest {
-        val settledThroughJuly = neverConfirmedTemplate.copy(lastConfirmedPeriod = "2026-07")
-        stubEmptyLedger()
-        every { recurringRepo.allLive() } returns flowOf(listOf(settledThroughJuly))
+        insertAccount()
+        insertTemplate(id = "rec-1", lastConfirmedPeriod = "2026-07", createdAt = TEMPLATE_CREATED)
 
         val exported = exportedPayload(exportedAt = EXPORTED_AT).recurringMovements.single()
 
@@ -269,15 +251,12 @@ class DefaultBackupRepositoryTest {
         // carries (categoryId, type) -> categories(categoryId, categoryType). Exporting an id whose
         // category is tombstoned — and therefore not in the file — writes a backup that fails its
         // own import on the FK.
-        every { accountRepo.all() } returns flowOf(listOf(account))
-        every { categoryRepo.all() } returns flowOf(listOf(categoryIncome))
-        every { transactionRepo.all() } returns flowOf(emptyList())
-        every { recurringRepo.allLive() } returns flowOf(
-            listOf(
-                neverConfirmedTemplate.copy(categoryId = CategoryId("cat-deleted")),
-                neverConfirmedTemplate.copy(id = RecurringMovementId("rec-2"), categoryId = CategoryId("cat-1")),
-            ),
-        )
+        insertAccount()
+        insertCategory(categoryId = "cat-1", name = "Comida", categoryType = "Spend")
+        insertCategory(categoryId = "cat-deleted", name = "Antojos", categoryType = "Spend")
+        insertTemplate(id = "rec-1", categoryId = "cat-deleted")
+        insertTemplate(id = "rec-2", name = "Bus", categoryId = "cat-1")
+        db.categoriesQueries.softDelete(deletedAt = 1L, updatedAt = 1L, categoryId = "cat-deleted")
 
         val exported = exportedPayload().recurringMovements
 
@@ -286,16 +265,163 @@ class DefaultBackupRepositoryTest {
         assertEquals("cat-1", exported.single { it.recurringMovementId == "rec-2" }.categoryId)
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────────
+    // ── the two properties the transactional refactor introduced ──────────────
 
-    private fun stubEmptyLedger() {
-        every { accountRepo.all() } returns flowOf(emptyList())
-        every { categoryRepo.all() } returns flowOf(emptyList())
-        every { transactionRepo.all() } returns flowOf(emptyList())
+    /**
+     * **A database failure leaves the export as a [DomainException], never as a raw SQLite throw.**
+     *
+     * Reading [EmmDatabaseData] directly took `catchAsDomainException()` off this path — it lived on
+     * the four repository interfaces the export no longer holds — so the translation had to be put
+     * back explicitly, with `safeDbCall`. Nothing else in the repo would have noticed it missing:
+     * `ProfileViewModel` would have shown the generic unknown failure and the file would simply not
+     * have been written.
+     *
+     * The assertion is the FAMILY, not `DatabaseError`, and that is not slack. `isSqliteException()`
+     * is an `expect fun` whose Android actual tests for `android.database.sqlite.SQLiteException`,
+     * which the JVM host driver never throws — so on this source set the same failure that is a
+     * `DatabaseError` on a device arrives as `DomainException.Unknown`. Pinning the subtype here
+     * would pin the host's accident. What matters, and what is asserted, is that nothing raw escapes.
+     */
+    @Test
+    fun `a database failure during the export surfaces as a DomainException`() = runTest {
+        // No table references `recurring_movements`, so it can be dropped outright — and the export
+        // reads it third, after two statements that succeed.
+        driver.execute(null, "DROP TABLE recurring_movements", 0)
+
+        assertFailsWith<DomainException> {
+            repository.exportToJson(exportedAt = 0L, appVersion = "1.0.0")
+        }
     }
+
+    /**
+     * **Every read the export makes happens inside one open transaction, and there are exactly four.**
+     *
+     * *What this proves and what it does not.* It does NOT prove atomicity against a concurrent
+     * writer, and no host test here can: `JdbcSqliteDriver(IN_MEMORY)` is a single connection, so
+     * there is no second connection for a competing write to arrive on and nothing to interleave.
+     * Isolation is SQLite's property, not this code's, and it only has anything to isolate once the
+     * reads are inside a transaction at all.
+     *
+     * *That* is the property this pins, and it is the exact one the refactor added — the four
+     * `Flow.first()` calls it replaced each opened and closed their own implicit transaction, so a
+     * write landing between two of them was visible to the second and not the first. The spy records
+     * `currentTransaction()` at the moment of every `executeQuery`, so a revert to per-read
+     * statements shows up as `false` entries; the count of four shows up if a read is dropped, or if
+     * one migrates into a per-row loop.
+     */
+    @Test
+    fun `every read the export makes runs inside one open transaction`() = runTest {
+        val spy = TransactionSpyDriver(driver)
+        val spied = DefaultBackupRepository(db = EmmDatabaseData(spy), clock = clock)
+        insertAccount()
+        insertCategory(categoryId = "cat-1", name = "Sueldo", categoryType = "Income")
+        insertTransaction(transactionId = "tx-1", type = "Income", categoryId = "cat-1")
+        insertTemplate(id = "rec-1")
+
+        spied.exportToJson(exportedAt = 0L, appVersion = "1.0.0")
+
+        assertEquals(listOf(true, true, true, true), spy.readsInsideTransaction)
+    }
+
+    /**
+     * Records, for each query it forwards, whether a SQLDelight transaction was open at the time.
+     *
+     * Delegation rather than a hand-written implementation: the point is to observe one method and
+     * change nothing, and `newTransaction()`/`currentTransaction()` must keep landing on the real
+     * driver or the reading would be of the spy's own bookkeeping.
+     */
+    private class TransactionSpyDriver(private val delegate: SqlDriver) : SqlDriver by delegate {
+
+        val readsInsideTransaction: MutableList<Boolean> = mutableListOf()
+
+        override fun <R> executeQuery(
+            identifier: Int?,
+            sql: String,
+            mapper: (SqlCursor) -> QueryResult<R>,
+            parameters: Int,
+            binders: (SqlPreparedStatement.() -> Unit)?,
+        ): QueryResult<R> {
+            readsInsideTransaction += delegate.currentTransaction() != null
+            return delegate.executeQuery(identifier, sql, mapper, parameters, binders)
+        }
+    }
+
+    // ── helpers ───────────────────────────────────────────────────────────────
 
     private suspend fun exportedPayload(exportedAt: Long = 0L): ExportPayloadDto =
         Json.decodeFromString(repository.exportToJson(exportedAt = exportedAt, appVersion = "1.0.0"))
+
+    private fun insertAccount(accountId: String = "acc-1", name: String = "Yape") {
+        db.accountsQueries.insert(
+            accountId = accountId,
+            name = name,
+            type = "Cash",
+            currency = "PEN",
+            updatedAt = 0L,
+            createdAt = 0L,
+        )
+    }
+
+    private fun insertCategory(categoryId: String, name: String, categoryType: String) {
+        db.categoriesQueries.insert(
+            categoryId = categoryId,
+            name = name,
+            icon = "work",
+            color = "#00FF00",
+            categoryType = categoryType,
+            isDefault = false,
+            updatedAt = 0L,
+            createdAt = 0L,
+        )
+    }
+
+    private fun insertTransaction(
+        transactionId: String,
+        type: String,
+        amount: Long = 100_00L,
+        occurredAt: String = "2026-05-23T09:33:20",
+        categoryId: String?,
+        accountId: String = "acc-1",
+    ) {
+        db.transactionsQueries.insert(
+            transactionId = transactionId,
+            type = type,
+            amount = amount,
+            description = "Sueldo mayo",
+            occurredAt = occurredAt,
+            categoryId = categoryId,
+            accountId = accountId,
+            createdAt = 0L,
+            updatedAt = 0L,
+        )
+    }
+
+    private fun insertTemplate(
+        id: String,
+        name: String = "Alquiler",
+        type: String = "Spend",
+        amount: Long? = 1200_00L,
+        categoryId: String? = null,
+        isActive: Long = 1L,
+        lastConfirmedPeriod: String? = null,
+        createdAt: Long = TEMPLATE_CREATED,
+    ) {
+        db.recurring_movementsQueries.insert(
+            id = id,
+            name = name,
+            type = type,
+            amount = amount,
+            description = "Depa",
+            categoryId = categoryId,
+            accountId = "acc-1",
+            frequency = "Monthly",
+            dayOfMonth = 5L,
+            isActive = isActive,
+            lastConfirmedPeriod = lastConfirmedPeriod,
+            createdAt = createdAt,
+            updatedAt = 0L,
+        )
+    }
 
     private companion object {
         /** 2026-06-10 — the template's own instant, and two months before the export's. */

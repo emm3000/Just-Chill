@@ -4,17 +4,9 @@ import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
-import com.emm.domain.account.Account
-import com.emm.domain.account.AccountRepository
-import com.emm.domain.category.CategoryRepository
-import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
-import com.emm.domain.transaction.TransactionRepository
-import io.mockk.every
-import io.mockk.mockk
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.After
@@ -66,10 +58,6 @@ class BackupV3CompatibilityTest {
         driver.execute(null, "PRAGMA foreign_keys=ON", 0)
         db = EmmDatabaseData(driver)
         repository = DefaultBackupRepository(
-            transactions = mockk<TransactionRepository> { every { all() } returns flowOf(emptyList()) },
-            categories = mockk<CategoryRepository> { every { all() } returns flowOf(emptyList()) },
-            accounts = mockk<AccountRepository> { every { all() } returns flowOf(emptyList<Account>()) },
-            recurring = mockk<RecurringMovementRepository> { every { allLive() } returns flowOf(emptyList()) },
             db = db,
             // Stated, not read: the storage stamps this import writes must not move with the machine
             // the suite runs on.

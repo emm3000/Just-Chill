@@ -53,7 +53,8 @@ internal const val BACKUP_RECURRING_SINCE_VERSION: Int = 3
  *    restore instant instead, which raises the floor to the restore month and makes every period the
  *    template still owes disappear. Silently: no error, no row, nothing on screen to notice.
  *
- * `DefaultBackupRepositoryTest` pins one each, because a single test cannot fail in both directions.
+ * `DefaultBackupRepositoryImportTest` pins one each, because a single test cannot fail in both
+ * directions — and it pins them over the whole round trip, which is the only place the claim holds.
  *
  * [type] and [frequency] carry enum *names* rather than the enums, for the same reason
  * [TransactionDto.type] does: a backup file is untrusted input, and a value this build does not know
