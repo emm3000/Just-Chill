@@ -177,7 +177,7 @@ gana el ADR.
     3 plantillas), `schemaVersion` 3, las cuatro arrays presentes, arranque sin
     `NoDefinitionFoundException` — el riesgo real del constructor que pasó de seis dependencias a dos —
     y cero excepciones en logcat. Observado, no razonado.
-  - [ ] Fase 2b — storage. **Partida en dos**, porque el plan la escribió como una sola unidad y
+  - [x] Fase 2b — storage. **Partida en dos**, porque el plan la escribió como una sola unidad y
     mezcla tres cosas que fallan distinto: una dependencia, una migración de servidor y el primitivo
     de integridad. El mismo criterio con el que el plan ya parte la Fase 2 en tres series de PR.
     - [x] **2b-i — el primitivo de integridad**, en `trunk` el 2026-08-14 (`5d43cc90`, `7dc783f0`,
@@ -191,7 +191,7 @@ gana el ADR.
       post-read-back tiene que hashear la secuencia idéntica. `BackupManifestDto` lleva dos versiones
       que no se pueden confundir: `manifestVersion` (suya) y `payloadSchemaVersion` (la del snapshot
       que describe). Los 18 tests viven en `commonTest`, así que también compilan para iOS.
-    - [ ] 2b-ii — storage. **Partida en dos también**, por donde ya corta el borde cliente/servidor:
+    - [x] 2b-ii — storage. **Partida en dos también**, por donde ya corta el borde cliente/servidor:
       la infraestructura se landea y se sondea sin una sola línea de pipeline, y un bucket que
       rechaza lo que no corresponde conviene tenerlo antes de que algo escriba en él.
       - [x] **Parte A — bucket y plugin**, en `trunk` el 2026-08-14 (`18ac5838`, `30098d14`,
@@ -208,14 +208,33 @@ gana el ADR.
         `do nothing` a `do update`: con `do nothing` la migración reportaba éxito y no corregía
         nada sobre un bucket ya existente, probado rompiendo las tres columnas a mano. Nada en CI
         protege el predicado RLS; eso queda diferido a la Fase 4.
-      - [ ] **Parte B — upload con read-back verificado.** **Ojo al escribirlo**: comparar los
-        `rowCounts` del manifest no prueba nada — salen de los mismos bytes que el digest, así que
-        si el hash coincide los conteos coinciden por construcción. La verificación real es
-        `sha256Hex(bytesLeídos) == manifest.payloadSha256`, con bytes crudos de los dos lados, nunca
-        un String re-codificado. Y el timeout que gobierna un upload es
-        `Storage.Config.transferTimeout` (120 s por defecto), no el `requestTimeout` de 10 s.
+      - [x] **Parte B — upload con read-back verificado**, en `trunk` el 2026-08-14 (`e0aef49a`,
+        `192e6032`, `8335cf29`, `08267bdd`, `56be26e0`, `4b56c131`), **sin pushear**. `BackupUploader`
+        (puerto en `:domain`), `DefaultBackupUploader` (sube → relee → verifica → manifest) y
+        `BackupObjectStore` + `SupabaseBackupObjectStore` (la costura de cuatro operaciones que hace
+        demostrable un mismatch en el host suite, sin red ni proyecto Supabase). El orden es el
+        diseño: **que exista el manifest ES la afirmación de que el payload de al lado se verificó**,
+        y eso se sostiene porque el bucket no otorga `update` y el upload va con `upsert = false`.
+        La verificación son bytes crudos de los dos lados (`sha256Hex(leídos) == payloadSha256`),
+        nunca los `rowCounts` — salen de los mismos bytes que el digest. **El manifest también se
+        relee**, por igualdad de bytes: confiar en su 200 es justo lo que esta unidad existe para
+        rechazar, y un manifest corrupto en tránsito condena un snapshot sano en la verificación
+        previa a un restore. Si el manifest no coincide se borran los dos objetos. Una relectura que
+        FALLA no borra nada — el transporte muerto que impidió leer impediría borrar, y la razón
+        precisa se perdería. La espera de sesión quedó acotada a 10 s (el `launchOp` de la 2c la
+        sostendría sin excepción ni mensaje); los timeouts que ADR 009 difiere son
+        `requestTimeout` / `transferTimeout`, que no gobiernan esto. Un hash que no coincide ya no
+        usa `BackupFileInvalid` — ese texto es para quien eligió un archivo malo al *restaurar* —
+        sino `BackupUploadUnverified`. **Verificación por mutación** de las diez conductas nuevas,
+        incluidas las tres del contrato con el servidor (id del bucket, `upsert = false`,
+        `application/json` pelado) que hasta ahora sólo vivían en prosa: escribir `"backup"` en
+        `BACKUP_BUCKET_ID` compilaba y pasaba todos los tests del repo.
   - [ ] Fase 2c — orquestación: dirty flag, `backgroundEvents()`, "Back up now", retención,
-    flag `SNAPSHOT_BACKUP_ENABLED`.
+    flag `SNAPSHOT_BACKUP_ENABLED`. **La poda se apoya en `<name>.manifest.json`, nunca en `<name>`
+    solo**: un payload sin sidecar no ocupa cupo de retención y se borra a la vista. Una poda por
+    nombre le da cupo a un huérfano y desaloja un snapshot verificado — eso es pérdida de datos, y
+    el razonamiento completo (incluido cuál huérfano bueno se tira a propósito) está en la fila
+    Retención de `sync/ADR009_PLAN.md`.
 - [ ] La app tiene que decir en pantalla, antes del primer upload a una cuenta nueva, que sube el
   ledger entero de este device ahí — incluidas las filas de una cuenta anterior, porque `signOut()`
   no borra nada. ADR 009 Decision 5; es aviso, no diálogo de confirmación.

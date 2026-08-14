@@ -485,9 +485,42 @@ Five things it settled that this plan had left open or got wrong:
   a local stack, which no green build repeats. Deferred to Phase 4, where the CI round-trip work
   already lives — not given a home of its own here.
 
-**2b-ii part B — upload and read-back. NOT STARTED.** Upload the payload plus its sidecar manifest
-under the `<uid>/` prefix the policies expect, read the payload back, and verify before marking
-success.
+**2b-ii part B — upload and read-back. LANDED** (`e0aef49a`, `192e6032`, `8335cf29`, `08267bdd`,
+`56be26e0`, `4b56c131`). The payload and its sidecar manifest go under the `<uid>/` prefix the
+policies expect, the payload is read back and verified before the manifest is written, and the
+manifest is read back too. `BackupUploader` is the port in `:domain`; `DefaultBackupUploader` holds
+the whole decision; `BackupObjectStore` is the four-operation seam that makes a mismatch provable on
+a host suite with no network, implemented by `SupabaseBackupObjectStore`.
+
+Six things it settled that this plan had left open or got wrong:
+
+- **The order carries the meaning, not just the bytes.** Payload → read-back → manifest, so *a
+  manifest present means the payload beside it was verified*. Uploading both together leaves the
+  same objects on the server and destroys that claim. The invariant holds because the bucket grants
+  no `update` and uploads use `upsert = false`, so no key is ever rewritten — it is a property of the
+  migration as much as of this class.
+- **The manifest is verified too**, by plain byte equality against the array that was uploaded. A
+  200 is exactly the claim this unit exists to refuse, and the failure it prevents is a false alarm
+  on a GOOD snapshot: a manifest corrupted in transit states a digest the intact payload will never
+  match, so a later pre-restore check condemns bytes that would have restored perfectly. On a
+  manifest mismatch both objects are deleted — no valid receipt means nothing worth keeping.
+- **A read-back that FAILS does not delete.** Whatever stopped the read would very likely stop the
+  delete, and a vague "could not clean up" would replace a precise "could not read it back". The
+  orphan that leaves is what the Retention row above is now written around.
+- **The sidecar's name APPENDS the extension** — `<name>.json.manifest.json`, which looks clumsy and
+  is the point: the bucket's mime check is a verbatim string match and storage-kt derives the header
+  from the key, so a name that stops ending in `.json` is an HTTP 415 that reads like a server fault.
+  Appending cannot produce one whatever the caller passed; swapping an extension can. It also gives
+  a listing a shape it can read without downloading anything, which is what the prune runs on.
+- **Session resolution needed its own bound, and the deferral above did not cover it.** The
+  `requestTimeout` / `transferTimeout` paragraphs are about HTTP knobs; waiting for a persisted
+  session to load is not an HTTP call. Unbounded, it would hold 2c's `launchOp` concurrent-op guard
+  with no exception and no message — hard constraint 4's exact shape. It is 10s, copied from
+  `DefaultSyncRepository`'s identical constant rather than imported from it, since that file is
+  deleted in Phase 5.
+- **A hash mismatch is NOT `BackupFileInvalid`.** That code renders "El archivo está dañado o no es
+  un respaldo de JustChill", written for a user who picked a bad file to *restore*. A failed upload
+  is the opposite event with the opposite actor, and it gets `BackupUploadUnverified`.
 
 **What "verify" means, precisely, because the obvious reading is wrong.** It is
 `sha256Hex(readBackBytes) == manifest.payloadSha256`, raw bytes on both sides. It is **not** a
@@ -522,8 +555,34 @@ must not build chunking or progress reporting against a 10-second limit that is 
 | Trigger | new `backgroundEvents()` expect/actual, sibling of `resumeEvents()` (ProcessLifecycleOwner ON_STOP / UIApplicationDidEnterBackground), capped at 1 automatic snapshot/day; **plus a staleness check on resume** — if the process died mid-upload, the next foreground retries (dirty flag is still set) |
 | Manual action | "Back up now" in Profile, through the existing `launchOp` concurrent-op guard |
 | Naming | `backup-v3-<ISO8601-UTC, colons replaced>.json` |
-| Retention | client-side prune (no server code exists): list bucket, parse timestamps from names, keep 7 daily + 8 weekly + 12 monthly, delete the rest. Pinned snapshots live under a `pinned/` prefix the prune never scans. "Pin before risky operation" action; every future DB schema migration must be preceded by a pinned snapshot |
+| Retention | client-side prune (no server code exists): list the bucket and **key on the presence of `<name>.manifest.json`, never on `<name>` alone**. A payload without its sidecar is not a snapshot: it counts toward no retention bucket and is **deleted on sight** — see the paragraph below, which is the rule, not a note about it. Parse timestamps from the names that DO carry a manifest, keep 7 daily + 8 weekly + 12 monthly, delete the rest. Pinned snapshots live under a `pinned/` prefix the prune never scans. "Pin before risky operation" action; every future DB schema migration must be preceded by a pinned snapshot |
 | Flag | `SNAPSHOT_BACKUP_ENABLED = false` in `core/backup/`, mirroring the `SyncKillSwitch` pattern (const + KDoc + grep-able). `bootstrapAppGraph` starts `BackupOrchestrator` behind it, the same pattern that gates `SyncOrchestrator.start()` in `AppGraph` today |
+
+**Why the prune keys on the manifest — a name-only prune loses verified data.** 2b-ii part B
+uploads the payload, reads it back, and writes the sidecar **only** after the bytes matched, so
+*the presence of `<name>.manifest.json` is the statement that the payload beside it was verified*.
+A prune that lists names and keeps "7 daily + 8 weekly + 12 monthly" without looking for the sidecar
+gives an orphan a retention slot, and the snapshot it evicts to make room is one that was verified.
+That is not untidiness, it is data loss, and it is invisible: both objects are just names in a
+listing. The rule is stated here rather than in `DefaultBackupUploader`'s KDoc because this file is
+what 2c is built from, and nobody implementing a prune has a reason to open a `:data` class.
+
+**Deleting an orphan on sight does throw away good bytes sometimes, and that is still the right
+call.** There are **three** ways a payload ends up without a sidecar, and nothing on the wire tells
+them apart:
+
+1. **the read-back failed** — the payload is *unverified*, and deliberately not deleted at the time
+   (a delete over the same dead transport would replace a precise reason with a vague one);
+2. **the manifest upload or its own read-back failed** — the payload is *verified*; this is the one
+   where deletion-on-sight discards an intact snapshot;
+3. **the process died mid-upload** — the case the Trigger row above already plans for, where the
+   dirty flag is still set and the next foreground retries.
+
+Because 2 cannot be distinguished from 1, the choice is between *occasionally discarding a good
+snapshot* and *keeping a possibly-unverified one indefinitely* — and the second is the failure this
+whole ADR exists to end: a restore from bytes nothing ever vouched for. The cost of the first is one
+skipped backup cycle, on a device that backs up daily and whose dirty flag is still set. The cost of
+the second is discovering, at restore time, that the only copy is corrupt. Delete on sight.
 
 **Verification**: gate green + a test proving an upload whose hash mismatches is NOT marked
 successful.
