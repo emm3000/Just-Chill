@@ -358,15 +358,18 @@ gana el ADR.
   **EL BACKUP NO ERA RED COMPLETA PARA ESTA MIGRACIÓN.** Medido contra la 2.4.0, que escribe formato
   v2: `ExportPayloadDto` llevaba `accounts`, `categories` y `transactions`, y **no llevaba
   `recurringMovements`** — verificado exportando desde la 2.4.0 en el emulador: el JSON no tiene la
-  clave. **Eso ya cambió**: el formato v3 (`BACKUP_SCHEMA_VERSION = 3`, rama `adr-009-phase-1`) sí
-  lleva `recurringMovements`, y `ExportPayloadDto.recurringMovements` lo declara. La medición de
+  clave. **Eso ya cambió**: el formato v3 (`BACKUP_SCHEMA_VERSION = 3`, rama
+  `adr-009-phase-1-export-v3`) sí lleva `recurringMovements`, y `ExportPayloadDto.recurringMovements`
+  lo declara. La medición de
   arriba sigue describiendo los archivos escritos por la 2.4.0, que son los que están en disco hoy.
   Pero `4.sqm:60-65` sí nullea `recurring_movements.categoryId`. O sea, cuando esta migración corrió:
   la categoría que perdiera una plantilla recurrente **no estaba en ningún backup y no se podía
   recuperar**, y hasta que alguien la re-asigne a mano cada confirmación mensual acuña un movimiento
   sin categoría. Los movimientos recurrentes con el par mismatched tampoco se podían CONTAR desde el
   backup, por lo mismo. La única medición previa posible era a ojo, en la pantalla de recurrentes,
-  antes de instalar. Con v3 en adelante un backup nuevo sí carga esas plantillas.
+  antes de instalar. Con v3 en adelante un backup nuevo **escribe** esas plantillas en el archivo —
+  solo esa mitad. El import todavía no las barre ni las restaura, así que como red de recuperación
+  esto no está cerrado: eso llega con el sweep versionado de la Fase 1 (`docs/sync/ADR009_PLAN.md`).
 
 - [ ] **Editar un movimiento de una categoría borrada lo re-archiva bajo otra, sin que nadie lo elija.**
   `EditTransactionViewModel.resolveSelection` (`:109-112`) corta en `snapshot?.categoryId ?: return null`,
