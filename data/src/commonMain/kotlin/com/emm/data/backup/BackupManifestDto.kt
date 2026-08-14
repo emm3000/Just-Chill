@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
@@ -21,6 +22,9 @@ import kotlinx.serialization.json.jsonPrimitive
  *
  * **This number moves in the same commit that changes [BackupManifestDto], never in an earlier one**
  * — same rule, same reason.
+ *
+ * It is stamped by [buildBackupManifest] and nowhere else, because
+ * [BackupManifestDto.manifestVersion] deliberately carries no default: see its own KDoc.
  */
 internal const val BACKUP_MANIFEST_VERSION: Int = 1
 
@@ -28,9 +32,7 @@ internal const val BACKUP_MANIFEST_VERSION: Int = 1
  * The sidecar that says what a stored snapshot is supposed to be.
  *
  * Uploaded next to the payload (ADR 009 Phase 2b): the payload is verified against
- * [payloadSha256] after read-back, and [rowCounts] is what makes a truncated-but-well-formed file
- * visible — a snapshot that parses and simply lost half its rows passes every check the JSON itself
- * can offer.
+ * [payloadSha256] after read-back.
  *
  * **Two version numbers live here and they are different numbers.** [manifestVersion] is this
  * file's own format; [payloadSchemaVersion] is the snapshot's. They can move independently and
@@ -39,17 +41,45 @@ internal const val BACKUP_MANIFEST_VERSION: Int = 1
  * reading either name in isolation still knows which artefact it is talking about.
  *
  * The field names are a wire format from the moment the first manifest is uploaded: renaming one
- * later breaks every stored manifest, so `BackupManifestSerializationTest` pins them.
+ * later breaks every stored manifest, so `BackupManifestTest` pins them.
  */
 @Serializable
 internal data class BackupManifestDto(
-    val manifestVersion: Int = BACKUP_MANIFEST_VERSION,
+    /**
+     * Required, with **no default** — the same construction, for the same reason, as
+     * [ExportPayloadDto.recurringMovements].
+     *
+     * A default would make this format commit the exact mistake the doc above claims it avoided:
+     * a manifest carrying no `manifestVersion` key would decode as version 1 rather than being
+     * refused, so a file written by something that is not this app — or by a future writer that
+     * dropped the field — would be read under the rules of a version it never declared. Without the
+     * default it fails deserialization, which is the honest answer, and it removes the need for the
+     * `encodeDefaults` that a defaulted property would have required on the way out.
+     */
+    val manifestVersion: Int,
     /** Storage name of the payload this manifest describes. Naming is ADR 009 Phase 2c's decision. */
     val fileName: String,
     /** Lowercase hex, 64 chars — [sha256Hex] over the exact bytes uploaded. */
     val payloadSha256: String,
     /** The `schemaVersion` the payload DECLARES. Not [manifestVersion]; see the class KDoc. */
     val payloadSchemaVersion: Int,
+    /**
+     * Rows per table in the payload — for a HUMAN and for comparing snapshots, never as a second
+     * opinion about the bytes.
+     *
+     * **It cannot corroborate [payloadSha256], and whoever writes the read-back check must not treat
+     * it as if it could.** Both are derived from the same byte array by [buildBackupManifest], so on
+     * read-back they are tautologically consistent: if the digest matches, the counts match by
+     * construction and prove nothing further; if it does not, the file is already known to be wrong
+     * and the counts describe a payload that no longer exists. Nor do they catch a truncated
+     * snapshot — truncated bytes never reach here, because the strict decode below refuses them
+     * outright rather than counting what survived.
+     *
+     * What they are actually for: reading a bucket without downloading it. "Yesterday's snapshot
+     * held 812 movements and today's holds 3" is a question the manifest can answer at listing time,
+     * and it is the shape a silent local data loss takes. And before a restore, "this file holds N
+     * movements" is something a person can be shown and can refuse.
+     */
     val rowCounts: BackupRowCountsDto,
 )
 
@@ -71,28 +101,41 @@ internal data class BackupRowCountsDto(
  * **The counts come from the payload, never from a second read of the database**, and that is the
  * point of taking bytes as the only input. A manifest built from its own query pass describes the
  * database at the instant it ran, which is not the instant the snapshot was taken — the two can
- * legitimately disagree, and then the integrity check fires on a file that is perfectly intact. A
- * manifest derived from the bytes is a claim about the bytes and can only be wrong in the same way
- * they are, which is exactly what a verification wants: hash, version and counts all describe one
- * byte sequence, and no call site can pair the counts of one snapshot with the digest of another.
+ * legitimately disagree, and then the numbers stored beside a perfectly intact file are simply
+ * wrong. A manifest derived from the bytes is a claim about the bytes and can only be wrong in the
+ * same way they are, so no call site can pair the counts of one snapshot with the digest of another.
  *
- * [payloadSchemaVersion] is read from the raw JSON before the payload is deserialized, the same
- * discipline `DefaultBackupRepository.decodePayload` documents: [ExportPayloadDto.schemaVersion]
- * carries a default, so a file that declares no version at all would decode as the current one and
- * the manifest would state a version the file never claimed.
+ * [BackupManifestDto.payloadSchemaVersion] is read from the raw JSON before the payload is
+ * deserialized, the same discipline `DefaultBackupRepository.decodePayload` documents:
+ * [ExportPayloadDto.schemaVersion] carries a default, so a file that declares no version at all
+ * would decode as the current one and the manifest would state a version the file never claimed.
  *
  * Anything unreadable here is a defect in this app's own export rather than a bad user file — these
- * bytes were produced by [DefaultBackupRepository.exportToJson] moments earlier. It still fails with
- * a NAMED reason instead of a raw [SerializationException], because ADR 009's hard constraint 4
- * forbids a silent failure anywhere in the backup pipeline and an unnamed one is how the 2026-08-12
- * outage stayed invisible.
+ * bytes were produced by [DefaultBackupRepository.exportToJson] moments earlier. **Each way it can
+ * fail says which one happened**, because ADR 009's hard constraint 4 forbids a silent failure
+ * anywhere in the backup pipeline, and one message shared by every cause is silent in the only sense
+ * that matters: the log tells whoever is holding the outage nothing it did not already know.
  */
-internal fun buildBackupManifest(fileName: String, payloadBytes: ByteArray): BackupManifestDto = readingPayload {
-    val root = payloadJson.parseToJsonElement(payloadBytes.decodeToString()).jsonObject
-    val declaredVersion = root[SCHEMA_VERSION_KEY]?.jsonPrimitive?.intOrNull ?: throw payloadUnreadable(cause = null)
-    val payload = payloadJson.decodeFromJsonElement<ExportPayloadDto>(root)
+internal fun buildBackupManifest(fileName: String, payloadBytes: ByteArray): BackupManifestDto {
+    // `throwOnInvalidSequence` because this whole unit's thesis is that the bytes are the bytes: the
+    // default repairs malformed UTF-8 into U+FFFD, which would let a manifest describe a payload
+    // nobody can decode back. Unreachable today; free to close.
+    val payloadText = readingPayload(NOT_UTF8) { payloadBytes.decodeToString(throwOnInvalidSequence = true) }
+    // Parsing and shape are two steps because they are two answers: "this is not JSON" and "this is
+    // JSON, but the root is an array" send a reader looking in different places.
+    val parsed = readingPayload(NOT_JSON) { payloadJson.parseToJsonElement(payloadText) }
+    val root = readingPayload(ROOT_NOT_AN_OBJECT) { parsed.jsonObject }
+    val declaredVersion = declaredVersionOf(root)
 
-    BackupManifestDto(
+    // The declared version is interpolated into the reason on purpose: it is what separates "a v1 or
+    // v2 file reached the manifest builder" from "the current shape gained a key this build has
+    // never seen", and both arrive here as the same SerializationException.
+    val payload = readingPayload("$WRONG_SHAPE (it declares $SCHEMA_VERSION_KEY $declaredVersion)") {
+        payloadJson.decodeFromJsonElement<ExportPayloadDto>(root)
+    }
+
+    return BackupManifestDto(
+        manifestVersion = BACKUP_MANIFEST_VERSION,
         fileName = fileName,
         payloadSha256 = sha256Hex(payloadBytes),
         payloadSchemaVersion = declaredVersion,
@@ -108,17 +151,29 @@ internal fun buildBackupManifest(fileName: String, payloadBytes: ByteArray): Bac
 /**
  * The manifest as the bytes that get uploaded.
  *
- * `encodeDefaults` is load-bearing rather than cosmetic: [BackupManifestDto.manifestVersion] is a
- * defaulted property, and a `Json` without it writes a manifest carrying no version field — an
- * unversioned file claiming to be the versioned format. It is stated here, once, so no future
- * upload path has to remember it.
+ * No `encodeDefaults`: nothing in [BackupManifestDto] or [BackupRowCountsDto] has a default, so
+ * every field is written because every field is required. That is the point — the setting existed
+ * only to compensate for a defaulted [BackupManifestDto.manifestVersion], and removing the default
+ * removed the need for the compensation rather than moving it somewhere quieter.
  */
 internal fun BackupManifestDto.encodeToJson(): String = manifestJson.encodeToString(this)
 
-private val manifestJson = Json {
-    prettyPrint = true
-    encodeDefaults = true
+/**
+ * The version the payload declares, or a named failure — absent and unusable are DIFFERENT answers.
+ *
+ * Folding them together is how a `"schemaVersion": "three"` would have been logged as "declares no
+ * schemaVersion", which sends whoever is reading that line looking for the wrong bug. Same split,
+ * for the same reason, as `DefaultBackupRepository.schemaVersionOf`.
+ */
+private fun declaredVersionOf(root: JsonObject): Int {
+    val declared = root[SCHEMA_VERSION_KEY] ?: throw payloadUnreadable(NO_VERSION_KEY, cause = null)
+    // `jsonPrimitive` THROWS when the value is an object or an array, so it has to be read inside
+    // the guard; `intOrNull` covers the value that is a primitive but not a number.
+    return readingPayload(VERSION_NOT_A_NUMBER) { declared.jsonPrimitive.intOrNull }
+        ?: throw payloadUnreadable(VERSION_NOT_A_NUMBER, cause = null)
 }
+
+private val manifestJson = Json { prettyPrint = true }
 
 /**
  * Strict on purpose — no `ignoreUnknownKeys`, unlike the import reader.
@@ -130,17 +185,29 @@ private val manifestJson = Json {
  */
 private val payloadJson = Json
 
+// One reason per thing a log reader would do differently on seeing it. `schemaVersion` present as an
+// object and present as a string share [VERSION_NOT_A_NUMBER] deliberately — the field is unusable
+// either way and the next move is the same; the thrown `cause` carries which of the two it was.
+private const val NOT_UTF8 = "its bytes are not valid UTF-8"
+private const val NOT_JSON = "it is not JSON"
+private const val ROOT_NOT_AN_OBJECT = "its root is not a JSON object"
+private const val NO_VERSION_KEY = "it declares no $SCHEMA_VERSION_KEY"
+private const val VERSION_NOT_A_NUMBER = "its $SCHEMA_VERSION_KEY is not a number"
+private const val WRONG_SHAPE = "it does not decode as the current snapshot shape"
+
 @Suppress("SwallowedException")
-private inline fun <T> readingPayload(block: () -> T): T = try {
+private inline fun <T> readingPayload(reason: String, block: () -> T): T = try {
     block()
+} catch (e: CharacterCodingException) {
+    throw payloadUnreadable(reason, e)
 } catch (e: SerializationException) {
-    throw payloadUnreadable(e)
+    throw payloadUnreadable(reason, e)
 } catch (e: IllegalArgumentException) {
-    throw payloadUnreadable(e)
+    throw payloadUnreadable(reason, e)
 }
 
-private fun payloadUnreadable(cause: Throwable?) = DomainException.ValidationError(
-    "Backup payload could not be read back as a snapshot; no manifest can describe it.",
+private fun payloadUnreadable(reason: String, cause: Throwable?) = DomainException.ValidationError(
+    "Backup payload cannot be described by a manifest: $reason.",
     ValidationCode.BackupFileInvalid,
     cause = cause,
 )

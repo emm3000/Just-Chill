@@ -2,6 +2,7 @@ package com.emm.data.backup
 
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonObject
@@ -34,12 +35,27 @@ class BackupManifestTest {
     }
 
     @Test
-    fun writes_its_own_version_even_though_the_property_is_defaulted() {
-        // `encodeDefaults` in the manifest's own Json is what puts this key in the file. Without it
-        // the versioned format would ship its very first file carrying no version at all.
+    fun stamps_its_own_format_version_into_the_file() {
         val root = Json.parseToJsonElement(buildBackupManifest(FILE_NAME, samplePayloadBytes()).encodeToJson())
 
         assertEquals(BACKUP_MANIFEST_VERSION, root.jsonObject.getValue("manifestVersion").jsonPrimitive.int)
+    }
+
+    @Test
+    fun refuses_a_manifest_that_declares_no_version_of_its_own() {
+        // The property carries NO default, so an absent key is refused instead of decoding as
+        // version 1. Without this test that is a property of the code nobody checks — and adding a
+        // default back would break nothing else in the suite.
+        assertFailsWith<SerializationException> {
+            Json.decodeFromString<BackupManifestDto>(manifestJsonText(manifestVersion = null))
+        }
+
+        // The control: the identical document WITH the key decodes, so the refusal above is about
+        // that key and not about a typo somewhere else in the fixture.
+        assertEquals(
+            BACKUP_MANIFEST_VERSION,
+            Json.decodeFromString<BackupManifestDto>(manifestJsonText(BACKUP_MANIFEST_VERSION)).manifestVersion,
+        )
     }
 
     @Test
@@ -97,34 +113,96 @@ class BackupManifestTest {
     }
 
     @Test
-    fun refuses_a_payload_that_declares_no_version() {
+    fun refuses_every_payload_it_cannot_describe() {
         // Not a hypothetical guard against a user file — these bytes come from this app's own export
-        // seconds earlier, so this is the defect path, and it fails with a named reason rather than
-        // producing a manifest that invents a version the file never claimed.
-        val failure = assertFailsWith<DomainException.ValidationError> {
-            buildBackupManifest(FILE_NAME, """{"accounts":[]}""".encodeToByteArray())
-        }
+        // seconds earlier, so every one of these is the defect path.
+        UNREADABLE_PAYLOADS.forEach { case ->
+            val failure = assertFailsWith<DomainException.ValidationError>(message = case.label) {
+                buildBackupManifest(FILE_NAME, case.bytes)
+            }
 
-        assertEquals(ValidationCode.BackupFileInvalid, failure.code)
+            assertEquals(ValidationCode.BackupFileInvalid, failure.code, case.label)
+        }
     }
 
     @Test
-    fun refuses_bytes_that_are_not_json_at_all() {
-        val failure = assertFailsWith<DomainException.ValidationError> {
-            buildBackupManifest(FILE_NAME, "not a snapshot".encodeToByteArray())
-        }
+    fun says_which_way_the_payload_was_unreadable() {
+        // ADR 009 hard constraint 4. One message shared by every cause is silent in the only sense
+        // that matters — the log would tell whoever is holding the outage nothing they did not
+        // already know. Each expected reason is spelled out rather than counted, so the GROUPING is
+        // reviewable too: the two `schemaVersion` cases deliberately share one reason, and the last
+        // two differ only by the version they print, which is what separates "a v1 file reached the
+        // manifest builder" from "the current shape grew a key this build has never seen" — both
+        // arrive as the same SerializationException.
+        UNREADABLE_PAYLOADS.forEach { case ->
+            val failure = assertFailsWith<DomainException.ValidationError> {
+                buildBackupManifest(FILE_NAME, case.bytes)
+            }
 
-        assertEquals(ValidationCode.BackupFileInvalid, failure.code)
+            assertEquals(
+                "Backup payload cannot be described by a manifest: ${case.reason}.",
+                failure.message,
+                case.label,
+            )
+        }
     }
 
     @Test
-    fun refuses_json_that_is_missing_a_required_payload_field() {
-        val failure = assertFailsWith<DomainException.ValidationError> {
-            buildBackupManifest(FILE_NAME, """{"schemaVersion":3}""".encodeToByteArray())
-        }
+    fun the_reasons_that_are_meant_to_differ_actually_differ() {
+        val reasons = UNREADABLE_PAYLOADS.map { case -> case.reason }.toSet()
 
-        assertEquals(ValidationCode.BackupFileInvalid, failure.code)
+        // Seven distinct reasons over eight cases. The ONLY pair that shares a reason is the two
+        // unusable-`schemaVersion` shapes; in particular the two wrong-shape cases do not, because
+        // the version they print is the whole diagnostic.
+        assertEquals(7, reasons.size, "reasons: $reasons")
     }
+}
+
+private class UnreadablePayload(val label: String, val bytes: ByteArray, val reason: String)
+
+/** One entry per way the bytes can fail, with the reason a log reader is supposed to see. */
+private val UNREADABLE_PAYLOADS: List<UnreadablePayload> = listOf(
+    // A lone 0xC3 opens a two-byte sequence that never arrives. The default `decodeToString` would
+    // repair it into U+FFFD and carry on describing a payload nobody can decode back.
+    UnreadablePayload("truncated UTF-8", byteArrayOf(0xC3.toByte()), "its bytes are not valid UTF-8"),
+    UnreadablePayload("not JSON at all", "not a snapshot".encodeToByteArray(), "it is not JSON"),
+    UnreadablePayload("root is an array", "[]".encodeToByteArray(), "its root is not a JSON object"),
+    UnreadablePayload("no schemaVersion", """{"accounts":[]}""".encodeToByteArray(), "it declares no schemaVersion"),
+    UnreadablePayload(
+        label = "schemaVersion is an object",
+        bytes = """{"schemaVersion":{}}""".encodeToByteArray(),
+        reason = "its schemaVersion is not a number",
+    ),
+    UnreadablePayload(
+        label = "schemaVersion is a string",
+        bytes = """{"schemaVersion":"three"}""".encodeToByteArray(),
+        reason = "its schemaVersion is not a number",
+    ),
+    UnreadablePayload(
+        label = "current version, wrong shape",
+        bytes = """{"schemaVersion":$BACKUP_SCHEMA_VERSION}""".encodeToByteArray(),
+        reason = "it does not decode as the current snapshot shape " +
+            "(it declares schemaVersion $BACKUP_SCHEMA_VERSION)",
+    ),
+    UnreadablePayload(
+        label = "an older version's shape",
+        bytes = """{"schemaVersion":1}""".encodeToByteArray(),
+        reason = "it does not decode as the current snapshot shape (it declares schemaVersion 1)",
+    ),
+)
+
+/** A complete manifest document, with [manifestVersion] omitted entirely when it is null. */
+private fun manifestJsonText(manifestVersion: Int?): String {
+    val version = manifestVersion?.let { value -> "\"manifestVersion\": $value," }.orEmpty()
+    return """
+        {
+          $version
+          "fileName": "$FILE_NAME",
+          "payloadSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "payloadSchemaVersion": $BACKUP_SCHEMA_VERSION,
+          "rowCounts": { "accounts": 1, "categories": 2, "transactions": 3, "recurringMovements": 1 }
+        }
+    """.trimIndent()
 }
 
 private const val FILE_NAME = "justchill-2026-08-14T03-00-00.json"
