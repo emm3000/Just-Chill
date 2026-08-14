@@ -6,7 +6,7 @@
 > [checklist de trabajo abierto](#checklist-de-trabajo-abierto) — es la lista única, y no hay
 > ningún `OPEN_WORK.md` compitiendo con ella a propósito.
 >
-> **Última actualización**: 2026-08-13. No se anota el hash de trunk acá: el commit que lo
+> **Última actualización**: 2026-08-14. No se anota el hash de trunk acá: el commit que lo
 > escribe ya lo deja viejo, igual que pasó con el conteo de commits.
 >
 > **El sync está APAGADO en producción desde el 2026-08-12.** Kill switch
@@ -139,9 +139,16 @@ gana el ADR.
 - [ ] Fase 0: decidir qué se hace con los dos tenants. AUDIT §8, §10.
 - [ ] **Fase 1: decidir el fork de scoping por usuario** — DB por usuario, filtro `userId` en cada
   lectura, o wipe al cambiar de cuenta. Sin decidir. AUDIT §5 (Identity).
-- [ ] ADR 009 Fase 1: `recurring_movements` al formato de export (v3), con v2 congelado y el barrido
-  del import versionado. **Precondición dura** — sin esto un restore pierde los movimientos
-  recurrentes, y restaurar un archivo v1/v2 los destruye.
+- [ ] ADR 009 Fase 1 — **código terminado en la rama `adr-009-phase-1-export-v3`, todavía no
+  mergeado**. Aterrizó completo: v2 congelado con su fixture y su test, `recurring_movements` en el
+  export a formato v3, y el barrido del import gateado por `BACKUP_RECURRING_SINCE_VERSION` — un
+  archivo que declara 3 o más barre y restaura esa tabla, uno v1/v2 no la toca. El restore trae
+  `createdAt` y `lastConfirmedPeriod` del archivo, `ImportStats.recurring` cuenta lo que aterrizó y
+  el diálogo de import ya nombra la tabla que puede borrar. `qualityGate` verde, compile iOS
+  incluido. Era **precondición dura**: sin esto un restore perdía los movimientos recurrentes.
+  Lo que falta no es código: la rama **no está pusheada, no tiene PR y no está en `trunk`**, así que
+  nada de esto llegó al device del autor todavía. Fase 2 no arranca hasta que esté mergeada
+  (`docs/sync/ADR009_PLAN.md`, Fase 1).
 - [ ] ADR 009 Fases 2-5: pipeline de snapshot, visibilidad, confianza en el restore, y recién ahí
   desmantelar el motor. Detalle y compuertas en `docs/sync/ADR009_PLAN.md`.
 - [ ] La app tiene que decir en pantalla, antes del primer upload a una cuenta nueva, que sube el
