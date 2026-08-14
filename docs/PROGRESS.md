@@ -139,16 +139,22 @@ gana el ADR.
 - [ ] Fase 0: decidir qué se hace con los dos tenants. AUDIT §8, §10.
 - [ ] **Fase 1: decidir el fork de scoping por usuario** — DB por usuario, filtro `userId` en cada
   lectura, o wipe al cambiar de cuenta. Sin decidir. AUDIT §5 (Identity).
-- [ ] ADR 009 Fase 1 — **código terminado en la rama `adr-009-phase-1-export-v3`, todavía no
-  mergeado**. Aterrizó completo: v2 congelado con su fixture y su test, `recurring_movements` en el
-  export a formato v3, y el barrido del import gateado por `BACKUP_RECURRING_SINCE_VERSION` — un
-  archivo que declara 3 o más barre y restaura esa tabla, uno v1/v2 no la toca. El restore trae
-  `createdAt` y `lastConfirmedPeriod` del archivo, `ImportStats.recurring` cuenta lo que aterrizó y
-  el diálogo de import ya nombra la tabla que puede borrar. `qualityGate` verde, compile iOS
-  incluido. Era **precondición dura**: sin esto un restore perdía los movimientos recurrentes.
-  Lo que falta no es código: la rama **no está pusheada, no tiene PR y no está en `trunk`**, así que
-  nada de esto llegó al device del autor todavía. Fase 2 no arranca hasta que esté mergeada
-  (`docs/sync/ADR009_PLAN.md`, Fase 1).
+- [x] ADR 009 Fase 1 — **en `trunk` y pusheada** el 2026-08-14. Aterrizó completo: v2 congelado con
+  su fixture y su test, `recurring_movements` en el export a formato v3, y el barrido del import
+  gateado por `BACKUP_RECURRING_SINCE_VERSION` — un archivo que declara 3 o más barre y restaura esa
+  tabla, uno v1/v2 no la toca. El restore trae `createdAt` y `lastConfirmedPeriod` del archivo,
+  `ImportStats.recurring` cuenta lo que aterrizó y el diálogo de import ya nombra la tabla que puede
+  borrar. `qualityGate` verde, compile iOS incluido. Era **precondición dura**: sin esto un restore
+  perdía los movimientos recurrentes. La rama `adr-009-phase-1-export-v3` quedó apuntando al mismo
+  commit que `trunk`; no la leas como trabajo pendiente. Fase 2 ya está destrabada
+  (`docs/sync/ADR009_PLAN.md`, Fase 2).
+
+  **Esta entrada estuvo mal durante un día y vale la pena saber por qué**: el commit que la escribió
+  (`17fc33b2`, "record ADR 009 Phase 1 as finished on the branch, not shipped") era verdad al
+  escribirse y falso una hora después, cuando la rama se integró. Un doc que afirma el estado de
+  integración de una rama caduca en el merge siguiente — la misma clase de dato que la cabecera de
+  este archivo ya prohíbe anotar (cuántos commits faltan pushear, desde qué hash). Sacalo del repo:
+  `git branch --contains <sha> -a`.
 - [ ] ADR 009 Fases 2-5: pipeline de snapshot, visibilidad, confianza en el restore, y recién ahí
   desmantelar el motor. Detalle y compuertas en `docs/sync/ADR009_PLAN.md`.
 - [ ] La app tiene que decir en pantalla, antes del primer upload a una cuenta nueva, que sube el
@@ -365,8 +371,8 @@ gana el ADR.
   **EL BACKUP NO ERA RED COMPLETA PARA ESTA MIGRACIÓN.** Medido contra la 2.4.0, que escribe formato
   v2: `ExportPayloadDto` llevaba `accounts`, `categories` y `transactions`, y **no llevaba
   `recurringMovements`** — verificado exportando desde la 2.4.0 en el emulador: el JSON no tiene la
-  clave. **Eso ya cambió**: el formato v3 (`BACKUP_SCHEMA_VERSION = 3`, rama
-  `adr-009-phase-1-export-v3`) sí lleva `recurringMovements`, y `ExportPayloadDto.recurringMovements`
+  clave. **Eso ya cambió**: el formato v3 (`BACKUP_SCHEMA_VERSION = 3`, en `trunk`
+  desde el 2026-08-14) sí lleva `recurringMovements`, y `ExportPayloadDto.recurringMovements`
   lo declara. La medición de
   arriba sigue describiendo los archivos escritos por la 2.4.0, que son los que están en disco hoy.
   Pero `4.sqm:60-65` sí nullea `recurring_movements.categoryId`. O sea, cuando esta migración corrió:
