@@ -262,11 +262,69 @@ parent-key change, and inside the one transaction wrapping the restore that is n
 it is the whole import rolled back after the tombstone sweep. Only the narrow claim holds: the sweep
 neither wipes nor restores that table. Today.
 
-**Open — statement order inside the transaction.** Under a v3 sweep that also wipes and restores
-recurring rows, that detach and the recurring restore land in the **same transaction**, and their
-relative order becomes a correctness question: run the detach first and it scrubs rows about to be
-replaced anyway; run it after the restore and it may scrub the pairs the file just wrote. Name the
-invariant before writing the statements. This plan does not choose it.
+**Settled — statement order inside the transaction.** Under a v3 sweep the four tombstones move
+first (the recurring one gated on `declaredVersion >= 3`, the other three as today), then accounts,
+then categories — the detach still runs there, on every version, unchanged — then transactions, and
+the recurring restore lands **last**, gated on `declaredVersion >= 3` the same as its tombstone:
+
+```
+softDeleteAllLive x4        (recurring only when declaredVersion >= 3)
+payload.accounts            restore
+payload.categories          restore   <- the detach runs here, on EVERY version, before the category is written
+payload.transactions        restore
+payload.recurringMovements  restore   <- LAST, v3+ only
+```
+
+Both alternatives lose data, and the same way: a recurring row loses its `categoryId`, silently — it
+is only the WHICH rows that differs. Detaching after the recurring restore runs
+`clearCategoryOnTypeChange` over rows the file just wrote in this same transaction, stripping every
+row whose restored category disagrees with it. Restoring recurring before the categories loop looks
+different but lands in the same place, once `usableCategoryId` — settled below as the shared guard —
+sits in the call: it reads `typeOf(categoryId)` off whatever the categories table holds **at the
+point it runs**, and under this ordering that is still the pre-restore world, since
+`softDeleteAllLive` tombstones a row without rewriting its `categoryType`. A recurring row whose
+file-declared type matches the category the file is about to write, but not the one still sitting in
+the table, reads a mismatch and comes back null — not a thrown constraint, `usableCategoryId` never
+throws, it resolves. So the row still lands, still gets counted, just uncategorized: every template
+whose category changed type in this file loses that category with nothing on screen to say so.
+`usableCategoryId`'s own KDoc names the throw-and-roll-back failure this function exists to prevent
+(`DefaultBackupRepository.kt:340-349`) — that risk is real in general, it is simply not what THIS
+ordering produces, because the guard the plan already commits to catches it first and turns it into
+a quieter loss instead. Last position is the one place `usableCategoryId` sees the file's own
+categories rather than a world the import is mid-replacing, which is the actual reason it goes last:
+not that the earlier positions crash, but that they are the only positions where the pairs the file
+carries are NOT the pairs that survive.
+
+The detach does not become dead weight once the sweep tombstones recurring rows first — this is the
+non-obvious part. A tombstone is not a delete: `clearCategoryOnTypeChange` carries no
+`deletedAt IS NULL` filter, so a recurring row the file does not mention, freshly tombstoned by the
+sweep, still holds its old `(categoryId, type)` pair and still makes SQLite refuse the category's
+type change. The detach stays, unversioned, on every import, sweep or no sweep.
+
+**`usableCategoryId` is reused, not duplicated.** It already takes `(categoryId, type)` and reads
+`db.categoriesQueries.typeOf(categoryId)` — nothing about it is transaction-specific, and
+`recurring_movements` carries the identical composite FK. Its name is already table-neutral, so the
+recurring restore calls it as-is. The order above is what makes that reuse correct: by the time it
+runs over a recurring row, every category in the file has already been written, so `typeOf` reads
+the file's world, not the categories table's old one — the same argument the function's own KDoc
+already makes for transactions ("the file is the whole world … there is no later arrival to wait
+for").
+
+That KDoc needs widening when the reuse lands, though, and not just moved: it justifies the fallback
+by LEGACY provenance today — *"Every backup file that exists today predates the composite key"* —
+and that does not hold for recurring. v3 was born after the composite key existed, and Phase 1's
+dangling-category scrub already keeps a tombstoned category's id out of the export, so a file this
+app writes can never carry a broken recurring pair. The only remaining provenance is a hand-edited
+file. The fallback still stands — the file is untrusted, and a rollback after the sweep already ran
+is the catastrophic case either way — but the KDoc has to name both provenances once it serves both
+callers, or it argues something false for half of them.
+
+Still open, and left for the commit that writes the restore mapper: whether the recurring restore
+also needs a validating drop, the way `restore(dto: TransactionDto)`'s `toEntityOrNull()` discards a
+row whose `occurredAt` will not parse. Recurring has no `occurredAt`, but it has
+`lastConfirmedPeriod` — a zero-padded `"YYYY-MM"` that `ensureNotSettled` orders as a plain string —
+and a garbage value there still deserializes clean while breaking that ordering in silence. Not
+answered here.
 
 **Two stale KDocs — CORRECTED, ahead of the behavior change.** In
 `DefaultBackupRepositoryImportTest`, the KDoc above the test for a backup that redefines a
