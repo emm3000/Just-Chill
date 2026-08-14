@@ -4,16 +4,24 @@ package com.emm.justchill.hh.profile
  * Body copy for the "import finished" notification.
  *
  * [recurring] joined the count in the same commit that made the v3 import restore that table
- * (`69f28de5`); until then the sentence only ever named `transactions`. `recurring == 0` keeps
- * that original sentence byte for byte — a v1/v2 file, or a v3 file whose owner has no templates,
- * must not start naming a table it did nothing to. Only `recurring > 0` grows the sentence.
+ * (`69f28de5`); until then the sentence only ever named `transactions`. `recurring == 0` still
+ * names nothing else — a v1/v2 file, or a v3 file whose owner has no templates, must not start
+ * naming a table it did nothing to. Only `recurring > 0` grows the sentence.
  *
- * The `transactions` side's missing singular (`"1 movimientos importados"` reads wrong) is
- * pre-existing and deliberately NOT fixed here — out of scope for the change that added
- * [recurring]. Do not "fix" it as a drive-by.
+ * Both counts inflect, the way `DeleteCategoryCopy` and `ReportShareFormatter` already do it. The
+ * `transactions` side did not until a device showed the result: `(1, 1)` rendered
+ * `"1 movimientos y 1 recurrente importados."` — the two rules side by side in one sentence, which
+ * is what made a long-standing wrong plural finally unignorable.
+ *
+ * The participle only drops to `"importado"` in the `recurring == 0` singular branch. Two singular
+ * subjects joined by "y" take a plural participle, so `(1, 1)` keeps `"importados"`.
  */
 fun buildImportDoneMessage(transactions: Int, recurring: Int): String {
-    if (recurring == 0) return "Listo — $transactions movimientos importados."
+    val transactionsPhrase = if (transactions == 1) "1 movimiento" else "$transactions movimientos"
+    if (recurring == 0) {
+        val participle = if (transactions == 1) "importado" else "importados"
+        return "Listo — $transactionsPhrase $participle."
+    }
     val recurringPhrase = if (recurring == 1) "1 recurrente" else "$recurring recurrentes"
-    return "Listo — $transactions movimientos y $recurringPhrase importados."
+    return "Listo — $transactionsPhrase y $recurringPhrase importados."
 }

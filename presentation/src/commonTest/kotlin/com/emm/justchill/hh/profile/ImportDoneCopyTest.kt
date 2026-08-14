@@ -30,13 +30,22 @@ class ImportDoneCopyTest {
     }
 
     @Test
-    fun `does not fix the pre-existing missing singular on the transactions side`() {
-        // "1 movimientos importados" reads wrong, and it is out of scope for this change — see
-        // the class KDoc. This test pins the current (imperfect) behaviour so nobody "fixes" it
-        // as a drive-by inside an unrelated commit.
+    fun `uses the singular for a single movement`() {
         assertEquals(
-            "Listo — 1 movimientos importados.",
+            "Listo — 1 movimiento importado.",
             buildImportDoneMessage(transactions = 1, recurring = 0),
+        )
+    }
+
+    @Test
+    fun `uses both singulars when one movement and one recurring movement landed`() {
+        // The only input where the two singular rules meet, and the one this suite was missing
+        // while the transactions half had no singular at all: the sentence then showed a correct
+        // "1 recurrente" next to a wrong "1 movimientos", one rule each, in one line of copy.
+        // The participle stays plural — two singular subjects joined by "y" take it.
+        assertEquals(
+            "Listo — 1 movimiento y 1 recurrente importados.",
+            buildImportDoneMessage(transactions = 1, recurring = 1),
         )
     }
 }
