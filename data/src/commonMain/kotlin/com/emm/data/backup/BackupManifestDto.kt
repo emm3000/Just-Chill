@@ -187,7 +187,11 @@ private val payloadJson = Json
 
 // One reason per thing a log reader would do differently on seeing it. `schemaVersion` present as an
 // object and present as a string share [VERSION_NOT_A_NUMBER] deliberately — the field is unusable
-// either way and the next move is the same; the thrown `cause` carries which of the two it was.
+// either way and the next move is the same. They stay distinguishable in a log, but by whether a
+// `cause` is attached rather than by what it says: the object and array shapes carry an
+// `IllegalArgumentException` from the element read, while string, boolean, float and JSON-null carry
+// no cause at all. An earlier version of this comment claimed the cause identified which shape it
+// was; it does not, and nothing should be built on that.
 private const val NOT_UTF8 = "its bytes are not valid UTF-8"
 private const val NOT_JSON = "it is not JSON"
 private const val ROOT_NOT_AN_OBJECT = "its root is not a JSON object"

@@ -148,9 +148,17 @@ class BackupManifestTest {
     }
 
     @Test
-    fun the_reasons_that_are_meant_to_differ_actually_differ() {
+    fun the_fixture_still_expects_seven_distinct_reasons() {
         val reasons = UNREADABLE_PAYLOADS.map { case -> case.reason }.toSet()
 
+        // Reads the EXPECTED strings, so it pins the fixture and NOT production: collapsing two
+        // reasons in `BackupManifestDto` leaves this green. `says_which_way_the_payload_was_unreadable`
+        // is what actually holds production to these messages; this one only stops a future edit from
+        // collapsing two expectations in lockstep with the code, which would let both tests agree on
+        // a regression. Named for what it guards, after a review found the old name
+        // (`the_reasons_that_are_meant_to_differ_actually_differ`) claiming the property its sibling
+        // owns.
+        //
         // Seven distinct reasons over eight cases. The ONLY pair that shares a reason is the two
         // unusable-`schemaVersion` shapes; in particular the two wrong-shape cases do not, because
         // the version they print is the whole diagnostic.
