@@ -330,10 +330,15 @@ class DefaultBackupRepositoryImportTest {
      * The parent half of the same problem, and the one the export cannot protect against.
      *
      * A recurring movement holds `(cat-1, Spend)`. The file redefines `cat-1` as an Income
-     * category. Import never touches `recurring_movements` — deliberately, since the format does
-     * not carry them — so the movement still holds the old pair when the category's type is
-     * rewritten, and SQLite refuses the parent-key change. Inside the single wrapping transaction
-     * that is not one failed row: it is the whole restore rolled back, after the tombstone sweep.
+     * category. The import neither tombstones nor restores `recurring_movements`, so the movement
+     * still holds the old pair when the category's type is rewritten, and SQLite refuses the
+     * parent-key change. Inside the single wrapping transaction that is not one failed row: it is
+     * the whole restore rolled back, after the tombstone sweep.
+     *
+     * **This KDoc used to say "import never touches `recurring_movements` — deliberately, since the
+     * format does not carry them", and both halves were wrong.** The assertion at the bottom of this
+     * very test is the import mutating that table; and the format has carried
+     * `recurringMovements` since version 3. What is true is the narrow claim: no sweep, no restore.
      */
     @Test
     fun `a backup that redefines a category's type does not abort on the movements filed under it`() = runTest {
@@ -366,8 +371,8 @@ class DefaultBackupRepositoryImportTest {
         assertEquals(1, stats.transactions, "the import must complete, not roll back")
         assertEquals("Income", db.categoriesQueries.find("cat-1").executeAsOne().categoryType)
         assertEquals("cat-1", db.transactionsQueries.find("tx-1").executeAsOne().categoryId)
-        // The template survives, minus a label it can no longer hold. It is never deleted: the
-        // import does not own that table.
+        // The template survives, minus a label it can no longer hold. It is never deleted and never
+        // tombstoned: the detach is the only thing an import does to this table today.
         assertEquals(1, rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'rec-1'"))
         assertNull(db.recurring_movementsQueries.find("rec-1").executeAsOne().categoryId)
     }

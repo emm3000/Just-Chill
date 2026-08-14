@@ -105,10 +105,12 @@ class DefaultBackupRepository(
                 // pushes to the server and reaches the other devices — a physical DELETE left no
                 // trace, and the next pull simply downloaded the rows again.
                 //
-                // Recurring movements are untouched here — not swept, not restored — even though
-                // the format now carries them. Adding the field and acting on it are two commits on
-                // purpose: the destructive half has to be version-gated, since a v1/v2 file has no
-                // templates to give and wiping on one would destroy data no backup can put back.
+                // Recurring movements are neither swept nor restored — even though the format now
+                // carries them. Not "untouched": `restore(dto: CategoryDto, …)` below detaches a
+                // category from any recurring row whose type disagrees with it, on every version.
+                // Adding the field and acting on it are two commits on purpose: the destructive
+                // half has to be version-gated, since a v1/v2 file has no templates to give and
+                // wiping on one would destroy data no backup can put back.
                 // Until that lands, a v3 file carries templates an import does not restore, and
                 // BackupV3CompatibilityTest pins that the rows already on the device survive it.
                 db.transactionsQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
@@ -253,11 +255,16 @@ class DefaultBackupRepository(
      * the statement throws inside the ONE transaction that wraps the whole restore, so the import
      * rolls back after the tombstone sweep and reaches the user as a generic database error.
      *
-     * `recurring_movements` is what makes it reachable rather than theoretical: the import
-     * deliberately never touches that table, so its rows still hold whatever pair they were
-     * created with while the file rewrites the category out from under them. And the file is
-     * untrusted — a hand-edited `categoryType` is all it takes, which is the same premise the
-     * movement restore below already works from.
+     * `recurring_movements` is what makes it reachable rather than theoretical: the import neither
+     * tombstones nor restores that table, so its rows still hold whatever pair they were created
+     * with while the file rewrites the category out from under them. And the file is untrusted — a
+     * hand-edited `categoryType` is all it takes, which is the same premise the movement restore
+     * below already works from.
+     *
+     * **"Never touches that table" is what this used to say, and it was false where it stood**: the
+     * `clearCategoryOnTypeChange` call ten lines below runs on `recurring_movementsQueries` for
+     * every category of every import at every version. The narrow claim — no sweep, no restore — is
+     * the true one, and it is the half commit ③ inverts for v3 while keeping it for v1 and v2.
      */
     private fun restore(dto: CategoryDto, now: Long) {
         db.transactionsQueries.clearCategoryOnTypeChange(

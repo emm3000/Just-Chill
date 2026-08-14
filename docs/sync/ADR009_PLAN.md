@@ -234,9 +234,16 @@ still references it, with the reasoning in a comment block above those statement
 has no counterpart on it at all. New `.sq` statements are not a migration (constraint 1).
 
 **Version the import sweep — the data-loss trap.** With v3 the sweep includes recurring **only for
-v3+ payloads**; importing a v1/v2 file must keep leaving local recurring intact, since those formats
-carry none and wiping them would destroy data no backup can restore. Pin both sides with tests:
-*importing v1/v2 leaves recurring untouched; importing v3 replaces it.*
+v3+ payloads**; importing a v1/v2 file must keep neither tombstoning nor restoring local recurring
+rows, since those formats carry none and wiping them would destroy data no backup can restore. Pin
+both sides with tests: *importing v1/v2 neither tombstones nor restores recurring; importing v3
+replaces it.* Not "leaves it untouched" — the category detach below runs on every version.
+
+**The gate value exists.** `decodePayload` returns `DecodedBackup(declaredVersion, payload)`, so the
+version the FILE declared reaches `importFromJson` unchanged. Gate on `declaredVersion`, never on
+`payload.recurringMovements` being empty: every `toCurrent()` restamps `payload.schemaVersion` to the
+current version, so a v1 file, a v2 file and a v3 file from a device with no templates are otherwise
+indistinguishable. The three compatibility suites each pin their own file's `declaredVersion`.
 
 **③ must re-point ②'s two data-loss guards at the real restore.** ②'s `lastConfirmedPeriod` and
 `createdAt` tests rebuild the template from the exported DTO with a **test-local** reconstruction,
@@ -261,12 +268,15 @@ relative order becomes a correctness question: run the detach first and it scrub
 replaced anyway; run it after the restore and it may scrub the pairs the file just wrote. Name the
 invariant before writing the statements. This plan does not choose it.
 
-**Two stale KDocs, in scope because v3 makes them wrong on the destructive path.** In
+**Two stale KDocs — CORRECTED, ahead of the behavior change.** In
 `DefaultBackupRepositoryImportTest`, the KDoc above the test for a backup that redefines a
-category's type asserts *"Import never touches `recurring_movements`"* — while the test directly
-beneath it asserts that exact mutation. `restore(dto: CategoryDto, …)`'s own KDoc says the same
-("the import deliberately never touches that table"). Both are defects now and worse after v3;
-correct them in the commit that changes the behavior.
+category's type asserted *"Import never touches `recurring_movements`"* — while the test directly
+beneath it asserts that exact mutation. `restore(dto: CategoryDto, …)`'s own KDoc said the same
+("the import deliberately never touches that table"). Both now state the narrow claim instead — the
+import neither tombstones nor restores that table — and both name the detach as the one thing it
+does do. `DefaultBackupRepository`'s in-transaction comment and `docs/PROGRESS.md`'s 2.4.0
+measurement carried the same wording and were corrected with them. Nothing left in the repo says
+the import never touches that table; ③ still has to invert the narrow claim for v3.
 
 **`ImportBackupDialog` (`:ui-android`) is user-facing and goes stale.** Both its `isSignedIn`
 body-copy branches enumerate the tables in Spanish — *"Tus movimientos, categorías y cuentas quedan
