@@ -20,7 +20,12 @@
 -- allowed_mime_types is constrained to JSON. Both things that land here are JSON (the export and
 -- the manifest), so anything else arriving is a client bug, and this turns that bug into a loud
 -- refusal at the edge instead of a mystery blob in the user's backup history. The uploader must
--- therefore send `application/json`.
+-- therefore send a BARE `application/json`, with no `charset` parameter: storage-api matches the
+-- Content-Type header verbatim against this array rather than stripping parameters, so
+-- `application/json; charset=utf-8` is refused with HTTP 415 `invalid_mime_type` — a hard failure
+-- that reads like a server fault and is not one. The default path is safe: storage-kt falls back to
+-- `ContentType.defaultForFilePath(path)`, which yields bare `application/json` for a `.json` key,
+-- so the trap is only sprung by passing a charset explicitly.
 --
 -- file_size_limit is 10 MiB. Basis, so a future reader can move it on evidence rather than on
 -- feeling: one human's personal finances, where an exported transaction costs roughly 200 bytes of
@@ -28,9 +33,21 @@
 -- dataset this app has ever held, and still bounded, so a corrupt or runaway payload cannot quietly
 -- consume the project's storage quota. Raise it here if a real export ever approaches it; a
 -- rejected upload is a reported failure, not a silent one (hard constraint 4).
+--
+-- `do update`, NOT `do nothing`, and the difference is the whole value of the two paragraphs above.
+-- With `do nothing`, a bucket that already exists keeps whatever settings it was born with and this
+-- migration reports success while enforcing none of them — the Dashboard's "New bucket" form leaves
+-- both file_size_limit and allowed_mime_types null, so a `backups` bucket created by hand and then
+-- migrated over would silently accept unbounded payloads of any content type. It also breaks the
+-- "raise it here" workflow: a later migration editing these values would be a no-op forever.
+-- `do update` makes this file the single declaration of the bucket's settings and re-running it
+-- converge. It touches bucket metadata only — never storage.objects, so no stored snapshot moves.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('backups', 'backups', false, 10485760, array['application/json'])
-on conflict (id) do nothing;
+on conflict (id) do update set
+  public             = excluded.public,
+  file_size_limit    = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 
 -- Owner policies, modelled on the row-table policies in 20260610043814_sync_schema.sql:
 --   - `to authenticated` only. anon never touches this bucket; ADR 009 Decision 1 says no session
@@ -50,6 +67,12 @@ on conflict (id) do nothing;
 -- storage.objects` outright ("Direct deletion from storage tables is not allowed. Use the Storage
 -- API instead."), whatever the policy says. The prune therefore has to go through the Storage API —
 -- which is what the client does anyway — and this policy is what authorises it there.
+--
+-- Same class of trap, on the upload side: `storage.s3_multipart_uploads` and
+-- `storage.s3_multipart_uploads_parts` have RLS enabled with zero policies, so the resumable/TUS
+-- path (storage-kt's `uploadAsFlow`) is closed to `authenticated` and fails with an RLS error that
+-- names none of this. Irrelevant under a 10 MiB ceiling — a one-shot upload is the right call
+-- anyway — but reach for resumable and this is why it refuses.
 --
 -- Idempotent: drop-then-create, so re-running this migration is safe.
 
