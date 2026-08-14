@@ -20,8 +20,21 @@ sealed class DomainException(message: String, cause: Throwable? = null) : Except
     /** Authentication failed or credentials were rejected (e.g. wrong password, invalid token). */
     class Unauthorized(message: String, cause: Throwable? = null) : DomainException(message, cause)
 
-    /** The operation could not be completed because the network was unreachable or timed out. */
-    class NetworkUnavailable(cause: Throwable) : DomainException(cause.message ?: "Network unavailable", cause)
+    /**
+     * The operation could not be completed because the network was unreachable or timed out.
+     *
+     * [message] is English and diagnostic, exactly like [ValidationError]'s, and it defaults to the
+     * cause's own text — the right answer whenever the throwable already names what failed. A caller
+     * passes its own when the throwable does NOT: a pipeline whose steps all fail as the same
+     * transport error needs the step in the message, because that is the only thing separating them
+     * in a log. ADR 009's hard constraint 4 (no silent failure in the backup pipeline) is what asks
+     * for it — uploading a snapshot, reading it back and deleting an unverified one are three
+     * different outages behind one `HttpRequestException`.
+     */
+    class NetworkUnavailable(cause: Throwable, message: String = cause.message ?: "Network unavailable") :
+        DomainException(message, cause)
 
-    class Unknown(cause: Throwable) : DomainException(cause.message ?: "Unknown error", cause)
+    /** [message] is diagnostic and defaults to the cause's; see [NetworkUnavailable] for when to pass one. */
+    class Unknown(cause: Throwable, message: String = cause.message ?: "Unknown error") :
+        DomainException(message, cause)
 }
