@@ -209,7 +209,8 @@ gana el ADR.
         nada sobre un bucket ya existente, probado rompiendo las tres columnas a mano. Nada en CI
         protege el predicado RLS; eso queda diferido a la Fase 4.
       - [x] **Parte B — upload con read-back verificado**, en `trunk` el 2026-08-14 (`e0aef49a`,
-        `192e6032`, `8335cf29`, `08267bdd`, `56be26e0`, `4b56c131`), **sin pushear**. `BackupUploader`
+        `192e6032`, `8335cf29`, `08267bdd`, `56be26e0`, `4b56c131`, `66f499bf`, `4359e11c`),
+        **sin pushear**. `BackupUploader`
         (puerto en `:domain`), `DefaultBackupUploader` (sube → relee → verifica → manifest) y
         `BackupObjectStore` + `SupabaseBackupObjectStore` (la costura de cuatro operaciones que hace
         demostrable un mismatch en el host suite, sin red ni proyecto Supabase). El orden es el
@@ -228,13 +229,23 @@ gana el ADR.
         sino `BackupUploadUnverified`. **Verificación por mutación** de las diez conductas nuevas,
         incluidas las tres del contrato con el servidor (id del bucket, `upsert = false`,
         `application/json` pelado) que hasta ahora sólo vivían en prosa: escribir `"backup"` en
-        `BACKUP_BUCKET_ID` compilaba y pasaba todos los tests del repo.
+        `BACKUP_BUCKET_ID` compilaba y pasaba todos los tests del repo. Cerró además un **flake en el
+        gate** que sólo aparecía con `qualityGate --rerun-tasks` en frío y en paralelo:
+        `SupabaseBackupObjectStoreTest` importaba la sesión sobre un plugin de Auth que todavía no
+        terminaba de inicializar, y la escritura de estado de `init` podía aterrizar última. Un flake
+        en el gate es peor que un rojo — enseña a re-correr.
   - [ ] Fase 2c — orquestación: dirty flag, `backgroundEvents()`, "Back up now", retención,
     flag `SNAPSHOT_BACKUP_ENABLED`. **La poda se apoya en `<name>.manifest.json`, nunca en `<name>`
     solo**: un payload sin sidecar no ocupa cupo de retención y se borra a la vista. Una poda por
     nombre le da cupo a un huérfano y desaloja un snapshot verificado — eso es pérdida de datos, y
     el razonamiento completo (incluido cuál huérfano bueno se tira a propósito) está en la fila
     Retención de `sync/ADR009_PLAN.md`.
+- [ ] `buildBackupManifest` lanza `ValidationCode.BackupFileInvalid` — "El archivo está dañado o no es
+  un respaldo de JustChill", la voz del *restore* — ante un defecto de nuestro propio export, donde
+  no hay archivo que nadie eligió. El arreglo honesto es `DomainException.Unknown`, no un
+  `ValidationCode` nuevo: nada de esto es input del usuario. Es una unidad aparte a propósito —
+  `BackupManifestTest` pinnea esos mensajes y tocarlo desde la 2b-ii parte B ensanchaba el diff sobre
+  la superficie ya shippeada y testeada de la 2b-i. Anotado acá para no redescubrirlo por tercera vez.
 - [ ] La app tiene que decir en pantalla, antes del primer upload a una cuenta nueva, que sube el
   ledger entero de este device ahí — incluidas las filas de una cuenta anterior, porque `signOut()`
   no borra nada. ADR 009 Decision 5; es aviso, no diálogo de confirmación.

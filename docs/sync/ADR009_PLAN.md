@@ -486,13 +486,13 @@ Five things it settled that this plan had left open or got wrong:
   already lives — not given a home of its own here.
 
 **2b-ii part B — upload and read-back. LANDED** (`e0aef49a`, `192e6032`, `8335cf29`, `08267bdd`,
-`56be26e0`, `4b56c131`). The payload and its sidecar manifest go under the `<uid>/` prefix the
+`56be26e0`, `4b56c131`, `66f499bf`, `4359e11c`). The payload and its sidecar manifest go under the `<uid>/` prefix the
 policies expect, the payload is read back and verified before the manifest is written, and the
 manifest is read back too. `BackupUploader` is the port in `:domain`; `DefaultBackupUploader` holds
 the whole decision; `BackupObjectStore` is the four-operation seam that makes a mismatch provable on
 a host suite with no network, implemented by `SupabaseBackupObjectStore`.
 
-Six things it settled that this plan had left open or got wrong:
+Seven things it settled that this plan had left open or got wrong:
 
 - **The order carries the meaning, not just the bytes.** Payload → read-back → manifest, so *a
   manifest present means the payload beside it was verified*. Uploading both together leaves the
@@ -521,6 +521,14 @@ Six things it settled that this plan had left open or got wrong:
 - **A hash mismatch is NOT `BackupFileInvalid`.** That code renders "El archivo está dañado o no es
   un respaldo de JustChill", written for a user who picked a bad file to *restore*. A failed upload
   is the opposite event with the opposite actor, and it gets `BackupUploadUnverified`.
+- **A test that pins a real `SupabaseClient` has to settle the Auth plugin before importing a
+  session**, and a single green gate run does not prove it does. `SupabaseBackupObjectStoreTest`
+  imported into a plugin that had not finished initializing, so `Auth.init`'s own status write raced
+  the import and could land last — one failure in three cold parallel gate runs, green in isolation
+  and green under the `:data` suite alone. `runTest` never drives the standalone
+  `UnconfinedTestDispatcher` these tests pin to `Dispatchers.Main`, so the settle has to happen on a
+  real dispatcher. Twelve, not eleven, is also the pipeline's failure count: the `.json` refusal was
+  never added to the total the KDocs quote.
 
 **What "verify" means, precisely, because the obvious reading is wrong.** It is
 `sha256Hex(readBackBytes) == manifest.payloadSha256`, raw bytes on both sides. It is **not** a
@@ -568,14 +576,17 @@ listing. The rule is stated here rather than in `DefaultBackupUploader`'s KDoc b
 what 2c is built from, and nobody implementing a prune has a reason to open a `:data` class.
 
 **Deleting an orphan on sight does throw away good bytes sometimes, and that is still the right
-call.** There are **three** ways a payload ends up without a sidecar, and nothing on the wire tells
+call.** There are **four** ways a payload ends up without a sidecar, and nothing on the wire tells
 them apart:
 
 1. **the read-back failed** — the payload is *unverified*, and deliberately not deleted at the time
    (a delete over the same dead transport would replace a precise reason with a vague one);
-2. **the manifest upload or its own read-back failed** — the payload is *verified*; this is the one
-   where deletion-on-sight discards an intact snapshot;
-3. **the process died mid-upload** — the case the Trigger row above already plans for, where the
+2. **the manifest upload failed** — the payload is *verified*; this is the one where
+   deletion-on-sight discards an intact snapshot;
+3. **a payload mismatch whose cleanup delete failed** — the payload is *known bad*, and this is the
+   orphan the rule is unambiguously right about: the bytes are proven not to match their own digest
+   and the uploader already tried to remove them;
+4. **the process died mid-upload** — the case the Trigger row above already plans for, where the
    dirty flag is still set and the next foreground retries.
 
 Because 2 cannot be distinguished from 1, the choice is between *occasionally discarding a good
@@ -583,6 +594,22 @@ snapshot* and *keeping a possibly-unverified one indefinitely* — and the secon
 whole ADR exists to end: a restore from bytes nothing ever vouched for. The cost of the first is one
 skipped backup cycle, on a device that backs up daily and whose dirty flag is still set. The cost of
 the second is discovering, at restore time, that the only copy is corrupt. Delete on sight.
+
+**Two rarer leftovers are not orphans at all, and the prune must not be changed to chase them.** They
+are a *complete-looking pair* — payload plus sidecar — that will fail a pre-restore check:
+
+- **the manifest read-back failed**: the payload is verified, the sidecar is of unknown state, and
+  the uploader deliberately deletes neither, for the same dead-transport reason as orphan 1.
+  `a manifest that cannot be read back leaves both objects alone` pins exactly that.
+- **a manifest mismatch whose manifest-delete failed**: the payload is verified and the sidecar is
+  known to state the wrong digest, so the pair looks complete and can never verify.
+
+The prune keeps both, correctly — it keys on the sidecar and both have one. This is the residue the
+read-back verification cannot eliminate, and it lands on the reader instead: **a pre-restore check
+must fall back to the newest snapshot that VERIFIES, rather than declaring the newest one broken.**
+A check that only ever looks at the latest pair turns one bad receipt into "you have no backup" on a
+device holding a shelf of good snapshots. That requirement is repeated in Phase 4, which is where it
+gets built.
 
 **Verification**: gate green + a test proving an upload whose hash mismatches is NOT marked
 successful.
@@ -614,7 +641,12 @@ successful.
    `AppGraphKoinTest` already uses) — fixture across all 4 tables including tombstoned rows →
    export → wipe → import → row-level equality.
 2. **In-app "Verify backup"**: download latest snapshot, check hash, parse, compare per-table
-   counts against local — **without applying it**. Result in UI.
+   counts against local — **without applying it**. Result in UI. **It must walk back to the newest
+   snapshot that verifies rather than reporting the newest one broken**: 2b-ii part B can leave a
+   complete-looking pair whose manifest is wrong or of unknown state — the note under Retention
+   enumerates the two ways — and a check that only looks at the latest pair turns one bad receipt
+   into "you have no backup" on a device holding a shelf of good snapshots. Which one was actually
+   verified is what the UI must name, not just "OK".
 3. **Documented drill** added to the release checklist: after every DB schema bump, restore the
    latest production snapshot on a clean emulator and compare.
 4. **An automated RLS probe for the `backups` bucket**: two authenticated users, each proving it
