@@ -370,8 +370,8 @@ gana el ADR.
   antes de instalar. Con v3 en adelante un backup nuevo **escribe** esas plantillas en el archivo, y
   el import de un archivo que declara 3 o más **las barre y las restaura** — con `createdAt` y
   `lastConfirmedPeriod` del archivo, no del import. Un archivo v1/v2 no toca esa tabla: no tiene
-  plantillas que devolver. Como red de recuperación queda la mitad de UI (`ImportStats.recurring` y
-  el diálogo), no la de datos (`docs/sync/ADR009_PLAN.md`).
+  plantillas que devolver. La mitad de UI (`ImportStats.recurring` y el diálogo) ya aterrizó; el
+  detalle queda en `docs/sync/ADR009_PLAN.md`.
 
 - [ ] **Editar un movimiento de una categoría borrada lo re-archiva bajo otra, sin que nadie lo elija.**
   `EditTransactionViewModel.resolveSelection` (`:109-112`) corta en `snapshot?.categoryId ?: return null`,

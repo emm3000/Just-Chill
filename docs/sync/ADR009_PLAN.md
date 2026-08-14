@@ -233,8 +233,8 @@ which physically deletes the old row and is therefore refused by `ON DELETE REST
 still references it, with the reasoning in a comment block above those statements in `accounts.sq` —
 has no counterpart on it at all. New `.sq` statements are not a migration (constraint 1).
 
-**Version the import sweep — the data-loss trap. LANDED, minus the two user-facing pieces below
-(`ImportStats.recurring` and `ImportBackupDialog`), which are deliberately their own commit.** With
+**Version the import sweep — the data-loss trap. LANDED, including the two user-facing pieces below
+(`ImportStats.recurring` and `ImportBackupDialog`), which landed as their own commit.** With
 v3 the sweep includes recurring **only for v3+ payloads**; importing a v1/v2 file neither tombstones
 nor restores local recurring rows, since those formats carry none and wiping them would destroy data
 no backup can restore. Both sides are pinned: *importing v1/v2 neither tombstones nor restores
@@ -365,15 +365,19 @@ for v3 and kept it for v1 and v2, in every one of those places. What survived th
 is the detach: a tombstone is not a delete, so a swept row still holds its old `(categoryId, type)`
 pair and still makes SQLite refuse the category's type change.
 
-**`ImportBackupDialog` (`:ui-android`) is user-facing and goes stale.** Both its `isSignedIn`
-body-copy branches enumerate the tables in Spanish — *"Tus movimientos, categorías y cuentas quedan
-tal cual el archivo"* — and its KDoc makes the same list in English ("replaces every movement,
-category and account"). Both become incomplete the moment v3 sweeps recurring, on the one screen
-where the user consents to a destructive operation. Correctness, not copy polish, and in this
-phase's scope. The body copy stays Spanish; it is UI.
+**`ImportBackupDialog` (`:ui-android`) was user-facing and stale — FIXED.** Both its `isSignedIn`
+body-copy branches enumerated the tables in Spanish — *"Tus movimientos, categorías y cuentas quedan
+tal cual el archivo"* — and its KDoc made the same list in English ("replaces every movement,
+category and account"). Both went incomplete the moment v3 started sweeping recurring, on the one
+screen where the user consents to a destructive operation. Both now name "recurrentes" too, for
+every file — including a v1/v2 one, since the dialog runs before the file is decoded and cannot
+tell it apart from a v3 one; that deliberate over-warning is argued in the dialog's own KDoc.
+Correctness, not copy polish, and in this phase's scope. The body copy stays Spanish; it is UI.
 
-**`ImportStats`** gains a `recurring` count (today `accounts` / `categories` / `transactions` only),
-plus the UI message that reports it.
+**`ImportStats` — LANDED.** Gained a `recurring` count (`accounts` / `categories` / `transactions`
+before it), counted the same way `transactions` already was — what LANDED, not what the file held,
+so a template dropped for an unknown `type`/`frequency` is not counted either — plus the UI message
+that reports it (`ProfileMessage.ImportDone`, `buildImportDoneMessage`).
 
 **Downgrade behavior, and it is operational rather than cosmetic.** `decodePayload` reads the
 declared version **before** it deserializes anything — its KDoc: the version is read first, "and

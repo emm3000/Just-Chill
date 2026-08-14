@@ -174,6 +174,6 @@ class ProfileViewModel(
         },
     ) {
         val stats = importData(json)
-        sendEffect(ProfileEffect.Notify(ProfileMessage.ImportDone(stats.transactions)))
+        sendEffect(ProfileEffect.Notify(ProfileMessage.ImportDone(stats.transactions, stats.recurring)))
     }
 }

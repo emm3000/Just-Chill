@@ -200,7 +200,8 @@ class BackupV3CompatibilityTest {
     fun `a version 3 file still restores the three tables the older versions carried`() = runTest {
         val stats = repository.importFromJson(V3_BACKUP)
 
-        assertEquals(ImportStats(accounts = 1, categories = 2, transactions = 1), stats)
+        // Both rec-1 and rec-2 carry a type and a frequency this build knows, so both land.
+        assertEquals(ImportStats(accounts = 1, categories = 2, transactions = 1, recurring = 2), stats)
         assertEquals(1, db.accountsQueries.all().executeAsList().size)
         assertEquals(2, db.categoriesQueries.all().executeAsList().size)
         assertEquals(1, db.transactionsQueries.all().executeAsList().size)

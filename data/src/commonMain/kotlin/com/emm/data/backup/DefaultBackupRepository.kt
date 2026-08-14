@@ -100,6 +100,7 @@ class DefaultBackupRepository(
             // that rewrites every row the user owns at once.
             val now = clock.nowMillis()
             var restoredTransactions = 0
+            var restoredRecurring = 0
             db.transaction {
                 // "Replace everything" expressed as tombstones instead of physical deletes.
                 // Every live row is tombstoned first, then the backup brings back exactly what it
@@ -135,18 +136,24 @@ class DefaultBackupRepository(
                 payload.categories.forEach { dto -> restore(dto, now) }
                 restoredTransactions = payload.transactions.count { dto -> restore(dto, now) }
                 if (fileCarriesRecurring) {
-                    payload.recurringMovements.forEach { dto -> restore(dto, now) }
+                    restoredRecurring = payload.recurringMovements.count { dto -> restore(dto, now) }
                 }
             }
 
-            // The count is what LANDED, not what the file held. Reporting the file's own length
-            // would say "3 movimientos importados" while one of them is nowhere on screen — and
-            // the balance would still include its amount, because the totals aggregate reads the
-            // column and the mappers that hide the row never run on it.
+            // The count is what LANDED, not what the file held — for both counted tables, and for
+            // the same underlying reason. Reporting the file's own length would say "3 movimientos
+            // importados" while one of them is nowhere on screen, and the balance would still
+            // include its amount, because the totals aggregate reads the column and the mappers
+            // that hide the row never run on it. `recurring` mirrors that exactly: a template with
+            // an unknown type or frequency is dropped by `restore(dto: RecurringMovementDto)` — see
+            // its own KDoc — and a dropped row still counts in `countLiveByAccount`, so reporting
+            // the file's length would claim a template imported that the recurring screen can never
+            // show and that still blocks an account deletion with nothing on screen to explain it.
             ImportStats(
                 accounts = payload.accounts.size,
                 categories = payload.categories.size,
                 transactions = restoredTransactions,
+                recurring = restoredRecurring,
             )
         }
     }
@@ -355,6 +362,10 @@ class DefaultBackupRepository(
     /**
      * Restores one template — the fourth table, and the only one an older file may not touch.
      *
+     * Returns false when the row was NOT restored — the same signal `restore(dto: TransactionDto)`
+     * uses, and for the same reason: it is what lets [ImportStats.recurring] count what LANDED
+     * instead of the file's own length.
+     *
      * A row the file carries but this build cannot read is dropped, not written: see
      * [RecurringMovementDto.toEntityOrNull], which also argues why an unparseable
      * `lastConfirmedPeriod` is repaired to null there instead of costing the whole template.
@@ -366,8 +377,8 @@ class DefaultBackupRepository(
      * `restoreFromBackup` writes it for the same reason — a re-import onto a device that still holds
      * the row has to take the file's value, not the one already in the column.
      */
-    private fun restore(dto: RecurringMovementDto, now: Long) {
-        val template = dto.toEntityOrNull() ?: return
+    private fun restore(dto: RecurringMovementDto, now: Long): Boolean {
+        val template = dto.toEntityOrNull() ?: return false
         val type = template.type.name
         val categoryId = usableCategoryId(dto.categoryId, type)
         db.recurring_movementsQueries.insertOrIgnoreFromBackup(
@@ -400,6 +411,7 @@ class DefaultBackupRepository(
             updatedAt = now,
             id = template.id.value,
         )
+        return true
     }
 
     /**

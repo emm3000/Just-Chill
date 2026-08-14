@@ -72,8 +72,9 @@ class ProfileViewModelImportTest {
     )
 
     @Test
-    fun `ImportJson happy path emits ImportDone notify with transaction count`() = runTest(testDispatcher) {
-        coEvery { importData(any()) } returns ImportStats(accounts = 2, categories = 5, transactions = 234)
+    fun `ImportJson happy path emits ImportDone with both counts`() = runTest(testDispatcher) {
+        coEvery { importData(any()) } returns
+            ImportStats(accounts = 2, categories = 5, transactions = 234, recurring = 6)
 
         val vm = buildViewModel()
         val effects = mutableListOf<ProfileEffect>()
@@ -83,8 +84,8 @@ class ProfileViewModelImportTest {
         advanceUntilIdle()
 
         assertTrue(
-            effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.ImportDone(234) },
-            "Expected ImportDone(234) notify not found in $effects",
+            effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.ImportDone(234, 6) },
+            "Expected ImportDone(234, 6) notify not found in $effects",
         )
         assertEquals(ProfileOp.None, vm.state.value.op)
 
@@ -133,7 +134,8 @@ class ProfileViewModelImportTest {
 
     @Test
     fun `ImportJson resets op to None after completion`() = runTest(testDispatcher) {
-        coEvery { importData(any()) } returns ImportStats(accounts = 1, categories = 1, transactions = 10)
+        coEvery { importData(any()) } returns
+            ImportStats(accounts = 1, categories = 1, transactions = 10, recurring = 0)
 
         val vm = buildViewModel()
 

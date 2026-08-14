@@ -114,7 +114,8 @@ class DefaultBackupRepositoryImportTest {
 
         val stats: ImportStats = repository.importFromJson(json)
 
-        assertEquals(ImportStats(accounts = 1, categories = 2, transactions = 3), stats)
+        // buildPayloadJson never writes any recurringMovements.
+        assertEquals(ImportStats(accounts = 1, categories = 2, transactions = 3, recurring = 0), stats)
     }
 
     @Test
@@ -154,7 +155,7 @@ class DefaultBackupRepositoryImportTest {
 
         val stats = repository.importFromJson(EMPTY_PAYLOAD_JSON)
 
-        assertEquals(ImportStats(accounts = 0, categories = 0, transactions = 0), stats)
+        assertEquals(ImportStats(accounts = 0, categories = 0, transactions = 0, recurring = 0), stats)
         assertTrue(db.accountsQueries.all().executeAsList().isEmpty())
         assertTrue(db.categoriesQueries.all().executeAsList().isEmpty())
         assertTrue(db.transactionsQueries.all().executeAsList().isEmpty())
@@ -576,12 +577,15 @@ class DefaultBackupRepositoryImportTest {
             ),
         )
 
-        repository.importFromJson(json)
+        val stats = repository.importFromJson(json)
 
         assertEquals(0, rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'rec-weird'"))
         assertEquals(1, rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'rec-ok'"))
         // ...and the count that blocks an account deletion sees the one template the user can see.
         assertEquals(1L, db.recurring_movementsQueries.countLiveByAccount("acc-1").executeAsOne())
+        // Same rule as `the reported count is what landed, not what the file held`, for this table:
+        // the dropped row must not inflate ImportStats.recurring either.
+        assertEquals(1, stats.recurring)
     }
 
     /**

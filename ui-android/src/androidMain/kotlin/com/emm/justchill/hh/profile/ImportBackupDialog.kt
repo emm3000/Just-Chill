@@ -32,8 +32,18 @@ import com.emm.justchill.core.theme.LocalEmmType
  * Confirmation for restoring a backup — the most destructive action in the app.
  *
  * It used to have none at all, while "Eliminar cuenta" did. Restoring replaces every movement,
- * category and account with what the file carries, and while signed in the replacement is pushed
- * to the other devices too, so [isSignedIn] decides how far the warning has to reach.
+ * category, account and recurring movement with what the file carries, and while signed in the
+ * replacement is pushed to the other devices too, so [isSignedIn] decides how far the warning has
+ * to reach.
+ *
+ * **This dialog is shown BEFORE the file is decoded**, so it cannot read the version the file
+ * declares — only `DefaultBackupRepository.importFromJson` can, and only after this confirmation
+ * has already returned. A v1/v2 file leaves the device's recurring movements untouched; only a
+ * v3+ file replaces them (`BACKUP_RECURRING_SINCE_VERSION`). The body copy below names
+ * "recurrentes" anyway, for every file, which is a deliberate over-warning and not an oversight:
+ * naming a table that turns out not to have been touched surprises the user harmlessly, while
+ * failing to name one that WAS wiped is exactly the harm this dialog exists to prevent. Do not
+ * make the copy conditional on a version this dialog cannot see.
  */
 @Composable
 internal fun ImportBackupDialog(isSignedIn: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
@@ -79,12 +89,14 @@ internal fun ImportBackupDialog(isSignedIn: Boolean, onConfirm: () -> Unit, onDi
             Spacer(Modifier.height(6.dp))
 
             Text(
+                // "recurrentes" is named for every file, including a v1/v2 one that cannot touch
+                // that table — see the class KDoc for why over-warning here is the safe direction.
                 text = if (isSignedIn) {
-                    "Tus movimientos, categorías y cuentas quedan tal cual el archivo. " +
+                    "Tus movimientos, categorías, cuentas y recurrentes quedan tal cual el archivo. " +
                         "Lo que no esté ahí se borra, y como tenés sesión iniciada también se " +
                         "borra en tus otros dispositivos. No se puede deshacer."
                 } else {
-                    "Tus movimientos, categorías y cuentas quedan tal cual el archivo. " +
+                    "Tus movimientos, categorías, cuentas y recurrentes quedan tal cual el archivo. " +
                         "Lo que no esté ahí se borra. No se puede deshacer."
                 },
                 style = typography.bodyM,

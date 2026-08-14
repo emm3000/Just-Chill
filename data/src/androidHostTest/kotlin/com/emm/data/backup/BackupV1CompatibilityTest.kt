@@ -77,7 +77,10 @@ class BackupV1CompatibilityTest {
     fun `a version 1 file still restores everything it carries`() = runTest {
         val stats = repository.importFromJson(V1_BACKUP)
 
-        assertEquals(ImportStats(accounts = 1, categories = 2, transactions = 3), stats)
+        // recurring = 0: not "none carried" but "none touched" — a v1 file cannot sweep or restore
+        // that table at all, see `importing a version 1 file leaves the recurring movements
+        // already on the device alive` below.
+        assertEquals(ImportStats(accounts = 1, categories = 2, transactions = 3, recurring = 0), stats)
         assertEquals(1, db.accountsQueries.all().executeAsList().size)
         assertEquals(2, db.categoriesQueries.all().executeAsList().size)
         assertEquals(3, db.transactionsQueries.all().executeAsList().size)
