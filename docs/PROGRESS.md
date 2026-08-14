@@ -170,8 +170,26 @@ gana el ADR.
     `JdbcSqliteDriver` real: los 8 comportamientos que pinneaba siguen pinneados, más 3 nuevos.
     Revisado en contexto fresco con el gate corrido desde cero y **verificación por mutación** —
     sacar el `safeDbCall` y la transacción tira exactamente los dos tests nuevos.
-  - [ ] Fase 2b — storage: `storage-kt` al catálogo, bucket + RLS por usuario como migración SQL,
-    SHA-256 del payload + manifest sidecar, read-back verificado antes de marcar éxito.
+  - [ ] Fase 2b — storage. **Partida en dos**, porque el plan la escribió como una sola unidad y
+    mezcla tres cosas que fallan distinto: una dependencia, una migración de servidor y el primitivo
+    de integridad. El mismo criterio con el que el plan ya parte la Fase 2 en tres series de PR.
+    - [x] **2b-i — el primitivo de integridad**, en `trunk` el 2026-08-14 (`5d43cc90`, `7dc783f0`,
+      `d0b9a871`, `8e343996`), **sin pushear**. Cero red, cero servidor: se landeó solo y primero, para
+      que un hash que no coincide y una falla de red no se depuren juntos más adelante. okio quedó
+      **declarado** en `libs.versions.toml` en vez de heredado por transitividad de `supabase-kt` — la
+      integridad de los respaldos no se apoya en una dep que llega de rebote, y verificado en un
+      worktree aparte el pin no mueve la resolución (Gradle ya elegía 3.17.0 por highest-wins). Con
+      okio no hace falta `expect/actual`: `ByteString.sha256()` compila igual para Android e iOS desde
+      commonMain. `sha256Hex` toma **bytes, no String** — el upload manda bytes y la verificación
+      post-read-back tiene que hashear la secuencia idéntica. `BackupManifestDto` lleva dos versiones
+      que no se pueden confundir: `manifestVersion` (suya) y `payloadSchemaVersion` (la del snapshot
+      que describe). Los 18 tests viven en `commonTest`, así que también compilan para iOS.
+    - [ ] 2b-ii — storage: `storage-kt` al catálogo, `install(Storage)` en `SupabaseModule`, bucket +
+      RLS por usuario como migración SQL bajo `supabase/`, y upload con read-back verificado.
+      **Ojo al escribir el read-back**: comparar los `rowCounts` del manifest no prueba nada — salen
+      de los mismos bytes que el digest, así que si el hash coincide los conteos coinciden por
+      construcción. La verificación real es `sha256Hex(bytesLeídos) == manifest.payloadSha256`, con
+      bytes crudos de los dos lados, nunca un String re-codificado.
   - [ ] Fase 2c — orquestación: dirty flag, `backgroundEvents()`, "Back up now", retención,
     flag `SNAPSHOT_BACKUP_ENABLED`.
 - [ ] La app tiene que decir en pantalla, antes del primer upload a una cuenta nueva, que sube el

@@ -416,14 +416,47 @@ blocks, so `.first()` cannot run inside one: switch the export to direct queries
 (`executeAsList()`) inside a single `transactionWithResult`. `DefaultBackupRepository` already
 holds the `db`; the refactor is contained to that class.
 
-**2b — storage.** Add `storage-kt` to the catalog (BOM 3.7.0 currently ships only auth-kt +
-postgrest-kt; zero Storage usage exists in the repo). Bucket + RLS restricted to the owning
-user — model it on the row-table policies named above — created as a SQL migration under
-`supabase/`, where that CLI infra already exists. Integrity: SHA-256 of the payload + sidecar
-manifest (filename, hash, format version, per-table row counts); after upload, read back and
-verify the hash before marking success. KMP has no SHA-256 in the common stdlib: use okio's
-`ByteString.sha256()` if okio is already transitive, else an `expect/actual` over
-`java.security.MessageDigest` / CommonCrypto.
+**2b — storage. SPLIT IN TWO when it was built**, for the same reason Phase 2 itself is three PR
+series: as written below it bundles a dependency, a server-side migration and the integrity
+primitive, and those three fail in different ways. Landing the primitive alone and first means a
+hash mismatch and a network failure are never being debugged at the same time.
+
+**2b-i — the integrity primitive. LANDED** (`5d43cc90`, `7dc783f0`, `d0b9a871`, `8e343996`). No
+network, no server. SHA-256 of the payload + the sidecar manifest (filename, hash, format version,
+per-table row counts).
+
+Three things it settled that this plan had left open or got wrong:
+
+- **okio is declared, not inherited.** The plan said "use okio's `ByteString.sha256()` if okio is
+  already transitive". It is — 3.17.0, via `auth-kt` → `supabase-kt` — but arriving only as a side
+  effect of someone else's dependency graph is exactly the hazard this plan flags one paragraph
+  down for supabase-kt's 10-second `requestTimeout`. It now has its own catalog entry. Verified in a
+  scratch worktree: the pin does not move resolution, because Gradle's highest-wins had already
+  selected 3.17.0.
+- **No `expect/actual` was needed.** The plan's fallback (`java.security.MessageDigest` /
+  CommonCrypto) is moot — okio's `sha256()` compiles from commonMain for both targets.
+- **`sha256Hex` takes bytes, never a String.** The upload sends UTF-8 bytes and the read-back must
+  hash the identical sequence; an API taking a String and encoding internally invites a later caller
+  to hash something one encoding step away from what actually travelled.
+
+The manifest carries **two** version fields that must never be conflated: `manifestVersion` (its own
+format, born at 1) and `payloadSchemaVersion` (the snapshot's `schemaVersion`, 3 today). Neither
+carries a default — a missing key must not be indistinguishable from a value, which is the lesson
+Phase 1 paid for. Every unreadable-payload path names a distinct reason (hard constraint 4).
+
+**2b-ii — storage. NOT STARTED.** Add `storage-kt` to the catalog (BOM 3.7.0 currently ships only
+auth-kt + postgrest-kt; zero Storage usage exists in the repo) and `install(Storage)` to
+`SupabaseModule`, which installs only `Auth` and `Postgrest` today. Bucket + RLS restricted to the
+owning user — model it on the row-table policies named above — created as a SQL migration under
+`supabase/`, where that CLI infra already exists. After upload, read back and verify before marking
+success.
+
+**What "verify" means, precisely, because the obvious reading is wrong.** It is
+`sha256Hex(readBackBytes) == manifest.payloadSha256`, raw bytes on both sides. It is **not** a
+comparison of the manifest's `rowCounts`: those are derived from the same bytes as the digest, so
+if the hash matches the counts match by construction, and if it does not they are meaningless. The
+counts earn their place at listing time and in a pre-restore "this file holds N movements" display —
+not in the integrity check.
 
 **The request timeout is 10s**, and it is not configured here. supabase-kt 3.7.0's
 `KtorSupabaseHttpClient.applyDefaultConfiguration` installs `HttpTimeout` on every client it
