@@ -163,12 +163,19 @@ class SupabaseBackupObjectStoreTest {
      * - **without a session**, an unsettled client is still `Initializing`, so
      *   [SupabaseBackupObjectStore.ownedPrefix] reports its ten-second ceiling instead of the missing
      *   session — a green test asserting the wrong failure.
-     * - **with a session**, `importSession` into a plugin that has not finished initializing races
+     * - **with a session**, `importSession` into a plugin that has not finished initializing may race
      *   `init`'s own status write, and the write can land last: `awaitInitialization()` then returns
-     *   with `currentUserOrNull()` null and the imported session gone. That is a FLAKE, and it was a
-     *   real one — it fell over on a cold parallel `qualityGate` as `Unauthorized` from the prefix
-     *   test, and passed on the next two runs and in isolation. Settling first is what removes the
-     *   race rather than reducing its odds.
+     *   with `currentUserOrNull()` null and the imported session gone. That is a red this suite hit
+     *   once — `Unauthorized` from the prefix test, on a cold `--rerun-tasks` gate under heavy
+     *   machine load — and never reproduced since, across 15 more cold gate runs, 15 runs of this
+     *   class under 9 busy-loop CPU hogs, and a scheduler probe, all green. The gate itself is
+     *   sequential, so the load source is real JVM thread scheduling, not Gradle task concurrency.
+     *   Settling first demonstrably removes an ordering ambiguity between `Auth.init` and
+     *   `importSession`; the diagnosis beyond that is NOT confirmed — two sub-mechanisms both fit the
+     *   one failure seen, and the settle closes both. See "A test that pins a real `SupabaseClient`"
+     *   in `docs/sync/ADR009_PLAN.md` for the two candidates and the observable that would tell them
+     *   apart. Keep the settle regardless: it is cheap, and dropping it as ceremony would reopen a
+     *   failure mode that has already fired once.
      */
     private suspend fun settled(client: SupabaseClient): SupabaseClient = client.also {
         withContext(Dispatchers.Default) { it.auth.awaitInitialization() }

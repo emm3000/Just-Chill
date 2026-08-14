@@ -523,12 +523,37 @@ Seven things it settled that this plan had left open or got wrong:
   is the opposite event with the opposite actor, and it gets `BackupUploadUnverified`.
 - **A test that pins a real `SupabaseClient` has to settle the Auth plugin before importing a
   session**, and a single green gate run does not prove it does. `SupabaseBackupObjectStoreTest`
-  imported into a plugin that had not finished initializing, so `Auth.init`'s own status write raced
-  the import and could land last — one failure in three cold parallel gate runs, green in isolation
-  and green under the `:data` suite alone. `runTest` never drives the standalone
-  `UnconfinedTestDispatcher` these tests pin to `Dispatchers.Main`, so the settle has to happen on a
-  real dispatcher. Twelve, not eleven, is also the pipeline's failure count: the `.json` refusal was
-  never added to the total the KDocs quote.
+  imported into a plugin that had not finished initializing, and once, on a cold `--rerun-tasks`
+  gate, that produced `Unauthorized` from the prefix test. The observed red is an **observation, not
+  a confirmed diagnosis**: it never reproduced since, across 15 more cold gate runs, 15 runs of the
+  class under 9 busy-loop CPU hogs, and a scheduler probe — all green. The machine was under heavy
+  load when it fired (Android Studio at ~67% CPU, load average ~49), which is the load source that
+  matters: the gate itself is sequential (`org.gradle.parallel` is commented out in
+  `gradle.properties`, no `--parallel` / `maxParallelForks` / `forkEvery` anywhere in the build), so a
+  real race here would be settled by JVM thread scheduling, not by Gradle task concurrency. What the
+  settle demonstrably does is remove an ordering ambiguity between `Auth.init` and `importSession`;
+  calling that "removes the race" claims a diagnosis nobody has reproduced.
+
+  Two sub-mechanisms both fit the one `Unauthorized` observed — which can only mean
+  `awaitInitialization()` returned *and* `currentUserOrNull()` was null — and the settle closes both:
+  **(a) clobber**, `importSession` writes `Authenticated` and then a queued `Auth.init` continuation
+  writes `NotAuthenticated` over it; **(b) pending write**, `importSession` is `suspend`, and if its
+  status write is still queued when the helper returns, `ownedPrefix()` reads `NotAuthenticated` and
+  throws. The existing scheduler probe cannot distinguish them: `advanceUntilIdle()` drains exactly
+  the queue (b) depends on, so a probe that drains before observing will see the imported user
+  survive whether or not (b) is real — its result is what (b) predicts, so it is not evidence against
+  the diagnosis.
+
+  The observable that would distinguish them: read `client.auth.sessionStatus.value` **immediately
+  after `importSession` returns, with nothing drained in between**, then again after a
+  real-dispatcher settle. `Authenticated` first, later flipping to `NotAuthenticated` ⇒ (a).
+  `NotAuthenticated` / `Initializing` first, becoming `Authenticated` only after draining ⇒ (b).
+  `Authenticated` first and stable under load ⇒ neither, and the real cause is still unknown.
+  Sharper: loop the *unsettled* helper 500+ times under load asserting `currentUserOrNull() != null`
+  immediately after it returns — if that never reds, the helper is not the cause. `runTest` never
+  drives the standalone `UnconfinedTestDispatcher` these tests pin to `Dispatchers.Main`, so any
+  settle has to happen on a real dispatcher. Twelve, not eleven, is also the pipeline's failure
+  count: the `.json` refusal was never added to the total the KDocs quote.
 
 **What "verify" means, precisely, because the obvious reading is wrong.** It is
 `sha256Hex(readBackBytes) == manifest.payloadSha256`, raw bytes on both sides. It is **not** a
@@ -576,13 +601,17 @@ listing. The rule is stated here rather than in `DefaultBackupUploader`'s KDoc b
 what 2c is built from, and nobody implementing a prune has a reason to open a `:data` class.
 
 **Deleting an orphan on sight does throw away good bytes sometimes, and that is still the right
-call.** There are **four** ways a payload ends up without a sidecar, and nothing on the wire tells
-them apart:
+call.** There are **five** ways a payload ends up without a sidecar — two of them are handled
+identically and share one entry below — and nothing on the wire tells them apart:
 
 1. **the read-back failed** — the payload is *unverified*, and deliberately not deleted at the time
    (a delete over the same dead transport would replace a precise reason with a vague one);
-2. **the manifest upload failed** — the payload is *verified*; this is the one where
-   deletion-on-sight discards an intact snapshot;
+2. **the manifest upload failed, or a manifest mismatch's cleanup deleted the manifest but not the
+   payload** — the payload is *verified*; this is the shape where deletion-on-sight discards an
+   intact snapshot. Two different causes land here: either the manifest never made it up at all, or
+   `delete(manifestKey)` succeeded while `delete(payloadKey)` failed in the manifest-mismatch cleanup
+   (`DefaultBackupUploader.kt:136-141`) — the manifest is gone either way, so the end state and the
+   handling are the same;
 3. **a payload mismatch whose cleanup delete failed** — the payload is *known bad*, and this is the
    orphan the rule is unambiguously right about: the bytes are proven not to match their own digest
    and the uploader already tried to remove them;

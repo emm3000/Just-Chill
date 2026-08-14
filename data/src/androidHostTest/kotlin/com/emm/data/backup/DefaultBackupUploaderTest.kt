@@ -225,6 +225,38 @@ class DefaultBackupUploaderTest {
     }
 
     @Test
+    fun `a manifest mismatch cleanup that deletes the manifest but not the payload orphans it alone`() = runTest {
+        val store = FakeBackupObjectStore()
+        store.readBackInstead[MANIFEST_KEY] = "{}".encodeToByteArray()
+        // The manifest delete (first in the cleanup) succeeds; only the payload delete fails. This is
+        // orphan source five (`docs/sync/ADR009_PLAN.md`): a verified payload the manifest-mismatch
+        // cleanup could only half-finish, indistinguishable on the wire from "the manifest upload
+        // never happened" and handled identically by the retention prune.
+        store.failDeleteOf = PAYLOAD_KEY
+
+        val failure = assertFailsWith<DomainException.Unknown> {
+            DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+        }
+
+        assertEquals(MANIFEST_CLEANUP_FAILED, failure.message)
+        // The point of this test: the payload survives ALONE. A pair that both failed to delete would
+        // still be a "complete-looking pair" (a different, already-covered leftover); a payload with
+        // no manifest beside it is what makes this orphan source five rather than a non-event.
+        assertEquals(listOf(PAYLOAD_KEY), store.objects.keys.toList())
+        assertEquals(
+            listOf(
+                "upload $PAYLOAD_KEY",
+                "download $PAYLOAD_KEY",
+                "upload $MANIFEST_KEY",
+                "download $MANIFEST_KEY",
+                "delete $MANIFEST_KEY",
+                "delete $PAYLOAD_KEY",
+            ),
+            store.calls,
+        )
+    }
+
+    @Test
     fun `no session stops the snapshot before anything is written`() = runTest {
         val store = FakeBackupObjectStore()
         // The real text and the real type are pinned in SupabaseBackupObjectStoreTest; what this one
@@ -328,6 +360,14 @@ private class FakeBackupObjectStore : BackupObjectStore {
     var failDownloadOf: String? = null
     var failDelete: Throwable? = null
 
+    /**
+     * Fails only the delete of this one key, so a partial pair-cleanup — one delete landing, the
+     * other failing — is expressible. Without this, [failDelete] fails both deletes in the manifest
+     * mismatch cleanup indiscriminately, and the state where the manifest is gone but the payload
+     * survives alone (orphan source five, `docs/sync/ADR009_PLAN.md`) has no way to occur.
+     */
+    var failDeleteOf: String? = null
+
     override suspend fun ownedPrefix(): String {
         prefixResolutions++
         failOwnedPrefix?.let { throw it }
@@ -351,6 +391,7 @@ private class FakeBackupObjectStore : BackupObjectStore {
     override suspend fun delete(key: String) {
         calls += "delete $key"
         failDelete?.let { throw it }
+        if (key == failDeleteOf) throw IllegalStateException("boom")
         objects -= key
     }
 }
@@ -373,6 +414,7 @@ private const val CLEANUP_FAILED = "$FAILED$MISMATCHED, and the unverified objec
 private const val MANIFEST_UPLOAD_FAILED = "${FAILED}the manifest could not be uploaded to $MANIFEST_KEY."
 private const val MANIFEST_READ_BACK_FAILED = "${FAILED}the manifest could not be read back from $MANIFEST_KEY."
 private const val MANIFEST_MISMATCH = "$FAILED$MANIFEST_MISMATCHED; both objects were deleted."
+private const val MANIFEST_CLEANUP_FAILED = "$FAILED$MANIFEST_MISMATCHED, and the pair could not be deleted."
 
 /**
  * A real snapshot document, small but complete: [buildBackupManifest] decodes it STRICTLY, so an
