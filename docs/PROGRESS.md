@@ -157,6 +157,23 @@ gana el ADR.
   `git branch --contains <sha> -a`.
 - [ ] ADR 009 Fases 2-5: pipeline de snapshot, visibilidad, confianza en el restore, y recién ahí
   desmantelar el motor. Detalle y compuertas en `docs/sync/ADR009_PLAN.md`.
+  - [x] **Fase 2a — export transaccional**, en `trunk` el 2026-08-14 (`7a16ce19`, `fae2e147`,
+    `7bfa16c2`), **sin pushear**. `exportToJson` hacía cuatro `Flow.first()` independientes y una
+    escritura entre dos producía un archivo que describe un estado que la base nunca tuvo; ahora las
+    cuatro tablas se leen con `executeAsList()` dentro de un solo `transactionWithResult`. El export
+    quedó envuelto en `safeDbCall` — al leer `db` directo se perdía el `catchAsDomainException()` que
+    aplicaban las interfaces de repositorio, y una excepción cruda de SQLite escapando del export no
+    la agarraba ningún test — y recuperó el hop de `ioDispatcher` que vivía dentro de
+    `mapToList(ioDispatcher)`. El constructor bajó a `db` + `clock`: las cuatro repos solo las usaba
+    el export, y con ellas se fue `allLive()` entero (interfaz de `:domain`, impl, data source y
+    fake). `DefaultBackupRepositoryTest` pasó de mockear cuatro repos a correr contra un
+    `JdbcSqliteDriver` real: los 8 comportamientos que pinneaba siguen pinneados, más 3 nuevos.
+    Revisado en contexto fresco con el gate corrido desde cero y **verificación por mutación** —
+    sacar el `safeDbCall` y la transacción tira exactamente los dos tests nuevos.
+  - [ ] Fase 2b — storage: `storage-kt` al catálogo, bucket + RLS por usuario como migración SQL,
+    SHA-256 del payload + manifest sidecar, read-back verificado antes de marcar éxito.
+  - [ ] Fase 2c — orquestación: dirty flag, `backgroundEvents()`, "Back up now", retención,
+    flag `SNAPSHOT_BACKUP_ENABLED`.
 - [ ] La app tiene que decir en pantalla, antes del primer upload a una cuenta nueva, que sube el
   ledger entero de este device ahí — incluidas las filas de una cuenta anterior, porque `signOut()`
   no borra nada. ADR 009 Decision 5; es aviso, no diálogo de confirmación.
@@ -410,6 +427,15 @@ gana el ADR.
   canal de error sin tipar, paralelo a `DomainException` — el nombre desalineado es la misma deuda
   vista desde otro ángulo. Renombrar o reubicar el port toca ~18 archivos y es su propia unidad de
   trabajo, no se hizo acá.
+- [ ] **El export saltea los cuatro `LocalDataSource`, y la tabla de capas de `data/CLAUDE.md` todavía
+  no lo dice.** Desde la Fase 2a, `DefaultBackupRepository.snapshot()` llama las statements
+  directamente, así que el par *qué statement* ↔ *qué cadena de mappers* responde "todas las cuentas"
+  existe en dos lugares: `{Entity}LocalDataSource.all()` y `snapshot()`. La atomicidad lo justifica —
+  una transacción no puede abarcar data sources basados en Flow — pero si alguien repunta
+  `AccountLocalDataSource.all()` a otra statement, el export se queda callado con la vieja. El test de
+  tombstones fija el comportamiento actual, no el vínculo. La salida que preservaba la capa era un
+  `allForExport()` síncrono por data source; se eligió no meterlo. Riesgo bajo, pero el doc de módulo
+  afirma hoy algo que dejó de ser cierto.
 - [ ] `SyncOrchestrator` no tiene trigger de reconexión: si un sync falla offline y vuelve la red sin
   escrituras nuevas, no reintenta hasta el próximo `ON_RESUME`. No hay pérdida de data — local-first
   se auto-cura — solo latencia.

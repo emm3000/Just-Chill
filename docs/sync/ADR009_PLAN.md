@@ -204,14 +204,26 @@ so they fail on a value that still deserializes but no longer produces the right
 `frequency` has a single enum member today, its column carries a DEFAULT, and `update:` never writes
 it — it is in the list because the file is a format, not a snapshot of today's cardinality.
 
-**Settled in ② — export reads through a new `allLive()`.** `RecurringMovementRepository` gained
-`allLive()`, backed by a flat `selectAllLive:` (`WHERE deletedAt IS NULL ORDER BY name`) — the same
-`all:` convention the other three tables already follow.
+**Settled in ② — export reads through a new `allLive()`. REVERSED by Phase 2a; do not re-apply.**
+`RecurringMovementRepository` gained `allLive()`, backed by a flat `selectAllLive:`
+(`WHERE deletedAt IS NULL ORDER BY name`) — the same `all:` convention the other three tables
+already follow.
 
-What decided it, so the reasoning survives: `exportToJson` reads the other three tables through
-domain repository interfaces, and that symmetry is what lets `DefaultBackupRepositoryTest` mock
-every read. A direct `db` query for this one table would leave the export test mockable for three
-tables and not the fourth. Neither existing read fit either. `allActive()` filters `isActive = 1`
+The `selectAllLive:` statement **stays**; it is what the export still calls. What is gone is
+`allLive()` — the domain-interface method, its `:data` implementation, its `LocalDataSource` method
+and its test fake, all deleted in `fae2e147` once Phase 2a left it with zero callers.
+
+What decided it in ②, and why that reasoning expired: `exportToJson` read the other three tables
+through domain repository interfaces, and that symmetry was what let `DefaultBackupRepositoryTest`
+mock every read — so a direct `db` query for this one table would have left the export test mockable
+for three tables and not the fourth. **Phase 2a removed the premise.** The export cannot read through
+repository interfaces at all any more: those return Flows, `transactionWithResult` is a synchronous
+block, and a `Flow.first()` cannot run inside one. All four tables are now read the same way, by
+direct `executeAsList()` on the frozen statements, and the test file mocks nothing — it runs against
+a real in-memory `JdbcSqliteDriver`. The symmetry ② was protecting still holds; it just moved down a
+layer.
+
+Still true and still load-bearing: neither pre-existing read fit. `allActive()` filters `isActive = 1`
 and would drop every paused template — data the user still owns. `allWithDetails()` **does** return
 every live row, paused ones included (correcting this plan's earlier "none returns every live row"),
 but it is a joined model carrying three extra columns; what was actually missing was a **flat**
