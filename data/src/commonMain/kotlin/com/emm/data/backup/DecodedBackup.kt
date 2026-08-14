@@ -23,7 +23,4 @@ package com.emm.data.backup
  * [declaredVersion] is the only thing that separates the three, which is why it is carried out of the
  * decoder rather than left inside it. Whoever writes the version-gated sweep gates on this field.
  */
-internal data class DecodedBackup(
-    val declaredVersion: Int,
-    val payload: ExportPayloadDto,
-)
+internal data class DecodedBackup(val declaredVersion: Int, val payload: ExportPayloadDto)
