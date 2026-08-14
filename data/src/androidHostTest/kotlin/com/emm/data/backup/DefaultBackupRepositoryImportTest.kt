@@ -4,25 +4,39 @@ import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
+import com.emm.data.recurring.asEntity
+import com.emm.data.recurring.asExternalModelOrNull
 import com.emm.data.transaction.asEntity
 import com.emm.data.transaction.asExternalModel
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
+import com.emm.domain.account.AccountType
 import com.emm.domain.category.CategoryRepository
+import com.emm.domain.recurring.Frequency
+import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.recurring.RecurringMovementRepository
+import com.emm.domain.recurring.pendingPeriods
+import com.emm.domain.recurring.periodKey
+import com.emm.domain.shared.AccountId
+import com.emm.domain.shared.Money
+import com.emm.domain.shared.RecurringMovementId
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionType
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
@@ -329,16 +343,15 @@ class DefaultBackupRepositoryImportTest {
     /**
      * The parent half of the same problem, and the one the export cannot protect against.
      *
-     * A recurring movement holds `(cat-1, Spend)`. The file redefines `cat-1` as an Income
-     * category. The import neither tombstones nor restores `recurring_movements`, so the movement
-     * still holds the old pair when the category's type is rewritten, and SQLite refuses the
-     * parent-key change. Inside the single wrapping transaction that is not one failed row: it is
-     * the whole restore rolled back, after the tombstone sweep.
+     * A recurring movement holds `(cat-1, Spend)`. The file redefines `cat-1` as an Income category
+     * and does not carry that template, so the v3 sweep tombstones it — **and the tombstone is
+     * exactly why the detach is still needed.** A tombstoned row is still physically there, still
+     * holding `(cat-1, Spend)`, and SQLite still refuses to change the category's type under it.
+     * Inside the single wrapping transaction that is not one failed row: it is the whole restore
+     * rolled back, after the sweep.
      *
-     * **This KDoc used to say "import never touches `recurring_movements` — deliberately, since the
-     * format does not carry them", and both halves were wrong.** The assertion at the bottom of this
-     * very test is the import mutating that table; and the format has carried
-     * `recurringMovements` since version 3. What is true is the narrow claim: no sweep, no restore.
+     * So the row is read back through raw SQL below. `find` filters `deletedAt IS NULL` and can no
+     * longer see it at all, which is a fact about the sweep and not about the detach.
      */
     @Test
     fun `a backup that redefines a category's type does not abort on the movements filed under it`() = runTest {
@@ -371,10 +384,13 @@ class DefaultBackupRepositoryImportTest {
         assertEquals(1, stats.transactions, "the import must complete, not roll back")
         assertEquals("Income", db.categoriesQueries.find("cat-1").executeAsOne().categoryType)
         assertEquals("cat-1", db.transactionsQueries.find("tx-1").executeAsOne().categoryId)
-        // The template survives, minus a label it can no longer hold. It is never deleted and never
-        // tombstoned: the detach is the only thing an import does to this table today.
+        // The template is still physically there — tombstoned, because this v3 file does not carry
+        // it — and it lost the label it could no longer hold.
         assertEquals(1, rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'rec-1'"))
-        assertNull(db.recurring_movementsQueries.find("rec-1").executeAsOne().categoryId)
+        assertEquals(
+            1,
+            rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'rec-1' AND categoryId IS NULL"),
+        )
     }
 
     // ── the version probe ─────────────────────────────────────────────────────
@@ -537,7 +553,203 @@ class DefaultBackupRepositoryImportTest {
         assertEquals(1, rawCount("SELECT COUNT(*) FROM accounts WHERE syncState = 'Pending'"))
     }
 
+    // ── an untrusted file: templates the app cannot hold as written ───────────
+
+    /**
+     * An unknown `type` costs one template, never the file — the same policy the movement above
+     * follows, reached by a different argument.
+     *
+     * A template with an unknown type cannot skew a total the way a movement can: the recurring
+     * screen and `GetRecurringMonthlyTotals` fold the same list, and both drop it. It is dropped on
+     * the way in anyway because the invisible row is not inert — `countLiveByAccount` still counts
+     * it, and that is what tells the owner an account cannot be deleted because it still has
+     * recurring movements, on a screen showing none.
+     */
+    @Test
+    fun `a template with a type the app does not know is dropped rather than restored invisibly`() = runTest {
+        val json = payloadWith(
+            categoriesJson = emptyList(),
+            transactionsJson = emptyList(),
+            recurringJson = listOf(
+                template(id = "rec-ok", type = "Spend"),
+                template(id = "rec-weird", type = "Transfer"),
+            ),
+        )
+
+        repository.importFromJson(json)
+
+        assertEquals(0, rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'rec-weird'"))
+        assertEquals(1, rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'rec-ok'"))
+        // ...and the count that blocks an account deletion sees the one template the user can see.
+        assertEquals(1L, db.recurring_movementsQueries.countLiveByAccount("acc-1").executeAsOne())
+    }
+
+    /**
+     * A `lastConfirmedPeriod` the app cannot read costs the MARK, not the template.
+     *
+     * `ensureNotSettled` orders this column as a plain string, so `"julio"` sorts above every real
+     * key and refuses every confirmation — while `pendingPeriods` parses it, gets null, and keeps
+     * listing those months as owed. The user is shown months they cannot confirm. Nulling it is the
+     * state the column already has a meaning for ("never settled"), the app's own skip action puts
+     * the mark back in one tap, and the name, amount, day and account the file did carry survive.
+     */
+    @Test
+    fun `a template whose settled mark is unreadable restores with no mark rather than being dropped`() = runTest {
+        val json = payloadWith(
+            categoriesJson = emptyList(),
+            transactionsJson = emptyList(),
+            recurringJson = listOf(template(id = "rec-1", lastConfirmedPeriod = "julio")),
+        )
+
+        repository.importFromJson(json)
+
+        val restored = db.recurring_movementsQueries.find("rec-1").executeAsOne()
+        assertNull(restored.lastConfirmedPeriod)
+        assertEquals("Alquiler", restored.name)
+        assertEquals(120_000L, restored.amount)
+    }
+
+    @Test
+    fun `a settled mark the parser accepts is re-encoded into the shape the comparison needs`() = runTest {
+        // "2026-7" parses as July and sorts ABOVE "2026-08" as a string, so a value copied through
+        // verbatim would settle August by accident. The column is written from the parsed value for
+        // the same reason `occurredAt` is.
+        val json = payloadWith(
+            categoriesJson = emptyList(),
+            transactionsJson = emptyList(),
+            recurringJson = listOf(template(id = "rec-1", lastConfirmedPeriod = "2026-7")),
+        )
+
+        repository.importFromJson(json)
+
+        assertEquals("2026-07", db.recurring_movementsQueries.find("rec-1").executeAsOne().lastConfirmedPeriod)
+    }
+
+    /**
+     * **The test that pins WHERE the templates are restored, not just that they are.**
+     *
+     * The file redefines `cat-1` from Spend to Income and carries a template holding the new pair.
+     * Templates go last, after every category in the file is written, so `usableCategoryId` reads
+     * `typeOf(cat-1)` as Income and the pair agrees. Move the restore ahead of the categories loop
+     * and it reads the pre-import world — Spend, since a sweep tombstones a category without
+     * rewriting its type — decides the pair disagrees, and the template lands uncategorized with
+     * nothing on screen to say so.
+     */
+    @Test
+    fun `a template keeps the category the FILE gives it, not the one the device still held`() = runTest {
+        repository.importFromJson(
+            payloadWith(
+                categoriesJson = listOf(
+                    """{"categoryId":"cat-1","name":"Bar","icon":"i","color":"c","categoryType":"Spend"}""",
+                ),
+                transactionsJson = emptyList(),
+            ),
+        )
+
+        repository.importFromJson(
+            payloadWith(
+                categoriesJson = listOf(
+                    """{"categoryId":"cat-1","name":"Sueldo","icon":"i","color":"c","categoryType":"Income"}""",
+                ),
+                transactionsJson = emptyList(),
+                recurringJson = listOf(template(id = "rec-1", type = "Income", categoryId = "cat-1")),
+            ),
+        )
+
+        assertEquals("cat-1", db.recurring_movementsQueries.find("rec-1").executeAsOne().categoryId)
+    }
+
+    @Test
+    fun `a template filed under a category of the other type restores uncategorized`() = runTest {
+        // The export's scrub keeps this out of any file the app writes, so it only arrives
+        // hand-edited — where the composite key would otherwise roll the whole import back.
+        val json = payloadWith(
+            categoriesJson = listOf(
+                """{"categoryId":"cat-spend","name":"Café","icon":"i","color":"c","categoryType":"Spend"}""",
+            ),
+            transactionsJson = emptyList(),
+            recurringJson = listOf(template(id = "rec-1", type = "Income", categoryId = "cat-spend")),
+        )
+
+        repository.importFromJson(json)
+
+        val restored = db.recurring_movementsQueries.find("rec-1").executeAsOne()
+        assertNull(restored.categoryId)
+        assertEquals("Income", restored.type)
+    }
+
+    // ── the two fields a restore must not invent ──────────────────────────────
+    //
+    // These two moved here from `DefaultBackupRepositoryTest`, where they rebuilt the template out
+    // of the exported DTO with a test-local mapper because the production restore did not exist yet.
+    // They proved the EXPORT carried each field and nothing about what a restore did with it — so
+    // the exact failure this format version exists to prevent, a restore stamping `createdAt = now`
+    // and swallowing every owed past period, left both of them green.
+    //
+    // They now run the whole round trip against a real database: export, import, read the row back
+    // through the production mappers, and hand the result to the real `pendingPeriods`. What is
+    // protected is the pending list, not a field, and a field assertion would pass for a value that
+    // no longer produces it.
+
+    /**
+     * **The loss this guards: a restore re-mints a month the user already settled.**
+     *
+     * `lastConfirmedPeriod` is the high-water mark `pendingPeriods` counts from. A restore that
+     * dropped it would hand back a template owing every month since its creation, so the app asks
+     * for a rent and a salary the ledger already holds and a confirmation writes the duplicate.
+     */
+    @Test
+    fun `a restored template keeps the mark it was settled through, so the app does not re-mint it`() = runTest {
+        val settledThroughJuly = NEVER_CONFIRMED.copy(lastConfirmedPeriod = "2026-07")
+
+        val restored = assertNotNull(roundTrip(settledThroughJuly))
+
+        assertEquals("2026-07", restored.lastConfirmedPeriod)
+        // June and July are settled; only the current month is still owed. Drop the mark on the way
+        // through and this list grows back to three.
+        assertEquals(listOf("2026-08"), owedPeriodsOf(restored))
+    }
+
+    /**
+     * **The opposite loss, and the silent one: a restore swallows the months still owed.**
+     *
+     * `createdAt` floors the catch-up window — a template owes nothing from before it existed. Every
+     * other restore path in the app stamps `createdAt = now`, and doing that here raises the floor to
+     * the restore month: no error, no row, nothing on screen, the rent for June and July simply never
+     * asked about again. The import's own instant is [FIRST_IMPORT], August, which is exactly the
+     * value that would look plausible in the column.
+     */
+    @Test
+    fun `a restored template keeps its own createdAt, so the months it still owes survive`() = runTest {
+        val restored = assertNotNull(roundTrip(NEVER_CONFIRMED))
+
+        assertEquals(TEMPLATE_CREATED, restored.createdAt)
+        assertEquals(listOf("2026-06", "2026-07", "2026-08"), owedPeriodsOf(restored))
+    }
+
     // ── helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * [template] through the real export and the real import, read back as the app would read it.
+     *
+     * Null when the restored row is one the production mapper refuses — the same answer the recurring
+     * list screen would give, since it maps every row through this exact function.
+     */
+    private suspend fun roundTrip(template: RecurringMovement): RecurringMovement? {
+        every { accountRepo.all() } returns flowOf(listOf(Account(AccountId("acc-1"), "Cuenta", AccountType.Cash)))
+        every { recurringRepo.allLive() } returns flowOf(listOf(template))
+
+        repository.importFromJson(repository.exportToJson(exportedAt = 0L, appVersion = "1.0.0"))
+
+        return db.recurring_movementsQueries.find(template.id.value)
+            .executeAsOneOrNull()
+            ?.asEntity()
+            ?.asExternalModelOrNull()
+    }
+
+    /** Every period [template] still owes as of [TODAY], as "YYYY-MM" keys. */
+    private fun owedPeriodsOf(template: RecurringMovement): List<String> =
+        pendingPeriods(template, TODAY, TimeZone.UTC).map(::periodKey)
 
     private fun exec(sql: String) {
         driver.execute(identifier = null, sql = sql, parameters = 0)
@@ -601,8 +813,12 @@ class DefaultBackupRepositoryImportTest {
     private fun payloadWithTransactions(vararg transactionsJson: String): String =
         payloadWith(categoriesJson = emptyList(), transactionsJson = transactionsJson.toList())
 
-    /** One account, plus exactly the category and transaction JSON the test wrote by hand. */
-    private fun payloadWith(categoriesJson: List<String>, transactionsJson: List<String>): String = """
+    /** One account, plus exactly the category, transaction and template JSON the test wrote by hand. */
+    private fun payloadWith(
+        categoriesJson: List<String>,
+        transactionsJson: List<String>,
+        recurringJson: List<String> = emptyList(),
+    ): String = """
         {
             "schemaVersion": 3,
             "exportedAt": 0,
@@ -610,8 +826,26 @@ class DefaultBackupRepositoryImportTest {
             "accounts": [{"accountId":"acc-1","name":"Cuenta","type":"Cash","currency":"PEN"}],
             "categories": [${categoriesJson.joinToString(",")}],
             "transactions": [${transactionsJson.joinToString(",")}],
-            "recurringMovements": []
+            "recurringMovements": [${recurringJson.joinToString(",")}]
         }
+    """.trimIndent()
+
+    /**
+     * One template as JSON, written out rather than serialized from [RecurringMovementDto].
+     *
+     * A fixture generated from the DTO renames itself along with the field it was meant to pin, and
+     * three of these tests exist to feed the reader values no DTO would ever produce.
+     */
+    private fun template(
+        id: String,
+        type: String = "Spend",
+        categoryId: String? = null,
+        lastConfirmedPeriod: String? = null,
+    ): String = """
+        {"recurringMovementId":"$id","name":"Alquiler","type":"$type","amountCents":120000,
+         "description":"Depa","categoryId":${categoryId?.let { "\"$it\"" }},"accountId":"acc-1",
+         "frequency":"Monthly","dayOfMonth":5,"isActive":true,
+         "lastConfirmedPeriod":${lastConfirmedPeriod?.let { "\"$it\"" }},"createdAt":1780000000000}
     """.trimIndent()
 
     private companion object {
@@ -622,5 +856,36 @@ class DefaultBackupRepositoryImportTest {
         // compared against rather than whatever the machine happened to read.
         val FIRST_IMPORT: Instant = Instant.parse("2026-08-11T15:04:05Z")
         val SECOND_IMPORT: Instant = Instant.parse("2026-08-11T16:04:05Z")
+
+        /**
+         * 2026-06-10, and the zone below only has to be STATED, not real: the assertions turn on
+         * which month a floor lands in, and midday is nowhere near a month boundary in any offset.
+         */
+        val TEMPLATE_CREATED: Long = Instant.parse("2026-06-10T12:00:00Z").toEpochMilliseconds()
+
+        val TODAY = LocalDate(2026, 8, 13)
+
+        /**
+         * Created in June 2026 and never settled, so it owes June, July and August.
+         *
+         * `lastConfirmedPeriod` is null and `createdAt` is the only thing holding the catch-up floor
+         * down; the two round-trip guards above each move exactly one of them. Uncategorized on
+         * purpose — the file carries no categories, and a category the file does not carry is a
+         * different guard's subject.
+         */
+        val NEVER_CONFIRMED = RecurringMovement(
+            id = RecurringMovementId("rec-1"),
+            name = "Alquiler",
+            type = TransactionType.Spend,
+            amount = Money(1200_00L),
+            description = "Depa",
+            categoryId = null,
+            accountId = AccountId("acc-1"),
+            frequency = Frequency.Monthly,
+            dayOfMonth = 5,
+            isActive = true,
+            lastConfirmedPeriod = null,
+            createdAt = TEMPLATE_CREATED,
+        )
     }
 }

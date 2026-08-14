@@ -40,19 +40,18 @@ import kotlin.time.Instant
  * If a change makes this suite fail, the change breaks real files on a real disk — fix the reader,
  * never the fixture.
  *
- * ### What is deliberately NOT here yet
+ * ### The version this suite is the gate for
  *
- * The import does not restore recurring movements, and does not sweep them either. The format
- * carrying them and the import acting on them are two commits, in that order, on purpose: the
- * version number has to move with the shape, and the destructive half — tombstone every live
- * template, then put back exactly what the file holds — is its own change with its own risk.
+ * Version 3 is the first version an import is allowed to act on: it tombstones every live template
+ * and then puts back exactly the ones the file carries. `BackupV1CompatibilityTest` and
+ * `BackupV2CompatibilityTest` hold the other side — an older file must leave that table's rows
+ * alive, because it has none to give back.
  *
- * So a v3 file today carries templates that importing does not put back. That is an intermediate
- * state, and the guard below is what keeps it from being a destructive one: a v3 import must neither
- * tombstone nor delete the templates already on the device. Note the claim is narrow on purpose — an
- * import can still detach a template's category, and the guard's own KDoc says exactly when. When the
- * sweep lands, that test is the one that has to be deliberately inverted, which is the point of it
- * existing now.
+ * The two suites are one guard, not two, and the second test below is the half that makes it mean
+ * something: a v3 export from a device that owns no templates is byte-identical to a converted v1 or
+ * v2 payload in everything but its declared version, and it must still sweep. An import that gated
+ * on `recurringMovements` being empty would pass every other test in this file and get exactly that
+ * one backwards, in both directions.
  */
 class BackupV3CompatibilityTest {
 
@@ -208,35 +207,20 @@ class BackupV3CompatibilityTest {
     }
 
     /**
-     * The intermediate state, pinned so it cannot become a silent one.
+     * "Make everything look like this file", now including the templates.
      *
-     * The format carries templates; the import neither sweeps nor restores them. Both halves have to
-     * be true at once and only one of them is visible from the file — so what this asserts is the
-     * invisible half: no row is tombstoned, no row is deleted, and the file's own two templates land
-     * nowhere.
+     * A template the file does not mention is **tombstoned, never deleted** — the same rule the other
+     * three tables follow, and the reason is not cosmetic: a physical DELETE leaves no trace for the
+     * push to carry, so the row comes back on the next pull, and `ON DELETE RESTRICT` would refuse it
+     * anyway while anything still references the account. The destructive shapes are therefore
+     * checked through raw SQL, which sees every row: `find` filters `deletedAt IS NULL` and so cannot
+     * tell "deleted" from "tombstoned" at all.
      *
-     * **"Untouched" would be the wrong word, and it is worth being exact about why.** A v3 import can
-     * still mutate this table, through one narrow path that has nothing to do with the new field:
-     * `restore(dto: CategoryDto, …)` calls `clearCategoryOnTypeChange` on `recurring_movementsQueries`
-     * for every category the file restores, nulling `categoryId` on any recurring row whose `type`
-     * disagrees with that category's `categoryType`. It has to — SQLite refuses the parent-key change
-     * otherwise, and inside the one transaction wrapping the restore that is the whole import rolled
-     * back rather than one failed row. This fixture does not trigger it because the on-device row
-     * holds `(cat-spend, Spend)` and the file restores `cat-spend` as `Spend`: the pair agrees, so
-     * the detach's `type != :categoryType` matches nothing. `DefaultBackupRepositoryImportTest` owns
-     * the case where it does fire.
-     *
-     * The claim here is therefore the narrow one — no sweep, no restore — and it is the one commit ③
-     * has to deliberately invert for v3 while keeping it true for v1 and v2.
-     *
-     * The destructive shapes are checked first, through raw SQL that sees every row. `find` filters
-     * `deletedAt IS NULL`, so it cannot tell "physically deleted" from "tombstoned", and asking it
-     * for `deletedAt` would be vacuous since it can never return a row where that is set. Asserting
-     * these before the read is what makes each mode fail with its own message instead of both
-     * arriving as an NPE out of `executeAsOne`.
+     * The file's own two templates land with the bytes the file carried — `lastConfirmedPeriod` and
+     * `createdAt` included, the two fields whose loss is the whole reason version 3 exists.
      */
     @Test
-    fun `importing a version 3 file neither sweeps nor restores the templates on the device`() = runTest {
+    fun `importing a version 3 file replaces the templates on the device`() = runTest {
         repository.importFromJson(V3_BACKUP)
         exec(
             "INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, " +
@@ -247,22 +231,51 @@ class BackupV3CompatibilityTest {
 
         repository.importFromJson(V3_BACKUP)
 
-        assertEquals(1, rawCount("SELECT COUNT(*) FROM recurring_movements"), "the row was deleted outright")
+        assertEquals(3, rawCount("SELECT COUNT(*) FROM recurring_movements"), "a row was deleted outright")
         assertEquals(
-            0,
-            rawCount("SELECT COUNT(*) FROM recurring_movements WHERE deletedAt IS NOT NULL"),
-            "the row was tombstoned by the import's sweep",
+            1,
+            rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'on-device' AND deletedAt IS NOT NULL"),
+            "the row the file does not carry was left live",
         )
-        // The file carries two templates and neither of them is this one: the import restored
-        // nothing, so the device's own row is still exactly what it was.
-        val onDevice = db.recurring_movementsQueries.find("on-device").executeAsOne()
-        assertEquals("Netflix", onDevice.name)
-        assertEquals(4490L, onDevice.amount)
-        assertEquals("cat-spend", onDevice.categoryId)
-        assertEquals(1L, onDevice.isActive)
-        assertEquals("2026-06", onDevice.lastConfirmedPeriod)
-        assertEquals(1_780_000_000_000L, onDevice.createdAt)
-        assertEquals(0, rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id IN ('rec-1','rec-2')"))
+        val rent = db.recurring_movementsQueries.find("rec-1").executeAsOne()
+        assertEquals("Alquiler", rent.name)
+        assertEquals(120_000L, rent.amount)
+        assertEquals("cat-spend", rent.categoryId)
+        assertEquals(1L, rent.isActive)
+        assertEquals("2026-07", rent.lastConfirmedPeriod)
+        assertEquals(1_780_000_000_000L, rent.createdAt)
+        // The paused one lands too: a template the user stopped is still data the user owns.
+        assertEquals(0L, db.recurring_movementsQueries.find("rec-2").executeAsOne().isActive)
+    }
+
+    /**
+     * **The one test an empty-list gate cannot pass**, and the reason the gate reads the declared
+     * version instead.
+     *
+     * This file is a real v3 export from a device that owns no templates. After the decode it is
+     * indistinguishable from a converted v1 or v2 payload — current `schemaVersion`, empty
+     * `recurringMovements` — and yet the correct answer is the opposite one: the owner's backup says
+     * there are none, so the templates on the device go. An import that inferred the format from the
+     * list would skip this file and leave behind exactly the templates the backup says are gone,
+     * while reading a v1 file as v3 the moment it inferred the other way.
+     *
+     * Its twins are `BackupV1CompatibilityTest` and `BackupV2CompatibilityTest`, which hand the
+     * import the same empty list and demand the opposite behaviour. Neither test means anything
+     * without the other.
+     */
+    @Test
+    fun `a version 3 file carrying no templates still sweeps the ones on the device`() = runTest {
+        repository.importFromJson(V3_BACKUP)
+        assertEquals(2, rawCount("SELECT COUNT(*) FROM recurring_movements WHERE deletedAt IS NULL"))
+
+        repository.importFromJson(V3_BACKUP_EMPTY_RECURRING)
+
+        assertEquals(2, rawCount("SELECT COUNT(*) FROM recurring_movements"), "a row was deleted outright")
+        assertEquals(
+            2,
+            rawCount("SELECT COUNT(*) FROM recurring_movements WHERE deletedAt IS NOT NULL"),
+            "the file says the device owns no templates and the sweep did not run",
+        )
     }
 
     private fun exec(sql: String) {

@@ -1,7 +1,6 @@
 package com.emm.data.backup
 
 import com.emm.data.EmmDatabaseData
-import com.emm.data.shared.enumValueOrNull
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountType
@@ -11,8 +10,6 @@ import com.emm.domain.category.CategoryType
 import com.emm.domain.recurring.Frequency
 import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.recurring.RecurringMovementRepository
-import com.emm.domain.recurring.pendingPeriods
-import com.emm.domain.recurring.periodKey
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
@@ -25,13 +22,10 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
 import kotlinx.serialization.json.Json
 import org.junit.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
@@ -99,12 +93,7 @@ class DefaultBackupRepositoryTest {
         categoryId = null,
     )
 
-    /**
-     * A template created in June 2026 and never settled — so it owes June, July and August.
-     *
-     * `lastConfirmedPeriod` is null and `createdAt` is the only thing holding the catch-up floor
-     * down; the two data-loss tests below each move exactly one of those.
-     */
+    /** A template created in June 2026 and never settled. */
     private val neverConfirmedTemplate = RecurringMovement(
         id = RecurringMovementId("rec-1"),
         name = "Alquiler",
@@ -195,17 +184,12 @@ class DefaultBackupRepositoryTest {
 
     // ── recurring movements: what version 3 added ─────────────────────────────
     //
-    // SCOPE OF THE TWO DATA-LOSS GUARDS BELOW, and it is the whole of what their names claim: they
-    // prove the EXPORT carries the field a correct restore will need. They prove nothing about any
-    // restore. Both rebuild the template through `asRestoredTemplateOrNull` below — a hand-written
-    // stand-in, because the production restore mapper does not exist until commit ③ writes it. So
-    // the exact failure the plan warns about, a restore stamping `createdAt = now` over the value
-    // the file carried, leaves BOTH of these green.
-    //
-    // THE RESTORE-SIDE GUARD LANDS WITH COMMIT ③, and not before: that is the commit that writes the
-    // real mapper, and re-points these two at it. Until it does, this suite has export coverage for
-    // both losses and restore coverage for neither. Their names used to say "so a restore cannot …",
-    // which is the claim a gate report shows and the one thing they cannot support.
+    // This suite is the EXPORT half and only that: `db` is a mock here, so nothing below can observe
+    // a restore. The two data-loss guards that used to sit in this section — `lastConfirmedPeriod`
+    // and `createdAt`, the two fields that lose data in opposite directions — moved to
+    // `DefaultBackupRepositoryImportTest` when the restore mapper landed. They run the full round
+    // trip there, against a real database, which is the only place the claim their names make can
+    // actually be held.
 
     /**
      * A paused template is data the user still owns, so the export reads every LIVE row — not every
@@ -257,61 +241,26 @@ class DefaultBackupRepositoryTest {
     }
 
     /**
-     * **The loss the FILE half of this guards: a restore re-mints a month the user already settled.**
+     * The two fields that are behaviour rather than storage reach the file at all.
      *
-     * `lastConfirmedPeriod` is the high-water mark `pendingPeriods` starts counting after. A file
-     * that drops it can only restore a template that owes every month back to its creation — so the
-     * app asks the user to record a rent and a salary the ledger already holds, and a confirmation
-     * writes the duplicate. What is asserted here is that the file does not drop it; that a restore
-     * honours it is commit ③'s, and this test would stay green if it did not.
-     *
-     * The assertion runs the exported bytes back through the real rule rather than comparing the
-     * field to itself: what is being protected is the pending list, and a field assertion would pass
-     * for a value that no longer produces it. `pendingPeriods` is production code; the template it is
-     * handed is not — see the scope note above the section.
+     * Shape only, and deliberately so: what each of them costs when a restore loses it — a re-minted
+     * month, or every owed month swallowed — is held by the round-trip guards in
+     * `DefaultBackupRepositoryImportTest`, which can run the restored values back through the real
+     * `pendingPeriods` rule. A `createdAt` this suite could assert against the export alone is a
+     * `createdAt` the import is still free to overwrite.
      */
     @Test
-    fun `the export carries the mark a template was settled through, the field a restore needs to not re-mint`() =
-        runTest {
-            val settledThroughJuly = neverConfirmedTemplate.copy(lastConfirmedPeriod = "2026-07")
-            stubEmptyLedger()
-            every { recurringRepo.allLive() } returns flowOf(listOf(settledThroughJuly))
-
-            val restored = assertNotNull(exportedPayload().recurringMovements.single().asRestoredTemplateOrNull())
-
-            assertEquals("2026-07", restored.lastConfirmedPeriod)
-            // June and July are settled; only the current month is still owed. Drop the mark and
-            // this list grows back to three.
-            assertEquals(listOf("2026-08"), owedPeriodsOf(restored))
-        }
-
-    /**
-     * **The loss the FILE half of this guards, and it is the opposite one: a restore swallows the
-     * months still owed.**
-     *
-     * `createdAt` floors the catch-up window — a template owes nothing from before it existed. Every
-     * restore path in the app stamps `createdAt = now`, so a file that does not carry the template's
-     * own value hands the restore a floor of "this month", and every period the template still owed
-     * disappears. No error, no row, nothing on screen: the rent for June and July is simply never
-     * asked about again.
-     *
-     * This closes the FILE half of that hazard only. The restore half — the mapper that must not
-     * re-stamp what the file carried — is commit ③'s, and nothing here would catch it; see the scope
-     * note above the section.
-     */
-    @Test
-    fun `the export carries a template's own createdAt, the field a restore needs to not swallow months`() = runTest {
+    fun `the export carries a template's own settled mark and createdAt`() = runTest {
+        val settledThroughJuly = neverConfirmedTemplate.copy(lastConfirmedPeriod = "2026-07")
         stubEmptyLedger()
-        every { recurringRepo.allLive() } returns flowOf(listOf(neverConfirmedTemplate))
+        every { recurringRepo.allLive() } returns flowOf(listOf(settledThroughJuly))
 
-        val restored = assertNotNull(
-            exportedPayload(exportedAt = EXPORTED_AT).recurringMovements.single().asRestoredTemplateOrNull(),
-        )
+        val exported = exportedPayload(exportedAt = EXPORTED_AT).recurringMovements.single()
 
-        assertEquals(TEMPLATE_CREATED, restored.createdAt)
-        // Created in June, never settled, read in August: three months are owed. Stamp the export
-        // instant (August) onto createdAt instead and only the current one survives.
-        assertEquals(listOf("2026-06", "2026-07", "2026-08"), owedPeriodsOf(restored))
+        assertEquals("2026-07", exported.lastConfirmedPeriod)
+        // The export's own instant is August; the template's is June, and it is the template's that
+        // has to travel.
+        assertEquals(TEMPLATE_CREATED, exported.createdAt)
     }
 
     @Test
@@ -348,54 +297,8 @@ class DefaultBackupRepositoryTest {
     private suspend fun exportedPayload(exportedAt: Long = 0L): ExportPayloadDto =
         Json.decodeFromString(repository.exportToJson(exportedAt = exportedAt, appVersion = "1.0.0"))
 
-    /**
-     * The template a restore would rebuild out of the exported bytes — null when the bytes carry an
-     * enum name this build does not know.
-     *
-     * Written here rather than taken from production code on purpose: the restore that will consume
-     * this DTO does not exist yet, and a helper that shared its mapper would pass whatever that
-     * mapper did. This one reads the file the way the format promises it can be read.
-     *
-     * **`-OrNull`, and it is the contract rather than a convenience.** [RecurringMovementDto]'s own
-     * KDoc states that [RecurringMovementDto.type] and [RecurringMovementDto.frequency] carry enum
-     * *names* precisely so that a value this build does not know "must be a row it can skip rather
-     * than a file it reports as corrupt" — the same policy `TransactionDto.toEntityOrNull` already
-     * implements with the same [enumValueOrNull]. `valueOf` was standing in for that mapper while
-     * throwing on exactly the input the contract says to skip, so a stand-in that disagreed with the
-     * thing it stands in for would have written the wrong expectation into commit ③.
-     */
-    private fun RecurringMovementDto.asRestoredTemplateOrNull(): RecurringMovement? {
-        val parsedType: TransactionType? = enumValueOrNull<TransactionType>(type)
-        val parsedFrequency: Frequency? = enumValueOrNull<Frequency>(frequency)
-        return if (parsedType == null || parsedFrequency == null) {
-            null
-        } else {
-            RecurringMovement(
-                id = RecurringMovementId(recurringMovementId),
-                name = name,
-                type = parsedType,
-                amount = amountCents?.let(::Money),
-                description = description,
-                categoryId = categoryId?.let(::CategoryId),
-                accountId = AccountId(accountId),
-                frequency = parsedFrequency,
-                dayOfMonth = dayOfMonth,
-                isActive = isActive,
-                lastConfirmedPeriod = lastConfirmedPeriod,
-                createdAt = createdAt,
-            )
-        }
-    }
-
-    /** Every period [template] still owes as of [TODAY], as "YYYY-MM" keys. */
-    private fun owedPeriodsOf(template: RecurringMovement): List<String> =
-        pendingPeriods(template, TODAY, TimeZone.UTC).map(::periodKey)
-
     private companion object {
-        /**
-         * 2026-06-10, and the zone below only has to be STATED, not real: the assertions turn on
-         * which month a floor lands in, and midday is nowhere near a month boundary in any offset.
-         */
+        /** 2026-06-10 — the template's own instant, and two months before the export's. */
         val TEMPLATE_CREATED: Long = Instant.parse("2026-06-10T12:00:00Z").toEpochMilliseconds()
 
         /**
@@ -403,7 +306,5 @@ class DefaultBackupRepositoryTest {
          * that lost the field would still look plausible while owing nothing before this month.
          */
         val EXPORTED_AT: Long = Instant.parse("2026-08-11T15:04:05Z").toEpochMilliseconds()
-
-        val TODAY = LocalDate(2026, 8, 13)
     }
 }

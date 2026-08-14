@@ -86,10 +86,12 @@ class DefaultBackupRepository(
     override suspend fun importFromJson(json: String): ImportStats {
         // Both halves of the decode, deliberately: `payload` is the current shape, and
         // `decoded.declaredVersion` is the version the FILE declared — the only thing that can tell
-        // a v1/v2 file apart from a v3 one exported by a device with no templates. Nothing reads it
-        // yet; the version-gated sweep is what will. See [DecodedBackup].
+        // a v1/v2 file apart from a v3 one exported by a device with no templates. See
+        // [DecodedBackup], and [BACKUP_RECURRING_SINCE_VERSION] for why the gate is a `>=` against a
+        // frozen literal rather than against the current version.
         val decoded = decodePayload(json)
         val payload = decoded.payload
+        val fileCarriesRecurring = decoded.declaredVersion >= BACKUP_RECURRING_SINCE_VERSION
 
         return safeDbCall {
             // One read, reused by the tombstone sweep and by every row restored after it — the
@@ -105,22 +107,36 @@ class DefaultBackupRepository(
                 // pushes to the server and reaches the other devices — a physical DELETE left no
                 // trace, and the next pull simply downloaded the rows again.
                 //
-                // Recurring movements are neither swept nor restored — even though the format now
-                // carries them. Not "untouched": `restore(dto: CategoryDto, …)` below detaches a
-                // category from any recurring row whose type disagrees with it, on every version.
-                // Adding the field and acting on it are two commits on purpose: the destructive
-                // half has to be version-gated, since a v1/v2 file has no templates to give and
-                // wiping on one would destroy data no backup can put back.
-                // Until that lands, a v3 file carries templates an import does not restore, and
-                // BackupV3CompatibilityTest pins that the rows already on the device survive it.
+                // RECURRING MOVEMENTS ARE THE ONE VERSIONED TABLE, both halves gated on the version
+                // the FILE declared. Versions 1 and 2 had no templates to carry, so an emptiness
+                // that came out of `toCurrent()` is the format's silence and not the owner's data:
+                // sweeping on it deletes every template on the device with nothing able to put them
+                // back. A v3 file with an empty array is the opposite claim — the owner has none —
+                // and must sweep. Only the declared version separates the two; `recurringMovements`
+                // being empty cannot, which is why the gate never reads it.
+                //
+                // The detach is NOT gated and never was: `restore(dto: CategoryDto, …)` clears the
+                // category off any recurring row whose type disagrees with the one being restored,
+                // on every version, sweep or no sweep. A tombstone is not a delete — the swept row
+                // still holds its old (categoryId, type) pair and still makes SQLite refuse the
+                // category's type change.
                 db.transactionsQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
+                if (fileCarriesRecurring) {
+                    db.recurring_movementsQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
+                }
                 db.categoriesQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
                 db.accountsQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
 
-                // ORDER MATTERS: a restored transaction references its account and category.
+                // ORDER MATTERS: a restored transaction references its account and category, and the
+                // templates go LAST — that is the only position where `usableCategoryId` reads the
+                // categories the FILE carries rather than the ones the import is mid-replacing. See
+                // its own KDoc.
                 payload.accounts.forEach { dto -> restore(dto, now) }
                 payload.categories.forEach { dto -> restore(dto, now) }
                 restoredTransactions = payload.transactions.count { dto -> restore(dto, now) }
+                if (fileCarriesRecurring) {
+                    payload.recurringMovements.forEach { dto -> restore(dto, now) }
+                }
             }
 
             // The count is what LANDED, not what the file held. Reporting the file's own length
@@ -255,16 +271,15 @@ class DefaultBackupRepository(
      * the statement throws inside the ONE transaction that wraps the whole restore, so the import
      * rolls back after the tombstone sweep and reaches the user as a generic database error.
      *
-     * `recurring_movements` is what makes it reachable rather than theoretical: the import neither
-     * tombstones nor restores that table, so its rows still hold whatever pair they were created
-     * with while the file rewrites the category out from under them. And the file is untrusted — a
-     * hand-edited `categoryType` is all it takes, which is the same premise the movement restore
-     * below already works from.
+     * `recurring_movements` is what makes it reachable rather than theoretical, and the sweep did
+     * not remove the need — **a tombstone is not a delete.** `clearCategoryOnTypeChange` carries no
+     * `deletedAt IS NULL` filter precisely because a row the file does not mention, freshly
+     * tombstoned, still holds the pair it was created with and still makes SQLite refuse the
+     * category's type change. Under a v1 or v2 file nothing was swept at all and every template on
+     * the device is in that position. And the file is untrusted — a hand-edited `categoryType` is
+     * all it takes, which is the same premise the movement restore below already works from.
      *
-     * **"Never touches that table" is what this used to say, and it was false where it stood**: the
-     * `clearCategoryOnTypeChange` call ten lines below runs on `recurring_movementsQueries` for
-     * every category of every import at every version. The narrow claim — no sweep, no restore — is
-     * the true one, and it is the half commit ③ inverts for v3 while keeping it for v1 and v2.
+     * So this call is the one thing the import does to that table on EVERY version, gate or no gate.
      */
     private fun restore(dto: CategoryDto, now: Long) {
         db.transactionsQueries.clearCategoryOnTypeChange(
@@ -338,20 +353,81 @@ class DefaultBackupRepository(
     }
 
     /**
+     * Restores one template — the fourth table, and the only one an older file may not touch.
+     *
+     * A row the file carries but this build cannot read is dropped, not written: see
+     * [RecurringMovementDto.toEntityOrNull], which also argues why an unparseable
+     * `lastConfirmedPeriod` is repaired to null there instead of costing the whole template.
+     *
+     * `createdAt` comes off the FILE and never from [now], which is the opposite of every other
+     * restore here and the single most destructive thing this function could get wrong: it floors
+     * `RecurringDueRules.pendingPeriods`, so stamping the import's instant onto it swallows every
+     * period the template still owed, with no error and nothing on screen.
+     * `restoreFromBackup` writes it for the same reason — a re-import onto a device that still holds
+     * the row has to take the file's value, not the one already in the column.
+     */
+    private fun restore(dto: RecurringMovementDto, now: Long) {
+        val template = dto.toEntityOrNull() ?: return
+        val type = template.type.name
+        val categoryId = usableCategoryId(dto.categoryId, type)
+        db.recurring_movementsQueries.insertOrIgnoreFromBackup(
+            id = template.id.value,
+            name = template.name,
+            type = type,
+            amount = template.amount?.cents,
+            description = template.description,
+            categoryId = categoryId,
+            accountId = template.accountId.value,
+            frequency = template.frequency.name,
+            dayOfMonth = template.dayOfMonth.toLong(),
+            isActive = if (template.isActive) 1L else 0L,
+            lastConfirmedPeriod = template.lastConfirmedPeriod,
+            createdAt = template.createdAt,
+            updatedAt = now,
+        )
+        db.recurring_movementsQueries.restoreFromBackup(
+            name = template.name,
+            type = type,
+            amount = template.amount?.cents,
+            description = template.description,
+            categoryId = categoryId,
+            accountId = template.accountId.value,
+            frequency = template.frequency.name,
+            dayOfMonth = template.dayOfMonth.toLong(),
+            isActive = if (template.isActive) 1L else 0L,
+            lastConfirmedPeriod = template.lastConfirmedPeriod,
+            createdAt = template.createdAt,
+            updatedAt = now,
+            id = template.id.value,
+        )
+    }
+
+    /**
      * The category id this row may actually be written with — [categoryId] itself, or null.
      *
-     * **Every backup file that exists today predates the composite key**, and the export before it
-     * carried whatever pair the app had stored, mismatches included. Under the key those rows no
-     * longer insert: the statement aborts with a constraint violation inside the single
-     * transaction that wraps the whole restore, so ONE stale row would roll back the entire import
-     * and leave the owner with nothing. That is the one safety net on a device holding real
-     * accumulated data, so the row lands uncategorized instead — the movement, its amount and its
-     * type are the data; the category is a label the user can put back in two taps.
+     * Under the composite key a stale `(categoryId, type)` pair no longer inserts: the statement
+     * aborts with a constraint violation inside the single transaction that wraps the whole restore,
+     * so ONE bad row would roll back the entire import and leave the owner with nothing. That is the
+     * one safety net on a device holding real accumulated data, so the row lands uncategorized
+     * instead — the movement, its amount and its type are the data; the category is a label the user
+     * can put back in two taps.
+     *
+     * **Both callers reach it by a different route, and only one of them is about legacy files.**
+     *
+     *  - Transactions: every backup file that exists today predates the composite key, and the export
+     *    before it carried whatever pair the app had stored, mismatches included.
+     *  - Templates: version 3 was born after the key existed, and the export's dangling-category
+     *    scrub already keeps a tombstoned category's id out of the file — so a file **this app wrote**
+     *    can never carry a broken recurring pair. The only provenance left is a hand-edited one.
+     *
+     * The guard stands either way: the file is untrusted input whatever wrote it, and a rollback
+     * after the tombstone sweep has already run is the catastrophic outcome in both cases.
      *
      * Absent and mismatched are both handled the same way here, unlike in `sync/`, and the reason
-     * is that the file is the whole world: categories are restored before transactions inside this
-     * same transaction, so a category still missing at this point is missing from the file, not
-     * late. There is no later arrival to wait for.
+     * is that the file is the whole world: every category the file carries is restored before the
+     * first transaction and before the first template, inside this same transaction, so a category
+     * still missing at this point is missing from the file, not late. There is no later arrival to
+     * wait for — which is also why the templates are restored last rather than first.
      */
     private fun usableCategoryId(categoryId: String?, type: String): String? {
         if (categoryId == null) return null

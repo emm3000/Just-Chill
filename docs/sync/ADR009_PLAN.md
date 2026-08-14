@@ -224,20 +224,24 @@ transactions whose category is tombstoned (`DefaultBackupRepository`); `recurrin
 the same composite FK `(categoryId, type) → categories(categoryId, categoryType)`, identical to the
 one on `transactions`, so without the same scrub the exported file fails its own import.
 
-**③ The SQL is four statements, not one SELECT.** ② landed the first, `selectAllLive:`. The other
-three are the ones the sweep and restore paths consume on the other tables and that
-`recurring_movements.sq` declares **none** of: `softDeleteAllLive:`, `insertOrIgnoreFromBackup:`,
+**③ The SQL is four statements, not one SELECT — LANDED.** ② landed the first, `selectAllLive:`. The
+other three are the ones the sweep and restore paths consume on the other tables and that
+`recurring_movements.sq` declared **none** of: `softDeleteAllLive:`, `insertOrIgnoreFromBackup:`,
 `restoreFromBackup:`. That table already carries `clearCategoryOnTypeChange:` and full soft-delete
 like the other three, but the insert-then-update restore idiom — chosen over `INSERT OR REPLACE`,
 which physically deletes the old row and is therefore refused by `ON DELETE RESTRICT` while anything
 still references it, with the reasoning in a comment block above those statements in `accounts.sq` —
 has no counterpart on it at all. New `.sq` statements are not a migration (constraint 1).
 
-**Version the import sweep — the data-loss trap.** With v3 the sweep includes recurring **only for
-v3+ payloads**; importing a v1/v2 file must keep neither tombstoning nor restoring local recurring
-rows, since those formats carry none and wiping them would destroy data no backup can restore. Pin
-both sides with tests: *importing v1/v2 neither tombstones nor restores recurring; importing v3
-replaces it.* Not "leaves it untouched" — the category detach below runs on every version.
+**Version the import sweep — the data-loss trap. LANDED, minus the two user-facing pieces below
+(`ImportStats.recurring` and `ImportBackupDialog`), which are deliberately their own commit.** With
+v3 the sweep includes recurring **only for v3+ payloads**; importing a v1/v2 file neither tombstones
+nor restores local recurring rows, since those formats carry none and wiping them would destroy data
+no backup can restore. Both sides are pinned: *importing v1/v2 neither tombstones nor restores
+recurring* (`BackupV1CompatibilityTest`, `BackupV2CompatibilityTest`); *importing v3 replaces it,
+including a v3 file whose array is empty* (`BackupV3CompatibilityTest` — that second test is the one
+an emptiness gate cannot pass, and it is what makes the other two mean anything). Not "leaves it
+untouched" — the category detach below runs on every version.
 
 **The gate value exists.** `decodePayload` returns `DecodedBackup(declaredVersion, payload)`, so the
 version the FILE declared reaches `importFromJson` unchanged. Gate on `declaredVersion`, never on
@@ -245,14 +249,16 @@ version the FILE declared reaches `importFromJson` unchanged. Gate on `declaredV
 current version, so a v1 file, a v2 file and a v3 file from a device with no templates are otherwise
 indistinguishable. The three compatibility suites each pin their own file's `declaredVersion`.
 
-**③ must re-point ②'s two data-loss guards at the real restore.** ②'s `lastConfirmedPeriod` and
-`createdAt` tests rebuild the template from the exported DTO with a **test-local** reconstruction,
-because the production restore mapper does not exist until ③. They prove those two fields survive
-the *export*. They do not prove a restore honours them — and the exact failure this phase exists to
-prevent, a restore stamping `createdAt = now` and swallowing every owed past period, leaves both of
-them green. So the commit that writes the restore mapper re-points both guards at it. Until that
-happens the phase has export coverage and **no restore coverage** for the two opposite losses, and
-a green ② does not say otherwise.
+**③ re-pointed ②'s two data-loss guards at the real restore — DONE.** ②'s `lastConfirmedPeriod` and
+`createdAt` tests rebuilt the template from the exported DTO with a **test-local** reconstruction,
+because the production restore mapper did not exist until ③. They proved those two fields survive
+the *export* and nothing about a restore — the exact failure this phase exists to prevent, a restore
+stamping `createdAt = now` and swallowing every owed past period, left both of them green. They now
+live in `DefaultBackupRepositoryImportTest` as full round trips against a real database: export,
+import, read the row back through the production mappers, hand the result to `pendingPeriods`. Both
+were verified red against a restore mutated to stamp `now`. `restoreFromBackup` writes `createdAt`
+for the same reason, unlike its three siblings, where `createdAt` is a storage stamp: on a re-import
+the file's value has to win over the one already in the column.
 
 **"The import leaves recurring untouched" is true of the sweep and false of the import.**
 `restore(dto: CategoryDto, …)` already calls `clearCategoryOnTypeChange` on
@@ -319,12 +325,33 @@ file. The fallback still stands — the file is untrusted, and a rollback after 
 is the catastrophic case either way — but the KDoc has to name both provenances once it serves both
 callers, or it argues something false for half of them.
 
-Still open, and left for the commit that writes the restore mapper: whether the recurring restore
-also needs a validating drop, the way `restore(dto: TransactionDto)`'s `toEntityOrNull()` discards a
-row whose `occurredAt` will not parse. Recurring has no `occurredAt`, but it has
-`lastConfirmedPeriod` — a zero-padded `"YYYY-MM"` that `ensureNotSettled` orders as a plain string —
-and a garbage value there still deserializes clean while breaking that ordering in silence. Not
-answered here.
+**Settled by the commit that wrote the mapper — the validating drop, and it splits in two.** The
+question was whether the recurring restore needs the equivalent of `restore(dto: TransactionDto)`'s
+`toEntityOrNull()`. The answer is yes for the enums and no for the period key, and the asymmetry is
+the whole of it:
+
+- **Unknown `type` or `frequency` → drop the row.** Not for the transaction's reason: a template
+  cannot skew a total, since the recurring screen and `GetRecurringMonthlyTotals` fold the same list
+  and `asExternalModelOrNull` drops it from both. It is dropped because invisible is not inert — the
+  row still counts in `countLiveByAccount`, which is what tells the owner an account cannot be
+  deleted because it still has recurring movements, on a screen showing none. And there is no safe
+  default: coercing Income to Spend corrupts the ledger the template mints into.
+- **Unparseable `lastConfirmedPeriod` → null, keep the row.** The hazard is real —
+  `ensureNotSettled` orders that column as a plain string, so `"julio"` sorts above every real key
+  and refuses every confirmation while `pendingPeriods` parses it, gets null, and keeps listing
+  those months as owed: months the user is shown and cannot confirm. But null is a state the column
+  already means ("never settled"), `SkipRecurringMovementUseCase` puts the mark back in one tap per
+  month without writing money the user did not enter, and dropping instead would throw away the
+  name, the amount, the account and the day the file carried correctly. The value is also
+  **re-encoded** through `parsePeriodKey` + `periodKey` rather than copied through — the same policy
+  `occurredAt` follows — which repairs the near-miss the parser accepts and the comparison does not:
+  `"2026-7"` reads as July and sorts above `"2026-08"`.
+
+**The gate is `>= BACKUP_RECURRING_SINCE_VERSION`, a frozen literal, not `>= BACKUP_SCHEMA_VERSION`.**
+The two are equal today and the equality is a coincidence of timing: the moment a version 4 exists, a
+gate written against the current version stops restoring the templates in every v3 file ever written,
+silently, since the import would read the file, skip the table and report success. Same reasoning as
+`BACKUP_SCHEMA_VERSION_V2`.
 
 **Two stale KDocs — CORRECTED, ahead of the behavior change.** In
 `DefaultBackupRepositoryImportTest`, the KDoc above the test for a backup that redefines a
@@ -333,8 +360,10 @@ beneath it asserts that exact mutation. `restore(dto: CategoryDto, …)`'s own K
 ("the import deliberately never touches that table"). Both now state the narrow claim instead — the
 import neither tombstones nor restores that table — and both name the detach as the one thing it
 does do. `DefaultBackupRepository`'s in-transaction comment and `docs/PROGRESS.md`'s 2.4.0
-measurement carried the same wording and were corrected with them. Nothing left in the repo says
-the import never touches that table; ③ still has to invert the narrow claim for v3.
+measurement carried the same wording and were corrected with them. ③ then inverted the narrow claim
+for v3 and kept it for v1 and v2, in every one of those places. What survived the inversion unchanged
+is the detach: a tombstone is not a delete, so a swept row still holds its old `(categoryId, type)`
+pair and still makes SQLite refuse the category's type change.
 
 **`ImportBackupDialog` (`:ui-android`) is user-facing and goes stale.** Both its `isSignedIn`
 body-copy branches enumerate the tables in Spanish — *"Tus movimientos, categorías y cuentas quedan

@@ -64,6 +64,38 @@ WHERE id = ?;
 deleteAll:
 DELETE FROM recurring_movements;
 
+-- ── Backup restore ────────────────────────────────────────────────────────────
+-- The same three statements accounts.sq declares, for the same two reasons — tombstone instead of
+-- DELETE so the removal survives a pull, and INSERT OR IGNORE + UPDATE instead of INSERT OR REPLACE
+-- so `ON DELETE RESTRICT` on accountId cannot refuse the physical delete OR REPLACE performs first.
+-- The full reasoning lives in accounts.sq; it is one decision, not two.
+--
+-- Only a payload that DECLARED version 3 or newer may run these: the format had no templates before
+-- then, so sweeping on an older file destroys rows nothing can put back. The gate lives in
+-- DefaultBackupRepository.importFromJson.
+--
+-- ONE divergence from the other three tables, and it is deliberate: restoreFromBackup writes
+-- createdAt. Everywhere else createdAt is a storage stamp and the row keeps the one it was first
+-- inserted with; here it is behaviour — RecurringDueRules.pendingPeriods floors the catch-up window
+-- at the month the template was created, so a re-import onto a device that still holds the row must
+-- take the file's value or every period the template owes before the local value disappears.
+-- lastConfirmedPeriod travels for the mirror-image reason: without it the restored template owes
+-- months the user already settled.
+-- userId is deliberately never written, exactly as on the other three.
+softDeleteAllLive:
+UPDATE recurring_movements
+SET deletedAt = :deletedAt, updatedAt = :updatedAt, syncState = 'Pending'
+WHERE deletedAt IS NULL;
+
+insertOrIgnoreFromBackup:
+INSERT OR IGNORE INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, lastConfirmedPeriod, createdAt, updatedAt, syncState)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending');
+
+restoreFromBackup:
+UPDATE recurring_movements
+SET name = ?, type = ?, amount = ?, description = ?, categoryId = ?, accountId = ?, frequency = ?, dayOfMonth = ?, isActive = ?, lastConfirmedPeriod = ?, createdAt = ?, updatedAt = ?, deletedAt = NULL, syncState = 'Pending'
+WHERE id = ?;
+
 selectAllWithDetails:
 SELECT
     rm.*,
