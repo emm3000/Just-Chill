@@ -138,11 +138,12 @@ class DefaultAuthRepositorySignOutTest {
      *
      * It builds its transport with [DISABLED_REQUEST_TIMEOUT] — no request timeout whatsoever, so
      * cancellation is the only thing in existence that can end the request. Sharing the 500ms the
-     * hanging test uses, or any other finite value, makes this a wall-clock race: whenever the timer
-     * wins, the swallow path runs instead of the cancellation path and the test fails for a reason
-     * that has nothing to do with the code under test. Two finite values were tried and both lost;
-     * [DISABLED_REQUEST_TIMEOUT] records what they were and why the answer is not a third one. The
-     * test is instead bounded at [HANG_BOUND], which cannot race anything.
+     * hanging test uses, or any other finite value, makes the timer a competitor of the mechanism
+     * under test: whenever it wins, the swallow path runs instead of the cancellation path and the
+     * test fails on an assertion that has nothing to do with the code under test. Two finite values
+     * were tried and both lost; [DISABLED_REQUEST_TIMEOUT] records what they were and why the answer
+     * is not a third one. The test is instead bounded at [HANG_BOUND] — which is still a wall clock,
+     * and is deliberately the only one left: read its KDoc for what that does and does not buy.
      *
      * The discriminating assertion below is deliberately NOT "does `deferred.await()` throw" —
      * verified empirically (by running this exact mutation) that it is not: cancelling a coroutine's
@@ -313,10 +314,11 @@ class DefaultAuthRepositorySignOutTest {
          *    runs it. An intermittent red is worse than a poor failure message, because the first
          *    thing anyone does with one is re-run it and the second is stop believing it.
          *
-         * **Do not put a number back here.** The fast-failure half of that trade is now bought
-         * separately and for free by [HANG_BOUND] on the test itself, which is where a bound on how
-         * long a test may run belongs — it does not have to be smuggled in as a network timeout that
-         * competes with the very mechanism under test.
+         * **Do not put a number back here.** The fast-failure half of that trade is bought
+         * separately by [HANG_BOUND] on the test itself, which is where a bound on how long a test
+         * may run belongs — it does not have to be smuggled in as a network timeout that competes
+         * with the very mechanism under test. It is not bought for free, and [HANG_BOUND] says what
+         * it costs.
          */
         val DISABLED_REQUEST_TIMEOUT = Duration.INFINITE
 
@@ -324,13 +326,38 @@ class DefaultAuthRepositorySignOutTest {
          * Bounds the cancellation test itself, replacing `runTest`'s 60s default.
          *
          * With no request timeout, a regression that stops cancellation from ending the request would
-         * hang instead of failing — so the bound moves here, where it cannot race anything. This is a
-         * ceiling on a test that normally finishes in milliseconds, not a timer the code under test
-         * competes with: nothing in the happy path waits on it, so making it generous costs nothing
-         * and shortening it buys nothing.
+         * hang instead of failing, so a bound has to exist somewhere. This is that bound, and it is a
+         * ceiling on a test that normally finishes in milliseconds.
          *
-         * Ten seconds and a `UncompletedCoroutinesError` naming the leaked coroutine beats sixty
-         * seconds of the same message.
+         * ### What it is, measured — not what it would be convenient for it to be
+         *
+         * **It is a real clock, and it covers the whole test body.** Verified against
+         * kotlinx-coroutines-test 1.11.0, the version this build resolves: `TestScope.runTest` runs
+         * its body inside `withTimeout(timeout)` (`commonMain/TestBuilders.kt:338`), and on the JVM
+         * the surrounding `createTestResult` is a plain `runBlocking`
+         * (`jvmMain/TestBuildersJvm.kt:9-13`). `runBlocking`'s context carries the default `Delay`,
+         * not the `TestScope`'s virtual `testScheduler`, so the deadline elapses in wall-clock time.
+         * The body is started `UNDISPATCHED` but parks on a `yield()` before any of its code runs
+         * (`TestBuilders.kt:312-315`) precisely so the timeout is armed first — which means the
+         * window opens at `createSupabaseClient`, not at the request.
+         *
+         * **So it did not remove the race the 10s request timeout lost; it widened the interval.**
+         * ktor arms a request timeout inside the `Send` phase
+         * (`HttpTimeout.kt:152` `on(Send)`, `:166` `applyRequestTimeout`), so the 10 seconds that
+         * measured 1 failure in 12 runs under load covered a strict SUBINTERVAL of what these 10
+         * seconds cover. Every load condition that beat the old timer beats this bound too, and
+         * marginally sooner.
+         *
+         * **What it does buy, and it is the whole of it: the failure is unambiguous.** When the old
+         * timer won, `HttpRequestTimeoutException` ended the request, the repository swallowed it,
+         * the session was cleared and the test failed on the session-status assertion — reporting a
+         * cancellation defect that had not happened. When this bound wins, the test fails with
+         * `UncompletedCoroutinesError` naming the leaked coroutine, which cannot be mistaken for a
+         * verdict about `signOut`. The race moved off the mechanism under test; it is not gone.
+         *
+         * Removing it outright would need the whole test to run on virtual time, and it cannot: a
+         * real `SupabaseClient` over a real ktor `MockEngine` is this suite's premise (see the class
+         * KDoc), and both dispatch on real threads.
          */
         val HANG_BOUND = 10.seconds
     }
