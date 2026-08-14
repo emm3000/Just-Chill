@@ -47,6 +47,10 @@ data class ExportPayloadDto(
      * frozen reader's `toCurrent()`, which can state the absence because it knows the format never
      * carried one. Emptiness cannot tell those two apart. The version can, and it is the only thing
      * that can, which is why the number had to move in the same commit as this field.
+     *
+     * That version is reachable: `decodePayload` returns [DecodedBackup], whose `declaredVersion`
+     * is the value it dispatched on. It is NOT [schemaVersion] above — every `toCurrent()` restamps
+     * that one to [BACKUP_SCHEMA_VERSION], because a converted payload really is the current shape.
      */
     val recurringMovements: List<RecurringMovementDto>,
 )

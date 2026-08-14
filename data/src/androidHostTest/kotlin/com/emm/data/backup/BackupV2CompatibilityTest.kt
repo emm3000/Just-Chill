@@ -22,6 +22,7 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
@@ -131,8 +132,29 @@ class BackupV2CompatibilityTest {
         // The seventh field, and the only one with no source on the frozen side — the conversion
         // invents it. Empty is the sole honest value: version 2 carried no templates, so there is
         // nothing to hand across. What must NOT be read into this emptiness is "the file says there
-        // are none"; the declared version is what separates those, and the sweep gates on that.
+        // are none"; the declared version is what separates those, and `decodePayload` carries it
+        // past this restamp as `DecodedBackup.declaredVersion` — pinned by the test below.
         assertTrue(current.recurringMovements.isEmpty())
+    }
+
+    /**
+     * The other half of the restamp above: the version the FILE declared survives the decode.
+     *
+     * `toCurrent()` is right to stamp 3 onto the payload — by then the payload is the current shape.
+     * The cost is that a v1 file, a v2 file and a v3 file exported by a device with no templates
+     * leave the decoder as three identical objects, `recurringMovements` empty on all three. The
+     * version-gated sweep cannot be written against that, and getting it wrong tombstones every
+     * template on the device over a file whose format never carried one. `declaredVersion` is the
+     * only thing that separates them, so it is asserted here rather than inferred from the payload.
+     */
+    @Test
+    fun `a version 2 file reaches the import still declaring version 2`() {
+        val decoded = repository.decodePayload(V2_BACKUP)
+
+        assertEquals(BACKUP_SCHEMA_VERSION_V2, decoded.declaredVersion)
+        assertNotEquals(BACKUP_SCHEMA_VERSION, decoded.declaredVersion)
+        assertEquals(BACKUP_SCHEMA_VERSION, decoded.payload.schemaVersion)
+        assertTrue(decoded.payload.recurringMovements.isEmpty())
     }
 
     // ── the whole restore ─────────────────────────────────────────────────────

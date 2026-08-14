@@ -62,8 +62,12 @@ internal const val BACKUP_SCHEMA_VERSION_V1: Int = 1
  *
  * The empty `recurringMovements` is a statement, not a shrug: version 1 predates the table entirely,
  * so a v1 file has nothing to say about templates and the import must not read this list as "the
- * file says there are none". What keeps those apart is the declared version, which the import gates
- * its sweep on — never the emptiness of this list.
+ * file says there are none". What keeps those apart is the declared version, which `decodePayload`
+ * carries out to the import as [DecodedBackup.declaredVersion] — never the emptiness of this list.
+ *
+ * [ExportPayloadDto.schemaVersion] is restamped to the current version below, deliberately: after
+ * this conversion the payload IS the current shape, and a payload that kept claiming to be v1 would
+ * be lying about itself. The fact that restamp destroys is the one [DecodedBackup] preserves.
  */
 internal fun ExportPayloadV1Dto.toCurrent(): ExportPayloadDto = ExportPayloadDto(
     schemaVersion = BACKUP_SCHEMA_VERSION,

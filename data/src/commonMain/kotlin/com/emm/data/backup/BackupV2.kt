@@ -100,8 +100,13 @@ internal const val BACKUP_SCHEMA_VERSION_V2: Int = 2
  * file contributes no templates because the format had none to carry, and the import has to read
  * that as "this file has nothing to say about them" rather than as "this file says there are none".
  *
- * The empty list here is not what says so — the declared version is, and the import gates its sweep
- * on that. This list is empty because there is nothing truthful to put in it.
+ * The empty list here is not what says so — the declared version is, and `decodePayload` carries it
+ * out to the import as [DecodedBackup.declaredVersion] rather than losing it here. This list is
+ * empty because there is nothing truthful to put in it.
+ *
+ * [ExportPayloadDto.schemaVersion] is restamped to the current version below, deliberately: after
+ * this conversion the payload IS the current shape, and a payload that kept claiming to be v2 would
+ * be lying about itself. The fact that restamp destroys is the one [DecodedBackup] preserves.
  */
 internal fun ExportPayloadV2Dto.toCurrent(): ExportPayloadDto = ExportPayloadDto(
     schemaVersion = BACKUP_SCHEMA_VERSION,

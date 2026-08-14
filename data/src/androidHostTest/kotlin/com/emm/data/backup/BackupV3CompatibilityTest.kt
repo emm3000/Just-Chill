@@ -9,6 +9,8 @@ import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.backup.ImportStats
+import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.error.ValidationCode
 import com.emm.domain.transaction.TransactionRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -19,6 +21,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -123,6 +126,46 @@ class BackupV3CompatibilityTest {
         assertNull(paused.categoryId)
         assertNull(paused.lastConfirmedPeriod)
         assertEquals(false, paused.isActive)
+    }
+
+    /**
+     * The third of the three declared-version guards, and the one that makes the other two mean
+     * something: a v3 file has to be distinguishable from a v1 or a v2 file after the decode.
+     *
+     * Its twins live in `BackupV1CompatibilityTest` and `BackupV2CompatibilityTest`, each against
+     * its own frozen bytes. All three payloads leave `decodePayload` claiming version 3 — correctly,
+     * since `toCurrent()` converted the older two — and this file is the only one of the three whose
+     * empty-or-not `recurringMovements` is a statement about the user's data.
+     */
+    @Test
+    fun `a version 3 file reaches the import declaring version 3, where the payload alone cannot say so`() {
+        val decoded = repository.decodePayload(V3_BACKUP)
+
+        assertEquals(BACKUP_SCHEMA_VERSION, decoded.declaredVersion)
+        assertEquals(BACKUP_SCHEMA_VERSION, decoded.payload.schemaVersion)
+        assertEquals(listOf("rec-1", "rec-2"), decoded.payload.recurringMovements.map { it.recurringMovementId })
+    }
+
+    /**
+     * A file that says version 3 and carries no `recurringMovements` key is corrupt, and is refused
+     * as corrupt — never decoded as "there are none".
+     *
+     * This is what [ExportPayloadDto.recurringMovements] having **no default** buys, and it is the
+     * whole of what it buys: adding `= emptyList()` is a one-token edit that compiles clean and
+     * leaves every other test in this module green, while turning a malformed file into a file that
+     * claims the device owns no templates. Under the version-gated sweep that claim is a delete
+     * order for every template on the device, authorized by a key that was simply missing.
+     *
+     * The fixture is the real one minus that key, written out by hand for the same reason the rest
+     * of this suite is: a variant derived from [ExportPayloadDto] would follow a rename.
+     */
+    @Test
+    fun `a version 3 file with no recurringMovements key is refused as corrupt, not read as none`() = runTest {
+        val ex = assertFailsWith<DomainException.ValidationError> {
+            repository.importFromJson(V3_BACKUP_WITHOUT_RECURRING)
+        }
+
+        assertEquals(ValidationCode.BackupFileInvalid, ex.code)
     }
 
     @Test
@@ -290,6 +333,31 @@ class BackupV3CompatibilityTest {
             "createdAt": 1780000000000
         }
     ]
+}
+"""
+
+        /**
+         * A file declaring version 3 with the `recurringMovements` key absent — the shape this app
+         * has never written, and the one that must fail rather than decode.
+         *
+         * Written out by hand like every fixture here, and kept minimal on purpose: the three older
+         * lists are present and valid so that the ONLY reason the decode fails is the missing key.
+         */
+        const val V3_BACKUP_WITHOUT_RECURRING = """
+{
+    "schemaVersion": 3,
+    "exportedAt": 1785000000000,
+    "appVersion": "2.5.0",
+    "accounts": [
+        {
+            "accountId": "acc-1",
+            "name": "BCP",
+            "type": "Bank",
+            "currency": "PEN"
+        }
+    ],
+    "categories": [],
+    "transactions": []
 }
 """
     }

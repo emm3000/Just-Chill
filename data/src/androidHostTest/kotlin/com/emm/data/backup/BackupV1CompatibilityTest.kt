@@ -21,6 +21,8 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -121,6 +123,28 @@ class BackupV1CompatibilityTest {
         val ex = assertFailsWith<DomainException.ValidationError> { repository.importFromJson(fromTheFuture) }
 
         assertEquals(ValidationCode.BackupVersionUnsupported, ex.code)
+    }
+
+    /**
+     * The decode keeps the fact the conversion destroys: this file was written at version 1.
+     *
+     * `toCurrent()` restamps the payload to the current version — correctly, since the payload is
+     * the current shape by then — which leaves a v1 file, a v2 file and a v3 file exported by a
+     * device with no templates as three identical objects. `declaredVersion` is what separates them,
+     * and the version-gated sweep is the reason that separation has to survive the decode: a sweep
+     * that read the empty `recurringMovements` as "the file says there are none" would tombstone
+     * every template on the device over a file whose format never carried one.
+     */
+    @Test
+    fun `a version 1 file reaches the import still declaring version 1`() {
+        val decoded = repository.decodePayload(V1_BACKUP)
+
+        assertEquals(BACKUP_SCHEMA_VERSION_V1, decoded.declaredVersion)
+        // Not the current version — asserting both is the whole point: the payload says 3 for every
+        // file that ever restores, so only the declared half can tell this file from a v3 one.
+        assertNotEquals(BACKUP_SCHEMA_VERSION, decoded.declaredVersion)
+        assertEquals(BACKUP_SCHEMA_VERSION, decoded.payload.schemaVersion)
+        assertTrue(decoded.payload.recurringMovements.isEmpty())
     }
 
     /**

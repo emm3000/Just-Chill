@@ -84,7 +84,12 @@ class DefaultBackupRepository(
     }
 
     override suspend fun importFromJson(json: String): ImportStats {
-        val payload = decodePayload(json)
+        // Both halves of the decode, deliberately: `payload` is the current shape, and
+        // `decoded.declaredVersion` is the version the FILE declared — the only thing that can tell
+        // a v1/v2 file apart from a v3 one exported by a device with no templates. Nothing reads it
+        // yet; the version-gated sweep is what will. See [DecodedBackup].
+        val decoded = decodePayload(json)
+        val payload = decoded.payload
 
         return safeDbCall {
             // One read, reused by the tombstone sweep and by every row restored after it — the
@@ -129,17 +134,30 @@ class DefaultBackupRepository(
     }
 
     /**
-     * Reads the file at whichever format version it declares.
+     * Reads the file at whichever format version it declares, and hands BOTH results back.
      *
      * The version is read FIRST, from the raw JSON, and only then is the payload decoded as the
      * shape that version actually had. Decoding optimistically and falling back would mean a v1
      * file was parsed by v2's rules first, which is exactly the mistake that makes an old file
      * report itself as corrupt.
+     *
+     * The version it dispatched on then travels out with the payload, in [DecodedBackup]. Returning
+     * the payload alone would throw it away: every branch below ends in the current shape, so a v1
+     * file, a v2 file and a v3 file written by a device with no templates all leave here identical.
+     * [DecodedBackup.declaredVersion] is what keeps them apart — and it is deliberately not
+     * recoverable from [ExportPayloadDto.schemaVersion], which each `toCurrent()` restamps to the
+     * current version precisely because the payload IS current by then.
+     *
+     * `internal` rather than private so the compatibility suites can assert that a v1 and a v2 file
+     * reach this boundary still declaring 1 and 2. Nothing outside the import path calls it, and
+     * nothing observable to `importFromJson`'s caller would fail if the version were lost — which is
+     * exactly why it has to be pinned here.
      */
-    private fun decodePayload(json: String): ExportPayloadDto {
+    internal fun decodePayload(json: String): DecodedBackup {
         val root = parse { importJson.parseToJsonElement(json).jsonObject }
+        val declaredVersion = schemaVersionOf(root)
 
-        return when (schemaVersionOf(root)) {
+        val payload = when (declaredVersion) {
             BACKUP_SCHEMA_VERSION -> parse {
                 importJson.decodeFromJsonElement<ExportPayloadDto>(root)
             }
@@ -161,6 +179,7 @@ class DefaultBackupRepository(
                 ValidationCode.BackupVersionUnsupported,
             )
         }
+        return DecodedBackup(declaredVersion = declaredVersion, payload = payload)
     }
 
     /**
