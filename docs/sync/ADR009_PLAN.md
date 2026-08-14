@@ -444,11 +444,49 @@ format, born at 1) and `payloadSchemaVersion` (the snapshot's `schemaVersion`, 3
 carries a default — a missing key must not be indistinguishable from a value, which is the lesson
 Phase 1 paid for. Every unreadable-payload path names a distinct reason (hard constraint 4).
 
-**2b-ii — storage. NOT STARTED.** Add `storage-kt` to the catalog (BOM 3.7.0 currently ships only
-auth-kt + postgrest-kt; zero Storage usage exists in the repo) and `install(Storage)` to
-`SupabaseModule`, which installs only `Auth` and `Postgrest` today. Bucket + RLS restricted to the
-owning user — model it on the row-table policies named above — created as a SQL migration under
-`supabase/`, where that CLI infra already exists. After upload, read back and verify before marking
+**2b-ii — storage. SPLIT IN TWO as well**, along the line the client/server boundary already draws:
+the infrastructure can land and be probed with no pipeline code, and a bucket that refuses the wrong
+thing is worth having before anything writes to it.
+
+**2b-ii part A — the bucket and the client plugin. LANDED** (`18ac5838`, `30098d14`, `04cae52c`,
+`74a0bdea`).
+`storage-kt` in the catalog (the BOM shipped only auth-kt + postgrest-kt; the repo had zero Storage
+usage), `install(Storage)` in `SupabaseModule` with `requireValidSession = true` beside Postgrest's,
+and `supabase/migrations/20260814200043_backup_storage_bucket.sql`: a private `backups` bucket capped
+at 10 MiB and constrained to `application/json`, plus select/insert/delete policies `to authenticated`
+keyed on `(storage.foldername(name))[1] = (select auth.uid())::text`, modelled on the row-table
+policies named above. No update grant — every snapshot name carries its own timestamp, so no key is
+ever rewritten. The predicate was probed against a live local stack with two real authenticated
+users and could not be crossed.
+
+Five things it settled that this plan had left open or got wrong:
+
+- **`storage.protect_delete()` refuses `delete from storage.objects` outright**, whatever the policy
+  says. So Phase 2c's retention prune MUST go through the Storage API; the delete policy is what
+  authorises the prune there, not what performs it. A policy-only reading of "delete works" is wrong.
+- **The mime constraint is an exact string match, parameters included.** storage-api compares the
+  Content-Type header verbatim against `allowed_mime_types`, so `application/json; charset=utf-8` is
+  refused with HTTP 415 `invalid_mime_type` — a hard failure that looks like a server fault. Part B
+  sends a **bare** `application/json`, which is also storage-kt's own default for a `.json` key
+  (`ContentType.defaultForFilePath`), so the trap springs only on an explicit `withCharset`.
+- **Resumable upload is unavailable, not merely unused.** `storage.s3_multipart_uploads` and
+  `storage.s3_multipart_uploads_parts` have RLS enabled with zero policies, so `uploadAsFlow` fails
+  for `authenticated` with an error naming none of that. Harmless under a 10 MiB ceiling — one-shot
+  upload is the right call anyway — but it is not a choice part B gets to make.
+- **`on conflict do nothing` is not a migration.** The bucket insert shipped with it, and it was
+  proven non-convergent: with the local bucket set to `public = true` and both limits null, re-running
+  the migration reported success and corrected nothing. On a project where `backups` already exists —
+  a hand-made Dashboard bucket, which sets neither a size nor a mime limit — production would have got
+  an unbounded bucket accepting any content type, and a later migration raising the limit would have
+  been a no-op forever. It is `do update` on the three settings columns now, so this file is the single
+  declaration of them; proven convergent by breaking all three by hand and re-running.
+- **Nothing in CI protects the RLS predicate.** `qualityGate` cannot see SQL policies and the repo has
+  no Supabase test infrastructure; the only proof this bucket is owner-scoped is a manual probe against
+  a local stack, which no green build repeats. Deferred to Phase 4, where the CI round-trip work
+  already lives — not given a home of its own here.
+
+**2b-ii part B — upload and read-back. NOT STARTED.** Upload the payload plus its sidecar manifest
+under the `<uid>/` prefix the policies expect, read the payload back, and verify before marking
 success.
 
 **What "verify" means, precisely, because the obvious reading is wrong.** It is
@@ -466,6 +504,15 @@ retries and any outer timeout above it. **Caveat**: read once out of the Gradle 
 2026-08-13 and nothing enforces it — a BOM bump can change it silently. Installing `HttpTimeout`
 explicitly in `SupabaseModule` would make it visible, but it also moves the sync push path, so it
 belongs to its own unit.
+
+**…and it does not govern the upload.** `Storage.Config.transferTimeout` is a separate knob with its
+own default of **120 seconds**, and it — not `requestTimeout` — is what bounds every call `StorageImpl`
+makes, not only an upload or a download: it sets `HttpTimeoutConfig.requestTimeoutMillis` on the
+Storage API client wholesale, so list and delete inherit the same 120s ceiling. `SupabaseModule`
+configures neither. So the paragraph above sizes retries for ordinary Postgrest calls only, and part B
+must not build chunking or progress reporting against a 10-second limit that is not there — and Phase
+2c's retention prune, a list-then-delete loop, runs under the 120s bound rather than the 10s
+`requestTimeout`.
 
 **2c — orchestration.**
 
@@ -511,8 +558,13 @@ successful.
    counts against local — **without applying it**. Result in UI.
 3. **Documented drill** added to the release checklist: after every DB schema bump, restore the
    latest production snapshot on a clean emulator and compare.
+4. **An automated RLS probe for the `backups` bucket**: two authenticated users, each proving it
+   reaches its own prefix and cannot list, read or delete the other's. Today that proof exists only
+   as a manual probe run once by hand against a local stack (2b-ii part A) — `qualityGate` cannot
+   see a SQL policy and the repo has no Supabase test infrastructure. This is where it stops being
+   a thing someone remembered to do.
 
-Only when all three pass does `SNAPSHOT_BACKUP_ENABLED` flip to `true`.
+Only when all four pass does `SNAPSHOT_BACKUP_ENABLED` flip to `true`.
 
 ### Phase 5 — decommission the engine
 

@@ -191,12 +191,29 @@ gana el ADR.
       post-read-back tiene que hashear la secuencia idéntica. `BackupManifestDto` lleva dos versiones
       que no se pueden confundir: `manifestVersion` (suya) y `payloadSchemaVersion` (la del snapshot
       que describe). Los 18 tests viven en `commonTest`, así que también compilan para iOS.
-    - [ ] 2b-ii — storage: `storage-kt` al catálogo, `install(Storage)` en `SupabaseModule`, bucket +
-      RLS por usuario como migración SQL bajo `supabase/`, y upload con read-back verificado.
-      **Ojo al escribir el read-back**: comparar los `rowCounts` del manifest no prueba nada — salen
-      de los mismos bytes que el digest, así que si el hash coincide los conteos coinciden por
-      construcción. La verificación real es `sha256Hex(bytesLeídos) == manifest.payloadSha256`, con
-      bytes crudos de los dos lados, nunca un String re-codificado.
+    - [ ] 2b-ii — storage. **Partida en dos también**, por donde ya corta el borde cliente/servidor:
+      la infraestructura se landea y se sondea sin una sola línea de pipeline, y un bucket que
+      rechaza lo que no corresponde conviene tenerlo antes de que algo escriba en él.
+      - [x] **Parte A — bucket y plugin**, en `trunk` el 2026-08-14 (`18ac5838`, `30098d14`,
+        `04cae52c`, `74a0bdea`), **sin pushear**. `storage-kt` al catálogo, `install(Storage)` en
+        `SupabaseModule` con `requireValidSession = true`, y la migración
+        `20260814200043_backup_storage_bucket.sql`: bucket `backups` privado, tope de 10 MiB, sólo
+        `application/json`, y políticas select/insert/delete `to authenticated` sobre el primer
+        segmento del path (sin update: cada snapshot lleva su timestamp, ninguna key se reescribe).
+        El predicado se sondeó contra un stack local con dos usuarios autenticados reales y no se
+        pudo cruzar. Tres trampas quedan anotadas en `sync/ADR009_PLAN.md` porque condicionan la
+        parte B y la 2c: `storage.protect_delete()` bloquea el DELETE por SQL (la poda de la 2c va
+        por la Storage API sí o sí), el mime se compara literal — `application/json; charset=utf-8`
+        devuelve HTTP 415 — y el upload resumable está cerrado por RLS. El `on conflict` pasó de
+        `do nothing` a `do update`: con `do nothing` la migración reportaba éxito y no corregía
+        nada sobre un bucket ya existente, probado rompiendo las tres columnas a mano. Nada en CI
+        protege el predicado RLS; eso queda diferido a la Fase 4.
+      - [ ] **Parte B — upload con read-back verificado.** **Ojo al escribirlo**: comparar los
+        `rowCounts` del manifest no prueba nada — salen de los mismos bytes que el digest, así que
+        si el hash coincide los conteos coinciden por construcción. La verificación real es
+        `sha256Hex(bytesLeídos) == manifest.payloadSha256`, con bytes crudos de los dos lados, nunca
+        un String re-codificado. Y el timeout que gobierna un upload es
+        `Storage.Config.transferTimeout` (120 s por defecto), no el `requestTimeout` de 10 s.
   - [ ] Fase 2c — orquestación: dirty flag, `backgroundEvents()`, "Back up now", retención,
     flag `SNAPSHOT_BACKUP_ENABLED`.
 - [ ] La app tiene que decir en pantalla, antes del primer upload a una cuenta nueva, que sube el

@@ -36,12 +36,13 @@
 --
 -- `do update`, NOT `do nothing`, and the difference is the whole value of the two paragraphs above.
 -- With `do nothing`, a bucket that already exists keeps whatever settings it was born with and this
--- migration reports success while enforcing none of them — the Dashboard's "New bucket" form leaves
--- both file_size_limit and allowed_mime_types null, so a `backups` bucket created by hand and then
--- migrated over would silently accept unbounded payloads of any content type. It also breaks the
--- "raise it here" workflow: a later migration editing these values would be a no-op forever.
--- `do update` makes this file the single declaration of the bucket's settings and re-running it
--- converge. It touches bucket metadata only — never storage.objects, so no stored snapshot moves.
+-- migration reports success while enforcing none of them — the Dashboard's "New bucket" form is
+-- believed to leave both file_size_limit and allowed_mime_types null (unverified against the hosted
+-- Dashboard), so a `backups` bucket created by hand and then migrated over would silently accept
+-- unbounded payloads of any content type. It also breaks the "raise it here" workflow: a later
+-- migration editing these values would be a no-op forever. `do update` makes this file the single
+-- declaration of the bucket's settings and makes re-running it converge. It touches bucket metadata
+-- only — never storage.objects, so no stored snapshot moves.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('backups', 'backups', false, 10485760, array['application/json'])
 on conflict (id) do update set
