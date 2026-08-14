@@ -651,6 +651,32 @@ class DefaultBackupRepositoryImportTest {
         assertEquals(120_000L, restored.amount)
     }
 
+    /**
+     * The same repair, for the mark that reached a real device.
+     *
+     * A hand-edited v3 file carrying `"12345-07"` imported and the column still held `12345-07`:
+     * the re-encode canonicalized the month and passed the year through, because nothing bounded
+     * it. That value sorts above every real key, so the template refuses every confirmation as
+     * already-settled while offering nothing to confirm — silent, and permanent.
+     *
+     * Nulling it is the same answer `"julio"` gets, and it is reachable for the same reason: only a
+     * hand-edited file can carry a year `periodKey` could not have written.
+     */
+    @Test
+    fun `a settled mark whose year the app could not have written restores with no mark`() = runTest {
+        val json = payloadWith(
+            categoriesJson = emptyList(),
+            transactionsJson = emptyList(),
+            recurringJson = listOf(template(id = "rec-1", lastConfirmedPeriod = "12345-07")),
+        )
+
+        repository.importFromJson(json)
+
+        val restored = db.recurring_movementsQueries.find("rec-1").executeAsOne()
+        assertNull(restored.lastConfirmedPeriod)
+        assertEquals("Alquiler", restored.name)
+    }
+
     @Test
     fun `a settled mark the parser accepts is re-encoded into the shape the comparison needs`() = runTest {
         // "2026-7" parses as July and sorts ABOVE "2026-08" as a string, so a value copied through

@@ -14,6 +14,8 @@ private const val LEAP_YEAR_DIVISOR = 4
 private const val CENTURY_DIVISOR = 100
 private const val QUAD_CENTURY_DIVISOR = 400
 private const val PERIOD_KEY_PARTS = 2
+private const val PERIOD_KEY_YEAR_LENGTH = 4
+private const val MAX_PERIOD_KEY_YEAR = 9999
 
 /**
  * How far back [pendingPeriods] will ask a user to catch up, current month included.
@@ -64,12 +66,31 @@ fun periodKey(yearMonth: YearMonth): String {
 /**
  * Parses a "YYYY-MM" key back into a [YearMonth], or null when it is malformed.
  *
- * Rows arrive from other devices, so the stored key is untrusted input like any other column.
+ * Rows arrive from other devices and from a backup file the user can hand-edit, so the stored key
+ * is untrusted input like any other column.
+ *
+ * **The year is bounded to what [periodKey] can emit — four characters, 1..9999 — and that bound is
+ * the whole point of this being stricter than "two numbers".** `ensureNotSettled` compares this
+ * column as a plain string, so `"12345-07"` sorts above every real key: every confirmation is
+ * refused as already-settled, while [pendingPeriods] reads it as a floor past the current month and
+ * offers nothing to confirm. The template goes silent, and nothing in the app can put it back.
+ *
+ * `"9999-12"` sorts above every real key too and is accepted anyway, because the two are not the
+ * same failure. A far-future *valid* mark means "settled through then" — someone wrote it, and
+ * refusing confirmations under it is the monotonic guard working. A five-digit year is *malformed*:
+ * no writer in this app can produce it, so it carries no such statement. Only the second is a
+ * defect, and only the second is rejected — where the import turns it into null and keeps the row.
+ *
+ * The month stays lenient (`"2026-7"` reads as July) on purpose: the import repairs a near-miss by
+ * parsing it and re-encoding through [periodKey], which it can only do while the parser reads it.
  */
 fun parsePeriodKey(key: String): YearMonth? {
     val parts = key.split('-')
     if (parts.size != PERIOD_KEY_PARTS) return null
-    val year = parts[0].toIntOrNull()
+    val year = parts[0]
+        .takeIf { it.length == PERIOD_KEY_YEAR_LENGTH }
+        ?.toIntOrNull()
+        ?.takeIf { it in 1..MAX_PERIOD_KEY_YEAR }
     val monthNumber = parts[1].toIntOrNull()?.takeIf { it in 1..Month.entries.size }
     return if (year != null && monthNumber != null) YearMonth(year, Month(monthNumber)) else null
 }

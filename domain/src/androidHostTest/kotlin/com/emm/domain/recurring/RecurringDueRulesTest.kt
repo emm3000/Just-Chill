@@ -118,6 +118,35 @@ class RecurringDueRulesTest {
         assertNull(parsePeriodKey(""))
     }
 
+    /**
+     * A year `periodKey` could never have written is malformed, and it jams the template it is on.
+     *
+     * `ensureNotSettled` compares this column as a plain string, so `"12345-07"` sorts above every
+     * real key: every confirmation is refused as already-settled while `pendingPeriods` reads the
+     * same value as a floor past the current month and offers nothing to confirm. The template goes
+     * silent, permanently, and the import that was meant to repair marks like this passed it
+     * straight through because nothing bounded the year.
+     *
+     * `"9999-12"` sorts above every real key too and is deliberately still accepted: it is a mark
+     * `periodKey` can write, and "settled through December 9999" refusing confirmations is the
+     * monotonic guard doing its job on a value someone meant. Only the unwritable one is a defect.
+     */
+    @Test
+    fun `parsePeriodKey rejects a year no periodKey could have written`() {
+        assertNull(parsePeriodKey("12345-07"))
+        assertNull(parsePeriodKey("0-07"))
+        assertNull(parsePeriodKey("0000-07"))
+        assertEquals(YearMonth(9999, Month.DECEMBER), parsePeriodKey("9999-12"))
+    }
+
+    @Test
+    fun `parsePeriodKey still accepts a month written without its leading zero`() {
+        // Deliberate leniency, and the year bound must not take it away: the import repairs
+        // "2026-7" — which sorts above "2026-08" and would settle August by accident — only by
+        // parsing it and re-encoding through periodKey, which needs the parser to read it first.
+        assertEquals(YearMonth(2026, Month.JULY), parsePeriodKey("2026-7"))
+    }
+
     // ── pendingPeriods boundaries ─────────────────────────────────────────────
 
     /**
