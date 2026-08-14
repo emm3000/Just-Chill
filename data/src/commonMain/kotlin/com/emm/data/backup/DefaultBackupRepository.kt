@@ -39,10 +39,7 @@ private val importJson = Json {
 
 private const val SCHEMA_VERSION_KEY = "schemaVersion"
 
-class DefaultBackupRepository(
-    private val db: EmmDatabaseData,
-    private val clock: Clock,
-) : BackupRepository {
+class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock: Clock) : BackupRepository {
 
     /**
      * The whole ledger as ONE snapshot — four tables read inside a single transaction.
