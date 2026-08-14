@@ -677,6 +677,33 @@ class DefaultBackupRepositoryImportTest {
         assertEquals("Alquiler", restored.name)
     }
 
+    /**
+     * The same repair, for the year a *length* bound let through — the worse half of the same defect.
+     *
+     * `periodKey` never pads the year, so `"0999-07"` is as unwritable as `"12345-07"`. A four-
+     * character check accepted it anyway, and the re-encode then made it worse rather than better:
+     * year 999 renders as `"999-07"`, which the parser rejects, so the column ends up holding a mark
+     * `pendingPeriods` reads as "never settled" while `ensureNotSettled`'s string comparison reads
+     * `"999-07" >= "2026-08"` as settled. Confirm throws, skip throws, and the months stay on screen.
+     *
+     * Null is the answer for the same reason it is `"12345-07"`'s: the mark is the only field the app
+     * can rebuild, and only a hand-edited file can carry a year `periodKey` could not have written.
+     */
+    @Test
+    fun `a settled mark whose year was padded to four characters restores with no mark`() = runTest {
+        val json = payloadWith(
+            categoriesJson = emptyList(),
+            transactionsJson = emptyList(),
+            recurringJson = listOf(template(id = "rec-1", lastConfirmedPeriod = "0999-07")),
+        )
+
+        repository.importFromJson(json)
+
+        val restored = db.recurring_movementsQueries.find("rec-1").executeAsOne()
+        assertNull(restored.lastConfirmedPeriod)
+        assertEquals("Alquiler", restored.name)
+    }
+
     @Test
     fun `a settled mark the parser accepts is re-encoded into the shape the comparison needs`() = runTest {
         // "2026-7" parses as July and sorts ABOVE "2026-08" as a string, so a value copied through

@@ -150,6 +150,13 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData,
      *
      * Period keys are zero-padded "YYYY-MM", so string ordering is chronological ordering and the
      * comparison needs no parsing.
+     *
+     * **Paired guard:** `parsePeriodKey` in `:domain` decides the same question — "is this mark
+     * settled" — and is the only one of the two that bounds what a well-formed key is. They must
+     * agree. A key that parser rejects still reaches this comparison as a raw string and sorts
+     * wherever its bytes fall, so a mark it calls malformed can settle every future period here
+     * while `pendingPeriods` goes on listing them as owed: confirm and skip both throw, and the
+     * template is stuck. Change that bound and re-read this.
      */
     private fun ensureNotSettled(recurringId: String, period: String) {
         val settledThrough = rmq.find(recurringId).executeAsOneOrNull()?.lastConfirmedPeriod ?: return

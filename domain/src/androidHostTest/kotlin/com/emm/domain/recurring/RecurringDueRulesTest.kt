@@ -139,6 +139,34 @@ class RecurringDueRulesTest {
         assertEquals(YearMonth(9999, Month.DECEMBER), parsePeriodKey("9999-12"))
     }
 
+    /**
+     * The same rejection, for the years a *four-character* check let through.
+     *
+     * `periodKey` pads the month and not the year, so a four-character year it emits is only ever
+     * `1000..9999`. Bounding by length accepted `"0999"` anyway, and that
+     * is worse than the five-digit case, not better: the import parses it as year 999 and re-encodes
+     * through `periodKey` into `"999-07"`, which this parser then rejects (three characters). The
+     * column ends up holding a mark `pendingPeriods` reads as "never settled" — so it lists those
+     * months as owed — while `ensureNotSettled`'s raw string comparison reads `"999-07" >= "2026-08"`
+     * as settled and refuses **both** confirm and skip. There is no tap left that unjams it.
+     *
+     * `"+999"` is the same hole through a different door: `toIntOrNull` accepts a leading sign, so it
+     * is four characters and parses to 999.
+     */
+    @Test
+    fun `parsePeriodKey rejects a four-character year periodKey would never have padded`() {
+        assertNull(parsePeriodKey("0999-07"))
+        assertNull(parsePeriodKey("0001-01"))
+        assertNull(parsePeriodKey("+999-07"))
+    }
+
+    @Test
+    fun `parsePeriodKey accepts the first year periodKey can write without padding`() {
+        // The floor is inclusive: 1000 is the smallest year that renders as four characters, so it
+        // is a key periodKey can emit and the bound must not round it away with the padded ones.
+        assertEquals(YearMonth(1000, Month.JANUARY), parsePeriodKey("1000-01"))
+    }
+
     @Test
     fun `parsePeriodKey still accepts a month written without its leading zero`() {
         // Deliberate leniency, and the year bound must not take it away: the import repairs
