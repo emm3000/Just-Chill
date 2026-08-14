@@ -170,6 +170,13 @@ gana el ADR.
     `JdbcSqliteDriver` real: los 8 comportamientos que pinneaba siguen pinneados, más 3 nuevos.
     Revisado en contexto fresco con el gate corrido desde cero y **verificación por mutación** —
     sacar el `safeDbCall` y la transacción tira exactamente los dos tests nuevos.
+    **Smoke test en device, 2026-08-14, `emulator-5554`**: el gate nunca ejerció esto contra SQLite de
+    Android — los host tests corren sobre `JdbcSqliteDriver` (JVM) y el device usa
+    `AndroidSqliteDriver`, que lleva la transacción en un `ThreadLocal`. Se exportó por UI y los cuatro
+    conteos del archivo coinciden con los del SQLite del device (1 cuenta, 2 categorías, 1 movimiento,
+    3 plantillas), `schemaVersion` 3, las cuatro arrays presentes, arranque sin
+    `NoDefinitionFoundException` — el riesgo real del constructor que pasó de seis dependencias a dos —
+    y cero excepciones en logcat. Observado, no razonado.
   - [ ] Fase 2b — storage. **Partida en dos**, porque el plan la escribió como una sola unidad y
     mezcla tres cosas que fallan distinto: una dependencia, una migración de servidor y el primitivo
     de integridad. El mismo criterio con el que el plan ya parte la Fase 2 en tres series de PR.
