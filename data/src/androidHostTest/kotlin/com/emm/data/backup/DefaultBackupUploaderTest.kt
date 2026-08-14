@@ -17,8 +17,8 @@ import kotlin.test.assertTrue
  * was handed, so a mismatch cannot be provoked against one; behind the seam it is a two-line stub.
  * Everything else here rides on the same fixture, including the nine failure paths that must stay
  * nine different messages — ADR 009 hard constraint 4, the reason the 2026-08-12 outage stayed
- * invisible as long as it did. The other two of the pipeline's eleven come out of the real store and
- * belong to `SupabaseBackupObjectStoreTest`.
+ * invisible as long as it did. The other three of the pipeline's twelve come out of the real store
+ * and belong to `SupabaseBackupObjectStoreTest`.
  *
  * The expected messages are written out as literals rather than read from production. That is
  * deliberate and is the same discipline `BackupManifestTest` follows: a test that builds its

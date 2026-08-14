@@ -63,15 +63,18 @@ import kotlin.coroutines.cancellation.CancellationException
  *
  * ### Failure reasons
  *
- * **Eleven paths, eleven messages**, because ADR 009 hard constraint 4 exists: the 2026-08-12 outage
+ * **Twelve paths, twelve messages**, because ADR 009 hard constraint 4 exists: the 2026-08-12 outage
  * was invisible for as long as it was because one path logged nothing. Nine of them originate here —
  * resolving the owning prefix, uploading the payload, reading it back, the digest disagreeing,
  * failing to discard the object that disagreed, uploading the manifest, reading the manifest back,
- * the manifest disagreeing, failing to discard the pair — and two more come out of
- * [SupabaseBackupObjectStore.ownedPrefix] intact: nobody is signed in, and a session that never
- * finished loading. Collapsing any two would tell whoever is holding the outage only what they
- * already knew. `DefaultBackupUploaderTest` asserts the nine as a property rather than trusting nine
- * expectations to disagree by accident; `SupabaseBackupObjectStoreTest` owns the other two.
+ * the manifest disagreeing, failing to discard the pair — and three more come out of
+ * [SupabaseBackupObjectStore] intact: nobody is signed in, a session that never finished loading,
+ * and a key that does not end in `.json`. That last one is a defect in this app's own naming rather
+ * than a transport failure, and it is counted with the rest precisely because whoever reads the
+ * message has no way to know that in advance. Collapsing any two would tell whoever is holding the
+ * outage only what they already knew. `DefaultBackupUploaderTest` asserts the nine as a property
+ * rather than trusting nine expectations to disagree by accident; `SupabaseBackupObjectStoreTest`
+ * owns the other three.
  *
  * The exception TYPE still comes from the cause, so a caller can still tell a dead network from a
  * refusal; the message is what carries the step. Translation is [asBackupFailure], written here and
@@ -194,9 +197,10 @@ private suspend fun <T> remotely(reason: String, block: suspend () -> T): T = tr
 /**
  * Supabase/Ktor throwable to [DomainException], keeping [reason] as the message.
  *
- * A [DomainException] passes through unchanged — [BackupObjectStore.ownedKey] already throws one for
- * a missing session, and rewrapping it would bury the only failure here that is not a transport
- * problem under a message about the step that merely noticed it.
+ * A [DomainException] passes through unchanged — [BackupObjectStore.ownedPrefix] already throws one
+ * for a missing session and [BackupObjectStore.upload] one for a key that does not end in `.json`,
+ * and rewrapping either would bury the failures here that are not transport problems under a message
+ * about the step that merely noticed them.
  *
  * [RestException] carries the server's own status, and it is spelled into the message rather than
  * left in the cause because the two refusals this bucket is configured to produce are unreadable

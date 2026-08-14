@@ -83,8 +83,8 @@ class SupabaseBackupObjectStoreTest {
             store.ownedPrefix()
         }
 
-        // Hard constraint 4: this is one of the eleven things that can go wrong in the pipeline and
-        // it has to be tellable from the other ten by reading the failure.
+        // Hard constraint 4: this is one of the twelve things that can go wrong in the pipeline and
+        // it has to be tellable from the other eleven by reading the failure.
         assertEquals(
             "Snapshot backup failed: nobody is signed in, so there is no prefix to store it under.",
             failure.message,
@@ -145,16 +145,32 @@ class SupabaseBackupObjectStoreTest {
     }
 
     private suspend fun clientWithSession(recordingInto: MutableList<HttpRequestData>? = null): SupabaseClient =
-        client(recordingInto).also { it.auth.importSession(session(), autoRefresh = false) }
+        settled(client(recordingInto)).also { it.auth.importSession(session(), autoRefresh = false) }
+
+    private suspend fun clientWithoutSession(): SupabaseClient = settled(client())
 
     /**
-     * The session is settled on a REAL dispatcher before the store ever sees the client, and that is
-     * not ceremony. supabase-kt leaves `sessionStatus` in `Initializing` until a coroutine on its own
-     * scope moves it, and `runTest`'s virtual clock advances the moment the test scheduler has
-     * nothing left to run — so an unsettled client would make [SupabaseBackupObjectStore.ownedPrefix]
-     * report the timeout instead of the missing session, testing the wrong thing entirely.
+     * Waits, on a REAL dispatcher, for the Auth plugin to finish initializing. Both helpers above go
+     * through it, and it is not ceremony in either.
+     *
+     * `Auth`'s own `init` moves `sessionStatus` out of `Initializing` from coroutines it launches on
+     * its own scope — which these tests pin to [Dispatchers.Main], a standalone
+     * [UnconfinedTestDispatcher] whose scheduler `runTest` never drives. Nothing here can advance it,
+     * so the settle has to happen on a dispatcher backed by real threads.
+     *
+     * It buys a different thing on each side, and both are load-bearing:
+     *
+     * - **without a session**, an unsettled client is still `Initializing`, so
+     *   [SupabaseBackupObjectStore.ownedPrefix] reports its ten-second ceiling instead of the missing
+     *   session — a green test asserting the wrong failure.
+     * - **with a session**, `importSession` into a plugin that has not finished initializing races
+     *   `init`'s own status write, and the write can land last: `awaitInitialization()` then returns
+     *   with `currentUserOrNull()` null and the imported session gone. That is a FLAKE, and it was a
+     *   real one — it fell over on a cold parallel `qualityGate` as `Unauthorized` from the prefix
+     *   test, and passed on the next two runs and in isolation. Settling first is what removes the
+     *   race rather than reducing its odds.
      */
-    private suspend fun clientWithoutSession(): SupabaseClient = client().also {
+    private suspend fun settled(client: SupabaseClient): SupabaseClient = client.also {
         withContext(Dispatchers.Default) { it.auth.awaitInitialization() }
     }
 

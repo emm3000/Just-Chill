@@ -20,7 +20,7 @@ fun DomainException.toUserMessage(): String = when (this) {
  *
  * A `ValidationError`'s own `message` is English and diagnostic; it never reaches the snackbar.
  * Keep every branch on one line — a multiline branch makes ktlint demand a blank line between all
- * nineteen of them.
+ * twenty of them.
  *
  * Suppressed: this is a flat dispatch table over an enum, so every case added raises the cyclomatic
  * count by one while the code stays exactly as simple as it was. Splitting it to satisfy the
