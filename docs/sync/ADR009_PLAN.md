@@ -369,9 +369,11 @@ pair and still makes SQLite refuse the category's type change.
 body-copy branches enumerated the tables in Spanish — *"Tus movimientos, categorías y cuentas quedan
 tal cual el archivo"* — and its KDoc made the same list in English ("replaces every movement,
 category and account"). Both went incomplete the moment v3 started sweeping recurring, on the one
-screen where the user consents to a destructive operation. Both now name "recurrentes" too, for
-every file — including a v1/v2 one, since the dialog runs before the file is decoded and cannot
-tell it apart from a v3 one; that deliberate over-warning is argued in the dialog's own KDoc.
+screen where the user consents to a destructive operation. Both now name the table: the two Spanish
+body-copy branches say "recurrentes", the KDoc says "recurring movement" in English, as the
+repo-wide convention requires. They name it for every file — including a v1/v2 one, since the
+dialog runs before the file is decoded and cannot tell it apart from a v3 one; that deliberate
+over-warning is argued in the dialog's own KDoc.
 Correctness, not copy polish, and in this phase's scope. The body copy stays Spanish; it is UI.
 
 **`ImportStats` — LANDED.** Gained a `recurring` count (`accounts` / `categories` / `transactions`

@@ -114,7 +114,10 @@ class DefaultBackupRepositoryImportTest {
 
         val stats: ImportStats = repository.importFromJson(json)
 
-        // buildPayloadJson never writes any recurringMovements.
+        // recurring = 0 is the OPPOSITE reading from the v1/v2 fixtures' identical zero. Their
+        // format cannot touch the table, so their zero means "none touched"; buildPayloadJson
+        // declares version 3 with an empty `recurringMovements`, so this one means "swept, and
+        // nothing carried to restore" — the count is of what landed after the sweep.
         assertEquals(ImportStats(accounts = 1, categories = 2, transactions = 3, recurring = 0), stats)
     }
 
@@ -552,6 +555,41 @@ class DefaultBackupRepositoryImportTest {
         assertEquals(1, rawCount("SELECT COUNT(*) FROM accounts WHERE userId = 'user-1'"))
         // Re-queued for push: the restore is the newer write and must win LWW.
         assertEquals(1, rawCount("SELECT COUNT(*) FROM accounts WHERE syncState = 'Pending'"))
+    }
+
+    /**
+     * The same guard for `recurring_movements`, which had none at all.
+     *
+     * All four `restoreFromBackup` statements write `syncState = 'Pending'` so the restore is the
+     * newer write and wins LWW; only the accounts one was asserted. Flipping the literal in
+     * `recurring_movements.sq` to `'Synced'` left this entire suite green — a restored template
+     * would sit unqueued, the push would skip it, and the device that owns the backup would keep
+     * serving the row the file just replaced.
+     *
+     * The SECOND import is what narrows this to `restoreFromBackup`: the row already exists, so
+     * `insertOrIgnoreFromBackup` — which writes a `'Pending'` literal of its own — does nothing,
+     * and the state read back can only have come from the UPDATE.
+     */
+    @Test
+    fun `a restored template is re-queued for push and keeps the userId it was claimed under`() = runTest {
+        val json = payloadWith(
+            categoriesJson = emptyList(),
+            transactionsJson = emptyList(),
+            recurringJson = listOf(template(id = "rec-1")),
+        )
+        repository.importFromJson(json)
+        exec("UPDATE recurring_movements SET userId = 'user-1', syncState = 'Synced'")
+
+        repository.importFromJson(json)
+
+        assertEquals(
+            1,
+            rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'rec-1' AND userId = 'user-1'"),
+        )
+        assertEquals(
+            1,
+            rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'rec-1' AND syncState = 'Pending'"),
+        )
     }
 
     // ── an untrusted file: templates the app cannot hold as written ───────────
