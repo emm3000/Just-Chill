@@ -29,5 +29,17 @@ enum class ValidationCode {
     GoogleTokenInvalid,
     BackupFileInvalid,
     BackupVersionUnsupported,
+
+    /**
+     * A snapshot this app uploaded did not survive the round trip — the stored bytes did not match
+     * what was sent.
+     *
+     * **Deliberately not [BackupFileInvalid]**, which is about a file the user CHOSE to restore and
+     * whose message says the file is damaged. Here the actor is the same user, the artefact is one
+     * this app produced seconds ago, and the event is a backup that failed rather than a restore that
+     * was refused. Reusing the other code would tell the owner of a perfectly good ledger that their
+     * file is corrupt.
+     */
+    BackupUploadUnverified,
     Unspecified,
 }

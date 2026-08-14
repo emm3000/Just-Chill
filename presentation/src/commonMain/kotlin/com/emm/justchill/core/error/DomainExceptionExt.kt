@@ -20,7 +20,7 @@ fun DomainException.toUserMessage(): String = when (this) {
  *
  * A `ValidationError`'s own `message` is English and diagnostic; it never reaches the snackbar.
  * Keep every branch on one line — a multiline branch makes ktlint demand a blank line between all
- * eighteen of them.
+ * nineteen of them.
  *
  * Suppressed: this is a flat dispatch table over an enum, so every case added raises the cyclomatic
  * count by one while the code stays exactly as simple as it was. Splitting it to satisfy the
@@ -46,5 +46,6 @@ private fun ValidationCode.toUserMessage(): String = when (this) {
     ValidationCode.GoogleTokenInvalid -> "No pudimos validar tu cuenta de Google — intenta de nuevo"
     ValidationCode.BackupFileInvalid -> "El archivo está dañado o no es un respaldo de JustChill"
     ValidationCode.BackupVersionUnsupported -> "Ese respaldo es de una versión que esta app no puede leer"
+    ValidationCode.BackupUploadUnverified -> "No pudimos verificar tu respaldo en la nube — intenta de nuevo"
     ValidationCode.Unspecified -> "Algo no cuadra con los datos"
 }
