@@ -25,6 +25,10 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
+            // SHA-256 for the backup integrity check. Already transitive through supabase-kt/Ktor;
+            // declared so the digest the backups are verified against is ours to pin. See the
+            // catalog note on the `okio` version.
+            implementation(libs.okio)
         }
         androidMain.dependencies {
             implementation(libs.android.driver)
