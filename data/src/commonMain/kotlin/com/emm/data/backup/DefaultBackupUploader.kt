@@ -12,7 +12,8 @@ import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * Uploads a snapshot, reads it back, and writes the manifest only once the bytes have matched.
+ * Uploads a snapshot, reads it back, and writes the manifest only once the bytes have matched — then
+ * reads the manifest back too.
  *
  * ### The order is the design, and it is the manifest that carries the meaning
  *
@@ -29,25 +30,48 @@ import kotlin.coroutines.cancellation.CancellationException
  * **A read-back that FAILS deliberately does not delete.** The failure that stopped the read is
  * overwhelmingly the transport, and a delete over the same dead transport would fail too — replacing
  * a precise "could not read it back" with a vague "could not clean up", which is the reason
- * disappearing rather than the object. The orphan it leaves is the safe leftover again, so ADR 009
- * Phase 2c's retention prune must treat a payload with no manifest as prunable rubbish and never as
- * a snapshot.
+ * disappearing rather than the object. The orphan it leaves is the safe leftover again.
+ *
+ * **The rule that makes an orphan safe lives in `docs/sync/ADR009_PLAN.md`, not here.** ADR 009
+ * Phase 2c's retention prune keys on the presence of `<name>.manifest.json` and never on `<name>`
+ * alone; a payload without its sidecar counts toward no retention bucket and is deleted on sight.
+ * That rule is stated in the plan because that is what 2c is built from, and its full argument —
+ * including which orphans it knowingly throws away — is there. It is repeated here only so nobody
+ * changes this ordering believing the prune will sort it out.
  *
  * ### What "verify" is, since the obvious reading is wrong
  *
- * `sha256Hex(readBackBytes) == manifest.payloadSha256`, raw bytes on both sides, and **not** a
- * comparison of the manifest's row counts. Both are derived from the same array by
+ * For the payload: `sha256Hex(readBackBytes) == manifest.payloadSha256`, raw bytes on both sides, and
+ * **not** a comparison of the manifest's row counts. Both are derived from the same array by
  * [buildBackupManifest], so matching counts are a tautology when the digest matches and describe a
  * payload that no longer exists when it does not. [BackupManifestDto.rowCounts]'s own KDoc says so;
  * the counts earn their keep at listing time, not here.
  *
+ * **The manifest is verified too, and by plain byte equality**, because trusting its 200 is the exact
+ * thing this class exists to refuse. It needs no digest of its own: the array that was uploaded is
+ * still in hand, it is a few hundred bytes, and comparing it to what came back is strictly stronger
+ * than hashing both. What it prevents is a false alarm on a GOOD snapshot — a manifest corrupted in
+ * transit states a digest the payload beside it will never match, so a later pre-restore check
+ * condemns intact bytes and the owner is told a perfectly restorable ledger is broken.
+ *
+ * On a manifest mismatch **both** objects are deleted, in that order. There is no valid receipt, so
+ * there is nothing to keep: a payload whose only manifest is known wrong is exactly the orphan the
+ * prune discards anyway, and leaving the bad manifest up would leave the false alarm in place. This
+ * is also the one cleanup path where the transport is known to be working — the mismatch was
+ * measured over bytes that arrived — so the delete is expected to succeed rather than hoped for, and
+ * that is what separates it from the read-back failure two paragraphs up.
+ *
  * ### Failure reasons
  *
- * Six paths, six messages, because ADR 009 hard constraint 4 exists: the 2026-08-12 outage was
- * invisible for as long as it was because one path logged nothing. Uploading the payload, reading it
- * back, the digest disagreeing, failing to discard the object that disagreed, uploading the manifest
- * and having no session at all are six different things to go and look at, and collapsing them into
- * one "backup failed" would tell whoever is holding the outage only what they already knew.
+ * **Eleven paths, eleven messages**, because ADR 009 hard constraint 4 exists: the 2026-08-12 outage
+ * was invisible for as long as it was because one path logged nothing. Nine of them originate here —
+ * resolving the owning prefix, uploading the payload, reading it back, the digest disagreeing,
+ * failing to discard the object that disagreed, uploading the manifest, reading the manifest back,
+ * the manifest disagreeing, failing to discard the pair — and two more come out of
+ * [SupabaseBackupObjectStore.ownedPrefix] intact: nobody is signed in, and a session that never
+ * finished loading. Collapsing any two would tell whoever is holding the outage only what they
+ * already knew. `DefaultBackupUploaderTest` asserts the nine as a property rather than trusting nine
+ * expectations to disagree by accident; `SupabaseBackupObjectStoreTest` owns the other two.
  *
  * The exception TYPE still comes from the cause, so a caller can still tell a dead network from a
  * refusal; the message is what carries the step. Translation is [asBackupFailure], written here and
@@ -71,12 +95,20 @@ class DefaultBackupUploader internal constructor(private val store: BackupObject
         // a mismatch would then be indistinguishable from a corrupted transfer.
         val payloadBytes = payload.encodeToByteArray()
         val manifest = buildBackupManifest(fileName, payloadBytes)
+        // Serialised OUTSIDE the upload's failure wrapper: a defect in the manifest's own encoding is
+        // not a transport problem, and reporting it as "the manifest could not be uploaded" would
+        // send whoever is reading that line to the network.
+        val manifestBytes = manifest.encodeToJson().encodeToByteArray()
 
-        // Both keys resolved before anything is written, so a session that ends mid-upload cannot
-        // land the manifest under a different prefix from the payload it describes — and so "nobody
-        // is signed in" is reported before, rather than after, a blob exists.
-        val payloadKey = store.ownedKey(fileName)
-        val manifestKey = store.ownedKey(manifestNameFor(fileName))
+        // Resolved ONCE, and both keys are built from it. Two calls would be two reads of the session
+        // and therefore two possible prefixes; what actually stops a split pair reaching the bucket is
+        // the RLS `with check` on `storage.objects`, which refuses whichever key does not match the
+        // live session — a backstop in the migration, not in this file. Resolving once is what makes
+        // the pair consistent by construction instead of by the server's mercy, and it is also what
+        // reports "nobody is signed in" before rather than after a blob exists.
+        val prefix = remotely(PREFIX_UNRESOLVED) { store.ownedPrefix() }
+        val payloadKey = prefix + fileName
+        val manifestKey = prefix + manifestNameFor(fileName)
 
         remotely("the payload could not be uploaded to $payloadKey") {
             store.upload(payloadKey, payloadBytes)
@@ -84,19 +116,29 @@ class DefaultBackupUploader internal constructor(private val store: BackupObject
         val readBack = remotely("the payload could not be read back from $payloadKey") {
             store.download(payloadKey)
         }
-
         if (sha256Hex(readBack) != manifest.payloadSha256) {
-            remotely("${mismatchAt(payloadKey)}, and the unverified object could not be deleted") {
+            remotely("${payloadMismatchAt(payloadKey)}, and the unverified object could not be deleted") {
                 store.delete(payloadKey)
             }
-            throw DomainException.ValidationError(
-                "$FAILED${mismatchAt(payloadKey)}; the unverified object was deleted.",
-                ValidationCode.BackupFileInvalid,
-            )
+            throw unverified("${payloadMismatchAt(payloadKey)}; the unverified object was deleted.")
         }
 
         remotely("the manifest could not be uploaded to $manifestKey") {
-            store.upload(manifestKey, manifest.encodeToJson().encodeToByteArray())
+            store.upload(manifestKey, manifestBytes)
+        }
+        val manifestReadBack = remotely("the manifest could not be read back from $manifestKey") {
+            store.download(manifestKey)
+        }
+        if (!manifestReadBack.contentEquals(manifestBytes)) {
+            remotely("${manifestMismatchAt(manifestKey)}, and the pair could not be deleted") {
+                // Manifest FIRST. If the second delete fails, what survives is a payload with no
+                // sidecar — the leftover the retention rule already knows to throw away. Deleting the
+                // payload first and failing would leave the opposite: a receipt for goods that are
+                // gone, which is the one shape a pre-restore check has no way to catch.
+                store.delete(manifestKey)
+                store.delete(payloadKey)
+            }
+            throw unverified("${manifestMismatchAt(manifestKey)}; both objects were deleted.")
         }
     }
 }
@@ -116,10 +158,22 @@ class DefaultBackupUploader internal constructor(private val store: BackupObject
 private fun manifestNameFor(fileName: String): String = "$fileName.manifest.json"
 
 /** Shared by the mismatch itself and by a failure to clean up after it — one event, two endings. */
-private fun mismatchAt(payloadKey: String): String =
+private fun payloadMismatchAt(payloadKey: String): String =
     "the payload read back from $payloadKey does not match the digest its manifest states"
 
+/** The same pair of endings for the sidecar. Byte equality, not a digest — see the class KDoc. */
+private fun manifestMismatchAt(manifestKey: String): String =
+    "the manifest read back from $manifestKey does not match the bytes that were uploaded"
+
+/** Both mismatches are the same event to the person holding the phone: a backup that is not trustworthy. */
+private fun unverified(reason: String): DomainException = DomainException.ValidationError(
+    "$FAILED$reason",
+    ValidationCode.BackupUploadUnverified,
+)
+
 private const val FAILED = "Snapshot backup failed: "
+
+private const val PREFIX_UNRESOLVED = "the owning prefix could not be resolved"
 
 /**
  * Runs one storage call and turns anything it throws into a [DomainException] that names [reason].

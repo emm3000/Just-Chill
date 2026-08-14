@@ -22,27 +22,37 @@ package com.emm.data.backup
 internal interface BackupObjectStore {
 
     /**
-     * The full object key [fileName] must be stored under, or a named failure if nobody is signed in.
+     * The prefix every object of this snapshot must be stored under — uid plus a trailing `/` — or a
+     * named failure if nobody is signed in.
      *
      * **The owning prefix comes from the session, never from a caller**, which is what makes the
      * bucket's access rules unbreakable from this side: every policy on `storage.objects` is keyed on
      * the first path segment equalling the caller's uid, so an implementation that let a caller
-     * choose the prefix would be offering to write somewhere the server will refuse anyway. Building
-     * the key here also means the key layout and the SQL policy that constrains it stay one decision
-     * in one place (`supabase/migrations/20260814200043_backup_storage_bucket.sql`).
+     * choose the prefix would be offering to write somewhere the server will refuse anyway. The
+     * prefix and the SQL policy that constrains it stay one decision in one place
+     * (`supabase/migrations/20260814200043_backup_storage_bucket.sql`).
+     *
+     * **It hands back a prefix rather than a finished key, and it is resolved once per snapshot.**
+     * An earlier shape took a file name and returned the whole key, so a caller needing a payload and
+     * a manifest called it twice — two independent reads of the session, and therefore two prefixes
+     * whenever the session changed between them. The separator lives in the returned value so that
+     * concatenation is all a caller does and nothing downstream gets to reinvent the layout.
      *
      * No session is a reported failure and never a silent no-op: ADR 009 Decision 1 says no session
      * means no pipeline, and a snapshot that quietly did not happen is the outage shape hard
      * constraint 4 forbids.
      */
-    suspend fun ownedKey(fileName: String): String
+    suspend fun ownedPrefix(): String
 
-    /** Writes [bytes] at [key]. Never an upsert — see the implementation for why the server agrees. */
+    /**
+     * Writes [bytes] at [key], which must end in `.json`. Never an upsert — see the implementation
+     * for why the server agrees, and for why the extension is a refusal rather than a convention.
+     */
     suspend fun upload(key: String, bytes: ByteArray)
 
     /** Reads back exactly what is stored at [key]. */
     suspend fun download(key: String): ByteArray
 
-    /** Removes [key]. Used only to discard a payload that failed verification. */
+    /** Removes [key]. Used only to discard an object that failed verification. */
     suspend fun delete(key: String)
 }

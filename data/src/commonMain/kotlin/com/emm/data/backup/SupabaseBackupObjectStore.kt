@@ -6,7 +6,9 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.storage.BucketApi
 import io.github.jan.supabase.storage.storage
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 
 /**
  * The bucket the snapshots live in — declared by
@@ -15,6 +17,23 @@ import kotlinx.coroutines.withContext
  * names it; it never creates it, and a client that tried to would be the second declaration.
  */
 private const val BACKUP_BUCKET_ID = "backups"
+
+/**
+ * How long [SupabaseBackupObjectStore.ownedPrefix] waits for a persisted session to finish loading.
+ *
+ * **Backup declares its own rather than reaching for `DefaultSyncRepository`'s identical constant**,
+ * which is private to the row-replication engine ADR 009 Phase 5 deletes: importing it would make the
+ * backup pipeline break on the day that file is removed, for a shared `10_000L` and nothing else. The
+ * number is deliberately the same, because the thing being waited on is the same
+ * (`Auth.awaitInitialization`) and two different ceilings for one wait would be a worse answer than
+ * one duplicated literal (`docs/CODE_QUALITY.md`: duplication of text, not of knowledge).
+ *
+ * Unbounded was the previous answer and it was wrong. ADR 009 defers `requestTimeout` and
+ * `transferTimeout` — HTTP knobs on an in-flight call — and says nothing about session resolution,
+ * which is not an HTTP call at all. A wait that never ends holds ADR 009 Phase 2c's `launchOp`
+ * concurrent-op guard with no exception and no message, which is hard constraint 4's exact shape.
+ */
+private const val SESSION_RESOLVE_TIMEOUT_MS = 10_000L
 
 /**
  * [BackupObjectStore] over Supabase Storage — the one class in the pipeline that knows a bucket exists.
@@ -28,7 +47,8 @@ private const val BACKUP_BUCKET_ID = "backups"
  *   hard refusal that reads like a server fault. [upload] therefore sets no content type at all and
  *   lets storage-kt fall back to `ContentType.defaultForFilePath(path)`, which yields exactly the
  *   bare form for a key ending in `.json`. **That is a constraint on the KEY, not just on this
- *   file**: every name this store is given must end in `.json`, the manifest sidecar included.
+ *   file**: every key handed to [upload] must end in `.json`, the manifest sidecar included, and
+ *   [upload] enforces it rather than asking to be trusted.
  * - **Never resumable.** `storage.s3_multipart_uploads` and `…_parts` have RLS on with zero
  *   policies, so storage-kt's `uploadAsFlow` fails for `authenticated` with an error that names none
  *   of that. One-shot is the right call under a 10 MiB ceiling anyway; it is simply not a choice.
@@ -39,10 +59,11 @@ private const val BACKUP_BUCKET_ID = "backups"
  * - **Deletes go through the Storage API and could not go anywhere else.** `storage.objects` carries
  *   a `storage.protect_delete()` trigger that refuses a direct SQL delete whatever the policy says.
  *
- * Nothing here configures a timeout. `Storage.Config.transferTimeout` — 120s, not the 10s
- * `requestTimeout` that bounds Postgrest — is what actually bounds every call this class makes, and
- * ADR 009 leaves making either visible to its own unit. It is named here only so nobody sizes a
- * retry or a chunk against the wrong number.
+ * Nothing here configures an HTTP timeout. `Storage.Config.transferTimeout` — 120s, not the 10s
+ * `requestTimeout` that bounds Postgrest — is what actually bounds every REQUEST this class makes,
+ * and ADR 009 leaves making either visible to its own unit. It is named here only so nobody sizes a
+ * retry or a chunk against the wrong number. [SESSION_RESOLVE_TIMEOUT_MS] is a different thing
+ * entirely and is set here: it bounds a wait for a local session to load, which no HTTP knob reaches.
  */
 internal class SupabaseBackupObjectStore(private val client: SupabaseClient) : BackupObjectStore {
 
@@ -56,16 +77,40 @@ internal class SupabaseBackupObjectStore(private val client: SupabaseClient) : B
      * start would report "nobody is signed in" and skip, which is a wrong reason rather than a silent
      * one but still sends whoever reads it to the wrong bug.
      *
-     * The await is unbounded on purpose: ADR 009 defers every timeout in this pipeline to its own
-     * unit, and inventing a number here would be the third one in the codebase.
+     * **The wait is bounded, and a session that never resolves is a named failure** rather than a
+     * suspension nobody can see — [SESSION_RESOLVE_TIMEOUT_MS] carries why, including why the number
+     * is copied from the sync engine instead of imported from it. It maps to
+     * [DomainException.NetworkUnavailable] because that is what an unresolvable session is from here:
+     * something retryable that has not happened yet, not a refusal.
      */
-    override suspend fun ownedKey(fileName: String): String {
-        client.auth.awaitInitialization()
-        val uid = client.auth.currentUserOrNull()?.id ?: throw DomainException.Unauthorized(NO_SESSION)
-        return "$uid/$fileName"
+    override suspend fun ownedPrefix(): String {
+        val uid = try {
+            withTimeout(SESSION_RESOLVE_TIMEOUT_MS) {
+                client.auth.awaitInitialization()
+                client.auth.currentUserOrNull()?.id
+            }
+        } catch (e: TimeoutCancellationException) {
+            throw DomainException.NetworkUnavailable(e, SESSION_NEVER_RESOLVED)
+        }
+        return "${uid ?: throw DomainException.Unauthorized(NO_SESSION)}/"
     }
 
+    /**
+     * **The `.json` check is here and not in a KDoc**, because the KDoc above used to call it a hard
+     * requirement while nothing held anyone to it. The manifest sidecar is safe by construction; a
+     * payload name is whatever ADR 009 Phase 2c decides to pass, and a name that ends any other way
+     * makes storage-kt derive a content type the bucket refuses — HTTP 415 `invalid_mime_type`, a
+     * server-shaped error for a client-side naming defect.
+     *
+     * It throws [DomainException.Unknown] rather than a `ValidationError`: nothing about it is user
+     * input, it can only be a defect in this app's own naming, and `Unknown`'s user-facing message is
+     * the honest one for that. The diagnostic message names the key so the defect is one grep away.
+     */
     override suspend fun upload(key: String, bytes: ByteArray) {
+        if (!key.endsWith(JSON_EXTENSION)) {
+            val defect = IllegalArgumentException("$NOT_JSON: $key")
+            throw DomainException.Unknown(defect, "$NOT_JSON: $key.")
+        }
         withContext(ioDispatcher) {
             bucket().upload(key, bytes) { upsert = false }
         }
@@ -85,6 +130,15 @@ internal class SupabaseBackupObjectStore(private val client: SupabaseClient) : B
 
     private companion object {
 
+        const val JSON_EXTENSION = ".json"
+
         const val NO_SESSION = "Snapshot backup failed: nobody is signed in, so there is no prefix to store it under."
+
+        const val SESSION_NEVER_RESOLVED =
+            "Snapshot backup failed: the session did not finish loading within " +
+                "${SESSION_RESOLVE_TIMEOUT_MS}ms, so there is no prefix to store it under."
+
+        const val NOT_JSON =
+            "Snapshot backup failed: the bucket only accepts application/json and this key does not end in .json"
     }
 }

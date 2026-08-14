@@ -15,9 +15,10 @@ import kotlin.test.assertTrue
  *
  * That proof is only possible because [BackupObjectStore] exists. A real bucket returns the bytes it
  * was handed, so a mismatch cannot be provoked against one; behind the seam it is a two-line stub.
- * Everything else here rides on the same fixture, including the four failure paths that must stay
- * four different messages — ADR 009 hard constraint 4, the reason the 2026-08-12 outage stayed
- * invisible as long as it did.
+ * Everything else here rides on the same fixture, including the nine failure paths that must stay
+ * nine different messages — ADR 009 hard constraint 4, the reason the 2026-08-12 outage stayed
+ * invisible as long as it did. The other two of the pipeline's eleven come out of the real store and
+ * belong to `SupabaseBackupObjectStoreTest`.
  *
  * The expected messages are written out as literals rather than read from production. That is
  * deliberate and is the same discipline `BackupManifestTest` follows: a test that builds its
@@ -33,33 +34,53 @@ class DefaultBackupUploaderTest {
         val store = FakeBackupObjectStore()
         // Stands in for a corrupted transfer: what comes back is not what went up. Nothing else in
         // the pipeline can tell that apart from a truncated or rewritten object, which is the point.
-        store.readBackInstead = "{}".encodeToByteArray()
+        store.readBackInstead[PAYLOAD_KEY] = "{}".encodeToByteArray()
 
         val failure = assertFailsWith<DomainException.ValidationError> {
             DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
         }
 
         assertEquals(MISMATCH, failure.message)
-        assertEquals(ValidationCode.BackupFileInvalid, failure.code)
+        assertEquals(ValidationCode.BackupUploadUnverified, failure.code)
         // The manifest is the receipt: it must not exist beside a payload that failed its check.
         assertEquals(listOf("upload $PAYLOAD_KEY", "download $PAYLOAD_KEY", "delete $PAYLOAD_KEY"), store.calls)
         assertEquals(emptyList(), store.objects.keys.toList())
     }
 
     @Test
-    fun `a verified snapshot writes the payload first and its manifest second`() = runTest {
+    fun `a verified snapshot writes the payload, its manifest, and reads both back`() = runTest {
         val store = FakeBackupObjectStore()
 
         DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
 
-        // Order, not just membership: a manifest written before the read-back would mean "an upload
-        // was attempted" instead of "these bytes were verified", and every later restore check that
-        // trusts the manifest would be trusting a receipt written before the goods arrived.
+        // Order, not just membership: a manifest written before the payload's read-back would mean
+        // "an upload was attempted" instead of "these bytes were verified", and every later restore
+        // check that trusts the manifest would be trusting a receipt written before the goods
+        // arrived. The manifest's own read-back is last because it is the receipt being checked, and
+        // a receipt corrupted in transit condemns a payload that is perfectly intact.
         assertEquals(
-            listOf("upload $PAYLOAD_KEY", "download $PAYLOAD_KEY", "upload $MANIFEST_KEY"),
+            listOf(
+                "upload $PAYLOAD_KEY",
+                "download $PAYLOAD_KEY",
+                "upload $MANIFEST_KEY",
+                "download $MANIFEST_KEY",
+            ),
             store.calls,
         )
         assertEquals(listOf(PAYLOAD_KEY, MANIFEST_KEY), store.objects.keys.toList())
+    }
+
+    @Test
+    fun `the owning prefix is resolved once, not once per object`() = runTest {
+        val store = FakeBackupObjectStore()
+
+        DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+
+        // Two resolutions would be two reads of the session, so a sign-out landing between them puts
+        // the manifest under a different prefix from the payload it describes. The bucket's RLS
+        // `with check` refuses whichever key misses the live session, but that is a backstop in a
+        // migration; the pair is meant to be consistent before the server ever sees it.
+        assertEquals(1, store.prefixResolutions)
     }
 
     @Test
@@ -129,7 +150,7 @@ class DefaultBackupUploaderTest {
     @Test
     fun `a cleanup that fails after a mismatch reports the cleanup, not the mismatch`() = runTest {
         val store = FakeBackupObjectStore()
-        store.readBackInstead = "{}".encodeToByteArray()
+        store.readBackInstead[PAYLOAD_KEY] = "{}".encodeToByteArray()
         store.failDelete = IllegalStateException("the socket died")
 
         val failure = assertFailsWith<DomainException.Unknown> {
@@ -156,12 +177,60 @@ class DefaultBackupUploaderTest {
     }
 
     @Test
+    fun `a manifest that cannot be read back leaves both objects alone`() = runTest {
+        val store = FakeBackupObjectStore()
+        store.failDownloadOf = MANIFEST_KEY
+
+        val failure = assertFailsWith<DomainException.Unknown> {
+            DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+        }
+
+        assertEquals(MANIFEST_READ_BACK_FAILED, failure.message)
+        // Same reasoning as the payload's failed read-back: the transport is the suspect, so a delete
+        // over it would replace a precise reason with a vague one. What is left is a verified payload
+        // beside a manifest of unknown state, and the next cycle uploads a fresh pair under a fresh
+        // timestamp rather than reasoning about this one.
+        assertEquals(listOf(PAYLOAD_KEY, MANIFEST_KEY), store.objects.keys.toList())
+    }
+
+    @Test
+    fun `a manifest that reads back wrong takes the payload down with it`() = runTest {
+        val store = FakeBackupObjectStore()
+        // A receipt corrupted in transit is the nastiest of these failures: the payload is intact and
+        // the manifest now states a digest it will never match, so a later pre-restore check
+        // condemns a snapshot that would have restored perfectly.
+        store.readBackInstead[MANIFEST_KEY] = "{}".encodeToByteArray()
+
+        val failure = assertFailsWith<DomainException.ValidationError> {
+            DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+        }
+
+        assertEquals(MANIFEST_MISMATCH, failure.message)
+        assertEquals(ValidationCode.BackupUploadUnverified, failure.code)
+        // Manifest deleted BEFORE the payload: if the second delete failed, what survives is a
+        // payload with no sidecar, which the retention rule already discards. The other order would
+        // leave a receipt for goods that are gone.
+        assertEquals(
+            listOf(
+                "upload $PAYLOAD_KEY",
+                "download $PAYLOAD_KEY",
+                "upload $MANIFEST_KEY",
+                "download $MANIFEST_KEY",
+                "delete $MANIFEST_KEY",
+                "delete $PAYLOAD_KEY",
+            ),
+            store.calls,
+        )
+        assertEquals(emptyList(), store.objects.keys.toList())
+    }
+
+    @Test
     fun `no session stops the snapshot before anything is written`() = runTest {
         val store = FakeBackupObjectStore()
         // The real text and the real type are pinned in SupabaseBackupObjectStoreTest; what this one
-        // owns is that the uploader lets it through untouched instead of rewrapping it as "the
-        // payload could not be uploaded", and that it stops before a blob exists.
-        store.failOwnedKey = DomainException.Unauthorized("nobody is signed in")
+        // owns is that the uploader lets it through untouched instead of rewrapping it as "the owning
+        // prefix could not be resolved", and that it stops before a blob exists.
+        store.failOwnedPrefix = DomainException.Unauthorized("nobody is signed in")
 
         val failure = assertFailsWith<DomainException.Unauthorized> {
             DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
@@ -172,8 +241,23 @@ class DefaultBackupUploaderTest {
     }
 
     @Test
-    fun `the five failures reachable through the seam say five different things`() = runTest {
-        // Hard constraint 4, asserted as a property rather than five tests agreeing by accident.
+    fun `anything else the prefix step throws is named rather than escaping raw`() = runTest {
+        val store = FakeBackupObjectStore()
+        store.failOwnedPrefix = IllegalStateException("the session store exploded")
+
+        // The port's headline contract is that EVERY failure is a DomainException. Without the
+        // wrapper this step is the one place a raw throwable leaves the pipeline unnamed.
+        val failure = assertFailsWith<DomainException.Unknown> {
+            DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+        }
+
+        assertEquals(PREFIX_FAILED, failure.message)
+        assertEquals(emptyList(), store.calls)
+    }
+
+    @Test
+    fun `the nine failures reachable through the seam say nine different things`() = runTest {
+        // Hard constraint 4, asserted as a property rather than nine tests agreeing by accident.
         // Collapsing any two of these messages in production turns this red even if each individual
         // expectation above were edited to match.
         val messages: List<String?> = FAILURES.map { failure ->
@@ -191,16 +275,23 @@ class DefaultBackupUploaderTest {
 
 private class Failure(val label: String, val arrange: (FakeBackupObjectStore) -> Unit)
 
-/** One entry per way an upload can fail once the owner prefix has resolved. */
+/** One entry per way an upload can fail, from resolving the prefix to discarding a broken pair. */
 private val FAILURES: List<Failure> = listOf(
+    Failure("prefix resolution") { it.failOwnedPrefix = IllegalStateException("boom") },
     Failure("payload upload") { it.failUpload = IllegalStateException("boom") },
-    Failure("read-back") { it.failDownload = IllegalStateException("boom") },
-    Failure("digest mismatch") { it.readBackInstead = "{}".encodeToByteArray() },
-    Failure("cleanup after a mismatch") {
-        it.readBackInstead = "{}".encodeToByteArray()
+    Failure("payload read-back") { it.failDownload = IllegalStateException("boom") },
+    Failure("payload digest mismatch") { it.readBackInstead[PAYLOAD_KEY] = "{}".encodeToByteArray() },
+    Failure("cleanup after a payload mismatch") {
+        it.readBackInstead[PAYLOAD_KEY] = "{}".encodeToByteArray()
         it.failDelete = IllegalStateException("boom")
     },
     Failure("manifest upload") { it.failUploadOf = MANIFEST_KEY },
+    Failure("manifest read-back") { it.failDownloadOf = MANIFEST_KEY },
+    Failure("manifest mismatch") { it.readBackInstead[MANIFEST_KEY] = "{}".encodeToByteArray() },
+    Failure("cleanup after a manifest mismatch") {
+        it.readBackInstead[MANIFEST_KEY] = "{}".encodeToByteArray()
+        it.failDelete = IllegalStateException("boom")
+    },
 )
 
 /**
@@ -211,25 +302,36 @@ private val FAILURES: List<Failure> = listOf(
  * means, and [readBackInstead] is the corrupted transfer that no real storage API will perform on
  * request. A failure is recorded in [calls] before it is thrown, so "it tried and failed" and "it
  * never got that far" stay distinguishable.
+ *
+ * Every misbehaviour is addressable by KEY, because the payload and its sidecar now travel the same
+ * four operations and a fixture that broke both at once could not tell their failures apart.
  */
 private class FakeBackupObjectStore : BackupObjectStore {
 
     val objects: LinkedHashMap<String, ByteArray> = linkedMapOf()
     val calls: MutableList<String> = mutableListOf()
 
-    /** Handed back by [download] in place of what is stored. */
-    var readBackInstead: ByteArray? = null
-    var failOwnedKey: Throwable? = null
+    /** How many times the prefix was resolved — one snapshot must mean one read of the session. */
+    var prefixResolutions: Int = 0
+        private set
+
+    /** Handed back by [download] in place of what is stored, per key. */
+    val readBackInstead: MutableMap<String, ByteArray> = mutableMapOf()
+    var failOwnedPrefix: Throwable? = null
     var failUpload: Throwable? = null
 
     /** Fails only the upload of this one key, so payload and manifest can fail independently. */
     var failUploadOf: String? = null
     var failDownload: Throwable? = null
+
+    /** The read-back counterpart of [failUploadOf]. */
+    var failDownloadOf: String? = null
     var failDelete: Throwable? = null
 
-    override suspend fun ownedKey(fileName: String): String {
-        failOwnedKey?.let { throw it }
-        return "$UID/$fileName"
+    override suspend fun ownedPrefix(): String {
+        prefixResolutions++
+        failOwnedPrefix?.let { throw it }
+        return "$UID/"
     }
 
     override suspend fun upload(key: String, bytes: ByteArray) {
@@ -242,7 +344,8 @@ private class FakeBackupObjectStore : BackupObjectStore {
     override suspend fun download(key: String): ByteArray {
         calls += "download $key"
         failDownload?.let { throw it }
-        return readBackInstead ?: objects.getValue(key)
+        if (key == failDownloadOf) throw IllegalStateException("boom")
+        return readBackInstead[key] ?: objects.getValue(key)
     }
 
     override suspend fun delete(key: String) {
@@ -259,12 +362,17 @@ private const val MANIFEST_KEY = "$PAYLOAD_KEY.manifest.json"
 
 private const val FAILED = "Snapshot backup failed: "
 private const val MISMATCHED = "the payload read back from $PAYLOAD_KEY does not match the digest its manifest states"
+private const val MANIFEST_MISMATCHED =
+    "the manifest read back from $MANIFEST_KEY does not match the bytes that were uploaded"
 
+private const val PREFIX_FAILED = "${FAILED}the owning prefix could not be resolved."
 private const val UPLOAD_FAILED = "${FAILED}the payload could not be uploaded to $PAYLOAD_KEY."
 private const val READ_BACK_FAILED = "${FAILED}the payload could not be read back from $PAYLOAD_KEY."
 private const val MISMATCH = "$FAILED$MISMATCHED; the unverified object was deleted."
 private const val CLEANUP_FAILED = "$FAILED$MISMATCHED, and the unverified object could not be deleted."
 private const val MANIFEST_UPLOAD_FAILED = "${FAILED}the manifest could not be uploaded to $MANIFEST_KEY."
+private const val MANIFEST_READ_BACK_FAILED = "${FAILED}the manifest could not be read back from $MANIFEST_KEY."
+private const val MANIFEST_MISMATCH = "$FAILED$MANIFEST_MISMATCHED; both objects were deleted."
 
 /**
  * A real snapshot document, small but complete: [buildBackupManifest] decodes it STRICTLY, so an
