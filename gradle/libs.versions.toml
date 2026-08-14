@@ -106,6 +106,9 @@ detekt-compose-rules = { module = "io.nlopez.compose.rules:detekt", version.ref 
 supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "supabaseBom" }
 supabase-auth-kt = { module = "io.github.jan-tennert.supabase:auth-kt" }
 supabase-postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
+# storage-kt — the snapshot backup destination (ADR 009). BOM-managed like its two siblings: the
+# version must never be pinned here, or a BOM bump would split the supabase-kt modules apart.
+supabase-storage-kt = { module = "io.github.jan-tennert.supabase:storage-kt" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorClientOkhttp" }
 # iOS engine — pinned to the same Ktor version as the OkHttp (Android) engine.
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktorClientOkhttp" }

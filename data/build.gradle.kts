@@ -22,6 +22,7 @@ kotlin {
             implementation(libs.coroutines.extensions)
             api(libs.supabase.auth.kt)
             api(libs.supabase.postgrest.kt)
+            api(libs.supabase.storage.kt)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
