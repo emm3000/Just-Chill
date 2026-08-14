@@ -69,10 +69,6 @@ class FakeRecurringMovementRepository : RecurringMovementRepository {
 
     override fun allActive(): Flow<List<RecurringMovement>> = store.map { it.values.filter { rm -> rm.isActive } }
 
-    // No tombstone in this fake — `delete` removes the entry outright — so every stored template is
-    // a live one, paused ones included. That is the whole difference from `allActive` above.
-    override fun allLive(): Flow<List<RecurringMovement>> = store.map { it.values.toList() }
-
     override fun allWithDetails(): Flow<List<RecurringMovementDetails>> = store.map { map ->
         map.values.map { rm ->
             RecurringMovementDetails(

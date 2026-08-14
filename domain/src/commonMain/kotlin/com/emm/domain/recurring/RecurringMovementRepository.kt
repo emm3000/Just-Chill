@@ -20,21 +20,6 @@ interface RecurringMovementRepository {
 
     fun allActive(): Flow<List<RecurringMovement>>
 
-    /**
-     * Every LIVE template — paused ones included — as the flat model, with nothing joined on.
-     *
-     * The third all-row read on this interface, and it exists because neither of the other two can
-     * answer "what does this device own". [allActive] filters `isActive = 1`, so exporting through it
-     * would drop every paused template — data the user still owns and no backup could put back.
-     * [allWithDetails] keeps them but is a joined view carrying a category name, a category colour
-     * and an account name, which is a screen's shape, not a record's.
-     *
-     * The one consumer is the backup export. It reads accounts, categories and transactions through
-     * their repository interfaces, and this is what lets it read the fourth table the same way rather
-     * than reaching past the layer into SQLDelight for one table alone.
-     */
-    fun allLive(): Flow<List<RecurringMovement>>
-
     fun allWithDetails(): Flow<List<RecurringMovementDetails>>
 
     suspend fun confirm(insert: TransactionInsert, recurringId: RecurringMovementId, period: String)

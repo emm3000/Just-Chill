@@ -20,8 +20,6 @@ class DefaultRecurringMovementRepository(
 
     override fun allActive(): Flow<List<RecurringMovement>> = localDataSource.allActive().catchAsDomainException()
 
-    override fun allLive(): Flow<List<RecurringMovement>> = localDataSource.allLive().catchAsDomainException()
-
     override fun allWithDetails(): Flow<List<RecurringMovementDetails>> =
         localDataSource.allWithDetails().catchAsDomainException()
 
