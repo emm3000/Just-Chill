@@ -23,6 +23,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -129,21 +130,49 @@ class BackupV3CompatibilityTest {
     }
 
     /**
-     * The third of the three declared-version guards, and the one that makes the other two mean
-     * something: a v3 file has to be distinguishable from a v1 or a v2 file after the decode.
+     * A v3 file that carries templates reaches the import declaring 3, with its templates intact.
      *
-     * Its twins live in `BackupV1CompatibilityTest` and `BackupV2CompatibilityTest`, each against
-     * its own frozen bytes. All three payloads leave `decodePayload` claiming version 3 — correctly,
-     * since `toCurrent()` converted the older two — and this file is the only one of the three whose
-     * empty-or-not `recurringMovements` is a statement about the user's data.
+     * The claim is only that: the version survives the decode and so does the list. It is NOT the
+     * "only the declared version can tell this file apart" claim its twins in
+     * `BackupV1CompatibilityTest` and `BackupV2CompatibilityTest` make — a non-empty
+     * `recurringMovements` is itself a v3 discriminator, since no `toCurrent()` ever produces one.
+     * The test below owns that claim, against the file that can actually exercise it.
      */
     @Test
-    fun `a version 3 file reaches the import declaring version 3, where the payload alone cannot say so`() {
+    fun `a version 3 file with templates declares 3 and carries them through the decode`() {
         val decoded = repository.decodePayload(V3_BACKUP)
 
         assertEquals(BACKUP_SCHEMA_VERSION, decoded.declaredVersion)
         assertEquals(BACKUP_SCHEMA_VERSION, decoded.payload.schemaVersion)
         assertEquals(listOf("rec-1", "rec-2"), decoded.payload.recurringMovements.map { it.recurringMovementId })
+    }
+
+    /**
+     * The third of the three declared-version guards, and the one that makes the other two mean
+     * something: a v3 export from a device with no templates is indistinguishable from a converted
+     * v1 or v2 payload, and must still arrive declaring 3.
+     *
+     * The three assertions below are exactly the object `ExportPayloadV1Dto.toCurrent()` and
+     * `ExportPayloadV2Dto.toCurrent()` hand over — current `schemaVersion`, empty
+     * `recurringMovements` — with one difference the payload has no field for. So the pair is the
+     * point: emptiness here is the user's data saying "none", emptiness there is a format that never
+     * carried any, and `declaredVersion` is the only thing between them.
+     *
+     * Getting that backwards is what the version-gated sweep must not do. A sweep that inferred the
+     * format from the list would read this file as pre-v3 and skip it — leaving on the device
+     * exactly the templates the owner's backup says are gone — and would read a v1 file as v3 the
+     * moment it inferred the other way, tombstoning templates no v1 file can put back.
+     */
+    @Test
+    fun `a version 3 file with no templates is told from a v1 or v2 file only by its declared version`() {
+        val decoded = repository.decodePayload(V3_BACKUP_EMPTY_RECURRING)
+
+        assertEquals(BACKUP_SCHEMA_VERSION, decoded.declaredVersion)
+        assertEquals(BACKUP_SCHEMA_VERSION, decoded.payload.schemaVersion)
+        assertTrue(decoded.payload.recurringMovements.isEmpty())
+        // The rest of the file decoded too, so the emptiness above is the file's statement about
+        // templates and not a decode that failed its way into a blank payload.
+        assertEquals(listOf("tx-1"), decoded.payload.transactions.map { it.transactionId })
     }
 
     /**
@@ -333,6 +362,59 @@ class BackupV3CompatibilityTest {
             "createdAt": 1780000000000
         }
     ]
+}
+"""
+
+        /**
+         * A version-3 export written by a device that owns no templates: the key is present and the
+         * list is empty. Written out by hand like the rest, and deliberately the same three tables
+         * as [V3_BACKUP] so the ONLY difference between the two files is the templates.
+         *
+         * This is the file the declared-version guard needs and [V3_BACKUP] cannot supply. Not to be
+         * confused with [V3_BACKUP_WITHOUT_RECURRING], where the key is absent: that one is corrupt
+         * and must be refused, this one is a valid export and must decode.
+         */
+        const val V3_BACKUP_EMPTY_RECURRING = """
+{
+    "schemaVersion": 3,
+    "exportedAt": 1785000000000,
+    "appVersion": "2.5.0",
+    "accounts": [
+        {
+            "accountId": "acc-1",
+            "name": "BCP",
+            "type": "Bank",
+            "currency": "PEN"
+        }
+    ],
+    "categories": [
+        {
+            "categoryId": "cat-income",
+            "name": "Sueldo",
+            "icon": "salary",
+            "color": "green",
+            "categoryType": "Income"
+        },
+        {
+            "categoryId": "cat-spend",
+            "name": "Comida",
+            "icon": "food",
+            "color": "red",
+            "categoryType": "Spend"
+        }
+    ],
+    "transactions": [
+        {
+            "transactionId": "tx-1",
+            "type": "Income",
+            "amountCents": 450000,
+            "description": "Sueldo mayo",
+            "occurredAt": "2025-05-23T06:33:20",
+            "accountId": "acc-1",
+            "categoryId": "cat-income"
+        }
+    ],
+    "recurringMovements": []
 }
 """
 
