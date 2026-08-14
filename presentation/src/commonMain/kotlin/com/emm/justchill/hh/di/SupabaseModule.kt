@@ -7,6 +7,7 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.serializer.KotlinXSerializer
+import io.github.jan.supabase.storage.Storage
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
@@ -33,6 +34,18 @@ private fun provideSupabaseClient(config: SupabaseConfig): SupabaseClient {
             // both strictly authenticated paths. Without this, an unresolved JWT is silently
             // downgraded to an anonymous request that RLS rejects with a confusing HTTP 403; with it,
             // the call throws SessionRequiredException, which maps to a retryable sync error instead.
+            @OptIn(SupabaseExperimental::class)
+            requireValidSession = true
+        }
+        install(Storage) {
+            // Same strict-auth posture as Postgrest above, and it is the same knob: Storage.Config
+            // implements AuthDependentPluginConfig, so `requireValidSession` exists here too and
+            // defaults to false (verified against 3.7.0, not assumed). Storage holds one thing —
+            // per-user snapshot backups behind RLS (ADR 009) — and ADR 009 Decision 1 says no
+            // session means no pipeline, never a queued upload. Left at the default, an unresolved
+            // JWT would be downgraded to an anonymous request that RLS answers with a confusing
+            // 403; with it, the call throws SessionRequiredException, which is a distinct and
+            // reportable reason (hard constraint 4: no silent failure).
             @OptIn(SupabaseExperimental::class)
             requireValidSession = true
         }
