@@ -3,6 +3,7 @@ package com.emm.justchill.hh.di
 import com.emm.data.account.AccountLocalDataSource
 import com.emm.data.account.DefaultAccountRepository
 import com.emm.data.backup.DefaultBackupRepository
+import com.emm.data.backup.DefaultBackupUploader
 import com.emm.data.category.CategoryLocalDataSource
 import com.emm.data.category.DefaultCategoryRepository
 import com.emm.data.provideTransactionQueries
@@ -17,6 +18,7 @@ import com.emm.domain.category.CategoryRepository
 import com.emm.domain.home.GetHomeDataUseCase
 import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.backup.BackupRepository
+import com.emm.domain.shared.backup.BackupUploader
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionStatsRepository
 import org.koin.core.module.dsl.bind
@@ -47,4 +49,9 @@ val dataModule = module {
     factoryOf(::DefaultAccountRepository) { bind<AccountRepository>() }
     factoryOf(::DefaultRecurringMovementRepository) { bind<RecurringMovementRepository>() }
     factoryOf(::DefaultBackupRepository) { bind<BackupRepository>() }
+
+    // Written out rather than `factoryOf(::DefaultBackupUploader)`: the class has a second,
+    // `internal` constructor taking its storage seam, which only :data (and its tests) can see. The
+    // constructor DSL would have to resolve a reference this module cannot name.
+    factory<BackupUploader> { DefaultBackupUploader(get()) }
 }
