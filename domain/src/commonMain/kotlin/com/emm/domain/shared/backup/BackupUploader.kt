@@ -28,9 +28,16 @@ interface BackupUploader {
      * caller hash one encoding and an implementation send another: same characters, different bytes,
      * a mismatch indistinguishable from a corrupt upload.
      *
-     * [fileName] is a name, not a path. Where it lands is the implementation's business — the
-     * storage layer owns the per-user prefix its access rules require, so a caller cannot aim a
-     * snapshot at somebody else's by construction. Naming is ADR 009 Phase 2c's decision.
+     * [fileName] is a name **relative to a prefix the caller never sees, and it must end in
+     * `.json`**. A relative path is allowed — ADR 009 Phase 2c pins snapshots under a `pinned/`
+     * segment the retention prune never scans, and that segment arrives through this parameter. What
+     * a caller cannot do is choose the ROOT: the storage layer owns the per-user prefix its access
+     * rules are keyed on, so a snapshot cannot be aimed at somebody else's by construction.
+     *
+     * The `.json` requirement is not cosmetic and not the storage layer's private business either:
+     * the bucket accepts one content type and the implementation derives it from the extension, so a
+     * name that ends any other way is a server-side refusal. Naming is ADR 009 Phase 2c's decision;
+     * the extension is not up for grabs.
      */
     suspend fun upload(fileName: String, payload: String)
 }
