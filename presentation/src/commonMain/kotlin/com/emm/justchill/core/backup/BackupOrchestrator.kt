@@ -143,6 +143,15 @@ class BackupOrchestrator(
      *   already taken today. It still respects the session gate and the single-operation guard:
      *   neither is a policy about when a backup is worth taking, and both are correctness.
      *
+     * **A manual request made with no session is discarded, not deferred.** The flag is consumed at
+     * the top of [runBackup], *before* the session gate returns, so a tap while signed out clears it
+     * and a later sign-in does not inherit a backup nobody is waiting for any more. That is the
+     * choice and not an oversight: the alternative fires a snapshot at some arbitrary later moment,
+     * long after the screen that asked for it is gone, and a "manual" backup the user cannot connect
+     * to anything they did is worse than none. Answering the tap is 2c-iv's job — this method returns
+     * `Unit` and reports nothing to anybody, so a signed-out tap has to be refused at the button, not
+     * queued here. `SyncOrchestrator` cannot show the difference: `runSync` has no auth gate at all.
+     *
      * ADR 009 2c-iv adds the Perfil "Back up now" button that calls this. **Having no production
      * caller before then is expected**: the concurrency guard lives here, so the entry point has to
      * live here too, and a button that reached the pipeline around this class could run a second
@@ -327,6 +336,17 @@ class BackupOrchestrator(
      * object must not abort the run — so that channel is logged too. A stuck object is a leftover
      * the next prune sees again; the same object stuck for a month is the thing worth noticing, and
      * a report nobody reads cannot distinguish the two.
+     *
+     * **This catch is not redundant with [runBackup]'s, and the difference is the message.** The
+     * prune is the last statement of a cycle whose watermark is already written, so as *control
+     * flow* the two are interchangeable — delete this one and every behavioural assertion in
+     * `BackupOrchestratorTest` still passes. What changes is what the log says: the outer catch
+     * reports "the last-successful watermark is untouched, so the next trigger retries", which for a
+     * prune failure is simply **false** — the watermark was written, the snapshot is safe, and the
+     * next trigger will not retry anything because the day is spent. Sending whoever is holding an
+     * outage to look for a failed upload that succeeded is hard constraint 4's failure mode wearing a
+     * log line, so `a failed prune leaves the watermark recorded and throws nothing` asserts this
+     * message and asserts the outer one is absent. Delete the catch and that test goes red.
      */
     // Intentional broad catch: a prune must never undo or fail a verified upload.
     @Suppress("TooGenericExceptionCaught")

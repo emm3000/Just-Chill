@@ -214,7 +214,17 @@ class BackupOrchestratorTest {
 
         // The snapshot is uploaded and verified; retention is housekeeping over objects already safe.
         verify(exactly = 1) { metadata.setLastSuccessfulBackupAt(USER_ID, NOW.toEpochMilliseconds()) }
-        verify(atLeast = 1) { logger.warn(any(), any()) }
+
+        // And these two are what make `prune()`'s own try/catch load-bearing rather than decoration.
+        // As control flow it is interchangeable with `runBackup`'s outer catch — the prune is the
+        // last statement and the watermark is already written, so deleting it changes no behaviour
+        // any other test in this file can see. What it changes is the MESSAGE: the outer catch says
+        // "the last-successful watermark is untouched, so the next trigger retries", which here is
+        // false twice over — the watermark IS written and the day IS spent — and it would send
+        // whoever is holding an outage hunting for a failed upload that succeeded. Constraint 4 is
+        // about a failure nobody can see; a failure described as the wrong one is the same defect.
+        verify(exactly = 1) { logger.warn(match { it.startsWith(PRUNE_FAILED) }, any()) }
+        verify(exactly = 0) { logger.warn(match { it.startsWith(CYCLE_FAILED) }, any()) }
     }
 
     // ── (6) No session, no backup — on any trigger, manual included ──────────────────
@@ -239,7 +249,38 @@ class BackupOrchestratorTest {
         coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
     }
 
-    // ── (6b) The account can change INSIDE a cycle, and both ends have to notice ─────
+    // ── (6b) Signing out stops the pipeline, not just never signing in ───────────────
+
+    /**
+     * Test 6 covers a device that was never authenticated, which `flatMapLatest` handles by never
+     * subscribing at all. This one covers the transition — the seam the mid-cycle account switch
+     * below also lives on — where the collectors existed and have to be torn down. Nothing structural
+     * says the manual path is covered too: [BackupOrchestrator.requestBackup] does not consult the
+     * session, so its request reaches the consumer and is refused by the captured-user gate instead.
+     */
+    @Test
+    fun `a trigger after signing out uploads nothing`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        every { metadata.lastSuccessfulBackupAt(any()) } returns null
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        sessionFlow.value = SessionStatus.NotAuthenticated
+        advanceUntilIdle()
+
+        backgroundFlow.emit(Unit)
+        resumeFlow.emit(Unit)
+        orchestrator.requestBackup(manual = true)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { backupRepository.exportToJson(any(), any()) }
+        coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
+        verify(exactly = 0) { metadata.setLastSuccessfulBackupAt(any(), any()) }
+    }
+
+    // ── (6c) The account can change INSIDE a cycle, and both ends have to notice ─────
 
     /**
      * A cycle captures the account once and then suspends through an export and four round trips
@@ -516,9 +557,12 @@ class BackupOrchestratorTest {
         const val APP_VERSION = "2.4.0"
 
         /**
-         * A log-message prefix, spelled out here rather than read from production — a test that
+         * Log-message prefixes, spelled out here rather than read from production — a test that
          * builds its expectation out of the code under test agrees with any regression it introduces.
+         * Each one is the only thing separating a swallow from the wrong swallow.
          */
+        const val PRUNE_FAILED = "backup prune failed after a verified upload"
+        const val CYCLE_FAILED = "backup cycle failed"
         const val OWNER_GONE = "backup upload finished for an account that is no longer signed in"
 
         /** Stands in for the uploader's own owner-mismatch refusal; its text is pinned in `:data`. */
