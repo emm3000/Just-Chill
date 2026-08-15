@@ -32,7 +32,7 @@ class DefaultBackupPrunerTest {
 
         val report = prunerOver(store).prune()
 
-        assertEquals(listOf("list $PREFIX"), store.calls)
+        assertEquals(listOf("list $PREFIX from 0"), store.calls)
         assertEquals(listOf(PAIR_PAYLOAD, PAIR_SIDECAR), store.objects)
         assertEquals(1, report.kept)
         assertEquals(0, report.deleted)
@@ -71,7 +71,7 @@ class DefaultBackupPrunerTest {
         val report = prunerOver(store).prune()
 
         assertEquals(listOf(PAIR_PAYLOAD, PAIR_SIDECAR), store.objects)
-        assertEquals(listOf("list $PREFIX", "delete $PREFIX$orphan"), store.calls)
+        assertEquals(listOf("list $PREFIX from 0", "delete $PREFIX$orphan"), store.calls)
         assertEquals(1, report.kept)
     }
 
@@ -104,22 +104,6 @@ class DefaultBackupPrunerTest {
     }
 
     @Test
-    fun `a listing that came back at the limit deletes nothing at all`() = runTest {
-        // Every one of these is an orphan, so a prune that trusted the page would delete all 1000.
-        // A truncated listing is a partial view of the bucket: it can make an old snapshot look like
-        // the newest, and then real snapshots are deleted to fill slots already taken by objects
-        // nobody could see. A skipped prune costs storage; this one costs data.
-        val store = storeOf(*List(BACKUP_LIST_LIMIT) { payload("2026-08-14", minuteSecond = it) }.toTypedArray())
-
-        val failure = assertFailsWith<DomainException.Unknown> { prunerOver(store).prune() }
-
-        assertTrue(failure.message.orEmpty().startsWith("Snapshot retention prune failed:"), failure.message.orEmpty())
-        assertTrue(failure.message.orEmpty().contains("$BACKUP_LIST_LIMIT-object limit"), failure.message.orEmpty())
-        assertEquals(listOf("list $PREFIX"), store.calls)
-        assertEquals(BACKUP_LIST_LIMIT, store.objects.size)
-    }
-
-    @Test
     fun `a listing that could not be read aborts before any delete`() = runTest {
         val store = storeOf(payload("2026-08-12"), PAIR_PAYLOAD, PAIR_SIDECAR)
         store.failList = IllegalStateException("the socket died")
@@ -130,8 +114,78 @@ class DefaultBackupPrunerTest {
             "Snapshot retention prune failed: the bucket could not be listed, so nothing was deleted.",
             failure.message,
         )
-        assertEquals(listOf("list $PREFIX"), store.calls)
+        assertEquals(listOf("list $PREFIX from 0"), store.calls)
         assertEquals(3, store.objects.size)
+    }
+
+    @Test
+    fun `a full page is followed by another, and the pair split across the boundary survives`() = runTest {
+        // The boundary is where truncation costs data: the payload is the last entry of page one and
+        // its sidecar the first of page two, so a prune that stopped at one page would see an orphan
+        // and delete a verified snapshot on sight. Assembling both pages first is what makes the pair
+        // a pair.
+        val filler = List(BACKUP_LIST_PAGE_SIZE - 1) { manifestNameFor(payload("2026-01-02", minuteSecond = it)) }
+        val store = storeOf(*(filler + listOf(PAIR_PAYLOAD, PAIR_SIDECAR)).toTypedArray())
+
+        val report = prunerOver(store).prune()
+
+        assertEquals(listOf("list $PREFIX from 0", "list $PREFIX from $BACKUP_LIST_PAGE_SIZE"), store.calls.take(2))
+        assertEquals(1, report.kept)
+        // Every filler entry is a sidecar whose payload does not exist, so all of them go and the
+        // pair stays: the second page was read, and it was read as part of one listing.
+        assertEquals(filler.size, report.deleted)
+        assertEquals(listOf(PAIR_PAYLOAD, PAIR_SIDECAR), store.objects)
+    }
+
+    @Test
+    fun `a page that is full only because of a folder entry is still a full page`() = runTest {
+        // The regression, named: the store drops folder entries, so this page arrives one object
+        // short of the limit while the server reported it full. A pager that counted the names it
+        // received would call it the last page and never read the sidecar sitting on page two —
+        // turning the verified pair into an orphan the prune deletes on sight.
+        val filler = List(BACKUP_LIST_PAGE_SIZE - 1) { manifestNameFor(payload("2026-01-02", minuteSecond = it)) }
+        val store = storeOf(*(filler + listOf(PAIR_PAYLOAD, PAIR_SIDECAR)).toTypedArray())
+        store.foldersOnFirstPage = 1
+
+        val report = prunerOver(store).prune()
+
+        assertEquals(listOf("list $PREFIX from 0", "list $PREFIX from $BACKUP_LIST_PAGE_SIZE"), store.calls.take(2))
+        assertEquals(1, report.kept)
+        assertEquals(listOf(PAIR_PAYLOAD, PAIR_SIDECAR), store.objects)
+    }
+
+    @Test
+    fun `a server that never stops paging is refused, and deletes nothing`() = runTest {
+        val store = storeOf(payload("2026-08-12"), PAIR_PAYLOAD, PAIR_SIDECAR)
+        store.neverEnds = true
+
+        val failure = assertFailsWith<DomainException.Unknown> { prunerOver(store).prune() }
+
+        assertTrue(failure.message.orEmpty().startsWith("Snapshot retention prune failed:"), failure.message.orEmpty())
+        assertTrue(
+            failure.message.orEmpty().contains("$BACKUP_LIST_MAX_PAGES pages of $BACKUP_LIST_PAGE_SIZE objects"),
+            failure.message.orEmpty(),
+        )
+        assertEquals(BACKUP_LIST_MAX_PAGES, store.calls.size)
+        assertEquals(3, store.objects.size)
+    }
+
+    @Test
+    fun `a failure on the second page aborts the whole prune, not just that page`() = runTest {
+        // Half a listing is a partial view of the bucket, and a partial view can make an old snapshot
+        // look like the newest. Same answer as a first page that failed: nothing is deleted.
+        val filler = List(BACKUP_LIST_PAGE_SIZE) { manifestNameFor(payload("2026-01-02", minuteSecond = it)) }
+        val store = storeOf(*(filler + listOf(PAIR_PAYLOAD, PAIR_SIDECAR)).toTypedArray())
+        store.failListAtOffset = BACKUP_LIST_PAGE_SIZE
+
+        val failure = assertFailsWith<DomainException.Unknown> { prunerOver(store).prune() }
+
+        assertEquals(
+            "Snapshot retention prune failed: the bucket could not be listed, so nothing was deleted.",
+            failure.message,
+        )
+        assertEquals(listOf("list $PREFIX from 0", "list $PREFIX from $BACKUP_LIST_PAGE_SIZE"), store.calls)
+        assertEquals(filler.size + 2, store.objects.size)
     }
 
     @Test
@@ -166,7 +220,7 @@ class DefaultBackupPrunerTest {
         val report = prunerOver(store).prune()
 
         assertEquals(
-            listOf("list $PREFIX", "delete $PREFIX${manifestNameFor(older)}", "delete $PREFIX$older"),
+            listOf("list $PREFIX from 0", "delete $PREFIX${manifestNameFor(older)}", "delete $PREFIX$older"),
             store.calls,
         )
         assertEquals(listOf(PAIR_PAYLOAD, PAIR_SIDECAR), store.objects)
@@ -224,6 +278,10 @@ private fun payload(day: String, hour: String = "12", minuteSecond: Int = 0): St
  * [delete] takes a full key, so the round trip through `prefix + name` is exercised rather than
  * assumed. [upload] and [download] throw: the prune has no business calling either, and a fixture
  * that quietly tolerated one would hide it.
+ *
+ * It pages the way the server does — `limit` entries from `offset`, in the order it was handed them —
+ * and it can report a page as fuller than the names it hands over ([foldersOnFirstPage]), which is
+ * the one behaviour a real bucket has and a naive fake does not.
  */
 private class FakePrunableObjectStore(names: List<String>) : BackupObjectStore {
 
@@ -236,6 +294,18 @@ private class FakePrunableObjectStore(names: List<String>) : BackupObjectStore {
     var failOwnedPrefix: Throwable? = null
     var failList: Throwable? = null
 
+    /** Fails the page that starts at this offset, so a mid-pagination failure is expressible. */
+    var failListAtOffset: Int? = null
+
+    /**
+     * Folder entries the server counts and never hands over. ADR 009 mandates a `pinned/` folder, so
+     * a first page whose raw size only reaches the limit because of one is the designed state.
+     */
+    var foldersOnFirstPage: Int = 0
+
+    /** Answers every page full, forever — the misbehaving server the page cap exists for. */
+    var neverEnds: Boolean = false
+
     /** Full keys whose delete fails, so one stuck object and a healthy bucket are expressible together. */
     val failDeleteOf: MutableSet<String> = mutableSetOf()
 
@@ -245,10 +315,18 @@ private class FakePrunableObjectStore(names: List<String>) : BackupObjectStore {
         return PREFIX
     }
 
-    override suspend fun list(prefix: String): List<String> {
-        calls += "list $prefix"
+    override suspend fun list(prefix: String, limit: Int, offset: Int): ObjectPage {
+        calls += "list $prefix from $offset"
         failList?.let { throw it }
-        return objects.toList()
+        if (offset == failListAtOffset) throw IllegalStateException("the socket died mid-listing")
+        if (neverEnds) return ObjectPage(names = emptyList(), serverReturned = limit)
+
+        // The server counts folder entries in both the page size and the offset, so an object's
+        // index trails the offset by however many folders came before it.
+        val folders = if (offset == 0) foldersOnFirstPage else 0
+        val firstObject = (offset - foldersOnFirstPage).coerceAtLeast(0)
+        val page: List<String> = objects.drop(firstObject).take(limit - folders)
+        return ObjectPage(names = page, serverReturned = page.size + folders)
     }
 
     override suspend fun delete(key: String) {

@@ -399,9 +399,12 @@ private class FakeBackupObjectStore : BackupObjectStore {
      * Answers honestly so a stray call would show up, but nothing here lists anything: [list] belongs
      * to the retention prune, and `DefaultBackupPrunerTest` owns the fixture that exercises it.
      */
-    override suspend fun list(prefix: String): List<String> {
-        calls += "list $prefix"
-        return objects.keys.filter { it.startsWith(prefix) }.map { it.removePrefix(prefix) }
+    override suspend fun list(prefix: String, limit: Int, offset: Int): ObjectPage {
+        calls += "list $prefix from $offset"
+        val page = objects.keys.filter { it.startsWith(prefix) }.map { it.removePrefix(prefix) }
+            .drop(offset)
+            .take(limit)
+        return ObjectPage(names = page, serverReturned = page.size)
     }
 }
 

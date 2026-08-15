@@ -128,21 +128,28 @@ internal class SupabaseBackupObjectStore(private val client: SupabaseClient) : B
     }
 
     /**
-     * **Both the limit and the sort order are set explicitly, because both have server-side defaults
-     * this code does not control.** storage-kt sends only the fields the filter block sets, so an
-     * unset limit means whatever the Storage API decides that day — a number a BOM bump can move
-     * without a compile error. The prune refuses to act on a listing that came back at
-     * [BACKUP_LIST_LIMIT]; that refusal is meaningless unless the limit is a number this repo chose.
+     * **The limit, the offset and the sort order are all set explicitly, because all three have
+     * server-side defaults this code does not control.** storage-kt sends only the fields the filter
+     * block sets, so an unset limit means whatever the Storage API decides that day — a number a BOM
+     * bump can move without a compile error, and the caller's paging arithmetic is built on knowing
+     * it. The V1 list route this posts to declares `limit` with `minimum: 1` and no maximum and
+     * passes it through unclamped (read out of storage-api's own source), so what is asked for is
+     * what bounds the page.
      *
      * Sorting by name ascending is the same order as chronologically ascending, since every snapshot
-     * name carries its own UTC stamp. That is the *worst* order to be truncated in — the newest
-     * objects are the ones that fall off the end — and it is chosen anyway, because a stable,
-     * deterministic order is worth more than a lucky one when the answer to truncation is to refuse.
+     * name carries its own UTC stamp. Under the data-relative retention policy that is also the
+     * *safest* order for a page boundary to fall in — an early page holds the oldest objects, so
+     * anything a short read would have missed is newer than everything it saw. The caller pages to
+     * completion regardless; the deterministic order is what makes two consecutive pages join up
+     * instead of overlapping arbitrarily.
      *
-     * **Folder entries are dropped here.** Supabase Storage derives folders from the `/` delimiter
-     * and returns them in a listing as a `FileObject` whose fields are all null except the name, so
-     * `pinned` appears beside real objects. A folder is not something [delete] could act on, and the
-     * prune must never scan under `pinned/` at all.
+     * **Folder entries are dropped here — but they are counted.** Supabase Storage derives folders
+     * from the `/` delimiter and returns them in a listing as a `FileObject` whose fields are all
+     * null except the name, so `pinned` appears beside real objects. A folder is not something
+     * [delete] could act on, and the prune must never scan under `pinned/` at all. It still occupied
+     * a place in the page the server returned, so it is included in [ObjectPage.serverReturned] and
+     * excluded from [ObjectPage.names]; conflating the two is what let a full page read as the last
+     * one.
      *
      * **The prefix is stripped defensively.** [BackupObjectStore.list]'s contract is relative names,
      * and the V1 list endpoint answers with names relative to the prefix it was given —
@@ -150,15 +157,16 @@ internal class SupabaseBackupObjectStore(private val client: SupabaseClient) : B
      * becoming `<uid>/<uid>/…` if it ever were not. It is here rather than in the caller because
      * this is the class that knows what the wire said.
      */
-    override suspend fun list(prefix: String): List<String> = withContext(ioDispatcher) {
-        bucket()
-            .list(prefix) {
-                limit = BACKUP_LIST_LIMIT
-                offset = 0
-                sortBy(column = NAME_COLUMN, order = SortOrder.ASC)
-            }
-            .filter { it.id != null }
-            .map { it.name.removePrefix(prefix) }
+    override suspend fun list(prefix: String, limit: Int, offset: Int): ObjectPage = withContext(ioDispatcher) {
+        val page = bucket().list(prefix) {
+            this.limit = limit
+            this.offset = offset
+            sortBy(column = NAME_COLUMN, order = SortOrder.ASC)
+        }
+        ObjectPage(
+            names = page.filter { it.id != null }.map { it.name.removePrefix(prefix) },
+            serverReturned = page.size,
+        )
     }
 
     private fun bucket(): BucketApi = client.storage.from(BACKUP_BUCKET_ID)

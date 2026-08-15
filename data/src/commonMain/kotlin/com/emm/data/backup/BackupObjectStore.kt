@@ -1,21 +1,56 @@
 package com.emm.data.backup
 
 /**
- * How many objects one [BackupObjectStore.list] call may return, and the number a caller must treat
- * as "this listing might not be everything".
+ * How many objects one [BackupObjectStore.list] call asks the server for.
  *
- * **The refusal it enables is the point, not the ceiling.** Supabase Storage's list takes a limit
- * with a server-side default and returns a page, not a bucket; a prune that runs against a partial
- * view can conclude a snapshot is the newest when it is not, and delete real snapshots to fill slots
- * that are already occupied by objects it cannot see. So the limit is set explicitly rather than
- * inherited, and a result of exactly this size aborts the prune — a skipped prune costs storage, a
- * prune on a truncated listing costs data.
+ * **It is a page size, not a ceiling on the bucket.** Supabase Storage's list takes a limit with a
+ * server-side default and answers with a page; the caller pages through with an advancing offset
+ * until a **short** page comes back, and a short page is what *proves* the listing is complete.
+ * Nothing infers completeness from a count any more, which is the whole reason the number is here
+ * rather than the refusal it used to enable: a page that came back full but held a folder entry
+ * arrived at the caller one object short of the limit, so the refusal did not fire and the prune ran
+ * on a truncated listing believing it was whole. ADR 009 mandates a `pinned/` folder, so that folder
+ * entry is the designed state rather than an edge case.
  *
- * A thousand is roughly forty times what retention can ever leave behind (`7 + 8 + 12` snapshots,
- * each with a sidecar) and is the value Supabase's own bucket-migration example uses, so reaching it
- * means something is wrong rather than merely busy.
+ * The limit is still set explicitly rather than inherited, because an unset one is whatever the
+ * Storage API decides that day — a number a BOM bump can move without a compile error, and the
+ * offset arithmetic below is built on knowing it.
+ *
+ * A thousand is roughly forty times what retention can ever leave behind (54 snapshots, each with a
+ * sidecar) and is the value Supabase's own bucket-migration example uses, so a bucket that needs a
+ * second page at all is already unusual.
  */
-internal const val BACKUP_LIST_LIMIT: Int = 1000
+internal const val BACKUP_LIST_PAGE_SIZE: Int = 1000
+
+/**
+ * How many pages one listing may take before the caller gives up and refuses to prune.
+ *
+ * **The bound is there for the server, not for the bucket.** Retention leaves at most 54 snapshots
+ * and their sidecars behind — 108 objects, a tenth of one page — so ten pages is about a hundred
+ * times a healthy bucket and reaching it means something is wrong rather than merely busy. What it
+ * actually rules out is a server that answers every page full: paging forever would hold ADR 009
+ * Phase 2c's `launchOp` concurrent-op guard with no exception and no message, which is hard
+ * constraint 4's exact shape. Hitting the cap deletes nothing, for the same reason a failed listing
+ * deletes nothing — a partial view can make an old snapshot look like the newest.
+ */
+internal const val BACKUP_LIST_MAX_PAGES: Int = 10
+
+/**
+ * One page of a bucket listing: the object [names], and how many entries the server actually
+ * returned.
+ *
+ * **The two counts are different and the difference is the whole point of this type.** [names] has
+ * had folder entries dropped, so `names.size` can be short of a page that was in fact full. A pager
+ * that compared the filtered size against its limit would read a full page as the last one and stop
+ * early, and a listing truncated mid-way can cut between a payload and its sidecar — an orphan
+ * payload is deleted on sight, so that is one verified snapshot gone, silently.
+ *
+ * [serverReturned] is the count before any filtering, and it is the only number a pager may compare
+ * against the limit it asked for. It is carried here rather than left for the caller to work out
+ * because the caller cannot: by the time a listing has crossed this seam, the folder entries that
+ * made the page full are gone.
+ */
+internal data class ObjectPage(val names: List<String>, val serverReturned: Int)
 
 /**
  * The five things the snapshot pipeline does to remote object storage, and nothing else.
@@ -74,8 +109,13 @@ internal interface BackupObjectStore {
     suspend fun delete(key: String)
 
     /**
-     * The objects stored **directly** under [prefix], as names relative to it, at most
-     * [BACKUP_LIST_LIMIT] of them.
+     * One page of the objects stored **directly** under [prefix]: at most [limit] entries starting
+     * at [offset], as names relative to the prefix, plus the raw count the server answered with.
+     *
+     * **It is one page and it says so**, which is what keeps a caller from mistaking a page for a
+     * bucket. Completeness is proved by asking again at the next offset and getting a short page —
+     * see [ObjectPage.serverReturned] for why the caller must compare *that* number against [limit]
+     * and never the length of the names it received.
      *
      * Three properties the retention prune depends on, all of them the implementation's job to
      * guarantee rather than the caller's to work around:
@@ -91,11 +131,8 @@ internal interface BackupObjectStore {
      *   `<uid>/` can contain `pinned` itself. A folder is not an object and cannot be deleted as
      *   one, so it never reaches the caller. (The prune survives one arriving anyway — a folder name
      *   parses as no snapshot and matches no sidecar — but defence in depth is not a reason to hand
-     *   one over.)
-     *
-     * **A result of exactly [BACKUP_LIST_LIMIT] entries means the listing may be incomplete**, and
-     * the caller must refuse to act on it. See that constant for why a partial listing is a
-     * data-loss vector rather than an inconvenience.
+     *   one over.) It is still **counted** in [ObjectPage.serverReturned], because the server
+     *   counted it.
      */
-    suspend fun list(prefix: String): List<String>
+    suspend fun list(prefix: String, limit: Int, offset: Int): ObjectPage
 }

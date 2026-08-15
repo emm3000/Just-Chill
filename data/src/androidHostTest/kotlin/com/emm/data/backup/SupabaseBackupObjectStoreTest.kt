@@ -16,6 +16,7 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondOk
 import io.ktor.client.request.HttpRequestData
 import io.ktor.http.HttpHeaders
+import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -41,17 +42,33 @@ import kotlin.test.assertTrue
  * (`supabase/migrations/20260814200043_backup_storage_bucket.sql`) — and that a missing session is a
  * named refusal rather than a guessed prefix or a silent skip.
  *
- * It also pins the three server-contract facts the rest of the pipeline is built on and that no
- * other test could see: the bucket id, `upsert = false`, and the bare `application/json` the `.json`
- * extension derives. All three compile and pass whatever value they hold — typing `"backup"` into
- * `BACKUP_BUCKET_ID` breaks nothing anywhere else — so they are asserted off the wire, on the request
- * a real upload produced.
+ * It also pins the server-contract facts the rest of the pipeline is built on and that no other test
+ * could see: the bucket id, `upsert = false`, the bare `application/json` the `.json` extension
+ * derives, and the list request's limit, offset and sort order. All of them compile and pass whatever
+ * value they hold — typing `"backup"` into `BACKUP_BUCKET_ID` breaks nothing anywhere else — so they
+ * are asserted off the wire, on the requests a real upload and a real listing produced.
+ *
+ * **What a host test cannot reach, and it is worth being explicit**: whether the server honours the
+ * sort order, whether it clamps the limit, and whether the `/` delimiter really makes `pinned` a
+ * null-id entry. Those are server behaviours; what is pinned here is the request this client sends
+ * and the decoding it does with the answer. The response shapes below are written from storage-kt's
+ * `FileObject`, so a BOM bump that changed that type is a compile failure rather than a silent one —
+ * but a BOM bump that changed the *route's* semantics would still pass.
  *
  * Auth is built with `minimalConfig()` for the reason `DefaultAuthRepositorySignOutTest` documents —
  * no Android lifecycle callbacks, in-memory session store, nothing to load from disk.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SupabaseBackupObjectStoreTest {
+
+    /**
+     * What the scripted transport answers the next list request with, in order.
+     *
+     * A listing is the one operation here whose response shape carries meaning — a folder entry is a
+     * `FileObject` with a null id, and that null is what the store filters on — so these tests script
+     * the body rather than the blanket upload response every other request gets.
+     */
+    private val listPages: ArrayDeque<String> = ArrayDeque()
 
     // supabase-kt's Auth plugin builds its scope on Dispatchers.Main, absent on a JVM host test.
     @Before
@@ -144,6 +161,77 @@ class SupabaseBackupObjectStoreTest {
         assertEquals(emptyList(), requests.toList())
     }
 
+    @Test
+    fun `a listing asks the V1 list route for the page it was told to, sorted by name ascending`() = runTest {
+        val requests = mutableListOf<HttpRequestData>()
+        listPages += page(fileEntry("backup-v3-2026-08-14T03-04-05Z.json", id = "object-1"))
+        val store = SupabaseBackupObjectStore(clientWithSession(recordingInto = requests))
+
+        store.list("$USER_ID/", limit = PAGE, offset = OFFSET)
+
+        val request = requests.single()
+        assertEquals("/storage/v1/object/list/$BUCKET", request.url.encodedPath)
+        // Every one of these is a field storage-kt sends ONLY because the filter block set it: an
+        // unset limit is whatever the Storage API defaults to that day, and the pager's offset
+        // arithmetic is built on knowing the page size it asked for.
+        val body = (request.body as TextContent).text
+        assertEquals(
+            """{"prefix":"$USER_ID/","limit":$PAGE,"offset":$OFFSET,"sortBy":{"column":"name","order":"asc"}}""",
+            body,
+        )
+    }
+
+    @Test
+    fun `folder entries never reach the caller, and the names that do are relative to the prefix`() = runTest {
+        // Supabase derives folders from the `/` delimiter and returns them as a FileObject whose
+        // every field but the name is null — `pinned` is the one ADR 009 mandates. A folder cannot be
+        // deleted as an object and the prune must never scan under it.
+        listPages += page(
+            fileEntry("pinned", id = null),
+            fileEntry("backup-v3-2026-08-14T03-04-05Z.json", id = "object-1"),
+            // Relative is what the V1 route answers with; stripping is the guard for the day it is
+            // not, since the caller turns every name back into a key with `prefix + name`.
+            fileEntry("$USER_ID/backup-v3-2026-08-13T03-04-05Z.json", id = "object-2"),
+        )
+        val store = SupabaseBackupObjectStore(clientWithSession())
+
+        val listing = store.list("$USER_ID/", limit = PAGE, offset = 0)
+
+        assertEquals(
+            listOf("backup-v3-2026-08-14T03-04-05Z.json", "backup-v3-2026-08-13T03-04-05Z.json"),
+            listing.names,
+        )
+    }
+
+    @Test
+    fun `a page full only because of a folder entry still reports the server's own count`() = runTest {
+        // The regression this type exists for. Filtering happens here, so `names.size` comes back
+        // under the limit for a page that was in fact full — and a caller that paged on THAT number
+        // would read a truncated listing as a complete one. A cut can fall between a payload and its
+        // sidecar, and an orphan payload is deleted on sight: one verified snapshot gone, silently.
+        listPages += page(
+            fileEntry("pinned", id = null),
+            fileEntry("backup-v3-2026-08-14T03-04-05Z.json", id = "object-1"),
+            fileEntry("backup-v3-2026-08-13T03-04-05Z.json", id = "object-2"),
+        )
+        val store = SupabaseBackupObjectStore(clientWithSession())
+
+        val listing = store.list("$USER_ID/", limit = FULL_PAGE_OF_THREE, offset = 0)
+
+        assertEquals(FULL_PAGE_OF_THREE, listing.serverReturned)
+        assertEquals(FULL_PAGE_OF_THREE - 1, listing.names.size)
+    }
+
+    @Test
+    fun `a short page reports fewer than the limit, which is what proves the listing ended`() = runTest {
+        listPages += page(fileEntry("backup-v3-2026-08-14T03-04-05Z.json", id = "object-1"))
+        val store = SupabaseBackupObjectStore(clientWithSession())
+
+        val listing = store.list("$USER_ID/", limit = FULL_PAGE_OF_THREE, offset = 0)
+
+        assertEquals(1, listing.serverReturned)
+    }
+
     private suspend fun clientWithSession(recordingInto: MutableList<HttpRequestData>? = null): SupabaseClient =
         settled(client(recordingInto)).also { it.auth.importSession(session(), autoRefresh = false) }
 
@@ -212,7 +300,8 @@ class SupabaseBackupObjectStoreTest {
     ) {
         httpEngine = MockEngine { request ->
             recordingInto?.add(request)
-            respond(UPLOAD_RESPONSE, headers = headersOf(HttpHeaders.ContentType, "application/json"))
+            val body = if (request.url.encodedPath.startsWith(LIST_PATH)) listPages.removeFirst() else UPLOAD_RESPONSE
+            respond(body, headers = headersOf(HttpHeaders.ContentType, "application/json"))
         }
         install(Auth) { minimalConfig() }
         // The default resumable cache is backed by multiplatform-settings' no-arg factory, which has
@@ -239,12 +328,36 @@ class SupabaseBackupObjectStoreTest {
         override suspend fun deleteSession() = Unit
     }
 
+    /**
+     * One entry of a list response, in the shape storage-kt's `FileObject` decodes.
+     *
+     * None of its six fields carries a default, so all six have to be present — and a **null [id] is
+     * what makes an entry a folder**, which is the fact the store's filter rests on and the reason
+     * these bodies are written out rather than built from a library type.
+     */
+    private fun fileEntry(name: String, id: String?): String {
+        val idJson = id?.let { "\"$it\"" } ?: "null"
+        return """{"name":"$name","id":$idJson,"updated_at":null,""" +
+            """"created_at":null,"last_accessed_at":null,"metadata":null}"""
+    }
+
+    private fun page(vararg entries: String): String =
+        entries.joinToString(separator = ",", prefix = "[", postfix = "]")
+
     private companion object {
 
         const val USER_ID = "5f1a2b3c-0000-4000-8000-000000000001"
         const val SUPABASE_URL = "https://project.supabase.co"
         const val BUCKET = "backups"
         const val UPSERT_HEADER = "x-upsert"
+        const val LIST_PATH = "/storage/v1/object/list/"
+
+        /** An arbitrary page size and offset: what matters is that they arrive on the wire unchanged. */
+        const val PAGE = 250
+        const val OFFSET = 500
+
+        /** Small enough to write out, so "the page came back full" is three entries rather than a thousand. */
+        const val FULL_PAGE_OF_THREE = 3
 
         /** The shape storage-kt decodes an upload into. Its contents are nobody's business here. */
         const val UPLOAD_RESPONSE = """{"Id":"object-id","Key":"backups/object"}"""

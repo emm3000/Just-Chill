@@ -20,13 +20,26 @@ import kotlin.time.Instant
  * arithmetic be tested exhaustively with no storage anywhere, and it is the half where an off-by-one
  * deletes real financial history.
  *
+ * ### The listing is paged to completion, and completeness is PROVED rather than inferred
+ *
+ * The bucket is read one page at a time until the server answers with a short one. A short page is
+ * proof there is nothing after it; a count that merely came in under the limit is not, and that
+ * distinction is the defect this shape closes. The previous version refused any listing that came
+ * back at exactly [BACKUP_LIST_PAGE_SIZE] — but it counted the list *after* folder entries had been
+ * dropped, so a full page holding `pinned` arrived one short, the refusal never fired, and the prune
+ * ran on a truncated listing believing it was whole. That refusal was also terminal rather than a
+ * skip: nothing advanced an offset, so a bucket that genuinely reached the limit would have thrown
+ * on every run forever, and the only thing that could have brought it back under the limit was the
+ * prune itself.
+ *
  * ### Reading fails loudly, deleting does not
  *
- * A failure to resolve the prefix or to read the listing throws, and **nothing is deleted**. So does
- * a listing that came back at [BACKUP_LIST_LIMIT]: that is a page rather than a bucket, and a prune
- * on a partial view can decide a snapshot is the newest when it is not, then delete real ones to
- * fill slots already occupied by objects it could not see. A skipped prune costs storage; a prune on
- * a truncated listing costs data.
+ * A failure to resolve the prefix or to read **any** page throws, and nothing is deleted — a partial
+ * view can decide a snapshot is the newest when it is not, then delete real ones to fill slots
+ * already occupied by objects it could not see. A cut can also fall between a payload and its
+ * sidecar, and an orphan payload is deleted on sight. A skipped prune costs storage; a prune on a
+ * truncated listing costs data. Running past [BACKUP_LIST_MAX_PAGES] is the same answer for the same
+ * reason: a server still answering full pages there is an anomaly, not a busy bucket.
  *
  * Individual deletes are independent and none of them can abort the run. An object that fails to
  * delete is a leftover the next prune sees again, and taking the rest of the run down with it would
@@ -62,8 +75,7 @@ class DefaultBackupPruner internal constructor(
         // under somebody else's prefix. It is also what reports "nobody is signed in" before any
         // delete is issued rather than after some of them are.
         val prefix: String = storageCall(PREFIX_UNRESOLVED) { store.ownedPrefix() }
-        val names: List<String> = storageCall(LIST_FAILED) { store.list(prefix) }
-        if (names.size >= BACKUP_LIST_LIMIT) throw listingMayBeTruncated(names.size)
+        val names: List<String> = wholeBucket(prefix)
 
         val plan: PrunePlan = planPrune(names, clock.now(), zone)
 
@@ -83,6 +95,30 @@ class DefaultBackupPruner internal constructor(
             }
         }
         return BackupPruneReport(kept = plan.kept, deleted = deleted, failedDeletes = failures)
+    }
+
+    /**
+     * Every object under [prefix], assembled page by page, or a named refusal that deletes nothing.
+     *
+     * **The comparison is against [ObjectPage.serverReturned], never against the names received.**
+     * The store drops folder entries, so a page that was full arrives shorter than the limit — and a
+     * pager that stopped there would treat a truncated listing as a complete one, which is the
+     * data-loss shape the whole class is written around. The server's own count is the only number
+     * that answers "was this page full".
+     *
+     * A page bigger than the limit is treated as full and paging continues: [BACKUP_LIST_MAX_PAGES]
+     * bounds the loop whatever the server does, and over-reading is safe where under-reading is not.
+     */
+    private suspend fun wholeBucket(prefix: String): List<String> {
+        val names = mutableListOf<String>()
+        var offset = 0
+        repeat(BACKUP_LIST_MAX_PAGES) {
+            val page: ObjectPage = storageCall(LIST_FAILED) { store.list(prefix, BACKUP_LIST_PAGE_SIZE, offset) }
+            names += page.names
+            if (page.serverReturned < BACKUP_LIST_PAGE_SIZE) return names
+            offset += BACKUP_LIST_PAGE_SIZE
+        }
+        throw listingNeverEnded()
     }
 }
 
@@ -142,17 +178,19 @@ private fun planPrune(names: List<String>, now: Instant, zone: TimeZone): PruneP
 }
 
 /**
- * The refusal that makes [BACKUP_LIST_LIMIT] worth setting.
+ * The refusal that makes [BACKUP_LIST_MAX_PAGES] a bound rather than a wish.
  *
  * It is [DomainException.Unknown] rather than a `ValidationError` for the same reason
  * [SupabaseBackupObjectStore.upload]'s `.json` check is: nothing about it is user input, and its
- * user-facing text should say so. The count is spelled into the message because "1000 of 1000" is
- * what tells a reader this is a paging ceiling and not a coincidence.
+ * user-facing text should say so. Both numbers are spelled into the message because "ten pages of a
+ * thousand" is what tells a reader this is a server answering full pages forever rather than a
+ * bucket that happens to be large.
  */
-private fun listingMayBeTruncated(size: Int): DomainException {
-    val reason = "$PRUNE_FAILED the bucket listing came back at its $BACKUP_LIST_LIMIT-object limit " +
-        "($size returned), so it may be only part of the bucket. Pruning a partial listing can " +
-        "delete a snapshot that is not really the oldest, so nothing was deleted."
+private fun listingNeverEnded(): DomainException {
+    val reason = "$PRUNE_FAILED the bucket was still answering full pages after " +
+        "$BACKUP_LIST_MAX_PAGES pages of $BACKUP_LIST_PAGE_SIZE objects, so the listing cannot be " +
+        "read completely. Pruning a partial listing can delete a snapshot that is not really the " +
+        "oldest, so nothing was deleted."
     return DomainException.Unknown(IllegalStateException(reason), reason)
 }
 
