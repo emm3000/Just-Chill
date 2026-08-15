@@ -45,7 +45,9 @@ import kotlin.time.Instant
  * already occupied by objects it could not see. A cut can also fall between a payload and its
  * sidecar, and an orphan payload is deleted on sight. A skipped prune costs storage; a prune on a
  * truncated listing costs data. Running past [BACKUP_LIST_MAX_PAGES] is the same answer for the same
- * reason: a server still answering full pages there is an anomaly, not a busy bucket.
+ * reason: a listing that never returns an empty page within the cap has not been proved complete —
+ * there is no "full page" under the zero terminator, so this is not a busy bucket, it is a listing
+ * this pager gave up on.
  *
  * Individual deletes are independent and none of them can abort the run. An object that fails to
  * delete is a leftover the next prune sees again, and taking the rest of the run down with it would

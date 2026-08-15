@@ -66,7 +66,7 @@ kotlin {
             // viewModelOf DSL for the DI modules — the compose-free base of koin-compose-viewmodel.
             implementation(libs.koin.core.viewmodel)
         }
-        // ProcessLifecycleOwner for the resumeEvents() Android actual (core/sync).
+        // ProcessLifecycleOwner for the resumeEvents() Android actual (core/lifecycle).
         androidMain.dependencies {
             implementation(libs.androidx.lifecycle.process)
         }

@@ -15,9 +15,11 @@ import platform.UIKit.UIApplicationDidBecomeActiveNotification
  * [UIApplicationDidBecomeActiveNotification] on the default [NSNotificationCenter]. It fires on cold
  * launch becoming active and on every return from background.
  *
- * Wired into the common [SyncOrchestrator] as its `resumeEvents` flow (the platform-injected on-resume
- * signal), so the on-resume sync trigger reaches Android parity. Both platforms now resolve through the
- * single common `resumeEvents()` expect declaration — this is its iOS actual.
+ * Wired into `SyncOrchestrator` (`core/sync/`) as its `resumeEvents` flow (the platform-injected
+ * on-resume signal), so the on-resume sync trigger reaches Android parity. Both platforms now resolve
+ * through the single common `resumeEvents()` expect declaration — this is its iOS actual. Not a KDoc
+ * link: `SyncOrchestrator` lives in a different package now that this file moved out of `core/sync/`,
+ * and `core/sync/` is deleted whole in ADR 009 Phase 5, so an import here would just go stale again.
  *
  * The observer token returned by `addObserverForName` is removed in [awaitClose] to avoid leaking the
  * registration (and the captured `trySend`) once the collector is cancelled.
