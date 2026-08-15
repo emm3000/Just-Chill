@@ -276,7 +276,7 @@ class AppGraphKoinTest {
 
         const val OWN_PACKAGE_PREFIX = "com.emm."
 
-        /** The graph currently exposes 28 injected Clock/TimeZone fields across :domain/:data/:presentation. */
+        /** The graph currently exposes 30 injected Clock/TimeZone fields across :domain/:data/:presentation. */
         const val MIN_EXPECTED_TIME_FIELDS = 20
 
         val EXPECTED_VIEW_MODELS = sortedSetOf(
