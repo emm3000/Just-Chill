@@ -587,7 +587,7 @@ must not build chunking or progress reporting against a 10-second limit that is 
 |---|---|
 | Dirty flag | `max(updatedAt)` across the 4 tables (new SELECTs; `softDelete` already bumps `updatedAt`, so deletes mark dirty) vs `lastSuccessfulBackupAt` in `AppPreferences` — the facade already holds cursor/lastSyncedAt keys |
 | Trigger | new `backgroundEvents()` expect/actual, sibling of `resumeEvents()` (ProcessLifecycleOwner ON_STOP / UIApplicationDidEnterBackground), capped at 1 automatic snapshot/day; **plus a staleness check on resume** — if the process died mid-upload, the next foreground retries (dirty flag is still set) |
-| Manual action | "Back up now" in Profile. **`launchOp` is not the guard for it** — see the note below; 2c-iv needs a completion signal first |
+| Manual action | "Back up now" in Profile. **`launchOp` is not the guard for it** — see the note below; 2c-iv needs a completion signal first. **LANDED in 2c-iv**, as "Respaldar ahora" behind the flag |
 | Naming | `backup-v3-<ISO8601-UTC, colons replaced>.json` |
 | Retention | client-side prune (no server code exists): list the bucket and **key on the presence of `<name>.manifest.json`, never on `<name>` alone**. A payload without its sidecar is not a snapshot: it counts toward no retention bucket and is **deleted on sight** — see the paragraph below, which is the rule, not a note about it. Parse timestamps from the names that DO carry a manifest, keep 7 daily + 8 weekly + 12 monthly — **slots filled from the data, not anchored on today; see 2c-ii for why** — and delete the rest. Pinned snapshots live under a `pinned/` prefix the prune never scans. "Pin before risky operation" action; every future DB schema migration must be preceded by a pinned snapshot |
 | Flag | `SNAPSHOT_BACKUP_ENABLED = false` in `core/backup/`, mirroring the `SyncKillSwitch` pattern (const + KDoc + grep-able). `bootstrapAppGraph` starts `BackupOrchestrator` behind it, the same pattern that gates `SyncOrchestrator.start()` in `AppGraph` today. **The polarity is inverted** — `SYNC_TEMPORARILY_DISABLED` is `true` for off, this one is `false` for off — and both mean off today |
@@ -878,6 +878,41 @@ definition that was never registered is not in it. Concretely that is `CommitHas
 (`presentation/androidMain/core/CommitHash.kt`, sole consumer `AppNavHost.kt:88`), which is why
 `AndroidPlatformModuleTest` resolves it out of its own module instead. The general rule is recorded
 in `presentation/CLAUDE.md`, where somebody touching DI will meet it.
+
+**2c-iv — the manual action, and Phase 2c closed. LANDED** (`c8a0540f`, `44461895`, `e1b90622`).
+The Manual action row, built the way the note above says it had to be: a `BackupController` port in
+`presentation/core/backup/` carrying `isBackingUp`, a one-shot `BackupEvent` per manual cycle and
+`requestBackup(manual)`; a `ProfileOp.BackingUp` the ViewModel mirrors that flag into; and a
+"Respaldar ahora" row in Perfil's **Respaldo** group behind `SNAPSHOT_BACKUP_ENABLED`, so it does not
+render today.
+
+Four things it settled:
+
+- **`launchOp` does not wrap `requestBackup`, and the guard is still reused.** The re-entry check is
+  repeated in `backUpNow` rather than inherited, because `launchOp` measures a suspend block and there
+  is none — but it is the same check and the same `OperationInProgress` message, which is what keeps a
+  tap from racing an export or an import. Cycle-vs-cycle concurrency stays in the orchestrator.
+- **No backup failure signs the user out, and the negative is asserted twice.** A failure comes back
+  as `ProfileEffect.Notify(BackupFailed)`, never `ShowError` — the only effect that reaches
+  `toUserMessage()`. `BackupEvent.Failed` carries its `DomainException` and the ViewModel deliberately
+  ignores it: the account-switch refusal is an `Unauthorized`, indistinguishable by type from an
+  expired session, and both existing readings of that type are wrong for a user who is signed in just
+  as somebody else. One message until Phase 3 gives finer copy somewhere to live.
+- **The status flag claims the shared `op` slot only while it is free.** `isBackingUp` covers
+  automatic cycles too, and one can start mid-export; a blind overwrite would leave `launchOp`'s
+  `finally` clearing the slot with the backup still running. An automatic backup landing mid-export is
+  therefore not shown, which is the honest of the two failures.
+- **The signed-out tap is refused at the button.** `requestBackup` discards a session-less manual
+  request and reports nothing, so the ViewModel — the only place that sees both the tap and the
+  session — answers it instead. `takeSnapshot` now returns a `SnapshotOutcome` rather than `Unit` so
+  the orchestrator can tell "nothing to do" from "the account changed", and report only the second.
+
+**The gap this unit leaves**: the flag gate itself is untested. `:ui-android` has no Compose UI test
+harness — its `androidHostTest` is plain JVM, with no `ui-test-junit4` and no Robolectric anywhere in
+the catalog — so nothing asserts that the row is absent while `SNAPSHOT_BACKUP_ENABLED` is false, or
+that it and `bootstrapAppGraph`'s `start()` read the same constant. Both sites carry a comment
+pointing at the other; that is the whole of the enforcement. Phase 4 flips the flag and is where the
+pair is exercised for real.
 
 ### Phase 3 — health visibility
 
