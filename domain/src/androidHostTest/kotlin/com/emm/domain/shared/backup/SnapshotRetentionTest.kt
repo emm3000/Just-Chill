@@ -142,6 +142,50 @@ class SnapshotRetentionTest {
     }
 
     @Test
+    fun `a crowd of future-stamped snapshots collapses into the same slots instead of piling up`() {
+        // The failure this closes is not hypothetical: a clock that jumps forward writes snapshots
+        // stamped in the future, the clock is corrected, and every one of those objects fills no
+        // slot — so nothing can ever evict them, and each further excursion strands more. Unbounded
+        // growth whose only signal is uploads eventually failing.
+        val skewed = consecutiveDaysTo("2029-01-01", MANY)
+
+        val decision = SnapshotRetention.select(skewed, NOW, LIMA)
+
+        assertTrue(decision.keep.size <= SLOTS_PER_SHELF, "the future shelf kept ${decision.keep.size}")
+        // And the rest are actually deleted rather than merely uncounted: the two lists partition.
+        assertEquals(MANY - decision.keep.size, decision.delete.size)
+        // Newest first out of a bucket, on this shelf as on the other one.
+        assertTrue(id("2029-01-01") in decision.keep, "the newest future-stamped snapshot was deleted")
+    }
+
+    @Test
+    fun `a crowd of future-stamped snapshots still evicts nothing that is eligible`() {
+        // The property the future partition exists for, now that the partition is capped: however
+        // many skewed objects arrive, the eligible answer is the answer they were never part of.
+        val days = consecutiveDaysTo("2026-08-14", SnapshotRetention.DAILY_SLOTS + 1)
+        val skewed = consecutiveDaysTo("2029-01-01", MANY)
+        val eligibleIds: Set<String> = days.map { it.id }.toSet()
+
+        val alone = SnapshotRetention.select(days, NOW, LIMA)
+        val crowded = SnapshotRetention.select(days + skewed, NOW, LIMA)
+
+        assertEquals(alone.keep, crowded.keep.filter { it in eligibleIds })
+        assertEquals(alone.delete, crowded.delete.filter { it in eligibleIds })
+    }
+
+    @Test
+    fun `the survivor count is bounded whatever a broken clock does`() {
+        // The bound the KDoc states, asserted rather than argued: two shelves of 7 + 8 + 12, and
+        // nothing survives without occupying a slot on one of them.
+        val eligible = consecutiveDaysTo("2026-08-14", MANY)
+        val skewed = consecutiveDaysTo("2029-01-01", MANY)
+
+        val decision = SnapshotRetention.select(eligible + skewed, NOW, LIMA)
+
+        assertTrue(decision.keep.size <= 2 * SLOTS_PER_SHELF, "kept ${decision.keep.size}")
+    }
+
+    @Test
     fun `the answer is a function of the input set, not of the order it arrives in`() {
         // FIFTEENTHS and a handful of recent days: disjoint, so no id appears twice and the
         // partition assertion below is about the policy rather than about the fixture.
@@ -183,6 +227,13 @@ private val LIMA: TimeZone = TimeZone.of("America/Lima")
 private val NOW: Instant = Instant.parse("2027-01-01T00:00:00Z")
 
 private const val TEN = 10
+
+/** Rather more than a year of daily snapshots — enough that an unbounded shelf is obvious. */
+private const val MANY = 400
+
+/** What one shelf — eligible, or future-stamped — can hold. The whole policy is two of these. */
+private val SLOTS_PER_SHELF: Int =
+    SnapshotRetention.DAILY_SLOTS + SnapshotRetention.WEEKLY_SLOTS + SnapshotRetention.MONTHLY_SLOTS
 
 /** [count] consecutive calendar days ending at [endInclusive], oldest first. */
 private fun consecutiveDaysTo(endInclusive: String, count: Int): List<RetentionCandidate> =

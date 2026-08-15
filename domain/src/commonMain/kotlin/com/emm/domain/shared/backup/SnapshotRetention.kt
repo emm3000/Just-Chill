@@ -38,7 +38,22 @@ data class RetentionDecision(val keep: List<String>, val delete: List<String>)
  *
  * Filling from the data means retention advances when a **new snapshot arrives**, never merely
  * because time passed. A phone left in a drawer for a year comes back to every snapshot it had. The
- * storage bound is unchanged: at most `7 + 8 + 12` objects survive however long the app runs.
+ * storage bound is `7 + 8 + 12` per partition and **54 in total**, because the future-stamped
+ * candidates below are bucketed on a shelf of their own; nothing here can survive without filling a
+ * slot, so no sequence of clock excursions makes the bucket grow without end.
+ *
+ * ### A future stamp buys a separate shelf, not an exemption
+ *
+ * Only a skewed clock stamps a snapshot after [Instant] `now`, and such a candidate must not compete
+ * with the real ones: letting it claim the newest slot of all three buckets would evict three
+ * verified snapshots to make room for a mistake. So the future-stamped candidates are **partitioned
+ * out and run through the same three buckets separately**, and the two survivor sets are unioned.
+ *
+ * Keeping them *unconditionally* was the previous answer and it was unbounded. An object that fills
+ * no slot can never be evicted by anything, so a clock that jumps forward, is corrected, and jumps
+ * again strands more of them on every excursion — growth whose only signal is uploads eventually
+ * failing. Merging the two sets instead would give the mistake its slots back. Bucketing them apart
+ * keeps the property the partition exists for and makes the bound true.
  *
  * ### Within a bucket the NEWEST survives
  *
@@ -69,22 +84,21 @@ object SnapshotRetention {
      *
      * [now] is passed rather than read so the whole decision is a function of `(candidates, now,
      * zone)` and nothing else — no hidden clock, so a test can move time without moving a machine.
-     * Its one job is the future: a candidate stamped **after** [now] is kept unconditionally and
-     * fills no slot. Clock skew is the only thing that produces one, and the alternative — letting it
-     * claim the newest slot in every bucket — would evict three real snapshots to make room for a
-     * mistake. Keeping it costs one object.
+     * Its one job is splitting the candidates stamped **after** [now] onto their own shelf, where
+     * they fill their own slots and take none from anybody — see "A future stamp buys a separate
+     * shelf" above for why that is neither "keep them all" nor "let them compete".
      */
     fun select(candidates: List<RetentionCandidate>, now: Instant, zone: TimeZone): RetentionDecision {
         val nowMillis: Long = now.toEpochMilliseconds()
         val (future, eligible) = candidates.partition { it.takenAtEpochMillis > nowMillis }
 
-        // A UNION of three independent selections, never three passes that can each delete. This is
-        // what makes the grandfather-father-son bug — one bucket evicting what another is keeping —
-        // structurally impossible instead of merely tested for.
-        val survivors: MutableSet<String> = future.mapTo(mutableSetOf()) { it.id }
-        survivors += eligible.newestPerBucket(DAILY_SLOTS, zone) { day -> day }
-        survivors += eligible.newestPerBucket(WEEKLY_SLOTS, zone) { day -> day.previousOrSame(DayOfWeek.MONDAY) }
-        survivors += eligible.newestPerBucket(MONTHLY_SLOTS, zone) { day -> LocalDate(day.year, day.month, 1) }
+        // A UNION of independent selections, never passes that can each delete. This is what makes
+        // the grandfather-father-son bug — one bucket evicting what another is keeping —
+        // structurally impossible instead of merely tested for, and it is why the two shelves can be
+        // unioned as safely as the three buckets are.
+        val survivors: MutableSet<String> = mutableSetOf()
+        survivors += eligible.newestPerSlot(zone)
+        survivors += future.newestPerSlot(zone)
 
         val (keep, delete) = candidates.sortedWith(CHRONOLOGICAL).partition { it.id in survivors }
         return RetentionDecision(keep = keep.map { it.id }, delete = delete.map { it.id })
@@ -99,6 +113,20 @@ object SnapshotRetention {
     /** Twelve distinct calendar months. */
     const val MONTHLY_SLOTS: Int = 12
 }
+
+/**
+ * The whole policy over one shelf of candidates: seven daily, eight weekly and twelve monthly slots,
+ * unioned.
+ *
+ * It is a function rather than three lines inside `select` because it runs **twice** — once over the
+ * eligible candidates and once over the future-stamped ones — and the two runs have to be the same
+ * policy by construction. A second copy of the three calls is exactly how the future shelf would
+ * quietly drift into being unbounded again.
+ */
+private fun List<RetentionCandidate>.newestPerSlot(zone: TimeZone): List<String> =
+    newestPerBucket(SnapshotRetention.DAILY_SLOTS, zone) { day -> day } +
+        newestPerBucket(SnapshotRetention.WEEKLY_SLOTS, zone) { day -> day.previousOrSame(DayOfWeek.MONDAY) } +
+        newestPerBucket(SnapshotRetention.MONTHLY_SLOTS, zone) { day -> LocalDate(day.year, day.month, 1) }
 
 /**
  * The newest candidate of each of the [slots] most recent buckets, where [bucketOf] says what a
