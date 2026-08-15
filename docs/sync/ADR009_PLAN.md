@@ -663,9 +663,10 @@ compares them and decides whether to trigger a backup.
   `clearSyncMetadata`, riding `DeleteUserAccountUseCase`'s account-deletion call — **not** because
   the watermark is sync metadata (it explicitly is not), but because that `clear` is the only
   account-deletion seam that exists today, under `NonCancellable`, and inventing a dedicated port
-  for a key nothing reads yet would be YAGNI. **2c-iii is the unit that must introduce the proper
-  backup-metadata seam and move both the write and the clear onto it** — it is where the writer of
-  this timestamp arrives, so it is the natural owner of the seam too.
+  for a key nothing reads yet would be YAGNI. **2c-iii-a is the unit that introduced the proper
+  backup-metadata seam and moved both the write and the clear onto it** — it was the writer of
+  this timestamp that made the seam's absence a real cost, not a hypothetical one; see 2c-iii-a
+  below.
 - `DefaultBackupRepository` was already at detekt's `TooManyFunctions` ceiling of 11, so adding the
   override forced extracting the existing private `usableCategoryId` to a file-private top-level
   function, matching `snapshot`'s existing extension-on-`EmmDatabaseData` shape. Future work on that
@@ -745,22 +746,54 @@ Six things it settled that this plan had left open or got wrong:
   a leftover the next prune sees again; taking the run down with it would turn it into a bucket that
   never gets cleaned.
 
-**2c-iii owes two things beyond its own scope**: it must call `backupSnapshotName` rather than
-re-implement the format (which is why that function is public and the parser is not), and — carried
-over from 2c-i — it must introduce the proper backup-metadata seam and move the `lastSuccessfulBackupAt`
-write and its account-deletion clear off `SyncCursorStore` onto it.
+**2c-iii turned out to be two units, not one — the plan did not anticipate the split.** The seams
+(the trigger primitives and the backup-metadata port) were substantial and independently landable
+on their own, so they shipped first as **2c-iii-a**; the orchestrator that consumes them is
+**2c-iii-b**, still open.
+
+**2c-iii-a — the seams. LANDED** (`ab7d90e7`, `ac2bed36`, `0acd47ec`, `3409560f`).
+
+- Moves `resumeEvents()` (expect + both actuals, bodies byte-identical) out of the doomed
+  `core/sync/` into a neutral `com.emm.justchill.core.lifecycle` package: it is a platform
+  lifecycle primitive, not a sync concept, and the backup orchestrator needs a resume trigger for
+  its staleness retry (the Trigger row above).
+- Adds `backgroundEvents()` beside it — the Trigger row's other half, `ProcessLifecycleOwner.onStop`
+  on Android and `UIApplicationDidEnterBackgroundNotification` on iOS, each mirroring the
+  corresponding `resumeEvents` actual. **It has no production caller yet** — wiring it up is
+  2c-iii-b's job.
+- Introduces `BackupMetadataStore` in `:domain` (`lastSuccessfulBackupAt` / `setLastSuccessfulBackupAt`
+  / `clear`), implemented by `DefaultBackupMetadataStore(prefs: AppPreferences)` in `:presentation`'s
+  `core/backup/`, bound in `BackupModule.kt` — **not** `SyncModule.kt`, which Phase 5 deletes whole;
+  an earlier attempt put the binding there and it was corrected, since a missing Koin binding is a
+  runtime crash the build gate cannot see.
+- Moves the backup-watermark clear off `DefaultSyncCursorStore.clear` onto
+  `DeleteUserAccountUseCase`, as its own step inside the existing `NonCancellable` block, and
+  reverts `SyncCursorStore.clear`'s KDoc to describing only sync metadata.
+
+The property this unit was for, verified by the reviewer: **if Phase 5 deleted every sync-named
+file today, nothing in this unit would break.** Both guards are mutation-proved — removing the
+`bind<BackupMetadataStore>()` reds `AppGraphKoinTest`; deleting the `clear` call reds four named
+tests, one of which pins its placement inside `NonCancellable`.
+
+**2c-iii-b — the orchestrator. Still open.** `BackupOrchestrator`, comparing
+`latestLocalChangeAt()` against `BackupMetadataStore.lastSuccessfulBackupAt`, gated behind
+`SNAPSHOT_BACKUP_ENABLED`; the dirty-flag comparison that decides whether a backup is due; the
+once-a-day cap on automatic snapshots; the staleness retry on `resumeEvents()` for a process that
+died mid-upload; and the `bootstrapAppGraph` wiring, the same pattern that gates
+`SyncOrchestrator.start()` today. Must call `backupSnapshotName` rather than re-implement the
+format (which is why that function is public and the parser is not).
 
 **Verification**: gate green + a test proving an upload whose hash mismatches is NOT marked
 successful.
 
 ### Phase 3 — health visibility
 
-- Show "Last backup: X ago" in Profile, reading `AppPreferences.lastSuccessfulBackupAt`. The storage
-  itself — `lastSuccessfulBackupAt` / `setLastSuccessfulBackupAt` / `clearBackupMetadata` — already
-  landed in 2c-i (see that section); nothing calls `setLastSuccessfulBackupAt` yet, since there is no
-  backup pipeline to call it after. Still open here: wiring the write after a verified upload, the
-  Profile read, and — per 2c-i's note — routing both the write and the account-deletion clear
-  through the proper backup-metadata seam 2c-iii introduces, instead of a naked `AppPreferences` call.
+- Show "Last backup: X ago" in Profile, reading `BackupMetadataStore.lastSuccessfulBackupAt` —
+  **not** a naked `AppPreferences` read: 2c-iii-a already landed the seam (`lastSuccessfulBackupAt`
+  / `setLastSuccessfulBackupAt` / `clear`), so Phase 3 goes through the port from the start.
+  Nothing calls `setLastSuccessfulBackupAt` yet, since there is no backup pipeline to call it
+  after — that is 2c-iii-b. Still open here: wiring the write after a verified upload and the
+  Profile read itself.
 - Warning state when staleness exceeds 3 days with pending mutations.
 - Every failure (serialization, network, hash mismatch, storage error) logs a distinct reason
   and increments a visible failure indicator.
