@@ -348,11 +348,13 @@ gana el ADR.
 - [x] Los **15** errores de compilación de `:ui-android:detektMainAndroid`, cerrados el 2026-08-11
   borrando el registry de SavedState de navegación (`3105d91`, `bb9e6d5`, `57fe356`). La tarea
   ahora reporta cero.
-- [ ] **12 errores de expect/actual**: `:data` (9) y `:presentation` (3). detekt analiza commonMain
-  y androidMain como una sola unidad, sin la estructura de fragmentos de HMPP, así que el compilador
-  ve el `expect` y su `actual` juntos. Son exactamente **3 errores por par**, no una estimación:
-  `:data` tiene tres pares (`shared/Dispatchers.kt`, y dos en `shared/SqliteExceptions.kt`) y
-  `:presentation` uno (`core/sync/ResumeEvents.kt`), cada uno con su contraparte `.android.kt`.
+- [ ] **15 errores de expect/actual**: `:data` (9) y `:presentation` (6, subió de 3 el 2026-08-15
+  con ADR 009 2c-iii-a). detekt analiza commonMain y androidMain como una sola unidad, sin la
+  estructura de fragmentos de HMPP, así que el compilador ve el `expect` y su `actual` juntos. Son
+  exactamente **3 errores por par**, no una estimación: `:data` tiene tres pares
+  (`shared/Dispatchers.kt`, y dos en `shared/SqliteExceptions.kt`) y `:presentation` ahora dos
+  (`core/lifecycle/ResumeEvents.kt` y `core/lifecycle/BackgroundEvents.kt`), cada uno con su
+  contraparte `.android.kt`.
 - [ ] **13 errores más en `:androidApp:detektDevDebug` y `detektDevRelease`**, sin diagnosticar y
   sin cambio antes y después del trabajo del 2026-08-11. Las variantes `prod*` reportan 10. Los tres
   de diferencia salen del flavor `dev` — probablemente del playground `experiences/`, que solo
