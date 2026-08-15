@@ -234,8 +234,9 @@ gana el ADR.
         `SupabaseBackupObjectStoreTest` importaba la sesión sobre un plugin de Auth que todavía no
         terminaba de inicializar, y la escritura de estado de `init` podía aterrizar última. Un flake
         en el gate es peor que un rojo — enseña a re-correr.
-  - [ ] Fase 2c — orquestación: dirty flag, `backgroundEvents()`, "Back up now", retención,
-    flag `SNAPSHOT_BACKUP_ENABLED`. **La poda se apoya en `<name>.manifest.json`, nunca en `<name>`
+  - [x] Fase 2c — orquestación: dirty flag, `backgroundEvents()`, "Back up now", retención,
+    flag `SNAPSHOT_BACKUP_ENABLED`. **Cerrada** — las cuatro sub-unidades abajo landearon en `trunk`,
+    sin pushear. **La poda se apoya en `<name>.manifest.json`, nunca en `<name>`
     solo**: un payload sin sidecar no ocupa cupo de retención y se borra a la vista. Una poda por
     nombre le da cupo a un huérfano y desaloja un snapshot verificado — eso es pérdida de datos, y
     el razonamiento completo (incluido cuál huérfano bueno se tira a propósito) está en la fila
@@ -259,6 +260,14 @@ gana el ADR.
       El clear salió de `DefaultSyncCursorStore.clear` y es su propio paso en
       `DeleteUserAccountUseCase`, dentro del mismo bloque `NonCancellable`. Detalle completo en
       `sync/ADR009_PLAN.md`.
+    - [x] **2c-ii — naming del snapshot y poda de retención**, `trunk` (`3e3c5dd9`, `b1c2e3ce`,
+      `2a186ebe`, `217d4081`, `0c510b2a`, `05296659`, `95b7bc90`, `559cf2e7`, `955b8797`).
+    - [x] **2c-iii-a — las costuras** (`resumeEvents`/`backgroundEvents`, `BackupMetadataStore`),
+      `trunk` (`ab7d90e7`, `ac2bed36`, `0acd47ec`, `3409560f`).
+    - [x] **2c-iii-b — el orquestador**, `trunk` (`e5989df4`, `8ab93972`, `d7fa1cff`, `e7fc821d`,
+      `1a8df300`).
+    - [x] **2c-iv — la acción manual "Respaldar ahora", Fase 2c cerrada**, `trunk` (`c8a0540f`,
+      `44461895`, `e1b90622`).
 - [ ] `buildBackupManifest` lanza `ValidationCode.BackupFileInvalid` — "El archivo está dañado o no es
   un respaldo de JustChill", la voz del *restore* — ante un defecto de nuestro propio export, donde
   no hay archivo que nadie eligió. El arreglo honesto es `DomainException.Unknown`, no un
