@@ -673,7 +673,11 @@ compares them and decides whether to trigger a backup.
   unrelated to the change that caused it.
 
 **2c-ii — naming and the retention prune. LANDED** (`3e3c5dd9`, `b1c2e3ce`, `2a186ebe`, `217d4081`,
-`0c510b2a`, `05296659`, `95b7bc90`). The Naming and Retention rows above, with **nothing scheduling
+`0c510b2a`, `05296659`, `95b7bc90`, `559cf2e7`, `955b8797`) — the last two are the hardening the
+"Hardened post-landing" paragraph below describes: `559cf2e7` makes the pager advance by the server's
+returned count and terminate on a zero page, so completeness no longer depends on the server
+honouring the requested page size; `955b8797` documents the offset-paging skip risk over a mutating
+listing. The Naming and Retention rows above, with **nothing scheduling
 either yet** — 2c-iii is what runs a prune after an upload. Four pieces: `backupSnapshotName` and
 `parseBackupSnapshotTakenAt` in one file (`data/backup/BackupSnapshotName.kt`), because the name is
 the only place a snapshot's timestamp survives and a builder and reader that disagree by one

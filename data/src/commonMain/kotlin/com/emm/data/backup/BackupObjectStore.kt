@@ -29,15 +29,19 @@ package com.emm.data.backup
 internal const val BACKUP_LIST_PAGE_SIZE: Int = 1000
 
 /**
- * How many pages one listing may take before the caller gives up and refuses to prune.
+ * How many list requests one listing may issue before the caller gives up and refuses to prune.
  *
- * **The bound is there for the server, not for the bucket.** Retention leaves at most 54 snapshots
- * and their sidecars behind — 108 objects, a tenth of one page — so ten pages is about a hundred
- * times a healthy bucket and reaching it means something is wrong rather than merely busy. What it
- * actually rules out is a server that answers every page full: paging forever would hold ADR 009
- * Phase 2c's `launchOp` concurrent-op guard with no exception and no message, which is hard
- * constraint 4's exact shape. Hitting the cap deletes nothing, for the same reason a failed listing
- * deletes nothing — a partial view can make an old snapshot look like the newest.
+ * **The bound is on requests, not on pages of objects.** Under the zero terminator, one of those ten
+ * requests has to come back empty to prove the listing is complete, so at most nine of them can carry
+ * objects: 9 × [BACKUP_LIST_PAGE_SIZE] = 9000 is the real ceiling on how many objects a healthy prune
+ * can read before refusing, not the ~9999 a reading of "ten pages" as ten pages *of objects* would
+ * suggest. Retention leaves at most 54 snapshots and their sidecars behind — 108 objects — so that
+ * ceiling is still about eighty times a healthy bucket, and reaching it means something is wrong
+ * rather than merely busy. What it actually rules out is a server that answers every request with a
+ * non-empty page: paging forever would hold ADR 009 Phase 2c's `launchOp` concurrent-op guard with no
+ * exception and no message, which is hard constraint 4's exact shape. Hitting the cap deletes nothing,
+ * for the same reason a failed listing deletes nothing — a partial view can make an old snapshot look
+ * like the newest.
  */
 internal const val BACKUP_LIST_MAX_PAGES: Int = 10
 

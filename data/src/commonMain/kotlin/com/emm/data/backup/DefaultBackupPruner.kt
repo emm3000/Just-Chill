@@ -129,8 +129,9 @@ class DefaultBackupPruner internal constructor(
      * size** — it reintroduces the defect above with no test able to tell from the request alone,
      * only from a clamping server.
      *
-     * A page bigger than the limit is treated as full and paging continues: [BACKUP_LIST_MAX_PAGES]
-     * bounds the loop whatever the server does, and over-reading is safe where under-reading is not.
+     * There is no "full page" under the zero terminator: any page that reports a non-zero count keeps
+     * the loop going, however many objects it holds. [BACKUP_LIST_MAX_PAGES] bounds the loop whatever
+     * the server does, and over-reading is safe where under-reading is not.
      * A page reporting zero while more objects genuinely remain — a server misbehaving in the other
      * direction — is indistinguishable from the real end from here, so it is treated as the end: the
      * alternative is guessing, and a pager that kept asking after a zero could spin forever with
