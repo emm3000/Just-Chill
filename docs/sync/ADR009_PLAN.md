@@ -587,10 +587,32 @@ must not build chunking or progress reporting against a 10-second limit that is 
 |---|---|
 | Dirty flag | `max(updatedAt)` across the 4 tables (new SELECTs; `softDelete` already bumps `updatedAt`, so deletes mark dirty) vs `lastSuccessfulBackupAt` in `AppPreferences` — the facade already holds cursor/lastSyncedAt keys |
 | Trigger | new `backgroundEvents()` expect/actual, sibling of `resumeEvents()` (ProcessLifecycleOwner ON_STOP / UIApplicationDidEnterBackground), capped at 1 automatic snapshot/day; **plus a staleness check on resume** — if the process died mid-upload, the next foreground retries (dirty flag is still set) |
-| Manual action | "Back up now" in Profile, through the existing `launchOp` concurrent-op guard |
+| Manual action | "Back up now" in Profile. **`launchOp` is not the guard for it** — see the note below; 2c-iv needs a completion signal first |
 | Naming | `backup-v3-<ISO8601-UTC, colons replaced>.json` |
 | Retention | client-side prune (no server code exists): list the bucket and **key on the presence of `<name>.manifest.json`, never on `<name>` alone**. A payload without its sidecar is not a snapshot: it counts toward no retention bucket and is **deleted on sight** — see the paragraph below, which is the rule, not a note about it. Parse timestamps from the names that DO carry a manifest, keep 7 daily + 8 weekly + 12 monthly — **slots filled from the data, not anchored on today; see 2c-ii for why** — and delete the rest. Pinned snapshots live under a `pinned/` prefix the prune never scans. "Pin before risky operation" action; every future DB schema migration must be preceded by a pinned snapshot |
 | Flag | `SNAPSHOT_BACKUP_ENABLED = false` in `core/backup/`, mirroring the `SyncKillSwitch` pattern (const + KDoc + grep-able). `bootstrapAppGraph` starts `BackupOrchestrator` behind it, the same pattern that gates `SyncOrchestrator.start()` in `AppGraph` today. **The polarity is inverted** — `SYNC_TEMPORARILY_DISABLED` is `true` for off, this one is `false` for off — and both mean off today |
+
+**The manual action cannot ride `launchOp`, and 2c-iv is where that bill comes due.** The Manual
+action row above was written before the orchestrator existed and assumed the Perfil button would look
+like every other Perfil operation. It cannot: `BackupOrchestrator.requestBackup` is fire-and-forget —
+a `trySend` onto the CONFLATED request channel, returning `Unit` — while `launchOp` measures a
+**suspend block's completion** and reports on it. Wrapping one in the other reports success the
+instant the request is *queued*, which is a green tick for a backup that has not started, may be
+sitting behind another cycle, and may fail every one of the pipeline's thirteen named ways without
+the screen ever hearing about it. That is hard constraint 4 with a checkmark on top, and it is worse
+than no button.
+
+So 2c-iv owes a **completion/failure signal** before it owes a button: something the orchestrator
+publishes when a requested cycle ends, carrying which ending it was. Two other refusals already
+decided by this pipeline land on the same signal — a manual request made while signed out is
+*discarded, not deferred* (the flag is consumed before the auth gate, argued in `requestBackup`'s
+KDoc), and a cycle whose account changed mid-flight records nothing; both are answers a tap deserves
+and neither can be delivered by a method returning `Unit`.
+
+**This is the point where the deliberately-deferred `BackupController` earns itself.** 2c-iii-b
+declined to create it because it would have had one implementation, one method and zero consumers.
+A signal with a Perfil consumer is the second thing for it to carry, which is exactly the condition
+that entry named for reopening the question.
 
 **Why the prune keys on the manifest — a name-only prune loses verified data.** 2b-ii part B
 uploads the payload, reads it back, and writes the sidecar **only** after the bytes matched, so
@@ -775,7 +797,8 @@ file today, nothing in this unit would break.** Both guards are mutation-proved 
 `bind<BackupMetadataStore>()` reds `AppGraphKoinTest`; deleting the `clear` call reds four named
 tests, one of which pins its placement inside `NonCancellable`.
 
-**2c-iii-b — the orchestrator. LANDED.** `BackupOrchestrator` in `presentation/core/backup/`, bound
+**2c-iii-b — the orchestrator. LANDED** (`e5989df4`, `8ab93972`, `d7fa1cff`, then `e7fc821d`,
+`1a8df300` closing the review). `BackupOrchestrator` in `presentation/core/backup/`, bound
 in `BackupModule.kt` and started by `bootstrapAppGraph` behind `SNAPSHOT_BACKUP_ENABLED` — one
 `flatMapLatest` session gate over `merge(backgroundEvents, resumeEvents)`, a CONFLATED request
 channel with a single consumer, and the export → name → upload → record → prune cycle. It calls
@@ -806,11 +829,43 @@ Four things it settled that this plan had left open or got wrong:
   four resolutions instead; mutation-proved, along with the ordering, the injected zone, the resilient
   trigger and the injected `TimeZone`.
 
+**And one thing the review found it had got wrong — a cycle read the session twice** (`e7fc821d`).
+The cycle captured `currentUserId`, then suspended through the export and four round trips under a
+120s `transferTimeout`, while the destination prefix was resolved *inside the uploader* from the
+**live** session and the watermark was written under the **captured** one. The session collector runs
+in another coroutine and the request consumer is not cancelled on sign-out, so A signing out and B
+signing in mid-cycle uploaded A's ledger under **B's** prefix — the bucket's RLS `with check` accepts
+it, because the key matches whoever is signed in now — and then recorded A as backed up for the day
+on a snapshot that exists nowhere. Sign-out alone was always safe (`ownedPrefix()` throws), so it took
+an account switch inside one cycle; narrow, and structurally the same split `SyncKillSwitch`'s KDoc
+blames for the dangling cross-tenant rows that ended row replication.
+
+Fixed at **both** ends, because neither alone is enough. `BackupUploader.upload` gained the account
+the snapshot is for and **asserts** it against the resolved prefix before the first byte — the prefix
+still comes from the session and never from the parameter, so this is a refusal and not a new
+destination, and `ownerPrefixOf` became the single declaration of the layout that the store builds and
+the uploader compares. That closes the window up to the last byte sent; the orchestrator then
+re-checks the account before `setLastSuccessfulBackupAt` and skips the prune too, because a **false**
+watermark is worse than a missing one — it suppresses the account's next backup for a whole day,
+where a missing one costs only the retry the next trigger already provides. The uploader's ordering,
+its delete-on-mismatch behaviour and its nine existing messages are untouched; the mismatch is a
+tenth, and the pipeline's twelve named failures are now thirteen.
+
 **Still open from this row**: verification of an upload whose hash mismatches — `BackupUploader`'s
 contract already makes that a throw, and `DefaultBackupUploaderTest` pins it, but nothing yet asserts
 that the orchestrator leaves the watermark unwritten *for that specific failure* rather than for a
 generic one. `a failed upload records no watermark and the next trigger retries` covers the shape;
 the hash-specific case rides on the uploader's own suite.
+
+**Also still open, and it is a hole this unit narrowed rather than closed.** `every single
+bootstrapAppGraph resolves is bound` names the four types the bootstrap resolves, and
+`EXPECTED_VIEW_MODELS` covers ViewModels — so a definition is now visible to the never-bound failure
+if it is resolved by either. **Anything whose only consumer is a direct `koinInject` / `koin.get`
+outside the graph is still invisible**, because `AppGraphKoinTest` iterates the registry and a
+definition that was never registered is not in it. Concretely that is `CommitHash`
+(`presentation/androidMain/core/CommitHash.kt`, sole consumer `AppNavHost.kt:88`), which is why
+`AndroidPlatformModuleTest` resolves it out of its own module instead. The general rule is recorded
+in `presentation/CLAUDE.md`, where somebody touching DI will meet it.
 
 ### Phase 3 — health visibility
 
@@ -869,7 +924,7 @@ Verified inventory (against trunk, 2026-08-13). Four buckets — delete, move, r
 | Delete, `:data` / `:domain` | the 9 files in `data/sync/`; `ConflictResolver`, `SyncCursorStore`, `SyncDataUseCase`, `SyncRepository`; the claim machinery (`ClaimLocalDataOnAuthenticationUseCase` + its un-gated observer in `bootstrapAppGraph` — local `userId` is dead metadata without a push) |
 | Delete, `:presentation` | `SyncOrchestrator`, `SyncController`, `SyncStatus`, `SyncEvent`, `DefaultSyncCursorStore`; the cursor keys in `AppPreferences`; the sync surface of `ProfileViewModel` (it consumes `SyncStatus`/`SyncController` for the Perfil badge) |
 | Delete, `:ui-android` | `hh/shared/SyncEventsHandler.kt` — whose own KDoc calls itself *"the ONLY collector of `SyncController.events`, and that is load-bearing"* — plus the sync references in `AppNavHost` and `AppNavigator`. **Miss these and the Android build breaks**, since the `:presentation` deletions above remove what they collect |
-| Move | the `appScope` single (`named("appScope")`) out of `syncModule` into CoreModule — it drives the claim observer today and `BackupOrchestrator` tomorrow; it is not engine property |
+| Move | **Nothing left.** The one entry this row carried — the `appScope` single (`named("appScope")`) out of `syncModule` into CoreModule — is **already done**: 2c-iii-b pulled it forward (`8ab93972`), because the orchestrator needs an application-lifetime scope and could not take one from a module Phase 5 deletes. It was never engine property; that is why it survived rather than moving. |
 | Rewrite | `DeleteUserAccountUseCase` — its "unclaim" and "cursor clear" steps are engine parts; remote delete becomes: delete the user's Storage objects + the auth user. Also carries the sign-out fix Phase 0 gave `DefaultAuthRepository.signOut()`: `DefaultAuthRepository.deleteAccount()` still calls bare `client.auth.signOut(SignOutScope.LOCAL)` after the `delete_account` RPC, with the identical defect — a network failure mid-request leaves the device holding a session for a user that no longer exists server-side. Its KDoc used to claim the call "clears the on-device session"; Phase 0 corrected that, **by inspection of `AuthImpl.signOut` — not by test.** `DefaultAuthRepositorySignOutTest` exercises `signOut()` only; nothing runs `deleteAccount()`'s call shape, so this defect is unpinned and a fix here has no red test to turn green. Not fixed in Phase 0: `deleteAccount()` is its own contract question (the account is gone either way, so "qualified success" may not even be the right shape there) |
 | Keep | `SyncMutex`, renamed to drop the "Sync" prefix. After this phase its only holders are the rewritten `DeleteUserAccountUseCase` and `BackupOrchestrator`. The logger this row used to name alongside it is **already done**: 2c-iii-b moved it to `domain/.../shared/logging/DiagnosticsLogger.kt` with its two platform impls (`CrashReportingDiagnosticsLogger`, `PrintlnDiagnosticsLogger`), because the orchestrator needs it for constraint 4 and could not depend on a sync-named symbol. Also `resumeEvents()`, and `importFromJson` + the export code — they are the product now |
 

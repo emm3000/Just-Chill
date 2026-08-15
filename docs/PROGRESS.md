@@ -265,6 +265,15 @@ gana el ADR.
   `ValidationCode` nuevo: nada de esto es input del usuario. Es una unidad aparte a propósito —
   `BackupManifestTest` pinnea esos mensajes y tocarlo desde la 2b-ii parte B ensanchaba el diff sobre
   la superficie ya shippeada y testeada de la 2b-i. Anotado acá para no redescubrirlo por tercera vez.
+- [ ] **`appVersion` está hardcodeado `"1.0.0"` en iOS** (`presentation/src/iosMain/.../KoinIos.kt:49`,
+  `single(named("appVersion")) { "1.0.0" }`). Preexistente — hasta ahora solo pintaba el footer de
+  Perfil, donde una versión falsa es cosmética. Con la 2c-iii-b dejó de serlo: `BackupOrchestrator`
+  estampa ese mismo valor en el payload del snapshot, así que **un backup escrito desde iOS miente
+  sobre la versión de la app que lo produjo** — y esa versión es justo lo que se va a mirar el día
+  que un restore no cuadre con el schema. **No se arregla acá a propósito**: leer la versión real es
+  `NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString")`, plataforma pura,
+  y es su propia unidad. Anotado con la consecuencia dicha para que no se descubra durante un
+  restore.
 - [ ] La app tiene que decir en pantalla, antes del primer upload a una cuenta nueva, que sube el
   ledger entero de este device ahí — incluidas las filas de una cuenta anterior, porque `signOut()`
   no borra nada. ADR 009 Decision 5; es aviso, no diálogo de confirmación.

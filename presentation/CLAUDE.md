@@ -68,6 +68,14 @@ that Android satisfies from `:androidApp` instead: `PrintlnDiagnosticsLogger` fo
   `core/AppGraphKoinTest.kt`, which resolves the WHOLE Koin graph off-device against
   `TestPlatformModule`. A missing binding compiles clean and passes the Android build — this test
   is the only net before a user hits it. Register every new ViewModel there.
+  **What it cannot see is a definition nothing in the graph resolves.** The sweep iterates the Koin
+  registry, so deleting a `single { }` whose only consumer is a direct `koinInject` / `koin.get`
+  outside `appModules()` compiles, keeps the suite green, and crashes at that call site. Two named
+  tests plug the two ways in — `EXPECTED_VIEW_MODELS` for ViewModels, `every single
+  bootstrapAppGraph resolves is bound` for what the bootstrap resolves — and everything else is
+  still exposed. Today that is exactly one binding: `CommitHash` (`androidMain/core/CommitHash.kt`,
+  sole consumer `AppNavHost.kt:88`), covered by `AndroidPlatformModuleTest` in `:androidApp` instead.
+  Add a binding with a consumer outside the graph and you owe it a test of its own.
   It also guards what a definition *receives*, not just that it resolves: with a sentinel `Clock`
   and `TimeZone` bound, every `Clock`/`TimeZone` field on a `com.emm.` class must be the bound
   instance. That is the net for a hand-written `viewModel { }`/`factory { }` block forgetting a
