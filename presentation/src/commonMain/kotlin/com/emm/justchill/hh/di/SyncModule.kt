@@ -12,10 +12,10 @@ import com.emm.domain.sync.SyncDataUseCase
 import com.emm.domain.sync.SyncLogger
 import com.emm.domain.sync.SyncMutex
 import com.emm.domain.sync.SyncRepository
+import com.emm.justchill.core.lifecycle.resumeEvents
 import com.emm.justchill.core.sync.DefaultSyncCursorStore
 import com.emm.justchill.core.sync.SyncController
 import com.emm.justchill.core.sync.SyncOrchestrator
-import com.emm.justchill.core.sync.resumeEvents
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

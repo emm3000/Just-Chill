@@ -1,4 +1,4 @@
-package com.emm.justchill.core.sync
+package com.emm.justchill.core.lifecycle
 
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

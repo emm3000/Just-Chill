@@ -35,9 +35,10 @@ declaration becomes a lie.
 UiState + Intent + Effect + `toUi` mappers) and one Koin module in `hh/di/`; pure helpers and
 `UiStrings` sit in `hh/shared/`.
 
-`androidMain/` holds two files: the one actual, `core/sync/ResumeEvents.android.kt`, and
-`core/CommitHash.kt` — an ordinary Android-only DI contract (producer and consumer are both
-Android), deliberately outside `commonMain` so it never reaches the iOS compile or `JustChillKit`.
+`androidMain/` holds the two lifecycle actuals, `core/lifecycle/ResumeEvents.android.kt` and
+`core/lifecycle/BackgroundEvents.android.kt`, plus `core/CommitHash.kt` — an ordinary Android-only DI
+contract (producer and consumer are both Android), deliberately outside `commonMain` so it never
+reaches the iOS compile or `JustChillKit`.
 `iosMain/` holds its
 counterpart, `KoinIos.kt` — the iOS entry point (`initKoin`, `iosPlatformModule`, and one typed
 resolver per Swift-facing ViewModel) — and, unlike `androidMain`, two ordinary port implementations
