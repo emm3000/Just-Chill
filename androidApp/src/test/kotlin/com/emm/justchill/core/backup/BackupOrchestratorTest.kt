@@ -293,15 +293,30 @@ class BackupOrchestratorTest {
      * The refusal itself belongs to the uploader (`DefaultBackupUploaderTest` owns the message and
      * proves nothing is written). What this test owns is the orchestrator's half: it hands over the
      * account it *captured*, so the assertion is reachable at all, and it records nothing for anybody.
+     *
+     * The switch is staged inside the `exportToJson` stub, with the same `delay(1)` arrangement as
+     * "a sign-out landing after the upload records no watermark" below — **before** `uploader.upload`
+     * is called, not inside its own answer. Argument expressions are evaluated before a mocked call's
+     * body ever runs, so staging the switch inside `upload`'s `coAnswers` would leave `currentUserId`
+     * unchanged at the point the call is actually made: the argument would be the captured account
+     * either way, and a call site rewritten to read the live field instead would go undetected. Moving
+     * the switch earlier, with a real suspension point for the session collector to run, makes the two
+     * diverge for real by the time `uploader.upload` is invoked.
      */
     @Test
     fun `an account switch mid-cycle records no watermark for either account`() = runTest(testDispatcher) {
         coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
         every { metadata.lastSuccessfulBackupAt(any()) } returns null
-        coEvery { uploader.upload(USER_ID, any(), any()) } coAnswers {
+        coEvery { backupRepository.exportToJson(any(), any()) } coAnswers {
             sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = OTHER_USER_ID, email = "b@b.com"))
-            throw DomainException.Unauthorized(OWNER_CHANGED)
+            // The session collector is a different coroutine on the same scheduler. Parking here for
+            // one virtual millisecond lets it observe the switch before this cycle reaches
+            // uploader.upload, so the captured account and the live one are genuinely different by
+            // then rather than merely different inside this answer block.
+            delay(1)
+            PAYLOAD
         }
+        coEvery { uploader.upload(USER_ID, any(), any()) } throws DomainException.Unauthorized(OWNER_CHANGED)
 
         val orchestrator = buildOrchestrator()
         orchestrator.start()
@@ -310,8 +325,8 @@ class BackupOrchestratorTest {
         backgroundFlow.emit(Unit)
         advanceUntilIdle()
 
-        // The captured account is what travelled — a cycle that passed the live one would have handed
-        // over B and the uploader would have had nothing to disagree with.
+        // The captured account is what travelled — a cycle that read the live field instead would
+        // have handed over B, and the uploader would have had nothing to disagree with.
         coVerify(exactly = 1) { uploader.upload(USER_ID, backupSnapshotName(NOW), PAYLOAD) }
         verify(exactly = 0) { metadata.setLastSuccessfulBackupAt(any(), any()) }
         coVerify(exactly = 0) { pruner.prune() }
