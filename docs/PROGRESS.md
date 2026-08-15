@@ -252,11 +252,13 @@ gana el ADR.
       2c-iii es la que los compara. `DefaultBackupRepository` ya estaba en el techo de
       `TooManyFunctions` de detekt (11), así que agregar el override forzó extraer el
       `usableCategoryId` privado que ya existía a una función top-level file-private, con la misma
-      forma de extensión que `snapshot`. El `clearBackupMetadata` de la nueva key vive en
-      `DefaultSyncCursorStore.clear`, que la Fase 5 borra — aceptado a propósito, YAGNI de
-      inventar un puerto para una key que nadie lee todavía, pero **la 2c-iii tiene que introducir
-      la costura propia de metadata de backup y mover ahí tanto la escritura como el clear**, queda
-      anotado en la tabla de `sync/ADR009_PLAN.md` para no perderlo.
+      forma de extensión que `snapshot`. El watermark ya tiene costura propia: `BackupMetadataStore`
+      en `:domain` (`lastSuccessfulBackupAt` / `setLastSuccessfulBackupAt` / `clear`), implementada
+      por `DefaultBackupMetadataStore` en `:presentation` (`core/backup/`) y registrada en
+      `BackupModule.kt` — landed como **2c-iii-a** (`ab7d90e7`, `ac2bed36`, `0acd47ec`, `3409560f`).
+      El clear salió de `DefaultSyncCursorStore.clear` y es su propio paso en
+      `DeleteUserAccountUseCase`, dentro del mismo bloque `NonCancellable`. Detalle completo en
+      `sync/ADR009_PLAN.md`.
 - [ ] `buildBackupManifest` lanza `ValidationCode.BackupFileInvalid` — "El archivo está dañado o no es
   un respaldo de JustChill", la voz del *restore* — ante un defecto de nuestro propio export, donde
   no hay archivo que nadie eligió. El arreglo honesto es `DomainException.Unknown`, no un
@@ -354,7 +356,12 @@ gana el ADR.
   exactamente **3 errores por par**, no una estimación: `:data` tiene tres pares
   (`shared/Dispatchers.kt`, y dos en `shared/SqliteExceptions.kt`) y `:presentation` ahora dos
   (`core/lifecycle/ResumeEvents.kt` y `core/lifecycle/BackgroundEvents.kt`), cada uno con su
-  contraparte `.android.kt`.
+  contraparte `.android.kt`. El mensaje del propio detekt es *"This affects accuracy of
+  reporting"*: no es solo ruido en consola, cualquier regla que dependa de type resolution corre
+  **degradada** sobre esos dos archivos, así que un `detektMainAndroid` verde no es prueba de que
+  `ResumeEvents`/`BackgroundEvents` estén completamente linteados. Y nada topa el número — cada
+  trío `expect/actual` nuevo en un módulo KMP suma exactamente 3, así que este total sigue
+  subiendo con cada unidad que agregue una plataforma más.
 - [ ] **13 errores más en `:androidApp:detektDevDebug` y `detektDevRelease`**, sin diagnosticar y
   sin cambio antes y después del trabajo del 2026-08-11. Las variantes `prod*` reportan 10. Los tres
   de diferencia salen del flavor `dev` — probablemente del playground `experiences/`, que solo
