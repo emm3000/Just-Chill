@@ -609,6 +609,18 @@ decided by this pipeline land on the same signal — a manual request made while
 KDoc), and a cycle whose account changed mid-flight records nothing; both are answers a tap deserves
 and neither can be delivered by a method returning `Unit`.
 
+**The account-switch refusal is a `DomainException.Unauthorized`, and that type cannot tell 2c-iv
+what actually happened.** `DefaultBackupUploader` throws it because it is the honest classification —
+the live session simply is not the account the snapshot was authorised for — but the same type also
+covers a genuinely expired or invalid session, and the two existing consumers of it both treat it as
+the latter: `DomainExceptionExt.toUserMessage()` renders it as *"Credenciales incorrectas o sesión
+expirada"*, and `SyncOrchestrator`'s posture for it is sign out + emit `SessionExpired`
+(`core/sync/SyncOrchestrator.kt:44`). Neither is true for an account switch — the user is signed in,
+just as somebody else — and a 2c-iv that forwarded either would force-sign-out a user for the crime of
+switching accounts. The exception type does not carry enough to distinguish the two cases, so 2c-iv
+has to make that call deliberately when it designs the completion signal, rather than inherit whatever
+`Unauthorized` already means elsewhere in this codebase.
+
 **This is the point where the deliberately-deferred `BackupController` earns itself.** 2c-iii-b
 declined to create it because it would have had one implementation, one method and zero consumers.
 A signal with a Perfil consumer is the second thing for it to carry, which is exactly the condition

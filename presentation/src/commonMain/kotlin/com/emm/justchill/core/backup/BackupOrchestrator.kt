@@ -291,10 +291,15 @@ class BackupOrchestrator(
      *    and the bucket's RLS accepts the write because the key matches whoever is signed in *now* —
      *    A's ledger under B's prefix, and A recorded as backed up.
      *  - **The record re-checks it**, because the assertion above only covers up to the last byte
-     *    sent. A mismatch here means the snapshot either went somewhere else or belongs to an account
-     *    that is gone, so nothing is written and the prune is skipped too — a *false* watermark is
-     *    worse than a missing one, since it suppresses the next backup for a whole day, while a
-     *    missing one only costs the retry the next trigger already provides.
+     *    sent, not what happens between `upload` returning and the watermark being written. A normal
+     *    return already means the prefix was asserted and RLS accepted every write under it, so a
+     *    mismatch here cannot mean the snapshot went somewhere else — it means the account signed out,
+     *    or into a different one, in that window between the upload finishing and the record running.
+     *    The re-check deliberately does not lean on the upload's assertion still holding by the time it
+     *    runs: it reads [currentUserId] fresh rather than trusting that nothing changed since. On a
+     *    mismatch nothing is written and the prune is skipped too — a *false* watermark is worse than a
+     *    missing one, since it suppresses the next backup for a whole day, while a missing one only
+     *    costs the retry the next trigger already provides.
      */
     private suspend fun takeSnapshot(userId: String, manual: Boolean) {
         val takenAt: Instant = clock.now()
