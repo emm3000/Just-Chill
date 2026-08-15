@@ -7,12 +7,18 @@ import com.emm.domain.shared.backup.BackupMetadataStore
 import com.emm.domain.shared.backup.BackupPruner
 import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.BackupUploader
+import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.logging.DiagnosticsLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.merge
@@ -33,6 +39,9 @@ import kotlin.time.Instant
  * calling them: the export, the verified upload, the retention prune and the two watermarks all
  * existed with zero callers. This is the caller. It owns the *decision* and the *concurrency*, and
  * no step of the pipeline itself — a step that fails belongs to whichever port it came from.
+ *
+ * It is also the [BackupController] the shared UI consumes: [isBackingUp] while a cycle runs, and
+ * one [BackupEvent] per **manually requested** cycle. Both are argued on the port, not here.
  *
  * ### The decision, in order
  *
@@ -113,7 +122,16 @@ class BackupOrchestrator(
     private val backgroundEvents: Flow<Unit>,
     private val resumeEvents: Flow<Unit>,
     private val logger: DiagnosticsLogger,
-) {
+) : BackupController {
+
+    private val _isBackingUp = MutableStateFlow(false)
+    override val isBackingUp: StateFlow<Boolean> = _isBackingUp.asStateFlow()
+
+    // No replay, one slot of buffer: an outcome raised with nobody listening is dropped rather than
+    // held for the next collector. Argued on BackupController.events — it is the opposite of
+    // SyncOrchestrator's buffered channel, and deliberately so.
+    private val _events = MutableSharedFlow<BackupEvent>(replay = 0, extraBufferCapacity = 1)
+    override val events: Flow<BackupEvent> = _events.asSharedFlow()
 
     // CONFLATED: the concurrent-operation guard. Overlapping triggers collapse into at most one
     // queued run behind the active one, and a single consumer drains it — so two uploads can never
@@ -148,16 +166,16 @@ class BackupOrchestrator(
      * and a later sign-in does not inherit a backup nobody is waiting for any more. That is the
      * choice and not an oversight: the alternative fires a snapshot at some arbitrary later moment,
      * long after the screen that asked for it is gone, and a "manual" backup the user cannot connect
-     * to anything they did is worse than none. Answering the tap is 2c-iv's job — this method returns
-     * `Unit` and reports nothing to anybody, so a signed-out tap has to be refused at the button, not
-     * queued here. `SyncOrchestrator` cannot show the difference: `runSync` has no auth gate at all.
+     * to anything they did is worse than none. That discard is also the one ending this class does
+     * **not** publish on [events] — it never got as far as a cycle — so a signed-out tap has to be
+     * refused at the button, which is what `ProfileViewModel.backUpNow` does.
+     * `SyncOrchestrator` cannot show the difference: `runSync` has no auth gate at all.
      *
-     * ADR 009 2c-iv adds the Perfil "Back up now" button that calls this. **Having no production
-     * caller before then is expected**: the concurrency guard lives here, so the entry point has to
-     * live here too, and a button that reached the pipeline around this class could run a second
-     * upload alongside an automatic one.
+     * The Perfil "Respaldar ahora" row (ADR 009 2c-iv) is the production caller, and it comes through
+     * here rather than around it: the concurrency guard lives in this class, so a button reaching the
+     * pipeline any other way could run a second upload alongside an automatic one.
      */
-    fun requestBackup(manual: Boolean = false) {
+    override fun requestBackup(manual: Boolean) {
         if (manual) manualRequestPending = true
         requestChannel.trySend(Unit)
     }
@@ -241,21 +259,28 @@ class BackupOrchestrator(
     }
 
     /**
-     * One cycle: consume the manual flag, and never let anything out.
+     * One cycle: consume the manual flag, publish what happened, and never let anything out.
      *
      * The catch is what keeps the request consumer alive. Without it a single unmapped throwable
      * would break out of the `for` loop draining [requestChannel] and leave the app with no backups
      * at all until the next cold start — a failure that looks exactly like "backup is working" from
      * the outside, which is the shape ADR 009 hard constraint 4 exists to forbid.
+     *
+     * [isBackingUp] wraps the whole body, session gate included, so it means exactly "the consumer is
+     * busy with a request" — including the discarded signed-out one, which flips it true and false
+     * with no event. Anything narrower would have to be kept in step with the early returns below,
+     * and a status flag that lies by omission is worse than one that occasionally says "busy" about
+     * a cycle that turned out to have nothing to do.
      */
     // Intentional broad catch: nothing may escape into externalScope; CancellationException is re-thrown.
     @Suppress("TooGenericExceptionCaught")
     private suspend fun runBackup() {
         val manual = manualRequestPending
         manualRequestPending = false
-        val userId = currentUserId ?: return
+        _isBackingUp.value = true
         try {
-            takeSnapshot(userId, manual)
+            val userId = currentUserId ?: return
+            report(manual, takeSnapshot(userId, manual))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -265,7 +290,28 @@ class BackupOrchestrator(
                     "The last-successful watermark is untouched, so the next trigger retries.",
                 e,
             )
+            if (manual) _events.tryEmit(BackupEvent.Failed(e.asDomainException()))
+        } finally {
+            _isBackingUp.value = false
         }
+    }
+
+    /**
+     * Turns one cycle's ending into the answer a tap gets, and stays silent for every other trigger.
+     *
+     * [SnapshotOutcome.NotDue] deliberately produces nothing rather than a success. It is
+     * unreachable for a manual cycle — `manual` skips the dirty check and the daily cap — but if it
+     * ever became reachable, reporting "done" for a snapshot that was never taken is precisely the
+     * checkmark-over-a-non-event ADR 009 hard constraint 4 exists to forbid.
+     */
+    private fun report(manual: Boolean, outcome: SnapshotOutcome) {
+        if (!manual) return
+        val event: BackupEvent? = when (outcome) {
+            SnapshotOutcome.Recorded -> BackupEvent.Succeeded
+            SnapshotOutcome.OwnerChanged -> BackupEvent.Failed(DomainException.Unauthorized(OWNER_CHANGED))
+            SnapshotOutcome.NotDue -> null
+        }
+        if (event != null) _events.tryEmit(event)
     }
 
     /**
@@ -300,10 +346,14 @@ class BackupOrchestrator(
      *    mismatch nothing is written and the prune is skipped too — a *false* watermark is worse than a
      *    missing one, since it suppresses the next backup for a whole day, while a missing one only
      *    costs the retry the next trigger already provides.
+     *
+     * The [SnapshotOutcome] it returns exists so [report] can tell those two non-events apart. A
+     * `Boolean` could not: "no snapshot" covers both a cycle that had nothing to do and one whose
+     * account vanished under it, and only the second is something a tap should hear about.
      */
-    private suspend fun takeSnapshot(userId: String, manual: Boolean) {
+    private suspend fun takeSnapshot(userId: String, manual: Boolean): SnapshotOutcome {
         val takenAt: Instant = clock.now()
-        if (!manual && !isBackupDue(userId, takenAt)) return
+        if (!manual && !isBackupDue(userId, takenAt)) return SnapshotOutcome.NotDue
 
         val payload: String = backupRepository.exportToJson(
             exportedAt = takenAt.toEpochMilliseconds(),
@@ -313,17 +363,22 @@ class BackupOrchestrator(
         // and a second spelling of the format would leave the prune unable to recognise the app's
         // own snapshots — silently, since a name it cannot parse is simply not a prune candidate.
         uploader.upload(userId, backupSnapshotName(takenAt), payload)
-        if (currentUserId != userId) {
+        // Read once and branched on twice: two reads of a @Volatile field can disagree, and the
+        // second one deciding the return value while the first decided the write is how a cycle
+        // reports an ending it did not have.
+        val stillTheSameAccount: Boolean = currentUserId == userId
+        if (stillTheSameAccount) {
+            metadata.setLastSuccessfulBackupAt(userId, takenAt.toEpochMilliseconds())
+            prune()
+        } else {
             logger.warn(
                 "backup upload finished for an account that is no longer signed in; the watermark " +
                     "is NOT recorded and retention was skipped. Recording it would mark $userId " +
                     "backed up for the day on the strength of a snapshot this device can no longer " +
                     "see, and suppress the real one.",
             )
-            return
         }
-        metadata.setLastSuccessfulBackupAt(userId, takenAt.toEpochMilliseconds())
-        prune()
+        return if (stillTheSameAccount) SnapshotOutcome.Recorded else SnapshotOutcome.OwnerChanged
     }
 
     /** Dirty first, then the daily cap — and `&&` is what keeps that order real, not just written. */
@@ -378,8 +433,25 @@ class BackupOrchestrator(
          * costs a handful of retries per minute instead of a spin.
          */
         val TRIGGER_RETRY_DELAY = 5.seconds
+
+        /**
+         * Diagnostic text for the account-switch refusal, English like every other [DomainException]
+         * message. It never reaches the user: `ProfileViewModel` answers a failed backup with its own
+         * Spanish copy rather than `toUserMessage()`, which would render this as "sesión expirada".
+         */
+        const val OWNER_CHANGED = "Snapshot backup finished for an account that is no longer signed in"
     }
 }
+
+/** What one cycle actually did. [BackupOrchestrator.report] answers a manual request out of it. */
+private enum class SnapshotOutcome { Recorded, NotDue, OwnerChanged }
+
+/**
+ * The pipeline's ports throw [DomainException], and the last-resort catch above exists precisely for
+ * the throwable that did not — so an unmapped one is wrapped rather than dropped from the report.
+ * Same posture, same wrapper, as `SyncOrchestrator`'s unmapped branch.
+ */
+private fun Exception.asDomainException(): DomainException = this as? DomainException ?: DomainException.Unknown(this)
 
 /**
  * Has anything changed locally that the last recorded backup does not already hold?

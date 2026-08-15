@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import com.emm.domain.auth.ClaimLocalDataOnAuthenticationUseCase
 import com.emm.domain.category.CategoryType
+import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.core.sync.SyncOrchestrator
 import com.emm.justchill.hh.category.AddCategoryViewModel
@@ -31,6 +32,7 @@ import org.koin.dsl.module
 import java.lang.reflect.Field
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -167,6 +169,26 @@ class AppGraphKoinTest {
         koin.get<ClaimLocalDataOnAuthenticationUseCase>()
         koin.get<SyncOrchestrator>()
         koin.get<BackupOrchestrator>()
+    }
+
+    /**
+     * The backup port and the orchestrator are ONE instance, not two.
+     *
+     * `backupModule` publishes [BackupController] as a secondary type of the orchestrator's `single`.
+     * Written instead as a second definition — a `single<BackupController> { BackupOrchestrator(…) }`
+     * beside the first, or the same class bound as a `factory` — every other test in this file stays
+     * green: both types resolve, the sweep is happy, and the ViewModel gets a perfectly valid
+     * controller. It is just not the one `bootstrapAppGraph` called `start()` on, so its request
+     * channel has no consumer and its status flow never moves. A manual backup would then do
+     * *nothing*, silently, which is the exact failure shape ADR 009 hard constraint 4 forbids.
+     *
+     * `assertSame`, not `assertEquals`: two orchestrators built from the same graph are not equal to
+     * each other, but a `factory` would produce two distinct instances that are also not equal, and
+     * only identity separates "the port IS the running orchestrator" from "the port resolves".
+     */
+    @Test
+    fun `the backup controller port is the orchestrator single, not a second instance`() {
+        assertSame(koin.get<BackupOrchestrator>(), koin.get<BackupController>())
     }
 
     /**

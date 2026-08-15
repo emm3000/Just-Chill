@@ -25,6 +25,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -540,6 +541,195 @@ class BackupOrchestratorTest {
         coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
         coVerify(exactly = 0) { pruner.prune() }
     }
+
+    // ── (12b) The outcome signal: what a manual tap gets told, and what nothing else does ──
+
+    /**
+     * The signal 2c-iv is built on. `requestBackup` returns `Unit`, so without these the Perfil row
+     * could only report that a request was *queued* — a green tick for a backup that has not started
+     * and may fail thirteen named ways. Everything below pins which endings reach [BackupEvent] and,
+     * just as importantly, which do not.
+     */
+    @Test
+    fun `a manual cycle that records a snapshot publishes Succeeded`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns null
+
+        val orchestrator = buildOrchestrator()
+        val events = mutableListOf<BackupEvent>()
+        val job = launch { orchestrator.events.collect { events += it } }
+        advanceUntilIdle()
+
+        orchestrator.start()
+        authenticate()
+        orchestrator.requestBackup(manual = true)
+        advanceUntilIdle()
+
+        assertEquals(listOf<BackupEvent>(BackupEvent.Succeeded), events)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `a failed manual cycle publishes Failed and never a success`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns null
+        coEvery { uploader.upload(any(), any(), any()) } throws
+            DomainException.NetworkUnavailable(RuntimeException("no net"))
+
+        val orchestrator = buildOrchestrator()
+        val events = mutableListOf<BackupEvent>()
+        val job = launch { orchestrator.events.collect { events += it } }
+        advanceUntilIdle()
+
+        orchestrator.start()
+        authenticate()
+        orchestrator.requestBackup(manual = true)
+        advanceUntilIdle()
+
+        val failure = events.singleOrNull()
+        assertTrue(
+            failure is BackupEvent.Failed && failure.cause is DomainException.NetworkUnavailable,
+            "Expected exactly one Failed(NetworkUnavailable), got: $events",
+        )
+
+        job.cancel()
+    }
+
+    /**
+     * The account-switch refusal, which is the one failure this pipeline produces that another
+     * consumer would answer by signing the user out. It arrives here as an ordinary
+     * [BackupEvent.Failed] — the orchestrator's job is to say the backup did not happen, and
+     * `ProfileViewModel` owns the decision not to translate `Unauthorized` into "sesión expirada".
+     */
+    @Test
+    fun `an account switch mid-cycle answers a manual request with a failure, not a success`() =
+        runTest(testDispatcher) {
+            coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+            every { metadata.lastSuccessfulBackupAt(any()) } returns null
+            coEvery { uploader.upload(USER_ID, any(), any()) } coAnswers {
+                sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = OTHER_USER_ID, email = "b@b.com"))
+                delay(1)
+            }
+
+            val orchestrator = buildOrchestrator()
+            val events = mutableListOf<BackupEvent>()
+            val job = launch { orchestrator.events.collect { events += it } }
+            advanceUntilIdle()
+
+            orchestrator.start()
+            authenticate()
+            orchestrator.requestBackup(manual = true)
+            advanceUntilIdle()
+
+            // The upload itself returned normally, so only the post-upload re-check separates this
+            // from a success — which is exactly what a Boolean return could not have expressed.
+            verify(exactly = 0) { metadata.setLastSuccessfulBackupAt(any(), any()) }
+            assertTrue(
+                events.singleOrNull() is BackupEvent.Failed,
+                "A cycle that recorded nothing must not be reported as a success: $events",
+            )
+
+            job.cancel()
+        }
+
+    /**
+     * Automatic cycles say nothing, and that is the whole reason [BackupEvent] is one-shot rather
+     * than a status field. Background and resume triggers fire while the user is elsewhere; a
+     * snackbar for one of them arrives attached to nothing the user did.
+     */
+    @Test
+    fun `an automatic cycle publishes no event, whether it succeeds or fails`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns null
+
+        val orchestrator = buildOrchestrator()
+        val events = mutableListOf<BackupEvent>()
+        val job = launch { orchestrator.events.collect { events += it } }
+        advanceUntilIdle()
+
+        orchestrator.start()
+        authenticate()
+
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+
+        coEvery { uploader.upload(any(), any(), any()) } throws
+            DomainException.NetworkUnavailable(RuntimeException("no net"))
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns null
+        resumeFlow.emit(Unit)
+        advanceUntilIdle()
+
+        assertEquals(emptyList<BackupEvent>(), events, "Automatic cycles must publish nothing")
+
+        job.cancel()
+    }
+
+    /**
+     * A manual request made with no session is discarded, not deferred (argued in `requestBackup`'s
+     * KDoc), and it is the one ending this class does not report — there was never a cycle. The tap
+     * is refused at the button instead, by `ProfileViewModel`, which can see the session.
+     */
+    @Test
+    fun `a manual request while signed out publishes nothing`() = runTest(testDispatcher) {
+        val orchestrator = buildOrchestrator()
+        val events = mutableListOf<BackupEvent>()
+        val job = launch { orchestrator.events.collect { events += it } }
+        advanceUntilIdle()
+
+        orchestrator.start()
+        sessionFlow.value = SessionStatus.NotAuthenticated
+        advanceUntilIdle()
+
+        orchestrator.requestBackup(manual = true)
+        advanceUntilIdle()
+
+        assertEquals(emptyList<BackupEvent>(), events)
+
+        job.cancel()
+    }
+
+    // ── (12c) isBackingUp is true for the cycle's whole duration, and false after ────
+
+    @Test
+    fun `isBackingUp is true while a cycle runs and false once it ends`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns null
+        coEvery { uploader.upload(any(), any(), any()) } coAnswers { delay(UPLOAD_DURATION_MILLIS) }
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        assertEquals(false, orchestrator.isBackingUp.value, "Idle before anything is requested")
+
+        orchestrator.requestBackup(manual = true)
+        advanceTimeBy(UPLOAD_DURATION_MILLIS / 2)
+        assertEquals(true, orchestrator.isBackingUp.value, "Must report busy while the upload is in flight")
+
+        advanceUntilIdle()
+        assertEquals(false, orchestrator.isBackingUp.value, "Must return to idle once the cycle ends")
+    }
+
+    /**
+     * Including the cycle that turns out to have nothing to do. The flag wraps the whole body, so it
+     * cannot drift out of step with the early returns inside it — and a UI deriving a spinner from it
+     * gets a flicker rather than a spinner that never stops.
+     */
+    @Test
+    fun `isBackingUp returns to idle after a request that is discarded for having no session`() =
+        runTest(testDispatcher) {
+            val orchestrator = buildOrchestrator()
+            orchestrator.start()
+
+            sessionFlow.value = SessionStatus.NotAuthenticated
+            advanceUntilIdle()
+
+            orchestrator.requestBackup(manual = true)
+            advanceUntilIdle()
+
+            assertEquals(false, orchestrator.isBackingUp.value)
+        }
 
     // ── (12) The resume trigger exists, and it is the mid-upload-death retry ─────────
 
