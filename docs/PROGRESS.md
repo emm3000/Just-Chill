@@ -240,6 +240,23 @@ gana el ADR.
     nombre le da cupo a un huérfano y desaloja un snapshot verificado — eso es pérdida de datos, y
     el razonamiento completo (incluido cuál huérfano bueno se tira a propósito) está en la fila
     Retención de `sync/ADR009_PLAN.md`.
+    - [x] **2c-i — el watermark de cambios locales y el timestamp persistido**, en `trunk` el
+      2026-08-14 (`646e2666`, `1da00cfa`), **sin pushear**. `BackupRepository.latestLocalChangeAt():
+      Long?`, un solo `UNION ALL` en `backup.sq` que reduce las cuatro tablas a una lectura — no
+      cuatro — por la misma razón que la Fase 2a movió el export a `transactionWithResult`. Cuenta
+      las filas soft-deleted a propósito, al revés que el export: `softDelete` también pisa
+      `updatedAt`, así que un borrado es un cambio que amerita respaldo. `null` (las cuatro tablas
+      vacías) se distingue de `0` de forma estructural, no por convención — SQLDelight genera
+      `Long?` para la columna. Del otro lado, `AppPreferences.lastSuccessfulBackupAt` por usuario,
+      con el mismo sentinel `-1L` que `lastSyncedAt`. Nadie consume ninguno de los dos todavía; la
+      2c-iii es la que los compara. `DefaultBackupRepository` ya estaba en el techo de
+      `TooManyFunctions` de detekt (11), así que agregar el override forzó extraer el
+      `usableCategoryId` privado que ya existía a una función top-level file-private, con la misma
+      forma de extensión que `snapshot`. El `clearBackupMetadata` de la nueva key vive en
+      `DefaultSyncCursorStore.clear`, que la Fase 5 borra — aceptado a propósito, YAGNI de
+      inventar un puerto para una key que nadie lee todavía, pero **la 2c-iii tiene que introducir
+      la costura propia de metadata de backup y mover ahí tanto la escritura como el clear**, queda
+      anotado en la tabla de `sync/ADR009_PLAN.md` para no perderlo.
 - [ ] `buildBackupManifest` lanza `ValidationCode.BackupFileInvalid` — "El archivo está dañado o no es
   un respaldo de JustChill", la voz del *restore* — ante un defecto de nuestro propio export, donde
   no hay archivo que nadie eligió. El arreglo honesto es `DomainException.Unknown`, no un

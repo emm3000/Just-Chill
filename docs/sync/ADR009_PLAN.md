@@ -591,6 +591,37 @@ must not build chunking or progress reporting against a 10-second limit that is 
 | Retention | client-side prune (no server code exists): list the bucket and **key on the presence of `<name>.manifest.json`, never on `<name>` alone**. A payload without its sidecar is not a snapshot: it counts toward no retention bucket and is **deleted on sight** — see the paragraph below, which is the rule, not a note about it. Parse timestamps from the names that DO carry a manifest, keep 7 daily + 8 weekly + 12 monthly, delete the rest. Pinned snapshots live under a `pinned/` prefix the prune never scans. "Pin before risky operation" action; every future DB schema migration must be preceded by a pinned snapshot |
 | Flag | `SNAPSHOT_BACKUP_ENABLED = false` in `core/backup/`, mirroring the `SyncKillSwitch` pattern (const + KDoc + grep-able). `bootstrapAppGraph` starts `BackupOrchestrator` behind it, the same pattern that gates `SyncOrchestrator.start()` in `AppGraph` today |
 
+**2c-i — the dirty-flag watermark and the persisted timestamp. LANDED** (`646e2666`, `1da00cfa`).
+Both halves of the Dirty flag row above, with nothing consuming either yet — 2c-iii is what
+compares them and decides whether to trigger a backup.
+
+- `BackupRepository.latestLocalChangeAt(): Long?`, backed by `backup.sq`'s `latestLocalChange`:
+  one `UNION ALL` of `max(updatedAt)` across the four backed-up tables, reduced by one outer `max`.
+  **One statement, not four reads**, for the same reason Phase 2a moved the export into
+  `transactionWithResult`: four independent reads could interleave with a write landing between
+  any two of them and produce a watermark that is not any state the database was ever actually in.
+- **It counts soft-deleted rows on purpose** — the opposite of the export, which filters
+  `deletedAt IS NULL`. `softDelete` bumps `updatedAt` the same as any other write (verified: all
+  four `.sq` files), so a deletion is a local change worth backing up; excluding tombstones would
+  let a device whose only change since the last backup was a deletion stay marked clean forever.
+- **`null` (all four tables empty) is distinguishable from `0`, and that is structural, not
+  conventional**: SQLDelight generates `Long?` for the column, so an empty database and a database
+  whose oldest row has `updatedAt = 0` cannot be confused by construction.
+- `AppPreferences.lastSuccessfulBackupAt(userId)` / `setLastSuccessfulBackupAt` /
+  `clearBackupMetadata`, per-user with the same `-1L` "never" sentinel as `lastSyncedAt`.
+  `clearBackupMetadata` is wired into `DefaultSyncCursorStore.clear` alongside
+  `clearSyncMetadata`, riding `DeleteUserAccountUseCase`'s account-deletion call — **not** because
+  the watermark is sync metadata (it explicitly is not), but because that `clear` is the only
+  account-deletion seam that exists today, under `NonCancellable`, and inventing a dedicated port
+  for a key nothing reads yet would be YAGNI. **2c-iii is the unit that must introduce the proper
+  backup-metadata seam and move both the write and the clear onto it** — it is where the writer of
+  this timestamp arrives, so it is the natural owner of the seam too.
+- `DefaultBackupRepository` was already at detekt's `TooManyFunctions` ceiling of 11, so adding the
+  override forced extracting the existing private `usableCategoryId` to a file-private top-level
+  function, matching `snapshot`'s existing extension-on-`EmmDatabaseData` shape. Future work on that
+  class pays this tax again — worth knowing before a new method trips a lint failure that looks
+  unrelated to the change that caused it.
+
 **Why the prune keys on the manifest — a name-only prune loses verified data.** 2b-ii part B
 uploads the payload, reads it back, and writes the sidecar **only** after the bytes matched, so
 *the presence of `<name>.manifest.json` is the statement that the payload beside it was verified*.
@@ -645,7 +676,12 @@ successful.
 
 ### Phase 3 — health visibility
 
-- Persist `lastSuccessfulBackupAt`; show "Last backup: X ago" in Profile.
+- Show "Last backup: X ago" in Profile, reading `AppPreferences.lastSuccessfulBackupAt`. The storage
+  itself — `lastSuccessfulBackupAt` / `setLastSuccessfulBackupAt` / `clearBackupMetadata` — already
+  landed in 2c-i (see that section); nothing calls `setLastSuccessfulBackupAt` yet, since there is no
+  backup pipeline to call it after. Still open here: wiring the write after a verified upload, the
+  Profile read, and — per 2c-i's note — routing both the write and the account-deletion clear
+  through the proper backup-metadata seam 2c-iii introduces, instead of a naked `AppPreferences` call.
 - Warning state when staleness exceeds 3 days with pending mutations.
 - Every failure (serialization, network, hash mismatch, storage error) logs a distinct reason
   and increments a visible failure indicator.
