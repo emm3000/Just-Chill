@@ -93,7 +93,7 @@ internal class SupabaseBackupObjectStore(private val client: SupabaseClient) : B
         } catch (e: TimeoutCancellationException) {
             throw DomainException.NetworkUnavailable(e, SESSION_NEVER_RESOLVED)
         }
-        return "${uid ?: throw DomainException.Unauthorized(NO_SESSION)}/"
+        return ownerPrefixOf(uid ?: throw DomainException.Unauthorized(NO_SESSION))
     }
 
     /**

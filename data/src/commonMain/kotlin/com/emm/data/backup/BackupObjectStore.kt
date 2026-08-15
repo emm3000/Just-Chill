@@ -65,6 +65,19 @@ internal const val BACKUP_LIST_MAX_PAGES: Int = 10
 internal data class ObjectPage(val names: List<String>, val serverReturned: Int)
 
 /**
+ * The prefix a given account's objects live under — **the single declaration of that layout**.
+ *
+ * It exists because two places now need to agree on it and neither may guess: the store BUILDS the
+ * prefix out of the live session here, and [DefaultBackupUploader] COMPARES the prefix it was handed
+ * against the account its caller decided the snapshot belongs to. Written twice, the comparison would
+ * be a second spelling of a rule the bucket's RLS policies are keyed on, and a divergence would not
+ * fail a compile — it would refuse every upload, or accept the wrong one.
+ *
+ * The trailing `/` is part of the value on purpose; see [BackupObjectStore.ownedPrefix].
+ */
+internal fun ownerPrefixOf(userId: String): String = "$userId/"
+
+/**
  * The five things the snapshot pipeline does to remote object storage, and nothing else.
  *
  * **This seam is what makes the verification testable at all**, and that is its whole justification

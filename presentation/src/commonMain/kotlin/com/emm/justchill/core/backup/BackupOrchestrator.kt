@@ -60,6 +60,10 @@ import kotlin.time.Instant
  *  - **An upload failure must leave the watermark untouched**, which is what makes the daily cap a
  *    cap on successes. It throws out of [BackupUploader.upload] before the write, so this is
  *    structural rather than remembered.
+ *  - **The account is checked at both ends of the cycle, not only at the start.** The capture at the
+ *    top is a decision; the upload and the record each verify it still holds, because a cycle
+ *    suspends for up to two minutes and the session collector runs elsewhere. Both halves are argued
+ *    on [takeSnapshot].
  *  - **A prune failure must not propagate or undo the success.** The snapshot is uploaded and
  *    verified by then; retention is housekeeping over objects that are already safe, and the next
  *    prune sees the same leftovers. Letting it throw would mark a good backup as a failed cycle and
@@ -263,6 +267,25 @@ class BackupOrchestrator(
      * data it holds, and the recorded watermark is deliberately the instant the cycle *started*: a
      * write landing during the upload then still reads as dirty next time, which errs toward one
      * extra backup rather than a lost change.
+     *
+     * ### [userId] is carried through, and checked again at the end
+     *
+     * A cycle captures the account once and then suspends for a long time — an export plus four
+     * round trips under a 120s `transferTimeout` — while the session collector that maintains
+     * [currentUserId] runs in a different coroutine and the request consumer is not cancelled on
+     * sign-out. So the account can change *inside* a cycle, and both ends of the cycle have to say so
+     * rather than assume it cannot:
+     *
+     *  - **The upload asserts it.** [BackupUploader.upload] takes the account and refuses if the live
+     *    session is no longer that one, with a named failure. Without it the destination prefix is a
+     *    second, later read of the session than the dirty check and the watermark were made against,
+     *    and the bucket's RLS accepts the write because the key matches whoever is signed in *now* —
+     *    A's ledger under B's prefix, and A recorded as backed up.
+     *  - **The record re-checks it**, because the assertion above only covers up to the last byte
+     *    sent. A mismatch here means the snapshot either went somewhere else or belongs to an account
+     *    that is gone, so nothing is written and the prune is skipped too — a *false* watermark is
+     *    worse than a missing one, since it suppresses the next backup for a whole day, while a
+     *    missing one only costs the retry the next trigger already provides.
      */
     private suspend fun takeSnapshot(userId: String, manual: Boolean) {
         val takenAt: Instant = clock.now()
@@ -275,7 +298,16 @@ class BackupOrchestrator(
         // backupSnapshotName is called, never re-implemented: it is public for exactly this caller,
         // and a second spelling of the format would leave the prune unable to recognise the app's
         // own snapshots — silently, since a name it cannot parse is simply not a prune candidate.
-        uploader.upload(backupSnapshotName(takenAt), payload)
+        uploader.upload(userId, backupSnapshotName(takenAt), payload)
+        if (currentUserId != userId) {
+            logger.warn(
+                "backup upload finished for an account that is no longer signed in; the watermark " +
+                    "is NOT recorded and retention was skipped. Recording it would mark $userId " +
+                    "backed up for the day on the strength of a snapshot this device can no longer " +
+                    "see, and suppress the real one.",
+            )
+            return
+        }
         metadata.setLastSuccessfulBackupAt(userId, takenAt.toEpochMilliseconds())
         prune()
     }

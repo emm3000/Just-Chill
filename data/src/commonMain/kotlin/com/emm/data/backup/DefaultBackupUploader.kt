@@ -55,19 +55,40 @@ import io.github.jan.supabase.SupabaseClient
  * measured over bytes that arrived — so the delete is expected to succeed rather than hoped for, and
  * that is what separates it from the read-back failure two paragraphs up.
  *
+ * ### The prefix is asserted against the caller's account, not merely resolved
+ *
+ * [BackupUploader.upload] takes the account the snapshot is *for*, and the resolved prefix has to be
+ * that account's or nothing is written. The prefix still comes from the live session and never from
+ * the parameter — a caller cannot aim a snapshot anywhere — so this adds no destination, only a
+ * refusal.
+ *
+ * What it closes is a race the server cannot see. A caller decides "this is user A's ledger, and A's
+ * watermark", then suspends here through an export and four round trips under a 120s
+ * `transferTimeout`. An account switch landing inside that window makes this class resolve **B's**
+ * prefix, and the bucket's RLS `with check` *accepts* the write, because the key matches whoever is
+ * signed in now. A's ledger lands in B's bucket and A is marked backed up. One decision read the
+ * session twice — the same shape `core/sync/SyncKillSwitch.kt` blames for the dangling cross-tenant
+ * rows that ended row replication.
+ *
+ * The comparison is against [ownerPrefixOf], which is also what builds the prefix in
+ * [SupabaseBackupObjectStore]; the layout is declared once and read here, never respelled. It sits
+ * immediately after the single resolution and before the first upload, so a mismatch costs a session
+ * read and leaves the bucket untouched.
+ *
  * ### Failure reasons
  *
- * **Twelve paths, twelve messages**, because ADR 009 hard constraint 4 exists: the 2026-08-12 outage
- * was invisible for as long as it was because one path logged nothing. Nine of them originate here —
- * resolving the owning prefix, uploading the payload, reading it back, the digest disagreeing,
+ * **Thirteen paths, thirteen messages**, because ADR 009 hard constraint 4 exists: the 2026-08-12
+ * outage was invisible for as long as it was because one path logged nothing. Ten of them originate
+ * here — resolving the owning prefix, the session no longer belonging to the account the snapshot is
+ * for, uploading the payload, reading it back, the digest disagreeing,
  * failing to discard the object that disagreed, uploading the manifest, reading the manifest back,
  * the manifest disagreeing, failing to discard the pair — and three more come out of
  * [SupabaseBackupObjectStore] intact: nobody is signed in, a session that never finished loading,
  * and a key that does not end in `.json`. That last one is a defect in this app's own naming rather
  * than a transport failure, and it is counted with the rest precisely because whoever reads the
  * message has no way to know that in advance. Collapsing any two would tell whoever is holding the
- * outage only what they already knew. `DefaultBackupUploaderTest` asserts the nine as a property
- * rather than trusting nine expectations to disagree by accident; `SupabaseBackupObjectStoreTest`
+ * outage only what they already knew. `DefaultBackupUploaderTest` asserts the ten as a property
+ * rather than trusting ten expectations to disagree by accident; `SupabaseBackupObjectStoreTest`
  * owns the other three.
  *
  * The exception TYPE still comes from the cause, so a caller can still tell a dead network from a
@@ -85,7 +106,7 @@ class DefaultBackupUploader internal constructor(private val store: BackupObject
      */
     constructor(client: SupabaseClient) : this(SupabaseBackupObjectStore(client))
 
-    override suspend fun upload(fileName: String, payload: String) {
+    override suspend fun upload(userId: String, fileName: String, payload: String) {
         // Encoded ONCE, and everything downstream reads this array: the digest in the manifest, the
         // bytes that travel, and the bytes the read-back is compared against. Re-encoding `payload`
         // for the upload would make the digest a claim about a String rather than about the file, and
@@ -103,7 +124,7 @@ class DefaultBackupUploader internal constructor(private val store: BackupObject
         // live session — a backstop in the migration, not in this file. Resolving once is what makes
         // the pair consistent by construction instead of by the server's mercy, and it is also what
         // reports "nobody is signed in" before rather than after a blob exists.
-        val prefix = remotely(PREFIX_UNRESOLVED) { store.ownedPrefix() }
+        val prefix = ownedPrefixFor(userId)
         val payloadKey = prefix + fileName
         val manifestKey = prefix + manifestNameFor(fileName)
 
@@ -138,6 +159,28 @@ class DefaultBackupUploader internal constructor(private val store: BackupObject
             throw unverified("${manifestMismatchAt(manifestKey)}; both objects were deleted.")
         }
     }
+
+    /**
+     * The one session read this snapshot gets, refused unless the session is still [userId]'s.
+     *
+     * **Asserted, never substituted.** The prefix comes from the live session exactly as it always
+     * did; [userId] only says which session the caller *decided* this snapshot was for. Resolving
+     * without comparing is what let an account switch land one user's ledger under another's key —
+     * with the bucket's RLS agreeing, because the key matched whoever was signed in by then.
+     *
+     * It is one step rather than two lines inside [upload] so that the resolution and its refusal
+     * cannot drift apart, and so the "resolved exactly once per snapshot" property
+     * [BackupObjectStore.ownedPrefix] asks for has one place to be read off. The comparison uses
+     * [ownerPrefixOf], the single declaration of the layout — this file never respells it.
+     */
+    private suspend fun ownedPrefixFor(userId: String): String {
+        val prefix: String = remotely(PREFIX_UNRESOLVED) { store.ownedPrefix() }
+        val owner: String = ownerPrefixOf(userId)
+        // Before the first byte, so a session that changed mid-cycle costs a read and leaves the
+        // bucket exactly as it was.
+        if (prefix != owner) throw ownerChanged(owner, prefix)
+        return prefix
+    }
 }
 
 /** Shared by the mismatch itself and by a failure to clean up after it — one event, two endings. */
@@ -147,6 +190,19 @@ private fun payloadMismatchAt(payloadKey: String): String =
 /** The same pair of endings for the sidecar. Byte equality, not a digest — see the class KDoc. */
 private fun manifestMismatchAt(manifestKey: String): String =
     "the manifest read back from $manifestKey does not match the bytes that were uploaded"
+
+/**
+ * The account switched under a cycle that had already decided whose ledger this is.
+ *
+ * [DomainException.Unauthorized] rather than a `ValidationError`: nothing was validated and nothing
+ * is wrong with the payload — the live session is simply not the one this operation was authorised
+ * for. Both prefixes are named because "the session is someone else's" and "the session is gone" are
+ * different outages, and only the text separates them here.
+ */
+private fun ownerChanged(owner: String, live: String): DomainException = DomainException.Unauthorized(
+    "${FAILED}the signed-in account changed while the snapshot was being taken: it belongs under " +
+        "$owner and the live session owns $live, so nothing was uploaded.",
+)
 
 /** Both mismatches are the same event to the person holding the phone: a backup that is not trustworthy. */
 private fun unverified(reason: String): DomainException = DomainException.ValidationError(

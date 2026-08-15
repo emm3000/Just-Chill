@@ -20,7 +20,24 @@ package com.emm.domain.shared.backup
 interface BackupUploader {
 
     /**
-     * Stores [payload] under [fileName], reads it back, and returns only if the two match.
+     * Stores [payload] under [fileName] **for [userId]**, reads it back, and returns only if the two
+     * match.
+     *
+     * [userId] is an **assertion, not a destination.** The implementation still resolves where the
+     * snapshot goes from the live session — a caller cannot aim one anywhere, see [fileName] below —
+     * but it refuses outright if that session no longer belongs to [userId], with a failure named
+     * like every other. Without the parameter, the destination is a *second, later* read of the
+     * session than the one the caller's own bookkeeping was made against: a caller decides "this is
+     * user A's ledger and A's watermark", suspends here through an export and four round trips, and
+     * an account switch landing inside that window puts A's ledger under B's prefix. The bucket's RLS
+     * `with check` accepts it, because the key matches whoever is signed in *now*, and the caller
+     * then records a success for a snapshot that does not exist. That split — one decision, two reads
+     * of the session — is the same shape `core/sync/SyncKillSwitch.kt` blames for the dangling
+     * cross-tenant rows that ended row replication, and this pipeline exists to make a recorded
+     * backup a real one.
+     *
+     * A caller that captured [userId] must still re-check it before recording anything: this
+     * parameter closes the window up to the last byte sent, and the session can change after that.
      *
      * [payload] is the export document as [BackupRepository.exportToJson] returned it — a `String`
      * and not a `ByteArray` because the encoding has to happen exactly once, on the far side of this
@@ -39,5 +56,5 @@ interface BackupUploader {
      * name that ends any other way is a server-side refusal. Naming is ADR 009 Phase 2c's decision;
      * the extension is not up for grabs.
      */
-    suspend fun upload(fileName: String, payload: String)
+    suspend fun upload(userId: String, fileName: String, payload: String)
 }

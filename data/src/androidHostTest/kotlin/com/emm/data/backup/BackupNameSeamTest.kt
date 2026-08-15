@@ -31,7 +31,7 @@ class BackupNameSeamTest {
     fun `the pair the uploader writes is a pair the prune keeps`() = runTest {
         val bucket = InMemoryBucket()
 
-        DefaultBackupUploader(bucket).upload(backupSnapshotName(TAKEN_AT), PAYLOAD)
+        DefaultBackupUploader(bucket).upload(UID, backupSnapshotName(TAKEN_AT), PAYLOAD)
         val report = prunerOver(bucket).prune()
 
         // Both objects still there, and the payload counted as a verified snapshot rather than as an
@@ -50,7 +50,7 @@ class BackupNameSeamTest {
         // The control. Without it the test above would pass just as happily against a prune that
         // deleted nothing at all, or one that recognised no name in the bucket as a snapshot.
         val bucket = InMemoryBucket()
-        DefaultBackupUploader(bucket).upload(backupSnapshotName(TAKEN_AT), PAYLOAD)
+        DefaultBackupUploader(bucket).upload(UID, backupSnapshotName(TAKEN_AT), PAYLOAD)
         bucket.objects -= PREFIX + manifestNameFor(backupSnapshotName(TAKEN_AT))
 
         val report = prunerOver(bucket).prune()

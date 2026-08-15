@@ -126,7 +126,7 @@ class BackupOrchestratorTest {
             // before recording would let a prune failure lose a backup that already succeeded.
             coVerifyOrder {
                 backupRepository.exportToJson(NOW.toEpochMilliseconds(), APP_VERSION)
-                uploader.upload(backupSnapshotName(NOW), PAYLOAD)
+                uploader.upload(USER_ID, backupSnapshotName(NOW), PAYLOAD)
                 metadata.setLastSuccessfulBackupAt(USER_ID, NOW.toEpochMilliseconds())
                 pruner.prune()
             }
@@ -146,7 +146,7 @@ class BackupOrchestratorTest {
         backgroundFlow.emit(Unit)
         advanceUntilIdle()
 
-        coVerify(exactly = 0) { uploader.upload(any(), any()) }
+        coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
     }
 
     // ── (3) The daily cap, even with local changes waiting ───────────────────────────
@@ -164,7 +164,7 @@ class BackupOrchestratorTest {
         backgroundFlow.emit(Unit)
         advanceUntilIdle()
 
-        coVerify(exactly = 0) { uploader.upload(any(), any()) }
+        coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
     }
 
     // ── (4) An upload failure must NOT record, so the next trigger retries ───────────
@@ -173,7 +173,8 @@ class BackupOrchestratorTest {
     fun `a failed upload records no watermark and the next trigger retries`() = runTest(testDispatcher) {
         coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
         every { metadata.lastSuccessfulBackupAt(USER_ID) } returns null
-        coEvery { uploader.upload(any(), any()) } throws DomainException.NetworkUnavailable(RuntimeException("no net"))
+        coEvery { uploader.upload(any(), any(), any()) } throws
+            DomainException.NetworkUnavailable(RuntimeException("no net"))
 
         val orchestrator = buildOrchestrator()
         orchestrator.start()
@@ -188,11 +189,11 @@ class BackupOrchestratorTest {
         verify(atLeast = 1) { logger.warn(any(), any()) }
 
         // The consumer survived the failure and the ledger is still dirty, so the retry lands.
-        coEvery { uploader.upload(any(), any()) } returns Unit
+        coEvery { uploader.upload(any(), any(), any()) } returns Unit
         backgroundFlow.emit(Unit)
         advanceUntilIdle()
 
-        coVerify(exactly = 2) { uploader.upload(any(), any()) }
+        coVerify(exactly = 2) { uploader.upload(any(), any(), any()) }
         verify(exactly = 1) { metadata.setLastSuccessfulBackupAt(USER_ID, NOW.toEpochMilliseconds()) }
     }
 
@@ -235,7 +236,78 @@ class BackupOrchestratorTest {
         advanceUntilIdle()
 
         coVerify(exactly = 0) { backupRepository.exportToJson(any(), any()) }
-        coVerify(exactly = 0) { uploader.upload(any(), any()) }
+        coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
+    }
+
+    // ── (6b) The account can change INSIDE a cycle, and both ends have to notice ─────
+
+    /**
+     * A cycle captures the account once and then suspends through an export and four round trips
+     * under a 120s `transferTimeout`, while the session collector that maintains `currentUserId` runs
+     * in another coroutine and the request consumer is never cancelled on sign-out. So A signing out
+     * and B signing in mid-cycle is reachable, and it used to mean: A's ledger uploaded under **B's**
+     * prefix — RLS accepts it, the key matches the live session — and `setLastSuccessfulBackupAt("A")`
+     * marking A backed up for the day on a snapshot that exists nowhere.
+     *
+     * The refusal itself belongs to the uploader (`DefaultBackupUploaderTest` owns the message and
+     * proves nothing is written). What this test owns is the orchestrator's half: it hands over the
+     * account it *captured*, so the assertion is reachable at all, and it records nothing for anybody.
+     */
+    @Test
+    fun `an account switch mid-cycle records no watermark for either account`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        every { metadata.lastSuccessfulBackupAt(any()) } returns null
+        coEvery { uploader.upload(USER_ID, any(), any()) } coAnswers {
+            sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = OTHER_USER_ID, email = "b@b.com"))
+            throw DomainException.Unauthorized(OWNER_CHANGED)
+        }
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+
+        // The captured account is what travelled — a cycle that passed the live one would have handed
+        // over B and the uploader would have had nothing to disagree with.
+        coVerify(exactly = 1) { uploader.upload(USER_ID, backupSnapshotName(NOW), PAYLOAD) }
+        verify(exactly = 0) { metadata.setLastSuccessfulBackupAt(any(), any()) }
+        coVerify(exactly = 0) { pruner.prune() }
+    }
+
+    /**
+     * And the other half, which the uploader's assertion cannot reach: the session changing **after**
+     * the last byte is sent. The upload succeeded, so nothing throws, and only the re-check before the
+     * write stops a watermark for an account that is gone. A false watermark is worse than a missing
+     * one — it suppresses this account's next backup for a whole day, whereas a missing one costs the
+     * retry the next trigger already provides.
+     */
+    @Test
+    fun `a sign-out landing after the upload records no watermark`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        every { metadata.lastSuccessfulBackupAt(any()) } returns null
+        coEvery { uploader.upload(USER_ID, any(), any()) } coAnswers {
+            sessionFlow.value = SessionStatus.NotAuthenticated
+            // The session collector is a different coroutine on the same scheduler. Parking here for
+            // one virtual millisecond lets it observe the sign-out before this cycle reaches its
+            // re-check, which is the real ordering rather than a contrivance: the upload returning
+            // and the session flow emitting are genuinely independent.
+            delay(1)
+        }
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { uploader.upload(USER_ID, backupSnapshotName(NOW), PAYLOAD) }
+        verify(exactly = 0) { metadata.setLastSuccessfulBackupAt(any(), any()) }
+        // Skipped too: retention would be pruning whatever bucket the session points at now.
+        coVerify(exactly = 0) { pruner.prune() }
+        verify(exactly = 1) { logger.warn(match { it.startsWith(OWNER_GONE) }, any()) }
     }
 
     // ── (7) A manual request bypasses BOTH the cap and the dirty check ───────────────
@@ -254,7 +326,7 @@ class BackupOrchestratorTest {
         orchestrator.requestBackup(manual = true)
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { uploader.upload(backupSnapshotName(NOW), PAYLOAD) }
+        coVerify(exactly = 1) { uploader.upload(USER_ID, backupSnapshotName(NOW), PAYLOAD) }
         verify(exactly = 1) { metadata.setLastSuccessfulBackupAt(USER_ID, NOW.toEpochMilliseconds()) }
     }
 
@@ -281,7 +353,7 @@ class BackupOrchestratorTest {
         resumeFlow.emit(Unit)
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { uploader.upload(any(), any()) }
+        coVerify(exactly = 1) { uploader.upload(any(), any(), any()) }
     }
 
     /**
@@ -297,7 +369,7 @@ class BackupOrchestratorTest {
 
         var inFlight = 0
         var peakInFlight = 0
-        coEvery { uploader.upload(any(), any()) } coAnswers {
+        coEvery { uploader.upload(any(), any(), any()) } coAnswers {
             inFlight++
             peakInFlight = maxOf(peakInFlight, inFlight)
             delay(UPLOAD_DURATION_MILLIS)
@@ -315,7 +387,7 @@ class BackupOrchestratorTest {
         orchestrator.requestBackup(manual = true)
         advanceUntilIdle()
 
-        coVerify(exactly = 2) { uploader.upload(any(), any()) }
+        coVerify(exactly = 2) { uploader.upload(any(), any(), any()) }
         assertEquals(1, peakInFlight, "Two uploads were in flight at once")
     }
 
@@ -359,7 +431,7 @@ class BackupOrchestratorTest {
         backgroundFlow.emit(Unit)
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { uploader.upload(any(), any()) }
+        coVerify(exactly = 1) { uploader.upload(any(), any(), any()) }
     }
 
     // ── (10) The cap is a CALENDAR question, answered in the injected zone ───────────
@@ -382,7 +454,7 @@ class BackupOrchestratorTest {
         authenticate()
         backgroundFlow.emit(Unit)
         advanceUntilIdle()
-        coVerify(exactly = 0) { uploader.upload(any(), any()) }
+        coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
 
         // UTC-5: the same instants are 13 August 21:00 and 14 August 01:00 — a new day, so it runs.
         val lima = buildOrchestrator(now = now, zone = TimeZone.of("America/Lima"))
@@ -390,7 +462,7 @@ class BackupOrchestratorTest {
         advanceUntilIdle()
         backgroundFlow.emit(Unit)
         advanceUntilIdle()
-        coVerify(exactly = 1) { uploader.upload(backupSnapshotName(now), PAYLOAD) }
+        coVerify(exactly = 1) { uploader.upload(USER_ID, backupSnapshotName(now), PAYLOAD) }
     }
 
     // ── (11) An empty database is not a backup candidate ─────────────────────────────
@@ -409,7 +481,7 @@ class BackupOrchestratorTest {
         advanceUntilIdle()
 
         coVerify(exactly = 0) { backupRepository.exportToJson(any(), any()) }
-        coVerify(exactly = 0) { uploader.upload(any(), any()) }
+        coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
         coVerify(exactly = 0) { pruner.prune() }
     }
 
@@ -427,7 +499,7 @@ class BackupOrchestratorTest {
         resumeFlow.emit(Unit)
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { uploader.upload(backupSnapshotName(NOW), PAYLOAD) }
+        coVerify(exactly = 1) { uploader.upload(USER_ID, backupSnapshotName(NOW), PAYLOAD) }
     }
 
     private fun fixedClock(instant: Instant): Clock = object : Clock {
@@ -438,7 +510,19 @@ class BackupOrchestratorTest {
         val NOW: Instant = Instant.parse("2026-08-14T12:00:00Z")
         val CHANGED_AT: Long = Instant.parse("2026-08-14T10:00:00Z").toEpochMilliseconds()
         const val USER_ID = "uid-1"
+
+        /** The account the session switches to mid-cycle. */
+        const val OTHER_USER_ID = "uid-2"
         const val APP_VERSION = "2.4.0"
+
+        /**
+         * A log-message prefix, spelled out here rather than read from production — a test that
+         * builds its expectation out of the code under test agrees with any regression it introduces.
+         */
+        const val OWNER_GONE = "backup upload finished for an account that is no longer signed in"
+
+        /** Stands in for the uploader's own owner-mismatch refusal; its text is pinned in `:data`. */
+        const val OWNER_CHANGED = "Snapshot backup failed: the signed-in account changed"
         const val PAYLOAD = """{"schemaVersion":3}"""
 
         /** Comfortably past `BackupOrchestrator.TRIGGER_RETRY_DELAY`, which is private. */

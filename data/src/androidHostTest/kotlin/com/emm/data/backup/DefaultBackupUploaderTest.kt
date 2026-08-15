@@ -15,9 +15,9 @@ import kotlin.test.assertTrue
  *
  * That proof is only possible because [BackupObjectStore] exists. A real bucket returns the bytes it
  * was handed, so a mismatch cannot be provoked against one; behind the seam it is a two-line stub.
- * Everything else here rides on the same fixture, including the nine failure paths that must stay
- * nine different messages — ADR 009 hard constraint 4, the reason the 2026-08-12 outage stayed
- * invisible as long as it did. The other three of the pipeline's twelve come out of the real store
+ * Everything else here rides on the same fixture, including the ten failure paths that must stay
+ * ten different messages — ADR 009 hard constraint 4, the reason the 2026-08-12 outage stayed
+ * invisible as long as it did. The other three of the pipeline's thirteen come out of the real store
  * and belong to `SupabaseBackupObjectStoreTest`.
  *
  * The expected messages are written out as literals rather than read from production. That is
@@ -37,7 +37,7 @@ class DefaultBackupUploaderTest {
         store.readBackInstead[PAYLOAD_KEY] = "{}".encodeToByteArray()
 
         val failure = assertFailsWith<DomainException.ValidationError> {
-            DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+            DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
         }
 
         assertEquals(MISMATCH, failure.message)
@@ -51,7 +51,7 @@ class DefaultBackupUploaderTest {
     fun `a verified snapshot writes the payload, its manifest, and reads both back`() = runTest {
         val store = FakeBackupObjectStore()
 
-        DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+        DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
 
         // Order, not just membership: a manifest written before the payload's read-back would mean
         // "an upload was attempted" instead of "these bytes were verified", and every later restore
@@ -74,7 +74,7 @@ class DefaultBackupUploaderTest {
     fun `the owning prefix is resolved once, not once per object`() = runTest {
         val store = FakeBackupObjectStore()
 
-        DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+        DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
 
         // Two resolutions would be two reads of the session, so a sign-out landing between them puts
         // the manifest under a different prefix from the payload it describes. The bucket's RLS
@@ -87,7 +87,7 @@ class DefaultBackupUploaderTest {
     fun `both objects land under the owner prefix and both end in json`() = runTest {
         val store = FakeBackupObjectStore()
 
-        DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+        DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
 
         // The prefix is what every RLS policy on the bucket is keyed on; the extension is what makes
         // storage-kt send a bare `application/json`, which is the only content type the bucket
@@ -104,7 +104,7 @@ class DefaultBackupUploaderTest {
     fun `the bytes that were hashed are the bytes that were stored`() = runTest {
         val store = FakeBackupObjectStore()
 
-        DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+        DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
 
         val stored: ByteArray = store.objects.getValue(PAYLOAD_KEY)
         // Byte-for-byte the caller's document. Anything that re-serialised the payload between
@@ -123,7 +123,7 @@ class DefaultBackupUploaderTest {
         store.failUpload = IllegalStateException("the socket died")
 
         val failure = assertFailsWith<DomainException.Unknown> {
-            DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+            DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
         }
 
         assertEquals(UPLOAD_FAILED, failure.message)
@@ -136,7 +136,7 @@ class DefaultBackupUploaderTest {
         store.failDownload = IllegalStateException("the socket died")
 
         val failure = assertFailsWith<DomainException.Unknown> {
-            DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+            DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
         }
 
         assertEquals(READ_BACK_FAILED, failure.message)
@@ -154,7 +154,7 @@ class DefaultBackupUploaderTest {
         store.failDelete = IllegalStateException("the socket died")
 
         val failure = assertFailsWith<DomainException.Unknown> {
-            DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+            DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
         }
 
         // Both facts survive in one message — the digest disagreed AND the bad object is still up
@@ -170,7 +170,7 @@ class DefaultBackupUploaderTest {
         store.failUploadOf = MANIFEST_KEY
 
         val failure = assertFailsWith<DomainException.Unknown> {
-            DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+            DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
         }
 
         assertEquals(MANIFEST_UPLOAD_FAILED, failure.message)
@@ -182,7 +182,7 @@ class DefaultBackupUploaderTest {
         store.failDownloadOf = MANIFEST_KEY
 
         val failure = assertFailsWith<DomainException.Unknown> {
-            DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+            DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
         }
 
         assertEquals(MANIFEST_READ_BACK_FAILED, failure.message)
@@ -202,7 +202,7 @@ class DefaultBackupUploaderTest {
         store.readBackInstead[MANIFEST_KEY] = "{}".encodeToByteArray()
 
         val failure = assertFailsWith<DomainException.ValidationError> {
-            DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+            DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
         }
 
         assertEquals(MANIFEST_MISMATCH, failure.message)
@@ -235,7 +235,7 @@ class DefaultBackupUploaderTest {
         store.failDeleteOf = PAYLOAD_KEY
 
         val failure = assertFailsWith<DomainException.Unknown> {
-            DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+            DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
         }
 
         assertEquals(MANIFEST_CLEANUP_FAILED, failure.message)
@@ -265,7 +265,7 @@ class DefaultBackupUploaderTest {
         store.failOwnedPrefix = DomainException.Unauthorized("nobody is signed in")
 
         val failure = assertFailsWith<DomainException.Unauthorized> {
-            DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+            DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
         }
 
         assertEquals("nobody is signed in", failure.message)
@@ -280,7 +280,7 @@ class DefaultBackupUploaderTest {
         // The port's headline contract is that EVERY failure is a DomainException. Without the
         // wrapper this step is the one place a raw throwable leaves the pipeline unnamed.
         val failure = assertFailsWith<DomainException.Unknown> {
-            DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+            DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
         }
 
         assertEquals(PREFIX_FAILED, failure.message)
@@ -288,8 +288,28 @@ class DefaultBackupUploaderTest {
     }
 
     @Test
-    fun `the nine failures reachable through the seam say nine different things`() = runTest {
-        // Hard constraint 4, asserted as a property rather than nine tests agreeing by accident.
+    fun `a snapshot for one account is refused when the session has become another's`() = runTest {
+        val store = FakeBackupObjectStore()
+        // The account switched between the cycle deciding whose ledger this is and this class asking
+        // where it goes. Resolved rather than asserted, the prefix would simply BE the new owner's,
+        // the bucket's RLS `with check` would accept the key because it matches the live session, and
+        // one user's whole ledger would land in another's bucket — with the caller then recording a
+        // success for a snapshot it can never see again. Nothing about that is visible server-side.
+        store.owner = OTHER_UID
+
+        val failure = assertFailsWith<DomainException.Unauthorized> {
+            DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
+        }
+
+        assertEquals(OWNER_CHANGED, failure.message)
+        // Refused before the first byte: one session read, and a bucket in exactly the state it was.
+        assertEquals(emptyList(), store.calls)
+        assertEquals(1, store.prefixResolutions)
+    }
+
+    @Test
+    fun `the ten failures reachable through the seam say ten different things`() = runTest {
+        // Hard constraint 4, asserted as a property rather than ten tests agreeing by accident.
         // Collapsing any two of these messages in production turns this red even if each individual
         // expectation above were edited to match.
         val messages: List<String?> = FAILURES.map { failure ->
@@ -297,7 +317,7 @@ class DefaultBackupUploaderTest {
             failure.arrange(store)
 
             assertFailsWith<DomainException>(message = failure.label) {
-                DefaultBackupUploader(store).upload(FILE_NAME, PAYLOAD)
+                DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
             }.message
         }
 
@@ -310,6 +330,7 @@ private class Failure(val label: String, val arrange: (FakeBackupObjectStore) ->
 /** One entry per way an upload can fail, from resolving the prefix to discarding a broken pair. */
 private val FAILURES: List<Failure> = listOf(
     Failure("prefix resolution") { it.failOwnedPrefix = IllegalStateException("boom") },
+    Failure("the session became another account's") { it.owner = OTHER_UID },
     Failure("payload upload") { it.failUpload = IllegalStateException("boom") },
     Failure("payload read-back") { it.failDownload = IllegalStateException("boom") },
     Failure("payload digest mismatch") { it.readBackInstead[PAYLOAD_KEY] = "{}".encodeToByteArray() },
@@ -347,6 +368,14 @@ private class FakeBackupObjectStore : BackupObjectStore {
     var prefixResolutions: Int = 0
         private set
 
+    /**
+     * Whose session [ownedPrefix] answers for. Settable because an account switch landing mid-cycle
+     * is the one thing a real store cannot be asked to perform: the uploader would have to be
+     * suspended between resolving the prefix and being constructed, which is not a thing. Here it is
+     * one assignment, and it is what makes the owner assertion falsifiable at all.
+     */
+    var owner: String = UID
+
     /** Handed back by [download] in place of what is stored, per key. */
     val readBackInstead: MutableMap<String, ByteArray> = mutableMapOf()
     var failOwnedPrefix: Throwable? = null
@@ -371,7 +400,7 @@ private class FakeBackupObjectStore : BackupObjectStore {
     override suspend fun ownedPrefix(): String {
         prefixResolutions++
         failOwnedPrefix?.let { throw it }
-        return "$UID/"
+        return "$owner/"
     }
 
     override suspend fun upload(key: String, bytes: ByteArray) {
@@ -410,6 +439,9 @@ private class FakeBackupObjectStore : BackupObjectStore {
 
 private const val UID = "5f1a2b3c-0000-4000-8000-000000000001"
 
+/** The account the session switches to mid-cycle. A real uid shape, because the prefix is one. */
+private const val OTHER_UID = "5f1a2b3c-0000-4000-8000-000000000002"
+
 /**
  * A REAL snapshot name — one `backupSnapshotName` writes and `parseBackupSnapshotTakenAt` reads back.
  *
@@ -429,6 +461,9 @@ private const val MANIFEST_MISMATCHED =
     "the manifest read back from $MANIFEST_KEY does not match the bytes that were uploaded"
 
 private const val PREFIX_FAILED = "${FAILED}the owning prefix could not be resolved."
+private const val OWNER_CHANGED =
+    "${FAILED}the signed-in account changed while the snapshot was being taken: it belongs under " +
+        "$UID/ and the live session owns $OTHER_UID/, so nothing was uploaded."
 private const val UPLOAD_FAILED = "${FAILED}the payload could not be uploaded to $PAYLOAD_KEY."
 private const val READ_BACK_FAILED = "${FAILED}the payload could not be read back from $PAYLOAD_KEY."
 private const val MISMATCH = "$FAILED$MISMATCHED; the unverified object was deleted."
