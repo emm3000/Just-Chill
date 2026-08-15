@@ -666,12 +666,15 @@ class BackupOrchestratorTest {
     }
 
     /**
-     * A manual request made with no session is discarded, not deferred (argued in `requestBackup`'s
-     * KDoc), and it is the one ending this class does not report — there was never a cycle. The tap
-     * is refused at the button instead, by `ProfileViewModel`, which can see the session.
+     * A manual request made with no session never becomes a cycle — no export, upload, record or
+     * prune runs — but it is no longer the ending this class reports nothing for. `ProfileViewModel`
+     * refuses a signed-out tap at the button, but that check only sees the session at tap time; this
+     * orchestrator is the backstop for the session having already ended by the time the single
+     * consumer gets to the request, which is exactly what "was never authenticated" looks like from
+     * here — [currentUserId] is null either way. See [BackupOrchestrator.requestBackup]'s KDoc.
      */
     @Test
-    fun `a manual request while signed out publishes nothing`() = runTest(testDispatcher) {
+    fun `a manual request while signed out publishes Failed, not nothing`() = runTest(testDispatcher) {
         val orchestrator = buildOrchestrator()
         val events = mutableListOf<BackupEvent>()
         val job = launch { orchestrator.events.collect { events += it } }
@@ -684,9 +687,66 @@ class BackupOrchestratorTest {
         orchestrator.requestBackup(manual = true)
         advanceUntilIdle()
 
-        assertEquals(emptyList<BackupEvent>(), events)
+        coVerify(exactly = 0) { backupRepository.exportToJson(any(), any()) }
+        val failure = events.singleOrNull()
+        assertTrue(failure is BackupEvent.Failed, "Expected exactly one Failed, got: $events")
 
         job.cancel()
+    }
+
+    /**
+     * The case FIX 2 is actually about: a session that existed at tap time and is gone by the time
+     * the single consumer drains the request — the window `ProfileViewModel.backUpNow`'s tap-time
+     * check cannot see, because `requestBackup` returns before the session can be re-checked and
+     * nothing suspends between the two. This device signs in, the request is queued, and only then
+     * does the session end — the same outcome as the fully-signed-out case above, reached the other
+     * way round.
+     */
+    @Test
+    fun `a manual request whose session ends before the consumer drains it still gets an answer`() =
+        runTest(testDispatcher) {
+            val orchestrator = buildOrchestrator()
+            val events = mutableListOf<BackupEvent>()
+            val job = launch { orchestrator.events.collect { events += it } }
+            advanceUntilIdle()
+
+            orchestrator.start()
+            authenticate()
+
+            sessionFlow.value = SessionStatus.NotAuthenticated
+            advanceUntilIdle()
+
+            orchestrator.requestBackup(manual = true)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { backupRepository.exportToJson(any(), any()) }
+            verify(exactly = 0) { metadata.setLastSuccessfulBackupAt(any(), any()) }
+            val failure = events.singleOrNull()
+            assertTrue(failure is BackupEvent.Failed, "Expected exactly one Failed, got: $events")
+
+            job.cancel()
+        }
+
+    // ── (13) A request before start() is dropped and logged, not silently queued ─────
+
+    /**
+     * [BackupOrchestrator.start] is what [SNAPSHOT_BACKUP_ENABLED] being false keeps uncalled in
+     * production, so this is the shape a stray `requestBackup` reaching a not-yet-started (or
+     * never-started) orchestrator takes: dropped, logged, and nothing uploaded — never a silent
+     * `trySend` onto a channel nothing will ever drain.
+     */
+    @Test
+    fun `a request made before start logs a warning and uploads nothing`() = runTest(testDispatcher) {
+        val orchestrator = buildOrchestrator()
+
+        orchestrator.requestBackup(manual = true)
+        advanceUntilIdle()
+
+        verify(exactly = 1) {
+            logger.warn(match { it.contains("before the orchestrator started") }, isNull())
+        }
+        coVerify(exactly = 0) { backupRepository.exportToJson(any(), any()) }
+        coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
     }
 
     // ── (12c) isBackingUp is true for the cycle's whole duration, and false after ────

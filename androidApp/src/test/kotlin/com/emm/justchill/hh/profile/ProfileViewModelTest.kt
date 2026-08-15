@@ -685,21 +685,17 @@ class ProfileViewModelTest {
             advanceUntilIdle()
 
             val shown: String? = effects.filterIsInstance<ProfileEffect.Notify>().firstOrNull()?.message?.toText()
+            // Pinning the exact backup-failure copy is what already proves Unauthorized never reaches
+            // the sign-in copy: `DomainExceptionExt.toUserMessage()`'s Unauthorized branch renders as
+            // "Credenciales incorrectas o sesión expirada", a different string than the one below, so
+            // a second assertion re-deriving that from the same `shown` value could never fail on its
+            // own — it would only ever fail together with this one.
             assertEquals(
                 "No pude respaldar en la nube — intenta de nuevo.",
                 shown,
                 "A backup failure must read as a backup failure",
             )
-            assertTrue(
-                shown != CREDENTIALS_EXPIRED,
-                "Unauthorized must not reach the user through the sign-in copy",
-            )
 
             job.cancel()
         }
-
-    private companion object {
-        /** `DomainExceptionExt.toUserMessage()`'s Unauthorized branch, spelled out on purpose. */
-        const val CREDENTIALS_EXPIRED = "Credenciales incorrectas o sesión expirada"
-    }
 }

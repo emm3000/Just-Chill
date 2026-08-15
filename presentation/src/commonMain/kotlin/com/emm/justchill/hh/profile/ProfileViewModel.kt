@@ -156,13 +156,21 @@ class ProfileViewModel(
      * **Not a [launchOp] call, on purpose.** That helper measures a suspend block's completion, and
      * `requestBackup` returns the instant the request is queued — wrapping it would report success
      * for a backup that has not started. What this reuses is [launchOp]'s *re-entry guard*, in the
-     * same shape and for the same reason: it is what stops a tap from racing an export or an import.
+     * same shape and for the same reason — but it only guards **this** direction: it stops a backup
+     * tap from racing an export or an import already in flight. It does not stop the reverse.
+     * `requestBackup` returns before [ProfileUiState.op] flips to [ProfileOp.BackingUp], so for a
+     * dispatch hop right after this tap `op` is still `None` and an export or import can still start
+     * on top of it. Benign in practice — a two-row double-tap inside a few milliseconds, and SQLite
+     * serialises the transactions — so this is not something to redesign the guard around.
      * Concurrency between backup cycles themselves is not this class's business at all — the
      * orchestrator's conflated channel and single consumer own that.
      *
-     * The signed-out refusal is answered here because nobody else can. `requestBackup` discards a
-     * session-less manual request rather than deferring it, and reports nothing (argued in its own
-     * KDoc); this is the only place that sees both the tap and the session.
+     * The signed-out refusal here is a fast local answer, not the only one. `BackupOrchestrator
+     * .requestBackup` still queues a session-less manual request rather than refusing it outright;
+     * its own consumer answers one with [BackupEvent.Failed] once it drains it, which is what covers
+     * the session ending in the gap between this check and that draining. What this method buys is
+     * the common case — a tap refused before it ever reaches the channel — and both answers render
+     * identically on screen, so nothing distinguishes them from the user's side.
      */
     private fun backUpNow() {
         val refusal: ProfileMessage? = when {
