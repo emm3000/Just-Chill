@@ -141,7 +141,15 @@ internal class SupabaseBackupObjectStore(private val client: SupabaseClient) : B
      * *safest* order for a page boundary to fall in — an early page holds the oldest objects, so
      * anything a short read would have missed is newer than everything it saw. The caller pages to
      * completion regardless; the deterministic order is what makes two consecutive pages join up
-     * instead of overlapping arbitrarily.
+     * instead of overlapping arbitrarily — **for a static bucket.** Offset paging over a listing that
+     * is *mutating between the two requests* can instead skip: if an object sorting before the
+     * boundary is deleted after the first request and before the second, everything after it shifts
+     * left by one, and the entry that was going to be first on the second page is never returned by
+     * either. A skipped sidecar makes its payload an orphan, which the prune deletes on sight. This
+     * needs more than a thousand objects in the bucket (this class's own page size) plus a concurrent
+     * deleter to land inside that window, which `launchOp`'s concurrent-op guard and the single-device
+     * premise both push toward remote rather than absent — it is not fixed here, and a fix would be
+     * cursor-based paging, not this offset scheme.
      *
      * **Folder entries are dropped here — but they are counted.** Supabase Storage derives folders
      * from the `/` delimiter and returns them in a listing as a `FileObject` whose fields are all
