@@ -211,13 +211,13 @@ private fun planPrune(names: List<String>, now: Instant, zone: TimeZone): PruneP
  * It is [DomainException.Unknown] rather than a `ValidationError` for the same reason
  * [SupabaseBackupObjectStore.upload]'s `.json` check is: nothing about it is user input, and its
  * user-facing text should say so. Both numbers are spelled into the message because "ten pages of a
- * thousand" is what tells a reader this is a server answering full pages forever rather than a
- * bucket that happens to be large.
+ * thousand" is what tells a reader the listing never came up empty within the request cap — not
+ * that the bucket happens to be large.
  */
 private fun listingNeverEnded(): DomainException {
-    val reason = "$PRUNE_FAILED the bucket was still answering full pages after " +
-        "$BACKUP_LIST_MAX_PAGES pages of $BACKUP_LIST_PAGE_SIZE objects, so the listing cannot be " +
-        "read completely. Pruning a partial listing can delete a snapshot that is not really the " +
+    val reason = "$PRUNE_FAILED the listing never returned an empty page within " +
+        "$BACKUP_LIST_MAX_PAGES pages of $BACKUP_LIST_PAGE_SIZE objects, so it cannot be read " +
+        "completely. Pruning a partial listing can delete a snapshot that is not really the " +
         "oldest, so nothing was deleted."
     return DomainException.Unknown(IllegalStateException(reason), reason)
 }
