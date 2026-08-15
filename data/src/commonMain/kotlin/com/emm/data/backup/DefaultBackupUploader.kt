@@ -146,20 +146,6 @@ class DefaultBackupUploader internal constructor(private val store: BackupObject
     }
 }
 
-/**
- * The sidecar's name: the payload's, plus a suffix.
- *
- * **It appends rather than replacing the extension**, which looks clumsier and is the point. The
- * bucket only accepts `application/json`, and storage-kt derives that header from the key's
- * extension, so a name that stops ending in `.json` is refused with an HTTP 415 that reads like a
- * server fault. Appending cannot produce one whatever the caller passed; swapping an extension
- * quietly can, for any file name that did not have the extension the rule assumed.
- *
- * It also gives the pair a shape a listing can read without downloading anything: `.manifest.json`
- * is the manifest, everything else is a payload, and no payload name can collide with a sidecar.
- */
-private fun manifestNameFor(fileName: String): String = "$fileName.manifest.json"
-
 /** Shared by the mismatch itself and by a failure to clean up after it — one event, two endings. */
 private fun payloadMismatchAt(payloadKey: String): String =
     "the payload read back from $payloadKey does not match the digest its manifest states"
