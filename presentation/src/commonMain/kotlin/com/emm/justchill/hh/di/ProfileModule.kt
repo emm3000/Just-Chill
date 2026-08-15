@@ -23,6 +23,9 @@ val profileModule = module {
             signOut = get(),
             deleteUserAccount = get(),
             syncController = get(),
+            // The BackupController port, bound as a secondary type of backupModule's orchestrator
+            // single — so this resolves the same instance bootstrapAppGraph started.
+            backupController = get(),
             categoryRepository = get(),
             accountRepository = get(),
             observeSession = get(),

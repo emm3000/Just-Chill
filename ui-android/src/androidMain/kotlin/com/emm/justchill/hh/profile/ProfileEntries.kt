@@ -116,6 +116,8 @@ private fun ProfileEntry(
                         ProfileMessage.ExportFailed,
                         ProfileMessage.ImportFailed,
                         ProfileMessage.OperationInProgress,
+                        ProfileMessage.BackupFailed,
+                        ProfileMessage.BackupNeedsAccount,
                         -> EmmSnackbarTone.Error
 
                         // A chosen branch, not a default: EmmSnackbarTone only has two values today,
@@ -128,6 +130,7 @@ private fun ProfileEntry(
                         ProfileMessage.AccountDeleted,
                         ProfileMessage.ExportDone,
                         is ProfileMessage.ImportDone,
+                        ProfileMessage.BackupDone,
                         -> EmmSnackbarTone.Success
                     },
                 )

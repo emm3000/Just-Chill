@@ -24,5 +24,11 @@ fun ProfileMessage.toText(): String = when (this) {
 
     ProfileMessage.ImportFailed -> "No pude importar el archivo — capaz está dañado."
 
+    ProfileMessage.BackupDone -> "Listo, tu respaldo está en la nube."
+
+    ProfileMessage.BackupFailed -> "No pude respaldar en la nube — intenta de nuevo."
+
+    ProfileMessage.BackupNeedsAccount -> "Inicia sesión para respaldar en la nube."
+
     ProfileMessage.OperationInProgress -> "Espera a que termine la operación en curso."
 }

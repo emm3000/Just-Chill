@@ -10,6 +10,7 @@ import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.MainDispatcherRule
+import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.sync.SyncController
 import com.emm.justchill.core.sync.SyncStatus
 import io.mockk.coEvery
@@ -17,6 +18,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -43,6 +45,10 @@ class ProfileViewModelImportTest {
     private val syncController = mockk<SyncController>(relaxed = true) {
         every { status } returns MutableStateFlow(SyncStatus())
     }
+    private val backupController = mockk<BackupController>(relaxed = true) {
+        every { isBackingUp } returns MutableStateFlow(false)
+        every { events } returns emptyFlow()
+    }
     private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns flowOf(emptyList())
@@ -64,6 +70,7 @@ class ProfileViewModelImportTest {
         signOut = signOut,
         deleteUserAccount = deleteUserAccount,
         syncController = syncController,
+        backupController = backupController,
         categoryRepository = categoryRepository,
         accountRepository = accountRepository,
         observeSession = observeSession,

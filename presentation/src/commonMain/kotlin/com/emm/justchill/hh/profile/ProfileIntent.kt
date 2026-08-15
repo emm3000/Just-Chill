@@ -13,4 +13,11 @@ sealed interface ProfileIntent : UiIntent {
     data object SignOut : ProfileIntent
     data object SyncNow : ProfileIntent
     data object DeleteAccount : ProfileIntent
+
+    /**
+     * User asked for a snapshot backup now (ADR 009 2c-iv). Unlike [ExportRequested], which hands
+     * the platform layer a JSON file to write, this asks the always-running backup orchestrator for
+     * a cycle and waits for it to report back — the ViewModel neither exports nor uploads anything.
+     */
+    data object BackUpNow : ProfileIntent
 }

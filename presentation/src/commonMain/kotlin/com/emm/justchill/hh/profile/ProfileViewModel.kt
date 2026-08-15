@@ -11,6 +11,8 @@ import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.backup.BackupController
+import com.emm.justchill.core.backup.BackupEvent
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.core.sync.SYNC_TEMPORARILY_DISABLED
 import com.emm.justchill.core.sync.SyncController
@@ -26,6 +28,7 @@ class ProfileViewModel(
     private val signOut: SignOutUseCase,
     private val deleteUserAccount: DeleteUserAccountUseCase,
     private val syncController: SyncController,
+    private val backupController: BackupController,
     categoryRepository: CategoryRepository,
     accountRepository: AccountRepository,
     observeSession: ObserveSessionUseCase,
@@ -79,6 +82,14 @@ class ProfileViewModel(
                 }
             }
             .launchIn(viewModelScope)
+
+        backupController.isBackingUp
+            .onEach(::onBackupProgress)
+            .launchIn(viewModelScope)
+
+        backupController.events
+            .onEach(::onBackupEvent)
+            .launchIn(viewModelScope)
     }
 
     override fun onIntent(intent: ProfileIntent) {
@@ -88,6 +99,81 @@ class ProfileViewModel(
             ProfileIntent.SignOut -> performSignOut()
             ProfileIntent.SyncNow -> syncNow()
             ProfileIntent.DeleteAccount -> deleteAccount()
+            ProfileIntent.BackUpNow -> backUpNow()
+        }
+    }
+
+    /**
+     * Mirrors the orchestrator's cycle flag onto the shared [ProfileUiState.op] slot — claiming it
+     * only while it is free, releasing only what it claimed.
+     *
+     * `BackupController.isBackingUp` reports **every** cycle, and the automatic ones fire from the
+     * app's own lifecycle: one can start while an export or an import is already running here. A
+     * blind `copy(op = BackingUp)` would overwrite that op, and then [launchOp]'s `finally` would
+     * reset the slot to `None` while the backup was still in flight — two operations sharing one
+     * field with neither owning it, which reads on screen as an export that finished twice.
+     *
+     * So an automatic backup landing mid-export is simply not shown. That is the honest of the two
+     * failures: the row keeps describing the operation the user started, and the backup is not
+     * something they are waiting on.
+     */
+    private fun onBackupProgress(backingUp: Boolean) = updateState {
+        when {
+            backingUp && op == ProfileOp.None -> copy(op = ProfileOp.BackingUp)
+            !backingUp && op == ProfileOp.BackingUp -> copy(op = ProfileOp.None)
+            else -> this
+        }
+    }
+
+    /**
+     * Answers a manual backup — and **no backup failure signs the user out. None.**
+     *
+     * [BackupEvent.Failed] carries a `DomainException` and this deliberately does not read it. The
+     * account-switch refusal `DefaultBackupUploader` throws is a `DomainException.Unauthorized`, and
+     * that type cannot be told apart from a genuinely expired session, so both existing readings of
+     * it are wrong here: `toUserMessage()` renders it as *"Credenciales incorrectas o sesión
+     * expirada"*, and `SyncOrchestrator`'s posture for it is sign out + `SyncEvent.SessionExpired`.
+     * Either inherited blindly force-signs-out a user whose only crime was switching accounts —
+     * while signed in, on a device holding real data.
+     *
+     * One message for every failure is therefore the deliberate floor, not the ceiling: ADR 009
+     * Phase 3 owns backup health, and finer-grained copy needs the state surface it builds to be
+     * worth anything. Note that this is also why a failure comes back as
+     * [ProfileEffect.Notify] and never [ProfileEffect.ShowError] — the latter is the effect that
+     * routes through `toUserMessage()`.
+     */
+    private fun onBackupEvent(event: BackupEvent) {
+        val message: ProfileMessage = when (event) {
+            BackupEvent.Succeeded -> ProfileMessage.BackupDone
+            is BackupEvent.Failed -> ProfileMessage.BackupFailed
+        }
+        sendEffect(ProfileEffect.Notify(message))
+    }
+
+    /**
+     * The "Respaldar ahora" tap.
+     *
+     * **Not a [launchOp] call, on purpose.** That helper measures a suspend block's completion, and
+     * `requestBackup` returns the instant the request is queued — wrapping it would report success
+     * for a backup that has not started. What this reuses is [launchOp]'s *re-entry guard*, in the
+     * same shape and for the same reason: it is what stops a tap from racing an export or an import.
+     * Concurrency between backup cycles themselves is not this class's business at all — the
+     * orchestrator's conflated channel and single consumer own that.
+     *
+     * The signed-out refusal is answered here because nobody else can. `requestBackup` discards a
+     * session-less manual request rather than deferring it, and reports nothing (argued in its own
+     * KDoc); this is the only place that sees both the tap and the session.
+     */
+    private fun backUpNow() {
+        val refusal: ProfileMessage? = when {
+            currentState.op != ProfileOp.None -> ProfileMessage.OperationInProgress
+            currentState.session !is SessionUiState.SignedIn -> ProfileMessage.BackupNeedsAccount
+            else -> null
+        }
+        if (refusal == null) {
+            backupController.requestBackup(manual = true)
+        } else {
+            sendEffect(ProfileEffect.Notify(refusal))
         }
     }
 
@@ -100,8 +186,10 @@ class ProfileViewModel(
      * The guard reports instead of swallowing: a confirmed intent arriving while another op is in
      * flight used to return silently with no effect and no state change — indistinguishable on
      * screen from the delete-account RPC never firing at all (`docs/archive/sync/AUDIT.md` §8, candidate 1).
-     * One generic [ProfileMessage.OperationInProgress] covers all four ops here on purpose — this
-     * guard is shared, and must not grow a per-op branch.
+     * One generic [ProfileMessage.OperationInProgress] covers every op here on purpose — this
+     * guard is shared, and must not grow a per-op branch. [backUpNow] repeats the check instead of
+     * calling this helper (it has no suspend block to measure) and reuses the message for the same
+     * reason.
      */
     private fun launchOp(op: ProfileOp, onError: (DomainException) -> ProfileEffect, block: suspend () -> Unit) {
         // Near-unreachable on Android by hand: all four entry points also gate on `state.op` in
