@@ -28,8 +28,17 @@ import kotlin.time.Instant
  * will run in; outside them the stamp gains a sign and an extra digit and the pair stops
  * round-tripping. `every name the builder writes is a name the parser reads back` is what holds the
  * two ends together, and it is the test to break if this format is ever changed.
+ *
+ * **It is the one half of this file that is public, and the visibility is load-bearing.** ADR 009
+ * Phase 2c-iii orchestrates the snapshot from `:presentation`, which is where `BackupUploader.upload`
+ * is called and therefore where the name is chosen. Left `internal`, that unit had two options and
+ * both were bad: widen this in a hurry, or spell the format out a second time — and a second
+ * generator that disagrees with [parseBackupSnapshotTakenAt] by one character is exactly the failure
+ * the builder-and-parser-in-one-file decision exists to prevent, since the prune would simply stop
+ * recognising this app's own snapshots. Nothing else here follows: reading a name back is the prune's
+ * business, and the prune lives in `:data`.
  */
-internal fun backupSnapshotName(takenAt: Instant): String {
+fun backupSnapshotName(takenAt: Instant): String {
     val stamp = Instant.fromEpochSeconds(takenAt.epochSeconds).toString()
     return "$SNAPSHOT_PREFIX${stamp.replace(':', TIME_SEPARATOR)}$JSON_EXTENSION"
 }

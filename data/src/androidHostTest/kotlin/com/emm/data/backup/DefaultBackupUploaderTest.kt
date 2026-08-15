@@ -409,7 +409,17 @@ private class FakeBackupObjectStore : BackupObjectStore {
 }
 
 private const val UID = "5f1a2b3c-0000-4000-8000-000000000001"
-private const val FILE_NAME = "backup-v3-2026-08-14T03-00-00.json"
+
+/**
+ * A REAL snapshot name — one `backupSnapshotName` writes and `parseBackupSnapshotTakenAt` reads back.
+ *
+ * It used to be missing its `Z`, which made it a name the prune classifies as *not a snapshot*
+ * (`BackupSnapshotNameTest` pins that exact shape as a non-snapshot). Nothing here failed, because
+ * the uploader never parses what it is handed — but this is the more-read of the two files, so what
+ * it showed a reader was a format the rest of the pipeline rejects. `BackupNameSeamTest` is what now
+ * holds the two ends together.
+ */
+private const val FILE_NAME = "backup-v3-2026-08-14T03-00-00Z.json"
 private const val PAYLOAD_KEY = "$UID/$FILE_NAME"
 private const val MANIFEST_KEY = "$PAYLOAD_KEY.manifest.json"
 
