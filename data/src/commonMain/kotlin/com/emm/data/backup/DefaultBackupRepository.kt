@@ -160,6 +160,18 @@ class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock
     }
 
     /**
+     * See [BackupRepository.latestLocalChangeAt]. Backed by `backup.sq:latestLocalChange`, a
+     * single `SELECT` that already reduces the four tables to one row — no
+     * `transactionWithResult` needed here the way [exportToJson] needs one, because there is only
+     * ever one statement to run, not four.
+     */
+    override suspend fun latestLocalChangeAt(): Long? = safeDbCall {
+        withContext(ioDispatcher) {
+            db.backupQueries.latestLocalChange().executeAsOne().updatedAt
+        }
+    }
+
+    /**
      * Reads the file at whichever format version it declares, and hands BOTH results back.
      *
      * The version is read FIRST, from the raw JSON, and only then is the payload decoded as the
@@ -335,7 +347,7 @@ class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock
         val transaction = dto.toEntityOrNull() ?: return false
         val occurredAt = transaction.occurredAt.toOccurredAtText()
         val type = transaction.type.name
-        val categoryId = usableCategoryId(dto.categoryId, type)
+        val categoryId = db.usableCategoryId(dto.categoryId, type)
         db.transactionsQueries.insertOrIgnoreFromBackup(
             transactionId = dto.transactionId,
             type = type,
@@ -381,7 +393,7 @@ class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock
     private fun restore(dto: RecurringMovementDto, now: Long): Boolean {
         val template = dto.toEntityOrNull() ?: return false
         val type = template.type.name
-        val categoryId = usableCategoryId(dto.categoryId, type)
+        val categoryId = db.usableCategoryId(dto.categoryId, type)
         db.recurring_movementsQueries.insertOrIgnoreFromBackup(
             id = template.id.value,
             name = template.name,
@@ -414,39 +426,45 @@ class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock
         )
         return true
     }
+}
 
-    /**
-     * The category id this row may actually be written with — [categoryId] itself, or null.
-     *
-     * Under the composite key a stale `(categoryId, type)` pair no longer inserts: the statement
-     * aborts with a constraint violation inside the single transaction that wraps the whole restore,
-     * so ONE bad row would roll back the entire import and leave the owner with nothing. That is the
-     * one safety net on a device holding real accumulated data, so the row lands uncategorized
-     * instead — the movement, its amount and its type are the data; the category is a label the user
-     * can put back in two taps.
-     *
-     * **Both callers reach it by a different route, and only one of them is about legacy files.**
-     *
-     *  - Transactions: every backup file that exists today predates the composite key, and the export
-     *    before it carried whatever pair the app had stored, mismatches included.
-     *  - Templates: version 3 was born after the key existed, and the export's dangling-category
-     *    scrub already keeps a tombstoned category's id out of the file — so a file **this app wrote**
-     *    can never carry a broken recurring pair. The only provenance left is a hand-edited one.
-     *
-     * The guard stands either way: the file is untrusted input whatever wrote it, and a rollback
-     * after the tombstone sweep has already run is the catastrophic outcome in both cases.
-     *
-     * Absent and mismatched are both handled the same way here, unlike in `sync/`, and the reason
-     * is that the file is the whole world: every category the file carries is restored before the
-     * first transaction and before the first template, inside this same transaction, so a category
-     * still missing at this point is missing from the file, not late. There is no later arrival to
-     * wait for — which is also why the templates are restored last rather than first.
-     */
-    private fun usableCategoryId(categoryId: String?, type: String): String? {
-        if (categoryId == null) return null
-        val storedType = db.categoriesQueries.typeOf(categoryId).executeAsOneOrNull()
-        return if (storedType == type) categoryId else null
-    }
+/**
+ * The category id a restored row may actually be written with — [categoryId] itself, or null.
+ *
+ * Top-level rather than a member of [DefaultBackupRepository], and an extension on
+ * [EmmDatabaseData] in the same shape as [snapshot], for the same mechanical reason: adding
+ * [DefaultBackupRepository.latestLocalChangeAt] put the class one function past detekt's
+ * `allowedFunctionsPerClass: 11`, and this one needs nothing but the database and its two
+ * arguments — no other private member of the class.
+ *
+ * Under the composite key a stale `(categoryId, type)` pair no longer inserts: the statement
+ * aborts with a constraint violation inside the single transaction that wraps the whole restore,
+ * so ONE bad row would roll back the entire import and leave the owner with nothing. That is the
+ * one safety net on a device holding real accumulated data, so the row lands uncategorized
+ * instead — the movement, its amount and its type are the data; the category is a label the user
+ * can put back in two taps.
+ *
+ * **Both callers reach it by a different route, and only one of them is about legacy files.**
+ *
+ *  - Transactions: every backup file that exists today predates the composite key, and the export
+ *    before it carried whatever pair the app had stored, mismatches included.
+ *  - Templates: version 3 was born after the key existed, and the export's dangling-category
+ *    scrub already keeps a tombstoned category's id out of the file — so a file **this app wrote**
+ *    can never carry a broken recurring pair. The only provenance left is a hand-edited one.
+ *
+ * The guard stands either way: the file is untrusted input whatever wrote it, and a rollback
+ * after the tombstone sweep has already run is the catastrophic outcome in both cases.
+ *
+ * Absent and mismatched are both handled the same way here, unlike in `sync/`, and the reason
+ * is that the file is the whole world: every category the file carries is restored before the
+ * first transaction and before the first template, inside this same transaction, so a category
+ * still missing at this point is missing from the file, not late. There is no later arrival to
+ * wait for — which is also why the templates are restored last rather than first.
+ */
+private fun EmmDatabaseData.usableCategoryId(categoryId: String?, type: String): String? {
+    if (categoryId == null) return null
+    val storedType = categoriesQueries.typeOf(categoryId).executeAsOneOrNull()
+    return if (storedType == type) categoryId else null
 }
 
 /**

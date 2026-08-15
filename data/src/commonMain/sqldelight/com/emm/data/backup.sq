@@ -1,0 +1,37 @@
+-- No CREATE TABLE here — this file exists only to hold cross-table reads that do not belong to any
+-- single table's own `.sq` file. See accounts.sq / categories.sq / transactions.sq /
+-- recurring_movements.sq for the schema.
+
+-- The dirty-flag watermark: the latest `updatedAt` across all four backed-up tables, in ONE
+-- statement.
+--
+-- Deliberately counts soft-deleted rows. `softDelete` (see e.g. accounts.sq:softDelete) bumps
+-- `updatedAt` when it sets `deletedAt`, so a deletion IS a local change and must be able to trigger
+-- a backup. This is the OPPOSITE of every `all:`/export read in this module, which filters
+-- `deletedAt IS NULL` — those describe what the device currently HOLDS; this describes whether the
+-- device has changed AT ALL since the last backup. Do NOT add a `deletedAt IS NULL` filter here to
+-- "match" the export: a device whose only change since the last backup was a deletion would then
+-- never mark itself dirty, and the deleted row would survive in the last snapshot forever.
+--
+-- ONE statement, not four reads. Four independent `SELECT max(updatedAt)` calls could interleave
+-- with a write landing between any two of them and produce a watermark that is not any state the
+-- database was ever actually in — the same race Phase 2a closed on the export itself by moving it
+-- inside a single `transactionWithResult`. A `UNION ALL` of the four per-table maxima, reduced by
+-- one outer `max`, is a single read and cannot straddle a write.
+--
+-- Each per-table `SELECT max(updatedAt)` always returns exactly one row — an aggregate with no
+-- GROUP BY does, even over zero rows, where it returns NULL — so the UNION ALL always yields four
+-- rows and the outer `max` always yields exactly one. SQLite's `max()` ignores NULL inputs and
+-- only returns NULL when every input is NULL, so the result is NULL precisely when all four tables
+-- hold no rows at all — no local data ever written — and that NULL must stay distinguishable from
+-- a real watermark of epoch 0.
+latestLocalChange:
+SELECT max(m) AS updatedAt FROM (
+    SELECT max(updatedAt) AS m FROM accounts
+    UNION ALL
+    SELECT max(updatedAt) AS m FROM categories
+    UNION ALL
+    SELECT max(updatedAt) AS m FROM transactions
+    UNION ALL
+    SELECT max(updatedAt) AS m FROM recurring_movements
+);
