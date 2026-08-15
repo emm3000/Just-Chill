@@ -3,18 +3,24 @@ package com.emm.data.backup
 /**
  * How many objects one [BackupObjectStore.list] call asks the server for.
  *
- * **It is a page size, not a ceiling on the bucket.** Supabase Storage's list takes a limit with a
- * server-side default and answers with a page; the caller pages through with an advancing offset
- * until a **short** page comes back, and a short page is what *proves* the listing is complete.
- * Nothing infers completeness from a count any more, which is the whole reason the number is here
- * rather than the refusal it used to enable: a page that came back full but held a folder entry
- * arrived at the caller one object short of the limit, so the refusal did not fire and the prune ran
- * on a truncated listing believing it was whole. ADR 009 mandates a `pinned/` folder, so that folder
- * entry is the designed state rather than an edge case.
+ * **It is a page size, not a ceiling on the bucket, and not a promise about what any one page
+ * contains.** Supabase Storage's list takes a limit with a server-side default and answers with a
+ * page; the caller pages through with an offset that advances by [ObjectPage.serverReturned] — what
+ * the server actually handed back, never this constant — until a page reports **zero** objects, and
+ * that is what *proves* the listing is complete. A page merely coming back short of this number is
+ * not proof: a server free to clamp the limit could hand back fewer than asked while more objects
+ * remain, and inferring "done" from a short page would read the first clamped page as the whole
+ * bucket. (Today's server does not clamp this route — confirmed from storage-api's own source, see
+ * the 2c-ii write-up in `docs/sync/ADR009_PLAN.md` — but that is a fact about the current server, not
+ * a promise the type system holds it to, and the pager is written to be correct either way.) The
+ * previous version of this pager also inferred completeness from a count, comparing the *filtered*
+ * page size against this limit: a page that came back full but held a folder entry arrived at the
+ * caller one object short, so the refusal never fired and the prune ran on a truncated listing
+ * believing it was whole. ADR 009 mandates a `pinned/` folder, so that folder entry is the designed
+ * state rather than an edge case.
  *
  * The limit is still set explicitly rather than inherited, because an unset one is whatever the
- * Storage API decides that day — a number a BOM bump can move without a compile error, and the
- * offset arithmetic below is built on knowing it.
+ * Storage API decides that day — a number a BOM bump can move without a compile error.
  *
  * A thousand is roughly forty times what retention can ever leave behind (54 snapshots, each with a
  * sidecar) and is the value Supabase's own bucket-migration example uses, so a bucket that needs a
@@ -45,10 +51,12 @@ internal const val BACKUP_LIST_MAX_PAGES: Int = 10
  * early, and a listing truncated mid-way can cut between a payload and its sidecar — an orphan
  * payload is deleted on sight, so that is one verified snapshot gone, silently.
  *
- * [serverReturned] is the count before any filtering, and it is the only number a pager may compare
- * against the limit it asked for. It is carried here rather than left for the caller to work out
- * because the caller cannot: by the time a listing has crossed this seam, the folder entries that
- * made the page full are gone.
+ * [serverReturned] is the count before any filtering, and it is the only number a pager may treat as
+ * authoritative: zero is what proves the listing is complete, and it is also the amount the offset of
+ * the next request must advance by — never the limit that was asked for, which the server is free to
+ * hand back less of. It is carried here rather than left for the caller to work out because the
+ * caller cannot: by the time a listing has crossed this seam, the folder entries that made the page
+ * full are gone.
  */
 internal data class ObjectPage(val names: List<String>, val serverReturned: Int)
 
@@ -113,9 +121,10 @@ internal interface BackupObjectStore {
      * at [offset], as names relative to the prefix, plus the raw count the server answered with.
      *
      * **It is one page and it says so**, which is what keeps a caller from mistaking a page for a
-     * bucket. Completeness is proved by asking again at the next offset and getting a short page —
-     * see [ObjectPage.serverReturned] for why the caller must compare *that* number against [limit]
-     * and never the length of the names it received.
+     * bucket. Completeness is proved by asking again at the next offset and getting back **zero**
+     * objects — see [ObjectPage.serverReturned] for why the caller must terminate on that number being
+     * zero, advance the next offset by it, and never compare it against [limit] or the length of the
+     * names it received.
      *
      * Three properties the retention prune depends on, all of them the implementation's job to
      * guarantee rather than the caller's to work around:

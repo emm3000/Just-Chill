@@ -32,7 +32,9 @@ class DefaultBackupPrunerTest {
 
         val report = prunerOver(store).prune()
 
-        assertEquals(listOf("list $PREFIX from 0"), store.calls)
+        // Two calls, not one: the first hands back both objects (`serverReturned == 2`, not zero),
+        // so the pager must ask again at offset 2 to see the zero that actually proves completeness.
+        assertEquals(listOf("list $PREFIX from 0", "list $PREFIX from 2"), store.calls)
         assertEquals(listOf(PAIR_PAYLOAD, PAIR_SIDECAR), store.objects)
         assertEquals(1, report.kept)
         assertEquals(0, report.deleted)
@@ -71,7 +73,12 @@ class DefaultBackupPrunerTest {
         val report = prunerOver(store).prune()
 
         assertEquals(listOf(PAIR_PAYLOAD, PAIR_SIDECAR), store.objects)
-        assertEquals(listOf("list $PREFIX from 0", "delete $PREFIX$orphan"), store.calls)
+        // The terminating zero-page (offset 3, all three objects already seen) comes before any
+        // delete: the listing must be proved complete before the plan is acted on.
+        assertEquals(
+            listOf("list $PREFIX from 0", "list $PREFIX from 3", "delete $PREFIX$orphan"),
+            store.calls,
+        )
         assertEquals(1, report.kept)
     }
 
@@ -155,6 +162,54 @@ class DefaultBackupPrunerTest {
     }
 
     @Test
+    fun `a server that clamps every page below the requested size still assembles the complete listing`() = runTest {
+        // The exact regression FIX A closes. Eleven objects: nine strangers, then a verified pair
+        // straddling the clamp boundary — the payload lands on the clamped first page, the sidecar on
+        // the second. A pager that stopped the moment a page came back short of the REQUESTED size —
+        // the previous terminator — would read the ten-object first page as complete on one list call
+        // alone, never see the sidecar, and delete the payload on sight as an orphan. Advancing the
+        // offset by what the server actually returned (never by the requested size) and terminating
+        // only on a genuinely empty page reads every object regardless of the server's limit policy.
+        val strangers = List(9) { "stranger-$it.txt" }
+        val store = storeOf(*(strangers + listOf(PAIR_PAYLOAD, PAIR_SIDECAR)).toTypedArray())
+        store.clampPageSizeTo = CLAMP_LIMIT
+
+        val report = prunerOver(store).prune()
+
+        // Three requests, at offsets 0, 10 and 11 — each advanced by what the PREVIOUS page actually
+        // returned (10, then 1), never by the requested BACKUP_LIST_PAGE_SIZE. That is the fix, made
+        // visible: the old pager would have stopped after the first call.
+        assertEquals(
+            listOf("list $PREFIX from 0", "list $PREFIX from $CLAMP_LIMIT", "list $PREFIX from ${CLAMP_LIMIT + 1}"),
+            store.calls,
+        )
+        assertEquals(1, report.kept)
+        assertEquals(0, report.deleted)
+        assertEquals(strangers + listOf(PAIR_PAYLOAD, PAIR_SIDECAR), store.objects)
+    }
+
+    @Test
+    fun `a page reporting zero objects ends the loop even though more objects remain unread`() = runTest {
+        // Not the clamp shape above — a server ending the listing outright instead of merely capping
+        // a page. `serverReturned == 0` IS the terminator, so the pager must stop cleanly right there
+        // rather than guess that more is coming: the sidecar the server never hands back is genuinely
+        // unreachable from here, and the payload it leaves behind is deleted as an orphan. What this
+        // proves is the shape of the failure, not a hang or an unbounded retry.
+        val store = storeOf(PAIR_PAYLOAD, PAIR_SIDECAR, payload("2026-08-10"))
+        store.clampPageSizeTo = 1
+        store.zeroPageAtOffset = 1
+
+        val report = prunerOver(store).prune()
+
+        assertEquals(
+            listOf("list $PREFIX from 0", "list $PREFIX from 1", "delete $PREFIX$PAIR_PAYLOAD"),
+            store.calls,
+        )
+        assertEquals(0, report.kept)
+        assertEquals(1, report.deleted)
+    }
+
+    @Test
     fun `a server that never stops paging is refused, and deletes nothing`() = runTest {
         val store = storeOf(payload("2026-08-12"), PAIR_PAYLOAD, PAIR_SIDECAR)
         store.neverEnds = true
@@ -219,8 +274,15 @@ class DefaultBackupPrunerTest {
 
         val report = prunerOver(store).prune()
 
+        // The terminating zero-page (offset 4, all four objects already seen) still comes before any
+        // delete.
         assertEquals(
-            listOf("list $PREFIX from 0", "delete $PREFIX${manifestNameFor(older)}", "delete $PREFIX$older"),
+            listOf(
+                "list $PREFIX from 0",
+                "list $PREFIX from 4",
+                "delete $PREFIX${manifestNameFor(older)}",
+                "delete $PREFIX$older",
+            ),
             store.calls,
         )
         assertEquals(listOf(PAIR_PAYLOAD, PAIR_SIDECAR), store.objects)
@@ -306,6 +368,20 @@ private class FakePrunableObjectStore(names: List<String>) : BackupObjectStore {
     /** Answers every page full, forever — the misbehaving server the page cap exists for. */
     var neverEnds: Boolean = false
 
+    /**
+     * Caps every page at this many objects regardless of the `limit` requested — the clamping server
+     * the regression test below is written against. `null` means the fake honours whatever `limit` it
+     * is asked for, which is the (confirmed) behaviour of the real V1 list route.
+     */
+    var clampPageSizeTo: Int? = null
+
+    /**
+     * Reports zero objects the moment `offset` reaches this value, even if [objects] holds more
+     * beyond that point. Models a server that ends a listing early rather than one that clamps its
+     * page size — the degenerate case the terminator must not spin on.
+     */
+    var zeroPageAtOffset: Int? = null
+
     /** Full keys whose delete fails, so one stuck object and a healthy bucket are expressible together. */
     val failDeleteOf: MutableSet<String> = mutableSetOf()
 
@@ -319,14 +395,23 @@ private class FakePrunableObjectStore(names: List<String>) : BackupObjectStore {
         calls += "list $prefix from $offset"
         failList?.let { throw it }
         if (offset == failListAtOffset) throw IllegalStateException("the socket died mid-listing")
-        if (neverEnds) return ObjectPage(names = emptyList(), serverReturned = limit)
 
         // The server counts folder entries in both the page size and the offset, so an object's
         // index trails the offset by however many folders came before it.
         val folders = if (offset == 0) foldersOnFirstPage else 0
         val firstObject = (offset - foldersOnFirstPage).coerceAtLeast(0)
-        val page: List<String> = objects.drop(firstObject).take(limit - folders)
-        return ObjectPage(names = page, serverReturned = page.size + folders)
+        val effectiveLimit = clampPageSizeTo?.coerceAtMost(limit) ?: limit
+
+        return when {
+            neverEnds -> ObjectPage(names = emptyList(), serverReturned = limit)
+
+            offset == zeroPageAtOffset -> ObjectPage(names = emptyList(), serverReturned = 0)
+
+            else -> {
+                val page: List<String> = objects.drop(firstObject).take(effectiveLimit - folders)
+                ObjectPage(names = page, serverReturned = page.size + folders)
+            }
+        }
     }
 
     override suspend fun delete(key: String) {
@@ -350,6 +435,9 @@ private const val UID = "5f1a2b3c-0000-4000-8000-000000000001"
 private const val PREFIX = "$UID/"
 
 private const val SECONDS_PER_MINUTE = 60
+
+/** The clamp width the clamping-server regression test asks the fake to enforce. */
+private const val CLAMP_LIMIT = 10
 
 private val LIMA: TimeZone = TimeZone.of("America/Lima")
 

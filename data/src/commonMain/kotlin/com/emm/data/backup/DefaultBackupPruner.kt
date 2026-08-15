@@ -22,15 +22,21 @@ import kotlin.time.Instant
  *
  * ### The listing is paged to completion, and completeness is PROVED rather than inferred
  *
- * The bucket is read one page at a time until the server answers with a short one. A short page is
- * proof there is nothing after it; a count that merely came in under the limit is not, and that
- * distinction is the defect this shape closes. The previous version refused any listing that came
- * back at exactly [BACKUP_LIST_PAGE_SIZE] — but it counted the list *after* folder entries had been
- * dropped, so a full page holding `pinned` arrived one short, the refusal never fired, and the prune
- * ran on a truncated listing believing it was whole. That refusal was also terminal rather than a
- * skip: nothing advanced an offset, so a bucket that genuinely reached the limit would have thrown
- * on every run forever, and the only thing that could have brought it back under the limit was the
- * prune itself.
+ * The bucket is read one page at a time until the server answers with **zero** objects. A page that
+ * came back short of [BACKUP_LIST_PAGE_SIZE] is not proof of anything: a server is free to hand back
+ * fewer than the requested limit while more objects remain, and a pager that treated "short" as
+ * "done" would read the first clamped page as the whole bucket. Only a page reporting nothing left
+ * proves there is nothing left. For the same reason the offset advances by
+ * [ObjectPage.serverReturned] — what the server actually handed back — and never by the requested
+ * [BACKUP_LIST_PAGE_SIZE]: advancing by the request would skip whatever a short page omitted, which
+ * is exactly the shape that deletes a verified snapshot silently (see [wholeBucket]'s KDoc for the
+ * scenario). The previous version refused any listing that came back at exactly
+ * [BACKUP_LIST_PAGE_SIZE] — but it counted the list *after* folder entries had been dropped, so a
+ * full page holding `pinned` arrived one short, the refusal never fired, and the prune ran on a
+ * truncated listing believing it was whole. That refusal was also terminal rather than a skip:
+ * nothing advanced an offset, so a bucket that genuinely reached the limit would have thrown on every
+ * run forever, and the only thing that could have brought it back under the limit was the prune
+ * itself.
  *
  * ### Reading fails loudly, deleting does not
  *
@@ -100,14 +106,35 @@ class DefaultBackupPruner internal constructor(
     /**
      * Every object under [prefix], assembled page by page, or a named refusal that deletes nothing.
      *
-     * **The comparison is against [ObjectPage.serverReturned], never against the names received.**
-     * The store drops folder entries, so a page that was full arrives shorter than the limit — and a
-     * pager that stopped there would treat a truncated listing as a complete one, which is the
-     * data-loss shape the whole class is written around. The server's own count is the only number
-     * that answers "was this page full".
+     * **The loop terminates on [ObjectPage.serverReturned] being zero, and nothing else.** Comparing
+     * it against the requested [BACKUP_LIST_PAGE_SIZE] instead — "the server gave back fewer than we
+     * asked for, so this must be the last page" — is only sound if the server never clamps. It is not
+     * currently exploitable (storage-api's V1 list route declares no maximum and passes `limit`
+     * through unclamped — confirmed from source, see the 2c-ii write-up in
+     * `docs/sync/ADR009_PLAN.md`), but nothing in CI pins that, and a BOM bump could change it with no
+     * compile error to catch it. Concretely: eleven objects, a verified payload/sidecar pair sitting
+     * at positions 10 and 11, a server clamping every page to 10 regardless of the limit asked for.
+     * Comparing against the requested size calls the first (and only) page complete the moment it
+     * comes back short — one list call, ten objects, the eleventh never read, the payload classified
+     * as an orphan and deleted. Comparing against zero keeps asking until the server says there is
+     * nothing left, so the eleventh object — the sidecar — is read on the next page and the pair
+     * survives. [DefaultBackupPrunerTest] names this scenario.
+     *
+     * **The offset advances by [ObjectPage.serverReturned], never by [BACKUP_LIST_PAGE_SIZE].**
+     * Advancing by the requested size assumes the server returned that many; under a clamp it did
+     * not, and the next request would start past objects the caller never saw — the same data loss as
+     * above, reached a different way. Advancing by what the server actually returned is correct
+     * whatever the server's limit policy is, and costs nothing extra when the server *is* honouring
+     * the limit, since the two numbers are then equal. **Do not "optimise" this back to the requested
+     * size** — it reintroduces the defect above with no test able to tell from the request alone,
+     * only from a clamping server.
      *
      * A page bigger than the limit is treated as full and paging continues: [BACKUP_LIST_MAX_PAGES]
      * bounds the loop whatever the server does, and over-reading is safe where under-reading is not.
+     * A page reporting zero while more objects genuinely remain — a server misbehaving in the other
+     * direction — is indistinguishable from the real end from here, so it is treated as the end: the
+     * alternative is guessing, and a pager that kept asking after a zero could spin forever with
+     * nothing to bound it.
      */
     private suspend fun wholeBucket(prefix: String): List<String> {
         val names = mutableListOf<String>()
@@ -115,8 +142,8 @@ class DefaultBackupPruner internal constructor(
         repeat(BACKUP_LIST_MAX_PAGES) {
             val page: ObjectPage = storageCall(LIST_FAILED) { store.list(prefix, BACKUP_LIST_PAGE_SIZE, offset) }
             names += page.names
-            if (page.serverReturned < BACKUP_LIST_PAGE_SIZE) return names
-            offset += BACKUP_LIST_PAGE_SIZE
+            if (page.serverReturned == 0) return names
+            offset += page.serverReturned
         }
         throw listingNeverEnded()
     }

@@ -714,7 +714,7 @@ Six things it settled that this plan had left open or got wrong:
   unprobed against a live server**, and nothing in CI pins any of the three — `SupabaseBackupObjectStoreTest`
   asserts the request this client sends and the decoding it does with the answer, which a BOM bump
   changing the route's semantics would still pass.
-- **The prune paginates, so completeness is PROVED by a short page rather than inferred from a
+- **The prune paginates, so completeness is PROVED by a zero-length page rather than inferred from a
   count.** The first shape refused any listing that came back at the 1000-object limit — but it
   counted the list *after* the store had dropped folder entries, so a full page holding `pinned`
   arrived at 999 and the refusal never fired. That is not an edge case: ADR 009 mandates the `pinned/`
@@ -723,8 +723,18 @@ Six things it settled that this plan had left open or got wrong:
   skip — nothing advanced an offset, so a bucket genuinely at the limit would have thrown on every
   run forever, and the only thing that could bring it back under was the prune itself. `list` now
   takes an explicit limit and offset and returns the names **plus the raw count the server sent**, and
-  the pager compares that count. It is bounded at 10 pages; hitting the cap refuses the prune and
-  deletes nothing, for the same reason a failed page does.
+  the pager terminates on that count being zero. It is bounded at 10 pages; hitting the cap refuses
+  the prune and deletes nothing, for the same reason a failed page does.
+  **Hardened post-landing**: the pager originally terminated on a page coming back *short* of the
+  requested limit and advanced the offset by that same requested limit — correct only if the server
+  never clamps `limit` below what was asked. It does not today (storage-api's V1 list route declares
+  no maximum and passes `limit` through unclamped, confirmed from source), but nothing in CI pins
+  that. Demonstrated cost if it ever did: eleven objects, a verified pair straddling a clamp-at-10
+  boundary — the old terminator reads the first (only) list call as complete, never sees the sidecar
+  on what would have been the second page, and deletes the payload as an orphan. The pager now
+  terminates only on `serverReturned == 0` and advances the offset by `serverReturned` — the server's
+  own count, never the requested size — which is correct under any limit policy and costs one extra
+  list call per prune. `DefaultBackupPrunerTest` names the regression.
 - **A prune that deletes on a failure is worse than one that skips**, so every read failure — the
   prefix, any page, the page cap — aborts before the first delete, while an individual delete that
   fails is recorded in `BackupPruneReport.failedDeletes` and never stops the run. One stuck object is
