@@ -1,8 +1,8 @@
 package com.emm.data.sync
 
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.domain.sync.ConflictResolver
 import com.emm.domain.sync.LocalRevision
-import com.emm.domain.sync.SyncLogger
 import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -83,7 +83,7 @@ class BaseTableSyncPaginationTest {
      * Captures what the pull path reported. The skips it logs are the only trace a user-visible
      * data gap leaves behind, so they are asserted like any other observable behaviour.
      */
-    class RecordingSyncLogger : SyncLogger {
+    class RecordingDiagnosticsLogger : DiagnosticsLogger {
         val warnings = mutableListOf<String>()
 
         override fun warn(message: String, throwable: Throwable?) {
@@ -104,7 +104,7 @@ class BaseTableSyncPaginationTest {
     inner class FakeTableSync(
         private val fetcher: RemotePageFetcher,
         pageSize: Int = DEFAULT_TEST_PAGE_SIZE,
-        val recordingLogger: RecordingSyncLogger = RecordingSyncLogger(),
+        val recordingLogger: RecordingDiagnosticsLogger = RecordingDiagnosticsLogger(),
     ) : BaseTableSync<TestDto>(
         client = mockk(relaxed = true),
         transact = { body -> body() },

@@ -17,7 +17,7 @@ EmmApp.kt                              Application: startKoin + bootstrapAppGrap
 core/AndroidPlatformModule.kt          the injected platformModule
 core/DefaultDispatcher.kt              Android impl of :presentation's DispatchersProvider
                                        interface — Koin-bound, NOT an expect/actual
-core/CrashReportingSyncLogger.kt       SyncLogger sink → Crashlytics (iOS binds a println one)
+core/CrashReportingDiagnosticsLogger.kt DiagnosticsLogger sink → Crashlytics (iOS: a println one)
 core/platform/CurrentActivityHolder.kt
 hh/auth/ActivityGoogleSignInLauncher.kt + GoogleCredentialClient.kt
 components/EmmAmountChill.kt + EmmComponentsPreview.kt   (Android-only @Preview surface)
@@ -48,8 +48,8 @@ nothing belongs in them anymore.
   40-hex sha. The spelling itself is pinned on both sides — `CommitHashUiTest` for
   `UNKNOWN_COMMIT_HASH`, `GenerateBuildInfoTaskTest` for `build-logic`'s `UNKNOWN_COMMIT`.
 - `DispatchersProvider`, `CurrentActivityHolder`
-- `SyncLogger` → `CrashReportingSyncLogger` (Crashlytics is Android-only; iOS binds
-  `PrintlnSyncLogger` in `KoinIos.kt`)
+- `DiagnosticsLogger` → `CrashReportingDiagnosticsLogger` (Crashlytics is Android-only; iOS binds
+  `PrintlnDiagnosticsLogger` in `KoinIos.kt`)
 
 `EmmApp` calls `startKoin { modules(appModules(androidPlatformModule) + experiencesModule) }` then
 `bootstrapAppGraph(koin)`. `startKoin` can't be shared — it needs `androidContext()` /

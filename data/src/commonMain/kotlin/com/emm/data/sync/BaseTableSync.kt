@@ -2,10 +2,10 @@ package com.emm.data.sync
 
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.safeDbCall
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.domain.sync.ConflictResolver
 import com.emm.domain.sync.LocalRevision
 import com.emm.domain.sync.Resolution
-import com.emm.domain.sync.SyncLogger
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.query.filter.PostgrestFilterBuilder
 import kotlinx.coroutines.withContext
@@ -99,7 +99,7 @@ abstract class BaseTableSync<DTO : SyncRowDto>(
      * Where the silent row skips below become visible. Every skip is a row this device decided not
      * to apply — a data gap the user cannot see and the algorithm never reports upward.
      */
-    protected val logger: SyncLogger,
+    protected val logger: DiagnosticsLogger,
     /**
      * Remote table name, used only to identify this instance in log lines (all four subclasses
      * share this class, so a message without it is unattributable).

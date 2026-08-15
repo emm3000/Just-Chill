@@ -5,8 +5,8 @@ import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.domain.sync.SyncDataUseCase
-import com.emm.domain.sync.SyncLogger
 import com.emm.domain.sync.SyncRepository
 import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.preferences.AppPreferences
@@ -45,7 +45,7 @@ class SyncOrchestratorTest {
     private val syncRepository = mockk<SyncRepository>(relaxed = true)
     private val signOut = mockk<SignOutUseCase>(relaxed = true)
     private val prefs = mockk<AppPreferences>(relaxed = true)
-    private val logger = mockk<SyncLogger>(relaxed = true)
+    private val logger = mockk<DiagnosticsLogger>(relaxed = true)
 
     // Fake injectable flows
     private val sessionFlow = MutableStateFlow<SessionStatus>(SessionStatus.Initializing)

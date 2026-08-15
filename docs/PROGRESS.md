@@ -518,13 +518,16 @@ gana el ADR.
 
 ### Deuda técnica
 
-- [ ] `SyncLogger` (`domain/.../sync/SyncLogger.kt`) está nombrado para el sync path, pero ya es el
-  canal general de diagnóstico: lo usan también `DeleteUserAccountUseCase` (borrado de cuenta) y
-  `ClaimLocalDataOnAuthenticationUseCase` (claim al autenticarse), ninguno de los dos estrictamente
-  sync. El audit archivado (`docs/archive/sync/AUDIT.md`) ya listaba `SyncLogger` como un segundo
-  canal de error sin tipar, paralelo a `DomainException` — el nombre desalineado es la misma deuda
-  vista desde otro ángulo. Renombrar o reubicar el port toca ~18 archivos y es su propia unidad de
-  trabajo, no se hizo acá.
+- [x] ~~`SyncLogger` está nombrado para el sync path, pero ya es el canal general de diagnóstico~~ —
+  **cerrado en ADR 009 2c-iii-b.** Es ahora `DiagnosticsLogger`, en `domain/.../shared/logging/`, con
+  `CrashReportingDiagnosticsLogger` (Android) y `PrintlnDiagnosticsLogger` (iOS). Lo que lo forzó no
+  fue el nombre desalineado sino la Fase 5: borra todo archivo, paquete y módulo con nombre de sync,
+  y el `BackupOrchestrator` necesita este port para cumplir la restricción dura 4 (ningún fallo
+  silencioso). Depender de un símbolo con nombre de sync desde el pipeline que sobrevive no era
+  aceptable, así que el movimiento se adelantó a la fila "Keep, renamed" de la Fase 5. Tocó 21
+  archivos, todos mecánicos y verificados por el compilador. Lo que **no** cierra: el audit
+  archivado (`docs/archive/sync/AUDIT.md`) lo listaba además como un segundo canal de error sin
+  tipar, paralelo a `DomainException` — esa mitad de la deuda sigue abierta y no la toca un rename.
 - [ ] **El export saltea los cuatro `LocalDataSource`, y la tabla de capas de `data/CLAUDE.md` todavía
   no lo dice.** Desde la Fase 2a, `DefaultBackupRepository.snapshot()` llama las statements
   directamente, así que el par *qué statement* ↔ *qué cadena de mappers* responde "todas las cuentas"

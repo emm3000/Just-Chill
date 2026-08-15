@@ -2,8 +2,8 @@ package com.emm.domain.auth
 
 import com.emm.domain.shared.backup.BackupMetadataStore
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.domain.sync.SyncCursorStore
-import com.emm.domain.sync.SyncLogger
 import com.emm.domain.sync.SyncMutex
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -43,7 +43,7 @@ import kotlin.time.Duration.Companion.seconds
  * sync cycle for the rest of the process lifetime. A session that never settles surfaces as
  * [DomainException.NetworkUnavailable]: retryable, and the lock is released on the way out.
  *
- * Every step is logged through [SyncLogger] on failure, naming which one broke, before the
+ * Every step is logged through [DiagnosticsLogger] on failure, naming which one broke, before the
  * original exception is rethrown unchanged. This flow used to fail completely silently in
  * production with zero trace of which step (or the caller's UI guard) ate the failure — see
  * `docs/archive/sync/AUDIT.md` §8. [CancellationException] is never logged as a failure: the user simply
@@ -58,7 +58,7 @@ class DeleteUserAccountUseCase(
     private val syncCursorStore: SyncCursorStore,
     private val backupMetadataStore: BackupMetadataStore,
     private val syncMutex: SyncMutex,
-    private val logger: SyncLogger,
+    private val logger: DiagnosticsLogger,
 ) {
     // The whole flow runs under the shared SyncMutex: an in-flight push finishing AFTER the
     // delete_account RPC would re-upsert rows the server just wiped (stateless JWT + no FK to

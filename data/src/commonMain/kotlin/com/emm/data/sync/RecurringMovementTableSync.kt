@@ -7,8 +7,8 @@ import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.isSqliteConstraintViolation
 import com.emm.data.shared.safeDbCall
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.domain.sync.LocalRevision
-import com.emm.domain.sync.SyncLogger
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Order
@@ -19,13 +19,16 @@ private const val TABLE = "recurring_movements"
 // `open` for the same single reason TransactionTableSync is: fetchRemotePage is the only seam
 // through which a test can drive the REAL pull — this class's own applyRemoteRow, the shared page
 // loop and a real SQLite database — with a chosen page of remote rows.
-open class RecurringMovementTableSync(private val db: EmmDatabaseData, client: SupabaseClient, logger: SyncLogger) :
-    BaseTableSync<RecurringMovementRowDto>(
-        client = client,
-        transact = { body -> db.transaction { body() } },
-        logger = logger,
-        tableName = TABLE,
-    ) {
+open class RecurringMovementTableSync(
+    private val db: EmmDatabaseData,
+    client: SupabaseClient,
+    logger: DiagnosticsLogger,
+) : BaseTableSync<RecurringMovementRowDto>(
+    client = client,
+    transact = { body -> db.transaction { body() } },
+    logger = logger,
+    tableName = TABLE,
+) {
 
     // ---------------------------------------------------------------------------
     // Push hooks

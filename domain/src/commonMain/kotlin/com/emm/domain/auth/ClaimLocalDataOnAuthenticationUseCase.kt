@@ -1,6 +1,6 @@
 package com.emm.domain.auth
 
-import com.emm.domain.sync.SyncLogger
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -43,7 +43,7 @@ class ClaimLocalDataOnAuthenticationUseCase(
     private val observeSession: ObserveSessionUseCase,
     private val claimLocalData: ClaimLocalDataUseCase,
     private val claimLocalDataRepository: ClaimLocalDataRepository,
-    private val logger: SyncLogger,
+    private val logger: DiagnosticsLogger,
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)

@@ -3,7 +3,7 @@ package com.emm.justchill
 import com.emm.data.provideDb
 import com.emm.data.provideSqlDriver
 import com.emm.data.seedDefaultCategoriesIfEmpty
-import com.emm.domain.sync.SyncLogger
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.core.SupabaseConfig
 import com.emm.justchill.core.appModules
 import com.emm.justchill.core.bootstrapAppGraph
@@ -43,7 +43,7 @@ private val iosPlatformModule = module {
 
     // Sync observability sink. Android reports to Crashlytics; iOS has no crash-reporting SDK
     // wired (ADR 003), so the console is the whole sink here.
-    single<SyncLogger> { PrintlnSyncLogger() }
+    single<DiagnosticsLogger> { PrintlnDiagnosticsLogger() }
 
     // App version surfaced in the Profile footer (no BuildConfig on iOS).
     single(named("appVersion")) { "1.0.0" }

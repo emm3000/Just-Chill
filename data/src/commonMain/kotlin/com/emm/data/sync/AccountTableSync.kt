@@ -7,8 +7,8 @@ import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.isSqliteConstraintViolation
 import com.emm.data.shared.safeDbCall
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.domain.sync.LocalRevision
-import com.emm.domain.sync.SyncLogger
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Order
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.Flow
 
 private const val TABLE = "accounts"
 
-class AccountTableSync(private val db: EmmDatabaseData, client: SupabaseClient, logger: SyncLogger) :
+class AccountTableSync(private val db: EmmDatabaseData, client: SupabaseClient, logger: DiagnosticsLogger) :
     BaseTableSync<AccountRowDto>(
         client = client,
         transact = { body -> db.transaction { body() } },

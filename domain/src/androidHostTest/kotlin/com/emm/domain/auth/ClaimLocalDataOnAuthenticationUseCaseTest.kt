@@ -1,7 +1,7 @@
 package com.emm.domain.auth
 
 import com.emm.domain.shared.error.DomainException
-import com.emm.domain.sync.SyncLogger
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -21,7 +21,7 @@ class ClaimLocalDataOnAuthenticationUseCaseTest {
     private val observeSession = mockk<ObserveSessionUseCase>()
     private val claimLocalDataRepository = mockk<ClaimLocalDataRepository>(relaxed = true)
     private val claimLocalData = ClaimLocalDataUseCase(claimLocalDataRepository)
-    private val logger = mockk<SyncLogger>(relaxed = true)
+    private val logger = mockk<DiagnosticsLogger>(relaxed = true)
 
     // Controllable unclaimed-count flow pushed into per-test.
     private val unclaimedCount = MutableStateFlow(0L)

@@ -2,8 +2,8 @@ package com.emm.domain.auth
 
 import com.emm.domain.shared.backup.BackupMetadataStore
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.domain.sync.SyncCursorStore
-import com.emm.domain.sync.SyncLogger
 import com.emm.domain.sync.SyncMutex
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -31,7 +31,7 @@ class DeleteUserAccountUseCaseTest {
     private val syncCursorStore = mockk<SyncCursorStore>()
     private val backupMetadataStore = mockk<BackupMetadataStore>()
     private val syncMutex = SyncMutex()
-    private val logger = mockk<SyncLogger>(relaxed = true)
+    private val logger = mockk<DiagnosticsLogger>(relaxed = true)
 
     private val useCase = DeleteUserAccountUseCase(
         authRepository = authRepository,

@@ -42,7 +42,7 @@ reaches the iOS compile or `JustChillKit`.
 `iosMain/` holds its
 counterpart, `KoinIos.kt` — the iOS entry point (`initKoin`, `iosPlatformModule`, and one typed
 resolver per Swift-facing ViewModel) — and, unlike `androidMain`, two ordinary port implementations
-that Android satisfies from `:androidApp` instead: `PrintlnSyncLogger` for `SyncLogger` and
+that Android satisfies from `:androidApp` instead: `PrintlnDiagnosticsLogger` for `DiagnosticsLogger` and
 `UnavailableGoogleSignInLauncher` for the still-deferred iOS Google sign-in. Both are bound in
 `iosPlatformModule`.
 

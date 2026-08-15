@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import android.os.Build
 import com.emm.data.provideDb
 import com.emm.data.provideSqlDriver
-import com.emm.domain.sync.SyncLogger
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.BuildConfig
 import com.emm.justchill.BuildInfo
 import com.emm.justchill.core.platform.CurrentActivityHolder
@@ -41,7 +41,7 @@ val androidPlatformModule = module {
 
     // Sync observability sink. Platform-specific because it reports to Crashlytics (Android-only);
     // iOS binds a println implementation of the same port in KoinIos.kt.
-    single<SyncLogger> { CrashReportingSyncLogger() }
+    single<DiagnosticsLogger> { CrashReportingDiagnosticsLogger() }
 
     // Platform-provided app version (no BuildConfig in commonMain). Consumed by ProfileViewModel
     // via the "appVersion" qualifier; stamped into exported backups.

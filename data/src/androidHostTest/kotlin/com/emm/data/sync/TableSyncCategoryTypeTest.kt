@@ -3,8 +3,8 @@ package com.emm.data.sync
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.domain.sync.ConflictResolver
-import com.emm.domain.sync.SyncLogger
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -40,7 +40,7 @@ class TableSyncCategoryTypeTest {
     private lateinit var logger: RecordingLogger
 
     /** Captures the log lines, which are the only trace a repaired row leaves behind. */
-    private class RecordingLogger : SyncLogger {
+    private class RecordingLogger : DiagnosticsLogger {
         val warnings = mutableListOf<String>()
 
         override fun warn(message: String, throwable: Throwable?) {
@@ -50,7 +50,7 @@ class TableSyncCategoryTypeTest {
 
     private class PagedTransactionSync(
         db: EmmDatabaseData,
-        logger: SyncLogger,
+        logger: DiagnosticsLogger,
         private val page: List<TransactionRowDto>,
     ) : TransactionTableSync(db, mockk(relaxed = true), logger) {
         override suspend fun fetchRemotePage(
@@ -63,7 +63,7 @@ class TableSyncCategoryTypeTest {
 
     private class PagedRecurringSync(
         db: EmmDatabaseData,
-        logger: SyncLogger,
+        logger: DiagnosticsLogger,
         private val page: List<RecurringMovementRowDto>,
     ) : RecurringMovementTableSync(db, mockk(relaxed = true), logger) {
         override suspend fun fetchRemotePage(
@@ -74,8 +74,11 @@ class TableSyncCategoryTypeTest {
         ): List<RecurringMovementRowDto> = if (after == null) page else emptyList()
     }
 
-    private class PagedCategorySync(db: EmmDatabaseData, logger: SyncLogger, private val page: List<CategoryRowDto>) :
-        CategoryTableSync(db, mockk(relaxed = true), logger) {
+    private class PagedCategorySync(
+        db: EmmDatabaseData,
+        logger: DiagnosticsLogger,
+        private val page: List<CategoryRowDto>,
+    ) : CategoryTableSync(db, mockk(relaxed = true), logger) {
         override suspend fun fetchRemotePage(
             userId: String,
             overlapCursor: String?,

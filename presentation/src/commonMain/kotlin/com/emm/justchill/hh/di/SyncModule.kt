@@ -6,10 +6,10 @@ import com.emm.data.sync.DefaultSyncRepository
 import com.emm.data.sync.RecurringMovementTableSync
 import com.emm.data.sync.TableSync
 import com.emm.data.sync.TransactionTableSync
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.domain.sync.ConflictResolver
 import com.emm.domain.sync.SyncCursorStore
 import com.emm.domain.sync.SyncDataUseCase
-import com.emm.domain.sync.SyncLogger
 import com.emm.domain.sync.SyncMutex
 import com.emm.domain.sync.SyncRepository
 import com.emm.justchill.core.lifecycle.resumeEvents
@@ -42,7 +42,7 @@ val appScopeQualifier = named("appScope")
 val syncModule = module {
     // Per-table sync units — qualified so DefaultSyncRepository can distinguish the four TableSync
     // slots even though they share the interface type. Each takes (EmmDatabaseData, SupabaseClient,
-    // SyncLogger); the logger is the platform single that makes their silent row skips visible.
+    // DiagnosticsLogger); the logger is the platform single that makes their silent row skips visible.
     factory<TableSync>(accountSyncQualifier) { AccountTableSync(get(), get(), get()) }
     factory<TableSync>(categorySyncQualifier) { CategoryTableSync(get(), get(), get()) }
     factory<TableSync>(transactionSyncQualifier) { TransactionTableSync(get(), get(), get()) }
@@ -79,7 +79,7 @@ val syncModule = module {
     // which on Android is a crash — for a feature the app is fully usable without. The logger is
     // resolved once, up front, so the handler never has to touch Koin while unwinding a failure.
     single<CoroutineScope>(appScopeQualifier) {
-        val logger = get<SyncLogger>()
+        val logger = get<DiagnosticsLogger>()
         val handler = CoroutineExceptionHandler { _, throwable ->
             logger.warn("uncaught in appScope", throwable)
         }

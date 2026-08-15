@@ -4,8 +4,8 @@ import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.domain.sync.SyncDataUseCase
-import com.emm.domain.sync.SyncLogger
 import com.emm.domain.sync.SyncRepository
 import com.emm.justchill.core.preferences.AppPreferences
 import kotlinx.coroutines.CancellationException
@@ -79,7 +79,7 @@ class SyncOrchestrator(
     private val prefs: AppPreferences,
     private val externalScope: CoroutineScope,
     private val resumeEvents: Flow<Unit>,
-    private val logger: SyncLogger,
+    private val logger: DiagnosticsLogger,
 ) : SyncController {
 
     private val _status = MutableStateFlow(SyncStatus())

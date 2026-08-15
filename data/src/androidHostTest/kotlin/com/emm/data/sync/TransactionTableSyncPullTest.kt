@@ -3,8 +3,8 @@ package com.emm.data.sync
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.domain.sync.ConflictResolver
-import com.emm.domain.sync.SyncLogger
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -33,7 +33,7 @@ class TransactionTableSyncPullTest {
     private lateinit var logger: RecordingLogger
 
     /** Captures the log lines, which are the only trace a skipped row leaves behind. */
-    private class RecordingLogger : SyncLogger {
+    private class RecordingLogger : DiagnosticsLogger {
         val warnings = mutableListOf<String>()
 
         override fun warn(message: String, throwable: Throwable?) {
@@ -44,7 +44,7 @@ class TransactionTableSyncPullTest {
     /** The production class, with the network call replaced by a fixed page. Nothing else. */
     private class PagedTransactionTableSync(
         db: EmmDatabaseData,
-        logger: SyncLogger,
+        logger: DiagnosticsLogger,
         private val page: List<TransactionRowDto>,
     ) : TransactionTableSync(db, mockk(relaxed = true), logger) {
 

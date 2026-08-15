@@ -11,8 +11,8 @@ import com.emm.data.shared.safeDbCall
 import com.emm.data.shared.toFixedPeruEpochMillis
 import com.emm.data.shared.toOccurredAtOrNull
 import com.emm.data.shared.toOccurredAtText
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.domain.sync.LocalRevision
-import com.emm.domain.sync.SyncLogger
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Order
@@ -24,7 +24,7 @@ private const val TABLE = "transactions"
 // REAL pull — this class's own applyRemoteRow, the shared page loop, and a real SQLite database —
 // with a chosen page of remote rows. A fake table sync instead would have to re-implement the very
 // branch under test, which is how a green suite once coexisted with a broken write path here.
-open class TransactionTableSync(private val db: EmmDatabaseData, client: SupabaseClient, logger: SyncLogger) :
+open class TransactionTableSync(private val db: EmmDatabaseData, client: SupabaseClient, logger: DiagnosticsLogger) :
     BaseTableSync<TransactionRowDto>(
         client = client,
         transact = { body -> db.transaction { body() } },
