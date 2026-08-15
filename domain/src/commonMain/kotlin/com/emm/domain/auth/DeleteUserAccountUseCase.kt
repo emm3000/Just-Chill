@@ -1,5 +1,6 @@
 package com.emm.domain.auth
 
+import com.emm.domain.shared.backup.BackupMetadataStore
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.sync.SyncCursorStore
 import com.emm.domain.sync.SyncLogger
@@ -23,13 +24,13 @@ import kotlin.time.Duration.Companion.seconds
  *    If this step throws, local data is untouched and no orphaned state is created.
  * 2. [ClaimLocalDataRepository.unclaimAll] — resets userId → NULL and syncState → 'Pending' for
  *    all rows belonging to [userId]. Local data survives as anonymous-local rows.
- * 3. [SyncCursorStore.clear] — removes stale pull-cursor and last-synced-at metadata, PLUS the
- *    persisted backup watermark, for [userId] so none of it interferes if the same device
- *    registers again in the future. The watermark is not sync metadata; it rides this call only
- *    because `clear` is the sole account-deletion seam that exists today — see
- *    [SyncCursorStore.clear]'s own KDoc for the ADR 009 Phase 5 relocation requirement.
+ * 3. [SyncCursorStore.clear] — removes stale pull-cursor and last-synced-at metadata for [userId]
+ *    so it does not interfere if the same device registers again in the future.
+ * 4. [BackupMetadataStore.clear] — removes the persisted backup watermark for [userId], its own
+ *    step rather than a side effect of step 3: the watermark is not sync metadata, and ADR 009
+ *    Phase 5 deletes [SyncCursorStore] and everything sync-named while this seam survives.
  *
- * Steps 2 and 3 run inside `withContext(NonCancellable)`. Step 1 is left fully cancellable —
+ * Steps 2-4 run inside `withContext(NonCancellable)`. Step 1 is left fully cancellable —
  * cancelling before the remote RPC succeeds is safe, nothing irreversible has happened yet — but
  * once it succeeds the account is gone server-side, so a cancellation landing after it (e.g. the
  * caller popping the Perfil screen mid-flight, cancelling `viewModelScope`) must not skip the local
@@ -55,6 +56,7 @@ class DeleteUserAccountUseCase(
     private val authRepository: AuthRepository,
     private val claimLocalDataRepository: ClaimLocalDataRepository,
     private val syncCursorStore: SyncCursorStore,
+    private val backupMetadataStore: BackupMetadataStore,
     private val syncMutex: SyncMutex,
     private val logger: SyncLogger,
 ) {
@@ -68,7 +70,7 @@ class DeleteUserAccountUseCase(
         // cancellable — cancelling before the RPC succeeds is safe, nothing irreversible yet.
         withStepLogging("remote delete") { authRepository.deleteAccount() }
 
-        // Steps 2-3 run under NonCancellable: once step 1 has succeeded the account is gone
+        // Steps 2-4 run under NonCancellable: once step 1 has succeeded the account is gone
         // server-side, so a cancellation landing here (e.g. the caller leaving the screen) must
         // not leave local rows still tagged with a userId that no longer exists remotely — see the
         // class KDoc and `docs/archive/sync/AUDIT.md` §3.
@@ -76,10 +78,12 @@ class DeleteUserAccountUseCase(
             // Step 2: revert owned local rows to anonymous-local (userId = NULL, syncState = Pending).
             withStepLogging("unclaim") { claimLocalDataRepository.unclaimAll(userId) }
 
-            // Step 3: clear stale pull-cursor, last-synced-at, and the backup watermark for this
-            // user. The watermark rides this call rather than getting its own step — see
-            // SyncCursorStore.clear's KDoc for why, and for the Phase 5 relocation requirement.
+            // Step 3: clear stale pull-cursor and last-synced-at metadata for this user.
             withStepLogging("cursor clear") { syncCursorStore.clear(userId) }
+
+            // Step 4: clear the persisted backup watermark for this user, its own step — see the
+            // class KDoc for why this is no longer a side effect of step 3.
+            withStepLogging("backup metadata clear") { backupMetadataStore.clear(userId) }
         }
     }
 

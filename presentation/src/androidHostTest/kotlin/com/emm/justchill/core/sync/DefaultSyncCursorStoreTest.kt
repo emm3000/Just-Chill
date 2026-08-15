@@ -4,18 +4,18 @@ import com.emm.justchill.core.preferences.AppPreferences
 import com.russhwolf.settings.MapSettings
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 /**
  * [DefaultSyncCursorStore.clear] against a real [AppPreferences] over [MapSettings] — proves the
- * WIRING, not just each half in isolation. `AppPreferencesTest` (sibling suite, `core/preferences/`)
- * already covers `AppPreferences.clearBackupMetadata` on its own; nothing asserted that
- * `DefaultSyncCursorStore.clear` actually calls it, alongside `clearSyncMetadata`, until this test.
+ * WIRING, not just each half in isolation.
  *
- * `clear` used to be `= prefs.clearSyncMetadata(userId)`, an expression body. It is a block body
- * now so it can also call `clearBackupMetadata`, and reverting it to a one-line expression body is
- * exactly the shape of a "simplify this" pass — the gate stays green either way, since detekt and
- * the compiler have no opinion on which lines a function body contains. This test is the only net.
+ * `clear` no longer touches the backup watermark: ADR 009 2c-iii-a moved that clear onto its own
+ * seam (`BackupMetadataStore`, `DefaultBackupMetadataStoreTest`), called as its own step by
+ * `DeleteUserAccountUseCase` rather than riding this one. This test now pins the narrower claim —
+ * `clear` empties only the two genuine sync keys — so a "widen it back onto this class" regression
+ * would turn it red instead of silently reintroducing the coupling 2c-iii-a removed.
  */
 class DefaultSyncCursorStoreTest {
 
@@ -29,7 +29,7 @@ class DefaultSyncCursorStoreTest {
     }
 
     @Test
-    fun `clear removes the pull cursor, the last-synced-at timestamp, and the backup watermark`() {
+    fun `clear removes the pull cursor and the last-synced-at timestamp, and leaves the backup watermark alone`() {
         val userId = "user-a"
         prefs.setLastPulledAt(userId, "2026-08-14T00:00:00Z")
         prefs.setLastSyncedAt(userId, 1_755_000_000_000L)
@@ -39,6 +39,6 @@ class DefaultSyncCursorStoreTest {
 
         assertNull(prefs.lastPulledAt(userId))
         assertNull(prefs.lastSyncedAt(userId))
-        assertNull(prefs.lastSuccessfulBackupAt(userId))
+        assertEquals(1_755_000_000_000L, prefs.lastSuccessfulBackupAt(userId))
     }
 }

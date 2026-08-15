@@ -77,11 +77,12 @@ class AppPreferences(private val settings: Settings) {
      *
      * Deliberately a SEPARATE function from [clearSyncMetadata], not a third line added to it:
      * `clearSyncMetadata` and everything sync-named is deleted whole in ADR 009 Phase 5, and this
-     * key must survive that deletion. Callers that clear account metadata on account deletion
-     * call both functions; see `DefaultSyncCursorStore.clear` in `:presentation`. Failure this
-     * prevents: a user deletes their account and registers again on the same device — with no
-     * clear, the stale timestamp claims a backup already happened, the new account's bucket is
-     * empty, and the first snapshot for it never fires.
+     * key must survive that deletion. Called through `BackupMetadataStore`'s implementation,
+     * `DefaultBackupMetadataStore` (`:presentation`, `core/backup/`) — its own seam, not a side
+     * effect of `DefaultSyncCursorStore.clear`. Failure this prevents: a user deletes their account
+     * and registers again on the same device — with no clear, the stale timestamp claims a backup
+     * already happened, the new account's bucket is empty, and the first snapshot for it never
+     * fires.
      */
     fun clearBackupMetadata(userId: String) {
         settings.remove(lastSuccessfulBackupAtKey(userId))

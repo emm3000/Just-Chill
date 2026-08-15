@@ -1,5 +1,6 @@
 package com.emm.domain.auth
 
+import com.emm.domain.shared.backup.BackupMetadataStore
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.sync.SyncCursorStore
 import com.emm.domain.sync.SyncLogger
@@ -28,6 +29,7 @@ class DeleteUserAccountUseCaseTest {
     private val authRepository = mockk<AuthRepository>()
     private val claimLocalDataRepository = mockk<ClaimLocalDataRepository>()
     private val syncCursorStore = mockk<SyncCursorStore>()
+    private val backupMetadataStore = mockk<BackupMetadataStore>()
     private val syncMutex = SyncMutex()
     private val logger = mockk<SyncLogger>(relaxed = true)
 
@@ -35,6 +37,7 @@ class DeleteUserAccountUseCaseTest {
         authRepository = authRepository,
         claimLocalDataRepository = claimLocalDataRepository,
         syncCursorStore = syncCursorStore,
+        backupMetadataStore = backupMetadataStore,
         syncMutex = syncMutex,
         logger = logger,
     )
@@ -45,12 +48,13 @@ class DeleteUserAccountUseCaseTest {
     // ── Happy path ────────────────────────────────────────────────────────────
 
     @Test
-    fun `happy path calls deleteAccount then unclaimAll then clear in order`() = runTest {
+    fun `happy path calls deleteAccount, unclaimAll, cursor clear, then backup metadata clear`() = runTest {
         val userId = "uid-1"
         every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
         coEvery { authRepository.deleteAccount() } just Runs
         coEvery { claimLocalDataRepository.unclaimAll(userId) } just Runs
         every { syncCursorStore.clear(userId) } just Runs
+        every { backupMetadataStore.clear(userId) } just Runs
 
         useCase()
 
@@ -58,7 +62,30 @@ class DeleteUserAccountUseCaseTest {
             authRepository.deleteAccount()
             claimLocalDataRepository.unclaimAll(userId)
             syncCursorStore.clear(userId)
+            backupMetadataStore.clear(userId)
         }
+    }
+
+    // ── Backup metadata (ADR 009 2c-iii-a) ────────────────────────────────────
+
+    /**
+     * The failure this seam exists to prevent: a user deletes their account, registers again on
+     * the same device, and a stale `lastSuccessfulBackupAt` claims a backup already exists against
+     * the new account's empty bucket — so the first snapshot for it never fires. Account deletion
+     * MUST clear the watermark through its own step, not as a side effect of `syncCursorStore.clear`.
+     */
+    @Test
+    fun `account deletion clears the backup metadata watermark`() = runTest {
+        val userId = "uid-backup"
+        every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
+        coEvery { authRepository.deleteAccount() } just Runs
+        coEvery { claimLocalDataRepository.unclaimAll(userId) } just Runs
+        every { syncCursorStore.clear(userId) } just Runs
+        every { backupMetadataStore.clear(userId) } just Runs
+
+        useCase()
+
+        verify(exactly = 1) { backupMetadataStore.clear(userId) }
     }
 
     // ── Not authenticated ─────────────────────────────────────────────────────
@@ -73,12 +100,13 @@ class DeleteUserAccountUseCaseTest {
         coVerify(exactly = 0) { authRepository.deleteAccount() }
         coVerify(exactly = 0) { claimLocalDataRepository.unclaimAll(any()) }
         verify(exactly = 0) { syncCursorStore.clear(any()) }
+        verify(exactly = 0) { backupMetadataStore.clear(any()) }
     }
 
     // ── deleteAccount throws ──────────────────────────────────────────────────
 
     @Test
-    fun `deleteAccount throwing leaves unclaimAll and clear uncalled`() = runTest {
+    fun `deleteAccount throwing leaves unclaimAll and both clears uncalled`() = runTest {
         val userId = "uid-2"
         every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
         coEvery { authRepository.deleteAccount() } throws
@@ -88,13 +116,14 @@ class DeleteUserAccountUseCaseTest {
 
         coVerify(exactly = 0) { claimLocalDataRepository.unclaimAll(any()) }
         verify(exactly = 0) { syncCursorStore.clear(any()) }
+        verify(exactly = 0) { backupMetadataStore.clear(any()) }
     }
 
     // ── Failure observability (docs/archive/sync/AUDIT.md §8) ─────────────────────────
 
     /**
      * The failure this whole change exists for: a broken step used to be indistinguishable from a
-     * swallowed intent. The step name proves WHICH of the three post-resolve steps broke, and the
+     * swallowed intent. The step name proves WHICH of the four post-resolve steps broke, and the
      * original exception must still reach the caller unchanged.
      */
     @Test
@@ -155,13 +184,14 @@ class DeleteUserAccountUseCaseTest {
      * loop).
      */
     @Test
-    fun `cancellation arriving after deleteAccount returns still runs unclaimAll and clear`() = runTest {
+    fun `cancellation arriving after deleteAccount returns still runs unclaimAll and both clears`() = runTest {
         val userId = "uid-7"
         every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
         coEvery { authRepository.deleteAccount() } just Runs
         val unclaimGate = CompletableDeferred<Unit>()
         coEvery { claimLocalDataRepository.unclaimAll(userId) } coAnswers { unclaimGate.await() }
         every { syncCursorStore.clear(userId) } just Runs
+        every { backupMetadataStore.clear(userId) } just Runs
 
         val job = launch { useCase() }
         testScheduler.advanceUntilIdle() // deleteAccount succeeded; now parked inside unclaimAll's gate
@@ -169,15 +199,17 @@ class DeleteUserAccountUseCaseTest {
         job.cancel() // caller cancelled (e.g. left the screen) after the irreversible remote delete
         testScheduler.advanceUntilIdle()
 
-        // clear must not have run yet — NonCancellable does not skip ahead, it keeps unclaimAll
+        // Neither clear must have run yet — NonCancellable does not skip ahead, it keeps unclaimAll
         // parked on its own gate exactly like an uncancelled run would.
         verify(exactly = 0) { syncCursorStore.clear(userId) }
+        verify(exactly = 0) { backupMetadataStore.clear(userId) }
 
         unclaimGate.complete(Unit)
         job.join()
 
         coVerify(exactly = 1) { claimLocalDataRepository.unclaimAll(userId) }
         verify(exactly = 1) { syncCursorStore.clear(userId) }
+        verify(exactly = 1) { backupMetadataStore.clear(userId) }
     }
 
     // ── Initializing then Authenticated ──────────────────────────────────────
@@ -190,12 +222,14 @@ class DeleteUserAccountUseCaseTest {
         coEvery { authRepository.deleteAccount() } just Runs
         coEvery { claimLocalDataRepository.unclaimAll(userId) } just Runs
         every { syncCursorStore.clear(userId) } just Runs
+        every { backupMetadataStore.clear(userId) } just Runs
 
         useCase()
 
         coVerify(exactly = 1) { authRepository.deleteAccount() }
         coVerify(exactly = 1) { claimLocalDataRepository.unclaimAll(userId) }
         verify(exactly = 1) { syncCursorStore.clear(userId) }
+        verify(exactly = 1) { backupMetadataStore.clear(userId) }
     }
 
     // ── SyncMutex serialization ───────────────────────────────────────────────
@@ -207,6 +241,7 @@ class DeleteUserAccountUseCaseTest {
         coEvery { authRepository.deleteAccount() } just Runs
         coEvery { claimLocalDataRepository.unclaimAll(userId) } just Runs
         every { syncCursorStore.clear(userId) } just Runs
+        every { backupMetadataStore.clear(userId) } just Runs
 
         // Simulate an in-flight sync cycle holding the shared lock.
         val syncGate = CompletableDeferred<Unit>()
@@ -242,6 +277,7 @@ class DeleteUserAccountUseCaseTest {
         coVerify(exactly = 0) { authRepository.deleteAccount() }
         coVerify(exactly = 0) { claimLocalDataRepository.unclaimAll(any()) }
         verify(exactly = 0) { syncCursorStore.clear(any()) }
+        verify(exactly = 0) { backupMetadataStore.clear(any()) }
 
         // The point of the bound: sync must be able to run again after a stuck session.
         assertTrue(syncMutex.withLock { true }, "The shared SyncMutex must be free again")
