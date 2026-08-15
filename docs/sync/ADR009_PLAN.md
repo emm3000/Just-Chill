@@ -489,8 +489,9 @@ Five things it settled that this plan had left open or got wrong:
 `56be26e0`, `4b56c131`, `66f499bf`, `4359e11c`). The payload and its sidecar manifest go under the `<uid>/` prefix the
 policies expect, the payload is read back and verified before the manifest is written, and the
 manifest is read back too. `BackupUploader` is the port in `:domain`; `DefaultBackupUploader` holds
-the whole decision; `BackupObjectStore` is the four-operation seam that makes a mismatch provable on
-a host suite with no network, implemented by `SupabaseBackupObjectStore`.
+the whole decision; `BackupObjectStore` is the seam that makes a mismatch provable on a host suite
+with no network, implemented by `SupabaseBackupObjectStore`. It carried four operations when this
+landed; 2c-ii added `list` as the fifth.
 
 Seven things it settled that this plan had left open or got wrong:
 
@@ -588,7 +589,7 @@ must not build chunking or progress reporting against a 10-second limit that is 
 | Trigger | new `backgroundEvents()` expect/actual, sibling of `resumeEvents()` (ProcessLifecycleOwner ON_STOP / UIApplicationDidEnterBackground), capped at 1 automatic snapshot/day; **plus a staleness check on resume** — if the process died mid-upload, the next foreground retries (dirty flag is still set) |
 | Manual action | "Back up now" in Profile, through the existing `launchOp` concurrent-op guard |
 | Naming | `backup-v3-<ISO8601-UTC, colons replaced>.json` |
-| Retention | client-side prune (no server code exists): list the bucket and **key on the presence of `<name>.manifest.json`, never on `<name>` alone**. A payload without its sidecar is not a snapshot: it counts toward no retention bucket and is **deleted on sight** — see the paragraph below, which is the rule, not a note about it. Parse timestamps from the names that DO carry a manifest, keep 7 daily + 8 weekly + 12 monthly, delete the rest. Pinned snapshots live under a `pinned/` prefix the prune never scans. "Pin before risky operation" action; every future DB schema migration must be preceded by a pinned snapshot |
+| Retention | client-side prune (no server code exists): list the bucket and **key on the presence of `<name>.manifest.json`, never on `<name>` alone**. A payload without its sidecar is not a snapshot: it counts toward no retention bucket and is **deleted on sight** — see the paragraph below, which is the rule, not a note about it. Parse timestamps from the names that DO carry a manifest, keep 7 daily + 8 weekly + 12 monthly — **slots filled from the data, not anchored on today; see 2c-ii for why** — and delete the rest. Pinned snapshots live under a `pinned/` prefix the prune never scans. "Pin before risky operation" action; every future DB schema migration must be preceded by a pinned snapshot |
 | Flag | `SNAPSHOT_BACKUP_ENABLED = false` in `core/backup/`, mirroring the `SyncKillSwitch` pattern (const + KDoc + grep-able). `bootstrapAppGraph` starts `BackupOrchestrator` behind it, the same pattern that gates `SyncOrchestrator.start()` in `AppGraph` today |
 
 **Why the prune keys on the manifest — a name-only prune loses verified data.** 2b-ii part B
@@ -670,6 +671,70 @@ compares them and decides whether to trigger a backup.
   function, matching `snapshot`'s existing extension-on-`EmmDatabaseData` shape. Future work on that
   class pays this tax again — worth knowing before a new method trips a lint failure that looks
   unrelated to the change that caused it.
+
+**2c-ii — naming and the retention prune. LANDED** (`3e3c5dd9`, `b1c2e3ce`, `2a186ebe`, `217d4081`,
+`0c510b2a`, `05296659`, `95b7bc90`). The Naming and Retention rows above, with **nothing scheduling
+either yet** — 2c-iii is what runs a prune after an upload. Four pieces: `backupSnapshotName` and
+`parseBackupSnapshotTakenAt` in one file (`data/backup/BackupSnapshotName.kt`), because the name is
+the only place a snapshot's timestamp survives and a builder and reader that disagree by one
+character do not fail loudly — the prune just stops recognising this app's own snapshots;
+`SnapshotRetention`, a pure `:domain` object over ids and timestamps, so the arithmetic that deletes
+financial history is testable exhaustively with no storage in sight; `list` as `BackupObjectStore`'s
+fifth operation; and `DefaultBackupPruner`, the half that knows there is a bucket.
+
+Six things it settled that this plan had left open or got wrong:
+
+- **Retention slots fill from the DATA, not from today's calendar.** A slot is one distinct day, ISO
+  week or month **that actually holds a snapshot**, newest first — not "the last 7 days from today".
+  That deviates from the conventional anchored reading of "7 daily + 8 weekly + 12 monthly", and the
+  reason is an unrecoverable failure rather than a preference: under anchored windows a device whose
+  clock jumps forward more than twelve months finds every stored snapshot outside every window
+  simultaneously and deletes the entire shelf. Anchoring buys nothing back, because a wrong clock
+  also stamps the names it writes — the anchor and the data drift together. Filling from the data
+  means retention advances when a new snapshot arrives, never merely because time passed: a phone
+  left in a drawer for a year comes back to every snapshot it had.
+- **Future-stamped snapshots get their own shelf, and that is what makes the bound true.** A
+  candidate stamped after `now` must not compete with the real ones — it would evict three verified
+  snapshots to claim the newest slot of all three buckets — but keeping it *unconditionally* was
+  unbounded: an object that fills no slot can never be evicted, so every clock excursion stranded
+  more of them, with uploads eventually failing as the only signal. The future partition now runs
+  through the same three buckets separately, so the storage bound is `7 + 8 + 12` per shelf and **54
+  in total**.
+- **The grandfather-father-son overlap is structurally impossible here, not merely tested.** Survivors
+  are a union built into a set, and the input is partitioned against it exactly once, so "kept by the
+  weekly rule, deleted by the daily one" is inexpressible rather than unlikely. The same property is
+  what lets the two shelves be unioned as safely as the three buckets are.
+- **Two of the three `list` unknowns are settled from storage-api's own source**, and it cost enough
+  effort to be worth recording. The V1 list route `BucketApiImpl.list` posts to declares `limit` with
+  `minimum: 1` and **no maximum**, and passes it through with no clamp — the feared "the server
+  silently caps below what we asked for" does not happen on this endpoint. (`listObjectsV2` does
+  `Math.min(maxKeys || 1000, 1000)`, but that is a different endpoint and not the one storage-kt's
+  `list` uses.) And `searchObjects` appends a trailing `/` to a prefix that lacks one, so
+  `ownedPrefix()`'s trailing slash is right rather than merely harmless. **Sort order remains
+  unprobed against a live server**, and nothing in CI pins any of the three — `SupabaseBackupObjectStoreTest`
+  asserts the request this client sends and the decoding it does with the answer, which a BOM bump
+  changing the route's semantics would still pass.
+- **The prune paginates, so completeness is PROVED by a short page rather than inferred from a
+  count.** The first shape refused any listing that came back at the 1000-object limit — but it
+  counted the list *after* the store had dropped folder entries, so a full page holding `pinned`
+  arrived at 999 and the refusal never fired. That is not an edge case: ADR 009 mandates the `pinned/`
+  folder. A truncation can cut between a payload and its sidecar, and an orphan payload is deleted on
+  sight, so the cost is one verified snapshot, silently. The refusal was also terminal rather than a
+  skip — nothing advanced an offset, so a bucket genuinely at the limit would have thrown on every
+  run forever, and the only thing that could bring it back under was the prune itself. `list` now
+  takes an explicit limit and offset and returns the names **plus the raw count the server sent**, and
+  the pager compares that count. It is bounded at 10 pages; hitting the cap refuses the prune and
+  deletes nothing, for the same reason a failed page does.
+- **A prune that deletes on a failure is worse than one that skips**, so every read failure — the
+  prefix, any page, the page cap — aborts before the first delete, while an individual delete that
+  fails is recorded in `BackupPruneReport.failedDeletes` and never stops the run. One stuck object is
+  a leftover the next prune sees again; taking the run down with it would turn it into a bucket that
+  never gets cleaned.
+
+**2c-iii owes two things beyond its own scope**: it must call `backupSnapshotName` rather than
+re-implement the format (which is why that function is public and the parser is not), and — carried
+over from 2c-i — it must introduce the proper backup-metadata seam and move the `lastSuccessfulBackupAt`
+write and its account-deletion clear off `SyncCursorStore` onto it.
 
 **Verification**: gate green + a test proving an upload whose hash mismatches is NOT marked
 successful.
