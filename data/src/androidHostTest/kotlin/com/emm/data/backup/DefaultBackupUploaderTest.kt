@@ -394,6 +394,15 @@ private class FakeBackupObjectStore : BackupObjectStore {
         if (key == failDeleteOf) throw IllegalStateException("boom")
         objects -= key
     }
+
+    /**
+     * Answers honestly so a stray call would show up, but nothing here lists anything: [list] belongs
+     * to the retention prune, and `DefaultBackupPrunerTest` owns the fixture that exercises it.
+     */
+    override suspend fun list(prefix: String): List<String> {
+        calls += "list $prefix"
+        return objects.keys.filter { it.startsWith(prefix) }.map { it.removePrefix(prefix) }
+    }
 }
 
 private const val UID = "5f1a2b3c-0000-4000-8000-000000000001"

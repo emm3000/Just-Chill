@@ -4,12 +4,6 @@ import com.emm.domain.shared.backup.BackupUploader
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.exception.SessionRequiredException
-import io.github.jan.supabase.exceptions.HttpRequestException
-import io.github.jan.supabase.exceptions.RestException
-import io.github.jan.supabase.exceptions.UnauthorizedRestException
-import io.ktor.client.plugins.HttpRequestTimeoutException
-import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Uploads a snapshot, reads it back, and writes the manifest only once the bytes have matched — then
@@ -165,49 +159,11 @@ private const val FAILED = "Snapshot backup failed: "
 private const val PREFIX_UNRESOLVED = "the owning prefix could not be resolved"
 
 /**
- * Runs one storage call and turns anything it throws into a [DomainException] that names [reason].
+ * One storage call, reported as an upload failure that names [reason].
  *
- * `CancellationException` is rethrown before the generic catch, the same property Phase 0's sign-out
- * fix pinned: a cancelled snapshot is the caller going away, not a backup failure, and reporting it
- * as one would put a phantom outage in front of whoever is reading these messages.
+ * The headline and the trailing full stop are added here rather than by [storageCall], which the
+ * retention prune shares: the two operations fail for different reasons and must never borrow each
+ * other's opening words. Every one of this file's nine messages is pinned by
+ * `DefaultBackupUploaderTest`, so the assembly is not taken on trust.
  */
-@Suppress("TooGenericExceptionCaught")
-private suspend fun <T> remotely(reason: String, block: suspend () -> T): T = try {
-    block()
-} catch (e: CancellationException) {
-    throw e
-} catch (e: Exception) {
-    throw e.asBackupFailure("$FAILED$reason.")
-}
-
-/**
- * Supabase/Ktor throwable to [DomainException], keeping [reason] as the message.
- *
- * A [DomainException] passes through unchanged — [BackupObjectStore.ownedPrefix] already throws one
- * for a missing session and [BackupObjectStore.upload] one for a key that does not end in `.json`,
- * and rewrapping either would bury the failures here that are not transport problems under a message
- * about the step that merely noticed them.
- *
- * [RestException] carries the server's own status, and it is spelled into the message rather than
- * left in the cause because the two refusals this bucket is configured to produce are unreadable
- * without it: **413** is a payload over the 10 MiB ceiling and **415** is a content type the bucket
- * does not allow. Both are deliberate server-side refusals, not faults, and a message that omitted
- * the code would send a reader hunting for a network problem that is not there.
- */
-private fun Throwable.asBackupFailure(reason: String): DomainException = when (this) {
-    is DomainException -> this
-
-    is UnauthorizedRestException -> DomainException.Unauthorized(reason, this)
-
-    // Storage is installed with requireValidSession = true, so an unresolved session throws instead
-    // of silently downgrading to the anon key and collecting an RLS refusal that explains nothing.
-    is SessionRequiredException -> DomainException.Unauthorized(reason, this)
-
-    is RestException -> DomainException.Unknown(this, "$reason The server answered HTTP $statusCode: $error.")
-
-    is HttpRequestException,
-    is HttpRequestTimeoutException,
-    -> DomainException.NetworkUnavailable(this, reason)
-
-    else -> DomainException.Unknown(this, reason)
-}
+private suspend fun <T> remotely(reason: String, block: suspend () -> T): T = storageCall("$FAILED$reason.", block)
