@@ -23,8 +23,11 @@ import kotlin.time.Duration.Companion.seconds
  *    If this step throws, local data is untouched and no orphaned state is created.
  * 2. [ClaimLocalDataRepository.unclaimAll] — resets userId → NULL and syncState → 'Pending' for
  *    all rows belonging to [userId]. Local data survives as anonymous-local rows.
- * 3. [SyncCursorStore.clear] — removes stale pull-cursor and last-synced-at metadata for [userId]
- *    so it does not interfere if the same device registers again in the future.
+ * 3. [SyncCursorStore.clear] — removes stale pull-cursor and last-synced-at metadata, PLUS the
+ *    persisted backup watermark, for [userId] so none of it interferes if the same device
+ *    registers again in the future. The watermark is not sync metadata; it rides this call only
+ *    because `clear` is the sole account-deletion seam that exists today — see
+ *    [SyncCursorStore.clear]'s own KDoc for the ADR 009 Phase 5 relocation requirement.
  *
  * Steps 2 and 3 run inside `withContext(NonCancellable)`. Step 1 is left fully cancellable —
  * cancelling before the remote RPC succeeds is safe, nothing irreversible has happened yet — but
@@ -73,7 +76,9 @@ class DeleteUserAccountUseCase(
             // Step 2: revert owned local rows to anonymous-local (userId = NULL, syncState = Pending).
             withStepLogging("unclaim") { claimLocalDataRepository.unclaimAll(userId) }
 
-            // Step 3: clear stale pull-cursor and last-synced-at timestamp for this user.
+            // Step 3: clear stale pull-cursor, last-synced-at, and the backup watermark for this
+            // user. The watermark rides this call rather than getting its own step — see
+            // SyncCursorStore.clear's KDoc for why, and for the Phase 5 relocation requirement.
             withStepLogging("cursor clear") { syncCursorStore.clear(userId) }
         }
     }
