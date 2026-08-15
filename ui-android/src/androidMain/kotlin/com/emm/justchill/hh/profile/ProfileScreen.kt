@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FileDownload
@@ -54,6 +55,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.backup.SNAPSHOT_BACKUP_ENABLED
 import com.emm.justchill.core.sync.SYNC_TEMPORARILY_DISABLED
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
@@ -91,22 +93,13 @@ fun ProfileScreen(
     onDeleteAccountClick: () -> Unit = {},
     onSyncNowClick: () -> Unit = {},
     onCopyCommitHashClick: () -> Unit = {},
+    // Asks the always-running backup orchestrator for a snapshot cycle. Only reachable while
+    // SNAPSHOT_BACKUP_ENABLED is true — see the gate in BackupSection.
+    onBackUpNowClick: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
-    var showImportDialog by remember { mutableStateOf(false) }
-
-    if (showImportDialog) {
-        ImportBackupDialog(
-            isSignedIn = state.session is SessionUiState.SignedIn,
-            onConfirm = {
-                showImportDialog = false
-                onImportClick()
-            },
-            onDismiss = { showImportDialog = false },
-        )
-    }
 
     Column(
         modifier = modifier
@@ -163,39 +156,12 @@ fun ProfileScreen(
             )
         }
 
-        SectionHeader(text = "Respaldo")
-        ProfileGroup {
-            ProfileRowWithTrailing(
-                icon = Icons.Outlined.FileDownload,
-                label = "Exportar mi data",
-                // "Preparando…": covers only the JSON generation. The SAF write that follows
-                // (ProfileEntries.kt's ExportReady -> platform.requestExport) runs after `op`
-                // already reset, so a label claiming "Exportando…" here would outlive its own scope.
-                meta = if (state.op == ProfileOp.Exporting) "Preparando…" else "Guardar como archivo",
-                metaIsPrimary = true,
-                // Dimmed only when a DIFFERENT op is running — this row's own op keeps full
-                // emphasis so its progress copy stays readable.
-                enabled = state.op == ProfileOp.None || state.op == ProfileOp.Exporting,
-                onClick = onExportClick.takeIf { state.op == ProfileOp.None },
-                trailing = {
-                    ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.Exporting)
-                },
-            )
-            HairlineDivider()
-            ProfileRowWithTrailing(
-                icon = Icons.Outlined.FileUpload,
-                label = "Importar respaldo",
-                meta = if (state.op == ProfileOp.Importing) "Importando…" else "Reemplaza todo",
-                metaIsPrimary = false,
-                enabled = state.op == ProfileOp.None || state.op == ProfileOp.Importing,
-                // Confirm before the file picker: by the time a file is chosen the user has
-                // already decided, and this is the only irreversible action left unguarded.
-                onClick = { showImportDialog = true }.takeIf { state.op == ProfileOp.None },
-                trailing = {
-                    ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.Importing)
-                },
-            )
-        }
+        BackupSection(
+            state = state,
+            onExportClick = onExportClick,
+            onImportClick = onImportClick,
+            onBackUpNowClick = onBackUpNowClick,
+        )
 
         SectionHeader(text = "App")
         ProfileGroup {
@@ -241,6 +207,96 @@ fun ProfileScreen(
             onCopyClick = onCopyCommitHashClick,
         )
         Spacer(Modifier.height(spacing.s4))
+    }
+}
+
+/**
+ * The "Respaldo" group: the two file actions, and the cloud snapshot behind its kill switch.
+ *
+ * Extracted out of [ProfileScreen] when the third row arrived rather than suppressed there. Each of
+ * these rows carries three `state.op` branches, and the fourth set put that composable over
+ * `CyclomaticComplexMethod`'s threshold — a limit `docs/CODE_QUALITY.md` records as one detekt does
+ * apply to Composables, with no annotation escape. It owns the import confirmation dialog too, which
+ * belongs to the row that opens it and to nothing else on the screen.
+ */
+@Composable
+private fun BackupSection(
+    state: ProfileUiState,
+    onExportClick: () -> Unit,
+    onImportClick: () -> Unit,
+    onBackUpNowClick: () -> Unit,
+) {
+    var showImportDialog by remember { mutableStateOf(false) }
+
+    if (showImportDialog) {
+        ImportBackupDialog(
+            isSignedIn = state.session is SessionUiState.SignedIn,
+            onConfirm = {
+                showImportDialog = false
+                onImportClick()
+            },
+            onDismiss = { showImportDialog = false },
+        )
+    }
+
+    // One top-level emitter, same shape as AccountSection: compose-rules rejects a composable that
+    // emits from two sources at its top level, and the header plus the group are two.
+    Column(modifier = Modifier.fillMaxWidth()) {
+        SectionHeader(text = "Respaldo")
+        ProfileGroup {
+            ProfileRowWithTrailing(
+                icon = Icons.Outlined.FileDownload,
+                label = "Exportar mi data",
+                // "Preparando…": covers only the JSON generation. The SAF write that follows
+                // (ProfileEntries.kt's ExportReady -> platform.requestExport) runs after `op`
+                // already reset, so a label claiming "Exportando…" here would outlive its own scope.
+                meta = if (state.op == ProfileOp.Exporting) "Preparando…" else "Guardar como archivo",
+                metaIsPrimary = true,
+                // Dimmed only when a DIFFERENT op is running — this row's own op keeps full
+                // emphasis so its progress copy stays readable.
+                enabled = state.op == ProfileOp.None || state.op == ProfileOp.Exporting,
+                onClick = onExportClick.takeIf { state.op == ProfileOp.None },
+                trailing = {
+                    ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.Exporting)
+                },
+            )
+            HairlineDivider()
+            ProfileRowWithTrailing(
+                icon = Icons.Outlined.FileUpload,
+                label = "Importar respaldo",
+                meta = if (state.op == ProfileOp.Importing) "Importando…" else "Reemplaza todo",
+                metaIsPrimary = false,
+                enabled = state.op == ProfileOp.None || state.op == ProfileOp.Importing,
+                // Confirm before the file picker: by the time a file is chosen the user has
+                // already decided, and this is the only irreversible action left unguarded.
+                onClick = { showImportDialog = true }.takeIf { state.op == ProfileOp.None },
+                trailing = {
+                    ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.Importing)
+                },
+            )
+            // THE SAME CONSTANT GATES `BackupOrchestrator.start()` in `bootstrapAppGraph`, and the
+            // two sites have to move together. With the switch off nothing drains the orchestrator's
+            // request channel, so a visible row would queue a tap into a dead channel: no upload, no
+            // failure, no message — the invisible failure ADR 009 hard constraint 4 exists to forbid.
+            // It is `false` today, so this row does not render; it flips only when Phase 4 passes
+            // (BackupKillSwitch.kt).
+            if (SNAPSHOT_BACKUP_ENABLED) {
+                HairlineDivider()
+                ProfileRowWithTrailing(
+                    icon = Icons.Outlined.CloudUpload,
+                    label = "Respaldar ahora",
+                    meta = if (state.op == ProfileOp.BackingUp) "Respaldando…" else "Sube una copia a la nube",
+                    metaIsPrimary = true,
+                    // Dimmed only when a DIFFERENT op is running — this row's own op keeps full
+                    // emphasis so its progress copy stays readable.
+                    enabled = state.op == ProfileOp.None || state.op == ProfileOp.BackingUp,
+                    onClick = onBackUpNowClick.takeIf { state.op == ProfileOp.None },
+                    trailing = {
+                        ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.BackingUp)
+                    },
+                )
+            }
+        }
     }
 }
 

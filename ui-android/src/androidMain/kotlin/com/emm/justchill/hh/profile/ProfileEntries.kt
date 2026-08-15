@@ -168,6 +168,10 @@ private fun ProfileEntry(
         onSignOutClick = { vm.onIntent(ProfileIntent.SignOut) },
         onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccount) },
         onSyncNowClick = { vm.onIntent(ProfileIntent.SyncNow) },
+        // Unlike the export above, this is NOT gated on platform.supportsBackup: that flag is about
+        // the SAF file pickers this platform layer owns, and a snapshot cycle needs none of them.
+        // Its own gate is SNAPSHOT_BACKUP_ENABLED, which decides whether the row exists at all.
+        onBackUpNowClick = { vm.onIntent(ProfileIntent.BackUpNow) },
         onCopyCommitHashClick = {
             clipboardScope.launch { copyCommitHash(clipboard, commitHash, bindings) }
         },
