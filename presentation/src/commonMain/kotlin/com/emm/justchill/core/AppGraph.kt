@@ -1,6 +1,8 @@
 package com.emm.justchill.core
 
 import com.emm.domain.auth.ClaimLocalDataOnAuthenticationUseCase
+import com.emm.justchill.core.backup.BackupOrchestrator
+import com.emm.justchill.core.backup.SNAPSHOT_BACKUP_ENABLED
 import com.emm.justchill.core.sync.SYNC_TEMPORARILY_DISABLED
 import com.emm.justchill.core.sync.SyncOrchestrator
 import com.emm.justchill.hh.di.accountModule
@@ -64,4 +66,9 @@ fun bootstrapAppGraph(koin: Koin) {
     // request consumer — and that consumer is the only caller of the private runSync(), so no cycle
     // can reach the network. The single stays bound and lazily resolvable; only its loops are off.
     if (!SYNC_TEMPORARILY_DISABLED) koin.get<SyncOrchestrator>().start()
+    // Kill switch, opposite polarity to the line above and the same meaning today: both are off.
+    // Skipping start() registers no trigger and launches no request consumer — and that consumer is
+    // the only caller of the private cycle — so nothing can export, upload or prune. The single
+    // stays bound and lazily resolvable; only its loops are off. See BackupKillSwitch.kt.
+    if (SNAPSHOT_BACKUP_ENABLED) koin.get<BackupOrchestrator>().start()
 }

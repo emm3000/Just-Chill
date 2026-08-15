@@ -590,7 +590,7 @@ must not build chunking or progress reporting against a 10-second limit that is 
 | Manual action | "Back up now" in Profile, through the existing `launchOp` concurrent-op guard |
 | Naming | `backup-v3-<ISO8601-UTC, colons replaced>.json` |
 | Retention | client-side prune (no server code exists): list the bucket and **key on the presence of `<name>.manifest.json`, never on `<name>` alone**. A payload without its sidecar is not a snapshot: it counts toward no retention bucket and is **deleted on sight** — see the paragraph below, which is the rule, not a note about it. Parse timestamps from the names that DO carry a manifest, keep 7 daily + 8 weekly + 12 monthly — **slots filled from the data, not anchored on today; see 2c-ii for why** — and delete the rest. Pinned snapshots live under a `pinned/` prefix the prune never scans. "Pin before risky operation" action; every future DB schema migration must be preceded by a pinned snapshot |
-| Flag | `SNAPSHOT_BACKUP_ENABLED = false` in `core/backup/`, mirroring the `SyncKillSwitch` pattern (const + KDoc + grep-able). `bootstrapAppGraph` starts `BackupOrchestrator` behind it, the same pattern that gates `SyncOrchestrator.start()` in `AppGraph` today |
+| Flag | `SNAPSHOT_BACKUP_ENABLED = false` in `core/backup/`, mirroring the `SyncKillSwitch` pattern (const + KDoc + grep-able). `bootstrapAppGraph` starts `BackupOrchestrator` behind it, the same pattern that gates `SyncOrchestrator.start()` in `AppGraph` today. **The polarity is inverted** — `SYNC_TEMPORARILY_DISABLED` is `true` for off, this one is `false` for off — and both mean off today |
 
 **Why the prune keys on the manifest — a name-only prune loses verified data.** 2b-ii part B
 uploads the payload, reads it back, and writes the sidecar **only** after the bytes matched, so
@@ -775,16 +775,42 @@ file today, nothing in this unit would break.** Both guards are mutation-proved 
 `bind<BackupMetadataStore>()` reds `AppGraphKoinTest`; deleting the `clear` call reds four named
 tests, one of which pins its placement inside `NonCancellable`.
 
-**2c-iii-b — the orchestrator. Still open.** `BackupOrchestrator`, comparing
-`latestLocalChangeAt()` against `BackupMetadataStore.lastSuccessfulBackupAt`, gated behind
-`SNAPSHOT_BACKUP_ENABLED`; the dirty-flag comparison that decides whether a backup is due; the
-once-a-day cap on automatic snapshots; the staleness retry on `resumeEvents()` for a process that
-died mid-upload; and the `bootstrapAppGraph` wiring, the same pattern that gates
-`SyncOrchestrator.start()` today. Must call `backupSnapshotName` rather than re-implement the
-format (which is why that function is public and the parser is not).
+**2c-iii-b — the orchestrator. LANDED.** `BackupOrchestrator` in `presentation/core/backup/`, bound
+in `BackupModule.kt` and started by `bootstrapAppGraph` behind `SNAPSHOT_BACKUP_ENABLED` — one
+`flatMapLatest` session gate over `merge(backgroundEvents, resumeEvents)`, a CONFLATED request
+channel with a single consumer, and the export → name → upload → record → prune cycle. It calls
+`backupSnapshotName`, never a second spelling of the format. `requestBackup(manual)` is exposed with
+no caller: 2c-iv's Perfil button has to come through the concurrency guard, which lives here.
 
-**Verification**: gate green + a test proving an upload whose hash mismatches is NOT marked
-successful.
+Four things it settled that this plan had left open or got wrong:
+
+- **The manual entry point did NOT get a `BackupController` interface**, unlike `SyncOrchestrator` /
+  `SyncController`. That pair exists because `ProfileViewModel` consumes `SyncStatus` and
+  `SyncController.events`; the backup orchestrator publishes neither until Phase 3 adds health
+  visibility, so the interface would have had one implementation, one method and zero consumers —
+  the shape `docs/CODE_QUALITY.md` marks "YAGNI, in, and it bites". 2c-iv or Phase 3 introduces one
+  when there is a second thing for it to carry.
+- **Two sync-named dependencies had to move, not be imported.** `SyncLogger` became
+  `domain/shared/logging/DiagnosticsLogger` (constraint 4 needs a logger and Phase 5 deletes
+  sync-named files), and the `appScope` single moved from `syncModule` into `CoreModule` — a move
+  Phase 5's own inventory already scheduled, pulled forward for the same reason. `launchResilientTrigger`
+  was **copied** rather than moved: it is private to `SyncOrchestrator` and dies with it.
+- **A CONFLATED channel does not collapse two requests when the consumer is parked**, so "two
+  triggers ⇒ one upload" is not a property of the channel. It is delivered instead by *serialisation
+  plus the cap*: the second cycle reads the watermark the first one wrote. That is the sharper test —
+  concurrent cycles would both have read the pre-upload value — and it is paired with one that pins
+  the real channel property, two manual requests never overlapping in the uploader.
+- **`AppGraphKoinTest`'s sweep cannot see a binding that was never bound**, because it iterates the
+  registry. Deleting the orchestrator's `single { }` would have compiled, kept the whole suite green
+  and crashed only when the flag flips. `every single bootstrapAppGraph resolves is bound` names the
+  four resolutions instead; mutation-proved, along with the ordering, the injected zone, the resilient
+  trigger and the injected `TimeZone`.
+
+**Still open from this row**: verification of an upload whose hash mismatches — `BackupUploader`'s
+contract already makes that a throw, and `DefaultBackupUploaderTest` pins it, but nothing yet asserts
+that the orchestrator leaves the watermark unwritten *for that specific failure* rather than for a
+generic one. `a failed upload records no watermark and the next trigger retries` covers the shape;
+the hash-specific case rides on the uploader's own suite.
 
 ### Phase 3 — health visibility
 

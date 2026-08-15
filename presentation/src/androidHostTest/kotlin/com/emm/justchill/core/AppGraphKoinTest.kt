@@ -2,12 +2,16 @@ package com.emm.justchill.core
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import com.emm.domain.auth.ClaimLocalDataOnAuthenticationUseCase
 import com.emm.domain.category.CategoryType
+import com.emm.justchill.core.backup.BackupOrchestrator
+import com.emm.justchill.core.sync.SyncOrchestrator
 import com.emm.justchill.hh.category.AddCategoryViewModel
 import com.emm.justchill.hh.recurring.AddEditRecurringMovementViewModel
 import com.emm.justchill.hh.transaction.EditTransactionViewModel
 import com.russhwolf.settings.SettingsInitializer
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -40,11 +44,12 @@ import kotlin.time.Instant
  * navigates to the affected screen. This test closes that gap by building the real graph against
  * [testPlatformModule] and resolving EVERY definition it contains.
  *
- * Deliberately NOT covered: `bootstrapAppGraph`. Its three resolutions (the appScope
- * `CoroutineScope`, `ClaimLocalDataOnAuthenticationUseCase`, `SyncOrchestrator`) are all swept by
- * [every definition in the app graph resolves], but calling it would also start the orchestrator's
- * collectors, and the Android `resumeEvents()` actual needs `ProcessLifecycleOwner` — an Android
- * runtime this host test does not have.
+ * Deliberately NOT *called*: `bootstrapAppGraph` itself, because that would start the orchestrators'
+ * collectors and the Android `resumeEvents()` / `backgroundEvents()` actuals need
+ * `ProcessLifecycleOwner` — an Android runtime this host test does not have. Its four resolutions
+ * are covered instead by [every single bootstrapAppGraph resolves is bound], which resolves them
+ * the way it does. Resolving is safe because both lifecycle actuals are `callbackFlow` builders:
+ * nothing touches `ProcessLifecycleOwner` until something collects.
  *
  * ### The boundary, stated so nobody assumes past it
  *
@@ -142,6 +147,26 @@ class AppGraphKoinTest {
             )
             assertTrue(viewModel is ViewModel, "$name did not resolve to a ViewModel.")
         }
+    }
+
+    /**
+     * The four definitions `bootstrapAppGraph` resolves BY TYPE, resolved exactly the way it does.
+     *
+     * The sweep above proves every *bound* definition resolves. It cannot notice one that was never
+     * bound at all — there is nothing in the registry to iterate over — and `bootstrapAppGraph` is
+     * precisely where that gap bites: both orchestrators are resolved behind kill switches that are
+     * off today, so deleting either binding would compile, keep this whole suite green, and crash
+     * on the day the flag flips. Naming the four here is what turns a deleted binding red now.
+     *
+     * No assertion body on purpose: a missing or unresolvable definition throws out of `get`, which
+     * is the failure this test exists to produce.
+     */
+    @Test
+    fun `every single bootstrapAppGraph resolves is bound`() {
+        koin.get<CoroutineScope>(appScopeQualifier)
+        koin.get<ClaimLocalDataOnAuthenticationUseCase>()
+        koin.get<SyncOrchestrator>()
+        koin.get<BackupOrchestrator>()
     }
 
     /**

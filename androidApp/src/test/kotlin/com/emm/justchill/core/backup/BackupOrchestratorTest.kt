@@ -1,0 +1,450 @@
+package com.emm.justchill.core.backup
+
+import com.emm.data.backup.backupSnapshotName
+import com.emm.domain.auth.AuthUser
+import com.emm.domain.auth.ObserveSessionUseCase
+import com.emm.domain.auth.SessionStatus
+import com.emm.domain.shared.backup.BackupMetadataStore
+import com.emm.domain.shared.backup.BackupPruneReport
+import com.emm.domain.shared.backup.BackupPruner
+import com.emm.domain.shared.backup.BackupRepository
+import com.emm.domain.shared.backup.BackupUploader
+import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.logging.DiagnosticsLogger
+import com.emm.justchill.MainDispatcherRule
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.coVerifyOrder
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.TimeZone
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
+
+/**
+ * The two failure modes of ADR 009 2c-iii-b are DI and lifecycle, and `qualityGate` sees neither: a
+ * trigger wired to the wrong flow never crashes, it just silently never backs up. Everything below
+ * pins a decision this class is the only thing making — the dirty check, the once-a-day cap on
+ * SUCCESSES, the ordering of record-then-prune, and the resilience that keeps one bad cycle from
+ * ending backups for the rest of the process lifetime.
+ *
+ * Shape borrowed from `SyncOrchestratorTest`: the orchestrator's scope shares the test scheduler but
+ * is not a child of [TestScope], so `runTest` never waits on its long-lived coroutines, and both
+ * lifecycle flows are injected fakes rather than the real `ProcessLifecycleOwner`-backed actuals.
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
+class BackupOrchestratorTest {
+
+    private val testDispatcher = StandardTestDispatcher()
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule(testDispatcher)
+
+    private val backupRepository = mockk<BackupRepository>(relaxed = true)
+    private val uploader = mockk<BackupUploader>(relaxed = true)
+    private val pruner = mockk<BackupPruner>(relaxed = true)
+    private val metadata = mockk<BackupMetadataStore>(relaxed = true)
+    private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
+    private val logger = mockk<DiagnosticsLogger>(relaxed = true)
+
+    private val sessionFlow = MutableStateFlow<SessionStatus>(SessionStatus.Initializing)
+    private val backgroundFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
+    private val resumeFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
+
+    /**
+     * Defaults only. They are installed HERE and not inside [buildOrchestrator] on purpose: a test
+     * that overrides one — the throwing session flow, the failing prune — states its stub before it
+     * builds the orchestrator, and a builder that re-stubbed would silently undo it and leave the
+     * test asserting the happy path under a name promising the opposite.
+     */
+    @Before
+    fun setUp() {
+        every { observeSession.invoke() } returns sessionFlow
+        coEvery { backupRepository.exportToJson(any(), any()) } returns PAYLOAD
+        coEvery { pruner.prune() } returns BackupPruneReport(kept = 1, deleted = 0, failedDeletes = emptyList())
+    }
+
+    private fun TestScope.buildOrchestrator(now: Instant = NOW, zone: TimeZone = TimeZone.UTC): BackupOrchestrator {
+        val sharedDispatcher = StandardTestDispatcher(testScheduler)
+        return BackupOrchestrator(
+            backupRepository = backupRepository,
+            uploader = uploader,
+            pruner = pruner,
+            metadata = metadata,
+            observeSession = observeSession,
+            appVersion = APP_VERSION,
+            clock = fixedClock(now),
+            timeZone = zone,
+            externalScope = CoroutineScope(sharedDispatcher + SupervisorJob()),
+            backgroundEvents = backgroundFlow,
+            resumeEvents = resumeFlow,
+            logger = logger,
+        )
+    }
+
+    /** Signs in and drains, so the merged trigger is subscribed before anything is emitted into it. */
+    private fun TestScope.authenticate() {
+        sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = USER_ID, email = "a@b.com"))
+        advanceUntilIdle()
+    }
+
+    // ── (1) The happy path, and the ORDER inside it ──────────────────────────────────
+
+    @Test
+    fun `a dirty ledger not yet backed up today uploads, records, then prunes - in that order`() =
+        runTest(testDispatcher) {
+            coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+            every { metadata.lastSuccessfulBackupAt(USER_ID) } returns null
+
+            val orchestrator = buildOrchestrator()
+            orchestrator.start()
+            authenticate()
+
+            backgroundFlow.emit(Unit)
+            advanceUntilIdle()
+
+            // The order is the contract: a manifest-verified upload, THEN the watermark, THEN
+            // retention. Recording before the upload would let a failure burn the day; pruning
+            // before recording would let a prune failure lose a backup that already succeeded.
+            coVerifyOrder {
+                backupRepository.exportToJson(NOW.toEpochMilliseconds(), APP_VERSION)
+                uploader.upload(backupSnapshotName(NOW), PAYLOAD)
+                metadata.setLastSuccessfulBackupAt(USER_ID, NOW.toEpochMilliseconds())
+                pruner.prune()
+            }
+        }
+
+    // ── (2) Not dirty ────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `a ledger unchanged since the last backup uploads nothing`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns CHANGED_AT
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { uploader.upload(any(), any()) }
+    }
+
+    // ── (3) The daily cap, even with local changes waiting ───────────────────────────
+
+    @Test
+    fun `a backup already recorded today uploads nothing even when the ledger is dirty`() = runTest(testDispatcher) {
+        val backedUpAt = Instant.parse("2026-08-14T09:00:00Z").toEpochMilliseconds()
+        coEvery { backupRepository.latestLocalChangeAt() } returns backedUpAt + 1
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns backedUpAt
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { uploader.upload(any(), any()) }
+    }
+
+    // ── (4) An upload failure must NOT record, so the next trigger retries ───────────
+
+    @Test
+    fun `a failed upload records no watermark and the next trigger retries`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns null
+        coEvery { uploader.upload(any(), any()) } throws DomainException.NetworkUnavailable(RuntimeException("no net"))
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+
+        // This is what makes the cap a cap on successes: nothing was written, so today is not spent.
+        verify(exactly = 0) { metadata.setLastSuccessfulBackupAt(any(), any()) }
+        coVerify(exactly = 0) { pruner.prune() }
+        verify(atLeast = 1) { logger.warn(any(), any()) }
+
+        // The consumer survived the failure and the ledger is still dirty, so the retry lands.
+        coEvery { uploader.upload(any(), any()) } returns Unit
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 2) { uploader.upload(any(), any()) }
+        verify(exactly = 1) { metadata.setLastSuccessfulBackupAt(USER_ID, NOW.toEpochMilliseconds()) }
+    }
+
+    // ── (5) A prune failure must not undo or fail the backup ─────────────────────────
+
+    @Test
+    fun `a failed prune leaves the watermark recorded and throws nothing`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns null
+        coEvery { pruner.prune() } throws DomainException.Unknown(RuntimeException("bucket unreachable"))
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+
+        // The snapshot is uploaded and verified; retention is housekeeping over objects already safe.
+        verify(exactly = 1) { metadata.setLastSuccessfulBackupAt(USER_ID, NOW.toEpochMilliseconds()) }
+        verify(atLeast = 1) { logger.warn(any(), any()) }
+    }
+
+    // ── (6) No session, no backup — on any trigger, manual included ──────────────────
+
+    @Test
+    fun `nothing happens on any trigger while not authenticated`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        every { metadata.lastSuccessfulBackupAt(any()) } returns null
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+
+        sessionFlow.value = SessionStatus.NotAuthenticated
+        advanceUntilIdle()
+
+        backgroundFlow.emit(Unit)
+        resumeFlow.emit(Unit)
+        orchestrator.requestBackup(manual = true)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { backupRepository.exportToJson(any(), any()) }
+        coVerify(exactly = 0) { uploader.upload(any(), any()) }
+    }
+
+    // ── (7) A manual request bypasses BOTH the cap and the dirty check ───────────────
+
+    @Test
+    fun `a manual request uploads with a clean ledger already backed up today`() = runTest(testDispatcher) {
+        // Not dirty at all (no rows anywhere) AND capped (a success recorded an hour ago today).
+        coEvery { backupRepository.latestLocalChangeAt() } returns null
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns
+            Instant.parse("2026-08-14T11:00:00Z").toEpochMilliseconds()
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        orchestrator.requestBackup(manual = true)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { uploader.upload(backupSnapshotName(NOW), PAYLOAD) }
+        verify(exactly = 1) { metadata.setLastSuccessfulBackupAt(USER_ID, NOW.toEpochMilliseconds()) }
+    }
+
+    // ── (8) The concurrency guard, from both sides ───────────────────────────────────
+
+    /**
+     * Two automatic triggers in one drain produce ONE upload, and the reason is what this test is
+     * really for: the second cycle reads the watermark the first one wrote. Run concurrently, both
+     * would have read the pre-upload value, both would have found the ledger dirty and uncapped, and
+     * two snapshots would have gone into the same bucket in the same second.
+     */
+    @Test
+    fun `two triggers arriving together produce one upload, not two`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        val recorded = mutableListOf<Long>()
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } answers { recorded.lastOrNull() }
+        every { metadata.setLastSuccessfulBackupAt(USER_ID, any()) } answers { recorded += secondArg<Long>() }
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        backgroundFlow.emit(Unit)
+        resumeFlow.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { uploader.upload(any(), any()) }
+    }
+
+    /**
+     * And when two cycles genuinely both have work to do — two manual requests, which bypass the cap
+     * and the dirty check — they run one after the other rather than at the same time. Concurrent
+     * uploads into one bucket are the state ADR 009's naming and read-back verification both assume
+     * cannot happen, and only the single consumer draining the request channel prevents it.
+     */
+    @Test
+    fun `two manual requests never have two uploads in flight at once`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns null
+
+        var inFlight = 0
+        var peakInFlight = 0
+        coEvery { uploader.upload(any(), any()) } coAnswers {
+            inFlight++
+            peakInFlight = maxOf(peakInFlight, inFlight)
+            delay(UPLOAD_DURATION_MILLIS)
+            inFlight--
+        }
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        orchestrator.requestBackup(manual = true)
+        // Mid-upload: the second request arrives while the first cycle is still suspended in the
+        // uploader, which is the only window in which two could ever overlap.
+        advanceTimeBy(UPLOAD_DURATION_MILLIS / 2)
+        orchestrator.requestBackup(manual = true)
+        advanceUntilIdle()
+
+        coVerify(exactly = 2) { uploader.upload(any(), any()) }
+        assertEquals(1, peakInFlight, "Two uploads were in flight at once")
+    }
+
+    // ── (9) A trigger that throws must not end backups for the process ───────────────
+
+    /**
+     * The session flow is auth-provider-backed and can throw mid-observe. Collected bare, that
+     * throwable reaches an application scope with no handler — process death. The trigger absorbs it
+     * and re-subscribes, and without this test that resilience is decoration: everything else here
+     * passes whether or not `launchResilientTrigger` exists.
+     */
+    @Test
+    fun `a throwing session flow does not kill the trigger and a later backup still runs`() = runTest(testDispatcher) {
+        var sessionCollections = 0
+        every { observeSession.invoke() } answers {
+            sessionCollections++
+            if (sessionCollections == 1) {
+                flow { throw DomainException.DatabaseError(RuntimeException("disk full")) }
+            } else {
+                sessionFlow
+            }
+        }
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns null
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        advanceUntilIdle()
+
+        verify(atLeast = 1) { logger.warn(any(), any()) }
+
+        // Past the back-off, the trigger re-subscribes to a healthy flow.
+        advanceTimeBy(RETRY_BACKOFF_MILLIS)
+        advanceUntilIdle()
+        assertTrue(
+            sessionCollections >= 2,
+            "Trigger must have re-subscribed after the failure; collections=$sessionCollections",
+        )
+
+        authenticate()
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { uploader.upload(any(), any()) }
+    }
+
+    // ── (10) The cap is a CALENDAR question, answered in the injected zone ───────────
+
+    /**
+     * The same two instants, four hours apart, straddle midnight in one zone and not in the other.
+     * A cap implemented as `now - last < 24h` would answer identically in both and pass every other
+     * test in this file.
+     */
+    @Test
+    fun `the daily cap is evaluated in the injected time zone`() = runTest(testDispatcher) {
+        val lastSuccessAt = Instant.parse("2026-08-14T02:00:00Z").toEpochMilliseconds()
+        val now = Instant.parse("2026-08-14T06:00:00Z")
+        coEvery { backupRepository.latestLocalChangeAt() } returns lastSuccessAt + 1
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns lastSuccessAt
+
+        // UTC: 02:00 and 06:00 are the same 14 August, so the cap holds.
+        val utc = buildOrchestrator(now = now, zone = TimeZone.UTC)
+        utc.start()
+        authenticate()
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+        coVerify(exactly = 0) { uploader.upload(any(), any()) }
+
+        // UTC-5: the same instants are 13 August 21:00 and 14 August 01:00 — a new day, so it runs.
+        val lima = buildOrchestrator(now = now, zone = TimeZone.of("America/Lima"))
+        lima.start()
+        advanceUntilIdle()
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+        coVerify(exactly = 1) { uploader.upload(backupSnapshotName(now), PAYLOAD) }
+    }
+
+    // ── (11) An empty database is not a backup candidate ─────────────────────────────
+
+    @Test
+    fun `an empty ledger touches neither the export, the upload nor the prune`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns null
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns null
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        backgroundFlow.emit(Unit)
+        resumeFlow.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { backupRepository.exportToJson(any(), any()) }
+        coVerify(exactly = 0) { uploader.upload(any(), any()) }
+        coVerify(exactly = 0) { pruner.prune() }
+    }
+
+    // ── (12) The resume trigger exists, and it is the mid-upload-death retry ─────────
+
+    @Test
+    fun `a resume backs up a ledger left dirty by a process that died mid-upload`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns null
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        resumeFlow.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { uploader.upload(backupSnapshotName(NOW), PAYLOAD) }
+    }
+
+    private fun fixedClock(instant: Instant): Clock = object : Clock {
+        override fun now(): Instant = instant
+    }
+
+    private companion object {
+        val NOW: Instant = Instant.parse("2026-08-14T12:00:00Z")
+        val CHANGED_AT: Long = Instant.parse("2026-08-14T10:00:00Z").toEpochMilliseconds()
+        const val USER_ID = "uid-1"
+        const val APP_VERSION = "2.4.0"
+        const val PAYLOAD = """{"schemaVersion":3}"""
+
+        /** Comfortably past `BackupOrchestrator.TRIGGER_RETRY_DELAY`, which is private. */
+        const val RETRY_BACKOFF_MILLIS = 6_000L
+
+        /** Long enough that a second request lands squarely inside the first cycle's upload. */
+        const val UPLOAD_DURATION_MILLIS = 1_000L
+    }
+}
