@@ -6,20 +6,16 @@ import com.emm.data.sync.DefaultSyncRepository
 import com.emm.data.sync.RecurringMovementTableSync
 import com.emm.data.sync.TableSync
 import com.emm.data.sync.TransactionTableSync
-import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.domain.sync.ConflictResolver
 import com.emm.domain.sync.SyncCursorStore
 import com.emm.domain.sync.SyncDataUseCase
 import com.emm.domain.sync.SyncMutex
 import com.emm.domain.sync.SyncRepository
+import com.emm.justchill.core.appScopeQualifier
 import com.emm.justchill.core.lifecycle.resumeEvents
 import com.emm.justchill.core.sync.DefaultSyncCursorStore
 import com.emm.justchill.core.sync.SyncController
 import com.emm.justchill.core.sync.SyncOrchestrator
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -30,10 +26,6 @@ private val accountSyncQualifier = named("accountSync")
 private val categorySyncQualifier = named("categorySync")
 private val transactionSyncQualifier = named("transactionSync")
 private val recurringSyncQualifier = named("recurringSync")
-
-// Single application-lifetime coroutine scope qualifier. ONE scope drives BOTH the claim-on-sign-in
-// observer (bootstrapAppGraph) and the SyncOrchestrator's internal loops. Public so AppGraph resolves it.
-val appScopeQualifier = named("appScope")
 
 // Single commonMain sync wiring (replaces :androidApp/hh/di/SyncModule.kt + KoinIos.kt's iosSyncModule
 // AND the SyncMutex previously bound in iosProfileSupportModule). resumeEvents() is expect/actual in
@@ -72,19 +64,6 @@ val syncModule = module {
     single { SyncMutex() }
 
     singleOf(::SyncDataUseCase)
-
-    // Application-lifetime scope for SyncOrchestrator long-lived jobs and the claim observer.
-    // The handler is a backstop, not the primary defence: SyncOrchestrator and the claim observer
-    // both catch their own failures. Without it, anything they miss reaches the default handler,
-    // which on Android is a crash — for a feature the app is fully usable without. The logger is
-    // resolved once, up front, so the handler never has to touch Koin while unwinding a failure.
-    single<CoroutineScope>(appScopeQualifier) {
-        val logger = get<DiagnosticsLogger>()
-        val handler = CoroutineExceptionHandler { _, throwable ->
-            logger.warn("uncaught in appScope", throwable)
-        }
-        CoroutineScope(SupervisorJob() + Dispatchers.Default + handler)
-    }
 
     // Single: owns long-lived coroutine jobs launched in externalScope. Does NOT self-start — start()
     // is called by bootstrapAppGraph after the graph is built (same lifecycle on both platforms).

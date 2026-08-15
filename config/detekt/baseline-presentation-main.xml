@@ -9,7 +9,7 @@
     <ID>FunctionSignature:SpanishDateFormat.kt:SpanishDateFormat$fun longDate: String</ID>
     <ID>FunctionSignature:SpanishDateFormat.kt:fun String.titlecaseFirstChar: String</ID>
     <ID>FunctionSignature:SpanishSearch.kt:fun String.stripSpanishAccents: String</ID>
-    <ID>InjectDispatcher:SyncModule.kt:Default</ID>
+    <ID>InjectDispatcher:CoreModule.kt:Default</ID>
     <ID>InvalidPackageDeclaration:AccountModule.kt:package com.emm.justchill.hh.di</ID>
     <ID>InvalidPackageDeclaration:AuthModule.kt:package com.emm.justchill.hh.di</ID>
     <ID>InvalidPackageDeclaration:BackupModule.kt:package com.emm.justchill.hh.di</ID>

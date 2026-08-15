@@ -4,7 +4,6 @@ import com.emm.domain.auth.ClaimLocalDataOnAuthenticationUseCase
 import com.emm.justchill.core.sync.SYNC_TEMPORARILY_DISABLED
 import com.emm.justchill.core.sync.SyncOrchestrator
 import com.emm.justchill.hh.di.accountModule
-import com.emm.justchill.hh.di.appScopeQualifier
 import com.emm.justchill.hh.di.authModule
 import com.emm.justchill.hh.di.backupModule
 import com.emm.justchill.hh.di.categoryModule
