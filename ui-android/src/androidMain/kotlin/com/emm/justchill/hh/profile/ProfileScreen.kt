@@ -25,6 +25,7 @@ import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.CloudDone
+import androidx.compose.material.icons.outlined.CloudSync
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
@@ -96,6 +97,7 @@ fun ProfileScreen(
     onSyncNowClick: () -> Unit = {},
     onCopyCommitHashClick: () -> Unit = {},
     onBackUpNowClick: () -> Unit = {},
+    onVerifyBackupClick: () -> Unit = {},
     onAcknowledgeBackupDestinationClick: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
@@ -161,8 +163,11 @@ fun ProfileScreen(
             state = state,
             onExportClick = onExportClick,
             onImportClick = onImportClick,
-            onBackUpNowClick = onBackUpNowClick,
-            onAcknowledgeBackupDestinationClick = onAcknowledgeBackupDestinationClick,
+            snapshotActions = SnapshotBackupActions(
+                onBackUpNow = onBackUpNowClick,
+                onVerify = onVerifyBackupClick,
+                onAcknowledgeDestination = onAcknowledgeBackupDestinationClick,
+            ),
         )
 
         SectionHeader(text = "App")
@@ -211,13 +216,20 @@ fun ProfileScreen(
     }
 }
 
+// The three callbacks that only exist behind SNAPSHOT_BACKUP_ENABLED travel together so they can
+// leave together, and so BackupSection stays inside the parameter budget.
+private class SnapshotBackupActions(
+    val onBackUpNow: () -> Unit,
+    val onVerify: () -> Unit,
+    val onAcknowledgeDestination: () -> Unit,
+)
+
 @Composable
 private fun BackupSection(
     state: ProfileUiState,
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
-    onBackUpNowClick: () -> Unit,
-    onAcknowledgeBackupDestinationClick: () -> Unit,
+    snapshotActions: SnapshotBackupActions,
 ) {
     var showImportDialog by remember { mutableStateOf(false) }
 
@@ -266,19 +278,36 @@ private fun BackupSection(
                     meta = if (state.op == ProfileOp.BackingUp) "Respaldando…" else "Sube una copia a la nube",
                     metaIsPrimary = true,
                     enabled = state.op == ProfileOp.None || state.op == ProfileOp.BackingUp,
-                    onClick = onBackUpNowClick.takeIf { state.op == ProfileOp.None },
+                    onClick = snapshotActions.onBackUpNow.takeIf { state.op == ProfileOp.None },
                     trailing = {
                         ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.BackingUp)
                     },
                 )
                 HairlineDivider()
+                VerifyBackupRow(op = state.op, onVerifyClick = snapshotActions.onVerify)
+                HairlineDivider()
                 LastBackupRow(row = state.backupRow)
                 if (state.backupRow == BackupRowUi.DisclosurePending) {
-                    BackupDestinationDisclosure(onAcknowledge = onAcknowledgeBackupDestinationClick)
+                    BackupDestinationDisclosure(onAcknowledge = snapshotActions.onAcknowledgeDestination)
                 }
             }
         }
     }
+}
+
+@Composable
+private fun VerifyBackupRow(op: ProfileOp, onVerifyClick: () -> Unit) {
+    val busy: Boolean = op == ProfileOp.VerifyingBackup
+    val idle: Boolean = op == ProfileOp.None
+    ProfileRowWithTrailing(
+        icon = Icons.Outlined.CloudSync,
+        label = "Verificar respaldo",
+        meta = if (busy) "Verificando…" else "Revisa que el último se pueda restaurar",
+        metaIsPrimary = true,
+        enabled = idle || busy,
+        onClick = onVerifyClick.takeIf { idle },
+        trailing = { ChevronTrailing(enabled = idle || busy) },
+    )
 }
 
 @Composable

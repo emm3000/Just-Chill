@@ -11,6 +11,7 @@ import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.backup.BackupFailureReason
 import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.BackupStaleness
+import com.emm.domain.shared.backup.BackupVerifier
 import com.emm.domain.shared.backup.GetBackupStalenessUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.error.DomainException
@@ -69,6 +70,8 @@ class ProfileViewModelBackupRowTest {
         every { health } returns healthFlow
     }
 
+    private val backupVerifier = mockk<BackupVerifier>()
+
     private val getBackupStaleness = mockk<GetBackupStalenessUseCase>()
     private val logger = mockk<DiagnosticsLogger>(relaxed = true)
     private val categoryRepository = mockk<CategoryRepository> {
@@ -94,6 +97,7 @@ class ProfileViewModelBackupRowTest {
             deleteUserAccount = deleteUserAccount,
             syncController = syncController,
             backupController = backupController,
+            backupVerifier = backupVerifier,
             getBackupStaleness = getBackupStaleness,
             logger = logger,
             categoryRepository = categoryRepository,

@@ -92,6 +92,8 @@ private fun ProfileEntry(
                         ProfileMessage.BackupFailed,
                         ProfileMessage.BackupNeedsAccount,
                         ProfileMessage.BackupNeedsDisclosure,
+                        ProfileMessage.BackupVerifyFailed,
+                        is ProfileMessage.BackupNotVerified,
                         -> EmmSnackbarTone.Error
 
                         ProfileMessage.SessionClosed,
@@ -100,6 +102,7 @@ private fun ProfileEntry(
                         ProfileMessage.ExportDone,
                         is ProfileMessage.ImportDone,
                         ProfileMessage.BackupDone,
+                        is ProfileMessage.BackupVerified,
                         -> EmmSnackbarTone.Success
                     },
                 )
@@ -138,6 +141,7 @@ private fun ProfileEntry(
         onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccount) },
         onSyncNowClick = { vm.onIntent(ProfileIntent.SyncNow) },
         onBackUpNowClick = { vm.onIntent(ProfileIntent.BackUpNow) },
+        onVerifyBackupClick = { vm.onIntent(ProfileIntent.VerifyBackup) },
         onAcknowledgeBackupDestinationClick = {
             vm.onIntent(ProfileIntent.AcknowledgeBackupDestination)
         },

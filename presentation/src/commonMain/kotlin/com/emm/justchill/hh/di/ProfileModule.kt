@@ -14,6 +14,7 @@ val profileModule = module {
             deleteUserAccount = get(),
             syncController = get(),
             backupController = get(),
+            backupVerifier = get(),
             getBackupStaleness = get(),
             logger = get(),
             categoryRepository = get(),

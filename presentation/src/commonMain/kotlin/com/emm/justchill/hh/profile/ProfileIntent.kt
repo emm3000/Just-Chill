@@ -11,5 +11,7 @@ sealed interface ProfileIntent : UiIntent {
 
     data object BackUpNow : ProfileIntent
 
+    data object VerifyBackup : ProfileIntent
+
     data object AcknowledgeBackupDestination : ProfileIntent
 }
