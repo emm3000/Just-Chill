@@ -104,6 +104,26 @@ bloat: writers talking to the next reviewer, not to the next reader.
 - A comment that promises more than the code delivers is worse than none; reviews already caught
   KDocs doing exactly that.
 
+### How it spreads — two standing rules
+
+There is no scheduled repo-wide sweep, and the policy does not need one. It applies at two moments,
+and a reviewer can fail a diff on either:
+
+1. **New code ships with zero comments.** Any file a unit creates carries no comment and no KDoc
+   unless a line passes the survivor test above. This is not a preference — a new comment explaining
+   *what* the code does is a naming or decomposition defect, and the fix is the rename or the
+   extraction, not the sentence.
+2. **Code touched in passing gets stripped.** When a unit edits a file for any reason, its existing
+   comments are brought to this policy in the same commit. Not the whole module, not a separate
+   cleanup ticket — the file already in the diff. The reviewer's own second half already reads that
+   file, so the cost is bounded and the surface converges as the code moves.
+
+`fc67d14a` stripped the backup surface (65 files, −5007 lines) as a one-off because ADR 009's review
+loops had concentrated the bloat there. The rest of the repo — **448 KDoc blocks across 213
+production files**, measured 2026-08-16 — is not on any list. It converges under rule 2 or it does
+not converge, and that is the accepted trade: a comment nobody has touched in a year is not the one
+misleading anybody.
+
 ## The acronyms — verdict table
 
 Each **in** row carries the test that makes a finding falsifiable:
