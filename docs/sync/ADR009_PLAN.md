@@ -922,7 +922,9 @@ pair is exercised for real.
   Still open here: the Profile read itself.
 - Warning state when staleness exceeds 3 days with pending mutations.
 - Every failure (serialization, network, hash mismatch, storage error) logs a distinct reason
-  and increments a visible failure indicator. **The serialization leg landed — 3a-i below.**
+  and increments a visible failure indicator. **The serialization leg landed — 3a-i below. The named
+  reasons, the persisted counter and the health state surface landed — 3a-ii below; "storage error"
+  is the one reason still indistinguishable, and 3a-ii says what closing it would take.**
 - `ProfileOp` gains `VerifyingBackup` (`BackingUp` already landed in 2c-iv); the concurrent-op
   guard already emits `OperationInProgress`. Automatic backups do NOT go through
   `ProfileViewModel` — `BackupOrchestrator` is a singleton in the style of `SyncOrchestrator`.
@@ -973,6 +975,64 @@ through `toUserMessage()`. So `SerializationError`'s new Spanish string exists a
 has no UI route today: a serialization failure reads on screen exactly like every other backup
 failure. Giving it one — finer per-reason copy, or at least routing the failure through
 `toUserMessage()` — is not yet named by any bullet above and is left for whoever picks this up.
+
+**3a-ii — the persisted health state surface. LANDED** (`a82a77c8`, `5def67d9`, `5a4c965b`,
+`04c248fe`). `BackupController` gains `health: StateFlow<BackupHealth>` — last verified snapshot,
+consecutive failures, and the reason for the newest one — persisted per user beside the watermark.
+`BackupEvent` is untouched: its KDoc already said health is a state surface, and an event with no
+replay is gone by the time anyone opens Perfil.
+
+- **`BackupFailureReason` names only what the code can actually tell apart.** Six members, each
+  produced by a real mapping over a `DomainException` the pipeline throws: `Serialization`,
+  `Network`, `Unauthorized`, `Unverified`, `LocalDatabase`, `Unknown`. `LocalDatabase` is not in the
+  Phase 3 bullet above but is genuinely reachable — `safeDbCall` raises `DatabaseError` from
+  `exportToJson` and `latestLocalChangeAt`.
+- **The bullet's "hash mismatch" IS distinguishable** — `DefaultBackupUploader` raises
+  `ValidationError` with `ValidationCode.BackupUploadUnverified` for both read-back mismatches, and
+  no other backup failure carries that code. `5a4c965b` is what made that true in the case that
+  matters most: both cleanup deletes used to run inside `remotely { }`, so a mismatch whose cleanup
+  *also* failed threw a transport exception and never reached the `unverified` verdict — the one
+  outcome where an unverified object is left in the bucket was typed as a network blip. It is now
+  the verdict either way, with the cleanup failure as the cause.
+- **The bullet's "storage error" is NOT, and no member was invented for it.** A Supabase
+  `RestException` — the bucket's 413 over the 10 MiB ceiling, its 415 for a content type it refuses,
+  any 5xx — is mapped by `Throwable.asBackupFailure` to `DomainException.Unknown` with the status
+  spelled into the *message string*, and so is the `.json` naming defect and so is any unanticipated
+  throwable. Separating them needs a `DomainException` member carrying the status as data plus the
+  `:data` mapping to raise it. **That is the one piece of the "every failure logs a distinct reason"
+  bullet still open**, and it is a `:domain` + `:data` change, not a presentation one.
+- **`SnapshotOutcome.OwnerChanged` increments nothing.** It is a refusal, not a failure: the export
+  ran, the upload was accepted and the read-back verified it, so a streak would send whoever reads
+  it hunting an outage that does not exist — and the account it would be booked against has left.
+  The uploader's own *pre-upload* account-switch refusal does count: it arrives as an ordinary
+  `Unauthorized`, type-identical to an expired session, and telling those apart would mean matching
+  message text.
+- **Failure state is booked against the account the cycle captured**, never against whoever is
+  signed in when the throwable lands — the same hazard the watermark's post-upload re-check exists
+  for. It is *published* only while that account is still signed in, and `publishHealth` re-checks
+  after the write and reverts with `compareAndSet`: a guard checked only before the write is
+  check-then-act, and on `Dispatchers.Default` a sign-out landing in that window left the departed
+  account's streak on a signed-out device permanently (`04c248fe`).
+- **Both halves of the streak are one preference key** (`count|REASON`). `Settings` has no
+  transaction, so two keys meant two commits and a process killed between them left a count carrying
+  the previous outage's reason. `clearBackupMetadata` — and so `DeleteUserAccountUseCase` — removes
+  it with the watermark.
+
+**The gaps this unit leaves.**
+
+- **`health` has zero consumers.** Nothing renders it; that is 3b. And with
+  `SNAPSHOT_BACKUP_ENABLED` false, `start()` is never called, the session gate that seeds health
+  never runs, and the value stays `BackupHealth.None` forever. A UI must read
+  `lastSuccessfulBackupAt == null` as "no backup on this device", never as "up to date".
+- **Warn on the count, never on the reason.** `BackupFailureReason.fromNameOrNull` answers null for
+  a member this build no longer has a name for — deliberate, so a rename cannot crash the code that
+  reports a failure — which makes `(5, null)` a reachable value. `if (lastFailureReason != null)`
+  would hide a device that has failed five times running.
+- **Account deletion clears what is stored; it does not fence off later writes.** A cycle already in
+  flight for the deleted account re-creates the keys when it fails. Left unguarded on purpose: the
+  UUID is never reissued, read again or displayed.
+- **Staleness is not here.** The 3-day warning with pending mutations is still 3b, and belongs in a
+  use case rather than in the orchestrator.
 
 ### Phase 4 — restore confidence (the flag's gate)
 
