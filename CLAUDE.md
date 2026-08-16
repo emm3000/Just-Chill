@@ -1,49 +1,37 @@
-# CLAUDE.md
+# CLAUDE.md — per-module guidance lives in each module's own `CLAUDE.md`
 
-Per-module guidance lives in each module's own `CLAUDE.md`; Claude loads it automatically when working in that module.
-
-> **KMP everywhere; each platform owns its UI.** Android renders Compose (`:ui-android`); iOS is a
-> native SwiftUI app over the `JustChillKit` framework `:presentation` exports with SKIE
-> ([ADR 005](docs/adr/005-native-swiftui-ios-over-the-kmp-core.md); slices in `docs/swiftui/PLAN.md`).
-> Keep the iOS compile in every gate run — it is the only thing stopping the exported core from
-> silently filling with `java.*`. iOS runs the same writer+reviewer loop as everything else — see
-> `docs/WORKFLOW.md`. Android-only *capabilities* may live in `:androidApp`, but their platform-neutral
-> *logic* stays in the KMP core.
+> **KMP everywhere; each platform owns its UI.** Android renders Compose (`:ui-android`); iOS is native
+> SwiftUI over the `JustChillKit` framework `:presentation` exports with SKIE (ADR 005; slices in
+> `docs/swiftui/PLAN.md`). Keep the iOS compile in every gate run — it is the only thing stopping the
+> exported core from silently filling with `java.*`. Android-only *capabilities* may live in
+> `:androidApp`; their platform-neutral *logic* stays in the KMP core.
 >
-> **No third-party users on either platform, but the author runs the release build daily** via
-> Firebase App Distribution, on a device holding real accumulated data — UI and navigation are cheap
-> to redo, a destructive migration is not.
+> **No third-party users, but the author runs the release daily** on a device holding real accumulated
+> data — UI is cheap to redo, a destructive migration is not.
 
 ## Build & Development Commands
 
 ```bash
-./gradlew assembleDevDebug      # dev debug build (most common during dev)
-./gradlew assembleProdRelease   # production signed release
+./gradlew assembleDevDebug      # dev debug build; prod release is assembleProdRelease
 ./gradlew qualityGate           # THE gate — see Gotchas
-
-# Unit tests (JVM host tests — no device)
-./gradlew test                             # everything
-./gradlew :domain:testAndroidHostTest      # also :data:, :presentation:, :ui-android:
-./gradlew :androidApp:testDevDebugUnitTest # the MockK ViewModel suite lives here
-./gradlew :domain:testAndroidHostTest --tests "com.emm.domain.transaction.CreateTransactionUseCaseTest"
-
-# iOS
+./gradlew test                  # all JVM host tests; per module :<module>:testAndroidHostTest;
+                                # the MockK ViewModel suite is :androidApp:testDevDebugUnitTest
 ./gradlew :presentation:compileKotlinIosSimulatorArm64      # proves zero java.*/android.* leak
 ./gradlew :presentation:linkDebugFrameworkIosSimulatorArm64 # links JustChillKit + runs SKIE
-open iosApp/iosApp.xcodeproj                                # run the SwiftUI app from Xcode
 ```
 
-KMP host-test tasks go `UP-TO-DATE` across sessions — `--rerun` forces a real run, and it is **per-task**:
-with several tasks in one invocation it forces only the task it follows. There is no `:domain:test` and
-no `connectedDevDebugAndroidTest`; both died with the KMP migration.
+KMP host-test tasks go `UP-TO-DATE` across sessions — `--rerun` forces a real run, **per-task** (it only
+forces the task it follows). There is no `:domain:test` and no `connectedDevDebugAndroidTest`.
 
 ## Project Layout
 
-- Modules in `settings.gradle.kts`: `:androidApp`, `:ui-android`, `:presentation`, `:domain`, `:data`.
-- Java toolchain 17 everywhere. `compileSdk = 37`. `minSdk = 28` (`:androidApp`, `:ui-android`, `:presentation`) / `26` (`:domain`, `:data`).
+- Java toolchain 17 everywhere. `compileSdk = 37`. `minSdk = 28`, except 26 on `:domain` and `:data`.
 - `iosApp/` — Xcode project consuming `JustChillKit`. `supabase/` — CLI migrations for the server schema.
 - Two `tier` flavors (`dev` / `prod`), `:androidApp` only. Signing, Crashlytics-per-flavor and the
   deliberately-absent Firebase Analytics are in `androidApp/CLAUDE.md`.
+- Versions live in `gradle/libs.versions.toml` + `gradle-wrapper.properties`, not here. Compose
+  Multiplatform is **gone** — `:ui-android` renders Google's Compose under the BOM; `:presentation`
+  still uses JetBrains' multiplatform `lifecycle-viewmodel`, which has to compile for iOS.
 
 ## Architecture
 
@@ -62,30 +50,27 @@ packages across that boundary on purpose — explicit imports are required where
 crossed modules. ViewModels cannot touch Compose; conventions around it (ViewModel purity, why
 `:presentation` depends on `:data`) are in `presentation/CLAUDE.md`.
 
-The app is **local-first**: SQLDelight on-device is the single source of truth and the app is fully
-usable with no account and no network. **Sync is switched OFF in production since 2026-08-12**
-(`SYNC_TEMPORARILY_DISABLED` in `core/sync/SyncKillSwitch.kt`) and is **being removed, not repaired**:
-[ADR 009](docs/adr/009-backup-is-a-snapshot-not-row-replication.md) replaces row replication with
-**snapshot backup** — the versioned JSON export, uploaded automatically — and deletes the engine while
-keeping the sync schema. **Read `docs/sync/ADR009_PLAN.md`, the single live sync doc, before touching
-`data/.../sync/` or `presentation/.../core/sync/`.**
+The app is **local-first**: SQLDelight on-device is the single source of truth, fully usable with no
+account and no network. **Sync is OFF in production** (`SYNC_TEMPORARILY_DISABLED`,
+`core/sync/SyncKillSwitch.kt`) and is **being removed, not repaired**: ADR 009 replaces row
+replication with **snapshot backup** and deletes the engine while keeping the sync schema. **Read
+`docs/sync/ADR009_PLAN.md` before touching `data/.../sync/` or `presentation/.../core/sync/`.**
 
 **Data flow:** `Screen` → `ViewModel` → use case → `Repository` interface → `Default{Entity}Repository` → `LocalDataSource` (SQLDelight). The use case is there **only where there is domain logic** — a pure read goes from `ViewModel` straight to the `Repository` interface. Rationale + the measurement: `docs/CODE_QUALITY.md`.
 
 ### Contracts that span modules
 
-- **MVI** — `MviViewModel<S, I, E>` plus every ViewModel/UiState/Intent/Effect live in `:presentation` (`core/mvi/`); the Screens that consume them live in `:ui-android`.
-- **Errors** — sealed `DomainException` (`:domain/shared/error/`) → `:data/shared/SafeCall.kt` translates
-  SQLDelight exceptions into it → `:presentation/core/error/DomainExceptionExt.kt` turns it into a
-  Spanish message via `toUserMessage()`. Add failure modes by extending `DomainException`, never by
-  introducing a new exception type.
+- **MVI** — `MviViewModel<S, I, E>` and every ViewModel/UiState/Intent/Effect live in `:presentation`
+  (`core/mvi/`); the Screens consuming them live in `:ui-android`.
+- **Errors** — sealed `DomainException` (`:domain/shared/error/`) → `SafeCall.kt` translates SQLDelight
+  exceptions into it → `DomainExceptionExt.kt` renders the Spanish message. Add failure modes by
+  extending `DomainException`, never a new exception type.
 
 ## Testing
 
-JUnit4 + MockK + `kotlinx-coroutines-test` as JVM host tests (`androidHostTest`); `:domain` use cases are
-the primary surface. Two suites are the ONLY net for their failure mode — a missing Koin binding
-(`AppGraphKoinTest`, in `:presentation`) and a missing schema migration (the instrumented `:data` tests,
-not on the default gate). Both are documented where they live.
+JUnit4 + MockK + `kotlinx-coroutines-test` as JVM host tests (`androidHostTest`); `:domain` use cases
+are the primary surface. Two suites are the ONLY net for their failure mode: `AppGraphKoinTest`
+(missing Koin binding) and the instrumented `:data` tests (missing migration, off the default gate).
 
 ## Delegation
 
@@ -96,78 +81,70 @@ not on the default gate). Both are documented where they live.
 | Opus | Decides — architecture, ADRs, plans, reviewers, judges, and code where nothing else catches the error |
 | Main thread | Decides, delegates, verifies conclusions — never reads raw tool output |
 
-Tiebreaker: Sonnet writes where the compiler/a test catches the error; Opus writes where nothing does
-(that "nothing" list is `## Gotchas` below). The reviewer is always Opus, no exception — the Sonnet carve-out belongs only to Judgment Day's judges, for low blast radius. `model` passed explicitly every time, never relying on agent-file frontmatter. Loop + reasoning: `docs/WORKFLOW.md`.
+Tiebreaker: Sonnet writes where the compiler/a test catches the error; Opus where nothing does (that
+"nothing" list is `## Gotchas` below). The reviewer is always Opus. `model` passed explicitly every
+time, never relying on agent-file frontmatter. Loop + reasoning: `docs/WORKFLOW.md`.
+
+## Writer conventions (they reach every subagent through this file)
+
+- **Comments climb a ladder, in order: delete → rename → redesign → comment.** In a test file the test
+  method name IS the rename rung. A surviving comment names a constraint the code cannot show — one
+  comment, one fact. Full rule: `docs/CODE_QUALITY.md`.
+- **English for every identifier; Spanish only in user-data VALUES.** `name = "Sueldo"` is data;
+  `val sueldo` is a violation — name fixture locals by role (`incomeCategory`).
 
 ## Gotchas
 
 This is the Opus list (`docs/WORKFLOW.md` model-tier policy) — a Sonnet writer does not write here.
 
-- **`./gradlew qualityGate` is the gate.** One definition, in `build-logic/.../QualityGateConventionPlugin.kt`;
-  the pre-push hook and all three workflows invoke it. detekt over every **module** source set holding code,
-  the host test suites, dev lint, and (macOS only) the iOS compile — plus `:build-logic:test`, named
-  explicitly on the root project because an included build is unreachable by task-name matching.
-  `build-logic` is on the gate for its **tests only**: it applies no detekt, so its own sources are the one
-  body of code the gate runs and never lints. Change the plugin, not the callers. **Never
-  gate on plain `./gradlew detekt`** — it is `NO-SOURCE` on all three KMP modules and only lints `:androidApp`.
-- **Third-party actions in `.github/` are pinned to a commit SHA on purpose** — they hold the signing key,
-  the Firebase credentials and the Play service account, and a floating `@v1` can be repointed by whoever
-  owns the upstream repo. Do not "tidy" them into tags; dependabot proposes the bumps. GitHub's own
-  `actions/*` stay on tags — they already own the runner and the secret store.
-- **`versionName` is `git describe --match "v[0-9]*"`, and the filter is load-bearing.** The repo carries
-  non-release tags (`pre-kmp`, `post-s5`, `pre-redesign`) and a bare `describe` returns the nearest one — that is how builds shipped `versionName = "pre-kmp"`. Same filter in `/release`.
+- **`./gradlew qualityGate` is the gate.** One definition — `build-logic/.../QualityGateConventionPlugin.kt`,
+  invoked by the pre-push hook and all three workflows: detekt over every module source set holding
+  code, the host test suites, dev lint, (macOS) the iOS compile, plus `:build-logic:test` named
+  explicitly (an included build is unreachable by task-name matching; its sources are the one code the
+  gate runs and never lints). Change the plugin, not the callers. **Never gate on plain
+  `./gradlew detekt`** — `NO-SOURCE` on all three KMP modules; it only lints `:androidApp`.
+- **Third-party actions in `.github/` are pinned to a commit SHA on purpose** — they hold the signing
+  and Play/Firebase credentials, and a floating `@v1` can be repointed upstream. Do not "tidy" them
+  into tags; dependabot proposes bumps. GitHub's own `actions/*` stay on tags.
+- **`versionName` is `git describe --match "v[0-9]*"`, and the filter is load-bearing** — the repo
+  carries non-release tags and a bare `describe` returns the nearest one (builds once shipped
+  `versionName = "pre-kmp"`). Same filter in `/release`.
 - **A tag push does not ship.** `uploadRelease.yml` uploads the AAB to the alpha track as a **draft**; publishing it is manual in Play Console. A green workflow reached no one.
 - **`run:` blocks take secrets through `env:`**, never `${{ }}` spliced into the script text. Validate workflow edits with `actionlint` — it catches errors a YAML parse cannot.
-- **Every route the nav host can push MUST be `@Serializable`.** `AppNavHost` uses the reflective 1-arg
-  `rememberNavBackStack`, which re-resolves each entry via `Class.forName(name).kotlin.serializer()` —
-  miss the annotation and the app dies on process-death restore and nowhere else, invisible to the
-  compiler. `RouteSerializationTest` round-trips every sealed `AppRoute` through that same serializer.
-
-## Tooling Versions
-
-Trust the source, not a version list here: `gradle/libs.versions.toml` (AGP under the `androidApplication`
-key) and `gradle/wrapper/gradle-wrapper.properties`. Compose Multiplatform is **gone** — `:ui-android`
-renders on Google's Compose under the BOM and the CMP Gradle plugin is applied nowhere; `:presentation`
-still uses JetBrains' multiplatform `lifecycle-viewmodel`, which has to compile for iOS.
+- **Every route the nav host can push MUST be `@Serializable`.** The reflective 1-arg
+  `rememberNavBackStack` re-resolves each entry via `Class.forName(name).kotlin.serializer()` — miss
+  the annotation and the app dies only on process-death restore, invisible to the compiler.
+  `RouteSerializationTest` round-trips every sealed `AppRoute` through that serializer.
 
 ## Docs contract
 
-Six doc types, each with one job and a death rule — anything else is a smell:
-
-1. **`CLAUDE.md`** (root + per module) — how to work here. ≤150 lines, pointers, no content of its own.
-2. **`adr/`** — one decision per ADR, target 1 page, ceiling 2; long evidence links to `archive/`.
-   Amended by a new ADR, never edited.
-3. **One live plan per track** — states ONLY what remains. Closing a unit removes it from the plan
-   **in the same commit**; surviving constraints become bullets in the plan's constraints section.
-4. **`PROGRESS.md`** — where we are + backlog. Items are 1–2 lines with a pointer, no essays.
-5. **Reference docs** (`WORKFLOW.md`, `CODE_QUALITY.md`, `DESIGN_SYSTEM.md`, …) — timeless
-   conventions. Zero history, zero dates-as-story; rewritten in place.
-6. **`archive/`** — the reasoning of closed work. Read to understand the past, never for what to do next.
-
-The chronicle — what shipped, what review found, how it went — lives in git and engram, never in a
-live doc. Every live doc has a read-trigger in the docs map below; a doc with no trigger is archive.
+Six doc types, one job and a death rule each: **`CLAUDE.md`** — how to work here, ≤150 lines, pointers
+only. **`adr/`** — one decision per ADR, target 1 page, ceiling 2; amended by a new ADR, never edited.
+**One live plan per track** — ONLY what remains; closing a unit removes it from the plan in the same
+commit. **`PROGRESS.md`** — backlog items of 1–2 lines + pointer, no essays. **Reference docs**
+(`WORKFLOW`, `CODE_QUALITY`, `DESIGN_SYSTEM`) — timeless conventions, zero history. **`archive/`** —
+the reasoning of closed work. The chronicle lives in git and engram, never in a live doc; every live
+doc has a read-trigger in the map below, and a doc with no trigger is archive.
 
 ## Docs map (`docs/`)
 
-- `PROGRESS.md` — "where are we now" plus the single open-work checklist (there is no tech-debt list here;
-  sync debt lives in `sync/ADR009_PLAN.md`). **Read it first.**
+- `PROGRESS.md` — "where are we now" plus the single open-work checklist; sync debt lives in the sync
+  plan instead. **Read it first.**
 - `sync/ADR009_PLAN.md` — the single live sync doc: what remains of replacing row replication with
-  snapshot backup, plus the constraints closed phases left behind. **Read before touching sync.**
-  The unit-by-unit chronicle of Phases 0–3, the old audit and the old slice plan sit in
-  `archive/sync/`, kept for the reasoning, never for what to do next.
-- `adr/` — filenames state the decision. 004 amends 002; 005 supersedes 003's frozen-UI scope; 006
-  supersedes 001's multi-device premise and leaves 004 dormant; 007 amends 003's point 5 (writer + reviewer, repo-wide); 008 moves the category/type invariant into the schema; 009 is the one to read first for anything sync-shaped — backup becomes a snapshot, the engine goes, the schema stays; it supersedes parts of 001 and 006 and renders 002 dormant, decision by decision in its header. **Read before changing anything an ADR decided** — ADRs are amended by a new ADR, never rewritten.
-- `DATE_AUDIT.md` — the 13 date findings, all closed. **Read before touching dates.** Live rule #7:
-  whatever asks "what day/month is it" takes an injected `Clock` **and** `TimeZone`, **neither carrying a
-  default** (`hh/di/SharedModule.kt` is the only way in). Follow-up: #5 phase two.
+  snapshot backup, plus the constraints closed phases left behind. **Read before touching sync.** The
+  Phase 0–3 chronicle, old audit and old slice plan sit in `archive/sync/`.
+- `adr/` — filenames state the decision; each header declares what it amends or supersedes. 009 is
+  the one to read first for anything sync-shaped. **Read before changing anything an ADR decided.**
+- `DATE_AUDIT.md` — the date findings + live rule #7: whatever asks "what day is it" takes an injected
+  `Clock` **and** `TimeZone`, neither with a default. **Read before touching dates.**
 - `PLAY_ADVERTISING_ID.md` — proof the app does not use the advertising ID. **Read before answering Play's declaration**; the console says "Yes", wrongly.
 - `DESIGN_SYSTEM.md` — tokens and components. **Read before adding UI**; paths point at `ui-android/src/androidMain/`, the only source set `:ui-android` has.
 - `CODE_QUALITY.md` — the two halves of the convention: detekt's real thresholds and its blind spots, and what only a reviewer can judge. **Read before adding a lint rule, a `@Suppress`, or a use case.**
-- `WORKFLOW.md` — the writer/reviewer loop, the reinforced gate, the model-tier policy. **Required before
-  any unit of work**, not just KMP. `archive/kmp/ORCHESTRATION.md` — the closed KMP slice ledger +
-  landmines, historical. `swiftui/PLAN.md` — the 11 iOS slices and their status.
-- `PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `POST_V1_PLAN.md` — the product definition ADR 001 amends by row id, plus unstarted growth work. **Read before scoping a feature.**
+- `WORKFLOW.md` — the writer/reviewer loop, the reinforced gate, the model-tier policy. **Required
+  before any unit of work.** `swiftui/PLAN.md` — the 11 iOS slices and their status.
+- `PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `POST_V1_PLAN.md` — the product definition ADR 001
+  amends by row id, plus unstarted growth work. **Read before scoping a feature.**
 - `archive/` — closed tracks kept for the reasoning.
 
-Latest tags: `v2.4.0`, `pre-kmp` (rollback point before the KMP migration). `v2.4.0` is tagged and built
-but has NOT reached the alpha track — its Play upload was rejected, see `PLAY_ADVERTISING_ID.md`.
+Latest release tag `v2.4.0`: built but NOT on the alpha track — its Play upload was rejected
+(`PLAY_ADVERTISING_ID.md`). `pre-kmp` is the rollback point before the KMP migration.
