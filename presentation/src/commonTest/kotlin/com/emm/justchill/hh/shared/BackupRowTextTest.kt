@@ -162,6 +162,32 @@ class BackupRowTextTest {
         )
     }
 
+    @Test
+    fun `a pending disclosure asks for the tap rather than reporting a state`() {
+        val text = BackupRowUi.DisclosurePending.toMetaText()
+
+        assertEquals("Falta tu confirmación para respaldar en esta cuenta", text)
+        assertTrue("Sin respaldo" !in text)
+    }
+
+    /**
+     * The sentence ADR 009 Decision 5 requires on screen: this device's WHOLE ledger, including rows
+     * written under a previous account, goes into this account's backup. A copy edit that drops
+     * either half stops satisfying the decision, so both halves are asserted rather than the string.
+     */
+    @Test
+    fun `the disclosure names the whole ledger and the previous account`() {
+        assertTrue("TODO" in BACKUP_DESTINATION_DISCLOSURE, BACKUP_DESTINATION_DISCLOSURE)
+        assertTrue("otra cuenta" in BACKUP_DESTINATION_DISCLOSURE, BACKUP_DESTINATION_DISCLOSURE)
+        assertTrue("cerrar sesión no borra" in BACKUP_DESTINATION_DISCLOSURE, BACKUP_DESTINATION_DISCLOSURE)
+        assertTrue(BACKUP_DESTINATION_DISCLOSURE_ACTION.isNotBlank())
+    }
+
+    @Test
+    fun `a pending disclosure is amber, because the row itself carries the fix`() {
+        assertEquals(BackupRowSeverity.Warning, BackupRowUi.DisclosurePending.severity())
+    }
+
     private fun failed(reason: BackupFailureReason?, days: Int, isStale: Boolean = false) =
         BackupRowUi.Failed(reason, LastSnapshot.DaysAgo(days = days, isStale = isStale))
 }

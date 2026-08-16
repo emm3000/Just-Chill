@@ -10,4 +10,6 @@ sealed interface ProfileIntent : UiIntent {
     data object DeleteAccount : ProfileIntent
 
     data object BackUpNow : ProfileIntent
+
+    data object AcknowledgeBackupDestination : ProfileIntent
 }

@@ -182,7 +182,10 @@ class BackupOrchestrator(
         if (!manual) return
         val event: BackupEvent? = when (outcome) {
             SnapshotOutcome.Recorded -> BackupEvent.Succeeded
+
             SnapshotOutcome.OwnerChanged -> BackupEvent.Failed(DomainException.Unauthorized(OWNER_CHANGED))
+
+            // The disclosure is refused at the button by ProfileViewModel, which can name why.
             SnapshotOutcome.NotDue,
             SnapshotOutcome.DestinationUndisclosed,
             -> null
@@ -211,20 +214,25 @@ class BackupOrchestrator(
     }
 
     private suspend fun takeSnapshot(userId: String, manual: Boolean): SnapshotOutcome {
-        // Ahead of the due-check a manual request skips, so a tap cannot walk around the disclosure.
-        if (metadata.destinationDisclosedAt(userId) == null) {
-            logger.warn(
-                "backup cycle refused: this device has not disclosed to $userId that its whole " +
-                    "ledger, including rows written under a previous account, goes into this " +
-                    "account's backup. Nothing is exported or uploaded until Perfil is acknowledged.",
-            )
-            return SnapshotOutcome.DestinationUndisclosed
-        }
-
         val takenAt: Instant = clock.now()
-        // manual skips isBackupDue: a user-requested backup runs regardless of dirty state or the
-        // once-a-day cap.
-        if (!manual && !isBackupDue(userId, takenAt)) return SnapshotOutcome.NotDue
+        // The disclosure is checked ahead of the due-check a manual request skips, so a tap cannot
+        // walk around it. manual skips isBackupDue: a user-requested backup runs regardless of
+        // dirty state or the once-a-day cap.
+        val refusal: SnapshotOutcome? = when {
+            metadata.destinationDisclosedAt(userId) == null -> {
+                logger.warn(
+                    "backup cycle refused: this device has not disclosed to $userId that its whole " +
+                        "ledger, including rows written under a previous account, goes into this " +
+                        "account's backup. Nothing is exported or uploaded until Perfil is acknowledged.",
+                )
+                SnapshotOutcome.DestinationUndisclosed
+            }
+
+            !manual && !isBackupDue(userId, takenAt) -> SnapshotOutcome.NotDue
+
+            else -> null
+        }
+        if (refusal != null) return refusal
 
         val payload: String = backupRepository.exportToJson(
             exportedAt = takenAt.toEpochMilliseconds(),

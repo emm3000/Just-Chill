@@ -30,6 +30,7 @@ import io.mockk.verify
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -37,6 +38,7 @@ import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -123,6 +125,7 @@ class ProfileViewModelBackupRowTest {
     fun `a signed-in device with no snapshot is Never`() = runTest(testDispatcher) {
         val vm = buildViewModel()
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
+        healthFlow.value = health(null, consecutiveFailures = 0, lastFailureReason = null)
         advanceUntilIdle()
 
         assertEquals(BackupRowUi.Never, vm.state.value.backupRow)
@@ -331,6 +334,88 @@ class ProfileViewModelBackupRowTest {
         assertEquals("Hace 30 días · vuelve a iniciar sesión", row.toMetaText())
         assertEquals(BackupRowSeverity.Danger, row.severity())
     }
+
+    // ── The destination disclosure (ADR 009 Decision 5, unit 3c) ───────────────────
+
+    @Test
+    fun `a signed-in device whose destination was never disclosed asks before anything else`() =
+        runTest(testDispatcher) {
+            val vm = buildViewModel()
+
+            sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
+            healthFlow.value = BackupHealth(LAST_BACKUP_AT, 0, null, isDestinationDisclosed = false)
+            advanceUntilIdle()
+
+            assertEquals(BackupRowUi.DisclosurePending, vm.state.value.backupRow)
+            coVerify(exactly = 0) { getBackupStaleness(any()) }
+        }
+
+    /**
+     * The orchestrator raises `isBackingUp` for the cycle it is about to refuse, so a lower rank
+     * would flash "Respaldando…" over a device uploading nothing.
+     */
+    @Test
+    fun `a pending disclosure outranks a running cycle`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+
+        sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
+        healthFlow.value = BackupHealth(LAST_BACKUP_AT, 0, null, isDestinationDisclosed = false)
+        backingUpFlow.value = true
+        advanceUntilIdle()
+
+        assertEquals(BackupRowUi.DisclosurePending, vm.state.value.backupRow)
+    }
+
+    @Test
+    fun `a signed-out device is still NeedsAccount, never a disclosure it has nobody to make to`() =
+        runTest(testDispatcher) {
+            val vm = buildViewModel()
+
+            sessionFlow.emit(SessionStatus.NotAuthenticated)
+            healthFlow.value = BackupHealth(null, 0, null, isDestinationDisclosed = false)
+            advanceUntilIdle()
+
+            assertEquals(BackupRowUi.NeedsAccount, vm.state.value.backupRow)
+        }
+
+    @Test
+    fun `acknowledging reaches the controller, which is what unblocks the cycle`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+
+        sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
+        healthFlow.value = BackupHealth(LAST_BACKUP_AT, 0, null, isDestinationDisclosed = false)
+        advanceUntilIdle()
+
+        vm.onIntent(ProfileIntent.AcknowledgeBackupDestination)
+        advanceUntilIdle()
+
+        verify(exactly = 1) { backupController.acknowledgeDestination() }
+    }
+
+    @Test
+    fun `tapping Respaldar ahora while the disclosure is pending says so instead of doing nothing`() =
+        runTest(testDispatcher) {
+            val vm = buildViewModel()
+
+            sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
+            healthFlow.value = BackupHealth(LAST_BACKUP_AT, 0, null, isDestinationDisclosed = false)
+            advanceUntilIdle()
+
+            val effects = mutableListOf<ProfileEffect>()
+            val job = launch { vm.effect.collect { effects.add(it) } }
+            advanceUntilIdle()
+
+            vm.onIntent(ProfileIntent.BackUpNow)
+            advanceUntilIdle()
+
+            assertTrue(
+                effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.BackupNeedsDisclosure },
+                "Expected BackupNeedsDisclosure notify not found in $effects",
+            )
+            verify(exactly = 0) { backupController.requestBackup(any<Boolean>()) }
+
+            job.cancel()
+        }
 
     // Every case below describes a destination the user already acknowledged; the pending
     // disclosure outranks all of them and has its own tests.

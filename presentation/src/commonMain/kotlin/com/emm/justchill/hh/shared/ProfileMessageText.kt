@@ -30,5 +30,7 @@ fun ProfileMessage.toText(): String = when (this) {
 
     ProfileMessage.BackupNeedsAccount -> "Inicia sesión para respaldar en la nube."
 
+    ProfileMessage.BackupNeedsDisclosure -> "Primero confirma dónde va a quedar tu respaldo."
+
     ProfileMessage.OperationInProgress -> "Espera a que termine la operación en curso."
 }

@@ -32,6 +32,12 @@ sealed interface BackupRowUi {
 
     data object NeedsAccount : BackupRowUi
 
+    /**
+     * No upload can happen in this state: `BackupOrchestrator` refuses every cycle for an account
+     * whose destination was never disclosed, so the row is the only way out of it.
+     */
+    data object DisclosurePending : BackupRowUi
+
     data object Never : BackupRowUi
 
     data object Unreadable : BackupRowUi
@@ -52,6 +58,12 @@ fun BackupRowUi.severity(): BackupRowSeverity = when (this) {
     BackupRowUi.BackingUp,
     BackupRowUi.Never,
     -> BackupRowSeverity.Normal
+
+    // Warning, not danger: the ledger is unprotected, but this is consent pending rather than
+    // protection failing, and the row itself carries the tap that fixes it. `danger` stays for a
+    // ledger with no remedy in reach — nothing backed up at all, or a stale snapshot under a
+    // failing cycle.
+    BackupRowUi.DisclosurePending -> BackupRowSeverity.Warning
 
     BackupRowUi.Unreadable -> BackupRowSeverity.Warning
 

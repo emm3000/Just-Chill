@@ -642,23 +642,22 @@ class BackupOrchestratorTest {
      * refusal to upload can. It is a refusal and not a failure: no streak, no reason, no watermark.
      */
     @Test
-    fun `an undisclosed destination exports nothing, uploads nothing and books no failure`() =
-        runTest(testDispatcher) {
-            disclosed.clear()
-            coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+    fun `an undisclosed destination uploads nothing and books no failure`() = runTest(testDispatcher) {
+        disclosed.clear()
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
 
-            val orchestrator = buildOrchestrator()
-            orchestrator.start()
-            authenticate()
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
 
-            backgroundFlow.emit(Unit)
-            advanceUntilIdle()
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
 
-            coVerify(exactly = 0) { backupRepository.exportToJson(any(), any()) }
-            coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
-            verify(exactly = 0) { metadata.setLastSuccessfulBackupAt(any(), any()) }
-            verify(exactly = 0) { metadata.recordFailure(any(), any()) }
-        }
+        coVerify(exactly = 0) { backupRepository.exportToJson(any(), any()) }
+        coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
+        verify(exactly = 0) { metadata.setLastSuccessfulBackupAt(any(), any()) }
+        verify(exactly = 0) { metadata.recordFailure(any(), any()) }
+    }
 
     @Test
     fun `a manual tap hits the same gate as an automatic cycle`() = runTest(testDispatcher) {

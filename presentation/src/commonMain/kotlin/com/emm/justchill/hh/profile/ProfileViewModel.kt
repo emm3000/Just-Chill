@@ -115,6 +115,7 @@ class ProfileViewModel(
             ProfileIntent.SyncNow -> syncNow()
             ProfileIntent.DeleteAccount -> deleteAccount()
             ProfileIntent.BackUpNow -> backUpNow()
+            ProfileIntent.AcknowledgeBackupDestination -> backupController.acknowledgeDestination()
         }
     }
 
@@ -138,6 +139,7 @@ class ProfileViewModel(
         val refusal: ProfileMessage? = when {
             currentState.op != ProfileOp.None -> ProfileMessage.OperationInProgress
             currentState.session !is SessionUiState.SignedIn -> ProfileMessage.BackupNeedsAccount
+            currentState.backupRow == BackupRowUi.DisclosurePending -> ProfileMessage.BackupNeedsDisclosure
             else -> null
         }
         if (refusal == null) {
@@ -214,6 +216,7 @@ class ProfileViewModel(
 /**
  * ```
  * resolveBackupRow          not signed in ............... NeedsAccount
+ *                           destination undisclosed ..... DisclosurePending
  *                           a cycle is running .......... BackingUp
  *                           no watermark ................ failing ? Failed(reason, None) : Never
  *                           a watermark ................. ↓
@@ -234,6 +237,11 @@ private suspend fun resolveBackupRow(
     val lastSuccessfulBackupAt: Long? = health.lastSuccessfulBackupAt
     return when {
         sessionUiState !is SessionUiState.SignedIn -> BackupRowUi.NeedsAccount
+
+        // Above BackingUp for the same reason NeedsAccount is: the orchestrator raises isBackingUp
+        // for the whole cycle, including the one that is about to refuse, so ranking it lower would
+        // flash "Respaldando…" over a device that is uploading nothing.
+        !health.isDestinationDisclosed -> BackupRowUi.DisclosurePending
 
         backingUp -> BackupRowUi.BackingUp
 

@@ -65,6 +65,9 @@ import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.atoms.FilledCta
+import com.emm.justchill.hh.shared.BACKUP_DESTINATION_DISCLOSURE
+import com.emm.justchill.hh.shared.BACKUP_DESTINATION_DISCLOSURE_ACTION
 import com.emm.justchill.hh.shared.SpanishDateFormat
 import com.emm.justchill.hh.shared.toMetaText
 import kotlinx.datetime.TimeZone
@@ -93,6 +96,7 @@ fun ProfileScreen(
     onSyncNowClick: () -> Unit = {},
     onCopyCommitHashClick: () -> Unit = {},
     onBackUpNowClick: () -> Unit = {},
+    onAcknowledgeBackupDestinationClick: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -158,6 +162,7 @@ fun ProfileScreen(
             onExportClick = onExportClick,
             onImportClick = onImportClick,
             onBackUpNowClick = onBackUpNowClick,
+            onAcknowledgeBackupDestinationClick = onAcknowledgeBackupDestinationClick,
         )
 
         SectionHeader(text = "App")
@@ -212,6 +217,7 @@ private fun BackupSection(
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
     onBackUpNowClick: () -> Unit,
+    onAcknowledgeBackupDestinationClick: () -> Unit,
 ) {
     var showImportDialog by remember { mutableStateOf(false) }
 
@@ -267,8 +273,33 @@ private fun BackupSection(
                 )
                 HairlineDivider()
                 LastBackupRow(row = state.backupRow)
+                if (state.backupRow == BackupRowUi.DisclosurePending) {
+                    BackupDestinationDisclosure(onAcknowledge = onAcknowledgeBackupDestinationClick)
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun BackupDestinationDisclosure(onAcknowledge: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = spacing.s5, end = spacing.s5, bottom = spacing.s4),
+        verticalArrangement = Arrangement.spacedBy(spacing.s3),
+    ) {
+        Text(
+            text = BACKUP_DESTINATION_DISCLOSURE,
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
+            fontFamily = InterFontFamily,
+            fontWeight = FontWeight.W400,
+            color = colors.textSecondary,
+        )
+        FilledCta(label = BACKUP_DESTINATION_DISCLOSURE_ACTION, onClick = onAcknowledge)
     }
 }
 

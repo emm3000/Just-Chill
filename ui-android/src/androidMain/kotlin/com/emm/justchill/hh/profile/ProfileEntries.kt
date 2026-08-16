@@ -91,6 +91,7 @@ private fun ProfileEntry(
                         ProfileMessage.OperationInProgress,
                         ProfileMessage.BackupFailed,
                         ProfileMessage.BackupNeedsAccount,
+                        ProfileMessage.BackupNeedsDisclosure,
                         -> EmmSnackbarTone.Error
 
                         ProfileMessage.SessionClosed,
@@ -137,6 +138,9 @@ private fun ProfileEntry(
         onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccount) },
         onSyncNowClick = { vm.onIntent(ProfileIntent.SyncNow) },
         onBackUpNowClick = { vm.onIntent(ProfileIntent.BackUpNow) },
+        onAcknowledgeBackupDestinationClick = {
+            vm.onIntent(ProfileIntent.AcknowledgeBackupDestination)
+        },
         onCopyCommitHashClick = {
             clipboardScope.launch { copyCommitHash(clipboard, commitHash, bindings) }
         },

@@ -59,7 +59,10 @@ class ProfileViewModelTest {
 
     private val backingUpFlow = MutableStateFlow(false)
     private val backupEvents = MutableSharedFlow<BackupEvent>(extraBufferCapacity = 4)
-    private val healthFlow = MutableStateFlow(BackupHealth.None)
+
+    // Disclosed: this suite is about the ops, and an undisclosed destination refuses every one of
+    // the manual taps below. The gate has its own tests.
+    private val healthFlow = MutableStateFlow(BackupHealth.None.copy(isDestinationDisclosed = true))
     private val backupController = mockk<BackupController>(relaxed = true) {
         every { isBackingUp } returns backingUpFlow
         every { events } returns backupEvents

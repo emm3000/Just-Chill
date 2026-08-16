@@ -20,5 +20,6 @@ sealed interface ProfileMessage {
     data object BackupDone : ProfileMessage
     data object BackupFailed : ProfileMessage
     data object BackupNeedsAccount : ProfileMessage
+    data object BackupNeedsDisclosure : ProfileMessage
     data object OperationInProgress : ProfileMessage
 }
