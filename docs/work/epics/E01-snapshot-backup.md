@@ -52,3 +52,4 @@ engine decommission remain.
 - The Perfil day count does not refresh across midnight, computed per emission without a ticker (same as `ReportUiState.isCurrentMonth`, `DATE_AUDIT.md` #7).
 - Session and health are two flows — across an account switch there is one emission where the new session pairs with the old account's watermark (a display seam, not a recording one).
 - Settled, do not reopen: shared accounts, multi-device sync, CRDTs, server-side LWW/conditional upsert, push-only row sync, or E2E encryption now (a Keystore-bound key dies with the phone).
+- An unparseable `lastConfirmedPeriod` degrades the field to null, never the row — a template with no readable mark is still usable, unlike an unreadable `type`/`frequency`, which leaves the row itself unusable.

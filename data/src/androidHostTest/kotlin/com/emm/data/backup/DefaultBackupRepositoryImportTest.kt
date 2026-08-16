@@ -465,11 +465,23 @@ class DefaultBackupRepositoryImportTest {
     }
 
     @Test
-    fun `a template whose settled mark is unreadable restores with no mark rather than being dropped`() = runTest {
+    fun `a template whose settled mark is malformed restores intact with the mark cleared`() = runTest {
         val json = payloadWith(
-            categoriesJson = emptyList(),
+            categoriesJson = listOf(
+                """{"categoryId":"cat-1","name":"Casa","icon":"i","color":"c","categoryType":"Spend"}""",
+            ),
             transactionsJson = emptyList(),
-            recurringJson = listOf(template(id = "rec-1", lastConfirmedPeriod = "julio")),
+            recurringJson = listOf(
+                template(
+                    id = "rec-1",
+                    categoryId = "cat-1",
+                    lastConfirmedPeriod = "julio",
+                    dayOfMonth = 17,
+                    isActive = false,
+                    amountCents = 999_900,
+                    createdAt = 1_780_555_000_000,
+                ),
+            ),
         )
 
         repository.importFromJson(json)
@@ -477,15 +489,35 @@ class DefaultBackupRepositoryImportTest {
         val restored = db.recurring_movementsQueries.find("rec-1").executeAsOne()
         assertNull(restored.lastConfirmedPeriod)
         assertEquals("Alquiler", restored.name)
-        assertEquals(120_000L, restored.amount)
+        assertEquals("Spend", restored.type)
+        assertEquals(999_900L, restored.amount)
+        assertEquals("Depa", restored.description)
+        assertEquals("cat-1", restored.categoryId)
+        assertEquals("acc-1", restored.accountId)
+        assertEquals("Monthly", restored.frequency)
+        assertEquals(17L, restored.dayOfMonth)
+        assertEquals(0L, restored.isActive)
+        assertEquals(1_780_555_000_000L, restored.createdAt)
     }
 
     @Test
-    fun `a settled mark whose year the app could not have written restores with no mark`() = runTest {
+    fun `a well-formed but out-of-range settled mark restores the template intact with the mark cleared`() = runTest {
         val json = payloadWith(
-            categoriesJson = emptyList(),
+            categoriesJson = listOf(
+                """{"categoryId":"cat-1","name":"Casa","icon":"i","color":"c","categoryType":"Spend"}""",
+            ),
             transactionsJson = emptyList(),
-            recurringJson = listOf(template(id = "rec-1", lastConfirmedPeriod = "12345-07")),
+            recurringJson = listOf(
+                template(
+                    id = "rec-1",
+                    categoryId = "cat-1",
+                    lastConfirmedPeriod = "12345-07",
+                    dayOfMonth = 22,
+                    isActive = false,
+                    amountCents = 555_500,
+                    createdAt = 1_780_666_000_000,
+                ),
+            ),
         )
 
         repository.importFromJson(json)
@@ -493,6 +525,15 @@ class DefaultBackupRepositoryImportTest {
         val restored = db.recurring_movementsQueries.find("rec-1").executeAsOne()
         assertNull(restored.lastConfirmedPeriod)
         assertEquals("Alquiler", restored.name)
+        assertEquals("Spend", restored.type)
+        assertEquals(555_500L, restored.amount)
+        assertEquals("Depa", restored.description)
+        assertEquals("cat-1", restored.categoryId)
+        assertEquals("acc-1", restored.accountId)
+        assertEquals("Monthly", restored.frequency)
+        assertEquals(22L, restored.dayOfMonth)
+        assertEquals(0L, restored.isActive)
+        assertEquals(1_780_666_000_000L, restored.createdAt)
     }
 
     @Test
@@ -683,11 +724,15 @@ class DefaultBackupRepositoryImportTest {
         type: String = "Spend",
         categoryId: String? = null,
         lastConfirmedPeriod: String? = null,
+        dayOfMonth: Int = 5,
+        isActive: Boolean = true,
+        amountCents: Long = 120000,
+        createdAt: Long = 1780000000000,
     ): String = """
-        {"recurringMovementId":"$id","name":"Alquiler","type":"$type","amountCents":120000,
+        {"recurringMovementId":"$id","name":"Alquiler","type":"$type","amountCents":$amountCents,
          "description":"Depa","categoryId":${categoryId?.let { "\"$it\"" }},"accountId":"acc-1",
-         "frequency":"Monthly","dayOfMonth":5,"isActive":true,
-         "lastConfirmedPeriod":${lastConfirmedPeriod?.let { "\"$it\"" }},"createdAt":1780000000000}
+         "frequency":"Monthly","dayOfMonth":$dayOfMonth,"isActive":$isActive,
+         "lastConfirmedPeriod":${lastConfirmedPeriod?.let { "\"$it\"" }},"createdAt":$createdAt}
     """.trimIndent()
 
     private companion object {
