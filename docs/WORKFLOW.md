@@ -74,18 +74,19 @@ Before delegating, map the unit cheaply so the writer prompt is precise:
   same-package gotcha where it applies; **re-run the full gate from scratch** (`--rerun-tasks`).
 - Output: severity-tagged findings (`CRITICAL`/`WARNING`/`NIT`) + one-line verdict **SHIP** or
   **FIX-FIRST**. Review only — no fixes, no commit.
+- **A comment finding has exactly two shapes: DELETE, or KEEP naming the constraint it carries.**
+  "Inconsistent with the surrounding style" is not a comment finding — style is what the diff looks
+  like, and the policy is about whether the sentence should exist at all. This is not hypothetical:
+  3c's review reported a comment as a KDoc-vs-line-comment inconsistency, the orchestrator forwarded
+  it as a reformatting instruction, and the round shipped the same sentence in a different syntax
+  while the sentence itself was a copy of a rule enforced in another file.
 
 ### 5. Decide
 - **SHIP** → report to user, move to the next unit.
 - **FIX-FIRST** → send findings back to the writer agent (or a fix agent). No re-review by default —
   see the Review policy cap below.
 
-## Review policy — risk-tiered and capped (2026-08-15)
-
-Adopted after ADR 009 Phase 3 unit 3b, where the loop went recursive: two SHIP verdicts, then a fix
-round, then a pending "review of the fixes" — rounds reviewing rounds, never converging. Rounds 1–2
-caught real product bugs the gate cannot see; round 3 caught copy. The cap keeps the part that pays
-and kills the tail.
+## Review policy — risk-tiered and capped
 
 **Cap: at most one review + one fix round per unit.**
 - SHIP → done. Fixes that follow a SHIP verdict (nits, copy) are covered by the gate, not by another
@@ -183,16 +184,7 @@ single highest-risk spot; the full ledger and landmines are in `docs/archive/kmp
 
 ### Enforcement note
 
-`~/.claude/agents/jd-judge-a.md:7` and `jd-judge-b.md:7` carry `model: sonnet` in frontmatter. The
-Agent tool's `model` parameter overrides frontmatter, and this policy is deliberately repo-scoped, so
-the global frontmatter is NOT being changed — which means omitting `model` on an Agent call silently
-downgrades a judge to Sonnet.
-
-This is not a hypothetical risk; it already happened. Across this project's session logs there are 16
-`jd-judge-a`/`jd-judge-b` invocations total. Only 8 carry `"model":"opus"`, all in one session,
-`c793227e` (2026-08-11). The other 8 carry **no `model` key at all**, so they ran on the frontmatter
-default — Sonnet — across three separate sessions: `72d07f9b` (×4), `baafe251` (×2), `fc5c810b` (×2).
-Session `baafe251`, timestamped 2026-08-12T04:35:56Z, is the judgment day over the composite-primary-
-key repair migration — the migration that rewrote production primary keys irreversibly, the exact
-class of change this document declares mandatory-Opus. The silent downgrade landed on the
-highest-stakes diff judged so far. **Always pass `model` explicitly.**
+`model` is passed explicitly on every delegation. Agent-file frontmatter (e.g.
+`~/.claude/agents/jd-judge-a.md`, `jd-judge-b.md`) carries `model: sonnet` by default, and the Agent
+tool's `model` parameter overrides it — omitting it silently downgrades a judge to Sonnet. The
+incident chronicle lives in git/engram.

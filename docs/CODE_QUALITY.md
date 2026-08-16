@@ -40,7 +40,7 @@ annotation escape and do fire on Composables**. Evidence in
 (`AddTransactionScreenContent`, `EmmButton`, `EmmTextInput`) and 24 `LongParameterList`, 22 of them
 on a `@Composable` (the two that are not are the `EditTransactionViewModel` and `SyncOrchestrator`
 constructors). Live in the source: `@Suppress("CyclomaticComplexMethod")` at
-`ui-android/.../ProfileScreen.kt:306`, tracked in `docs/PROGRESS.md`. So `TooManyFunctions` per file
+`ui-android/.../ProfileScreen.kt:335`, tracked in `docs/PROGRESS.md`. So `TooManyFunctions` per file
 is the rule the repo *leans on* for Compose — not the only one that reaches it.
 **What the gate does not cover:** `:ui-android:detektAndroidMainSourceSet` reports **21** issues
 deliberately left outside it — `detektMainAndroid` covers the same files *with* type resolution, so
@@ -53,7 +53,7 @@ adding it buys tasks, not coverage (`QualityGateConventionPlugin`; item in `docs
 that string says "11 functions". The file is exempt at *any* size, forever. **Seven files
 hold that amnesty today**, at these non-preview top-level function counts against a threshold of 8:
 `SeeTransactionsScreen` 16, `HomeScreen` 16, `AddCategoryScreen` 13, `AccountsScreen` 11,
-`AddEditRecurringMovementScreen` 10, `ProfileScreen` 13, `RecurringMovementsScreen` 9. The baseline
+`AddEditRecurringMovementScreen` 10, `ProfileScreen` 15, `RecurringMovementsScreen` 9. The baseline
 stops new bleeding and creates **zero** pressure on old code, so the burn-down list lives in
 `docs/PROGRESS.md` — the baseline will never ask.
 
@@ -86,8 +86,7 @@ matches nothing, `Preview` works. Getting this wrong put four extra screens into
 ## Comments
 
 **Default is zero comments. A comment exists only to state a constraint the code cannot show — the
-why, never the what.** Adopted 2026-08-15, after the ADR 009 review loops left defensive comment
-bloat: writers talking to the next reviewer, not to the next reader.
+why, never the what.**
 
 - **Test (a diff can fail it):** delete the comment mentally. If no *constraint* is lost — only a
   restatement of what the code says — it is noise; delete it for real. If the *what* is unclear
@@ -103,6 +102,43 @@ bloat: writers talking to the next reviewer, not to the next reader.
   places; three copies is a divergence liability, not documentation.
 - A comment that promises more than the code delivers is worse than none; reviews already caught
   KDocs doing exactly that.
+- **A comment describing behaviour enforced elsewhere is a copy, and copies diverge.** A constraint
+  lives once, at the declaration it constrains — not at a call site, not on a consuming type, and
+  not 85 lines below its own `const val`, which is where a cleanup round left a second wording of
+  `MAX_CATCH_UP_MONTHS`'s product limit while the first sat on the declaration. This is the rule the
+  three-place precedence diagram broke. If the declaration lacks the constraint and a call site has
+  it, move it to the declaration; never keep both.
+- **Carrying a true constraint is not sufficient to survive.** True *and* not already stated at the
+  declaration. Blocks that fail the second half get deleted whole, not shortened — shortening a
+  duplicate leaves a duplicate.
+- **Converting KDoc to line comments is not applying this policy.** The test is deletion. A round
+  that reformats a comment has decided nothing — `47cd0159`'s sibling nit did exactly that, and the
+  comment it preserved turned out to be one of the copies the bullet above forbids.
+- **Prefer the rename.** If a comment exists to say what a name should have said, the fix is the
+  name: `BackupHealth.isDestinationDisclosed` needed two lines to say `false` blocks every upload,
+  and `canUploadToDestination` needs none.
+
+### The ladder — and why "reduced it" is a failure signal
+
+A comment is the LAST resort, and the steps above it are not optional:
+
+1. **Delete** — the comment says what the code does.
+2. **Rename** — it says what a name should have said (`isDestinationDisclosed` → `canUploadToDestination`).
+3. **Redesign** — it warns about a misuse the design permits (`nowMillis()`'s read-once warning is a
+   signature that should take the instant, not a warning).
+4. **Comment** — only when none of the above can carry it.
+
+**If you are shortening a comment, you are almost certainly on the wrong step.** Reduction is what
+deleting looks like when someone flinched. Three rounds of this policy failed exactly that way —
+history rewritten shorter instead of deleted, a rule copied out of the file that enforces it, and a
+duplicate of a `const val`'s own constraint kept 85 lines below the declaration.
+
+**Enforcement is the reviewer plus rule 2 above, deliberately — not detekt.** Turning on
+`ForbiddenComment` history patterns was tried and abandoned: enabling a detekt rule forces the whole
+repo green in one sweep, which turns an incremental policy into a 60-file migration of delegated
+judgment calls nobody can review. Worse, a pattern can only see the word, so the way to satisfy it is
+to rephrase — the one move this policy forbids. The 448 legacy blocks converge under rule 2 or not at
+all, and they sit in code nobody is touching.
 
 ### How it spreads — two standing rules
 
@@ -118,10 +154,8 @@ and a reviewer can fail a diff on either:
    cleanup ticket — the file already in the diff. The reviewer's own second half already reads that
    file, so the cost is bounded and the surface converges as the code moves.
 
-`fc67d14a` stripped the backup surface (65 files, −5007 lines) as a one-off because ADR 009's review
-loops had concentrated the bloat there. The rest of the repo — **448 KDoc blocks across 213
-production files**, measured 2026-08-16 — is not on any list. It converges under rule 2 or it does
-not converge, and that is the accepted trade: a comment nobody has touched in a year is not the one
+**No repo-wide sweep.** Files converge under rule 2 above (touch-it, clean-it) or they do not
+converge, and that is the accepted trade: a comment nobody has touched in a year is not the one
 misleading anybody.
 
 ## The acronyms — verdict table

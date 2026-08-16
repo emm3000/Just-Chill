@@ -283,9 +283,9 @@ gana el ADR.
   `NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString")`, plataforma pura,
   y es su propia unidad. Anotado con la consecuencia dicha para que no se descubra durante un
   restore.
-- [ ] La app tiene que decir en pantalla, antes del primer upload a una cuenta nueva, que sube el
-  ledger entero de este device ahí — incluidas las filas de una cuenta anterior, porque `signOut()`
-  no borra nada. ADR 009 Decision 5; es aviso, no diálogo de confirmación.
+- [x] ~~La app tiene que decir en pantalla, antes del primer upload, que sube el ledger entero del
+  device~~ — aterrizó como ADR 009 unit 3c (`3ce1dfb0`, `df452737`, `8b12fc45`); `docs/sync/ADR009_PLAN.md`
+  Fase 3, crónica en `docs/archive/sync/`.
 - [x] ~~Fase 2 (upsert condicional del server)~~ — **cancelado** por ADR 009 Decision 2: era el
   arreglo de un protocolo de replicación que deja de existir.
 - [x] ~~Fase 3: rediseño de bordes, colapsar los cuatro `*TableSync`, cursor a SQLDelight~~ —
@@ -314,29 +314,17 @@ gana el ADR.
   `toAuthDomainException` (AUDIT §8). Revisar y confirmar que sigue siendo la divergencia deseada,
   no "corregirla" como si fuera un defecto.
 - [ ] `toAuthDomainException` mapea `SessionRequiredException` a `Unauthorized` asumiendo que el
-  delete path ya está gateado igual que el de sync, pero no lo está: le falta el
-  `observeSession.awaitInitialization()` que `DefaultSyncRepository.currentUserId()` sí llama para
-  cerrar la carrera de Kotlin/Native que esa misma función documenta (postgrest lee el JWT
-  sincrónicamente de un `StateFlow` que se llena async). Hoy esa carrera sigue abierta en el delete
-  path y la nueva mapping la muestra como error de credenciales en vez de algo reintentable. No se
-  agrega `awaitInitialization()` al delete path en este commit — es un cambio de comportamiento, va
-  aparte. El razonamiento completo está en el KDoc de `toAuthDomainException`, en
-  `DefaultAuthRepository.kt`.
+  delete path llama `observeSession.awaitInitialization()` como `DefaultSyncRepository`, pero no lo
+  hace — la carrera de Kotlin/Native sigue abierta y se muestra como error de credenciales en vez de
+  reintentable. El fix (agregar el await) es un cambio de comportamiento aparte. Razonamiento
+  completo: KDoc de `toAuthDomainException` en `DefaultAuthRepository.kt`.
 
 ### Fechas — lo único abierto que toca el servidor y la data real
 
-- [ ] **Fase dos del hallazgo #5**: el wire de sync y la columna de Supabase todavía llevan
-  `date bigint`. `data/src/commonMain/kotlin/com/emm/data/shared/FixedPeruOffset.kt` convierte en
-  ambas direcciones al offset fijo de Lima. Los trece hallazgos de `docs/DATE_AUDIT.md` están
-  cerrados; este es el único follow-up que sobrevive, y es paso humano — cambiar una columna en un
-  server vivo con data acumulada no lo hace el gate.
-
-  **Corregido el 2026-08-12: `FixedPeruOffset.kt` NO se borra cuando la columna pase a `text`.**
-  Esta línea decía que sí y es falso — el archivo tiene dos callers (su propia cabecera, `:16-27`) y
-  solo uno es el wire de sync; el otro, leer un backup v1 de disco, es **permanente**. La fase dos
-  borra un caller, no el archivo. La conversión va con UTC-5, **no** con `AT TIME ZONE 'UTC'`
-  (`3.sqm` ya aplicó ese supuesto a la data histórica local): SQL ensayado en verde, 7/7 vectores,
-  falta decidir el secuenciamiento. Ver [`docs/archive/sync/AUDIT.md`](archive/sync/AUDIT.md) §5.
+- [ ] **Fase dos del hallazgo #5**: migrar la columna de Supabase de `date bigint` a `text`, UTC-5
+  (no `AT TIME ZONE 'UTC'`) — SQL ya en verde, 7/7 vectores, falta el secuenciamiento humano sobre
+  data real. Solo borra el caller de sync en `FixedPeruOffset.kt`; el caller que lee un backup v1
+  es permanente. Detalle: [`docs/archive/sync/AUDIT.md`](archive/sync/AUDIT.md) §5.
 
 ### Release y compliance — bloqueantes del alpha, solo los puede hacer un humano
 
@@ -368,18 +356,10 @@ gana el ADR.
 - [x] Los **15** errores de compilación de `:ui-android:detektMainAndroid`, cerrados el 2026-08-11
   borrando el registry de SavedState de navegación (`3105d91`, `bb9e6d5`, `57fe356`). La tarea
   ahora reporta cero.
-- [ ] **15 errores de expect/actual**: `:data` (9) y `:presentation` (6, subió de 3 el 2026-08-15
-  con ADR 009 2c-iii-a). detekt analiza commonMain y androidMain como una sola unidad, sin la
-  estructura de fragmentos de HMPP, así que el compilador ve el `expect` y su `actual` juntos. Son
-  exactamente **3 errores por par**, no una estimación: `:data` tiene tres pares
-  (`shared/Dispatchers.kt`, y dos en `shared/SqliteExceptions.kt`) y `:presentation` ahora dos
-  (`core/lifecycle/ResumeEvents.kt` y `core/lifecycle/BackgroundEvents.kt`), cada uno con su
-  contraparte `.android.kt`. El mensaje del propio detekt es *"This affects accuracy of
-  reporting"*: no es solo ruido en consola, cualquier regla que dependa de type resolution corre
-  **degradada** sobre esos dos archivos, así que un `detektMainAndroid` verde no es prueba de que
-  `ResumeEvents`/`BackgroundEvents` estén completamente linteados. Y nada topa el número — cada
-  trío `expect/actual` nuevo en un módulo KMP suma exactamente 3, así que este total sigue
-  subiendo con cada unidad que agregue una plataforma más.
+- [ ] **15 errores de expect/actual** (`:data` 9, `:presentation` 6): detekt analiza commonMain y
+  androidMain como una sola unidad, sin fragmentos HMPP, así que cuenta **3 errores por par** y
+  corre **degradada** (sin type resolution) sobre esos archivos — un `detektMainAndroid` verde no
+  prueba lint completo. Crece +3 por cada `expect/actual` nuevo; nada lo topa.
 - [ ] **13 errores más en `:androidApp:detektDevDebug` y `detektDevRelease`**, sin diagnosticar y
   sin cambio antes y después del trabajo del 2026-08-11. Las variantes `prod*` reportan 10. Los tres
   de diferencia salen del flavor `dev` — probablemente del playground `experiences/`, que solo
@@ -388,31 +368,25 @@ gana el ADR.
 - [ ] **El gate no falla con errores de compilación de detekt.** detekt los degrada a warning y la
   tarea termina en `BUILD SUCCESSFUL` — medido. Lo que importa no es el ruido en consola sino que
   cualquier regla que dependa de type resolution puede no dispararse, en silencio.
-- [ ] El modo compiler-plugin de detekt sería el arreglo de raíz —correría dentro de la compilación
-  real, con el frontend de verdad, así que los errores de arriba desaparecerían por construcción— y
-  hoy no es viable, por dos motivos independientes. **Uno:** el plugin id
-  `dev.detekt.gradle.compiler-plugin` declara configuration-cache `UNDECLARED` y este build tiene
-  `org.gradle.configuration-cache=true` (`gradle.properties:24`). **Dos:** está roto de fábrica en
-  `2.0.0-alpha.6`. El dato no se ve grepeando el repo, hay que sacarlo del jar del plugin
-  (`javap` sobre `dev/detekt/detekt_gradle_plugin/BuildConfig.class` en el cache de Gradle):
-  `DETEKT_COMPILER_PLUGIN_VERSION = "2.0.0-alpha.6"`, y ese artefacto no existe —
-  `dev/detekt/detekt-compiler-plugin/2.0.0-alpha.6/…pom` responde **404** en Maven Central,
-  mientras que el publicado de verdad es `2.4.10-2.0.0-alpha.6` (**200**). Aplicarlo tal cual
-  falla al resolver `kotlinCompilerPluginClasspath`; haría falta forzar la versión por
-  substitución. Vía cerrada, no una regresión.
+- [ ] El modo compiler-plugin de detekt arreglaría de raíz los expect/actual de arriba, pero no es
+  viable hoy: **(1)** `dev.detekt.gradle.compiler-plugin` declara configuration-cache `UNDECLARED`,
+  y choca con `org.gradle.configuration-cache=true` (`gradle.properties:24`); **(2)** en
+  `2.0.0-alpha.6` el artefacto declarado 404-ea en Maven Central — el real es
+  `2.4.10-2.0.0-alpha.6` — así que resolver `kotlinCompilerPluginClasspath` exige forzar la versión
+  por substitución. Vía cerrada, no una regresión.
 - [ ] Purgar las **47** entradas muertas de `UnusedPrivateFunction` en
-  `config/detekt/baseline-ui-android-main.xml` (sobre 151 entradas en total). Desde `c94e290` la
+  `config/detekt/baseline-ui-android-main.xml` (sobre 154 entradas en total). Desde `c94e290` la
   regla ignora los `@Preview` por anotación, así que esas entradas quedaron inertes.
 - [ ] Entrada `ImportOrdering:ProfileScreen.kt` en `config/detekt/baseline-ui-android-main.xml:37`,
   probablemente muerta desde que `253e170` tocó esos imports. **No verificado**: correr la tarea y
   ver si el issue reaparece antes de borrarla.
-- [ ] Sacar el `@Suppress("CyclomaticComplexMethod")` de `ui-android/.../ProfileScreen.kt:250` al
+- [ ] Sacar el `@Suppress("CyclomaticComplexMethod")` de `ui-android/.../ProfileScreen.kt:335` al
   borrar el kill switch — cubre todo `AccountSection` en vez de solo las ramas de sync. Única
   SUGGESTION del Judgment Day de `253e170`.
 - [ ] **Burn-down de los 7 `TooManyFunctions` con amnistía** en
   `config/detekt/baseline-ui-android-main.xml`, contra el umbral de 8 funciones top-level no-`@Preview`
   por archivo: `SeeTransactionsScreen` (16), `HomeScreen` (16), `AddCategoryScreen` (13),
-  `AccountsScreen` (11), `AddEditRecurringMovementScreen` (10), `ProfileScreen` (12),
+  `AccountsScreen` (11), `AddEditRecurringMovementScreen` (10), `ProfileScreen` (15),
   `RecurringMovementsScreen` (9). La entrada del baseline no lleva el conteo, así que **el gate no los
   va a volver a reportar nunca**, crezcan lo que crezcan: si no se bajan acá, no se bajan.
   Criterio y método de conteo en `docs/CODE_QUALITY.md`.
@@ -454,16 +428,12 @@ gana el ADR.
 
 ### Docs y comentarios que afirman cosas falsas
 
-- [ ] `ui-android/src/androidMain/kotlin/com/emm/justchill/hh/shared/AppNavHost.kt:51-67` — diecisiete
-  líneas de cabecera que describen un host que ya no existe. Las tres afirmaciones son falsas:
-  no es un "single Compose Multiplatform nav host for both Android and iOS" (`:ui-android` solo
-  tiene `androidMain` y `androidHostTest`); no corre sobre el port navigation3-UI de JetBrains
-  (`ui-android/build.gradle.kts:50-52` dice que el port "lost its reason to exist" y que runtime y
-  UI son de Google); y `PlatformHostActions + startTab` no están detrás de `expect/actual` — son
-  una `interface` y un `val` planos en `hh/shared/PlatformHostActions.kt:39` y `:168`. Es código,
-  no doc: queda anotado acá y **la cabecera sigue sin tocarse**. El archivo sí se tocó por otro
-  motivo (el import de `CommitHash` y el comentario del footer de commit, `:29` y `:78-87`), lo que
-  desplazó la cabecera de `:50-66` a `:51-67` — este pin se re-verifica en cada edición del archivo.
+- [ ] `ui-android/.../hh/shared/AppNavHost.kt:51-67` — cabecera de 17 líneas que describe un host
+  que ya no existe: dice CMP host único para Android+iOS, port navigation3-UI de JetBrains, y
+  `PlatformHostActions + startTab` tras `expect/actual` — las tres son falsas hoy (`:ui-android` es
+  Android-only, el port se retiró, `PlatformHostActions` es `interface`/`val` planos en
+  `hh/shared/PlatformHostActions.kt:39`/`:168`). Sin tocar todavía; re-verificar el rango de línea
+  en cada edición del archivo.
 - [ ] `docs/DESIGN_SYSTEM.md` §5 documenta 5 radios con otro esquema de nombres (`radius.0`,
   `radius.s` 6dp, `radius.m`, `radius.l`, `radius.full`); `EmmRadii.kt` ships **9** (`r0`, `rXS` 8dp,
   `rS` 10dp, `rM`, `rL`, `rXL`, `rXXL`, `rLTop`, `rFull`) y `rXS` —el que usa el footer de commit— no
@@ -520,19 +490,10 @@ gana el ADR.
   detalle queda en `docs/sync/ADR009_PLAN.md`.
 
 - [ ] **Editar un movimiento de una categoría borrada lo re-archiva bajo otra, sin que nadie lo elija.**
-  `EditTransactionViewModel.resolveSelection` (`:109-112`) corta en `snapshot?.categoryId ?: return null`,
-  así que ya no auto-selecciona cuando el movimiento nunca tuvo categoría. Pero la lista viene de
-  `categories.sq:all`, que filtra `deletedAt IS NULL`: un movimiento archivado bajo una categoría
-  **tombstoneada** tiene `storedId` no-nulo que no está en la lista, y cae en `?: list.firstOrNull()`.
-  Abrís un gasto viejo de "Café" (borrada) para corregirle la descripción, el picker muestra "Alquiler"
-  seleccionado, `recompute()` ve el cambio, habilita Guardar, y el guardado escribe `categoryId = alquiler`.
-  El vínculo que `DeleteCategoryUseCase` preserva **a propósito** (ver su KDoc, y `RecurringMovementFkTest:119-132`)
-  se pierde, y el monto queda atribuido a otra categoría en Tendencias.
-  Preexistente, no lo introdujo el FK compuesto. El fix del FK adoptó el principio correcto
-  ("una etiqueta que nadie eligió") y lo aplicó solo al caso `categoryId == null`; el límite quedó en
-  el lado equivocado, porque en los dos casos el usuario no tocó la categoría.
-  El otro branch —`changeTransactionType` sobre un movimiento que sí tenía categoría— es defendible:
-  ahí el usuario cambió el tipo a propósito.
+  `EditTransactionViewModel.resolveSelection` (`:109-112`) cae en `?: list.firstOrNull()` porque
+  `categories.sq:all` filtra `deletedAt IS NULL` y una categoría tombstoneada no está en la lista,
+  perdiendo el vínculo que `DeleteCategoryUseCase` preserva a propósito (`RecurringMovementFkTest:119-132`).
+  Preexistente, no lo introdujo el FK compuesto (ADR 008).
 
 ### Deuda técnica
 

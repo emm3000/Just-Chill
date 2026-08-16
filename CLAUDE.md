@@ -130,13 +130,31 @@ key) and `gradle/wrapper/gradle-wrapper.properties`. Compose Multiplatform is **
 renders on Google's Compose under the BOM and the CMP Gradle plugin is applied nowhere; `:presentation`
 still uses JetBrains' multiplatform `lifecycle-viewmodel`, which has to compile for iOS.
 
+## Docs contract
+
+Six doc types, each with one job and a death rule — anything else is a smell:
+
+1. **`CLAUDE.md`** (root + per module) — how to work here. ≤150 lines, pointers, no content of its own.
+2. **`adr/`** — one decision per ADR, target 1 page, ceiling 2; long evidence links to `archive/`.
+   Amended by a new ADR, never edited.
+3. **One live plan per track** — states ONLY what remains. Closing a unit removes it from the plan
+   **in the same commit**; surviving constraints become bullets in the plan's constraints section.
+4. **`PROGRESS.md`** — where we are + backlog. Items are 1–2 lines with a pointer, no essays.
+5. **Reference docs** (`WORKFLOW.md`, `CODE_QUALITY.md`, `DESIGN_SYSTEM.md`, …) — timeless
+   conventions. Zero history, zero dates-as-story; rewritten in place.
+6. **`archive/`** — the reasoning of closed work. Read to understand the past, never for what to do next.
+
+The chronicle — what shipped, what review found, how it went — lives in git and engram, never in a
+live doc. Every live doc has a read-trigger in the docs map below; a doc with no trigger is archive.
+
 ## Docs map (`docs/`)
 
 - `PROGRESS.md` — "where are we now" plus the single open-work checklist (there is no tech-debt list here;
   sync debt lives in `sync/ADR009_PLAN.md`). **Read it first.**
-- `sync/ADR009_PLAN.md` — the single live sync doc: the build order replacing row replication with
-  snapshot backup. **Read before touching sync.** Old audit + slice plan sit in `archive/sync/`, kept
-  for the reasoning, never for what to do next.
+- `sync/ADR009_PLAN.md` — the single live sync doc: what remains of replacing row replication with
+  snapshot backup, plus the constraints closed phases left behind. **Read before touching sync.**
+  The unit-by-unit chronicle of Phases 0–3, the old audit and the old slice plan sit in
+  `archive/sync/`, kept for the reasoning, never for what to do next.
 - `adr/` — filenames state the decision. 004 amends 002; 005 supersedes 003's frozen-UI scope; 006
   supersedes 001's multi-device premise and leaves 004 dormant; 007 amends 003's point 5 (writer + reviewer, repo-wide); 008 moves the category/type invariant into the schema; 009 is the one to read first for anything sync-shaped — backup becomes a snapshot, the engine goes, the schema stays; it supersedes parts of 001 and 006 and renders 002 dormant, decision by decision in its header. **Read before changing anything an ADR decided** — ADRs are amended by a new ADR, never rewritten.
 - `DATE_AUDIT.md` — the 13 date findings, all closed. **Read before touching dates.** Live rule #7:

@@ -599,43 +599,6 @@ Not references:
 
 ---
 
-## 13 · Roadmap (implementation order)
+## 13 · Roadmap
 
-Aligned with the sprints in `docs/archive/ROADMAP_V1.md` — all ten steps below landed, and that
-roadmap is archived. Kept as the order the system grew in, not as a plan.
-
-1. **Foundations layer** — `Color.kt`, `Type.kt`, `EmmSpacing.kt`, `EmmRadii.kt`. Import Inter font. (Already in place — verify against §2-5 before S1.)
-2. **Core components** — Button variants, TextInput, ListItem (transaction row), Card. (Mostly in place — verify before S1.)
-3. **`SeeTransactionsScreen`** — exercises ListItem + headers + empty state. (Done.)
-4. **`HomeScreen`** — exercises amount.hero, balance hero, month navigation chevrons (added in S1 / US-09).
-5. **`AddTransactionScreen`** — amount input, type toggle, category picker. (Done.)
-6. **`ReportScreen` (US-11, S1)** — exercises §7.10 income-by-category bars, mes navigation. **This is the most important visual deliverable of v1.**
-7. **`FirstLaunchScreen` (US-02, S2)** — exercises §7.11 manifesto layout.
-8. **`ProfileScreen` polish (US-21, S4)** — full list of 7 items, ListItem reuse, no logo.
-9. **`AccountsScreen` revamp (US-03 / US-17, S0 cleanup + S4)** — exercises §7.9 preset account visuals.
-10. **Empty states audit (S5)** — every screen has a polished §7.12 empty state, no debug strings.
-
-Each step ends with a commit that updates this doc if the implementation forced a token change.
-
-> **Auth screens exist and this section used to deny it.** It said "Not in this roadmap: any Auth /
-> Login / Register screen. The app has been local-only since the migration that removed
-> Supabase/Ktor/auth." [ADR 001](adr/001-reverse-local-only-to-local-first-optional-sync.md)
-> reversed that: the app is local-**first** with opt-in Supabase sync, and `AuthScreen.kt`,
-> the CUENTA block in `ProfileScreen.kt` and Google sign-in all ship today.
->
-> The now-archived `docs/archive/AUTH_SYNC_UI_BLUEPRINT.md` flagged this exact contradiction as its
-> deviation #7 and it went unactioned for months, which is why it is spelled out here rather than
-> quietly deleted. That blueprint is the screen-by-screen map of the auth/sync UI as built; the
-> tokens it should be measured against are the ones in this doc. Auth has no section of its own
-> here yet — that is the real gap.
-
----
-
-## 14 · Change log
-
-| Date | Change | Reason |
-|---|---|---|
-| 2026-05-16 | Initial draft | Rebrand kickoff (Starlink-inspired, monochrome) |
-| 2026-05-17 | Alineado con Fases 1-4 del proceso de definición | Removed legacy Auth refs (§13). Added §7.9 account preset visuals (peruanidad concreta). Added §7.10 income-by-category bars (US-11 la apuesta). Added §7.11 manifesto layout (US-02). Renumbered §7.9 empty states → §7.12. |
-| 2026-05-21 | Report redesign handoff alignment | §3.4 eyebrow exception (all caps permitted in `Eyebrow` role). §7.10 card variant added for grouped layout. New §7.13 vertical bar chart for Tendencias (income vs expense, `cat.sage` + `cat.terracotta`, NOT green/red — §1.4 preserved). New §7.14 comparison pill + section footer. Empty states renumbered §7.12 → §7.15. |
-| 2026-05-21 | Report v2 — second designer pass | §1.4 total-hero exception added (`success`/`danger` tint on Reporte's hero integer part only). §7.10 row layout rewritten to Notion-style (dot + name + amount + %, thin colored stripe instead of full progress bar). |
+The redesign roadmap is closed; reasoning in `docs/archive/ROADMAP_V1.md`.
