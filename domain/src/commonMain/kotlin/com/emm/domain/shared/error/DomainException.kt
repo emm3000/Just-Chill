@@ -37,4 +37,20 @@ sealed class DomainException(message: String, cause: Throwable? = null) : Except
     /** [message] is diagnostic and defaults to the cause's; see [NetworkUnavailable] for when to pass one. */
     class Unknown(cause: Throwable, message: String = cause.message ?: "Unknown error") :
         DomainException(message, cause)
+
+    /**
+     * Data the caller already trusts could not be turned into (or out of) the wire format — a
+     * `kotlinx.serialization` encode/decode failure that is neither a database failure nor a
+     * rejection of untrusted input.
+     *
+     * Distinct from [Unknown]: ADR 009's Phase 3 requires the backup pipeline to log a NAMED reason
+     * for every failure mode it can hit (serialization, network, hash mismatch, storage error), and
+     * folding this into [Unknown] would erase exactly the fact that answers "which one broke".
+     * Distinct from [ValidationError]'s `BackupFileInvalid` / `BackupVersionUnsupported`: those are
+     * for a FILE the reader does not trust and rejects on purpose; this is the pipeline's own
+     * encoder or decoder failing on data it already trusts (e.g. a snapshot just read from the
+     * local database, not yet handed to anyone).
+     */
+    class SerializationError(cause: Throwable, message: String = cause.message ?: "Serialization error") :
+        DomainException(message, cause)
 }

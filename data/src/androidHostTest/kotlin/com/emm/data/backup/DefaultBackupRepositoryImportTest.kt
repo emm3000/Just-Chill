@@ -395,6 +395,26 @@ class DefaultBackupRepositoryImportTest {
         assertEquals(ValidationCode.BackupFileInvalid, ex.code)
     }
 
+    /**
+     * **The decode side of the defect this unit closes was already fixed — this pins that it stays
+     * fixed.** `decodePayload`'s `parse { }` wraps `importJson.decodeFromJsonElement<...>` in a
+     * `try`/`catch` on [kotlinx.serialization.SerializationException] and translates it to
+     * `ValidationError(BackupFileInvalid)` — a named, user-actionable reason, not a raw crash and
+     * not [DomainException.SerializationError]. `accounts` here is a string where the shape demands
+     * a list, which is exactly the mismatch that throws `SerializationException` inside the decode.
+     */
+    @Test
+    fun `a shape mismatch on decode is reported as an invalid file, not as SerializationError`() = runTest {
+        val json = """{"schemaVersion":3,"exportedAt":0,"appVersion":"1.0.0","accounts":"not-a-list",""" +
+            """"categories":[],"transactions":[],"recurringMovements":[]}"""
+
+        val ex = assertFailsWith<DomainException.ValidationError> {
+            repository.importFromJson(json)
+        }
+
+        assertEquals(ValidationCode.BackupFileInvalid, ex.code)
+    }
+
     @Test
     fun `a schemaVersion that is not a number is reported as corrupt, not as an unsupported version`() = runTest {
         // It used to escape the guard entirely: the probe ran outside it, so the accessor's own

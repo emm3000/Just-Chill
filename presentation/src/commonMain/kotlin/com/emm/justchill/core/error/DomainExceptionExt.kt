@@ -13,6 +13,7 @@ fun DomainException.toUserMessage(): String = when (this) {
     is DomainException.Unauthorized -> "Credenciales incorrectas o sesión expirada"
     is DomainException.NetworkUnavailable -> "Sin conexión — revisa tu internet"
     is DomainException.Unknown -> "Algo se rompió — capaz reinicia la app?"
+    is DomainException.SerializationError -> "No pudimos preparar tus datos — intenta de nuevo"
 }
 
 /**

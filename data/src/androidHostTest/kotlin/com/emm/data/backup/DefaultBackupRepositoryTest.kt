@@ -8,6 +8,7 @@ import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
 import com.emm.domain.shared.error.DomainException
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.junit.After
 import org.junit.Before
@@ -291,6 +292,46 @@ class DefaultBackupRepositoryTest {
         assertFailsWith<DomainException> {
             repository.exportToJson(exportedAt = 0L, appVersion = "1.0.0")
         }
+    }
+
+    /**
+     * **A serialization failure surfaces as its own named reason, not as [DomainException.Unknown].**
+     *
+     * `exportToJson` used to hand `exportJson.encodeToString(payload)` to nothing — only
+     * `safeDbCall` wrapped the DB read above it, so an encode failure escaped as a raw
+     * [SerializationException], caught only by the generic branch in `BackupOrchestrator.runBackup`
+     * and reported with no reason a log or the UI could name. ADR 009 Phase 3 asks every backup
+     * failure mode, serialization included, to log a distinct reason.
+     *
+     * [encodeAsDomainException] is exercised directly rather than through `exportToJson`: every
+     * field [ExportPayloadDto] carries is a plain `String`/`Long`/`Boolean`/`List`, so there is no
+     * well-formed payload that can make the real encoder throw — see that function's own KDoc.
+     */
+    @Test
+    fun `a serialization failure translates to SerializationError, not Unknown or DatabaseError`() {
+        val ex = assertFailsWith<DomainException.SerializationError> {
+            encodeAsDomainException<String> { throw SerializationException("boom") }
+        }
+
+        assertEquals("boom", ex.message)
+    }
+
+    /**
+     * The DB-failure path above this test is untouched by [encodeAsDomainException] — it never
+     * reaches the encode step, because [safeDbCall] throws before `exportToJson` gets to
+     * `exportJson.encodeToString`. Pinned explicitly so a future refactor that moved the encode
+     * step earlier, or widened `safeDbCall` to cover it, would be caught here rather than only by
+     * losing the distinction the previous test pins.
+     */
+    @Test
+    fun `a database failure never reaches the encode step, so it is never SerializationError`() = runTest {
+        driver.execute(null, "DROP TABLE recurring_movements", 0)
+
+        val ex = assertFailsWith<DomainException> {
+            repository.exportToJson(exportedAt = 0L, appVersion = "1.0.0")
+        }
+
+        assertTrue(ex !is DomainException.SerializationError)
     }
 
     /**
