@@ -149,15 +149,24 @@ class DefaultBackupUploaderTest {
     }
 
     @Test
-    fun `a cleanup that fails after a mismatch reports the cleanup, not the mismatch`() = runTest {
+    fun `a cleanup that fails after a mismatch is still typed as unverified, and says both`() = runTest {
         val store = FakeBackupObjectStore()
         store.readBackInstead[PAYLOAD_KEY] = "{}".encodeToByteArray()
         store.failDelete = IllegalStateException("the socket died")
 
-        val failure = assertFailsWith<DomainException.Unknown> {
+        // The TYPE is the mismatch verdict, not the transport failure that stopped the cleanup. Both
+        // deletes used to run inside `remotely { }`, so this threw DomainException.Unknown and the
+        // `unverified` verdict below it was unreachable — which meant the single worst outcome this
+        // class produces, an unverified object LEFT in the bucket, was classified as a network blip.
+        // `BackupFailureReason` (ADR 009 Phase 3) keys on the type, so that put the one failure the
+        // owner most needs to see under "check your connection".
+        val failure = assertFailsWith<DomainException.ValidationError> {
             DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
         }
 
+        assertEquals(ValidationCode.BackupUploadUnverified, failure.code)
+        // And nothing diagnostic is lost: what stopped the cleanup is the verdict's cause.
+        assertEquals("the socket died", failure.cause?.message)
         // Both facts survive in one message — the digest disagreed AND the bad object is still up
         // there. Reporting only the mismatch would leave an unverified blob nobody knows about.
         assertEquals(CLEANUP_FAILED, failure.message)
@@ -235,10 +244,13 @@ class DefaultBackupUploaderTest {
         // never happened" and handled identically by the retention prune.
         store.failDeleteOf = PAYLOAD_KEY
 
-        val failure = assertFailsWith<DomainException.Unknown> {
+        // Same typing rule as the payload cleanup above: the mismatch is the verdict, the half-done
+        // cleanup is a detail carried in the message and the cause.
+        val failure = assertFailsWith<DomainException.ValidationError> {
             DefaultBackupUploader(store).upload(UID, FILE_NAME, PAYLOAD)
         }
 
+        assertEquals(ValidationCode.BackupUploadUnverified, failure.code)
         assertEquals(MANIFEST_CLEANUP_FAILED, failure.message)
         // The point of this test: the payload survives ALONE. A pair that both failed to delete would
         // still be a "complete-looking pair" (a different, already-covered leftover); a payload with

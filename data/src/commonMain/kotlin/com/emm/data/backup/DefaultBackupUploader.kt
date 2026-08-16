@@ -4,6 +4,7 @@ import com.emm.domain.shared.backup.BackupUploader
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 import io.github.jan.supabase.SupabaseClient
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Uploads a snapshot, reads it back, and writes the manifest only once the bytes have matched — then
@@ -92,7 +93,13 @@ import io.github.jan.supabase.SupabaseClient
  * owns the other three.
  *
  * The exception TYPE still comes from the cause, so a caller can still tell a dead network from a
- * refusal; the message is what carries the step. Translation is [asBackupFailure], written here and
+ * refusal; the message is what carries the step. **The two mismatch paths are the exception**, and
+ * deliberately: a read-back that disagreed is a verdict about the snapshot, not about the transport,
+ * so both raise [DomainException.ValidationError] with [ValidationCode.BackupUploadUnverified] even
+ * when the cleanup delete after them fails — see [DefaultBackupUploader.discarding] for what that
+ * mistyping cost before. The failed cleanup travels as the verdict's `cause` and in its message.
+ *
+ * Translation is [asBackupFailure], written here and
  * deliberately NOT delegated to `toSyncDomainException`: that function belongs to the row-replication
  * engine ADR 009 Phase 5 deletes, and reusing it would make backup break when sync is removed.
  * Duplication of text, not of knowledge (`docs/CODE_QUALITY.md`) — the two tables answer to different
@@ -138,10 +145,15 @@ class DefaultBackupUploader internal constructor(private val store: BackupObject
             store.download(payloadKey)
         }
         if (sha256Hex(readBack) != manifest.payloadSha256) {
-            remotely("${payloadMismatchAt(payloadKey)}, and the unverified object could not be deleted") {
-                store.delete(payloadKey)
-            }
-            throw unverified("${payloadMismatchAt(payloadKey)}; the unverified object was deleted.")
+            val cleanup: Throwable? = discarding { store.delete(payloadKey) }
+            throw unverified(
+                if (cleanup == null) {
+                    "${payloadMismatchAt(payloadKey)}; the unverified object was deleted."
+                } else {
+                    "${payloadMismatchAt(payloadKey)}, and the unverified object could not be deleted."
+                },
+                cleanup,
+            )
         }
 
         remotely("the manifest could not be uploaded to $manifestKey") {
@@ -151,7 +163,7 @@ class DefaultBackupUploader internal constructor(private val store: BackupObject
             store.download(manifestKey)
         }
         if (!manifestReadBack.contentEquals(manifestBytes)) {
-            remotely("${manifestMismatchAt(manifestKey)}, and the pair could not be deleted") {
+            val cleanup: Throwable? = discarding {
                 // Manifest FIRST. If the second delete fails, what survives is a payload with no
                 // sidecar — the leftover the retention rule already knows to throw away. Deleting the
                 // payload first and failing would leave the opposite: a receipt for goods that are
@@ -159,8 +171,46 @@ class DefaultBackupUploader internal constructor(private val store: BackupObject
                 store.delete(manifestKey)
                 store.delete(payloadKey)
             }
-            throw unverified("${manifestMismatchAt(manifestKey)}; both objects were deleted.")
+            throw unverified(
+                if (cleanup == null) {
+                    "${manifestMismatchAt(manifestKey)}; both objects were deleted."
+                } else {
+                    "${manifestMismatchAt(manifestKey)}, and the pair could not be deleted."
+                },
+                cleanup,
+            )
         }
+    }
+
+    /**
+     * Runs a post-mismatch cleanup and returns what stopped it, or null when it finished.
+     *
+     * **The mismatch is the finding; a failed cleanup is a detail of it.** Both deletes used to run
+     * inside `remotely { }`, so a cleanup that failed threw a *transport* exception and the
+     * `unverified` verdict below it was never reached: the single worst outcome this class can
+     * produce — an unverified object left in the bucket — was typed as
+     * [DomainException.NetworkUnavailable] or [DomainException.Unknown] and read downstream as a
+     * network blip. ADR 009 Phase 3's failure taxonomy (`BackupFailureReason`) classifies on the
+     * type, so that mistyping put the one failure the owner most needs to see under "check your
+     * connection".
+     *
+     * The message is unchanged in both cases — the two facts still travel together, which is what
+     * `DefaultBackupUploaderTest`'s ten-distinct-messages property pins — and the throwable that
+     * stopped the cleanup becomes the verdict's `cause`, so nothing diagnostic is lost.
+     *
+     * [CancellationException] is rethrown before the generic catch, the same property [storageCall]
+     * has: a cancelled cleanup is the caller leaving, not a failure to report.
+     */
+    // Intentional broad catch: this converts a cleanup failure into data, so the verdict above it
+    // survives. Nothing is swallowed — the throwable becomes the thrown exception's cause.
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun discarding(block: suspend () -> Unit): Throwable? = try {
+        block()
+        null
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        e
     }
 
     /**
@@ -207,11 +257,21 @@ private fun ownerChanged(owner: String, live: String): DomainException = DomainE
         "$owner and the live session owns $live, so nothing was uploaded.",
 )
 
-/** Both mismatches are the same event to the person holding the phone: a backup that is not trustworthy. */
-private fun unverified(reason: String): DomainException = DomainException.ValidationError(
-    "$FAILED$reason",
-    ValidationCode.BackupUploadUnverified,
-)
+/**
+ * Both mismatches are the same event to the person holding the phone: a backup that is not
+ * trustworthy.
+ *
+ * [cleanupFailure] is what stopped the post-mismatch delete, when something did — see [discarding].
+ * It rides as the `cause` rather than replacing the verdict, because a mismatch whose cleanup also
+ * failed is still a mismatch, and it is the more serious one: the unverified object is still up
+ * there. Null whenever the cleanup finished.
+ */
+private fun unverified(reason: String, cleanupFailure: Throwable? = null): DomainException =
+    DomainException.ValidationError(
+        "$FAILED$reason",
+        ValidationCode.BackupUploadUnverified,
+        cleanupFailure,
+    )
 
 private const val FAILED = "Snapshot backup failed: "
 
