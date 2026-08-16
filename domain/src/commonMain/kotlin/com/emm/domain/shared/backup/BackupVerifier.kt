@@ -9,11 +9,8 @@ sealed interface BackupVerification {
 
     data object NoSnapshots : BackupVerification
 
-    data class Verified(
-        val fileName: String,
-        val rowCounts: BackupRowCounts,
-        val isNewestPair: Boolean,
-    ) : BackupVerification
+    data class Verified(val fileName: String, val rowCounts: BackupRowCounts, val isNewestPair: Boolean) :
+        BackupVerification
 
     data class NothingVerified(val pairsInspected: Int) : BackupVerification
 }
