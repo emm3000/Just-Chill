@@ -203,7 +203,10 @@ class ProfileViewModelBackupRowTest {
         healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 1, BackupFailureReason.Network)
         advanceUntilIdle()
 
-        assertEquals(BackupRowUi.Failed(BackupFailureReason.Network, lastBackupDaysAgo = 1), vm.state.value.backupRow)
+        assertEquals(
+            BackupRowUi.Failed(BackupFailureReason.Network, LastSnapshot.DaysAgo(days = 1, isStale = false)),
+            vm.state.value.backupRow,
+        )
     }
 
     /**
@@ -221,7 +224,10 @@ class ProfileViewModelBackupRowTest {
         healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 5, lastFailureReason = null)
         advanceUntilIdle()
 
-        assertEquals(BackupRowUi.Failed(null, lastBackupDaysAgo = 0), vm.state.value.backupRow)
+        assertEquals(
+            BackupRowUi.Failed(null, LastSnapshot.DaysAgo(days = 0, isStale = false)),
+            vm.state.value.backupRow,
+        )
     }
 
     /**
@@ -268,8 +274,15 @@ class ProfileViewModelBackupRowTest {
 
         val row = vm.state.value.backupRow
         assertIs<BackupRowUi.Failed>(row)
-        assertEquals(0, row.lastBackupDaysAgo, "The row must still be able to say the backup is from today.")
-        assertEquals("Hoy · no pude actualizar", row.toMetaText())
+        assertEquals(
+            LastSnapshot.DaysAgo(days = 0, isStale = false),
+            row.lastSnapshot,
+            "The row must still be able to say the backup is from today.",
+        )
+        // The age leads; the tail is the network's own action, not a generic one.
+        assertEquals("Hoy · revisa tu conexión", row.toMetaText())
+        // And a failure over this morning's snapshot is amber, not red — the data is safe.
+        assertEquals(BackupRowSeverity.Warning, row.severity())
     }
 
     /**
@@ -289,7 +302,7 @@ class ProfileViewModelBackupRowTest {
         advanceUntilIdle()
 
         val row = vm.state.value.backupRow
-        assertEquals(BackupRowUi.Failed(BackupFailureReason.Network, lastBackupDaysAgo = null), row)
+        assertEquals(BackupRowUi.Failed(BackupFailureReason.Network, LastSnapshot.None), row)
         assertEquals("Sin respaldo · revisa tu conexión", row.toMetaText())
         // No watermark to age, so the database is never touched on this path.
         coVerify(exactly = 0) { getBackupStaleness(any()) }
@@ -335,6 +348,52 @@ class ProfileViewModelBackupRowTest {
         vm.onIntent(ProfileIntent.SignOut)
         advanceUntilIdle()
         coVerify(exactly = 1) { signOut.invoke() }
+    }
+
+    /**
+     * **The streak survives a staleness read that throws.** An earlier version returned
+     * `Unreadable` from the catch unconditionally, discarding a `consecutiveFailures = 5` that was
+     * already resolved and sitting in a parameter — the same shape of bug as a failure hiding a fresh
+     * snapshot, in the other direction.
+     */
+    @Test
+    fun `a failing device whose staleness read throws keeps the failure`() = runTest(testDispatcher) {
+        coEvery { getBackupStaleness(any()) } throws IllegalStateException("watermark out of range")
+        val vm = buildViewModel()
+
+        sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
+        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 5, BackupFailureReason.Unauthorized)
+        advanceUntilIdle()
+
+        val row = vm.state.value.backupRow
+        assertEquals(BackupRowUi.Failed(BackupFailureReason.Unauthorized, LastSnapshot.AgeUnknown), row)
+        // And it still names the action, without ever claiming there is no backup.
+        assertEquals("No pude respaldar · vuelve a iniciar sesión", row.toMetaText())
+        verify { logger.warn(any(), any()) }
+    }
+
+    /**
+     * The full path for the case that motivated the escalation: a dead refresh token. Every cycle
+     * fails, the snapshot ages past the staleness threshold, and the row has to both name the action
+     * and stop looking like a minor hiccup.
+     */
+    @Test
+    fun `a stale snapshot under a failure streak escalates and names the action`() = runTest(testDispatcher) {
+        coEvery { getBackupStaleness(LAST_BACKUP_AT) } returns
+            BackupStaleness(daysSinceLastBackup = 30, isStale = true)
+        val vm = buildViewModel()
+
+        sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
+        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 12, BackupFailureReason.Unauthorized)
+        advanceUntilIdle()
+
+        val row = vm.state.value.backupRow
+        assertEquals(
+            BackupRowUi.Failed(BackupFailureReason.Unauthorized, LastSnapshot.DaysAgo(days = 30, isStale = true)),
+            row,
+        )
+        assertEquals("Hace 30 días · vuelve a iniciar sesión", row.toMetaText())
+        assertEquals(BackupRowSeverity.Danger, row.severity())
     }
 
     private companion object {

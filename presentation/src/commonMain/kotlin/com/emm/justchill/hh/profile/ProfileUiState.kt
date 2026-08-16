@@ -22,6 +22,43 @@ sealed interface SyncRowUi {
 }
 
 /**
+ * What this device's last verified snapshot is, for the row that has to describe it.
+ *
+ * Three cases, because there genuinely are three and the previous `Int?` could only carry two. It
+ * replaced that nullable after review pointed out the same ambiguity [BackupRowUi.Unreadable] exists
+ * to remove: `null` meant "no snapshot" and the copy shouted "Sin respaldo", but nothing in the type
+ * stopped it from describing a device that had one whose age simply could not be read. The invariant
+ * held only because one function constructed it. Now it cannot be stated wrongly at all.
+ */
+sealed interface LastSnapshot {
+
+    /** This device has never completed a verified snapshot for this account. */
+    data object None : LastSnapshot
+
+    /**
+     * A snapshot exists, but reading how old it is threw.
+     *
+     * Never says "Sin respaldo": there is one, and the row simply cannot date it.
+     */
+    data object AgeUnknown : LastSnapshot
+
+    /**
+     * A snapshot from [days] calendar days ago, and whether the staleness rule calls it stale.
+     *
+     * [isStale] is carried rather than recomputed because it is not the age alone — it is the age
+     * **and** the ledger having moved since (`GetBackupStalenessUseCase`). A month-old snapshot of a
+     * ledger nobody has touched is complete, and must not be escalated as if it were not.
+     */
+    data class DaysAgo(val days: Int, val isStale: Boolean) : LastSnapshot
+}
+
+/**
+ * How loudly the row should be drawn. Semantic, not a colour — `:presentation` cannot know what a
+ * `Color` is, and each platform maps these onto its own tokens.
+ */
+enum class BackupRowSeverity { Normal, Warning, Danger }
+
+/**
  * Presentation state for the "Último respaldo" row in the Respaldo section.
  *
  * Same principle as [SyncRowUi] above, and the same reason: the discrimination is resolved here, in
@@ -31,14 +68,29 @@ sealed interface SyncRowUi {
  * session, the health and the staleness answer at once. A composable rebuilding that from an
  * `if (x == null)` chain would be guessing at two of the three.
  *
- * ### Precedence, in the order the `when` applies it
+ * ### The shape is two-level, not one chain
  *
- * [NeedsAccount] > [BackingUp] > [Unreadable] > [Failed] > [Never] > [Stale] > [UpToDate], with the
- * reasoning on `ProfileViewModel.resolveBackupRow`. Two positions are load-bearing rather than
- * arbitrary: [NeedsAccount] outranks [BackingUp] so a cycle still in flight when the session ends
- * cannot render "Respaldando…" to a signed-out user, and **a failure does not outrank the snapshot
- * itself** — [Failed] carries the age instead, so one bad manual tap cannot hide a backup that
- * succeeded this morning.
+ * An earlier version of this KDoc — and of `ProfileViewModel`'s, and of `docs/sync/ADR009_PLAN.md` —
+ * claimed a single precedence chain `NeedsAccount > BackingUp > Unreadable > Failed > Never > Stale
+ * > UpToDate`. **The code has never had that order**, and three copies of a wrong contract are three
+ * chances to be believed. What it actually does:
+ *
+ * ```
+ * resolveBackupRow          not signed in ............... NeedsAccount
+ *                           a cycle is running .......... BackingUp
+ *                           no watermark ................ failing ? Failed(reason, None) : Never
+ *                           a watermark ................. ↓
+ * snapshotRow               the staleness read threw .... failing ? Failed(reason, AgeUnknown)
+ *                                                                 : Unreadable
+ *                           otherwise ................... failing ? Failed(reason, DaysAgo(…))
+ *                                                                 : isStale ? Stale : UpToDate
+ * ```
+ *
+ * Two positions are load-bearing rather than arbitrary. [NeedsAccount] outranks [BackingUp] so a
+ * cycle still in flight when the session ends cannot render "Respaldando…" to a signed-out user. And
+ * **a failure never replaces the snapshot; it annotates it** — [Failed] carries [LastSnapshot], so
+ * one bad manual tap cannot hide a backup that succeeded this morning, and a staleness read that
+ * throws cannot hide a five-cycle failure streak.
  *
  * ### The one trap, spelled out in `BackupHealth`'s KDoc
  *
@@ -73,13 +125,13 @@ sealed interface BackupRowUi {
     data object Never : BackupRowUi
 
     /**
-     * The row could not be built: reading how old the last snapshot is threw.
+     * A snapshot exists, nothing is failing, and reading how old it is threw.
      *
      * Distinct from [Failed] because the two are different sentences. [Failed] says a backup *cycle*
      * did not produce a snapshot — a fact the health surface persisted. This says the app cannot
      * currently describe the snapshot it has, which claims nothing about whether backup is working.
-     * Collapsing it into `Failed(reason, lastBackupDaysAgo = null)` would render as "Sin respaldo" on
-     * a device that has one.
+     * The failing counterpart of this state is `Failed(reason, LastSnapshot.AgeUnknown)`, not this:
+     * a streak that is already resolved and in hand must not be dropped for a weaker sentence.
      */
     data object Unreadable : BackupRowUi
 
@@ -87,19 +139,59 @@ sealed interface BackupRowUi {
      * At least one cycle has failed since the last verified snapshot — **and what that snapshot is**.
      *
      * @property reason may be null; read the trap note above before keying anything on it.
-     * @property lastBackupDaysAgo the age of the last verified snapshot, or null when there is none.
-     *   It is here so a failure cannot erase a good backup from the row: a manual tap on bad wifi an
-     *   hour after a successful automatic cycle is an ordinary sequence, and the daily cap then keeps
-     *   the streak from clearing until midnight. `null` is the case that is genuinely alarming —
-     *   failing with nothing backed up at all — and it is the one the copy shouts about.
+     * @property lastSnapshot the snapshot the failure is happening *over*. It is here so a failure
+     *   cannot erase a good backup from the row: a manual tap on bad wifi an hour after a successful
+     *   automatic cycle is an ordinary sequence, and the daily cap then keeps the streak from
+     *   clearing until midnight. It is also what [severity] reads to decide how loud to be.
      */
-    data class Failed(val reason: BackupFailureReason?, val lastBackupDaysAgo: Int?) : BackupRowUi
+    data class Failed(val reason: BackupFailureReason?, val lastSnapshot: LastSnapshot) : BackupRowUi
 
     /** A verified snapshot exists, but it is older than the threshold **and** the ledger has moved since. */
     data class Stale(val daysSinceLastBackup: Int) : BackupRowUi
 
     /** A verified snapshot exists and nothing above applies. */
     data class UpToDate(val daysSinceLastBackup: Int) : BackupRowUi
+}
+
+/**
+ * How loudly to draw the row — resolved here rather than in each platform's composable, for the
+ * reason [BackupRowUi] exists at all.
+ *
+ * ### The rule, after review
+ *
+ * **[BackupRowSeverity.Danger] means the ledger is not protected and will not become protected on
+ * its own.** It is deliberately not "something failed": a failed cycle over this morning's snapshot
+ * is an update that did not happen, and the data is safe.
+ *
+ * That reads two ways, and the second one was missing. The first is [LastSnapshot.None] — nothing is
+ * backed up at all. The second is a snapshot the staleness rule already calls stale *while cycles
+ * are failing*: "backed up 30 days ago, failing ever since, with unsaved changes" is a ledger at
+ * risk just as truly, and it used to render in the same amber as a one-off hiccup because severity
+ * only ever escalated through `None`. A plain [BackupRowUi.Stale] stays [BackupRowSeverity.Warning]
+ * precisely because it *will* self-heal — the next trigger fixes it. A failing one will not.
+ *
+ * [LastSnapshot.AgeUnknown] stays at [BackupRowSeverity.Warning] on purpose: not knowing the age is
+ * not evidence the snapshot is old, and guessing loudly would cry wolf on a device that is fine.
+ * [BackupRowUi.Never] likewise — a signed-in device that has not been backed up *yet* is a "not
+ * yet", and the orchestrator's next trigger is what answers it.
+ */
+fun BackupRowUi.severity(): BackupRowSeverity = when (this) {
+    BackupRowUi.NeedsAccount,
+    BackupRowUi.BackingUp,
+    BackupRowUi.Never,
+    -> BackupRowSeverity.Normal
+
+    BackupRowUi.Unreadable -> BackupRowSeverity.Warning
+
+    is BackupRowUi.UpToDate -> BackupRowSeverity.Normal
+
+    is BackupRowUi.Stale -> BackupRowSeverity.Warning
+
+    is BackupRowUi.Failed -> when (val snapshot = lastSnapshot) {
+        LastSnapshot.None -> BackupRowSeverity.Danger
+        LastSnapshot.AgeUnknown -> BackupRowSeverity.Warning
+        is LastSnapshot.DaysAgo -> if (snapshot.isStale) BackupRowSeverity.Danger else BackupRowSeverity.Warning
+    }
 }
 
 /**

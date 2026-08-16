@@ -309,13 +309,21 @@ class ProfileViewModel(
 }
 
 /**
- * The whole of the "Último respaldo" row's discrimination, in the order [BackupRowUi] documents.
+ * The first level of the "Último respaldo" row's discrimination — everything answerable without
+ * touching the database. [snapshotRow] is the second.
  *
  * Private top-level rather than a method, in the shape `BackupOrchestrator.kt` already uses for its
  * own decision helpers: it reads nothing off the ViewModel but the collaborators it is handed, and
  * `ProfileViewModel` sits on detekt's per-class function limit.
  *
- * ### Order, and what each position is protecting
+ * ### It is two levels, not one precedence chain
+ *
+ * The full shape, and the reason it is drawn here rather than listed as an order, is on
+ * [BackupRowUi] — three copies of this file's earlier one-chain description were wrong, including
+ * `docs/sync/ADR009_PLAN.md`. This level answers: no session, a cycle running, or no watermark at
+ * all. Everything past that needs the staleness read and belongs to [snapshotRow].
+ *
+ * ### What each position is protecting
  *
  * **[BackupRowUi.NeedsAccount] is first, ahead of [BackupRowUi.BackingUp].** A cycle in flight when
  * the session ends would otherwise render "Respaldando…" to a signed-out user, describing work
@@ -327,18 +335,16 @@ class ProfileViewModel(
  * ahora at 10:00 on bad wifi" is ordinary — and the daily cap then blocks any automatic cycle from
  * clearing the streak until midnight. Ranking a failure above a fresh snapshot would hide the one
  * fact a row titled "Último respaldo" exists to show, for the rest of the day, on a device whose
- * data is perfectly safe. So the age is resolved first and handed to [BackupRowUi.Failed], which
- * carries both facts; the copy decides which one leads, and `lastBackupDaysAgo == null` — nothing
- * backed up at all AND failing — is the genuinely alarming case that keeps the loud wording.
+ * data is perfectly safe. So [BackupRowUi.Failed] carries a [LastSnapshot] describing what the
+ * failure is happening *over*, and only [LastSnapshot.None] — failing with nothing backed up at all
+ * — keeps the loud wording and the danger token.
  *
  * **[BackupRowUi.Failed] is chosen on `consecutiveFailures > 0`, never on
  * `lastFailureReason != null`** — `BackupHealth`'s KDoc spells out why: the reason degrades to null
  * for a persisted name this build cannot resolve, so `(5, null)` is a real value and keying on the
  * reason would show a device that has failed five times running as healthy. The reason is carried
- * through only to pick the wording.
- *
- * The staleness read is asked only where it can be answered — never without a session, and never
- * without the watermark that [GetBackupStalenessUseCase] refuses to take as null.
+ * through to pick the wording, and where it names an action the user can take, that action is shown
+ * however old the snapshot is.
  *
  * The known limit, and it is the same one `docs/DATE_AUDIT.md` #7 records for
  * `ReportUiState.isCurrentMonth`: the day count is computed per emission, not continuously. A Perfil
@@ -360,14 +366,15 @@ private suspend fun resolveBackupRow(
         backingUp -> BackupRowUi.BackingUp
 
         lastSuccessfulBackupAt == null ->
-            if (failing) BackupRowUi.Failed(health.lastFailureReason, lastBackupDaysAgo = null) else BackupRowUi.Never
+            if (failing) BackupRowUi.Failed(health.lastFailureReason, LastSnapshot.None) else BackupRowUi.Never
 
         else -> snapshotRow(lastSuccessfulBackupAt, failing, health.lastFailureReason, getBackupStaleness, logger)
     }
 }
 
 /**
- * The branch that has a verified snapshot to describe, with everything that can throw contained.
+ * The second level: there is a verified snapshot, so describe it — with everything that can throw
+ * contained.
  *
  * [GetBackupStalenessUseCase] runs inside a plain `onEach` collector rather than `launchSafe`, so an
  * escaping exception would cancel `viewModelScope` and take the session, sync and counter collectors
@@ -382,10 +389,14 @@ private suspend fun resolveBackupRow(
  * is rethrown first, per `MviViewModel.launchSafe`'s reasoning: it is an `Exception`, and swallowing
  * it would break the collector's own cancellation.
  *
- * The fallback is [BackupRowUi.Unreadable] rather than a mapped [BackupRowUi.Failed]: the failure is
- * in *reading* the state, not in a backup cycle, and the two say different true things. Nothing here
- * knows whether that snapshot is fresh, so nothing here may imply it. The swallow is logged because
- * it is otherwise the one failure on this screen with no channel at all.
+ * **The fallback keeps [failing], which an earlier version dropped.** A device with five recorded
+ * failures whose staleness read throws used to render the bare "no pude leer el estado" of
+ * [BackupRowUi.Unreadable] — discarding a streak that was already resolved and sitting in a
+ * parameter, which is the same shape of bug as a failure hiding a fresh snapshot. It now degrades to
+ * [LastSnapshot.AgeUnknown], which says "there is a snapshot, I cannot date it" without ever
+ * claiming "Sin respaldo". [BackupRowUi.Unreadable] remains the not-failing case, and only that.
+ *
+ * The swallow is logged because it is otherwise the one failure on this screen with no channel.
  */
 // Intentional broad catch: see the KDoc — a frozen Perfil is the alternative.
 @Suppress("TooGenericExceptionCaught")
@@ -403,14 +414,15 @@ private suspend fun snapshotRow(
     } catch (e: Exception) {
         logger.warn(
             "could not read backup staleness for the Perfil row; the last-backup watermark is " +
-                "$lastSuccessfulBackupAt and the row falls back to Unreadable rather than claiming " +
-                "a health it could not determine",
+                "$lastSuccessfulBackupAt and the row falls back to an undated snapshot rather than " +
+                "claiming a health it could not determine",
             e,
         )
-        return BackupRowUi.Unreadable
+        return if (failing) BackupRowUi.Failed(reason, LastSnapshot.AgeUnknown) else BackupRowUi.Unreadable
     }
+    val snapshot = LastSnapshot.DaysAgo(days = staleness.daysSinceLastBackup, isStale = staleness.isStale)
     return when {
-        failing -> BackupRowUi.Failed(reason, staleness.daysSinceLastBackup)
+        failing -> BackupRowUi.Failed(reason, snapshot)
         staleness.isStale -> BackupRowUi.Stale(staleness.daysSinceLastBackup)
         else -> BackupRowUi.UpToDate(staleness.daysSinceLastBackup)
     }

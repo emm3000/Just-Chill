@@ -317,16 +317,13 @@ private fun BackupSection(
 @Composable
 private fun LastBackupRow(row: BackupRowUi) {
     val colors = LocalEmmColors.current
-    // Warning vs danger, and the split is about the DATA, not about whether something failed:
-    // danger is reserved for "nothing on this phone is backed up", which is the only state where a
-    // ledger is actually at risk. A failed cycle over a snapshot that exists is an update that did
-    // not happen — amber, like a stale one. docs/DESIGN_SYSTEM.md gives each its own token.
-    val metaColor: Color? = when {
-        row is BackupRowUi.Failed && row.lastBackupDaysAgo == null -> colors.danger
-        row is BackupRowUi.Failed -> colors.warning
-        row is BackupRowUi.Stale -> colors.warning
-        row is BackupRowUi.Unreadable -> colors.warning
-        else -> null
+    // Which token, only. WHICH SEVERITY is `BackupRowUi.severity()`, in :presentation, because the
+    // rule reads `LastSnapshot.DaysAgo.isStale` — a domain verdict this composable has no business
+    // re-deriving, and one the SwiftUI row has to reach the same answer on.
+    val metaColor: Color? = when (row.severity()) {
+        BackupRowSeverity.Normal -> null
+        BackupRowSeverity.Warning -> colors.warning
+        BackupRowSeverity.Danger -> colors.danger
     }
     ProfileRowWithTrailing(
         icon = Icons.Outlined.CloudDone,

@@ -1,7 +1,10 @@
 package com.emm.justchill.hh.shared
 
 import com.emm.domain.shared.backup.BackupFailureReason
+import com.emm.justchill.hh.profile.BackupRowSeverity
 import com.emm.justchill.hh.profile.BackupRowUi
+import com.emm.justchill.hh.profile.LastSnapshot
+import com.emm.justchill.hh.profile.severity
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -40,11 +43,31 @@ class BackupRowTextTest {
     @Test
     fun `a failure over a snapshot leads with the age, so a good backup is never hidden`() {
         // The manual-tap-on-bad-wifi case: data is safe, an update did not happen.
-        assertEquals("Hoy · no pude actualizar", BackupRowUi.Failed(BackupFailureReason.Network, 0).toMetaText())
-        assertEquals("Ayer · no pude actualizar", BackupRowUi.Failed(BackupFailureReason.Unknown, 1).toMetaText())
+        assertEquals("Hoy · no pude actualizar", failed(BackupFailureReason.Unknown, days = 0).toMetaText())
+        assertEquals("Ayer · no pude actualizar", failed(BackupFailureReason.Serialization, days = 1).toMetaText())
+        assertEquals("Hace 4 días · no pude actualizar", failed(BackupFailureReason.Unverified, days = 4).toMetaText())
+    }
+
+    /**
+     * **The action is never bought off by an age.** A dead refresh token fails every cycle from that
+     * moment, so the snapshot ages while the streak climbs — and the one thing that fixes it is the
+     * one thing an age-only tail never says. This is the hole review found: the row read
+     * "Hace 30 días · no pude actualizar" and never once mentioned signing in again.
+     */
+    @Test
+    fun `a reason with a real action says it however old the snapshot is`() {
         assertEquals(
-            "Hace 4 días · no pude actualizar",
-            BackupRowUi.Failed(BackupFailureReason.Unauthorized, 4).toMetaText(),
+            "Hace 30 días · vuelve a iniciar sesión",
+            failed(BackupFailureReason.Unauthorized, days = 30, isStale = true).toMetaText(),
+        )
+        assertEquals(
+            "Hoy · vuelve a iniciar sesión",
+            failed(BackupFailureReason.Unauthorized, days = 0).toMetaText(),
+        )
+        assertEquals("Hace 2 días · revisa tu conexión", failed(BackupFailureReason.Network, days = 2).toMetaText())
+        assertEquals(
+            "Ayer · no pude leer tus datos",
+            failed(BackupFailureReason.LocalDatabase, days = 1).toMetaText(),
         )
     }
 
@@ -52,20 +75,25 @@ class BackupRowTextTest {
     fun `a failure with no snapshot at all spends the line on the reason instead`() {
         assertEquals(
             "Sin respaldo · revisa tu conexión",
-            BackupRowUi.Failed(BackupFailureReason.Network, null).toMetaText(),
+            BackupRowUi.Failed(BackupFailureReason.Network, LastSnapshot.None).toMetaText(),
         )
         assertEquals(
             "Sin respaldo · vuelve a iniciar sesión",
-            BackupRowUi.Failed(BackupFailureReason.Unauthorized, null).toMetaText(),
+            BackupRowUi.Failed(BackupFailureReason.Unauthorized, LastSnapshot.None).toMetaText(),
+        )
+        assertEquals(
+            "Sin respaldo · no pude leer tus datos",
+            BackupRowUi.Failed(BackupFailureReason.LocalDatabase, LastSnapshot.None).toMetaText(),
         )
     }
 
+    /** An undated snapshot is still a snapshot: the copy must never downgrade it to "Sin respaldo". */
     @Test
-    fun `an unreadable local database is not blamed on the cloud`() {
-        assertEquals(
-            "Sin respaldo · no pude leer los datos de este teléfono",
-            BackupRowUi.Failed(BackupFailureReason.LocalDatabase, null).toMetaText(),
-        )
+    fun `a failure over an undated snapshot does not claim there is none`() {
+        val text = BackupRowUi.Failed(BackupFailureReason.Unauthorized, LastSnapshot.AgeUnknown).toMetaText()
+
+        assertEquals("No pude respaldar · vuelve a iniciar sesión", text)
+        assertTrue("Sin respaldo" !in text)
     }
 
     @Test
@@ -84,8 +112,12 @@ class BackupRowTextTest {
      */
     @Test
     fun `a failure with no resolvable reason still reads as a failure`() {
-        assertEquals("Sin respaldo · intenta de nuevo", BackupRowUi.Failed(null, null).toMetaText())
-        assertEquals("Hoy · no pude actualizar", BackupRowUi.Failed(null, 0).toMetaText())
+        assertEquals("Sin respaldo · intenta de nuevo", BackupRowUi.Failed(null, LastSnapshot.None).toMetaText())
+        assertEquals("Hoy · no pude actualizar", failed(null, days = 0).toMetaText())
+        assertEquals(
+            "No pude respaldar · intenta de nuevo",
+            BackupRowUi.Failed(null, LastSnapshot.AgeUnknown).toMetaText(),
+        )
     }
 
     @Test
@@ -93,12 +125,68 @@ class BackupRowTextTest {
         // Exhaustive over the enum by construction: a member added later lands on the generic branch
         // rather than on nothing, and this fails the day one renders blank.
         for (reason in BackupFailureReason.entries) {
-            val withoutSnapshot = BackupRowUi.Failed(reason, null).toMetaText()
-            val withSnapshot = BackupRowUi.Failed(reason, 3).toMetaText()
+            val withoutSnapshot = BackupRowUi.Failed(reason, LastSnapshot.None).toMetaText()
+            val withSnapshot = failed(reason, days = 3).toMetaText()
 
             assertTrue(withoutSnapshot.startsWith("Sin respaldo · "), "$reason: $withoutSnapshot")
             assertTrue(withoutSnapshot.removePrefix("Sin respaldo · ").isNotBlank(), "$reason rendered no cause.")
-            assertEquals("Hace 3 días · no pude actualizar", withSnapshot, "$reason with a snapshot")
+            assertTrue(withSnapshot.startsWith("Hace 3 días · "), "$reason: $withSnapshot")
+            assertTrue(withSnapshot.removePrefix("Hace 3 días · ").isNotBlank(), "$reason rendered no tail.")
         }
     }
+
+    // ── Severity ───────────────────────────────────────────────────────────
+
+    @Test
+    fun `a healthy or merely pending row is drawn normally`() {
+        assertEquals(BackupRowSeverity.Normal, BackupRowUi.NeedsAccount.severity())
+        assertEquals(BackupRowSeverity.Normal, BackupRowUi.BackingUp.severity())
+        assertEquals(BackupRowSeverity.Normal, BackupRowUi.UpToDate(0).severity())
+        // "Not yet", not "broken": the orchestrator's next trigger is what answers this one.
+        assertEquals(BackupRowSeverity.Normal, BackupRowUi.Never.severity())
+    }
+
+    @Test
+    fun `a stale but not failing device stays amber, because it will self-heal`() {
+        assertEquals(BackupRowSeverity.Warning, BackupRowUi.Stale(9).severity())
+    }
+
+    @Test
+    fun `nothing backed up at all is the loud case`() {
+        assertEquals(
+            BackupRowSeverity.Danger,
+            BackupRowUi.Failed(BackupFailureReason.Network, LastSnapshot.None).severity(),
+        )
+    }
+
+    /**
+     * The escalation review asked for. "Backed up 30 days ago, failing ever since, with unsaved
+     * changes" is a ledger at risk exactly as truly as one never backed up — and it used to render in
+     * the same amber as a one-off hiccup, because severity only ever escalated through `None`.
+     */
+    @Test
+    fun `a failure over a stale snapshot escalates, a failure over a fresh one does not`() {
+        assertEquals(
+            BackupRowSeverity.Danger,
+            failed(BackupFailureReason.Unauthorized, days = 30, isStale = true).severity(),
+        )
+        assertEquals(
+            BackupRowSeverity.Warning,
+            failed(BackupFailureReason.Unauthorized, days = 30, isStale = false).severity(),
+            "A month-old snapshot of a ledger nobody has touched is complete — the age alone is not the rule.",
+        )
+        assertEquals(BackupRowSeverity.Warning, failed(BackupFailureReason.Network, days = 0).severity())
+    }
+
+    @Test
+    fun `not knowing the age is not evidence the snapshot is old`() {
+        assertEquals(BackupRowSeverity.Warning, BackupRowUi.Unreadable.severity())
+        assertEquals(
+            BackupRowSeverity.Warning,
+            BackupRowUi.Failed(BackupFailureReason.Network, LastSnapshot.AgeUnknown).severity(),
+        )
+    }
+
+    private fun failed(reason: BackupFailureReason?, days: Int, isStale: Boolean = false) =
+        BackupRowUi.Failed(reason, LastSnapshot.DaysAgo(days = days, isStale = isStale))
 }
