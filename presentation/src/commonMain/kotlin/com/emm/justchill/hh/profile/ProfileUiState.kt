@@ -32,10 +32,8 @@ sealed interface BackupRowUi {
 
     data object NeedsAccount : BackupRowUi
 
-    /**
-     * No upload can happen in this state: `BackupOrchestrator` refuses every cycle for an account
-     * whose destination was never disclosed, so the row is the only way out of it.
-     */
+    // No upload can happen in this state: BackupOrchestrator refuses every cycle for an account
+    // whose destination was never disclosed, so the row is the only way out of it.
     data object DisclosurePending : BackupRowUi
 
     data object Never : BackupRowUi

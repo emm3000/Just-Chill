@@ -172,12 +172,14 @@ class BackupRowTextTest {
 
     /**
      * The sentence ADR 009 Decision 5 requires on screen: this device's WHOLE ledger, including rows
-     * written under a previous account, goes into this account's backup. A copy edit that drops
-     * either half stops satisfying the decision, so both halves are asserted rather than the string.
+     * written under a previous account, goes into THIS account's backup, and signing out does not
+     * erase it. A copy edit that drops any one fact stops satisfying the decision, so every fact is
+     * asserted rather than the string.
      */
     @Test
     fun `the disclosure names the whole ledger and the previous account`() {
         assertTrue("TODO" in BACKUP_DESTINATION_DISCLOSURE, BACKUP_DESTINATION_DISCLOSURE)
+        assertTrue("a esta cuenta" in BACKUP_DESTINATION_DISCLOSURE, BACKUP_DESTINATION_DISCLOSURE)
         assertTrue("otra cuenta" in BACKUP_DESTINATION_DISCLOSURE, BACKUP_DESTINATION_DISCLOSURE)
         assertTrue("cerrar sesión no borra" in BACKUP_DESTINATION_DISCLOSURE, BACKUP_DESTINATION_DISCLOSURE)
         assertTrue(BACKUP_DESTINATION_DISCLOSURE_ACTION.isNotBlank())

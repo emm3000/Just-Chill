@@ -236,6 +236,22 @@ class DefaultBackupMetadataStoreTest {
         assertEquals(2, settings.keys.size, "Two independent facts, two keys: ${settings.keys}")
     }
 
+    @Test
+    fun `the three preference keys carry their exact prefixes`() {
+        store.setLastSuccessfulBackupAt("user-a", 1_755_000_000_000L)
+        store.recordFailure("user-a", BackupFailureReason.Network)
+        store.setDestinationDisclosed("user-a", 1_800_000_000_000L)
+
+        assertEquals(
+            setOf(
+                "last_successful_backup_at_user-a",
+                "backup_failure_user-a",
+                "backup_destination_disclosed_at_user-a",
+            ),
+            settings.keys,
+        )
+    }
+
     /**
      * Two users whose ids are prefixes of one another is what a naive concatenation gets wrong, and
      * every key in this class is built the same way — so proving it once covers all of them.
