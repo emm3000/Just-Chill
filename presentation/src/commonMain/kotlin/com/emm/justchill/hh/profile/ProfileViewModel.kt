@@ -247,7 +247,7 @@ private suspend fun resolveBackupRow(
         // Above BackingUp for the same reason NeedsAccount is: the orchestrator raises isBackingUp
         // for the whole cycle, including the one that is about to refuse, so ranking it lower would
         // flash "Respaldando…" over a device that is uploading nothing.
-        !health.isDestinationDisclosed -> BackupRowUi.DisclosurePending
+        !health.canUploadToDestination -> BackupRowUi.DisclosurePending
 
         backingUp -> BackupRowUi.BackingUp
 

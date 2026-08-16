@@ -62,7 +62,7 @@ class ProfileViewModelTest {
 
     // Disclosed: this suite is about the ops, and an undisclosed destination refuses every one of
     // the manual taps below. The gate has its own tests.
-    private val healthFlow = MutableStateFlow(BackupHealth.None.copy(isDestinationDisclosed = true))
+    private val healthFlow = MutableStateFlow(BackupHealth.None.copy(canUploadToDestination = true))
     private val backupController = mockk<BackupController>(relaxed = true) {
         every { isBackingUp } returns backingUpFlow
         every { events } returns backupEvents

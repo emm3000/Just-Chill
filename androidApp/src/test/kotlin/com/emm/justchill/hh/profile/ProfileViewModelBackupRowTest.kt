@@ -344,7 +344,7 @@ class ProfileViewModelBackupRowTest {
             val vm = buildViewModel()
 
             sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-            healthFlow.value = BackupHealth(LAST_BACKUP_AT, 0, null, isDestinationDisclosed = false)
+            healthFlow.value = BackupHealth(LAST_BACKUP_AT, 0, null, canUploadToDestination = false)
             advanceUntilIdle()
 
             assertEquals(BackupRowUi.DisclosurePending, vm.state.value.backupRow)
@@ -360,7 +360,7 @@ class ProfileViewModelBackupRowTest {
         val vm = buildViewModel()
 
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, 0, null, isDestinationDisclosed = false)
+        healthFlow.value = BackupHealth(LAST_BACKUP_AT, 0, null, canUploadToDestination = false)
         backingUpFlow.value = true
         advanceUntilIdle()
 
@@ -373,7 +373,7 @@ class ProfileViewModelBackupRowTest {
             val vm = buildViewModel()
 
             sessionFlow.emit(SessionStatus.NotAuthenticated)
-            healthFlow.value = BackupHealth(null, 0, null, isDestinationDisclosed = false)
+            healthFlow.value = BackupHealth(null, 0, null, canUploadToDestination = false)
             advanceUntilIdle()
 
             assertEquals(BackupRowUi.NeedsAccount, vm.state.value.backupRow)
@@ -384,7 +384,7 @@ class ProfileViewModelBackupRowTest {
         val vm = buildViewModel()
 
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, 0, null, isDestinationDisclosed = false)
+        healthFlow.value = BackupHealth(LAST_BACKUP_AT, 0, null, canUploadToDestination = false)
         advanceUntilIdle()
 
         vm.onIntent(ProfileIntent.AcknowledgeBackupDestination)
@@ -403,7 +403,7 @@ class ProfileViewModelBackupRowTest {
 
         val vm = buildViewModel()
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, 0, null, isDestinationDisclosed = false)
+        healthFlow.value = BackupHealth(LAST_BACKUP_AT, 0, null, canUploadToDestination = false)
         advanceUntilIdle()
 
         vm.onIntent(ProfileIntent.ExportRequested)
@@ -425,7 +425,7 @@ class ProfileViewModelBackupRowTest {
             val vm = buildViewModel()
 
             sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-            healthFlow.value = BackupHealth(LAST_BACKUP_AT, 0, null, isDestinationDisclosed = false)
+            healthFlow.value = BackupHealth(LAST_BACKUP_AT, 0, null, canUploadToDestination = false)
             advanceUntilIdle()
 
             val effects = mutableListOf<ProfileEffect>()
@@ -450,7 +450,7 @@ class ProfileViewModelBackupRowTest {
         lastSuccessfulBackupAt: Long?,
         consecutiveFailures: Int,
         lastFailureReason: BackupFailureReason?,
-    ) = BackupHealth(lastSuccessfulBackupAt, consecutiveFailures, lastFailureReason, isDestinationDisclosed = true)
+    ) = BackupHealth(lastSuccessfulBackupAt, consecutiveFailures, lastFailureReason, canUploadToDestination = true)
 
     private companion object {
         const val LAST_BACKUP_AT: Long = 1_785_856_445_000L

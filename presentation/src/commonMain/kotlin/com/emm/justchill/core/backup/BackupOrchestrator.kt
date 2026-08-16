@@ -207,7 +207,7 @@ class BackupOrchestrator(
             lastSuccessfulBackupAt = metadata.lastSuccessfulBackupAt(userId),
             consecutiveFailures = state.consecutiveFailures,
             lastFailureReason = state.lastReason,
-            isDestinationDisclosed = metadata.destinationDisclosedAt(userId) != null,
+            canUploadToDestination = metadata.destinationDisclosedAt(userId) != null,
         )
         _health.value = published
         if (currentUserId != userId) _health.compareAndSet(published, BackupHealth.None)

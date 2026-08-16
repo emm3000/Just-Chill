@@ -353,21 +353,21 @@ class BackupOrchestratorHealthTest {
         authenticate()
 
         assertEquals(
-            BackupHealth(LAST_SUCCESS, 0, null, isDestinationDisclosed = false),
+            BackupHealth(LAST_SUCCESS, 0, null, canUploadToDestination = false),
             orchestrator.health.value,
         )
 
         orchestrator.acknowledgeDestination()
         advanceUntilIdle()
 
-        assertTrue(orchestrator.health.value.isDestinationDisclosed)
+        assertTrue(orchestrator.health.value.canUploadToDestination)
     }
 
     private fun health(
         lastSuccessfulBackupAt: Long?,
         consecutiveFailures: Int,
         lastFailureReason: BackupFailureReason?,
-    ) = BackupHealth(lastSuccessfulBackupAt, consecutiveFailures, lastFailureReason, isDestinationDisclosed = true)
+    ) = BackupHealth(lastSuccessfulBackupAt, consecutiveFailures, lastFailureReason, canUploadToDestination = true)
 
     private fun awaitUntil(what: String, condition: () -> Boolean) {
         val deadline = System.nanoTime() + AWAIT_TIMEOUT_MILLIS * NANOS_PER_MILLI
