@@ -126,6 +126,16 @@ class AppPreferencesTest {
         settings.putString(key, "not-a-streak")
         assertEquals(BackupFailureState.None, prefsOverRawSettings.backupFailure("user-a"))
 
+        // An unparseable count discards the whole reading, reason included. Parsing the two halves
+        // independently would answer (0, Network) here — a reason hanging off a streak of zero, the
+        // exact disagreeing pair the single-key encoding exists to make impossible.
+        settings.putString(key, "abc|Network")
+        assertEquals(BackupFailureState.None, prefsOverRawSettings.backupFailure("user-a"))
+
+        // Same rule for a count no Int can hold.
+        settings.putString(key, "99999999999999|Network")
+        assertEquals(BackupFailureState.None, prefsOverRawSettings.backupFailure("user-a"))
+
         // A count with a reason this build no longer has a name for keeps the count — the streak is
         // the fact a UI warns on, and losing it because a label was renamed would hide a broken
         // device. See BackupHealth: (5, null) is a real value and 3b must handle it.

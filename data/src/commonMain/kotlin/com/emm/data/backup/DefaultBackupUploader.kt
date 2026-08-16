@@ -282,7 +282,7 @@ private const val PREFIX_UNRESOLVED = "the owning prefix could not be resolved"
  *
  * The headline and the trailing full stop are added here rather than by [storageCall], which the
  * retention prune shares: the two operations fail for different reasons and must never borrow each
- * other's opening words. Every one of this file's nine messages is pinned by
+ * other's opening words. Every one of this file's ten messages is pinned by
  * `DefaultBackupUploaderTest`, so the assembly is not taken on trust.
  */
 private suspend fun <T> remotely(reason: String, block: suspend () -> T): T = storageCall("$FAILED$reason.", block)

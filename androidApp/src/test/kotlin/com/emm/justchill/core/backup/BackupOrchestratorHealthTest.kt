@@ -22,6 +22,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -394,36 +395,45 @@ class BackupOrchestratorHealthTest {
             LAST_SUCCESS
         }
 
-        orchestrator = BackupOrchestrator(
-            backupRepository = backupRepository,
-            uploader = uploader,
-            pruner = pruner,
-            metadata = metadata,
-            observeSession = observeSession,
-            appVersion = APP_VERSION,
-            clock = fixedClock(NOW),
-            timeZone = TimeZone.UTC,
-            externalScope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
-            backgroundEvents = backgroundFlow,
-            resumeEvents = resumeFlow,
-            logger = logger,
-        )
-        orchestrator.start()
-        sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = USER_ID, email = "a@b.com"))
-        // The trigger is a shared flow with no replay: emitting before it is subscribed drops the
-        // event and the cycle never runs.
-        withTimeout(AWAIT_TIMEOUT_MILLIS) { backgroundFlow.subscriptionCount.first { it > 0 } }
+        // Cancelled in the finally below. Unlike every other test here it is a real scope on a real
+        // dispatcher, so its consumer coroutine would otherwise park on the request channel for the
+        // rest of the JVM's life — harmless today (JUnit4 builds a fresh instance per method) but
+        // this is the test somebody copies to write the next threaded one.
+        val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+        try {
+            orchestrator = BackupOrchestrator(
+                backupRepository = backupRepository,
+                uploader = uploader,
+                pruner = pruner,
+                metadata = metadata,
+                observeSession = observeSession,
+                appVersion = APP_VERSION,
+                clock = fixedClock(NOW),
+                timeZone = TimeZone.UTC,
+                externalScope = scope,
+                backgroundEvents = backgroundFlow,
+                resumeEvents = resumeFlow,
+                logger = logger,
+            )
+            orchestrator.start()
+            sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = USER_ID, email = "a@b.com"))
+            // The trigger is a shared flow with no replay: emitting before it is subscribed drops
+            // the event and the cycle never runs.
+            withTimeout(AWAIT_TIMEOUT_MILLIS) { backgroundFlow.subscriptionCount.first { it > 0 } }
 
-        backgroundFlow.emit(Unit)
-        awaitUntil("the cycle to start") { orchestrator.isBackingUp.value }
-        awaitUntil("the cycle to finish") { !orchestrator.isBackingUp.value }
+            backgroundFlow.emit(Unit)
+            awaitUntil("the cycle to start") { orchestrator.isBackingUp.value }
+            awaitUntil("the cycle to finish") { !orchestrator.isBackingUp.value }
 
-        assertTrue(signedOutMidPublish, "The test never reached publishHealth's window")
-        assertEquals(
-            BackupHealth.None,
-            orchestrator.health.value,
-            "A signed-out device must not be showing the departed account's backup health",
-        )
+            assertTrue(signedOutMidPublish, "The test never reached publishHealth's window")
+            assertEquals(
+                BackupHealth.None,
+                orchestrator.health.value,
+                "A signed-out device must not be showing the departed account's backup health",
+            )
+        } finally {
+            scope.cancel()
+        }
     }
 
     /** Bounded spin — a concurrency test may wait, but it may never hang the suite. */

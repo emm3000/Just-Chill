@@ -24,8 +24,6 @@ import com.emm.domain.shared.backup.BackupFailureReason
  * `lastSuccessfulBackupAt == null` as "no backup on this device", never as "up to date" — the flag
  * gate is why that distinction is not academic today.
  *
- * @property lastSuccessfulBackupAt epoch millis of the last verified, recorded snapshot; null if
- *   this device has never completed one for this account.
  * ### Read [consecutiveFailures] to decide whether to warn, never [lastFailureReason]
  *
  * The reason is a **label on** the streak, not the existence of one. It is null whenever nothing has
@@ -37,6 +35,8 @@ import com.emm.domain.shared.backup.BackupFailureReason
  * device that has failed five times running. Warn on `consecutiveFailures > 0`; use the reason only
  * to choose the wording, with a fallback for null.
  *
+ * @property lastSuccessfulBackupAt epoch millis of the last verified, recorded snapshot; null if
+ *   this device has never completed one for this account.
  * @property consecutiveFailures cycles failed in a row since the last verified success. Zero after
  *   any success, so a non-zero value means backup is broken *now*. This is the warning condition.
  * @property lastFailureReason why the most recent failure failed. Null when nothing has failed since

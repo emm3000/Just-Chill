@@ -102,18 +102,23 @@ class AppPreferences(private val settings: Settings) {
      * in a KDoc — see [BackupFailureState], which used to claim exactly that guarantee while the
      * writer below did not provide it.
      *
-     * Every malformed reading degrades to [BackupFailureState.None] instead of throwing: an absent
-     * key, a value from a build that spelled this differently, a truncated string. The reason
-     * resolves through [BackupFailureReason.fromNameOrNull], which answers null for a name this
-     * build no longer has rather than throwing on a device that upgraded across a rename — so a
-     * streak can legitimately survive with no reason attached to it.
+     * **The count gates the whole reading**, and that ordering is the point rather than a detail: it
+     * is what makes "anything this build cannot parse reads as [BackupFailureState.None]" true. Parse
+     * the two halves independently and it stops being true — `abc|Network`, or a count that overflows
+     * `Int`, yields `(0, Network)`: a reason attached to a streak of zero, which is the disagreeing
+     * pair this whole encoding exists to make impossible. No writer here can produce that value, and
+     * that is exactly why it must not be left to a writer to prevent.
+     *
+     * Nothing throws on the way, deliberately: this is the read that runs while the app is trying to
+     * *report* a failure. The reason resolves through [BackupFailureReason.fromNameOrNull], which
+     * answers null for a name this build no longer has rather than throwing on a device that
+     * upgraded across a rename — so a streak can legitimately survive with no reason attached to it.
      */
     fun backupFailure(userId: String): BackupFailureState {
         val stored: String = settings.getStringOrNull(userKey(KEY_BACKUP_FAILURE_PREFIX, userId)).orEmpty()
-        return BackupFailureState(
-            consecutiveFailures = stored.substringBefore(FAILURE_SEPARATOR).toIntOrNull() ?: 0,
-            lastReason = BackupFailureReason.fromNameOrNull(stored.substringAfter(FAILURE_SEPARATOR, "")),
-        )
+        val count: Int = stored.substringBefore(FAILURE_SEPARATOR).toIntOrNull() ?: return BackupFailureState.None
+        val reasonName: String = stored.substringAfter(FAILURE_SEPARATOR, "")
+        return BackupFailureState(count, BackupFailureReason.fromNameOrNull(reasonName))
     }
 
     /**
