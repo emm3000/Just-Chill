@@ -5,7 +5,6 @@ import com.emm.domain.shared.backup.BackupVerification
 import com.emm.justchill.hh.profile.ProfileMessage
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.time.Instant
 
 class BackupMessageTextTest {
 
@@ -80,8 +79,6 @@ private val NO_ROWS = BackupRowCounts(accounts = 0, categories = 0, transactions
 private fun verifiedText(counts: BackupRowCounts, isNewestPair: Boolean = true): String = ProfileMessage.BackupVerified(
     BackupVerification.Verified(
         fileName = "backup-v3-2026-08-16T14-22-08Z.json",
-        takenAt = Instant.parse("2026-08-16T14:22:08Z"),
-        schemaVersion = 3,
         rowCounts = counts,
         isNewestPair = isNewestPair,
     ),

@@ -28,8 +28,6 @@ class DefaultBackupVerifierTest {
         val verified = assertIs<BackupVerification.Verified>(verifier().verifyLatest())
 
         assertEquals(NEWEST, verified.fileName)
-        assertEquals(TAKEN_AT_NEWEST, verified.takenAt)
-        assertEquals(BACKUP_SCHEMA_VERSION, verified.schemaVersion)
         assertTrue(verified.isNewestPair, "the newest pair verified, so nothing was walked back")
     }
 
@@ -173,12 +171,11 @@ class DefaultBackupVerifierTest {
     }
 
     @Test
-    fun `a payload declaring an older schema version verifies, and reports the version the file declares`() = runTest {
+    fun `a payload declaring an older schema version verifies, and its counts are that file's`() = runTest {
         bucket.seedPair(NEWEST, payloadJson(recurring = 3, schemaVersion = BACKUP_SCHEMA_VERSION_V2))
 
         val verified = assertIs<BackupVerification.Verified>(verifier().verifyLatest())
 
-        assertEquals(BACKUP_SCHEMA_VERSION_V2, verified.schemaVersion)
         assertEquals(
             0,
             verified.rowCounts.recurringMovements,

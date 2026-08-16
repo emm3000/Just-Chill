@@ -794,8 +794,6 @@ class ProfileViewModelTest {
 
 private val VERIFIED_NEWEST = BackupVerification.Verified(
     fileName = "backup-v3-2026-08-16T14-22-08Z.json",
-    takenAt = Instant.parse("2026-08-16T14:22:08Z"),
-    schemaVersion = 3,
     rowCounts = BackupRowCounts(accounts = 1, categories = 23, transactions = 412, recurringMovements = 3),
     isNewestPair = true,
 )

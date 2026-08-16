@@ -54,8 +54,6 @@ class DefaultBackupVerifier internal constructor(private val store: BackupObject
         return decoded?.let {
             BackupVerification.Verified(
                 fileName = snapshot.fileName,
-                takenAt = snapshot.takenAt,
-                schemaVersion = it.declaredVersion,
                 rowCounts = it.payload.rowCounts(),
                 isNewestPair = isNewestPair,
             )

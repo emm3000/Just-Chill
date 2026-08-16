@@ -1,7 +1,5 @@
 package com.emm.domain.shared.backup
 
-import kotlin.time.Instant
-
 interface BackupVerifier {
 
     suspend fun verifyLatest(): BackupVerification
@@ -13,8 +11,6 @@ sealed interface BackupVerification {
 
     data class Verified(
         val fileName: String,
-        val takenAt: Instant,
-        val schemaVersion: Int,
         val rowCounts: BackupRowCounts,
         val isNewestPair: Boolean,
     ) : BackupVerification
