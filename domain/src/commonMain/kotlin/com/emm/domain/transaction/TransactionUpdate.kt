@@ -11,10 +11,5 @@ data class TransactionUpdate(
     val description: String,
     val accountId: AccountId,
     val categoryId: CategoryId?,
-    /**
-     * When the money moved, after the edit. Written verbatim — an edit that did not touch the date
-     * hands back the value it was loaded with, so it is byte-identical by construction rather than
-     * by a conditional. See [Transaction].
-     */
     val occurredAt: LocalDateTime,
 )

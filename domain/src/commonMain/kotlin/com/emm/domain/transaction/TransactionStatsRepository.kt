@@ -15,14 +15,7 @@ interface TransactionStatsRepository {
         endExclusive: String,
     ): List<CategoryAmount>
 
-    /**
-     * Category breakdown for a whole window of months in ONE database round-trip, both types
-     * included, returned in the same order as [ranges].
-     *
-     * The Trends tab needs twelve months of income and expense. Asking month by month and type by
-     * type meant ~30 sequential suspend calls on open, each with its own dispatcher hop, and each
-     * free to observe a different snapshot of the table if a write landed mid-load.
-     */
+    // One entry per range, in the same order as [ranges]: callers pair the two lists by index.
     suspend fun monthlyAmountByCategoryForRanges(ranges: List<MonthRange>): List<MonthCategoryAmounts>
 
     suspend fun monthlyStats(type: TransactionType, startInclusive: String, endExclusive: String): MonthlySectionStats

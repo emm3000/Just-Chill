@@ -6,18 +6,6 @@ import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 import com.emm.domain.transaction.TransactionRepository
 
-/**
- * Tombstones an account, with a live-row guard enforced in the domain layer.
- *
- * SQL ON DELETE RESTRICT only fires on hard DELETE, not on soft-delete UPDATEs.
- * This use case replicates that guard using live-row counts (deletedAt IS NULL):
- *   - If any live transaction references this account, block with ValidationError.
- *   - If any live recurring_movement references this account, block with ValidationError.
- *   - Otherwise, tombstone the account.
- *
- * Using countLiveByAccount (filters deletedAt IS NULL) means tombstoned transactions
- * no longer prevent deletion — only active rows do (DECISION 4).
- */
 class DeleteAccountUseCase(
     private val repository: AccountRepository,
     private val transactionRepository: TransactionRepository,

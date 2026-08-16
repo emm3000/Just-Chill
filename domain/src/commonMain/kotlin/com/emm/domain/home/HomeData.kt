@@ -10,10 +10,5 @@ data class HomeData(
     val spend: Money,
     val balance: Money,
     val hasAnyTransaction: Boolean,
-    /**
-     * Everything owed as of today, oldest period first. Deliberately NOT scoped to the month the
-     * user is looking at: it is a to-do list, and a month missed while the app was closed has to
-     * stay visible after the calendar moves on.
-     */
     val pendingRecurringMovements: List<PendingRecurring> = emptyList(),
 )

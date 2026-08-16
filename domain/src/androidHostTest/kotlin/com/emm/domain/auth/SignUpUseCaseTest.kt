@@ -17,8 +17,7 @@ class SignUpUseCaseTest {
 
     private val validEmail = "new@example.com"
 
-    // Sign-up requires at least 8 characters.
-    private val validPassword = "password1" // 9 chars — well above the 8-char minimum
+    private val validPassword = "password1"
     private val user = AuthUser(userId = "uid-2", email = validEmail)
 
     @Test
@@ -56,8 +55,6 @@ class SignUpUseCaseTest {
         }
         coVerify(exactly = 0) { authRepository.signUp(any(), any()) }
     }
-
-    // ── Shared validateEmail rule coverage ───────────────────────────────────
 
     @Test
     fun `email with blank local part (at-sign first) throws ValidationError`() = runTest {
@@ -104,7 +101,7 @@ class SignUpUseCaseTest {
     @Test
     fun `password with 7 chars throws ValidationError (minimum is 8)`() = runTest {
         assertFailsWith<DomainException.ValidationError> {
-            useCase(validEmail, "1234567") // exactly 7 chars
+            useCase(validEmail, "1234567")
         }
         coVerify(exactly = 0) { authRepository.signUp(any(), any()) }
     }

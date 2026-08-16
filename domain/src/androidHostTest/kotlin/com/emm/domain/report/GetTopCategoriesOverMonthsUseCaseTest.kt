@@ -28,8 +28,6 @@ class GetTopCategoriesOverMonthsUseCaseTest {
     private val repository = mockk<TransactionStatsRepository>()
     private val useCase = GetTopCategoriesOverMonthsUseCase(repository)
 
-    // Mid-month noon UTC: the window ends on May 2026 in every zone, so the tests below are about
-    // ranking, not about boundaries — the boundary has its own test.
     private val fixedClock: Clock = object : Clock {
         override fun now(): Instant = Instant.parse("2026-05-15T12:00:00Z")
     }
@@ -76,14 +74,6 @@ class GetTopCategoriesOverMonthsUseCaseTest {
 
     @Test
     fun `the window ends at the month of the injected zone, not the device's`() = runTest {
-        // One instant, two zones, two different months: 2026-09-01T02:00Z is already September at
-        // UTC and still 31 August at UTC-5. A one-month window therefore reads August in Lima and
-        // September at UTC — off the same clock. The zone used to come off the machine, where no
-        // test can move it onto a boundary.
-        //
-        // Both zones are asserted because one proves nothing: on a machine whose own clock sits in
-        // that zone the ambient read agrees, and the test stays green straight through the bug.
-        // The dev machine here is America/Lima, which is exactly UTC-5.
         val nearMidnight: Clock = object : Clock {
             override fun now(): Instant = Instant.parse("2026-09-01T02:00:00Z")
         }
@@ -142,8 +132,6 @@ class GetTopCategoriesOverMonthsUseCaseTest {
 
         val result = useCase(TransactionType.Income, clock = fixedClock, zone = TimeZone.UTC, months = 1, topN = 3)
 
-        // One query now returns both types; picking the wrong bucket would rank a user's salary
-        // as a spending category.
         assertEquals(1, result.size)
         assertEquals(CategoryId("INCOME"), result.single().categoryId)
     }

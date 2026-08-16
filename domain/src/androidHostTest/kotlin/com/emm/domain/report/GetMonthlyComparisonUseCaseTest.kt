@@ -19,7 +19,7 @@ class GetMonthlyComparisonUseCaseTest {
     private val useCase = GetMonthlyComparisonUseCase(repository)
 
     private val currentMonth = YearMonth(2026, Month.MAY)
-    private val previousMonth = currentMonth.previous() // April 2026
+    private val previousMonth = currentMonth.previous()
 
     private fun stubMonthly(yearMonth: YearMonth, amountCents: Long) {
         val items = if (amountCents == 0L) {
@@ -54,7 +54,6 @@ class GetMonthlyComparisonUseCaseTest {
         requireNotNull(result)
         assertEquals(Money(6200_00L), result.currentTotal)
         assertEquals(Money(5500_00L), result.previousTotal)
-        // delta = ((6200 - 5500) / 5500) * 100 = 12 (truncated)
         assertEquals(12, result.deltaPercent)
     }
 
@@ -94,7 +93,7 @@ class GetMonthlyComparisonUseCaseTest {
     @Test
     fun `edge case january wraps correctly to december of previous year`() = runTest {
         val january = YearMonth(2026, Month.JANUARY)
-        val december2025 = january.previous() // December 2025
+        val december2025 = january.previous()
 
         stubMonthly(january, 6000_00L)
         stubMonthly(december2025, 5000_00L)

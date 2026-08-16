@@ -28,19 +28,14 @@ class GetSavingsRateUseCaseTest {
     private val repository = mockk<TransactionStatsRepository>()
     private val useCase = GetSavingsRateUseCase(repository)
 
-    // Fixed clock: May 2026. Mid-month noon UTC, so the window ends on May in every zone and the
-    // tests below are about totals, not about boundaries — the boundary has its own test.
     private val fixedClock: Clock = object : Clock {
         override fun now(): Instant = Instant.parse("2026-05-15T12:00:00Z")
     }
 
-    /** Cents per month, income to expense. Anything not listed is a month with no movements. */
     private val amountsByMonth = mutableMapOf<YearMonth, Pair<Long, Long>>()
 
     @Before
     fun setUp() {
-        // The use case reads the whole span in one call and expects the answers back in the order
-        // it asked for them, so the fake resolves each range independently.
         coEvery { repository.monthlyAmountByCategoryForRanges(any()) } answers {
             firstArg<List<MonthRange>>().map { range ->
                 val ym = YearMonth.of(LocalDate.parse(range.startInclusive))
@@ -84,14 +79,6 @@ class GetSavingsRateUseCaseTest {
 
     @Test
     fun `the window ends at the month of the injected zone, not the device's`() = runTest {
-        // One instant, two zones, two different months: 2026-09-01T02:00Z is already September at
-        // UTC and still 31 August at UTC-5. Which month a report window ends on is therefore a
-        // question about the zone, and an injected clock alone cannot ask it — the zone was still
-        // being read off the machine, where no test can put it on a boundary.
-        //
-        // Both zones are asserted because one proves nothing: on a machine whose own clock sits in
-        // that zone the ambient read agrees, and the test stays green straight through the bug.
-        // The dev machine here is America/Lima, which is exactly UTC-5.
         val nearMidnight: Clock = object : Clock {
             override fun now(): Instant = Instant.parse("2026-09-01T02:00:00Z")
         }
@@ -111,7 +98,6 @@ class GetSavingsRateUseCaseTest {
         val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
 
         assertEquals(33, result.currentRatePercent)
-        // prior rate = (5000-4000)/5000 * 100 = 20, delta = 33 - 20 = 13
         assertEquals(13, result.deltaPointsVsPrior)
         assertEquals(6, result.monthly.size)
     }
@@ -122,8 +108,6 @@ class GetSavingsRateUseCaseTest {
 
         useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
 
-        // Two windows of six months used to mean 24 sequential suspend calls: one per month, per
-        // type, per window. They are contiguous, so they are one request.
         coVerify(exactly = 1) { repository.monthlyAmountByCategoryForRanges(capture(ranges)) }
         assertEquals(12, ranges.captured.size)
         val months = ranges.captured.map { YearMonth.of(LocalDate.parse(it.startInclusive)) }
@@ -144,7 +128,6 @@ class GetSavingsRateUseCaseTest {
             assertEquals(ym.startInclusiveDay(), range.startInclusive)
             assertEquals(ym.endExclusiveDay(), range.endExclusive)
         }
-        // Half-open and contiguous: no gap and no overlap between consecutive months.
         ranges.captured.zipWithNext { earlier, later ->
             assertEquals(earlier.endExclusive, later.startInclusive)
         }
@@ -164,8 +147,6 @@ class GetSavingsRateUseCaseTest {
 
         val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
 
-        // (1000 - 1500) / 1000 = -50%. Clamping this to 0 hid the exact situation the
-        // savings rate exists to surface.
         assertEquals(-50, result.currentRatePercent)
     }
 
@@ -180,15 +161,11 @@ class GetSavingsRateUseCaseTest {
 
     @Test
     fun `delta compares real rates, not clamped ones`() = runTest {
-        // Current 6 months: overspending, true rate -50.
         val priorEnd = stubMonths(YearMonth(2026, Month.MAY), count = 6, income = 100_000L, expense = 150_000L)
-        // Prior 6 months: worse still, true rate -150.
         stubMonths(priorEnd, count = 6, income = 100_000L, expense = 250_000L)
 
         val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
 
-        // Both rates used to clamp to 0, so the delta read 0 — "same pace" while the user
-        // had in fact cut their overspend by a third of their income.
         assertEquals(-50, result.currentRatePercent)
         assertEquals(100, result.deltaPointsVsPrior)
     }
@@ -220,8 +197,6 @@ class GetSavingsRateUseCaseTest {
 
         val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
 
-        // Reading twelve months in one call only helps if each answer is put back where it came
-        // from; an off-by-one here would move a user's money between months.
         val byMonth = result.monthly.associateBy { it.yearMonth }
         assertEquals(Money(60_000L), byMonth.getValue(may).income)
         assertEquals(Money.Zero, byMonth.getValue(may).expense)
@@ -246,9 +221,6 @@ class GetSavingsRateUseCaseTest {
 
         val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
 
-        // A user one month into the app earned 600 and spent 400 that month. Dividing by the
-        // fixed 6-month window reported 100 and 66 — a sixth of reality, for everyone whose
-        // history is shorter than the window.
         assertEquals(1, result.monthsWithData)
         assertEquals(Money(60_000L), result.averageIncome)
         assertEquals(Money(40_000L), result.averageExpense)

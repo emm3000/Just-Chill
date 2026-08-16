@@ -49,7 +49,6 @@ class AccountDeleterTest {
 
     @Test
     fun `delete should succeed when account has only tombstoned transactions`() = runTest {
-        // countLiveByAccount filters deletedAt IS NULL — tombstoned rows return 0.
         coEvery { transactionRepository.countLiveByAccount(any()) } returns 0L
         coEvery { recurringMovementRepository.countLiveByAccount(any()) } returns 0L
         coEvery { repository.delete(any()) } just Runs

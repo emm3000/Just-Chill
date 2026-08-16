@@ -11,10 +11,6 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-/**
- * Tests for DeleteRecurringMovementUseCase.
- * Spec coverage: 9.1 9.2
- */
 class DeleteRecurringMovementUseCaseTest {
 
     private lateinit var repository: FakeRecurringMovementRepository
@@ -42,12 +38,8 @@ class DeleteRecurringMovementUseCaseTest {
         useCase = DeleteRecurringMovementUseCase(repository)
     }
 
-    /**
-     * Scenario 9.1 — delete existing template.
-     */
     @Test
     fun `invoke calls repository delete and does not touch transaction repository`() = runTest {
-        // spec 9.1
         useCase(RecurringMovementId("rm-1"))
         assertEquals(1, repository.deleteCount)
         assertEquals(0, repository.confirmCount)
@@ -55,18 +47,13 @@ class DeleteRecurringMovementUseCaseTest {
 
     @Test
     fun `invoke deleted template can no longer be found`() = runTest {
-        // spec 9.1
         useCase(RecurringMovementId("rm-1"))
         val found = repository.find(RecurringMovementId("rm-1"))
         assertEquals(null, found)
     }
 
-    /**
-     * Scenario 9.2 — delete non-existent template → NotFound.
-     */
     @Test
     fun `invoke throws NotFound when template does not exist`() = runTest {
-        // spec 9.2
         assertFailsWith<DomainException.NotFound> {
             useCase(RecurringMovementId("T_GHOST"))
         }

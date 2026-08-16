@@ -16,10 +16,6 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-/**
- * Skipping is the escape hatch out of the oldest-first catch-up queue: a month the user genuinely
- * did not pay would otherwise block every later month behind it forever.
- */
 class SkipRecurringMovementUseCaseTest {
 
     private lateinit var repository: FakeRecurringMovementRepository

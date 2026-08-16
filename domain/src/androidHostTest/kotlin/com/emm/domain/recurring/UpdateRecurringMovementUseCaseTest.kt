@@ -11,10 +11,6 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-/**
- * Tests for UpdateRecurringMovementUseCase.
- * Spec coverage: 8.1 8.2 8.3
- */
 class UpdateRecurringMovementUseCaseTest {
 
     private lateinit var repository: FakeRecurringMovementRepository
@@ -58,33 +54,21 @@ class UpdateRecurringMovementUseCaseTest {
         isActive = isActive,
     )
 
-    /**
-     * Scenario 8.1 — edit name and dayOfMonth.
-     */
     @Test
     fun `invoke delegates update to repository and does not touch transactions`() = runTest {
-        // spec 8.1
         useCase(RecurringMovementId("rm-1"), validUpdateInsert())
         assertEquals(1, repository.updateCount)
         assertEquals(0, repository.confirmCount)
     }
 
-    /**
-     * Scenario 8.2 — set isActive to false.
-     */
     @Test
     fun `invoke updates isActive to false`() = runTest {
-        // spec 8.2
         useCase(RecurringMovementId("rm-1"), validUpdateInsert(isActive = false))
         assertEquals(1, repository.updateCount)
     }
 
-    /**
-     * Scenario 8.3 — change amount from fixed to variable (null).
-     */
     @Test
     fun `invoke accepts null amount change from fixed to variable`() = runTest {
-        // spec 8.3
         useCase(RecurringMovementId("rm-1"), validUpdateInsert(amount = null))
         assertEquals(1, repository.updateCount)
     }

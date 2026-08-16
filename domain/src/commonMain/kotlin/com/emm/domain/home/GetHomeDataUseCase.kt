@@ -22,14 +22,9 @@ class GetHomeDataUseCase(
     private val zone: TimeZone,
 ) {
 
-    // The zone goes to `current` as well as to `today` below. Both answer the same question —
-    // "where is this user, so what date is it there" — and letting one of them read the ambient
-    // zone means a test can move the device and only half the screen notices.
     operator fun invoke(yearMonth: YearMonth = YearMonth.current(clock, zone)): Flow<HomeData> {
         val startOfMonth = yearMonth.startInclusiveDay()
         val startOfNextMonth = yearMonth.endExclusiveDay()
-        // Injected next to the clock, not read ambiently: "what is today" is the one date
-        // question left that needs a zone, and a zone no test can vary is a zone no test covers.
         val today: LocalDate = clock.now().toLocalDateTime(zone).date
         return combine(
             flow = transactionRepository.observeTotals(),
@@ -41,11 +36,6 @@ class GetHomeDataUseCase(
         )
     }
 
-    /**
-     * The month figures still fold rows because the screen lists those same rows anyway; the
-     * balance does not, because it spans every transaction ever recorded and used to be re-folded
-     * from scratch on each emission.
-     */
     private fun computeFinancialSummary(
         totals: TransactionTotals,
         currentMonthTransactions: List<TransactionWithCategory>,

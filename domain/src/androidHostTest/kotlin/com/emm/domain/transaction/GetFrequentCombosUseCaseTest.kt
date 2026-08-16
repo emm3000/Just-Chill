@@ -17,8 +17,6 @@ class GetFrequentCombosUseCaseTest {
 
     private val repo = mockk<TransactionStatsRepository>()
 
-    // Stated, not inherited: the window's lower bound is counted back from this instant, so the
-    // suite names it rather than letting the machine answer.
     private val clock = object : Clock {
         override fun now(): Instant = Instant.parse("2026-08-11T12:00:00Z")
     }
@@ -101,10 +99,6 @@ class GetFrequentCombosUseCaseTest {
 
         useCase(TransactionType.Income, windowDays = 90)
 
-        // The date, not `any()`. This test was named for the window it passed and asserted nothing
-        // about it — it could not, while the bound was counted back from whatever day the suite ran
-        // on. 90 calendar days before 2026-08-11 is 2026-05-13, and `DateWindowTest` derives the
-        // same value independently.
         coVerify {
             repo.topUsedCombos(
                 type = TransactionType.Income,

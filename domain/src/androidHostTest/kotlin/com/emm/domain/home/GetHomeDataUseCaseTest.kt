@@ -32,8 +32,6 @@ class GetHomeDataUseCaseTest {
     private val transactionRepository = mockk<TransactionRepository>()
     private val getPendingRecurringMovements = mockk<GetPendingRecurringMovementsUseCase>()
 
-    // Stated, not inherited: the use case takes no defaults, so the suite names the instant its
-    // default month window is derived from. 16 May 2026 at UTC — the day the fixtures below carry.
     private val useCase = GetHomeDataUseCase(
         transactionRepository,
         getPendingRecurringMovements,
@@ -85,8 +83,6 @@ class GetHomeDataUseCaseTest {
 
     @Test
     fun `balance comes from the aggregate, not from folding the whole table`() = runTest {
-        // The month holds a single 100 income, but the ledger as a whole is 80 in the red. Folding
-        // the current month — the only list the use case still reads — could never produce that.
         stub(
             currentMonth = listOf(tx("1", TransactionType.Income, 10000L)),
             totals = TransactionTotals(Money(-8000L), 4L),
@@ -100,8 +96,6 @@ class GetHomeDataUseCaseTest {
 
     @Test
     fun `hasAnyTransaction follows the ledger count, not the visible month`() = runTest {
-        // Browsing back to an empty month must not make the app think the user has never recorded
-        // anything: that flips Home into its first-run empty state.
         stub(currentMonth = emptyList(), totals = TransactionTotals(Money(12000L), 3L))
 
         val data = useCase().first()
@@ -118,7 +112,6 @@ class GetHomeDataUseCaseTest {
         val data = useCase().first()
 
         assertEquals(7, data.lastTransactions.size)
-        // income is summed from all current-month transactions, not just the display slice
         assertEquals(Money(1000L), data.income)
     }
 
@@ -137,7 +130,6 @@ class GetHomeDataUseCaseTest {
 
     @Test
     fun `integer arithmetic avoids floating-point rounding for Money sums`() = runTest {
-        // 3 transactions of 33 cents each must sum to exactly 99 cents, not 98 or 100
         val currentMonth = listOf(
             tx("a", TransactionType.Income, 33L),
             tx("b", TransactionType.Income, 33L),
@@ -164,22 +156,12 @@ class GetHomeDataUseCaseTest {
 
         GetHomeDataUseCase(repo, pendingUc, fixedClock, TimeZone.UTC).invoke().first()
 
-        // Half-open day bounds, no timezone anywhere: the window is the month, spelled out.
         assertEquals("2026-05-01", startSlot.captured)
         assertEquals("2026-06-01", endSlot.captured)
     }
 
     @Test
     fun `the default month is read in the injected zone, not the device's`() = runTest {
-        // One instant, two zones, two different months: 2026-06-01T02:00Z is already June at UTC
-        // and still 31 May at UTC-5. So the clock alone cannot decide the window — and the zone
-        // that decides it must be the injected one, the same one this use case already uses to
-        // answer "what is today". Otherwise the window and the Hoy/Ayer labels can disagree about
-        // where the user is.
-        //
-        // Both halves are asserted on purpose. A single zone proves nothing: on a machine whose own
-        // clock sits in that zone, the ambient read gives the same answer and the test stays green
-        // through the bug. The dev machine here is America/Lima, which is exactly UTC-5.
         assertEquals("2026-05-01", startOfDefaultWindow(zoneOffsetHours = -5))
         assertEquals("2026-06-01", startOfDefaultWindow(zoneOffsetHours = 0))
     }

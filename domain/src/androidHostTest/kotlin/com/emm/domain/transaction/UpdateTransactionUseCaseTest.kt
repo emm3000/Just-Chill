@@ -27,8 +27,6 @@ class UpdateTransactionUseCaseTest {
 
     private val repository = mockk<TransactionRepository>()
 
-    // Stated, not inherited. The use case takes no defaults, so "now" is a fact of this suite:
-    // 09:00 on 11 August 2026 in Lima. The stored March dates below are past against it.
     private val lima = TimeZone.of("America/Lima")
     private val today = LocalDate(2026, Month.AUGUST, 11)
     private val clock = object : Clock {
@@ -71,9 +69,6 @@ class UpdateTransactionUseCaseTest {
 
     @Test
     fun `an edit that does not touch the date writes back the stored value unchanged`() = runTest {
-        // The regression this whole change exists to make impossible. There is no conversion left
-        // to be non-inverse with itself: an amount-only edit carries the same LocalDateTime it was
-        // loaded with, so what reaches the repository is identical to what is stored.
         coEvery { repository.update(any(), any()) } just Runs
 
         useCase(oldTransaction, anyUpdate.copy(amount = Money(999L)))
@@ -141,8 +136,6 @@ class UpdateTransactionUseCaseTest {
 
     @Test
     fun `update accepts a transaction stamped later today than the clock reads`() = runTest {
-        // The Edit path carries the original hour over, so this is the ordinary case for a
-        // movement recorded in the evening and edited the next morning — not a future date.
         coEvery { repository.update(any(), any()) } just Runs
 
         useCase(oldTransaction, anyUpdate.copy(occurredAt = LocalDateTime(today, LocalTime(23, 0))))

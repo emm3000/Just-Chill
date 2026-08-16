@@ -3,26 +3,13 @@ package com.emm.domain.auth
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 
-/** Product rule. Public because the UI states the number in its own copy — one source of truth. */
+// Public because the UI states the number in its own copy — one source of truth.
 const val MIN_SIGNUP_PASSWORD_LENGTH = 8
 
-/**
- * Single validation guard for the auth domain.
- * Throws [error] immediately when [condition] is false.
- * Keeps the ThrowsCount to 1 per call site (detekt-compliant).
- */
 internal fun ensure(condition: Boolean, error: DomainException) {
     if (!condition) throw error
 }
 
-/**
- * Validates an email address.
- *
- * Rules (minimally honest — server is the authority for full RFC compliance):
- * - Exactly one '@' character.
- * - Non-blank local part (before '@').
- * - Non-blank domain part (after '@').
- */
 internal fun validateEmail(email: String) {
     val atCount = email.count { it == '@' }
     ensure(
@@ -40,13 +27,6 @@ internal fun validateEmail(email: String) {
     )
 }
 
-/**
- * Validates credentials for sign-in.
- *
- * - Email: validated via [validateEmail].
- * - Password: merely non-blank — existing accounts may have shorter passwords; the server is
- *   the authority on sign-in credential correctness.
- */
 internal fun validateSignInCredentials(email: String, password: String) {
     validateEmail(email)
     ensure(
@@ -55,12 +35,6 @@ internal fun validateSignInCredentials(email: String, password: String) {
     )
 }
 
-/**
- * Validates credentials for sign-up.
- *
- * - Email: validated via [validateEmail].
- * - Password: minimum [MIN_SIGNUP_PASSWORD_LENGTH] characters (product rule; UI copy: "Mínimo 8 caracteres").
- */
 internal fun validateSignUpCredentials(email: String, password: String) {
     validateEmail(email)
     ensure(

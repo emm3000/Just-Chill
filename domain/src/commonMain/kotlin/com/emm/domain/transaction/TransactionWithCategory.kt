@@ -11,7 +11,6 @@ data class TransactionWithCategory(
     val type: TransactionType,
     val amount: Money,
     val description: String,
-    /** When the money moved: calendar day + wall-clock time, no timezone. See [Transaction]. */
     val occurredAt: LocalDateTime,
     val accountId: AccountId,
     val category: Category?,

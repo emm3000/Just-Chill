@@ -32,7 +32,7 @@ class GetMonthlySectionStatsUseCaseTest {
         val result = useCase(month, TransactionType.Income)
 
         assertEquals(4, result.movementCount)
-        assertEquals(Money(155_000L), result.averageAmount) // 620000 / 4
+        assertEquals(Money(155_000L), result.averageAmount)
     }
 
     @Test
@@ -57,7 +57,6 @@ class GetMonthlySectionStatsUseCaseTest {
 
     @Test
     fun `truncates fractional cents in average`() = runTest {
-        // 100 cents / 3 rows = 33 cents (truncated integer division)
         stubStats(count = 3, totalCents = 100L)
 
         val result = useCase(month, TransactionType.Income)

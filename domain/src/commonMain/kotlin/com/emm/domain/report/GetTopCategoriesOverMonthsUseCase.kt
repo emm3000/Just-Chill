@@ -10,10 +10,6 @@ import kotlin.time.Clock
 
 class GetTopCategoriesOverMonthsUseCase(private val transactionStatsRepository: TransactionStatsRepository) {
 
-    /**
-     * [clock] and [zone] have no defaults on purpose — see [GetSavingsRateUseCase.invoke]. The
-     * window ends at the month the caller's [zone] is in, not the month the machine is in.
-     */
     suspend operator fun invoke(
         type: TransactionType,
         clock: Clock,
@@ -23,17 +19,12 @@ class GetTopCategoriesOverMonthsUseCase(private val transactionStatsRepository: 
     ): List<CategoryAggregate> {
         val window = YearMonth.windowEndingAt(YearMonth.current(clock, zone), months)
 
-        // Per-month results oldest-first, fetched in one round-trip.
-        // The uncategorized bucket is dropped here: this is a ranking OF categories, and a
-        // bucket with no name, icon or color cannot occupy one of the top-N slots. Month
-        // totals still include it — see [CategoryAmount].
         val monthlyResults: List<List<CategoryAmount>> = transactionStatsRepository
             .monthlyAmountByCategoryForRanges(window.map { it.range() })
             .map { slice -> slice.of(type).filter { amount -> amount.categoryId != null } }
 
-        // Aggregate totals across all months per categoryId
         val totals = mutableMapOf<CategoryId, Money>()
-        val meta = mutableMapOf<CategoryId, Triple<String, String, String>>() // name, color, icon
+        val meta = mutableMapOf<CategoryId, Triple<String, String, String>>()
 
         monthlyResults.forEach { items ->
             items.forEach { item ->
@@ -47,19 +38,16 @@ class GetTopCategoriesOverMonthsUseCase(private val transactionStatsRepository: 
             }
         }
 
-        // For each month, identify the local top-N categoryIds
         val localTopSets: List<Set<CategoryId>> = monthlyResults.map { items ->
             items.sortedByDescending { it.amount.cents }.take(topN).mapNotNull { it.categoryId }.toSet()
         }
 
-        // Count how many months each aggregated category appeared in the local top-N
         val monthsInTop = mutableMapOf<CategoryId, Int>()
         totals.keys.forEach { catId ->
             val count = localTopSets.count { it.contains(catId) }
             monthsInTop[catId] = count
         }
 
-        // Return top-N overall by total amount
         return totals.entries
             .sortedByDescending { it.value.cents }
             .take(topN)

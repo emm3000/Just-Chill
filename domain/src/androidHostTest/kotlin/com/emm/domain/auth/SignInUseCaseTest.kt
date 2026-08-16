@@ -16,7 +16,6 @@ class SignInUseCaseTest {
 
     private val validEmail = "user@example.com"
 
-    // Sign-in only requires non-blank password; existing accounts may have short passwords.
     private val validPassword = "abc"
     private val user = AuthUser(userId = "uid-1", email = validEmail)
 
@@ -53,8 +52,6 @@ class SignInUseCaseTest {
         }
         coVerify(exactly = 0) { authRepository.signIn(any(), any()) }
     }
-
-    // ── Shared validateEmail rule coverage ───────────────────────────────────
 
     @Test
     fun `email with blank local part (at-sign first) throws ValidationError`() = runTest {
@@ -100,7 +97,6 @@ class SignInUseCaseTest {
 
     @Test
     fun `short password (under 8 chars) is accepted by sign-in (server is the authority)`() = runTest {
-        // Sign-in path only requires non-blank; existing accounts may have short passwords.
         val shortPassword = "abc"
         coEvery { authRepository.signIn(validEmail, shortPassword) } returns user
 

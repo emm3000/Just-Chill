@@ -19,13 +19,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-/**
- * Tests for ConfirmRecurringMovementUseCase.
- * Spec coverage: 4.1 4.2 5.2 5.3 6.1
- *
- * A fixed UTC timezone is injected so date-millis assertions are deterministic
- * regardless of the machine's local timezone.
- */
 class ConfirmRecurringMovementUseCaseTest {
 
     private lateinit var repository: FakeRecurringMovementRepository
@@ -34,8 +27,6 @@ class ConfirmRecurringMovementUseCaseTest {
     private val utc = TimeZone.UTC
     private val may2026 = YearMonth(2026, Month.MAY)
 
-    // The fixed template is due on the 15th, so confirming May books it on 2026-05-15, NOT on the
-    // day the user happened to tap confirm.
     private val expectedOccurredAt = LocalDateTime(2026, 5, 15, 0, 0)
 
     private val createdAt = LocalDate(2026, 1, 1).atStartOfDayIn(utc).toEpochMilliseconds()
@@ -77,12 +68,8 @@ class ConfirmRecurringMovementUseCaseTest {
         useCase = ConfirmRecurringMovementUseCase(repository)
     }
 
-    /**
-     * Scenario 4.1 — confirm fixed amount successfully.
-     */
     @Test
     fun `invoke fixed amount calls repo confirm exactly once with correct TransactionInsert`() = runTest {
-        // spec 4.1
         useCase(
             templateId = RecurringMovementId("rm-fixed"),
             yearMonth = may2026,
@@ -98,12 +85,8 @@ class ConfirmRecurringMovementUseCaseTest {
         assertEquals("2026-05", repository.lastConfirmPeriod)
     }
 
-    /**
-     * Scenario 4.2 — confirm fails: repo throws DomainException.
-     */
     @Test
     fun `invoke propagates DomainException from repo confirm`() = runTest {
-        // spec 4.2
         val failingRepo = io.mockk.mockk<RecurringMovementRepository>()
         io.mockk.coEvery { failingRepo.find(RecurringMovementId("rm-fixed")) } returns fixedTemplate
         io.mockk.coEvery {
@@ -119,12 +102,8 @@ class ConfirmRecurringMovementUseCaseTest {
         }
     }
 
-    /**
-     * Scenario 5.2 — variable amount: confirm with valid user-supplied amount.
-     */
     @Test
     fun `invoke variable template uses callerAmount when template amount is null`() = runTest {
-        // spec 5.2
         useCase(
             templateId = RecurringMovementId("rm-variable"),
             yearMonth = may2026,
@@ -134,12 +113,8 @@ class ConfirmRecurringMovementUseCaseTest {
         assertEquals(Money(350_000L), repository.lastConfirmInsert?.amount)
     }
 
-    /**
-     * Scenario 5.3 — variable amount: zero supplied by caller → ValidationError.
-     */
     @Test
     fun `invoke throws ValidationError when variable template and callerAmount is zero`() = runTest {
-        // spec 5.3
         assertFailsWith<DomainException.ValidationError> {
             useCase(
                 templateId = RecurringMovementId("rm-variable"),
@@ -152,7 +127,6 @@ class ConfirmRecurringMovementUseCaseTest {
 
     @Test
     fun `invoke throws ValidationError when variable template and callerAmount is null`() = runTest {
-        // spec 5.3 variant: null callerAmount for variable template
         assertFailsWith<DomainException.ValidationError> {
             useCase(
                 templateId = RecurringMovementId("rm-variable"),
@@ -175,13 +149,8 @@ class ConfirmRecurringMovementUseCaseTest {
         assertEquals(0, repository.confirmCount)
     }
 
-    /**
-     * Scenario 6.1 — idempotency: double confirm same period rejected.
-     */
     @Test
     fun `invoke throws ValidationError when template already confirmed this period`() = runTest {
-        // spec 6.1
-        // First confirm — succeeds
         useCase(
             templateId = RecurringMovementId("rm-fixed"),
             yearMonth = may2026,
@@ -189,7 +158,6 @@ class ConfirmRecurringMovementUseCaseTest {
         )
         assertEquals(1, repository.confirmCount)
 
-        // Second confirm same period — should fail with ValidationError
         assertFailsWith<DomainException.ValidationError> {
             useCase(
                 templateId = RecurringMovementId("rm-fixed"),
@@ -197,7 +165,6 @@ class ConfirmRecurringMovementUseCaseTest {
                 callerAmount = null,
             )
         }
-        // repo.confirm NOT called a second time
         assertEquals(1, repository.confirmCount)
     }
 
@@ -213,10 +180,6 @@ class ConfirmRecurringMovementUseCaseTest {
         assertEquals(0, repository.confirmCount)
     }
 
-    /**
-     * The transaction lands at midnight on the period's own due day — a calendar fact that needs
-     * no clock and no timezone to state.
-     */
     @Test
     fun `invoke dates the transaction on the period's due day`() = runTest {
         useCase(
@@ -229,12 +192,8 @@ class ConfirmRecurringMovementUseCaseTest {
         assertEquals(expectedOccurredAt, insert.occurredAt)
     }
 
-    // ── catch-up ──────────────────────────────────────────────────────────────
-
     @Test
     fun `a caught-up period is booked in its own month, not in the current one`() = runTest {
-        // Settling March while it is May has to date the transaction in March, or Home and Reporte
-        // disagree about the month the money moved.
         useCase(
             templateId = RecurringMovementId("rm-fixed"),
             yearMonth = YearMonth(2026, Month.MARCH),
@@ -258,7 +217,6 @@ class ConfirmRecurringMovementUseCaseTest {
     fun `confirming a period at or before the mark is rejected`() = runTest {
         useCase(RecurringMovementId("rm-fixed"), YearMonth(2026, Month.APRIL), null)
 
-        // March is now behind the mark. Accepting it would rewind the mark and resurrect April.
         assertFailsWith<DomainException.ValidationError> {
             useCase(RecurringMovementId("rm-fixed"), YearMonth(2026, Month.MARCH), null)
         }

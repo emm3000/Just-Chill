@@ -17,26 +17,12 @@ interface TransactionRepository {
 
     fun fetchAllWithCategoryInRange(startInclusive: String, endExclusive: String): Flow<List<TransactionWithCategory>>
 
-    /**
-     * Whole-ledger balance and movement count, aggregated by the database.
-     *
-     * Callers that need only these two numbers must use this instead of [fetchAllWithCategory]:
-     * the latter re-reads and re-folds every transaction ever recorded on each emission.
-     */
     fun observeTotals(): Flow<TransactionTotals>
 
-    /**
-     * Live (non-tombstoned, categorized) transaction count per category, aggregated by the
-     * database.
-     *
-     * Callers ranking categories by usage must use this instead of folding
-     * [fetchAllWithCategory]: the fold re-reads every transaction ever recorded on each emission.
-     */
     fun observeCategoryUsageCounts(): Flow<Map<CategoryId, Int>>
 
     suspend fun update(transactionId: TransactionId, transactionUpdate: TransactionUpdate)
 
-    /** Count live (non-tombstoned) transactions for the given account. */
     suspend fun countLiveByAccount(accountId: AccountId): Long
 
     suspend fun delete(transactionId: TransactionId)

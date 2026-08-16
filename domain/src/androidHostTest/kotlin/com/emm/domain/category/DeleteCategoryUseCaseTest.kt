@@ -22,10 +22,6 @@ class DeleteCategoryUseCaseTest {
 
         useCase(CategoryId("cat-1"))
 
-        // Deleting a category used to also null categoryId on every live transaction and
-        // recurring movement referencing it, rewriting history the user never asked to touch.
-        // The tombstone alone is now the whole operation — the transaction and recurring
-        // repositories are gone from the constructor, so this no longer compiles otherwise.
         coVerify(exactly = 1) { repository.delete(CategoryId("cat-1")) }
     }
 

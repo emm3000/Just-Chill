@@ -98,7 +98,6 @@ class FakeRecurringMovementRepository : RecurringMovementRepository {
         markSettled(recurringId, period)
     }
 
-    /** Moves the high-water mark, so the monotonic guard can be exercised. */
     private fun markSettled(recurringId: RecurringMovementId, period: String) {
         val map = store.value.toMutableMap()
         val existing = map[recurringId.value] ?: return

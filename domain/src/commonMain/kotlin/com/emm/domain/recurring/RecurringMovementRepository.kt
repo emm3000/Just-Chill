@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface RecurringMovementRepository {
 
-    /** Count live (non-tombstoned) recurring movements for the given account. */
     suspend fun countLiveByAccount(accountId: AccountId): Long
 
     suspend fun create(insert: RecurringMovementInsert)
@@ -24,6 +23,5 @@ interface RecurringMovementRepository {
 
     suspend fun confirm(insert: TransactionInsert, recurringId: RecurringMovementId, period: String)
 
-    /** Advances the high-water mark to [period] without creating a transaction. */
     suspend fun skip(recurringId: RecurringMovementId, period: String)
 }

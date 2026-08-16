@@ -3,10 +3,9 @@ package com.emm.domain.recurring
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 
-/** Product rule. Public because the UI states the range in its own copy — one source of truth. */
+// Public because the UI states the range in its own copy — one source of truth.
 const val MIN_DAY_OF_MONTH = 1
 
-/** @see MIN_DAY_OF_MONTH */
 const val MAX_DAY_OF_MONTH = 31
 
 class CreateRecurringMovementUseCase(private val repository: RecurringMovementRepository) {

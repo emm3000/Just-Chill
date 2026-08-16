@@ -14,11 +14,6 @@ class CreateTransactionUseCase(
     private val zone: TimeZone,
 ) {
 
-    /**
-     * [transactionInsert]`.occurredAt` is stored exactly as given. Nothing here derives, combines
-     * or re-resolves it — that derivation is what the two representations of "when" used to need,
-     * and it is what kept breaking.
-     */
     suspend operator fun invoke(transactionInsert: TransactionInsert) {
         if (transactionInsert.amount.cents <= 0) {
             throw DomainException.ValidationError(

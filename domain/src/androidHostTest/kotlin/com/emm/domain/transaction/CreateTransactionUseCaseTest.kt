@@ -30,9 +30,6 @@ class CreateTransactionUseCaseTest {
     private val repository = mockk<TransactionRepository>()
     private val idProvider = mockk<UniqueIdProvider>()
 
-    // Stated, not inherited. The use case takes no defaults, so "now" is a fact of this suite:
-    // 09:00 on 11 August 2026 in Lima. Every date below is read against it, including the ones
-    // the future-date guard rejects.
     private val lima = TimeZone.of("America/Lima")
     private val today = LocalDate(2026, Month.AUGUST, 11)
     private val clock = object : Clock {
@@ -66,9 +63,6 @@ class CreateTransactionUseCaseTest {
 
     @Test
     fun `create does not touch the time of day it was handed`() = runTest {
-        // The hour belongs to the caller: it is the moment of the save, already resolved. Nothing
-        // here re-reads a clock or rounds the value to midnight — the two representations of "when"
-        // that used to need reconciling are one.
         every { idProvider.id } returns "id"
         coEvery { repository.create(any()) } just Runs
 
@@ -128,7 +122,6 @@ class CreateTransactionUseCaseTest {
 
     @Test
     fun `create accepts a movement stamped later today than the clock reads`() = runTest {
-        // The rule compares days. 23:00 today is not the future at 09:00 today.
         every { idProvider.id } returns "id"
         coEvery { repository.create(any()) } just Runs
 
