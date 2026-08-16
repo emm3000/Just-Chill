@@ -17,9 +17,11 @@ class DefaultBackupVerifier internal constructor(private val store: BackupObject
     override suspend fun verifyLatest(): BackupVerification {
         val prefix: String = storageCall(PREFIX_UNRESOLVED) { store.ownedPrefix() }
         val names: List<String> = store.wholeBucket(prefix, LIST_FAILED, LISTING_NEVER_ENDED)
-        val inspected: List<SnapshotPair> = pairsNewestFirst(names).take(BACKUP_VERIFY_MAX_PAIRS)
+        val snapshots: List<Snapshot> = snapshotsNewestFirst(names)
+        val inspected: List<Snapshot> = snapshots.filter { it.hasManifest }.take(BACKUP_VERIFY_MAX_PAIRS)
 
-        val verified: BackupVerification.Verified? = firstThatVerifies(prefix, inspected)
+        val verified: BackupVerification.Verified? =
+            firstThatVerifies(prefix, inspected, newestName = snapshots.firstOrNull()?.fileName)
         return when {
             verified != null -> verified
             inspected.isEmpty() -> BackupVerification.NoSnapshots
@@ -27,9 +29,14 @@ class DefaultBackupVerifier internal constructor(private val store: BackupObject
         }
     }
 
-    private suspend fun firstThatVerifies(prefix: String, pairs: List<SnapshotPair>): BackupVerification.Verified? {
-        for ((index, pair) in pairs.withIndex()) {
-            val verified: BackupVerification.Verified? = verify(prefix, pair, isNewestPair = index == 0)
+    private suspend fun firstThatVerifies(
+        prefix: String,
+        snapshots: List<Snapshot>,
+        newestName: String?,
+    ): BackupVerification.Verified? {
+        for (snapshot in snapshots) {
+            val verified: BackupVerification.Verified? =
+                verify(prefix, snapshot, isNewestPair = snapshot.fileName == newestName)
             if (verified != null) return verified
         }
         return null
@@ -37,17 +44,17 @@ class DefaultBackupVerifier internal constructor(private val store: BackupObject
 
     private suspend fun verify(
         prefix: String,
-        pair: SnapshotPair,
+        snapshot: Snapshot,
         isNewestPair: Boolean,
     ): BackupVerification.Verified? {
-        val manifestKey: String = prefix + manifestNameFor(pair.fileName)
+        val manifestKey: String = prefix + manifestNameFor(snapshot.fileName)
         val manifest = decodeBackupManifestOrNull(read(manifestKey)) ?: return null
 
-        val decoded: DecodedBackup? = decodeIfDigestMatches(manifest, read(prefix + pair.fileName))
+        val decoded: DecodedBackup? = decodeIfDigestMatches(manifest, read(prefix + snapshot.fileName))
         return decoded?.let {
             BackupVerification.Verified(
-                fileName = pair.fileName,
-                takenAt = pair.takenAt,
+                fileName = snapshot.fileName,
+                takenAt = snapshot.takenAt,
                 schemaVersion = it.declaredVersion,
                 rowCounts = it.payload.rowCounts(),
                 isNewestPair = isNewestPair,
@@ -65,15 +72,17 @@ private fun decodeIfDigestMatches(manifest: BackupManifestDto, payloadBytes: Byt
     return decodeBackupPayloadOrNull(payloadBytes.decodeToString())
 }
 
-// A payload with no sidecar is not verifiable and is left exactly where it is: an orphan is the
-// prune's business, and a check that deletes is not a check.
-private fun pairsNewestFirst(names: List<String>): List<SnapshotPair> {
+// Orphans stay in the list rather than being filtered out of it: an orphan payload is the newest
+// thing in the bucket the night a manifest PUT fails, and a result that reported the pair below it
+// as the newest one would hide exactly that. It is still never verified and never deleted — an
+// orphan is the prune's business, and a check that deletes is not a check.
+private fun snapshotsNewestFirst(names: List<String>): List<Snapshot> {
     val flat: List<String> = names.filterNot { it.contains('/') }
     val present: Set<String> = flat.toSet()
     return flat
-        .mapNotNull { name -> parseBackupSnapshotTakenAt(name)?.let { SnapshotPair(name, it) } }
-        .filter { manifestNameFor(it.fileName) in present }
-        .sortedByDescending { it.takenAt }
+        .mapNotNull { name -> parseBackupSnapshotTakenAt(name)?.let { name to it } }
+        .sortedByDescending { (_, takenAt) -> takenAt }
+        .map { (name, takenAt) -> Snapshot(name, takenAt, hasManifest = manifestNameFor(name) in present) }
 }
 
 private fun ExportPayloadDto.rowCounts(): BackupRowCounts = BackupRowCounts(
@@ -83,7 +92,7 @@ private fun ExportPayloadDto.rowCounts(): BackupRowCounts = BackupRowCounts(
     recurringMovements = recurringMovements.size,
 )
 
-private class SnapshotPair(val fileName: String, val takenAt: Instant)
+private class Snapshot(val fileName: String, val takenAt: Instant, val hasManifest: Boolean)
 
 private fun unreadable(key: String): String = "$VERIFY_FAILED $key could not be downloaded."
 

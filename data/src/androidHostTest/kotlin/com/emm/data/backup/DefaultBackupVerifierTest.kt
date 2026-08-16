@@ -87,6 +87,20 @@ class DefaultBackupVerifierTest {
     }
 
     @Test
+    fun `an orphan newest payload leaves the pair that verifies a walked-back one, never the newest`() = runTest {
+        bucket.seedPair(OLDER, payloadJson())
+        bucket.objects[PREFIX + NEWEST] = payloadJson().encodeToByteArray()
+
+        val verified = assertIs<BackupVerification.Verified>(verifier().verifyLatest())
+
+        assertEquals(OLDER, verified.fileName)
+        assertFalse(
+            verified.isNewestPair,
+            "$NEWEST uploaded and its manifest never landed, so nothing restorable is the newest snapshot",
+        )
+    }
+
+    @Test
     fun `an empty bucket has no snapshots, which is not the same as none of them verifying`() = runTest {
         assertEquals(BackupVerification.NoSnapshots, verifier().verifyLatest())
     }
