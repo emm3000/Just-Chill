@@ -4,10 +4,8 @@ import com.emm.domain.shared.backup.BackupFailureReason
 import com.emm.justchill.hh.profile.BackupRowUi
 import com.emm.justchill.hh.profile.LastSnapshot
 
-/**
- * The disclosure itself (ADR 009 Decision 5). Both UIs show this sentence before the first upload to
- * an account, and no upload happens until it is acknowledged — it is the disclosure, not a hint.
- */
+// ADR 009 Decision 5 requires this sentence on screen before the first upload to an account, and no
+// upload happens until it is acknowledged. It is the disclosure, not a hint.
 const val BACKUP_DESTINATION_DISCLOSURE: String =
     "Tu respaldo va a llevar TODO lo que hay en este teléfono a esta cuenta, incluso lo que " +
         "registraste con otra cuenta: cerrar sesión no borra nada de acá."
