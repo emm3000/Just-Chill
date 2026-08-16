@@ -91,11 +91,11 @@ class BackupOrchestrator(
         requestChannel.trySend(Unit)
     }
 
-    override fun acknowledgeDestination() {
+    override fun acknowledgeDestination(requestCycle: Boolean) {
         val userId: String = currentUserId ?: return
         metadata.setDestinationDisclosed(userId, clock.now().toEpochMilliseconds())
         publishHealth(userId, metadata.failureState(userId))
-        requestBackup(manual = true)
+        if (requestCycle) requestBackup(manual = true)
     }
 
     fun start() {

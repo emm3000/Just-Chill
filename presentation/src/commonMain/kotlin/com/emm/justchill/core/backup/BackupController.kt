@@ -13,5 +13,5 @@ interface BackupController {
 
     fun requestBackup(manual: Boolean = false)
 
-    fun acknowledgeDestination()
+    fun acknowledgeDestination(requestCycle: Boolean = true)
 }

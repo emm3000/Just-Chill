@@ -115,7 +115,7 @@ class ProfileViewModel(
             ProfileIntent.SyncNow -> syncNow()
             ProfileIntent.DeleteAccount -> deleteAccount()
             ProfileIntent.BackUpNow -> backUpNow()
-            ProfileIntent.AcknowledgeBackupDestination -> backupController.acknowledgeDestination()
+            ProfileIntent.AcknowledgeBackupDestination -> acknowledgeBackupDestination()
         }
     }
 
@@ -147,6 +147,12 @@ class ProfileViewModel(
         } else {
             sendEffect(ProfileEffect.Notify(refusal))
         }
+    }
+
+    // The disclosure is written regardless of op, so the user's acknowledgement is never lost; only
+    // the follow-on cycle is gated, the same guard backUpNow applies to a direct tap.
+    private fun acknowledgeBackupDestination() {
+        backupController.acknowledgeDestination(requestCycle = currentState.op == ProfileOp.None)
     }
 
     private fun launchOp(op: ProfileOp, onError: (DomainException) -> ProfileEffect, block: suspend () -> Unit) {

@@ -27,6 +27,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -379,7 +380,7 @@ class ProfileViewModelBackupRowTest {
         }
 
     @Test
-    fun `acknowledging reaches the controller, which is what unblocks the cycle`() = runTest(testDispatcher) {
+    fun `acknowledging while idle writes the flag and requests the cycle`() = runTest(testDispatcher) {
         val vm = buildViewModel()
 
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
@@ -389,7 +390,33 @@ class ProfileViewModelBackupRowTest {
         vm.onIntent(ProfileIntent.AcknowledgeBackupDestination)
         advanceUntilIdle()
 
-        verify(exactly = 1) { backupController.acknowledgeDestination() }
+        verify(exactly = 1) { backupController.acknowledgeDestination(requestCycle = true) }
+    }
+
+    @Test
+    fun `acknowledging during a non-idle op writes the flag and requests no cycle`() = runTest(testDispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        coEvery { backupRepository.exportToJson(any(), any()) } coAnswers {
+            gate.await()
+            ""
+        }
+
+        val vm = buildViewModel()
+        sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
+        healthFlow.value = BackupHealth(LAST_BACKUP_AT, 0, null, isDestinationDisclosed = false)
+        advanceUntilIdle()
+
+        vm.onIntent(ProfileIntent.ExportRequested)
+        advanceUntilIdle()
+        assertEquals(ProfileOp.Exporting, vm.state.value.op)
+
+        vm.onIntent(ProfileIntent.AcknowledgeBackupDestination)
+        advanceUntilIdle()
+
+        verify(exactly = 1) { backupController.acknowledgeDestination(requestCycle = false) }
+        verify(exactly = 0) { backupController.requestBackup(any<Boolean>()) }
+
+        gate.cancel()
     }
 
     @Test
