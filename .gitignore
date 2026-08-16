@@ -31,6 +31,8 @@ docs/*
 !docs/sync/**
 !docs/swiftui/
 !docs/swiftui/**
+!docs/work/
+!docs/work/**
 !docs/PRODUCT_DISCOVERY.md
 !docs/PRODUCT_REQUIREMENTS.md
 !docs/ROADMAP_V1.md
