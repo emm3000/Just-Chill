@@ -29,5 +29,5 @@ private fun BackupRowCounts.toPhrase(): String = listOf(
     if (accounts == 1) "1 cuenta" else "$accounts cuentas",
     if (categories == 1) "1 categoría" else "$categories categorías",
     if (transactions == 1) "1 movimiento" else "$transactions movimientos",
-    if (recurringMovements == 1) "1 plantilla" else "$recurringMovements plantillas",
+    if (recurringMovements == 1) "1 recurrente" else "$recurringMovements recurrentes",
 ).joinToString(", ")

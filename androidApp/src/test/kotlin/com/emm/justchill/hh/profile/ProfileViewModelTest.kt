@@ -670,7 +670,7 @@ class ProfileViewModelTest {
             assertEquals(listOf(ProfileMessage.BackupVerified(VERIFIED_NEWEST)), messages)
             assertEquals(
                 "Verificado: backup-v3-2026-08-16T14-22-08Z.json — 1 cuenta, 23 categorías, " +
-                    "412 movimientos, 3 plantillas",
+                    "412 movimientos, 3 recurrentes",
                 messages.single().toText(),
             )
         }

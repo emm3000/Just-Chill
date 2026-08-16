@@ -15,7 +15,7 @@ class BackupMessageTextTest {
         val shown = verifiedText(counts)
 
         assertEquals(
-            "Verificado: backup-v3-2026-08-16T14-22-08Z.json — 1 cuenta, 23 categorías, 412 movimientos, 3 plantillas",
+            "Verificado: backup-v3-2026-08-16T14-22-08Z.json — 1 cuenta, 23 categorías, 412 movimientos, 3 recurrentes",
             shown,
         )
     }
@@ -27,7 +27,7 @@ class BackupMessageTextTest {
         val shown = verifiedText(counts)
 
         assertEquals(
-            "Verificado: backup-v3-2026-08-16T14-22-08Z.json — 2 cuentas, 1 categoría, 1 movimiento, 0 plantillas",
+            "Verificado: backup-v3-2026-08-16T14-22-08Z.json — 2 cuentas, 1 categoría, 1 movimiento, 0 recurrentes",
             shown,
         )
     }
@@ -38,7 +38,7 @@ class BackupMessageTextTest {
 
         assertEquals(
             "Verificado un respaldo más antiguo: backup-v3-2026-08-16T14-22-08Z.json — " +
-                "0 cuentas, 0 categorías, 0 movimientos, 0 plantillas",
+                "0 cuentas, 0 categorías, 0 movimientos, 0 recurrentes",
             shown,
         )
     }
