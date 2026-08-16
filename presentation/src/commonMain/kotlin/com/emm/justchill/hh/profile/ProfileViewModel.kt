@@ -91,7 +91,7 @@ class ProfileViewModel(
             .launchIn(viewModelScope)
 
         backupController.events
-            .onEach(::onBackupEvent)
+            .onEach { event -> sendEffect(ProfileEffect.Notify(event.toProfileMessage())) }
             .launchIn(viewModelScope)
 
         combine(
@@ -125,14 +125,6 @@ class ProfileViewModel(
             !backingUp && op == ProfileOp.BackingUp -> copy(op = ProfileOp.None)
             else -> this
         }
-    }
-
-    private fun onBackupEvent(event: BackupEvent) {
-        val message: ProfileMessage = when (event) {
-            BackupEvent.Succeeded -> ProfileMessage.BackupDone
-            is BackupEvent.Failed -> ProfileMessage.BackupFailed
-        }
-        sendEffect(ProfileEffect.Notify(message))
     }
 
     private fun backUpNow() {
@@ -217,6 +209,11 @@ class ProfileViewModel(
         val stats = importData(json)
         sendEffect(ProfileEffect.Notify(ProfileMessage.ImportDone(stats.transactions, stats.recurring)))
     }
+}
+
+private fun BackupEvent.toProfileMessage(): ProfileMessage = when (this) {
+    BackupEvent.Succeeded -> ProfileMessage.BackupDone
+    is BackupEvent.Failed -> ProfileMessage.BackupFailed
 }
 
 /**
