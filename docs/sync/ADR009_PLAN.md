@@ -35,7 +35,7 @@ Name the symbol and let `rg` find it.
 | **Account inheritance.** `signOut()` clears no local data and there is one SQLite file per device, no per-user DB, no wipe on user change. So the next account inherits the previous one's rows — and under snapshot backup that ledger gets uploaded to the new account's bucket | ADR 009 Decision 5; disclosed in 3c, sign-out fixed in Phase 0 |
 | **No read query filters by `userId`.** `all:`, `completeTransactions:`, `liveTotals:`, `getAccountBalance:` and `monthlyStats:` filter only `deletedAt IS NULL` | Does not retire. It is the same hazard as the row above, seen from the read side |
 | **`updateFromRemote` stamps `userId` unconditionally**, and the 23 seeded default categories carry fixed identical UUIDs on every install — so the same PKs exist on every device that ever ran the app | Phase 5 cloud cleanup: this is why the two tenants' rows cannot simply be merged |
-| **RLS is correct — preserve it.** `with check (user_id = (select auth.uid()))` on all four tables, policies `to authenticated` only; `delete_account()` is `security definer` with `set search_path = ''`, revoked from `public`/`anon`; `requireValidSession = true` in `SupabaseModule` | The `backups` bucket policy is modelled on it; Phase 4 item 4 is the probe |
+| **RLS is correct — preserve it.** `with check (user_id = (select auth.uid()))` on all four tables, policies `to authenticated` only; `delete_account()` is `security definer` with `set search_path = ''`, revoked from `public`/`anon`; `requireValidSession = true` in `SupabaseModule` | The `backups` bucket policy is modelled on it; Phase 4 item 3 is the probe |
 | **`syncMutex.withLock` has no timeout**, and the mutex is a shared Koin `single` | Still open — `BackupOrchestrator` is now a second holder |
 
 **Production forensics (input to Phase 5, never executed).** Supabase project `pievwpleqmrjwszuuivr`,
@@ -53,7 +53,7 @@ foreign keys at all, deliberately, per ADR 001. That is the "proven garbage" Pha
 | 1 | Export format v3: recurring_movements in, v2 frozen | closed |
 | 2 | Snapshot pipeline (transactional export, upload, retention, orchestration) | closed |
 | 3 | Health visibility in Profile | closed but for the items below |
-| 4 | Restore confidence (CI round-trip, in-app verify, drill doc, RLS probe) | **open — the flag flips here** |
+| 4 | Restore confidence (in-app verify, drill doc, RLS probe) | **open — the flag flips here** |
 | 5 | Engine decommission + cloud cleanup | open |
 
 ## Phases 0–3 — closed
@@ -207,7 +207,7 @@ not a description of what shipped.
   constant. Paired comments at each site are the whole enforcement; Phase 4 exercises the pair.
 - **Nothing in CI protects the bucket's RLS predicate.** `qualityGate` cannot see a SQL policy and
   the repo has no Supabase test infrastructure; the only proof the bucket is owner-scoped is a manual
-  probe run once against a local stack. Phase 4 item 4.
+  probe run once against a local stack. Phase 4 item 3.
 - **`AppGraphKoinTest` cannot see a definition that was never registered**, because it iterates the
   registry. Anything whose only consumer is a direct `koinInject` / `koin.get` outside the graph
   stays invisible (the `CommitHash` shape, resolved by `AndroidPlatformModuleTest` instead). Register
@@ -291,25 +291,36 @@ not a description of what shipped.
 
 ### Phase 4 — restore confidence (the flag's gate)
 
-1. **CI round-trip, no device needed**: host test with in-memory JDBC SQLite (the pattern
-   `AppGraphKoinTest` already uses) — fixture across all 4 tables including tombstoned rows →
-   export → wipe → import → row-level equality.
-2. **In-app "Verify backup"**: download latest snapshot, check hash, parse, compare per-table
+1. **In-app "Verify backup"**: download latest snapshot, check hash, parse, compare per-table
    counts against local — **without applying it**. Result in UI. **It must walk back to the newest
    snapshot that verifies rather than reporting the newest one broken**: 2b-ii part B can leave a
    complete-looking pair whose manifest is wrong or of unknown state — the note under Retention
    enumerates the two ways — and a check that only looks at the latest pair turns one bad receipt
    into "you have no backup" on a device holding a shelf of good snapshots. Which one was actually
    verified is what the UI must name, not just "OK".
-3. **Documented drill** added to the release checklist: after every DB schema bump, restore the
+2. **Documented drill** added to the release checklist: after every DB schema bump, restore the
    latest production snapshot on a clean emulator and compare.
-4. **An automated RLS probe for the `backups` bucket**: two authenticated users, each proving it
+3. **An automated RLS probe for the `backups` bucket**: two authenticated users, each proving it
    reaches its own prefix and cannot list, read or delete the other's. Today that proof exists only
    as a manual probe run once by hand against a local stack (2b-ii part A) — `qualityGate` cannot
    see a SQL policy and the repo has no Supabase test infrastructure. This is where it stops being
    a thing someone remembered to do.
 
-Only when all four pass does `SNAPSHOT_BACKUP_ENABLED` flip to `true`.
+Only when all three pass does `SNAPSHOT_BACKUP_ENABLED` flip to `true`.
+
+- The round-trip test is done (`BackupRoundTripTest`, `:data` host tests). It runs the fixture through
+  two compositions: `export → physical wipe → import`, and `export → stale the live rows → import`
+  **without wiping**. The second one is the production path — `importFromJson` never deletes
+  physically, so on a device that already holds the row the INSERT is ignored on PK conflict and
+  `restoreFromBackup` is the only statement that acts. Dropping a bound `SET` clause from it is a
+  compile error, but dropping the literal `deletedAt = NULL` is not: without the no-wipe composition
+  that regression stays green while a real restore leaves every row tombstoned and the app empty.
+- **Open, found while writing that test**: `RecurringMovementDto.toEntityOrNull` runs
+  `lastConfirmedPeriod` through `parsePeriodKey` and keeps the value only if it parses. A key that is
+  malformed or whose year falls outside `MIN_PERIOD_KEY_YEAR..MAX_PERIOD_KEY_YEAR` is **silently
+  nulled on import**, so a settled template comes back unsettled and `RecurringDueRules.pendingPeriods`
+  re-mints up to `MAX_CATCH_UP_MONTHS` the user already closed. A value this app wrote round-trips
+  fine; the exposure is a key an older build left in the DB. No coverage.
 
 ### Phase 5 — decommission the engine
 
