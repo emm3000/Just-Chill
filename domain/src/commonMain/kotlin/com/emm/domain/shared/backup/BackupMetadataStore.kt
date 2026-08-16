@@ -65,6 +65,16 @@ interface BackupMetadataStore {
      * claiming a backup already exists — the new account's bucket would be empty and the first
      * snapshot for it would never fire — and would still read the deleted account's failure count,
      * showing a brand-new account a streak of failures it never had.
+     *
+     * **It clears what is stored when it runs; it does not fence off later writes**, and there is
+     * one way that shows. A cycle already in flight for [userId] when the account is deleted goes on
+     * to fail — the account is gone — and `BackupOrchestrator` books that failure against the
+     * account it captured, deliberately and without consulting this store first (see its
+     * `recordFailure`). The keys come back. No guard is added for it because the consequence is
+     * nil: they sit under a UUID that is never reissued, never read again — the next registration is
+     * a different user id — and never displayed. The alternative, a liveness check inside the
+     * failure path, would buy nothing and would put an account lookup in the one place that must
+     * stay simple.
      */
     fun clear(userId: String)
 }

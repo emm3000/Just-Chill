@@ -379,6 +379,11 @@ class BackupOrchestrator(
             val kind = if (manual) "manual" else "auto"
             val failure: DomainException = e.asDomainException()
             val reason: BackupFailureReason = failure.toBackupFailureReason()
+            // Answered FIRST, before anything that touches storage. The tap is waiting on this and
+            // nothing else can answer it (see requestBackup), so ordering it after the persistence
+            // write would let a failure in the write swallow the user's answer too — one broken
+            // thing reported as two, with the visible half being the silence.
+            if (manual) _events.tryEmit(BackupEvent.Failed(failure))
             // A cycle with no session never reached the pipeline and has no account to count
             // against; every other failure increments the captured account's streak.
             val streak: Int = if (userId == null) 0 else recordFailure(userId, reason)
@@ -388,7 +393,6 @@ class BackupOrchestrator(
                     "The last-successful watermark is untouched, so the next trigger retries.",
                 e,
             )
-            if (manual) _events.tryEmit(BackupEvent.Failed(failure))
         } finally {
             _isBackingUp.value = false
         }
@@ -436,17 +440,40 @@ class BackupOrchestrator(
      *
      * The read of the watermark happens here rather than at the call sites so that health is always
      * assembled from what is actually stored, including the watermark a success wrote a statement
-     * earlier. A mismatch on [currentUserId] drops the publish silently: the value is already
-     * persisted, the account it belongs to will read it on its next sign-in, and the account signed
-     * in right now must not inherit it.
+     * earlier. A mismatch on [currentUserId] drops the publish: the value is already persisted, the
+     * account it belongs to will read it on its next sign-in, and the account signed in right now
+     * must not inherit it.
+     *
+     * ### The account is checked on BOTH sides of the write, and the second check is the real one
+     *
+     * A single check before the write is check-then-act, and this class runs on
+     * `Dispatchers.Default` (`CoreModule`'s `appScope`) with the session collector and the request
+     * consumer in different coroutines on different threads. That leaves a window wide enough to
+     * drive a bus through — it contains a preferences read:
+     *
+     *  1. the consumer passes the guard, having read [currentUserId] as A;
+     *  2. the session ends, so the collector nulls [currentUserId] and publishes [BackupHealth.None];
+     *  3. the consumer completes its assignment, restoring A's streak and A's watermark.
+     *
+     * The result is a signed-out device displaying the previous account's backup history, and it
+     * *sticks*: the session `StateFlow` emits nothing else while signed out, so nothing overwrites
+     * it until the next sign-in or a process restart. `@Volatile` on [currentUserId] gives
+     * visibility, never atomicity.
+     *
+     * The re-check after the write closes it, and `compareAndSet` is what makes the correction safe:
+     * it only reverts the value this call actually wrote, so a publish that has already been
+     * overtaken — by the sign-out's own [BackupHealth.None], or by the next account's seeding — is
+     * left exactly as it is rather than being clobbered a second time.
      */
     private fun publishHealth(userId: String, state: BackupFailureState) {
         if (currentUserId != userId) return
-        _health.value = BackupHealth(
+        val published = BackupHealth(
             lastSuccessfulBackupAt = metadata.lastSuccessfulBackupAt(userId),
             consecutiveFailures = state.consecutiveFailures,
             lastFailureReason = state.lastReason,
         )
+        _health.value = published
+        if (currentUserId != userId) _health.compareAndSet(published, BackupHealth.None)
     }
 
     /**

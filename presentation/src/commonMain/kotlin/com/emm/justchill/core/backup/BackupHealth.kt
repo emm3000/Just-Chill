@@ -26,10 +26,21 @@ import com.emm.domain.shared.backup.BackupFailureReason
  *
  * @property lastSuccessfulBackupAt epoch millis of the last verified, recorded snapshot; null if
  *   this device has never completed one for this account.
+ * ### Read [consecutiveFailures] to decide whether to warn, never [lastFailureReason]
+ *
+ * The reason is a **label on** the streak, not the existence of one. It is null whenever nothing has
+ * failed, and also whenever the persisted reason names something this build cannot resolve —
+ * [BackupFailureReason.fromNameOrNull] answers null rather than throwing for a member that was
+ * renamed or removed under a device that upgraded. That degradation is deliberate: a health
+ * indicator must not crash the app it is reporting on. The consequence for a UI is that
+ * `(5, null)` is a real, reachable value, so `if (lastFailureReason != null) showWarning()` hides a
+ * device that has failed five times running. Warn on `consecutiveFailures > 0`; use the reason only
+ * to choose the wording, with a fallback for null.
+ *
  * @property consecutiveFailures cycles failed in a row since the last verified success. Zero after
- *   any success, so a non-zero value means backup is broken *now*.
- * @property lastFailureReason why the most recent failure failed; null when nothing has failed
- *   since the last success. Non-null exactly when [consecutiveFailures] is non-zero.
+ *   any success, so a non-zero value means backup is broken *now*. This is the warning condition.
+ * @property lastFailureReason why the most recent failure failed. Null when nothing has failed since
+ *   the last success, **and also** when the stored reason cannot be resolved by this build.
  */
 data class BackupHealth(
     val lastSuccessfulBackupAt: Long?,

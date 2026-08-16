@@ -60,8 +60,15 @@ enum class BackupFailureReason {
      *
      * This is the plan's "hash mismatch", and it **is** distinguishable: `DefaultBackupUploader`
      * raises [DomainException.ValidationError] with [ValidationCode.BackupUploadUnverified] for both
-     * read-back mismatches (the payload against its digest, the manifest against its bytes), and
-     * deletes the unverified objects before throwing. No other backup failure carries that code.
+     * read-back mismatches — the payload against its digest, the manifest against its bytes. No
+     * other backup failure carries that code.
+     *
+     * It covers the mismatch whose cleanup ALSO failed, which is the worse of the two endings: the
+     * unverified object is still in the bucket. That was not true when this enum first landed — the
+     * cleanup delete ran inside the uploader's transport wrapper, so a failed delete threw a network
+     * exception and this verdict was never reached, filing the most serious outcome under [Network]
+     * or [Unknown]. `DefaultBackupUploader.discarding` is where that was closed, and the two
+     * cleanup-failure tests in `DefaultBackupUploaderTest` are what hold it closed.
      */
     Unverified,
 

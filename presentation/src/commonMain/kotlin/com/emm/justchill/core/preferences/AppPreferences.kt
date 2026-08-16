@@ -88,48 +88,54 @@ class AppPreferences(private val settings: Settings) {
      */
     fun clearBackupMetadata(userId: String) {
         settings.remove(userKey(KEY_LAST_SUCCESSFUL_BACKUP_AT_PREFIX, userId))
-        settings.remove(userKey(KEY_BACKUP_FAILURE_COUNT_PREFIX, userId))
-        settings.remove(userKey(KEY_BACKUP_FAILURE_REASON_PREFIX, userId))
+        settings.remove(userKey(KEY_BACKUP_FAILURE_PREFIX, userId))
     }
 
     /**
      * The persisted backup failure streak for [userId], or [BackupFailureState.None] when none is
      * recorded.
      *
-     * Returns the domain value rather than the two primitives behind it because the two keys are one
-     * fact and are always read and written together — argued on [BackupFailureState]. The reason is
-     * stored by enum NAME and resolved through [BackupFailureReason.fromNameOrNull], which answers
-     * null for a spelling this build no longer has instead of throwing on a device that upgraded
-     * across a rename.
+     * **Both halves live under ONE key**, encoded `count|REASON_NAME`. Two keys is the obvious
+     * spelling and it is wrong: `Settings` has no transaction, so two writes are two commits and a
+     * process killed between them leaves a count with the previous outage's reason, or a reason with
+     * no streak. One key makes the torn pair unrepresentable on disk rather than merely discouraged
+     * in a KDoc — see [BackupFailureState], which used to claim exactly that guarantee while the
+     * writer below did not provide it.
+     *
+     * Every malformed reading degrades to [BackupFailureState.None] instead of throwing: an absent
+     * key, a value from a build that spelled this differently, a truncated string. The reason
+     * resolves through [BackupFailureReason.fromNameOrNull], which answers null for a name this
+     * build no longer has rather than throwing on a device that upgraded across a rename — so a
+     * streak can legitimately survive with no reason attached to it.
      */
-    fun backupFailure(userId: String): BackupFailureState = BackupFailureState(
-        consecutiveFailures = settings.getInt(userKey(KEY_BACKUP_FAILURE_COUNT_PREFIX, userId), 0),
-        lastReason = BackupFailureReason.fromNameOrNull(
-            settings.getStringOrNull(userKey(KEY_BACKUP_FAILURE_REASON_PREFIX, userId)),
-        ),
-    )
+    fun backupFailure(userId: String): BackupFailureState {
+        val stored: String = settings.getStringOrNull(userKey(KEY_BACKUP_FAILURE_PREFIX, userId)).orEmpty()
+        return BackupFailureState(
+            consecutiveFailures = stored.substringBefore(FAILURE_SEPARATOR).toIntOrNull() ?: 0,
+            lastReason = BackupFailureReason.fromNameOrNull(stored.substringAfter(FAILURE_SEPARATOR, "")),
+        )
+    }
 
     /**
-     * Persists [state] as the backup failure streak for [userId].
+     * Persists [state] as the backup failure streak for [userId], in a single write.
      *
-     * A null [BackupFailureState.lastReason] REMOVES the reason key rather than writing a sentinel:
-     * absence is already how [backupFailure] reads "no reason", and a written placeholder would be a
-     * second spelling of it that only one of the two functions knows about.
+     * A null [BackupFailureState.lastReason] is encoded as an empty name rather than a sentinel word:
+     * [backupFailure] already reads anything it cannot resolve as "no reason", so a placeholder would
+     * be a second spelling of absence that only one of these two functions knows about.
      */
     fun setBackupFailure(userId: String, state: BackupFailureState) {
-        settings.putInt(userKey(KEY_BACKUP_FAILURE_COUNT_PREFIX, userId), state.consecutiveFailures)
-        val reasonKey = userKey(KEY_BACKUP_FAILURE_REASON_PREFIX, userId)
-        val reason = state.lastReason
-        if (reason == null) settings.remove(reasonKey) else settings.putString(reasonKey, reason.name)
+        settings.putString(
+            userKey(KEY_BACKUP_FAILURE_PREFIX, userId),
+            "${state.consecutiveFailures}$FAILURE_SEPARATOR${state.lastReason?.name.orEmpty()}",
+        )
     }
 
     /**
      * The one spelling of the per-user key layout: a fixed prefix followed by the user id.
      *
-     * It was three near-identical private functions until the backup failure streak needed two more
-     * keys — the same sentence written five times is repeated knowledge, and `TooManyFunctions`
-     * counts private members, so five would also have pushed this class past detekt's per-class
-     * budget of 11.
+     * It was three near-identical private functions until the backup failure streak arrived — the
+     * same sentence written four times is repeated knowledge, and `TooManyFunctions` counts private
+     * members, so four would also have pushed this class past detekt's per-class budget of 11.
      */
     private fun userKey(prefix: String, userId: String) = "$prefix$userId"
 
@@ -138,7 +144,12 @@ class AppPreferences(private val settings: Settings) {
         const val KEY_LAST_PULLED_AT_PREFIX = "last_pulled_at_"
         const val KEY_LAST_SYNCED_AT_PREFIX = "last_synced_at_"
         const val KEY_LAST_SUCCESSFUL_BACKUP_AT_PREFIX = "last_successful_backup_at_"
-        const val KEY_BACKUP_FAILURE_COUNT_PREFIX = "backup_failure_count_"
-        const val KEY_BACKUP_FAILURE_REASON_PREFIX = "backup_failure_reason_"
+        const val KEY_BACKUP_FAILURE_PREFIX = "backup_failure_"
+
+        /**
+         * Splits the streak from the reason name inside the one value. Safe as a plain character
+         * because the right-hand side is always an enum name, which cannot contain it.
+         */
+        const val FAILURE_SEPARATOR = '|'
     }
 }

@@ -19,20 +19,25 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.TimeZone
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -318,7 +323,7 @@ class BackupOrchestratorHealthTest {
 
         verify(exactly = 1) {
             logger.warn(
-                match { it.startsWith(CYCLE_FAILED) && it.contains("reason=Serialization") && it.contains("1") },
+                match { it.startsWith(CYCLE_FAILED) && it.contains("reason=Serialization") && it.contains(STREAK_1) },
                 any(),
             )
         }
@@ -330,9 +335,103 @@ class BackupOrchestratorHealthTest {
 
         verify(exactly = 1) {
             logger.warn(
-                match { it.startsWith(CYCLE_FAILED) && it.contains("reason=Network") && it.contains("2") },
+                match { it.startsWith(CYCLE_FAILED) && it.contains("reason=Network") && it.contains(STREAK_2) },
                 any(),
             )
+        }
+    }
+
+    /**
+     * The check-then-act window inside `publishHealth`, with the interleaving FORCED rather than
+     * hoped for.
+     *
+     * In production `externalScope` is `Dispatchers.Default` (`CoreModule`'s `appScope`), so the
+     * session collector and the request consumer are different coroutines on different threads and
+     * this ordering is reachable: the consumer passes the "is this still my account" guard, the
+     * session ends and publishes [BackupHealth.None], and only then does the consumer's assignment
+     * land — restoring the departed account's streak onto a signed-out device. It sticks, because a
+     * signed-out session `StateFlow` emits nothing further.
+     *
+     * **This test runs on real threads on purpose.** An earlier version used
+     * `UnconfinedTestDispatcher` on the theory that an emission would resume the collector inline;
+     * it does not — `flatMapLatest` buffers through an internal channel — so the collector ran
+     * *after* the cycle finished, which is the benign ordering, and the test passed against the
+     * unfixed code. A test that cannot fail is worse than no test, so the ordering is now imposed:
+     * the stub on the watermark read — the one call `publishHealth` makes between its guard and its
+     * assignment — signs out and then BLOCKS until the collector has actually published `None`. Only
+     * then does it return, letting the consumer complete its write into a session that is already
+     * gone.
+     *
+     * Every wait is bounded by [AWAIT_TIMEOUT_MILLIS] and fails loudly, so a regression that stops
+     * reaching the window shows up as a failure rather than a hang.
+     */
+    // InjectDispatcher: the rule wants a dispatcher injected, and this test injects one — a REAL
+    // multithreaded one, deliberately. It is the subject: the interleaving being proven cannot
+    // occur on a single-threaded test dispatcher, and production uses exactly this dispatcher
+    // (CoreModule's appScope is Dispatchers.Default + SupervisorJob).
+    @Suppress("InjectDispatcher")
+    @Test
+    fun `a sign-out inside publishHealth leaves no stale account health`() = runBlocking {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        coEvery { uploader.upload(any(), any(), any()) } throws
+            DomainException.NetworkUnavailable(RuntimeException("no net"))
+
+        lateinit var orchestrator: BackupOrchestrator
+        var signedOutMidPublish = false
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } answers {
+            // Only from inside publishHealth's window. The seeding publish at sign-in and the
+            // dirty check both read this too, and they run before any failure is recorded — so
+            // the recorded streak is what identifies the one call that matters.
+            if (failures.containsKey(USER_ID) && !signedOutMidPublish) {
+                signedOutMidPublish = true
+                sessionFlow.value = SessionStatus.NotAuthenticated
+                // Publishing None is the collector's LAST act; observing it means currentUserId
+                // is already null, which is precisely the state the guard above read as A.
+                awaitUntil("the sign-out to reach the orchestrator") {
+                    orchestrator.health.value == BackupHealth.None
+                }
+            }
+            LAST_SUCCESS
+        }
+
+        orchestrator = BackupOrchestrator(
+            backupRepository = backupRepository,
+            uploader = uploader,
+            pruner = pruner,
+            metadata = metadata,
+            observeSession = observeSession,
+            appVersion = APP_VERSION,
+            clock = fixedClock(NOW),
+            timeZone = TimeZone.UTC,
+            externalScope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
+            backgroundEvents = backgroundFlow,
+            resumeEvents = resumeFlow,
+            logger = logger,
+        )
+        orchestrator.start()
+        sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = USER_ID, email = "a@b.com"))
+        // The trigger is a shared flow with no replay: emitting before it is subscribed drops the
+        // event and the cycle never runs.
+        withTimeout(AWAIT_TIMEOUT_MILLIS) { backgroundFlow.subscriptionCount.first { it > 0 } }
+
+        backgroundFlow.emit(Unit)
+        awaitUntil("the cycle to start") { orchestrator.isBackingUp.value }
+        awaitUntil("the cycle to finish") { !orchestrator.isBackingUp.value }
+
+        assertTrue(signedOutMidPublish, "The test never reached publishHealth's window")
+        assertEquals(
+            BackupHealth.None,
+            orchestrator.health.value,
+            "A signed-out device must not be showing the departed account's backup health",
+        )
+    }
+
+    /** Bounded spin — a concurrency test may wait, but it may never hang the suite. */
+    private fun awaitUntil(what: String, condition: () -> Boolean) {
+        val deadline = System.nanoTime() + AWAIT_TIMEOUT_MILLIS * NANOS_PER_MILLI
+        while (!condition()) {
+            check(System.nanoTime() < deadline) { "Timed out waiting for $what" }
+            Thread.sleep(1)
         }
     }
 
@@ -349,11 +448,26 @@ class BackupOrchestratorHealthTest {
         const val OTHER_USER_ID = "uid-2"
         const val APP_VERSION = "2.4.0"
 
+        /** A watermark the departed account owns, so leaking it on screen is unmistakable. */
+        val LAST_SUCCESS: Long = Instant.parse("2026-08-10T12:00:00Z").toEpochMilliseconds()
+
         /**
          * Spelled out here rather than read from production: a test that builds its expectation out
          * of the code under test agrees with any regression that code introduces.
          */
         const val CYCLE_FAILED = "backup cycle failed"
+
+        /**
+         * The whole `consecutive failures=N` fragment, not a bare digit. `contains("1")` was
+         * satisfied by a streak of 12, 21 or the timestamp in any other number the line happens to
+         * carry — an assertion that cannot fail is worse than none, because it reads like coverage.
+         */
+        const val STREAK_1 = "consecutive failures=1"
+        const val STREAK_2 = "consecutive failures=2"
+
+        /** Generous enough for a loaded CI box, short enough that a hang is reported as one. */
+        const val AWAIT_TIMEOUT_MILLIS = 5_000L
+        const val NANOS_PER_MILLI = 1_000_000L
 
         /** Stands in for the uploader's own owner-mismatch refusal; its text is pinned in `:data`. */
         const val OWNER_CHANGED = "Snapshot backup failed: the signed-in account changed"

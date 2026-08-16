@@ -85,12 +85,52 @@ class AppPreferencesTest {
     }
 
     @Test
-    fun `writing a state with no reason removes the stored one rather than leaving it behind`() {
+    fun `writing a state with no reason clears the previous one rather than leaving it attached`() {
         prefs.setBackupFailure("user-a", BackupFailureState(2, BackupFailureReason.Network))
 
         prefs.setBackupFailure("user-a", BackupFailureState.None)
 
         assertEquals(BackupFailureState.None, prefs.backupFailure("user-a"))
+    }
+
+    /**
+     * **The torn-write fix, stated structurally.** The count and the reason used to be two keys, and
+     * `Settings` has no transaction: two writes are two commits, so a process killed between them
+     * left a streak carrying the previous outage's reason — or a reason with no streak. One key, one
+     * commit, and the half-written pair stops being representable on disk.
+     *
+     * Asserted over the backing map rather than through the round-trip above, because a round-trip
+     * passes just as happily with two keys. This is the only test that can see the difference.
+     */
+    @Test
+    fun `both halves of the streak are stored under a single key`() {
+        val settings = MapSettings()
+
+        AppPreferences(settings).setBackupFailure("user-a", BackupFailureState(3, BackupFailureReason.Network))
+
+        assertEquals(1, settings.keys.size, "The streak must be one key, not a pair: ${settings.keys}")
+    }
+
+    /**
+     * A value this build cannot parse — an older spelling, a truncation, anything — degrades to
+     * [BackupFailureState.None]. It must never throw: this is the read that runs while the app is
+     * trying to REPORT a backup failure, and crashing there loses the failure and the app with it.
+     */
+    @Test
+    fun `an unparseable stored value reads as no failure at all`() {
+        val settings = MapSettings()
+        val prefsOverRawSettings = AppPreferences(settings)
+        prefsOverRawSettings.setBackupFailure("user-a", BackupFailureState(3, BackupFailureReason.Network))
+        val key = settings.keys.single()
+
+        settings.putString(key, "not-a-streak")
+        assertEquals(BackupFailureState.None, prefsOverRawSettings.backupFailure("user-a"))
+
+        // A count with a reason this build no longer has a name for keeps the count — the streak is
+        // the fact a UI warns on, and losing it because a label was renamed would hide a broken
+        // device. See BackupHealth: (5, null) is a real value and 3b must handle it.
+        settings.putString(key, "5|HashMismatch")
+        assertEquals(BackupFailureState(5, null), prefsOverRawSettings.backupFailure("user-a"))
     }
 
     @Test
@@ -117,7 +157,7 @@ class AppPreferencesTest {
     /**
      * The three per-user prefixes became one `userKey(prefix, userId)` helper in 3a-ii. Two users
      * whose ids are prefixes of one another is what a naive concatenation gets wrong, and every key
-     * in this class is built the same way — so proving it once here covers all five.
+     * in this class is built the same way — so proving it once here covers all four.
      */
     @Test
     fun `keys built for one user never collide with another whose id extends it`() {
