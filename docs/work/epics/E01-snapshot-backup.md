@@ -40,6 +40,7 @@ engine decommission remain.
 - Retention slots fill from the data, never today's calendar — a slot is one distinct day/week/month that actually holds a snapshot; storage bound is `7 + 8 + 12` per shelf. `pinned/` is never scanned.
 - A prune that deletes on a read failure is worse than one that skips: any read failure aborts before the first delete; individual failed deletes are recorded and never stop the run.
 - An orphan payload (no manifest) is deleted on sight; a complete-looking pair with a bad manifest is kept — any pre-restore check must walk back to the newest snapshot that verifies.
+- iOS reads the marketing version from `CFBundleShortVersionString` and falls back to `"unknown"`, never to a version-shaped guess — the value is stamped into the payload and its manifest, so a wrong version misattributes the file rather than admitting the gap.
 - `Storage.Config.transferTimeout` (120s) bounds every Storage call including list/delete, not the 10s Postgrest `requestTimeout`; neither is configured in `SupabaseModule`.
 - Whatever asks "what day is it" takes an injected `Clock` and `TimeZone`, no default (`DATE_AUDIT.md` #7). Staleness needs both `BACKUP_STALE_AFTER_DAYS` (3 calendar days) AND a ledger that moved since the last verified snapshot.
 - `hasLocalChangesSince` in `:domain` is the single predicate for "is there anything to back up" — the cycle gate and the UI warning must not be able to disagree.

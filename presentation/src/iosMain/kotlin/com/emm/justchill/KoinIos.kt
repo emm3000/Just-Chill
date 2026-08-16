@@ -17,6 +17,7 @@ import org.koin.core.module.dsl.factoryOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.koin.mp.KoinPlatform
+import platform.Foundation.NSBundle
 import platform.Foundation.NSUserDefaults
 
 // iOS platform Koin module — the iOS analogue of androidPlatformModule, and the ONLY place iOS-specific
@@ -46,7 +47,7 @@ private val iosPlatformModule = module {
     single<DiagnosticsLogger> { PrintlnDiagnosticsLogger() }
 
     // App version surfaced in the Profile footer (no BuildConfig on iOS).
-    single(named("appVersion")) { "1.0.0" }
+    single(named("appVersion")) { readMarketingVersionOrUnknown() }
 
     // No Google web client id on iOS — Google Sign-In is deferred; AuthViewModel.submitWithGoogle
     // short-circuits on a blank id (and the button is hidden anyway).
@@ -68,6 +69,9 @@ private val iosPlatformModule = module {
 
 // Called once from Swift at app launch (iOSApp.init). Swift sees this top-level fn as
 // KoinIosKt.doInitKoin() (the `init` prefix is mangled by the Kotlin/Native Obj-C exporter).
+private fun readMarketingVersionOrUnknown(): String =
+    (NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as? String) ?: "unknown"
+
 fun initKoin() {
     val koinApp = startKoin {
         modules(appModules(iosPlatformModule))
