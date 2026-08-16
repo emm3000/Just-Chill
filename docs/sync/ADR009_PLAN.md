@@ -308,19 +308,9 @@ not a description of what shipped.
 
 Only when all three pass does `SNAPSHOT_BACKUP_ENABLED` flip to `true`.
 
-- The round-trip test is done (`BackupRoundTripTest`, `:data` host tests). It runs the fixture through
-  two compositions: `export → physical wipe → import`, and `export → stale the live rows → import`
-  **without wiping**. The second one is the production path — `importFromJson` never deletes
-  physically, so on a device that already holds the row the INSERT is ignored on PK conflict and
-  `restoreFromBackup` is the only statement that acts. Dropping a bound `SET` clause from it is a
-  compile error, but dropping the literal `deletedAt = NULL` is not: without the no-wipe composition
-  that regression stays green while a real restore leaves every row tombstoned and the app empty.
-- **Open, found while writing that test**: `RecurringMovementDto.toEntityOrNull` runs
-  `lastConfirmedPeriod` through `parsePeriodKey` and keeps the value only if it parses. A key that is
-  malformed or whose year falls outside `MIN_PERIOD_KEY_YEAR..MAX_PERIOD_KEY_YEAR` is **silently
-  nulled on import**, so a settled template comes back unsettled and `RecurringDueRules.pendingPeriods`
-  re-mints up to `MAX_CATCH_UP_MONTHS` the user already closed. A value this app wrote round-trips
-  fine; the exposure is a key an older build left in the DB. No coverage.
+- Also open: `RecurringMovementDto.toEntityOrNull` keeps `lastConfirmedPeriod` only if `parsePeriodKey`
+  accepts it, so a malformed or out-of-range key is **silently nulled on import** and the settled
+  template comes back unsettled, re-minting months the user already closed. No coverage.
 
 ### Phase 5 — decommission the engine
 
