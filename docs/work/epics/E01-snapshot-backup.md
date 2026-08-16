@@ -27,7 +27,7 @@ engine decommission remain.
 - `DisclosurePending` severity is `Warning`, never `Danger` — the remedy is in the same row and fires on every first sign-in.
 - A failure annotates the snapshot, never replaces it (`Failed` carries a `LastSnapshot`, never a nullable `Int`); warn on the failure count, never on the reason (`fromNameOrNull` can be null).
 - Backup row state resolution and copy live in `:presentation` (`BackupRowUi.severity()`, `toMetaText()`), never in a composable — SwiftUI must reach the same answer.
-- `TooManyFunctions` allows 11 per class; `DefaultBackupRepository`, `BackupOrchestrator` and `ProfileViewModel` each sit at exactly 11 — the next member on any of them needs a top-level hoist first.
+- `TooManyFunctions` allows 11 per class; `BackupOrchestrator` and `ProfileViewModel` each sit at exactly 11 — the next member on either needs a top-level hoist first. `DefaultBackupRepository` is at 7.
 - `:ui-android` has no Compose UI test harness, so no flag gate is asserted anywhere; only paired comments at each call site enforce that UI and `bootstrapAppGraph` read the same constant.
 - `AppGraphKoinTest` cannot see a binding that was never registered — anything reached only via direct `koinInject`/`koin.get` stays invisible; register every new binding or cover it with its own module test.
 - Version gates are frozen literals (`BACKUP_RECURRING_SINCE_VERSION`, `BACKUP_SCHEMA_VERSION_V2`), never the live `BACKUP_SCHEMA_VERSION`; the version bumps in the same commit that changes the shape.
