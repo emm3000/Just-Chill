@@ -1,5 +1,6 @@
 package com.emm.justchill.core.sync
 
+import com.emm.justchill.core.backup.DefaultBackupMetadataStore
 import com.emm.justchill.core.preferences.AppPreferences
 import com.russhwolf.settings.MapSettings
 import org.junit.Before
@@ -20,11 +21,14 @@ import kotlin.test.assertNull
 class DefaultSyncCursorStoreTest {
 
     private lateinit var prefs: AppPreferences
+    private lateinit var backupMetadata: DefaultBackupMetadataStore
     private lateinit var store: DefaultSyncCursorStore
 
     @Before
     fun setUp() {
-        prefs = AppPreferences(MapSettings())
+        val settings = MapSettings()
+        prefs = AppPreferences(settings)
+        backupMetadata = DefaultBackupMetadataStore(settings)
         store = DefaultSyncCursorStore(prefs)
     }
 
@@ -33,12 +37,12 @@ class DefaultSyncCursorStoreTest {
         val userId = "user-a"
         prefs.setLastPulledAt(userId, "2026-08-14T00:00:00Z")
         prefs.setLastSyncedAt(userId, 1_755_000_000_000L)
-        prefs.setLastSuccessfulBackupAt(userId, 1_755_000_000_000L)
+        backupMetadata.setLastSuccessfulBackupAt(userId, 1_755_000_000_000L)
 
         store.clear(userId)
 
         assertNull(prefs.lastPulledAt(userId))
         assertNull(prefs.lastSyncedAt(userId))
-        assertEquals(1_755_000_000_000L, prefs.lastSuccessfulBackupAt(userId))
+        assertEquals(1_755_000_000_000L, backupMetadata.lastSuccessfulBackupAt(userId))
     }
 }

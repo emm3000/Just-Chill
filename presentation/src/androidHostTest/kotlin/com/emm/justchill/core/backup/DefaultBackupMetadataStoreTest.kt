@@ -2,7 +2,6 @@ package com.emm.justchill.core.backup
 
 import com.emm.domain.shared.backup.BackupFailureReason
 import com.emm.domain.shared.backup.BackupFailureState
-import com.emm.justchill.core.preferences.AppPreferences
 import com.russhwolf.settings.MapSettings
 import org.junit.Before
 import org.junit.Test
@@ -11,13 +10,13 @@ import kotlin.test.assertNull
 
 class DefaultBackupMetadataStoreTest {
 
-    private lateinit var prefs: AppPreferences
+    private lateinit var settings: MapSettings
     private lateinit var store: DefaultBackupMetadataStore
 
     @Before
     fun setUp() {
-        prefs = AppPreferences(MapSettings())
-        store = DefaultBackupMetadataStore(prefs)
+        settings = MapSettings()
+        store = DefaultBackupMetadataStore(settings)
     }
 
     @Test
@@ -55,6 +54,16 @@ class DefaultBackupMetadataStoreTest {
     }
 
     @Test
+    fun `clear leaves keys this store does not own alone`() {
+        settings.putLong("last_synced_at_user-a", 300L)
+        store.setLastSuccessfulBackupAt("user-a", 100L)
+
+        store.clear("user-a")
+
+        assertEquals(300L, settings.getLong("last_synced_at_user-a", -1L))
+    }
+
+    @Test
     fun `a user who has never failed has no streak and no reason`() {
         assertEquals(BackupFailureState.None, store.failureState("user-a"))
     }
@@ -73,6 +82,18 @@ class DefaultBackupMetadataStoreTest {
         assertEquals(BackupFailureState(2, BackupFailureReason.Unverified), store.failureState("user-a"))
     }
 
+    /**
+     * The reason is stored by enum NAME, so this is also the test that fails if the persisted form
+     * ever quietly becomes the ordinal — reordering the enum would then rewrite history on every
+     * device that already had a value.
+     */
+    @Test
+    fun `the reason is persisted under its own name`() {
+        store.recordFailure("user-a", BackupFailureReason.LocalDatabase)
+
+        assertEquals("1|LocalDatabase", settings.getStringOrNull(settings.keys.single()))
+    }
+
     @Test
     fun `clearFailures resets the streak and drops the reason with it`() {
         store.recordFailure("user-a", BackupFailureReason.Serialization)
@@ -81,6 +102,52 @@ class DefaultBackupMetadataStoreTest {
         store.clearFailures("user-a")
 
         assertEquals(BackupFailureState.None, store.failureState("user-a"))
+    }
+
+    /**
+     * **The torn-write fix, stated structurally.** The count and the reason used to be two keys, and
+     * `Settings` has no transaction: two writes are two commits, so a process killed between them
+     * left a streak carrying the previous outage's reason — or a reason with no streak. One key, one
+     * commit, and the half-written pair stops being representable on disk.
+     *
+     * Asserted over the backing map rather than through a round-trip, because a round-trip passes
+     * just as happily with two keys. This is the only test that can see the difference.
+     */
+    @Test
+    fun `both halves of the streak are stored under a single key`() {
+        store.recordFailure("user-a", BackupFailureReason.Network)
+
+        assertEquals(1, settings.keys.size, "The streak must be one key, not a pair: ${settings.keys}")
+    }
+
+    /**
+     * A value this build cannot parse — an older spelling, a truncation, anything — degrades to
+     * [BackupFailureState.None]. It must never throw: this is the read that runs while the app is
+     * trying to REPORT a backup failure, and crashing there loses the failure and the app with it.
+     */
+    @Test
+    fun `an unparseable stored value reads as no failure at all`() {
+        store.recordFailure("user-a", BackupFailureReason.Network)
+        val key = settings.keys.single()
+
+        settings.putString(key, "not-a-streak")
+        assertEquals(BackupFailureState.None, store.failureState("user-a"))
+
+        // An unparseable count discards the whole reading, reason included. Parsing the two halves
+        // independently would answer (0, Network) here — a reason hanging off a streak of zero, the
+        // exact disagreeing pair the single-key encoding exists to make impossible.
+        settings.putString(key, "abc|Network")
+        assertEquals(BackupFailureState.None, store.failureState("user-a"))
+
+        // Same rule for a count no Int can hold.
+        settings.putString(key, "99999999999999|Network")
+        assertEquals(BackupFailureState.None, store.failureState("user-a"))
+
+        // A count with a reason this build no longer has a name for keeps the count — the streak is
+        // the fact a UI warns on, and losing it because a label was renamed would hide a broken
+        // device. See BackupHealth: (5, null) is a real value and 3b must handle it.
+        settings.putString(key, "5|HashMismatch")
+        assertEquals(BackupFailureState(5, null), store.failureState("user-a"))
     }
 
     @Test
@@ -98,14 +165,13 @@ class DefaultBackupMetadataStoreTest {
 
     @Test
     fun `the streak survives a fresh store built over the same settings`() {
-        val settings = MapSettings()
-        DefaultBackupMetadataStore(AppPreferences(settings)).apply {
+        DefaultBackupMetadataStore(settings).apply {
             setLastSuccessfulBackupAt("user-a", 1_755_000_000_000L)
             recordFailure("user-a", BackupFailureReason.Unauthorized)
             recordFailure("user-a", BackupFailureReason.Network)
         }
 
-        val afterRestart = DefaultBackupMetadataStore(AppPreferences(settings))
+        val afterRestart = DefaultBackupMetadataStore(settings)
 
         assertEquals(BackupFailureState(2, BackupFailureReason.Network), afterRestart.failureState("user-a"))
         assertEquals(1_755_000_000_000L, afterRestart.lastSuccessfulBackupAt("user-a"))
@@ -122,5 +188,23 @@ class DefaultBackupMetadataStoreTest {
         assertNull(store.lastSuccessfulBackupAt("user-a"))
         assertEquals(BackupFailureState.None, store.failureState("user-a"))
         assertEquals(BackupFailureState(1, BackupFailureReason.Network), store.failureState("user-b"))
+    }
+
+    /**
+     * Two users whose ids are prefixes of one another is what a naive concatenation gets wrong, and
+     * every key in this class is built the same way — so proving it once covers all of them.
+     */
+    @Test
+    fun `keys built for one user never collide with another whose id extends it`() {
+        store.setLastSuccessfulBackupAt("user", 100L)
+        store.setLastSuccessfulBackupAt("user-a", 200L)
+        store.recordFailure("user", BackupFailureReason.Network)
+        store.recordFailure("user-a", BackupFailureReason.Unverified)
+        store.recordFailure("user-a", BackupFailureReason.Unverified)
+
+        assertEquals(100L, store.lastSuccessfulBackupAt("user"))
+        assertEquals(200L, store.lastSuccessfulBackupAt("user-a"))
+        assertEquals(BackupFailureState(1, BackupFailureReason.Network), store.failureState("user"))
+        assertEquals(BackupFailureState(2, BackupFailureReason.Unverified), store.failureState("user-a"))
     }
 }
