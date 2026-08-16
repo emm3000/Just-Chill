@@ -5,17 +5,7 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
-// ViewModel wiring only. Repository binds + data sources live in the commonMain dataModule
-// (slice H). The "appVersion" qualifier is provided by the platform module
-// (androidPlatformModule / iosPlatformModule).
 val profileModule = module {
-    // Explicit block (not viewModelOf): appVersion is a qualified String the constructor-DSL
-    // can't resolve by type. That is a reason to name every argument here, not a reason to leave
-    // one out. The clock used to be omitted, and it was the only place in the app where a Kotlin
-    // default was actually evaluated at runtime — harmlessly, since it was Clock.System and that
-    // is exactly what sharedModule binds. The reason it had to go is drift: rebind Clock there and
-    // this one consumer would have kept reading Clock.System, silently. Now it cannot compile, and
-    // AppGraphKoinTest fails if a default ever comes back and lets it.
     viewModel {
         ProfileViewModel(
             backupRepository = get(),
@@ -23,13 +13,8 @@ val profileModule = module {
             signOut = get(),
             deleteUserAccount = get(),
             syncController = get(),
-            // The BackupController port, bound as a secondary type of backupModule's orchestrator
-            // single — so this resolves the same instance bootstrapAppGraph started.
             backupController = get(),
-            // Bound in backupModule, beside the orchestrator that asks the same dirtiness question.
             getBackupStaleness = get(),
-            // Platform-provided (Crashlytics on Android, println on iOS) — the same port the
-            // orchestrator logs its cycles through.
             logger = get(),
             categoryRepository = get(),
             accountRepository = get(),

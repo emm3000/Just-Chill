@@ -71,16 +71,13 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
 
-/** Meta copy for the sync rows while [SYNC_TEMPORARILY_DISABLED] is on. Spanish, like all UI copy. */
 private const val SYNC_PAUSED_META = "Sincronización en pausa"
 
 @Composable
 fun ProfileScreen(
     state: ProfileUiState,
     modifier: Modifier = Modifier,
-    // Injected from the platform layer (no BuildConfig in commonMain).
     appVersion: String = "",
-    // Full 40-char sha of the commit this build came from, or "unknown".
     commitHash: String = "",
     isDebug: Boolean = false,
     onCategoriesClick: () -> Unit = {},
@@ -95,8 +92,6 @@ fun ProfileScreen(
     onDeleteAccountClick: () -> Unit = {},
     onSyncNowClick: () -> Unit = {},
     onCopyCommitHashClick: () -> Unit = {},
-    // Asks the always-running backup orchestrator for a snapshot cycle. Only reachable while
-    // SNAPSHOT_BACKUP_ENABLED is true — see the gate in BackupSection.
     onBackUpNowClick: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
@@ -190,7 +185,6 @@ fun ProfileScreen(
                 ProfileRow(
                     icon = Icons.Outlined.Repeat,
                     label = "Sincronizar ahora",
-                    // The tap is already a no-op (ProfileViewModel.syncNow returns early); say so.
                     meta = when {
                         SYNC_TEMPORARILY_DISABLED -> "$SYNC_PAUSED_META · este botón no hace nada"
                         state.isSyncing -> "Sincronizando…"
@@ -212,15 +206,6 @@ fun ProfileScreen(
     }
 }
 
-/**
- * The "Respaldo" group: the two file actions, and the cloud snapshot behind its kill switch.
- *
- * Extracted out of [ProfileScreen] when the third row arrived rather than suppressed there. Each of
- * these rows carries three `state.op` branches, and the fourth set put that composable over
- * `CyclomaticComplexMethod`'s threshold — a limit `docs/CODE_QUALITY.md` records as one detekt does
- * apply to Composables, with no annotation escape. It owns the import confirmation dialog too, which
- * belongs to the row that opens it and to nothing else on the screen.
- */
 @Composable
 private fun BackupSection(
     state: ProfileUiState,
@@ -241,21 +226,14 @@ private fun BackupSection(
         )
     }
 
-    // One top-level emitter, same shape as AccountSection: compose-rules rejects a composable that
-    // emits from two sources at its top level, and the header plus the group are two.
     Column(modifier = Modifier.fillMaxWidth()) {
         SectionHeader(text = "Respaldo")
         ProfileGroup {
             ProfileRowWithTrailing(
                 icon = Icons.Outlined.FileDownload,
                 label = "Exportar mi data",
-                // "Preparando…": covers only the JSON generation. The SAF write that follows
-                // (ProfileEntries.kt's ExportReady -> platform.requestExport) runs after `op`
-                // already reset, so a label claiming "Exportando…" here would outlive its own scope.
                 meta = if (state.op == ProfileOp.Exporting) "Preparando…" else "Guardar como archivo",
                 metaIsPrimary = true,
-                // Dimmed only when a DIFFERENT op is running — this row's own op keeps full
-                // emphasis so its progress copy stays readable.
                 enabled = state.op == ProfileOp.None || state.op == ProfileOp.Exporting,
                 onClick = onExportClick.takeIf { state.op == ProfileOp.None },
                 trailing = {
@@ -269,19 +247,11 @@ private fun BackupSection(
                 meta = if (state.op == ProfileOp.Importing) "Importando…" else "Reemplaza todo",
                 metaIsPrimary = false,
                 enabled = state.op == ProfileOp.None || state.op == ProfileOp.Importing,
-                // Confirm before the file picker: by the time a file is chosen the user has
-                // already decided, and this is the only irreversible action left unguarded.
                 onClick = { showImportDialog = true }.takeIf { state.op == ProfileOp.None },
                 trailing = {
                     ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.Importing)
                 },
             )
-            // THE SAME CONSTANT GATES `BackupOrchestrator.start()` in `bootstrapAppGraph`, and the
-            // two sites have to move together. With the switch off nothing drains the orchestrator's
-            // request channel, so a visible row would queue a tap into a dead channel: no upload, no
-            // failure, no message — the invisible failure ADR 009 hard constraint 4 exists to forbid.
-            // It is `false` today, so this row does not render; it flips only when Phase 4 passes
-            // (BackupKillSwitch.kt).
             if (SNAPSHOT_BACKUP_ENABLED) {
                 HairlineDivider()
                 ProfileRowWithTrailing(
@@ -289,8 +259,6 @@ private fun BackupSection(
                     label = "Respaldar ahora",
                     meta = if (state.op == ProfileOp.BackingUp) "Respaldando…" else "Sube una copia a la nube",
                     metaIsPrimary = true,
-                    // Dimmed only when a DIFFERENT op is running — this row's own op keeps full
-                    // emphasis so its progress copy stays readable.
                     enabled = state.op == ProfileOp.None || state.op == ProfileOp.BackingUp,
                     onClick = onBackUpNowClick.takeIf { state.op == ProfileOp.None },
                     trailing = {
@@ -304,22 +272,9 @@ private fun BackupSection(
     }
 }
 
-/**
- * "Último respaldo" — the read-only health line for the snapshot pipeline (ADR 009 Phase 3).
- *
- * Every branch it has is over [BackupRowUi], and every branch that decides *meaning* was already
- * taken in `ProfileViewModel`: this picks a colour token and a trailing glyph, and delegates the
- * Spanish to `toMetaText()` in `:presentation` so the SwiftUI row reads the same sentences.
- *
- * `onClick = null` on purpose — it reports, it does not act. "Respaldar ahora" directly above is the
- * action, and a chevron here would promise a destination that does not exist.
- */
 @Composable
 private fun LastBackupRow(row: BackupRowUi) {
     val colors = LocalEmmColors.current
-    // Which token, only. WHICH SEVERITY is `BackupRowUi.severity()`, in :presentation, because the
-    // rule reads `LastSnapshot.DaysAgo.isStale` — a domain verdict this composable has no business
-    // re-deriving, and one the SwiftUI row has to reach the same answer on.
     val metaColor: Color? = when (row.severity()) {
         BackupRowSeverity.Normal -> null
         BackupRowSeverity.Warning -> colors.warning
@@ -344,9 +299,8 @@ private fun LastBackupRow(row: BackupRowUi) {
     )
 }
 
-// CyclomaticComplexMethod: this composable sat exactly on the limit before SYNC_TEMPORARILY_DISABLED
-// added a branch to each of its sync-facing decisions. Every one of those branches disappears when
-// the kill switch does — drop this suppression with it instead of restructuring around it.
+// CyclomaticComplexMethod: every extra branch here comes from SYNC_TEMPORARILY_DISABLED and
+// disappears with it — drop this suppression with the kill switch instead of restructuring around it.
 @Suppress("CyclomaticComplexMethod")
 @Composable
 private fun AccountSection(
@@ -379,8 +333,6 @@ private fun AccountSection(
                     ProfileRow(
                         icon = Icons.Outlined.Shield,
                         label = "Iniciar sesión",
-                        // Signing in no longer buys multi-device sync while the switch is on, so it
-                        // must not be promised here either.
                         meta = if (SYNC_TEMPORARILY_DISABLED) {
                             SYNC_PAUSED_META
                         } else {
@@ -395,8 +347,6 @@ private fun AccountSection(
                     ProfileRowWithTrailing(
                         icon = Icons.Outlined.AccountCircle,
                         label = session.email ?: "Tu cuenta",
-                        // While the kill switch is on the row must not report a status it cannot
-                        // have: no cycle runs, so `syncRow` would sit on a stale, flattering Idle.
                         meta = if (SYNC_TEMPORARILY_DISABLED) {
                             SYNC_PAUSED_META
                         } else {
@@ -451,8 +401,6 @@ private fun AccountSection(
                             "Tus datos siguen en este teléfono"
                         },
                         metaIsPrimary = false,
-                        // Dimmed only when a DIFFERENT op is running — this row's own op keeps
-                        // full emphasis so its progress copy stays readable.
                         enabled = state.op == ProfileOp.None || state.op == ProfileOp.SigningOut,
                         onClick = onSignOutClick.takeIf { state.op == ProfileOp.None },
                         trailing = {
@@ -469,8 +417,6 @@ private fun AccountSection(
                             "Borra tu cuenta y tus datos en la nube"
                         },
                         metaIsPrimary = false,
-                        // Dimmed only when a DIFFERENT op is running — this row's own op keeps
-                        // full emphasis so its progress copy stays readable.
                         enabled = state.op == ProfileOp.None || state.op == ProfileOp.DeletingAccount,
                         onClick = { showDeleteAccountDialog = true }.takeIf { state.op == ProfileOp.None },
                         trailing = {
@@ -537,9 +483,6 @@ private fun ProfileRow(icon: ImageVector, label: String, meta: String, metaIsPri
     )
 }
 
-// Kept separate from ProfileRow's default parameter list on purpose: LongParameterList caps
-// composables at 5 params (config/detekt/detekt.yml), and ProfileRowWithTrailing already carries
-// the `enabled` lever for the few rows that need it (docs/archive/sync/AUDIT.md §8, candidate 4).
 @Composable
 private fun ChevronTrailing(enabled: Boolean) {
     val colors = LocalEmmColors.current
@@ -557,13 +500,9 @@ private fun ProfileRowWithTrailing(
     label: String,
     meta: String,
     metaIsPrimary: Boolean,
-    // When null, the row is non-interactive (no ripple/press state). Pass a lambda to make it tappable.
     onClick: (() -> Unit)?,
     trailing: @Composable () -> Unit,
-    // When non-null, overrides the default meta text color derived from [metaIsPrimary].
     metaColor: Color? = null,
-    // Dims icon/label/meta to `colors.textDisabled` — the same token EmmButton/OutlinedCta use for
-    // their disabled state. Purely visual; callers still own whether onClick actually fires.
     enabled: Boolean = true,
 ) {
     val colors = LocalEmmColors.current
@@ -655,14 +594,6 @@ private fun VersionFooter(appVersion: String, commitHash: String, onCopyClick: (
             color = colors.textTertiary,
             textAlign = TextAlign.Center,
         )
-        // versionName is the nearest release tag, so it is identical across every build between two
-        // releases — the commit is the only thing that tells two daily App Distribution builds
-        // apart. Short on screen, full 40 on the clipboard: the GitHub convention, and the short
-        // form is the one a human can read back over a chat.
-        //
-        // Two states, not one string: with no hash there is nothing to copy, so the row loses the
-        // click, the Role.Button and the icon rather than offering to put the sentinel on the
-        // clipboard. commitHashUi() owns that decision and is unit-tested; this only renders it.
         when (val commit = commitHashUi(commitHash)) {
             is CommitHashUi.Available -> CopyableCommitRow(
                 label = commit.label,
@@ -681,9 +612,6 @@ private fun VersionFooter(appVersion: String, commitHash: String, onCopyClick: (
     }
 }
 
-// The row, not the text, carries the 48dp touch floor DESIGN_SYSTEM §4.1 calls non-negotiable; the
-// copy inside it stays at the footer's 12sp. It also declares Role.Button — without it the whole
-// thing announces as an unnamed clickable, the same treatment RetryPill in this package applies.
 @Composable
 private fun CopyableCommitRow(label: String, onCopyClick: () -> Unit) {
     val colors = LocalEmmColors.current

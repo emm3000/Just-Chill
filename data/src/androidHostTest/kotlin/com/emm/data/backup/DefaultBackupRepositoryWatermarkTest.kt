@@ -12,15 +12,6 @@ import kotlin.test.assertNull
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-/**
- * [DefaultBackupRepository.latestLocalChangeAt] — the dirty-flag watermark, against a real
- * in-memory SQLDelight database.
- *
- * Same driver setup as [DefaultBackupRepositoryTest] and for the same reason: the query reads
- * `db` directly, so a real database is the only collaborator worth having. `clock` is unused here
- * — the watermark reads `updatedAt` columns the fixtures stamp explicitly, nothing in this class
- * asks the clock for anything.
- */
 class DefaultBackupRepositoryWatermarkTest {
 
     private lateinit var driver: SqlDriver
@@ -66,9 +57,6 @@ class DefaultBackupRepositoryWatermarkTest {
 
     @Test
     fun `a row in transactions alone is the watermark`() = runTest {
-        // transactions.accountId is NOT NULL REFERENCES accounts — needs a parent row, but the
-        // parent's own updatedAt must stay lower than the child's or this case would not isolate
-        // the transactions branch of the UNION ALL.
         insertAccount(updatedAt = 1L)
         insertTransaction(updatedAt = 333L)
 
@@ -77,9 +65,6 @@ class DefaultBackupRepositoryWatermarkTest {
 
     @Test
     fun `a row in recurring_movements alone is the watermark`() = runTest {
-        // Same FK shape as transactions: recurring_movements.accountId is NOT NULL REFERENCES
-        // accounts. This is also the case that pins the LAST branch of the UNION ALL — a typo
-        // dropping this table from the query would silently pass every other case above.
         insertAccount(updatedAt = 1L)
         insertTemplate(updatedAt = 444L)
 
@@ -106,12 +91,6 @@ class DefaultBackupRepositoryWatermarkTest {
         assertEquals(999L, repository.latestLocalChangeAt())
     }
 
-    /**
-     * The tombstone decision, pinned. `softDelete` is the exact query the app runs to delete an
-     * account — building the fixture through it, rather than hand-writing a row with `deletedAt`
-     * already set, means this test breaks the moment `softDelete` stops bumping `updatedAt`, which
-     * is the one thing the watermark actually depends on.
-     */
     @Test
     fun `a soft-deleted row is counted, not excluded`() = runTest {
         insertAccount(accountId = "acc-1", updatedAt = 1L)

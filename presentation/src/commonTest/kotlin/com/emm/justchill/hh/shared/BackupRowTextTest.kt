@@ -9,7 +9,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** The Spanish the "Último respaldo" row puts on each [BackupRowUi]. Copy is behaviour here. */
 class BackupRowTextTest {
 
     @Test
@@ -42,18 +41,11 @@ class BackupRowTextTest {
 
     @Test
     fun `a failure over a snapshot leads with the age, so a good backup is never hidden`() {
-        // The manual-tap-on-bad-wifi case: data is safe, an update did not happen.
         assertEquals("Hoy · no pude actualizar", failed(BackupFailureReason.Unknown, days = 0).toMetaText())
         assertEquals("Ayer · no pude actualizar", failed(BackupFailureReason.Serialization, days = 1).toMetaText())
         assertEquals("Hace 4 días · no pude actualizar", failed(BackupFailureReason.Unverified, days = 4).toMetaText())
     }
 
-    /**
-     * **The action is never bought off by an age.** A dead refresh token fails every cycle from that
-     * moment, so the snapshot ages while the streak climbs — and the one thing that fixes it is the
-     * one thing an age-only tail never says. This is the hole review found: the row read
-     * "Hace 30 días · no pude actualizar" and never once mentioned signing in again.
-     */
     @Test
     fun `a reason with a real action says it however old the snapshot is`() {
         assertEquals(
@@ -87,7 +79,6 @@ class BackupRowTextTest {
         )
     }
 
-    /** An undated snapshot is still a snapshot: the copy must never downgrade it to "Sin respaldo". */
     @Test
     fun `a failure over an undated snapshot does not claim there is none`() {
         val text = BackupRowUi.Failed(BackupFailureReason.Unauthorized, LastSnapshot.AgeUnknown).toMetaText()
@@ -101,15 +92,9 @@ class BackupRowTextTest {
         val text = BackupRowUi.Unreadable.toMetaText()
 
         assertEquals("No pude leer el estado del respaldo", text)
-        // The distinction the variant exists for: it must not read as "there is no backup".
         assertTrue("Sin respaldo" !in text)
     }
 
-    /**
-     * The reason degrades to null for a persisted name this build cannot resolve
-     * (`BackupFailureReason.fromNameOrNull`), so a genuinely failing device arrives here unlabelled.
-     * It still has to be told its backups are failing.
-     */
     @Test
     fun `a failure with no resolvable reason still reads as a failure`() {
         assertEquals("Sin respaldo · intenta de nuevo", BackupRowUi.Failed(null, LastSnapshot.None).toMetaText())
@@ -122,8 +107,6 @@ class BackupRowTextTest {
 
     @Test
     fun `every failure reason renders something, and never an empty string`() {
-        // Exhaustive over the enum by construction: a member added later lands on the generic branch
-        // rather than on nothing, and this fails the day one renders blank.
         for (reason in BackupFailureReason.entries) {
             val withoutSnapshot = BackupRowUi.Failed(reason, LastSnapshot.None).toMetaText()
             val withSnapshot = failed(reason, days = 3).toMetaText()
@@ -135,14 +118,11 @@ class BackupRowTextTest {
         }
     }
 
-    // ── Severity ───────────────────────────────────────────────────────────
-
     @Test
     fun `a healthy or merely pending row is drawn normally`() {
         assertEquals(BackupRowSeverity.Normal, BackupRowUi.NeedsAccount.severity())
         assertEquals(BackupRowSeverity.Normal, BackupRowUi.BackingUp.severity())
         assertEquals(BackupRowSeverity.Normal, BackupRowUi.UpToDate(0).severity())
-        // "Not yet", not "broken": the orchestrator's next trigger is what answers this one.
         assertEquals(BackupRowSeverity.Normal, BackupRowUi.Never.severity())
     }
 
@@ -159,11 +139,6 @@ class BackupRowTextTest {
         )
     }
 
-    /**
-     * The escalation review asked for. "Backed up 30 days ago, failing ever since, with unsaved
-     * changes" is a ledger at risk exactly as truly as one never backed up — and it used to render in
-     * the same amber as a one-off hiccup, because severity only ever escalated through `None`.
-     */
     @Test
     fun `a failure over a stale snapshot escalates, a failure over a fresh one does not`() {
         assertEquals(

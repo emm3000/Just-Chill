@@ -6,29 +6,15 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-/**
- * Every branch of [toBackupFailureReason], because the mapping is the only thing standing between a
- * named outage and "algo falló".
- *
- * The failure indicator ADR 009 Phase 3 asks for is exactly as useful as this function is accurate:
- * a reason that mislabels a local database read as a network problem sends whoever is holding an
- * outage to the wrong place, and nothing else in the pipeline will contradict it. The inputs below
- * are the real exception shapes `:data` raises — see `BackupFailures.kt`, `DefaultBackupUploader`
- * and `safeDbCall` — not invented ones.
- */
 class BackupFailureReasonTest {
 
     @Test
     fun `a serialization failure is named, not folded into Unknown`() {
-        // Stands in for kotlinx.serialization's own SerializationException, which :domain cannot see
-        // — only coroutines and datetime are allowed here. The mapping keys on the DomainException
-        // type, not on what it wraps, so the stand-in exercises the same branch.
         val failure = DomainException.SerializationError(RuntimeException("bad json"))
 
         assertEquals(BackupFailureReason.Serialization, failure.toBackupFailureReason())
     }
 
-    /** `SerializationError.cause` is nullable (ADR 009 3a-i); a null one must map the same way. */
     @Test
     fun `a serialization failure with no cause still maps to Serialization`() {
         val failure = DomainException.SerializationError(cause = null, message = "schemaVersion absent")
@@ -50,11 +36,6 @@ class BackupFailureReasonTest {
         assertEquals(BackupFailureReason.Unauthorized, failure.toBackupFailureReason())
     }
 
-    /**
-     * The plan's "hash mismatch". It is distinguishable — `DefaultBackupUploader` raises a
-     * `ValidationError` carrying [ValidationCode.BackupUploadUnverified] for both read-back
-     * mismatches — and this test is what stops it collapsing back into [BackupFailureReason.Unknown].
-     */
     @Test
     fun `an unverified upload maps to Unverified, not Unknown`() {
         val failure = DomainException.ValidationError(
@@ -65,11 +46,6 @@ class BackupFailureReasonTest {
         assertEquals(BackupFailureReason.Unverified, failure.toBackupFailureReason())
     }
 
-    /**
-     * Every OTHER validation code belongs to a form or to `importFromJson`'s rejection of a file the
-     * user chose. Mapping one of those to [BackupFailureReason.Unverified] would tell somebody their
-     * upload was corrupt because a different feature refused a different file.
-     */
     @Test
     fun `a validation error from anywhere else maps to Unknown`() {
         val failure = DomainException.ValidationError("the file is not a backup", ValidationCode.BackupFileInvalid)
@@ -84,12 +60,6 @@ class BackupFailureReasonTest {
         assertEquals(BackupFailureReason.LocalDatabase, failure.toBackupFailureReason())
     }
 
-    /**
-     * And the honest one. A Supabase `RestException` — the bucket's 413 for an oversized payload, its
-     * 415 for a content type it refuses — reaches here as [DomainException.Unknown] with the status
-     * spelled into the message string, so "storage error" and "nobody expected this" are the same
-     * value. Naming a `Storage` member would need `:data` to carry the status as data first.
-     */
     @Test
     fun `a server refusal is indistinguishable from an unexpected throwable and maps to Unknown`() {
         val serverRefusal = DomainException.Unknown(
@@ -107,8 +77,6 @@ class BackupFailureReasonTest {
         assertEquals(BackupFailureReason.Unknown, DomainException.NotFound("snapshot").toBackupFailureReason())
     }
 
-    // ── The persisted spelling ───────────────────────────────────────────────────────
-
     @Test
     fun `every reason round-trips through its persisted name`() {
         BackupFailureReason.entries.forEach { reason ->
@@ -116,11 +84,6 @@ class BackupFailureReasonTest {
         }
     }
 
-    /**
-     * A device that upgraded across a renamed member reads a name this build no longer has. It must
-     * forget which failure it was, never crash: `valueOf` would throw here, inside the code path that
-     * exists to REPORT a failure.
-     */
     @Test
     fun `an unknown or absent stored name resolves to no reason at all`() {
         assertNull(BackupFailureReason.fromNameOrNull("HashMismatch"))

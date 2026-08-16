@@ -9,14 +9,6 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-/**
- * [DefaultBackupMetadataStore] against a real [AppPreferences] over [MapSettings].
- *
- * ADR 009 2c-iii-a moved the backup-watermark clear off `DefaultSyncCursorStore.clear` onto this
- * seam. `DefaultSyncCursorStoreTest` now pins that `clear` no longer touches the watermark; this
- * suite is the corresponding positive coverage — round trip, per-user isolation, and clear — for
- * the seam that replaced it.
- */
 class DefaultBackupMetadataStoreTest {
 
     private lateinit var prefs: AppPreferences
@@ -62,8 +54,6 @@ class DefaultBackupMetadataStoreTest {
         assertEquals(1_800_000_000_000L, store.lastSuccessfulBackupAt("user-b"))
     }
 
-    // ── The failure streak (ADR 009 Phase 3, unit 3a-ii) ─────────────────────────────
-
     @Test
     fun `a user who has never failed has no streak and no reason`() {
         assertEquals(BackupFailureState.None, store.failureState("user-a"))
@@ -80,8 +70,6 @@ class DefaultBackupMetadataStoreTest {
             store.recordFailure("user-a", BackupFailureReason.Unverified),
         )
 
-        // Returned AND stored: a caller that trusted only the return value would still be right, and
-        // a screen opened later reads the same thing.
         assertEquals(BackupFailureState(2, BackupFailureReason.Unverified), store.failureState("user-a"))
     }
 
@@ -92,7 +80,6 @@ class DefaultBackupMetadataStoreTest {
 
         store.clearFailures("user-a")
 
-        // Not just the count: a reason left behind would label the NEXT outage with the last one's.
         assertEquals(BackupFailureState.None, store.failureState("user-a"))
     }
 
@@ -109,14 +96,6 @@ class DefaultBackupMetadataStoreTest {
         assertEquals(BackupFailureState(1, BackupFailureReason.LocalDatabase), store.failureState("user-b"))
     }
 
-    /**
-     * The reason the streak is persisted at all. A failure indicator that a restart resets tells a
-     * device whose backups have been failing all week that everything is fine — and this is the only
-     * test that can fail if the two values ever move into a field.
-     *
-     * A second [AppPreferences] and a second store over the SAME [MapSettings] is what process death
-     * looks like from here: the objects are gone, the key-value backing is not.
-     */
     @Test
     fun `the streak survives a fresh store built over the same settings`() {
         val settings = MapSettings()
@@ -132,11 +111,6 @@ class DefaultBackupMetadataStoreTest {
         assertEquals(1_755_000_000_000L, afterRestart.lastSuccessfulBackupAt("user-a"))
     }
 
-    /**
-     * Account deletion wipes the streak too, for the same reason it wipes the watermark: the same
-     * device registering again would otherwise open on a brand-new account already showing somebody
-     * else's failures.
-     */
     @Test
     fun `clear removes the streak as well as the watermark, and only for that user`() {
         store.setLastSuccessfulBackupAt("user-a", 1_755_000_000_000L)

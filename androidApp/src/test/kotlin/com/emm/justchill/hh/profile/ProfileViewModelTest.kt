@@ -57,8 +57,6 @@ class ProfileViewModelTest {
         every { status } returns MutableStateFlow(SyncStatus())
     }
 
-    // Real controllable flows, like sessionFlow below: every backup assertion in this file is about
-    // what the ViewModel does with what the orchestrator publishes, so both have to be drivable.
     private val backingUpFlow = MutableStateFlow(false)
     private val backupEvents = MutableSharedFlow<BackupEvent>(extraBufferCapacity = 4)
     private val healthFlow = MutableStateFlow(BackupHealth.None)
@@ -68,8 +66,6 @@ class ProfileViewModelTest {
         every { health } returns healthFlow
     }
 
-    // Mocked rather than real: GetBackupStalenessUseCaseTest already owns the rule itself, and what
-    // is under test here is the mapping from (session, health, staleness) to a BackupRowUi.
     private val getBackupStaleness = mockk<GetBackupStalenessUseCase>()
     private val logger = mockk<DiagnosticsLogger>(relaxed = true)
     private val categoryRepository = mockk<CategoryRepository> {
@@ -79,12 +75,9 @@ class ProfileViewModelTest {
         every { all() } returns flowOf(emptyList())
     }
 
-    // Real controllable flow — replaces the relaxed mock that returns empty flow.
     private val sessionFlow = MutableSharedFlow<SessionStatus>(replay = 1)
     private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
 
-    // The instant an export is stamped with. Stated here rather than read from the machine, which
-    // is what makes the assertion below possible at all.
     private val fixedNow = Instant.parse("2026-08-11T15:04:05Z")
     private val fixedClock = object : Clock {
         override fun now(): Instant = fixedNow
@@ -108,8 +101,6 @@ class ProfileViewModelTest {
             clock = fixedClock,
         )
     }
-
-    // ── Session state tests ────────────────────────────────────────────────
 
     @Test
     fun `session emits Authenticated maps to SignedIn with email`() = runTest(testDispatcher) {
@@ -207,8 +198,6 @@ class ProfileViewModelTest {
         job.cancel()
     }
 
-    // ── Export tests ────────────────────────────────────────────────────────
-
     @Test
     fun `ExportRequested happy path emits ExportReady with the generated json`() = runTest(testDispatcher) {
         val expectedJson = """{"version":"1.0","data":[]}"""
@@ -242,14 +231,6 @@ class ProfileViewModelTest {
 
     @Test
     fun `ExportRequested stamps exportedAt from the injected clock`() = runTest(testDispatcher) {
-        // The other half of the same stamp as the appVersion test above: what goes into the backup
-        // as `exportedAt`. It had no test at all, which is reason enough for this one.
-        //
-        // What it does NOT prove — an earlier comment here claimed otherwise — is anything about
-        // the deleted `= Clock.System` default. A Kotlin default never blocks an explicit argument,
-        // so this exact test compiles and passes against the old constructor too. The default's
-        // removal is a wiring guarantee (ProfileModule can no longer omit the clock without a
-        // compile error), and nothing in this file exercises it. See docs/DATE_AUDIT.md #7.
         val exportedAt = slot<Long>()
         coEvery { backupRepository.exportToJson(capture(exportedAt), any()) } returns "{}"
 
@@ -284,8 +265,6 @@ class ProfileViewModelTest {
 
     @Test
     fun `ExportRequested on Unknown error emits ShowError effect`() = runTest(testDispatcher) {
-        // The disk-space ExportFailed hint now lives in the platform write layer; the VM only
-        // generates the JSON, so any domain failure here surfaces uniformly as ShowError.
         coEvery { backupRepository.exportToJson(any(), any()) } throws
             DomainException.Unknown(RuntimeException("serialize error"))
 
@@ -317,7 +296,7 @@ class ProfileViewModelTest {
             val vm = buildViewModel()
 
             vm.onIntent(ProfileIntent.ImportJson("{}"))
-            advanceUntilIdle() // suspended at gate — op == Importing
+            advanceUntilIdle()
 
             assertEquals(ProfileOp.Importing, vm.state.value.op)
 
@@ -327,8 +306,6 @@ class ProfileViewModelTest {
             vm.onIntent(ProfileIntent.ExportRequested)
             advanceUntilIdle()
 
-            // The guard no longer swallows silently (docs/archive/sync/AUDIT.md §8) — it still runs no
-            // export, but it now reports through the shared OperationInProgress notify.
             assertTrue(
                 effects.singleOrNull() == ProfileEffect.Notify(ProfileMessage.OperationInProgress),
                 "Expected exactly one OperationInProgress notify, got: $effects",
@@ -352,14 +329,13 @@ class ProfileViewModelTest {
             val job = launch { vm.effect.collect { effects.add(it) } }
 
             vm.onIntent(ProfileIntent.ExportRequested)
-            advanceUntilIdle() // suspended at gate — op == Exporting
+            advanceUntilIdle()
 
             assertEquals(ProfileOp.Exporting, vm.state.value.op)
 
             vm.onIntent(ProfileIntent.ExportRequested)
             advanceUntilIdle()
 
-            // exportData must still have been called exactly once
             coVerify(exactly = 1) { backupRepository.exportToJson(any(), any()) }
             assertTrue(
                 effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.OperationInProgress },
@@ -369,8 +345,6 @@ class ProfileViewModelTest {
             gate.cancel()
             job.cancel()
         }
-
-    // ── DeleteAccount tests ────────────────────────────────────────────────
 
     @Test
     fun `DeleteAccount success emits AccountDeleted notify`() = runTest(testDispatcher) {
@@ -412,12 +386,6 @@ class ProfileViewModelTest {
         job.cancel()
     }
 
-    /**
-     * `docs/archive/sync/AUDIT.md` §8, candidate 1: the `launchOp` guard used to return silently on a
-     * confirmed re-entry — indistinguishable on screen from the delete_account RPC never firing at
-     * all. It now reports instead of swallowing, still invokes the use case exactly once, and
-     * resets `op` once the in-flight call completes.
-     */
     @Test
     fun `DeleteAccount re-fire while in flight emits OperationInProgress, ignores the re-fire, and resets op`() =
         runTest(testDispatcher) {
@@ -429,7 +397,7 @@ class ProfileViewModelTest {
             val job = launch { vm.effect.collect { effects.add(it) } }
 
             vm.onIntent(ProfileIntent.DeleteAccount)
-            advanceUntilIdle() // first call is suspended at the gate
+            advanceUntilIdle()
             assertEquals(ProfileOp.DeletingAccount, vm.state.value.op, "op must be DeletingAccount while in flight")
 
             vm.onIntent(ProfileIntent.DeleteAccount)
@@ -447,8 +415,6 @@ class ProfileViewModelTest {
 
             job.cancel()
         }
-
-    // ── SyncRowUi mapping tests ────────────────────────────────────────────
 
     @Test
     fun `lastSyncFailed=true from orchestrator maps to SyncRowUi-Failed`() = runTest(testDispatcher) {
@@ -490,16 +456,12 @@ class ProfileViewModelTest {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        // Both flags true — Syncing must win (precedence rule lives in the ViewModel, not the composable).
         statusFlow.value = SyncStatus(isSyncing = true, lastSyncFailed = true)
         advanceUntilIdle()
 
         assertIs<SyncRowUi.Syncing>(vm.state.value.syncRow)
     }
 
-    // ── Snapshot backup — the manual "Respaldar ahora" tap (ADR 009 2c-iv) ──
-
-    /** Signs in and drains, because the tap is refused without a session. */
     private suspend fun signIn() {
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid-backup", email = "a@b.com")))
     }
@@ -513,9 +475,6 @@ class ProfileViewModelTest {
         vm.onIntent(ProfileIntent.BackUpNow)
         advanceUntilIdle()
 
-        // `manual = true` is the whole request: it is what skips the dirty check and the daily cap,
-        // and what makes the cycle publish an outcome at all. An automatic request would leave the
-        // user tapping a button that reports nothing and usually does nothing.
         verify(exactly = 1) { backupController.requestBackup(manual = true) }
     }
 
@@ -542,8 +501,6 @@ class ProfileViewModelTest {
             vm.onIntent(ProfileIntent.BackUpNow)
             advanceUntilIdle()
 
-            // The existing guard is reused rather than bypassed: this is what keeps a tap from
-            // racing an export or an import, and it must not reach the orchestrator at all.
             verify(exactly = 0) { backupController.requestBackup(any()) }
             assertTrue(
                 effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.OperationInProgress },
@@ -554,12 +511,6 @@ class ProfileViewModelTest {
             job.cancel()
         }
 
-    /**
-     * `BackupOrchestrator.requestBackup` discards a session-less manual request rather than
-     * deferring it, and reports nothing at all — so a tap that reached it while signed out would be
-     * a button that silently does nothing. This ViewModel is the only place that sees both the tap
-     * and the session, which is why the refusal lives here.
-     */
     @Test
     fun `BackUpNow while signed out is refused at the button and asks for nothing`() = runTest(testDispatcher) {
         val vm = buildViewModel()
@@ -596,12 +547,6 @@ class ProfileViewModelTest {
         assertEquals(ProfileOp.None, vm.state.value.op, "The op must clear when the cycle ends")
     }
 
-    /**
-     * `isBackingUp` reports EVERY cycle, and the automatic ones fire from the app's own lifecycle —
-     * so one can start while an export the user asked for is still running. Overwriting the slot
-     * would leave `launchOp`'s `finally` resetting it to None mid-backup, and the export's own
-     * progress copy replaced by a backup nobody is waiting on.
-     */
     @Test
     fun `an automatic backup starting mid-export does not steal the op slot`() = runTest(testDispatcher) {
         val gate = CompletableDeferred<Unit>()
@@ -621,7 +566,6 @@ class ProfileViewModelTest {
         advanceUntilIdle()
         assertEquals(ProfileOp.Exporting, vm.state.value.op, "A backup must not claim a slot it did not take")
 
-        // And releasing it is symmetric: the backup ending must not clear somebody else's op.
         backingUpFlow.value = false
         advanceUntilIdle()
         assertEquals(ProfileOp.Exporting, vm.state.value.op, "A backup must not release an op it never held")
@@ -647,13 +591,6 @@ class ProfileViewModelTest {
         job.cancel()
     }
 
-    /**
-     * **The point of the whole unit.** No backup failure signs the user out and none reports a
-     * session expiry, because the failure that would trigger both is a `DomainException.Unauthorized`
-     * raised by the account-switch refusal — a user who is signed in, just as somebody else. The
-     * negatives are asserted explicitly: a `ShowError` is the only effect that routes through
-     * `toUserMessage()`, and `SignOutUseCase` is the only way this ViewModel can end a session.
-     */
     @Test
     fun `a failed backup notifies BackupFailed and never signs out or raises a session error`() =
         runTest(testDispatcher) {
@@ -678,13 +615,6 @@ class ProfileViewModelTest {
             job.cancel()
         }
 
-    /**
-     * And the same failure seen from the words on screen, because that is where the damage would
-     * land. `DomainExceptionExt.toUserMessage()` renders `Unauthorized` as the credentials/expiry
-     * line, which is false for an account switch and alarming for a backup — the copy this ViewModel
-     * picks has to be neither. Spelled out here rather than imported from `toUserMessage()`: a test
-     * that builds its expectation out of the code under test agrees with any regression in it.
-     */
     @Test
     fun `an Unauthorized backup failure is not rendered as the expired-credentials message`() =
         runTest(testDispatcher) {
@@ -697,11 +627,6 @@ class ProfileViewModelTest {
             advanceUntilIdle()
 
             val shown: String? = effects.filterIsInstance<ProfileEffect.Notify>().firstOrNull()?.message?.toText()
-            // Pinning the exact backup-failure copy is what already proves Unauthorized never reaches
-            // the sign-in copy: `DomainExceptionExt.toUserMessage()`'s Unauthorized branch renders as
-            // "Credenciales incorrectas o sesión expirada", a different string than the one below, so
-            // a second assertion re-deriving that from the same `shown` value could never fail on its
-            // own — it would only ever fail together with this one.
             assertEquals(
                 "No pude respaldar en la nube — intenta de nuevo.",
                 shown,

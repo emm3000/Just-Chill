@@ -10,11 +10,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-/**
- * The manifest is a WIRE FORMAT from the first upload: every field name here is stored in a file
- * this app will later have to read, so a rename is a compatibility break and not a refactor. These
- * tests are what makes that break visible in a diff.
- */
 class BackupManifestTest {
 
     @Test
@@ -42,15 +37,10 @@ class BackupManifestTest {
 
     @Test
     fun refuses_a_manifest_that_declares_no_version_of_its_own() {
-        // The property carries NO default, so an absent key is refused instead of decoding as
-        // version 1. Without this test that is a property of the code nobody checks — and adding a
-        // default back would break nothing else in the suite.
         assertFailsWith<SerializationException> {
             Json.decodeFromString<BackupManifestDto>(manifestJsonText(manifestVersion = null))
         }
 
-        // The control: the identical document WITH the key decodes, so the refusal above is about
-        // that key and not about a typo somewhere else in the fixture.
         assertEquals(
             BACKUP_MANIFEST_VERSION,
             Json.decodeFromString<BackupManifestDto>(manifestJsonText(BACKUP_MANIFEST_VERSION)).manifestVersion,
@@ -102,9 +92,6 @@ class BackupManifestTest {
 
     @Test
     fun states_the_declared_version_even_when_it_is_not_the_current_one() {
-        // The manifest DESCRIBES bytes; it does not validate them. Reading the version off the raw
-        // JSON rather than off the decoded DTO is what makes that possible — `schemaVersion` carries
-        // a default, so a decoded payload always looks current whatever the file said.
         val payload = encodePayload(samplePayload()).decodeToString()
             .replace("\"schemaVersion\": $BACKUP_SCHEMA_VERSION", "\"schemaVersion\": 99")
 
@@ -113,10 +100,6 @@ class BackupManifestTest {
 
     @Test
     fun refuses_every_payload_it_cannot_describe() {
-        // Not a hypothetical guard against a user file — these bytes come from this app's own export
-        // seconds earlier, so every one of these is the defect path. `SerializationError`, never
-        // `ValidationError(BackupFileInvalid)`: that code is for `importFromJson`'s untrusted input,
-        // and this function is never handed that — see the class KDoc on `buildBackupManifest`.
         UNREADABLE_PAYLOADS.forEach { case ->
             assertFailsWith<DomainException.SerializationError>(message = case.label) {
                 buildBackupManifest(FILE_NAME, case.bytes)
@@ -126,13 +109,6 @@ class BackupManifestTest {
 
     @Test
     fun says_which_way_the_payload_was_unreadable() {
-        // ADR 009 hard constraint 4. One message shared by every cause is silent in the only sense
-        // that matters — the log would tell whoever is holding the outage nothing they did not
-        // already know. Each expected reason is spelled out rather than counted, so the GROUPING is
-        // reviewable too: the two `schemaVersion` cases deliberately share one reason, and the last
-        // two differ only by the version they print, which is what separates "a v1 file reached the
-        // manifest builder" from "the current shape grew a key this build has never seen" — both
-        // arrive as the same SerializationException.
         UNREADABLE_PAYLOADS.forEach { case ->
             val failure = assertFailsWith<DomainException.SerializationError> {
                 buildBackupManifest(FILE_NAME, case.bytes)
@@ -150,27 +126,13 @@ class BackupManifestTest {
     fun the_fixture_still_expects_seven_distinct_reasons() {
         val reasons = UNREADABLE_PAYLOADS.map { case -> case.reason }.toSet()
 
-        // Reads the EXPECTED strings, so it pins the fixture and NOT production: collapsing two
-        // reasons in `BackupManifestDto` leaves this green. `says_which_way_the_payload_was_unreadable`
-        // is what actually holds production to these messages; this one only stops a future edit from
-        // collapsing two expectations in lockstep with the code, which would let both tests agree on
-        // a regression. Named for what it guards, after a review found the old name
-        // (`the_reasons_that_are_meant_to_differ_actually_differ`) claiming the property its sibling
-        // owns.
-        //
-        // Seven distinct reasons over eight cases. The ONLY pair that shares a reason is the two
-        // unusable-`schemaVersion` shapes; in particular the two wrong-shape cases do not, because
-        // the version they print is the whole diagnostic.
         assertEquals(7, reasons.size, "reasons: $reasons")
     }
 }
 
 private class UnreadablePayload(val label: String, val bytes: ByteArray, val reason: String)
 
-/** One entry per way the bytes can fail, with the reason a log reader is supposed to see. */
 private val UNREADABLE_PAYLOADS: List<UnreadablePayload> = listOf(
-    // A lone 0xC3 opens a two-byte sequence that never arrives. The default `decodeToString` would
-    // repair it into U+FFFD and carry on describing a payload nobody can decode back.
     UnreadablePayload("truncated UTF-8", byteArrayOf(0xC3.toByte()), "its bytes are not valid UTF-8"),
     UnreadablePayload("not JSON at all", "not a snapshot".encodeToByteArray(), "it is not JSON"),
     UnreadablePayload("root is an array", "[]".encodeToByteArray(), "its root is not a JSON object"),
@@ -198,7 +160,6 @@ private val UNREADABLE_PAYLOADS: List<UnreadablePayload> = listOf(
     ),
 )
 
-/** A complete manifest document, with [manifestVersion] omitted entirely when it is null. */
 private fun manifestJsonText(manifestVersion: Int?): String {
     val version = manifestVersion?.let { value -> "\"manifestVersion\": $value," }.orEmpty()
     return """
@@ -214,7 +175,6 @@ private fun manifestJsonText(manifestVersion: Int?): String {
 
 private const val FILE_NAME = "justchill-2026-08-14T03-00-00.json"
 
-/** The same configuration `DefaultBackupRepository.exportToJson` writes real snapshots with. */
 private val exportLikeJson = Json {
     prettyPrint = true
     encodeDefaults = true
@@ -225,10 +185,6 @@ private fun encodePayload(payload: ExportPayloadDto): ByteArray =
 
 private fun samplePayloadBytes(): ByteArray = encodePayload(samplePayload())
 
-/**
- * Accents on purpose — "Ahorro año", "categoría" — so the bytes hashed here are the multi-byte UTF-8
- * the real Spanish ledger produces rather than an ASCII stand-in.
- */
 private fun samplePayload() = ExportPayloadDto(
     exportedAt = 1_755_000_000_000,
     appVersion = "v2.4.0",

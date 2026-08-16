@@ -34,20 +34,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
-/**
- * Registers the profile entries on the host: [ProfileRoute] and [PrivacyPolicyRoute].
- *
- * @param appVersion the version string shown in the profile footer, injected by the host.
- * @param commitHash the full sha the build came from, injected by the host and shown abbreviated in
- *   that same footer.
- * @param pendingImportJson reads the host's "backup file the user just picked" channel. It is a
- *   lambda, not a value, on purpose: `rememberDecoratedNavEntries` caches the built entries under
- *   `remember(backStack.toList())`, and the Android SAF import callback fires with no back-stack
- *   change at all — an entry closing over a plain value would keep reading `null` and the
- *   confirmation dialog would never open. Reading through the lambda keeps the snapshot read inside
- *   the entry's own composition scope, exactly where it happened before this split.
- * @param onImportHandled clears that channel, whether the user confirmed or dismissed.
- */
 fun EntryProviderScope<NavKey>.profileEntries(
     bindings: NavHostBindings,
     appVersion: String,
@@ -66,7 +52,6 @@ fun EntryProviderScope<NavKey>.profileEntries(
     }
 
     entry<PrivacyPolicyRoute> {
-        // Registered on both platforms; iOS never navigates here (privacy click is inert).
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         PrivacyPolicyScreen(
             onBack = { nav.pop() },
@@ -74,15 +59,6 @@ fun EntryProviderScope<NavKey>.profileEntries(
     }
 }
 
-// `clearPendingImport` rather than the caller's `onImportHandled`: compose-rules' ParameterNaming
-// rejects a past-tense lambda parameter on a composable, and this one is a command ("clear the
-// channel"), not an event, so it reads as one — same shape as NavHostBindings.showMessage.
-//
-// `nav` used to be a sixth parameter, built by the entry{} block above and handed down. It was
-// always derived from `bindings.backStack`, which is already here, and detekt caps a function at
-// five parameters — so it is built here instead. This composable IS the entry's body, so
-// rememberAppNavigator still runs inside the entry scope, which is the only thing that constraint
-// is about (see AppNavigator).
 @Composable
 private fun ProfileEntry(
     bindings: NavHostBindings,
@@ -105,9 +81,6 @@ private fun ProfileEntry(
                     tone = EmmSnackbarTone.Error,
                 )
 
-                // VM finished generating the backup; the platform layer owns the
-                // SAF write. No-op on iOS (export is gated off there, so this never
-                // fires).
                 is ProfileEffect.ExportReady -> bindings.platform.requestExport(effect.json)
 
                 is ProfileEffect.Notify -> bindings.snackbarHostState.showEmmSnackbar(
@@ -120,11 +93,6 @@ private fun ProfileEntry(
                         ProfileMessage.BackupNeedsAccount,
                         -> EmmSnackbarTone.Error
 
-                        // A chosen branch, not a default: EmmSnackbarTone only has two values today,
-                        // so SessionClosedLocallyOnly (the server-side revoke was not reached) is a
-                        // deliberate Success here rather than an unclassified fallback — the sign-out
-                        // the user asked for did succeed locally. The next message added to
-                        // ProfileMessage has to extend this list explicitly; there is no `else`.
                         ProfileMessage.SessionClosed,
                         ProfileMessage.SessionClosedLocallyOnly,
                         ProfileMessage.AccountDeleted,
@@ -168,9 +136,6 @@ private fun ProfileEntry(
         onSignOutClick = { vm.onIntent(ProfileIntent.SignOut) },
         onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccount) },
         onSyncNowClick = { vm.onIntent(ProfileIntent.SyncNow) },
-        // Unlike the export above, this is NOT gated on platform.supportsBackup: that flag is about
-        // the SAF file pickers this platform layer owns, and a snapshot cycle needs none of them.
-        // Its own gate is SNAPSHOT_BACKUP_ENABLED, which decides whether the row exists at all.
         onBackUpNowClick = { vm.onIntent(ProfileIntent.BackUpNow) },
         onCopyCommitHashClick = {
             clipboardScope.launch { copyCommitHash(clipboard, commitHash, bindings) }
@@ -178,17 +143,8 @@ private fun ProfileEntry(
     )
 }
 
-/** Label the system attaches to the clip; never shown inside the app. */
 private const val COMMIT_HASH_CLIP_LABEL = "Commit hash"
 
-/**
- * Puts the FULL sha on the clipboard and confirms it, on the versions that need confirming.
- *
- * Android 13 (TIRAMISU) added a system-drawn confirmation for every clipboard write, in the same
- * corner of the screen the app's snackbar occupies. Showing both would be two popups saying the
- * same thing, stacked. Below 33 nothing confirms the copy at all, so the app has to — through the
- * root snackbar this screen already reports every other outcome on, not a mechanism of its own.
- */
 private suspend fun copyCommitHash(clipboard: Clipboard, commitHash: String, bindings: NavHostBindings) {
     clipboard.setClipEntry(ClipData.newPlainText(COMMIT_HASH_CLIP_LABEL, commitHash).toClipEntry())
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
@@ -196,10 +152,6 @@ private suspend fun copyCommitHash(clipboard: Clipboard, commitHash: String, bin
     }
 }
 
-/**
- * Confirms the destructive half of a backup import: restoring a file replaces everything on the
- * device, so the user is asked once before the VM is told to do it.
- */
 @Composable
 private fun ImportConfirmationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val dialogColors = LocalEmmColors.current

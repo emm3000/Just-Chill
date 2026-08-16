@@ -22,8 +22,6 @@ class BackupMappersTest {
 
     private val json = Json { encodeDefaults = true }
 
-    // ── Account ──────────────────────────────────────────────────────────────
-
     @Test
     fun `Account roundtrip - entity to DTO to JSON to DTO to entity preserves all fields`() {
         val original = Account(
@@ -68,10 +66,8 @@ class BackupMappersTest {
 
     @Test
     fun `Account import ignores currency field - old JSON with USD does not fail`() {
-        // Simulates a backup JSON created by an old app version that stored "USD"
         val oldJson = """{"accountId":"acc-old","name":"Old Account","type":"Bank","currency":"USD"}"""
         val dto = Json.decodeFromString<AccountDto>(oldJson)
-        // toEntity() must not throw; currency field is ignored
         val entity = dto.toEntity()
         assertEquals(AccountId("acc-old"), entity.accountId)
         assertEquals(AccountType.Bank, entity.type)
@@ -79,15 +75,12 @@ class BackupMappersTest {
 
     @Test
     fun `Account import - missing currency field in JSON uses default PEN`() {
-        // Simulates a minimal future backup that omits the currency field entirely
         val minimalJson = """{"accountId":"acc-2","name":"Minimal","type":"Cash"}"""
         val dto = Json { ignoreUnknownKeys = true }.decodeFromString<AccountDto>(minimalJson)
         assertEquals("PEN", dto.currency)
         val entity = dto.toEntity()
         assertEquals(AccountId("acc-2"), entity.accountId)
     }
-
-    // ── Category ─────────────────────────────────────────────────────────────
 
     @Test
     fun `Category roundtrip - entity to DTO to JSON to DTO to entity preserves all fields`() {
@@ -123,8 +116,6 @@ class BackupMappersTest {
             assertEquals(categoryType, restored.categoryType)
         }
     }
-
-    // ── Transaction ──────────────────────────────────────────────────────────
 
     @Test
     fun `Transaction roundtrip - entity to DTO to JSON to DTO to entity preserves all fields`() {

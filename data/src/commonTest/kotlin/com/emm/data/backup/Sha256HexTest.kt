@@ -4,14 +4,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
-/**
- * [sha256Hex] against the PUBLISHED digests, not against itself.
- *
- * A suite that only asserted "the same input hashes the same twice" would prove the function is
- * deterministic and nothing else — every wrong digest is deterministic too. The vectors below are
- * FIPS 180-4's own (`""`, `"abc"`, and the 56-byte two-block message), so the test fails if okio is
- * swapped for something that is not SHA-256, or if `hex()` ever stops being lowercase.
- */
 class Sha256HexTest {
 
     @Test
@@ -32,8 +24,6 @@ class Sha256HexTest {
 
     @Test
     fun matches_the_published_two_block_digest() {
-        // The 448-bit vector — long enough to cross SHA-256's 512-bit block boundary, so it exercises
-        // the padding path that a single short message never reaches.
         val message = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
 
         assertEquals(
@@ -44,9 +34,6 @@ class Sha256HexTest {
 
     @Test
     fun hashes_the_utf8_bytes_of_an_accented_string() {
-        // "ñ" is one char and two UTF-8 bytes (C3 B1). The app's data is Spanish, so an account named
-        // "Ahorro año" is the ordinary case, not the exotic one — and it is exactly where a String
-        // overload that encoded internally could quietly pick a different encoding than the upload.
         assertEquals("c3b1", "ñ".encodeToByteArray().joinToString("") { byte -> byte.toHexPair() })
 
         assertEquals(
@@ -61,8 +48,6 @@ class Sha256HexTest {
 
     @Test
     fun a_different_encoding_of_the_same_text_is_a_different_digest() {
-        // The reason the signature takes bytes. UTF-16LE of "ñ" is F1 00 — same character, different
-        // bytes, different hash. Whatever is stored has to be what was hashed.
         val utf16le = byteArrayOf(0xF1.toByte(), 0x00)
 
         assertNotEquals(sha256Hex(utf16le), sha256Hex("ñ".encodeToByteArray()))

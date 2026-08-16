@@ -35,12 +35,6 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
-// Uses an in-memory JVM SQLite driver (app.cash.sqldelight:sqlite-driver) to exercise the full
-// SQLDelight schema — the atomicity of the transaction block and the actual queries.
-//
-// FK enforcement is switched ON here via PRAGMA, matching the Android driver callback. It used to
-// be off, which is why the import path could physically DELETE parent rows for years without any
-// test noticing that ON DELETE RESTRICT would reject it on a real device.
 class DefaultBackupRepositoryImportTest {
 
     private lateinit var driver: SqlDriver
@@ -48,17 +42,6 @@ class DefaultBackupRepositoryImportTest {
 
     private lateinit var repository: DefaultBackupRepository
 
-    /**
-     * Returns a DIFFERENT instant on every read — the current one, then a millisecond later.
-     *
-     * A clock that returns a constant cannot tell "read once" from "read per row": move the read
-     * inside the restore loop and every assertion still passes, because every read answers the
-     * same. Ticking makes the two observable, which is the only way a test can hold #6's
-     * once-per-write rule rather than just the weaker "the clock is injected".
-     *
-     * [instant] is settable so a test can put the next import at a chosen time instead of
-     * whatever the ticks have reached.
-     */
     private class TickingClock(var instant: Instant) : Clock {
         override fun now(): Instant = instant.also { instant += 1.milliseconds }
     }
@@ -86,10 +69,6 @@ class DefaultBackupRepositoryImportTest {
 
         val stats: ImportStats = repository.importFromJson(json)
 
-        // recurring = 0 is the OPPOSITE reading from the v1/v2 fixtures' identical zero. Their
-        // format cannot touch the table, so their zero means "none touched"; buildPayloadJson
-        // declares version 3 with an empty `recurringMovements`, so this one means "swept, and
-        // nothing carried to restore" — the count is of what landed after the sweep.
         assertEquals(ImportStats(accounts = 1, categories = 2, transactions = 3, recurring = 0), stats)
     }
 
@@ -125,7 +104,6 @@ class DefaultBackupRepositoryImportTest {
 
     @Test
     fun `empty payload succeeds with ImportStats zeros and wipes the DB`() = runTest {
-        // Seed some data first
         repository.importFromJson(buildPayloadJson(accounts = 1, categories = 1, transactions = 1))
 
         val stats = repository.importFromJson(EMPTY_PAYLOAD_JSON)
@@ -160,24 +138,11 @@ class DefaultBackupRepositoryImportTest {
         assertEquals(beforeAccounts, db.accountsQueries.all().executeAsList().size)
     }
 
-    // ── an untrusted file: rows the app cannot interpret ──────────────────────
-
-    /**
-     * The file is plain JSON in storage the user chose. It can have been hand-edited, truncated, or
-     * written by something else — so a row in it is not automatically a row this app can hold.
-     *
-     * Writing one anyway is the worst of the available options, and it is what used to happen: the
-     * column is NOT NULL so the INSERT succeeds, but every mapper on the read path drops the row.
-     * The movement is then invisible on every screen AND counted in the balance, which is precisely
-     * the "the total disagrees with the list" defect the whole occurredAt model exists to remove.
-     */
     @Test
     fun `a movement the app cannot read is not restored, and the balance still matches the ledger`() = runTest {
         val json = payloadWithTransactions(
             """{"transactionId":"tx-ok","type":"Income","amountCents":10000,"description":"Sueldo",""" +
                 """"occurredAt":"2026-05-23T09:33:20","accountId":"acc-1","categoryId":null}""",
-            // A hand-edited date: one-digit month and day, a space instead of the 'T'. No writer in
-            // the app can produce it, and nothing on the read path can parse it.
             """{"transactionId":"tx-broken","type":"Income","amountCents":777700,"description":"Roto",""" +
                 """"occurredAt":"2026-8-1 12:00","accountId":"acc-1","categoryId":null}""",
         )
@@ -185,8 +150,6 @@ class DefaultBackupRepositoryImportTest {
         repository.importFromJson(json)
 
         assertEquals(0, rawCount("SELECT COUNT(*) FROM transactions WHERE transactionId = 'tx-broken'"))
-        // The two numbers Home puts next to each other: the balance aggregate reads the column
-        // directly, the ledger goes through the mappers. They must fold the same rows.
         val balance = db.transactionsQueries.liveTotals().executeAsOne().balance
         val visible = db.transactionsQueries.all().executeAsList().asEntity().asExternalModel()
         assertEquals(visible.sumOf { it.amount.cents }, balance)
@@ -204,8 +167,6 @@ class DefaultBackupRepositoryImportTest {
 
         val stats = repository.importFromJson(json)
 
-        // "2 movimientos importados" for a file whose second movement is nowhere is a lie the user
-        // has no way to check — and the count is the only feedback the import gives.
         assertEquals(1, stats.transactions)
     }
 
@@ -220,16 +181,12 @@ class DefaultBackupRepositoryImportTest {
 
         val stats = repository.importFromJson(json)
 
-        // Same skip-the-row policy the storage mappers apply. One uninterpretable movement costs
-        // one movement — never the whole restore, and never a file reported as corrupt.
         assertEquals(1, stats.transactions)
         assertEquals(1, db.transactionsQueries.all().executeAsList().size)
     }
 
     @Test
     fun `a movement written without seconds restores in the canonical shape`() = runTest {
-        // The lenient parser accepts it, so it must not be dropped — but it is re-encoded on the
-        // way in, so two writes of the same moment cannot end up as two different strings.
         val json = payloadWithTransactions(
             """{"transactionId":"tx-short","type":"Income","amountCents":10000,"description":"Sueldo",""" +
                 """"occurredAt":"2026-05-23T09:33","accountId":"acc-1","categoryId":null}""",
@@ -240,17 +197,6 @@ class DefaultBackupRepositoryImportTest {
         assertEquals("2026-05-23T09:33:00", db.transactionsQueries.find("tx-short").executeAsOne().occurredAt)
     }
 
-    // ── a file older than the composite key ───────────────────────────────────
-
-    /**
-     * **Every backup file that exists today predates the composite key**, and the export that wrote
-     * them copied whatever pair the app had stored — mismatches included, since nothing checked.
-     *
-     * Under the key those rows no longer insert. The whole restore runs inside ONE transaction, so
-     * a raw constraint violation does not cost one movement: it rolls the import back and leaves
-     * the owner with the tombstone sweep and nothing else. That is the only safety net on a device
-     * holding real accumulated data, which is why the row lands uncategorized instead.
-     */
     @Test
     fun `a movement filed under a category of the other type restores uncategorized`() = runTest {
         val json = payloadWith(
@@ -265,7 +211,6 @@ class DefaultBackupRepositoryImportTest {
 
         val stats = repository.importFromJson(json)
 
-        // The movement, its amount and its type are the data. The category is a label.
         assertEquals(1, stats.transactions)
         val tx = db.transactionsQueries.find("tx-mismatch").executeAsOne()
         assertNull(tx.categoryId)
@@ -275,8 +220,6 @@ class DefaultBackupRepositoryImportTest {
 
     @Test
     fun `one mismatched movement does not cost the rest of the file`() = runTest {
-        // The assertion that says a stale pair is a lost label and not a lost backup: without the
-        // repair the constraint violation aborts the enclosing transaction and tx-ok never lands.
         val json = payloadWith(
             categoriesJson = listOf(
                 """{"categoryId":"cat-income","name":"Sueldo","icon":"i","color":"c","categoryType":"Income"}""",
@@ -293,15 +236,11 @@ class DefaultBackupRepositoryImportTest {
 
         assertEquals(2, stats.transactions)
         assertNull(db.transactionsQueries.find("tx-mismatch").executeAsOne().categoryId)
-        // ...and the matching pair keeps its category: a repair that stripped every id would also
-        // have passed the test above.
         assertEquals("cat-income", db.transactionsQueries.find("tx-ok").executeAsOne().categoryId)
     }
 
     @Test
     fun `a movement pointing at a category the file never carried restores uncategorized`() = runTest {
-        // The export drops dangling ids, so this shape only reaches the app from a hand-edited or
-        // truncated file — where it used to abort the entire restore on the FK.
         val json = payloadWith(
             categoriesJson = emptyList(),
             transactionsJson = listOf(
@@ -316,19 +255,6 @@ class DefaultBackupRepositoryImportTest {
         assertNull(db.transactionsQueries.find("tx-orphan").executeAsOne().categoryId)
     }
 
-    /**
-     * The parent half of the same problem, and the one the export cannot protect against.
-     *
-     * A recurring movement holds `(cat-1, Spend)`. The file redefines `cat-1` as an Income category
-     * and does not carry that template, so the v3 sweep tombstones it — **and the tombstone is
-     * exactly why the detach is still needed.** A tombstoned row is still physically there, still
-     * holding `(cat-1, Spend)`, and SQLite still refuses to change the category's type under it.
-     * Inside the single wrapping transaction that is not one failed row: it is the whole restore
-     * rolled back, after the sweep.
-     *
-     * So the row is read back through raw SQL below. `find` filters `deletedAt IS NULL` and can no
-     * longer see it at all, which is a fact about the sweep and not about the detach.
-     */
     @Test
     fun `a backup that redefines a category's type does not abort on the movements filed under it`() = runTest {
         repository.importFromJson(
@@ -360,8 +286,6 @@ class DefaultBackupRepositoryImportTest {
         assertEquals(1, stats.transactions, "the import must complete, not roll back")
         assertEquals("Income", db.categoriesQueries.find("cat-1").executeAsOne().categoryType)
         assertEquals("cat-1", db.transactionsQueries.find("tx-1").executeAsOne().categoryId)
-        // The template is still physically there — tombstoned, because this v3 file does not carry
-        // it — and it lost the label it could no longer hold.
         assertEquals(1, rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'rec-1'"))
         assertEquals(
             1,
@@ -369,12 +293,8 @@ class DefaultBackupRepositoryImportTest {
         )
     }
 
-    // ── the version probe ─────────────────────────────────────────────────────
-
     @Test
     fun `a file with no schemaVersion reads as version 1 rather than as an unreadable version`() = runTest {
-        // The key only started being written when there was a second version to tell apart, so its
-        // absence means "old file", not "from the future". Saying otherwise blames the wrong thing.
         val json = """{"exportedAt":0,"appVersion":"2.4.0","accounts":[""" +
             """{"accountId":"acc-1","name":"BCP","type":"Bank","currency":"PEN"}],"categories":[],""" +
             """"transactions":[{"transactionId":"tx-1","type":"Income","amountCents":450000,""" +
@@ -395,14 +315,6 @@ class DefaultBackupRepositoryImportTest {
         assertEquals(ValidationCode.BackupFileInvalid, ex.code)
     }
 
-    /**
-     * **The decode side of the defect this unit closes was already fixed — this pins that it stays
-     * fixed.** `decodePayload`'s `parse { }` wraps `importJson.decodeFromJsonElement<...>` in a
-     * `try`/`catch` on [kotlinx.serialization.SerializationException] and translates it to
-     * `ValidationError(BackupFileInvalid)` — a named, user-actionable reason, not a raw crash and
-     * not [DomainException.SerializationError]. `accounts` here is a string where the shape demands
-     * a list, which is exactly the mismatch that throws `SerializationException` inside the decode.
-     */
     @Test
     fun `a shape mismatch on decode is reported as an invalid file, not as SerializationError`() = runTest {
         val json = """{"schemaVersion":3,"exportedAt":0,"appVersion":"1.0.0","accounts":"not-a-list",""" +
@@ -417,8 +329,6 @@ class DefaultBackupRepositoryImportTest {
 
     @Test
     fun `a schemaVersion that is not a number is reported as corrupt, not as an unsupported version`() = runTest {
-        // It used to escape the guard entirely: the probe ran outside it, so the accessor's own
-        // throw reached the caller and the user got the generic failure instead of this one.
         listOf("""{"schemaVersion":{}}""", """{"schemaVersion":[]}""", """{"schemaVersion":"dos"}""").forEach { root ->
             val ex = assertFailsWith<DomainException.ValidationError>("root was $root") {
                 repository.importFromJson(root)
@@ -427,27 +337,10 @@ class DefaultBackupRepositoryImportTest {
         }
     }
 
-    // ── the stamp an import writes ────────────────────────────────────────────
-
-    /**
-     * Every row an import restores carries the SAME stamp, and it is the first tick of the
-     * injected clock — so the clock is read once for the whole import, not once per row.
-     *
-     * Both halves matter and the second is the one with teeth. `docs/DATE_AUDIT.md` #6 states that
-     * `:data` reads an injected `Clock` **once per write**; every other writer in the module already
-     * did, and this one was the exception, on the single path that rewrites every row the user owns
-     * at once. A constant fake clock cannot hold that rule — it answers the same however often it is
-     * asked — so [TickingClock] moves a millisecond per read and the equality below is what fails if
-     * the read migrates into the restore loop.
-     *
-     * The whole assertion was impossible before: the repository read `Clock.System` directly, so the
-     * timestamps an import produced were whatever the machine said while the suite ran.
-     */
     @Test
     fun `an import reads the clock once and stamps every restored row with it`() = runTest {
         repository.importFromJson(buildPayloadJson(accounts = 1, categories = 1, transactions = 1))
 
-        // The FIRST tick, and the only one: three tables, six columns, one value.
         val expected = FIRST_IMPORT.toEpochMilliseconds()
         assertEquals(expected, rawStamp("SELECT createdAt FROM accounts WHERE accountId = 'acc-1'"))
         assertEquals(expected, rawStamp("SELECT updatedAt FROM accounts WHERE accountId = 'acc-1'"))
@@ -457,17 +350,6 @@ class DefaultBackupRepositoryImportTest {
         assertEquals(expected, rawStamp("SELECT updatedAt FROM transactions WHERE transactionId = 'tx-1'"))
     }
 
-    /**
-     * The tombstone an import leaves behind carries the same instant as the rows it restores.
-     *
-     * The other half of reading the clock once, across the tombstone/restore boundary rather than
-     * across rows: the sweep and the restores are one atomic "make everything look like this file",
-     * so a row the file dropped must not sort before or after a row it kept. Against a ticking
-     * clock, a per-statement read would give them different values and this fails.
-     *
-     * It also pins what a re-import does NOT change — `createdAt` survives, because the insert is
-     * `INSERT OR IGNORE` and only `restoreFromBackup` writes `updatedAt`.
-     */
     @Test
     fun `a second import stamps its own instant, and the tombstone it leaves shares it`() = runTest {
         repository.importFromJson(buildPayloadJson(accounts = 2, categories = 1, transactions = 1))
@@ -476,20 +358,15 @@ class DefaultBackupRepositoryImportTest {
         repository.importFromJson(buildPayloadJson(accounts = 1, categories = 1, transactions = 1))
 
         val second = SECOND_IMPORT.toEpochMilliseconds()
-        // acc-2 is missing from the second file: tombstoned, stamped at the second import.
         assertEquals(second, rawStamp("SELECT deletedAt FROM accounts WHERE accountId = 'acc-2'"))
         assertEquals(second, rawStamp("SELECT updatedAt FROM accounts WHERE accountId = 'acc-2'"))
-        // acc-1 survives it and is re-stamped with the same instant, so the restore wins LWW.
         assertEquals(second, rawStamp("SELECT updatedAt FROM accounts WHERE accountId = 'acc-1'"))
         assertNull(rawStamp("SELECT deletedAt FROM accounts WHERE accountId = 'acc-1'"))
-        // ...but keeps the createdAt of the import that first brought it in — INSERT OR IGNORE.
         assertEquals(
             FIRST_IMPORT.toEpochMilliseconds(),
             rawStamp("SELECT createdAt FROM accounts WHERE accountId = 'acc-1'"),
         )
     }
-
-    // ── replace semantics: tombstones, not physical deletes ───────────────────
 
     @Test
     fun `rows missing from the backup are tombstoned so the deletion can sync`() = runTest {
@@ -497,7 +374,6 @@ class DefaultBackupRepositoryImportTest {
 
         repository.importFromJson(buildPayloadJson(accounts = 1, categories = 1, transactions = 1))
 
-        // Still physically present, but tombstoned and queued for push.
         assertEquals(2, rawCount("SELECT COUNT(*) FROM accounts"))
         assertEquals(
             1,
@@ -531,7 +407,6 @@ class DefaultBackupRepositoryImportTest {
                 "VALUES ('rec-1', 'Alquiler', 'Spend', 5000, '', 'cat-1', 'acc-1', 5, 1, 1)",
         )
 
-        // A physical DELETE of acc-1 would be rejected here by ON DELETE RESTRICT.
         repository.importFromJson(EMPTY_PAYLOAD_JSON)
 
         assertEquals(1, rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'rec-1'"))
@@ -545,23 +420,9 @@ class DefaultBackupRepositoryImportTest {
         repository.importFromJson(buildPayloadJson(accounts = 1, categories = 1, transactions = 1))
 
         assertEquals(1, rawCount("SELECT COUNT(*) FROM accounts WHERE userId = 'user-1'"))
-        // Re-queued for push: the restore is the newer write and must win LWW.
         assertEquals(1, rawCount("SELECT COUNT(*) FROM accounts WHERE syncState = 'Pending'"))
     }
 
-    /**
-     * The same guard for `recurring_movements`, which had none at all.
-     *
-     * All four `restoreFromBackup` statements write `syncState = 'Pending'` so the restore is the
-     * newer write and wins LWW; only the accounts one was asserted. Flipping the literal in
-     * `recurring_movements.sq` to `'Synced'` left this entire suite green — a restored template
-     * would sit unqueued, the push would skip it, and the device that owns the backup would keep
-     * serving the row the file just replaced.
-     *
-     * The SECOND import is what narrows this to `restoreFromBackup`: the row already exists, so
-     * `insertOrIgnoreFromBackup` — which writes a `'Pending'` literal of its own — does nothing,
-     * and the state read back can only have come from the UPDATE.
-     */
     @Test
     fun `a restored template is re-queued for push and keeps the userId it was claimed under`() = runTest {
         val json = payloadWith(
@@ -584,18 +445,6 @@ class DefaultBackupRepositoryImportTest {
         )
     }
 
-    // ── an untrusted file: templates the app cannot hold as written ───────────
-
-    /**
-     * An unknown `type` costs one template, never the file — the same policy the movement above
-     * follows, reached by a different argument.
-     *
-     * A template with an unknown type cannot skew a total the way a movement can: the recurring
-     * screen and `GetRecurringMonthlyTotals` fold the same list, and both drop it. It is dropped on
-     * the way in anyway because the invisible row is not inert — `countLiveByAccount` still counts
-     * it, and that is what tells the owner an account cannot be deleted because it still has
-     * recurring movements, on a screen showing none.
-     */
     @Test
     fun `a template with a type the app does not know is dropped rather than restored invisibly`() = runTest {
         val json = payloadWith(
@@ -611,22 +460,10 @@ class DefaultBackupRepositoryImportTest {
 
         assertEquals(0, rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'rec-weird'"))
         assertEquals(1, rawCount("SELECT COUNT(*) FROM recurring_movements WHERE id = 'rec-ok'"))
-        // ...and the count that blocks an account deletion sees the one template the user can see.
         assertEquals(1L, db.recurring_movementsQueries.countLiveByAccount("acc-1").executeAsOne())
-        // Same rule as `the reported count is what landed, not what the file held`, for this table:
-        // the dropped row must not inflate ImportStats.recurring either.
         assertEquals(1, stats.recurring)
     }
 
-    /**
-     * A `lastConfirmedPeriod` the app cannot read costs the MARK, not the template.
-     *
-     * `ensureNotSettled` orders this column as a plain string, so `"julio"` sorts above every real
-     * key and refuses every confirmation — while `pendingPeriods` parses it, gets null, and keeps
-     * listing those months as owed. The user is shown months they cannot confirm. Nulling it is the
-     * state the column already has a meaning for ("never settled"), the app's own skip action puts
-     * the mark back in one tap, and the name, amount, day and account the file did carry survive.
-     */
     @Test
     fun `a template whose settled mark is unreadable restores with no mark rather than being dropped`() = runTest {
         val json = payloadWith(
@@ -643,17 +480,6 @@ class DefaultBackupRepositoryImportTest {
         assertEquals(120_000L, restored.amount)
     }
 
-    /**
-     * The same repair, for the mark that reached a real device.
-     *
-     * A hand-edited v3 file carrying `"12345-07"` imported and the column still held `12345-07`:
-     * the re-encode canonicalized the month and passed the year through, because nothing bounded
-     * it. That value sorts above every real key, so the template refuses every confirmation as
-     * already-settled while offering nothing to confirm — silent, and permanent.
-     *
-     * Nulling it is the same answer `"julio"` gets, and it is reachable for the same reason: only a
-     * hand-edited file can carry a year `periodKey` could not have written.
-     */
     @Test
     fun `a settled mark whose year the app could not have written restores with no mark`() = runTest {
         val json = payloadWith(
@@ -669,18 +495,6 @@ class DefaultBackupRepositoryImportTest {
         assertEquals("Alquiler", restored.name)
     }
 
-    /**
-     * The same repair, for the year a *length* bound let through — the worse half of the same defect.
-     *
-     * `periodKey` never pads the year, so `"0999-07"` is as unwritable as `"12345-07"`. A four-
-     * character check accepted it anyway, and the re-encode then made it worse rather than better:
-     * year 999 renders as `"999-07"`, which the parser rejects, so the column ends up holding a mark
-     * `pendingPeriods` reads as "never settled" while `ensureNotSettled`'s string comparison reads
-     * `"999-07" >= "2026-08"` as settled. Confirm throws, skip throws, and the months stay on screen.
-     *
-     * Null is the answer for the same reason it is `"12345-07"`'s: the mark is the only field the app
-     * can rebuild, and only a hand-edited file can carry a year `periodKey` could not have written.
-     */
     @Test
     fun `a settled mark whose year was padded to four characters restores with no mark`() = runTest {
         val json = payloadWith(
@@ -698,9 +512,6 @@ class DefaultBackupRepositoryImportTest {
 
     @Test
     fun `a settled mark the parser accepts is re-encoded into the shape the comparison needs`() = runTest {
-        // "2026-7" parses as July and sorts ABOVE "2026-08" as a string, so a value copied through
-        // verbatim would settle August by accident. The column is written from the parsed value for
-        // the same reason `occurredAt` is.
         val json = payloadWith(
             categoriesJson = emptyList(),
             transactionsJson = emptyList(),
@@ -712,16 +523,6 @@ class DefaultBackupRepositoryImportTest {
         assertEquals("2026-07", db.recurring_movementsQueries.find("rec-1").executeAsOne().lastConfirmedPeriod)
     }
 
-    /**
-     * **The test that pins WHERE the templates are restored, not just that they are.**
-     *
-     * The file redefines `cat-1` from Spend to Income and carries a template holding the new pair.
-     * Templates go last, after every category in the file is written, so `usableCategoryId` reads
-     * `typeOf(cat-1)` as Income and the pair agrees. Move the restore ahead of the categories loop
-     * and it reads the pre-import world — Spend, since a sweep tombstones a category without
-     * rewriting its type — decides the pair disagrees, and the template lands uncategorized with
-     * nothing on screen to say so.
-     */
     @Test
     fun `a template keeps the category the FILE gives it, not the one the device still held`() = runTest {
         repository.importFromJson(
@@ -748,8 +549,6 @@ class DefaultBackupRepositoryImportTest {
 
     @Test
     fun `a template filed under a category of the other type restores uncategorized`() = runTest {
-        // The export's scrub keeps this out of any file the app writes, so it only arrives
-        // hand-edited — where the composite key would otherwise roll the whole import back.
         val json = payloadWith(
             categoriesJson = listOf(
                 """{"categoryId":"cat-spend","name":"Café","icon":"i","color":"c","categoryType":"Spend"}""",
@@ -765,26 +564,6 @@ class DefaultBackupRepositoryImportTest {
         assertEquals("Income", restored.type)
     }
 
-    // ── the two fields a restore must not invent ──────────────────────────────
-    //
-    // These two moved here from `DefaultBackupRepositoryTest`, where they rebuilt the template out
-    // of the exported DTO with a test-local mapper because the production restore did not exist yet.
-    // They proved the EXPORT carried each field and nothing about what a restore did with it — so
-    // the exact failure this format version exists to prevent, a restore stamping `createdAt = now`
-    // and swallowing every owed past period, left both of them green.
-    //
-    // They now run the whole round trip against a real database: export, import, read the row back
-    // through the production mappers, and hand the result to the real `pendingPeriods`. What is
-    // protected is the pending list, not a field, and a field assertion would pass for a value that
-    // no longer produces it.
-
-    /**
-     * **The loss this guards: a restore re-mints a month the user already settled.**
-     *
-     * `lastConfirmedPeriod` is the high-water mark `pendingPeriods` counts from. A restore that
-     * dropped it would hand back a template owing every month since its creation, so the app asks
-     * for a rent and a salary the ledger already holds and a confirmation writes the duplicate.
-     */
     @Test
     fun `a restored template keeps the mark it was settled through, so the app does not re-mint it`() = runTest {
         val settledThroughJuly = NEVER_CONFIRMED.copy(lastConfirmedPeriod = "2026-07")
@@ -792,20 +571,9 @@ class DefaultBackupRepositoryImportTest {
         val restored = assertNotNull(roundTrip(settledThroughJuly))
 
         assertEquals("2026-07", restored.lastConfirmedPeriod)
-        // June and July are settled; only the current month is still owed. Drop the mark on the way
-        // through and this list grows back to three.
         assertEquals(listOf("2026-08"), owedPeriodsOf(restored))
     }
 
-    /**
-     * **The opposite loss, and the silent one: a restore swallows the months still owed.**
-     *
-     * `createdAt` floors the catch-up window — a template owes nothing from before it existed. Every
-     * other restore path in the app stamps `createdAt = now`, and doing that here raises the floor to
-     * the restore month: no error, no row, nothing on screen, the rent for June and July simply never
-     * asked about again. The import's own instant is [FIRST_IMPORT], August, which is exactly the
-     * value that would look plausible in the column.
-     */
     @Test
     fun `a restored template keeps its own createdAt, so the months it still owes survive`() = runTest {
         val restored = assertNotNull(roundTrip(NEVER_CONFIRMED))
@@ -814,19 +582,6 @@ class DefaultBackupRepositoryImportTest {
         assertEquals(listOf("2026-06", "2026-07", "2026-08"), owedPeriodsOf(restored))
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────────
-
-    /**
-     * [template] through the real export and the real import, read back as the app would read it.
-     *
-     * Null when the restored row is one the production mapper refuses — the same answer the recurring
-     * list screen would give, since it maps every row through this exact function.
-     *
-     * The template is written into the database rather than stubbed onto a repository mock: the
-     * export reads `db` inside one transaction and holds no collaborators to stub. Its account goes
-     * in first because `recurring_movements.accountId` is a real foreign key and this suite runs with
-     * enforcement on.
-     */
     private suspend fun roundTrip(template: RecurringMovement): RecurringMovement? {
         db.accountsQueries.insert(
             accountId = template.accountId.value,
@@ -860,7 +615,6 @@ class DefaultBackupRepositoryImportTest {
             ?.asExternalModelOrNull()
     }
 
-    /** Every period [template] still owes as of [TODAY], as "YYYY-MM" keys. */
     private fun owedPeriodsOf(template: RecurringMovement): List<String> =
         pendingPeriods(template, TODAY, TimeZone.UTC).map(::periodKey)
 
@@ -870,12 +624,6 @@ class DefaultBackupRepositoryImportTest {
 
     private fun rawCount(sql: String): Long = rawStamp(sql) ?: 0L
 
-    /**
-     * The first column of the first row as a NULLABLE Long — for reading a stamp back off a row.
-     *
-     * Nullable on purpose: `deletedAt` is null on a live row, and collapsing that to 0 would let
-     * "this row was never tombstoned" pass an assertion about when it was.
-     */
     private fun rawStamp(sql: String): Long? = driver.executeQuery(
         identifier = null,
         sql = sql,
@@ -886,17 +634,6 @@ class DefaultBackupRepositoryImportTest {
         parameters = 0,
     ).value
 
-    /**
-     * Builds a minimal valid JSON payload. Account IDs are sequential to ensure uniqueness.
-     * Transaction accountId always references "acc-1" which is in the accounts list.
-     *
-     * **`schemaVersion` here must track [BACKUP_SCHEMA_VERSION].** This suite is what covers the
-     * current reader branch; the per-version fixtures frozen in `BackupV1CompatibilityTest` and
-     * `BackupV2CompatibilityTest` cover the old ones. Leaving a stale number here does not fail —
-     * the old branch still restores it — it just quietly moves every test in this file onto a frozen
-     * reader, which is how the current branch ends up with no coverage at all. The number is written
-     * out rather than interpolated so the next bump has to look at these bytes.
-     */
     private fun buildPayloadJson(accounts: Int, categories: Int, transactions: Int): String {
         val accountsJson = (1..accounts).joinToString(",") { i ->
             """{"accountId":"acc-$i","name":"Cuenta $i","type":"Cash","currency":"PEN"}"""
@@ -922,11 +659,9 @@ class DefaultBackupRepositoryImportTest {
         """.trimIndent()
     }
 
-    /** One account, no categories, and exactly the transaction JSON the test wrote by hand. */
     private fun payloadWithTransactions(vararg transactionsJson: String): String =
         payloadWith(categoriesJson = emptyList(), transactionsJson = transactionsJson.toList())
 
-    /** One account, plus exactly the category, transaction and template JSON the test wrote by hand. */
     private fun payloadWith(
         categoriesJson: List<String>,
         transactionsJson: List<String>,
@@ -943,12 +678,6 @@ class DefaultBackupRepositoryImportTest {
         }
     """.trimIndent()
 
-    /**
-     * One template as JSON, written out rather than serialized from [RecurringMovementDto].
-     *
-     * A fixture generated from the DTO renames itself along with the field it was meant to pin, and
-     * three of these tests exist to feed the reader values no DTO would ever produce.
-     */
     private fun template(
         id: String,
         type: String = "Spend",
@@ -965,27 +694,13 @@ class DefaultBackupRepositoryImportTest {
         const val EMPTY_PAYLOAD_JSON = """{"schemaVersion":3,"exportedAt":0,"appVersion":"1.0.0",""" +
             """"accounts":[],"categories":[],"transactions":[],"recurringMovements":[]}"""
 
-        // Two instants an hour apart. Stated, so the rows an import writes have a value to be
-        // compared against rather than whatever the machine happened to read.
         val FIRST_IMPORT: Instant = Instant.parse("2026-08-11T15:04:05Z")
         val SECOND_IMPORT: Instant = Instant.parse("2026-08-11T16:04:05Z")
 
-        /**
-         * 2026-06-10, and the zone below only has to be STATED, not real: the assertions turn on
-         * which month a floor lands in, and midday is nowhere near a month boundary in any offset.
-         */
         val TEMPLATE_CREATED: Long = Instant.parse("2026-06-10T12:00:00Z").toEpochMilliseconds()
 
         val TODAY = LocalDate(2026, 8, 13)
 
-        /**
-         * Created in June 2026 and never settled, so it owes June, July and August.
-         *
-         * `lastConfirmedPeriod` is null and `createdAt` is the only thing holding the catch-up floor
-         * down; the two round-trip guards above each move exactly one of them. Uncategorized on
-         * purpose — the file carries no categories, and a category the file does not carry is a
-         * different guard's subject.
-         */
         val NEVER_CONFIRMED = RecurringMovement(
             id = RecurringMovementId("rec-1"),
             name = "Alquiler",

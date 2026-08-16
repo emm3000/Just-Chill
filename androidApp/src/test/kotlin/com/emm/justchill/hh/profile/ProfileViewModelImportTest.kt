@@ -63,9 +63,6 @@ class ProfileViewModelImportTest {
         every { all() } returns flowOf(emptyList())
     }
 
-    // Nothing here asserts the export stamp — that lives in ProfileViewModelTest — but the clock is
-    // still stated rather than read: no test in this repo should reintroduce the ambient default
-    // the constructor just lost.
     private val fixedClock = object : Clock {
         override fun now(): Instant = Instant.parse("2026-08-11T15:04:05Z")
     }
@@ -171,7 +168,7 @@ class ProfileViewModelImportTest {
         val vm = buildViewModel()
 
         vm.onIntent(ProfileIntent.ExportRequested)
-        advanceUntilIdle() // suspended at gate — op == Exporting
+        advanceUntilIdle()
 
         assertEquals(ProfileOp.Exporting, vm.state.value.op)
 
@@ -181,8 +178,6 @@ class ProfileViewModelImportTest {
         vm.onIntent(ProfileIntent.ImportJson("{}"))
         advanceUntilIdle()
 
-        // The guard no longer swallows silently (docs/archive/sync/AUDIT.md §8) — it still runs no import,
-        // but it now reports through the shared OperationInProgress notify.
         assertTrue(
             effects.singleOrNull() == ProfileEffect.Notify(ProfileMessage.OperationInProgress),
             "Expected exactly one OperationInProgress notify, got: $effects",
