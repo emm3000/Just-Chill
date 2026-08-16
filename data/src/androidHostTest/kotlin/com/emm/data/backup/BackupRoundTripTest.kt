@@ -49,7 +49,7 @@ class BackupRoundTripTest {
     fun `the file declares the current schema version and every live row`() = runTest {
         val payload = exportedPayload()
 
-        assertEquals(BACKUP_SCHEMA_VERSION, payload.schemaVersion)
+        assertEquals(3, payload.schemaVersion)
         assertEquals(EXPORTED_AT, payload.exportedAt)
         assertEquals(APP_VERSION, payload.appVersion)
         assertEquals(LIVE_ACCOUNTS, payload.accounts.size)
@@ -62,7 +62,15 @@ class BackupRoundTripTest {
     fun `the restored database holds exactly the live rows the file carried`() = runTest {
         val stats = roundTrip()
 
-        assertEquals(ImportStats(LIVE_ACCOUNTS, LIVE_CATEGORIES, LIVE_TRANSACTIONS, LIVE_RECURRING), stats)
+        assertEquals(
+            ImportStats(
+                accounts = LIVE_ACCOUNTS,
+                categories = LIVE_CATEGORIES,
+                transactions = LIVE_TRANSACTIONS,
+                recurring = LIVE_RECURRING,
+            ),
+            stats,
+        )
         assertEquals(LIVE_ACCOUNTS.toLong(), totalRows("accounts"))
         assertEquals(LIVE_CATEGORIES.toLong(), totalRows("categories"))
         assertEquals(LIVE_TRANSACTIONS.toLong(), totalRows("transactions"))
@@ -74,11 +82,9 @@ class BackupRoundTripTest {
         roundTrip()
 
         val walletAccount = account("acc-wallet")
-        assertEquals("acc-wallet", walletAccount.accountId)
         assertEquals("Yape", walletAccount.name)
         assertEquals("Wallet", walletAccount.type)
         val bankAccount = account("acc-bank")
-        assertEquals("acc-bank", bankAccount.accountId)
         assertEquals("BCP", bankAccount.name)
         assertEquals("Bank", bankAccount.type)
     }
@@ -126,7 +132,6 @@ class BackupRoundTripTest {
         roundTrip()
 
         val incomeTransaction = transaction("tx-income")
-        assertEquals("tx-income", incomeTransaction.transactionId)
         assertEquals("Income", incomeTransaction.type)
         assertEquals(4500_00L, incomeTransaction.amount)
         assertEquals("Sueldo mayo", incomeTransaction.description)
@@ -159,7 +164,6 @@ class BackupRoundTripTest {
         roundTrip()
 
         val activeTemplate = template("rec-active")
-        assertEquals("rec-active", activeTemplate.id)
         assertEquals("Alquiler", activeTemplate.name)
         assertEquals("Spend", activeTemplate.type)
         assertEquals(1200_00L, activeTemplate.amount)
@@ -177,20 +181,12 @@ class BackupRoundTripTest {
 
         val pausedTemplate = template("rec-paused")
         assertEquals("Gimnasio", pausedTemplate.name)
+        assertEquals("Income", pausedTemplate.type)
         assertNull(pausedTemplate.amount)
         assertNull(pausedTemplate.categoryId)
         assertNull(pausedTemplate.lastConfirmedPeriod)
         assertEquals(20L, pausedTemplate.dayOfMonth)
         assertEquals(0L, pausedTemplate.isActive)
-    }
-
-    @Test
-    fun `a template keeps its own createdAt and settled mark, unlike every other row`() = runTest {
-        roundTrip()
-
-        assertEquals(ACTIVE_TEMPLATE_CREATED, template("rec-active").createdAt)
-        assertEquals("2026-07", template("rec-active").lastConfirmedPeriod)
-        assertEquals(PAUSED_TEMPLATE_CREATED, template("rec-paused").createdAt)
     }
 
     @Test
@@ -207,7 +203,7 @@ class BackupRoundTripTest {
     }
 
     @Test
-    fun `a claimed row comes back unclaimed - the restore never writes userId`() = runTest {
+    fun `a row missing from the device comes back unclaimed - the restore never writes userId`() = runTest {
         roundTrip()
 
         assertNull(account("acc-wallet").userId)
@@ -241,9 +237,93 @@ class BackupRoundTripTest {
         assertEquals(0L, rowsWithId("recurring_movements", "id", "rec-dead"))
     }
 
+    @Test
+    fun `an account already on the device gets every field the file carries, not the stale local values`() = runTest {
+        roundTripOnPopulatedDb()
+
+        val walletAccount = account("acc-wallet")
+        assertEquals("Yape", walletAccount.name)
+        assertEquals("Wallet", walletAccount.type)
+        val bankAccount = account("acc-bank")
+        assertEquals("BCP", bankAccount.name)
+        assertEquals("Bank", bankAccount.type)
+        assertEquals("PEN", bankAccount.currency)
+    }
+
+    @Test
+    fun `a category already on the device gets every field the file carries, not the stale local values`() = runTest {
+        roundTripOnPopulatedDb()
+
+        val incomeCategory = category("cat-income")
+        assertEquals("Sueldo", incomeCategory.name)
+        assertEquals("work", incomeCategory.icon)
+        assertEquals("#00FF00", incomeCategory.color)
+        assertEquals("Income", incomeCategory.categoryType)
+        val spendCategory = category("cat-spend")
+        assertEquals("Comida", spendCategory.name)
+        assertEquals("food", spendCategory.icon)
+        assertEquals("#FF0000", spendCategory.color)
+        assertEquals("Spend", spendCategory.categoryType)
+    }
+
+    @Test
+    fun `a transaction already on the device gets every field the file carries, not the stale local values`() =
+        runTest {
+            roundTripOnPopulatedDb()
+
+            val incomeTransaction = transaction("tx-income")
+            assertEquals("Income", incomeTransaction.type)
+            assertEquals(4500_00L, incomeTransaction.amount)
+            assertEquals("Sueldo mayo", incomeTransaction.description)
+            assertEquals("2026-05-23T09:33:20", incomeTransaction.occurredAt)
+            assertEquals("cat-income", incomeTransaction.categoryId)
+            assertEquals("acc-wallet", incomeTransaction.accountId)
+            val spendTransaction = transaction("tx-spend")
+            assertEquals("Spend", spendTransaction.type)
+            assertEquals(150_00L, spendTransaction.amount)
+            assertEquals("Menu del dia", spendTransaction.description)
+            assertEquals("2026-05-24T13:20:00", spendTransaction.occurredAt)
+            assertEquals("cat-spend", spendTransaction.categoryId)
+            assertEquals("acc-bank", spendTransaction.accountId)
+        }
+
+    @Test
+    fun `a template already on the device gets every field the file carries, not the stale local values`() = runTest {
+        roundTripOnPopulatedDb()
+
+        val activeTemplate = template("rec-active")
+        assertEquals("Alquiler", activeTemplate.name)
+        assertEquals("Spend", activeTemplate.type)
+        assertEquals(1200_00L, activeTemplate.amount)
+        assertEquals("Depa", activeTemplate.description)
+        assertEquals("cat-spend", activeTemplate.categoryId)
+        assertEquals("acc-bank", activeTemplate.accountId)
+        assertEquals("Monthly", activeTemplate.frequency)
+        assertEquals(5L, activeTemplate.dayOfMonth)
+        assertEquals(1L, activeTemplate.isActive)
+        assertEquals(ACTIVE_TEMPLATE_CREATED, activeTemplate.createdAt)
+        assertEquals("2026-07", activeTemplate.lastConfirmedPeriod)
+
+        val pausedTemplate = template("rec-paused")
+        assertEquals("Gimnasio", pausedTemplate.name)
+        assertEquals("Income", pausedTemplate.type)
+        assertNull(pausedTemplate.amount)
+        assertNull(pausedTemplate.categoryId)
+        assertNull(pausedTemplate.lastConfirmedPeriod)
+        assertEquals(20L, pausedTemplate.dayOfMonth)
+        assertEquals(0L, pausedTemplate.isActive)
+        assertEquals(PAUSED_TEMPLATE_CREATED, pausedTemplate.createdAt)
+    }
+
     private suspend fun roundTrip(): ImportStats {
         val json = repository.exportToJson(exportedAt = EXPORTED_AT, appVersion = APP_VERSION)
         wipePhysically()
+        return repository.importFromJson(json)
+    }
+
+    private suspend fun roundTripOnPopulatedDb(): ImportStats {
+        val json = repository.exportToJson(exportedAt = EXPORTED_AT, appVersion = APP_VERSION)
+        staleTheLiveRows()
         return repository.importFromJson(json)
     }
 
@@ -256,6 +336,45 @@ class BackupRoundTripTest {
         assertEquals(0L, totalRows("recurring_movements"))
         assertEquals(0L, totalRows("categories"))
         assertEquals(0L, totalRows("accounts"))
+    }
+
+    private fun staleTheLiveRows() {
+        driver.execute(null, "UPDATE transactions SET categoryId = NULL WHERE deletedAt IS NULL", 0)
+        driver.execute(null, "UPDATE recurring_movements SET categoryId = NULL WHERE deletedAt IS NULL", 0)
+        driver.execute(
+            null,
+            "UPDATE categories SET name = 'Stale', icon = 'stale-icon', color = '#111111', " +
+                "categoryType = CASE categoryId WHEN 'cat-income' THEN 'Spend' ELSE categoryType END " +
+                "WHERE deletedAt IS NULL",
+            0,
+        )
+        driver.execute(
+            null,
+            "UPDATE accounts SET name = 'Stale', type = 'Cash', currency = 'XXX' WHERE deletedAt IS NULL",
+            0,
+        )
+        driver.execute(
+            null,
+            "UPDATE transactions SET " +
+                "type = CASE type WHEN 'Income' THEN 'Spend' ELSE 'Income' END, " +
+                "amount = 1, description = 'Stale', occurredAt = '2020-01-01T00:00:00', " +
+                "accountId = CASE accountId " +
+                "WHEN 'acc-wallet' THEN 'acc-bank' WHEN 'acc-bank' THEN 'acc-wallet' ELSE accountId END " +
+                "WHERE deletedAt IS NULL",
+            0,
+        )
+        driver.execute(
+            null,
+            "UPDATE recurring_movements SET " +
+                "name = 'Stale', type = CASE type WHEN 'Income' THEN 'Spend' ELSE 'Income' END, " +
+                "amount = 1, description = 'Stale', frequency = 'Weekly', dayOfMonth = 28, " +
+                "isActive = CASE isActive WHEN 1 THEN 0 ELSE 1 END, lastConfirmedPeriod = '2020-01', " +
+                "createdAt = 0, " +
+                "accountId = CASE accountId " +
+                "WHEN 'acc-wallet' THEN 'acc-bank' WHEN 'acc-bank' THEN 'acc-wallet' ELSE accountId END " +
+                "WHERE deletedAt IS NULL",
+            0,
+        )
     }
 
     private suspend fun exportedPayload(): ExportPayloadDto =
@@ -335,6 +454,24 @@ class BackupRoundTripTest {
             accountId = "acc-wallet",
         )
         insertTransaction(
+            transactionId = "tx-extra-1",
+            type = "Spend",
+            amount = 10_00L,
+            description = "Extra",
+            occurredAt = "2026-05-26T09:00:00",
+            categoryId = null,
+            accountId = "acc-wallet",
+        )
+        insertTransaction(
+            transactionId = "tx-extra-2",
+            type = "Spend",
+            amount = 20_00L,
+            description = "Extra",
+            occurredAt = "2026-05-27T09:00:00",
+            categoryId = null,
+            accountId = "acc-bank",
+        )
+        insertTransaction(
             transactionId = "tx-dead",
             type = "Spend",
             amount = 999_00L,
@@ -360,6 +497,7 @@ class BackupRoundTripTest {
         insertTemplate(
             id = "rec-paused",
             name = "Gimnasio",
+            type = "Income",
             amount = null,
             description = "Mensualidad",
             categoryId = null,
@@ -367,6 +505,26 @@ class BackupRoundTripTest {
             dayOfMonth = 20L,
             isActive = 0L,
             createdAt = PAUSED_TEMPLATE_CREATED,
+        )
+        insertTemplate(
+            id = "rec-extra-1",
+            name = "Extra 1",
+            amount = null,
+            description = "Extra",
+            categoryId = null,
+            accountId = "acc-wallet",
+            dayOfMonth = 10L,
+            createdAt = SEEDED_AT,
+        )
+        insertTemplate(
+            id = "rec-extra-2",
+            name = "Extra 2",
+            amount = null,
+            description = "Extra",
+            categoryId = null,
+            accountId = "acc-bank",
+            dayOfMonth = 15L,
+            createdAt = SEEDED_AT,
         )
         insertTemplate(
             id = "rec-dead",
@@ -454,6 +612,7 @@ class BackupRoundTripTest {
     private fun insertTemplate(
         id: String,
         name: String,
+        type: String = "Spend",
         amount: Long?,
         description: String,
         categoryId: String?,
@@ -466,7 +625,7 @@ class BackupRoundTripTest {
         db.recurring_movementsQueries.insert(
             id = id,
             name = name,
-            type = "Spend",
+            type = type,
             amount = amount,
             description = description,
             categoryId = categoryId,
@@ -487,8 +646,8 @@ class BackupRoundTripTest {
 
         const val LIVE_ACCOUNTS = 3
         const val LIVE_CATEGORIES = 2
-        const val LIVE_TRANSACTIONS = 3
-        const val LIVE_RECURRING = 2
+        const val LIVE_TRANSACTIONS = 5
+        const val LIVE_RECURRING = 4
 
         val EXPORTED_AT: Long = Instant.parse("2026-08-16T10:00:00Z").toEpochMilliseconds()
         val IMPORTED_AT: Instant = Instant.parse("2026-08-16T11:30:00Z")
