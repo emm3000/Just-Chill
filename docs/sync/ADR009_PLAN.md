@@ -1044,19 +1044,54 @@ the same `SNAPSHOT_BACKUP_ENABLED` gate as "Respaldar ahora".
   apart: only the ViewModel holds the session *and* the health *and* the staleness answer at once.
   So the discrimination lives in the UI-facing state instead, as `BackupRowUi` in `ProfileUiState.kt`,
   mirroring the `SyncRowUi` precedent whose KDoc already stated the principle: resolved in one place,
-  not scattered across the composable. Seven variants, precedence in this order —
-  `NeedsAccount` > `BackingUp` > `Unreadable` > `Failed` > `Never` > `Stale` > `UpToDate`.
-- **Two of those positions are load-bearing rather than arbitrary.** `NeedsAccount` outranks
-  `BackingUp` because a cycle still in flight when the session ends would otherwise render
-  "Respaldando…" to a signed-out user, describing work being done for an account they just left.
-  And **a failure does not outrank the snapshot itself**: `takeSnapshot` skips the due-check for a
-  manual request, so "automatic cycle succeeds at 09:00, user taps Respaldar ahora at 10:00 on bad
+  not scattered across the composable.
+- **The shape is two-level, not one precedence chain**, and this entry said otherwise for two
+  commits — as did both KDocs. There is no single order; there is a first level that answers what
+  needs no database, and a second that describes the snapshot once it is known to exist:
+
+  ```
+  resolveBackupRow    not signed in ......... NeedsAccount
+                      a cycle is running .... BackingUp
+                      no watermark .......... failing ? Failed(reason, None) : Never
+                      a watermark ........... ↓
+  snapshotRow         staleness read threw .. failing ? Failed(reason, AgeUnknown) : Unreadable
+                      otherwise ............. failing ? Failed(reason, DaysAgo(days, isStale))
+                                                      : isStale ? Stale : UpToDate
+  ```
+
+  This repo treats prose as contract, so three copies of a wrong one were three chances to be
+  believed. Corrected on review, along with everything below it.
+- **A failure never replaces the snapshot; it annotates it.** `takeSnapshot` skips the due-check for
+  a manual request, so "automatic cycle succeeds at 09:00, user taps Respaldar ahora at 10:00 on bad
   wifi" is an ordinary sequence — and `alreadyBackedUpOn` then blocks every automatic cycle from
   clearing the streak until midnight. Ranking the failure first hid "backed up today" for the rest
   of the day, under a row whose title promises exactly that fact, on a device whose data was safe.
-  `Failed` therefore carries `lastBackupDaysAgo` and the copy shows both facts; `null` there —
-  failing with nothing backed up at all — is the genuinely alarming case and the only one that takes
-  the `danger` token. Found by review, not by the gate.
+  `Failed` therefore carries what the failure is happening *over*. `NeedsAccount` outranking
+  `BackingUp` is load-bearing for the same class of reason: a cycle still in flight when the session
+  ends would otherwise render "Respaldando…" to a signed-out user. Found by review, not by the gate.
+- **That "over" is a `LastSnapshot` sealed type — `None` / `AgeUnknown` / `DaysAgo(days, isStale)` —
+  and not the `Int?` it started as.** The nullable reintroduced exactly the ambiguity `Unreadable`
+  exists to remove: `null` meant "no snapshot" and the copy shouted "Sin respaldo", with nothing in
+  the type stopping it from describing a device that had one. It held only because one function
+  constructed it. The third case is not hypothetical — it is what a failing device whose staleness
+  read throws now degrades to, instead of dropping a five-cycle streak for the weaker sentence
+  `Unreadable` carries. Second review round.
+- **Severity escalates with the ledger's real risk, not with "something failed".** `danger` means the
+  ledger is not protected **and will not become protected on its own**, which reads two ways: nothing
+  backed up at all (`LastSnapshot.None`), or a snapshot the staleness rule already calls stale while
+  cycles keep failing. The second was missing, and the case that exposed it is ordinary on the
+  author's own device: a refresh token dies, every cycle fails, the snapshot ages — and the row
+  settled on amber permanently, because severity could only escalate through `None`. A plain `Stale`
+  stays amber precisely because the next trigger fixes it; a failing one will not. `AgeUnknown` stays
+  amber too — not knowing an age is not evidence it is old. The rule lives in `BackupRowUi.severity()`
+  in `:presentation` rather than in the composable, because it reads a domain verdict (`isStale`) and
+  SwiftUI has to reach the same answer. Second review round.
+- **A reason that names an action says it however old the snapshot is.** The first version spent the
+  line on the age alone once a snapshot existed, which silenced the one reason whose action is not
+  obvious — `Unauthorized` needs the user to sign in again, and "no pude actualizar" never said so.
+  Copy is now `<what this device has> · <what to do>`: "Hace 30 días · vuelve a iniciar sesión",
+  "Hoy · revisa tu conexión", and the generic "no pude actualizar" only where no reason names an
+  action. Second review round.
 - **Warn on the count, never on the reason** — 3a-ii's trap, now with a test that fails when it is
   reintroduced. `BackupRowUi.Failed` is chosen on `consecutiveFailures > 0`; the reason is carried
   only to pick wording and has a null branch, because `(5, null)` is reachable.
@@ -1104,7 +1139,12 @@ the same `SNAPSHOT_BACKUP_ENABLED` gate as "Respaldar ahora".
   `onEach`, not `launchSafe`: an escaping exception cancels `viewModelScope` and freezes all of
   Perfil. The catch is broad on purpose — the use case also converts an epoch-millis watermark to a
   `LocalDate`, and `kotlinx.datetime` raises `DateTimeArithmeticException`, not a `DomainException`,
-  for an out-of-range value. It logs through `DiagnosticsLogger` rather than swallowing silently.
+  for an out-of-range value. It logs through `DiagnosticsLogger` rather than swallowing silently, and
+  it now keeps the failure streak (`Failed(reason, AgeUnknown)`) instead of discarding it;
+  `Unreadable` is the not-failing case, and only that.
+- **A failing row cannot also say "hay cambios sin respaldar".** The line has no room for the age,
+  the action and the dirty half at once, so the dirty half is what the `danger` token carries
+  instead. A reader who wants the sentence has to read the colour.
 
 ### Phase 4 — restore confidence (the flag's gate)
 
