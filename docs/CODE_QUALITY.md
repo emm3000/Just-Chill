@@ -83,6 +83,27 @@ matches nothing, `Preview` works. Getting this wrong put four extra screens into
   moment one dead method was deleted (`2e7aa81` — the three types dropped 12 → 11 functions), and
   their comments still claimed an overage that no longer existed.
 
+## Comments
+
+**Default is zero comments. A comment exists only to state a constraint the code cannot show — the
+why, never the what.** Adopted 2026-08-15, after the ADR 009 review loops left defensive comment
+bloat: writers talking to the next reviewer, not to the next reader.
+
+- **Test (a diff can fail it):** delete the comment mentally. If no *constraint* is lost — only a
+  restatement of what the code says — it is noise; delete it for real. If the *what* is unclear
+  without it, rename or extract a function instead of commenting.
+- Survivors of that test: product decisions invisible in code (the exclusive `>` on
+  `BACKUP_STALE_AFTER_DAYS`), warnings about non-obvious consequences, invariants no test pins,
+  deliberate duplication markers, and `@Suppress` justifications (the Suppression policy above).
+- A kept comment is 1–3 lines of present-tense fact. **Zero history:** a sentence describing what
+  the code used to be, what replaced what, or what a review said is deleted — never rephrased.
+- **No KDoc by default** — on any class, property, or function, exported to iOS or not. If removing
+  the history leaves only a paraphrase of the signature, the whole KDoc goes.
+- **Diagrams: one source, maximum.** The backup-row precedence ASCII diagram existed in three
+  places; three copies is a divergence liability, not documentation.
+- A comment that promises more than the code delivers is worse than none; reviews already caught
+  KDocs doing exactly that.
+
 ## The acronyms — verdict table
 
 Each **in** row carries the test that makes a finding falsifiable:

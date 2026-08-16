@@ -15,9 +15,9 @@
   unit — the move, the fix, the doc, the slice. Model tier per the policy below.
 - **Reviewer** (delegated sub-agent, fresh context, a **different agent instance** — no shared
   context with the writer): adversarial double-check of the writer's commit. Finds breakage or risky
-  changes the gate can't catch. **Always Opus, no exception, regardless of blast radius** — full
-  rationale in the Model tier policy below. Not to be confused with Judgment Day's judges, a separate,
-  on-demand two-panel protocol with its own (narrower) Sonnet carve-out.
+  changes the gate can't catch. **Always Opus when it runs — but it no longer runs on every unit**:
+  the Review policy below decides whether a unit gets one. Not to be confused with Judgment Day's
+  judges, a separate, on-demand two-panel protocol with its own (narrower) Sonnet carve-out.
 
 ## The loop
 
@@ -77,7 +77,34 @@ Before delegating, map the unit cheaply so the writer prompt is precise:
 
 ### 5. Decide
 - **SHIP** → report to user, move to the next unit.
-- **FIX-FIRST** → send findings back to the writer agent (or a fix agent) and re-review.
+- **FIX-FIRST** → send findings back to the writer agent (or a fix agent). No re-review by default —
+  see the Review policy cap below.
+
+## Review policy — risk-tiered and capped (2026-08-15)
+
+Adopted after ADR 009 Phase 3 unit 3b, where the loop went recursive: two SHIP verdicts, then a fix
+round, then a pending "review of the fixes" — rounds reviewing rounds, never converging. Rounds 1–2
+caught real product bugs the gate cannot see; round 3 caught copy. The cap keeps the part that pays
+and kills the tail.
+
+**Cap: at most one review + one fix round per unit.**
+- SHIP → done. Fixes that follow a SHIP verdict (nits, copy) are covered by the gate, not by another
+  review round.
+- FIX-FIRST → writer fixes → done. One exception: a fix touching a finding the reviewer tagged
+  **CRITICAL** gets one re-review, scoped to that finding only.
+
+**Tiering: the full adversarial review runs only where nothing else catches the error.**
+- **Reviewed (mandatory):** Supabase/SQLDelight schema or migrations, backup/restore correctness,
+  auth, DI graph changes, the iOS-exported surface (`:presentation` commonMain), `.github/` — the
+  same list that mandates Opus judges for Judgment Day.
+- **Gate-only (no reviewer):** UI composition, copy, presentation-layer wiring, docs, tests-only
+  changes, mechanical refactors. The reinforced gate plus the orchestrator's cheap-verify is the
+  whole check.
+- A unit spanning both tiers gets one review scoped to its high-risk part.
+
+Rationale: this app has no third-party users and the author runs the release daily on real data. The
+one irreversible failure is data loss. A wrong row in Perfil behind a flag is cheap to fix later;
+the review budget belongs to the paths that are not.
 
 ## The reinforced gate (every unit)
 ```bash
@@ -138,10 +165,10 @@ single highest-risk spot; the full ledger and landmines are in `docs/archive/kmp
 - **Tiebreaker for code writers: Sonnet writes where the compiler or a test catches the error. Opus
   writes where nothing catches it.** In this repo the "nothing catches it" list IS the `## Gotchas`
   section of `CLAUDE.md`.
-- **The reviewer (step 4 of the loop) is always Opus — no exception, no blast-radius carve-out.** Its
-  entire job is the zone where the compiler, the tests, and `qualityGate` catch nothing, so lowering
-  its tier removes its reason to exist; it also reads and reports rather than writing, which makes it
-  the cheapest agent in the loop to run at the top tier.
+- **The reviewer (step 4 of the loop) is always Opus — the Review policy decides whether it runs,
+  never its tier.** Its entire job is the zone where the compiler, the tests, and `qualityGate` catch
+  nothing, so lowering its tier removes its reason to exist; it also reads and reports rather than
+  writing, which makes it the cheapest agent in the loop to run at the top tier.
 - **Judgment Day's two-judge blind panel is Opus, with `model` passed explicitly on every Agent
   call.** This carve-out is scoped to that panel only: Sonnet judges only when blast radius is low
   (UI, formatters, tests, docs) — NOT when the diff is merely small, and NEVER for the reviewer above.
