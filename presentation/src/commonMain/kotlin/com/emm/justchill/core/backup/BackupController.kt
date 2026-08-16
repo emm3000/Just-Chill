@@ -46,6 +46,18 @@ interface BackupController {
     val events: Flow<BackupEvent>
 
     /**
+     * Standing backup health for the signed-in account: last verified snapshot, failure streak and
+     * the reason for the newest failure. See [BackupHealth].
+     *
+     * A `StateFlow` rather than another event, and the distinction is the whole reason this member
+     * exists next to [events]: a failure the user was not looking at when it happened still has to be
+     * readable when they next open Perfil, and an event with no replay is gone by then. It is
+     * persisted underneath, so it also survives process death — a failure indicator a restart resets
+     * would tell a device whose backups have failed all week that everything is fine.
+     */
+    val health: StateFlow<BackupHealth>
+
+    /**
      * Ask for a backup. Overlapping calls collapse safely.
      *
      * @param manual when true the cycle skips the dirty check and the once-a-day cap, and its

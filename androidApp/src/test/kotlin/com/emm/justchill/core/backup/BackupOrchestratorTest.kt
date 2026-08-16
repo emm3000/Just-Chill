@@ -4,6 +4,8 @@ import com.emm.data.backup.backupSnapshotName
 import com.emm.domain.auth.AuthUser
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
+import com.emm.domain.shared.backup.BackupFailureReason
+import com.emm.domain.shared.backup.BackupFailureState
 import com.emm.domain.shared.backup.BackupMetadataStore
 import com.emm.domain.shared.backup.BackupPruneReport
 import com.emm.domain.shared.backup.BackupPruner
@@ -75,12 +77,20 @@ class BackupOrchestratorTest {
      * that overrides one — the throwing session flow, the failing prune — states its stub before it
      * builds the orchestrator, and a builder that re-stubbed would silently undo it and leave the
      * test asserting the happy path under a name promising the opposite.
+     *
+     * The three health stubs are flat values on purpose: every cycle now touches the failure streak,
+     * but nothing in THIS class asserts on it. The streak's own behaviour — increment, reset,
+     * per-account isolation — belongs to `BackupOrchestratorHealthTest`, which fakes the store for
+     * real instead.
      */
     @Before
     fun setUp() {
         every { observeSession.invoke() } returns sessionFlow
         coEvery { backupRepository.exportToJson(any(), any()) } returns PAYLOAD
         coEvery { pruner.prune() } returns BackupPruneReport(kept = 1, deleted = 0, failedDeletes = emptyList())
+        every { metadata.lastSuccessfulBackupAt(any()) } returns null
+        every { metadata.failureState(any()) } returns BackupFailureState.None
+        every { metadata.recordFailure(any(), any()) } returns BackupFailureState(1, BackupFailureReason.Unknown)
     }
 
     private fun TestScope.buildOrchestrator(now: Instant = NOW, zone: TimeZone = TimeZone.UTC): BackupOrchestrator {

@@ -3,10 +3,13 @@ package com.emm.justchill.core.backup
 import com.emm.data.backup.backupSnapshotName
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
+import com.emm.domain.shared.backup.BackupFailureReason
+import com.emm.domain.shared.backup.BackupFailureState
 import com.emm.domain.shared.backup.BackupMetadataStore
 import com.emm.domain.shared.backup.BackupPruner
 import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.BackupUploader
+import com.emm.domain.shared.backup.toBackupFailureReason
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.logging.DiagnosticsLogger
 import kotlinx.coroutines.CancellationException
@@ -40,8 +43,18 @@ import kotlin.time.Instant
  * existed with zero callers. This is the caller. It owns the *decision* and the *concurrency*, and
  * no step of the pipeline itself — a step that fails belongs to whichever port it came from.
  *
- * It is also the [BackupController] the shared UI consumes: [isBackingUp] while a cycle runs, and
- * one [BackupEvent] per **manually requested** cycle. Both are argued on the port, not here.
+ * It is also the [BackupController] the shared UI consumes: [isBackingUp] while a cycle runs, one
+ * [BackupEvent] per **manually requested** cycle, and [health] as a standing per-account fact. All
+ * three are argued on the port, not here.
+ *
+ * ### Health is per-account, persisted, and written only for the account a cycle actually ran as
+ *
+ * A verified success clears the failure streak beside the watermark it records; a failure increments
+ * it and names the reason ([toBackupFailureReason]). Both writes sit inside — or take — the same
+ * captured account the watermark does, because a cycle outlives the session that started it: booking
+ * a failure against whoever is signed in *now*, for a cycle that ran as someone else, is the bug the
+ * watermark's re-check already exists to prevent. See [publishHealth] for the read side of the same
+ * split, and [takeSnapshot] for why [SnapshotOutcome.OwnerChanged] increments nothing at all.
  *
  * ### The decision, in order
  *
@@ -94,7 +107,7 @@ import kotlin.time.Instant
  * @param backupRepository produces the snapshot and answers the dirty question.
  * @param uploader         stores it and proves it arrived intact; returning normally IS the proof.
  * @param pruner           retention, run after a success and never allowed to fail the cycle.
- * @param metadata         the per-user last-successful-backup watermark this class writes.
+ * @param metadata         the per-user backup watermark and failure streak this class writes.
  * @param observeSession   session-status flow; the gate and the source of the user id.
  * @param appVersion       stamped into the export payload; a qualified String from the platform module.
  * @param clock            read ONCE per cycle, for the payload stamp, the name and the watermark.
@@ -132,6 +145,13 @@ class BackupOrchestrator(
     // SyncOrchestrator's buffered channel, and deliberately so.
     private val _events = MutableSharedFlow<BackupEvent>(replay = 0, extraBufferCapacity = 1)
     override val events: Flow<BackupEvent> = _events.asSharedFlow()
+
+    // Seeded from persistence by the session gate — NOT in this initialiser, which has no account to
+    // read and would have to invent one. Until a session resolves (and forever if start() is never
+    // called, which is what SNAPSHOT_BACKUP_ENABLED being false does) this stays None, which
+    // BackupHealth's KDoc spells out means "nothing known" rather than "healthy".
+    private val _health = MutableStateFlow(BackupHealth.None)
+    override val health: StateFlow<BackupHealth> = _health.asStateFlow()
 
     // CONFLATED: the concurrent-operation guard. Overlapping triggers collapse into at most one
     // queued run behind the active one, and a single consumer drains it — so two uploads can never
@@ -257,12 +277,21 @@ class BackupOrchestrator(
             observeSession().flatMapLatest { status ->
                 when (status) {
                     is SessionStatus.Authenticated -> {
-                        currentUserId = status.user.userId
+                        val userId = status.user.userId
+                        currentUserId = userId
+                        // Health is per-account, so signing in is when this device learns what it
+                        // has to say about THIS one — including a failure streak left behind by a
+                        // process that died, which is the whole point of persisting it.
+                        publishHealth(userId, metadata.failureState(userId))
                         merge(backgroundEvents, resumeEvents)
                     }
 
                     else -> {
                         currentUserId = null
+                        // Not "healthy": nothing is known, because nobody is signed in. Leaving the
+                        // previous account's streak on screen after a sign-out would attribute one
+                        // user's outage to whoever signs in next.
+                        _health.value = BackupHealth.None
                         flowOf()
                     }
                 }
@@ -329,8 +358,12 @@ class BackupOrchestrator(
         val manual = manualRequestPending
         manualRequestPending = false
         _isBackingUp.value = true
+        // Captured ONCE, outside the try, because the catch has to book the failure against the
+        // account this cycle ran as. Reading currentUserId again down there would record whoever the
+        // session collector has installed by the time the failure lands — the mirror image of the
+        // mistake takeSnapshot's post-upload re-check exists to prevent.
+        val userId: String? = currentUserId
         try {
-            val userId = currentUserId
             if (userId == null) {
                 // A manual request reaching here with no session means the session ended between
                 // ProfileViewModel's tap-time check and this consumer draining the request — see
@@ -344,12 +377,18 @@ class BackupOrchestrator(
             throw e
         } catch (e: Exception) {
             val kind = if (manual) "manual" else "auto"
+            val failure: DomainException = e.asDomainException()
+            val reason: BackupFailureReason = failure.toBackupFailureReason()
+            // A cycle with no session never reached the pipeline and has no account to count
+            // against; every other failure increments the captured account's streak.
+            val streak: Int = if (userId == null) 0 else recordFailure(userId, reason)
             logger.warn(
-                "backup cycle failed ($kind): ${e::class.simpleName}. " +
+                "backup cycle failed ($kind): reason=$reason, consecutive failures=$streak, " +
+                    "${e::class.simpleName}. " +
                     "The last-successful watermark is untouched, so the next trigger retries.",
                 e,
             )
-            if (manual) _events.tryEmit(BackupEvent.Failed(e.asDomainException()))
+            if (manual) _events.tryEmit(BackupEvent.Failed(failure))
         } finally {
             _isBackingUp.value = false
         }
@@ -371,6 +410,43 @@ class BackupOrchestrator(
             SnapshotOutcome.NotDue -> null
         }
         if (event != null) _events.tryEmit(event)
+    }
+
+    /**
+     * Books one failure against [userId] and returns the new streak length.
+     *
+     * The write is unconditional and the publish is not: a cycle that ran as A genuinely failed as A
+     * whatever the session did afterwards, so A's streak is the truth and it is stored — but the
+     * value on [health] describes the account signed in now, and [publishHealth] is where that
+     * distinction is enforced.
+     *
+     * Unlike a *false watermark*, a recorded failure suppresses nothing: it gates no cap, delays no
+     * trigger, and only ever adds a line to what the user is told. That asymmetry is why this write
+     * needs no `stillTheSameAccount` guard of its own while the watermark does.
+     */
+    private fun recordFailure(userId: String, reason: BackupFailureReason): Int {
+        val state: BackupFailureState = metadata.recordFailure(userId, reason)
+        publishHealth(userId, state)
+        return state.consecutiveFailures
+    }
+
+    /**
+     * Publishes [state] as [userId]'s health — **and only while [userId] is still the signed-in
+     * account**.
+     *
+     * The read of the watermark happens here rather than at the call sites so that health is always
+     * assembled from what is actually stored, including the watermark a success wrote a statement
+     * earlier. A mismatch on [currentUserId] drops the publish silently: the value is already
+     * persisted, the account it belongs to will read it on its next sign-in, and the account signed
+     * in right now must not inherit it.
+     */
+    private fun publishHealth(userId: String, state: BackupFailureState) {
+        if (currentUserId != userId) return
+        _health.value = BackupHealth(
+            lastSuccessfulBackupAt = metadata.lastSuccessfulBackupAt(userId),
+            consecutiveFailures = state.consecutiveFailures,
+            lastFailureReason = state.lastReason,
+        )
     }
 
     /**
@@ -409,6 +485,22 @@ class BackupOrchestrator(
      * The [SnapshotOutcome] it returns exists so [report] can tell those two non-events apart. A
      * `Boolean` could not: "no snapshot" covers both a cycle that had nothing to do and one whose
      * account vanished under it, and only the second is something a tap should hear about.
+     *
+     * ### [SnapshotOutcome.OwnerChanged] increments no failure counter, deliberately
+     *
+     * It is a **refusal, not a failure**, and the difference is not bookkeeping: the export ran, the
+     * upload was accepted and the read-back verified it, so nothing in the pipeline is broken and a
+     * streak claiming otherwise would send whoever reads it looking for an outage that does not
+     * exist. There is also nobody to count it against — [userId] left, and the account that arrived
+     * did nothing wrong. The one thing genuinely worth knowing here is that a snapshot went
+     * unrecorded, and the `logger.warn` below is what says so. A manual tap still hears a failure
+     * through [report]; that is a different question, since the *tap* really did fail to produce a
+     * recorded backup.
+     *
+     * The uploader's own account-switch refusal (thrown before the first byte) is NOT this branch:
+     * it arrives at [runBackup]'s catch as an ordinary [DomainException.Unauthorized], type-identical
+     * to a genuinely expired session, and is counted. Separating those two would mean matching on
+     * message text, which is not a distinction worth building on.
      */
     private suspend fun takeSnapshot(userId: String, manual: Boolean): SnapshotOutcome {
         val takenAt: Instant = clock.now()
@@ -428,13 +520,19 @@ class BackupOrchestrator(
         val stillTheSameAccount: Boolean = currentUserId == userId
         if (stillTheSameAccount) {
             metadata.setLastSuccessfulBackupAt(userId, takenAt.toEpochMilliseconds())
+            // The streak is cleared beside the watermark, under the same guard: a verified snapshot
+            // is the only evidence that whatever was failing has stopped, and a streak that survived
+            // its own fix would keep a warning on screen for a device that is backing up fine.
+            metadata.clearFailures(userId)
+            publishHealth(userId, BackupFailureState.None)
             prune()
         } else {
             logger.warn(
                 "backup upload finished for an account that is no longer signed in; the watermark " +
-                    "is NOT recorded and retention was skipped. Recording it would mark $userId " +
-                    "backed up for the day on the strength of a snapshot this device can no longer " +
-                    "see, and suppress the real one.",
+                    "is NOT recorded, the failure streak is left exactly as it was, and retention " +
+                    "was skipped. Recording the watermark would mark $userId backed up for the day " +
+                    "on the strength of a snapshot this device can no longer see, and suppress the " +
+                    "real one.",
             )
         }
         return if (stillTheSameAccount) SnapshotOutcome.Recorded else SnapshotOutcome.OwnerChanged
