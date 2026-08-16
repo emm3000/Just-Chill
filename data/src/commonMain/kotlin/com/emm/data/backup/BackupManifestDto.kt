@@ -203,7 +203,6 @@ private const val NO_VERSION_KEY = "it declares no $SCHEMA_VERSION_KEY"
 private const val VERSION_NOT_A_NUMBER = "its $SCHEMA_VERSION_KEY is not a number"
 private const val WRONG_SHAPE = "it does not decode as the current snapshot shape"
 
-@Suppress("SwallowedException")
 private inline fun <T> readingPayload(reason: String, block: () -> T): T = try {
     block()
 } catch (e: CharacterCodingException) {
@@ -219,13 +218,13 @@ private inline fun <T> readingPayload(reason: String, block: () -> T): T = try {
  * KDoc's "Anything unreadable here..." paragraph for why this file's bytes are never an untrusted
  * user file.
  *
- * [cause] is null only at the two call sites that read [SCHEMA_VERSION_KEY] and find it absent or
- * not a number: nothing threw there, the value was simply judged unusable. A [SerializationException]
- * carrying [reason] is synthesized for those so [DomainException.SerializationError] — which, like
- * [DomainException.Unknown] and [DomainException.NetworkUnavailable], always carries a real cause —
- * still gets one, rather than the site inventing its own ad hoc null-cause exception.
+ * [cause] is genuinely null at the two call sites that read [SCHEMA_VERSION_KEY] and find it absent
+ * or not a number: nothing threw there, the value was simply judged unusable, and it is passed
+ * through as null rather than papered over with a fabricated exception — see
+ * [DomainException.SerializationError]'s own KDoc for why. [reason] already carries the diagnostic
+ * either way; it is in [message], not in the cause chain.
  */
 private fun payloadUnreadable(reason: String, cause: Throwable?): DomainException = DomainException.SerializationError(
-    cause = cause ?: SerializationException(reason),
+    cause = cause,
     message = "Backup payload cannot be described by a manifest: $reason.",
 )

@@ -50,7 +50,15 @@ sealed class DomainException(message: String, cause: Throwable? = null) : Except
      * for a FILE the reader does not trust and rejects on purpose; this is the pipeline's own
      * encoder or decoder failing on data it already trusts (e.g. a snapshot just read from the
      * local database, not yet handed to anyone).
+     *
+     * [cause] is nullable, like [ValidationError]'s — deliberately unlike [Unknown] and
+     * [NetworkUnavailable], which always wrap a real caught throwable. Most call sites here do too,
+     * but at least one (`BackupManifestDto.payloadUnreadable`'s absent- or non-numeric-`schemaVersion`
+     * branches) judges the payload's shape unusable without anything having thrown — a JSON accessor
+     * returned null rather than raising. A `cause` fabricated to fill that gap would plant a
+     * synthetic stack frame in whatever later reads this exception's cause chain — Crashlytics
+     * included — that looks like a real trace pointing at code that never ran. Absence stays absent.
      */
-    class SerializationError(cause: Throwable, message: String = cause.message ?: "Serialization error") :
+    class SerializationError(cause: Throwable?, message: String = cause?.message ?: "Serialization error") :
         DomainException(message, cause)
 }

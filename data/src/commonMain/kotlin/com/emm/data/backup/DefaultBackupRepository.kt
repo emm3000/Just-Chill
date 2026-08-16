@@ -245,7 +245,6 @@ class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock
      * for a shape mismatch and [IllegalArgumentException] both for an enum value it does not know
      * and for a JSON element that is not the shape the accessor demanded.
      */
-    @Suppress("SwallowedException")
     private inline fun <T> parse(block: () -> T): T = try {
         block()
     } catch (e: SerializationException) {
