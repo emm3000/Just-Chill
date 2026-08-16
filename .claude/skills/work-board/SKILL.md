@@ -5,7 +5,7 @@ license: Apache-2.0
 allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 metadata:
   author: "emm"
-  version: "1.0"
+  version: "2.0"
 ---
 
 ## Activation Contract
@@ -14,35 +14,24 @@ Load when planning a unit of work, closing one, recording a defect or invariant 
 
 ## Hard Rules
 
-- The board's rules live in `docs/work/README.md`. Read it. Never restate them here or in another doc — a rule in two places diverges.
-- Never write a list of ticket names into any file. The index is `eza docs/work/backlog`.
-- Never write chronicle into a ticket or an epic: why a past round decided something, how finished work operates. That belongs in the commit message and engram.
-- Verify a constraint against the source before writing it. A plan in this repo asserted `BackupOrchestrator` holds the shared `SyncMutex`; the file contains no lock at all. Prose is never verified, so a false claim in it survives indefinitely.
-- Every `Done when` entry must be observably true or false. "Improve the flow" is not one.
+- Read `docs/work/README.md` first. It is the only source of the board's rules; nothing below repeats one. If a rule appears in both places, delete it here.
+- Verify a constraint against the source before writing it into an epic. A plan in this repo asserted `BackupOrchestrator` holds the shared `SyncMutex`; the file contains no lock at all. Prose is never verified, so a false claim in it survives indefinitely.
+- Tick a `Done when` box only after the check that proves it has run. Name that check when reporting.
 
 ## Decision Gates
 
-| The fact | Goes to |
-|---|---|
-| Work with a fix and an end state | new ticket in `backlog/` |
-| Describes how the system IS; a writer could break it by accident | epic `## Constraints` |
-| Why a decision was made, or how closed work operates | commit message + engram |
-| A rule for operating the board itself | `docs/work/README.md` |
-
-Test: **if it has a fix, it is a ticket, not a constraint.**
+**If it has a fix, it is a ticket, not a constraint.** A constraint describes how the system is and can be broken by accident; a defect describes how the system is wrong and gets closed.
 
 ## Execution Steps
 
-1. Take: `git mv docs/work/backlog/<id>-*.md docs/work/doing/`.
-2. Tick a `Done when` box only after the check that proves it has run.
-3. Close: `git mv docs/work/doing/<id>-*.md docs/work/done/`, in the same commit as the code it describes.
-4. New ticket: copy `assets/ticket.md`, take the next free `E<NN>-<NN>`. Never reuse or renumber a retired ID.
-5. Defect found mid-work: open a new ticket. Do not widen the ticket in `doing/`.
-6. After moving or archiving any doc: `git grep -l '<old-path>' -- ':!docs/archive'` and repoint every hit.
+1. On taking a ticket, re-verify its `Done when` against current code. Correct the ticket first if the code moved under it.
+2. Close it in the same commit as the code it describes.
+3. Defect found mid-work: open a new ticket. Never widen the ticket in `doing/`.
+4. After moving or archiving any doc: `git grep -l '<old-path>' -- ':!docs/archive'` and repoint every hit.
 
 ## Output Contract
 
-Report the ticket IDs touched and their new directory, plus any ticket created. Never report a `Done when` as met without naming the check that proved it.
+Report the ticket IDs touched and their new directory, plus any ticket created, plus the check that proved each box ticked.
 
 ## References
 
