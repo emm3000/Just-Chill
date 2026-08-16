@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.di
 
 import com.emm.domain.shared.backup.BackupMetadataStore
+import com.emm.domain.shared.backup.GetBackupStalenessUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.justchill.core.appScopeQualifier
 import com.emm.justchill.core.backup.BackupController
@@ -19,6 +20,12 @@ import org.koin.dsl.module
 // since slice H).
 val backupModule = module {
     factoryOf(::ImportDataUseCase)
+
+    // ADR 009 Phase 3's "warning state when staleness exceeds 3 days with pending mutations".
+    // Resolves its BackupRepository, Clock and TimeZone by type — the constructor DSL is enough
+    // here, and AppGraphKoinTest's sentinel sweep is what proves the last two are the graph's and
+    // not defaults (this class has none, by docs/DATE_AUDIT.md rule 7).
+    factoryOf(::GetBackupStalenessUseCase)
 
     // Domain port: the backup watermark seam (ADR 009 2c-iii-a), bound in the backup feature's own
     // module — NOT syncModule, which Phase 5 deletes outright.

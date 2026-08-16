@@ -22,3 +22,21 @@ interface BackupRepository {
      */
     suspend fun latestLocalChangeAt(): Long?
 }
+
+/**
+ * Has anything changed locally that the last recorded backup does not already hold?
+ *
+ * The one place that sentence is spelled, because two callers ask it for different purposes and a
+ * second spelling would let them disagree on screen: `BackupOrchestrator` asks it to decide whether
+ * an automatic cycle is worth a network round trip, and [GetBackupStalenessUseCase] asks it to
+ * decide whether the user is warned. A device the orchestrator considers clean must never be one the
+ * warning calls dirty.
+ *
+ * @param latestLocalChangeAt [BackupRepository.latestLocalChangeAt]. A `null` is the four backed-up
+ *   tables holding no row at all — structurally distinct from `0`, because SQLDelight types the
+ *   column `Long?` — and an empty ledger is nothing to back up.
+ * @param lastSuccessfulBackupAt the last verified snapshot's watermark. A `null` is a device that
+ *   has never completed one, which is dirty as soon as it holds anything.
+ */
+fun hasLocalChangesSince(latestLocalChangeAt: Long?, lastSuccessfulBackupAt: Long?): Boolean =
+    latestLocalChangeAt != null && (lastSuccessfulBackupAt == null || latestLocalChangeAt > lastSuccessfulBackupAt)

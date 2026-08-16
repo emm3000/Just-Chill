@@ -9,6 +9,7 @@ import com.emm.domain.shared.backup.BackupMetadataStore
 import com.emm.domain.shared.backup.BackupPruner
 import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.BackupUploader
+import com.emm.domain.shared.backup.hasLocalChangesSince
 import com.emm.domain.shared.backup.toBackupFailureReason
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.logging.DiagnosticsLogger
@@ -565,10 +566,16 @@ class BackupOrchestrator(
         return if (stillTheSameAccount) SnapshotOutcome.Recorded else SnapshotOutcome.OwnerChanged
     }
 
-    /** Dirty first, then the daily cap — and `&&` is what keeps that order real, not just written. */
+    /**
+     * Dirty first, then the daily cap — and `&&` is what keeps that order real, not just written.
+     *
+     * The dirtiness half is [hasLocalChangesSince], in `:domain` beside the method it interprets,
+     * because ADR 009 Phase 3's staleness warning asks the same question of the same two values: a
+     * device this gate considers clean must never be one the Perfil row calls stale.
+     */
     private suspend fun isBackupDue(userId: String, now: Instant): Boolean {
         val lastSuccessAt: Long? = metadata.lastSuccessfulBackupAt(userId)
-        return isDirty(backupRepository.latestLocalChangeAt(), lastSuccessAt) &&
+        return hasLocalChangesSince(backupRepository.latestLocalChangeAt(), lastSuccessAt) &&
             !alreadyBackedUpOn(lastSuccessAt, now, timeZone)
     }
 
@@ -643,17 +650,6 @@ private enum class SnapshotOutcome { Recorded, NotDue, OwnerChanged }
  * Same posture, same wrapper, as `SyncOrchestrator`'s unmapped branch.
  */
 private fun Exception.asDomainException(): DomainException = this as? DomainException ?: DomainException.Unknown(this)
-
-/**
- * Has anything changed locally that the last recorded backup does not already hold?
- *
- * A `null` watermark is the four backed-up tables holding no row at all — structurally distinct from
- * `0`, because SQLDelight types the column `Long?` — and an empty ledger is nothing to back up. A
- * `null` [lastSuccessAt] is a device that has never completed one, which is dirty as soon as it
- * holds anything.
- */
-private fun isDirty(watermarkAt: Long?, lastSuccessAt: Long?): Boolean =
-    watermarkAt != null && (lastSuccessAt == null || watermarkAt > lastSuccessAt)
 
 /**
  * Did the last recorded success fall on the same calendar day as [now], in [timeZone]?

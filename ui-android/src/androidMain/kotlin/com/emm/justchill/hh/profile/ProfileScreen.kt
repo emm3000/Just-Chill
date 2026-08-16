@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
@@ -65,6 +66,7 @@ import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.hh.shared.SpanishDateFormat
+import com.emm.justchill.hh.shared.toMetaText
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
@@ -295,9 +297,51 @@ private fun BackupSection(
                         ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.BackingUp)
                     },
                 )
+                HairlineDivider()
+                LastBackupRow(row = state.backupRow)
             }
         }
     }
+}
+
+/**
+ * "Último respaldo" — the read-only health line for the snapshot pipeline (ADR 009 Phase 3).
+ *
+ * Every branch it has is over [BackupRowUi], and every branch that decides *meaning* was already
+ * taken in `ProfileViewModel`: this picks a colour token and a trailing glyph, and delegates the
+ * Spanish to `toMetaText()` in `:presentation` so the SwiftUI row reads the same sentences.
+ *
+ * `onClick = null` on purpose — it reports, it does not act. "Respaldar ahora" directly above is the
+ * action, and a chevron here would promise a destination that does not exist.
+ */
+@Composable
+private fun LastBackupRow(row: BackupRowUi) {
+    val colors = LocalEmmColors.current
+    // Warning vs danger, not one "bad" colour: stale is a device drifting, failing is a device
+    // broken, and docs/DESIGN_SYSTEM.md gives each its own token. Everything else takes the row's
+    // default meta colour by passing null.
+    val metaColor: Color? = when (row) {
+        is BackupRowUi.Failed -> colors.danger
+        is BackupRowUi.Stale -> colors.warning
+        else -> null
+    }
+    ProfileRowWithTrailing(
+        icon = Icons.Outlined.CloudDone,
+        label = "Último respaldo",
+        meta = row.toMetaText(),
+        metaIsPrimary = true,
+        metaColor = metaColor,
+        onClick = null,
+        trailing = {
+            if (row is BackupRowUi.BackingUp) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp,
+                    color = colors.textTertiary,
+                )
+            }
+        },
+    )
 }
 
 // CyclomaticComplexMethod: this composable sat exactly on the limit before SYNC_TEMPORARILY_DISABLED

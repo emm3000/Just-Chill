@@ -9,13 +9,17 @@ import com.emm.domain.auth.SignOutResult
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.shared.backup.BackupRepository
+import com.emm.domain.shared.backup.GetBackupStalenessUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
+import com.emm.domain.shared.backup.toBackupFailureReason
 import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupEvent
+import com.emm.justchill.core.backup.BackupHealth
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.core.sync.SYNC_TEMPORARILY_DISABLED
 import com.emm.justchill.core.sync.SyncController
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -29,6 +33,7 @@ class ProfileViewModel(
     private val deleteUserAccount: DeleteUserAccountUseCase,
     private val syncController: SyncController,
     private val backupController: BackupController,
+    private val getBackupStaleness: GetBackupStalenessUseCase,
     categoryRepository: CategoryRepository,
     accountRepository: AccountRepository,
     observeSession: ObserveSessionUseCase,
@@ -43,6 +48,17 @@ class ProfileViewModel(
 ) : MviViewModel<ProfileUiState, ProfileIntent, ProfileEffect>() {
 
     override val initialState = ProfileUiState()
+
+    /**
+     * The session, held so two readers can share one subscription to [ObserveSessionUseCase].
+     *
+     * The account section renders it directly; the backup row needs it to tell "signed out" from
+     * "signed in and never backed up", which `BackupHealth` publishes identically as
+     * `lastSuccessfulBackupAt == null` (see its KDoc). Reading `currentState.session` from the backup
+     * collector instead would race: health emits its initial value before the session resolves, and
+     * the row would be built against `Initializing` and never rebuilt.
+     */
+    private val session = MutableStateFlow<SessionUiState>(SessionUiState.Initializing)
 
     init {
         combine(
@@ -63,6 +79,7 @@ class ProfileViewModel(
                     SessionStatus.NotAuthenticated -> SessionUiState.SignedOut
                     SessionStatus.Initializing -> SessionUiState.Initializing
                 }
+                session.value = sessionUiState
                 updateState { copy(session = sessionUiState) }
             }
             .launchIn(viewModelScope)
@@ -89,6 +106,16 @@ class ProfileViewModel(
 
         backupController.events
             .onEach(::onBackupEvent)
+            .launchIn(viewModelScope)
+
+        // Separate from the isBackingUp collector above even though both read that flag: that one
+        // owns the shared `op` slot and must not overwrite another operation, this one owns a row
+        // nothing else writes. Combining them would put the op guard's exception on the health row.
+        combine(session, backupController.health, backupController.isBackingUp, ::Triple)
+            .onEach { (sessionUiState, health, backingUp) ->
+                val row: BackupRowUi = resolveBackupRow(sessionUiState, health, backingUp, getBackupStaleness)
+                updateState { copy(backupRow = row) }
+            }
             .launchIn(viewModelScope)
     }
 
@@ -271,5 +298,72 @@ class ProfileViewModel(
     ) {
         val stats = importData(json)
         sendEffect(ProfileEffect.Notify(ProfileMessage.ImportDone(stats.transactions, stats.recurring)))
+    }
+}
+
+/**
+ * The whole of the "Último respaldo" row's discrimination, in the order [BackupRowUi] documents.
+ *
+ * Private top-level rather than a method, in the shape `BackupOrchestrator.kt` already uses for its
+ * own decision helpers: it reads nothing off the ViewModel but the collaborator it is handed, and
+ * `ProfileViewModel` sits on detekt's per-class function limit.
+ *
+ * **[BackupRowUi.Failed] is chosen on `consecutiveFailures > 0`, never on
+ * `lastFailureReason != null`** — `BackupHealth`'s KDoc spells out why: the reason degrades to null
+ * for a persisted name this build cannot resolve, so `(5, null)` is a real value and keying on the
+ * reason would show a device that has failed five times running as healthy. The reason is carried
+ * through only to pick the wording.
+ *
+ * The staleness question is asked **last and only where it can be answered**: it reads the database,
+ * so it must not run for a signed-out device, a failing one, or one with no watermark to age — the
+ * three cases above it in the `when` already have their answer, and one of them is the null that
+ * [GetBackupStalenessUseCase] refuses to take.
+ *
+ * The known limit, and it is the same one `docs/DATE_AUDIT.md` #7 records for
+ * `ReportUiState.isCurrentMonth`: the day count is computed per emission, not continuously. A Perfil
+ * left open across midnight keeps saying "Hoy" until the next emission from any of the three
+ * sources. Refreshing on every state write is not the same as refreshing continuously.
+ */
+private suspend fun resolveBackupRow(
+    sessionUiState: SessionUiState,
+    health: BackupHealth,
+    backingUp: Boolean,
+    getBackupStaleness: GetBackupStalenessUseCase,
+): BackupRowUi {
+    val lastSuccessfulBackupAt: Long? = health.lastSuccessfulBackupAt
+    return when {
+        backingUp -> BackupRowUi.BackingUp
+        sessionUiState !is SessionUiState.SignedIn -> BackupRowUi.NeedsAccount
+        health.consecutiveFailures > 0 -> BackupRowUi.Failed(health.lastFailureReason)
+        lastSuccessfulBackupAt == null -> BackupRowUi.Never
+        else -> stalenessRow(lastSuccessfulBackupAt, getBackupStaleness)
+    }
+}
+
+/**
+ * The staleness branch, with the one thing on this path that can throw contained.
+ *
+ * [GetBackupStalenessUseCase] reads the local database, and this runs inside a plain `onEach`
+ * collector rather than `launchSafe` — an escaping exception would cancel `viewModelScope` and take
+ * the session, sync and counter collectors down with it, leaving Perfil frozen with no message. That
+ * is ADR 009's hard constraint 4 (no invisible failure) wearing a dead screen.
+ *
+ * The fallback names what actually went wrong instead of guessing an age: `LocalDatabase` is the
+ * reason `safeDbCall` raises from **this exact read** and from the export's, so the row says the same
+ * true sentence whichever of the two failed.
+ */
+private suspend fun stalenessRow(
+    lastSuccessfulBackupAt: Long,
+    getBackupStaleness: GetBackupStalenessUseCase,
+): BackupRowUi {
+    val staleness = try {
+        getBackupStaleness(lastSuccessfulBackupAt)
+    } catch (e: DomainException) {
+        return BackupRowUi.Failed(e.toBackupFailureReason())
+    }
+    return if (staleness.isStale) {
+        BackupRowUi.Stale(staleness.daysSinceLastBackup)
+    } else {
+        BackupRowUi.UpToDate(staleness.daysSinceLastBackup)
     }
 }
