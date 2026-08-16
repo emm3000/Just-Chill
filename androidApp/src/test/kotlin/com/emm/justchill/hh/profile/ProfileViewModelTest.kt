@@ -662,8 +662,10 @@ class ProfileViewModelTest {
     fun `VerifyBackup reports the snapshot that verified, naming the file and the counts it holds`() =
         runTest(testDispatcher) {
             coEvery { backupVerifier.verifyLatest() } returns VERIFIED_NEWEST
+            val vm = buildViewModel()
+            signIn()
 
-            val messages = notifiedBy(buildViewModel(), ProfileIntent.VerifyBackup)
+            val messages = notifiedBy(vm, ProfileIntent.VerifyBackup)
 
             assertEquals(listOf(ProfileMessage.BackupVerified(VERIFIED_NEWEST)), messages)
             assertEquals(
@@ -677,8 +679,10 @@ class ProfileViewModelTest {
     fun `VerifyBackup that walked back to an older pair says so instead of reading as a plain success`() =
         runTest(testDispatcher) {
             coEvery { backupVerifier.verifyLatest() } returns VERIFIED_NEWEST.copy(isNewestPair = false)
+            val vm = buildViewModel()
+            signIn()
 
-            val shown: String = notifiedBy(buildViewModel(), ProfileIntent.VerifyBackup).single().toText()
+            val shown: String = notifiedBy(vm, ProfileIntent.VerifyBackup).single().toText()
 
             assertTrue(shown.startsWith("Verificado un respaldo más antiguo:"), shown)
         }
@@ -686,8 +690,10 @@ class ProfileViewModelTest {
     @Test
     fun `VerifyBackup that found nothing to verify is not reported as pairs that failed`() = runTest(testDispatcher) {
         coEvery { backupVerifier.verifyLatest() } returns BackupVerification.NoSnapshots
+        val vm = buildViewModel()
+        signIn()
 
-        val messages = notifiedBy(buildViewModel(), ProfileIntent.VerifyBackup)
+        val messages = notifiedBy(vm, ProfileIntent.VerifyBackup)
 
         assertEquals(listOf(ProfileMessage.BackupNotVerified(pairsInspected = 0)), messages)
     }
@@ -695,17 +701,34 @@ class ProfileViewModelTest {
     @Test
     fun `VerifyBackup where no pair verified reports how many were inspected`() = runTest(testDispatcher) {
         coEvery { backupVerifier.verifyLatest() } returns BackupVerification.NothingVerified(pairsInspected = 5)
+        val vm = buildViewModel()
+        signIn()
 
-        val messages = notifiedBy(buildViewModel(), ProfileIntent.VerifyBackup)
+        val messages = notifiedBy(vm, ProfileIntent.VerifyBackup)
 
         assertEquals(listOf(ProfileMessage.BackupNotVerified(pairsInspected = 5)), messages)
     }
 
     @Test
+    fun `VerifyBackup while signed out asks for an account instead of inviting a retry`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        sessionFlow.emit(SessionStatus.NotAuthenticated)
+
+        val messages = notifiedBy(vm, ProfileIntent.VerifyBackup)
+
+        coVerify(exactly = 0) { backupVerifier.verifyLatest() }
+        assertEquals(listOf(ProfileMessage.BackupNeedsAccount), messages)
+        assertEquals(ProfileOp.None, vm.state.value.op, "a refusal never takes the op slot")
+    }
+
+    @Test
     fun `a failed verification notifies and never signs out or raises a session error`() = runTest(testDispatcher) {
-        coEvery { backupVerifier.verifyLatest() } throws DomainException.Unauthorized("the session expired")
+        coEvery {
+            backupVerifier.verifyLatest()
+        } throws DomainException.NetworkUnavailable(IllegalStateException("the socket died mid-download"))
 
         val vm = buildViewModel()
+        signIn()
         val effects = mutableListOf<ProfileEffect>()
         val job = launch { vm.effect.collect { effects.add(it) } }
         advanceUntilIdle()
@@ -730,6 +753,7 @@ class ProfileViewModelTest {
         coEvery { backupVerifier.verifyLatest() } coAnswers { gate.await() }
 
         val vm = buildViewModel()
+        signIn()
         val effects = mutableListOf<ProfileEffect>()
         val job = launch { vm.effect.collect { effects.add(it) } }
         advanceUntilIdle()

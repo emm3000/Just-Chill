@@ -145,14 +145,26 @@ class ProfileViewModel(
         }
     }
 
-    // Not a backup cycle: it never touches the streak, the watermark or backup health, so it takes
-    // the generic op slot instead of backUpNow's ladder, and a failure is a Notify like every other
-    // backup failure — never a ShowError, which would read as expired credentials.
-    private fun verifyBackup() = launchOp(
-        op = ProfileOp.VerifyingBackup,
-        onError = { ProfileEffect.Notify(ProfileMessage.BackupVerifyFailed) },
-    ) {
-        sendEffect(ProfileEffect.Notify(backupVerifier.verifyLatest().toProfileMessage()))
+    // Not a backup cycle: it never touches the streak, the watermark or backup health, so a failure
+    // is a Notify like every other backup failure — never a ShowError, which would read as expired
+    // credentials. Signed out there is nothing to reach, so it refuses instead of failing: the
+    // account prompt is actionable and BackupVerifyFailed invites a retry that cannot succeed.
+    private fun verifyBackup() {
+        val refusal: ProfileMessage? = when {
+            currentState.op != ProfileOp.None -> ProfileMessage.OperationInProgress
+            currentState.session !is SessionUiState.SignedIn -> ProfileMessage.BackupNeedsAccount
+            else -> null
+        }
+        if (refusal != null) {
+            sendEffect(ProfileEffect.Notify(refusal))
+            return
+        }
+        launchOp(
+            op = ProfileOp.VerifyingBackup,
+            onError = { ProfileEffect.Notify(ProfileMessage.BackupVerifyFailed) },
+        ) {
+            sendEffect(ProfileEffect.Notify(backupVerifier.verifyLatest().toProfileMessage()))
+        }
     }
 
     // The disclosure is written regardless of op, so the user's acknowledgement is never lost; only
