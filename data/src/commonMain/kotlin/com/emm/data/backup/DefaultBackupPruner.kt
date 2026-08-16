@@ -4,7 +4,6 @@ import com.emm.domain.shared.backup.BackupPruneReport
 import com.emm.domain.shared.backup.BackupPruner
 import com.emm.domain.shared.backup.RetentionCandidate
 import com.emm.domain.shared.backup.SnapshotRetention
-import com.emm.domain.shared.error.DomainException
 import io.github.jan.supabase.SupabaseClient
 import kotlinx.datetime.TimeZone
 import kotlin.coroutines.cancellation.CancellationException
@@ -23,7 +22,7 @@ class DefaultBackupPruner internal constructor(
     @Suppress("TooGenericExceptionCaught")
     override suspend fun prune(): BackupPruneReport {
         val prefix: String = storageCall(PREFIX_UNRESOLVED) { store.ownedPrefix() }
-        val names: List<String> = wholeBucket(prefix)
+        val names: List<String> = store.wholeBucket(prefix, LIST_FAILED, LISTING_NEVER_ENDED)
 
         val plan: PrunePlan = planPrune(names, clock.now(), zone)
 
@@ -42,18 +41,6 @@ class DefaultBackupPruner internal constructor(
             }
         }
         return BackupPruneReport(kept = plan.kept, deleted = deleted, failedDeletes = failures)
-    }
-
-    private suspend fun wholeBucket(prefix: String): List<String> {
-        val names = mutableListOf<String>()
-        var offset = 0
-        repeat(BACKUP_LIST_MAX_PAGES) {
-            val page: ObjectPage = storageCall(LIST_FAILED) { store.list(prefix, BACKUP_LIST_PAGE_SIZE, offset) }
-            names += page.names
-            if (page.serverReturned == 0) return names
-            offset += page.serverReturned
-        }
-        throw listingNeverEnded()
     }
 }
 
@@ -87,16 +74,13 @@ private fun planPrune(names: List<String>, now: Instant, zone: TimeZone): PruneP
     )
 }
 
-private fun listingNeverEnded(): DomainException {
-    val reason = "$PRUNE_FAILED the listing never returned an empty page within " +
-        "$BACKUP_LIST_MAX_PAGES pages of $BACKUP_LIST_PAGE_SIZE objects, so it cannot be read " +
-        "completely. Pruning a partial listing can delete a snapshot that is not really the " +
-        "oldest, so nothing was deleted."
-    return DomainException.Unknown(IllegalStateException(reason), reason)
-}
-
 private const val PRUNE_FAILED = "Snapshot retention prune failed:"
 
 private const val PREFIX_UNRESOLVED = "$PRUNE_FAILED the owning prefix could not be resolved."
 
 private const val LIST_FAILED = "$PRUNE_FAILED the bucket could not be listed, so nothing was deleted."
+
+private const val LISTING_NEVER_ENDED = "$PRUNE_FAILED the listing never returned an empty page within " +
+    "$BACKUP_LIST_MAX_PAGES pages of $BACKUP_LIST_PAGE_SIZE objects, so it cannot be read " +
+    "completely. Pruning a partial listing can delete a snapshot that is not really the " +
+    "oldest, so nothing was deleted."

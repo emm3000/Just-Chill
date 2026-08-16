@@ -16,28 +16,16 @@ import com.emm.data.transaction.asExternalModel
 import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
-import com.emm.domain.shared.error.ValidationCode
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import kotlin.time.Clock
 
 private val exportJson = Json {
     prettyPrint = true
     encodeDefaults = true
 }
-
-private val importJson = Json {
-    ignoreUnknownKeys = true
-}
-
-internal const val SCHEMA_VERSION_KEY = "schemaVersion"
 
 class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock: Clock) : BackupRepository {
 
@@ -51,7 +39,7 @@ class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock
     }
 
     override suspend fun importFromJson(json: String): ImportStats {
-        val decoded = decodePayload(json)
+        val decoded = decodeBackupPayload(json)
         val payload = decoded.payload
         val fileCarriesRecurring = decoded.declaredVersion >= BACKUP_RECURRING_SINCE_VERSION
 
@@ -89,50 +77,6 @@ class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock
             db.backupQueries.latestLocalChange().executeAsOne().updatedAt
         }
     }
-
-    internal fun decodePayload(json: String): DecodedBackup {
-        val root = parse { importJson.parseToJsonElement(json).jsonObject }
-        val declaredVersion = schemaVersionOf(root)
-
-        val payload = when (declaredVersion) {
-            BACKUP_SCHEMA_VERSION -> parse {
-                importJson.decodeFromJsonElement<ExportPayloadDto>(root)
-            }
-
-            BACKUP_SCHEMA_VERSION_V2 -> parse {
-                importJson.decodeFromJsonElement<ExportPayloadV2Dto>(root).toCurrent()
-            }
-
-            BACKUP_SCHEMA_VERSION_V1 -> parse {
-                importJson.decodeFromJsonElement<ExportPayloadV1Dto>(root).toCurrent()
-            }
-
-            else -> throw DomainException.ValidationError(
-                "Unsupported file version.",
-                ValidationCode.BackupVersionUnsupported,
-            )
-        }
-        return DecodedBackup(declaredVersion = declaredVersion, payload = payload)
-    }
-
-    private fun schemaVersionOf(root: JsonObject): Int {
-        val declared = root[SCHEMA_VERSION_KEY] ?: return BACKUP_SCHEMA_VERSION_V1
-        return parse { declared.jsonPrimitive.intOrNull } ?: throw invalidFile(cause = null)
-    }
-
-    private inline fun <T> parse(block: () -> T): T = try {
-        block()
-    } catch (e: SerializationException) {
-        throw invalidFile(e)
-    } catch (e: IllegalArgumentException) {
-        throw invalidFile(e)
-    }
-
-    private fun invalidFile(cause: Throwable?) = DomainException.ValidationError(
-        "Invalid or corrupted file",
-        ValidationCode.BackupFileInvalid,
-        cause = cause,
-    )
 
     private fun restore(dto: AccountDto, now: Long) {
         db.accountsQueries.insertOrIgnoreFromBackup(

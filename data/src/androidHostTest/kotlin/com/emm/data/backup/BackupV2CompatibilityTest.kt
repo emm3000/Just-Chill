@@ -77,7 +77,7 @@ class BackupV2CompatibilityTest {
 
     @Test
     fun `a version 2 file reaches the import still declaring version 2`() {
-        val decoded = repository.decodePayload(V2_BACKUP)
+        val decoded = decodeBackupPayload(V2_BACKUP)
 
         assertEquals(BACKUP_SCHEMA_VERSION_V2, decoded.declaredVersion)
         assertNotEquals(BACKUP_SCHEMA_VERSION, decoded.declaredVersion)

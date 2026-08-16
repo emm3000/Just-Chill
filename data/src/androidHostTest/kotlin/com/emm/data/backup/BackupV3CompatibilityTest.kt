@@ -87,7 +87,7 @@ class BackupV3CompatibilityTest {
 
     @Test
     fun `a version 3 file with templates declares 3 and carries them through the decode`() {
-        val decoded = repository.decodePayload(V3_BACKUP)
+        val decoded = decodeBackupPayload(V3_BACKUP)
 
         assertEquals(BACKUP_SCHEMA_VERSION, decoded.declaredVersion)
         assertEquals(BACKUP_SCHEMA_VERSION, decoded.payload.schemaVersion)
@@ -96,7 +96,7 @@ class BackupV3CompatibilityTest {
 
     @Test
     fun `a version 3 file with no templates is told from a v1 or v2 file only by its declared version`() {
-        val decoded = repository.decodePayload(V3_BACKUP_EMPTY_RECURRING)
+        val decoded = decodeBackupPayload(V3_BACKUP_EMPTY_RECURRING)
 
         assertEquals(BACKUP_SCHEMA_VERSION, decoded.declaredVersion)
         assertEquals(BACKUP_SCHEMA_VERSION, decoded.payload.schemaVersion)

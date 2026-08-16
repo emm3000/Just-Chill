@@ -3,6 +3,7 @@ package com.emm.data.backup
 import com.emm.domain.shared.error.DomainException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -55,6 +56,26 @@ internal fun buildBackupManifest(fileName: String, payloadBytes: ByteArray): Bac
 }
 
 internal fun BackupManifestDto.encodeToJson(): String = manifestJson.encodeToString(this)
+
+internal fun decodeBackupManifestOrNull(bytes: ByteArray): BackupManifestDto? {
+    val manifest: BackupManifestDto? = readingManifest {
+        manifestJson.decodeFromString<BackupManifestDto>(bytes.decodeToString(throwOnInvalidSequence = true))
+    }
+    return manifest?.takeIf { it.manifestVersion == BACKUP_MANIFEST_VERSION }
+}
+
+// A manifest this build cannot read is not a verdict on the payload beside it — the only caller
+// walks back to an older pair — so the reason it was unreadable is discarded rather than reported.
+@Suppress("SwallowedException")
+private inline fun <T> readingManifest(block: () -> T): T? = try {
+    block()
+} catch (e: CharacterCodingException) {
+    null
+} catch (e: SerializationException) {
+    null
+} catch (e: IllegalArgumentException) {
+    null
+}
 
 private fun declaredVersionOf(root: JsonObject): Int {
     val declared = root[SCHEMA_VERSION_KEY] ?: throw payloadUnreadable(NO_VERSION_KEY, cause = null)
