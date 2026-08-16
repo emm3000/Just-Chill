@@ -1,5 +1,7 @@
 package com.emm.justchill.core.backup
 
+import com.emm.domain.shared.backup.BackupFailureReason
+import com.emm.domain.shared.backup.BackupFailureState
 import com.emm.domain.shared.backup.BackupMetadataStore
 import com.emm.justchill.core.preferences.AppPreferences
 
@@ -16,6 +18,25 @@ class DefaultBackupMetadataStore(private val prefs: AppPreferences) : BackupMeta
 
     override fun setLastSuccessfulBackupAt(userId: String, epochMillis: Long) =
         prefs.setLastSuccessfulBackupAt(userId, epochMillis)
+
+    override fun failureState(userId: String): BackupFailureState = prefs.backupFailure(userId)
+
+    /**
+     * Read-then-write, and safe here because there is exactly one writer: `BackupOrchestrator`'s
+     * single request consumer runs one cycle at a time, so no second cycle can read the same count
+     * and write the same increment. `AppPreferences` offers no atomic increment to use instead —
+     * `Settings` has none — and inventing a lock for a counter with one writer would be ceremony.
+     */
+    override fun recordFailure(userId: String, reason: BackupFailureReason): BackupFailureState {
+        val next = BackupFailureState(
+            consecutiveFailures = prefs.backupFailure(userId).consecutiveFailures + 1,
+            lastReason = reason,
+        )
+        prefs.setBackupFailure(userId, next)
+        return next
+    }
+
+    override fun clearFailures(userId: String) = prefs.setBackupFailure(userId, BackupFailureState.None)
 
     override fun clear(userId: String) = prefs.clearBackupMetadata(userId)
 }
