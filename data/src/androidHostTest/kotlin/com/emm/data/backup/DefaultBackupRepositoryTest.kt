@@ -317,24 +317,6 @@ class DefaultBackupRepositoryTest {
     }
 
     /**
-     * The DB-failure path above this test is untouched by [encodeAsDomainException] — it never
-     * reaches the encode step, because [safeDbCall] throws before `exportToJson` gets to
-     * `exportJson.encodeToString`. Pinned explicitly so a future refactor that moved the encode
-     * step earlier, or widened `safeDbCall` to cover it, would be caught here rather than only by
-     * losing the distinction the previous test pins.
-     */
-    @Test
-    fun `a database failure never reaches the encode step, so it is never SerializationError`() = runTest {
-        driver.execute(null, "DROP TABLE recurring_movements", 0)
-
-        val ex = assertFailsWith<DomainException> {
-            repository.exportToJson(exportedAt = 0L, appVersion = "1.0.0")
-        }
-
-        assertTrue(ex !is DomainException.SerializationError)
-    }
-
-    /**
      * **Every read the export makes happens inside one open transaction, and there are exactly four.**
      *
      * *What this proves and what it does not.* It does NOT prove atomicity against a concurrent

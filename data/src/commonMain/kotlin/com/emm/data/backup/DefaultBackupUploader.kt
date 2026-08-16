@@ -115,8 +115,11 @@ class DefaultBackupUploader internal constructor(private val store: BackupObject
         val manifest = buildBackupManifest(fileName, payloadBytes)
         // Serialised OUTSIDE the upload's failure wrapper: a defect in the manifest's own encoding is
         // not a transport problem, and reporting it as "the manifest could not be uploaded" would
-        // send whoever is reading that line to the network.
-        val manifestBytes = manifest.encodeToJson().encodeToByteArray()
+        // send whoever is reading that line to the network. `encodeAsDomainException` — shared with
+        // `DefaultBackupRepository.exportToJson` — is what names it instead: without it this escaped
+        // as a raw SerializationException, caught only by `BackupOrchestrator.runBackup`'s generic
+        // branch and reported as `DomainException.Unknown`.
+        val manifestBytes = encodeAsDomainException { manifest.encodeToJson() }.encodeToByteArray()
 
         // Resolved ONCE, and both keys are built from it. Two calls would be two reads of the session
         // and therefore two possible prefixes; what actually stops a split pair reaching the bucket is

@@ -430,22 +430,26 @@ class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock
 
 /**
  * Translates an encode failure into [DomainException.SerializationError] — deliberately NOT folded
- * into [safeDbCall], whose own KDoc says it translates SQLDelight exceptions. Encoding
- * [ExportPayloadDto] in [DefaultBackupRepository.exportToJson] happens after the database read has
- * already succeeded, so a failure here is not a database failure, and without this it escaped as a
- * raw [SerializationException], caught only by the generic branch in `BackupOrchestrator.runBackup`
- * and reported as [DomainException.Unknown] — no reason a log or the UI could name.
+ * into [safeDbCall], whose own KDoc says it translates SQLDelight exceptions. A failure here is not
+ * a database failure, and without this translation it escaped as a raw [SerializationException],
+ * caught only by the generic branch in `BackupOrchestrator.runBackup` and reported as
+ * [DomainException.Unknown] — no reason a log or the UI could name.
  *
- * Top-level rather than a member of [DefaultBackupRepository], for the same mechanical reason as
+ * Two call sites, both in this package: [DefaultBackupRepository.exportToJson] encoding
+ * [ExportPayloadDto], and [DefaultBackupUploader.upload] encoding [BackupManifestDto]. Top-level
+ * rather than a member of [DefaultBackupRepository], for the same mechanical reason as
  * [usableCategoryId] and [snapshot]: the class already sits exactly on detekt's
  * `allowedFunctionsPerClass: 11`.
  *
- * `internal` rather than private: every field [ExportPayloadDto] carries is a plain
- * `String`/`Long`/`Boolean`/`List`, so a well-formed payload cannot be made to fail its own encoder
- * — there is no route to this catch through [DefaultBackupRepository.exportToJson] alone. A test
- * drives [SerializationException] directly instead.
+ * `internal` rather than private: every field either DTO carries is a plain
+ * `String`/`Long`/`Int`/`Boolean`/`List`, so a well-formed instance cannot be made to fail its own
+ * encoder — there is no route to this catch through either call site alone. A test drives
+ * [SerializationException] directly instead.
+ *
+ * No `@Suppress("SwallowedException")`: the caught exception is passed on as the new exception's
+ * `cause`, not discarded, exactly like [safeDbCall] and `DefaultSyncRepository`'s translation,
+ * neither of which carries the suppress either.
  */
-@Suppress("SwallowedException")
 internal inline fun <T> encodeAsDomainException(block: () -> T): T = try {
     block()
 } catch (e: SerializationException) {

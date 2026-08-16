@@ -1,7 +1,6 @@
 package com.emm.data.backup
 
 import com.emm.domain.shared.error.DomainException
-import com.emm.domain.shared.error.ValidationCode
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
@@ -111,10 +110,15 @@ internal data class BackupRowCountsDto(
  * would decode as the current one and the manifest would state a version the file never claimed.
  *
  * Anything unreadable here is a defect in this app's own export rather than a bad user file — these
- * bytes were produced by [DefaultBackupRepository.exportToJson] moments earlier. **Each way it can
- * fail says which one happened**, because ADR 009's hard constraint 4 forbids a silent failure
- * anywhere in the backup pipeline, and one message shared by every cause is silent in the only sense
- * that matters: the log tells whoever is holding the outage nothing it did not already know.
+ * bytes were produced by [DefaultBackupRepository.exportToJson] moments earlier, and
+ * [DefaultBackupUploader.upload] is [buildBackupManifest]'s only caller, always fed that same
+ * fresh export and never an arbitrary file a user picked. That is why every failure below is
+ * [DomainException.SerializationError] and never `ValidationCode.BackupFileInvalid` — that code is
+ * reserved for `DefaultBackupRepository.importFromJson`, which decodes bytes off disk this app did
+ * not just write and cannot vouch for. **Each way it can fail says which one happened**, because
+ * ADR 009's hard constraint 4 forbids a silent failure anywhere in the backup pipeline, and one
+ * message shared by every cause is silent in the only sense that matters: the log tells whoever is
+ * holding the outage nothing it did not already know.
  */
 internal fun buildBackupManifest(fileName: String, payloadBytes: ByteArray): BackupManifestDto {
     // `throwOnInvalidSequence` because this whole unit's thesis is that the bytes are the bytes: the
@@ -210,8 +214,18 @@ private inline fun <T> readingPayload(reason: String, block: () -> T): T = try {
     throw payloadUnreadable(reason, e)
 }
 
-private fun payloadUnreadable(reason: String, cause: Throwable?) = DomainException.ValidationError(
-    "Backup payload cannot be described by a manifest: $reason.",
-    ValidationCode.BackupFileInvalid,
-    cause = cause,
+/**
+ * [DomainException.SerializationError], never `ValidationError(BackupFileInvalid)` — see the class
+ * KDoc's "Anything unreadable here..." paragraph for why this file's bytes are never an untrusted
+ * user file.
+ *
+ * [cause] is null only at the two call sites that read [SCHEMA_VERSION_KEY] and find it absent or
+ * not a number: nothing threw there, the value was simply judged unusable. A [SerializationException]
+ * carrying [reason] is synthesized for those so [DomainException.SerializationError] — which, like
+ * [DomainException.Unknown] and [DomainException.NetworkUnavailable], always carries a real cause —
+ * still gets one, rather than the site inventing its own ad hoc null-cause exception.
+ */
+private fun payloadUnreadable(reason: String, cause: Throwable?): DomainException = DomainException.SerializationError(
+    cause = cause ?: SerializationException(reason),
+    message = "Backup payload cannot be described by a manifest: $reason.",
 )

@@ -3,6 +3,7 @@ package com.emm.data.backup
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -307,6 +308,38 @@ class DefaultBackupUploaderTest {
         assertEquals(1, store.prefixResolutions)
     }
 
+    /**
+     * **The one manifest-building failure this fixture CAN provoke for real, through the real public
+     * path — no wrapper called in isolation.** `buildBackupManifest` runs before the first `upload`
+     * call, so a `payload` whose shape it rejects fails here, exactly as it would in production: this
+     * class's only caller (`BackupOrchestrator.runBackup`) always hands it the fresh output of
+     * `DefaultBackupRepository.exportToJson`, never a user-picked file, which is why
+     * [DomainException.SerializationError] is the right family — not `ValidationError` /
+     * `BackupFileInvalid`, which is reserved for `DefaultBackupRepository.importFromJson`'s untrusted
+     * input. `MALFORMED_PAYLOAD`'s `accounts` is a string where the shape demands a list, the same
+     * mismatch `decodeFromJsonElement<ExportPayloadDto>` cannot decode around.
+     *
+     * The manifest ENCODE failure ([BackupManifestDto.encodeToJson], also routed through
+     * `encodeAsDomainException`) has no equivalent test here: [BackupManifestDto] and
+     * [BackupRowCountsDto] are plain `String`/`Int`, so — exactly like [ExportPayloadDto] in
+     * `DefaultBackupRepositoryTest` — no well-formed instance can make that encoder fail. That
+     * translation is proven once, generically, in `DefaultBackupRepositoryTest`'s
+     * `encodeAsDomainException` test; there is nothing end-to-end to add for it here.
+     */
+    @Test
+    fun `a payload buildBackupManifest cannot decode surfaces as SerializationError, not BackupFileInvalid`() =
+        runTest {
+            val store = FakeBackupObjectStore()
+
+            val failure = assertFailsWith<DomainException.SerializationError> {
+                DefaultBackupUploader(store).upload(UID, FILE_NAME, MALFORMED_PAYLOAD)
+            }
+
+            // Nothing reached storage: the manifest is built, and fails, before the first `upload`.
+            assertEquals(emptyList(), store.calls)
+            assertTrue(failure.cause is SerializationException)
+        }
+
     @Test
     fun `the ten failures reachable through the seam say ten different things`() = runTest {
         // Hard constraint 4, asserted as a property rather than ten tests agreeing by accident.
@@ -488,6 +521,23 @@ private val PAYLOAD: String = """
       "accounts": [
         { "accountId": "acc-1", "name": "Ahorro año", "type": "Bank", "currency": "PEN" }
       ],
+      "categories": [],
+      "transactions": [],
+      "recurringMovements": []
+    }
+""".trimIndent()
+
+/**
+ * Same shape as [PAYLOAD], but `accounts` is a string where [ExportPayloadDto] demands a list —
+ * `decodeFromJsonElement` throws a real [SerializationException] on it, inside
+ * [buildBackupManifest], before `upload` ever reaches the store.
+ */
+private val MALFORMED_PAYLOAD: String = """
+    {
+      "schemaVersion": $BACKUP_SCHEMA_VERSION,
+      "exportedAt": 1755000000000,
+      "appVersion": "v2.4.0",
+      "accounts": "not-a-list",
       "categories": [],
       "transactions": [],
       "recurringMovements": []

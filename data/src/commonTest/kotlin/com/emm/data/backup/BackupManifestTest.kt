@@ -1,7 +1,6 @@
 package com.emm.data.backup
 
 import com.emm.domain.shared.error.DomainException
-import com.emm.domain.shared.error.ValidationCode
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.int
@@ -115,13 +114,13 @@ class BackupManifestTest {
     @Test
     fun refuses_every_payload_it_cannot_describe() {
         // Not a hypothetical guard against a user file — these bytes come from this app's own export
-        // seconds earlier, so every one of these is the defect path.
+        // seconds earlier, so every one of these is the defect path. `SerializationError`, never
+        // `ValidationError(BackupFileInvalid)`: that code is for `importFromJson`'s untrusted input,
+        // and this function is never handed that — see the class KDoc on `buildBackupManifest`.
         UNREADABLE_PAYLOADS.forEach { case ->
-            val failure = assertFailsWith<DomainException.ValidationError>(message = case.label) {
+            assertFailsWith<DomainException.SerializationError>(message = case.label) {
                 buildBackupManifest(FILE_NAME, case.bytes)
             }
-
-            assertEquals(ValidationCode.BackupFileInvalid, failure.code, case.label)
         }
     }
 
@@ -135,7 +134,7 @@ class BackupManifestTest {
         // manifest builder" from "the current shape grew a key this build has never seen" — both
         // arrive as the same SerializationException.
         UNREADABLE_PAYLOADS.forEach { case ->
-            val failure = assertFailsWith<DomainException.ValidationError> {
+            val failure = assertFailsWith<DomainException.SerializationError> {
                 buildBackupManifest(FILE_NAME, case.bytes)
             }
 
