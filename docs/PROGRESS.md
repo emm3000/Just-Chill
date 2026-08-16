@@ -11,9 +11,10 @@
 >
 > **El sync está APAGADO en producción desde el 2026-08-12.** Kill switch
 > `SYNC_TEMPORARILY_DISABLED` en `presentation/.../core/sync/SyncKillSwitch.kt`. El único doc vivo
-> de sync es [`docs/sync/ADR009_PLAN.md`](sync/ADR009_PLAN.md) — leelo antes de tocar cualquier cosa
-> de sync. El forense completo —causa raíz del loop, el borrado de cuenta que nunca salió del
-> teléfono— es historia y vive en [`docs/archive/sync/AUDIT.md`](archive/sync/AUDIT.md).
+> de sync es [`docs/work/epics/E01-snapshot-backup.md`](work/epics/E01-snapshot-backup.md) — leelo
+> antes de tocar cualquier cosa de sync. El forense completo —causa raíz del loop, el borrado de
+> cuenta que nunca salió del teléfono— es historia y vive en
+> [`docs/archive/sync/AUDIT.md`](archive/sync/AUDIT.md).
 >
 > Este doc se reescribió el 2026-08-08 porque quedó dos meses desactualizado y
 > se perdió toda la migración KMP. El detalle histórico previo (sprints S0-S5,
@@ -48,7 +49,7 @@ Tres tracks grandes cerrados o casi:
 | Track | Estado |
 |---|---|
 | Producto (Fases 1-5: discovery → post-v1) | ✅ cerrado, docs en `docs/` |
-| Local-first sync (slices 1-5) | ⏸ apagado desde el 2026-08-12 y **en eliminación**, no en reparación — ADR 009 lo reemplaza por respaldo snapshot; plan en `docs/sync/ADR009_PLAN.md` |
+| Local-first sync (slices 1-5) | ⏸ apagado desde el 2026-08-12 y **en eliminación**, no en reparación — ADR 009 lo reemplaza por respaldo snapshot; plan en `docs/work/epics/E01-snapshot-backup.md` |
 | Migración KMP / Compose Multiplatform | ✅ completa y mergeada a trunk |
 | Auditoría de funcionalidades | ✅ cerrada — 4 CRÍTICOS, 4 ALTOS, 3 MEDIOS |
 | iOS nativo SwiftUI sobre el core KMP | ⏳ S1-S2 de 11 ✅ — plan en `docs/swiftui/PLAN.md`, ADR 005 |
@@ -115,7 +116,7 @@ replicación" y dejado el motor en su lugar; de esa costura salió todo lo poste
 
 El orden de construcción por fases, las trampas verificadas, las compuertas de cada fase, el forense
 de los dos tenants y los hallazgos que sobreviven al motor están en
-[`docs/sync/ADR009_PLAN.md`](sync/ADR009_PLAN.md), el único doc vivo de sync. La causa raíz del loop
+[`docs/work/epics/E01-snapshot-backup.md`](work/epics/E01-snapshot-backup.md), el único doc vivo de sync. La causa raíz del loop
 y el resto de la maquinaria retirada quedan en
 [`docs/archive/sync/AUDIT.md`](archive/sync/AUDIT.md): donde el archivo y ADR 009 se contradigan,
 gana el ADR.
@@ -147,7 +148,7 @@ gana el ADR.
   borrar. `qualityGate` verde, compile iOS incluido. Era **precondición dura**: sin esto un restore
   perdía los movimientos recurrentes. La rama `adr-009-phase-1-export-v3` quedó apuntando al mismo
   commit que `trunk`; no la leas como trabajo pendiente. Fase 2 ya está destrabada
-  (`docs/sync/ADR009_PLAN.md`, Fase 2).
+  (`docs/work/epics/E01-snapshot-backup.md`).
 
   **Esta entrada estuvo mal durante un día y vale la pena saber por qué**: el commit que la escribió
   (`17fc33b2`, "record ADR 009 Phase 1 as finished on the branch, not shipped") era verdad al
@@ -156,7 +157,7 @@ gana el ADR.
   este archivo ya prohíbe anotar (cuántos commits faltan pushear, desde qué hash). Sacalo del repo:
   `git branch --contains <sha> -a`.
 - [ ] ADR 009 Fases 2-5: pipeline de snapshot, visibilidad, confianza en el restore, y recién ahí
-  desmantelar el motor. Detalle y compuertas en `docs/sync/ADR009_PLAN.md`.
+  desmantelar el motor. Detalle y compuertas en `docs/work/epics/E01-snapshot-backup.md`.
   - [x] **Fase 2a — export transaccional**, en `trunk` el 2026-08-14 (`7a16ce19`, `fae2e147`,
     `7bfa16c2`), **sin pushear**. `exportToJson` hacía cuatro `Flow.first()` independientes y una
     escritura entre dos producía un archivo que describe un estado que la base nunca tuvo; ahora las
@@ -201,7 +202,7 @@ gana el ADR.
         `application/json`, y políticas select/insert/delete `to authenticated` sobre el primer
         segmento del path (sin update: cada snapshot lleva su timestamp, ninguna key se reescribe).
         El predicado se sondeó contra un stack local con dos usuarios autenticados reales y no se
-        pudo cruzar. Tres trampas quedan anotadas en `sync/ADR009_PLAN.md` porque condicionan la
+        pudo cruzar. Tres trampas quedan anotadas en `docs/work/epics/E01-snapshot-backup.md` porque condicionan la
         parte B y la 2c: `storage.protect_delete()` bloquea el DELETE por SQL (la poda de la 2c va
         por la Storage API sí o sí), el mime se compara literal — `application/json; charset=utf-8`
         devuelve HTTP 415 — y el upload resumable está cerrado por RLS. El `on conflict` pasó de
@@ -240,7 +241,7 @@ gana el ADR.
     solo**: un payload sin sidecar no ocupa cupo de retención y se borra a la vista. Una poda por
     nombre le da cupo a un huérfano y desaloja un snapshot verificado — eso es pérdida de datos, y
     el razonamiento completo (incluido cuál huérfano bueno se tira a propósito) está en la fila
-    Retención de `sync/ADR009_PLAN.md`.
+    Retención de `docs/work/epics/E01-snapshot-backup.md`.
     - [x] **2c-i — el watermark de cambios locales y el timestamp persistido**, en `trunk` el
       2026-08-14 (`646e2666`, `1da00cfa`), **sin pushear**. `BackupRepository.latestLocalChangeAt():
       Long?`, un solo `UNION ALL` en `backup.sq` que reduce las cuatro tablas a una lectura — no
@@ -259,7 +260,7 @@ gana el ADR.
       `BackupModule.kt` — landed como **2c-iii-a** (`ab7d90e7`, `ac2bed36`, `0acd47ec`, `3409560f`).
       El clear salió de `DefaultSyncCursorStore.clear` y es su propio paso en
       `DeleteUserAccountUseCase`, dentro del mismo bloque `NonCancellable`. Detalle completo en
-      `sync/ADR009_PLAN.md`.
+      `docs/work/epics/E01-snapshot-backup.md`.
     - [x] **2c-ii — naming del snapshot y poda de retención**, `trunk` (`3e3c5dd9`, `b1c2e3ce`,
       `2a186ebe`, `217d4081`, `0c510b2a`, `05296659`, `95b7bc90`, `559cf2e7`, `955b8797`).
     - [x] **2c-iii-a — las costuras** (`resumeEvents`/`backgroundEvents`, `BackupMetadataStore`),
@@ -284,8 +285,8 @@ gana el ADR.
   y es su propia unidad. Anotado con la consecuencia dicha para que no se descubra durante un
   restore.
 - [x] ~~La app tiene que decir en pantalla, antes del primer upload, que sube el ledger entero del
-  device~~ — aterrizó como ADR 009 unit 3c (`3ce1dfb0`, `df452737`, `8b12fc45`); `docs/sync/ADR009_PLAN.md`
-  Fase 3, crónica en `docs/archive/sync/`.
+  device~~ — aterrizó como ADR 009 unit 3c (`3ce1dfb0`, `df452737`, `8b12fc45`);
+  `docs/work/epics/E01-snapshot-backup.md`, crónica en `docs/archive/sync/`.
 - [x] ~~Fase 2 (upsert condicional del server)~~ — **cancelado** por ADR 009 Decision 2: era el
   arreglo de un protocolo de replicación que deja de existir.
 - [x] ~~Fase 3: rediseño de bordes, colapsar los cuatro `*TableSync`, cursor a SQLDelight~~ —
@@ -332,7 +333,7 @@ gana el ADR.
   que faltaba crearlo. Es `pievwpleqmrjwszuuivr` ("Justtt"), linkeado desde el 2026-06-10
   (`supabase/.temp/linked-project.json`), con las tres migraciones aplicadas y los `prod.*`
   poblados en `supabase.properties`. La confusión no era gratuita: ese server tiene dos tenants con
-  data real y filas cruzadas. Ver [`docs/sync/ADR009_PLAN.md`](sync/ADR009_PLAN.md), sección
+  data real y filas cruzadas. Ver [`docs/work/epics/E01-snapshot-backup.md`](work/epics/E01-snapshot-backup.md), sección
   "Production forensics".
 - [ ] Hostear `docs/PRIVACY_POLICY.md` como URL pública (Play la exige para apps con eliminación
   de cuenta).
@@ -487,7 +488,7 @@ gana el ADR.
   el import de un archivo que declara 3 o más **las barre y las restaura** — con `createdAt` y
   `lastConfirmedPeriod` del archivo, no del import. Un archivo v1/v2 no toca esa tabla: no tiene
   plantillas que devolver. La mitad de UI (`ImportStats.recurring` y el diálogo) ya aterrizó; el
-  detalle queda en `docs/sync/ADR009_PLAN.md`.
+  detalle queda en `docs/work/epics/E01-snapshot-backup.md`.
 
 - [ ] **Editar un movimiento de una categoría borrada lo re-archiva bajo otra, sin que nadie lo elija.**
   `EditTransactionViewModel.resolveSelection` (`:109-112`) cae en `?: list.firstOrNull()` porque
@@ -734,10 +735,10 @@ siguen en el repo como marcadores históricos.
 
 - `docs/WORKFLOW.md` — loop writer/reviewer + gate + tiers de modelo, para todo el repo. **Vigente.**
   `docs/archive/kmp/ORCHESTRATION.md` — el ledger de slices de KMP + landmines. **Cerrado.**
-- `docs/sync/ADR009_PLAN.md` — **el único doc vivo de sync**: la decisión de ADR 009 (el respaldo es
-  snapshot, no replicación), el forense de producción y el plan por fases. Leerlo antes de tocar sync.
-  La auditoría original y el plan de slices viejo quedan en `docs/archive/sync/`, para el *por qué*,
-  no para el *qué sigue*.
+- `docs/work/epics/E01-snapshot-backup.md` — **el único doc vivo de sync**: la decisión de ADR 009
+  (el respaldo es snapshot, no replicación) y las constraints que sobreviven a cada ticket. Leerlo
+  antes de tocar sync. La auditoría original, el plan de slices viejo y el plan por fases quedan en
+  `docs/archive/sync/`, para el *por qué*, no para el *qué sigue*.
 - `docs/adr/` — 001 (reversa a local-first con sync opcional), 002 (cursor de pull),
   003 (iOS congelado: se mantiene solo el compile gate, se retira el ritual),
   004 (el resolver de conflictos solo arbitra ediciones sin pushear; enmienda al 002),

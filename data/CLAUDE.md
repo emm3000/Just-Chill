@@ -74,7 +74,7 @@ in `docs/PROGRESS.md`; it does not fail the gate.
 - This module also `api`-exposes the Supabase auth/postgrest SDK and the Ktor engines. The consumer
   that actually uses them is `:presentation` (`hh/di/SupabaseModule.kt`).
 
-## Sync engine (`sync/`) — scheduled for deletion, see `docs/sync/ADR009_PLAN.md`
+## Sync engine (`sync/`) — scheduled for deletion, see `docs/work/epics/E01-snapshot-backup.md`
 
 - The per-table push/pull algorithm lives once in `BaseTableSync<DTO : SyncRowDto>` (template
   method); each table class (`AccountTableSync`, etc.) supplies only generated-query adapters and

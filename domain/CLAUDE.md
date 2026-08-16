@@ -35,7 +35,7 @@ framework. Example: `TransactionRepository` lives here; its `DefaultTransactionR
 (SQLDelight-backed) lives in `:data`.
 
 The app is local-first; sync is **backup-only, one device at a time** (ADR 006). The row-replication
-engine below is scheduled for deletion (`docs/sync/ADR009_PLAN.md` Phase 5): auth ports live in
+engine below is scheduled for deletion (`docs/work/epics/E01-snapshot-backup.md`): auth ports live in
 `auth/` (`AuthRepository`, `ObserveSessionUseCase`, `SessionStatus`, claim use cases) and sync ports
 in `sync/` (`SyncRepository`, `SyncCursorStore`, `SyncDataUseCase`, `ConflictResolver` — pure LWW).
 Supabase implementations live in `:data`; the `SyncCursorStore` adapter lives in `:presentation`

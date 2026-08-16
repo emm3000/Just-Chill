@@ -54,7 +54,7 @@ The app is **local-first**: SQLDelight on-device is the single source of truth, 
 account and no network. **Sync is OFF in production** (`SYNC_TEMPORARILY_DISABLED`,
 `core/sync/SyncKillSwitch.kt`) and is **being removed, not repaired**: ADR 009 replaces row
 replication with **snapshot backup** and deletes the engine while keeping the sync schema. **Read
-`docs/sync/ADR009_PLAN.md` before touching `data/.../sync/` or `presentation/.../core/sync/`.**
+`docs/work/epics/E01-snapshot-backup.md` before touching `data/.../sync/` or `presentation/.../core/sync/`.**
 
 **Data flow:** `Screen` → `ViewModel` → use case → `Repository` interface → `Default{Entity}Repository` → `LocalDataSource` (SQLDelight). The use case is there **only where there is domain logic** — a pure read goes from `ViewModel` straight to the `Repository` interface. Rationale + the measurement: `docs/CODE_QUALITY.md`.
 
@@ -128,11 +128,11 @@ doc has a read-trigger in the map below, and a doc with no trigger is archive.
 
 ## Docs map (`docs/`)
 
-- `PROGRESS.md` — "where are we now" plus the single open-work checklist; sync debt lives in the sync
-  plan instead. **Read it first.**
-- `sync/ADR009_PLAN.md` — the single live sync doc: what remains of replacing row replication with
-  snapshot backup, plus the constraints closed phases left behind. **Read before touching sync.** The
-  Phase 0–3 chronicle, old audit and old slice plan sit in `archive/sync/`.
+- `PROGRESS.md` — "where are we now" plus the single open-work checklist; sync debt lives in the
+  work epic instead. **Read it first.**
+- `work/epics/E01-snapshot-backup.md` — the sync/backup epic: constraints outliving every ticket
+  under it, remaining work in `work/backlog/`. **Read before touching sync.** The Phase 0–3
+  chronicle, old audit, old plan and old slice plan sit in `archive/sync/`.
 - `adr/` — filenames state the decision; each header declares what it amends or supersedes. 009 is
   the one to read first for anything sync-shaped. **Read before changing anything an ADR decided.**
 - `DATE_AUDIT.md` — the date findings + live rule #7: whatever asks "what day is it" takes an injected

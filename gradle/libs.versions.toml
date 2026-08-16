@@ -38,7 +38,7 @@ ktorClientOkhttp = "3.5.2"
 # the point. An undeclared transitive is a version whoever owns supabase-kt's dependency graph picks
 # for us, and a BOM bump can change or drop it with nothing in the gate saying a word — the same
 # trap this repo already documents for supabase-kt's unconfigured 10s `requestTimeout`
-# (`docs/sync/ADR009_PLAN.md`, Phase 2b), one layer down. The user's backups are verified against
+# (`docs/work/epics/E01-snapshot-backup.md`), one layer down. The user's backups are verified against
 # this hash, so the digest is not something to inherit by accident.
 okio = "3.17.0"
 

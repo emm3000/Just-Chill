@@ -11,7 +11,7 @@ package com.emm.justchill.core.sync
  * **This stays `true` forever.** `docs/adr/009-backup-is-a-snapshot-not-row-replication.md` replaces
  * row replication with snapshot backup and deletes this engine rather than repairing it, so there
  * is no "turn sync back on" any more — flipping this to `false` would re-enable the loop above.
- * The constant and its gates are removed in the last phase of `docs/sync/ADR009_PLAN.md`, once
+ * The constant and its gates are removed in the last phase of `docs/work/epics/E01-snapshot-backup.md`, once
  * nothing references the engine. Grep this name to find every site it gates.
  */
 const val SYNC_TEMPORARILY_DISABLED: Boolean = true

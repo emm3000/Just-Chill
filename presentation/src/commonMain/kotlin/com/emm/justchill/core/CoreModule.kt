@@ -14,7 +14,7 @@ import org.koin.dsl.module
  *
  * It lived in `syncModule` until ADR 009 2c-iii-b, and it was never engine property: one scope drives
  * the claim-on-sign-in observer, `SyncOrchestrator`'s loops today and `BackupOrchestrator`'s loops
- * from now on. `docs/sync/ADR009_PLAN.md` Phase 5 deletes `SyncModule.kt` whole, so a backup
+ * from now on. `docs/work/epics/E01-snapshot-backup.md` deletes `SyncModule.kt` whole, so a backup
  * orchestrator resolving its scope from there would be a survivor wired into a file scheduled for
  * deletion — the same reason `resumeEvents()` and the diagnostics logger moved out ahead of it.
  */

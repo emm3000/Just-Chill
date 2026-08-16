@@ -146,7 +146,7 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
      *
      * Deliberately NOT repaired with [signOut]'s swallow-then-clear shape: whether a delete whose
      * remote half already succeeded should still report a qualified success is its own contract
-     * question, deferred to Phase 5 of `docs/sync/ADR009_PLAN.md`. And unlike [signOut], no test
+     * question, deferred to `docs/work/epics/E01-snapshot-backup.md`. And unlike [signOut], no test
      * covers this call shape — `DefaultAuthRepositorySignOutTest` exercises [signOut] only, so the
      * defect above is read off the provider's source rather than off a red test.
      */
