@@ -10,6 +10,7 @@ import com.emm.domain.shared.backup.GetBackupStalenessUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.backup.ImportStats
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupHealth
@@ -53,6 +54,7 @@ class ProfileViewModelImportTest {
         every { health } returns MutableStateFlow(BackupHealth.None)
     }
     private val getBackupStaleness = mockk<GetBackupStalenessUseCase>(relaxed = true)
+    private val logger = mockk<DiagnosticsLogger>(relaxed = true)
     private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns flowOf(emptyList())
@@ -76,6 +78,7 @@ class ProfileViewModelImportTest {
         syncController = syncController,
         backupController = backupController,
         getBackupStaleness = getBackupStaleness,
+        logger = logger,
         categoryRepository = categoryRepository,
         accountRepository = accountRepository,
         observeSession = observeSession,

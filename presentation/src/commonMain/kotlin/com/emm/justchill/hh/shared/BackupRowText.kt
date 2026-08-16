@@ -19,7 +19,17 @@ fun BackupRowUi.toMetaText(): String = when (this) {
 
     BackupRowUi.Never -> "Todavía no hay ningún respaldo"
 
-    is BackupRowUi.Failed -> reason.toFailureText()
+    BackupRowUi.Unreadable -> "No pude leer el estado del respaldo"
+
+    // Both facts, and the age decides which one leads. With a snapshot to point at, the failure is
+    // an update that did not happen and the data is safe — so the age leads and the reason is
+    // dropped, because the row has one line and "why" matters least when nothing is at risk. With
+    // no snapshot at all there is nothing else to say, so the reason gets the space instead.
+    is BackupRowUi.Failed -> if (lastBackupDaysAgo == null) {
+        "Sin respaldo · ${reason.toFailureCause()}"
+    } else {
+        "${backupAgeLabel(lastBackupDaysAgo).titlecaseFirstChar()} · no pude actualizar"
+    }
 
     // The age alone would read as a neutral fact, so the second half says what makes it a warning:
     // there is data on this phone that no snapshot holds. That IS the stale rule's other half.
@@ -45,29 +55,32 @@ private fun backupAgeLabel(days: Int): String = when (days) {
 }
 
 /**
- * Why the last cycle failed, in words — with a fallback for `null`.
+ * The half-sentence after "Sin respaldo · " — why the cycle that would have made one failed.
  *
  * The `null` branch is not defensive padding: `BackupFailureReason.fromNameOrNull` answers null for a
- * reason name a device upgraded past, so a real failing device can arrive here with no label. It has
- * to say "it failed" anyway, because the warning was already decided by the streak, not by this.
+ * reason name a device upgraded past, so a real failing device can arrive here with no label. It
+ * still has to say something, because the warning was already decided by the streak, not by this.
  *
- * Only the reasons that change what the user would do get their own sentence. The rest collapse:
+ * Only the reasons that change what the user would do get their own words. The rest collapse:
  * telling somebody their snapshot failed to serialize, or that its read-back digest did not match,
  * names a defect they cannot do anything about and that belongs in the log.
+ *
+ * Read only where there is no snapshot to point at. With one, the row spends its single line on the
+ * age instead — see [toMetaText].
  */
-private fun BackupFailureReason?.toFailureText(): String = when (this) {
-    BackupFailureReason.Network -> "No pude respaldar — revisa tu conexión"
+private fun BackupFailureReason?.toFailureCause(): String = when (this) {
+    BackupFailureReason.Network -> "revisa tu conexión"
 
-    BackupFailureReason.Unauthorized -> "No pude respaldar — vuelve a iniciar sesión"
+    BackupFailureReason.Unauthorized -> "vuelve a iniciar sesión"
 
-    // Its own sentence because it is the one reason that is NOT about the cloud: `safeDbCall` raises
-    // it from the export's read and from the staleness read, both on this phone's own database, and
-    // "intenta de nuevo" would send the user to check a connection that is fine.
-    BackupFailureReason.LocalDatabase -> "No pude leer los datos de este teléfono"
+    // Its own words because it is the one reason that is NOT about the cloud: `safeDbCall` raises it
+    // from the export's read of this phone's own database, and "intenta de nuevo" would send the
+    // user to check a connection that is fine.
+    BackupFailureReason.LocalDatabase -> "no pude leer los datos de este teléfono"
 
     BackupFailureReason.Serialization,
     BackupFailureReason.Unverified,
     BackupFailureReason.Unknown,
     null,
-    -> "No pude respaldar — intenta de nuevo"
+    -> "intenta de nuevo"
 }

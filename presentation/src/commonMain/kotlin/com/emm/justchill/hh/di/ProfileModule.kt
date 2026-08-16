@@ -28,6 +28,9 @@ val profileModule = module {
             backupController = get(),
             // Bound in backupModule, beside the orchestrator that asks the same dirtiness question.
             getBackupStaleness = get(),
+            // Platform-provided (Crashlytics on Android, println on iOS) — the same port the
+            // orchestrator logs its cycles through.
+            logger = get(),
             categoryRepository = get(),
             accountRepository = get(),
             observeSession = get(),

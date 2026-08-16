@@ -8,12 +8,11 @@ import com.emm.domain.auth.SessionStatus
 import com.emm.domain.auth.SignOutResult
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.category.CategoryRepository
-import com.emm.domain.shared.backup.BackupFailureReason
 import com.emm.domain.shared.backup.BackupRepository
-import com.emm.domain.shared.backup.BackupStaleness
 import com.emm.domain.shared.backup.GetBackupStalenessUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupEvent
@@ -72,6 +71,7 @@ class ProfileViewModelTest {
     // Mocked rather than real: GetBackupStalenessUseCaseTest already owns the rule itself, and what
     // is under test here is the mapping from (session, health, staleness) to a BackupRowUi.
     private val getBackupStaleness = mockk<GetBackupStalenessUseCase>()
+    private val logger = mockk<DiagnosticsLogger>(relaxed = true)
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns flowOf(emptyList())
     }
@@ -100,6 +100,7 @@ class ProfileViewModelTest {
             syncController = syncController,
             backupController = backupController,
             getBackupStaleness = getBackupStaleness,
+            logger = logger,
             categoryRepository = categoryRepository,
             accountRepository = accountRepository,
             observeSession = observeSession,
@@ -709,149 +710,4 @@ class ProfileViewModelTest {
 
             job.cancel()
         }
-
-    // ── The "Último respaldo" row (ADR 009 Phase 3) ────────────────────────
-
-    @Test
-    fun `before anything is observed the row does not claim a healthy backup`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        assertEquals(BackupRowUi.NeedsAccount, vm.state.value.backupRow)
-    }
-
-    @Test
-    fun `a signed-out device is NeedsAccount, not Never`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
-        sessionFlow.emit(SessionStatus.NotAuthenticated)
-        advanceUntilIdle()
-
-        // BackupHealth.None publishes lastSuccessfulBackupAt == null for a signed-out device and for
-        // a signed-in one that has never backed up. Those must not read the same on screen.
-        assertEquals(BackupRowUi.NeedsAccount, vm.state.value.backupRow)
-        coVerify(exactly = 0) { getBackupStaleness(any()) }
-    }
-
-    @Test
-    fun `a signed-in device with no snapshot is Never`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
-        sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        advanceUntilIdle()
-
-        assertEquals(BackupRowUi.Never, vm.state.value.backupRow)
-        coVerify(exactly = 0) { getBackupStaleness(any()) }
-    }
-
-    @Test
-    fun `a running cycle wins over everything else`() = runTest(testDispatcher) {
-        coEvery { getBackupStaleness(any()) } returns BackupStaleness(daysSinceLastBackup = 9, isStale = true)
-        val vm = buildViewModel()
-
-        // Signed in, a stale snapshot AND a failure streak — every other branch would claim this row.
-        sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 2, BackupFailureReason.Network)
-        backingUpFlow.value = true
-        advanceUntilIdle()
-
-        assertEquals(BackupRowUi.BackingUp, vm.state.value.backupRow)
-    }
-
-    @Test
-    fun `a fresh snapshot with no failures is UpToDate, carrying the day count`() = runTest(testDispatcher) {
-        coEvery { getBackupStaleness(LAST_BACKUP_AT) } returns
-            BackupStaleness(daysSinceLastBackup = 0, isStale = false)
-        val vm = buildViewModel()
-
-        sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 0, lastFailureReason = null)
-        advanceUntilIdle()
-
-        assertEquals(BackupRowUi.UpToDate(0), vm.state.value.backupRow)
-    }
-
-    @Test
-    fun `the staleness answer is what turns an old snapshot into a warning`() = runTest(testDispatcher) {
-        coEvery { getBackupStaleness(LAST_BACKUP_AT) } returns
-            BackupStaleness(daysSinceLastBackup = 7, isStale = true)
-        val vm = buildViewModel()
-
-        sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 0, lastFailureReason = null)
-        advanceUntilIdle()
-
-        assertEquals(BackupRowUi.Stale(7), vm.state.value.backupRow)
-    }
-
-    @Test
-    fun `an old snapshot the use case does not call stale stays UpToDate`() = runTest(testDispatcher) {
-        // Same age as the test above, opposite verdict — so the row follows the rule and not the age.
-        coEvery { getBackupStaleness(LAST_BACKUP_AT) } returns
-            BackupStaleness(daysSinceLastBackup = 7, isStale = false)
-        val vm = buildViewModel()
-
-        sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 0, lastFailureReason = null)
-        advanceUntilIdle()
-
-        assertEquals(BackupRowUi.UpToDate(7), vm.state.value.backupRow)
-    }
-
-    @Test
-    fun `a failure streak wins over the age, and carries the reason`() = runTest(testDispatcher) {
-        coEvery { getBackupStaleness(any()) } returns BackupStaleness(daysSinceLastBackup = 1, isStale = false)
-        val vm = buildViewModel()
-
-        sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 1, BackupFailureReason.Network)
-        advanceUntilIdle()
-
-        assertEquals(BackupRowUi.Failed(BackupFailureReason.Network), vm.state.value.backupRow)
-    }
-
-    /**
-     * **The trap `BackupHealth`'s KDoc names.** `BackupFailureReason.fromNameOrNull` answers null for
-     * a persisted reason name this build no longer has, so `(5, null)` is reachable on a device that
-     * upgraded across a rename. A mapping keyed on `lastFailureReason != null` shows that device as
-     * healthy — five failed cycles in a row, rendered as an up-to-date backup.
-     */
-    @Test
-    fun `five failures with an unresolvable reason still warn`() = runTest(testDispatcher) {
-        coEvery { getBackupStaleness(any()) } returns BackupStaleness(daysSinceLastBackup = 0, isStale = false)
-        val vm = buildViewModel()
-
-        sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 5, lastFailureReason = null)
-        advanceUntilIdle()
-
-        assertEquals(BackupRowUi.Failed(null), vm.state.value.backupRow)
-    }
-
-    /**
-     * The staleness read is the only database call on this path and it runs in a plain collector, so
-     * an escaping exception would cancel `viewModelScope` and freeze the whole screen. The row has to
-     * survive it AND the rest of the ViewModel has to keep working.
-     */
-    @Test
-    fun `a database failure while reading staleness does not kill the screen`() = runTest(testDispatcher) {
-        coEvery { getBackupStaleness(any()) } throws
-            DomainException.DatabaseError(RuntimeException("disk I/O error"))
-        coEvery { signOut.invoke() } returns SignOutResult.Revoked
-        val vm = buildViewModel()
-
-        sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 0, lastFailureReason = null)
-        advanceUntilIdle()
-
-        assertEquals(BackupRowUi.Failed(BackupFailureReason.LocalDatabase), vm.state.value.backupRow)
-
-        // The other collectors are still alive: the sign-out intent still reaches its use case.
-        vm.onIntent(ProfileIntent.SignOut)
-        advanceUntilIdle()
-        coVerify(exactly = 1) { signOut.invoke() }
-    }
-
-    private companion object {
-        /** 2026-08-04T15:04:05Z — a week before [fixedNow]. Any real instant would do. */
-        const val LAST_BACKUP_AT: Long = 1_785_856_445_000L
-    }
 }

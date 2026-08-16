@@ -38,23 +38,43 @@ class BackupRowTextTest {
     }
 
     @Test
-    fun `the two reasons the user can act on get their own sentence`() {
+    fun `a failure over a snapshot leads with the age, so a good backup is never hidden`() {
+        // The manual-tap-on-bad-wifi case: data is safe, an update did not happen.
+        assertEquals("Hoy · no pude actualizar", BackupRowUi.Failed(BackupFailureReason.Network, 0).toMetaText())
+        assertEquals("Ayer · no pude actualizar", BackupRowUi.Failed(BackupFailureReason.Unknown, 1).toMetaText())
         assertEquals(
-            "No pude respaldar — revisa tu conexión",
-            BackupRowUi.Failed(BackupFailureReason.Network).toMetaText(),
+            "Hace 4 días · no pude actualizar",
+            BackupRowUi.Failed(BackupFailureReason.Unauthorized, 4).toMetaText(),
+        )
+    }
+
+    @Test
+    fun `a failure with no snapshot at all spends the line on the reason instead`() {
+        assertEquals(
+            "Sin respaldo · revisa tu conexión",
+            BackupRowUi.Failed(BackupFailureReason.Network, null).toMetaText(),
         )
         assertEquals(
-            "No pude respaldar — vuelve a iniciar sesión",
-            BackupRowUi.Failed(BackupFailureReason.Unauthorized).toMetaText(),
+            "Sin respaldo · vuelve a iniciar sesión",
+            BackupRowUi.Failed(BackupFailureReason.Unauthorized, null).toMetaText(),
         )
     }
 
     @Test
     fun `an unreadable local database is not blamed on the cloud`() {
         assertEquals(
-            "No pude leer los datos de este teléfono",
-            BackupRowUi.Failed(BackupFailureReason.LocalDatabase).toMetaText(),
+            "Sin respaldo · no pude leer los datos de este teléfono",
+            BackupRowUi.Failed(BackupFailureReason.LocalDatabase, null).toMetaText(),
         )
+    }
+
+    @Test
+    fun `a row that could not be read claims neither health nor failure`() {
+        val text = BackupRowUi.Unreadable.toMetaText()
+
+        assertEquals("No pude leer el estado del respaldo", text)
+        // The distinction the variant exists for: it must not read as "there is no backup".
+        assertTrue("Sin respaldo" !in text)
     }
 
     /**
@@ -64,10 +84,8 @@ class BackupRowTextTest {
      */
     @Test
     fun `a failure with no resolvable reason still reads as a failure`() {
-        val text = BackupRowUi.Failed(null).toMetaText()
-
-        assertEquals("No pude respaldar — intenta de nuevo", text)
-        assertTrue(text.startsWith("No pude"), "A null reason must never render as a healthy row.")
+        assertEquals("Sin respaldo · intenta de nuevo", BackupRowUi.Failed(null, null).toMetaText())
+        assertEquals("Hoy · no pude actualizar", BackupRowUi.Failed(null, 0).toMetaText())
     }
 
     @Test
@@ -75,9 +93,12 @@ class BackupRowTextTest {
         // Exhaustive over the enum by construction: a member added later lands on the generic branch
         // rather than on nothing, and this fails the day one renders blank.
         for (reason in BackupFailureReason.entries) {
-            val text = BackupRowUi.Failed(reason).toMetaText()
-            assertTrue(text.isNotBlank(), "$reason rendered blank.")
-            assertTrue(text.startsWith("No pude"), "$reason did not read as a failure: $text")
+            val withoutSnapshot = BackupRowUi.Failed(reason, null).toMetaText()
+            val withSnapshot = BackupRowUi.Failed(reason, 3).toMetaText()
+
+            assertTrue(withoutSnapshot.startsWith("Sin respaldo · "), "$reason: $withoutSnapshot")
+            assertTrue(withoutSnapshot.removePrefix("Sin respaldo · ").isNotBlank(), "$reason rendered no cause.")
+            assertEquals("Hace 3 días · no pude actualizar", withSnapshot, "$reason with a snapshot")
         }
     }
 }

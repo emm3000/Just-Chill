@@ -33,9 +33,12 @@ sealed interface SyncRowUi {
  *
  * ### Precedence, in the order the `when` applies it
  *
- * [BackingUp] > [NeedsAccount] > [Failed] > [Never] > [Stale] > [UpToDate]. A running cycle wins
- * because it is the only transient one — mirroring [SyncRowUi]'s "Syncing wins over Failed" — and a
- * failure streak wins over [Never] because "it broke" is more actionable than "it has not happened".
+ * [NeedsAccount] > [BackingUp] > [Unreadable] > [Failed] > [Never] > [Stale] > [UpToDate], with the
+ * reasoning on `ProfileViewModel.resolveBackupRow`. Two positions are load-bearing rather than
+ * arbitrary: [NeedsAccount] outranks [BackingUp] so a cycle still in flight when the session ends
+ * cannot render "Respaldando…" to a signed-out user, and **a failure does not outrank the snapshot
+ * itself** — [Failed] carries the age instead, so one bad manual tap cannot hide a backup that
+ * succeeded this morning.
  *
  * ### The one trap, spelled out in `BackupHealth`'s KDoc
  *
@@ -69,8 +72,28 @@ sealed interface BackupRowUi {
     /** Signed in, nothing has failed, and this device has never completed a snapshot for this account. */
     data object Never : BackupRowUi
 
-    /** At least one cycle has failed since the last verified snapshot. [reason] may be null — read the KDoc above. */
-    data class Failed(val reason: BackupFailureReason?) : BackupRowUi
+    /**
+     * The row could not be built: reading how old the last snapshot is threw.
+     *
+     * Distinct from [Failed] because the two are different sentences. [Failed] says a backup *cycle*
+     * did not produce a snapshot — a fact the health surface persisted. This says the app cannot
+     * currently describe the snapshot it has, which claims nothing about whether backup is working.
+     * Collapsing it into `Failed(reason, lastBackupDaysAgo = null)` would render as "Sin respaldo" on
+     * a device that has one.
+     */
+    data object Unreadable : BackupRowUi
+
+    /**
+     * At least one cycle has failed since the last verified snapshot — **and what that snapshot is**.
+     *
+     * @property reason may be null; read the trap note above before keying anything on it.
+     * @property lastBackupDaysAgo the age of the last verified snapshot, or null when there is none.
+     *   It is here so a failure cannot erase a good backup from the row: a manual tap on bad wifi an
+     *   hour after a successful automatic cycle is an ordinary sequence, and the daily cap then keeps
+     *   the streak from clearing until midnight. `null` is the case that is genuinely alarming —
+     *   failing with nothing backed up at all — and it is the one the copy shouts about.
+     */
+    data class Failed(val reason: BackupFailureReason?, val lastBackupDaysAgo: Int?) : BackupRowUi
 
     /** A verified snapshot exists, but it is older than the threshold **and** the ledger has moved since. */
     data class Stale(val daysSinceLastBackup: Int) : BackupRowUi
