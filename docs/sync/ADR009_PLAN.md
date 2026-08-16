@@ -919,16 +919,14 @@ pair is exercised for real.
 - Show "Last backup: X ago" in Profile, reading `BackupMetadataStore.lastSuccessfulBackupAt` —
   **not** a naked `AppPreferences` read: 2c-iii-a already landed the seam (`lastSuccessfulBackupAt`
   / `setLastSuccessfulBackupAt` / `clear`), so Phase 3 goes through the port from the start.
-  Nothing calls `setLastSuccessfulBackupAt` yet, since there is no backup pipeline to call it
-  after — that is 2c-iii-b. Still open here: wiring the write after a verified upload and the
-  Profile read itself.
+  Still open here: the Profile read itself.
 - Warning state when staleness exceeds 3 days with pending mutations.
 - Every failure (serialization, network, hash mismatch, storage error) logs a distinct reason
-  and increments a visible failure indicator.
-- `ProfileOp` gains `BackingUp` / `VerifyingBackup`; the concurrent-op guard already emits
-  `OperationInProgress`. Automatic backups do NOT go through `ProfileViewModel` —
-  `BackupOrchestrator` is a singleton in the style of `SyncOrchestrator`. Register every new
-  binding in `AppGraphKoinTest`.
+  and increments a visible failure indicator. **The serialization leg landed — 3a-i below.**
+- `ProfileOp` gains `VerifyingBackup` (`BackingUp` already landed in 2c-iv); the concurrent-op
+  guard already emits `OperationInProgress`. Automatic backups do NOT go through
+  `ProfileViewModel` — `BackupOrchestrator` is a singleton in the style of `SyncOrchestrator`.
+  Register every new binding in `AppGraphKoinTest`.
 - **Destination-change disclosure (ADR 009 Decision 5).** Before the first upload to an account
   this device has not backed up to before, say on screen that this device's whole ledger — including
   rows written under a previous account, since sign-out wipes nothing — goes into that account's
@@ -939,6 +937,42 @@ pair is exercised for real.
   ships. `BackupOrchestrator` becomes a second holder alongside `DeleteUserAccountUseCase`, so a
   stuck upload would block account deletion indefinitely — the same shape as the defect the engine
   had, under a new name.
+
+**3a-i — the serialization leg of "every failure logs a distinct reason". LANDED**
+(`16943dc9`, `bc74aad1`). Adds `DomainException.SerializationError` — distinct from `Unknown` and
+from `ValidationError`'s `BackupFileInvalid`/`BackupVersionUnsupported`, which stay reserved for
+`importFromJson`'s untrusted input — and wires it into every place the backup pipeline turns bytes
+into (or out of) the wire format:
+
+- `DefaultBackupRepository.exportToJson`'s `encodeToString(payload)` and
+  `DefaultBackupUploader.upload`'s `manifest.encodeToJson()`, both through a shared
+  `encodeAsDomainException`. **Wired but unreachable in practice**: `ExportPayloadDto` and
+  `BackupManifestDto` are both plain `String`/`Int`/`Long`/`Boolean`/`List`, so no well-formed
+  instance can make `kotlinx.serialization`'s encoder fail. The translation itself is proven by a
+  test that drives it directly with a synthetic `SerializationException`.
+- `BackupManifestDto`'s `readingPayload`/`payloadUnreadable`, which decode the bytes
+  `buildBackupManifest` builds a manifest from. **This one IS reachable**: those bytes are always
+  this app's own fresh `exportToJson` output, seconds old — `DefaultBackupUploader.upload` is
+  `buildBackupManifest`'s only caller, and `BackupOrchestrator.takeSnapshot` is its only caller,
+  always handing it the export it just made — never a user-picked file, which is what makes
+  `SerializationError` correct here and `ValidationError(BackupFileInvalid)` wrong. Proven
+  end-to-end: `BackupManifestTest`'s two assertion tests decode 8 fixtures covering all 7 reachable
+  failure reasons through the real function, not a wrapper called in isolation.
+- `DomainException.SerializationError.cause` is nullable, unlike `Unknown`'s and
+  `NetworkUnavailable`'s: two of `payloadUnreadable`'s call sites (an absent or non-numeric
+  `schemaVersion`) judge the payload unusable without anything having thrown, and a fabricated
+  cause would plant a synthetic frame in whatever later reads the exception's cause chain —
+  Crashlytics included — that looks like a real trace pointing at code that never ran. An earlier
+  version of this landed with a synthesized `SerializationException(reason)` cause for exactly that
+  gap; a re-review caught it and it was removed before this entry was written.
+
+**The gap this unit leaves, and it is real rather than hidden.** `ProfileViewModel.onBackupEvent`
+deliberately collapses every `BackupEvent.Failed` to one `ProfileMessage.BackupFailed` — see 2c-iv's
+"no backup failure signs the user out" note above — and never routes a backup `DomainException`
+through `toUserMessage()`. So `SerializationError`'s new Spanish string exists and is correct, but
+has no UI route today: a serialization failure reads on screen exactly like every other backup
+failure. Giving it one — finer per-reason copy, or at least routing the failure through
+`toUserMessage()` — is not yet named by any bullet above and is left for whoever picks this up.
 
 ### Phase 4 — restore confidence (the flag's gate)
 
