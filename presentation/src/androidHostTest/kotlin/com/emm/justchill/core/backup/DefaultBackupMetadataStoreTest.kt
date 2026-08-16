@@ -190,6 +190,52 @@ class DefaultBackupMetadataStoreTest {
         assertEquals(BackupFailureState(1, BackupFailureReason.Network), store.failureState("user-b"))
     }
 
+    // ── The destination disclosure (ADR 009 Decision 5, unit 3c) ───────────────────
+
+    @Test
+    fun `a destination nobody disclosed reads as null`() {
+        assertNull(store.destinationDisclosedAt("user-a"))
+    }
+
+    @Test
+    fun `setDestinationDisclosed round-trips the moment it was disclosed`() {
+        store.setDestinationDisclosed("user-a", 1_755_000_000_000L)
+
+        assertEquals(1_755_000_000_000L, store.destinationDisclosedAt("user-a"))
+    }
+
+    /**
+     * The disclosure is about ONE destination, so disclosing account A's must say nothing about
+     * account B's: B's bucket is a different place this device's ledger would land in.
+     */
+    @Test
+    fun `disclosing one account's destination leaves every other account undisclosed`() {
+        store.setDestinationDisclosed("user-a", 1_755_000_000_000L)
+
+        assertNull(store.destinationDisclosedAt("user-b"))
+    }
+
+    @Test
+    fun `clear removes the disclosure along with the rest, and only for that user`() {
+        store.setDestinationDisclosed("user-a", 1_755_000_000_000L)
+        store.setDestinationDisclosed("user-b", 1_800_000_000_000L)
+
+        store.clear("user-a")
+
+        assertNull(store.destinationDisclosedAt("user-a"))
+        assertEquals(1_800_000_000_000L, store.destinationDisclosedAt("user-b"))
+    }
+
+    @Test
+    fun `the disclosure is its own key, so writing it cannot lose the watermark`() {
+        store.setLastSuccessfulBackupAt("user-a", 1_755_000_000_000L)
+
+        store.setDestinationDisclosed("user-a", 1_800_000_000_000L)
+
+        assertEquals(1_755_000_000_000L, store.lastSuccessfulBackupAt("user-a"))
+        assertEquals(2, settings.keys.size, "Two independent facts, two keys: ${settings.keys}")
+    }
+
     /**
      * Two users whose ids are prefixes of one another is what a naive concatenation gets wrong, and
      * every key in this class is built the same way — so proving it once covers all of them.

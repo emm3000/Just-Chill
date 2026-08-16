@@ -12,4 +12,6 @@ interface BackupController {
     val health: StateFlow<BackupHealth>
 
     fun requestBackup(manual: Boolean = false)
+
+    fun acknowledgeDestination()
 }

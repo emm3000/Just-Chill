@@ -61,6 +61,10 @@ class BackupOrchestratorTest {
     private val backgroundFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
     private val resumeFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
 
+    // Seeded with USER_ID already disclosed: every test that is not about the disclosure gate is
+    // about what happens once it is open. The gate's own tests clear this first.
+    private val disclosed = mutableMapOf(USER_ID to DISCLOSED_AT)
+
     @Before
     fun setUp() {
         every { observeSession.invoke() } returns sessionFlow
@@ -69,6 +73,10 @@ class BackupOrchestratorTest {
         every { metadata.lastSuccessfulBackupAt(any()) } returns null
         every { metadata.failureState(any()) } returns BackupFailureState.None
         every { metadata.recordFailure(any(), any()) } returns BackupFailureState(1, BackupFailureReason.Unknown)
+        every { metadata.destinationDisclosedAt(any()) } answers { disclosed[firstArg<String>()] }
+        every { metadata.setDestinationDisclosed(any(), any()) } answers {
+            disclosed[firstArg()] = secondArg()
+        }
     }
 
     private fun TestScope.buildOrchestrator(now: Instant = NOW, zone: TimeZone = TimeZone.UTC): BackupOrchestrator {
@@ -626,6 +634,108 @@ class BackupOrchestratorTest {
         coVerify(exactly = 1) { uploader.upload(USER_ID, backupSnapshotName(NOW), PAYLOAD) }
     }
 
+    // ── The destination disclosure gate (ADR 009 Decision 5, unit 3c) ───────────────
+
+    /**
+     * THE test of this gate. An automatic cycle is headless — it never passes through
+     * `ProfileViewModel` — so a banner cannot satisfy "disclosed before the first upload"; only a
+     * refusal to upload can. It is a refusal and not a failure: no streak, no reason, no watermark.
+     */
+    @Test
+    fun `an undisclosed destination exports nothing, uploads nothing and books no failure`() =
+        runTest(testDispatcher) {
+            disclosed.clear()
+            coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+
+            val orchestrator = buildOrchestrator()
+            orchestrator.start()
+            authenticate()
+
+            backgroundFlow.emit(Unit)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { backupRepository.exportToJson(any(), any()) }
+            coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
+            verify(exactly = 0) { metadata.setLastSuccessfulBackupAt(any(), any()) }
+            verify(exactly = 0) { metadata.recordFailure(any(), any()) }
+        }
+
+    @Test
+    fun `a manual tap hits the same gate as an automatic cycle`() = runTest(testDispatcher) {
+        disclosed.clear()
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        orchestrator.requestBackup(manual = true)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { backupRepository.exportToJson(any(), any()) }
+        coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
+    }
+
+    /**
+     * The inverse of the test above, and it earns its place: a gate that never opens means backups
+     * silently never run again, and nothing else in this repo would turn red for that.
+     */
+    @Test
+    fun `acknowledging the destination lets the very next cycle upload`() = runTest(testDispatcher) {
+        disclosed.clear()
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+        coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
+
+        orchestrator.acknowledgeDestination()
+        advanceUntilIdle()
+
+        verify(exactly = 1) { metadata.setDestinationDisclosed(USER_ID, NOW.toEpochMilliseconds()) }
+        coVerify(exactly = 1) { uploader.upload(USER_ID, backupSnapshotName(NOW), PAYLOAD) }
+    }
+
+    @Test
+    fun `acknowledging for one account leaves the next account undisclosed`() = runTest(testDispatcher) {
+        disclosed.clear()
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+        orchestrator.acknowledgeDestination()
+        advanceUntilIdle()
+
+        sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = OTHER_USER_ID, email = "b@b.com"))
+        advanceUntilIdle()
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { uploader.upload(USER_ID, any(), any()) }
+        coVerify(exactly = 0) { uploader.upload(OTHER_USER_ID, any(), any()) }
+    }
+
+    @Test
+    fun `acknowledging with no session writes nothing`() = runTest(testDispatcher) {
+        disclosed.clear()
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        sessionFlow.value = SessionStatus.NotAuthenticated
+        advanceUntilIdle()
+
+        orchestrator.acknowledgeDestination()
+        advanceUntilIdle()
+
+        verify(exactly = 0) { metadata.setDestinationDisclosed(any(), any()) }
+        coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
+    }
+
     private fun fixedClock(instant: Instant): Clock = object : Clock {
         override fun now(): Instant = instant
     }
@@ -633,6 +743,7 @@ class BackupOrchestratorTest {
     private companion object {
         val NOW: Instant = Instant.parse("2026-08-14T12:00:00Z")
         val CHANGED_AT: Long = Instant.parse("2026-08-14T10:00:00Z").toEpochMilliseconds()
+        val DISCLOSED_AT: Long = Instant.parse("2026-08-01T00:00:00Z").toEpochMilliseconds()
         const val USER_ID = "uid-1"
         const val OTHER_USER_ID = "uid-2"
         const val APP_VERSION = "2.4.0"

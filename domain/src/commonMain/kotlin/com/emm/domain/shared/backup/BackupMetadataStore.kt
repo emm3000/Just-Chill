@@ -12,5 +12,9 @@ interface BackupMetadataStore {
 
     fun clearFailures(userId: String)
 
+    fun destinationDisclosedAt(userId: String): Long?
+
+    fun setDestinationDisclosed(userId: String, epochMillis: Long)
+
     fun clear(userId: String)
 }

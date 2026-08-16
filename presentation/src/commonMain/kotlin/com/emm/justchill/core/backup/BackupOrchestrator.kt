@@ -91,6 +91,13 @@ class BackupOrchestrator(
         requestChannel.trySend(Unit)
     }
 
+    override fun acknowledgeDestination() {
+        val userId: String = currentUserId ?: return
+        metadata.setDestinationDisclosed(userId, clock.now().toEpochMilliseconds())
+        publishHealth(userId, metadata.failureState(userId))
+        requestBackup(manual = true)
+    }
+
     fun start() {
         started = true
 
@@ -176,7 +183,9 @@ class BackupOrchestrator(
         val event: BackupEvent? = when (outcome) {
             SnapshotOutcome.Recorded -> BackupEvent.Succeeded
             SnapshotOutcome.OwnerChanged -> BackupEvent.Failed(DomainException.Unauthorized(OWNER_CHANGED))
-            SnapshotOutcome.NotDue -> null
+            SnapshotOutcome.NotDue,
+            SnapshotOutcome.DestinationUndisclosed,
+            -> null
         }
         if (event != null) _events.tryEmit(event)
     }
@@ -195,12 +204,23 @@ class BackupOrchestrator(
             lastSuccessfulBackupAt = metadata.lastSuccessfulBackupAt(userId),
             consecutiveFailures = state.consecutiveFailures,
             lastFailureReason = state.lastReason,
+            isDestinationDisclosed = metadata.destinationDisclosedAt(userId) != null,
         )
         _health.value = published
         if (currentUserId != userId) _health.compareAndSet(published, BackupHealth.None)
     }
 
     private suspend fun takeSnapshot(userId: String, manual: Boolean): SnapshotOutcome {
+        // Ahead of the due-check a manual request skips, so a tap cannot walk around the disclosure.
+        if (metadata.destinationDisclosedAt(userId) == null) {
+            logger.warn(
+                "backup cycle refused: this device has not disclosed to $userId that its whole " +
+                    "ledger, including rows written under a previous account, goes into this " +
+                    "account's backup. Nothing is exported or uploaded until Perfil is acknowledged.",
+            )
+            return SnapshotOutcome.DestinationUndisclosed
+        }
+
         val takenAt: Instant = clock.now()
         // manual skips isBackupDue: a user-requested backup runs regardless of dirty state or the
         // once-a-day cap.
@@ -263,7 +283,7 @@ class BackupOrchestrator(
     }
 }
 
-private enum class SnapshotOutcome { Recorded, NotDue, OwnerChanged }
+private enum class SnapshotOutcome { Recorded, NotDue, OwnerChanged, DestinationUndisclosed }
 
 private fun Exception.asDomainException(): DomainException = this as? DomainException ?: DomainException.Unknown(this)
 

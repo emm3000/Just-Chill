@@ -47,9 +47,19 @@ class DefaultBackupMetadataStore(private val settings: Settings) : BackupMetadat
 
     override fun clearFailures(userId: String) = writeFailure(userId, BackupFailureState.None)
 
+    override fun destinationDisclosedAt(userId: String): Long? {
+        val value: Long = settings.getLong(userKey(KEY_DESTINATION_DISCLOSED_AT_PREFIX, userId), NEVER)
+        return if (value == NEVER) null else value
+    }
+
+    override fun setDestinationDisclosed(userId: String, epochMillis: Long) {
+        settings.putLong(userKey(KEY_DESTINATION_DISCLOSED_AT_PREFIX, userId), epochMillis)
+    }
+
     override fun clear(userId: String) {
         settings.remove(userKey(KEY_LAST_SUCCESSFUL_BACKUP_AT_PREFIX, userId))
         settings.remove(userKey(KEY_BACKUP_FAILURE_PREFIX, userId))
+        settings.remove(userKey(KEY_DESTINATION_DISCLOSED_AT_PREFIX, userId))
     }
 
     /**
@@ -69,6 +79,7 @@ class DefaultBackupMetadataStore(private val settings: Settings) : BackupMetadat
         const val NEVER = -1L
         const val KEY_LAST_SUCCESSFUL_BACKUP_AT_PREFIX = "last_successful_backup_at_"
         const val KEY_BACKUP_FAILURE_PREFIX = "backup_failure_"
+        const val KEY_DESTINATION_DISCLOSED_AT_PREFIX = "backup_destination_disclosed_at_"
         const val FAILURE_SEPARATOR = '|'
     }
 }

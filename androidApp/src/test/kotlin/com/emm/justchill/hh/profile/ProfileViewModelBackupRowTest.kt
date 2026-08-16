@@ -135,7 +135,7 @@ class ProfileViewModelBackupRowTest {
         val vm = buildViewModel()
 
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 2, BackupFailureReason.Network)
+        healthFlow.value = health(LAST_BACKUP_AT, consecutiveFailures = 2, BackupFailureReason.Network)
         backingUpFlow.value = true
         advanceUntilIdle()
 
@@ -149,7 +149,7 @@ class ProfileViewModelBackupRowTest {
         val vm = buildViewModel()
 
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 0, lastFailureReason = null)
+        healthFlow.value = health(LAST_BACKUP_AT, consecutiveFailures = 0, lastFailureReason = null)
         advanceUntilIdle()
 
         assertEquals(BackupRowUi.UpToDate(0), vm.state.value.backupRow)
@@ -162,7 +162,7 @@ class ProfileViewModelBackupRowTest {
         val vm = buildViewModel()
 
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 0, lastFailureReason = null)
+        healthFlow.value = health(LAST_BACKUP_AT, consecutiveFailures = 0, lastFailureReason = null)
         advanceUntilIdle()
 
         assertEquals(BackupRowUi.Stale(7), vm.state.value.backupRow)
@@ -175,7 +175,7 @@ class ProfileViewModelBackupRowTest {
         val vm = buildViewModel()
 
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 0, lastFailureReason = null)
+        healthFlow.value = health(LAST_BACKUP_AT, consecutiveFailures = 0, lastFailureReason = null)
         advanceUntilIdle()
 
         assertEquals(BackupRowUi.UpToDate(7), vm.state.value.backupRow)
@@ -187,7 +187,7 @@ class ProfileViewModelBackupRowTest {
         val vm = buildViewModel()
 
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 1, BackupFailureReason.Network)
+        healthFlow.value = health(LAST_BACKUP_AT, consecutiveFailures = 1, BackupFailureReason.Network)
         advanceUntilIdle()
 
         assertEquals(
@@ -202,7 +202,7 @@ class ProfileViewModelBackupRowTest {
         val vm = buildViewModel()
 
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 5, lastFailureReason = null)
+        healthFlow.value = health(LAST_BACKUP_AT, consecutiveFailures = 5, lastFailureReason = null)
         advanceUntilIdle()
 
         assertEquals(
@@ -219,7 +219,7 @@ class ProfileViewModelBackupRowTest {
         val vm = buildViewModel()
 
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 0, lastFailureReason = null)
+        healthFlow.value = health(LAST_BACKUP_AT, consecutiveFailures = 0, lastFailureReason = null)
         advanceUntilIdle()
 
         assertEquals(BackupRowUi.Unreadable, vm.state.value.backupRow)
@@ -237,7 +237,7 @@ class ProfileViewModelBackupRowTest {
         val vm = buildViewModel()
 
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 1, BackupFailureReason.Network)
+        healthFlow.value = health(LAST_BACKUP_AT, consecutiveFailures = 1, BackupFailureReason.Network)
         advanceUntilIdle()
 
         val row = vm.state.value.backupRow
@@ -256,7 +256,7 @@ class ProfileViewModelBackupRowTest {
         val vm = buildViewModel()
 
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(
+        healthFlow.value = health(
             lastSuccessfulBackupAt = null,
             consecutiveFailures = 1,
             lastFailureReason = BackupFailureReason.Network,
@@ -287,7 +287,7 @@ class ProfileViewModelBackupRowTest {
         val vm = buildViewModel()
 
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 0, lastFailureReason = null)
+        healthFlow.value = health(LAST_BACKUP_AT, consecutiveFailures = 0, lastFailureReason = null)
         advanceUntilIdle()
 
         assertEquals(BackupRowUi.Unreadable, vm.state.value.backupRow)
@@ -304,7 +304,7 @@ class ProfileViewModelBackupRowTest {
         val vm = buildViewModel()
 
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 5, BackupFailureReason.Unauthorized)
+        healthFlow.value = health(LAST_BACKUP_AT, consecutiveFailures = 5, BackupFailureReason.Unauthorized)
         advanceUntilIdle()
 
         val row = vm.state.value.backupRow
@@ -320,7 +320,7 @@ class ProfileViewModelBackupRowTest {
         val vm = buildViewModel()
 
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-        healthFlow.value = BackupHealth(LAST_BACKUP_AT, consecutiveFailures = 12, BackupFailureReason.Unauthorized)
+        healthFlow.value = health(LAST_BACKUP_AT, consecutiveFailures = 12, BackupFailureReason.Unauthorized)
         advanceUntilIdle()
 
         val row = vm.state.value.backupRow
@@ -331,6 +331,14 @@ class ProfileViewModelBackupRowTest {
         assertEquals("Hace 30 días · vuelve a iniciar sesión", row.toMetaText())
         assertEquals(BackupRowSeverity.Danger, row.severity())
     }
+
+    // Every case below describes a destination the user already acknowledged; the pending
+    // disclosure outranks all of them and has its own tests.
+    private fun health(
+        lastSuccessfulBackupAt: Long?,
+        consecutiveFailures: Int,
+        lastFailureReason: BackupFailureReason?,
+    ) = BackupHealth(lastSuccessfulBackupAt, consecutiveFailures, lastFailureReason, isDestinationDisclosed = true)
 
     private companion object {
         const val LAST_BACKUP_AT: Long = 1_785_856_445_000L

@@ -63,8 +63,15 @@ class BackupOrchestratorHealthTest {
 
     private val failures = mutableMapOf<String, BackupFailureState>()
 
+    // Seeded disclosed: these tests are about the streak, not about the disclosure gate.
+    private val disclosed = mutableMapOf(USER_ID to DISCLOSED_AT)
+
     @Before
     fun setUp() {
+        every { metadata.destinationDisclosedAt(any()) } answers { disclosed[firstArg<String>()] }
+        every { metadata.setDestinationDisclosed(any(), any()) } answers {
+            disclosed[firstArg()] = secondArg()
+        }
         every { observeSession.invoke() } returns sessionFlow
         coEvery { backupRepository.exportToJson(any(), any()) } returns PAYLOAD
         coEvery { pruner.prune() } returns BackupPruneReport(kept = 1, deleted = 0, failedDeletes = emptyList())
@@ -118,7 +125,7 @@ class BackupOrchestratorHealthTest {
 
         authenticate()
 
-        assertEquals(BackupHealth(lastSuccess, 2, BackupFailureReason.Network), orchestrator.health.value)
+        assertEquals(health(lastSuccess, 2, BackupFailureReason.Network), orchestrator.health.value)
     }
 
     @Test
@@ -149,14 +156,14 @@ class BackupOrchestratorHealthTest {
 
         backgroundFlow.emit(Unit)
         advanceUntilIdle()
-        assertEquals(BackupHealth(null, 1, BackupFailureReason.Network), orchestrator.health.value)
+        assertEquals(health(null, 1, BackupFailureReason.Network), orchestrator.health.value)
 
         coEvery { uploader.upload(any(), any(), any()) } throws
             DomainException.ValidationError("read back does not match", ValidationCode.BackupUploadUnverified)
         resumeFlow.emit(Unit)
         advanceUntilIdle()
 
-        assertEquals(BackupHealth(null, 2, BackupFailureReason.Unverified), orchestrator.health.value)
+        assertEquals(health(null, 2, BackupFailureReason.Unverified), orchestrator.health.value)
     }
 
     @Test
@@ -182,7 +189,7 @@ class BackupOrchestratorHealthTest {
         advanceUntilIdle()
 
         verify(exactly = 1) { metadata.clearFailures(USER_ID) }
-        assertEquals(BackupHealth(NOW.toEpochMilliseconds(), 0, null), orchestrator.health.value)
+        assertEquals(health(NOW.toEpochMilliseconds(), 0, null), orchestrator.health.value)
     }
 
     @Test
@@ -336,6 +343,32 @@ class BackupOrchestratorHealthTest {
         }
     }
 
+    @Test
+    fun `an undisclosed destination is published as such so Perfil can ask`() = runTest(testDispatcher) {
+        disclosed.clear()
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns LAST_SUCCESS
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        assertEquals(
+            BackupHealth(LAST_SUCCESS, 0, null, isDestinationDisclosed = false),
+            orchestrator.health.value,
+        )
+
+        orchestrator.acknowledgeDestination()
+        advanceUntilIdle()
+
+        assertTrue(orchestrator.health.value.isDestinationDisclosed)
+    }
+
+    private fun health(
+        lastSuccessfulBackupAt: Long?,
+        consecutiveFailures: Int,
+        lastFailureReason: BackupFailureReason?,
+    ) = BackupHealth(lastSuccessfulBackupAt, consecutiveFailures, lastFailureReason, isDestinationDisclosed = true)
+
     private fun awaitUntil(what: String, condition: () -> Boolean) {
         val deadline = System.nanoTime() + AWAIT_TIMEOUT_MILLIS * NANOS_PER_MILLI
         while (!condition()) {
@@ -355,6 +388,7 @@ class BackupOrchestratorHealthTest {
         const val OTHER_USER_ID = "uid-2"
         const val APP_VERSION = "2.4.0"
         val LAST_SUCCESS: Long = Instant.parse("2026-08-10T12:00:00Z").toEpochMilliseconds()
+        val DISCLOSED_AT: Long = Instant.parse("2026-08-01T00:00:00Z").toEpochMilliseconds()
         const val CYCLE_FAILED = "backup cycle failed"
         const val STREAK_1 = "consecutive failures=1"
         const val STREAK_2 = "consecutive failures=2"
