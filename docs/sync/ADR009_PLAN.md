@@ -929,12 +929,7 @@ pair is exercised for real.
   guard already emits `OperationInProgress`. Automatic backups do NOT go through
   `ProfileViewModel` — `BackupOrchestrator` is a singleton in the style of `SyncOrchestrator`.
   Register every new binding in `AppGraphKoinTest`.
-- **Destination-change disclosure (ADR 009 Decision 5).** Before the first upload to an account
-  this device has not backed up to before, say on screen that this device's whole ledger — including
-  rows written under a previous account, since sign-out wipes nothing — goes into that account's
-  backup. A one-time disclosure, not a confirm-or-cancel dialog: nothing is downloaded, merged or
-  destroyed locally. Persist "already disclosed for this destination" so it fires once per account,
-  and pin it with a test — an undisclosed first upload is the failure this exists to prevent.
+- **Destination-change disclosure (ADR 009 Decision 5). LANDED — 3c below.**
 - **Close the `SyncMutex` timeout defect** recorded in `docs/PROGRESS.md` before the pipeline
   ships. `BackupOrchestrator` becomes a second holder alongside `DeleteUserAccountUseCase`, so a
   stuck upload would block account deletion indefinitely — the same shape as the defect the engine
@@ -1145,6 +1140,44 @@ the same `SNAPSHOT_BACKUP_ENABLED` gate as "Respaldar ahora".
 - **A failing row cannot also say "hay cambios sin respaldar".** The line has no room for the age,
   the action and the dirty half at once, so the dirty half is what the `danger` token carries
   instead. A reader who wants the sentence has to read the colour.
+
+**3c — the destination disclosure. LANDED.** Before the first upload to an account this device has
+not backed up to before, Perfil says on screen that this device's whole ledger — including rows
+written under a previous account, since sign-out wipes nothing — goes into that account's backup. A
+one-time disclosure, not a confirm-or-cancel dialog: nothing is downloaded, merged or destroyed
+locally.
+
+- **The gate is the first thing `takeSnapshot` checks**, ahead of the `isBackupDue` check a manual
+  request skips, so a tap cannot walk around it. `uploader.upload` has exactly one call site,
+  reachable only through `takeSnapshot` ← `runBackup` ← the single `requestChannel` consumer, so
+  manual and automatic cycles converge on that one choke point. An undisclosed destination is a
+  refusal, not a failure — it mirrors `SnapshotOutcome.OwnerChanged`: no streak, no
+  `BackupFailureReason`, no watermark touched, no `BackupEvent` emitted.
+- **The disclosure flag is its own preference key, not bundled with the streak.** 3a-ii bundled
+  count and reason because a torn write across two keys was representable; a single value written on
+  its own occasion buys nothing from bundling, and would force a read-modify-write of a neighbouring
+  fact instead. `clear(userId)` removes all three keys.
+- **Backup preference keys moved out of `AppPreferences`**, which sat at exactly 11 members —
+  detekt's `TooManyFunctions` ceiling — **into `DefaultBackupMetadataStore`**, which now takes
+  `Settings` directly. Key strings, the `-1L` sentinel and the `'|'` separator are byte-identical,
+  over the same `Settings` single. Zero exposure regardless of the move: `SNAPSHOT_BACKUP_ENABLED`
+  has never been `true`, so no install carries these keys yet.
+- **`BackupRowUi.DisclosurePending` ranks below `NeedsAccount`** — no session, nobody to disclose to;
+  the disclosure is per-account — **and above `BackingUp`** — the orchestrator raises `isBackingUp`
+  for the whole cycle, including the one it is about to refuse, so a lower rank would flash
+  "Respaldando…" over a device uploading nothing. Severity `Warning`, not `Danger`: 3b reserved
+  danger for a ledger unprotected AND with no remedy in reach; here the remedy is the button in the
+  same row, and it fires on every first sign-in, so colouring routine onboarding red destroys red.
+
+**The gaps this unit leaves.**
+
+- After the flag flips, a user who signs into a new account and never opens Perfil gets no backups
+  and no signal outside that screen.
+- iOS exports `DisclosurePending` but renders nothing yet — an iOS-slice item.
+- The flag gate itself is untested: `:ui-android` has no Compose harness, the same gap 2c-iv and 3b
+  record. Phase 4 exercises it.
+- `BackupOrchestrator` is now at exactly 11 class functions, so the next member there needs a hoist
+  to a top-level function first.
 
 ### Phase 4 — restore confidence (the flag's gate)
 
