@@ -1034,6 +1034,78 @@ replay is gone by the time anyone opens Perfil.
 - **Staleness is not here.** The 3-day warning with pending mutations is still 3b, and belongs in a
   use case rather than in the orchestrator.
 
+**3b — the Perfil row. LANDED** (`73843f42`, plus the review follow-up below). `BackupController
+.health` gets its first consumer: a read-only "Último respaldo" row in the Respaldo group, behind
+the same `SNAPSHOT_BACKUP_ENABLED` gate as "Respaldar ahora".
+
+- **`BackupHealth` was NOT reshaped into a sealed type**, and the alternative was considered rather
+  than skipped. Its `lastSuccessfulBackupAt == null` genuinely carries three meanings — no session,
+  orchestrator never started, signed in but never backed up — but a value object cannot tell them
+  apart: only the ViewModel holds the session *and* the health *and* the staleness answer at once.
+  So the discrimination lives in the UI-facing state instead, as `BackupRowUi` in `ProfileUiState.kt`,
+  mirroring the `SyncRowUi` precedent whose KDoc already stated the principle: resolved in one place,
+  not scattered across the composable. Seven variants, precedence in this order —
+  `NeedsAccount` > `BackingUp` > `Unreadable` > `Failed` > `Never` > `Stale` > `UpToDate`.
+- **Two of those positions are load-bearing rather than arbitrary.** `NeedsAccount` outranks
+  `BackingUp` because a cycle still in flight when the session ends would otherwise render
+  "Respaldando…" to a signed-out user, describing work being done for an account they just left.
+  And **a failure does not outrank the snapshot itself**: `takeSnapshot` skips the due-check for a
+  manual request, so "automatic cycle succeeds at 09:00, user taps Respaldar ahora at 10:00 on bad
+  wifi" is an ordinary sequence — and `alreadyBackedUpOn` then blocks every automatic cycle from
+  clearing the streak until midnight. Ranking the failure first hid "backed up today" for the rest
+  of the day, under a row whose title promises exactly that fact, on a device whose data was safe.
+  `Failed` therefore carries `lastBackupDaysAgo` and the copy shows both facts; `null` there —
+  failing with nothing backed up at all — is the genuinely alarming case and the only one that takes
+  the `danger` token. Found by review, not by the gate.
+- **Warn on the count, never on the reason** — 3a-ii's trap, now with a test that fails when it is
+  reintroduced. `BackupRowUi.Failed` is chosen on `consecutiveFailures > 0`; the reason is carried
+  only to pick wording and has a null branch, because `(5, null)` is reachable.
+- **The staleness rule is a `:domain` use case**, `GetBackupStalenessUseCase`: **older than
+  `BACKUP_STALE_AFTER_DAYS` (3) calendar days AND the ledger has moved since the last verified
+  snapshot.** Both halves are required — a device with nothing to back up is not stale, however old
+  its snapshot, because a ledger nobody has touched is completely backed up. The threshold is
+  exclusive (`>`, "exceeds three days" per the bullet above) and counted in **calendar days**, not
+  `now - 3 * 24h`: `docs/DATE_AUDIT.md` #8 is the finding that those are different questions, which
+  is why the injected `TimeZone` is a real dependency here and neither it nor the `Clock` carries a
+  default (that document's rule 7). It passes the use-case admission rule on the compound decision,
+  not on ceremony: a conjunction over data the caller does not hold and a clock it must not read.
+- **`latestLocalChangeAt() == null` → never stale.** That null is four empty tables, not an ancient
+  change — SQLDelight types the column `Long?` — and an empty ledger has nothing a snapshot could be
+  missing. The age half is evaluated first, so the database is not read at all when the age alone
+  already says no.
+- **`lastSuccessfulBackupAt` is non-null in the use case's signature.** The never-backed-up device is
+  a louder statement the caller has to make anyway, so it is not expressed as a null this class would
+  have to answer with a `true` or `false` nothing could observe.
+- **`BackupOrchestrator`'s private `isDirty` is gone.** Its predicate moved to
+  `hasLocalChangesSince` in `:domain`, beside the `latestLocalChangeAt` it interprets, and both
+  callers use it: the gate that decides whether an automatic cycle runs and the row that warns the
+  user must not be able to disagree. It has its own truth-table test — the extraction was correct,
+  but for one commit its only safety was that the text was identical, and mutating its `>` to `>=`
+  left the whole orchestrator suite green.
+- **Copy is `BackupRowUi.toMetaText()`** in `:presentation/hh/shared/`, beside `ProfileMessageText`
+  and for the same reason: both UIs read it, so a second table would be a second translation of one
+  state machine. It holds no colour and no icon — those are per-platform tokens.
+
+**The gaps this unit leaves.**
+
+- **The row does not render.** `SNAPSHOT_BACKUP_ENABLED` is still false, so the gate around it is
+  never true and health stays `BackupHealth.None`. As with 2c-iv, `:ui-android` has no Compose test
+  harness, so nothing asserts the flag gate itself; Phase 4 is where the pair is exercised.
+- **The day count does not refresh across midnight.** It is computed per emission of session, health
+  or `isBackingUp` — a Perfil left open overnight keeps saying "Hoy". Identical in kind and in
+  disclosure to `ReportUiState.isCurrentMonth` (`docs/DATE_AUDIT.md` #7), and deliberately not fixed
+  with a ticker.
+- **The session and the health are two flows, so they can disagree for an instant.** The row combines
+  `ProfileUiState.session` with `BackupController.health`, and the orchestrator publishes health
+  through its own session gate; across an account switch there is a window where account B's session
+  is paired with account A's watermark. It closes on the next emission. The watermark itself is
+  per-account and correct — this is a display seam, not a recording one.
+- **`Unreadable` exists because the staleness read can throw** and the row is built in a plain
+  `onEach`, not `launchSafe`: an escaping exception cancels `viewModelScope` and freezes all of
+  Perfil. The catch is broad on purpose — the use case also converts an epoch-millis watermark to a
+  `LocalDate`, and `kotlinx.datetime` raises `DateTimeArithmeticException`, not a `DomainException`,
+  for an out-of-range value. It logs through `DiagnosticsLogger` rather than swallowing silently.
+
 ### Phase 4 — restore confidence (the flag's gate)
 
 1. **CI round-trip, no device needed**: host test with in-memory JDBC SQLite (the pattern
