@@ -54,3 +54,6 @@ engine decommission remain.
 - Session and health are two flows — across an account switch there is one emission where the new session pairs with the old account's watermark (a display seam, not a recording one).
 - Settled, do not reopen: shared accounts, multi-device sync, CRDTs, server-side LWW/conditional upsert, push-only row sync, or E2E encryption now (a Keystore-bound key dies with the phone).
 - An unparseable `lastConfirmedPeriod` degrades the field to null, never the row — a template with no readable mark is still usable, unlike an unreadable `type`/`frequency`, which leaves the row itself unusable.
+- Verification is read-only and is not a backup cycle: it never deletes — **not even an orphan payload, which prune deletes on sight** — never touches the watermark, the failure streak or published health, and emits no `BackupEvent`. Two tests pin the no-write property from independent angles.
+- `isNewestPair` is measured against the newest parseable snapshot name, orphan or not. Filtering orphans before indexing makes a walked-back result claim it is the newest — precisely in the window a failed manifest PUT creates, which is the only reason orphans exist.
+- A list or download failure is an error, never `NothingVerified` — collapsing them renders a dead network as "none of your backups verify".
