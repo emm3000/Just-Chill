@@ -13,6 +13,7 @@ import com.emm.domain.shared.backup.hasLocalChangesSince
 import com.emm.domain.shared.backup.toBackupFailureReason
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.logging.DiagnosticsLogger
+import com.emm.domain.sync.SyncMutex
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
@@ -36,7 +37,7 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
-// LongParameterList: twelve distinct collaborator ports/seams this class orchestrates; no holder
+// LongParameterList: thirteen distinct collaborator ports/seams this class orchestrates; no holder
 // would carry behaviour of its own, and the two lifecycle flows must stay independent parameters.
 @Suppress("LongParameterList")
 class BackupOrchestrator(
@@ -44,6 +45,7 @@ class BackupOrchestrator(
     private val uploader: BackupUploader,
     private val pruner: BackupPruner,
     private val metadata: BackupMetadataStore,
+    private val syncMutex: SyncMutex,
     private val observeSession: ObserveSessionUseCase,
     private val appVersion: String,
     private val clock: Clock,
@@ -238,14 +240,23 @@ class BackupOrchestrator(
             exportedAt = takenAt.toEpochMilliseconds(),
             appVersion = appVersion,
         )
-        uploader.upload(userId, backupSnapshotName(takenAt), payload)
-        // currentUserId read once and reused for both branches below: two reads of a @Volatile
-        // field can disagree.
-        val stillTheSameAccount: Boolean = currentUserId == userId
+        // The lock spans the upload and the writes that book it, so an account deletion cannot slip
+        // its clear(userId) between them and leave this account marked backed up after it is gone.
+        // exportToJson and prune stay outside: neither writes anything the deletion clears, and both
+        // would only widen a process-wide lock across Storage calls the delete button waits on.
+        val stillTheSameAccount: Boolean = syncMutex.withLock {
+            uploader.upload(userId, backupSnapshotName(takenAt), payload)
+            // currentUserId read once and reused for both branches below: two reads of a @Volatile
+            // field can disagree.
+            val sameAccount: Boolean = currentUserId == userId
+            if (sameAccount) {
+                metadata.setLastSuccessfulBackupAt(userId, takenAt.toEpochMilliseconds())
+                metadata.clearFailures(userId)
+                publishHealth(userId, BackupFailureState.None)
+            }
+            sameAccount
+        }
         if (stillTheSameAccount) {
-            metadata.setLastSuccessfulBackupAt(userId, takenAt.toEpochMilliseconds())
-            metadata.clearFailures(userId)
-            publishHealth(userId, BackupFailureState.None)
             prune()
         } else {
             logger.warn(

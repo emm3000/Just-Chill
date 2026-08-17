@@ -9,7 +9,6 @@ import com.emm.data.sync.TransactionTableSync
 import com.emm.domain.sync.ConflictResolver
 import com.emm.domain.sync.SyncCursorStore
 import com.emm.domain.sync.SyncDataUseCase
-import com.emm.domain.sync.SyncMutex
 import com.emm.domain.sync.SyncRepository
 import com.emm.justchill.core.appScopeQualifier
 import com.emm.justchill.core.lifecycle.resumeEvents
@@ -27,10 +26,9 @@ private val categorySyncQualifier = named("categorySync")
 private val transactionSyncQualifier = named("transactionSync")
 private val recurringSyncQualifier = named("recurringSync")
 
-// Single commonMain sync wiring (replaces :androidApp/hh/di/SyncModule.kt + KoinIos.kt's iosSyncModule
-// AND the SyncMutex previously bound in iosProfileSupportModule). resumeEvents() is expect/actual in
-// commonMain (Android ProcessLifecycleOwner / iOS UIApplicationDidBecomeActive) — no platform branching
-// here. The connectivity-regained trigger is absent on both platforms (shared cross-platform debt).
+// resumeEvents() is expect/actual in commonMain (Android ProcessLifecycleOwner / iOS
+// UIApplicationDidBecomeActive) — no platform branching here. The connectivity-regained trigger is
+// absent on both platforms (shared cross-platform debt).
 val syncModule = module {
     // Per-table sync units — qualified so DefaultSyncRepository can distinguish the four TableSync
     // slots even though they share the interface type. Each takes (EmmDatabaseData, SupabaseClient,
@@ -58,10 +56,6 @@ val syncModule = module {
             recurringSync = get(recurringSyncQualifier),
         )
     }
-
-    // Single: ONE lock per process. Serializes sync cycles against each other AND against account
-    // deletion (in-flight push must not resurrect rows after delete_account).
-    single { SyncMutex() }
 
     singleOf(::SyncDataUseCase)
 

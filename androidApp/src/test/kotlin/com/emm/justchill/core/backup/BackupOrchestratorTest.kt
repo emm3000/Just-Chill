@@ -13,6 +13,7 @@ import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.BackupUploader
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.logging.DiagnosticsLogger
+import com.emm.domain.sync.SyncMutex
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -20,6 +21,7 @@ import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
@@ -56,6 +58,7 @@ class BackupOrchestratorTest {
     private val metadata = mockk<BackupMetadataStore>(relaxed = true)
     private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
     private val logger = mockk<DiagnosticsLogger>(relaxed = true)
+    private val syncMutex = SyncMutex()
 
     private val sessionFlow = MutableStateFlow<SessionStatus>(SessionStatus.Initializing)
     private val backgroundFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
@@ -86,6 +89,7 @@ class BackupOrchestratorTest {
             uploader = uploader,
             pruner = pruner,
             metadata = metadata,
+            syncMutex = syncMutex,
             observeSession = observeSession,
             appVersion = APP_VERSION,
             clock = fixedClock(now),
@@ -735,6 +739,55 @@ class BackupOrchestratorTest {
         coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
     }
 
+    @Test
+    fun `the upload waits for a holder of the shared mutex and runs once it lets go`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        val holderGate = CompletableDeferred<Unit>()
+        val holder = launch { syncMutex.withLock { holderGate.await() } }
+        advanceUntilIdle()
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+        backgroundFlow.emit(Unit)
+        advanceTimeBy(WAITING_ON_LOCK_MILLIS)
+
+        coVerify(exactly = 1) { backupRepository.exportToJson(any(), any()) }
+        coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
+
+        holderGate.complete(Unit)
+        holder.join()
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { uploader.upload(USER_ID, backupSnapshotName(NOW), PAYLOAD) }
+        verify(exactly = 1) { metadata.setLastSuccessfulBackupAt(USER_ID, NOW.toEpochMilliseconds()) }
+    }
+
+    @Test
+    fun `a stuck holder fails the cycle as Busy and leaves the consumer alive to retry`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        val stuck = CompletableDeferred<Unit>()
+        val holder = launch { syncMutex.withLock { stuck.await() } }
+        advanceUntilIdle()
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
+        verify(exactly = 1) { metadata.recordFailure(USER_ID, BackupFailureReason.Busy) }
+        verify(exactly = 0) { metadata.setLastSuccessfulBackupAt(any(), any()) }
+
+        stuck.complete(Unit)
+        holder.join()
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { uploader.upload(USER_ID, backupSnapshotName(NOW), PAYLOAD) }
+    }
+
     private fun fixedClock(instant: Instant): Clock = object : Clock {
         override fun now(): Instant = instant
     }
@@ -752,6 +805,9 @@ class BackupOrchestratorTest {
         const val OWNER_CHANGED = "Snapshot backup failed: the signed-in account changed"
         const val PAYLOAD = """{"schemaVersion":3}"""
         const val RETRY_BACKOFF_MILLIS = 6_000L
+
+        // Well inside SyncMutex's acquisition timeout: this test is about the wait, not the give-up.
+        const val WAITING_ON_LOCK_MILLIS = 5_000L
         const val UPLOAD_DURATION_MILLIS = 1_000L
     }
 }

@@ -13,6 +13,7 @@ import com.emm.domain.shared.backup.BackupUploader
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 import com.emm.domain.shared.logging.DiagnosticsLogger
+import com.emm.domain.sync.SyncMutex
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
@@ -99,6 +100,7 @@ class BackupOrchestratorHealthTest {
         uploader = uploader,
         pruner = pruner,
         metadata = metadata,
+        syncMutex = SyncMutex(),
         observeSession = observeSession,
         appVersion = APP_VERSION,
         clock = fixedClock(NOW),
