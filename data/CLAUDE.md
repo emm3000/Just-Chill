@@ -115,6 +115,12 @@ exception type here.
   migrate with **foreign keys ON** — the iOS configuration, and the only one under which statement
   order in `4.sqm` matters at all. Android runs them off here (`onOpen` after `onUpgrade`), so a
   suite that only tested Android would pass whatever order the migration were written in.
+- **A schema bump also rehearses the restore**, and it is a different question: the suite proves a
+  migration preserves rows already on the device, never that a snapshot written *before* the bump
+  can still be read *after* it. Before shipping one, import the latest production snapshot onto a
+  clean emulator and compare `ImportStats` — `accounts`, `categories`, `transactions`, `recurring` —
+  against the pre-bump counts. Any of the four that moved is a failure. Restoring is the only path
+  back from a migration that loses data, so a bump that has not been restored from is untested.
 
 ### Migration tests: use raw SQL against historical schemas
 

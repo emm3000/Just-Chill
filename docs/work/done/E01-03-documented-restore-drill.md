@@ -4,10 +4,10 @@
 
 ## Done when
 
-- [ ] `data/CLAUDE.md` states that a schema bump also restores the latest production snapshot on a
+- [x] `data/CLAUDE.md` states that a schema bump also restores the latest production snapshot on a
   clean emulator and compares it against the pre-bump state, beside the existing
   `:data:connectedAndroidDeviceTest` rule that fires on the same trigger
-- [ ] the drill names what "compare" means concretely enough to fail — which tables, which counts —
+- [x] the drill names what "compare" means concretely enough to fail — which tables, which counts —
   rather than leaving it to whoever reads it under pressure
 
 ## Context
