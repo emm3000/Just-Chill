@@ -4,7 +4,7 @@ import kotlin.time.Instant
 
 fun backupSnapshotName(takenAt: Instant): String {
     val stamp = Instant.fromEpochSeconds(takenAt.epochSeconds).toString()
-    return "$SNAPSHOT_PREFIX${stamp.replace(':', TIME_SEPARATOR)}$JSON_EXTENSION"
+    return "$CURRENT_GENERATION_PREFIX${stamp.replace(':', TIME_SEPARATOR)}$JSON_EXTENSION"
 }
 
 // Well-formed digits in the right places, not a real instant, is the same answer as a name that
@@ -27,7 +27,7 @@ private const val JSON_EXTENSION: String = ".json"
 
 private const val SNAPSHOT_FAMILY: String = "backup-v"
 
-private const val SNAPSHOT_PREFIX: String = "$SNAPSHOT_FAMILY$BACKUP_SCHEMA_VERSION-"
+private const val CURRENT_GENERATION_PREFIX: String = "$SNAPSHOT_FAMILY$BACKUP_SCHEMA_VERSION-"
 
 private const val TIME_SEPARATOR: Char = '-'
 
@@ -36,10 +36,6 @@ private const val HOURS = 2
 private const val MINUTES = 3
 private const val SECONDS = 4
 
-// The generation is written but never matched on. Only the family and the stamp are shared with the
-// writer: a matcher built from SNAPSHOT_PREFIX would stop seeing every file already in the bucket
-// the day BACKUP_SCHEMA_VERSION moves, and what a payload is has one source of truth anyway — its
-// own schemaVersion key, which is what decodeBackupPayload dispatches on.
 private val SNAPSHOT_NAME = Regex(
     SNAPSHOT_FAMILY + """\d+-(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})Z\.json""",
 )
