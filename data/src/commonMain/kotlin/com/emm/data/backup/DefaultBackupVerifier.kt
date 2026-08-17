@@ -102,4 +102,5 @@ private const val LIST_FAILED = "$VERIFY_FAILED the bucket could not be listed."
 
 private const val LISTING_NEVER_ENDED = "$VERIFY_FAILED the listing never returned an empty page within " +
     "$BACKUP_LIST_MAX_PAGES pages of $BACKUP_LIST_PAGE_SIZE objects, so the newest snapshot may not " +
-    "be in it at all — the bucket is listed by name ascending and the newest names sort last."
+    "be in it at all — the bucket is listed by name ascending, and absent an app downgrade the newest " +
+    "names sort last."
