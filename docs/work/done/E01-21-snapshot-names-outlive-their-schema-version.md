@@ -4,9 +4,9 @@
 
 ## Done when
 
-- [ ] a snapshot written under an older `BACKUP_SCHEMA_VERSION` is still recognised as a snapshot,
+- [x] a snapshot written under an older `BACKUP_SCHEMA_VERSION` is still recognised as a snapshot,
   so retention and verification keep seeing it after the constant moves
-- [ ] a test fails if a future bump makes the already-uploaded generation invisible again
+- [x] a test fails if a future bump makes the already-uploaded generation invisible again
 
 ## Context
 
