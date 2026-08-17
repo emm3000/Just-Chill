@@ -56,6 +56,7 @@ private fun BackupFailureReason?.toFailureAction(): String? = when (this) {
 
     BackupFailureReason.LocalDatabase -> "no pude leer tus datos"
 
+    BackupFailureReason.Busy,
     BackupFailureReason.Serialization,
     BackupFailureReason.Unverified,
     BackupFailureReason.Unknown,

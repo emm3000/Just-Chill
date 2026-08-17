@@ -11,6 +11,7 @@ fun DomainException.toUserMessage(): String = when (this) {
     is DomainException.ValidationError -> code.toUserMessage()
     is DomainException.DatabaseError -> "Hubo un problema guardando tu data"
     is DomainException.Unauthorized -> "Credenciales incorrectas o sesión expirada"
+    is DomainException.Busy -> "Hay otra operación en curso — espera un momento e intenta de nuevo"
     is DomainException.NetworkUnavailable -> "Sin conexión — revisa tu internet"
     is DomainException.Unknown -> "Algo se rompió — capaz reinicia la app?"
     is DomainException.SerializationError -> "No pudimos preparar tus datos — intenta de nuevo"

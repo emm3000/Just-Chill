@@ -60,7 +60,9 @@ class SyncDataUseCaseTest {
         val job1 = launch { serializedUseCase() }
         val job2 = launch { serializedUseCase() }
 
-        testScheduler.advanceUntilIdle()
+        // runCurrent, never advanceUntilIdle: virtual time would jump past SyncMutex's acquisition
+        // timeout and turn the waiting second caller into a Busy failure.
+        testScheduler.runCurrent()
 
         val enterCount = events.count { it == "enter" }
         assertEquals(1, enterCount, "Only the first sync should have started before the gate opens")

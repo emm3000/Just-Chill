@@ -11,6 +11,8 @@ enum class BackupFailureReason {
 
     Unauthorized,
 
+    Busy,
+
     Unverified,
 
     LocalDatabase,
@@ -30,6 +32,8 @@ fun DomainException.toBackupFailureReason(): BackupFailureReason = when (this) {
     is DomainException.NetworkUnavailable -> BackupFailureReason.Network
 
     is DomainException.Unauthorized -> BackupFailureReason.Unauthorized
+
+    is DomainException.Busy -> BackupFailureReason.Busy
 
     is DomainException.DatabaseError -> BackupFailureReason.LocalDatabase
 

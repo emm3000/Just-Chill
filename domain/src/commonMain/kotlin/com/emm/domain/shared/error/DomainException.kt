@@ -14,6 +14,8 @@ sealed class DomainException(message: String, cause: Throwable? = null) : Except
 
     class Unauthorized(message: String, cause: Throwable? = null) : DomainException(message, cause)
 
+    class Busy(message: String, cause: Throwable? = null) : DomainException(message, cause)
+
     class NetworkUnavailable(cause: Throwable, message: String = cause.message ?: "Network unavailable") :
         DomainException(message, cause)
 

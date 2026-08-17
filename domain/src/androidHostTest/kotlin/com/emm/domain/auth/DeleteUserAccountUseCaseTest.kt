@@ -15,6 +15,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -23,6 +24,7 @@ import org.junit.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.minutes
 
 class DeleteUserAccountUseCaseTest {
 
@@ -199,7 +201,9 @@ class DeleteUserAccountUseCaseTest {
         val syncGate = CompletableDeferred<Unit>()
         val syncJob = launch { syncMutex.withLock { syncGate.await() } }
         val deleteJob = launch { useCase() }
-        testScheduler.advanceUntilIdle()
+        // runCurrent, never advanceUntilIdle: virtual time would jump past SyncMutex's acquisition
+        // timeout and turn this waiting deletion into a Busy failure.
+        testScheduler.runCurrent()
 
         coVerify(exactly = 0) { authRepository.deleteAccount() }
 
@@ -210,6 +214,40 @@ class DeleteUserAccountUseCaseTest {
 
         coVerify(exactly = 1) { authRepository.deleteAccount() }
         coVerify(exactly = 1) { claimLocalDataRepository.unclaimAll(userId) }
+    }
+
+    @Test
+    fun `a stuck holder of the shared SyncMutex fails the deletion instead of blocking it forever`() = runTest {
+        val userId = "uid-8"
+        every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
+        coEvery { authRepository.deleteAccount() } just Runs
+
+        val stuck = CompletableDeferred<Unit>()
+        val holder = launch { syncMutex.withLock { stuck.await() } }
+        testScheduler.advanceUntilIdle()
+
+        assertFailsWith<DomainException.Busy> { useCase() }
+
+        coVerify(exactly = 0) { authRepository.deleteAccount() }
+        stuck.complete(Unit)
+        holder.join()
+    }
+
+    @Test
+    fun `a remote delete slower than the lock timeout still runs unclaim and both clears`() = runTest {
+        val userId = "uid-9"
+        every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
+        coEvery { authRepository.deleteAccount() } coAnswers { delay(10.minutes) }
+        coEvery { claimLocalDataRepository.unclaimAll(userId) } just Runs
+        every { syncCursorStore.clear(userId) } just Runs
+        every { backupMetadataStore.clear(userId) } just Runs
+
+        useCase()
+
+        coVerify(exactly = 1) { authRepository.deleteAccount() }
+        coVerify(exactly = 1) { claimLocalDataRepository.unclaimAll(userId) }
+        verify(exactly = 1) { syncCursorStore.clear(userId) }
+        verify(exactly = 1) { backupMetadataStore.clear(userId) }
     }
 
     @Test
