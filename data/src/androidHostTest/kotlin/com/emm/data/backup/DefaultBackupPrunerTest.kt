@@ -73,7 +73,7 @@ class DefaultBackupPrunerTest {
 
     @Test
     fun `a name this build cannot parse is left alone, not deleted`() = runTest {
-        val strangers = listOf("notes.txt", "justchill-backup-2026-08-14.json", "backup-v4-2026-08-14T12-00-00Z.json")
+        val strangers = listOf("notes.txt", "justchill-backup-2026-08-14.json", "backup-2026-08-14T12-00-00Z.json")
         val store = storeOf(*strangers.toTypedArray(), PAIR_PAYLOAD, PAIR_SIDECAR)
 
         prunerOver(store).prune()
@@ -222,6 +222,26 @@ class DefaultBackupPrunerTest {
         assertEquals(listOf(PAIR_PAYLOAD, PAIR_SIDECAR), store.objects)
         assertEquals(1, report.kept)
         assertEquals(2, report.deleted)
+    }
+
+    @Test
+    fun `a pair written under an older schema version fills a retention slot and can lose it`() = runTest {
+        val legacy = payload("2026-08-14", hour = "06").asEarlierGeneration()
+        val store = storeOf(legacy, manifestNameFor(legacy), PAIR_PAYLOAD, PAIR_SIDECAR)
+
+        val report = prunerOver(store).prune()
+
+        assertEquals(1, report.kept)
+        assertEquals(listOf(PAIR_PAYLOAD, PAIR_SIDECAR), store.objects)
+        assertEquals(
+            listOf(
+                "list $PREFIX from 0",
+                "list $PREFIX from 4",
+                "delete $PREFIX${manifestNameFor(legacy)}",
+                "delete $PREFIX$legacy",
+            ),
+            store.calls,
+        )
     }
 
     @Test

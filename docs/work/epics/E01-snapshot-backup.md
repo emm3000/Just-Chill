@@ -36,6 +36,7 @@ engine decommission remain.
 - From v3 on, every exported file is unreadable on any older installed build — `decodePayload` refuses an unknown version. `BACKUP_SCHEMA_VERSION` sits on `JustChillKit`'s public ABI.
 - Upload order carries the meaning: payload → read-back → manifest; `<name>.json.manifest.json` existing states the payload was verified. Holds only because the bucket forbids `update` and uploads use `upsert = false`.
 - The sidecar name appends the extension (`.json.manifest.json`) — the bucket's mime check is a verbatim string match; send bare `application/json`, never with a charset parameter.
+- The generation in a snapshot name is decorative: the writer stamps the live `BACKUP_SCHEMA_VERSION`, the matcher accepts any `backup-v<n>-`. What a payload *is* comes from its own `schemaVersion` key. Sharing one constant between the two made every already-uploaded snapshot invisible to prune and verify the moment the constant moved.
 - `storage.protect_delete()` refuses direct deletes; every delete goes through the Storage API. Resumable upload is unavailable, not merely unused.
 - Retention slots fill from the data, never today's calendar — a slot is one distinct day/week/month that actually holds a snapshot; storage bound is `7 + 8 + 12` per shelf. `pinned/` is never scanned.
 - A prune that deletes on a read failure is worse than one that skips: any read failure aborts before the first delete; individual failed deletes are recorded and never stop the run.

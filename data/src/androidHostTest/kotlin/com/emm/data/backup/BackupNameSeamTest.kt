@@ -25,6 +25,22 @@ class BackupNameSeamTest {
     }
 
     @Test
+    fun `and the pair a previous build wrote is one this build still keeps`() = runTest {
+        val bucket = InMemoryBucket()
+        val legacyName: String = backupSnapshotName(TAKEN_AT).asEarlierGeneration()
+
+        DefaultBackupUploader(bucket).upload(UID, legacyName, PAYLOAD)
+        val report = prunerOver(bucket).prune()
+
+        assertEquals(1, report.kept)
+        assertEquals(0, report.deleted)
+        assertEquals(
+            listOf(PREFIX + legacyName, PREFIX + manifestNameFor(legacyName)),
+            bucket.objects.keys.toList(),
+        )
+    }
+
+    @Test
     fun `and it is the sidecar that makes it one, not the payload name alone`() = runTest {
         val bucket = InMemoryBucket()
         DefaultBackupUploader(bucket).upload(UID, backupSnapshotName(TAKEN_AT), PAYLOAD)

@@ -12,7 +12,7 @@ class BackupSnapshotNameTest {
     fun `a snapshot name is the schema version and a UTC stamp with its colons replaced`() {
         val takenAt = Instant.parse("2026-08-14T03:04:05Z")
 
-        assertEquals("backup-v3-2026-08-14T03-04-05Z.json", backupSnapshotName(takenAt))
+        assertEquals("backup-v$BACKUP_SCHEMA_VERSION-2026-08-14T03-04-05Z.json", backupSnapshotName(takenAt))
     }
 
     @Test
@@ -33,14 +33,27 @@ class BackupSnapshotNameTest {
     fun `sub-second precision is dropped so one snapshot is always one fixed-width name`() {
         val name = backupSnapshotName(Instant.parse("2026-08-14T03:04:05.678Z"))
 
-        assertEquals("backup-v3-2026-08-14T03-04-05Z.json", name)
+        assertEquals("backup-v$BACKUP_SCHEMA_VERSION-2026-08-14T03-04-05Z.json", name)
         assertEquals(Instant.parse("2026-08-14T03:04:05Z"), parseBackupSnapshotTakenAt(name))
     }
 
     @Test
-    fun `a name from a future format version is not a v3 snapshot`() {
-        assertNull(parseBackupSnapshotTakenAt("backup-v4-2026-08-14T03-04-05Z.json"))
-        assertNull(parseBackupSnapshotTakenAt("backup-v2-2026-08-14T03-04-05Z.json"))
+    fun `a name from any other format generation is still a snapshot, so a bump hides nothing`() {
+        val takenAt = Instant.parse("2026-08-14T03:04:05Z")
+        val thisGeneration: String = backupSnapshotName(takenAt)
+        val generations: List<Int> = listOf(1, BACKUP_SCHEMA_VERSION - 1, BACKUP_SCHEMA_VERSION + 1, 97)
+
+        generations.forEach { generation ->
+            val name: String = thisGeneration.asGeneration(generation)
+
+            assertEquals(takenAt, parseBackupSnapshotTakenAt(name), name)
+        }
+    }
+
+    @Test
+    fun `a version that is not a number is not a generation, so the family alone matches nothing`() {
+        assertNull(parseBackupSnapshotTakenAt("backup-v-2026-08-14T03-04-05Z.json"))
+        assertNull(parseBackupSnapshotTakenAt("backup-2026-08-14T03-04-05Z.json"))
     }
 
     @Test
@@ -49,7 +62,7 @@ class BackupSnapshotNameTest {
         val sidecar = manifestNameFor(name)
 
         assertEquals(".manifest.json", BACKUP_MANIFEST_SUFFIX)
-        assertEquals("backup-v3-2026-08-14T03-04-05Z.json.manifest.json", sidecar)
+        assertEquals("backup-v$BACKUP_SCHEMA_VERSION-2026-08-14T03-04-05Z.json.manifest.json", sidecar)
         assertNull(parseBackupSnapshotTakenAt(sidecar))
         assertEquals(name, sidecar.removeSuffix(BACKUP_MANIFEST_SUFFIX))
         assertTrue(sidecar.endsWith(".json"), "the bucket only accepts application/json")

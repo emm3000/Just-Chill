@@ -184,6 +184,18 @@ class DefaultBackupVerifierTest {
     }
 
     @Test
+    fun `a snapshot named by an older build is still found, so a bump is not an empty bucket`() = runTest {
+        val legacy: String = NEWEST.asEarlierGeneration()
+        bucket.seedPair(legacy, payloadJson(accounts = 1, schemaVersion = BACKUP_SCHEMA_VERSION_V2))
+
+        val verified = assertIs<BackupVerification.Verified>(verifier().verifyLatest())
+
+        assertEquals(legacy, verified.fileName)
+        assertEquals(1, verified.rowCounts.accounts)
+        assertTrue(verified.isNewestPair, "it is the only pair in the bucket")
+    }
+
+    @Test
     fun `verification writes nothing to the bucket`() = runTest {
         bucket.seedPair(OLDER, payloadJson())
         bucket.seed(NEWEST, payloadJson(), manifest = "{ broken")
