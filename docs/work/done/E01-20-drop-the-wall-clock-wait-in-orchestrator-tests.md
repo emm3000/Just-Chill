@@ -4,11 +4,11 @@
 
 ## Done when
 
-- [ ] `awaitUntil` and its `AWAIT_TIMEOUT_MILLIS` / `NANOS_PER_MILLI` constants are gone from
+- [x] `awaitUntil` and its `AWAIT_TIMEOUT_MILLIS` / `NANOS_PER_MILLI` constants are gone from
       `BackupOrchestratorHealthTest`
-- [ ] each of its four call sites waits on the emission it needs instead of polling, and still fails
+- [x] each of its four call sites waits on the emission it needs instead of polling, and still fails
       when the emission never arrives
-- [ ] `rg 'System.nanoTime|Thread.sleep' --glob '*Test.kt'` returns nothing across the repo
+- [x] `rg 'System.nanoTime|Thread.sleep' --glob '*Test.kt'` returns nothing across the repo
 
 ## Context
 
