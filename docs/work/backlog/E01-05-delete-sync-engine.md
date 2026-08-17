@@ -9,6 +9,7 @@
 - [ ] `SyncOrchestrator`, `SyncController`, `SyncStatus`, `SyncEvent`, `DefaultSyncCursorStore`, the cursor keys in `AppPreferences`, and the sync surface of `ProfileViewModel` are deleted from `:presentation`
 - [ ] `hh/shared/SyncEventsHandler.kt` and the sync references in `AppNavHost`/`AppNavigator` are deleted from `:ui-android`, and the Android build still passes
 - [ ] `presentation/build.gradle.kts`'s `export(project(":data"))` no longer carries the deleted engine into `JustChillKit`'s public ABI
+- [ ] `SYNC_TEMPORARILY_DISABLED` and both its gates are deleted — a kill switch for an engine that no longer exists is a switch nobody can read
 
 ## Context
 

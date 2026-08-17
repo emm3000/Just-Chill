@@ -7,7 +7,6 @@
 
 - [ ] the two tenants' row tables in Supabase are truncated only after explicit owner confirmation at the moment, and only once a pinned, verified snapshot exists
 - [ ] Auth stays intact — Storage RLS still needs it
-- [ ] `SYNC_TEMPORARILY_DISABLED` and its gates are removed, now that nothing references the engine
 
 ## Context
 
