@@ -4,13 +4,13 @@
 
 ## Done when
 
-- [ ] "Verify backup" downloads the newest snapshot pair, checks the payload bytes against the
+- [x] "Verify backup" downloads the newest snapshot pair, checks the payload bytes against the
   manifest's `payloadSha256`, and parses the payload without applying it
-- [ ] the check walks back to the newest snapshot that verifies, rather than reporting the newest
+- [x] the check walks back to the newest snapshot that verifies, rather than reporting the newest
   pair as broken when only its manifest is bad or of unknown state
-- [ ] the UI names which snapshot verified, and the per-table counts it reports come from the file —
+- [x] the UI names which snapshot verified, and the per-table counts it reports come from the file —
   never a comparison against live local data, which legitimately moves between backups
-- [ ] `:presentation` reaches all of it through a domain port; `BackupObjectStore` and
+- [x] `:presentation` reaches all of it through a domain port; `BackupObjectStore` and
   `decodePayload` stay `internal` to `:data`
 
 ## Context
