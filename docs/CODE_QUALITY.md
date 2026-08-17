@@ -46,7 +46,7 @@ is the rule the repo *leans on* for Compose — not the only one that reaches it
 deliberately left outside it — `detektMainAndroid` covers the same files *with* type resolution, so
 adding it buys tasks, not coverage (`QualityGateConventionPlugin`; item in `docs/PROGRESS.md`).
 
-## Two gotchas, both found by measurement
+## Three gotchas, all found by measurement
 
 **1. A baseline entry for a file-level rule is permanent amnesty.** The ID carries no count —
 `TooManyFunctions:AccountsScreen.kt:com.emm.justchill.hh.account.AccountsScreen.kt`, and nothing in
@@ -60,6 +60,22 @@ stops new bleeding and creates **zero** pressure on old code, so the burn-down l
 **2. `ignoreAnnotatedFunctions` takes simple annotation names, not fully-qualified ones.** detekt
 matches the name as written in the source: `androidx.compose.ui.tooling.preview.Preview` silently
 matches nothing, `Preview` works. Getting this wrong put four extra screens into permanent amnesty.
+
+**3. detekt lints test sources with the production thresholds.** `detektDevDebugUnitTest` analyses
+`androidApp/src/test`, and `LongMethod` (60 lines) has no test exclusion — a long test method is a
+red gate, not a warning. So is `MultiLineIfElse`: `if (x) a else if (y) b` spread across lines needs
+braces in a test too.
+
+## A test that waits must observe the transition, not sample the state
+
+On a `StateFlow`, `flow.first { it }` followed by `flow.first { !it }` can pass while proving
+nothing: `first` resolves against the *current* value, so the second call returns immediately if the
+work already finished — or if it never started. Conflation can also drop the `true` before a late
+subscriber ever sees it. Subscribe before triggering and assert on the recorded sequence, so
+"finished" is unreachable without "started".
+
+The check: break the production line so the awaited emission never arrives. The test must fail
+naming what did not happen — not hang, and not pass.
 
 ## Arbitration: when the two halves meet
 
