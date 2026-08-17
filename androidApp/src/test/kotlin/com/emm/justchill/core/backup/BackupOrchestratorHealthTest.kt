@@ -18,6 +18,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,19 +28,23 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onSubscription
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.TimeZone
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.fail
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -89,23 +94,23 @@ class BackupOrchestratorHealthTest {
         every { metadata.clearFailures(any()) } answers { failures -= firstArg<String>() }
     }
 
-    private fun TestScope.buildOrchestrator(): BackupOrchestrator {
-        val sharedDispatcher = StandardTestDispatcher(testScheduler)
-        return BackupOrchestrator(
-            backupRepository = backupRepository,
-            uploader = uploader,
-            pruner = pruner,
-            metadata = metadata,
-            observeSession = observeSession,
-            appVersion = APP_VERSION,
-            clock = fixedClock(NOW),
-            timeZone = TimeZone.UTC,
-            externalScope = CoroutineScope(sharedDispatcher + SupervisorJob()),
-            backgroundEvents = backgroundFlow,
-            resumeEvents = resumeFlow,
-            logger = logger,
-        )
-    }
+    private fun orchestratorOn(scope: CoroutineScope): BackupOrchestrator = BackupOrchestrator(
+        backupRepository = backupRepository,
+        uploader = uploader,
+        pruner = pruner,
+        metadata = metadata,
+        observeSession = observeSession,
+        appVersion = APP_VERSION,
+        clock = fixedClock(NOW),
+        timeZone = TimeZone.UTC,
+        externalScope = scope,
+        backgroundEvents = backgroundFlow,
+        resumeEvents = resumeFlow,
+        logger = logger,
+    )
+
+    private fun TestScope.buildOrchestrator(): BackupOrchestrator =
+        orchestratorOn(CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()))
 
     private fun TestScope.authenticate() {
         sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = USER_ID, email = "a@b.com"))
@@ -301,8 +306,10 @@ class BackupOrchestratorHealthTest {
             if (failures.containsKey(USER_ID) && !signedOutMidPublish) {
                 signedOutMidPublish = true
                 sessionFlow.value = SessionStatus.NotAuthenticated
-                awaitUntil("the sign-out to reach the orchestrator") {
-                    orchestrator.health.value == BackupHealth.None
+                runBlocking {
+                    awaitOrFail("the sign-out to reach the orchestrator") {
+                        orchestrator.health.first { it == BackupHealth.None }
+                    }
                 }
             }
             LAST_SUCCESS
@@ -310,27 +317,17 @@ class BackupOrchestratorHealthTest {
 
         val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
         try {
-            orchestrator = BackupOrchestrator(
-                backupRepository = backupRepository,
-                uploader = uploader,
-                pruner = pruner,
-                metadata = metadata,
-                observeSession = observeSession,
-                appVersion = APP_VERSION,
-                clock = fixedClock(NOW),
-                timeZone = TimeZone.UTC,
-                externalScope = scope,
-                backgroundEvents = backgroundFlow,
-                resumeEvents = resumeFlow,
-                logger = logger,
-            )
+            orchestrator = orchestratorOn(scope)
             orchestrator.start()
             sessionFlow.value = SessionStatus.Authenticated(AuthUser(userId = USER_ID, email = "a@b.com"))
-            withTimeout(AWAIT_TIMEOUT_MILLIS) { backgroundFlow.subscriptionCount.first { it > 0 } }
+            awaitOrFail("the orchestrator to subscribe to its triggers") {
+                backgroundFlow.subscriptionCount.first { it > 0 }
+            }
+            val cycle = scope.watchBackupCycles(orchestrator)
 
             backgroundFlow.emit(Unit)
-            awaitUntil("the cycle to start") { orchestrator.isBackingUp.value }
-            awaitUntil("the cycle to finish") { !orchestrator.isBackingUp.value }
+            awaitOrFail("the cycle to start") { cycle.started.await() }
+            awaitOrFail("the cycle to finish") { cycle.finished.await() }
 
             assertTrue(signedOutMidPublish, "The test never reached publishHealth's window")
             assertEquals(
@@ -369,13 +366,31 @@ class BackupOrchestratorHealthTest {
         lastFailureReason: BackupFailureReason?,
     ) = BackupHealth(lastSuccessfulBackupAt, consecutiveFailures, lastFailureReason, canUploadToDestination = true)
 
-    private fun awaitUntil(what: String, condition: () -> Boolean) {
-        val deadline = System.nanoTime() + AWAIT_TIMEOUT_MILLIS * NANOS_PER_MILLI
-        while (!condition()) {
-            check(System.nanoTime() < deadline) { "Timed out waiting for $what" }
-            Thread.sleep(1)
-        }
+    private class CycleWatch {
+        val started = CompletableDeferred<Unit>()
+        val finished = CompletableDeferred<Unit>()
     }
+
+    private suspend fun CoroutineScope.watchBackupCycles(orchestrator: BackupOrchestrator): CycleWatch {
+        val watch = CycleWatch()
+        val subscribed = CompletableDeferred<Unit>()
+        launch {
+            orchestrator.isBackingUp
+                .onSubscription { subscribed.complete(Unit) }
+                .collect { backingUp ->
+                    if (backingUp) {
+                        watch.started.complete(Unit)
+                    } else if (watch.started.isCompleted) {
+                        watch.finished.complete(Unit)
+                    }
+                }
+        }
+        awaitOrFail("the cycle watcher to subscribe") { subscribed.await() }
+        return watch
+    }
+
+    private suspend fun <T : Any> awaitOrFail(what: String, emission: suspend () -> T): T =
+        withTimeoutOrNull(DEADLOCK_GUARD) { emission() } ?: fail("Waited in vain for $what")
 
     private fun fixedClock(instant: Instant): Clock = object : Clock {
         override fun now(): Instant = instant
@@ -392,8 +407,7 @@ class BackupOrchestratorHealthTest {
         const val CYCLE_FAILED = "backup cycle failed"
         const val STREAK_1 = "consecutive failures=1"
         const val STREAK_2 = "consecutive failures=2"
-        const val AWAIT_TIMEOUT_MILLIS = 5_000L
-        const val NANOS_PER_MILLI = 1_000_000L
+        val DEADLOCK_GUARD = 30.seconds
         const val OWNER_CHANGED = "Snapshot backup failed: the signed-in account changed"
         const val PAYLOAD = """{"schemaVersion":3}"""
     }
