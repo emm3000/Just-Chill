@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -73,22 +74,47 @@ class SyncMutexTest {
 
     // Real threads, not runTest: this needs the holder's release and the acquisition deadline to land
     // on two threads within the same nanoseconds, and virtual time orders every event on one thread.
-    // A loaded machine can only turn more acquisitions into Busy, never into the leak asserted here.
+    // A loaded machine can turn more acquisitions into Busy, including a spurious one on a free lock,
+    // but isFree()'s independent probes below make one pause defeating all of them implausible.
     @Test
     fun `a release racing the deadline never leaves the lock held by the caller that gave up`() =
         runBlocking(Dispatchers.Default) {
+            val waiterBusyCount = AtomicInteger(0)
+            val waiterAcquiredCount = AtomicInteger(0)
             repeat(RACE_ROUNDS) {
                 val raced: List<SyncMutex> = List(RACE_WIDTH) { SyncMutex(RACE_TIMEOUT) }
                 raced.flatMap { syncMutex ->
                     listOf(
-                        launch { runCatching { syncMutex.withLock { delay(RACE_TIMEOUT) } } },
-                        launch { runCatching { syncMutex.withLock { } } },
+                        launch {
+                            try {
+                                syncMutex.withLock { delay(RACE_TIMEOUT) }
+                            } catch (ignored: DomainException.Busy) {
+                            }
+                        },
+                        launch {
+                            try {
+                                syncMutex.withLock { }
+                                waiterAcquiredCount.incrementAndGet()
+                            } catch (ignored: DomainException.Busy) {
+                                waiterBusyCount.incrementAndGet()
+                            }
+                        },
                     )
                 }.joinAll()
                 raced.forEach { syncMutex ->
                     assertTrue(syncMutex.isFree(), "a caller that gave up walked off holding the lock")
                 }
             }
+            assertTrue(
+                waiterBusyCount.get() > 0,
+                "no Busy was ever observed for the waiter across $RACE_ROUNDS rounds — the deadline " +
+                    "never landed before a release, so this test could not have caught a leaked lock",
+            )
+            assertTrue(
+                waiterAcquiredCount.get() > 0,
+                "no clean acquire was ever observed for the waiter across $RACE_ROUNDS rounds — the " +
+                    "release never landed before the deadline, so this test could not have caught a leaked lock",
+            )
         }
 
     @Test
@@ -116,13 +142,22 @@ class SyncMutexTest {
 
     private companion object {
         val RACE_TIMEOUT = 2.milliseconds
-        const val RACE_ROUNDS = 500
+
+        // The mutant this test guards against died at 20-25% of a 500-round budget at both
+        // Dispatchers.Default and limitedParallelism(2); 200 keeps a margin over that kill point.
+        const val RACE_ROUNDS = 200
         const val RACE_WIDTH = 200
     }
 }
 
-// A leaked lock never frees, so a second refusal cannot be the scheduler running late.
-private suspend fun SyncMutex.isFree(): Boolean = acquires() || acquires()
+// A leaked lock never frees, so it alone explains refusal across every one of the LEAK_PROBE_ATTEMPTS
+// independent probes below; no single stop-the-world pause spans all of them.
+private const val LEAK_PROBE_ATTEMPTS = 50
+
+private suspend fun SyncMutex.isFree(): Boolean {
+    repeat(LEAK_PROBE_ATTEMPTS) { if (acquires()) return true }
+    return false
+}
 
 private suspend fun SyncMutex.acquires(): Boolean = try {
     withLock { true }
