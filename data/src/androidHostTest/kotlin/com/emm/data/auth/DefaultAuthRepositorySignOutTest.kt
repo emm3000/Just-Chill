@@ -10,6 +10,7 @@ import io.github.jan.supabase.auth.user.UserSession
 import io.github.jan.supabase.createSupabaseClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondOk
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +30,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import io.github.jan.supabase.auth.status.SessionStatus as SupabaseSessionStatus
 
@@ -44,24 +44,23 @@ import io.github.jan.supabase.auth.status.SessionStatus as SupabaseSessionStatus
  * different branch of [DefaultAuthRepository.signOut]:
  * - **fails instantly** — an unreachable host, the ordinary offline case. Swallowed by the method's
  *   `catch (e: Exception)`.
- * - **hangs, and the request times out** — a connection that is accepted but never answered.
- *   supabase-kt's own request timeout fires as an ordinary `HttpRequestTimeoutException`, an
- *   `IOException`, not a [kotlinx.coroutines.CancellationException] — so this ALSO lands in
- *   `catch (e: Exception)`, not the cancellation branch. This is NOT a duplicate of the case above:
- *   `KtorSupabaseHttpClient.request` catches three things in order — `HttpRequestTimeoutException`
- *   rethrown RAW, [CancellationException] rethrown RAW, and every remaining `Exception` wrapped into
- *   `HttpRequestException`. Only the third arm produces the wrapped type, so narrowing the
- *   repository's `catch (e: Exception)` to `catch (e: HttpRequestException)` would keep the
- *   unreachable-host test green and turn this one red. That mutant is the reason it exists. The test
- *   overrides the timeout to 500ms so it costs half a second instead of supabase-kt's 10s default;
- *   that override is what is pinned, not the default.
- * - **hangs, and the coroutine itself is cancelled** — the one shape the two tests above cannot
+ * - **times out** — the mock transport raises `HttpRequestTimeoutException` directly, the same
+ *   `IOException` subtype ktor's own `HttpTimeout` plugin raises when a real deadline elapses,
+ *   without installing or waiting for one. Not a [kotlinx.coroutines.CancellationException] — so
+ *   this ALSO lands in `catch (e: Exception)`, not the cancellation branch. This is NOT a duplicate
+ *   of the case above: `KtorSupabaseHttpClient.request` catches three things in order —
+ *   `HttpRequestTimeoutException` rethrown RAW, [CancellationException] rethrown RAW, and every
+ *   remaining `Exception` wrapped into `HttpRequestException`. Only the third arm produces the
+ *   wrapped type, so narrowing the repository's `catch (e: Exception)` to
+ *   `catch (e: HttpRequestException)` would keep the unreachable-host test green and turn this one
+ *   red. That mutant is the reason it exists.
+ * - **hangs, and the coroutine itself is cancelled** — the one shape the two cases above cannot
  *   produce. This is what exercises `catch (e: CancellationException) { throw e }`: without it, a
  *   cancellation would be indistinguishable from "the revoke failed" and get swallowed into a
  *   [SignOutResult.LocalOnly] instead of propagating.
  *
- * The request timeout is therefore a per-test choice, never a shared default, and the two choices
- * are opposites: see [SHORT_REQUEST_TIMEOUT] and [DISABLED_REQUEST_TIMEOUT].
+ * The last of the three genuinely hangs and is bounded only by an outside cancellation — its own
+ * request timeout is disabled outright, see [DISABLED_REQUEST_TIMEOUT].
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultAuthRepositorySignOutTest {
@@ -95,8 +94,8 @@ class DefaultAuthRepositorySignOutTest {
     }
 
     @Test
-    fun `signOut clears the local session and reports LocalOnly when the logout request hangs`() = runTest {
-        val client = hangingClientWithSession(requestTimeout = SHORT_REQUEST_TIMEOUT)
+    fun `signOut clears the local session and reports LocalOnly when the logout request times out`() = runTest {
+        val client = timedOutClientWithSession()
         val repository = DefaultAuthRepository(client)
 
         val result = repository.signOut()
@@ -104,7 +103,7 @@ class DefaultAuthRepositorySignOutTest {
         assertEquals(SignOutResult.LocalOnly, result)
         assertTrue(
             client.auth.sessionStatus.value is SupabaseSessionStatus.NotAuthenticated,
-            "A logout post that never answers must not keep the local clear from running.",
+            "A logout post that times out must not keep the local clear from running.",
         )
         assertNull(client.auth.currentSessionOrNull())
     }
@@ -129,21 +128,21 @@ class DefaultAuthRepositorySignOutTest {
      * clears the session.
      *
      * Neither of the two tests above can exercise that branch: the instantly-failing transport
-     * throws [IOException] (not cancellation), and the hanging transport's own request timeout
-     * produces [io.ktor.client.plugins.HttpRequestTimeoutException] — an ordinary [IOException]
-     * subtype, not [CancellationException] either (see [hangingClientWithSession]'s KDoc). This test
+     * throws [IOException] (not cancellation), and the timed-out transport raises
+     * [io.ktor.client.plugins.HttpRequestTimeoutException] directly — an ordinary [IOException]
+     * subtype, not [CancellationException] either (see [timedOutClientWithSession]). This test
      * cancels the coroutine itself while it is suspended inside the mocked request, using a
      * `CompletableDeferred` to synchronize on that exact suspension point instead of racing a real
      * delay.
      *
      * It builds its transport with [DISABLED_REQUEST_TIMEOUT] — no request timeout whatsoever, so
-     * cancellation is the only thing in existence that can end the request. Sharing the 500ms the
-     * hanging test uses, or any other finite value, makes the timer a competitor of the mechanism
-     * under test: whenever it wins, the swallow path runs instead of the cancellation path and the
-     * test fails on an assertion that has nothing to do with the code under test. Two finite values
-     * were tried and both lost; [DISABLED_REQUEST_TIMEOUT] records what they were and why the answer
-     * is not a third one. The test is instead bounded at [HANG_BOUND] — which is still a wall clock,
-     * and is deliberately the only one left: read its KDoc for what that does and does not buy.
+     * cancellation is the only thing in existence that can end the request. Any finite value makes
+     * the timer a competitor of the mechanism under test: whenever it wins, the swallow path runs
+     * instead of the cancellation path and the test fails on an assertion that has nothing to do
+     * with the code under test. Two finite values were tried and both lost; [DISABLED_REQUEST_TIMEOUT]
+     * records what they were and why the answer is not a third one. The test is instead bounded at
+     * [HANG_BOUND] — which is still a wall clock, and is deliberately the only one left: read its
+     * KDoc for what that does and does not buy.
      *
      * The discriminating assertion below is deliberately NOT "does `deferred.await()` throw" —
      * verified empirically (by running this exact mutation) that it is not: cancelling a coroutine's
@@ -219,16 +218,31 @@ class DefaultAuthRepositorySignOutTest {
     }
 
     /**
+     * A client holding a valid session whose transport raises `HttpRequestTimeoutException`
+     * immediately instead of installing a real ktor request timeout and waiting for it to elapse —
+     * see this class's KDoc for why that shape has to be covered on top of the unreachable-host
+     * case. Throwing it directly from the mock engine keeps the outcome off the wall clock: there
+     * is no deadline to race [runTest]'s virtual scheduler against.
+     */
+    private suspend fun timedOutClientWithSession(): SupabaseClient = createSupabaseClient(
+        supabaseUrl = "https://project.supabase.co",
+        supabaseKey = "test-anon-key",
+    ) {
+        httpEngine = MockEngine { request -> throw HttpRequestTimeoutException(request) }
+        install(Auth) { minimalConfig() }
+    }.also { client ->
+        client.auth.importSession(session(), autoRefresh = false)
+    }
+
+    /**
      * The same client, with a transport that accepts the request and never answers it.
      *
      * [requestTimeout] is what ends the request, absent a cancellation from outside — and it has no
-     * default here on purpose, because the two callers want opposite things from it. supabase-kt
+     * default here on purpose: the only remaining caller is the cancellation test, and it must
+     * disable the timeout outright (see [DISABLED_REQUEST_TIMEOUT]) rather than race it. supabase-kt
      * 3.7.0 installs ktor's `HttpTimeout` itself on every client it builds, custom engine included,
      * reading it from `SupabaseClientBuilder.requestTimeout` (default 10 seconds). Setting it here
-     * only moves when the expiry lands; it does not add the mechanism. `HttpTimeout` surfaces that
-     * expiry as `HttpRequestTimeoutException`, an ordinary `IOException`, never a
-     * [CancellationException] — which is what makes the hanging-transport test unable to exercise
-     * the cancellation branch pinned separately below.
+     * only moves when the expiry lands; it does not add the mechanism.
      *
      * [onRequestStarted] fires the instant the mocked transport receives the request, i.e. right
      * before it suspends forever — the cancellation test uses it to synchronize on that exact
@@ -271,16 +285,6 @@ class DefaultAuthRepositorySignOutTest {
     )
 
     private companion object {
-
-        /**
-         * For the hanging-transport test, where the timeout expiry IS the mechanism under test:
-         * stands in for supabase-kt's 10s default so that test costs half a second instead of ten.
-         *
-         * This one is a real, small, finite timeout and must stay that way. It is not covered by
-         * [DISABLED_REQUEST_TIMEOUT]'s reasoning below — there the expiry is the bug; here it is the
-         * subject.
-         */
-        val SHORT_REQUEST_TIMEOUT = 500.milliseconds
 
         /**
          * For the cancellation test: **no request timeout at all**, not a large one.

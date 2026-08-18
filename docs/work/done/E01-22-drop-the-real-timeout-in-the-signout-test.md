@@ -4,9 +4,9 @@
 
 ## Done when
 
-- [ ] `signOut clears the local session and reports LocalOnly when the logout request hangs` no
+- [x] `signOut clears the local session and reports LocalOnly when the logout request hangs` no
   longer depends on a real-time deadline elapsing, and still fails if the local clear stops running
-- [ ] `SHORT_REQUEST_TIMEOUT` is gone, or its remaining uses cannot decide a test's outcome by how
+- [x] `SHORT_REQUEST_TIMEOUT` is gone, or its remaining uses cannot decide a test's outcome by how
   loaded the machine is
 - [ ] the suite passes under `qualityGate --rerun-tasks` on a loaded machine, not only when run alone
 
