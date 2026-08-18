@@ -1,10 +1,13 @@
 package com.emm.justchill.hh.shared
 
+import com.emm.domain.shared.backup.BackupFailureReason
 import com.emm.domain.shared.backup.BackupRowCounts
 import com.emm.domain.shared.backup.BackupVerification
 import com.emm.justchill.hh.profile.ProfileMessage
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class BackupMessageTextTest {
 
@@ -70,9 +73,66 @@ class BackupMessageTextTest {
     @Test
     fun `a verification that could not run reads as its own failure, not as a failed backup`() {
         assertEquals("No pude verificar tu respaldo — intenta de nuevo.", ProfileMessage.BackupVerifyFailed.toText())
-        assertEquals("No pude respaldar en la nube — intenta de nuevo.", ProfileMessage.BackupFailed.toText())
+        assertEquals(
+            "El respaldo falló por algo inesperado — no es algo que hayas hecho mal.",
+            failedText(BackupFailureReason.Unknown),
+        )
+    }
+
+    @Test
+    fun `each failure reason says what happened in its own words`() {
+        assertEquals(
+            "No pude armar el archivo del respaldo — es una falla de la app, no tuya.",
+            failedText(BackupFailureReason.Serialization),
+        )
+        assertEquals(
+            "No llegué a la nube — revisa tu conexión e intenta de nuevo.",
+            failedText(BackupFailureReason.Network),
+        )
+        assertEquals(
+            "El servidor rechazó tu respaldo — no depende de ti, lo reintento más tarde.",
+            failedText(BackupFailureReason.RemoteRejected),
+        )
+        assertEquals(
+            "Tu sesión ya no vale para respaldar — vuelve a iniciar sesión.",
+            failedText(BackupFailureReason.Unauthorized),
+        )
+        assertEquals(
+            "Hay otra operación en curso — espera, el respaldo se reintenta solo.",
+            failedText(BackupFailureReason.Busy),
+        )
+        assertEquals(
+            "El respaldo no coincidió al verificarlo y lo descarté — lo reintento solo.",
+            failedText(BackupFailureReason.Unverified),
+        )
+        assertEquals(
+            "No pude leer tus datos de este teléfono para armar el respaldo.",
+            failedText(BackupFailureReason.LocalDatabase),
+        )
+    }
+
+    @Test
+    fun `no two failure reasons share a sentence`() {
+        val byReason: Map<BackupFailureReason, String> = BackupFailureReason.entries.associateWith(::failedText)
+
+        assertEquals(
+            byReason.size,
+            byReason.values.toSet().size,
+            "two reasons render the same sentence, so the user cannot tell them apart: $byReason",
+        )
+    }
+
+    @Test
+    fun `a failure never shows the user the reason's internal name`() {
+        BackupFailureReason.entries.forEach { reason ->
+            val shown: String = failedText(reason)
+            assertTrue(shown.isNotBlank(), "$reason renders nothing")
+            assertFalse(shown.contains(reason.name), "$reason leaks its enum name to the user: $shown")
+        }
     }
 }
+
+private fun failedText(reason: BackupFailureReason): String = ProfileMessage.BackupFailed(reason).toText()
 
 private val NO_ROWS = BackupRowCounts(accounts = 0, categories = 0, transactions = 0, recurringMovements = 0)
 

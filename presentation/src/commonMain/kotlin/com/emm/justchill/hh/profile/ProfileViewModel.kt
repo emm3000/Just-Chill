@@ -14,6 +14,7 @@ import com.emm.domain.shared.backup.BackupVerification
 import com.emm.domain.shared.backup.BackupVerifier
 import com.emm.domain.shared.backup.GetBackupStalenessUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
+import com.emm.domain.shared.backup.toBackupFailureReason
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.core.backup.BackupController
@@ -239,7 +240,7 @@ class ProfileViewModel(
 
 private fun BackupEvent.toProfileMessage(): ProfileMessage = when (this) {
     BackupEvent.Succeeded -> ProfileMessage.BackupDone
-    is BackupEvent.Failed -> ProfileMessage.BackupFailed
+    is BackupEvent.Failed -> ProfileMessage.BackupFailed(cause.toBackupFailureReason())
 }
 
 private fun BackupVerification.toProfileMessage(): ProfileMessage = when (this) {

@@ -89,7 +89,7 @@ private fun ProfileEntry(
                         ProfileMessage.ExportFailed,
                         ProfileMessage.ImportFailed,
                         ProfileMessage.OperationInProgress,
-                        ProfileMessage.BackupFailed,
+                        is ProfileMessage.BackupFailed,
                         ProfileMessage.BackupNeedsAccount,
                         ProfileMessage.BackupNeedsDisclosure,
                         ProfileMessage.BackupVerifyFailed,

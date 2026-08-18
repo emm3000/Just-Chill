@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.profile
 
+import com.emm.domain.shared.backup.BackupFailureReason
 import com.emm.domain.shared.backup.BackupVerification
 import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.core.mvi.UiEffect
@@ -24,7 +25,7 @@ sealed interface ProfileMessage {
     data object OperationInProgress : ProfileMessage
 
     data object BackupDone : Backup
-    data object BackupFailed : Backup
+    data class BackupFailed(val reason: BackupFailureReason) : Backup
     data object BackupNeedsAccount : Backup
     data object BackupNeedsDisclosure : Backup
     data class BackupVerified(val snapshot: BackupVerification.Verified) : Backup

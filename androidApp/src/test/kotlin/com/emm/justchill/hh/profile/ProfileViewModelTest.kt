@@ -613,7 +613,7 @@ class ProfileViewModelTest {
             advanceUntilIdle()
 
             assertTrue(
-                effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.BackupFailed },
+                effects.any { it is ProfileEffect.Notify && it.message is ProfileMessage.BackupFailed },
                 "Expected BackupFailed notify not found in $effects",
             )
             assertTrue(
@@ -638,7 +638,7 @@ class ProfileViewModelTest {
 
             val shown: String? = effects.filterIsInstance<ProfileEffect.Notify>().firstOrNull()?.message?.toText()
             assertEquals(
-                "No pude respaldar en la nube — intenta de nuevo.",
+                "Tu sesión ya no vale para respaldar — vuelve a iniciar sesión.",
                 shown,
                 "A backup failure must read as a backup failure",
             )
