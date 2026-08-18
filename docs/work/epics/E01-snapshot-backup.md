@@ -15,7 +15,7 @@ engine decommission remain.
 - No DB schema migration anywhere in this track; the export FORMAT version (v2→v3) is not the DB schema version.
 - Never drop `userId` / `syncState` / `deletedAt`; never change UUID PKs; never revert to hard deletes — the sync schema stays so a future engine can plug in without re-migrating. Dead columns stay dead in place.
 - `SYNC_TEMPORARILY_DISABLED` stays `true` until the last decommission step removes it.
-- No silent failure in the backup pipeline — every failure path logs a distinct, named reason (thirteen named failures today; a new one adds a fourteenth rather than reusing one).
+- No silent failure in the backup pipeline — every failure path logs a distinct, named reason (fourteen named failures today; a new one adds a fifteenth rather than reusing one).
 - Backup preference keys live in `DefaultBackupMetadataStore` (`:presentation/core/backup/`) over raw `Settings`, not `AppPreferences`; the key prefixes, the `-1L` "never" sentinel and the `'|'` failure separator are byte-identical to pre-move and load-bearing.
 - The failure streak's count and reason share **one** key (`count|REASON`) — `Settings` has no transaction, so two keys risk a count carrying the wrong reason across a kill.
 - `SNAPSHOT_BACKUP_ENABLED` has never been `true`, so no install carries any backup preference key yet — renaming one is free today and stops being free the moment the flag flips.
@@ -49,7 +49,7 @@ engine decommission remain.
 - No read query filters by `userId` (`all:`, `completeTransactions:`, `liveTotals:`, `getAccountBalance:`, `monthlyStats:` filter only `deletedAt IS NULL`) — same hazard as account inheritance, from the read side.
 - `updateFromRemote` stamps `userId` unconditionally and the 23 seeded default categories carry identical UUIDs on every install, so the same PKs exist on every device that ever ran the app.
 - RLS is correct, preserve it: `with check (user_id = (select auth.uid()))` on all four tables, `to authenticated` only; `delete_account()` is `security definer` with `set search_path = ''`, revoked from `public`/`anon`; the `backups` bucket policy is modelled on it.
-- `syncMutex.withLock` has no timeout and the mutex is a shared Koin `single`. Its holders today are `DeleteUserAccountUseCase` and `SyncDataUseCase`; `BackupOrchestrator` does not take it, so an upload and an account deletion are not serialized against each other.
+- The shared `SyncMutex` bounds only the acquisition — 30s, then `DomainException.Busy`, and a caller that gives up holds nothing. It never bounds the work under the lock: account deletion is irreversible once its `delete_account` RPC returns, so a timeout able to cancel it mid-flight would trade a hang for local rows tagged with a userId the server no longer has. Holders: `DeleteUserAccountUseCase`, `SyncDataUseCase` and `BackupOrchestrator`'s upload-plus-watermark section.
 - Production forensics: Supabase project `pievwpleqmrjwszuuivr` — zero rows with a non-null `deleted_at` anywhere; one tenant's rows point at the other's account/category PKs because the public schema has no foreign keys (ADR 001) — the "proven garbage" cloud cleanup truncates.
 - The Perfil day count does not refresh across midnight, computed per emission without a ticker (same as `ReportUiState.isCurrentMonth`, `DATE_AUDIT.md` #7).
 - Session and health are two flows — across an account switch there is one emission where the new session pairs with the old account's watermark (a display seam, not a recording one).
