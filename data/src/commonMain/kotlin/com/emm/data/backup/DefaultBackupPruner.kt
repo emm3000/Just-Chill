@@ -19,6 +19,9 @@ class DefaultBackupPruner internal constructor(
     constructor(client: SupabaseClient, clock: Clock, zone: TimeZone) :
         this(SupabaseBackupObjectStore(client), clock, zone)
 
+    /**
+     * A failed delete is recorded, never rethrown: one object must not take the rest of the run down.
+     */
     @Suppress("TooGenericExceptionCaught")
     override suspend fun prune(): BackupPruneReport {
         val prefix: String = storageCall(PREFIX_UNRESOLVED) { store.ownedPrefix() }
@@ -35,8 +38,6 @@ class DefaultBackupPruner internal constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                // Recorded, never rethrown — one failed delete must not take the rest of the run
-                // down with it, and the next prune sees this object again.
                 failures += "$name could not be deleted: ${e.message ?: e::class.simpleName}"
             }
         }

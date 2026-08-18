@@ -1,17 +1,10 @@
 package com.emm.data
 
-// iOS equivalent of DatabaseDriver.android.kt's seedDefaultCategories(db) which runs once
-// inside AndroidSqliteDriver.Callback.onCreate. NativeSqliteDriver (SQLDelight 2.x) has NO
-// onCreate hook (schema.create is wired internally and overriding onConfiguration would clobber
-// it), so we seed AFTER the DB is built, guarded by an idempotent count check.
-//
-// The 23 default categories MUST stay byte-for-byte identical to the Android seed
-// (same categoryId UUIDs, names, icons, colors, types, isDefault=1, fixed createdAt/updatedAt
-// 1736800000000) so a future cross-device sync (phase 6) sees the same rows on both platforms.
-// Do NOT diverge this set from data/src/androidMain/.../DatabaseDriver.android.kt.
-//
-// Idempotent: only inserts when countDefaultCategories() == 0, so it runs once on first launch
-// and never clobbers existing user data (including user-created categories) on subsequent opens.
+/**
+ * Deliberate duplicate of seedDefaultCategories in DatabaseDriver.android.kt: the two sets must stay
+ * identical, categoryId UUIDs and timestamps included. NativeSqliteDriver has no onCreate hook, so
+ * this runs after the database is built instead of from a create callback.
+ */
 fun seedDefaultCategoriesIfEmpty(db: EmmDatabaseData) {
     val cq = db.categoriesQueries
     val existingDefaults = cq.countDefaultCategories().executeAsOne()
@@ -40,7 +33,6 @@ private data class DefaultCategory(
     val type: String,
 )
 
-// Mirrors DatabaseDriver.android.kt seedDefaultCategories INSERT, in the same order.
 private val DEFAULT_CATEGORIES: List<DefaultCategory> = listOf(
     DefaultCategory("c3c1d0a2-8f12-4b9e-9a36-1c4d2f0b2f01", "Supermercado", "groceries", "green", "Spend"),
     DefaultCategory("9d2a0c6e-9d3b-4a2e-9d71-1a3e8d5a6b02", "Restaurantes", "food", "orange", "Spend"),

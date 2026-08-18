@@ -5,9 +5,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 
-// Filename MUST stay exactly "com.emm.data.db". It was previously derived from
-// BuildConfig.LIBRARY_PACKAGE_NAME (= namespace "com.emm.data"). Changing it orphans
-// every existing user's local database.
+/**
+ * Changing this name orphans every existing user's local database.
+ */
 private const val DATABASE_NAME = "com.emm.data.db"
 
 fun provideSqlDriver(context: Context): SqlDriver = AndroidSqliteDriver(
@@ -21,11 +21,6 @@ fun csm() = object : AndroidSqliteDriver.Callback(schema = EmmDatabaseData.Schem
     override fun onOpen(db: SupportSQLiteDatabase) {
         db.setForeignKeyConstraintsEnabled(true)
     }
-
-    // No onUpgrade override: AndroidSqliteDriver.Callback's default onUpgrade calls
-    // EmmDatabaseData.Schema.migrate(driver, oldVersion, newVersion), which runs the
-    // numbered .sqm files in order (e.g. 1.sqm: CREATE TABLE recurring_movements).
-    // This preserves all existing user data across schema upgrades.
 
     override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)

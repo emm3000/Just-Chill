@@ -7,7 +7,6 @@ import com.emm.domain.category.CategoryType
 import com.emm.domain.category.CategoryUpsert
 import com.emm.domain.shared.CategoryId
 
-// SQLDelight -> Entity (internal, stays within data source)
 fun Categories.asEntity() = CategoryEntity(
     categoryId = categoryId,
     name = name,
@@ -21,7 +20,6 @@ fun Categories.asEntity() = CategoryEntity(
 
 fun List<Categories>.asEntity() = map(Categories::asEntity)
 
-// Entity -> Domain
 fun CategoryEntity.asExternalModelOrNull(): Category? {
     val parsedType = enumValueOrNull<CategoryType>(categoryType) ?: return null
     return Category(
@@ -35,7 +33,6 @@ fun CategoryEntity.asExternalModelOrNull(): Category? {
 
 fun List<CategoryEntity>.asExternalModel() = mapNotNull(CategoryEntity::asExternalModelOrNull)
 
-// Domain upsert -> Entity
 fun CategoryUpsert.asEntity() = CategoryEntity(
     categoryId = categoryId.value,
     name = name,

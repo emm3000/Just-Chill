@@ -35,9 +35,6 @@ fun Transactions.asEntity() = TransactionEntity(
 
 fun List<Transactions>.asEntity() = map(Transactions::asEntity)
 
-// A row whose type or whose occurredAt the app cannot read is dropped, not guessed at — the same
-// skip-the-row policy the whole module applies, so an uninterpretable row stays invisible
-// everywhere rather than turning up misclassified or dated at some invented fallback.
 fun TransactionEntity.asExternalModelOrNull(): Transaction? {
     val parsedType = enumValueOrNull<TransactionType>(type)
     val parsedOccurredAt = occurredAt.toOccurredAtOrNull()
@@ -118,8 +115,6 @@ fun TransactionWithCategoryEntity.toDomainOrNull(): TransactionWithCategory? {
     }
 }
 
-// Unknown categoryType keeps the transaction alive but sets category = null.
-// The UI already renders null category as "Sin categoría"; financial totals must not depend on it.
 private fun TransactionWithCategoryEntity.resolveCategory(): Category? {
     val parsedType = categoryType?.let { enumValueOrNull<CategoryType>(it) } ?: return null
     val allFieldsPresent = categoryId != null && categoryName != null && categoryIcon != null && categoryColor != null
@@ -138,7 +133,6 @@ private fun TransactionWithCategoryEntity.resolveCategory(): Category? {
 
 fun List<TransactionWithCategoryEntity>.toDomain() = mapNotNull(TransactionWithCategoryEntity::toDomainOrNull)
 
-// totalAmount is Long? from SQLDelight (SUM is nullable), default to 0 if null
 fun MonthlyAmountByCategory.asEntity() = MonthlyAmountByCategoryEntity(
     categoryId = categoryId,
     categoryName = categoryName,
@@ -172,13 +166,6 @@ fun MonthlyAmountByTypeEntity.toDomain() = CategoryAmount(
     amount = Money(cents = totalAmount),
 )
 
-/**
- * Splits one month's rows into the two typed buckets the report reads.
- *
- * Rows whose type the app cannot parse are dropped rather than guessed at — the same policy the
- * transaction mappers apply, so an unreadable row stays invisible everywhere instead of landing in
- * the wrong column of a money screen.
- */
 fun List<MonthlyAmountByTypeEntity>.toMonthCategoryAmounts(): MonthCategoryAmounts {
     val byType: Map<TransactionType, List<CategoryAmount>> = groupBy { enumValueOrNull<TransactionType>(it.type) }
         .mapNotNull { (type, rows) -> type?.let { it to rows.map(MonthlyAmountByTypeEntity::toDomain) } }

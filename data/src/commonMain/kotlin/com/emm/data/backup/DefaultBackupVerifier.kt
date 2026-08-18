@@ -6,8 +6,10 @@ import com.emm.domain.shared.backup.BackupVerifier
 import io.github.jan.supabase.SupabaseClient
 import kotlin.time.Instant
 
-// Well under the 7 + 8 + 12 a shelf can hold: a bucket where nothing verifies must answer without
-// downloading every snapshot in it.
+/**
+ * Well under the 7 + 8 + 12 a shelf can hold: a bucket where nothing verifies must answer without
+ * downloading every snapshot in it.
+ */
 internal const val BACKUP_VERIFY_MAX_PAIRS: Int = 5
 
 class DefaultBackupVerifier internal constructor(private val store: BackupObjectStore) : BackupVerifier {
@@ -63,17 +65,16 @@ class DefaultBackupVerifier internal constructor(private val store: BackupObject
     private suspend fun read(key: String): ByteArray = storageCall(unreadable(key)) { store.download(key) }
 }
 
-// The digest is checked before the payload is parsed on purpose: a payload that parses is not
-// evidence it is the payload the manifest describes, and only the digest can say so.
 private fun decodeIfDigestMatches(manifest: BackupManifestDto, payloadBytes: ByteArray): DecodedBackup? {
     if (sha256Hex(payloadBytes) != manifest.payloadSha256) return null
     return decodeBackupPayloadOrNull(payloadBytes.decodeToString())
 }
 
-// Orphans stay in the list rather than being filtered out of it: an orphan payload is the newest
-// thing in the bucket the night a manifest PUT fails, and a result that reported the pair below it
-// as the newest one would hide exactly that. It is still never verified and never deleted — an
-// orphan is the prune's business, and a check that deletes is not a check.
+/**
+ * Orphans stay in the list rather than being filtered out of it: an orphan payload is the newest
+ * thing in the bucket the night a manifest PUT fails, and a result that reported the pair below it
+ * as the newest one would hide exactly that.
+ */
 private fun snapshotsNewestFirst(names: List<String>): List<Snapshot> {
     val flat: List<String> = names.filterNot { it.contains('/') }
     val present: Set<String> = flat.toSet()

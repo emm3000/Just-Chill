@@ -5,7 +5,6 @@ import com.emm.domain.account.Account
 import com.emm.domain.account.AccountType
 import com.emm.domain.shared.AccountId
 
-// SQLDelight -> Entity (internal, stays within data source)
 fun Accounts.asEntity() = AccountEntity(
     accountId = accountId,
     name = name,
@@ -16,7 +15,6 @@ fun Accounts.asEntity() = AccountEntity(
 
 fun List<Accounts>.asEntity() = map(Accounts::asEntity)
 
-// Entity -> Domain
 fun AccountEntity.asExternalModel() = Account(
     accountId = AccountId(accountId),
     name = name,

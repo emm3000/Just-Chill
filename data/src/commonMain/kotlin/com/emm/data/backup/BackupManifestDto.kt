@@ -64,8 +64,10 @@ internal fun decodeBackupManifestOrNull(bytes: ByteArray): BackupManifestDto? {
     return manifest?.takeIf { it.manifestVersion == BACKUP_MANIFEST_VERSION }
 }
 
-// A manifest this build cannot read is not a verdict on the payload beside it — the only caller
-// walks back to an older pair — so the reason it was unreadable is discarded rather than reported.
+/**
+ * A manifest this build cannot read is not a verdict on the payload beside it — the only caller
+ * walks back to an older pair — so the reason it was unreadable is discarded rather than reported.
+ */
 @Suppress("SwallowedException")
 private inline fun <T> readingManifest(block: () -> T): T? = try {
     block()

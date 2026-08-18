@@ -87,23 +87,12 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData,
     }
 
     /**
-     * Atomically:
-     * 1. Re-read lastConfirmedPeriod inside the transaction (DB-level idempotency guard)
-     * 2. Insert the transaction record
-     * 3. Mark the recurring movement confirmed with the same timestamp
-     *
-     * If the template is already settled at or past [period] (TOCTOU race), throws
-     * [DomainException.ValidationError] which causes the SQLDelight transaction to roll back,
-     * reverting the just-inserted transaction row.
-     *
-     * The clock is read ONCE, before the transaction opens, and the value stamps the new row and
-     * the template's high-water mark alike. Two rows written atomically that disagree about when
-     * would be a lie about an operation that either happened or did not.
+     * One clock read stamps both writes. Two rows committed in the same transaction that disagree
+     * about when would be a lie about an operation that either happened or did not.
      */
     suspend fun confirm(insert: TransactionInsert, recurringId: String, period: String) = withContext(ioDispatcher) {
         val now = clock.nowMillis()
         emmDatabase.transaction {
-            // DB-level idempotency guard: re-check inside the transaction to close the TOCTOU window.
             ensureNotSettled(recurringId, period)
 
             emmDatabase.transactionsQueries.insert(
@@ -126,12 +115,6 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData,
         Unit
     }
 
-    /**
-     * Advances the high-water mark to [period] with no transaction attached.
-     *
-     * Same guard as [confirm], for the same reason: a concurrent write must not be able to rewind
-     * the mark and resurrect periods the user already settled.
-     */
     suspend fun skip(recurringId: String, period: String, updatedAt: Long) = withContext(ioDispatcher) {
         emmDatabase.transaction {
             ensureNotSettled(recurringId, period)
@@ -141,16 +124,11 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData,
     }
 
     /**
-     * Throws unless [period] is strictly newer than the stored mark.
+     * Period keys are zero-padded "YYYY-MM", so string ordering is chronological and needs no parsing.
      *
-     * Period keys are zero-padded "YYYY-MM", so string ordering is chronological ordering and the
-     * comparison needs no parsing.
-     *
-     * **Paired guard:** `parsePeriodKey` in `:domain` decides the same question — "is this mark
-     * settled" — and is the only one of the two that bounds what a well-formed key is. They must
-     * agree. A key that parser rejects still reaches this comparison as a raw string and sorts
-     * wherever its bytes fall, so a mark it calls malformed can settle every future period here
-     * while `pendingPeriods` goes on listing them as owed: confirm and skip both throw, and the
+     * Paired with parsePeriodKey in :domain, the only one of the two that bounds a well-formed key.
+     * A key that parser rejects still sorts here by its raw bytes, so it can settle every future
+     * period while pendingPeriods keeps listing them as owed: confirm and skip both throw and the
      * template is stuck. Change that bound and re-read this.
      */
     private fun ensureNotSettled(recurringId: String, period: String) {

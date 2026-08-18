@@ -59,8 +59,10 @@ class DefaultBackupUploader internal constructor(private val store: BackupObject
         }
     }
 
-    // Converts a cleanup failure into data so the verdict above it survives; nothing is swallowed,
-    // the throwable becomes the thrown exception's cause.
+    /**
+     * Converts a cleanup failure into data so the verdict above it survives; nothing is swallowed,
+     * the throwable becomes the thrown exception's cause.
+     */
     @Suppress("TooGenericExceptionCaught")
     private suspend fun discarding(block: suspend () -> Unit): Throwable? = try {
         block()

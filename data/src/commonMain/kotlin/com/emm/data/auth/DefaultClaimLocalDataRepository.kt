@@ -12,19 +12,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.withContext
 
 /**
- * Stamps all anonymous-local rows (userId IS NULL) across the four tables with [userId] and marks
- * them Pending for sync, inside a single atomic SQLDelight transaction.
- *
- * Design rationale: this repository touches all four tables in one go, so it takes [EmmDatabaseData]
- * directly rather than going through per-entity LocalDataSources. Introducing four separate data
- * sources just to call a single claimAll query each would be over-engineering; the pattern matches
- * [DefaultBackupRepository] which also operates multi-table within one transaction.
+ * Takes EmmDatabaseData directly rather than per-entity LocalDataSources: the four tables are
+ * claimed in one atomic transaction, which no per-entity data source can span.
  */
 class DefaultClaimLocalDataRepository(private val db: EmmDatabaseData) : ClaimLocalDataRepository {
 
     override suspend fun claimAll(userId: String): Unit = safeDbCall {
-        // Move the blocking transaction off the caller's dispatcher (callers reach this from
-        // viewModelScope / Main via SignInUseCase). Mirrors the per-entity LocalDataSources.
         withContext(ioDispatcher) {
             db.transaction {
                 db.accountsQueries.claimAll(userId)
@@ -46,9 +39,6 @@ class DefaultClaimLocalDataRepository(private val db: EmmDatabaseData) : ClaimLo
         }
     }
 
-    // catchAsDomainException, like every other observe flow in this module: this one is collected
-    // by the claim observer on the application scope, where a raw SQLite throw is an uncaught
-    // exception rather than a failed call.
     override fun observeUnclaimedCount(): Flow<Long> = combine(
         db.accountsQueries.countUnclaimed().asFlow().mapToOne(ioDispatcher),
         db.categoriesQueries.countUnclaimed().asFlow().mapToOne(ioDispatcher),

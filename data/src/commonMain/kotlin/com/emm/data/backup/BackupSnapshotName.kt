@@ -7,8 +7,10 @@ fun backupSnapshotName(takenAt: Instant): String {
     return "$CURRENT_GENERATION_PREFIX${stamp.replace(':', TIME_SEPARATOR)}$JSON_EXTENSION"
 }
 
-// Well-formed digits in the right places, not a real instant, is the same answer as a name that
-// never looked like a snapshot: not a snapshot, so left alone.
+/**
+ * Well-formed digits in the right places, not a real instant, is the same answer as a name that
+ * never looked like a snapshot: not a snapshot, so left alone.
+ */
 @Suppress("SwallowedException")
 internal fun parseBackupSnapshotTakenAt(fileName: String): Instant? {
     val groups: List<String> = SNAPSHOT_NAME.matchEntire(fileName)?.groupValues ?: return null

@@ -19,8 +19,8 @@ import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
 /**
- * Upper bound on search results. Search is global (cross-month) by design, so this is the only
- * read path without a date window; the cap keeps its worst case at a fixed size.
+ * Search is global (cross-month) by design, so this is the only read path without a date window;
+ * the cap keeps its worst case at a fixed size.
  */
 private const val SEARCH_RESULT_CAP = 200L
 
@@ -66,8 +66,6 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries, private va
         .mapToOne(ioDispatcher)
         .map { row -> TransactionTotalsEntity(balance = row.balance, movementCount = row.movementCount) }
 
-    // The generated categoryId is non-null: SQLDelight narrows the nullable column through the
-    // query's `categoryId IS NOT NULL` filter.
     fun countPerCategory(): Flow<List<CategoryUsageCountEntity>> = tq.countPerCategory()
         .asFlow()
         .mapToList(ioDispatcher)

@@ -5,7 +5,6 @@ data class TransactionWithCategoryEntity(
     val type: String,
     val amount: Long,
     val description: String,
-    /** ISO local text, exactly as the column holds it. Parsed once, by the mapper. */
     val occurredAt: String,
     val accountId: String,
     val categoryId: String?,

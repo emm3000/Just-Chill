@@ -8,8 +8,10 @@ import io.github.jan.supabase.exceptions.UnauthorizedRestException
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlin.coroutines.cancellation.CancellationException
 
-// Caught broadly and translated into a DomainException below, never swallowed; CancellationException
-// is rethrown first so a cancelled operation is never reported as a failure.
+/**
+ * Caught broadly and translated into a DomainException below, never swallowed; CancellationException
+ * is rethrown first so a cancelled operation is never reported as a failure.
+ */
 @Suppress("TooGenericExceptionCaught")
 internal suspend fun <T> storageCall(reason: String, block: suspend () -> T): T = try {
     block()

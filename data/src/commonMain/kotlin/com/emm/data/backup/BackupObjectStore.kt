@@ -23,9 +23,6 @@ internal interface BackupObjectStore {
     suspend fun list(prefix: String, limit: Int, offset: Int): ObjectPage
 }
 
-// Every caller needs the same bound and the same refusal: a listing that never ends is a partial
-// view of the bucket, and both readers of it (prune, verification) draw a conclusion that is only
-// valid over the whole thing. The reasons differ per caller, the bound does not.
 internal suspend fun BackupObjectStore.wholeBucket(
     prefix: String,
     listFailed: String,

@@ -21,9 +21,7 @@ class TransactionStatsLocalDataSource(private val tq: TransactionsQueries) {
     }
 
     /**
-     * One dispatcher hop and one read transaction for the whole window.
-     *
-     * The transaction is not decoration: without it the months could be read either side of a
+     * The read transaction is not decoration: without it the months could be read either side of a
      * concurrent write, and the Trends tab would draw a bar chart no single state of the database
      * ever produced.
      */
