@@ -4,9 +4,9 @@
 
 ## Done when
 
-- [ ] a generic `RestException` reaching `toAuthDomainException` is typed the way the backup path
+- [x] a generic `RestException` reaching `toAuthDomainException` is typed the way the backup path
   types it, or the divergence is written down as deliberate with the reason
-- [ ] a test pins whichever answer is chosen, so the two paths cannot drift apart again silently
+- [x] a test pins whichever answer is chosen, so the two paths cannot drift apart again silently
 
 ## Context
 

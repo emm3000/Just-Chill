@@ -10,9 +10,11 @@ import io.github.jan.supabase.exceptions.UnauthorizedRestException
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.statement.HttpResponse
+import io.ktor.http.HttpStatusCode
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
 /**
@@ -93,11 +95,15 @@ class AuthExceptionMapperTest {
     }
 
     @Test
-    fun `generic RestException maps to Unknown`() {
+    fun `generic RestException is typed as RemoteRejected, mirroring the backup path`() {
         val response = mockk<HttpResponse>(relaxed = true)
-        every { response.status } returns mockk(relaxed = true)
+        every { response.status } returns HttpStatusCode(503, "test")
         val ex = object : RestException(error = "some_error", description = "desc", response = response) {}
-        assertIs<DomainException.Unknown>(ex.toAuthDomainException())
+
+        val rejected = ex.toAuthDomainException()
+
+        assertIs<DomainException.RemoteRejected>(rejected)
+        assertEquals(503, rejected.statusCode)
     }
 
     @Test

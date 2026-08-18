@@ -19,6 +19,7 @@ import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.user.UserInfo
 import io.github.jan.supabase.exceptions.HttpRequestException
+import io.github.jan.supabase.exceptions.RestException
 import io.github.jan.supabase.exceptions.UnauthorizedRestException
 import io.github.jan.supabase.postgrest.postgrest
 import io.ktor.client.plugins.HttpRequestTimeoutException
@@ -239,12 +240,18 @@ private val VALIDATION_AUTH_CODES: Map<AuthErrorCode, ValidationCode> = mapOf(
  *   Credential/authentication errors: [io.github.jan.supabase.auth.exception.AuthErrorCode]
  *   values UserNotFound, SessionNotFound, NoAuthorization, EmailNotConfirmed, etc.
  * - [UnauthorizedRestException] extends [io.github.jan.supabase.exceptions.RestException] — HTTP 401.
- * - [io.github.jan.supabase.exceptions.RestException] — any other structured server error.
+ * - [io.github.jan.supabase.exceptions.RestException] — any other structured server error, mapped to
+ *   [DomainException.RemoteRejected] carrying `statusCode`, the same way
+ *   `BackupFailures.asBackupFailure` maps the identical family on the backup path.
  * - [HttpRequestException] extends IOException — network-level failure.
  * - [HttpRequestTimeoutException] (ktor) — request timed out (network category).
  *
  * [AuthRestException] and [UnauthorizedRestException] are siblings (both extend [RestException]
- * directly), so their relative order is irrelevant — the branches are disjoint types.
+ * directly), so their relative order is irrelevant — the branches are disjoint types. The plain
+ * [RestException] branch below must still sit after both, or it would catch their instances first;
+ * [SessionRequiredException], despite the name, does NOT extend [RestException] — it extends
+ * `Exception` directly — so it never competes with that branch, but it stays ahead of it anyway to
+ * read the same top-to-bottom order as `BackupFailures.asBackupFailure`.
  *
  * Sign-up/credential rejections that are the user's fault (weak password, email already taken,
  * invalid email) carry an [AuthErrorCode] in [VALIDATION_AUTH_CODES] and map to [ValidationError]
@@ -283,6 +290,12 @@ internal fun Throwable.toAuthDomainException(): DomainException = when (this) {
 
     is SessionRequiredException -> DomainException.Unauthorized(
         message = "Postgrest call required a session but none was attached",
+        cause = this,
+    )
+
+    is RestException -> DomainException.RemoteRejected(
+        message = "The auth server rejected the request: HTTP $statusCode: $error.",
+        statusCode = statusCode,
         cause = this,
     )
 
