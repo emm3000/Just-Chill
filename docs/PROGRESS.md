@@ -442,6 +442,15 @@ gana el ADR.
   (`radius.0`/`r0` 0, `radius.m`/`rM` 12, `radius.full`/`rFull` 999) y divergen en dos:
   `radius.s` 6 contra `rS` 10, y `radius.l` 20 contra `rL` 14 —los 20dp del doc son los de `rXXL`.
 
+### Copy
+
+- [ ] **La app está partida entre tuteo y voseo, y el voseo es el registro equivocado** para un
+  usuario peruano. Cinco cadenas de producción vosean: `PrivacyPolicyScreen.kt:86` ("podés"),
+  `ImportBackupDialog.kt:77` ("tenés"), `DeleteCategoryCopy.kt:12-13` ("podés", dos veces) y
+  `ProfileMessageText.kt:11` ("Cerrá sesión"). El resto tutea. No hay nada que lo detecte: detekt no
+  lee español y cada escritor matchea el archivo que tiene delante, así que la mezcla se profundiza
+  sola. Decidir el registro una vez y barrer.
+
 ### Bugs
 
 - [x] **Crear una categoría desde un movimiento de Ingreso abre el formulario en Gasto.** Cerrado por
