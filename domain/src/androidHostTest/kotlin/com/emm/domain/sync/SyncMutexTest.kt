@@ -79,6 +79,14 @@ class SyncMutexTest {
     @Test
     fun `a release racing the deadline never leaves the lock held by the caller that gave up`() =
         runBlocking(Dispatchers.Default) {
+            // The leak needs a release and a deadline on two cores at once. Measured, a
+            // single-threaded dispatcher never reproduces it while the assertions below still pass —
+            // so the precondition is asserted rather than the outcome, which cannot detect this.
+            assertTrue(
+                Runtime.getRuntime().availableProcessors() >= MIN_RACE_CORES,
+                "this test needs $MIN_RACE_CORES cores to interleave a release with a deadline; " +
+                    "on fewer it passes without ever sampling the race it exists to catch",
+            )
             val waiterBusyCount = AtomicInteger(0)
             val waiterAcquiredCount = AtomicInteger(0)
             repeat(RACE_ROUNDS) {
@@ -147,6 +155,7 @@ class SyncMutexTest {
         // Dispatchers.Default and limitedParallelism(2); 200 keeps a margin over that kill point.
         const val RACE_ROUNDS = 200
         const val RACE_WIDTH = 200
+        const val MIN_RACE_CORES = 2
     }
 }
 
