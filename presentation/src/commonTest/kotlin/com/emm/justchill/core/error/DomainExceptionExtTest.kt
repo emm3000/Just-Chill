@@ -49,6 +49,19 @@ class DomainExceptionExtTest {
     }
 
     @Test
+    fun `a rejected request never shows the user the HTTP status it carries`() {
+        val rejected = DomainException.RemoteRejected(
+            "Snapshot backup failed. The server answered HTTP 413: payload too large.",
+            statusCode = 413,
+            cause = RuntimeException("rest"),
+        )
+        val message = rejected.toUserMessage()
+
+        assertTrue(message.isNotBlank())
+        assertFalse(message.contains("413"), "the status code is diagnosis, not user-facing copy: $message")
+    }
+
+    @Test
     fun `password length message states the actual minimum`() {
         val message = DomainException.ValidationError(
             diagnosticMessage,

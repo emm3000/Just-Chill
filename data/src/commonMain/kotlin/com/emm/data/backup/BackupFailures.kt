@@ -26,7 +26,13 @@ internal fun Throwable.asBackupFailure(reason: String): DomainException = when (
 
     is SessionRequiredException -> DomainException.Unauthorized(reason, this)
 
-    is RestException -> DomainException.Unknown(this, "$reason The server answered HTTP $statusCode: $error.")
+    // Below the two auth branches on purpose: UnauthorizedRestException is a RestException, and a
+    // session that expired must stay Unauthorized.
+    is RestException -> DomainException.RemoteRejected(
+        "$reason The server answered HTTP $statusCode: $error.",
+        statusCode,
+        this,
+    )
 
     is HttpRequestException,
     is HttpRequestTimeoutException,

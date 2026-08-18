@@ -9,6 +9,8 @@ enum class BackupFailureReason {
 
     Network,
 
+    RemoteRejected,
+
     Unauthorized,
 
     Busy,
@@ -30,6 +32,8 @@ fun DomainException.toBackupFailureReason(): BackupFailureReason = when (this) {
     is DomainException.SerializationError -> BackupFailureReason.Serialization
 
     is DomainException.NetworkUnavailable -> BackupFailureReason.Network
+
+    is DomainException.RemoteRejected -> BackupFailureReason.RemoteRejected
 
     is DomainException.Unauthorized -> BackupFailureReason.Unauthorized
 

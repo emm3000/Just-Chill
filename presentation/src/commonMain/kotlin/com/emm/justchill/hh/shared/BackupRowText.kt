@@ -59,6 +59,7 @@ private fun BackupFailureReason?.toFailureAction(): String? = when (this) {
     BackupFailureReason.Busy,
     BackupFailureReason.Serialization,
     BackupFailureReason.Unverified,
+    BackupFailureReason.RemoteRejected,
     BackupFailureReason.Unknown,
     null,
     -> null

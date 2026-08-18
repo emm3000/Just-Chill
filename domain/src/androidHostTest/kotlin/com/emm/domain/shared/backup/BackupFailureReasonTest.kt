@@ -61,14 +61,15 @@ class BackupFailureReasonTest {
     }
 
     @Test
-    fun `a server refusal is indistinguishable from an unexpected throwable and maps to Unknown`() {
-        val serverRefusal = DomainException.Unknown(
-            RuntimeException("rest"),
+    fun `a server refusal is named, not folded in with the unexpected throwable beside it`() {
+        val serverRefusal = DomainException.RemoteRejected(
             "The payload could not be uploaded. The server answered HTTP 413: payload too large.",
+            statusCode = 413,
+            cause = RuntimeException("rest"),
         )
         val unexpected = DomainException.Unknown(IllegalStateException("nobody saw this coming"))
 
-        assertEquals(BackupFailureReason.Unknown, serverRefusal.toBackupFailureReason())
+        assertEquals(BackupFailureReason.RemoteRejected, serverRefusal.toBackupFailureReason())
         assertEquals(BackupFailureReason.Unknown, unexpected.toBackupFailureReason())
     }
 
