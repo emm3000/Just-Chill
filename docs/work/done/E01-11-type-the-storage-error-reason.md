@@ -4,11 +4,11 @@
 
 ## Done when
 
-- [ ] `DomainException` gains a member carrying the failed HTTP status as typed data, replacing the
+- [x] `DomainException` gains a member carrying the failed HTTP status as typed data, replacing the
       string-only `Unknown(this, "$reason The server answered HTTP $statusCode: $error.")` mapping
-- [ ] `Throwable.asBackupFailure`'s `RestException` branch (`data/backup/BackupFailures.kt`) raises
+- [x] `Throwable.asBackupFailure`'s `RestException` branch (`data/backup/BackupFailures.kt`) raises
       the new type instead of `DomainException.Unknown`
-- [ ] the new type maps to its own `BackupFailureReason`, distinct from `Unknown`
+- [x] the new type maps to its own `BackupFailureReason`, distinct from `Unknown`
 
 ## Context
 
