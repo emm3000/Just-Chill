@@ -240,10 +240,8 @@ class BackupOrchestrator(
             exportedAt = takenAt.toEpochMilliseconds(),
             appVersion = appVersion,
         )
-        // The lock spans the upload and the writes that book it, so an account deletion cannot slip
-        // its clear(userId) between them and leave this account marked backed up after it is gone.
-        // exportToJson and prune stay outside: neither writes anything the deletion clears, and both
-        // would only widen a process-wide lock across Storage calls the delete button waits on.
+        // exportToJson and prune stay outside the lock: neither writes anything a deletion clears, and
+        // both would only widen a process-wide lock across Storage calls the delete button waits on.
         val stillTheSameAccount: Boolean = syncMutex.withLock {
             uploader.upload(userId, backupSnapshotName(takenAt), payload)
             // currentUserId read once and reused for both branches below: two reads of a @Volatile

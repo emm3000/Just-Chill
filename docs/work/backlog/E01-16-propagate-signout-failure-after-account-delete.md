@@ -13,3 +13,9 @@
 
 The right contract is an open question: the account is gone either way, so `signOut()`'s qualified
 `SignOutResult.LocalOnly` shape may not fit — decide it here, don't assume it carries over.
+
+While this is open, the device keeps an Authenticated session with a valid stateless JWT for an
+account that no longer exists. A backup waiting on the shared `SyncMutex` then uploads a full ledger
+snapshot into the deleted account's bucket and books the watermark: the lock serializes the two, it
+does not stop that. What stops it is `currentUserId` flipping to null, which is exactly what the
+swallowed sign-out fails to do.
