@@ -4,8 +4,9 @@
 
 ## Done when
 
-- [ ] the epic's failure-path count matches what `data/backup/` actually spells out
-- [ ] the line says how to recount it, so the next writer does not have to rediscover the method
+- [x] the epic's failure-path count matches what `data/backup/` actually spells out — the epic now
+      carries no count to drift; it names the command that recounts instead
+- [x] the line says how to recount it, so the next writer does not have to rediscover the method
 
 ## Context
 
