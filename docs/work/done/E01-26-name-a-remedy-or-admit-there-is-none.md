@@ -4,9 +4,9 @@
 
 ## Done when
 
-- [ ] `LocalDatabase` either moves to `toFailureAction`'s no-remedy group, or its action names
+- [x] `LocalDatabase` either moves to `toFailureAction`'s no-remedy group, or its action names
   something the user can actually do
-- [ ] a test pins which group each reason belongs to, so the split stops being a judgement call
+- [x] a test pins which group each reason belongs to, so the split stops being a judgement call
 
 ## Context
 

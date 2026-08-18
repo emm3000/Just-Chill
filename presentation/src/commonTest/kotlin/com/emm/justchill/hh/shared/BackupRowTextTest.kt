@@ -57,10 +57,6 @@ class BackupRowTextTest {
             failed(BackupFailureReason.Unauthorized, days = 0).toMetaText(),
         )
         assertEquals("Hace 2 días · revisa tu conexión", failed(BackupFailureReason.Network, days = 2).toMetaText())
-        assertEquals(
-            "Ayer · no pude leer tus datos",
-            failed(BackupFailureReason.LocalDatabase, days = 1).toMetaText(),
-        )
     }
 
     @Test
@@ -73,9 +69,17 @@ class BackupRowTextTest {
             "Sin respaldo · vuelve a iniciar sesión",
             BackupRowUi.Failed(BackupFailureReason.Unauthorized, LastSnapshot.None).toMetaText(),
         )
+    }
+
+    @Test
+    fun `a local database read failure gets the generic retry, not a false promise`() {
         assertEquals(
-            "Sin respaldo · no pude leer tus datos",
+            "Sin respaldo · intenta de nuevo",
             BackupRowUi.Failed(BackupFailureReason.LocalDatabase, LastSnapshot.None).toMetaText(),
+        )
+        assertEquals(
+            "Ayer · no pude actualizar",
+            failed(BackupFailureReason.LocalDatabase, days = 1).toMetaText(),
         )
     }
 
@@ -103,6 +107,24 @@ class BackupRowTextTest {
             "No pude respaldar · intenta de nuevo",
             BackupRowUi.Failed(null, LastSnapshot.AgeUnknown).toMetaText(),
         )
+    }
+
+    /**
+     * `toFailureAction` is `private` to `BackupRowText.kt`, so group membership is observed through
+     * `toMetaText()` instead: a reason with no remedy renders the exact same generic fallback as
+     * `null` does, and a reason with a remedy never does. Driven off [BackupFailureReason.entries]
+     * so a reason added later defaults into the no-remedy group until proven otherwise here.
+     */
+    @Test
+    fun `group membership is pinned per reason, not left to incidental string equality`() {
+        val reasonsWithARemedy = setOf(BackupFailureReason.Network, BackupFailureReason.Unauthorized)
+
+        for (reason in BackupFailureReason.entries) {
+            val text = BackupRowUi.Failed(reason, LastSnapshot.None).toMetaText()
+            val rendersTheGenericFallback = text == "Sin respaldo · intenta de nuevo"
+
+            assertEquals(reason !in reasonsWithARemedy, rendersTheGenericFallback, "$reason: $text")
+        }
     }
 
     @Test

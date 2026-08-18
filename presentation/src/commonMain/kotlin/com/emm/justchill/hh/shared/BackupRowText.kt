@@ -54,13 +54,12 @@ private fun BackupFailureReason?.toFailureAction(): String? = when (this) {
 
     BackupFailureReason.Unauthorized -> "vuelve a iniciar sesión"
 
-    BackupFailureReason.LocalDatabase -> "no pude leer tus datos"
-
     BackupFailureReason.Busy,
     BackupFailureReason.Serialization,
     BackupFailureReason.Unverified,
     BackupFailureReason.RemoteRejected,
     BackupFailureReason.Unknown,
+    BackupFailureReason.LocalDatabase,
     null,
     -> null
 }
