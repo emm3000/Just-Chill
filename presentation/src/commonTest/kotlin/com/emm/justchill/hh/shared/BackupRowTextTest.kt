@@ -73,10 +73,8 @@ class BackupRowTextTest {
 
     @Test
     fun `a local database read failure gets the generic retry, not a false promise`() {
-        assertEquals(
-            "Sin respaldo · intenta de nuevo",
-            BackupRowUi.Failed(BackupFailureReason.LocalDatabase, LastSnapshot.None).toMetaText(),
-        )
+        // The no-snapshot case (LocalDatabase renders the generic fallback) is pinned by
+        // `group membership is pinned per reason...` below; this keeps only what that test doesn't cover.
         assertEquals(
             "Ayer · no pude actualizar",
             failed(BackupFailureReason.LocalDatabase, days = 1).toMetaText(),
@@ -112,18 +110,25 @@ class BackupRowTextTest {
     /**
      * `toFailureAction` is `private` to `BackupRowText.kt`, so group membership is observed through
      * `toMetaText()` instead: a reason with no remedy renders the exact same generic fallback as
-     * `null` does, and a reason with a remedy never does. Driven off [BackupFailureReason.entries]
-     * so a reason added later defaults into the no-remedy group until proven otherwise here.
+     * `null` does, and a reason with a remedy never does. [EXPECTED_REMEDY_GROUP] names every
+     * [BackupFailureReason] explicitly and the first assertion below requires it to cover
+     * [BackupFailureReason.entries] exactly, so a reason added to the enum without a matching entry
+     * here fails on that coverage check instead of silently inheriting the no-remedy group.
      */
     @Test
-    fun `group membership is pinned per reason, not left to incidental string equality`() {
-        val reasonsWithARemedy = setOf(BackupFailureReason.Network, BackupFailureReason.Unauthorized)
+    fun `group membership is pinned per reason, and a new reason cannot join a group silently`() {
+        assertEquals(
+            BackupFailureReason.entries.toSet(),
+            EXPECTED_REMEDY_GROUP.keys,
+            "EXPECTED_REMEDY_GROUP must name every BackupFailureReason exactly — missing or stale " +
+                "entries let group membership drift unnoticed.",
+        )
 
-        for (reason in BackupFailureReason.entries) {
+        for ((reason, group) in EXPECTED_REMEDY_GROUP) {
             val text = BackupRowUi.Failed(reason, LastSnapshot.None).toMetaText()
             val rendersTheGenericFallback = text == "Sin respaldo · intenta de nuevo"
 
-            assertEquals(reason !in reasonsWithARemedy, rendersTheGenericFallback, "$reason: $text")
+            assertEquals(group == RemedyGroup.NoRemedy, rendersTheGenericFallback, "$reason: $text")
         }
     }
 
@@ -214,4 +219,19 @@ class BackupRowTextTest {
 
     private fun failed(reason: BackupFailureReason?, days: Int, isStale: Boolean = false) =
         BackupRowUi.Failed(reason, LastSnapshot.DaysAgo(days = days, isStale = isStale))
+
+    private enum class RemedyGroup { HasRemedy, NoRemedy }
+
+    private companion object {
+        val EXPECTED_REMEDY_GROUP: Map<BackupFailureReason, RemedyGroup> = mapOf(
+            BackupFailureReason.Network to RemedyGroup.HasRemedy,
+            BackupFailureReason.Unauthorized to RemedyGroup.HasRemedy,
+            BackupFailureReason.Serialization to RemedyGroup.NoRemedy,
+            BackupFailureReason.RemoteRejected to RemedyGroup.NoRemedy,
+            BackupFailureReason.Busy to RemedyGroup.NoRemedy,
+            BackupFailureReason.Unverified to RemedyGroup.NoRemedy,
+            BackupFailureReason.LocalDatabase to RemedyGroup.NoRemedy,
+            BackupFailureReason.Unknown to RemedyGroup.NoRemedy,
+        )
+    }
 }

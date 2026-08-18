@@ -163,10 +163,7 @@ class DefaultAuthRepositorySignOutTest {
     fun `signOut propagates CancellationException instead of swallowing it and clearing the session`() =
         runTest(timeout = HANG_BOUND) {
             val requestStarted = CompletableDeferred<Unit>()
-            val client = hangingClientWithSession(
-                requestTimeout = DISABLED_REQUEST_TIMEOUT,
-                onRequestStarted = { requestStarted.complete(Unit) },
-            )
+            val client = hangingClientWithSession(onRequestStarted = { requestStarted.complete(Unit) })
             val repository = DefaultAuthRepository(client)
 
             val deferred = async { repository.signOut() }
@@ -235,27 +232,18 @@ class DefaultAuthRepositorySignOutTest {
     }
 
     /**
-     * The same client, with a transport that accepts the request and never answers it.
-     *
-     * [requestTimeout] is what ends the request, absent a cancellation from outside — and it has no
-     * default here on purpose: the only remaining caller is the cancellation test, and it must
-     * disable the timeout outright (see [DISABLED_REQUEST_TIMEOUT]) rather than race it. supabase-kt
-     * 3.7.0 installs ktor's `HttpTimeout` itself on every client it builds, custom engine included,
-     * reading it from `SupabaseClientBuilder.requestTimeout` (default 10 seconds). Setting it here
-     * only moves when the expiry lands; it does not add the mechanism.
+     * The same client, with a transport that accepts the request and never answers it. Its request
+     * timeout is disabled outright (see [DISABLED_REQUEST_TIMEOUT]) rather than raced.
      *
      * [onRequestStarted] fires the instant the mocked transport receives the request, i.e. right
      * before it suspends forever — the cancellation test uses it to synchronize on that exact
      * suspension point instead of racing a real delay.
      */
-    private suspend fun hangingClientWithSession(
-        requestTimeout: Duration,
-        onRequestStarted: () -> Unit = {},
-    ): SupabaseClient = createSupabaseClient(
+    private suspend fun hangingClientWithSession(onRequestStarted: () -> Unit): SupabaseClient = createSupabaseClient(
         supabaseUrl = "https://project.supabase.co",
         supabaseKey = "test-anon-key",
     ) {
-        this.requestTimeout = requestTimeout
+        requestTimeout = DISABLED_REQUEST_TIMEOUT
         httpEngine = MockEngine {
             onRequestStarted()
             awaitCancellation()
@@ -310,7 +298,6 @@ class DefaultAuthRepositorySignOutTest {
          * handler starting, `CompletableDeferred.complete`, the test coroutine resuming from
          * `await()` and `cancel()` executing — all on real threads.
          *
-         *  - **500ms** (shared with the hanging test) lost routinely. Phase 0 moved it to 5 minutes.
          *  - **5 minutes** was unreachable, but exceeded `runTest`'s 60s default, so a genuine
          *    regression degraded from a clean assertion failure into `UncompletedCoroutinesError`.
          *  - **10 seconds** was the attempt to get both. It lost: measured at **1 failure in 12 runs**

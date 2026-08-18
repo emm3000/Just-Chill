@@ -8,7 +8,7 @@
   longer depends on a real-time deadline elapsing, and still fails if the local clear stops running
 - [x] `SHORT_REQUEST_TIMEOUT` is gone, or its remaining uses cannot decide a test's outcome by how
   loaded the machine is
-- [ ] the suite passes under `qualityGate --rerun-tasks` on a loaded machine, not only when run alone
+- [x] the suite passes under `qualityGate --rerun-tasks` on a loaded machine, not only when run alone
 
 ## Context
 

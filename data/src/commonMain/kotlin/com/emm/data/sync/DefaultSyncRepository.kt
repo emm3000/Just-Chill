@@ -139,8 +139,11 @@ class DefaultSyncRepository(
 // ---------------------------------------------------------------------------
 
 /**
- * Maps supabase / ktor throwables to [DomainException]. Mirrors the style in
- * [com.emm.data.auth.DefaultAuthRepository.toAuthDomainException].
+ * Maps supabase / ktor throwables to [DomainException]. Deliberately diverges from
+ * [com.emm.data.auth.DefaultAuthRepository.toAuthDomainException] on a bare [RestException]: auth
+ * and backup type it as [DomainException.RemoteRejected], this still types it as
+ * [DomainException.Unknown] — left alone because sync is slated for deletion, not repair, under
+ * `docs/work/epics/E01-snapshot-backup.md`.
  */
 fun Throwable.toSyncDomainException(): DomainException = when (this) {
     is UnauthorizedRestException -> DomainException.Unauthorized(

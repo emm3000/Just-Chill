@@ -235,7 +235,7 @@ private val VALIDATION_AUTH_CODES: Map<AuthErrorCode, ValidationCode> = mapOf(
 /**
  * Translates a supabase / ktor throwable into the appropriate [DomainException] subtype.
  *
- * Exception hierarchy verified against supabase-kt 3.6.0 sources:
+ * Exception hierarchy verified against supabase-kt 3.7.0 sources:
  * - [AuthRestException] extends [io.github.jan.supabase.exceptions.RestException] — auth-specific 4xx/5xx responses.
  *   Credential/authentication errors: [io.github.jan.supabase.auth.exception.AuthErrorCode]
  *   values UserNotFound, SessionNotFound, NoAuthorization, EmailNotConfirmed, etc.
