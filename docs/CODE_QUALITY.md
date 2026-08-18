@@ -77,6 +77,16 @@ subscriber ever sees it. Subscribe before triggering and assert on the recorded 
 The check: break the production line so the awaited emission never arrives. The test must fail
 naming what did not happen — not hang, and not pass.
 
+No test decides its outcome by how loaded the machine is. `rg 'System.nanoTime|Thread.sleep' --glob
+'*Test.kt'` returns nothing, and that is the check — a polled deadline fails the poll rather than the
+assertion, so a green run alone and a red run inside a full `qualityGate` are the same code. A real
+deadline hidden in a library config counts too: a Ktor `requestTimeout` raced inside `runTest`'s
+virtual time is wall clock wearing a different hat.
+
+Where a test genuinely needs real threads, assert the precondition rather than the outcome. A race
+that needs two cores proves nothing on one, and no assertion on the result can tell "it did not
+happen" from "I could not have seen it".
+
 ## Arbitration: when the two halves meet
 
 - **When they disagree.** Passing the gate is *necessary, never sufficient* — a reviewer may require
