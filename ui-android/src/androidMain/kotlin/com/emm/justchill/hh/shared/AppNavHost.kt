@@ -28,7 +28,6 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.emm.justchill.core.CommitHash
 import com.emm.justchill.core.preferences.AppPreferences
-import com.emm.justchill.core.sync.SyncController
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
@@ -49,8 +48,8 @@ import org.koin.compose.koinInject
 import org.koin.core.qualifier.named
 
 // Single Compose Multiplatform nav host for both Android and iOS. Merges the two former hosts
-// (androidApp Hh.kt + iosMain IosApp.kt) into one commonMain composable. The route keys, bottom bar,
-// sync-event handling and ProfileMessage copy already live in commonMain; this slice unifies the
+// (androidApp Hh.kt + iosMain IosApp.kt) into one commonMain composable. The route keys, bottom bar
+// and ProfileMessage copy already live in commonMain; this slice unifies the
 // NavDisplay + entryProvider body too. The five capabilities that genuinely differ per platform
 // (backup export/import, share, open-email, privacy click + the start tab) sit behind expect/actual
 // (PlatformHostActions + startTab) — Android wires real intents, iOS no-ops, exactly as before.
@@ -62,8 +61,8 @@ import org.koin.core.qualifier.named
 // The fifteen entries themselves are NOT here: each feature owns its own
 // `EntryProviderScope<NavKey>.xxxEntries(...)` next to the screens it wires (hh/<feature>/
 // <Feature>Entries.kt). What is left is the host proper — theme, DI lookups, the first-launch gate,
-// the back stack, the two result channels, the snackbar host, sync events, the bottom bar and
-// NavDisplay. Each entries function builds its own in-scene AppNavigator inside its entry{} body;
+// the back stack, the two result channels, the snackbar host, the bottom bar and NavDisplay. Each
+// entries function builds its own in-scene AppNavigator inside its entry{} body;
 // see AppNavigator for why that call cannot be hoisted up to here.
 
 @Composable
@@ -71,9 +70,6 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     EmmTheme {
         val colors = LocalEmmColors.current
         val appPrefs: AppPreferences = koinInject()
-        // Inject via the SyncController port so the SAME instance the orchestrator emits on drives the
-        // sync-event snackbars. Android binds SyncOrchestrator to SyncController; iOS binds it too.
-        val syncController: SyncController = koinInject()
         val appVersion: String = koinInject(named("appVersion"))
         // Full sha the APK was built from; the profile footer shows the first 7 and copies all 40.
         // androidPlatformModule (:androidApp) binds the CommitHash type this asks for.
@@ -101,9 +97,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         // discovery; that host is gone. Routes still have to be @Serializable — RouteSerializationTest
         // enforces it against this very serializer.
         val backStack: NavBackStack<NavKey> = rememberNavBackStack(startRoute)
-        // Host-level navigator for the two call sites that compose OUTSIDE NavDisplay: the bottom bar
-        // and SyncEventsHandler. Only its duplicate-key guard is live here — see AppNavigator. Every
-        // entry below builds its own, in-scene, where the transition guard works too.
+        // Host-level navigator for the one call site that composes OUTSIDE NavDisplay: the bottom bar.
+        // Only its duplicate-key guard is live here — see AppNavigator. Every entry below builds its
+        // own, in-scene, where the transition guard works too.
         val hostNav: AppNavigator = rememberAppNavigator(backStack)
         var pendingCategory by remember { mutableStateOf<SelectableCategory?>(null) }
         // Holds the JSON contents of an imported backup file until the user confirms the destructive
@@ -120,12 +116,6 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             snackbarHostState = snackbarHostState,
             scope = rootScope,
             onImport = { json -> pendingImportJson = json },
-        )
-
-        SyncEventsHandler(
-            syncController = syncController,
-            snackbarHostState = snackbarHostState,
-            onNavigateToSignIn = { hostNav.push(AuthRoute) },
         )
 
         val currentRoute: NavKey? = backStack.lastOrNull()

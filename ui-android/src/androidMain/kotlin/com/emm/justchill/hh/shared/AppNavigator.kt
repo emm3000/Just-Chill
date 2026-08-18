@@ -34,8 +34,8 @@ import androidx.navigation3.runtime.NavKey
  *
  *  - Built INSIDE an `entry<...> { }` body it picks up that per-scene owner, and **both** guards are
  *    live.
- *  - Built at host level — outside `NavDisplay`, as the bottom bar and [SyncEventsHandler] call sites
- *    are — it picks up the Activity's owner, which stays `RESUMED` through all in-app navigation.
+ *  - Built at host level — outside `NavDisplay`, as the bottom bar call site is — it picks up the
+ *    Activity's owner, which stays `RESUMED` through all in-app navigation.
  *    Only the **duplicate-key** guard is live there; the transition guard can never fire and must not
  *    be relied on. That is not an oversight to fix by threading a lifecycle owner down: it is what
  *    "composed outside `NavDisplay`" means, and it is why the duplicate guard had to be a check that

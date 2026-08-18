@@ -124,7 +124,6 @@ private fun ProfileEntry(
         state = profileState,
         appVersion = appVersion,
         commitHash = commitHash,
-        isDebug = bindings.platform.isDebug,
         onCategoriesClick = { nav.push(CategoriesListRoute) },
         onAccountsClick = { nav.push(AccountsRoute) },
         onRecurringClick = { nav.push(RecurringMovementsRoute) },
@@ -139,7 +138,6 @@ private fun ProfileEntry(
         onSignInClick = { nav.push(AuthRoute) },
         onSignOutClick = { vm.onIntent(ProfileIntent.SignOut) },
         onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccount) },
-        onSyncNowClick = { vm.onIntent(ProfileIntent.SyncNow) },
         onBackUpNowClick = { vm.onIntent(ProfileIntent.BackUpNow) },
         onVerifyBackupClick = { vm.onIntent(ProfileIntent.VerifyBackup) },
         onAcknowledgeBackupDestinationClick = {

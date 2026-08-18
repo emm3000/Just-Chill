@@ -34,7 +34,6 @@ import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Shield
-import androidx.compose.material.icons.outlined.SyncDisabled
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -58,7 +57,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.backup.SNAPSHOT_BACKUP_ENABLED
-import com.emm.justchill.core.sync.SYNC_TEMPORARILY_DISABLED
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
@@ -69,13 +67,7 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.FilledCta
 import com.emm.justchill.hh.shared.BACKUP_DESTINATION_DISCLOSURE
 import com.emm.justchill.hh.shared.BACKUP_DESTINATION_DISCLOSURE_ACTION
-import com.emm.justchill.hh.shared.SpanishDateFormat
 import com.emm.justchill.hh.shared.toMetaText
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Instant
-
-private const val SYNC_PAUSED_META = "Sincronización en pausa"
 
 @Composable
 fun ProfileScreen(
@@ -83,7 +75,6 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     appVersion: String = "",
     commitHash: String = "",
-    isDebug: Boolean = false,
     onCategoriesClick: () -> Unit = {},
     onAccountsClick: () -> Unit = {},
     onRecurringClick: () -> Unit = {},
@@ -94,7 +85,6 @@ fun ProfileScreen(
     onSignInClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {},
     onDeleteAccountClick: () -> Unit = {},
-    onSyncNowClick: () -> Unit = {},
     onCopyCommitHashClick: () -> Unit = {},
     onBackUpNowClick: () -> Unit = {},
     onVerifyBackupClick: () -> Unit = {},
@@ -129,7 +119,6 @@ fun ProfileScreen(
             onSignInClick = onSignInClick,
             onSignOutClick = onSignOutClick,
             onDeleteAccountClick = onDeleteAccountClick,
-            onSyncNowClick = onSyncNowClick,
         )
 
         SectionHeader(text = "Gestionar")
@@ -187,23 +176,6 @@ fun ProfileScreen(
                 metaIsPrimary = false,
                 onClick = onPrivacyClick,
             )
-        }
-
-        if (isDebug) {
-            SectionHeader(text = "Debug")
-            ProfileGroup {
-                ProfileRow(
-                    icon = Icons.Outlined.Repeat,
-                    label = "Sincronizar ahora",
-                    meta = when {
-                        SYNC_TEMPORARILY_DISABLED -> "$SYNC_PAUSED_META · este botón no hace nada"
-                        state.isSyncing -> "Sincronizando…"
-                        else -> "Push + Pull manual"
-                    },
-                    metaIsPrimary = state.isSyncing,
-                    onClick = onSyncNowClick,
-                )
-            }
         }
 
         Spacer(Modifier.height(spacing.s6))
@@ -359,18 +331,13 @@ private fun LastBackupRow(row: BackupRowUi) {
     )
 }
 
-// CyclomaticComplexMethod: every extra branch here comes from SYNC_TEMPORARILY_DISABLED and
-// disappears with it — drop this suppression with the kill switch instead of restructuring around it.
-@Suppress("CyclomaticComplexMethod")
 @Composable
 private fun AccountSection(
     state: ProfileUiState,
     onSignInClick: () -> Unit,
     onSignOutClick: () -> Unit,
     onDeleteAccountClick: () -> Unit,
-    onSyncNowClick: () -> Unit,
 ) {
-    val colors = LocalEmmColors.current
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
 
     if (showDeleteAccountDialog) {
@@ -393,11 +360,7 @@ private fun AccountSection(
                     ProfileRow(
                         icon = Icons.Outlined.Shield,
                         label = "Iniciar sesión",
-                        meta = if (SYNC_TEMPORARILY_DISABLED) {
-                            SYNC_PAUSED_META
-                        } else {
-                            "Sincroniza tus datos entre dispositivos"
-                        },
+                        meta = "Respalda tus datos en la nube",
                         metaIsPrimary = false,
                         onClick = onSignInClick,
                     )
@@ -407,49 +370,10 @@ private fun AccountSection(
                     ProfileRowWithTrailing(
                         icon = Icons.Outlined.AccountCircle,
                         label = session.email ?: "Tu cuenta",
-                        meta = if (SYNC_TEMPORARILY_DISABLED) {
-                            SYNC_PAUSED_META
-                        } else {
-                            when (val row = state.syncRow) {
-                                SyncRowUi.Syncing -> "Sincronizando…"
-                                SyncRowUi.Failed -> "No se pudo sincronizar"
-                                is SyncRowUi.Idle -> syncStatusLabel(row.lastSyncedAtMillis)
-                            }
-                        },
-                        metaIsPrimary = true,
-                        metaColor = when {
-                            SYNC_TEMPORARILY_DISABLED -> colors.warning
-                            state.syncRow is SyncRowUi.Failed -> colors.danger
-                            else -> null
-                        },
+                        meta = "",
+                        metaIsPrimary = false,
                         onClick = null,
-                        trailing = {
-                            if (SYNC_TEMPORARILY_DISABLED) {
-                                Icon(
-                                    imageVector = Icons.Outlined.SyncDisabled,
-                                    contentDescription = null,
-                                    tint = colors.warning,
-                                    modifier = Modifier.size(16.dp),
-                                )
-                            } else {
-                                when (state.syncRow) {
-                                    SyncRowUi.Syncing -> CircularProgressIndicator(
-                                        modifier = Modifier.size(16.dp),
-                                        strokeWidth = 2.dp,
-                                        color = colors.textTertiary,
-                                    )
-
-                                    SyncRowUi.Failed -> RetryPill(onClick = onSyncNowClick)
-
-                                    is SyncRowUi.Idle -> Icon(
-                                        imageVector = Icons.Outlined.ChevronRight,
-                                        contentDescription = null,
-                                        tint = colors.textTertiary,
-                                        modifier = Modifier.size(16.dp),
-                                    )
-                                }
-                            }
-                        },
+                        trailing = {},
                     )
                     HairlineDivider()
                     ProfileRowWithTrailing(
@@ -489,14 +413,6 @@ private fun AccountSection(
             }
         }
     }
-}
-
-private fun syncStatusLabel(lastSyncedAtMillis: Long?): String = if (lastSyncedAtMillis != null) {
-    val dateTime = Instant.fromEpochMilliseconds(lastSyncedAtMillis)
-        .toLocalDateTime(TimeZone.currentSystemDefault())
-    "Última sincronización: ${SpanishDateFormat.dayShortMonthTime(dateTime)}"
-} else {
-    "Sincronización activa"
 }
 
 @Composable
@@ -601,19 +517,21 @@ private fun ProfileRowWithTrailing(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = meta,
-                fontSize = 13.sp,
-                lineHeight = 18.sp,
-                fontFamily = InterFontFamily,
-                fontWeight = FontWeight.W400,
-                color = if (enabled) {
-                    metaColor ?: if (metaIsPrimary) colors.textSecondary else colors.textTertiary
-                } else {
-                    colors.textDisabled
-                },
-            )
+            if (meta.isNotEmpty()) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = meta,
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp,
+                    fontFamily = InterFontFamily,
+                    fontWeight = FontWeight.W400,
+                    color = if (enabled) {
+                        metaColor ?: if (metaIsPrimary) colors.textSecondary else colors.textTertiary
+                    } else {
+                        colors.textDisabled
+                    },
+                )
+            }
         }
         trailing()
     }
