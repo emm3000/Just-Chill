@@ -19,7 +19,7 @@ sealed class DomainException(message: String, cause: Throwable? = null) : Except
     class NetworkUnavailable(cause: Throwable, message: String = cause.message ?: "Network unavailable") :
         DomainException(message, cause)
 
-    // The status is a field and not prose inside the message: nothing can branch on a sentence.
+    // The status is a field so a caller never has to parse the sentence to branch on it.
     class RemoteRejected(message: String, val statusCode: Int, cause: Throwable) : DomainException(message, cause)
 
     class Unknown(cause: Throwable, message: String = cause.message ?: "Unknown error") :

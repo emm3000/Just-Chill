@@ -22,8 +22,8 @@ Packages: `account`, `auth`, `category`, `home`, `recurring`, `report`, `sync`, 
 ## Error model
 
 Sealed `DomainException` in `shared/error/` is the canonical failure type for all repositories and
-use cases. Subtypes: `NotFound`, `ValidationError`, `DatabaseError`, `Unauthorized`,
-`NetworkUnavailable`, `Unknown`.
+use cases. Read the sealed class for the current subtypes — a list here goes stale silently and
+already did.
 
 When adding a new failure mode, extend `DomainException` instead of introducing a new exception
 type. Don't leak SQLDelight or platform types into this module — those translations happen in `:data`.
