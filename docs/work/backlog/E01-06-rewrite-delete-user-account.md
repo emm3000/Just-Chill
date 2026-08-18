@@ -5,7 +5,7 @@
 
 ## Done when
 
-- [ ] the "unclaim" and "cursor clear" steps are replaced by: delete the user's Storage objects for that account, then delete the auth user
+- [ ] the "unclaim" step is replaced by: delete the user's Storage objects for that account, then delete the auth user
 - [ ] the `delete_account()` RPC call path is otherwise unchanged (`security definer`, `search_path = ''`, revoked from `public`/`anon`)
 
 ## Context
