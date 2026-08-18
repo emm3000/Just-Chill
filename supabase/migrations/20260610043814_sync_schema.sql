@@ -4,7 +4,7 @@
 -- logic is the server_updated_at trigger that orders pulls (ADR 002);
 -- it never resolves conflicts (LWW compares client updated_at).
 --
--- Mapping rules (see docs/sync/PLAN.md):
+-- Mapping rules (see docs/archive/sync/PLAN.md):
 --   - syncState is local-only and never pushed.
 --   - deleted_at IS pushed (tombstones must propagate).
 --   - Client timestamps stay bigint epoch millis.
