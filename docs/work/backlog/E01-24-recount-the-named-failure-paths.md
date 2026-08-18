@@ -9,6 +9,10 @@
 
 ## Context
 
-`docs/work/epics/E01-snapshot-backup.md:18` says "fourteen named failures today". The literal
-enumeration is about 18 — uploader 10, pruner 4, verifier 4 — and was already stale before E01-11.
-The number is a running count nobody can verify without recounting, which is why it drifted.
+`docs/work/epics/E01-snapshot-backup.md:18` says "fourteen named failures today". An independent
+recount over `data/src/commonMain/kotlin/com/emm/data/backup/` (one distinct reason per
+`storageCall`/`wholeBucket`/explicit-throw site inside `DefaultBackupUploader`,
+`DefaultBackupPruner`, `DefaultBackupVerifier`) gives **uploader 8, pruner 4, verifier 4 = 16**, not
+18 — and materially more, up to roughly 22, once `BackupManifestDto.kt`'s six payload/manifest
+reasons and `SupabaseBackupObjectStore.kt`'s own throws are folded in. The count depends on where
+the producer boundary is drawn; it was already stale before E01-11 either way.
