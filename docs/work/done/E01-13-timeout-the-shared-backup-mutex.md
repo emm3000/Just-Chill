@@ -4,11 +4,11 @@
 
 ## Done when
 
-- [ ] the shared mutex's `withLock` call in `DeleteUserAccountUseCase` takes a timeout, so a stuck
+- [x] the shared mutex's `withLock` call in `DeleteUserAccountUseCase` takes a timeout, so a stuck
       holder cannot block the other caller indefinitely
-- [ ] `BackupOrchestrator`'s upload critical section acquires the same shared mutex, so account
+- [x] `BackupOrchestrator`'s upload critical section acquires the same shared mutex, so account
       deletion and an in-flight backup can no longer run unserialized
-- [ ] a test pins that a stuck holder times out instead of blocking its counterpart forever
+- [x] a test pins that a stuck holder times out instead of blocking its counterpart forever
 
 ## Context
 
