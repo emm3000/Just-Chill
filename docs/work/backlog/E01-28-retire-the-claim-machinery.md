@@ -1,7 +1,7 @@
 # E01-28 — Retire the claim machinery
 
 **Epic:** [E01 — snapshot backup](../epics/E01-snapshot-backup.md)
-**Blocked by:** E01-06
+**Blocked by:** nothing — E01-06 closed
 
 ## Done when
 
