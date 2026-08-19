@@ -457,9 +457,11 @@ class MigrationV4ToV5Test {
     private fun migrate() =
         EmmDatabaseData.Schema.migrate(driver, oldVersion = 4, newVersion = EmmDatabaseData.Schema.version)
 
-    // `setForeignKeyConstraintsEnabled` is illegal inside a transaction; both call sites are
-    // outside one, and `Schema.migrate` opens none of its own (the real upgrade's transaction
-    // belongs to `SQLiteOpenHelper`, which this test bypasses).
+    /**
+     * `setForeignKeyConstraintsEnabled` is illegal inside a transaction; both call sites are
+     * outside one, and `Schema.migrate` opens none of its own (the real upgrade's transaction
+     * belongs to `SQLiteOpenHelper`, which this test bypasses).
+     */
     private fun enableForeignKeys() {
         val db = openedDb ?: error("onOpen never fired — the driver was never used")
         db.setForeignKeyConstraintsEnabled(true)

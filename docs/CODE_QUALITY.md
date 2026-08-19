@@ -124,6 +124,14 @@ why, never the what.**
   the code used to be, what replaced what, or what a review said is deleted — never rephrased.
 - **No KDoc by default** — on any class, property, or function, exported to iOS or not. If removing
   the history leaves only a paraphrase of the signature, the whole KDoc goes.
+- **What survives picks its syntax by POSITION, not by length.** KDoc on a declaration something
+  else calls, because that is the only form the IDE shows at the call site and the only one whose
+  `[Symbol]` links a rename keeps honest; `//` on a statement inside a body, which KDoc cannot
+  attach to anyway. The `1–3 lines` ceiling above is unchanged and binds both — KDoc is the form
+  that historically slid back into essays, and the ceiling is what stops it, not the syntax.
+  **A `@Test` takes `//`:** nothing calls it, so there is no call site to surface, and its name is
+  its documentation. This rule describes what `:data` production already does; it is written down
+  so a sweep stops re-deciding it per file.
 - **Diagrams: one source, maximum.** The backup-row precedence ASCII diagram existed in three
   places; three copies is a divergence liability, not documentation.
 - A comment that promises more than the code delivers is worse than none; reviews already caught

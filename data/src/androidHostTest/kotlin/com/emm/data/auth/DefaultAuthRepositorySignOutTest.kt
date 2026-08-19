@@ -33,8 +33,10 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import io.github.jan.supabase.auth.status.SessionStatus as SupabaseSessionStatus
 
-// The SupabaseClient has to be real: what these tests pin is supabase-kt's own behaviour, and a
-// mocked Auth would only assert what this repository calls.
+/**
+ * The SupabaseClient has to be real: what these tests pin is supabase-kt's own behaviour, and a
+ * mocked Auth would only assert what this repository calls.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultAuthRepositorySignOutTest {
 
@@ -130,8 +132,10 @@ class DefaultAuthRepositorySignOutTest {
         client.auth.importSession(session(), autoRefresh = false)
     }
 
-    // Raises the exception directly instead of installing a real ktor timeout and waiting for it,
-    // so the outcome never races the wall clock.
+    /**
+     * Raises the exception directly instead of installing a real ktor timeout and waiting for it,
+     * so the outcome never races the wall clock.
+     */
     private suspend fun timedOutClientWithSession(): SupabaseClient = createSupabaseClient(
         supabaseUrl = "https://project.supabase.co",
         supabaseKey = "test-anon-key",
@@ -176,13 +180,17 @@ class DefaultAuthRepositorySignOutTest {
 
     private companion object {
 
-        // INFINITE is the one value for which ktor launches no timeout coroutine at all. Any finite
-        // one competes with the cancellation under test and wins under load.
+        /**
+         * INFINITE is the one value for which ktor launches no timeout coroutine at all. Any finite
+         * one competes with the cancellation under test and wins under load.
+         */
         val DISABLED_REQUEST_TIMEOUT = Duration.INFINITE
 
-        // A real clock covering the whole test body, so load still beats it. It buys an
-        // unambiguous failure — a leaked coroutine, not a session-status assertion blaming a
-        // cancellation defect that never happened — never determinism.
+        /**
+         * A real clock covering the whole test body, so load still beats it. It buys an
+         * unambiguous failure — a leaked coroutine, not a session-status assertion blaming a
+         * cancellation defect that never happened — never determinism.
+         */
         val HANG_BOUND = 10.seconds
     }
 }
