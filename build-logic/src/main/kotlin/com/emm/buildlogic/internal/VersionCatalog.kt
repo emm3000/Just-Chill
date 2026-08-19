@@ -7,11 +7,6 @@ import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.getByType
 
-/**
- * Access to the SAME gradle/libs.versions.toml the main build uses. A Plugin<Project> class has no
- * `libs` accessor — that one is generated for .gradle.kts scripts only — so convention plugins look
- * the catalog up through this extension instead of hardcoding coordinates.
- */
 internal val Project.libs: VersionCatalog
     get() = extensions.getByType<VersionCatalogsExtension>().named("libs")
 

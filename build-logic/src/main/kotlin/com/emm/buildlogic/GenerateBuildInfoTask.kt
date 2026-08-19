@@ -8,49 +8,9 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 
-/**
- * Writes `BuildInfo.kt`: the git commit the running app was built from.
- *
- * The app ships to exactly one device — the author's, daily, through Firebase App Distribution —
- * so "which build am I looking at?" is a question with no answer today: `versionName` is the
- * nearest release tag and stays identical across dozens of builds. The commit hash is the only
- * identifier that moves with the code.
- *
- * The hash arrives as a plain `@Input` string rather than being read here, so the task itself has
- * no dependency on a git checkout being present and its up-to-date check is a comparison of that
- * declared input — reading git inside the action instead would make the change invisible to it.
- * Configuration caching is a second, separate mechanism: [BuildInfoConventionPlugin] reads git at
- * configuration time, which registers the command as a configuration-cache input and is what
- * invalidates the cached entry when HEAD moves.
- *
- * ### Known limitation: a dirty working tree
- *
- * `git rev-parse HEAD` names the last commit, not the bytes that were compiled. A build made with
- * uncommitted edits advertises a commit whose code it did not build, and the footer has no way to
- * say so. `git describe --dirty` is the usual mitigation and is deliberately NOT used: the
- * 40-hex-or-nothing rule in [normalizeCommitHash] would reduce a `-dirty` suffix to "unknown", and
- * widening that regex to admit the suffix is the one change that would make the generated file
- * unsafe again. The limitation is accepted. What ships through Firebase App Distribution is built
- * by CI from a pushed commit, so the tree is clean exactly where the hash is load-bearing; a dirty
- * local build is a build whose author already knows what is in it.
- *
- * A typed task rather than an ad-hoc `doLast { }`, for the same reason as
- * [GenerateIosSupabaseConfigTask]: inputs and outputs are declared as properties, so incrementality
- * and configuration-cache compatibility come from the type instead of from remembering not to
- * capture script state in the action.
- *
- * ### Why caching is off rather than on
- *
- * The output is reproducible and relocatable, so `@CacheableTask` would be *legal* — but that is not
- * the criterion. Gradle's rule is whether the work benefits: hashing the inputs, querying the cache
- * and unpacking an entry all cost more than writing these fourteen lines again. Up-to-date checking
- * still applies and is what actually saves the work here, since [commitHash] only changes when HEAD
- * does.
- */
 @DisableCachingByDefault(because = "Writing one small file is cheaper than a build cache round trip")
 abstract class GenerateBuildInfoTask : DefaultTask() {
 
-    /** Raw `git rev-parse HEAD` output, or [UNKNOWN_COMMIT] when git could not answer. */
     @get:Input
     abstract val commitHash: Property<String>
 
@@ -84,33 +44,17 @@ abstract class GenerateBuildInfoTask : DefaultTask() {
 
     internal companion object {
         /**
-         * Stand-in when git cannot answer — a source tarball, a shallow export, no git on PATH.
-         *
-         * A sentinel, not a short hash: the footer matches this exact word and renders a distinct
-         * "no commit" state instead of abbreviating it. `:ui-android`'s `UNKNOWN_COMMIT_HASH` holds
-         * the same literal on the consuming side — build-logic is not on the app's compile
-         * classpath, so they cannot be one constant.
-         *
-         * Nothing in the build links the two, so each side is pinned by a test that spells the
-         * word out instead of reading the constant: `GenerateBuildInfoTaskTest.the sentinel is the
-         * exact word the app side spells out` here, `CommitHashUiTest` there. Retyping this value
-         * turns the first red; retyping `UNKNOWN_COMMIT_HASH` turns the second red. Changing the
-         * word for real means editing four places: both constants and both tests.
+         * The same literal as `:ui-android`'s `UNKNOWN_COMMIT_HASH`, duplicated because build-logic
+         * is not on the app's compile classpath — the two cannot be one constant.
          */
         const val UNKNOWN_COMMIT = "unknown"
 
         private val FULL_SHA = Regex("[0-9a-f]{40}")
 
         /**
-         * Reduces anything that is not a full lowercase SHA-1 to [UNKNOWN_COMMIT].
-         *
-         * This is what keeps the generated file compilable: the value is interpolated straight into
-         * a Kotlin string literal, and a quote, a backslash or the trailing newline `git` always
-         * prints would break the build in a file no human ever opens. Rejecting outright beats
-         * escaping — a hash is either 40 hex characters or it is not a hash.
-         *
-         * `GenerateBuildInfoTaskTest` covers both branches, including the `-dirty` suffix the KDoc
-         * above says must stay rejected; it runs on `./gradlew qualityGate` as `:build-logic:test`.
+         * The value is interpolated straight into a Kotlin string literal, where a quote, a
+         * backslash or the trailing newline `git` always prints would break the build in a file no
+         * human ever opens.
          */
         fun normalizeCommitHash(raw: String): String {
             val trimmed = raw.trim().lowercase()

@@ -12,22 +12,8 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 
-/**
- * Writes the iOS counterpart of Android's `BuildConfig.SUPABASE_*`.
- *
- * Android reads root supabase.properties through buildConfigField with ""-fallbacks. iOS has no
- * BuildConfig, so this generates a Kotlin constants object from the SAME root file into a build/
- * source dir that gets wired into iosMain. Secrets are never hardcoded and the output lives under
- * build/ (gitignored). When supabase.properties is absent (CI), the fields fall back to empty or
- * the localhost placeholder exactly like Android, so the app stays usable offline/anonymous.
- *
- * A typed task rather than an ad-hoc `doLast { }`: inputs and outputs are declared as properties, so
- * incrementality and configuration-cache compatibility come from the type instead of from
- * remembering not to capture script state in the action.
- */
 abstract class GenerateIosSupabaseConfigTask : DefaultTask() {
 
-    /** Root supabase.properties. Optional — absent on CI, where the fallbacks take over. */
     @get:InputFile
     @get:Optional
     @get:PathSensitive(PathSensitivity.NONE)
@@ -44,12 +30,9 @@ abstract class GenerateIosSupabaseConfigTask : DefaultTask() {
             FileInputStream(file).use(props::load)
         }
 
-        // ios.* override first, then dev.* (parity with :androidApp's dev flavor). The iOS simulator
-        // shares the host network, so localhost == host; dev.supabase.url uses 10.0.2.2 — the
-        // Android-emulator host alias, which the simulator cannot resolve. The ios.* override lets
-        // both clients target the SAME local stack through their own alias. SUPABASE_URL keeps the
-        // empty -> localhost placeholder fallback that provideSupabaseClient() applies on Android;
-        // the anon key falls back to dev.* and stays empty only when both are absent.
+        // The ios.* key exists because dev.supabase.url holds 10.0.2.2, the Android-emulator host
+        // alias, which the iOS simulator cannot resolve. The simulator shares the host network, so
+        // the override lets both clients reach the SAME local stack through their own alias.
         val url = props.getProperty("ios.supabase.url", "")
             .ifBlank { props.getProperty("dev.supabase.url", "") }
             .ifBlank { "http://localhost:54321" }
@@ -74,7 +57,6 @@ abstract class GenerateIosSupabaseConfigTask : DefaultTask() {
         )
     }
 
-    /** Escapes a raw value so a quote or backslash in a key can never break compilation. */
     private fun String.toKotlinStringLiteral(): String =
         "\"" + replace("\\", "\\\\").replace("\"", "\\\"").replace("$", "\${'$'}") + "\""
 }

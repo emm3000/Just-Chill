@@ -9,14 +9,6 @@ import org.gradle.kotlin.dsl.configure
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
-/**
- * The "what am I" half of the three KMP library modules: :domain, :data and :ui-android.
- *
- * Targets, compile SDK, JVM target and the host-test source set live here once instead of being
- * copy-pasted into three build files. Each module keeps the half that genuinely differs — its
- * dependencies, its `namespace`, its `minSdk`, and any extra source set such as :data's
- * androidDeviceTest.
- */
 class KmpLibraryConventionPlugin : Plugin<Project> {
 
     override fun apply(target: Project) = with(target) {
@@ -25,19 +17,15 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
         pluginManager.apply("justchill.detekt")
         pluginManager.apply("justchill.quality.gate")
 
-        // Every KMP module here has a JVM host-test suite; it belongs on the gate. The pre-push
-        // hook used to run detekt and no tests at all.
         contributeToQualityGate("testAndroidHostTest")
 
-        // :ui-android opted out in slice S2 (docs/swiftui/PLAN.md): its Compose UI is Android-only;
-        // iOS consumes :presentation through the JustChillKit framework instead. The property lives
-        // in the module's own gradle.properties, so the opt-out is visible next to the build file.
         val hasIosTargets = findProperty("justchill.kmp.ios") != "false"
 
         if (hasIosTargets) {
             if (QualityGateConventionPlugin.isMacOsHost) {
-                // The iOS compile is the only mechanical proof that commonMain stays free of java.* /
-                // android.* — see docs/adr/003 (gate relocated to :presentation by docs/adr/005).
+                // The only mechanical proof that the exported core stays free of `java.*` and
+                // `android.*` — nothing else in the gate compiles it for a non-JVM, non-Android
+                // target. See docs/adr/003.
                 tasks.named(QualityGateConventionPlugin.GATE_TASK) {
                     dependsOn(tasks.matching { it.name.startsWith("compileKotlinIos") })
                 }
@@ -55,10 +43,6 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                 iosSimulatorArm64()
             }
 
-            // `android`, not the deprecated `androidLibrary` alias (AGP 9 marks that one
-            // @Deprecated with ReplaceWith("android")). From a Plugin<Project> class there is no
-            // generated DSL accessor for it, so it is reached as what it actually is: an extension
-            // registered on the Kotlin multiplatform extension.
             val android = (this as ExtensionAware).extensions
                 .getByName("android") as KotlinMultiplatformAndroidLibraryTarget
 
