@@ -98,7 +98,6 @@ class AddEditRecurringMovementViewModelTest {
 
         vm.onIntent(AddEditRecurringMovementIntent.OnNameChange("Netflix"))
         vm.onIntent(AddEditRecurringMovementIntent.OnAccountSelected(testAccount))
-        // Amount is required when not variable — empty amount keeps save disabled.
         vm.onIntent(AddEditRecurringMovementIntent.OnAmountChange("1800"))
         advanceUntilIdle()
 
@@ -113,7 +112,6 @@ class AddEditRecurringMovementViewModelTest {
 
         vm.onIntent(AddEditRecurringMovementIntent.OnNameChange("Netflix"))
         vm.onIntent(AddEditRecurringMovementIntent.OnAccountSelected(testAccount))
-        // amountDigits remains "" — save must be disabled to prevent a null fixed amount.
         advanceUntilIdle()
 
         assertFalse(vm.state.value.isSaveEnabled)
@@ -142,7 +140,6 @@ class AddEditRecurringMovementViewModelTest {
         vm.onIntent(AddEditRecurringMovementIntent.OnVariableAmountToggle(true))
         advanceUntilIdle()
 
-        // Variable amount — no digits required, save should be enabled.
         assertTrue(vm.state.value.isSaveEnabled)
     }
 
@@ -237,42 +234,30 @@ class AddEditRecurringMovementViewModelTest {
         assertTrue(vm.state.value.isVariableAmount)
     }
 
-    // ---- Account load-ordering (edit mode race) ----
-
     @Test
     fun `edit mode - account resolved even when accounts flow emits after template load`() = runTest {
-        // Simulate the race: accounts flow is a MutableSharedFlow that starts with no emission.
-        // The template loads (via recurringRepository.find) before accounts arrive.
         val accountsFlow = MutableSharedFlow<List<Account>>(replay = 1)
         every { accountRepository.all() } returns accountsFlow
 
         coEvery { recurringRepository.find(RecurringMovementId("rm-1")) } returns testTemplate
         val vm = createViewModel(id = "rm-1")
 
-        // Let the init block run — accounts have NOT yet been emitted.
         advanceUntilIdle()
 
-        // At this point template is loaded, but accounts not yet; selectedAccount may be null.
-        // pendingAccountId should carry the unresolved id.
         assertNull(vm.state.value.selectedAccount)
 
-        // Now emit accounts — the combine collector should resolve pendingAccountId.
         accountsFlow.emit(listOf(testAccount))
         advanceUntilIdle()
 
         assertNotNull(vm.state.value.selectedAccount)
         assertEquals("acc-1", vm.state.value.selectedAccount?.accountId?.value)
-        // pendingAccountId cleared after resolution.
         assertNull(vm.state.value.pendingAccountId)
     }
 
-    // ---- Category load-ordering (edit mode race) ----
-
     @Test
     fun `edit mode - category resolved even when categories flow emits after template load`() = runTest {
-        // Simulate the race: categories flow has not emitted when the template loads.
-        // Without a pendingCategoryId safety net the category silently resolves to null,
-        // which would WIPE the category on save.
+        // Without a pendingCategoryId safety net, the category would silently resolve to null and
+        // wipe the saved category.
         val categoriesFlow = MutableSharedFlow<List<Category>>(replay = 1)
         every { categoryRepository.all() } returns categoriesFlow
 
@@ -280,11 +265,9 @@ class AddEditRecurringMovementViewModelTest {
         coEvery { recurringRepository.find(RecurringMovementId("rm-1")) } returns templateWithCategory
         val vm = createViewModel(id = "rm-1")
 
-        // Template loaded, categories NOT yet emitted — category unresolved.
         advanceUntilIdle()
         assertNull(vm.state.value.selectedCategory)
 
-        // Now emit categories — the combine collector must resolve pendingCategoryId.
         categoriesFlow.emit(
             listOf(Category(CategoryId("cat-1"), "Bar", "bar", "purple", CategoryType.Spend)),
         )
@@ -297,9 +280,7 @@ class AddEditRecurringMovementViewModelTest {
 
     @Test
     fun `edit mode - account resolved when accounts flow emits before template load`() = runTest {
-        // Happy path: accounts arrive first (typical with SQLDelight immediate emission).
         coEvery { recurringRepository.find(RecurringMovementId("rm-1")) } returns testTemplate
-        // accountRepository.all() returns flowOf(listOf(testAccount)) via setUp()
         val vm = createViewModel(id = "rm-1")
         advanceUntilIdle()
 
@@ -308,17 +289,9 @@ class AddEditRecurringMovementViewModelTest {
         assertNull(vm.state.value.pendingAccountId)
     }
 
-    // ---- The category belongs to the type ----
-
     private val spendCategory = Category(CategoryId("cat-spend"), "Bar", "bar", "purple", CategoryType.Spend)
     private val incomeCategory = Category(CategoryId("cat-income"), "Sueldo", "salary", "green", CategoryType.Income)
 
-    /**
-     * A template mints a transaction of its own type every month, and `(categoryId, type)` is a
-     * foreign key since schema v5 — so a template holding a category of the other type is not one
-     * bad row, it is a generator of rows the database refuses. The form used to offer every
-     * category regardless of the type selected.
-     */
     @Test
     fun `only the categories of the selected type are offered`() = runTest {
         every { categoryRepository.all() } returns flowOf(listOf(spendCategory, incomeCategory))
@@ -326,7 +299,6 @@ class AddEditRecurringMovementViewModelTest {
         val vm = createViewModel()
         advanceUntilIdle()
 
-        // The form opens on Spend.
         assertEquals(TransactionType.Spend, vm.state.value.type)
         assertEquals(listOf("cat-spend"), vm.state.value.categories.map { it.categoryId.value })
     }

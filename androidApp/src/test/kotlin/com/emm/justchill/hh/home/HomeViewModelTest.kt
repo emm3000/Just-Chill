@@ -50,10 +50,7 @@ class HomeViewModelTest {
 
     private lateinit var viewModel: HomeViewModel
 
-    // Stated, not inherited. HomeViewModel takes no defaults, so the suite says when and where it
-    // is: noon UTC mid-month, which is May 2026 in every zone and matches [period] below. The
-    // helper defaults to that pair so the two tests that vary the zone are the only ones spelling
-    // one out — and so nothing here can quietly go back to reading the machine.
+    /** Noon UTC mid-month is May 2026 in every zone. */
     private val fixedClock = object : Clock {
         override fun now(): Instant = Instant.parse("2026-05-16T12:00:00Z")
     }
@@ -114,15 +111,6 @@ class HomeViewModelTest {
     @Suppress("IgnoredReturnValue")
     @Test
     fun `the month it loads is read in the injected zone, not the device's`() = runTest {
-        // One instant, two zones, two different months: 2026-09-01T02:00Z is already September at
-        // UTC and still 31 August at UTC-5. Which month Home opens on is therefore a question about
-        // the zone, and the zone that answers it has to be the injected one — the same one this
-        // ViewModel already uses for its Hoy/Ayer labels. Otherwise half the screen answers for the
-        // device and half for the injection.
-        //
-        // Both zones are asserted because one proves nothing: on a machine whose own clock sits in
-        // that zone the ambient read agrees, and the test stays green straight through the bug.
-        // The dev machine here is America/Lima, which is exactly UTC-5.
         val nearMidnight = object : Clock {
             override fun now(): Instant = Instant.parse("2026-09-01T02:00:00Z")
         }
@@ -136,8 +124,6 @@ class HomeViewModelTest {
         verify { getHomeData(YearMonth(2026, Month.SEPTEMBER)) }
     }
 
-    // ---- Scenario 10.1: No pending → section absent ----
-
     @Test
     fun `10_1 empty pending list maps to empty pendingRecurringMovements in state`() = runTest {
         every { getHomeData(any()) } returns flowOf(emptyHomeData)
@@ -147,8 +133,6 @@ class HomeViewModelTest {
 
         assertTrue(viewModel.state.value.pendingRecurringMovements.isEmpty())
     }
-
-    // ---- Scenario 10.2: One or more pending → section visible ----
 
     @Test
     fun `10_2 two pending items map to two PendingRecurringUi entries`() = runTest {
@@ -173,12 +157,6 @@ class HomeViewModelTest {
 
     @Test
     fun `a period older than the clock's month is marked catch-up, the clock's own month is not`() = runTest {
-        // isCatchUp is `period < YearMonth.current(clock, zone)`, so it is a question about the
-        // injected clock and nothing else. Worth pinning explicitly, because fixing the clock at
-        // May 2026 — the same month as `period` — made every other pending fixture in this suite
-        // land on `false`, and the catch-up branch became unreachable from here. Under the ambient
-        // clock it was silently `true` on any run after May 2026: the same assertion nobody wrote,
-        // answered differently depending on the day. Both sides are asserted so neither can rot.
         val homeData = emptyHomeData.copy(
             pendingRecurringMovements = listOf(
                 pending("rm-old", "Netflix", period = YearMonth(2026, Month.MARCH)),
@@ -194,8 +172,6 @@ class HomeViewModelTest {
         assertTrue(pending.single { it.templateId == "rm-old" }.isCatchUp, "March 2026 is a caught-up month")
         assertFalse(pending.single { it.templateId == "rm-now" }.isCatchUp, "May 2026 is the clock's own month")
     }
-
-    // ---- Scenario 4.1: Confirm fixed amount successfully ----
 
     @Test
     fun `4_1 ConfirmRecurring intent with fixed amount calls use case and emits CloseSheet effect`() = runTest {
@@ -213,8 +189,6 @@ class HomeViewModelTest {
         assertTrue(effects.any { it is HomeEffect.CloseConfirmSheet })
         job.cancel()
     }
-
-    // ---- Scenario 4.2: Confirm fails with DatabaseError ----
 
     @Test
     fun `4_2 ConfirmRecurring propagates DomainException as ShowSnackbar effect`() = runTest {
@@ -248,7 +222,6 @@ class HomeViewModelTest {
 
         val showError = effects.filterIsInstance<HomeEffect.ShowError>().firstOrNull()
         checkNotNull(showError) { "Expected ShowError effect but got: $effects" }
-        // Must carry the toUserMessage() string — never the raw exception message.
         assertEquals("Hubo un problema guardando tu data", showError.message)
         assertFalse(showError.message.contains("raw internal message"))
         job.cancel()
@@ -271,12 +244,6 @@ class HomeViewModelTest {
         job.cancel()
     }
 
-    // ---- Scenario 5.1: Variable amount — confirm button disabled while amount == 0 ----
-    // This scenario is enforced by the Sheet composable (amount field required before enabling the
-    // button). The ViewModel receives a valid callerAmount when the user taps Confirm, so there is
-    // no ViewModel-level test for "button disabled"; instead we verify that callerAmount is
-    // forwarded correctly and that null callerAmount is handled.
-
     @Test
     fun `5_1 ConfirmRecurring with variable amount forwards callerAmount null to use case`() = runTest {
         coEvery { confirmRecurring(any(), any(), null) } returns Unit
@@ -288,8 +255,6 @@ class HomeViewModelTest {
 
         coVerify(exactly = 1) { confirmRecurring(any(), any(), null) }
     }
-
-    // ---- Scenario 5.3: Variable amount zero rejected by use case ----
 
     @Test
     fun `5_3 ConfirmRecurring with zero callerAmount propagates ValidationError as ShowError effect`() = runTest {
@@ -308,8 +273,6 @@ class HomeViewModelTest {
         job.cancel()
     }
 
-    // ---- Scenario 6.1: Double confirm same period rejected ----
-
     @Test
     fun `6_1 ConfirmRecurring already-confirmed period propagates ValidationError as ShowError`() = runTest {
         val error = DomainException.ValidationError("Already confirmed for this period")
@@ -327,8 +290,6 @@ class HomeViewModelTest {
         job.cancel()
     }
 
-    // ---- Catch-up: the period travels with the intent ----
-
     @Test
     fun `ConfirmRecurring forwards the intent's period, not the month on screen`() = runTest {
         coEvery { confirmRecurring(any(), any(), any()) } returns Unit
@@ -339,7 +300,6 @@ class HomeViewModelTest {
         viewModel.onIntent(HomeIntent.ConfirmRecurring("rm-1", backdated, Money(1800L)))
         advanceUntilIdle()
 
-        // Reading the period off the selected month is what lost the missed month in the first place.
         coVerify(exactly = 1) { confirmRecurring(RecurringMovementId("rm-1"), backdated, Money(1800L)) }
     }
 

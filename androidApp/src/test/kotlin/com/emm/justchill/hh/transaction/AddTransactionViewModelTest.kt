@@ -51,11 +51,6 @@ class AddTransactionViewModelTest {
     private val today = LocalDate(2026, Month.AUGUST, 10)
     private val tomorrow = LocalDate(2026, Month.AUGUST, 11)
 
-    /**
-     * Movable so a test can hold a ViewModel across midnight — the case that made the add screen
-     * write the wrong day. Starts at 2026-08-10 14:30 Lima, so "today" never depends on when the
-     * suite runs.
-     */
     private class MovableClock(var instant: Instant) : Clock {
         override fun now(): Instant = instant
     }
@@ -115,29 +110,21 @@ class AddTransactionViewModelTest {
         zone = lima,
     )
 
-    // ── the selected date lives in the state ──────────────────────────────────
-
     @Test
     fun `date starts unset and reads as Hoy`() = runTest(testDispatcher) {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        // Unset, not "today resolved at construction": nobody has picked a day yet, and which day
-        // "Hoy" is has no answer until the transaction is actually saved.
         assertNull(vm.state.value.date)
         assertEquals(today, vm.state.value.today)
         assertEquals("Hoy", vm.state.value.dateLabel)
     }
-
-    // ── the day is resolved when saving, not when the screen opened ───────────
 
     @Test
     fun `an untouched date saves as the day it is saved on, not the day the screen opened`() = runTest(testDispatcher) {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        // The screen was opened just before midnight and sat there. Resolving "Hoy" at
-        // construction booked the movement on the previous day, silently.
         fixedClock.instant = instantAt(tomorrow, hour = 0, minute = 5)
 
         vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
@@ -147,7 +134,6 @@ class AddTransactionViewModelTest {
 
         val insert = slot<TransactionInsert>()
         coVerify { createTransaction.invoke(capture(insert)) }
-        // The day the save happened on, at the hour it happened at.
         assertEquals(LocalDateTime(tomorrow, LocalTime(0, 5)), insert.captured.occurredAt)
     }
 
@@ -168,7 +154,6 @@ class AddTransactionViewModelTest {
 
         val insert = slot<TransactionInsert>()
         coVerify { createTransaction.invoke(capture(insert)) }
-        // The picked day survives the rollover; only the hour comes from the save.
         assertEquals(LocalDateTime(picked, LocalTime(0, 5)), insert.captured.occurredAt)
     }
 
@@ -182,8 +167,6 @@ class AddTransactionViewModelTest {
         vm.onIntent(AddTransactionIntent.OnAmountChange("1"))
         advanceUntilIdle()
 
-        // Every intent re-reads the clock, so a screen left open overnight stops claiming that
-        // yesterday is "Hoy" as soon as the user touches anything.
         assertEquals(tomorrow, vm.state.value.today)
     }
 
@@ -230,7 +213,6 @@ class AddTransactionViewModelTest {
 
         val insert = slot<TransactionInsert>()
         coVerify { createTransaction.invoke(capture(insert)) }
-        // The day is the user's, the hour is the clock's — one value, composed once, at the save.
         assertEquals(LocalDateTime(picked, LocalTime(14, 30)), insert.captured.occurredAt)
     }
 
@@ -245,17 +227,12 @@ class AddTransactionViewModelTest {
         vm.onIntent(AddTransactionIntent.OnReset)
         advanceUntilIdle()
 
-        // Unset rather than today: the next transaction is dated when it is saved, and the add
-        // screen is reset after every save, so it can easily outlive the day it was opened on.
         assertNull(vm.state.value.date)
         assertEquals("Hoy", vm.state.value.dateLabel)
     }
 
-    // ── frequentCombos state ──────────────────────────────────────────────────
-
     @Test
     fun `frequentCombos populated on init when combos match accounts and categories`() = runTest(testDispatcher) {
-        // Default transactionType is Income
         val combo = FrequentCombo(AccountId("bcp"), CategoryId("salary"), TransactionType.Income)
         coEvery { getFrequentCombos.invoke(TransactionType.Income, any<Int>(), any<Int>()) } returns listOf(combo)
 
@@ -271,7 +248,6 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `frequentCombos is empty on init when history is absent`() = runTest(testDispatcher) {
-        // default stubbing from setupDefaults returns emptyList
         val vm = buildViewModel()
         advanceUntilIdle()
 
@@ -319,11 +295,8 @@ class AddTransactionViewModelTest {
         assertTrue(vm.state.value.frequentCombos.isEmpty())
     }
 
-    // ── OnFrequentComboSelected intent ────────────────────────────────────────
-
     @Test
     fun `OnFrequentComboSelected sets accountSelected and categorySelected`() = runTest(testDispatcher) {
-        // Default type is Income — use an Income combo (bcp + salary)
         val combo = FrequentCombo(AccountId("bcp"), CategoryId("salary"), TransactionType.Income)
         coEvery { getFrequentCombos.invoke(TransactionType.Income, any<Int>(), any<Int>()) } returns listOf(combo)
 
@@ -375,8 +348,6 @@ class AddTransactionViewModelTest {
         assertEquals(1, focusEffects.size)
     }
 
-    // ── Last-used account pre-selection ───────────────────────────────────────
-
     @Test
     fun `accountSelected is last-used account on init when history exists`() = runTest(testDispatcher) {
         coEvery { transactionStatsRepository.lastUsedAccountId() } returns AccountId("bcp")
@@ -389,12 +360,9 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `accountSelected falls back to firstOrNull when no history`() = runTest(testDispatcher) {
-        // default stub returns null
-
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        // first in list is account1 (yape)
         assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
     }
 
@@ -405,7 +373,6 @@ class AddTransactionViewModelTest {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        // "deleted-account" is not in the loaded list — falls back to first
         assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
     }
 
@@ -416,13 +383,12 @@ class AddTransactionViewModelTest {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        vm.onIntent(AddTransactionIntent.OnAccountSelected(account1)) // switch to yape
+        vm.onIntent(AddTransactionIntent.OnAccountSelected(account1))
         advanceUntilIdle()
 
         vm.onIntent(AddTransactionIntent.OnReset)
         advanceUntilIdle()
 
-        // After reset, accountSelected should again be the cached last-used (bcp)
         assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
     }
 
@@ -436,17 +402,6 @@ class AddTransactionViewModelTest {
         assertNull(vm.state.value.accountSelected)
     }
 
-    // ── a category created from this movement ─────────────────────────────────
-
-    /**
-     * The new-category screen hands its result back through [AddTransactionIntent.OnNewValueFromOthers],
-     * and what arrives has to be filed under the movement that asked for it.
-     *
-     * The offered list used to be rebuilt from EVERY category the app has, flattened: creating one
-     * from an Income movement replaced the Income picker with Income and Spend entries mixed
-     * together. `(categoryId, type)` is a foreign key since schema v5, so half of that list is now
-     * a pair the database refuses — a picker that offers them offers a failing save.
-     */
     @Test
     fun `a category created from an Income movement joins the Income list`() = runTest(testDispatcher) {
         val vm = buildViewModel()
@@ -474,9 +429,6 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `a category of the other type is not attached to the movement`() = runTest(testDispatcher) {
-        // The route carries the movement's type now, so this should be unreachable. It is the
-        // guard that keeps the screen correct if a future caller forgets to pass it — silently
-        // selecting the wrong type would produce a save the schema rejects.
         val vm = buildViewModel()
         advanceUntilIdle()
         val before = vm.state.value

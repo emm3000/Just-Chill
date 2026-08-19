@@ -45,18 +45,14 @@ class AuthViewModelTest {
         googleSignInLauncher = googleSignInLauncher,
     )
 
-    // ── Helpers ─────────────────────────────────────────────────────────────
-
     private fun TestScope.navigateToCheckEmail(vm: AuthViewModel) {
         coEvery { signUp.invoke(any(), any()) } returns com.emm.domain.auth.SignUpResult.ConfirmationPending
-        vm.onIntent(AuthIntent.ToggleMode) // switch to SignUp
+        vm.onIntent(AuthIntent.ToggleMode)
         vm.onIntent(AuthIntent.EmailChanged("user@example.com"))
         vm.onIntent(AuthIntent.PasswordChanged("pass1234"))
         vm.onIntent(AuthIntent.Submit)
         advanceUntilIdle()
     }
-
-    // ── 1. Sign-in happy path ────────────────────────────────────────────────
 
     @Test
     fun `sign-in submit happy path emits NavigateBack`() = runTest(testDispatcher) {
@@ -100,8 +96,6 @@ class AuthViewModelTest {
 
         job.cancel()
     }
-
-    // ── 2. Sign-up paths ─────────────────────────────────────────────────────
 
     @Test
     fun `signUp ConfirmationPending transitions to CheckEmail with trimmed email`() = runTest(testDispatcher) {
@@ -158,8 +152,6 @@ class AuthViewModelTest {
         job.cancel()
     }
 
-    // ── 3. Intents in wrong state are no-ops ─────────────────────────────────
-
     @Test
     fun `Submit while in CheckEmail is a no-op`() = runTest(testDispatcher) {
         val vm = buildViewModel()
@@ -167,17 +159,14 @@ class AuthViewModelTest {
 
         assertIs<AuthUiState.CheckEmail>(vm.state.value)
 
-        // Reset mocks so we can detect if signUp/signIn were called
         coEvery { signIn.invoke(any(), any()) } returns AuthUser("uid1", "u@e.com")
         coEvery { signUp.invoke(any(), any()) } returns com.emm.domain.auth.SignUpResult.ConfirmationPending
 
         vm.onIntent(AuthIntent.Submit)
         advanceUntilIdle()
 
-        // Still in CheckEmail — no state transition
         assertIs<AuthUiState.CheckEmail>(vm.state.value)
         coVerify(exactly = 0) { signIn.invoke(any(), any()) }
-        // signUp was called once during navigateToCheckEmail, not again
         coVerify(exactly = 1) { signUp.invoke(any(), any()) }
     }
 
@@ -192,8 +181,6 @@ class AuthViewModelTest {
         coVerify(exactly = 0) { resendConfirmationEmail.invoke(any()) }
         assertIs<AuthUiState.Form>(vm.state.value)
     }
-
-    // ── 4. Back intent ───────────────────────────────────────────────────────
 
     @Test
     fun `Back while CheckEmail transitions to fresh Form with SignIn mode and empty fields`() = runTest(
@@ -255,8 +242,6 @@ class AuthViewModelTest {
         assertEquals("", formState.email)
         assertEquals("", formState.password)
     }
-
-    // ── 5. Google flow via fake launcher ─────────────────────────────────────
 
     @Test
     fun `Google Success calls signInWithGoogle and emits NavigateBack, isSubmitting false at end`() = runTest(
@@ -355,20 +340,16 @@ class AuthViewModelTest {
 
     @Test
     fun `GoogleSignInClicked while already submitting calls launcher exactly once`() = runTest(testDispatcher) {
-        // Make the first signIn call suspend until we advance
         coEvery { googleSignInLauncher.signIn(any()) } returns GoogleSignInResult.Cancelled
 
         val vm = buildViewModel()
 
         vm.onIntent(AuthIntent.GoogleSignInClicked)
-        // Second click before advancing — should be no-op because isSubmitting = true
         vm.onIntent(AuthIntent.GoogleSignInClicked)
         advanceUntilIdle()
 
         coVerify(exactly = 1) { googleSignInLauncher.signIn(any()) }
     }
-
-    // ── 6. ResendEmail ───────────────────────────────────────────────────────
 
     @Test
     fun `ResendEmail happy path emits Notify ConfirmationLinkResent and resets isResending`() = runTest(
@@ -424,7 +405,6 @@ class AuthViewModelTest {
         navigateToCheckEmail(vm)
 
         vm.onIntent(AuthIntent.ResendEmail)
-        // Before advancing, isResending should be true
         val checkStateDuring = vm.state.value as? AuthUiState.CheckEmail
         assertTrue(checkStateDuring?.isResending == true)
 
@@ -441,7 +421,6 @@ class AuthViewModelTest {
         val vm = buildViewModel()
         navigateToCheckEmail(vm)
         vm.onIntent(AuthIntent.ResendEmail)
-        // Advance only enough to finish the send but not the 30s delay
         advanceTimeBy(100L)
 
         val checkState = assertIs<AuthUiState.CheckEmail>(vm.state.value)
@@ -455,7 +434,6 @@ class AuthViewModelTest {
         val vm = buildViewModel()
         navigateToCheckEmail(vm)
         vm.onIntent(AuthIntent.ResendEmail)
-        // Mid-cooldown: the send finished but the 30s cooldown is still running.
         advanceTimeBy(100L)
 
         val checkState = assertIs<AuthUiState.CheckEmail>(vm.state.value)
@@ -470,11 +448,9 @@ class AuthViewModelTest {
         val vm = buildViewModel()
         navigateToCheckEmail(vm)
         vm.onIntent(AuthIntent.ResendEmail)
-        // Advance past the send but within the cooldown — canResend must be false
         advanceTimeBy(100L)
         assertFalse(assertIs<AuthUiState.CheckEmail>(vm.state.value).canResend)
 
-        // Now advance past the cooldown
         advanceTimeBy(30_001L)
 
         assertTrue(assertIs<AuthUiState.CheckEmail>(vm.state.value).canResend)
@@ -487,16 +463,13 @@ class AuthViewModelTest {
         val vm = buildViewModel()
         navigateToCheckEmail(vm)
 
-        // First send — succeeds; advance just past the network call but not the delay
         vm.onIntent(AuthIntent.ResendEmail)
         advanceTimeBy(100L)
         assertFalse(assertIs<AuthUiState.CheckEmail>(vm.state.value).canResend)
 
-        // Second send while canResend==false — must be a no-op
         vm.onIntent(AuthIntent.ResendEmail)
         advanceTimeBy(100L)
 
-        // Use case was called exactly once
         coVerify(exactly = 1) { resendConfirmationEmail.invoke(any()) }
     }
 

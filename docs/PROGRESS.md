@@ -446,6 +446,13 @@ gana el ADR.
   `empty pair produces a bold span over zero characters` afirma `span.start == span.end` y nada
   más; sus tres hermanos sí chequean `FontWeight.W700`. El nombre promete "bold" y la aserción no
   lo mira. Salió al borrar un comentario que etiquetaba de negrita algo que el código no comprueba.
+- [ ] **El binding de `DispatchersProvider` en Koin no lo verifica nada.** `AppGraphKoinTest` no lo
+  ve —vive fuera de `appModules()`— y `AndroidPlatformModuleTest` tampoco lo comprueba, solo
+  resuelve `CommitHash`. `androidApp/src/test/kotlin/com/emm/justchill/core/AndroidPlatformModuleTest.kt`.
+- [ ] **`ReportViewModelTest`'s test `rapid month changes are latest-wins — first load is
+  cancelled by the second` no verifica ninguna cancelación.** Solo afirma
+  `invocationCount >= 1`; el nombre promete más de lo que el test entrega.
+  `androidApp/src/test/kotlin/com/emm/justchill/hh/report/ReportViewModelTest.kt`.
 - [ ] **La pantalla de Reportes se traga todos sus errores.** `ReportViewModel` emite
   `ReportEffect.ShowError(e.toUserMessage())` en `:124` y `:176`, pero `ReportScreen` no recibe
   ningún `SnackbarHostState` y `reportEntries` no le pasa `showMessage`, así que la rama es

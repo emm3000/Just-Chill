@@ -67,8 +67,6 @@ class RecurringMovementsViewModelTest {
         viewModel = RecurringMovementsViewModel(recurringMovementRepository, getTotals, deleteRecurring)
     }
 
-    // ---- R7.1 — Active and paused templates partitioned correctly and sorted ----
-
     @Test
     fun `R7_1 active and paused items are partitioned and sorted by day of month`() = runTest {
         every { recurringMovementRepository.allWithDetails() } returns flowOf(
@@ -89,8 +87,6 @@ class RecurringMovementsViewModelTest {
         assertEquals(listOf("Agua"), state.pausedItems.map { it.name })
     }
 
-    // ---- R7.2 — All active, pausedItems empty ----
-
     @Test
     fun `R7_2 all active templates result in empty pausedItems`() = runTest {
         every { recurringMovementRepository.allWithDetails() } returns flowOf(
@@ -108,8 +104,6 @@ class RecurringMovementsViewModelTest {
         assertEquals(2, state.activeItems.size)
         assertTrue(state.pausedItems.isEmpty())
     }
-
-    // ---- R7.3 — All paused, activeItems empty ----
 
     @Test
     fun `R7_3 all paused templates result in empty activeItems`() = runTest {
@@ -129,8 +123,6 @@ class RecurringMovementsViewModelTest {
         assertEquals(2, state.pausedItems.size)
     }
 
-    // ---- R8.2 / R12.1 — Empty list: formatted defaults, variableCount = 0 ----
-
     @Test
     fun `R8_2 and R12_1 empty list yields empty state with zero variableCount`() = runTest {
         every { recurringMovementRepository.allWithDetails() } returns flowOf(emptyList())
@@ -145,8 +137,6 @@ class RecurringMovementsViewModelTest {
         assertEquals(0, state.variableCount)
     }
 
-    // ---- R9.1 — variableCount propagated to state ----
-
     @Test
     fun `R9_1 variableCount is propagated from totals to state`() = runTest {
         every { recurringMovementRepository.allWithDetails() } returns flowOf(
@@ -159,8 +149,6 @@ class RecurringMovementsViewModelTest {
 
         assertEquals(1, viewModel.state.value.variableCount)
     }
-
-    // ---- R8.3 — Neutral-formatted amounts (no sign, with S/ symbol) ----
 
     @Test
     fun `R8_3 formatted amounts use neutral currency format without directional sign`() = runTest {
@@ -194,8 +182,6 @@ class RecurringMovementsViewModelTest {
             "SALEN must not contain '−' — got '${state.salenFormatted}'",
         )
     }
-
-    // ---- Existing intent tests (unchanged behaviors) ----
 
     @Test
     fun `NavigateToAdd dispatches NavigateToAddEdit(null) effect`() = runTest {
@@ -263,8 +249,6 @@ class RecurringMovementsViewModelTest {
         assertTrue(effects.any { it is RecurringMovementsEffect.ShowError })
         job.cancel()
     }
-
-    // ---- pendingDelete lookup searches both lists (regression guard) ----
 
     @Test
     fun `pendingDelete can reference an item in pausedItems`() = runTest {
