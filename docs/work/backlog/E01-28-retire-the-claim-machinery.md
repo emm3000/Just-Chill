@@ -6,8 +6,8 @@
 ## Done when
 
 - [ ] `ClaimLocalDataUseCase`, `ClaimLocalDataRepository` and `DefaultClaimLocalDataRepository` are deleted with their Koin bindings (`AuthModule.kt:30,32`) and their two test files
-- [ ] the eight `claimAll:` / `unclaimAll:` / `countUnclaimed:` queries in `accounts.sq`, `categories.sq`, `recurring_movements.sq` and `transactions.sq` STAY — the epic says a future engine plugging into the preserved sync schema needs a catch-up claim pass, and the queries are that pass
-- [ ] `qualityGate --rerun-tasks` green, with the iOS compile and link forced separately if it reports 241 tasks
+- [ ] the twelve `claimAll:` / `unclaimAll:` / `countUnclaimed:` queries — three in each of `accounts.sq`, `categories.sq`, `recurring_movements.sq` and `transactions.sq` — STAY: the epic says a future engine plugging into the preserved sync schema needs a catch-up claim pass, and the queries are that pass
+- [ ] `qualityGate --rerun-tasks` green, plus `:presentation:linkDebugFrameworkIosSimulatorArm64` run explicitly — the gate compiles for iOS and runs SKIE but never links, and its actionable-task count is not a signal either way
 
 ## Context
 
