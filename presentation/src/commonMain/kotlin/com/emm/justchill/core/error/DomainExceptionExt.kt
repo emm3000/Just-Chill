@@ -14,6 +14,7 @@ fun DomainException.toUserMessage(): String = when (this) {
     is DomainException.Busy -> "Hay otra operación en curso — espera un momento e intenta de nuevo"
     is DomainException.NetworkUnavailable -> "Sin conexión — revisa tu internet"
     is DomainException.RemoteRejected -> "El servidor rechazó la operación — vuelve a intentar más tarde"
+    is DomainException.BackupsNotErased -> "No pudimos borrar tus respaldos en la nube. Tu cuenta NO fue eliminada"
     is DomainException.Unknown -> "Algo se rompió — capaz reinicia la app?"
     is DomainException.SerializationError -> "No pudimos preparar tus datos — intenta de nuevo"
 }

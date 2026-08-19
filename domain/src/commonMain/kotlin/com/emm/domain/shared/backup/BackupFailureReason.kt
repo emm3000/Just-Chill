@@ -48,6 +48,8 @@ fun DomainException.toBackupFailureReason(): BackupFailureReason = when (this) {
             BackupFailureReason.Unknown
         }
 
+    // BackupsNotErased needs no named reason: only account deletion throws it, and that path books none.
+    is DomainException.BackupsNotErased,
     is DomainException.NotFound,
     is DomainException.Unknown,
     -> BackupFailureReason.Unknown
