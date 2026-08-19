@@ -68,11 +68,6 @@ import com.emm.justchill.hh.transaction.components.TransactionRow
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 
-/**
- * VM-owning overload used by [HomeEntry] in Hh.kt.
- * Effect collection (CloseConfirmSheet, ShowError) lives in HomeEntry; sheet-open state is
- * threaded in so the effect collector can close the sheet from outside this composable.
- */
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel,
@@ -149,16 +144,12 @@ private fun HomeWithData(
 ) {
     val colors = LocalEmmColors.current
 
-    // The selected template ID driving the sheet — stored locally for row clicks.
-    // Sheet-close is driven by the parent via confirmSheetOpen = false (from CloseConfirmSheet effect).
     var confirmSheetItem by rememberSaveable { mutableStateOf<String?>(null) }
 
-    // When the parent signals close (effect-driven), clear the local item too.
     if (!confirmSheetOpen && confirmSheetItem != null) {
         confirmSheetItem = null
     }
 
-    // Keyed by id (template + period), not by templateId: one template can owe several months.
     val pendingMap = remember(homeData.pendingRecurringMovements) {
         homeData.pendingRecurringMovements.associateBy { it.id }
     }
@@ -190,7 +181,6 @@ private fun HomeWithData(
         item { HeroBalance(balance = homeData.balance) }
         item { InOutRow(income = homeData.income, spend = homeData.spend) }
 
-        // ---- Pendientes section — only shown when list is non-empty (Scenario 10.1 / 10.2) ----
         if (homeData.pendingRecurringMovements.isNotEmpty()) {
             item {
                 PendientesHeader(
@@ -228,9 +218,6 @@ private fun HomeWithData(
         item { Spacer(Modifier.height(16.dp)) }
     }
 
-    // Show ConfirmRecurringSheet when an item is selected and sheet is open.
-    // Sheet closes ONLY via CloseConfirmSheet effect (success) → onConfirmSheetOpenChange(false).
-    // On error the sheet stays open so the snackbar is still visible with the sheet.
     if (confirmSheetOpen) {
         confirmSheetItem?.let { pendingId ->
             pendingMap[pendingId]?.let { item ->
@@ -298,8 +285,6 @@ private fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit) {
                 ),
                 color = colors.textPrimary,
             )
-            // The month is only worth naming when it is not the current one — otherwise every row
-            // would repeat today's month for no reason.
             Text(
                 text = if (item.isCatchUp) "Día ${item.dayOfMonth} · ${item.periodLabel}" else "Día ${item.dayOfMonth}",
                 style = TextStyle(
@@ -731,8 +716,6 @@ private fun HomeScreenEmptyPreview() {
     }
 }
 
-/** Any fixed local datetime — previews render the pre-formatted labels, never this value. */
 private val PREVIEW_OCCURRED_AT = LocalDateTime(2026, 8, 10, 14, 30)
 
-/** Fixed, matching [PREVIEW_OCCURRED_AT]. A preview that read the clock would drift with the day. */
 private val PREVIEW_MONTH = YearMonth(2026, Month.AUGUST)

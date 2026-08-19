@@ -11,11 +11,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.emm.domain.account.AccountType
 import com.emm.justchill.core.theme.EmmColors
 
-/**
- * Per-account dot color, derived from the account name (so "Yape" always maps
- * to the same swatch regardless of where it appears). Used by the picker chip
- * dot, the Cuentas tab icon tile, and any preview surface.
- */
 fun accountDotColor(name: String, colors: EmmColors): Color {
     val lower = name.lowercase()
     return when {

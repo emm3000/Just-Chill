@@ -188,8 +188,6 @@ fun ProfileScreen(
     }
 }
 
-// The three callbacks that only exist behind SNAPSHOT_BACKUP_ENABLED travel together so they can
-// leave together, and so BackupSection stays inside the parameter budget.
 private class SnapshotBackupActions(
     val onBackUpNow: () -> Unit,
     val onVerify: () -> Unit,

@@ -16,7 +16,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.LocalEmmType
 
-/** Shared action button for the confirmation dialogs in Perfil. */
 @Composable
 internal fun DialogActionButton(
     label: String,

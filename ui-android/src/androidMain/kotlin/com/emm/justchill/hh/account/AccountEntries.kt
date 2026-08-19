@@ -15,7 +15,6 @@ import com.emm.justchill.hh.shared.NavHostBindings
 import com.emm.justchill.hh.shared.rememberAppNavigator
 import org.koin.compose.viewmodel.koinViewModel
 
-/** Registers the account entries on the host: [AccountsRoute] and [AddAccountRoute]. */
 fun EntryProviderScope<NavKey>.accountEntries(bindings: NavHostBindings) {
     entry<AccountsRoute> {
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)

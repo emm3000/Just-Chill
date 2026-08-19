@@ -102,7 +102,6 @@ fun CategoriesScreen(
                     )
                 }
             }
-            // GASTOS always shows "Sin categoría" row at the end, so the count is +1
             item(key = "header-spends") {
                 SectionHeader(label = "Gastos", count = spends.size + 1)
             }

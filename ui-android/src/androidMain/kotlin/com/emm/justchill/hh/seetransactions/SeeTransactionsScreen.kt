@@ -107,8 +107,6 @@ private fun SeeTransactionsContent(
     var showFilterSheet by rememberSaveable { mutableStateOf(false) }
     var searchRequested by rememberSaveable { mutableStateOf(false) }
 
-    // A query outstanding with the field hidden would filter the list from nowhere — the state
-    // survives a tab switch, `searchRequested` does not — so the query itself also opens the bar.
     val isSearchOpen = searchRequested || state.query.isNotBlank()
 
     fun closeSearch() {
@@ -138,7 +136,6 @@ private fun SeeTransactionsContent(
             )
         }
 
-        // Month context lives here; an active filter means global results, so it steps aside.
         if (state.isMonthSelectorVisible) {
             MonthSection(
                 state = state,
@@ -158,10 +155,7 @@ private fun SeeTransactionsContent(
 
         Hairline()
 
-        // One value, no precedence here: :presentation owns which of the overlapping empty
-        // states wins, so the SwiftUI screen inherits the same answer.
         when (state.listDisplayState) {
-            // Nothing is claimed until the ledger count lands — an empty area, never empty copy.
             ListDisplayState.Loading -> Spacer(Modifier.fillMaxSize())
 
             ListDisplayState.EmptyLedger -> EmptyNoTransactionsAtAll(modifier = Modifier.fillMaxSize())
@@ -200,11 +194,6 @@ private fun SeeTransactionsContent(
     }
 }
 
-/**
- * Title plus the two chrome affordances. Search and category filtering used to occupy two
- * permanent bands above the list — a text field nobody types in most sessions, and a horizontally
- * scrolling chip row — which left the rows about 60% of the screen. Both are one tap away now.
- */
 @Composable
 private fun ScreenHeader(isCategoryFilterActive: Boolean, onSearch: () -> Unit, onFilter: () -> Unit) {
     val colors = LocalEmmColors.current
@@ -241,10 +230,6 @@ private fun ScreenHeader(isCategoryFilterActive: Boolean, onSearch: () -> Unit, 
     }
 }
 
-/**
- * The header's 44dp tile, matching the Reporte top bar's. The badge is the only signal that a
- * category filter is on while the sheet is closed — [ActiveFilterBanner] says which one.
- */
 @Composable
 private fun HeaderAction(
     icon: ImageVector,
@@ -271,11 +256,11 @@ private fun HeaderAction(
             modifier = Modifier.size(20.dp),
         )
         if (showBadge) {
+            // The surface1 ring keeps the accent dot legible where the badge overlaps the icon.
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = 9.dp, end = 9.dp)
-                    // The ring keeps the dot legible where it overlaps the icon's strokes.
                     .size(9.dp)
                     .clip(CircleShape)
                     .background(colors.surface1)
@@ -365,13 +350,6 @@ private fun SummaryDivider() {
     )
 }
 
-/**
- * The expanded search field, standing in for the header row while it is open. It takes the header's
- * slot rather than stacking below it so opening search costs no vertical space.
- *
- * [onClose] both clears the query and collapses the bar; the in-field X still only clears the text,
- * so correcting a typo does not throw the user out of search.
- */
 @Composable
 private fun SearchBar(query: String, onQueryChange: (String) -> Unit, onClose: () -> Unit) {
     val focusRequester = remember { FocusRequester() }
@@ -767,7 +745,6 @@ private fun EmptyFilteredNoResults(
 private fun SeeTransactionsEmptyPreview() {
     EmmTheme {
         SeeTransactionsContent(
-            // An explicit zero: the default count is null, which is "not known yet", not "empty".
             state = SeeTransactionsUiState(month = PREVIEW_MONTH, movementCount = 0L),
             onIntent = {},
             navigateToEdit = {},
@@ -870,8 +847,6 @@ private fun previewDayGroup(transactions: List<TransactionUi>): DayGroup {
     return DayGroup(date = today, today = today, transactions = transactions)
 }
 
-/** Any fixed local datetime — previews render the pre-formatted labels, never this value. */
 private val PREVIEW_OCCURRED_AT = LocalDateTime(2026, 8, 10, 14, 30)
 
-/** Fixed, matching [PREVIEW_OCCURRED_AT]. A preview that read the clock would drift with the day. */
 private val PREVIEW_MONTH = YearMonth(2026, Month.AUGUST)

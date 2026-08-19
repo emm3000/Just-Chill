@@ -7,7 +7,6 @@ import com.emm.justchill.hh.shared.AuthRoute
 import com.emm.justchill.hh.shared.NavHostBindings
 import com.emm.justchill.hh.shared.rememberAppNavigator
 
-/** Registers the auth entries on the host: [AuthRoute]. */
 fun EntryProviderScope<NavKey>.authEntries(bindings: NavHostBindings) {
     entry<AuthRoute> {
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)

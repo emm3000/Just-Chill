@@ -17,13 +17,6 @@ import com.emm.justchill.hh.transaction.SelectableCategory
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
-/**
- * Registers the category entries on the host: [CategoriesListRoute] and [CategoryRoute].
- *
- * @param onCategoryForTransaction hands the freshly created category back to the transaction form
- *   that asked for it ([CategoryRoute.propagateToTransaction]). The host owns that result channel;
- *   this function only decides when it fires.
- */
 fun EntryProviderScope<NavKey>.categoryEntries(
     bindings: NavHostBindings,
     onCategoryForTransaction: (SelectableCategory) -> Unit,
@@ -71,12 +64,6 @@ fun EntryProviderScope<NavKey>.categoryEntries(
     }
 }
 
-/**
- * Resolves a just-saved domain [Category] into the [SelectableCategory] the transaction form renders.
- *
- * The domain stores the icon and the colour as opaque ids; the catalogs that turn them into drawables
- * and colours are UI-side, so the mapping belongs next to them rather than inlined in the nav host.
- */
 private fun Category.toSelectableCategory(): SelectableCategory = SelectableCategory(
     categoryId = categoryId,
     name = name,

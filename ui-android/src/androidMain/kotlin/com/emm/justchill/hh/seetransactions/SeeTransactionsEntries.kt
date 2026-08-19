@@ -8,7 +8,6 @@ import com.emm.justchill.hh.shared.NavHostBindings
 import com.emm.justchill.hh.shared.SeeTransactionRoute
 import com.emm.justchill.hh.shared.rememberAppNavigator
 
-/** Registers the transaction-list entries on the host: [SeeTransactionRoute]. */
 fun EntryProviderScope<NavKey>.seeTransactionsEntries(bindings: NavHostBindings) {
     entry<SeeTransactionRoute> {
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)

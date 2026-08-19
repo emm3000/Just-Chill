@@ -19,7 +19,6 @@ import com.emm.justchill.hh.shared.SeeTransactionRoute
 import com.emm.justchill.hh.shared.rememberAppNavigator
 import org.koin.compose.viewmodel.koinViewModel
 
-/** Registers the home entries on the host: [HomeRoute]. */
 fun EntryProviderScope<NavKey>.homeEntries(bindings: NavHostBindings) {
     entry<HomeRoute> {
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)

@@ -80,9 +80,6 @@ fun AuthScreen(
     onBack: () -> Unit,
     snackbarHostState: SnackbarHostState,
     onOpenEmailApp: () -> Unit,
-    // Whether to show the "Continuar con Google" button. Android passes the default (true); iOS
-    // passes false because native Google Sign-In is deferred post-v1 (no GoogleSignInLauncher iOS
-    // impl). Default true keeps every existing Android call site unchanged.
     showGoogleSignIn: Boolean = true,
     vm: AuthViewModel = koinViewModel(),
 ) {
@@ -197,7 +194,7 @@ private fun AuthFormStep(
         "¿Ya tienes cuenta? Inicia sesión"
     }
 
-    // Password visibility: plain remember — masked-by-default after config change is safer
+    // Deliberately not rememberSaveable: a config change re-masks the password.
     var passwordVisible by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -224,16 +221,13 @@ private fun AuthFormStep(
 
             Spacer(Modifier.height(spacing.s6))
 
-            // Google sign-in is platform-gated: hidden on iOS (native Google Sign-In deferred
-            // post-v1). The "o" divider belongs to this block too — without the button above it,
-            // a lone divider makes no sense, so both are hidden together.
             if (showGoogleSignIn) {
                 OutlinedCta(
                     label = "Continuar con Google",
                     interaction = state.submitting.toCtaInteraction(busyWhen = Submitting.Google),
                     leading = {
-                        // Image, not Icon — the official multicolor G must never be tinted
-                        // (Google sign-in branding guidelines).
+                        // Image, not Icon: Google's sign-in branding requires the multicolor G
+                        // ship untinted.
                         Image(
                             painter = painterResource(R.drawable.ic_google),
                             contentDescription = null,
@@ -245,7 +239,6 @@ private fun AuthFormStep(
 
                 Spacer(Modifier.height(spacing.s4))
 
-                // Divider with label
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -305,7 +298,6 @@ private fun AuthFormStep(
     }
 }
 
-/** Each Form CTA spins only for its own submit path and is disabled while the other runs. */
 private fun Submitting.toCtaInteraction(busyWhen: Submitting): CtaInteraction = when (this) {
     Submitting.None -> CtaInteraction.Enabled
     busyWhen -> CtaInteraction.Loading
@@ -403,8 +395,8 @@ private fun CheckEmailStep(
                 text = if (state.isResending) "Reenviando…" else "Reenviar enlace",
                 style = type.bodyM,
                 color = if (resendActive) colors.accent else colors.textTertiary,
-                // Padding lives outside the conditional so the row height is identical in
-                // both states — no layout jump when the link disables mid-cooldown.
+                // Padding sits outside the branch so the row keeps its height when the link
+                // disables mid-cooldown.
                 modifier = if (resendActive) {
                     Modifier.clickable(role = Role.Button) { onIntent(AuthIntent.ResendEmail) }
                 } else {
@@ -521,8 +513,6 @@ private fun AuthFieldInput(
         )
     }
 }
-
-// --- Previews ---
 
 @Preview
 @Composable

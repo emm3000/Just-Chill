@@ -9,12 +9,6 @@ import com.emm.justchill.hh.shared.NavHostBindings
 import com.emm.justchill.hh.shared.rememberAppNavigator
 import com.emm.justchill.hh.shared.startTab
 
-/**
- * Registers the onboarding entries on the host: [ManifestoRoute].
- *
- * @param appPreferences flips `firstLaunchSeen` when the manifesto is completed for the first time,
- *   which is what makes the host's start-route gate land on `startTab` from the next launch on.
- */
 fun EntryProviderScope<NavKey>.onboardingEntries(bindings: NavHostBindings, appPreferences: AppPreferences) {
     entry<ManifestoRoute> { key ->
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)

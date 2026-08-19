@@ -153,7 +153,6 @@ private fun AddCategoryContent(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            // State carries catalog ids only (:presentation is compose-free); resolve them here.
             val selectedIcon = AppIconCatalog.findById(state.iconId)
             val selectedColor = findById(state.colorId)
 
