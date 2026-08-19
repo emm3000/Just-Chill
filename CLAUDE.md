@@ -132,6 +132,7 @@ doc has a read-trigger in the map below, and a doc with no trigger is archive.
 - `work/epics/E01-snapshot-backup.md` — the sync/backup epic: constraints outliving every ticket
   under it, remaining work in `work/backlog/`. **Read before touching sync.** The Phase 0–3
   chronicle, old audit, old plan and old slice plan sit in `archive/sync/`.
+- `work/epics/E02-migration-coverage.md` — **Read before touching a `.sqm` or a migration test.**
 - `adr/` — filenames state the decision; each header declares what it amends or supersedes. 009 is
   the one to read first for anything sync-shaped. **Read before changing anything an ADR decided.**
 - `DATE_AUDIT.md` — the date findings + live rule #7: whatever asks "what day is it" takes an injected
