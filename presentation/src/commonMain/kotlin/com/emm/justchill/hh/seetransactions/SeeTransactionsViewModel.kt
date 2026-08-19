@@ -37,16 +37,12 @@ class SeeTransactionsViewModel(
     private val zone: TimeZone,
 ) : MviViewModel<SeeTransactionsUiState, SeeTransactionsIntent, SeeTransactionsEffect>() {
 
-    // Both take the injected zone, not just the injected clock. "What month is it" is the same
-    // question as "what day is it" asked at a coarser grain, and answering one from the device's
-    // ambient zone while the other honours the injected one is a boundary no test can reach.
     override val initialState = SeeTransactionsUiState(month = YearMonth.current(clock, zone))
 
     private val filter = MutableStateFlow(TransactionFilter.None)
     private val selectedMonth = MutableStateFlow(YearMonth.current(clock, zone))
 
     init {
-        // Auto-reset filter if the active category got deleted out from under us.
         combine(categoryRepository.all(), filter) { categories, current ->
             val activeId = current.categoryIds.firstOrNull()
             if (activeId != null && categories.none { it.categoryId == activeId }) {
@@ -54,7 +50,6 @@ class SeeTransactionsViewModel(
             }
         }.launchIn(viewModelScope)
 
-        // Sheet items + counts + the active category, ranked by the DB-side usage aggregate.
         combine(
             categoryRepository.all(),
             transactionRepository.observeCategoryUsageCounts(),
@@ -74,26 +69,19 @@ class SeeTransactionsViewModel(
             }
             .launchIn(viewModelScope)
 
-        // App-level emptiness from one aggregate row — this is what tells the two empty
-        // states apart ("nothing ever recorded" vs "nothing this month").
         transactionRepository.observeTotals()
             .map<TransactionTotals, Long?> { totals -> totals.movementCount }
-            // A broken aggregate leaves the count unknown, never "known zero": one failed query
-            // must not make the screen announce that the whole ledger is empty.
             .catch { emit(null) }
             .onEach { count -> updateState { copy(movementCount = count) } }
             .launchIn(viewModelScope)
 
-        // The list: windowed to the selected month unless a filter is active — then it becomes
-        // a global cross-month search, the deliberate escape hatch (capped in SQL).
         combine(selectedMonth, filter, ::Pair)
             .debounce { (_, currentFilter) -> if (currentFilter.query.isBlank()) 0L else SEARCH_DEBOUNCE_MS }
             .distinctUntilChanged()
             .flatMapLatest { (month, currentFilter) ->
-                // Both branches catch their own failures. A `.catch` out here would terminate the
-                // whole collector on the first database error and nothing would ever re-subscribe:
-                // the month arrows would be dead until the ViewModel was recreated. Caught inside,
-                // one broken query degrades to an empty slice and the next tap queries again.
+                // Both branches catch their own failures: a `.catch` out here would kill the whole
+                // collector on the first database error, leaving the month arrows dead until the
+                // ViewModel is recreated. Caught inside, a broken query degrades to an empty slice.
                 if (currentFilter.isEmpty) {
                     transactionRepository
                         .fetchAllWithCategoryInRange(month.startInclusiveDay(), month.endExclusiveDay())
@@ -152,35 +140,18 @@ class SeeTransactionsViewModel(
     }
 
     /**
-     * Moves the window. The label is part of the tap, not part of the answer: it advances here,
-     * synchronously, so the arrow gives feedback without waiting for a database round-trip. The
-     * rows catch up when the new month's slice lands, and [withListSlice] drops any slice that
-     * still answers for the month just left.
+     * Advances the month synchronously so the tap gets instant feedback; the list stream lands the
+     * actual rows later.
      */
     private fun selectMonth(month: YearMonth) {
         selectedMonth.value = month
         updateState { copy(month = month) }
     }
 
-    /**
-     * The reference date the day headers resolve HOY/AYER against, read once per mapping pass so
-     * every group in one emission agrees — and so the branch is testable through the injected
-     * clock. The zone rides along with it: it is the only thing left that "what day is it" needs,
-     * and reading it from the environment would put it back out of every test's reach.
-     */
+    /** Read once per mapping pass so every [DayGroup] in one emission agrees on HOY/AYER. */
     private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
 
-    /**
-     * The sheet is the only entry point into a category filter, and it lists every category the
-     * user owns — 23 of them on a stock install. Alphabetical made the common pick a scroll; the
-     * `countPerCategory` aggregate already knows which ones actually get used, so it orders them.
-     *
-     * The sort is global but the sheet segments by type, and a stable ordering restricted to a
-     * subset keeps that subset's relative order — so "most used first" holds inside Ingresos and
-     * inside Gastos without sorting each half separately. Name breaks ties so the order is
-     * deterministic: an unused category has no usage row at all, and two of them at count 0 must
-     * not swap places between emissions.
-     */
+    /** Name breaks ties so two categories tied at zero usage don't swap places between emissions. */
     private fun buildCategoryFilterState(
         categories: List<Category>,
         usageCounts: Map<CategoryId, Int>,
@@ -224,12 +195,6 @@ class SeeTransactionsViewModel(
     )
 }
 
-/**
- * One emission of the list stream: the grouped days plus the summary (null in search mode).
- *
- * [month] is the month the slice answers for, or null when it came from a search — search results
- * are cross-month by design and belong to no single window.
- */
 internal data class ListSlice(val month: YearMonth?, val days: List<DayGroup>, val summary: MonthSummaryUi?) {
     companion object {
         fun emptyFor(month: YearMonth) = ListSlice(month = month, days = emptyList(), summary = null)
@@ -248,16 +213,16 @@ internal fun SeeTransactionsUiState.withListSlice(slice: ListSlice, selectedMont
     return if (isStale) this else copy(days = slice.days, summary = slice.summary)
 }
 
-// The day a row belongs under is the day it carries. No zone, no conversion, nothing that can put
-// the same transaction under a different header on a different device.
+/**
+ * The day a row belongs under is the day it carries. No zone, no conversion, nothing that can put
+ * the same transaction under a different header on a different device.
+ */
 private fun List<TransactionWithCategory>.toDayGroups(today: LocalDate): List<DayGroup> =
     groupBy { transaction -> transaction.occurredAt.date }
         .map { (date, transactions) ->
             DayGroup(date = date, today = today, transactions = transactions.toUi(today))
         }
 
-// Single pass over the month's raw amounts, before any toUi mapping. The window bounds the
-// input to one month's rows, so this stays cheap on every emission.
 private fun List<TransactionWithCategory>.toMonthSummary(): MonthSummaryUi {
     var incomeCents = 0L
     var spendCents = 0L

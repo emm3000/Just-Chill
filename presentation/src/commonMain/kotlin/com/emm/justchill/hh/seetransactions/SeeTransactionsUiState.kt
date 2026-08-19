@@ -16,50 +16,23 @@ data class CategorySheetItem(
 
 data class ActiveCategoryInfo(val id: String, val name: String)
 
-/** The selected month's totals, summed from its rows in the same pass that groups them. */
 data class MonthSummaryUi(val income: Money, val spend: Money) {
     val net: Money
         get() = income - spend
 }
 
-/**
- * What the list area shows, resolved once and in one place.
- *
- * The states overlap on their raw conditions — searching a ledger that holds nothing is at the
- * same time "no ledger" and "no results" — so the precedence has to be decided somewhere. It is
- * decided here rather than in the ordering of a UI `when`, or the second UI to render this screen
- * would have to rediscover it.
- */
 enum class ListDisplayState {
-    /** The ledger count has not arrived yet: claim nothing, neither rows nor emptiness. */
     Loading,
-
-    /** The count is known and it is zero — nothing has ever been recorded. */
     EmptyLedger,
-
-    /** A filter is active over a ledger that does hold movements, and matched none of them. */
     NoSearchResults,
-
-    /** Month mode over a ledger that holds movements, none of them in the selected month. */
     EmptyMonth,
-
-    /** There are rows to draw. */
     Content,
 }
 
-/**
- * [month] carries no default — see [com.emm.justchill.hh.home.HomeUiState]. A wall-clock default
- * makes every construction site an unannounced ambient read; the ViewModel supplies the month from
- * its injected clock and zone, and tests and previews name one.
- */
 data class SeeTransactionsUiState(
     val month: YearMonth,
     val days: List<DayGroup> = emptyList(),
     val summary: MonthSummaryUi? = null,
-    /**
-     * Whole-ledger movement count, or null while it is still unknown. Nullable on purpose: a
-     * `0L` default made every launch claim an empty ledger before the first aggregate emission.
-     */
     val movementCount: Long? = null,
     val query: String = "",
     val activeCategory: ActiveCategoryInfo? = null,
