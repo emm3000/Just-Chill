@@ -6,10 +6,6 @@ import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
 
-/**
- * UI representation of a recurring movement template used in the management list (Slice 3).
- * Created here so Slice 2 mappers can reference it without creating a dependency cycle.
- */
 data class RecurringMovementUi(
     val id: String,
     val name: String,
@@ -20,13 +16,10 @@ data class RecurringMovementUi(
     val isActive: Boolean,
     /** null when category was deleted or never assigned */
     val categoryName: String? = null,
-    /** Token key (e.g. "green", "blue") — resolved to Color at render time via findById(key).primary */
     val categoryColor: String? = null,
-    /** Account display name */
     val accountName: String = "",
 )
 
-/** Mapper for the list screen — sourced from the enriched details projection. */
 fun RecurringMovementDetails.toRecurringMovementUi(): RecurringMovementUi {
     val isVariable = amount == null
     val formatted = when {

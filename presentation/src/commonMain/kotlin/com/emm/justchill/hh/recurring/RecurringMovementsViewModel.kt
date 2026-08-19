@@ -21,8 +21,6 @@ class RecurringMovementsViewModel(
     override val initialState = RecurringMovementsUiState()
 
     init {
-        // Single allWithDetails() subscription — totals are derived in-memory from the same list
-        // (Decision 2: no second DB query / Flow to keep consistent with the row data).
         recurringMovementRepository.allWithDetails()
             .onEach { list ->
                 val activeItems = list
