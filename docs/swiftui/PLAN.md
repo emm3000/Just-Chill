@@ -3,9 +3,9 @@
 > Learning-driven track: build a native SwiftUI iOS app on top of the existing
 > KMP core (`:domain` + `:data` + extracted `:presentation`), feature by
 > feature, while the Android app stays untouched and shippable at every step.
-> Compose Multiplatform stays as Android's UI; the CMP-on-iOS entry point is
-> retired early in the track. Needs an ADR (005) formalizing the reversal of
-> the "one shared UI" direction and superseding the scope of
+> Android renders its own Compose UI, never a shared one; the CMP-on-iOS entry
+> point is already gone — it died in S2. Needs an ADR (005) formalizing the
+> reversal of the "one shared UI" direction and superseding the scope of
 > [ADR 003](../adr/003-freeze-ios-keep-the-compile-gate.md) (the compile gate
 > survives, but moves to `:presentation`).
 >
@@ -46,10 +46,9 @@ from that commit.
                  UiStrings, formatters, error mapping, preferences, sync port.
                  Declares the iOS framework (baseName "JustChillKit",
                  export :domain + :data) + SKIE.
-:ui-android       Compose UI only. Depends on :presentation. Drops iOS targets
-                 in S2 → becomes Android-only.
+:ui-android      Android-only Compose UI. Depends on :presentation.
 :androidApp      unchanged (thin shell)
-iosApp/          SwiftUI app consuming JustChillKit. CMP entry retired in S2.
+iosApp/          SwiftUI app consuming JustChillKit.
 ```
 
 Kotlin packages do NOT change when files move to `:presentation` — same
@@ -102,7 +101,7 @@ compiles and runs, trunk shippable. One slice ≈ 1-3 side-project sessions.
 | S8 | Reports | Charts + period selection + share. | **Swift Charts**, `ShareLink`/`UIActivityViewController`. |
 | S9 | Profile + backup | Export/import via `fileExporter`/`fileImporter` (replaces SAF flow; destructive-replace confirmation dialog), delete account, privacy policy link, app version. | File pickers, destructive flows, `Link`. |
 | S10 | Auth + sync UI | Supabase email/password + Google Sign-In (native iOS SDK) + claim-on-sign-in + sync status/snackbar equivalents. `ResumeEvents` iOS actual already exists (`NSNotificationCenter`). | Third-party SDK integration, async auth flows, app-lifecycle events. |
-| S11 | Onboarding + closure | Manifesto first-launch gate (`AppPreferences` shared), parity audit vs Android, delete CMP leftovers, finalize ADR 005, update `PROGRESS.md` + `WORKFLOW.md` + module CLAUDE.md files. | Scene phases, state restoration audit. |
+| S11 | Onboarding + closure | Manifesto first-launch gate (`AppPreferences` shared), parity audit vs Android, finalize ADR 005, update `PROGRESS.md` + `WORKFLOW.md` + module CLAUDE.md files. | Scene phases, state restoration audit. |
 
 Order rationale: read-only vertical first (pattern with least surface), forms
 second (most reused skill), platform APIs (files/charts/share) third, external
