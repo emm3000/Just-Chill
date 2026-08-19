@@ -8,13 +8,6 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 
-/**
- * Pins `liveTotals` against a real in-memory SQLite schema.
- *
- * Home used to fold every transaction ever recorded in memory to get these two numbers. The
- * replacement is only safe if it answers exactly what the fold answered, so each test here is a
- * case the old fold got right and the aggregate must keep getting right.
- */
 class LiveTotalsQueryTest {
 
     private lateinit var driver: JdbcSqliteDriver
@@ -70,9 +63,6 @@ class LiveTotalsQueryTest {
 
     @Test
     fun `an unreadable type contributes nothing and is not counted`() {
-        // A newer version on another device can sync down a type this build cannot parse. The
-        // mappers drop such a row from every list, so counting it here would light up Home with a
-        // balance whose movements the user cannot find anywhere.
         insert(id = "t-1", type = "Income", amount = 10_000)
         insert(id = "t-2", type = "Transfer", amount = 7_000)
 

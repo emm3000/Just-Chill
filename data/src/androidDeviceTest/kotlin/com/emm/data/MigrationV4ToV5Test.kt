@@ -19,57 +19,14 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Migration test: schema version 4 → 5 — a movement's category must share the movement's type, and
- * the schema is what says so from here on (composite FK `(categoryId, type)` → `categories`).
- *
- * The second DESTRUCTIVE migration in this repository, and the first that rebuilds TWO tables. Both
- * `transactions` and `recurring_movements` are dropped and recreated, and 4.sqm repairs the data
- * BEFORE it rebuilds — on iOS the copy is validated against the new key as it runs, so a repair
- * placed after the rebuild would be repairing rows that never crossed.
- *
- * What is asserted, and why each one:
- *   1. a movement whose category has the OTHER type loses the category — the defect being repaired;
- *   2. a movement whose category matches keeps it — a repair that nulls everything also "passes" 1;
- *   3. a movement pointing at a category that does not exist loses it too — the orphan shape the
- *      new key rejects just as hard, and the reason the repair is `NOT EXISTS` and not a comparison;
- *   4. a movement with no category is untouched — a composite FK with a NULL column is SATISFIED,
- *      so uncategorized movements must need no special case;
- *   5. **`type` is unchanged on every row.** The sign of `amount` follows the type; a repair that
- *      "fixed" the mismatch from the other side would rewrite the user's balance, silently and
- *      irreversibly. This is the assertion that says it did not;
- *   6. every row survives on BOTH tables — two DROP TABLEs, and a copy that moved nothing looks
- *      exactly like a copy that moved everything until something counts;
- *   7. every index exists afterwards — they belong to the dropped tables and nothing else in the
- *      build would ever notice their absence;
- *   8. the composite key is really enforced afterwards, as a CONSTRAINT violation. If the parent
- *      UNIQUE index were missing, SQLite would still refuse the insert — with a generic "foreign
- *      key mismatch", which is a different exception type and one no caller in `:data` catches.
- *
- * Migrates to `EmmDatabaseData.Schema.version`, never to a hardcoded 5 — the rule in
- * `data/CLAUDE.md`, written after `MigrationV2ToV3Test` stopped at 3 and broke the moment a 4
- * existed.
- *
- * Foreign keys are left OFF while the fixture is seeded, which is exactly what a real Android
- * upgrade does (`onOpen` runs after `onUpgrade`) and the only way to plant the orphan row case 3
- * needs. The one test that asserts enforcement turns them on explicitly, after the migration.
- *
- * Requires a device/emulator. Run with: `./gradlew :data:connectedAndroidDeviceTest`.
- */
 @RunWith(AndroidJUnit4::class)
 class MigrationV4ToV5Test {
 
     private lateinit var driver: AndroidSqliteDriver
     private lateinit var database: EmmDatabaseData
 
-    /** Captured in [AndroidSqliteDriver.Callback.onOpen] — the only handle that can toggle FKs. */
     private var openedDb: SupportSQLiteDatabase? = null
 
-    /**
-     * The production schema at version 4 — all 4 tables and every index exactly as they existed
-     * before this change: single-column `categoryId` foreign keys, and no unique index on
-     * `categories(categoryId, categoryType)`.
-     */
     private val schemaV4 = object : SqlSchema<QueryResult.Value<Unit>> {
         override val version: Long = 4
 
@@ -192,10 +149,8 @@ class MigrationV4ToV5Test {
             context = context,
             name = null,
             callback = object : AndroidSqliteDriver.Callback(schema = schemaV4) {
-                // Deliberately NOT enabling foreign keys HERE: seeding needs them off, because
-                // case 3 plants a row the old single-column FK would have rejected. The handle is
-                // captured instead so a test can flip them on at the moment it chooses — before
-                // migrating (the iOS configuration) or after it (to assert enforcement).
+                // Deliberately NOT enabling foreign keys here: seeding the orphan row needs them
+                // off. The handle is captured instead so a test can flip them on when it chooses.
                 override fun onOpen(db: SupportSQLiteDatabase) {
                     openedDb = db
                 }
@@ -203,8 +158,6 @@ class MigrationV4ToV5Test {
         )
         database = EmmDatabaseData(driver)
 
-        // Raw SQL against the historical schema: the generated queries target v5 and carry the
-        // constraint this fixture exists to violate.
         exec(
             "INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt) " +
                 "VALUES ('A1', 'BCP', 'Bank', 'PEN', 1000, 1000)",
@@ -224,11 +177,8 @@ class MigrationV4ToV5Test {
         driver.close()
     }
 
-    // ── transactions ──────────────────────────────────────────────────────────
-
     @Test
     fun migration_v4_to_v5_strips_a_category_of_the_wrong_type_off_a_transaction() {
-        // The defect this migration exists for: an Income movement filed under a Spend category.
         insertV4Transaction(id = "TX-MISMATCH", type = "Income", categoryId = "'C-SPEND'")
 
         migrate()
@@ -244,7 +194,7 @@ class MigrationV4ToV5Test {
 
     @Test
     fun migration_v4_to_v5_keeps_a_category_that_already_matches() {
-        // Without this, a repair that simply nulled every categoryId would pass the test above.
+        // Without this case, a repair that nulled every categoryId would pass the mismatch test.
         insertV4Transaction(id = "TX-OK", type = "Income", categoryId = "'C-INCOME'")
 
         migrate()
@@ -257,8 +207,6 @@ class MigrationV4ToV5Test {
 
     @Test
     fun migration_v4_to_v5_strips_a_category_that_does_not_exist_at_all() {
-        // Orphans violate the new key just as hard as mismatches, which is why the repair asks
-        // NOT EXISTS rather than comparing the two type columns.
         insertV4Transaction(id = "TX-ORPHAN", type = "Spend", categoryId = "'C-GONE'")
 
         migrate()
@@ -271,7 +219,6 @@ class MigrationV4ToV5Test {
 
     @Test
     fun migration_v4_to_v5_leaves_an_uncategorized_transaction_alone() {
-        // A composite FK with any NULL column is SATISFIED, so this needs no special case anywhere.
         insertV4Transaction(id = "TX-NULL", type = "Spend", categoryId = "NULL")
 
         migrate()
@@ -284,8 +231,6 @@ class MigrationV4ToV5Test {
 
     @Test
     fun migration_v4_to_v5_never_rewrites_the_type_of_any_transaction() {
-        // The whole point of repairing from the category side. `amount` is signed BY the type in
-        // getAccountBalance and liveTotals, so flipping one row's type moves the user's balance.
         val seeded = listOf(
             Triple("TX-A", "Income", "'C-SPEND'"),
             Triple("TX-B", "Spend", "'C-INCOME'"),
@@ -318,12 +263,8 @@ class MigrationV4ToV5Test {
         assertEquals(before, rawCount("SELECT COUNT(*) FROM transactions"))
     }
 
-    // ── recurring_movements ───────────────────────────────────────────────────
-
     @Test
     fun migration_v4_to_v5_repairs_recurring_movements_the_same_way() {
-        // A template mints a transaction of its own type every month, so a mismatched template is
-        // a mismatch generator, not a single bad row.
         insertV4Recurring(id = "RM-MISMATCH", type = "Spend", categoryId = "'C-INCOME'")
         insertV4Recurring(id = "RM-OK", type = "Spend", categoryId = "'C-SPEND'")
         insertV4Recurring(id = "RM-ORPHAN", type = "Income", categoryId = "'C-GONE'")
@@ -365,23 +306,8 @@ class MigrationV4ToV5Test {
         assertEquals(before, rawCount("SELECT COUNT(*) FROM recurring_movements"))
     }
 
-    // ── the iOS configuration: migrating with foreign keys already ON ─────────
-
-    /**
-     * The whole migration, run the way iOS runs it: **foreign keys enabled before it starts.**
-     *
-     * Every other test here migrates with them off, which is what Android does (`onOpen` runs after
-     * `onUpgrade`) — and under that configuration 4.sqm passes whatever order its statements are
-     * in. This is the test that holds the ordering argument in its header: the repair must come
-     * BEFORE the rebuild, because `INSERT INTO transactions_new SELECT` is validated against the
-     * new key as it copies. Move the repair after the rebuild and this fails while the other ten
-     * stay green.
-     *
-     * `DatabaseDriver.ios.kt` hands `NativeSqliteDriver` `foreignKeyConstraints = true`, which
-     * applies to the whole connection; there is no onOpen/onUpgrade split to hide behind and
-     * `PRAGMA foreign_keys` is a no-op inside a transaction. Android is the lenient platform here,
-     * not the strict one, so testing only Android tests the easy half.
-     */
+    // The only case that can fail on statement order: `INSERT INTO transactions_new SELECT` is
+    // validated against the new key as it copies, so 4.sqm has to repair before it rebuilds.
     @Test
     fun the_migration_completes_with_foreign_keys_enabled_the_way_ios_runs_it() {
         insertV4Transaction(id = "TX-MISMATCH", type = "Income", categoryId = "'C-SPEND'")
@@ -394,7 +320,6 @@ class MigrationV4ToV5Test {
         enableForeignKeys()
         migrate()
 
-        // Every repaired shape still repaired, with the constraint live throughout.
         assertNull(database.transactionsQueries.find("TX-MISMATCH").executeAsOne().categoryId)
         assertNull(database.transactionsQueries.find("TX-ORPHAN").executeAsOne().categoryId)
         assertNull(database.transactionsQueries.find("TX-NULL").executeAsOne().categoryId)
@@ -407,9 +332,6 @@ class MigrationV4ToV5Test {
 
     @Test
     fun nothing_violates_the_new_key_once_the_migration_has_run() {
-        // `PRAGMA foreign_key_check` walks every row of every table against every key and returns
-        // one row per violation. Empty is the only acceptable answer, and it is a stronger
-        // statement than any per-row assertion above: it also covers the rows no test named.
         insertV4Transaction(id = "TX-MISMATCH", type = "Income", categoryId = "'C-SPEND'")
         insertV4Transaction(id = "TX-ORPHAN", type = "Spend", categoryId = "'C-GONE'")
         insertV4Recurring(id = "RM-MISMATCH", type = "Spend", categoryId = "'C-INCOME'")
@@ -419,12 +341,8 @@ class MigrationV4ToV5Test {
         assertEquals(emptyList(), foreignKeyViolations(), "no row may violate the schema it just migrated to")
     }
 
-    // ── structure ─────────────────────────────────────────────────────────────
-
     @Test
     fun migration_v4_to_v5_recreates_every_index() {
-        // The indexes belong to the two tables 4.sqm drops. Nothing else in the build would notice
-        // they were gone — the app would just get slower, on the owner's device, silently.
         insertV4Transaction(id = "TX1", type = "Income", categoryId = "'C-INCOME'")
         insertV4Recurring(id = "RM1", type = "Income", categoryId = "'C-INCOME'")
 
@@ -450,8 +368,6 @@ class MigrationV4ToV5Test {
             assertTrue(name in recurringIndexes, "index $name must exist, found: $recurringIndexes")
         }
 
-        // The parent key of the composite FK. Absent, the child tables still build and every
-        // insert then fails at runtime instead.
         assertTrue(
             "categories_id_type_uidx" in indexNames("categories"),
             "the composite FK's parent unique index must exist",
@@ -472,10 +388,10 @@ class MigrationV4ToV5Test {
     @Test
     fun the_composite_key_is_really_enforced_after_the_migration() {
         migrate()
-        // Enforcement is what the whole change buys; asserting it needs foreign keys ON, which the
-        // fixture deliberately left off. SQLiteConstraintException specifically: a missing parent
-        // unique index refuses the insert too, as a plain SQLiteException nothing in :data catches.
         enableForeignKeys()
+
+        // SQLiteConstraintException specifically: a missing parent unique index refuses the insert
+        // too, as a plain SQLiteException nothing in :data catches.
 
         assertFailsWith<SQLiteConstraintException> {
             database.transactionsQueries.insert(
@@ -524,7 +440,6 @@ class MigrationV4ToV5Test {
         )
         assertNotNull(database.transactionsQueries.find("TX-NEW-OK").executeAsOneOrNull())
 
-        // And so does an uncategorized one: a composite key with a NULL column is satisfied.
         database.transactionsQueries.insert(
             transactionId = "TX-NEW-NULL",
             type = "Income",
@@ -539,27 +454,17 @@ class MigrationV4ToV5Test {
         assertNotNull(database.transactionsQueries.find("TX-NEW-NULL").executeAsOneOrNull())
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────────
-
     private fun migrate() =
         EmmDatabaseData.Schema.migrate(driver, oldVersion = 4, newVersion = EmmDatabaseData.Schema.version)
 
-    /**
-     * Turns foreign-key enforcement on for the rest of the test.
-     *
-     * Every other device test in this suite flips the flag inside `onOpen` and never moves it. This
-     * one has to move it, because the fixture must be seeded with the constraint OFF (the orphan
-     * row) and two tests need it ON afterwards — so the `SupportSQLiteDatabase` is captured in
-     * `onOpen` and flipped here instead. `setForeignKeyConstraintsEnabled` is documented as illegal
-     * inside a transaction; both call sites are outside one, and `Schema.migrate` opens none of its
-     * own (the real upgrade's transaction belongs to `SQLiteOpenHelper`, which this test bypasses).
-     */
+    // `setForeignKeyConstraintsEnabled` is illegal inside a transaction; both call sites are
+    // outside one, and `Schema.migrate` opens none of its own (the real upgrade's transaction
+    // belongs to `SQLiteOpenHelper`, which this test bypasses).
     private fun enableForeignKeys() {
         val db = openedDb ?: error("onOpen never fired — the driver was never used")
         db.setForeignKeyConstraintsEnabled(true)
     }
 
-    /** One entry per row that violates any foreign key, as `table:rowid`. Empty means clean. */
     private fun foreignKeyViolations(): List<String> = driver.executeQuery(
         identifier = null,
         sql = "PRAGMA foreign_key_check",

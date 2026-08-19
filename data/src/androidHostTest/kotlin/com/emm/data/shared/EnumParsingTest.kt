@@ -9,8 +9,6 @@ import kotlin.test.assertNull
 
 class EnumParsingTest {
 
-    // ── Known values parse correctly ──────────────────────────────────────────
-
     @Test
     fun `enumValueOrNull - known TransactionType Income returns Income`() {
         assertEquals(TransactionType.Income, enumValueOrNull<TransactionType>("Income"))
@@ -36,8 +34,6 @@ class EnumParsingTest {
         assertEquals(Frequency.Monthly, enumValueOrNull<Frequency>("Monthly"))
     }
 
-    // ── Unknown values return null ────────────────────────────────────────────
-
     @Test
     fun `enumValueOrNull - completely unknown value returns null`() {
         assertNull(enumValueOrNull<TransactionType>("Transfer"))
@@ -47,8 +43,6 @@ class EnumParsingTest {
     fun `enumValueOrNull - empty string returns null`() {
         assertNull(enumValueOrNull<TransactionType>(""))
     }
-
-    // ── Case-mismatch values return null (case-sensitive match) ───────────────
 
     @Test
     fun `enumValueOrNull - uppercase INCOME returns null`() {

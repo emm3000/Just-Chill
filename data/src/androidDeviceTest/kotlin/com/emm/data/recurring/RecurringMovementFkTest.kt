@@ -14,17 +14,6 @@ import org.junit.runner.RunWith
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-/**
- * Soft-delete integration tests for recurring_movements table.
- *
- * Since slice 1 switches hard DELETE to soft-delete (UPDATE SET deletedAt),
- * SQL FK ON DELETE actions (RESTRICT / SET NULL) are no longer triggered by
- * the normal delete flow. Referential integrity now lives in domain use cases
- * (DeleteAccountUseCase, DeleteCategoryUseCase) — see domain tests.
- *
- * These tests verify the soft-delete query behaviour at the SQLite level.
- * Run with: ./gradlew :data:connectedDebugAndroidTest
- */
 @RunWith(AndroidJUnit4::class)
 class RecurringMovementFkTest {
 
@@ -85,10 +74,6 @@ class RecurringMovementFkTest {
         driver.close()
     }
 
-    /**
-     * Soft-deleting a recurring movement marks it as tombstoned.
-     * It no longer appears in live queries (deletedAt IS NULL filters).
-     */
     @Test
     fun soft_delete_recurring_movement_excludes_it_from_live_queries() = runTest {
         val now = 2_000L
@@ -98,23 +83,13 @@ class RecurringMovementFkTest {
             id = "T1",
         )
 
-        // find() filters deletedAt IS NULL — tombstoned row should not appear.
         val found = database.recurring_movementsQueries.find("T1").executeAsOneOrNull()
         assertNull(found, "tombstoned recurring movement must not appear in find()")
 
-        // countLiveByAccount must return 0 for tombstoned rows.
         val count = database.recurring_movementsQueries.countLiveByAccount("A1").executeAsOne()
         assertEquals(0L, count, "tombstoned row must not be counted as live")
     }
 
-    /**
-     * Deleting a category leaves the recurring movement's categoryId alone.
-     *
-     * The de-linking pass this file used to cover is gone: a category delete is now only the
-     * category's own tombstone. The read path is what hides it — selectAllWithDetails LEFT JOINs
-     * categories with `c.deletedAt IS NULL`, so the movement stays visible with no category name
-     * rather than losing the reference for good.
-     */
     @Test
     fun tombstoned_category_leaves_the_recurring_movement_linked_but_unnamed() = runTest {
         database.categoriesQueries.softDelete(deletedAt = 2_000L, updatedAt = 2_000L, categoryId = "C1")

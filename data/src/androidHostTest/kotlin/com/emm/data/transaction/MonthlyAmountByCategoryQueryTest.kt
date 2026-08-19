@@ -9,17 +9,6 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-/**
- * Pins `monthlyAmountByCategory` against a real in-memory SQLite schema.
- *
- * The Report screen builds its month total by folding these rows; Home folds the raw
- * transactions of the same month. The invariant that keeps both screens telling the same
- * truth is therefore: **the rows returned here must sum to the month total**, with rows
- * that have no live category collapsing into a single uncategorized bucket.
- *
- * Setup inserts use raw SQL because the generated `insert` query forces syncState='Pending'
- * and never allows setting deletedAt directly — the same pattern used in [SyncQueriesTest].
- */
 class MonthlyAmountByCategoryQueryTest {
 
     private lateinit var driver: JdbcSqliteDriver
@@ -44,10 +33,6 @@ class MonthlyAmountByCategoryQueryTest {
     fun tearDown() {
         driver.close()
     }
-
-    // =========================================================================
-    // Tests
-    // =========================================================================
 
     @Test
     fun `transaction without category lands in the uncategorized bucket`() {
@@ -106,10 +91,6 @@ class MonthlyAmountByCategoryQueryTest {
         assertEquals(1_250L, row.totalAmount)
     }
 
-    // =========================================================================
-    // Helper functions
-    // =========================================================================
-
     private fun monthRows(): List<MonthlyAmountByCategory> = db.transactionsQueries
         .monthlyAmountByCategory(type = SPEND, startInclusive = MONTH_START, endExclusive = MONTH_END)
         .executeAsList()
@@ -145,17 +126,9 @@ class MonthlyAmountByCategoryQueryTest {
     private companion object {
         const val SPEND = "Spend"
 
-        // Half-open day bounds over August 2026, and a movement inside it. Plain strings: the
-        // window is a string comparison in SQL now, with no timezone to make it ambiguous.
         const val MONTH_START = "2026-08-01"
         const val MONTH_END = "2026-09-01"
         const val IN_MONTH = "2026-08-10T21:47:33"
-
-        // The first movement OUTSIDE the window, written the way a movement is actually written.
-        // A bound is not a value: no path in the app can store a bare '2026-09-01' — every write
-        // goes through the encoder, which always emits the seconds — and the read mappers would
-        // drop it if one somehow did. Pinning the boundary with a value the system cannot hold
-        // pins nothing.
         const val JUST_AFTER_MONTH = "2026-09-01T00:00:00"
     }
 }

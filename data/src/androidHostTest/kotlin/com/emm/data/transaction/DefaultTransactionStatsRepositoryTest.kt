@@ -18,13 +18,11 @@ class DefaultTransactionStatsRepositoryTest {
     private val localDataSource: TransactionStatsLocalDataSource = mockk()
     private val repository = DefaultTransactionStatsRepository(localDataSource)
 
-    // ── topUsedCombos ─────────────────────────────────────────────────────────
-
     @Test
     fun `topUsedCombos - skips combo with unknown type and returns only valid combos`() = runTest {
         coEvery { localDataSource.topUsedCombos(any(), any(), any()) } returns listOf(
             TopUsedCombos(accountId = "acc-1", categoryId = "cat-1", type = "Income"),
-            TopUsedCombos(accountId = "acc-2", categoryId = "cat-2", type = "INCOME"), // unknown → skip
+            TopUsedCombos(accountId = "acc-2", categoryId = "cat-2", type = "INCOME"),
             TopUsedCombos(accountId = "acc-3", categoryId = "cat-3", type = "Spend"),
         )
 
@@ -61,8 +59,6 @@ class DefaultTransactionStatsRepositoryTest {
         assertEquals(TransactionType.Spend, result[1].type)
     }
 
-    // ── monthlyAmountByCategoryForRanges ──────────────────────────────────────
-
     @Test
     fun `monthlyAmountByCategoryForRanges - splits one month's rows into income and expense`() = runTest {
         coEvery { localDataSource.monthlyAmountByCategoryForRanges(any()) } returns listOf(
@@ -98,8 +94,6 @@ class DefaultTransactionStatsRepositoryTest {
             ),
         )
 
-        // The caller pairs these back up with its own month list by index; dropping an empty month
-        // would shift every later month's figures onto the wrong bar.
         assertEquals(3, result.size)
         assertEquals(Money(100L), result[0].expense.single().amount)
         assertEquals(MonthCategoryAmounts.Empty, result[1])

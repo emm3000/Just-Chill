@@ -9,13 +9,6 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-/**
- * Pins `monthlyAmountByCategoryAndType` against a real in-memory SQLite schema.
- *
- * It exists to halve the Trends tab's round-trips by covering both types at once, so the property
- * that matters is that it stays interchangeable with `monthlyAmountByCategory`: same rows, same
- * uncategorized bucket, same totals — only split by type instead of filtered by it.
- */
 class MonthlyAmountByCategoryAndTypeQueryTest {
 
     private lateinit var driver: JdbcSqliteDriver
@@ -34,9 +27,6 @@ class MonthlyAmountByCategoryAndTypeQueryTest {
         )
         insertCategory(id = "cat-live", name = "Comida", categoryType = SPEND, deletedAt = null)
         insertCategory(id = "cat-gone", name = "Antigua", categoryType = SPEND, deletedAt = 500L)
-        // A category belongs to exactly ONE movement type since schema v5 — the composite key
-        // (categoryId, type) makes the same id on both sides impossible, which is why the income
-        // rows below file under their own category instead of borrowing the expense one.
         insertCategory(id = "cat-income", name = "Sueldo", categoryType = INCOME, deletedAt = null)
     }
 
@@ -59,17 +49,9 @@ class MonthlyAmountByCategoryAndTypeQueryTest {
 
     @Test
     fun `the two types are never netted against each other`() {
-        // This used to file all three movements under ONE category and call that normal. Schema v5
-        // made it impossible — (categoryId, type) is a foreign key, so a category is Income or
-        // Spend and never both — and simply splitting them across two categories would have left
-        // the test unable to fail: with one category per type, `GROUP BY c.categoryId` alone
-        // produces identical output, so dropping `t.type` from the grouping goes unnoticed.
-        //
-        // The UNCATEGORIZED pair is what carries the property now. The LEFT JOIN collapses every
+        // The uncategorized pair is what carries the property: the LEFT JOIN collapses every
         // null-category movement into a single group per type, so those two rows share a grouping
         // key in everything except `t.type` — remove it and 900 in is netted against 500 out.
-        // 4.sqm manufactures exactly these rows, on both sides of the ledger, which is why this
-        // matters more after the change than before it.
         insertTransaction(id = "t-1", type = SPEND, categoryId = "cat-live", amount = 1_000)
         insertTransaction(id = "t-2", type = SPEND, categoryId = "cat-live", amount = 500)
         insertTransaction(id = "t-3", type = INCOME, categoryId = "cat-income", amount = 700)
@@ -188,17 +170,9 @@ class MonthlyAmountByCategoryAndTypeQueryTest {
         const val SPEND = "Spend"
         const val INCOME = "Income"
 
-        // Half-open day bounds over August 2026, and a movement inside it. Plain strings: the
-        // window is a string comparison in SQL now, with no timezone to make it ambiguous.
         const val MONTH_START = "2026-08-01"
         const val MONTH_END = "2026-09-01"
         const val IN_MONTH = "2026-08-10T21:47:33"
-
-        // The first movement OUTSIDE the window, written the way a movement is actually written.
-        // A bound is not a value: no path in the app can store a bare '2026-09-01' — every write
-        // goes through the encoder, which always emits the seconds — and the read mappers would
-        // drop it if one somehow did. Pinning the boundary with a value the system cannot hold
-        // pins nothing.
         const val JUST_AFTER_MONTH = "2026-09-01T00:00:00"
     }
 }

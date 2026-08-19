@@ -16,43 +16,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-/**
- * Migration test: schema version 3 → 4 — `transactions.date INTEGER` (epoch millis) becomes
- * `transactions.occurredAt TEXT` (ISO local, no zone).
- *
- * **This is the repository's first DESTRUCTIVE migration.** SQLite cannot change a column's type,
- * so 3.sqm rebuilds the table: create, copy-converting, drop, rename, recreate the indexes. Every
- * step of that is a way to lose the whole table, and the instrumented suite is the only thing that
- * runs it against a real `AndroidSqliteDriver`.
- *
- * What is asserted, and why each one:
- *   1. a normal row converts to the expected ISO local string — the conversion itself;
- *   2. every row survives — a rebuild that drops the source table can silently lose all of them,
- *      and a count is the only assertion that notices;
- *   3. the indexes exist afterwards — they belong to the dropped table and must be recreated,
- *      and nothing else in the build would ever notice their absence;
- *   4. a `date` no `strftime` can read does NOT abort the migration — a NULL into the NOT NULL
- *      column would fail inside onUpgrade, leave user_version at 3, and fail identically on every
- *      subsequent open. That is a permanent open-crash, not a bad row.
- *
- * Migrates to `EmmDatabaseData.Schema.version`, never to a hardcoded 4 — the rule in
- * `data/CLAUDE.md`, written down after `MigrationV2ToV3Test` stopped at 3 and broke the moment a 4
- * existed. Every assertion below goes through generated queries, and those only ever match the
- * CURRENT schema; a run that stops mid-chain would be asserting against a shape it never reached.
- * It is also what a real device does: one open, the whole chain.
- *
- * Requires a device/emulator. Run with: `./gradlew :data:connectedAndroidDeviceTest`.
- */
 @RunWith(AndroidJUnit4::class)
 class MigrationV3ToV4Test {
 
     private lateinit var driver: AndroidSqliteDriver
     private lateinit var database: EmmDatabaseData
 
-    /**
-     * The production schema at version 3 — all 4 tables exactly as they existed before this
-     * change. DDL copied verbatim from the .sq files plus the 2.sqm sync-metadata columns.
-     */
     private val schemaV3 = object : SqlSchema<QueryResult.Value<Unit>> {
         override val version: Long = 3
 
@@ -173,8 +142,6 @@ class MigrationV3ToV4Test {
         )
         database = EmmDatabaseData(driver)
 
-        // Raw SQL: the generated TransactionsQueries.insert targets v4 and would reference a
-        // column this schema does not have yet.
         exec(
             "INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt) " +
                 "VALUES ('A1', 'BCP', 'Bank', 'PEN', 1000, 1000)",
@@ -209,9 +176,6 @@ class MigrationV3ToV4Test {
 
     @Test
     fun migration_v3_to_v4_keeps_every_row() {
-        // The assertion a table rebuild actually needs: DROP TABLE is in this migration, and a
-        // copy that silently moved nothing looks exactly like a copy that moved everything until
-        // something counts.
         repeat(ROW_COUNT) { index -> insertV3Transaction(id = "TX$index", date = 1_754_000_000_000L + index) }
         val before = rawCount("SELECT COUNT(*) FROM transactions")
 
@@ -223,8 +187,6 @@ class MigrationV3ToV4Test {
 
     @Test
     fun migration_v3_to_v4_recreates_every_index() {
-        // The indexes belong to the table 3.sqm drops. Nothing else in the build would notice they
-        // were gone — the app would just get slower, on the owner's device, silently.
         insertV3Transaction(id = "TX1", date = 1_754_000_000_000L)
 
         EmmDatabaseData.Schema.migrate(driver, oldVersion = 3, newVersion = EmmDatabaseData.Schema.version)
@@ -245,8 +207,8 @@ class MigrationV3ToV4Test {
     @Test
     fun migration_v3_to_v4_survives_a_date_no_conversion_can_read() {
         // strftime() returns NULL outside its range, and a NULL into a NOT NULL column aborts
-        // onUpgrade — leaving user_version at 3 and failing the same way on every later open.
-        // The app must open. The row is allowed to be visibly wrong; it is not allowed to be fatal.
+        // onUpgrade — leaving user_version at 3 and failing the same way on every later open. The
+        // row is allowed to be visibly wrong; it is not allowed to cost the user the app.
         insertV3Transaction(id = "TX-OK", date = 1_754_000_000_000L)
         insertV3Transaction(id = "TX-BROKEN", date = Long.MAX_VALUE)
 
@@ -270,8 +232,6 @@ class MigrationV3ToV4Test {
         assertNotNull(database.accountsQueries.find("A1").executeAsOneOrNull())
         assertNotNull(database.categoriesQueries.find("C1").executeAsOneOrNull())
     }
-
-    // ── helpers ───────────────────────────────────────────────────────────────
 
     private fun exec(sql: String) = driver.execute(null, sql, 0)
 

@@ -10,8 +10,6 @@ import kotlin.test.assertNull
 
 class RecurringMappersTest {
 
-    // ── RecurringMovementEntity.asExternalModelOrNull ─────────────────────────
-
     @Test
     fun `asExternalModelOrNull - valid type and frequency returns RecurringMovement`() {
         val entity = recurringEntity("rm-1", "Income", "Monthly")
@@ -36,13 +34,11 @@ class RecurringMappersTest {
         assertNull(recurringEntity("rm-1", "Transfer", "Weekly").asExternalModelOrNull())
     }
 
-    // ── List<RecurringMovementEntity>.asExternalModel ─────────────────────────
-
     @Test
     fun `list asExternalModel - unknown type row is skipped, valid rows survive`() {
         val entities = listOf(
             recurringEntity("rm-good-1", "Income", "Monthly"),
-            recurringEntity("rm-bad", "INCOME", "Monthly"), // unknown type
+            recurringEntity("rm-bad", "INCOME", "Monthly"),
             recurringEntity("rm-good-2", "Spend", "Monthly"),
         )
         val result = entities.asExternalModel()
@@ -55,14 +51,12 @@ class RecurringMappersTest {
     fun `list asExternalModel - unknown frequency row is skipped`() {
         val entities = listOf(
             recurringEntity("rm-1", "Income", "Monthly"),
-            recurringEntity("rm-2", "Spend", "MONTHLY"), // unknown frequency
+            recurringEntity("rm-2", "Spend", "MONTHLY"),
         )
         val result = entities.asExternalModel()
         assertEquals(1, result.size)
         assertEquals("rm-1", result[0].id.value)
     }
-
-    // ── SelectAllWithDetails.asExternalModelOrNull ────────────────────────────
 
     @Test
     fun `SelectAllWithDetails asExternalModelOrNull - valid type returns RecurringMovementDetails`() {
@@ -80,8 +74,6 @@ class RecurringMappersTest {
     fun `SelectAllWithDetails asExternalModelOrNull - unknown type Transfer returns null`() {
         assertNull(detailsRow("Transfer").asExternalModelOrNull())
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private fun recurringEntity(id: String, type: String, frequency: String) = RecurringMovementEntity(
         id = id,

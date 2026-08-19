@@ -12,14 +12,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 
-/**
- * Pins `countPerCategory` and its mapping to the domain usage map against a real in-memory
- * SQLite schema.
- *
- * The transactions tab used to rank its category chips by folding every transaction ever
- * recorded, on every emission. The replacement aggregate is only safe if it counts exactly
- * the rows that fold counted: live rows with a category, nothing else.
- */
 class CategoryUsageCountsTest {
 
     private lateinit var driver: JdbcSqliteDriver

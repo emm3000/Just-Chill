@@ -10,16 +10,6 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 
-/**
- * Verifies the security-critical claim/unclaim contract against a real SQLite schema (JVM JDBC
- * driver): claimAll stamps ONLY anonymous rows (userId IS NULL) across all four tables, never
- * touches rows already owned by another user, and is idempotent. unclaimAll reverses it for ONE
- * user's rows (userId → NULL, syncState → 'Pending'), tombstones included, leaving other users'
- * rows untouched.
- *
- * Uses raw SQL for setup so each row's userId can be controlled directly (the generated `insert`
- * queries force syncState and never set userId).
- */
 class DefaultClaimLocalDataRepositoryTest {
 
     private lateinit var driver: JdbcSqliteDriver
@@ -33,7 +23,6 @@ class DefaultClaimLocalDataRepositoryTest {
         db = EmmDatabaseData(driver)
         repository = DefaultClaimLocalDataRepository(db)
 
-        // One anonymous row (userId NULL) and one owned by someone else, per table.
         exec(
             "INSERT INTO accounts(accountId, name, updatedAt, createdAt, userId) " +
                 "VALUES ('acc-null', 'A', 0, 0, NULL)",
@@ -103,14 +92,12 @@ class DefaultClaimLocalDataRepositoryTest {
         repository.claimAll("me")
         repository.claimAll("second-user")
 
-        // Already-owned rows are immune to the WHERE userId IS NULL guard.
         assertEquals("me", userIdOf("accounts", "accountId", "acc-null"))
         assertEquals("other-user", userIdOf("accounts", "accountId", "acc-other"))
     }
 
     @Test
     fun `observeUnclaimedCount sums NULL-userId rows across all four tables`() = runTest {
-        // setUp already inserted 1 anonymous row per table = 4 total.
         val count = repository.observeUnclaimedCount().first()
         assertEquals(4L, count)
     }
@@ -126,16 +113,13 @@ class DefaultClaimLocalDataRepositoryTest {
 
     @Test
     fun `observeUnclaimedCount ignores rows already owned by another user`() = runTest {
-        // Only the 4 anonymous rows count; the 4 'other-user' rows must be excluded.
         val count = repository.observeUnclaimedCount().first()
         assertEquals(4L, count)
     }
 
-    // ── unclaimAll ────────────────────────────────────────────────────────────
-
     @Test
     fun `unclaimAll reverts owned rows to NULL userId and Pending across all four tables`() = runTest {
-        // A previously synced row must also flip back to Pending, not just lose its owner.
+        // Without a row that starts out Synced, the Pending assertion below would hold trivially.
         exec("UPDATE accounts SET syncState = 'Synced' WHERE accountId = 'acc-other'")
 
         repository.unclaimAll("other-user")
@@ -176,7 +160,6 @@ class DefaultClaimLocalDataRepositoryTest {
     fun `unclaimed rows count as anonymous again and are re-claimable`() = runTest {
         repository.unclaimAll("other-user")
 
-        // 4 anonymous from setUp + the 4 just-unclaimed rows.
         assertEquals(8L, repository.observeUnclaimedCount().first())
 
         repository.claimAll("new-user")

@@ -8,8 +8,6 @@ import kotlin.test.assertNull
 
 class TransactionMappersTest {
 
-    // ── TransactionEntity.asExternalModelOrNull ────────────────────────────────
-
     @Test
     fun `asExternalModelOrNull - valid Income type returns Transaction`() {
         val entity = transactionEntity("tx-1", "Income")
@@ -37,13 +35,11 @@ class TransactionMappersTest {
         assertNull(transactionEntity("tx-1", "Transfer").asExternalModelOrNull())
     }
 
-    // ── List<TransactionEntity>.asExternalModel ────────────────────────────────
-
     @Test
     fun `List asExternalModel - bad-type row is skipped, valid rows survive`() {
         val entities = listOf(
             transactionEntity("tx-good-1", "Income"),
-            transactionEntity("tx-bad", "INCOME"), // unknown
+            transactionEntity("tx-bad", "INCOME"),
             transactionEntity("tx-good-2", "Spend"),
         )
         val result = entities.asExternalModel()
@@ -60,8 +56,6 @@ class TransactionMappersTest {
         )
         assertEquals(emptyList(), entities.asExternalModel())
     }
-
-    // ── TransactionWithCategoryEntity.toDomainOrNull ───────────────────────────
 
     @Test
     fun `toDomainOrNull - valid type and category returns full TransactionWithCategory`() {
@@ -85,7 +79,7 @@ class TransactionMappersTest {
     fun `toDomainOrNull - valid type but unknown categoryType keeps transaction with null category`() {
         val entity = transactionWithCategoryEntity(
             type = "Income",
-            categoryType = "INCOME", // case-mismatch → unknown
+            categoryType = "INCOME",
         )
         val result = entity.toDomainOrNull()
         assertNotNull(result)
@@ -110,8 +104,6 @@ class TransactionMappersTest {
 
     @Test
     fun `toDomainOrNull - categoryId present but categoryType null keeps transaction with null category`() {
-        // categoryId is set (LEFT JOIN matched a row) but categoryType is null —
-        // the category cannot be parsed so the transaction is kept with category = null.
         val entity = transactionWithCategoryEntity(
             type = "Income",
             categoryId = "cat-1",
@@ -126,13 +118,11 @@ class TransactionMappersTest {
         assertNull(result.category)
     }
 
-    // ── List<TransactionWithCategoryEntity>.toDomain ──────────────────────────
-
     @Test
     fun `toDomain list - bad-type row is skipped, valid rows survive`() {
         val entities = listOf(
             transactionWithCategoryEntity(id = "tx-a", type = "Income", categoryType = "Income"),
-            transactionWithCategoryEntity(id = "tx-b", type = "SPEND"), // unknown type → skip
+            transactionWithCategoryEntity(id = "tx-b", type = "SPEND"),
             transactionWithCategoryEntity(id = "tx-c", type = "Spend", categoryType = "Spend"),
         )
         val result = entities.toDomain()
@@ -140,8 +130,6 @@ class TransactionMappersTest {
         assertEquals("tx-a", result[0].transactionId.value)
         assertEquals("tx-c", result[1].transactionId.value)
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private fun transactionEntity(id: String, type: String) = TransactionEntity(
         transactionId = id,

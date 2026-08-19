@@ -251,8 +251,6 @@ private fun FakeVerifiableBucket.seedPair(fileName: String, payload: String) {
     seed(fileName, payload, manifest = manifestJson(fileName, BACKUP_MANIFEST_VERSION, digestOf(payload)))
 }
 
-// Written straight into the map rather than through upload(), so the call log holds only what the
-// verifier itself did.
 private fun FakeVerifiableBucket.seed(fileName: String, payload: String, manifest: String) {
     objects[PREFIX + fileName] = payload.encodeToByteArray()
     objects[PREFIX + manifestNameFor(fileName)] = manifest.encodeToByteArray()

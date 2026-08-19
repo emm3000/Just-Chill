@@ -17,11 +17,6 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
-/**
- * Verifies each supabase / ktor exception family maps to the correct [DomainException] subtype.
- *
- * Calls the production [toAuthDomainException] directly (internal visibility, same package).
- */
 class AuthExceptionMapperTest {
 
     @Test

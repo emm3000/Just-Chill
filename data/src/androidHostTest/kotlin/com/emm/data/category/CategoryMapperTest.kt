@@ -8,8 +8,6 @@ import kotlin.test.assertNull
 
 class CategoryMapperTest {
 
-    // ── CategoryEntity.asExternalModelOrNull ──────────────────────────────────
-
     @Test
     fun `asExternalModelOrNull - valid Income type returns Category`() {
         val entity = categoryEntity("cat-1", "Income")
@@ -42,13 +40,11 @@ class CategoryMapperTest {
         assertNull(categoryEntity("cat-1", "Budget").asExternalModelOrNull())
     }
 
-    // ── List<CategoryEntity>.asExternalModel ──────────────────────────────────
-
     @Test
     fun `list asExternalModel - unknown categoryType rows are skipped`() {
         val entities = listOf(
             categoryEntity("cat-good-1", "Income"),
-            categoryEntity("cat-bad", "INCOME"), // unknown → skip
+            categoryEntity("cat-bad", "INCOME"),
             categoryEntity("cat-good-2", "Spend"),
         )
         val result = entities.asExternalModel()
@@ -65,8 +61,6 @@ class CategoryMapperTest {
         )
         assertEquals(emptyList(), entities.asExternalModel())
     }
-
-    // ── Helper ────────────────────────────────────────────────────────────────
 
     private fun categoryEntity(id: String, type: String) = CategoryEntity(
         categoryId = id,

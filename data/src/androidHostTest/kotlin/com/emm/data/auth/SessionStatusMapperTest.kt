@@ -53,15 +53,11 @@ class SessionStatusMapperTest {
     fun `RefreshFailure maps to domain NotAuthenticated`() {
         val cause = RefreshFailureCause.NetworkError(RuntimeException("timeout"))
 
-        // RefreshFailure(cause) constructor verified against supabase-kt 3.6.0; revisit on BOM bumps.
+        // The deprecated constructor is the only way to reach the RefreshFailure branch of toDomain.
         @Suppress("DEPRECATION")
         val result = SupabaseSessionStatus.RefreshFailure(cause = cause).toDomain()
         assertIs<SessionStatus.NotAuthenticated>(result)
     }
-
-    // ---------------------------------------------------------------------------
-    // Helpers
-    // ---------------------------------------------------------------------------
 
     private fun buildUserInfo(id: String, email: String?): UserInfo {
         val info = mockk<UserInfo>()
