@@ -14,7 +14,7 @@ engine decommission remain.
 
 - No DB schema migration anywhere in this track; the export FORMAT version (v2→v3) is not the DB schema version.
 - Never drop `userId` / `syncState` / `deletedAt`; never change UUID PKs; never revert to hard deletes — the sync schema stays so a future engine can plug in without re-migrating. Dead columns stay dead in place.
-- `SYNC_TEMPORARILY_DISABLED` stays `true` until the last decommission step removes it.
+- Local rows are no longer stamped with a `userId` at all — `ClaimLocalDataOnAuthenticationUseCase` was the only writer of it and is gone; benign today (no read filters by `userId`, `DefaultBackupUploader` scopes by storage prefix) but a future engine plugging into the preserved sync schema needs a catch-up claim pass.
 - No silent failure in the backup pipeline — every failure path in the uploader/pruner/verifier logs a distinct, named reason, and a new path adds a new reason instead of reusing one. To recount, list every `storageCall`, `wholeBucket` and explicit throw site in `data/.../backup/DefaultBackup{Uploader,Pruner,Verifier}.kt`; each `wholeBucket` forwards two reasons (list failed, listing never ended). No number lives here because the total moves with the producer boundary you draw.
 - Backup preference keys live in `DefaultBackupMetadataStore` (`:presentation/core/backup/`) over raw `Settings`, not `AppPreferences`; the key prefixes, the `-1L` "never" sentinel and the `'|'` failure separator are byte-identical to pre-move and load-bearing.
 - The failure streak's count and reason share **one** key (`count|REASON`) — `Settings` has no transaction, so two keys risk a count carrying the wrong reason across a kill.

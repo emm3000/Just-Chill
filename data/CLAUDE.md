@@ -83,7 +83,8 @@ in `docs/PROGRESS.md`; it does not fail the gate.
   transactions → recurring_movements), holds the pull cursor when any table skips rows, and funnels
   remote/ktor errors through `toSyncDomainException()`.
 - Cursor semantics (server-set `server_updated_at`, 10s overlap window) are defined in
-  `docs/adr/002`; the `SyncCursorStore` port is implemented in `:presentation`.
+  `docs/adr/002`; the `SyncCursorStore` port has zero implementers anywhere until wave C of
+  `E01-snapshot-backup.md` deletes it.
 
 ## Error handling
 

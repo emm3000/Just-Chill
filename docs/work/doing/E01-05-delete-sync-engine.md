@@ -20,3 +20,6 @@ E01-04 dropped from `Blocked by`: nothing in ADR 009, the epic or E01-04 itself 
 on the RLS probe — the archived plan gates the `SNAPSHOT_BACKUP_ENABLED` flip on it, not this.
 35 files deleted (~5,281 lines), ~24 edited. The three module deletions ship together — miss one and
 the Android build breaks, since `:ui-android` collects what `:presentation` would stop emitting.
+The `last_pulled_at_*` / `last_synced_at_*` keys already on installed devices are left in place —
+`clearSyncMetadata` and the cursor-clear step are gone, `migrateBuildIdPrefs` copies keys forward
+verbatim by type, and the values are inert.

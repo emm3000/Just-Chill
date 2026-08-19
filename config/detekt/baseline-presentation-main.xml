@@ -22,7 +22,6 @@
     <ID>InvalidPackageDeclaration:SeeTransactionsModule.kt:package com.emm.justchill.hh.di</ID>
     <ID>InvalidPackageDeclaration:SharedModule.kt:package com.emm.justchill.hh.di</ID>
     <ID>InvalidPackageDeclaration:SupabaseModule.kt:package com.emm.justchill.hh.di</ID>
-    <ID>InvalidPackageDeclaration:SyncModule.kt:package com.emm.justchill.hh.di</ID>
     <ID>InvalidPackageDeclaration:TransactionModule.kt:package com.emm.justchill.hh.di</ID>
     <ID>LongParameterList:EditTransactionViewModel.kt:EditTransactionViewModel</ID>
     <ID>MagicNumber:NumberFormatEs.kt:NumberFormatEs$0.5</ID>

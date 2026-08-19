@@ -37,9 +37,9 @@ a reviewer-half rule enters only with a test a diff can fail. No third bucket fo
 `CyclomaticComplexMethod`, `ComplexCondition`, `NestedBlockDepth` and `LongParameterList` have **no
 annotation escape and do fire on Composables**. Evidence in
 `config/detekt/baseline-ui-android-main.xml`: 3 `CyclomaticComplexMethod` entries
-(`AddTransactionScreenContent`, `EmmButton`, `EmmTextInput`) and 24 `LongParameterList`, 22 of them
-on a `@Composable` (the two that are not are the `EditTransactionViewModel` and `SyncOrchestrator`
-constructors). Live in the source: `@Suppress("CyclomaticComplexMethod")` at
+(`AddTransactionScreenContent`, `EmmButton`, `EmmTextInput`) and 23 `LongParameterList`, 22 of them
+on a `@Composable` (the one that is not is the `EditTransactionViewModel`
+constructor). Live in the source: `@Suppress("CyclomaticComplexMethod")` at
 `ui-android/.../ProfileScreen.kt:335`, tracked in `docs/PROGRESS.md`. So `TooManyFunctions` per file
 is the rule the repo *leans on* for Compose — not the only one that reaches it.
 **What the gate does not cover:** `:ui-android:detektAndroidMainSourceSet` reports **21** issues

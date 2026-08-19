@@ -23,8 +23,8 @@ val backupModule = module {
 
     factoryOf(::DefaultBackupMetadataStore) { bind<BackupMetadataStore>() }
 
-    // Bound here rather than in syncModule, which E01-05 deletes whole: the backup upload and account
-    // deletion are the holders that outlive the sync engine.
+    // Shared between BackupOrchestrator and DeleteUserAccountUseCase so a backup upload and an
+    // account deletion never race each other.
     single { SyncMutex() }
 
     single {

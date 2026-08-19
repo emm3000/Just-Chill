@@ -42,7 +42,6 @@
     <ID>Indentation:Font0.commonMain.kt: </ID>
     <ID>Indentation:Res.kt: </ID>
     <ID>Indentation:Res.kt:Res$ </ID>
-    <ID>InjectDispatcher:SyncModule.kt:Default</ID>
     <ID>LambdaParameterInRestartableEffect:ReportScreen.kt:onShareText: (String) -&gt; Unit = {}</ID>
     <ID>LongParameterList:AccountPickerSheet.kt:@Composable private fun AccountRow</ID>
     <ID>LongParameterList:AmountHero.kt:@Composable fun AmountHero</ID>
@@ -66,7 +65,6 @@
     <ID>LongParameterList:ReportScreen.kt:@Composable private fun MesContent</ID>
     <ID>LongParameterList:ReportScreen.kt:@Composable private fun ReportScreen</ID>
     <ID>LongParameterList:StickyCTA.kt:@Composable fun StickyCTA</ID>
-    <ID>LongParameterList:SyncOrchestrator.kt:SyncOrchestrator</ID>
     <ID>LongParameterList:TransactionFormControls.kt:@Composable internal fun QuickChip</ID>
     <ID>MagicNumber:NumberFormatEs.kt:NumberFormatEs$0.5</ID>
     <ID>MagicNumber:NumberFormatEs.kt:NumberFormatEs$100.0</ID>

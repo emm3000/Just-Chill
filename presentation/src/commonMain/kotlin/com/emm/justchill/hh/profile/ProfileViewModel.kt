@@ -21,8 +21,6 @@ import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupEvent
 import com.emm.justchill.core.backup.BackupHealth
 import com.emm.justchill.core.mvi.MviViewModel
-import com.emm.justchill.core.sync.SYNC_TEMPORARILY_DISABLED
-import com.emm.justchill.core.sync.SyncController
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -37,7 +35,6 @@ class ProfileViewModel(
     private val importData: ImportDataUseCase,
     private val signOut: SignOutUseCase,
     private val deleteUserAccount: DeleteUserAccountUseCase,
-    private val syncController: SyncController,
     private val backupController: BackupController,
     private val backupVerifier: BackupVerifier,
     private val getBackupStaleness: GetBackupStalenessUseCase,
@@ -74,22 +71,6 @@ class ProfileViewModel(
             }
             .launchIn(viewModelScope)
 
-        syncController.status
-            .onEach { syncStatus ->
-                val row = when {
-                    syncStatus.isSyncing -> SyncRowUi.Syncing
-                    syncStatus.lastSyncFailed -> SyncRowUi.Failed
-                    else -> SyncRowUi.Idle(syncStatus.lastSyncedAtMillis)
-                }
-                updateState {
-                    copy(
-                        isSyncing = syncStatus.isSyncing,
-                        syncRow = row,
-                    )
-                }
-            }
-            .launchIn(viewModelScope)
-
         backupController.isBackingUp
             .onEach(::onBackupProgress)
             .launchIn(viewModelScope)
@@ -116,7 +97,6 @@ class ProfileViewModel(
             ProfileIntent.ExportRequested -> exportRequested()
             is ProfileIntent.ImportJson -> importFromJson(intent.json)
             ProfileIntent.SignOut -> performSignOut()
-            ProfileIntent.SyncNow -> syncNow()
             ProfileIntent.DeleteAccount -> deleteAccount()
             ProfileIntent.BackUpNow -> backUpNow()
             ProfileIntent.VerifyBackup -> verifyBackup()
@@ -217,11 +197,6 @@ class ProfileViewModel(
             appVersion = appVersion,
         )
         sendEffect(ProfileEffect.ExportReady(json))
-    }
-
-    private fun syncNow() {
-        if (SYNC_TEMPORARILY_DISABLED) return
-        syncController.requestSync(manual = true)
     }
 
     private fun importFromJson(json: String) = launchOp(

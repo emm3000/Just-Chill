@@ -37,22 +37,22 @@ class CoreModulePrefsMigrationTest {
 
     @Test
     fun `copies String entry with putString`() {
-        val legacy = legacyWith(mapOf("last_pulled_at_user123" to "2024-01-01T00:00:00Z"))
+        val legacy = legacyWith(mapOf("some_string_key" to "2024-01-01T00:00:00Z"))
         val target = targetPrefs()
 
         migrateBuildIdPrefs(legacy, target)
 
-        verify { editor.putString("last_pulled_at_user123", "2024-01-01T00:00:00Z") }
+        verify { editor.putString("some_string_key", "2024-01-01T00:00:00Z") }
     }
 
     @Test
     fun `copies Long entry with putLong`() {
-        val legacy = legacyWith(mapOf("last_synced_at_user123" to 1700000000000L))
+        val legacy = legacyWith(mapOf("some_long_key" to 1700000000000L))
         val target = targetPrefs()
 
         migrateBuildIdPrefs(legacy, target)
 
-        verify { editor.putLong("last_synced_at_user123", 1700000000000L) }
+        verify { editor.putLong("some_long_key", 1700000000000L) }
     }
 
     @Test

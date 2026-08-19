@@ -3,7 +3,6 @@ package com.emm.domain.auth
 import com.emm.domain.shared.backup.BackupMetadataStore
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.logging.DiagnosticsLogger
-import com.emm.domain.sync.SyncCursorStore
 import com.emm.domain.sync.SyncMutex
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -30,7 +29,6 @@ class DeleteUserAccountUseCaseTest {
 
     private val authRepository = mockk<AuthRepository>()
     private val claimLocalDataRepository = mockk<ClaimLocalDataRepository>()
-    private val syncCursorStore = mockk<SyncCursorStore>()
     private val backupMetadataStore = mockk<BackupMetadataStore>()
     private val syncMutex = SyncMutex()
     private val logger = mockk<DiagnosticsLogger>(relaxed = true)
@@ -38,7 +36,6 @@ class DeleteUserAccountUseCaseTest {
     private val useCase = DeleteUserAccountUseCase(
         authRepository = authRepository,
         claimLocalDataRepository = claimLocalDataRepository,
-        syncCursorStore = syncCursorStore,
         backupMetadataStore = backupMetadataStore,
         syncMutex = syncMutex,
         logger = logger,
@@ -48,12 +45,11 @@ class DeleteUserAccountUseCaseTest {
         SessionStatus.Authenticated(AuthUser(userId = userId, email = "$userId@example.com"))
 
     @Test
-    fun `happy path calls deleteAccount, unclaimAll, cursor clear, then backup metadata clear`() = runTest {
+    fun `happy path calls deleteAccount, unclaimAll, then backup metadata clear`() = runTest {
         val userId = "uid-1"
         every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
         coEvery { authRepository.deleteAccount() } just Runs
         coEvery { claimLocalDataRepository.unclaimAll(userId) } just Runs
-        every { syncCursorStore.clear(userId) } just Runs
         every { backupMetadataStore.clear(userId) } just Runs
 
         useCase()
@@ -61,7 +57,6 @@ class DeleteUserAccountUseCaseTest {
         coVerifyOrder {
             authRepository.deleteAccount()
             claimLocalDataRepository.unclaimAll(userId)
-            syncCursorStore.clear(userId)
             backupMetadataStore.clear(userId)
         }
     }
@@ -72,7 +67,6 @@ class DeleteUserAccountUseCaseTest {
         every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
         coEvery { authRepository.deleteAccount() } just Runs
         coEvery { claimLocalDataRepository.unclaimAll(userId) } just Runs
-        every { syncCursorStore.clear(userId) } just Runs
         every { backupMetadataStore.clear(userId) } just Runs
 
         useCase()
@@ -89,12 +83,11 @@ class DeleteUserAccountUseCaseTest {
 
         coVerify(exactly = 0) { authRepository.deleteAccount() }
         coVerify(exactly = 0) { claimLocalDataRepository.unclaimAll(any()) }
-        verify(exactly = 0) { syncCursorStore.clear(any()) }
         verify(exactly = 0) { backupMetadataStore.clear(any()) }
     }
 
     @Test
-    fun `deleteAccount throwing leaves unclaimAll and both clears uncalled`() = runTest {
+    fun `deleteAccount throwing leaves unclaimAll and the backup clear uncalled`() = runTest {
         val userId = "uid-2"
         every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
         coEvery { authRepository.deleteAccount() } throws
@@ -103,7 +96,6 @@ class DeleteUserAccountUseCaseTest {
         assertFailsWith<DomainException.NetworkUnavailable> { useCase() }
 
         coVerify(exactly = 0) { claimLocalDataRepository.unclaimAll(any()) }
-        verify(exactly = 0) { syncCursorStore.clear(any()) }
         verify(exactly = 0) { backupMetadataStore.clear(any()) }
     }
 
@@ -145,13 +137,12 @@ class DeleteUserAccountUseCaseTest {
     }
 
     @Test
-    fun `cancellation arriving after deleteAccount returns still runs unclaimAll and both clears`() = runTest {
+    fun `cancellation arriving after deleteAccount returns still runs unclaimAll and the backup clear`() = runTest {
         val userId = "uid-7"
         every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
         coEvery { authRepository.deleteAccount() } just Runs
         val unclaimGate = CompletableDeferred<Unit>()
         coEvery { claimLocalDataRepository.unclaimAll(userId) } coAnswers { unclaimGate.await() }
-        every { syncCursorStore.clear(userId) } just Runs
         every { backupMetadataStore.clear(userId) } just Runs
 
         val job = launch { useCase() }
@@ -160,14 +151,12 @@ class DeleteUserAccountUseCaseTest {
         job.cancel()
         testScheduler.advanceUntilIdle()
 
-        verify(exactly = 0) { syncCursorStore.clear(userId) }
         verify(exactly = 0) { backupMetadataStore.clear(userId) }
 
         unclaimGate.complete(Unit)
         job.join()
 
         coVerify(exactly = 1) { claimLocalDataRepository.unclaimAll(userId) }
-        verify(exactly = 1) { syncCursorStore.clear(userId) }
         verify(exactly = 1) { backupMetadataStore.clear(userId) }
     }
 
@@ -178,14 +167,12 @@ class DeleteUserAccountUseCaseTest {
             flowOf(SessionStatus.Initializing, authenticated(userId))
         coEvery { authRepository.deleteAccount() } just Runs
         coEvery { claimLocalDataRepository.unclaimAll(userId) } just Runs
-        every { syncCursorStore.clear(userId) } just Runs
         every { backupMetadataStore.clear(userId) } just Runs
 
         useCase()
 
         coVerify(exactly = 1) { authRepository.deleteAccount() }
         coVerify(exactly = 1) { claimLocalDataRepository.unclaimAll(userId) }
-        verify(exactly = 1) { syncCursorStore.clear(userId) }
         verify(exactly = 1) { backupMetadataStore.clear(userId) }
     }
 
@@ -195,7 +182,6 @@ class DeleteUserAccountUseCaseTest {
         every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
         coEvery { authRepository.deleteAccount() } just Runs
         coEvery { claimLocalDataRepository.unclaimAll(userId) } just Runs
-        every { syncCursorStore.clear(userId) } just Runs
         every { backupMetadataStore.clear(userId) } just Runs
 
         val syncGate = CompletableDeferred<Unit>()
@@ -234,19 +220,17 @@ class DeleteUserAccountUseCaseTest {
     }
 
     @Test
-    fun `a remote delete slower than the lock timeout still runs unclaim and both clears`() = runTest {
+    fun `a remote delete slower than the lock timeout still runs unclaim and the backup clear`() = runTest {
         val userId = "uid-9"
         every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
         coEvery { authRepository.deleteAccount() } coAnswers { delay(10.minutes) }
         coEvery { claimLocalDataRepository.unclaimAll(userId) } just Runs
-        every { syncCursorStore.clear(userId) } just Runs
         every { backupMetadataStore.clear(userId) } just Runs
 
         useCase()
 
         coVerify(exactly = 1) { authRepository.deleteAccount() }
         coVerify(exactly = 1) { claimLocalDataRepository.unclaimAll(userId) }
-        verify(exactly = 1) { syncCursorStore.clear(userId) }
         verify(exactly = 1) { backupMetadataStore.clear(userId) }
     }
 
@@ -258,7 +242,6 @@ class DeleteUserAccountUseCaseTest {
 
         coVerify(exactly = 0) { authRepository.deleteAccount() }
         coVerify(exactly = 0) { claimLocalDataRepository.unclaimAll(any()) }
-        verify(exactly = 0) { syncCursorStore.clear(any()) }
         verify(exactly = 0) { backupMetadataStore.clear(any()) }
 
         assertTrue(syncMutex.withLock { true }, "The shared SyncMutex must be free again")

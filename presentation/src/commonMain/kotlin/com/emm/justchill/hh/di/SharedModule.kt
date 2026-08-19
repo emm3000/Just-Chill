@@ -16,9 +16,9 @@ val sharedModule = module {
     // injected graph: no use case and no ViewModel defaults either one any more, so every
     // "what day/month is it" in :domain and :presentation is answered from here. Koin does not
     // apply Kotlin default params, so that was already true in production — deleting the defaults
-    // is what makes it true for a hand-written caller too. One production read in this module still
-    // bypasses the graph — SyncOrchestrator's lastSyncedAt stamp — and :ui-android has four more by
-    // design. #7 names every one of them and says which are deliberate; do not infer from this
+    // is what makes it true for a hand-written caller too. :ui-android has four production-code
+    // LINES (three deliberate reads; DatePickerSheet accounts for two lines) that bypass the graph
+    // by design. #7 names every one of them and says which are deliberate; do not infer from this
     // comment that the rest of the app never reads the machine.
     // FQN avoids an ImportOrdering detekt violation (mirrors HomeViewModel).
     factory { kotlinx.datetime.TimeZone.currentSystemDefault() }

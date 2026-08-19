@@ -2,17 +2,14 @@ package com.emm.justchill.core
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
-import com.emm.domain.auth.ClaimLocalDataOnAuthenticationUseCase
 import com.emm.domain.category.CategoryType
 import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupOrchestrator
-import com.emm.justchill.core.sync.SyncOrchestrator
 import com.emm.justchill.hh.category.AddCategoryViewModel
 import com.emm.justchill.hh.recurring.AddEditRecurringMovementViewModel
 import com.emm.justchill.hh.transaction.EditTransactionViewModel
 import com.russhwolf.settings.SettingsInitializer
 import io.mockk.mockk
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -46,10 +43,10 @@ import kotlin.time.Instant
  * navigates to the affected screen. This test closes that gap by building the real graph against
  * [testPlatformModule] and resolving EVERY definition it contains.
  *
- * Deliberately NOT *called*: `bootstrapAppGraph` itself, because that would start the orchestrators'
- * collectors and the Android `resumeEvents()` / `backgroundEvents()` actuals need
- * `ProcessLifecycleOwner` — an Android runtime this host test does not have. Its four resolutions
- * are covered instead by [every single bootstrapAppGraph resolves is bound], which resolves them
+ * Deliberately NOT *called*: `bootstrapAppGraph` itself, because that would start the orchestrator's
+ * collector and the Android `resumeEvents()` / `backgroundEvents()` actuals need
+ * `ProcessLifecycleOwner` — an Android runtime this host test does not have. Its resolution
+ * is covered instead by [every single bootstrapAppGraph resolves is bound], which resolves it
  * the way it does. Resolving is safe because both lifecycle actuals are `callbackFlow` builders:
  * nothing touches `ProcessLifecycleOwner` until something collects.
  *
@@ -74,8 +71,8 @@ class AppGraphKoinTest {
         // settings' no-arg Settings(), whose Android implementation takes its Context from an
         // androidx.startup Initializer that only runs inside a real app. SettingsInitializer.create
         // is the library's documented hook for supplying that Context from tests; without it the
-        // SupabaseClient single cannot be created and 22 of the 105 bindings (all of auth and sync)
-        // would be untestable. A relaxed mock is enough — nothing here reads or writes preferences.
+        // SupabaseClient single cannot be created and every auth binding would be untestable.
+        // A relaxed mock is enough — nothing here reads or writes preferences.
         SettingsInitializer().create(mockk<Context>(relaxed = true))
 
         // Every ViewModel creates a viewModelScope on Dispatchers.Main at construction. Standard
@@ -114,8 +111,7 @@ class AppGraphKoinTest {
                 failures.joinToString("\n") { "  - $it" },
         )
         // Floor guard: if the registry sweep ever stops seeing definitions (a Koin internals change,
-        // an empty module list) the loop above would pass vacuously. The graph currently exposes
-        // ~97 (type, qualifier) pairs, so anything below 80 means the sweep itself broke.
+        // an empty module list) the loop above would pass vacuously.
         assertTrue(
             boundTypes.size >= MIN_EXPECTED_BINDINGS,
             "Only ${boundTypes.size} bindings were discovered; the registry sweep looks broken.",
@@ -152,22 +148,19 @@ class AppGraphKoinTest {
     }
 
     /**
-     * The four definitions `bootstrapAppGraph` resolves BY TYPE, resolved exactly the way it does.
+     * The one definition `bootstrapAppGraph` resolves BY TYPE, resolved exactly the way it does.
      *
      * The sweep above proves every *bound* definition resolves. It cannot notice one that was never
      * bound at all — there is nothing in the registry to iterate over — and `bootstrapAppGraph` is
-     * precisely where that gap bites: both orchestrators are resolved behind kill switches that are
-     * off today, so deleting either binding would compile, keep this whole suite green, and crash
-     * on the day the flag flips. Naming the four here is what turns a deleted binding red now.
+     * precisely where that gap bites: the orchestrator is resolved behind a kill switch that is
+     * off today, so deleting its binding would compile, keep this whole suite green, and crash
+     * on the day the flag flips. Naming it here is what turns a deleted binding red now.
      *
      * No assertion body on purpose: a missing or unresolvable definition throws out of `get`, which
      * is the failure this test exists to produce.
      */
     @Test
     fun `every single bootstrapAppGraph resolves is bound`() {
-        koin.get<CoroutineScope>(appScopeQualifier)
-        koin.get<ClaimLocalDataOnAuthenticationUseCase>()
-        koin.get<SyncOrchestrator>()
         koin.get<BackupOrchestrator>()
     }
 

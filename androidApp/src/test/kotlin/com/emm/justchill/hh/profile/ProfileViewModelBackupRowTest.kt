@@ -20,8 +20,6 @@ import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupEvent
 import com.emm.justchill.core.backup.BackupHealth
-import com.emm.justchill.core.sync.SyncController
-import com.emm.justchill.core.sync.SyncStatus
 import com.emm.justchill.hh.shared.toMetaText
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -57,9 +55,6 @@ class ProfileViewModelBackupRowTest {
     private val importData = mockk<ImportDataUseCase>(relaxed = true)
     private val signOut = mockk<SignOutUseCase>(relaxed = true)
     private val deleteUserAccount = mockk<DeleteUserAccountUseCase>(relaxed = true)
-    private val syncController = mockk<SyncController>(relaxed = true) {
-        every { status } returns MutableStateFlow(SyncStatus())
-    }
 
     private val backingUpFlow = MutableStateFlow(false)
     private val backupEvents = MutableSharedFlow<BackupEvent>(extraBufferCapacity = 4)
@@ -95,7 +90,6 @@ class ProfileViewModelBackupRowTest {
             importData = importData,
             signOut = signOut,
             deleteUserAccount = deleteUserAccount,
-            syncController = syncController,
             backupController = backupController,
             backupVerifier = backupVerifier,
             getBackupStaleness = getBackupStaleness,

@@ -38,7 +38,7 @@ kotlin {
             api(project(":presentation"))
             implementation(project(":domain"))
             // :data is reached directly so the Koin wiring that binds its impls
-            // (supabaseModule/syncModule/authModule/dataModule) exists in one place. ViewModel purity
+            // (supabaseModule/authModule/dataModule) exists in one place. ViewModel purity
             // (VMs take :domain interfaces, never SQLDelight/Default* types) is a CONVENTION, not a
             // module boundary. :data api-exposes the Supabase client SDK, inherited here.
             implementation(projects.data)

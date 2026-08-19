@@ -42,7 +42,7 @@ private val iosPlatformModule = module {
 
     single<Settings> { NSUserDefaultsSettings(NSUserDefaults.standardUserDefaults) }
 
-    // Sync observability sink. Android reports to Crashlytics; iOS has no crash-reporting SDK
+    // Diagnostics observability sink. Android reports to Crashlytics; iOS has no crash-reporting SDK
     // wired (ADR 003), so the console is the whole sink here.
     single<DiagnosticsLogger> { PrintlnDiagnosticsLogger() }
 

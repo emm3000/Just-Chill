@@ -21,7 +21,7 @@ import org.koin.dsl.onClose
  * `appModules(platformModule)` is parameterized by.
  *
  * It supplies the SAME binding set the two real platform modules do, so the rest of the graph
- * (every feature module plus the supabase/sync/auth/data/commonCore wiring) can be built and
+ * (every feature module plus the supabase/auth/data/commonCore wiring) can be built and
  * resolved off-device by [AppGraphKoinTest]. Construction is REAL wherever that is cheap — a real
  * SQLDelight schema on an in-memory JDBC driver, a real Settings store, a real Supabase client —
  * because the whole point is proving the production graph actually wires up, not that mocks do.

@@ -3,7 +3,6 @@ package com.emm.justchill.hh.di
 import com.emm.data.auth.DefaultAuthRepository
 import com.emm.data.auth.DefaultClaimLocalDataRepository
 import com.emm.domain.auth.AuthRepository
-import com.emm.domain.auth.ClaimLocalDataOnAuthenticationUseCase
 import com.emm.domain.auth.ClaimLocalDataRepository
 import com.emm.domain.auth.ClaimLocalDataUseCase
 import com.emm.domain.auth.DeleteUserAccountUseCase
@@ -37,7 +36,6 @@ val authModule = module {
     factoryOf(::SignUpUseCase)
     factoryOf(::SignOutUseCase)
     factoryOf(::ObserveSessionUseCase)
-    factoryOf(::ClaimLocalDataOnAuthenticationUseCase)
     factoryOf(::DeleteUserAccountUseCase)
 
     viewModel {

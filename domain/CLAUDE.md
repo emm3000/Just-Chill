@@ -38,8 +38,9 @@ The app is local-first; sync is **backup-only, one device at a time** (ADR 006).
 engine below is scheduled for deletion (`docs/work/epics/E01-snapshot-backup.md`): auth ports live in
 `auth/` (`AuthRepository`, `ObserveSessionUseCase`, `SessionStatus`, claim use cases) and sync ports
 in `sync/` (`SyncRepository`, `SyncCursorStore`, `SyncDataUseCase`, `ConflictResolver` — pure LWW).
-Supabase implementations live in `:data`; the `SyncCursorStore` adapter lives in `:presentation`
-(`core/sync/DefaultSyncCursorStore.kt`). See `docs/adr/001` / `docs/adr/006` / `docs/adr/009`.
+Supabase implementations live in `:data`; `SyncCursorStore` has zero implementers anywhere until
+wave C of `E01-snapshot-backup.md` deletes the port itself. See `docs/adr/001` / `docs/adr/006` /
+`docs/adr/009`.
 
 ## Testing
 

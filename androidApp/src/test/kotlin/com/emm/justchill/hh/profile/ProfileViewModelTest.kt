@@ -20,8 +20,6 @@ import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupEvent
 import com.emm.justchill.core.backup.BackupHealth
-import com.emm.justchill.core.sync.SyncController
-import com.emm.justchill.core.sync.SyncStatus
 import com.emm.justchill.hh.shared.toText
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -57,9 +55,6 @@ class ProfileViewModelTest {
     private val importData = mockk<ImportDataUseCase>(relaxed = true)
     private val signOut = mockk<SignOutUseCase>(relaxed = true)
     private val deleteUserAccount = mockk<DeleteUserAccountUseCase>(relaxed = true)
-    private val syncController = mockk<SyncController>(relaxed = true) {
-        every { status } returns MutableStateFlow(SyncStatus())
-    }
 
     private val backingUpFlow = MutableStateFlow(false)
     private val backupEvents = MutableSharedFlow<BackupEvent>(extraBufferCapacity = 4)
@@ -99,7 +94,6 @@ class ProfileViewModelTest {
             importData = importData,
             signOut = signOut,
             deleteUserAccount = deleteUserAccount,
-            syncController = syncController,
             backupController = backupController,
             backupVerifier = backupVerifier,
             getBackupStaleness = getBackupStaleness,
@@ -425,52 +419,6 @@ class ProfileViewModelTest {
 
             job.cancel()
         }
-
-    @Test
-    fun `lastSyncFailed=true from orchestrator maps to SyncRowUi-Failed`() = runTest(testDispatcher) {
-        val statusFlow = MutableStateFlow(SyncStatus())
-        every { syncController.status } returns statusFlow
-
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        statusFlow.value = SyncStatus(isSyncing = false, lastSyncFailed = true)
-        advanceUntilIdle()
-
-        assertIs<SyncRowUi.Failed>(vm.state.value.syncRow)
-    }
-
-    @Test
-    fun `SyncRowUi-Failed resets to Idle when orchestrator emits successful status`() = runTest(testDispatcher) {
-        val statusFlow = MutableStateFlow(SyncStatus(lastSyncFailed = true))
-        every { syncController.status } returns statusFlow
-
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        assertIs<SyncRowUi.Failed>(vm.state.value.syncRow)
-
-        statusFlow.value = SyncStatus(isSyncing = false, lastSyncedAtMillis = 1_000L, lastSyncFailed = false)
-        advanceUntilIdle()
-
-        val row = vm.state.value.syncRow
-        assertIs<SyncRowUi.Idle>(row)
-        assertEquals(1_000L, row.lastSyncedAtMillis)
-    }
-
-    @Test
-    fun `isSyncing=true wins over lastSyncFailed=true producing SyncRowUi-Syncing`() = runTest(testDispatcher) {
-        val statusFlow = MutableStateFlow(SyncStatus())
-        every { syncController.status } returns statusFlow
-
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        statusFlow.value = SyncStatus(isSyncing = true, lastSyncFailed = true)
-        advanceUntilIdle()
-
-        assertIs<SyncRowUi.Syncing>(vm.state.value.syncRow)
-    }
 
     private suspend fun signIn() {
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid-backup", email = "a@b.com")))

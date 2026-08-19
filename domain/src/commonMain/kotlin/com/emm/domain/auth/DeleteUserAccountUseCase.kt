@@ -3,7 +3,6 @@ package com.emm.domain.auth
 import com.emm.domain.shared.backup.BackupMetadataStore
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.logging.DiagnosticsLogger
-import com.emm.domain.sync.SyncCursorStore
 import com.emm.domain.sync.SyncMutex
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -16,7 +15,6 @@ import kotlin.time.Duration.Companion.seconds
 class DeleteUserAccountUseCase(
     private val authRepository: AuthRepository,
     private val claimLocalDataRepository: ClaimLocalDataRepository,
-    private val syncCursorStore: SyncCursorStore,
     private val backupMetadataStore: BackupMetadataStore,
     private val syncMutex: SyncMutex,
     private val logger: DiagnosticsLogger,
@@ -30,8 +28,6 @@ class DeleteUserAccountUseCase(
         // must not leave local rows tagged with a userId that no longer exists server-side.
         withContext(NonCancellable) {
             withStepLogging("unclaim") { claimLocalDataRepository.unclaimAll(userId) }
-
-            withStepLogging("cursor clear") { syncCursorStore.clear(userId) }
 
             withStepLogging("backup metadata clear") { backupMetadataStore.clear(userId) }
         }

@@ -51,10 +51,9 @@ crossed modules. ViewModels cannot touch Compose; conventions around it (ViewMod
 `:presentation` depends on `:data`) are in `presentation/CLAUDE.md`.
 
 The app is **local-first**: SQLDelight on-device is the single source of truth, fully usable with no
-account and no network. **Sync is OFF in production** (`SYNC_TEMPORARILY_DISABLED`,
-`core/sync/SyncKillSwitch.kt`) and is **being removed, not repaired**: ADR 009 replaces row
-replication with **snapshot backup** and deletes the engine while keeping the sync schema. **Read
-`docs/work/epics/E01-snapshot-backup.md` before touching `data/.../sync/` or `presentation/.../core/sync/`.**
+account and no network. **Sync is being removed, not repaired**: ADR 009 replaces row replication
+with **snapshot backup** and deletes the engine while keeping the sync schema. **Read
+`docs/work/epics/E01-snapshot-backup.md` before touching `data/.../sync/`.**
 
 **Data flow:** `Screen` → `ViewModel` → use case → `Repository` interface → `Default{Entity}Repository` → `LocalDataSource` (SQLDelight). The use case is there **only where there is domain logic** — a pure read goes from `ViewModel` straight to the `Repository` interface. Rationale + the measurement: `docs/CODE_QUALITY.md`.
 

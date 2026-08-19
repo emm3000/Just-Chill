@@ -9,8 +9,7 @@
 > **Última actualización**: 2026-08-14. No se anota el hash de trunk acá: el commit que lo
 > escribe ya lo deja viejo, igual que pasó con el conteo de commits.
 >
-> **El sync está APAGADO en producción desde el 2026-08-12.** Kill switch
-> `SYNC_TEMPORARILY_DISABLED` en `presentation/.../core/sync/SyncKillSwitch.kt`. El único doc vivo
+> **El sync se está eliminando, no reparando, desde el 2026-08-12.** El único doc vivo
 > de sync es [`docs/work/epics/E01-snapshot-backup.md`](work/epics/E01-snapshot-backup.md) — leelo
 > antes de tocar cualquier cosa de sync. El forense completo —causa raíz del loop, el borrado de
 > cuenta que nunca salió del teléfono— es historia y vive en
@@ -295,8 +294,7 @@ gana el ADR.
   la lleva ADR 009 Decision 9, para cuando algún día se reabra sync.
 - [ ] Arreglar los hallazgos vivos que sobreviven al backup-only: cursor único para cuatro tablas,
   push sin batching (con un punto **sin verificar** sobre el timeout), livelock de
-  `MAX_PULL_PAGES`, pérdida silenciosa por fecha fuera de rango, tres carreras en
-  `SyncOrchestrator`, iOS sin collector de `_events`. AUDIT §5.
+  `MAX_PULL_PAGES`, pérdida silenciosa por fecha fuera de rango. AUDIT §5.
 - [ ] Cero tests de push, tres tests tautológicos, y hacer escribible el test que lo habría
   cachado. AUDIT §5 (Tests).
 - [ ] Limpieza de tenants, **no ejecutada**: limpiar los dos y volver a subir desde el device.
@@ -526,9 +524,6 @@ gana el ADR.
   tombstones fija el comportamiento actual, no el vínculo. La salida que preservaba la capa era un
   `allForExport()` síncrono por data source; se eligió no meterlo. Riesgo bajo, pero el doc de módulo
   afirma hoy algo que dejó de ser cierto.
-- [ ] `SyncOrchestrator` no tiene trigger de reconexión: si un sync falla offline y vuelve la red sin
-  escrituras nuevas, no reintenta hasta el próximo `ON_RESUME`. No hay pérdida de data — local-first
-  se auto-cura — solo latencia.
 - [ ] Pasada de performance de Compose: `derivedStateOf`, lambdas recordadas, `contentType` en
   `LazyColumn`.
 - [x] **`BuildInfoConventionPlugin` ya no depende del orden del bloque `plugins { }`.**
@@ -626,11 +621,6 @@ que después se revirtieron.
 
 ## Track: local-first sync (APAGADO — en rediseño desde el 2026-08-12)
 
-**Apagado en producción** por el kill switch `SYNC_TEMPORARILY_DISABLED` (`SyncKillSwitch.kt`), con
-dos gates: `bootstrapAppGraph` en `AppGraph.kt` no llama a `SyncOrchestrator.start()`, y
-`ProfileViewModel.syncNow()` corta el path manual antes de encolar nada. No se borró nada — todo
-binding, test y clase del motor sigue cableado.
-
 Por qué: el push descartaba toda fila con un `userId` viejo mientras `countPending` las seguía
 contando, así que el trigger de escrituras debounceadas re-disparaba cada pocos segundos para
 siempre, y los ciclos que sí llegaban a Supabase escribían filas cruzadas entre tenants.
@@ -717,14 +707,12 @@ Residuo aceptado a conciencia: si dos devices editan la misma fila antes de sinc
 de cliente sigue desempatando y un device desfasado gana esa carrera. Ahí el costo sí es una sola
 edición pisada — el riesgo que ADR 001 aceptó sabiendo lo que aceptaba.
 
-Cuatro afirmaciones de la auditoría **no sobrevivieron a la verificación** — cotejar
+Tres afirmaciones de la auditoría **no sobrevivieron a la verificación** — cotejar
 contra el código antes de actuar sobre las que quedan:
 
 - **A7** "Borrar cuenta dice 'Delete or move them first' y mover no existe": falso. Mover sí existe
   — `EditTransaction.kt` tiene `AccountPickerSheet` y `TransactionUpdate` lleva `accountId`. El
   único defecto real era el inglés, y se cerró con A5.
-- "Importar deja las filas sin reclamar y mata el sync": falso. `observeUnclaimedCount()`
-  es un flow reactivo de SQLDelight; el claim corre solo.
 - "Después de importar no se dispara sync": falso. El trigger (c) del orquestador observa
   el pending-count con debounce de 3s.
 - "Borrar categoría es irreversible **y sin advertencia**": el diálogo ya existía. Lo que

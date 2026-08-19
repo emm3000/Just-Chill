@@ -23,8 +23,6 @@ import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.domain.sync.SyncMutex
 import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.backup.BackupOrchestrator
-import com.emm.justchill.core.sync.SyncController
-import com.emm.justchill.core.sync.SyncStatus
 import com.emm.justchill.hh.shared.toText
 import io.mockk.coEvery
 import io.mockk.every
@@ -75,9 +73,6 @@ class ProfileViewModelBackupFailureTest {
     private val backgroundFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
     private val resumeFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
 
-    private val syncController = mockk<SyncController>(relaxed = true) {
-        every { status } returns MutableStateFlow(SyncStatus())
-    }
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns flowOf(emptyList())
     }
@@ -243,7 +238,6 @@ class ProfileViewModelBackupFailureTest {
         importData = mockk<ImportDataUseCase>(relaxed = true),
         signOut = mockk<SignOutUseCase>(relaxed = true),
         deleteUserAccount = mockk<DeleteUserAccountUseCase>(relaxed = true),
-        syncController = syncController,
         backupController = orchestrator,
         backupVerifier = mockk<BackupVerifier>(relaxed = true),
         getBackupStaleness = mockk<GetBackupStalenessUseCase>(relaxed = true),

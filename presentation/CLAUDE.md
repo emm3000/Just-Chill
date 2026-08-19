@@ -1,7 +1,7 @@
 # :presentation — CLAUDE.md
 
 The compose-free presentation layer: MVI core, every feature's ViewModel/UiState/Intent/Effect, the
-Koin DI modules, formatters, `UiStrings` and the sync/preferences ports. Both UIs sit on it —
+Koin DI modules, formatters, `UiStrings` and the preferences ports. Both UIs sit on it —
 `:ui-android` (Android Compose) as a Gradle dependency, the SwiftUI iOS app through the
 **JustChillKit** framework this module declares (static, SKIE-processed, exports `:domain` +
 `:data`).
@@ -31,7 +31,7 @@ declaration becomes a lie.
 ## Where things live
 
 `commonMain/core/` holds `AppGraph` (`appModules`/`bootstrapAppGraph`), `mvi/`, `error/`, `format/`,
-`preferences/`, `sync/` and `DispatchersProvider`. A feature owns `hh/<feature>/` (ViewModel +
+`preferences/`, `backup/` and `DispatchersProvider`. A feature owns `hh/<feature>/` (ViewModel +
 UiState + Intent + Effect + `toUi` mappers) and one Koin module in `hh/di/`; pure helpers and
 `UiStrings` sit in `hh/shared/`.
 

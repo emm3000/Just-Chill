@@ -197,9 +197,9 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
   sources and the dev-flavor `androidApp/src/dev/.../experiences/` playground are outside it and
   read the clock freely; the playground is not part of the product.
 
-  This command regenerates the list, and its output **is** the list — currently eight lines: the two
-  `SharedModule` factories, `SyncOrchestrator`, and the five `:ui-android` lines making up the four
-  deliberate entries below (`DatePickerSheet` accounts for two of them).
+  This command regenerates the list, and its output **is** the list — currently six lines: the two
+  `SharedModule` factories and the four `:ui-android` lines making up the three deliberate entries
+  below (`DatePickerSheet` accounts for two of them).
 
   ```
   rg -n --type kotlin \
@@ -215,14 +215,12 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
   `ProfileModule` — prose *about* ambient reads, not ambient reads). It is a heuristic, not a
   parser: a trailing comment on a code line would still show up. And an earlier revision of this
   file published a looser version of this command while calling it authoritative; run verbatim it
-  returned sixteen lines for an eight-line list. Skim the output; do not paste the count anywhere.
+  returned sixteen lines for a six-line list. Skim the output; do not paste the count anywhere.
 
   Deliberate, all in `:ui-android`, none with a value that outlives the screen:
 
   - `DatePickerSheet` — the calendar's "today" and the zone it dims future days in. A composable
     with no ViewModel behind it; the day it picks is passed down as a value, not read back.
-  - `ProfileScreen`'s last-sync stamp — renders a real past instant and is *supposed* to move with
-    the device.
   - `SeeTransactionsScreen`'s `@Preview` helper — never runs in the app.
   - `PlatformHostActions.suggestedExportFilename` — `justchill-backup-YYYY-MM-DD.json`, the name the
     SAF picker pre-fills. **The date the user is standing in is the correct answer here**, and the
@@ -232,15 +230,6 @@ Status legend: `[x]` closed · `[~]` partially closed · `[ ]` open.
     device zone and agree, but they are two reads, not one, and only the payload's is pinned by a
     test. This module does have `koin-compose`, so the honest reason not to inject is that it would
     buy no assertion, not that it cannot be done.
-
-  Not deliberate — one read, `SyncOrchestrator.runSync`, which stamps `lastSyncedAt`. **It is not a
-  date defect.** It resolves no calendar day and consults no timezone, so nothing in this finding
-  applies to it: it is an instant, and it is rendered as one. What it is, is injection debt — a
-  writer that could take a `Clock` and does not, so no test can pin the value it records. Listed
-  here because it is the last ambient read outside `:ui-android`, not because it is a timezone bug.
-  Do not "fix" it as one.
-
-  `DefaultBackupRepository.importFromJson` used to be on that second list. It is gone — see #6.
 
 - [x] **8. A "last 90 days" window measured in fixed milliseconds.** `now - days * 24h` is a
   duration, not a number of days; it drifts by an hour across a DST change and starts mid-morning
