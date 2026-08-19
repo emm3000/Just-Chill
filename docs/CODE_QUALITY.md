@@ -239,13 +239,12 @@ decomposition happens two ways here, both counting:
 **A use case exists where there is domain logic. A pure read may go from ViewModel to repository.**
 The measurement behind that rule:
 
-- **8 ViewModels** in `:presentation` already inject `:domain` repositories directly (measured at `92c6d2cb`; `RecurringMovementsViewModel` joined).
-- **5 of 35** use cases in `:domain` are pure delegation, counting strictly: one member whose whole body
-  is a single `repository.x(...)` call and nothing else (measured at `92c6d2cb`). `ObserveSessionUseCase`
-  (two bare delegations) makes it 6, `SyncDataUseCase` (mutex-wrapped delegation) makes it 7. The 5
-  strict survivors — `ClaimLocalDataUseCase`, `SignOutUseCase`, `DeleteCategoryUseCase`,
+- **8 ViewModels** in `:presentation` already inject `:domain` repositories directly (measured at `8019831d`; `RecurringMovementsViewModel` joined).
+- **4 of 33** use cases in `:domain` are pure delegation, counting strictly: one member whose whole body
+  is a single `repository.x(...)` call and nothing else (measured at `8019831d`). `ObserveSessionUseCase`
+  (two bare delegations) makes it 5. The 4 strict survivors — `SignOutUseCase`, `DeleteCategoryUseCase`,
   `DeleteTransactionUseCase`, `ImportDataUseCase` — are all WRITES, exactly what the rule predicts.
-- `FindTransactionUseCase`, `FindAccountUseCase` and `FindCategoryUseCase` were the three worst — eight-line classes renaming `repository.find` — and all three are now deleted (measured at `92c6d2cb`); `CategoryRepository.find` itself had gone dead and was deleted too.
+- `FindTransactionUseCase`, `FindAccountUseCase` and `FindCategoryUseCase` were the three worst — eight-line classes renaming `repository.find` — and all three are now deleted (measured at `8019831d`); `CategoryRepository.find` itself had gone dead and was deleted too.
 
 The leak stops at `:presentation`: `:ui-android` and `:androidApp` production code import no
 `:domain` repository (only `androidApp/src/test`, which mocks them).

@@ -268,7 +268,6 @@ Worth keeping in view, because these are the patterns the fixes above copied:
   the date code was moved to.
 - `RecurringDueRules.periodKey` — zero-padded so string order matches chronological order, and
   `parsePeriodKey` treats the stored value as untrusted because it arrives from other devices.
-- `ConflictResolver` — does not consult a clock where it does not need one, and says why.
 
 `DateAndTimeCombiner` used to be listed here — idempotent, well-documented, tested on both sides of
 UTC. It was all of that and it still could not be safe, because its job was to hold two
