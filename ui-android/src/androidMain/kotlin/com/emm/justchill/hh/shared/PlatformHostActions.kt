@@ -22,52 +22,22 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-// The host's platform seams. This was an expect/actual pair while the module still compiled for iOS;
-// the module is Android-only, so the two halves collapsed into this single declaration. Behavior is
-// unchanged: SAF CreateDocument for export (with success/failure snackbar), SAF OpenDocument for
-// import (feeds onImport), ACTION_SEND share chooser, and ACTION_MAIN/CATEGORY_APP_EMAIL with a
-// missing-app snackbar fallback.
-
-/**
- * Holder of the host actions + capability flags consumed by [AppNavHost] entries.
- *
- * The capability flags gate navigation / view-model calls that a platform may not be able to
- * complete. With Android as the only target they are all constant — the seam survives because the
- * entries read it, not because it still varies. Collapsing it is a separate change.
- */
 @Stable
 interface PlatformHostActions {
-    /** Whether the debug-only Profile section is shown (Android debug build). */
     val isDebug: Boolean
-
-    /** Whether the "Continuar con Google" button is shown on the auth screen. */
     val showGoogleSignIn: Boolean
-
-    /** Whether the privacy-policy screen can be opened. */
     val supportsPrivacyPolicy: Boolean
-
-    /** Whether backup export/import is available (Android SAF). */
     val supportsBackup: Boolean
-
-    /** Shares plain text via the platform share sheet (Android chooser). */
     val onShareText: (String) -> Unit
-
-    /** Opens the platform email app (Android intent + missing-app snackbar). */
     val onOpenEmailApp: () -> Unit
-
-    /** Writes the backup [json] to a user-picked destination and reports success/failure (Android SAF). */
     val requestExport: (json: String) -> Unit
-
-    /** Opens the platform document picker and feeds the chosen file's contents to `onImport`. */
     val requestImport: () -> Unit
 }
 
 /**
- * Builds the [PlatformHostActions] for the app. Called once at the [AppNavHost] root so the SAF
- * launchers (which must be registered in composition) live above the [androidx.navigation3]
- * NavDisplay and survive entry recomposition.
- *
- * @param onImport invoked with the imported file contents.
+ * Call at the [AppNavHost] root, never inside an `entry<...> { }` body: the SAF launchers must be
+ * registered in a composition that outlives NavDisplay's entries, or a picker result arriving after
+ * its entry left composition is dropped.
  */
 @Composable
 fun rememberPlatformHostActions(
@@ -78,7 +48,6 @@ fun rememberPlatformHostActions(
     val context = LocalContext.current
     val currentOnImport by rememberUpdatedState(onImport)
 
-    // Holds the backup JSON produced by the VM until the SAF picker returns a destination.
     var pendingExportJson by remember { mutableStateOf<String?>(null) }
 
     val exportLauncher = rememberLauncherForActivityResult(
@@ -87,7 +56,6 @@ fun rememberPlatformHostActions(
         val json = pendingExportJson
         pendingExportJson = null
         if (uri != null && json != null) {
-            // Platform owns the SAF write; the VM only generated the JSON (commonMain, no IO).
             val ok = runCatching {
                 context.contentResolver.openOutputStream(uri)?.use { stream ->
                     stream.bufferedWriter().use { it.write(json) }
@@ -161,10 +129,6 @@ fun rememberPlatformHostActions(
     }
 }
 
-/**
- * The bottom-bar tab the back stack is rooted at (the "exit through home" base) and the route the
- * first-launch Manifesto gate lands on.
- */
 val startTab: BottomBarRoute = SeeTransactionRoute
 
 private fun suggestedExportFilename(): String {

@@ -17,8 +17,7 @@ import kotlin.jvm.JvmInline
  * a string that both sides had to spell the same way. A shared constant survived a rename but not a
  * retype: a fresh literal at either site compiled, passed the whole gate, and threw
  * `NoDefinitionFoundException` at launch. Koin resolves this by `KClass`, so there is no longer a
- * string either side can misspell. That is the whole of it — see `AppNavHost`'s injection site for
- * what this does NOT stop.
+ * string either side can misspell. That is the whole of it.
  *
  * ### Why it lives here, and in androidMain
  *

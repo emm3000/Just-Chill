@@ -47,65 +47,20 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.core.qualifier.named
 
-// Single Compose Multiplatform nav host for both Android and iOS. Merges the two former hosts
-// (androidApp Hh.kt + iosMain IosApp.kt) into one commonMain composable. The route keys, bottom bar
-// and ProfileMessage copy already live in commonMain; this slice unifies the
-// NavDisplay + entryProvider body too. The five capabilities that genuinely differ per platform
-// (backup export/import, share, open-email, privacy click + the start tab) sit behind expect/actual
-// (PlatformHostActions + startTab) — Android wires real intents, iOS no-ops, exactly as before.
-//
-// Both platforms now run on the JetBrains Compose Multiplatform navigation3-UI port (NavDisplay) over
-// Google's multiplatform navigation3-runtime (NavKey/NavBackStack). EmmTheme is applied here so each
-// entry point only calls AppNavHost().
-//
-// The fifteen entries themselves are NOT here: each feature owns its own
-// `EntryProviderScope<NavKey>.xxxEntries(...)` next to the screens it wires (hh/<feature>/
-// <Feature>Entries.kt). What is left is the host proper — theme, DI lookups, the first-launch gate,
-// the back stack, the two result channels, the snackbar host, the bottom bar and NavDisplay. Each
-// entries function builds its own in-scene AppNavigator inside its entry{} body;
-// see AppNavigator for why that call cannot be hoisted up to here.
-
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
     EmmTheme {
         val colors = LocalEmmColors.current
         val appPrefs: AppPreferences = koinInject()
         val appVersion: String = koinInject(named("appVersion"))
-        // Full sha the APK was built from; the profile footer shows the first 7 and copies all 40.
-        // androidPlatformModule (:androidApp) binds the CommitHash type this asks for.
-        //
-        // What the type buys is exactly one thing: there is no string left to misspell. It does NOT
-        // make the two sides agree — `koinInject<String>()` written here compiles green and crashes
-        // at launch, the same as the old hand-typed qualifier did. The mechanism stops a typo, not
-        // a rewrite. Nothing observes this line.
-        //
-        // Unwrapped at the DI boundary: everything downstream is footer plumbing that only needs
-        // the characters.
         val commitHash: String = koinInject<CommitHash>().value
 
-        // First-launch Manifesto gate: show the manifesto once, then land on startTab on every
-        // subsequent launch.
         val startRoute: NavKey = remember {
             if (appPrefs.firstLaunchSeen) startTab else ManifestoRoute()
         }
-        // 1-arg rememberNavBackStack: the Android-only overload, which persists the stack through
-        // NavKeySerializer and resolves each entry by JVM reflection. Google documents it as the path
-        // to take when you are on Android only and your keys are open-polymorphic (AppRoute is a
-        // NavKey interface), and this module IS Android-only since ADR 005 — iOS is native SwiftUI over
-        // :presentation. Slice F's explicit SavedStateConfiguration existed solely because one
-        // Compose Multiplatform host also drove Kotlin/Native, which has no reflective serializer
-        // discovery; that host is gone. Routes still have to be @Serializable — RouteSerializationTest
-        // enforces it against this very serializer.
         val backStack: NavBackStack<NavKey> = rememberNavBackStack(startRoute)
-        // Host-level navigator for the one call site that composes OUTSIDE NavDisplay: the bottom bar.
-        // Only its duplicate-key guard is live here — see AppNavigator. Every entry below builds its
-        // own, in-scene, where the transition guard works too.
         val hostNav: AppNavigator = rememberAppNavigator(backStack)
         var pendingCategory by remember { mutableStateOf<SelectableCategory?>(null) }
-        // Holds the JSON contents of an imported backup file until the user confirms the destructive
-        // replace. Hoisted to the host so the Android SAF import launcher (created in
-        // rememberPlatformHostActions, above NavDisplay) can feed it back; the Profile entry renders
-        // the confirmation dialog. Never set on iOS (requestImport no-ops there).
         var pendingImportJson by remember { mutableStateOf<String?>(null) }
         val snackbarHostState = remember { SnackbarHostState() }
         val rootScope = rememberCoroutineScope()

@@ -35,17 +35,8 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 
-// Shared bottom navigation bar for both nav hosts (Android Hh.kt + iOS IosApp.kt). The tab labels are
-// Spanish UI copy and are preserved verbatim.
-//
-// This bar composes in the Scaffold's bottomBar slot — OUTSIDE NavDisplay — so a lifecycle-based
-// transition guard cannot work here: `LocalLifecycleOwner` is the Activity's and stays RESUMED for the
-// whole of in-app navigation. The `dropUnlessResumed` wrappers that used to sit on these click
-// handlers were inert and are gone. Double taps are stopped instead by `AppNavigator.push`, which
-// refuses a route already on top and needs no lifecycle to do it.
-
 private data class BottomTab(
-    val route: BottomBarRoute?, // null = add pseudo-tab
+    val route: BottomBarRoute?,
     val label: String,
     val icon: ImageVector,
     val isAdd: Boolean = false,
