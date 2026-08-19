@@ -5,8 +5,6 @@ import com.emm.domain.report.CategoryAmount
 import com.emm.domain.shared.Money
 import com.emm.justchill.hh.shared.UiStrings
 
-// ── Mapping helpers ───────────────────────────────────────────────────
-
 internal fun buildShares(amounts: List<CategoryAmount>, total: Money): List<CategoryShare> {
     if (total.cents == 0L) return amounts.map { it.toCategoryShare(percentage = 0) }
     return amounts.map { item ->

@@ -462,6 +462,9 @@ gana el ADR.
   llaman `snackbarHostState.showSnackbar(effect.message)` pelado; `EmmSnackbarBody` castea a
   `EmmSnackbarVisuals` y cae a `Success` cuando el cast falla, así que un fallo muestra tilde verde.
   El arreglo son los call sites, no el átomo.
+- [ ] **`TRENDS_WINDOW_MONTHS = 6` está hardcodeado como texto en otro archivo.** `ReportShareFormatter.kt`
+  repite "6 meses previos" dos veces sin nada que lo ate a la constante en `ReportViewModel.kt`;
+  cambiar la constante deja el texto compartido mintiendo.
 - [x] **Crear una categoría desde un movimiento de Ingreso abre el formulario en Gasto.** Cerrado por
   schema, no por parche: la categoría de un movimiento ahora es **foreign key compuesta**
   `(categoryId, type) → categories(categoryId, categoryType)` en `transactions` y en

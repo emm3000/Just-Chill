@@ -18,13 +18,8 @@ import kotlinx.datetime.TimeZone
 import kotlin.math.abs
 import kotlin.time.Clock
 
-/** Window the Tendencias tab reads. Long enough to show a season, short enough to stay relevant. */
 private const val TRENDS_WINDOW_MONTHS = 6
-
-/** Under this many months holding movements the trend is noise, and the UI says so. */
 private const val MONTHS_FOR_A_MEANINGFUL_TREND = 3
-
-/** How many categories the "en qué se te va" card lists. */
 private const val TOP_EXPENSES_SHOWN = 3
 
 @Suppress("LongParameterList")
@@ -34,12 +29,6 @@ class ReportViewModel(
     private val getMonthlySectionStats: GetMonthlySectionStatsUseCase,
     private val getSavingsRate: GetSavingsRateUseCase,
     private val getTopCategories: GetTopCategoriesOverMonthsUseCase,
-    // Neither has a default, for the reason the two report use cases have none: an ambient default
-    // is a silent read of the machine. Koin's constructor DSL ignores Kotlin defaults anyway
-    // (see SharedModule), so a default here would only ever serve a hand-built instance.
-    // "Which month is it" is "what day is it" asked at a coarser grain, and a zone read off the
-    // device is one no test can move onto a month boundary — so nothing could prove which month
-    // Reporte opens on for a user sitting in another zone.
     private val clock: Clock,
     private val zone: TimeZone,
 ) : MviViewModel<ReportUiState, ReportIntent, ReportEffect>() {
@@ -48,18 +37,11 @@ class ReportViewModel(
         val opening = YearMonth.current(clock, zone)
         ReportUiState(
             month = opening,
-            // A second read of the same clock, not the same read — [isCurrent] asks again, and
-            // nothing here stops the two landing either side of midnight. Deriving it beats
-            // hardcoding `true`, which would be correct only by coincidence of the line above; and
-            // if the two reads ever did disagree the flag comes out false, which is the harmless
-            // direction: a spurious TodayPill offers a jump that is already a no-op, where a
-            // spurious `true` would hide the only one-tap way back.
             isCurrentMonth = isCurrent(opening),
             selectedType = TransactionType.Income,
         )
     }
 
-    // Latest-wins jobs: cancels the in-flight load before starting the new one.
     private var reportJob: Job? = null
     private var trendsJob: Job? = null
 
@@ -68,9 +50,6 @@ class ReportViewModel(
         reloadTrends()
     }
 
-    // Pure dispatch — exhaustiveness enforced by compiler via expression form. The four month
-    // intents differ only in which month they ask for, so they go straight to [showMonth] rather
-    // than through a handler each that would forward one expression.
     override fun onIntent(intent: ReportIntent) = when (intent) {
         ReportIntent.PreviousMonth -> showMonth(currentState.month.previous())
         ReportIntent.NextMonth -> showMonth(currentState.month.next())
@@ -80,8 +59,6 @@ class ReportViewModel(
         is ReportIntent.SelectTab -> onSelectTab(intent.tab)
         ReportIntent.ShareReport -> buildAndShareReport()
     }
-
-    // ── Intent handlers ───────────────────────────────────────────────────
 
     private fun onSelectType(type: TransactionType) {
         updateState { copy(selectedType = type) }
@@ -102,22 +79,8 @@ class ReportViewModel(
         reloadReport()
     }
 
-    /**
-     * Whether [month] is the one the user is living in right now, off the injected clock and zone.
-     *
-     * Called from every path that writes state, not only from a month move. The check this replaced
-     * lived in Compose, where recomposition re-evaluated it for free; a flag stored in state has to
-     * be re-derived deliberately or it goes stale — a session left open across midnight on the 1st
-     * would keep calling last month the current one, and `TodayPill`, the only one-tap way back,
-     * would stay suppressed.
-     *
-     * The honest limit: "every path that writes state" is not "continuously". A screen sitting idle
-     * with nothing loading does not notice a rollover until the next intent arrives. Reporte has no
-     * resume hook to hang a refresh on, and giving it one is a separate change.
-     */
+    /** No resume hook: an idle screen does not notice a midnight rollover until the next intent arrives. */
     private fun isCurrent(month: YearMonth): Boolean = month == YearMonth.current(clock, zone)
-
-    // ── Data loading (latest-wins) ────────────────────────────────────────
 
     private fun reloadReport() {
         reportJob?.cancel()
@@ -152,8 +115,6 @@ class ReportViewModel(
 
             updateState {
                 copy(
-                    // Re-read, not carried over: this load may be the first thing to happen after a
-                    // month rolled over under an open screen.
                     isCurrentMonth = isCurrent(month),
                     totalFormatted = formatSolesWithDecimals(total.cents),
                     comparisonText = comparisonText,
@@ -183,13 +144,9 @@ class ReportViewModel(
                 topN = TOP_EXPENSES_SHOWN,
             )
 
-            // Read per load, not per ViewModel: this may be the first thing to run after a month
-            // rolled over under an open screen. Feeds both the bars and the state flag below.
             val currentYm = YearMonth.current(clock, zone)
             val isEarlyState = savingsRate.monthsWithData < MONTHS_FOR_A_MEANINGFUL_TREND
 
-            // Magnitude only. Direction is `deltaIsPositive`, which the pill turns into a leading
-            // arrow icon — spelling it out here too rendered "↓ ↓ 10 pts".
             val deltaText = savingsRate.deltaPointsVsPrior?.let { delta -> "${abs(delta)} pts" }
             val deltaIsPositive = savingsRate.deltaPointsVsPrior?.let { it >= 0 }
 
@@ -231,8 +188,6 @@ class ReportViewModel(
             }
         }
     }
-
-    // ── Share ─────────────────────────────────────────────────────────────
 
     private fun buildAndShareReport() {
         val state = currentState
