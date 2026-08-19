@@ -88,10 +88,11 @@ la única verificación es la local.
 
 ### Bugs
 
-- [ ] Editar un movimiento de una categoría borrada lo re-archiva bajo otra sin que nadie lo elija:
-      `EditTransactionViewModel.resolveSelection` cae en `?: list.firstOrNull()` porque
-      `categories.sq:all` filtra `deletedAt IS NULL`, perdiendo el vínculo que `DeleteCategoryUseCase`
-      preserva a propósito. Preexistente, no lo introdujo el FK compuesto (ADR 008).
+- [ ] Cambiar el tipo de un movimiento le elige categoría sin que nadie lo pida:
+      `EditTransactionViewModel.resolveSelection` cae en `?: list.firstOrNull()`, así que el botón de
+      guardar se habilita con una categoría arbitraria. Su propio KDoc explica por qué no cae cuando
+      no hay categoría guardada, pero sí cae cuando hay una. El load inicial no tiene el defecto:
+      resuelve a null y deja el movimiento sin categoría, que es lo correcto.
 - [ ] La pantalla de Reportes se traga todos sus errores: `ReportViewModel` emite
       `ReportEffect.ShowError`, pero `ReportScreen` no recibe `SnackbarHostState` y la rama queda en
       `-> Unit`. Un fallo de carga o de compartir no le dice nada al usuario.
