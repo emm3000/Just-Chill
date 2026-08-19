@@ -40,13 +40,6 @@ import com.emm.justchill.hh.transaction.MAX_AMOUNT_DIGITS
 import com.emm.justchill.hh.transaction.centsToSoles
 import com.emm.justchill.hh.transaction.formatCentsForDisplay
 
-/**
- * Bottom sheet for entering a fixed amount via the cents-accumulation numpad.
- *
- * The keypad drives [onAmountChange] with the raw digits string; the caller owns all state.
- * No decimal key — intentional: the proven cents model is preserved.
- * Dismisses when the user taps "Listo" (only enabled when a non-zero amount is set).
- */
 @Composable
 fun AmountInputSheet(
     amountDigits: String,
@@ -67,7 +60,6 @@ fun AmountInputSheet(
         contentWindowInsets = { WindowInsets.navigationBars },
         dragHandle = { SheetDragHandle() },
     ) {
-        // Header row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -101,7 +93,6 @@ fun AmountInputSheet(
             }
         }
 
-        // Big centered amount
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -125,7 +116,6 @@ fun AmountInputSheet(
 
         Spacer(Modifier.height(16.dp))
 
-        // Numpad
         Numpad(
             modifier = Modifier
                 .fillMaxWidth()
@@ -145,7 +135,6 @@ fun AmountInputSheet(
 
         Spacer(Modifier.height(12.dp))
 
-        // Confirm button — enabled only when amount is non-zero
         val confirmEnabled = amountDigits.isNotEmpty() && amountDigits.toLongOrNull() != 0L
         val ctaBg = if (confirmEnabled) colors.accent else colors.surface1
         val ctaFg = if (confirmEnabled) colors.textOnAccent else colors.textTertiary

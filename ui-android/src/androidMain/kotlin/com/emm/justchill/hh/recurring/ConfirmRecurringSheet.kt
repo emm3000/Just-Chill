@@ -44,17 +44,7 @@ private const val DOUBLE_ZERO_MULTIPLIER = 100L
 private const val DIGIT_SHIFT = 10L
 
 /**
- * Bottom sheet to confirm a pending recurring movement.
- *
- * - Fixed amount: shows the amount read-only; "Confirmar" is always enabled.
- * - Variable amount: shows an editable Numpad-driven amount field;
- *   "Confirmar" is disabled while the entered amount is 0 (Scenario 5.1).
- *
- * Sheet dismissal on success is driven by the caller (via [HomeEffect.CloseConfirmSheet]).
- * [onDismiss] is only invoked when the user swipes down or taps outside (user-initiated).
- *
- * [onSkip] settles the period without booking anything. Periods are confirmed oldest-first, so a
- * month the user genuinely did not pay needs a way out or it blocks every month behind it.
+ * Confirming or skipping never dismisses: the caller closes the sheet once the operation succeeds.
  */
 @Composable
 fun ConfirmRecurringSheet(
@@ -66,9 +56,6 @@ fun ConfirmRecurringSheet(
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    // Cents accumulator — starts at the fixed amount (if any) or 0 for variable.
-    // Keyed by item.id (template + period) so the amount resets between items AND between two
-    // pending months of the same template.
     var amountCents by rememberSaveable(item.id) { mutableLongStateOf(item.fixedAmountCents ?: 0L) }
 
     val amountDouble = amountCents.toDouble() / 100.0
@@ -89,7 +76,6 @@ fun ConfirmRecurringSheet(
                 .fillMaxWidth()
                 .background(colors.bg),
         ) {
-            // ---- Header ----
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -167,7 +153,6 @@ fun ConfirmRecurringSheet(
 
             Spacer(Modifier.height(20.dp))
 
-            // ---- Amount display ----
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -183,7 +168,6 @@ fun ConfirmRecurringSheet(
 
             Spacer(Modifier.height(12.dp))
 
-            // ---- Numpad (only for variable amounts) ----
             if (item.isVariableAmount) {
                 Numpad(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
@@ -203,9 +187,6 @@ fun ConfirmRecurringSheet(
                 Spacer(Modifier.height(12.dp))
             }
 
-            // ---- CTA ----
-            // onDismiss() is NOT called here — the sheet stays open until the VM emits
-            // CloseConfirmSheet (success) so errors keep the sheet open with snackbar feedback.
             val confirmEnabled = amountCents > 0L
             StickyCTA(
                 label = "Confirmar",
@@ -220,10 +201,8 @@ fun ConfirmRecurringSheet(
 }
 
 /**
- * Escape hatch out of the oldest-first queue: marks the period settled with nothing booked.
- *
- * Deliberately plain text under the CTA, not a second button — it is the rare path, and giving it
- * equal weight would invite tapping it past a month that should have been recorded.
+ * Plain text under the CTA, never a second button: skipping discards a month with nothing
+ * booked, and equal visual weight would invite tapping past one that should have been recorded.
  */
 @Composable
 private fun SkipPeriodAction(periodLabel: String, onSkip: () -> Unit) {

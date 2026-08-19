@@ -44,13 +44,6 @@ private const val DAY_GRID_COLUMNS = 7
 private const val MIN_DAY = 1
 private const val MAX_DAY = 31
 
-/**
- * Bottom sheet for picking a day of month (1–31).
- *
- * Renders a 7-column grid. Selected day is highlighted with accent background.
- * A note below the grid explains that days 29–31 are clamped to the last day of the
- * month when needed — this mirrors [RecurringDueRules.effectiveDueDay] in the domain layer.
- */
 @Composable
 fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
@@ -64,7 +57,6 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
         contentWindowInsets = { WindowInsets.navigationBars },
         dragHandle = { SheetDragHandle() },
     ) {
-        // Header row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -98,7 +90,6 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
             }
         }
 
-        // Day grid: 7 columns, days 1..31
         DayGrid(
             selected = selected,
             onSelect = { selected = it },
@@ -107,7 +98,6 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
                 .padding(horizontal = 16.dp),
         )
 
-        // Note row explaining clamping behavior
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -132,7 +122,6 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
             )
         }
 
-        // Confirm button
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -221,7 +210,6 @@ private fun DayGrid(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier =
                         )
                     }
                 }
-                // Fill empty cells in the last row so columns align
                 val remainder = DAY_GRID_COLUMNS - rowDays.size
                 if (remainder > 0) {
                     repeat(remainder) {

@@ -14,10 +14,6 @@ import com.emm.justchill.hh.shared.RecurringMovementsRoute
 import com.emm.justchill.hh.shared.rememberAppNavigator
 import org.koin.compose.viewmodel.koinViewModel
 
-/**
- * Registers the recurring-movement entries on the host: [RecurringMovementsRoute] and
- * [AddEditRecurringMovementRoute].
- */
 fun EntryProviderScope<NavKey>.recurringEntries(bindings: NavHostBindings) {
     entry<RecurringMovementsRoute> {
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)

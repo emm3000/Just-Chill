@@ -110,7 +110,6 @@ fun RecurringMovementsScreen(
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(top = 4.dp, bottom = 12.dp),
             ) {
-                // Summary card — shown when at least one template exists
                 item {
                     RecurringSummaryCard(
                         entranFormatted = state.entranFormatted,
@@ -122,7 +121,6 @@ fun RecurringMovementsScreen(
                     )
                 }
 
-                // Active items — no section header
                 items(state.activeItems, key = { it.id }) { item ->
                     RecurringMovementRow(
                         item = item,
@@ -131,7 +129,6 @@ fun RecurringMovementsScreen(
                     )
                 }
 
-                // PAUSADOS section — only when there are paused items
                 if (state.pausedItems.isNotEmpty()) {
                     item {
                         Eyebrow(
@@ -167,8 +164,6 @@ fun RecurringMovementsScreen(
         )
     }
 }
-
-// ---- Summary card ----
 
 @Composable
 private fun RecurringSummaryCard(
@@ -237,8 +232,6 @@ private fun RecurringSummaryCard(
     }
 }
 
-// ---- Day badge ----
-
 @Composable
 private fun DayBadge(dayOfMonth: Int) {
     val colors = LocalEmmColors.current
@@ -271,8 +264,6 @@ private fun DayBadge(dayOfMonth: Int) {
     }
 }
 
-// ---- Row ----
-
 @Composable
 private fun RecurringMovementRow(
     item: RecurringMovementUi,
@@ -302,7 +293,6 @@ private fun RecurringMovementRow(
                     letterSpacing = (-0.15).sp,
                 )
                 Spacer(Modifier.height(2.dp))
-                // Metadata line: category dot + name + account, or account only when no category
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     item.categoryColor?.let { colorKey ->
                         val dotColor = remember(colorKey) { findById(colorKey).primary }
@@ -320,8 +310,6 @@ private fun RecurringMovementRow(
                             color = colors.textTertiary,
                         )
                     } ?: run {
-                        // No category: show account name only (spec R10.2).
-                        // accountName is effectively always present (accountId is NOT NULL in schema).
                         Text(
                             text = item.accountName,
                             fontSize = 12.sp,
@@ -332,7 +320,6 @@ private fun RecurringMovementRow(
                 }
             }
 
-            // Trailing: amount or "Variable", optional badge
             Column(horizontalAlignment = Alignment.End) {
                 if (item.isVariableAmount) {
                     Text(
@@ -364,8 +351,6 @@ private fun RecurringMovementRow(
         Hairline()
     }
 }
-
-// ---- Menu ----
 
 @Composable
 private fun RecurringRowMenu(onEdit: () -> Unit, onDelete: () -> Unit) {
@@ -451,8 +436,6 @@ private fun MenuIcon(icon: ImageVector) {
     )
 }
 
-// ---- Delete dialog ----
-
 @Composable
 private fun DeleteRecurringDialog(name: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
@@ -472,8 +455,6 @@ private fun DeleteRecurringDialog(name: String, onConfirm: () -> Unit, onDismiss
         },
     )
 }
-
-// ---- Add button ----
 
 @Composable
 private fun AddRecurringButton(onClick: () -> Unit) {
@@ -510,8 +491,6 @@ private fun AddRecurringButton(onClick: () -> Unit) {
     }
 }
 
-// ---- Empty state ----
-
 @Composable
 private fun RecurringEmptyState(onAdd: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
@@ -547,8 +526,6 @@ private fun RecurringEmptyState(onAdd: () -> Unit, modifier: Modifier = Modifier
         AddRecurringButton(onClick = onAdd)
     }
 }
-
-// ---- Preview ----
 
 @Preview
 @Composable

@@ -140,7 +140,6 @@ private fun AddEditRecurringMovementContent(
         ) {
             Spacer(Modifier.height(4.dp))
 
-            // 1. NOMBRE
             FormSection(eyebrow = "NOMBRE") {
                 NameInput(
                     value = state.name,
@@ -148,7 +147,6 @@ private fun AddEditRecurringMovementContent(
                 )
             }
 
-            // 2. TIPO — segmented toggle with leading glyph
             FormSection(eyebrow = "TIPO") {
                 TypeToggle(
                     selected = state.type,
@@ -156,7 +154,6 @@ private fun AddEditRecurringMovementContent(
                 )
             }
 
-            // 3. MONTO — tappable card + variable-amount toggle row
             FormSection(eyebrow = "MONTO") {
                 AmountCardSection(
                     amountDigits = state.amountDigits,
@@ -167,7 +164,6 @@ private fun AddEditRecurringMovementContent(
                 )
             }
 
-            // 4. ROW OF 3 COMPACT PILLS (CUENTA / CATEGORÍA / DÍA)
             SelectorPillsRow(
                 state = state,
                 onOpenAccount = { showAccountPicker = true },
@@ -175,13 +171,11 @@ private fun AddEditRecurringMovementContent(
                 onOpenDay = { showDaySheet = true },
             )
 
-            // 5. ACTIVO — card with subtitle + switch (success/green when on)
             ActiveCard(
                 isActive = state.isActive,
                 onToggle = { onIntent(AddEditRecurringMovementIntent.OnIsActiveChange(it)) },
             )
 
-            // 6. DESCRIPCIÓN · OPCIONAL
             FormSection(eyebrow = "DESCRIPCIÓN · OPCIONAL") {
                 NameInput(
                     value = state.description,
@@ -193,7 +187,6 @@ private fun AddEditRecurringMovementContent(
             Spacer(Modifier.height(8.dp))
         }
 
-        // 7. Sticky CTA
         val ctaLabel = if (state.isEdit) "Guardar cambios" else "Crear recurrente"
         StickyCTA(
             label = ctaLabel,
@@ -203,7 +196,6 @@ private fun AddEditRecurringMovementContent(
         )
     }
 
-    // Sheet: account picker
     if (showAccountPicker) {
         AccountPickerSheet(
             accounts = state.accounts,
@@ -216,7 +208,6 @@ private fun AddEditRecurringMovementContent(
         )
     }
 
-    // Sheet: category picker
     if (showCategoryPicker) {
         CategoryPickerSheet(
             categories = state.categories,
@@ -230,7 +221,6 @@ private fun AddEditRecurringMovementContent(
         )
     }
 
-    // Sheet: day-of-month grid
     if (showDaySheet) {
         DayOfMonthSheet(
             current = state.dayOfMonth,
@@ -242,7 +232,6 @@ private fun AddEditRecurringMovementContent(
         )
     }
 
-    // Sheet: amount numpad
     if (showAmountSheet) {
         AmountInputSheet(
             amountDigits = state.amountDigits,
@@ -253,10 +242,6 @@ private fun AddEditRecurringMovementContent(
     }
 }
 
-// ---------------------------------------------------------------------------
-// FormSection wrapper
-// ---------------------------------------------------------------------------
-
 @Composable
 private fun FormSection(eyebrow: String, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -264,10 +249,6 @@ private fun FormSection(eyebrow: String, content: @Composable () -> Unit) {
         content()
     }
 }
-
-// ---------------------------------------------------------------------------
-// NameInput (underline text field)
-// ---------------------------------------------------------------------------
 
 @Composable
 private fun NameInput(value: String, onValueChange: (String) -> Unit, placeholder: String = "Ej. Netflix") {
@@ -312,10 +293,6 @@ private fun NameInput(value: String, onValueChange: (String) -> Unit, placeholde
         },
     )
 }
-
-// ---------------------------------------------------------------------------
-// TypeToggle — segmented with leading glyph (+ Ingreso / − Gasto)
-// ---------------------------------------------------------------------------
 
 private val TYPE_OPTIONS = listOf(
     TransactionType.Income,
@@ -377,10 +354,6 @@ private fun TypeToggle(selected: TransactionType, onSelect: (TransactionType) ->
     }
 }
 
-// ---------------------------------------------------------------------------
-// AmountCardSection — tappable card that opens AmountInputSheet
-// ---------------------------------------------------------------------------
-
 @Composable
 private fun AmountCardSection(
     amountDigits: String,
@@ -394,7 +367,6 @@ private fun AmountCardSection(
     val tone = if (type == TransactionType.Income) AmountTone.Pos else AmountTone.Neg
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        // Amount card — tappable when not variable
         val cardInteraction = remember { MutableInteractionSource() }
         Box(
             modifier = Modifier
@@ -434,7 +406,6 @@ private fun AmountCardSection(
             }
         }
 
-        // Monto variable row
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -473,10 +444,6 @@ private fun AmountCardSection(
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// SelectorPill + SelectorPillsRow — compact 3-pill row (CUENTA/CATEGORÍA/DÍA)
-// ---------------------------------------------------------------------------
 
 @Composable
 private fun SelectorPill(
@@ -581,10 +548,6 @@ private fun SelectorPillsRow(
     }
 }
 
-// ---------------------------------------------------------------------------
-// ActiveCard — card with subtitle + success/green switch
-// ---------------------------------------------------------------------------
-
 @Composable
 private fun ActiveCard(isActive: Boolean, onToggle: (Boolean) -> Unit) {
     val colors = LocalEmmColors.current
@@ -627,10 +590,6 @@ private fun ActiveCard(isActive: Boolean, onToggle: (Boolean) -> Unit) {
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// Preview
-// ---------------------------------------------------------------------------
 
 @Preview
 @Composable
