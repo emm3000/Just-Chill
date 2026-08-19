@@ -1,10 +1,7 @@
 package com.emm.justchill.hh.di
 
 import com.emm.data.auth.DefaultAuthRepository
-import com.emm.data.auth.DefaultClaimLocalDataRepository
 import com.emm.domain.auth.AuthRepository
-import com.emm.domain.auth.ClaimLocalDataRepository
-import com.emm.domain.auth.ClaimLocalDataUseCase
 import com.emm.domain.auth.DeleteUserAccountUseCase
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.ResendConfirmationEmailUseCase
@@ -21,15 +18,12 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 // Single commonMain auth wiring (replaces :androidApp/hh/di/AuthModule.kt + KoinIos.kt's iosAuthModule).
-// DefaultAuthRepository takes SupabaseClient (supabaseModule); DefaultClaimLocalDataRepository takes
-// EmmDatabaseData (platform DB single). The Google sign-in launcher and the googleServerClientId string
-// are platform-provided (Android: ActivityGoogleSignInLauncher + BuildConfig; iOS: the no-op
-// UnavailableGoogleSignInLauncher + "").
+// DefaultAuthRepository takes SupabaseClient (supabaseModule). The Google sign-in launcher and the
+// googleServerClientId string are platform-provided (Android: ActivityGoogleSignInLauncher +
+// BuildConfig; iOS: the no-op UnavailableGoogleSignInLauncher + "").
 val authModule = module {
     factoryOf(::DefaultAuthRepository) { bind<AuthRepository>() }
-    factoryOf(::DefaultClaimLocalDataRepository) { bind<ClaimLocalDataRepository>() }
 
-    factoryOf(::ClaimLocalDataUseCase)
     factoryOf(::ResendConfirmationEmailUseCase)
     factoryOf(::SignInUseCase)
     factoryOf(::SignInWithGoogleUseCase)
