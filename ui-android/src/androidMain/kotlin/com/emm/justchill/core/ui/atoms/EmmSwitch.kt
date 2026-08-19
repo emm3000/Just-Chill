@@ -7,15 +7,9 @@ import androidx.compose.ui.graphics.Color
 import com.emm.justchill.core.theme.LocalEmmColors
 
 /**
- * Switch colors aligned with the EmmColors design system.
- *
- * Material3's default unchecked colors map the thumb and border to `colorScheme.outline`
- * (our near-invisible hairline `border`) over a `surface3` track of almost the same gray, so
- * an OFF switch has no usable contrast on a `surface1` card. This sets explicit unchecked
- * tokens — a `textTertiary` knob and outline over a `surface3` track — so the OFF state stays
- * visible while the ON state keeps its [checkedColor] tint.
- *
- * @param checkedColor accent used for the ON state (e.g. `accent` for amount, `success` for active).
+ * Material3's own unchecked colors land on this palette's `border` over `surface3` — two grays one
+ * hex step apart — so the OFF thumb and its outline disappear inside the track. The explicit
+ * unchecked tokens keep them visible.
  */
 @Composable
 fun emmSwitchColors(checkedColor: Color): SwitchColors {

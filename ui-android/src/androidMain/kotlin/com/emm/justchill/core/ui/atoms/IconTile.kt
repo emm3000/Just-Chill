@@ -22,17 +22,11 @@ enum class IconTileSize(val tileSize: Dp, val iconSize: Dp, val radius: Dp) {
 }
 
 enum class IconTileTone {
-    Neutral, // surface2 bg + textTertiary icon
-    Accent, // accentMuted bg + accent icon
-    Swatch, // custom color (pass via swatch param, alpha ~14% bg)
+    Neutral,
+    Accent,
+    Swatch,
 }
 
-/**
- * Rounded icon tile used for category icons in lists.
- *
- * @param swatch  Only used when [tone] is [IconTileTone.Swatch]. The icon is rendered
- *                in [swatch]; the background is [swatch] at ~14% opacity (0x24 alpha).
- */
 @Composable
 fun IconTile(
     icon: ImageVector,

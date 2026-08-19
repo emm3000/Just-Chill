@@ -16,17 +16,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.LocalEmmColors
 
-/** Opacity of a disabled button — enough to read the icon, not enough to invite a tap. */
 private const val DISABLED_ALPHA = 0.35f
 
 /**
- * 48dp square icon button with 1dp border and 12dp corner radius.
- *
- * Larger than the 44dp default to be comfortable on mobile (Material recommends 48dp min).
- *
- * [enabled] dims the button and drops the click. It stays laid out at full size when disabled:
- * the date picker's month chevrons use it, and a control that vanishes at the boundary would
- * shift the month label sideways every time the user reached the current month.
+ * Disabled dims the button without collapsing its box. `DatePickerSheet` flanks the month label
+ * with two of these in a `SpaceBetween` row, so hiding one at the boundary would shift the label.
  */
 @Composable
 fun IconBtn(

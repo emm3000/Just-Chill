@@ -8,10 +8,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
 
-/**
- * Eyebrow label — 10sp, w500, letter-spacing 0.16em, uppercase.
- * Default color: [EmmColors.textTertiary].
- */
 @Composable
 fun Eyebrow(text: String, modifier: Modifier = Modifier, color: Color? = null) {
     val colors = LocalEmmColors.current

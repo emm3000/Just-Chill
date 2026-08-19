@@ -12,10 +12,6 @@ import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 
-/**
- * Standard 32dp × 4dp drag handle pill used in bottom sheets.
- * Color: borderFocus (~hairline2 in design).
- */
 @Composable
 fun SheetDragHandle(modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current

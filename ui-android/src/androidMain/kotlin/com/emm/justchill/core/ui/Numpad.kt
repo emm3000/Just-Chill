@@ -25,27 +25,10 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.PlexMonoFontFamily
 
-/**
- * Reusable 3×4 custom numeric keypad for the Notion-dark design.
- *
- * Layout (left-to-right, top-to-bottom):
- *   1  2  3
- *   4  5  6
- *   7  8  9
- *   00 0  ⌫
- *
- * The "00" key appends two zeros — a standard pattern for a cents-only numpad.
- * The caller owns all state; this composable is a pure input device.
- *
- * @param onDigit       Called with a single digit character ('0'..'9').
- * @param onDoubleZero  Called when "00" is pressed.
- * @param onBackspace   Called when ⌫ is pressed.
- */
 @Composable
 fun Numpad(onDigit: (Char) -> Unit, onDoubleZero: () -> Unit, onBackspace: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
 
-    // Hairline border for digits, slightly brighter border for accented keys
     val hairline = colors.border
     val hairline2 = colors.borderFocus
     val surface2 = colors.surface2

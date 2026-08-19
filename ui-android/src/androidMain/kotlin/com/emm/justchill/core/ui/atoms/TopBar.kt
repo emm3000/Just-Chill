@@ -16,13 +16,6 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 
-/**
- * Design-system top bar with 44dp hit-zone slots for [left] and [right] actions,
- * and a centered title at 13sp w600 Inter.
- *
- * The bar itself has no background — wrap in a [androidx.compose.material3.Surface]
- * or apply background on the parent scaffold.
- */
 @Composable
 fun JcTopBar(
     title: String,

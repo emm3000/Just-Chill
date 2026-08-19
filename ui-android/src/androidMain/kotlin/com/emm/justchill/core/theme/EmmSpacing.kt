@@ -5,11 +5,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/**
- * Spacing scale. Base unit 4dp. Mirrors `docs/DESIGN_SYSTEM.md §4`.
- *
- * Naming reflects the multiplier: `s4` = 4 * base = 16dp.
- */
 @Immutable
 data class EmmSpacing(
     val s0: Dp = 0.dp,

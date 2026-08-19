@@ -26,12 +26,6 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 
-/**
- * Transaction-style list row. Mirrors `docs/DESIGN_SYSTEM.md §7.3`.
- *
- * [amount] should already include the sign (`+` for income, `−` minus, NOT hyphen).
- * [categoryColor] is the icon tint, not a background.
- */
 @Composable
 fun EmmListItem(
     icon: ImageVector,

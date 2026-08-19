@@ -20,20 +20,6 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmType
 
-/**
- * Full-width outlined (bordered) secondary CTA.
- *
- * Mirrors [StickyCTA] height ([CtaHeight]) and shape ([EmmRadii.rL]).
- * Used for secondary actions that should not compete visually with the primary [StickyCTA].
- *
- * @param label       Button label.
- * @param interaction Controls enabled/disabled/loading state. Default: [CtaInteraction.Enabled].
- *                    [CtaInteraction.Loading] shows a spinner before the label; the button is dimmed
- *                    and non-interactive. [CtaInteraction.Disabled] dims the button without a spinner.
- * @param leading     Optional slot rendered before the label (e.g. a provider logo). Hidden while
- *                    [CtaInteraction.Loading] — the spinner takes its place.
- * @param onClick     Action fired on tap (only when [CtaInteraction.Enabled]).
- */
 @Composable
 fun OutlinedCta(
     label: String,

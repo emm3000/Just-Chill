@@ -22,14 +22,6 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmType
 
-/**
- * Full-width filled primary button — the inline counterpart of [StickyCTA] for use
- * inside scrollable content (not pinned to the bottom edge).
- *
- * Height reuses [CtaHeight] (52dp). Radius: [EmmRadii.rL].
- *
- * @param interaction Controls enabled/disabled/loading state. Default: [CtaInteraction.Enabled].
- */
 @Composable
 fun FilledCta(
     label: String,

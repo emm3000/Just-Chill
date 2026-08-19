@@ -33,23 +33,6 @@ import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 
-/**
- * Month navigation control — prev/next arrows flanking a centered label.
- *
- * The one month selector for every screen. It renders one of two established looks,
- * chosen by [onLabelClick]:
- *
- * - `onLabelClick == null` — plain variant (Home): transparent pill with a hairline
- *   border, 13sp w600 Inter label, ripple on the arrow zones. The label is not clickable.
- * - `onLabelClick != null` — picker variant (Report): `surface1` pill, 44dp tall,
- *   `labelL` label with an [Icons.Outlined.ExpandMore] caret, indication-free press zones.
- *   Tapping the label invokes [onLabelClick] (month picker sheet).
- *
- * @param label        Formatted month string e.g. "Mayo 2026".
- * @param onPrevious   Called when the left chevron is tapped.
- * @param onNext       Called when the right chevron is tapped.
- * @param onLabelClick Called when the label is tapped; `null` keeps the label inert.
- */
 @Composable
 fun MonthSelector(
     label: String,
@@ -71,10 +54,6 @@ fun MonthSelector(
     }
 }
 
-/**
- * Plain variant — arrow zones 36dp × 36dp rounded [com.emm.justchill.core.theme.EmmRadii.rFull],
- * outer pill border + 4dp padding, 13sp w600 Inter label.
- */
 @Composable
 private fun PlainMonthSelector(
     label: String,
@@ -133,12 +112,6 @@ private fun PlainMonthSelector(
     }
 }
 
-/**
- * Picker variant — self-contained pill (`surface1` bg, hairline border, 44dp height).
- * The caller composes a "Hoy" shortcut as a sibling pill when needed — this atom does not
- * render the jump-to-today affordance internally, mirroring the designer's handoff layout
- * (selector + "Hoy" side-by-side).
- */
 @Composable
 private fun PickerMonthSelector(
     label: String,

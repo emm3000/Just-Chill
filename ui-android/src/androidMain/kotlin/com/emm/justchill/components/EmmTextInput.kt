@@ -33,12 +33,6 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 
-/**
- * Design system text input. Mirrors `docs/DESIGN_SYSTEM.md §7.2`.
- *
- * Underline-only (no filled background). Label sits above. Focus thickens the underline
- * to `accentFocus`; error swaps to `danger` and shows a helper line.
- */
 @Composable
 fun EmmTextInput(
     value: String,

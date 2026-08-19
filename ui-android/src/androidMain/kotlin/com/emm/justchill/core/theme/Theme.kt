@@ -5,11 +5,6 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 
-/**
- * Material3 color scheme derived from [emmDarkColors]. This keeps Material components
- * (Scaffold, TopAppBar, etc.) consistent with the design system while screens migrate
- * to the explicit `LocalEmm*` tokens.
- */
 private val materialDarkScheme = darkColorScheme(
     background = emmDarkColors.bg,
     onBackground = emmDarkColors.textPrimary,

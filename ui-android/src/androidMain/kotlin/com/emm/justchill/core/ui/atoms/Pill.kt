@@ -19,12 +19,6 @@ import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 
-/**
- * Small status/tag chip.
- *
- * Padding: 2dp vertical, 8dp horizontal. Height is driven by content (11sp text).
- * Radius: [EmmRadii.rFull].
- */
 @Composable
 fun Pill(
     text: String,

@@ -45,15 +45,8 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 
-/** Visual tone for [EmmSnackbarVisuals]. */
 enum class EmmSnackbarTone { Success, Error }
 
-/**
- * Custom [SnackbarVisuals] that carries a [tone] and an optional [actionLabel].
- *
- * Use [SnackbarHostState.showEmmSnackbar] as the convenient entry point.
- * [withDismissAction] is always false — dismiss is not exposed in this design.
- */
 class EmmSnackbarVisuals(
     override val message: String,
     val tone: EmmSnackbarTone = EmmSnackbarTone.Success,
@@ -70,7 +63,6 @@ fun EmmSnackbarHost(hostState: SnackbarHostState, modifier: Modifier = Modifier)
     }
 }
 
-/** Resolved icon, tint, and circle background for a single [EmmSnackbarTone]. */
 private data class ToneVisuals(val icon: ImageVector, val tint: Color, val circleBg: Color)
 
 @Composable
@@ -80,7 +72,6 @@ private fun EmmSnackbarBody(data: SnackbarData) {
     val spacing = LocalEmmSpacing.current
     val shape = radii.rL
 
-    // Resolve tone from the visuals — fall back to Success for plain showSnackbar(message) calls.
     val tone = (data.visuals as? EmmSnackbarVisuals)?.tone ?: EmmSnackbarTone.Success
 
     val visuals: ToneVisuals = when (tone) {
@@ -154,16 +145,6 @@ private fun EmmSnackbarBody(data: SnackbarData) {
     }
 }
 
-/**
- * Parses `«…»` guillemet pairs in [message] and renders the inner text in bold (W700).
- *
- * Contract:
- * - Text between `«` and the next `»` is wrapped in [SpanStyle] with [FontWeight.W700].
- * - The `«` and `»` delimiters themselves are included in the output as literal characters.
- * - Multiple pairs are each independently bolded.
- * - An unclosed `«` (no following `»`) is rendered literally — no bold span is opened.
- * - An empty pair `«»` produces a bold span over zero characters (visually a no-op).
- */
 internal fun highlightQuoted(message: String): AnnotatedString = buildAnnotatedString {
     var i = 0
     while (i < message.length) {
@@ -186,11 +167,6 @@ internal fun highlightQuoted(message: String): AnnotatedString = buildAnnotatedS
     }
 }
 
-/**
- * Convenience extension that wraps [message] in [EmmSnackbarVisuals] and shows it.
- *
- * @param duration Controls how long the snackbar is shown. Defaults to [SnackbarDuration.Short].
- */
 suspend fun SnackbarHostState.showEmmSnackbar(
     message: String,
     tone: EmmSnackbarTone = EmmSnackbarTone.Success,

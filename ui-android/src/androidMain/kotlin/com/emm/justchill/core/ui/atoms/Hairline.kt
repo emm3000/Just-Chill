@@ -12,13 +12,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.LocalEmmColors
 
-/**
- * A 1dp horizontal divider.
- *
- * @param insetStart  leading horizontal indent (e.g. to align with list content).
- * @param insetEnd    trailing horizontal indent.
- * @param color       divider color; defaults to [EmmColors.border].
- */
 @Composable
 fun Hairline(modifier: Modifier = Modifier, insetStart: Dp = 0.dp, insetEnd: Dp = 0.dp, color: Color? = null) {
     val colors = LocalEmmColors.current

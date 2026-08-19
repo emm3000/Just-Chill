@@ -4,11 +4,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
-/**
- * Design system color tokens — Notion-dark palette (SR-1).
- *
- * Read via `LocalEmmColors.current.<token>` inside any composable wrapped by `EmmTheme`.
- */
 @Immutable
 data class EmmColors(
     val bg: Color,
@@ -58,17 +53,17 @@ val emmDarkColors: EmmColors = EmmColors(
     textDisabled = Color(0xFF4A4A4A),
     textOnAccent = Color(0xFFFFFFFF),
 
-    accent = Color(0xFFE07856), // terracotta
-    accentMuted = Color(0x24E07856), // alpha ~14%
-    accentFocus = Color(0xFFEA8E70), // slightly lighter
+    accent = Color(0xFFE07856),
+    accentMuted = Color(0x24E07856),
+    accentFocus = Color(0xFFEA8E70),
 
-    success = Color(0xFF6FA876), // sage green (pos income)
-    warning = Color(0xFFB3935A), // ochre
-    danger = Color(0xFFCB6A5C), // neg expense
-    info = Color(0xFF7C8B99), // slate
+    success = Color(0xFF6FA876),
+    warning = Color(0xFFB3935A),
+    danger = Color(0xFFCB6A5C),
+    info = Color(0xFF7C8B99),
 
-    posMuted = Color(0x246FA876), // alpha ~14% sage
-    negMuted = Color(0x24CB6A5C), // alpha ~14% neg
+    posMuted = Color(0x246FA876),
+    negMuted = Color(0x24CB6A5C),
 
     catSlate = Color(0xFF7C8B99),
     catSage = Color(0xFF7FA075),

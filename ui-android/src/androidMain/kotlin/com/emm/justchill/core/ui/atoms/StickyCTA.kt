@@ -25,35 +25,14 @@ import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 
-/** Shared height for full-width CTA atoms (StickyCTA and FilledCta). */
 val CtaHeight = 52.dp
 
-/** Interaction state for full-width CTA atoms. */
 enum class CtaInteraction {
-    /** Button is active and clickable — normal accent visuals. */
     Enabled,
-
-    /** Button is dimmed (surface1/textTertiary) and not clickable. */
     Disabled,
-
-    /** Button is dimmed, not clickable, and shows a 16dp spinner before the label. */
     Loading,
 }
 
-/**
- * Full-width sticky CTA button, typically pinned to the bottom of a screen.
- *
- * - Height: 52dp
- * - Radius: [EmmRadii.rL] (14dp)
- * - Bottom container padding: 12dp top + 16dp bottom  (caller should add WindowInsets padding above this)
- * - Top hairline: always present
- *
- * @param label          Primary button label.
- * @param sublabel       Optional secondary content.
- * @param inlineSublabel When true, renders `label · sublabel` in a single Row instead of
- *                       stacking them. Useful for the Add-Transaction CTA ("Anotar gasto · S/ 85.40").
- * @param interaction    Controls enabled/disabled/loading state. Default: [CtaInteraction.Enabled].
- */
 @Composable
 fun StickyCTA(
     label: String,
@@ -97,7 +76,6 @@ fun StickyCTA(
             contentAlignment = Alignment.Center,
         ) {
             if (interaction == CtaInteraction.Loading) {
-                // Loading state: spinner + label side by side, dimmed colours
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -155,12 +133,6 @@ fun StickyCTA(
     }
 }
 
-/**
- * Shared label style for StickyCTA content branches.
- *
- * Single-line labels use negative tracking ((-0.15).sp); the stacked-sublabel branch
- * intentionally renders without it ([withLetterSpacing] = false).
- */
 @Composable
 private fun CtaLabel(text: String, color: Color, withLetterSpacing: Boolean = true) {
     Text(

@@ -9,12 +9,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
-/**
- * Insets for modal-style screens (no bottom bar): status bar at top,
- * `max(ime, navigationBars)` at bottom. Single source of truth so we never
- * stack `imePadding()` on top of `navigationBarsPadding()` (the IME inset
- * already covers the nav bar area when the keyboard is open).
- */
 @Composable
 fun Modifier.modalScreenInsets(): Modifier = this
     .statusBarsPadding()

@@ -9,16 +9,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.shared.R
 
-/**
- * Design system typography — SR-1.
- *
- * Inter (bundled) for all UI text, IBM Plex Mono (bundled) for amounts.
- * Use [LocalEmmType.current] inside composables wrapped by [EmmTheme].
- *
- * The families and [emmType] are plain `val`s. They were `@Composable get()` properties only
- * because Compose Multiplatform's resource `Font` is itself `@Composable`; the platform font
- * loader is not, so the styles are built once instead of on every recomposition that reads them.
- */
 val InterFontFamily: FontFamily = FontFamily(
     Font(R.font.inter_regular, FontWeight.Normal),
     Font(R.font.inter_medium, FontWeight.Medium),
@@ -63,17 +53,17 @@ internal val emmType: EmmType = EmmType(
     amountHero = TextStyle(
         fontFamily = PlexMonoFontFamily,
         fontSize = 48.sp,
-        lineHeight = 48.sp, // lineHeight = 1.0 × fontSize
+        lineHeight = 48.sp,
         fontWeight = FontWeight.W500,
-        letterSpacing = (-1.9).sp, // ≈ -0.04em × 48sp
+        letterSpacing = (-1.9).sp,
         fontFeatureSettings = TABULAR,
     ),
     amountL = TextStyle(
         fontFamily = PlexMonoFontFamily,
         fontSize = 52.sp,
-        lineHeight = 52.sp, // lineHeight = 1.0 × fontSize
+        lineHeight = 52.sp,
         fontWeight = FontWeight.W500,
-        letterSpacing = (-2.08).sp, // ≈ -0.04em × 52sp
+        letterSpacing = (-2.08).sp,
         fontFeatureSettings = TABULAR,
     ),
     amountM = TextStyle(
@@ -81,7 +71,7 @@ internal val emmType: EmmType = EmmType(
         fontSize = 15.sp,
         lineHeight = 20.sp,
         fontWeight = FontWeight.W500,
-        letterSpacing = (-0.3).sp, // ≈ -0.02em × 15sp
+        letterSpacing = (-0.3).sp,
         fontFeatureSettings = TABULAR,
     ),
     amountS = TextStyle(
@@ -173,7 +163,7 @@ internal val emmType: EmmType = EmmType(
         fontSize = 10.sp,
         lineHeight = 14.sp,
         fontWeight = FontWeight.W500,
-        letterSpacing = 1.6.sp, // ≈ 0.16em × 10sp
+        letterSpacing = 1.6.sp,
     ),
 )
 

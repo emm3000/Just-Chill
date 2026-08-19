@@ -12,11 +12,6 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 
-/**
- * Minimal card. Mirrors `docs/DESIGN_SYSTEM.md §7.4`.
- *
- * No shadow. Separation by surface color + 1dp hairline border.
- */
 @Composable
 fun EmmCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val colors = LocalEmmColors.current

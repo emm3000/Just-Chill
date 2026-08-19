@@ -12,15 +12,6 @@ import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.hh.shared.NumberFormatEs
 
-/**
- * Inline monetary amount — 15sp Inter W600 tnum, tabular figures.
- *
- * Negative values are prefixed with a minus sign (−).
- * Format: "S/ 1,234.56" or "− S/ 1,234.56"
- *
- * @param value   Numeric amount. Sign is retained in the rendered string.
- * @param color   Override text color; defaults to [EmmColors.textPrimary].
- */
 @Composable
 fun MoneyInline(value: Double, modifier: Modifier = Modifier, color: Color? = null) {
     val colors = LocalEmmColors.current

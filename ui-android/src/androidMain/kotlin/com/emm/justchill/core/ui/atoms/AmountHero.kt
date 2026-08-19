@@ -42,14 +42,9 @@ import kotlin.math.abs
 import kotlin.math.roundToLong
 
 /**
- * Hero amount display in IBM Plex Mono with tabular figures.
- *
- * Renders the prefix at 40% of [size] in textTertiary, baseline-aligned with the integer.
- * The decimal part is rendered at the same [size] but at 0.55 alpha for visual hierarchy.
- *
- * When [showCaret] is true a thin blinking caret is rendered right after the last digit as an
- * input affordance — it signals "this is a live field, type here". It never moves: the amount is a
- * cents accumulator (digits enter at the right edge), so there are no caret positions to move to.
+ * [showCaret] draws a caret that never moves: every caller that shows one feeds a cents
+ * accumulator, where digits only ever enter at the right edge, so there is no other position for
+ * it to be in.
  */
 @Composable
 fun AmountHero(
@@ -86,14 +81,12 @@ fun AmountHero(
     val prefixSize = (size.value * 0.40f).sp
     val tightLetterSpacing = (-0.04 * size.value).sp
 
-    // Prefix style — no tnum (S/ is not a digit; tnum widens non-digits in Plex Mono)
     val prefixStyle = TextStyle(
         fontFamily = PlexMonoFontFamily,
         fontWeight = FontWeight.W400,
         fontSize = prefixSize,
     )
 
-    // Number style — full size with tnum + tight letter spacing
     val numberStyle = TextStyle(
         fontFamily = PlexMonoFontFamily,
         fontWeight = FontWeight.W500,
@@ -115,7 +108,6 @@ fun AmountHero(
         }
     }
 
-    // Placeholder sized in em so the caret tracks the font metrics and scales with [size].
     val inlineContent = if (showCaret) {
         mapOf(
             CARET_ID to InlineTextContent(
@@ -151,10 +143,6 @@ fun AmountHero(
 
 private const val CARET_ID = "caret"
 
-/**
- * A thin vertical bar that hard-blinks (~530ms on / 530ms off, classic caret rate). Fills the
- * [Placeholder] bounds it is rendered into, so its height follows the surrounding text.
- */
 @Composable
 private fun BlinkingCaret(color: Color) {
     val transition = rememberInfiniteTransition(label = "caret")

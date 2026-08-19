@@ -22,15 +22,6 @@ import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
 
-/**
- * Generic segmented control. Renders options left-to-right inside a pill-rounded
- * container with no inner dividers — the selected cell carries the visual weight.
- *
- * Visual tokens (Notion-style, subtle): 44dp height, `surface1` track bg with 1dp
- * border, selected cell = `surface2` filled with `textPrimary`; unselected =
- * transparent with `textSecondary`. Matches the designer's handoff for Reporte
- * tabs and the Ingresos/Gastos toggle.
- */
 @Composable
 fun <T> Segmented(options: List<SegmentOption<T>>, selected: T, onSelect: (T) -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
