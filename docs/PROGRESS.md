@@ -374,9 +374,9 @@ gana el ADR.
   `2.4.10-2.0.0-alpha.6` — así que resolver `kotlinCompilerPluginClasspath` exige forzar la versión
   por substitución. Vía cerrada, no una regresión.
 - [ ] Purgar las **47** entradas muertas de `UnusedPrivateFunction` en
-  `config/detekt/baseline-ui-android-main.xml` (sobre 154 entradas en total). Desde `c94e290` la
+  `config/detekt/baseline-ui-android-main.xml` (sobre 121 entradas en total). Desde `c94e290` la
   regla ignora los `@Preview` por anotación, así que esas entradas quedaron inertes.
-- [ ] Entrada `ImportOrdering:ProfileScreen.kt` en `config/detekt/baseline-ui-android-main.xml:37`,
+- [ ] Entrada `ImportOrdering:ProfileScreen.kt` en `config/detekt/baseline-ui-android-main.xml:27`,
   probablemente muerta desde que `253e170` tocó esos imports. **No verificado**: correr la tarea y
   ver si el issue reaparece antes de borrarla.
 - [ ] **Burn-down de los 7 `TooManyFunctions` con amnistía** en
@@ -387,7 +387,7 @@ gana el ADR.
   va a volver a reportar nunca**, crezcan lo que crezcan: si no se bajan acá, no se bajan.
   Criterio y método de conteo en `docs/CODE_QUALITY.md`.
 - [ ] `LongParameterList:ProfileScreen.kt:@Composable private fun ProfileRowWithTrailing` en
-  `config/detekt/baseline-ui-android-main.xml:65` — 8 parámetros contra el tope de 5 para funciones
+  `config/detekt/baseline-ui-android-main.xml:48` — 8 parámetros contra el tope de 5 para funciones
   (`config/detekt/detekt.yml`), name-keyed y sin conteo, misma amnistía permanente que el punto
   anterior. Burn-down requerido por `docs/CODE_QUALITY.md` (arbitraje: crecimiento de baseline solo
   entra junto con esta línea).
