@@ -25,13 +25,11 @@ forces the task it follows). There is no `:domain:test` and no `connectedDevDebu
 
 ## Project Layout
 
-- Java toolchain 17 everywhere. `compileSdk = 37`. `minSdk = 28`, except 26 on `:domain` and `:data`.
-- `iosApp/` — Xcode project consuming `JustChillKit`. `supabase/` — CLI migrations for the server schema.
-- Two `tier` flavors (`dev` / `prod`), `:androidApp` only. Signing, Crashlytics-per-flavor and the
-  deliberately-absent Firebase Analytics are in `androidApp/CLAUDE.md`.
-- Versions live in `gradle/libs.versions.toml` + `gradle-wrapper.properties`, not here. Compose
-  Multiplatform is **gone** — `:ui-android` renders Google's Compose under the BOM; `:presentation`
-  still uses JetBrains' multiplatform `lifecycle-viewmodel`, which has to compile for iOS.
+- Toolchain, SDK levels and versions: `build-logic/.../BuildConventions.kt` +
+  `gradle/libs.versions.toml` — `minSdk` disagrees per module on purpose. Flavors `dev`/`prod` on
+  `:androidApp` only; signing, Crashlytics and the absent Analytics: `androidApp/CLAUDE.md`.
+- Compose Multiplatform is **gone** — `:ui-android` renders Google's Compose under the BOM;
+  `:presentation` still uses JetBrains' `lifecycle-viewmodel`, which has to compile for iOS.
 
 ## Architecture
 
@@ -52,8 +50,8 @@ crossed modules. ViewModels cannot touch Compose; conventions around it (ViewMod
 
 The app is **local-first**: SQLDelight on-device is the single source of truth, fully usable with no
 account and no network. **Sync is being removed, not repaired**: ADR 009 replaces row replication
-with **snapshot backup** and deletes the engine while keeping the sync schema. **Read
-`docs/work/epics/E01-snapshot-backup.md` before touching `data/.../sync/`.**
+with **snapshot backup**; the engine is gone, the sync schema stays. **Read
+`docs/work/epics/E01-snapshot-backup.md` before touching `data/src/**/backup/`.**
 
 **Data flow:** `Screen` → `ViewModel` → use case → `Repository` interface → `Default{Entity}Repository` → `LocalDataSource` (SQLDelight). The use case is there **only where there is domain logic** — a pure read goes from `ViewModel` straight to the `Repository` interface. Rationale + the measurement: `docs/CODE_QUALITY.md`.
 
@@ -69,7 +67,8 @@ with **snapshot backup** and deletes the engine while keeping the sync schema. *
 
 JUnit4 + MockK + `kotlinx-coroutines-test` as JVM host tests (`androidHostTest`); `:domain` use cases
 are the primary surface. Two suites are the ONLY net for their failure mode: `AppGraphKoinTest`
-(missing Koin binding) and the instrumented `:data` tests (missing migration, off the default gate).
+(missing Koin binding) and the instrumented `:data` tests (missing migration) — the gate **compiles**
+those, only a device **runs** them (`:data:connectedAndroidDeviceTest`).
 
 ## Delegation
 
@@ -130,21 +129,22 @@ doc has a read-trigger in the map below, and a doc with no trigger is archive.
 - `PROGRESS.md` — "where are we now" plus the single open-work checklist; sync debt lives in the
   work epic instead. **Read it first.**
 - `work/epics/E01-snapshot-backup.md` — the sync/backup epic: constraints outliving every ticket
-  under it, remaining work in `work/backlog/`. **Read before touching sync.** The Phase 0–3
-  chronicle, old audit, old plan and old slice plan sit in `archive/sync/`.
+  under it, remaining work in `work/backlog/`. **Read before touching backup.**
 - `work/epics/E02-migration-coverage.md` — **Read before touching a `.sqm` or a migration test.**
+- `work/README.md` — the board's rules: directory-is-status, immutable IDs, ceilings. **Read before
+  opening, taking or closing a ticket.**
 - `adr/` — filenames state the decision; each header declares what it amends or supersedes. 009 is
   the one to read first for anything sync-shaped. **Read before changing anything an ADR decided.**
 - `DATE_AUDIT.md` — the date findings + live rule #7: whatever asks "what day is it" takes an injected
   `Clock` **and** `TimeZone`, neither with a default. **Read before touching dates.**
-- `PLAY_ADVERTISING_ID.md` — proof the app does not use the advertising ID. **Read before answering Play's declaration**; the console says "Yes", wrongly.
+- `PLAY_ADVERTISING_ID.md`, `PLAY_STORE_LISTING.md`, `PRIVACY_POLICY.md` — the store-facing set.
+  **Read before a Play submission or a privacy change**; on the advertising ID the console says
+  "Yes", wrongly, and that doc is the proof.
 - `DESIGN_SYSTEM.md` — tokens and components. **Read before adding UI**; paths point at `ui-android/src/androidMain/`, the only source set `:ui-android` has.
 - `CODE_QUALITY.md` — the two halves of the convention: detekt's real thresholds and its blind spots, and what only a reviewer can judge. **Read before adding a lint rule, a `@Suppress`, or a use case.**
 - `WORKFLOW.md` — the writer/reviewer loop, the reinforced gate, the model-tier policy. **Required
   before any unit of work.** `swiftui/PLAN.md` — the 11 iOS slices and their status.
 - `PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `POST_V1_PLAN.md` — the product definition ADR 001
   amends by row id, plus unstarted growth work. **Read before scoping a feature.**
-- `archive/` — closed tracks kept for the reasoning.
-
-Latest release tag `v2.4.0`: built but NOT on the alpha track — its Play upload was rejected
-(`PLAY_ADVERTISING_ID.md`). `pre-kmp` is the rollback point before the KMP migration.
+- `archive/` — closed tracks kept for the reasoning. Release state lives in `PROGRESS.md`;
+  `pre-kmp` is the rollback point before the KMP migration.
