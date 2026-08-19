@@ -30,7 +30,7 @@ class HomeViewModel(
 ) : MviViewModel<HomeUiState, HomeIntent, HomeEffect>() {
 
     // Declared before initialState on purpose: property initializers run in order, so the state can
-    // only borrow the month from here if here already exists. One read, one source of truth.
+    // only borrow the month from here if here already exists.
     private val selectedMonth = MutableStateFlow(YearMonth.current(clock, zone))
 
     override val initialState = HomeUiState(month = selectedMonth.value)
@@ -82,18 +82,12 @@ class HomeViewModel(
         pendingRecurringMovements = data.pendingRecurringMovements.toPendingUi(),
     )
 
-    /**
-     * The reference date the row labels resolve Hoy/Ayer against, read once per mapping pass so
-     * every row in one emission agrees — and so the branch runs off this ViewModel's injected
-     * clock instead of an ambient one buried in the mapper. The zone is injected alongside it for
-     * the same reason: a zone read from the environment is a zone no test can put a boundary on.
-     */
     private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
 
-    // Current month comes from the clock, not from the selected month: it is what marks a pending
-    // item as catch-up, and browsing to March must not relabel March's own pending row. Same clock
-    // AND same zone as [today] — "what month is it" and "what day is it" cannot answer for two
-    // different places, and reading the zone ambiently here is how they used to be able to.
+    /**
+     * The current month comes from the clock, not the selected one: browsing to March must not
+     * relabel March's own pending row.
+     */
     private fun List<PendingRecurring>.toPendingUi(): List<PendingRecurringUi> {
         val currentMonth = YearMonth.current(clock, zone)
         return map { it.toPendingRecurringUi(currentMonth) }
