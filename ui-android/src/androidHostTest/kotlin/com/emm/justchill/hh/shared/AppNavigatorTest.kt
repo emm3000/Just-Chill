@@ -5,23 +5,9 @@ import androidx.navigation3.runtime.NavKey
 import org.junit.Test
 import kotlin.test.assertEquals
 
-/**
- * Guards the two navigation defects [AppNavigator] exists to close, plus the latent crash it fixed on
- * the way past.
- *
- * Nothing here needs a composition: the constructor is `internal` and takes `isReady` as a plain
- * lambda precisely so the guard logic can be driven from a JVM host test. [ready] stands in for nav3's
- * per-scene `LifecycleOwner` — `true` is a settled scene, `false` a scene mid-transition.
- *
- * [rootTab] is deliberately NOT the platform `startTab` (which is `SeeTransactionRoute` on Android):
- * the navigator must use the tab it was handed, not the global.
- *
- * What this does NOT cover: that the host actually builds its navigators inside `entry<...> { }`
- * bodies, which is what makes the transition guard live. That is a composition-level property, and the
- * comment on [AppNavigator] is what keeps it true.
- */
 class AppNavigatorTest {
 
+    /** Not the platform `startTab` (`SeeTransactionRoute`): the navigator must use the tab it is handed. */
     private val rootTab: BottomBarRoute = HomeRoute
     private val backStack: NavBackStack<NavKey> = NavBackStack(rootTab)
     private var ready: Boolean = true
@@ -78,11 +64,6 @@ class AppNavigatorTest {
         )
     }
 
-    /**
-     * The site this subsumes. `AppNavHost` used to hand-roll `if (backStack.none { it is AuthRoute })`
-     * around the sync handler's sign-in push, because that handler fires from wherever the user
-     * happens to be. Keeping the rule in one place beats two places that agree.
-     */
     @Test
     fun `push refuses a sign-in screen when one is already in the stack`() {
         navigator.push(AuthRoute)
@@ -172,11 +153,6 @@ class AppNavigatorTest {
         assertEquals(listOf<NavKey>(rootTab, AddTransactionRoute), backStack.toList())
     }
 
-    /**
-     * The latent crash the predecessor carried. `popToTransactionScreen()` looped `removeLastOrNull()`
-     * guarded only by `isNotEmpty()`, so a stack holding no transaction screen was drained to zero and
-     * `NavDisplay`'s `require(backStack.isNotEmpty())` took the app down on the next composition.
-     */
     @Test
     fun `popToTransaction leaves the stack untouched when no transaction screen is on it`() {
         navigator.push(CategoriesListRoute)

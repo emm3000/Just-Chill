@@ -442,6 +442,10 @@ gana el ADR.
 
 ### Bugs
 
+- [ ] **`HighlightQuotedTest` no verifica que el span en negrita sea negrita.** El test
+  `empty pair produces a bold span over zero characters` afirma `span.start == span.end` y nada
+  más; sus tres hermanos sí chequean `FontWeight.W700`. El nombre promete "bold" y la aserción no
+  lo mira. Salió al borrar un comentario que etiquetaba de negrita algo que el código no comprueba.
 - [ ] **La pantalla de Reportes se traga todos sus errores.** `ReportViewModel` emite
   `ReportEffect.ShowError(e.toUserMessage())` en `:124` y `:176`, pero `ReportScreen` no recibe
   ningún `SnackbarHostState` y `reportEntries` no le pasa `showMessage`, así que la rama es

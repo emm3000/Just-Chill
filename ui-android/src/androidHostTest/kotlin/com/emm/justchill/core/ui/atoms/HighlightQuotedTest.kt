@@ -20,7 +20,6 @@ class HighlightQuotedTest {
         assertEquals("Categoría «Regalos» creada", result.text)
         assertEquals(1, result.spanStyles.size)
         val span = result.spanStyles[0]
-        // Inner text "Regalos" starts after «  at index 10+1=11, ends before » at 17
         val inner = result.text.substring(span.start, span.end)
         assertEquals("Regalos", inner)
         assertEquals(FontWeight.W700, span.item.fontWeight)
@@ -54,6 +53,6 @@ class HighlightQuotedTest {
         assertEquals("Vacío: «»", result.text)
         assertEquals(1, result.spanStyles.size)
         val span = result.spanStyles[0]
-        assertEquals(span.start, span.end) // zero-width bold span
+        assertEquals(span.start, span.end)
     }
 }
