@@ -2,7 +2,8 @@
 
 Kotlin Multiplatform library (`android` + `iosArm64` + `iosSimulatorArm64`). Implements `:domain`
 repository interfaces. SQLDelight is the local source of truth; Supabase (`supabase-kt`) backs the
-optional auth (`auth/`) and the sync engine (`sync/`) — scheduled for deletion, see below.
+optional auth (`auth/`) and the backup pipeline (`backup/`). The row-replication sync engine that
+used to live in `sync/` is gone (`docs/work/epics/E01-snapshot-backup.md`, ADR 009).
 
 Root package: `com.emm.data.<entity>`. `minSdk = 26`. Depends on `:domain` only.
 
@@ -59,9 +60,8 @@ in `docs/PROGRESS.md`; it does not fail the gate.
 - **The category/type relation IS enforced by the schema**, and is the one exception to the line
   below. Since v5 `transactions` and `recurring_movements` declare a COMPOSITE foreign key,
   `(categoryId, type) → categories(categoryId, categoryType)`, so a movement can never carry a
-  category of the other type. It lives here and not in a use case because three writers reach the
-  database without passing through `:domain` — `DefaultBackupRepository` (import) and the
-  `TransactionTableSync` / `RecurringMovementTableSync` pulls. Full reasoning in the header of
+  category of the other type. It lives here and not in a use case because `DefaultBackupRepository`
+  (import) reaches the database without passing through `:domain`. Full reasoning in the header of
   `transactions.sq`; the decision and the rejected alternatives in
   [ADR 008](../docs/adr/008-the-schema-owns-the-category-type-invariant.md).
   Two properties of it that surprise people: a composite FK with any NULL column is SATISFIED, so an
@@ -74,18 +74,6 @@ in `docs/PROGRESS.md`; it does not fail the gate.
 - This module also `api`-exposes the Supabase auth/postgrest SDK and the Ktor engines. The consumer
   that actually uses them is `:presentation` (`hh/di/SupabaseModule.kt`).
 
-## Sync engine (`sync/`) — scheduled for deletion, see `docs/work/epics/E01-snapshot-backup.md`
-
-- The per-table push/pull algorithm lives once in `BaseTableSync<DTO : SyncRowDto>` (template
-  method); each table class (`AccountTableSync`, etc.) supplies only generated-query adapters and
-  the reified Postgrest calls.
-- `DefaultSyncRepository` orchestrates push then pull in FK-safe order (accounts → categories →
-  transactions → recurring_movements), holds the pull cursor when any table skips rows, and funnels
-  remote/ktor errors through `toSyncDomainException()`.
-- Cursor semantics (server-set `server_updated_at`, 10s overlap window) are defined in
-  `docs/adr/002`; the `SyncCursorStore` port has zero implementers anywhere until wave C of
-  `E01-snapshot-backup.md` deletes it.
-
 ## Error handling
 
 `shared/SafeCall.kt` wraps local DB calls and translates SQLDelight exceptions into
@@ -97,13 +85,12 @@ exception type here.
 
 ## Testing
 
-- Host tests (JUnit4 + MockK) in `data/src/androidHostTest/kotlin/` — mappers, sync repository,
-  pagination, enum parsing, backup. Run with `./gradlew :data:testAndroidHostTest`.
-- Platform-neutral tests in `data/src/commonTest/kotlin/` (`kotlin.test`), e.g. `SyncCursorUtilsTest`.
+- Host tests (JUnit4 + MockK) in `data/src/androidHostTest/kotlin/` — mappers, enum parsing, backup.
+  Run with `./gradlew :data:testAndroidHostTest`.
+- Platform-neutral tests in `data/src/commonTest/kotlin/` (`kotlin.test`), e.g. `Sha256HexTest`.
 - Instrumented tests in `data/src/androidDeviceTest/`: `MigrationV1ToV2Test`, `MigrationV2ToV3Test`,
-  `MigrationV3ToV4Test`, `MigrationV4ToV5Test`, `DeleteUseCasesE2ETest`, `RecurringMovementFkTest`,
-  `SyncFkExceptionTest`.
-  Run them with `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator; 34 tests).
+  `MigrationV3ToV4Test`, `MigrationV4ToV5Test`, `DeleteUseCasesE2ETest`, `RecurringMovementFkTest`.
+  Run them with `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator; 31 tests).
   They are the only thing that exercises migrations against the real `AndroidSqliteDriver` —
   **run them before shipping any schema change.** Gotcha: `kotlin.assert()` is a no-op on ART;
   always use `kotlin.test.assertTrue`.

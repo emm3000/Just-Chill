@@ -214,7 +214,6 @@
     <ID>LongParameterList:CategoriesQueries.kt:CategoriesQueries$public fun insert: QueryResult&lt;Long&gt;</ID>
     <ID>LongParameterList:CategoriesQueries.kt:CategoriesQueries$public fun insertOrIgnoreFromRemote: QueryResult&lt;Long&gt;</ID>
     <ID>LongParameterList:CategoriesQueries.kt:CategoriesQueries$public fun updateFromRemote: QueryResult&lt;Long&gt;</ID>
-    <ID>LongParameterList:DefaultSyncRepository.kt:DefaultSyncRepository</ID>
     <ID>LongParameterList:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun insert: QueryResult&lt;Long&gt;</ID>
     <ID>LongParameterList:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun insertOrIgnoreFromRemote: QueryResult&lt;Long&gt;</ID>
     <ID>LongParameterList:Recurring_movementsQueries.kt:Recurring_movementsQueries$public fun update: QueryResult&lt;Long&gt;</ID>
@@ -473,8 +472,6 @@
     <ID>TrailingCommaOnDeclarationSite:TransactionsQueries.kt:TransactionsQueries$(mapper: ( transactionId: String, type: String, amount: Long, description: String, date: Long, categoryId: String?, accountId: String, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
     <ID>TrailingCommaOnDeclarationSite:TransactionsQueries.kt:TransactionsQueries$(mapper: ( transactionId: String, type: String, amount: Long, description: String, date: Long, categoryId: String?, accountId: String, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, categoryName: String?, categoryIcon: String?, categoryColor: String?, categoryType_: String?, ) -&gt; T)</ID>
     <ID>TrailingCommaOnDeclarationSite:TransactionsQueries.kt:TransactionsQueries$(transactionId: String, mapper: ( transactionId: String, type: String, amount: Long, description: String, date: Long, categoryId: String?, accountId: String, createdAt: Long, updatedAt: Long, userId: String?, deletedAt: Long?, syncState: String, ) -&gt; T)</ID>
-    <ID>UnnecessaryNotNullOperator:BaseTableSync.kt:BaseTableSync$lastSat!!</ID>
-    <ID>UnnecessaryNotNullOperator:BaseTableSync.kt:BaseTableSync$maxInstant!!</ID>
     <ID>UnnecessaryNotNullOperator:TransactionMappers.kt:categoryColor!!</ID>
     <ID>UnnecessaryNotNullOperator:TransactionMappers.kt:categoryIcon!!</ID>
     <ID>UnnecessaryNotNullOperator:TransactionMappers.kt:categoryId!!</ID>
@@ -488,7 +485,6 @@
     <ID>UnsafeCallOnNullableType:AccountsQueries.kt:AccountsQueries$cursor.getString(3)!!</ID>
     <ID>UnsafeCallOnNullableType:AccountsQueries.kt:AccountsQueries$cursor.getString(6)!!</ID>
     <ID>UnsafeCallOnNullableType:AccountsQueries.kt:AccountsQueries$cursor.getString(8)!!</ID>
-    <ID>UnsafeCallOnNullableType:BaseTableSync.kt:BaseTableSync$maxInstant!!</ID>
     <ID>UnsafeCallOnNullableType:CategoriesQueries.kt:CategoriesQueries$cursor.getBoolean(5)!!</ID>
     <ID>UnsafeCallOnNullableType:CategoriesQueries.kt:CategoriesQueries$cursor.getLong(0)!!</ID>
     <ID>UnsafeCallOnNullableType:CategoriesQueries.kt:CategoriesQueries$cursor.getLong(6)!!</ID>
