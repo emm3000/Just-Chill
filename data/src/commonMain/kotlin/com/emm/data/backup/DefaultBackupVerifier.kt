@@ -18,7 +18,7 @@ class DefaultBackupVerifier internal constructor(private val store: BackupObject
 
     override suspend fun verifyLatest(): BackupVerification {
         val prefix: String = storageCall(PREFIX_UNRESOLVED) { store.ownedPrefix() }
-        val names: List<String> = store.wholeBucket(prefix, LIST_FAILED, LISTING_NEVER_ENDED)
+        val names: List<String> = store.wholeBucket(prefix, LIST_FAILED, LISTING_NEVER_ENDED).names
         val snapshots: List<Snapshot> = snapshotsNewestFirst(names)
         val inspected: List<Snapshot> = snapshots.filter { it.hasManifest }.take(BACKUP_VERIFY_MAX_PAIRS)
 

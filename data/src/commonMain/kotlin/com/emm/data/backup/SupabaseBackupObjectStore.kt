@@ -55,9 +55,12 @@ internal class SupabaseBackupObjectStore(private val client: SupabaseClient) : B
             this.offset = offset
             sortBy(column = NAME_COLUMN, order = SortOrder.ASC)
         }
+        // A row with a null id is not an object: it is the pseudo-row Storage emits to name a folder.
+        val (objects, folders) = page.partition { it.id != null }
         ObjectPage(
-            names = page.filter { it.id != null }.map { it.name.removePrefix(prefix) },
+            names = objects.map { it.name.removePrefix(prefix) },
             serverReturned = page.size,
+            folders = folders.map { it.name.removePrefix(prefix) },
         )
     }
 

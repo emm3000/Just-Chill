@@ -25,7 +25,7 @@ class DefaultBackupPruner internal constructor(
     @Suppress("TooGenericExceptionCaught")
     override suspend fun prune(): BackupPruneReport {
         val prefix: String = storageCall(PREFIX_UNRESOLVED) { store.ownedPrefix() }
-        val names: List<String> = store.wholeBucket(prefix, LIST_FAILED, LISTING_NEVER_ENDED)
+        val names: List<String> = store.wholeBucket(prefix, LIST_FAILED, LISTING_NEVER_ENDED).names
 
         val plan: PrunePlan = planPrune(names, clock.now(), zone)
 
