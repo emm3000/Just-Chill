@@ -90,7 +90,7 @@ exception type here.
 - Platform-neutral tests in `data/src/commonTest/kotlin/` (`kotlin.test`), e.g. `Sha256HexTest`.
 - Instrumented tests in `data/src/androidDeviceTest/`: `MigrationV1ToV2Test`, `MigrationV2ToV3Test`,
   `MigrationV3ToV4Test`, `MigrationV4ToV5Test`, `DeleteUseCasesE2ETest`, `RecurringMovementFkTest`.
-  Run them with `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator; 31 tests).
+  Run them with `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator; 32 tests).
   They are the only thing that exercises migrations against the real `AndroidSqliteDriver` —
   **run them before shipping any schema change.** Gotcha: `kotlin.assert()` is a no-op on ART;
   always use `kotlin.test.assertTrue`.

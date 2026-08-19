@@ -4,10 +4,10 @@
 
 ## Done when
 
-- [ ] A v1 database seeded with rows in every table it has reaches `EmmDatabaseData.Schema.version`
+- [x] A v1 database seeded with rows in every table it has reaches `EmmDatabaseData.Schema.version`
       in one `Schema.migrate` call, and its rows are asserted after it.
-- [ ] `rg 'newVersion = \d' data/src/androidDeviceTest/` returns no hits.
-- [ ] `./gradlew :data:connectedAndroidDeviceTest` passes on a device or emulator.
+- [x] `rg 'newVersion = \d' data/src/androidDeviceTest/` returns no hits.
+- [x] `./gradlew :data:connectedAndroidDeviceTest` passes on a device or emulator.
 
 ## Context
 

@@ -102,9 +102,19 @@ class MigrationV1ToV2Test {
         )
         database = EmmDatabaseData(driver)
 
-        driver.execute(null, "INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt) VALUES ('A1', 'BCP', 'Bank', 'PEN', 1000, 1000)", 0)
-        driver.execute(null, "INSERT INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt) VALUES ('C1', 'Sueldo', 'salary', 'green', 'Income', 0, 1000, 1000)", 0)
-        driver.execute(null, "INSERT INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt) VALUES ('TX1', 'Income', 350000, 'Sueldo mayo', 2000, 'C1', 'A1', 2000, 2000)", 0)
+        exec(
+            "INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt) " +
+                "VALUES ('A1', 'BCP', 'Bank', 'PEN', 1000, 1000)",
+        )
+        exec(
+            "INSERT INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt) " +
+                "VALUES ('C1', 'Sueldo', 'salary', 'green', 'Income', 0, 1000, 1000)",
+        )
+        exec(
+            "INSERT INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, " +
+                "createdAt, updatedAt) " +
+                "VALUES ('TX1', 'Income', 350000, 'Sueldo mayo', $SEEDED_AT_EPOCH_MILLIS, 'C1', 'A1', 2000, 2000)",
+        )
     }
 
     @After
@@ -113,42 +123,67 @@ class MigrationV1ToV2Test {
     }
 
     @Test
-    fun migration_v1_to_v2_preserves_user_data_and_adds_recurring_table() {
-        EmmDatabaseData.Schema.migrate(driver, oldVersion = 1, newVersion = 2)
+    fun migration_v1_to_current_preserves_user_data() {
+        migrateToCurrentVersion()
 
-        // The reads below stay raw SQL: this run stops at v2, and the generated query classes
-        // only ever describe the current schema.
-        val accountName = driver.executeQuery(
-            null, "SELECT name FROM accounts WHERE accountId = 'A1'",
-            { cursor -> QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null) }, 0
-        ).value
-        assertNotNull(accountName, "account must survive the migration")
-        assertEquals("BCP", accountName)
+        val account = database.accountsQueries.find("A1").executeAsOneOrNull()
+        assertNotNull(account, "account must survive the whole chain")
+        assertEquals("BCP", account.name)
+        assertEquals("Bank", account.type)
+        assertEquals("PEN", account.currency)
+        assertEquals(1_000L, account.createdAt)
 
-        val categoryName = driver.executeQuery(
-            null, "SELECT name FROM categories WHERE categoryId = 'C1'",
-            { cursor -> QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null) }, 0
-        ).value
-        assertNotNull(categoryName, "category must survive the migration")
-        assertEquals("Sueldo", categoryName)
+        val category = database.categoriesQueries.find("C1").executeAsOneOrNull()
+        assertNotNull(category, "category must survive the whole chain")
+        assertEquals("Sueldo", category.name)
+        assertEquals("salary", category.icon)
+        assertEquals("green", category.color)
+        assertEquals("Income", category.categoryType)
 
-        val txAmount = driver.executeQuery(
-            null, "SELECT amount FROM transactions WHERE transactionId = 'TX1'",
-            { cursor -> QueryResult.Value(if (cursor.next().value) cursor.getLong(0) else null) }, 0
-        ).value
-        assertNotNull(txAmount, "transaction must survive the migration")
-        assertEquals(350_000L, txAmount)
+        val transaction = database.transactionsQueries.find("TX1").executeAsOneOrNull()
+        assertNotNull(transaction, "transaction must survive the whole chain")
+        assertEquals("Income", transaction.type)
+        assertEquals(350_000L, transaction.amount)
+        assertEquals("Sueldo mayo", transaction.description)
+        assertEquals(SEEDED_AT_LIMA_TEXT, transaction.occurredAt)
+        assertEquals("C1", transaction.categoryId)
+        assertEquals("A1", transaction.accountId)
+    }
 
-        driver.execute(
-            null,
-            "INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, createdAt, updatedAt) VALUES ('RM1', 'Netflix', 'Spend', 4490, '', 'C1', 'A1', 'Monthly', 5, 1, 3000, 3000)",
-            0,
+    @Test
+    fun migration_v1_to_current_leaves_the_recurring_table_writable() {
+        migrateToCurrentVersion()
+
+        database.recurring_movementsQueries.insert(
+            id = "RM1",
+            name = "Netflix",
+            type = "Spend",
+            amount = 4_490L,
+            description = "",
+            categoryId = null,
+            accountId = "A1",
+            frequency = "Monthly",
+            dayOfMonth = 5L,
+            isActive = 1L,
+            lastConfirmedPeriod = null,
+            createdAt = 3_000L,
+            updatedAt = 3_000L,
         )
-        val recurringName = driver.executeQuery(
-            null, "SELECT name FROM recurring_movements WHERE id = 'RM1'",
-            { cursor -> QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null) }, 0
-        ).value
-        assertNotNull(recurringName, "recurring_movements row must be insertable after migration")
-        assertEquals("Netflix", recurringName)
+
+        val recurring = database.recurring_movementsQueries.find("RM1").executeAsOneOrNull()
+        assertNotNull(recurring, "recurring_movements must be writable after the whole chain")
+        assertEquals("Netflix", recurring.name)
+        assertEquals(4_490L, recurring.amount)
+        assertEquals("A1", recurring.accountId)
+    }
+
+    private fun migrateToCurrentVersion() =
+        EmmDatabaseData.Schema.migrate(driver, oldVersion = 1, newVersion = EmmDatabaseData.Schema.version)
+
+    private fun exec(sql: String) = driver.execute(null, sql, 0)
+
+    private companion object {
+        const val SEEDED_AT_EPOCH_MILLIS = 1_754_000_000_000L
+        const val SEEDED_AT_LIMA_TEXT = "2025-07-31T17:13:20"
     }
 }
