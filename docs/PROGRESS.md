@@ -445,6 +445,15 @@ gana el ADR.
 
 ### Bugs
 
+- [ ] **La pantalla de Reportes se traga todos sus errores.** `ReportViewModel` emite
+  `ReportEffect.ShowError(e.toUserMessage())` en `:124` y `:176`, pero `ReportScreen` no recibe
+  ningún `SnackbarHostState` y `reportEntries` no le pasa `showMessage`, así que la rama es
+  `-> Unit`. Un fallo de carga o de compartir no le dice nada al usuario. Lo único que lo registraba
+  era un comentario que afirmaba que "Hh.kt root" lo manejaba — archivo que no existe en el repo.
+- [ ] **Un snackbar de error se dibuja con el check verde de éxito.** Seis handlers de `ShowError`
+  llaman `snackbarHostState.showSnackbar(effect.message)` pelado; `EmmSnackbarBody` castea a
+  `EmmSnackbarVisuals` y cae a `Success` cuando el cast falla, así que un fallo muestra tilde verde.
+  El arreglo son los call sites, no el átomo.
 - [x] **Crear una categoría desde un movimiento de Ingreso abre el formulario en Gasto.** Cerrado por
   schema, no por parche: la categoría de un movimiento ahora es **foreign key compuesta**
   `(categoryId, type) → categories(categoryId, categoryType)` en `transactions` y en

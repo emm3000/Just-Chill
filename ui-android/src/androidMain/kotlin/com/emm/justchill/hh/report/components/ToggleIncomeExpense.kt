@@ -14,17 +14,6 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.SegmentOption
 import com.emm.justchill.core.ui.atoms.Segmented
 
-/**
- * Segmented control for Income / Expense.
- *
- * Pattern: Material SegmentedButtonRow (hand-rolled to control the exact
- * look — no Material defaults, full design system tokens).
- *
- * Decision D5 (PLAN_S1_REPORT.md): toggle is present from day 1.
- * Both queries share SQL — the toggle is ~50 LOC extra well spent.
- *
- * Implemented via the generic [Segmented] atom.
- */
 @Composable
 fun ToggleIncomeExpense(
     selected: TransactionType,

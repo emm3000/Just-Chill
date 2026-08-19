@@ -34,16 +34,6 @@ import com.emm.justchill.hh.report.CategoryShare
 import com.emm.justchill.hh.report.domainColorToUi
 import kotlinx.coroutines.delay
 
-/**
- * Category breakdown list — Notion-style.
- *
- * Per DS §7.10 (updated 2026-05-21): dot + name + amount + percentage in a
- * single row, with a thin colored stripe under the row whose width = `%` of
- * the row. No `surface1` track behind the stripe — just a colored stroke
- * that hints at proportion without competing with the type.
- *
- * Sorted descending by amount by the caller.
- */
 @Composable
 fun IncomeByCategoryBars(shares: List<CategoryShare>, modifier: Modifier = Modifier) {
     val spacing = LocalEmmSpacing.current

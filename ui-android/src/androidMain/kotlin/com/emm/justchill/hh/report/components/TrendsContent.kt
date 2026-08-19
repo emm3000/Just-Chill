@@ -24,12 +24,6 @@ import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.hh.report.TrendsUiData
 
-/**
- * Top-level content for the Tendencias tab.
- *
- * If isEarlyState (<3 months of data), shows an empty state with guidance copy.
- * Otherwise renders: SavingsRateBlock → EntroVsSalioCard → TopExpensesCard.
- */
 @Composable
 fun TrendsContent(trends: TrendsUiData, modifier: Modifier = Modifier) {
     if (trends.isEarlyState) {

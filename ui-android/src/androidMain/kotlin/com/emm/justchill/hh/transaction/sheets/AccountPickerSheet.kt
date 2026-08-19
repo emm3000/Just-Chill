@@ -49,15 +49,6 @@ import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import kotlinx.coroutines.launch
 
-/**
- * Bottom sheet for selecting an account.
- *
- * @param accounts          List of accounts to display.
- * @param selectedAccountId Currently selected account id (or null).
- * @param onSelect       Called when user taps an account row.
- * @param onAddNew          When non-null, shows a dashed "+ Nueva cuenta" button.
- * @param onDismiss         Called to dismiss the sheet.
- */
 @Composable
 fun AccountPickerSheet(
     accounts: List<Account>,
@@ -152,19 +143,16 @@ fun AccountPickerSheet(
 
         if (onAddNew != null) {
             val onAdd: () -> Unit = onAddNew
-            val dashedShape = RoundedCornerShape(12.dp)
+            val addButtonShape = RoundedCornerShape(12.dp)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)
                     .height(46.dp)
-                    .clip(dashedShape)
-                    // Dashed border approximated with a solid borderFocus — true dashed not
-                    // natively supported in Compose without Canvas; close enough for SR-3.
-                    .border(1.dp, colors.borderFocus, dashedShape)
-                    // Animate the sheet hide first so it slides out cleanly; THEN navigate.
-                    // hide() does not trigger onDismissRequest, so the parent's showAccountSheet
-                    // stays true and the sheet auto-re-opens when the user returns.
+                    .clip(addButtonShape)
+                    .border(1.dp, colors.borderFocus, addButtonShape)
+                    // hide() does not fire onDismissRequest, so the caller's "sheet is open" flag
+                    // stays set and the picker is back on screen when the user returns.
                     .clickable {
                         scope.launch {
                             sheetState.hide()
@@ -275,10 +263,6 @@ private fun AccountRow(
     }
 }
 
-/**
- * Maps a well-known account name (case-insensitive) to a design-system category swatch color.
- * Falls back to [EmmColors.catGraphite] for unknown names.
- */
 @Composable
 internal fun accountSwatchColor(
     name: String,

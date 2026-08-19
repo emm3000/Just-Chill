@@ -28,11 +28,6 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
 
-/**
- * Savings rate block for Tendencias tab.
- *
- * Layout (top to bottom): Eyebrow → big rate number + % + pill → context sentence.
- */
 @Composable
 fun SavingsRateBlock(
     ratePercent: Int,
@@ -55,9 +50,6 @@ fun SavingsRateBlock(
             horizontalArrangement = Arrangement.spacedBy(spacing.s3),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Big rate number: "26" in amountHero + "%" in amountL textTertiary.
-            // A negative rate means the user spent more than they earned — it reads in danger,
-            // not in the same neutral tone as a healthy one.
             val rateColor = if (ratePercent < 0) colors.danger else colors.textPrimary
             val rateAnnotated: AnnotatedString = buildAnnotatedString {
                 withStyle(SpanStyle(color = rateColor)) {

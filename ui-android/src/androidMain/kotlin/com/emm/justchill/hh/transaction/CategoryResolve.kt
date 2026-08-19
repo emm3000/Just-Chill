@@ -7,10 +7,6 @@ import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.CategoryColor
 import com.emm.justchill.hh.category.findById
 
-// Render-time resolution of the semantic ids carried by presentation models. The ids are the
-// plain strings the domain stores (Category.icon / Category.color); resolving them into
-// ImageVector/CategoryColor here — instead of in the mappers — keeps :presentation compose-free.
-
 val CategoryUi.resolvedIcon: ImageVector
     get() = iconId?.let(AppIconCatalog::findById)?.icon ?: Icons.Rounded.QuestionMark
 

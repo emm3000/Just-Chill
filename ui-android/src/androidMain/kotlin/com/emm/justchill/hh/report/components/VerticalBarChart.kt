@@ -45,15 +45,6 @@ private val BAR_WIDTH = 12.dp
 private val BAR_GAP = 4.dp
 private val BAR_RADIUS = 4.dp
 
-/**
- * §7.13 — Vertical bar chart (Compose Canvas, no library).
- *
- * Income bars: cat.sage. Expense bars: cat.terracotta. Per DS §7.13 —
- * NOT green/red; these are category palette colors signifying "entró"/"salió".
- *
- * Each month group has a contentDescription for a11y.
- * Bars themselves are hidden from accessibility.
- */
 @Composable
 fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
@@ -61,7 +52,6 @@ fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier)
 
     val maxAmount = items.maxOfOrNull { maxOf(it.incomeAmount, it.expenseAmount) }?.toFloat() ?: 1f
 
-    // One Animatable per month group
     val animatables = remember(items.size) { List(items.size) { Animatable(0f) } }
 
     items.forEachIndexed { index, _ ->
@@ -75,7 +65,6 @@ fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier)
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
-        // Chart area
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -93,7 +82,6 @@ fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier)
                 val barGapPx = BAR_GAP.toPx()
                 val groupWidthPx = barWidthPx * 2 + barGapPx
                 val n = items.size.toFloat()
-                // Inter-group gap calculated so edge padding equals inter-group gap
                 val interGroupGap = if (n > 1) (chartWidthPx - n * groupWidthPx) / (n + 1) else 0f
                 val radiusPx = BAR_RADIUS.toPx()
 
@@ -112,7 +100,6 @@ fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier)
                         (item.expenseAmount.toFloat() / maxAmount) * chartHeightPx * progress
                     }
 
-                    // Income bar (cat.sage)
                     if (incomeHeightPx > 0f) {
                         drawRoundRect(
                             color = colors.catSage,
@@ -122,7 +109,6 @@ fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier)
                         )
                     }
 
-                    // Expense bar (cat.terracotta)
                     val expenseLeft = groupLeft + barWidthPx + barGapPx
                     if (expenseHeightPx > 0f) {
                         drawRoundRect(
@@ -136,7 +122,6 @@ fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier)
             }
         }
 
-        // Month labels
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -159,9 +144,6 @@ fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier)
     }
 }
 
-/**
- * Full §7.13 card — Eyebrow header, legend, chart, hairline, average footer.
- */
 @Composable
 fun EntroVsSalioCard(
     items: List<MonthlyBarItem>,
@@ -183,7 +165,6 @@ fun EntroVsSalioCard(
             .padding(spacing.s4),
         verticalArrangement = Arrangement.spacedBy(spacing.s4),
     ) {
-        // Header row: Eyebrow + legend
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -203,7 +184,6 @@ fun EntroVsSalioCard(
 
         Hairline()
 
-        // Footer: "Promedio mensual" / amounts
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

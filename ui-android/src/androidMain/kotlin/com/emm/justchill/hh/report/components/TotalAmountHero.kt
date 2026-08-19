@@ -19,16 +19,6 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
 
-/**
- * Hero amount display for the Mes tab.
- *
- * Income integer part: `success` (green). Spend integer part: `textPrimary` (white/dark).
- * The currency prefix `S/ ` and the decimals `.00` stay `textTertiary` for both types.
- *
- * Single Text + AnnotatedString to keep baselines aligned across spans.
- *
- * Example input: `"S/ 6,200.00"`, type = Income.
- */
 @Composable
 fun TotalAmountHero(totalFormatted: String, type: TransactionType, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current

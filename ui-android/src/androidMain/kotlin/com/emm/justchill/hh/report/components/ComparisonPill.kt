@@ -21,16 +21,6 @@ import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
 
-/**
- * Pill showing absolute delta and percent vs previous month.
- *
- * §7.14: leading arrow icon, text "S/ 660 · 12%", tone Pos/Neg.
- * The "vs abril" label is rendered separately beside this pill by the caller.
- *
- * [directionUp] controls the arrow icon (raw delta direction).
- * [isPositive] controls the tone — semantic favorability for the user:
- *   Income: positive when delta ≥ 0; Spend: positive when delta ≤ 0.
- */
 @Composable
 fun ComparisonPill(
     absoluteDeltaFormatted: String,

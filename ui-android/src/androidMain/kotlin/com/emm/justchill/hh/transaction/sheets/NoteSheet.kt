@@ -45,30 +45,22 @@ import com.emm.justchill.core.ui.atoms.SheetDragHandle
 
 private const val NOTE_MAX_CHARS = 120
 
-/**
- * Bottom sheet for editing the transaction note.
- *
- * Local draft state is initialized from [initialNote]; nothing is saved until the
- * user taps "Guardar nota", which calls [onSave] with the final text.
- */
+private const val FOCUS_DELAY_AFTER_SHEET_SLIDE_IN_MS = 150L
+
 @Composable
 fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    // TextFieldValue carries both text and cursor selection — placing the cursor at the
-    // end on initial load means the user can keep typing without re-positioning.
     var draft by remember {
         val initial = initialNote.take(NOTE_MAX_CHARS)
         mutableStateOf(TextFieldValue(text = initial, selection = TextRange(initial.length)))
     }
     val focusRequester = remember { FocusRequester() }
 
-    // Wait for the sheet slide-in to finish (~150ms) before focusing the field
-    // — keeps the sheet and IME animations from colliding.
     LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(150)
+        kotlinx.coroutines.delay(FOCUS_DELAY_AFTER_SHEET_SLIDE_IN_MS)
         focusRequester.requestFocus()
     }
 

@@ -55,26 +55,6 @@ import kotlin.time.Clock
 
 private data class Shortcut(val label: String, val date: LocalDate)
 
-/**
- * Bottom sheet for picking a date.
- *
- * Shortcut pills (Hoy / Ayer / Esta semana / Este mes) call [onConfirm] directly.
- * The day grid updates in-memory selection; only the CTA commits it.
- *
- * The sheet speaks [LocalDate] in both directions. It always did internally — it took epoch millis
- * only to convert them to a day on the first line and back on the last — and that round trip was
- * what let both call sites hand it `DateUtils.currentDateInMillis()` instead of the date actually
- * selected, so it reopened on today whatever the user had chosen.
- *
- * Today is the last selectable day: later days render dimmed and take no tap, and the forward
- * chevron stops at the current month. This mirrors the domain rule rather than replacing it —
- * `TransactionDateRules` is what actually guarantees it, since this sheet is not the only way a
- * date reaches a transaction. Here it just keeps the user away from an error they cannot act on.
- *
- * @param currentDate  The day currently selected, which the grid opens on.
- * @param onConfirm    Delivers the chosen day to the caller.
- * @param onDismiss    Dismisses the sheet.
- */
 @Composable
 fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
@@ -84,7 +64,6 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
     val today: LocalDate = Clock.System.now().toLocalDateTime(zone).date
 
     var selectedDate: LocalDate by remember(currentDate) { mutableStateOf(currentDate) }
-    // First day of the currently displayed month.
     var displayedMonth: LocalDate by remember(currentDate) { mutableStateOf(currentDate.firstOfMonth()) }
 
     val shortcuts: List<Shortcut> = remember(today) {
@@ -184,8 +163,8 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                 letterSpacing = (-0.15).sp,
             )
             // A transaction records money that already moved, so there is no month after this one
-            // to browse. The domain rejects a future date outright (TransactionDateRules); stopping
-            // the chevron here means the user never reaches the error in the first place.
+            // to browse. The domain rejects a future date outright (TransactionDateRules); this
+            // chevron and the day cells' own enabled gate keep the user away from that error.
             val canGoForward = displayedMonth < today.firstOfMonth()
             IconBtn(
                 icon = Icons.Outlined.ChevronRight,
@@ -195,7 +174,6 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             )
         }
 
-        // Weekday header — Monday-first, single-letter labels
         val weekdayLabels = listOf("L", "M", "M", "J", "V", "S", "D")
         Row(
             modifier = Modifier
@@ -299,7 +277,6 @@ private const val CALENDAR_GRID_CELLS = 42
 
 private fun LocalDate.firstOfMonth(): LocalDate = LocalDate(year, month, 1)
 
-/** Monday of the ISO week containing this date. */
 private fun LocalDate.startOfWeekMonday(): LocalDate {
     val offset = (dayOfWeek.isoDayNumber - DayOfWeek.MONDAY.isoDayNumber + 7) % 7
     return minus(offset, DateTimeUnit.DAY)

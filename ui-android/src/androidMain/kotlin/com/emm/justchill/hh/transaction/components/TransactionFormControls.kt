@@ -205,12 +205,6 @@ internal fun QuickChip(
     }
 }
 
-/**
- * One-tap action chip for a frequent account+category combo.
- * Unlike [QuickChip] this is wrap-content (no weighted column, so the label survives an
- * unbounded-width LazyRow) and carries no dropdown affordance — tapping pre-fills the form,
- * it does not open a picker.
- */
 @Composable
 internal fun FrequentComboChip(label: String, dotColor: Color?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current

@@ -252,14 +252,14 @@ fun CategoryPickerSheet(
             }
         }
 
-        val dashedShape = RoundedCornerShape(12.dp)
+        val addButtonShape = RoundedCornerShape(12.dp)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)
                 .height(46.dp)
-                .clip(dashedShape)
-                .border(1.dp, colors.borderFocus, dashedShape)
+                .clip(addButtonShape)
+                .border(1.dp, colors.borderFocus, addButtonShape)
                 .clickable {
                     onAddNew()
                     onDismiss()

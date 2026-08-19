@@ -31,11 +31,6 @@ import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.report.TopCategoryItem
 import com.emm.justchill.hh.report.domainColorToUi
 
-/**
- * §7.4 card showing top expense categories over the 6-month window.
- *
- * Each row: IconTile (Swatch) | name (w600) + meta text | amount (amountS tnum).
- */
 @Composable
 fun TopExpensesCard(items: List<TopCategoryItem>, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
@@ -52,7 +47,6 @@ fun TopExpensesCard(items: List<TopCategoryItem>, modifier: Modifier = Modifier)
             .padding(spacing.s4),
         verticalArrangement = Arrangement.spacedBy(spacing.s4),
     ) {
-        // Header row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

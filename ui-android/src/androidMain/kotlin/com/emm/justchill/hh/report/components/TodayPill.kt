@@ -24,10 +24,6 @@ import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.MonthSelector
 
-/**
- * "Hoy" pill, shown beside [MonthSelector] when the selected month is not
- * the current one. Matches the selector's height + border style.
- */
 @Composable
 fun TodayPill(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current

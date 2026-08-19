@@ -3,7 +3,6 @@ package com.emm.justchill.hh.report
 import androidx.compose.ui.graphics.Color
 import com.emm.justchill.core.theme.emmDarkColors
 
-// Nullable: the uncategorized bucket carries no color and falls through to the neutral graphite.
 internal fun domainColorToUi(color: String?): Color = when (color) {
     "green" -> emmDarkColors.catSage
     "blue" -> emmDarkColors.catSlate

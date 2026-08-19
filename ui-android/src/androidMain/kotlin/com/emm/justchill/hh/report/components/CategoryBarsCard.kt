@@ -24,13 +24,6 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.hh.report.CategoryShare
 
-/**
- * §7.10 grouped-variant card: wraps IncomeByCategoryBars in a §7.4 card with
- * header (Eyebrow + category count), bars, hairline, and stats footer.
- *
- * Footer: "X movimientos" left, "Promedio S/ Y" right (caption textSecondary).
- * Singular form: "1 movimiento".
- */
 @Composable
 fun CategoryBarsCard(
     shares: List<CategoryShare>,
@@ -55,7 +48,6 @@ fun CategoryBarsCard(
             .padding(spacing.s4),
         verticalArrangement = Arrangement.spacedBy(spacing.s4),
     ) {
-        // Header row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -73,7 +65,6 @@ fun CategoryBarsCard(
 
         Hairline()
 
-        // Footer row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

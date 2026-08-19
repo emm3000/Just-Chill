@@ -28,10 +28,6 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 
-/**
- * Full-width secondary outlined button "Compartir reporte" with IosShare icon.
- * Variant: Button.Secondary (§7.1 — surface1 bg, textPrimary, 1dp border).
- */
 @Composable
 fun ShareReportButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
