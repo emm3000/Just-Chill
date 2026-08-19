@@ -50,10 +50,10 @@ entries read it, and collapsing that is a separate change.
 `AppNavHost` on Google's navigation3, runtime **and** UI. Slice F had put the UI on the JetBrains
 CMP port so one host could drive Android and iOS; iOS left for SwiftUI, so the port went too — and
 so did slice F's explicit `SavedStateConfiguration`, which only ever existed because Kotlin/Native
-has no reflective serializer discovery. The host now calls the Android-only 1-arg
-`rememberNavBackStack(startRoute)`: `NavKeySerializer` stores each entry as its class name and
-re-resolves it with `Class.forName(name).kotlin.serializer()`, so there is no subtype registry to
-keep in sync.
+has no reflective serializer discovery. The host now calls the Android-only
+`rememberNavBackStack(vararg NavKey)` with a single route: `NavKeySerializer` stores each entry as
+its class name and re-resolves it with `Class.forName(name).kotlin.serializer()`, so there is no
+subtype registry to keep in sync.
 
 **Landmine:** every route the host can push MUST be `@Serializable` (and so must its fields). An
 unserializable route crashes `rememberNavBackStack` on process-death restore and nowhere else —

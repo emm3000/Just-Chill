@@ -109,9 +109,9 @@ This is the Opus list (`docs/WORKFLOW.md` model-tier policy) — a Sonnet writer
   `versionName = "pre-kmp"`). Same filter in `/release`.
 - **A tag push does not ship.** `uploadRelease.yml` uploads the AAB to the alpha track as a **draft**; publishing it is manual in Play Console. A green workflow reached no one.
 - **`run:` blocks take secrets through `env:`**, never `${{ }}` spliced into the script text. Validate workflow edits with `actionlint` — it catches errors a YAML parse cannot.
-- **Every route the nav host can push MUST be `@Serializable`.** The reflective 1-arg
-  `rememberNavBackStack` re-resolves each entry via `Class.forName(name).kotlin.serializer()` — miss
-  the annotation and the app dies only on process-death restore, invisible to the compiler.
+- **Every route the nav host can push MUST be `@Serializable`.** Android's reflective
+  `rememberNavBackStack(vararg NavKey)` re-resolves each entry via `Class.forName(name).kotlin.serializer()`
+  — miss the annotation and the app dies only on process-death restore, invisible to the compiler.
   `RouteSerializationTest` round-trips every sealed `AppRoute` through that serializer.
 
 ## Docs contract
