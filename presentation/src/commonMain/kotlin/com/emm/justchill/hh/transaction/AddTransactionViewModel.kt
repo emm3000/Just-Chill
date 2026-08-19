@@ -43,10 +43,9 @@ class AddTransactionViewModel(
 
     private val allCategories: MutableMap<CategoryType, List<SelectableCategory>> = mutableMapOf()
 
-    // Cached last-used account id — resolved before the combine flow fires.
+    // Must be resolved before updateState's reducer runs — it isn't suspend and can re-run on a CAS retry.
     private var cachedLastUsedAccountId: AccountId? = null
 
-    // Raw domain combos for the current type — resolved by loadFrequent, re-mapped when accounts/categories update.
     private var rawCombos: List<FrequentCombo> = emptyList()
 
     init {
@@ -121,8 +120,6 @@ class AddTransactionViewModel(
 
     private fun selectFrequentCombo(combo: FrequentComboUi) {
         val account = currentState.accounts.find { it.accountId.value == combo.accountId }
-        // Scoped to the combo's own type, not to every category the app has: a combo carries the
-        // type it was recorded under, and the pair it restores has to be one the schema accepts.
         val category = allCategories[combo.type.categoryType].orEmpty()
             .find { it.categoryId.value == combo.categoryId }
         if (account == null || category == null) return
@@ -154,13 +151,8 @@ class AddTransactionViewModel(
     }
 
     /**
-     * Takes the category the new-category screen just created and selects it here.
-     *
-     * Scoped to the movement's own type, twice over. The list it rebuilds used to be every category
-     * in the app flattened, so creating one from an Income movement replaced the Income picker with
-     * Income AND Spend entries; and a category of the other type is now a pair the schema refuses
-     * outright, so selecting it would only produce a failed save. The route carries the movement's
-     * type, so the guard should never fire — it is what keeps this correct if a caller forgets to.
+     * The schema refuses a cross-type (categoryId, type) pair; the route always carries the
+     * movement's type, so this guard should never fire.
      */
     private fun addCategoryFromOthers(category: SelectableCategory) {
         val categoryType = currentState.transactionType.categoryType
@@ -202,8 +194,6 @@ class AddTransactionViewModel(
     ): List<FrequentComboUi> = combos.mapNotNull { combo ->
         val account = accounts.find { it.accountId == combo.accountId }
             ?: return@mapNotNull null
-        // Same scoping as selectFrequentCombo: a chip that renders must be a chip that can be
-        // applied, and the pair behind it has to be one the schema accepts.
         val category = categories[combo.type.categoryType].orEmpty()
             .find { it.categoryId == combo.categoryId }
             ?: return@mapNotNull null
@@ -224,13 +214,8 @@ class AddTransactionViewModel(
         sendEffect(AddTransactionEffect.TransactionSaved)
     }
 
-    // The day is the user's, the hour is the moment of the save — and both are decided HERE,
-    // where the save happens, not against the state's `today`. Resolving them earlier is what
-    // booked a screen opened at 23:59 and saved at 00:01 on the previous day.
-    //
-    // This is one of the two legitimate reads of a timezone left in the app: "what is the local
-    // date and time for this user, right now". Everything downstream carries the answer, not the
-    // question — the use case validates it and the column stores it, neither converts it.
+    // The day is the user's, the hour is the moment of the save — both decided here, not from
+    // the state's cached `today`.
     private fun createTransactionInsert(): TransactionInsert {
         val now: LocalDateTime = clock.now().toLocalDateTime(zone)
         return TransactionInsert(

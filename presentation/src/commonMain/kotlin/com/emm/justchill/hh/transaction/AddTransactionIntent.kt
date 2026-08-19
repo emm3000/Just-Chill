@@ -13,10 +13,6 @@ sealed interface AddTransactionIntent : UiIntent {
 
     data class OnTransactionTypeChange(val value: TransactionType) : AddTransactionIntent
 
-    /**
-     * A day picked in the date sheet. Carries the day, not epoch millis: the sheet works in days,
-     * and the conversion to an instant belongs at the one boundary that saves.
-     */
     data class OnDateSelected(val value: LocalDate) : AddTransactionIntent
 
     data class OnAccountSelected(val value: Account) : AddTransactionIntent

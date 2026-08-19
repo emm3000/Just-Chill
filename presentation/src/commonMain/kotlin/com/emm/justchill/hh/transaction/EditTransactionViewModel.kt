@@ -95,16 +95,8 @@ class EditTransactionViewModel(
     }
 
     /**
-     * The category to show for a newly-cut list — and **null when the movement never had one.**
-     *
-     * "Uncategorized" is a state the user chose, not a gap to fill. Falling back to the first
-     * category of the list writes a label nobody picked: [recompute] compares the selection against
-     * the snapshot, sees a change, enables Save, and the next tap on any unrelated field persists
-     * it. On an edit screen that reads as the app quietly filing the movement somewhere.
-     *
-     * It stopped being a corner case with schema v5: `4.sqm` nulls the category of every movement
-     * whose pair the new key refuses, so the author's device now holds a set of movements that open
-     * uncategorized — exactly the rows this would relabel, and they are real financial records.
+     * Returns null, not [list]'s first entry, when there is no stored category: "uncategorized" is
+     * a choice, and falling back would silently hand [recompute] a change to save.
      */
     private fun resolveSelection(list: List<SelectableCategory>): SelectableCategory? {
         val storedId = snapshot?.categoryId ?: return null
@@ -140,8 +132,6 @@ class EditTransactionViewModel(
         val account = accountRepository.find(oldTransaction.accountId) ?: return@launch
         val storedDay: LocalDate = oldTransaction.occurredAt.date
 
-        // Resolved out of the movement's own type, not out of every category: the stored pair is a
-        // foreign key now, so anything else was never a state this screen could load or save.
         val categoriesForType = allCategories[oldTransaction.type.categoryType].orEmpty()
         val selectedCategory: SelectableCategory? = oldTransaction.categoryId?.let { id ->
             categoriesForType.firstOrNull { it.categoryId == id }
@@ -180,13 +170,8 @@ class EditTransactionViewModel(
         sendEffect(EditTransactionEffect.TransactionUpdated)
     }
 
-    // The day the user is looking at, carrying the hour the transaction was already recorded at:
-    // moving a movement to another day must not restamp when it happened.
-    //
-    // No timezone and no instant, which is the whole point. If the user did not touch the date,
-    // `currentState.date` still IS `oldTransaction.occurredAt.date`, so this rebuilds the stored
-    // value exactly — an amount-only edit writes back identical bytes by construction, not because
-    // some branch remembered to leave the date alone. That branch is what corrupted the date twice.
+    // When the date is untouched, `currentState.date` still IS `oldTransaction.occurredAt.date`, so
+    // an amount-only edit rebuilds identical bytes by construction, not via a special-cased branch.
     private fun createTransactionUpdate(): TransactionUpdate = TransactionUpdate(
         type = currentState.transactionType,
         description = currentState.description,
