@@ -21,7 +21,7 @@
 ```
 
 KMP host-test tasks go `UP-TO-DATE` across sessions — `--rerun` forces a real run, **per-task** (it only
-forces the task it follows). There is no `:domain:test` and no `connectedDevDebugAndroidTest`.
+forces the task it follows). There is no `:domain:test`, and no instrumented source set outside `:data`.
 
 ## Project Layout
 
