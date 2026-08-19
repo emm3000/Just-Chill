@@ -6,16 +6,9 @@ import kotlinx.datetime.Month
 import kotlinx.datetime.number
 
 /**
- * Hand-rolled Spanish (es / es-PE) date formatting for `commonMain`. Replaces the JVM
- * `java.time.format.DateTimeFormatter` + `java.text.*` localized formatters, which cannot run on
- * iOS and would leak `java.*` into the exported framework. The app is Spanish-only, so the locale
- * tables are hardcoded to match — byte-for-byte — the strings the JVM `es`/`es-PE` formatters
- * produced (verified on the build JDK); `SpanishFormatGoldenTest` in this module's `commonTest`
- * holds those assertions.
- *
- * **This is the only Spanish month table in the app.** A second one lived in `MonthLabels.kt` and
- * the two disagreed on the screen for months; every label there delegates here now, and
- * `MonthLabelsTest` fails the build if that stops being true.
+ * Locale tables are hardcoded to match, byte-for-byte, the JVM `es`/`es-PE` formatter output
+ * (`SpanishFormatGoldenTest` pins it). This is the only Spanish month table in the app —
+ * `MonthLabelsTest` fails the build if a second one reappears.
  */
 object SpanishDateFormat {
 
@@ -40,42 +33,28 @@ object SpanishDateFormat {
 
     fun shortMonth(month: Month): String = SHORT_MONTHS[month.number]
 
-    /** DayOfWeek FULL Spanish name. [isoDayNumber] is 1 (Monday)..7 (Sunday). */
     fun fullWeekday(isoDayNumber: Int): String = FULL_WEEKDAYS[isoDayNumber]
 
-    /** "d de MMMM de yyyy" — e.g. "13 de junio de 2026". JVM FormatStyle.LONG for es. */
     fun longDate(date: LocalDate): String =
         "${date.dayOfMonth} de ${fullMonth(date.month)} de ${date.year}"
 
-    /** "d MMM" — e.g. "13 jun". */
     fun dayShortMonth(date: LocalDate): String = "${date.dayOfMonth} ${shortMonth(date.month)}"
 
-    /**
-     * "d MMM, HH:mm" — e.g. "13 sept, 09:05". Non-padded day, short month, 24-hour
-     * zero-padded hour and minute. Matches the JVM `SimpleDateFormat("d MMM, HH:mm", es)` output.
-     */
     fun dayShortMonthTime(dateTime: LocalDateTime): String {
         val hour = dateTime.hour.toString().padStart(2, '0')
         val minute = dateTime.minute.toString().padStart(2, '0')
         return "${dateTime.dayOfMonth} ${shortMonth(dateTime.month)}, $hour:$minute"
     }
 
-    /** "MMMM dd" — e.g. "junio 13" (zero-padded day). */
     fun monthDayPadded(date: LocalDate): String {
         val day = date.dayOfMonth.toString().padStart(2, '0')
         return "${fullMonth(date.month)} $day"
     }
 
-    /** "MMMM yyyy" — e.g. "septiembre 2026". */
     fun monthYear(year: Int, month: Month): String = "${fullMonth(month)} $year"
 
-    /** "d MMMM" — e.g. "13 junio". */
     fun dayFullMonth(date: LocalDate): String = "${date.dayOfMonth} ${fullMonth(date.month)}"
 
-    /**
-     * 12-hour Spanish time "h:mm a" — e.g. "3:45 p. m.", "9:05 a. m.", "12:00 a. m." (midnight),
-     * "12:00 p. m." (noon). [hour24] is 0..23.
-     */
     fun readableTime(hour24: Int, minute: Int): String {
         val isPm = hour24 >= 12
         val hour12 = when {
@@ -89,8 +68,8 @@ object SpanishDateFormat {
 }
 
 /**
- * Titlecase only the first character, Spanish-style (locale-independent for the Latin alphabet the
- * app uses). Replaces `replaceFirstChar { it.titlecase(SPANISH) }`.
+ * Titlecases only the first character, with no locale — safe because the app is Spanish-only and
+ * the Latin alphabet needs none.
  */
 fun String.titlecaseFirstChar(): String =
     if (isEmpty()) this else this[0].uppercaseChar() + substring(1)

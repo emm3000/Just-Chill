@@ -15,8 +15,6 @@ fun ProfileMessage.Backup.toBackupText(): String = when (this) {
     is ProfileMessage.BackupNotVerified -> notVerifiedText(pairsInspected)
 }
 
-// Only Network and Unauthorized name an action: the rest are the app's or the server's defect, and
-// the cycle retries them on its own because a failure never moves the last-backup watermark.
 private fun failedText(reason: BackupFailureReason): String = when (reason) {
     BackupFailureReason.Network -> "No llegué a la nube — revisa tu conexión e intenta de nuevo."
     BackupFailureReason.Unauthorized -> "Tu sesión ya no vale para respaldar — vuelve a iniciar sesión."
