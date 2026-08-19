@@ -58,11 +58,13 @@ import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.CtaTone
+import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.emmSwitchColors
+import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.hh.transaction.centsToSoles
 import com.emm.justchill.hh.transaction.resolvedColor
 import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
@@ -86,7 +88,11 @@ fun AddEditRecurringMovementScreen(
         vm.effect.collect { effect ->
             when (effect) {
                 AddEditRecurringMovementEffect.NavigateBack -> currentOnBack()
-                is AddEditRecurringMovementEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
+
+                is AddEditRecurringMovementEffect.ShowError -> snackbarHostState.showEmmSnackbar(
+                    message = effect.message,
+                    tone = EmmSnackbarTone.Error,
+                )
             }
         }
     }

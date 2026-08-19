@@ -85,6 +85,15 @@ la única verificación es la local.
       allowlist literal a propósito, no `tasks.withType<Detekt>()`.
 - [ ] `build-logic` corre en el gate pero no se lintea: su build file aplica solo `kotlin-dsl`, y la
       entrada de detekt ahí es un marker `implementation` para poder escribir `DetektConventionPlugin`.
+- [ ] Prohibir `SnackbarHostState.showSnackbar` con `ForbiddenMethodCall` (`config/detekt/detekt.yml`,
+      hoy `active: false`), para que un error pintado de verde no vuelva a mergear — el gate corre
+      `detektMainAndroid` sobre `:ui-android` con type resolution, así que la regla funcionaría. Costo
+      ya medido: prenderla activa también sus otras entradas, y eso son cuatro violaciones
+      preexistentes — el `println` de `PrintlnDiagnosticsLogger` (la clase se llama así a propósito) y
+      tres `BigDecimal(String)` en `EmmAmountChill.kt`. Decidir cada una es parte del trabajo.
+- [ ] `androidApp/lint-baseline.xml` tiene entradas muertas: el gate imprime "7 errors/warnings were
+      listed in the baseline file but not found in the project". Misma podredumbre que las entradas
+      muertas del baseline de detekt, pero en lint.
 
 ### Bugs
 
@@ -96,9 +105,6 @@ la única verificación es la local.
 - [ ] La pantalla de Reportes se traga todos sus errores: `ReportViewModel` emite
       `ReportEffect.ShowError`, pero `ReportScreen` no recibe `SnackbarHostState` y la rama queda en
       `-> Unit`. Un fallo de carga o de compartir no le dice nada al usuario.
-- [ ] Un snackbar de error se dibuja con el check verde de éxito: los handlers de `ShowError` llaman
-      `showSnackbar(message)` pelado y `EmmSnackbarBody` cae a `Success` cuando el cast a
-      `EmmSnackbarVisuals` falla. El arreglo son los call sites, no el átomo.
 - [ ] `TRENDS_WINDOW_MONTHS = 6` (`ReportViewModel.kt`) está repetido como texto literal "6 meses"
       en `ReportShareFormatter.kt`. Cambiar la constante deja el texto compartido mintiendo.
 - [ ] `DefaultAuthRepository.deleteAccount()` dispara el RPC sin `awaitSessionInitialization()`, así

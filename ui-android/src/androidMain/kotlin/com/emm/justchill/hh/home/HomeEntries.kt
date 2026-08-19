@@ -9,6 +9,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
+import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.hh.shared.AddTransactionRoute
 import com.emm.justchill.hh.shared.AppNavigator
 import com.emm.justchill.hh.shared.EditTransactionRoute
@@ -47,7 +49,11 @@ private fun HomeEntry(
         vm.effect.collect { effect ->
             when (effect) {
                 HomeEffect.CloseConfirmSheet -> confirmSheetOpen = false
-                is HomeEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
+
+                is HomeEffect.ShowError -> snackbarHostState.showEmmSnackbar(
+                    message = effect.message,
+                    tone = EmmSnackbarTone.Error,
+                )
             }
         }
     }

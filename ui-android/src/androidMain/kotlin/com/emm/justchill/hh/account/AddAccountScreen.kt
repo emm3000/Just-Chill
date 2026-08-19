@@ -58,10 +58,12 @@ import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.CtaTone
+import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
+import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -77,7 +79,11 @@ fun AddAccountScreen(
         vm.effect.collect { effect ->
             when (effect) {
                 AddAccountEffect.AccountSaved -> currentOnBack()
-                is AddAccountEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
+
+                is AddAccountEffect.ShowError -> snackbarHostState.showEmmSnackbar(
+                    message = effect.message,
+                    tone = EmmSnackbarTone.Error,
+                )
             }
         }
     }
