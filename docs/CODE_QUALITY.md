@@ -123,7 +123,9 @@ why, never the what.**
 - A kept comment is 1–3 lines of present-tense fact. **Zero history:** a sentence describing what
   the code used to be, what replaced what, or what a review said is deleted — never rephrased.
 - **No KDoc by default** — on any class, property, or function, exported to iOS or not. If removing
-  the history leaves only a paraphrase of the signature, the whole KDoc goes.
+  the history leaves only a paraphrase of the signature, the whole KDoc goes. **This bullet decides
+  EXISTENCE, never form:** a block that survives the deletion test is no longer a default, and the
+  bullet below picks its syntax. Read alone, this one has already been misread as "KDoc never".
 - **What survives picks its syntax by POSITION, not by length.** KDoc on a declaration something
   else calls, because that is the only form the IDE shows at the call site and the only one whose
   `[Symbol]` links a rename keeps honest; `//` on a statement inside a body, which KDoc cannot
