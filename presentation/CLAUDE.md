@@ -74,7 +74,7 @@ that Android satisfies from `:androidApp` instead: `PrintlnDiagnosticsLogger` fo
   tests plug the two ways in — `EXPECTED_VIEW_MODELS` for ViewModels, `every single
   bootstrapAppGraph resolves is bound` for what the bootstrap resolves — and everything else is
   still exposed. Today that is exactly one binding: `CommitHash` (`androidMain/core/CommitHash.kt`,
-  sole consumer `AppNavHost.kt:88`), covered by `AndroidPlatformModuleTest` in `:androidApp` instead.
+  sole consumer `koinInject<CommitHash>()` in `AppNavHost`), covered by `AndroidPlatformModuleTest` in `:androidApp` instead.
   Add a binding with a consumer outside the graph and you owe it a test of its own.
   It also guards what a definition *receives*, not just that it resolves: with a sentinel `Clock`
   and `TimeZone` bound, every `Clock`/`TimeZone` field on a `com.emm.` class must be the bound

@@ -427,12 +427,6 @@ gana el ADR.
 
 ### Docs y comentarios que afirman cosas falsas
 
-- [ ] `ui-android/.../hh/shared/AppNavHost.kt:51-67` — cabecera de 17 líneas que describe un host
-  que ya no existe: dice CMP host único para Android+iOS, port navigation3-UI de JetBrains, y
-  `PlatformHostActions + startTab` tras `expect/actual` — las tres son falsas hoy (`:ui-android` es
-  Android-only, el port se retiró, `PlatformHostActions` es `interface`/`val` planos en
-  `hh/shared/PlatformHostActions.kt:39`/`:168`). Sin tocar todavía; re-verificar el rango de línea
-  en cada edición del archivo.
 - [ ] `docs/DESIGN_SYSTEM.md` §5 documenta 5 radios con otro esquema de nombres (`radius.0`,
   `radius.s` 6dp, `radius.m`, `radius.l`, `radius.full`); `EmmRadii.kt` ships **9** (`r0`, `rXS` 8dp,
   `rS` 10dp, `rM`, `rL`, `rXL`, `rXXL`, `rLTop`, `rFull`) y `rXS` —el que usa el footer de commit— no
