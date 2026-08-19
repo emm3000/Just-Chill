@@ -156,11 +156,11 @@ class MigrationV1ToV2Test {
 
         database.recurring_movementsQueries.insert(
             id = "RM1",
-            name = "Netflix",
-            type = "Spend",
+            name = "Sueldo mensual",
+            type = "Income",
             amount = 4_490L,
             description = "",
-            categoryId = null,
+            categoryId = "C1",
             accountId = "A1",
             frequency = "Monthly",
             dayOfMonth = 5L,
@@ -172,7 +172,8 @@ class MigrationV1ToV2Test {
 
         val recurring = database.recurring_movementsQueries.find("RM1").executeAsOneOrNull()
         assertNotNull(recurring, "recurring_movements must be writable after the whole chain")
-        assertEquals("Netflix", recurring.name)
+        assertEquals("Sueldo mensual", recurring.name)
+        assertEquals("C1", recurring.categoryId)
         assertEquals(4_490L, recurring.amount)
         assertEquals("A1", recurring.accountId)
     }
