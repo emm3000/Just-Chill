@@ -13,5 +13,5 @@
 
 `MigrationV1ToV2Test:117` migrates to a literal `2`; the other three migration tests all target
 `EmmDatabaseData.Schema.version`, so `1 → current` is the one starting version nothing covers.
-It passes today only because its reads are raw SQL — decide whether they stay raw or become
-generated queries once the test reaches the current schema, before writing the fix.
+Its set-up inserts stay raw SQL against the v1 schema; the post-migration assertions become
+generated queries — the pattern is already written in `data/CLAUDE.md` `### Migration tests`.
