@@ -44,28 +44,6 @@ pero admin los bypassea: en un push directo esos checks **no corrieron**.
 - [ ] Detector de drift en CI con el md5 normalizado del schema del server, y mover el guard de
       `relreplident` después del `continue` de idempotencia (`supabase/migrations/`).
 
-### Detekt y baseline
-
-*Acá no se anota el conteo, sino el comando que lo saca: los números driftean.*
-
-- [ ] Purgar las entradas muertas de `UnusedPrivateFunction` en `config/detekt/baseline-ui-android-main.xml`:
-      la regla ya ignora los `@Preview` por anotación. `rg -c 'UnusedPrivateFunction' <ese archivo>`.
-- [ ] La entrada `ImportOrdering:ProfileScreen.kt` de ese baseline es probablemente muerta.
-      Correr la tarea y ver si el issue reaparece antes de borrarla.
-- [ ] Burn-down de los `TooManyFunctions` con amnistía en ese baseline: la entrada no lleva conteo,
-      así que **el gate no los va a volver a reportar nunca**. Criterio en `docs/CODE_QUALITY.md`.
-- [ ] Mismo caso con `LongParameterList` sobre `ProfileRowWithTrailing` (`ProfileScreen.kt`):
-      name-keyed y sin conteo, amnistía permanente hasta que se baje.
-- [ ] detekt corre **degradado** sobre los pares expect/actual: degrada los errores de compilación a
-      warning y termina verde, así que una regla con type resolution puede no dispararse en silencio.
-- [ ] El modo compiler-plugin lo arreglaría, pero la coordenada pineada da 404 en Maven Central
-      (`dev.detekt:detekt-compiler-plugin:2.0.0-alpha.6`; la publicada es `2.4.10-2.0.0-alpha.6`).
-- [ ] `:ui-android:detektAndroidMainSourceSet` y las tareas por flavor de `:androidApp` fallan y están
-      fuera del gate a propósito: `DETEKT_GATE_TASKS` es un allowlist literal, no `withType<Detekt>()`.
-- [ ] `build-logic` corre en el gate pero no se lintea: su build file aplica solo `kotlin-dsl`.
-- [ ] Prohibir `SnackbarHostState.showSnackbar` con `ForbiddenMethodCall` (hoy `active: false` en
-      `config/detekt/detekt.yml`). Prenderla arrastra 4 violaciones preexistentes que hay que decidir.
-
 ### Seguridad
 
 - [ ] La sesión de Supabase sigue en texto plano en `shared_prefs/justchill_auth.xml`. Cifrarla con
