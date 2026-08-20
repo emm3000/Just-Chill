@@ -27,6 +27,7 @@ import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
+import com.emm.justchill.hh.report.TRENDS_WINDOW_MONTHS
 
 @Composable
 fun SavingsRateBlock(
@@ -44,7 +45,7 @@ fun SavingsRateBlock(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
-        Eyebrow(text = "TASA DE AHORRO · 6 MESES")
+        Eyebrow(text = "TASA DE AHORRO · $TRENDS_WINDOW_MONTHS MESES")
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(spacing.s3),
