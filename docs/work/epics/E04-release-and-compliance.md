@@ -22,6 +22,9 @@ shipped. Nothing shipped.
 - **Flipping `SNAPSHOT_BACKUP_ENABLED` is a compliance event, not a feature flag.** The release that
   flips it updates the privacy policy, the store listing and the Data Safety answer in the same
   commit, because the app stops being "nothing leaves your phone".
+- **E04-01, E04-02 and E04-04 end in the Play Console**, so no amount of repo work closes them —
+  the last step is a person in a web form. The other two are not blocked on that: E04-03 is a file
+  anyone can write, and E04-05 waits on art nobody has authored.
 - **The restore drill is required by
   [ADR 009](../../adr/009-backup-is-a-snapshot-not-row-replication.md) Decision 4 and is enforced
   only by a line on the release checklist.** Until that checklist exists as a file, the rule is
