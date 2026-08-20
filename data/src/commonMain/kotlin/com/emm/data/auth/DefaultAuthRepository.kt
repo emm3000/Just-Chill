@@ -106,6 +106,11 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
      * `logout` for every scope, LOCAL included, and catches only RestException. HttpRequestException
      * is an IOException, so a network failure escapes before clearSession runs and leaves the device
      * holding a session for a user that no longer exists server-side.
+     *
+     * Fires the only Postgrest call in this class without awaiting initialization, because its only
+     * caller already did: DeleteUserAccountUseCase.resolveAuthenticatedUserId waits out Initializing
+     * under the same lock and refuses unless the session is Authenticated. Move that wait and this
+     * RPC starts attaching the anon key on a cold start, which RLS answers with 403.
      */
     override suspend fun deleteAccount(): Unit = authCall {
         client.postgrest.rpc("delete_account")
