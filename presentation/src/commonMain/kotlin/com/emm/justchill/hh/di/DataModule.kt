@@ -60,7 +60,7 @@ val dataModule = module {
     // `internal` constructor taking its storage seam, which only :data (and its tests) can see. The
     // constructor DSL would have to resolve a reference this module cannot name. Same for the
     // verifier and the eraser, and for the pruner, which additionally takes the graph's Clock and TimeZone —
-    // spelled as get() because neither carries a default any more (docs/DATE_AUDIT.md #7), and
+    // spelled as get() because neither carries a default any more (docs/CODE_QUALITY.md, Dates), and
     // AppGraphKoinTest asserts by identity that this block really passed the bound instances rather
     // than its own.
     factory<BackupUploader> { DefaultBackupUploader(get()) }

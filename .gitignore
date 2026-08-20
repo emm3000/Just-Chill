@@ -31,15 +31,12 @@ docs/*
 !docs/swiftui/**
 !docs/work/
 !docs/work/**
-!docs/PRODUCT_DISCOVERY.md
 !docs/PRODUCT_REQUIREMENTS.md
-!docs/POST_V1_PLAN.md
 !docs/DESIGN_SYSTEM.md
 !docs/PROGRESS.md
 !docs/PLAY_STORE_LISTING.md
 !docs/PLAY_ADVERTISING_ID.md
 !docs/PRIVACY_POLICY.md
-!docs/DATE_AUDIT.md
 !docs/WORKFLOW.md
 !docs/CODE_QUALITY.md
 !docs/PERSISTENCE.md

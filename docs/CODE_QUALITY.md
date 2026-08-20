@@ -260,12 +260,44 @@ decomposition happens two ways here, both counting:
 **A use case exists where there is domain logic. A pure read may go from ViewModel to repository.**
 The measurement behind that rule:
 
-- **8 ViewModels** in `:presentation` already inject `:domain` repositories directly (measured at `8019831d`; `RecurringMovementsViewModel` joined).
-- **4 of 33** use cases in `:domain` are pure delegation, counting strictly: one member whose whole body
-  is a single `repository.x(...)` call and nothing else (measured at `8019831d`). `ObserveSessionUseCase`
-  (two bare delegations) makes it 5. The 4 strict survivors — `SignOutUseCase`, `DeleteCategoryUseCase`,
+- ViewModels in `:presentation` inject `:domain` repositories directly wherever the read is pure.
+- The use cases that survive strict delegation-counting — `SignOutUseCase`, `DeleteCategoryUseCase`,
   `DeleteTransactionUseCase`, `ImportDataUseCase` — are all WRITES, exactly what the rule predicts.
-- `FindTransactionUseCase`, `FindAccountUseCase` and `FindCategoryUseCase` were the three worst — eight-line classes renaming `repository.find` — and all three are now deleted (measured at `8019831d`); `CategoryRepository.find` itself had gone dead and was deleted too.
+  A use case whose whole body is one `repository.x(...)` call on a READ is a rename, not a layer.
 
 The leak stops at `:presentation`: `:ui-android` and `:androidApp` production code import no
 `:domain` repository (only `androidApp/src/test`, which mocks them).
+
+## Dates
+
+**Whatever asks "what day is it" takes an injected `Clock` AND an injected `TimeZone`, and neither
+parameter carries a default.** A Kotlin default never blocks an explicit argument, so a test that
+passes a fake clock still compiles and passes against a constructor that defaults to the ambient
+one — the default hides the defect instead of failing. `hh/di/SharedModule.kt` is the only place a
+clock or a zone enters the graph. `AppGraphKoinTest` asserts by identity (`assertSame`, because
+every `Clock.System` reference is `==`) that every graph-built `com.emm.` class holds the bound
+instances.
+
+This command regenerates the list of production code that still reads the machine, and its output
+**is** the list. Skim the output; never paste its count anywhere.
+
+```
+rg -n --type kotlin \
+  -e 'LocalDate\.now\(\)' -e 'LocalDateTime\.now\(\)' -e 'Instant\.now\(\)' \
+  -e 'System\.currentTimeMillis' -e 'Clock\.System' -e 'currentSystemDefault\(\)' \
+  -g '!build/' -g '!**/src/*[Tt]est*/**' -g '!androidApp/src/dev/**' \
+  | rg -v ':[0-9]+: *(//|\*)'
+```
+
+The second `rg` drops lines that start with a comment marker, which is what keeps KDoc *about*
+ambient reads out of the output; it is a heuristic, not a parser, so a trailing comment on a code
+line still shows. Test sources and the dev-flavor `androidApp/src/dev/.../experiences/` playground
+are outside the rule and read the clock freely.
+
+Everything the command reports beyond the two `SharedModule` factories is deliberate, lives in
+`:ui-android`, and holds no value that outlives the screen: `DatePickerSheet` (today, and the zone
+it dims future days in), the `SeeTransactionsScreen` `@Preview` helper, and
+`PlatformHostActions.suggestedExportFilename` — where the date the user is standing in **is** the
+correct answer, and the value never leaves the SAF picker. That filename is an independent read
+from the `exportedAt` inside the payload, which comes from the injected clock; only the payload's
+is pinned by a test.

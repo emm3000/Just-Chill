@@ -13,7 +13,8 @@ own conventions are in `data/CLAUDE.md`.
   `data/build.gradle.kts`.
 - **`transactions.occurredAt` is ISO local text, not an instant** — `'2026-08-10T21:47:33'`, no
   timezone. Ordering, month windows and day grouping are all plain string operations on it; see the
-  header comment in `transactions.sq` for why that works and `DATE_AUDIT.md` #5 for why it had to.
+  header comment in `transactions.sq` for why that works: an instant column made "what day is
+this" depend on the reader's zone, which is the bug the text column removes.
   `createdAt` / `updatedAt` / `deletedAt` stay epoch millis: those are genuine instants.
 - **Soft-delete (tombstones)** since schema v3: deletes are `UPDATE ... SET deletedAt,
   syncState='Pending'`; every read query filters `deletedAt IS NULL`. Sync metadata columns on all

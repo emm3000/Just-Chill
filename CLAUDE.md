@@ -135,16 +135,15 @@ doc has a read-trigger in the map below, and a doc with no trigger is archive.
   opening, taking or closing a ticket.**
 - `adr/` — filenames state the decision; each header declares what it amends or supersedes. 009 is
   the one to read first for anything sync-shaped. **Read before changing anything an ADR decided.**
-- `DATE_AUDIT.md` — the date findings + live rule #7: whatever asks "what day is it" takes an injected
-  `Clock` **and** `TimeZone`, neither with a default. **Read before touching dates.**
 - `PLAY_ADVERTISING_ID.md`, `PLAY_STORE_LISTING.md`, `PRIVACY_POLICY.md` — the store-facing set.
   **Read before a Play submission or a privacy change**; on the advertising ID the console says
   "Yes", wrongly, and that doc is the proof.
-- `DESIGN_SYSTEM.md` — tokens and components. **Read before adding UI**; paths point at `ui-android/src/androidMain/`, the only source set `:ui-android` has.
-- `CODE_QUALITY.md` — the two halves of the convention: detekt's real thresholds and its blind spots, and what only a reviewer can judge. **Read before adding a lint rule, a `@Suppress`, or a use case.**
+- `DESIGN_SYSTEM.md` — the criteria: which token to reach for and why, never its value. **Read before adding UI.**
+- `CODE_QUALITY.md` — detekt's thresholds and blind spots, what only a reviewer can judge, and the date
+  rule (injected `Clock` **and** `TimeZone`, no defaults). **Read before a lint rule, a `@Suppress`, a use case, or a date.**
 - `WORKFLOW.md` — the writer/reviewer loop, the reinforced gate, the model-tier policy. **Required
-  before any unit of work.** `swiftui/PLAN.md` — the 11 iOS slices and their status.
-- `PRODUCT_DISCOVERY.md`, `PRODUCT_REQUIREMENTS.md`, `POST_V1_PLAN.md` — the product definition ADR 001
-  amends by row id, plus unstarted growth work. **Read before scoping a feature.**
+  before any unit of work.** `swiftui/PLAN.md` — the iOS slices that remain.
+- `PRODUCT_REQUIREMENTS.md` — the Won't-have rows (ADRs amend them **by row id**), the NFRs and the
+  acceptance criterion. **Read before scoping a feature.**
 - `archive/` — closed tracks kept for the reasoning. Release state lives in `PROGRESS.md`;
   `pre-kmp` is the rollback point before the KMP migration.
