@@ -32,18 +32,22 @@ Expected: the known permissions return `1`, `AD_ID` and `advertising` return `0`
 result only means something once you have proved the same command finds something you know is
 there. Skipping this step is how a search bug gets reported as a clean bill of health.
 
-## Evidence — valid for `v2.4.0` (commit `dcc176a`), nothing newer
+## Evidence — valid for `v2.5.0` (commit `b5d48191`), nothing newer
 
 All three were run against that bundle and agree. They say nothing about the bundle you are about
-to upload: `git rev-list --count v2.4.0..trunk` says how far `trunk` has moved past that tag.
+to upload: `git rev-list --count v2.5.0..trunk` says how far `trunk` has moved past that tag.
 **Re-run the quick path against the AAB that will actually be published before answering the
 question again** — this table is a record, not a standing clearance.
 
 | Check | Command | Result |
 |---|---|---|
-| Published AAB manifest | `rg -a 'AD_ID'` over the unzipped bundle | absent (control test passed) |
+| Published AAB manifest | `rg -a 'AD_ID'` over the unzipped bundle | absent (control test passed: `INTERNET` and `USE_BIOMETRIC` both found) |
 | Manifest merger report | `rg -i 'AD_ID\|advertising' androidApp/build/outputs/logs/manifest-merger-prod-release-report.txt` | 0 mentions |
-| Runtime classpath | `./gradlew :androidApp:dependencies --configuration prodReleaseRuntimeClasspath` | no `play-services-measurement`, no `play-services-ads-identifier` |
+| Runtime classpath | `./gradlew :androidApp:dependencies --configuration prodReleaseRuntimeClasspath` | no `play-services-measurement`, no `play-services-ads-identifier`, no `firebase-analytics` |
+
+The published bundle declares no `com.google.android.gms.permission.*` node of any kind. `v2.4.0`
+was checked the same way and was equally clean — and Play still refused its Edit for declaring
+`AD_ID`. Play's message describes a permission that is not in the binary.
 
 The merger report is the strongest of the three: it records every manifest node contributed by
 every dependency, including nodes that are later removed. Zero mentions means no library ever
@@ -97,5 +101,11 @@ it be superseded may resolve it on its own.
 
 ## Next step
 
-Flip the Play Console declaration back to "No" once `v2.4.0` has shipped, then re-run the checklist
-on the following release to confirm nothing regressed.
+The old wording waited on `v2.4.0`, which never shipped and never will — its Edit was refused. That
+wait is over: `v2.5.0` uploaded and **committed its Edit** with the declaration still reading "Yes",
+so the alpha track finally has a draft that can supersede the release the conflict is suspected to
+live on.
+
+Publish that draft, then flip the declaration to "No" and re-run the quick path on the release after
+it. If Play refuses the "No", read the section above before touching the answer: an old release
+still active in a track is the first suspect, not the bundle.
