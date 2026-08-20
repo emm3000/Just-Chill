@@ -43,6 +43,5 @@ Report the ticket IDs touched and their new directory, any ticket created, the c
 ## References
 
 - `docs/work/README.md` — the rules.
-- `references/lessons.md` — the incidents these rules come from.
 - `docs/work/epics/E01-snapshot-backup.md` — worked example of an epic.
 - `assets/ticket.md`, `assets/epic.md` — templates.

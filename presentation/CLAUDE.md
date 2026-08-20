@@ -23,22 +23,21 @@ never SQLDelight types or a `Default*` implementation. Unlike the no-Compose rul
 reviewed, not structural — the module *does* depend on `:data`, deliberately, so the Koin wiring can
 exist once instead of once per platform.
 
-Stability note: `:ui-android` compensates the missing `@Stable`/`@Immutable` annotations via
-`ui-android/compose_stability.conf` (`stabilityConfigurationFiles`) — state classes here are
-declared stable there. Keep state classes immutable (`val` + immutable collections) or that
+Because of that, `:ui-android` declares this module's state classes stable on its side rather than
+here (`ui-android/CLAUDE.md`). Keep them immutable (`val` + immutable collections) or that
 declaration becomes a lie.
 
 ## Where things live
 
-`commonMain/core/` holds `AppGraph` (`appModules`/`bootstrapAppGraph`), `mvi/`, `error/`, `format/`,
-`preferences/`, `backup/` and `DispatchersProvider`. A feature owns `hh/<feature>/` (ViewModel +
-UiState + Intent + Effect + `toUi` mappers) and one Koin module in `hh/di/`; pure helpers and
-`UiStrings` sit in `hh/shared/`.
+`commonMain/core/` holds `AppGraph` (`appModules`/`bootstrapAppGraph`), `DispatchersProvider`, and
+one directory per cross-cutting concern — read the directory rather than a list written here. A
+feature owns `hh/<feature>/` (ViewModel + UiState + Intent + Effect + `toUi` mappers) and one Koin
+module in `hh/di/`; pure helpers and `UiStrings` sit in `hh/shared/`.
 
-`androidMain/` holds the two lifecycle actuals, `core/lifecycle/ResumeEvents.android.kt` and
-`core/lifecycle/BackgroundEvents.android.kt`, plus `core/CommitHash.kt` — an ordinary Android-only DI
-contract (producer and consumer are both Android), deliberately outside `commonMain` so it never
-reaches the iOS compile or `JustChillKit`.
+`androidMain/` holds the lifecycle actuals under `core/lifecycle/`, plus `core/CommitHash.kt` — the
+one DI contract that is Android-only on both ends, deliberately outside `commonMain` so it never
+reaches the iOS compile or `JustChillKit`. Its KDoc owns the whole rationale (why a value class and
+not a qualifier, why this source set); don't restate it elsewhere.
 `iosMain/` holds its
 counterpart, `KoinIos.kt` — the iOS entry point (`initKoin`, `iosPlatformModule`, and one typed
 resolver per Swift-facing ViewModel) — and, unlike `androidMain`, two ordinary port implementations
@@ -63,7 +62,7 @@ that Android satisfies from `:androidApp` instead: `PrintlnDiagnosticsLogger` fo
 
 ## Testing
 
-- `./gradlew :presentation:testAndroidHostTest` (JVM host tests; `--rerun` is per-task).
+- `./gradlew :presentation:testAndroidHostTest`.
 - `androidHostTest/` — anything needing MockK, JDBC SQLite or `Dispatchers.setMain`; home of
   `core/AppGraphKoinTest.kt`, which resolves the WHOLE Koin graph off-device against
   `TestPlatformModule`. A missing binding compiles clean and passes the Android build — this test

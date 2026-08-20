@@ -1,25 +1,23 @@
 ---
-description: Tag the current trunk HEAD as a release and publish to Play Store alpha
+description: Tag the current trunk HEAD as a release and upload a draft to the Play Store alpha track
 argument-hint: "patch | minor | major | vX.Y.Z [--skip-tests]"
 allowed-tools:
   - Bash
   - Read
 ---
 
-You are executing the `/release` slash command. The user wants to tag the current trunk HEAD with a new semver tag, which will trigger `uploadRelease.yml` on GitHub Actions and publish the build to Play Store alpha.
+You are executing the `/release` slash command. The user wants to tag the current trunk HEAD with a new semver tag, which triggers `uploadRelease.yml` on GitHub Actions. That workflow uploads the AAB to the Play Store alpha track **as a draft** — publishing it is a manual step in Play Console, so this command does not ship anything on its own.
 
 ## Parse arguments
 
 The user invoked: `/release $ARGUMENTS`
 
-Recognized forms:
-- `patch` → bump the patch version (e.g., last tag `v1.6.0` → new `v1.6.1`)
-- `minor` → bump minor, reset patch to 0 (`v1.6.0` → `v1.7.0`)
-- `major` → bump major, reset minor/patch to 0 (`v1.6.0` → `v2.0.0`)
-- Explicit semver like `v1.7.0` or `1.7.0` (`v` is optional; you'll add it if missing)
-- Optional flag `--skip-tests` to skip the local pre-flight test run
+Recognized forms, from `v1.6.0`: `patch` → `v1.6.1`, `minor` → `v1.7.0` (patch reset), `major` →
+`v2.0.0` (minor and patch reset). An explicit semver is also accepted, with the leading `v` optional
+— add it if missing. `--skip-tests` skips the local pre-flight run.
 
-If the user provided no argument or something unrecognized, ask which bump (patch/minor/major) or accept an explicit version. Don't guess.
+If the argument is missing or unrecognized, ask which bump or accept an explicit version. Don't
+guess.
 
 ## Safety preflight (do these checks in order, STOP on failure)
 
@@ -54,8 +52,7 @@ If the user provided no argument or something unrecognized, ask which bump (patc
 If the user gave an explicit version, normalize to `vX.Y.Z` (add `v` prefix if missing). Validate it matches `^v\d+\.\d+\.\d+(-[\w.]+)?$`.
 
 If the user gave `patch`/`minor`/`major`, read the latest **release** tag. The `--match` filter is
-required: the repo carries non-release tags (`pre-kmp`, `post-s5`, `pre-redesign`) and a bare
-`describe` returns whichever is nearest, which is not parseable as semver.
+not optional — the same filter and the same reason are in `androidApp/build.gradle.kts`.
 ```bash
 git describe --tags --abbrev=0 --match "v[0-9]*" 2>/dev/null
 ```
@@ -79,19 +76,17 @@ Then ask the user to confirm with a clear yes/no. **Do not proceed without expli
 
 ## Optional pre-flight tests
 
-Unless the user passed `--skip-tests`, run a quick local validation BEFORE tagging — the same tasks
-the CI `publish` job runs, so a fail here predicts a CI fail without polluting the remote with a
-dead tag:
+Unless the user passed `--skip-tests`, run the same tasks the CI `publish` job runs BEFORE tagging,
+so a fail here predicts a CI fail without leaving a dead tag on the remote:
 
 ```bash
 ./gradlew qualityGate lintProdRelease
 ```
 
-Do not substitute a hand-written task list. `qualityGate` is defined once in build-logic and this
-line existed for months naming three tasks that the KMP migration had deleted (`:domain:test`,
-`:data:testDebugUnitTest`, `:app:testDevDebugUnitTest`), so the preflight failed on every release
-for a reason that had nothing to do with the release. On macOS `qualityGate` also compiles the iOS
-target; that is intended.
+Do not substitute a hand-written task list: `qualityGate` is defined once in build-logic, and a list
+spelled out here drifts from it silently until a release preflight fails for a reason that has
+nothing to do with the release. On macOS `qualityGate` also compiles the iOS target; that is
+intended.
 
 If anything fails, STOP. Show the failure, tell the user to fix and rerun. Do not tag.
 
@@ -107,21 +102,16 @@ Do NOT push trunk itself here — pretests should have happened at the previous 
 
 ## Post-release report
 
-After the push succeeds, tell the user:
+After the push succeeds, tell the user the tag is pushed and `uploadRelease.yml` is running, then
+read `git remote get-url origin` and give them
+`https://github.com/<owner>/<repo>/actions/workflows/uploadRelease.yml`.
 
-1. The tag is pushed; `uploadRelease.yml` should be running now.
-2. Give them the GitHub Actions URL pattern (read it from the remote):
-   ```bash
-   git remote get-url origin
-   ```
-   Construct: `https://github.com/<owner>/<repo>/actions/workflows/uploadRelease.yml`
-3. Remind them:
-   - Wait for the workflow to finish green (verify + publish).
-   - The workflow uploads the AAB as a **draft** on the alpha track — it does not ship. Open
-     Play Console → Pruebas → Alfa, confirm the draft's versionCode/versionName, and publish it.
-     A green workflow alone means nothing reached testers.
-   - Only then: Play Console → Producción → "Promover desde otra pista" → seleccionar la build de alpha → release notes → revisar → lanzar a producción.
-   - Google review: 1–3 días para apps existentes.
+Remind them what green does and does not mean:
+
+- The workflow uploads the AAB as a **draft** on the alpha track. A green workflow alone reached
+  nobody. Open Play Console → Pruebas → Alfa, confirm the draft's versionCode/versionName, publish.
+- Only then: Play Console → Producción → "Promover desde otra pista" → la build de alpha → release
+  notes → revisar → lanzar a producción. Google review takes 1–3 días for an existing app.
 
 ## Failure recovery
 

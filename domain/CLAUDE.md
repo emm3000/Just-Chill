@@ -1,53 +1,31 @@
 # :domain — CLAUDE.md
 
-Kotlin Multiplatform library. Targets: `android` (host tests only) + `iosArm64` + `iosSimulatorArm64`.
-**No Android, JVM, or framework dependencies.** No module dependencies — this is the bottom of the graph.
+Kotlin Multiplatform library and the bottom of the graph — no module dependencies at all. Targets:
+`android` (host tests only) + `iosArm64` + `iosSimulatorArm64`.
 
 Only `kotlinx-coroutines-core` and `kotlinx-datetime` are allowed here. Anything from `java.*`,
 `android.*`, SQLDelight, Supabase or Ktor breaks the iOS compile — that break is the guardrail
 working as intended, not an obstacle to route around.
 
-Root package: `com.emm.domain.<entity>`. Source in `domain/src/commonMain/kotlin/`.
-Packages: `account`, `auth`, `category`, `home`, `recurring`, `report`, `sync`, `transaction`,
-`shared/` (`error/`, `backup/`).
-
-## Layer conventions
-
-| Concept | Naming | Location |
-|---|---|---|
-| Use case | `[Verb][Noun]UseCase` (e.g. `CreateTransactionUseCase`, `DeleteCategoryUseCase`) | `<entity>/` |
-| Entity / value | `{Entity}` (no suffix) | `<entity>/` |
-| Repository interface | `{Entity}Repository` | `<entity>/` |
+Root package `com.emm.domain.<entity>`: one directory per entity under
+`domain/src/commonMain/kotlin/com/emm/domain/`, plus `shared/`. Read the directory instead of a list
+written here. Naming is `[Verb][Noun]UseCase`, `{Entity}` with no suffix, and `{Entity}Repository`,
+each in its entity's package.
 
 ## Error model
 
-Sealed `DomainException` in `shared/error/` is the canonical failure type for all repositories and
-use cases. Read the sealed class for the current subtypes — a list here goes stale silently and
-already did.
-
-When adding a new failure mode, extend `DomainException` instead of introducing a new exception
-type. Don't leak SQLDelight or platform types into this module — those translations happen in `:data`.
+Sealed `DomainException` in `shared/error/` is the canonical failure type for every repository and
+use case. Read the sealed class for the current subtypes — a list here goes stale silently and
+already did. Don't leak SQLDelight or platform types into this module; those translations happen in
+`:data`.
 
 ## Backend-agnostic interfaces
 
-Repository interfaces declared here must not reference SQLDelight, Supabase, or any other
-framework. Example: `TransactionRepository` lives here; its `DefaultTransactionRepository`
-(SQLDelight-backed) lives in `:data`.
+Repository interfaces declared here must not reference SQLDelight, Supabase, or any other framework.
+`TransactionRepository` lives here; its SQLDelight-backed `DefaultTransactionRepository` lives in
+`:data`.
 
 The app is local-first; sync is **backup-only, one device at a time** (ADR 006). The row-replication
-engine is gone (`docs/work/epics/E01-snapshot-backup.md`, ADR 009); auth ports live in `auth/`
-(`AuthRepository`, `ObserveSessionUseCase`, `SessionStatus`, claim use cases). `sync/` now holds only
-`SyncMutex`, shared by `DeleteUserAccountUseCase` and `BackupOrchestrator` so an account deletion and
-a backup upload never race each other. See `docs/adr/001` / `docs/adr/006` / `docs/adr/009`.
-
-## Testing
-
-- Primary unit-test surface for the whole project — fast, no device.
-- Tests live in `domain/src/androidHostTest/kotlin/` (JUnit4 + MockK). A `commonTest` source set is
-  declared in `build.gradle.kts` but has no files yet; MockK is only on the host-test classpath, so
-  anything that mocks belongs in `androidHostTest` regardless.
-- Use `runTest`, `mockk()`, `coEvery`, `coVerify`.
-- Run: `./gradlew :domain:testAndroidHostTest`
-- Single test: `./gradlew :domain:testAndroidHostTest --tests "com.emm.domain.transaction.CreateTransactionUseCaseTest"`
-- The task goes `UP-TO-DATE` across sessions — add `--rerun` to force a real run.
-- There is no `:domain:test` task. It disappeared when the module became KMP.
+engine is gone (`docs/work/epics/E01-snapshot-backup.md`, ADR 009); auth ports live in `auth/`.
+`sync/` now holds only `SyncMutex`, shared by `DeleteUserAccountUseCase` and `BackupOrchestrator` so
+an account deletion and a backup upload never race each other. See ADRs 001 / 006 / 009.
