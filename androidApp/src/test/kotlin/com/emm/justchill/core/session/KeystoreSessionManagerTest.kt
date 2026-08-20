@@ -9,14 +9,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class KeystoreSessionManagerTest {
 
     private val prefs = FakePreferences()
     private val cipher = FakeSessionCipher()
-    private val manager = KeystoreSessionManager(prefs, cipher, sessionJson)
+    private val manager = KeystoreSessionManager(prefs, cipher)
 
     private val session = UserSession(
         accessToken = "access-token",
@@ -52,11 +51,21 @@ class KeystoreSessionManagerTest {
     }
 
     @Test
-    fun `a session the cipher can no longer read reports absence instead of throwing`() = runTest {
+    fun `a session the cipher can no longer read reads as no session at all`() = runTest {
         manager.saveSession(session)
         cipher.readable = false
 
-        assertNull(manager.loadSessionOrNull())
+        assertFailsWith<NoSessionFoundException> { manager.loadSession() }
+    }
+
+    @Test
+    fun `a plaintext key a downgraded build wrote back wins, and stops existing`() = runTest {
+        val newer = session.copy(refreshToken = "written-by-the-older-build")
+        manager.saveSession(session)
+        prefs.values[LEGACY_SESSION_KEY] = sessionJson.encodeToString(newer)
+
+        assertEquals(newer, manager.loadSession())
+        assertFalse(prefs.values.containsKey(LEGACY_SESSION_KEY))
     }
 
     @Test
@@ -66,8 +75,8 @@ class KeystoreSessionManagerTest {
 
     @Test
     fun `signing out leaves neither the encrypted nor the legacy key behind`() = runTest {
-        prefs.values[LEGACY_SESSION_KEY] = sessionJson.encodeToString(session)
         manager.saveSession(session)
+        prefs.values[LEGACY_SESSION_KEY] = sessionJson.encodeToString(session)
 
         manager.deleteSession()
 

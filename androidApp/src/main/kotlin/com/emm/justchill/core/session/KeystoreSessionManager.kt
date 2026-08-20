@@ -13,25 +13,24 @@ internal const val ENCRYPTED_SESSION_KEY = "session_encrypted"
 internal const val LEGACY_SESSION_KEY = "session"
 
 /**
- * `encodeDefaults` is what SettingsSessionManager wrote with; a payload migrated off it decodes to a
- * different session without it.
+ * Without `encodeDefaults` a written payload omits `expiresAt`, and `UserSession`'s default
+ * recomputes it as `now + expiresIn` on the next read — silently extending the session.
  */
 internal val sessionJson: Json = Json { encodeDefaults = true }
 
-internal class KeystoreSessionManager(
-    private val prefs: SharedPreferences,
-    private val cipher: SessionCipher,
-    private val json: Json,
-) : SessionManager {
+internal class KeystoreSessionManager(private val prefs: SharedPreferences, private val cipher: SessionCipher) :
+    SessionManager {
 
     override suspend fun saveSession(session: UserSession) {
-        prefs.edit { putString(ENCRYPTED_SESSION_KEY, cipher.encrypt(json.encodeToString(session))) }
+        prefs.edit {
+            putString(ENCRYPTED_SESSION_KEY, cipher.encrypt(sessionJson.encodeToString(session)))
+            remove(LEGACY_SESSION_KEY)
+        }
     }
 
     override suspend fun loadSession(): UserSession {
-        val stored = prefs.getString(ENCRYPTED_SESSION_KEY, null)
-        val plaintext = if (stored == null) adoptLegacySession() else cipher.decrypt(stored)
-        return json.decodeFromString(plaintext ?: throw NoSessionFoundException())
+        val plaintext = adoptLegacySession() ?: readEncryptedSession()
+        return sessionJson.decodeFromString(plaintext ?: throw NoSessionFoundException())
     }
 
     override suspend fun deleteSession() {
@@ -41,8 +40,10 @@ internal class KeystoreSessionManager(
         }
     }
 
-    // Runs at most once per install: it removes the cleartext in the same edit that writes the
-    // ciphertext, so the branch that reaches it is unreachable on every later load.
+    private fun readEncryptedSession(): String? = prefs.getString(ENCRYPTED_SESSION_KEY, null)?.let(cipher::decrypt)
+
+    // Sideloading the previous APK re-creates the cleartext key and makes it the fresher of the
+    // two, so this runs ahead of the encrypted key on every load rather than only on first migration.
     private fun adoptLegacySession(): String? {
         val legacy = prefs.getString(LEGACY_SESSION_KEY, null) ?: return null
         prefs.edit {

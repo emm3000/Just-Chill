@@ -22,13 +22,14 @@ private const val PAYLOAD_SEPARATOR = '.'
 
 internal class KeystoreSessionCipher : SessionCipher {
 
+    private val keyLock = Any()
+
     override fun encrypt(plaintext: String): String {
         val cipher = Cipher.getInstance(TRANSFORMATION)
         cipher.init(Cipher.ENCRYPT_MODE, sessionKey())
         val ciphertext = cipher.doFinal(plaintext.toByteArray(Charsets.UTF_8))
 
-        // GCM breaks if an IV repeats under one key, so the provider draws a fresh one per
-        // operation and it is stored beside the ciphertext rather than fixed anywhere.
+        // GCM breaks if an IV repeats under one key; the provider draws a fresh one per operation.
         return "${encode(cipher.iv)}$PAYLOAD_SEPARATOR${encode(ciphertext)}"
     }
 
@@ -44,12 +45,20 @@ internal class KeystoreSessionCipher : SessionCipher {
         return String(cipher.doFinal(ciphertext), Charsets.UTF_8)
     }
 
-    private fun sessionKey(): SecretKey {
+    // Serialised because two first-use calls racing on the auth dispatcher would each generate a
+    // key, and the second replaces the alias — orphaning whatever the first already encrypted.
+    private fun sessionKey(): SecretKey = synchronized(keyLock) {
         val keyStore = KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
-        return keyStore.getKey(KEY_ALIAS, null) as? SecretKey ?: generateSessionKey()
+        val existing = runCatching { keyStore.getKey(KEY_ALIAS, null) }.getOrNull()
+        existing as? SecretKey ?: generateSessionKey(keyStore)
     }
 
-    private fun generateSessionKey(): SecretKey {
+    private fun generateSessionKey(keyStore: KeyStore): SecretKey {
+        // An alias present but unreadable is the documented keystore-corruption state. Left in
+        // place it dead-ends the app: encrypt throws forever, so no sign-in can ever persist
+        // again. Dropping it costs one re-login.
+        runCatching { keyStore.deleteEntry(KEY_ALIAS) }
+
         val purposes = KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
         val spec = KeyGenParameterSpec.Builder(KEY_ALIAS, purposes)
             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)

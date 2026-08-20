@@ -12,7 +12,6 @@ import com.emm.justchill.BuildInfo
 import com.emm.justchill.core.platform.CurrentActivityHolder
 import com.emm.justchill.core.session.KeystoreSessionCipher
 import com.emm.justchill.core.session.KeystoreSessionManager
-import com.emm.justchill.core.session.sessionJson
 import com.emm.justchill.hh.auth.ActivityGoogleSignInLauncher
 import com.emm.justchill.hh.auth.GoogleCredentialClient
 import com.emm.justchill.hh.auth.GoogleSignInLauncher
@@ -51,7 +50,6 @@ val androidPlatformModule = module {
         KeystoreSessionManager(
             prefs = androidContext().getSharedPreferences(AUTH_PREFS_NAME, Context.MODE_PRIVATE),
             cipher = KeystoreSessionCipher(),
-            json = sessionJson,
         )
     }
     single { CurrentActivityHolder() }
