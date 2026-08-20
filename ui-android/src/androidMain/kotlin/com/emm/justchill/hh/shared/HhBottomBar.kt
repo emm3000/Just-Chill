@@ -103,7 +103,8 @@ private fun RegularBottomBarItem(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
-    val tint = if (isActive) colors.textPrimary else colors.textDisabled
+    // textDisabled on bg is 2.0:1, under the 4.5:1 AA floor these 10sp labels need.
+    val tint = if (isActive) colors.textPrimary else colors.textSecondary
     val interactionSource = remember { MutableInteractionSource() }
 
     Column(
