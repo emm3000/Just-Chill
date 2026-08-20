@@ -598,7 +598,3 @@ Not references:
 - Material 3 sample apps. We borrow the *scale* (sp values, spacing units) but not the *color philosophy*.
 
 ---
-
-## 13 · Roadmap
-
-The redesign roadmap is closed; reasoning in `docs/archive/ROADMAP_V1.md`.

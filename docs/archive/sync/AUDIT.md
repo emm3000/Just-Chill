@@ -1,15 +1,13 @@
 # Sync — consolidated audit
 
 > **ARCHIVED.** This is the forensic audit of the row-replication sync engine that
-> [ADR 009](../../adr/009-backup-is-a-snapshot-not-row-replication.md) deleted. Kept for *why* this
-> exists, not for what to do next: its surviving findings were absorbed into
-> [`docs/sync/ADR009_PLAN.md`](../../sync/ADR009_PLAN.md), the single live sync doc. Its `file:line`
+> [ADR 009](../../adr/009-backup-is-a-snapshot-not-row-replication.md) deleted. Kept for *why* that
+> decision was made, never for what to do next — the decision is the ADR and the remaining work is
+> [`docs/work/epics/E01-snapshot-backup.md`](../../work/epics/E01-snapshot-backup.md). Its `file:line`
 > citations are known-rotted — do not trust them.
 
-Sync is **off in production** since 2026-08-12 (`253e170`). This doc is the reference for the
-redesign: root cause, what the backup-only decision retires, what still has to be fixed, and what
-must survive the rewrite. Status lives in `docs/PROGRESS.md`; `docs/archive/sync/PLAN.md` is the old
-slice plan, closed by ADR 009.
+Sync is **off in production** since 2026-08-12. What follows is the reference for that decision: root
+cause, what the backup-only choice retires, and what had to survive the rewrite.
 
 All of it is static reading of code, SQL and server logs. **Nothing was executed against a device**
 except the one observation in §2. `file:line` refs were re-checked against trunk `253e170`.
