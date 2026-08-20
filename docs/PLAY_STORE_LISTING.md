@@ -4,10 +4,8 @@
 > Normalizado a **tú** (peruano), coherente con el manifesto in-app
 > post-S5 y la política de privacidad.
 >
-> Escrito para la 2.0.0-alpha. El copy de la ficha sigue vigente; la sección
-> "What's new" es específica de esa versión y hay que reescribirla en cada
-> release (el tag más reciente es `v2.2.0`). El `versionName` sale del último
-> tag de git, no de este archivo.
+> El copy de la ficha sigue vigente. El `versionName` sale del último tag de
+> git, no de este archivo.
 
 ---
 
@@ -22,15 +20,15 @@ JustChill — plata clara
 ## Descripción corta (límite 80 caracteres)
 
 ```
-Sin login. Sin servidor. Sabe cuánto entra y sale, en 30 segundos al día.
+Tu plata vive en tu celular. Sabe cuánto entra y sale, en 30 segundos al día.
 ```
 
-(73 chars.)
+(77 chars.)
 
 ## Descripción larga (límite 4000 caracteres)
 
 ```
-Tu plata vive en tu celular. No la mandamos a ningún servidor.
+Tu plata vive en tu celular. La app completa funciona sin cuenta y sin internet.
 
 JustChill es una app para anotar cuánto entra y cuánto sale, sin hacerse la complicada.
 
@@ -41,11 +39,11 @@ QUÉ HACE:
 • Mensual, en soles, listo.
 
 QUÉ NO HACE (y no lo va a hacer):
-• No te pide login.
+• No te obliga a crear cuenta.
 • No se conecta a tu banco.
 • No te manda notificaciones diarias.
 • No te vende premium ni te muestra anuncios.
-• No te sincroniza con la nube.
+• No sincroniza tu data entre celulares.
 • No tiene "presupuestos" que te policíen.
 • No te enseña educación financiera porque no la necesitas — ya eres adulto.
 
@@ -53,24 +51,20 @@ PARA QUIÉN:
 Para el que tiene un sueldo pero también vende cosas por Instagram, hace consultoría freelance, recibe propinas o tiene ingresos que cambian mes a mes. Para el que quiere SABER cuánto realmente entra, no que le pidan ser "más disciplinado".
 
 TU PRIVACIDAD:
-Todo vive en tu celular. Sin servidor. Sin cookies. Sin analytics de tu uso. Si quieres respaldar tu data, exportas un JSON y lo guardas tú donde quieras.
+Tus movimientos viven en tu celular y no se suben a ningún servidor. Sin cookies. Sin analytics de tu uso. Puedes crear una cuenta si quieres, pero lo único que guardamos de ella es tu correo. Si quieres respaldar tu data, exportas un JSON y lo guardas tú donde quieras.
 
-Si reinstalas la app sin exportar primero, la data se pierde. Es el precio de no tener servidor — y nos parece justo.
+Si reinstalas la app sin exportar primero, la data se pierde. Es el precio de que tu plata no esté en un servidor — y nos parece justo.
 
 JustChill es para gente que ya está cansada de las apps que tratan a su billetera como un proyecto de productividad. Solo tú, tu plata, y la verdad.
 ```
 
-(~1700 caracteres.)
+(~1615 caracteres.)
 
-## What's new — versión 2.0.0-alpha
+## What's new
 
-```
-Reescritura completa: ahora 100% local. Sin login, sin nube, sin sync.
-Tu data vive solo en tu celular. Puedes exportar/importar JSON cuando
-quieras. Manifesto al primer launch, nueva pantalla de Perfil con
-ajustes, reporte de ingresos por fuente, edit/borrar cuentas y
-categorías, atajo "Volver a hoy" en navegación de meses.
-```
+Se escribe en cada release, contra lo que esa release realmente cambió. No se
+archiva aquí: una nota vieja en este archivo termina publicada como si fuera la
+actual.
 
 ## Categoría sugerida
 
