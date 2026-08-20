@@ -81,6 +81,9 @@ Tiers, the tiebreaker, the Judgment Day carve-outs and the `model`-passing rule 
   comment, one fact. Full rule: `docs/CODE_QUALITY.md`.
 - **English for every identifier; Spanish only in user-data VALUES.** `name = "Sueldo"` is data;
   `val sueldo` is a violation — name fixture locals by role (`incomeCategory`).
+- **That Spanish addresses the reader as `tú`, never `vos`.** Tuteo is the house register; a voseo
+  string is a defect even when it reads well. A test can pin the wrong one — `DeleteCategoryCopyTest`
+  did — so grep the expectation, not just the source.
 
 ## Gotchas
 
