@@ -8,7 +8,7 @@ class DeleteCategoryCopyTest {
     @Test
     fun `states how many movements lose their category`() {
         assertEquals(
-            "47 movimientos van a quedar sin categoría. No podés deshacerlo desde la app.",
+            "47 movimientos van a quedar sin categoría. No puedes deshacerlo desde la app.",
             buildDeleteCategoryMessage(affectedCount = 47),
         )
     }
@@ -16,7 +16,7 @@ class DeleteCategoryCopyTest {
     @Test
     fun `uses the singular for a single movement`() {
         assertEquals(
-            "1 movimiento va a quedar sin categoría. No podés deshacerlo desde la app.",
+            "1 movimiento va a quedar sin categoría. No puedes deshacerlo desde la app.",
             buildDeleteCategoryMessage(affectedCount = 1),
         )
     }

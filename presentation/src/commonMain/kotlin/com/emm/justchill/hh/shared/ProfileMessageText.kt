@@ -8,7 +8,7 @@ fun ProfileMessage.toText(): String = when (this) {
 
     ProfileMessage.SessionClosedLocallyOnly ->
         "Sesión cerrada acá; no llegué al servidor, así que tu acceso remoto sigue activo hasta " +
-            "que expire. Cerrá sesión con internet para cortarlo. Tus datos siguen en este teléfono."
+            "que expire. Cierra sesión con internet para cortarlo. Tus datos siguen en este teléfono."
 
     ProfileMessage.AccountDeleted -> "Cuenta eliminada. Tus datos siguen en este teléfono."
 

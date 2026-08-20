@@ -82,8 +82,8 @@ fun PrivacyPolicyScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             )
             Text(
                 text = "¿Quieres borrar tu cuenta y tu data del servidor? " +
-                    "Podés hacerlo directo desde la app: Perfil → \"Eliminar cuenta\". " +
-                    "También podés escribirnos a edgardo.emm20@gmail.com.",
+                    "Puedes hacerlo directo desde la app: Perfil → \"Eliminar cuenta\". " +
+                    "También puedes escribirnos a edgardo.emm20@gmail.com.",
                 style = type.bodyL,
                 color = colors.textPrimary,
             )

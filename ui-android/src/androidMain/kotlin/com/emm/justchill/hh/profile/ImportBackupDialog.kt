@@ -74,7 +74,7 @@ internal fun ImportBackupDialog(isSignedIn: Boolean, onConfirm: () -> Unit, onDi
             Text(
                 text = if (isSignedIn) {
                     "Tus movimientos, categorías, cuentas y recurrentes quedan tal cual el archivo. " +
-                        "Lo que no esté ahí se borra, y como tenés sesión iniciada también se " +
+                        "Lo que no esté ahí se borra, y como tienes sesión iniciada también se " +
                         "borra en tus otros dispositivos. No se puede deshacer."
                 } else {
                     "Tus movimientos, categorías, cuentas y recurrentes quedan tal cual el archivo. " +
