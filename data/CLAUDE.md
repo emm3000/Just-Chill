@@ -18,8 +18,8 @@ them are genuine `expect/actual` pairs — do not add a third without a real pla
 
 Those three `expect` declarations are also why `:data:detektMainAndroid` reports nine compiler
 errors: detekt analyses commonMain and androidMain as one unit, so it sees each `expect` and its
-`actual` together. Three errors per pair, and the same effect gives `:presentation` three. Tracked
-in `docs/PROGRESS.md`; it does not fail the gate.
+`actual` together. Three errors per pair, and the same effect gives `:presentation` three. It does
+not fail the gate, and what that costs is in [`docs/CODE_QUALITY.md`](../docs/CODE_QUALITY.md).
 
 ## Layer conventions
 

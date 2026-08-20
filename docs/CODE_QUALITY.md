@@ -27,19 +27,24 @@ enters only with a test a diff can fail. No third bucket for taste.
 | `MagicNumber` | active | `-1, 0, 1, 2` allowed; constants, properties and local vals ignored; test source sets *and* `**/*.kts` excluded (`:672`); `ignoreNamedArgument: true` (`:684`); `ignoreAnnotated: ['Composable', 'Preview']` (`:688`) |
 | `CognitiveComplexMethod` | **disabled** | |
 
-### What reaches a Compose screen — two kinds of blindness, not interchangeable
+### Where detekt goes blind — three kinds, not interchangeable
 
 - **`LongMethod` — blind by config** (`detekt.yml:115`), revertible in one edit; nothing about the
   rule is Compose-specific.
 - **`LargeClass` — blind structurally.** It counts lines in a *class*; a Compose screen is a
   top-level function, so there is no class to measure. No config change fixes that.
+- **Type-resolution rules — blind on `expect`/`actual` pairs.** detekt reads commonMain and
+  androidMain as one unit, so it sees each `expect` beside its `actual` and calls the clash a
+  compiler error — nine on `:data`, three on `:presentation`. Unresolvable code is downgraded to a
+  warning and the task passes, so a rule that needs type resolution can stay silent and still leave
+  the gate green. Not Compose-specific: this one reaches every KMP module.
 
 `CyclomaticComplexMethod`, `ComplexCondition`, `NestedBlockDepth` and `LongParameterList` have no
 annotation escape and **do** fire on Composables — `config/detekt/baseline-ui-android-main.xml` holds
 entries of both kinds. `TooManyFunctions` per file is the rule the repo *leans on* for Compose, not
 the only one that reaches it. `:ui-android:detektAndroidMainSourceSet` is deliberately outside
 `qualityGate`: `detektMainAndroid` covers the same files *with* type resolution, so adding it buys
-tasks, not coverage (`QualityGateConventionPlugin`; burn-down in `docs/PROGRESS.md`).
+tasks, not coverage (`QualityGateConventionPlugin`).
 
 ### One baseline file per analysis task
 
@@ -67,8 +72,8 @@ predates the rule.
 **1. A baseline entry for a file-level rule is permanent amnesty.** The ID carries no count —
 `TooManyFunctions:AccountsScreen.kt:com.emm.justchill.hh.account.AccountsScreen.kt` nowhere says
 "11 functions" — so the file is exempt at *any* size, forever. The baseline stops new bleeding and
-creates **zero** pressure on old code; the burn-down lives in `docs/PROGRESS.md`, because the
-baseline will never ask. Read the current holders out of the baseline file, never out of this one.
+creates **zero** pressure on old code, and nothing will ever ask for the burn-down. Read the current
+holders out of the baseline file, never out of this one — that file is the only list there is.
 
 **2. `ignoreAnnotatedFunctions` takes simple annotation names, not fully-qualified ones.** detekt
 matches the name as written in the source: `androidx.compose.ui.tooling.preview.Preview` silently
@@ -98,7 +103,7 @@ the precondition, not the outcome — a race that needs two cores proves nothing
 
 - Passing the gate is *necessary, never sufficient* — a reviewer may require a change detekt is
   perfectly happy with. In the other direction, a detekt failure becomes a baseline entry **only
-  together with a burn-down line in `docs/PROGRESS.md` naming it**; a silent addition is not allowed.
+  together with a ticket in `docs/work/` naming it**; a silent addition is not allowed.
 - **Removing an entry, or changing detekt config:** regenerate into a scratch file and diff against
   the committed one. Whoever touches the file next does it, at minimum — and a config that silently
   matches nothing (gotcha 2) shows up as "no change" and as nothing else.
