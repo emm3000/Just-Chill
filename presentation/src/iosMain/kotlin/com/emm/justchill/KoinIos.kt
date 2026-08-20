@@ -45,7 +45,7 @@ private val iosPlatformModule = module {
     single<Settings> { NSUserDefaultsSettings(NSUserDefaults.standardUserDefaults) }
 
     // Same store supabase-kt defaults to here, named explicitly because Android had to move off
-    // its own default. The Keychain is where this belongs on iOS; docs/PROGRESS.md carries it.
+    // its own default. The Keychain is where this belongs on iOS — docs/work/epics/E03-session-secrets.md.
     single<SessionManager> {
         SettingsSessionManager(NSUserDefaultsSettings(NSUserDefaults.standardUserDefaults))
     }
