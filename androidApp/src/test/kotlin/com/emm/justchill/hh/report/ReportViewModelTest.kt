@@ -396,12 +396,10 @@ class ReportViewModelTest {
     }
 
     @Test
-    fun `rapid month changes are latest-wins — first load is cancelled by the second`() = runTest(testDispatcher) {
+    fun `the reducer applies the new month before the in-flight load settles`() = runTest(testDispatcher) {
         val gate = CompletableDeferred<Unit>()
-        var invocationCount = 0
 
         coEvery { getMonthlyAmountByCategory(any(), any()) } coAnswers {
-            invocationCount++
             gate.await()
             emptyList()
         }
@@ -427,9 +425,6 @@ class ReportViewModelTest {
         gate.complete(Unit)
         advanceUntilIdle()
 
-        // Invocation count is racy — it depends on how many loads reach the await before
-        // cancellation. What matters is that the final state reflects the last requested month.
-        assertTrue(invocationCount >= 1, "Use case must have been invoked at least once")
         assertEquals(secondMonth, vm.state.value.month, "Final state must be the second month")
     }
 
