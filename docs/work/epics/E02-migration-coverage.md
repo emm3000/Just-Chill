@@ -18,5 +18,5 @@ that loses rows is the one failure this repo cannot undo.
   chain with them ON — the iOS shape, stricter than the Android upgrade path. `MigrationV1ToV2Test`
   does; dropping that callback would keep it green while proving less.
 - The per-test mechanics (raw SQL against historical schemas, `QueryResult<T>` mappers,
-  `kotlin.assert()` being a no-op on ART) live in `data/CLAUDE.md` under
-  `### Migration tests`. They are not repeated here.
+  `kotlin.assert()` being a no-op on ART) live in `docs/PERSISTENCE.md` under
+  `## Migration tests`. They are not repeated here.

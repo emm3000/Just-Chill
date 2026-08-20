@@ -20,8 +20,8 @@
 ./gradlew :presentation:linkDebugFrameworkIosSimulatorArm64 # links JustChillKit + runs SKIE
 ```
 
-KMP host-test tasks go `UP-TO-DATE` across sessions — `--rerun` forces a real run, **per-task** (it only
-forces the task it follows). There is no `:domain:test`, and no instrumented source set outside `:data`.
+KMP host-test tasks go `UP-TO-DATE` across sessions — `--rerun` forces a real run, **per-task**. There is
+no `:domain:test`, and no instrumented source set outside `:data`.
 
 ## Project Layout
 
@@ -33,7 +33,7 @@ forces the task it follows). There is no `:domain:test`, and no instrumented sou
 
 ## Architecture
 
-Clean Architecture, five KMP modules. Dependency direction is top to bottom:
+Clean Architecture, five modules, four of them KMP. Dependency direction is top to bottom:
 
 | Module | Role | Root package |
 |---|---|---|
@@ -66,9 +66,8 @@ with **snapshot backup**; the engine is gone, the sync schema stays. **Read
 ## Testing
 
 JUnit4 + MockK + `kotlinx-coroutines-test` as JVM host tests (`androidHostTest`); `:domain` use cases
-are the primary surface. Two suites are the ONLY net for their failure mode: `AppGraphKoinTest`
-(missing Koin binding) and the instrumented `:data` tests (missing migration) — the gate **compiles**
-those, only a device **runs** them (`:data:connectedAndroidDeviceTest`).
+are the primary surface. Two failure modes have one net each: a missing Koin binding, caught by a host
+test (`presentation/CLAUDE.md`), and a missing migration — compiled by the gate, run only on a device.
 
 ## Delegation
 
@@ -100,7 +99,7 @@ This is the Opus list (`docs/WORKFLOW.md` model-tier policy) — a Sonnet writer
   code, the host test suites, dev lint, (macOS) the iOS compile, plus `:build-logic:test` named
   explicitly (an included build is unreachable by task-name matching; its sources are the one code the
   gate runs and never lints). Change the plugin, not the callers. **Never gate on plain
-  `./gradlew detekt`** — `NO-SOURCE` on all three KMP modules; it only lints `:androidApp`.
+  `./gradlew detekt`** — `NO-SOURCE` on all four KMP modules; it only lints `:androidApp`.
 - **Third-party actions in `.github/` are pinned to a commit SHA on purpose** — they hold the signing
   and Play/Firebase credentials, and a floating `@v1` can be repointed upstream. Do not "tidy" them
   into tags; dependabot proposes bumps. GitHub's own `actions/*` stay on tags.
@@ -130,7 +129,8 @@ doc has a read-trigger in the map below, and a doc with no trigger is archive.
   work epic instead. **Read it first.**
 - `work/epics/E01-snapshot-backup.md` — the sync/backup epic: constraints outliving every ticket
   under it, remaining work in `work/backlog/`. **Read before touching backup.**
-- `work/epics/E02-migration-coverage.md` — **Read before touching a `.sqm` or a migration test.**
+- `work/epics/E02-migration-coverage.md` — the coverage invariant; `PERSISTENCE.md` — the schema, the
+  migration obligation and the test mechanics. **Read both before touching a `.sq`, a `.sqm` or a migration test.**
 - `work/README.md` — the board's rules: directory-is-status, immutable IDs, ceilings. **Read before
   opening, taking or closing a ticket.**
 - `adr/` — filenames state the decision; each header declares what it amends or supersedes. 009 is

@@ -27,25 +27,22 @@ docs/*
 !docs/adr/**
 !docs/archive/
 !docs/archive/**
-!docs/sync/
-!docs/sync/**
 !docs/swiftui/
 !docs/swiftui/**
 !docs/work/
 !docs/work/**
 !docs/PRODUCT_DISCOVERY.md
 !docs/PRODUCT_REQUIREMENTS.md
-!docs/ROADMAP_V1.md
 !docs/POST_V1_PLAN.md
 !docs/DESIGN_SYSTEM.md
 !docs/PROGRESS.md
 !docs/PLAY_STORE_LISTING.md
 !docs/PLAY_ADVERTISING_ID.md
 !docs/PRIVACY_POLICY.md
-!docs/AUTH_SYNC_UI_BLUEPRINT.md
 !docs/DATE_AUDIT.md
 !docs/WORKFLOW.md
 !docs/CODE_QUALITY.md
+!docs/PERSISTENCE.md
 # Supabase
 supabase.properties
 supabase/.temp/
