@@ -116,7 +116,8 @@ This is the Opus list (`docs/WORKFLOW.md` model-tier policy) — a Sonnet writer
 ## Docs contract
 
 Six doc types, one job and a death rule each: **`CLAUDE.md`** — how to work here, ≤150 lines, pointers
-only. **`adr/`** — one decision per ADR, target 1 page, ceiling 2; amended by a new ADR, never edited.
+only. **`adr/`** — one decision per ADR, target 1 page, ceiling 2 **at writing time**; a published ADR is
+never trimmed to fit, only amended by a new ADR.
 **One live plan per track** — ONLY what remains; closing a unit removes it from the plan in the same
 commit. **`PROGRESS.md`** — backlog items of 1–2 lines + pointer, no essays. **Reference docs**
 (`WORKFLOW`, `CODE_QUALITY`, `DESIGN_SYSTEM`) — timeless conventions, zero history. **`archive/`** —

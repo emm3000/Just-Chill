@@ -1,8 +1,8 @@
 # docs/work — file-per-ticket
 
-Directory is the status. `backlog/`, `doing/`, `done/`. Closing a ticket is `git mv` into `done/`,
-nothing else — there is no status field inside a ticket file; a status that lives in two places
-diverges.
+Directory is the status. `backlog/`, `doing/`. Closing a ticket is `git rm` — there is no status
+field inside a ticket file, and no `done/`: a closed ticket is chronicle, and the chronicle lives in
+git. A status that lives in two places diverges; a ticket that outlives its work is an essay.
 
 IDs are immutable: `E<epic>-<ticket>`, e.g. `E01-04`. Never renumbered, never reused — the number
 dies with the ticket, even if the ticket is abandoned.
