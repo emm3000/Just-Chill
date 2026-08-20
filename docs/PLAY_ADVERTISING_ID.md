@@ -32,9 +32,12 @@ Expected: the known permissions return `1`, `AD_ID` and `advertising` return `0`
 result only means something once you have proved the same command finds something you know is
 there. Skipping this step is how a search bug gets reported as a clean bill of health.
 
-## Evidence
+## Evidence — valid for `v2.4.0` (commit `dcc176a`), nothing newer
 
-All three were run against `v2.4.0` (commit `dcc176a`) and agree.
+All three were run against that bundle and agree. They say nothing about the bundle you are about
+to upload: at 2026-08-20 `trunk` was 343 commits past that tag. **Re-run the quick path against the
+AAB that will actually be published before answering the question again** — this table is a record,
+not a standing clearance.
 
 | Check | Command | Result |
 |---|---|---|
