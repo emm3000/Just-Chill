@@ -33,10 +33,11 @@ pero admin los bypassea: en un push directo esos checks **no corrieron**.
 - [ ] Completar el Google Play Data Safety form.
 - [ ] Checklist QA: clean install, semana offline-first, sign-in tardío, sign-out, y upgrade real
       con APK viejo + `adb install -r`.
-- [ ] Corregir la declaración de advertising ID en Play Console: hoy dice "Yes" y es falso.
-      Evidencia y comandos: `docs/PLAY_ADVERTISING_ID.md`.
-- [ ] `v2.4.0` está tagueado y construido pero nunca llegó a la pista alpha. El borrador se
-      publica a mano en Play Console.
+- [ ] `v2.4.0` nunca llegó a alpha: el workflow falló al commitear el Edit porque el AAB declara
+      `AD_ID` y Play Console decía que no. **No hay borrador esperando.** Cerrarlo es cortar una
+      release nueva, no publicar a mano.
+- [ ] Devolver la declaración de advertising ID a "No". Se puso en "Yes" para desbloquear ese
+      rechazo y quedó así. Las dos se destraban juntas: `docs/PLAY_ADVERTISING_ID.md`.
 
 ### Fechas
 
