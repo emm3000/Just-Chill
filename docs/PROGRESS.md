@@ -89,15 +89,6 @@ pero admin los bypassea: en un push directo esos checks **no corrieron**.
 - [ ] Flake preexistente en `MviViewModelTest` (`Dispatchers.Main was accessed`): la fuga viene de
       otro test de la misma JVM.
 
-### Docs y copy
-
-- [ ] `docs/DESIGN_SYSTEM.md` §5 documenta 5 radios con otro esquema de nombres; `EmmRadii.kt` ships 9.
-      Ningún nombre coincide y dos dp divergen.
-- [ ] La app está partida entre tuteo y voseo, y el voseo es el registro equivocado. Vosean
-      `PrivacyPolicyScreen`, `ImportBackupDialog`, `DeleteCategoryCopy` y `ProfileMessageText`.
-- [ ] La tabla de capas de `data/CLAUDE.md` ya no es cierta: `DefaultBackupRepository.snapshot()`
-      llama las statements directamente. La atomicidad lo justifica; el doc afirma lo contrario.
-
 ### Deuda técnica
 
 - [ ] La app no tiene ícono adaptativo: el manifest apunta a rasters legacy de 48dp. Rehacerlo pide
