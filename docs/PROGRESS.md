@@ -32,17 +32,6 @@ pero admin los bypassea: en un push directo esos checks **no corrieron**.
 - [ ] Detector de drift en CI con el md5 normalizado del schema del server, y mover el guard de
       `relreplident` después del `continue` de idempotencia (`supabase/migrations/`).
 
-### Deuda técnica
-
-- [ ] La app no tiene ícono adaptativo: el manifest apunta a rasters legacy de 48dp. Rehacerlo pide
-      re-autorar el arte a la safe zone de 66dp, y el fuente no está en el repo.
-- [ ] Restos del template con nombre visible: `@string/app_name` vale `"Retrofit"` (lo consume el
-      shortcut de dev) y el tema se llama `Theme.Retrofit`.
-- [ ] Pasada de performance de Compose: `derivedStateOf`, lambdas recordadas, `contentType` en `LazyColumn`.
-- [ ] `CommitHashUi.Available.fullHash` es público y solo lo consume su propio `label`.
-- [ ] `CopyableCommitRow` (`ProfileScreen.kt`) toma el ripple por defecto mientras las demás filas lo
-      apagan, y hardcodea `12.sp`/`14.dp` en vez de leer `LocalEmmType`.
-
 ### Infraestructura
 
 - [ ] Subir el wrapper de Gradle 9.7.0 → 9.7.1. Único warning de `:androidApp:lintProdRelease`; queda
