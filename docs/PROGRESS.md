@@ -7,10 +7,8 @@
 ## Dónde estamos ahora
 
 - App Android de finanzas personales, local-first, en Play Store alpha cerrada.
-- No hay usuarios terceros, ni Android ni iOS. Pero **el autor usa la app a diario** sobre la
-  release de Firebase App Distribution, y esa instalación tiene data real acumulada.
-- Rehacer navegación, cambiar UI y postergar compliance es barato. Una migración destructiva no:
-  toda migración preserva la data y se prueba con `:data:connectedAndroidDeviceTest` antes de `trunk`.
+- Toda migración preserva la data y se prueba con `:data:connectedAndroidDeviceTest` antes de
+  `trunk`. El porqué — la instalación del autor tiene data real — lo dice el header de `CLAUDE.md`.
 - El trabajo de backup/sync no se lista acá: vive en `docs/work/`. El índice es `eza docs/work/backlog`.
 
 ## Cómo se verifica el estado
