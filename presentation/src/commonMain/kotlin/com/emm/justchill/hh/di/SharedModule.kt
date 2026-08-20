@@ -11,8 +11,9 @@ import org.koin.dsl.module
 val sharedModule = module {
     factory { DefaultUniqueIdProvider } bind UniqueIdProvider::class
 
-    // The composition root is where reading the machine belongs, and these two factories are the ONLY way a Clock or a TimeZone enters the
-    // injected graph: no use case and no ViewModel defaults either one any more, so every
+    // The composition root is where reading the machine belongs, and these two factories are
+    // the ONLY way a Clock or a TimeZone enters the injected graph: no use case and no
+    // ViewModel defaults either one any more, so every
     // "what day/month is it" in :domain and :presentation is answered from here. Koin does not
     // apply Kotlin default params, so that was already true in production — deleting the defaults
     // is what makes it true for a hand-written caller too. :ui-android has four production-code

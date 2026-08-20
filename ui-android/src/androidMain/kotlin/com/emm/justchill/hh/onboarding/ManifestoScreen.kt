@@ -78,7 +78,7 @@ fun ManifestoScreen(isRevisit: Boolean, onStart: () -> Unit, modifier: Modifier 
             )
 
             Text(
-                text = "Sin login.\nSin notificaciones.\nSin que te vendamos nada.",
+                text = "Sin cuenta obligatoria.\nSin notificaciones.\nSin que te vendamos nada.",
                 style = type.bodyL,
                 color = colors.textPrimary,
             )
