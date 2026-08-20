@@ -2,16 +2,20 @@
 
 ## Why
 
-The Supabase refresh token is the account. It is the one value in this app worth stealing, and today
-both platforms keep it in the clear — Android in `shared_prefs/justchill_auth.xml`, iOS in
-`NSUserDefaults`.
+The Supabase refresh token is the account. It is the one value in this app worth stealing, and iOS
+still keeps it in the clear in `NSUserDefaults`.
 
 ## Constraints
 
 - A persisted credential lives in the platform's secret store — Android Keystore, iOS Keychain — or
   it does not persist. `SharedPreferences` and `NSUserDefaults` are not secret stores. They are the
   easy path, which is why this epic exists.
-- `SettingsSessionManager` is bound **once per platform**: `AndroidPlatformModule.kt` on Android,
+- **The Android Keystore is reached through the platform APIs, never through
+  `androidx.security:security-crypto`.** That library reached 1.1.0-stable and deprecated every one
+  of its APIs in the same 2025 cycle — "in favour of existing platform APIs and direct use of
+  Android Keystore" — so `EncryptedSharedPreferences` and `MasterKey` would be a dead dependency
+  holding the one secret worth stealing.
+- `SessionManager` is bound **once per platform**: `AndroidPlatformModule.kt` on Android,
   `KoinIos.kt` on iOS. A credential added later inherits whatever backing store that binding already
   has, so the binding is the thing to review — never the call site.
 - **Android Auto Backup stays off.** `allowBackup="false"` exists precisely so the token cannot ride

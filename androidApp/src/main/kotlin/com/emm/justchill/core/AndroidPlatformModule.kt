@@ -10,13 +10,15 @@ import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.BuildConfig
 import com.emm.justchill.BuildInfo
 import com.emm.justchill.core.platform.CurrentActivityHolder
+import com.emm.justchill.core.session.KeystoreSessionCipher
+import com.emm.justchill.core.session.KeystoreSessionManager
+import com.emm.justchill.core.session.sessionJson
 import com.emm.justchill.hh.auth.ActivityGoogleSignInLauncher
 import com.emm.justchill.hh.auth.GoogleCredentialClient
 import com.emm.justchill.hh.auth.GoogleSignInLauncher
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.SharedPreferencesSettings
 import io.github.jan.supabase.auth.SessionManager
-import io.github.jan.supabase.auth.SettingsSessionManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
@@ -46,10 +48,10 @@ val androidPlatformModule = module {
     // applicationId suffix can move; supabase-kt would otherwise default it into
     // "<applicationId>_preferences", which device-to-device migration still copies.
     single<SessionManager> {
-        SettingsSessionManager(
-            SharedPreferencesSettings(
-                androidContext().getSharedPreferences(AUTH_PREFS_NAME, Context.MODE_PRIVATE),
-            ),
+        KeystoreSessionManager(
+            prefs = androidContext().getSharedPreferences(AUTH_PREFS_NAME, Context.MODE_PRIVATE),
+            cipher = KeystoreSessionCipher(),
+            json = sessionJson,
         )
     }
     single { CurrentActivityHolder() }

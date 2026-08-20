@@ -1,7 +1,12 @@
 package com.emm.justchill.core
 
+import android.content.Context
 import com.emm.justchill.BuildInfo
+import com.emm.justchill.core.session.KeystoreSessionManager
+import io.github.jan.supabase.auth.SessionManager
+import io.mockk.mockk
 import org.junit.Test
+import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.koinApplication
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -35,6 +40,25 @@ class AndroidPlatformModuleTest {
             assertIs<DefaultDispatcher>(
                 koin.get<DispatchersProvider>(),
                 "androidPlatformModule no longer binds DispatchersProvider; the dev flavor cannot start.",
+            )
+        } finally {
+            koin.close()
+        }
+    }
+
+    @Test
+    fun `androidPlatformModule keeps the supabase session behind the Keystore`() {
+        // AppGraphKoinTest resolves a test double for SessionManager, so this binding is unguarded
+        // everywhere else: swapping it back reads as a green build and a plaintext refresh token.
+        val koin = koinApplication {
+            androidContext(mockk<Context>(relaxed = true))
+            modules(androidPlatformModule)
+        }.koin
+
+        try {
+            assertIs<KeystoreSessionManager>(
+                koin.get<SessionManager>(),
+                "androidPlatformModule no longer stores the Supabase session encrypted.",
             )
         } finally {
             koin.close()
