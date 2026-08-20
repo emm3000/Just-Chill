@@ -4,7 +4,10 @@
 -- logic is the server_updated_at trigger that orders pulls (ADR 002);
 -- it never resolves conflicts (LWW compares client updated_at).
 --
--- Mapping rules (see docs/archive/sync/PLAN.md):
+-- Mapping rules the retired engine followed. Nothing pushes any of this now:
+-- docs/adr/009-backup-is-a-snapshot-not-row-replication.md replaced row
+-- replication with snapshot backup and kept these tables only because a
+-- destructive migration is not allowed.
 --   - syncState is local-only and never pushed.
 --   - deleted_at IS pushed (tombstones must propagate).
 --   - Client timestamps stay bigint epoch millis.

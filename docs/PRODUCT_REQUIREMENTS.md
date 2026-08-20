@@ -1,9 +1,8 @@
 # PRODUCT REQUIREMENTS — JustChill v1
 
 **Fase**: 2 de 5 (Requirements)
-**Bloquea**: `archive/ARCHITECTURE_REVIEW.md` (Fase 3) y `archive/ROADMAP_V1.md` (Fase 4)
-— ambas cerradas y archivadas; este doc sigue vigente porque su §5 (los Won't) es un límite de
-alcance activo y el ADR 001 lo enmienda por id de fila (W-02/W-03/W-11).
+Este doc sigue vigente porque su §5 (los Won't) es un límite de alcance activo
+y el ADR 001 lo enmienda por id de fila (W-02/W-03/W-11).
 **Depende de**: PRODUCT_DISCOVERY.md (Fase 1, firmada).
 
 > Cada requirement de este doc está justificado por una decisión de Fase 1.

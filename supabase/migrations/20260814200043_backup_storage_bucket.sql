@@ -1,4 +1,4 @@
--- Snapshot backup bucket (ADR 009 / docs/archive/sync/ADR009_PLAN.md Phase 2b-ii).
+-- Snapshot backup bucket (docs/adr/009-backup-is-a-snapshot-not-row-replication.md).
 --
 -- The app uploads ONE private blob per snapshot: the complete versioned JSON export, plus its
 -- sidecar manifest. There is no row replication here and nothing server-side ever reads inside
