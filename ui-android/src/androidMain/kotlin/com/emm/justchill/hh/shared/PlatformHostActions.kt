@@ -2,7 +2,6 @@ package com.emm.justchill.hh.shared
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.content.pm.ApplicationInfo
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.SnackbarHostState
@@ -24,7 +23,6 @@ import java.time.format.DateTimeFormatter
 
 @Stable
 interface PlatformHostActions {
-    val isDebug: Boolean
     val showGoogleSignIn: Boolean
     val supportsPrivacyPolicy: Boolean
     val supportsBackup: Boolean
@@ -82,13 +80,8 @@ fun rememberPlatformHostActions(
         }
     }
 
-    val debuggable = remember(context) {
-        (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
-    }
-
-    return remember(context, scope, snackbarHostState, exportLauncher, importLauncher, debuggable) {
+    return remember(context, scope, snackbarHostState, exportLauncher, importLauncher) {
         object : PlatformHostActions {
-            override val isDebug: Boolean = debuggable
             override val showGoogleSignIn: Boolean = true
             override val supportsPrivacyPolicy: Boolean = true
             override val supportsBackup: Boolean = true
