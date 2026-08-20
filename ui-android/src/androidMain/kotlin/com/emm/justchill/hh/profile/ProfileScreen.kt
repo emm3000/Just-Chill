@@ -558,6 +558,7 @@ private fun IconTileSmall(icon: ImageVector, tint: Color = LocalEmmColors.curren
 @Composable
 private fun VersionFooter(appVersion: String, commitHash: String, onCopyClick: () -> Unit) {
     val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -565,8 +566,7 @@ private fun VersionFooter(appVersion: String, commitHash: String, onCopyClick: (
     ) {
         Text(
             text = "Versión $appVersion · alpha",
-            fontSize = 12.sp,
-            fontFamily = InterFontFamily,
+            style = type.caption,
             color = colors.textTertiary,
             textAlign = TextAlign.Center,
         )
@@ -578,8 +578,7 @@ private fun VersionFooter(appVersion: String, commitHash: String, onCopyClick: (
 
             CommitHashUi.Unavailable -> Text(
                 text = commit.label,
-                fontSize = 12.sp,
-                fontFamily = InterFontFamily,
+                style = type.caption,
                 color = colors.textTertiary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = spacing.s4, vertical = spacing.s2),
