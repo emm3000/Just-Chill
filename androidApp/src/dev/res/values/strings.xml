@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">Retrofit</string>
+    <!-- Long-press label for the dev-only shortcut into the experiences playground. -->
+    <string name="dev_shortcut_label">Experiences</string>
 </resources>

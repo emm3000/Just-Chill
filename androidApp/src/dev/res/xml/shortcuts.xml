@@ -4,8 +4,8 @@
         android:shortcutId="random"
         android:enabled="true"
         android:icon="@mipmap/ic_launcher_first_round"
-        android:shortcutShortLabel="@string/app_name"
-        android:shortcutLongLabel="@string/app_name">
+        android:shortcutShortLabel="@string/dev_shortcut_label"
+        android:shortcutLongLabel="@string/dev_shortcut_label">
         <intent
             android:action="android.intent.action.VIEW"
             android:targetPackage="com.emm.justchill.dev"

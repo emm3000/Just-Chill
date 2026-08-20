@@ -16,7 +16,7 @@
         android:label="${app_name}${flavor_suffix}"
         android:roundIcon="@mipmap/ic_launcher_first_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Retrofit">
+        android:theme="@style/Theme.JustChill">
         <activity
             android:name=".MainActivity"
             android:windowSoftInputMode="adjustResize"
