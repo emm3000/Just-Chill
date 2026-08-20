@@ -11,6 +11,8 @@ import com.emm.justchill.hh.auth.GoogleSignInLauncher
 import com.emm.justchill.hh.seetransactions.SeeTransactionsViewModel
 import com.russhwolf.settings.NSUserDefaultsSettings
 import com.russhwolf.settings.Settings
+import io.github.jan.supabase.auth.SessionManager
+import io.github.jan.supabase.auth.SettingsSessionManager
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
@@ -41,6 +43,12 @@ private val iosPlatformModule = module {
     }
 
     single<Settings> { NSUserDefaultsSettings(NSUserDefaults.standardUserDefaults) }
+
+    // Same store supabase-kt defaults to here, named explicitly because Android had to move off
+    // its own default. The Keychain is where this belongs on iOS; docs/PROGRESS.md carries it.
+    single<SessionManager> {
+        SettingsSessionManager(NSUserDefaultsSettings(NSUserDefaults.standardUserDefaults))
+    }
 
     // Diagnostics observability sink. Android reports to Crashlytics; iOS has no crash-reporting SDK
     // wired (ADR 003), so the console is the whole sink here.

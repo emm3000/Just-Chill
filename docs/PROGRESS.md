@@ -108,6 +108,21 @@ la única verificación es la local.
       que en la ventana de restore de sesión el fallo sale como error de credenciales en vez de
       reintentable. Agregar el await es un cambio de comportamiento aparte.
 
+### Seguridad
+
+- [ ] La sesión de Supabase sigue en texto plano en `shared_prefs/justchill_auth.xml`. Ya está fuera
+      de Auto Backup y de device-transfer, pero un device rooteado o una extracción física la leen.
+      Cifrarla con una clave del Android Keystore (que no sale del device) lo cierra.
+      `androidx.security:security-crypto` es el camino obvio, pero **verificá su estado antes de
+      adoptarlo** — estuvo deprecado.
+- [ ] En iOS la sesión va a `NSUserDefaults` (`KoinIos.kt`), que es el equivalente de
+      SharedPreferences: sin cifrar y dentro del backup de iCloud. En iOS el lugar de un refresh
+      token es el Keychain. Pide un `SessionManager` propio, no un `SettingsSessionManager`.
+- [ ] Con `allowBackup="false"` un usuario sin cuenta que pierde el teléfono pierde todo: el backup
+      automático a Supabase solo corre bajo `SessionStatus.Authenticated` (`BackupOrchestrator`
+      dispara en cada background/resume), y ya no hay respaldo de Android que lo cubra. Decidir si
+      eso se avisa en la app o si el modo sin cuenta deja de ser un modo soportado.
+
 ### Cobertura de tests
 
 - [ ] `HighlightQuotedTest.empty pair produces a bold span over zero characters` solo afirma

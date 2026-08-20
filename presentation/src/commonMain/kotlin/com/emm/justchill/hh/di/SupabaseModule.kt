@@ -4,6 +4,7 @@ import com.emm.justchill.core.SupabaseConfig
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.SessionManager
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.serializer.KotlinXSerializer
@@ -12,25 +13,27 @@ import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
 val supabaseModule = module {
-    single { provideSupabaseClient(get()) }
+    single { provideSupabaseClient(get(), get()) }
 }
 
-private fun provideSupabaseClient(config: SupabaseConfig): SupabaseClient = createSupabaseClient(
-    supabaseUrl = config.url,
-    supabaseKey = config.anonKey,
-) {
-    install(Auth)
-    install(Postgrest) {
-        @OptIn(SupabaseExperimental::class)
-        requireValidSession = true
+// The session manager is injected rather than defaulted: supabase-kt persists the refresh token to
+// the platform's default preference store, and each platform needs one the OS will not copy off.
+private fun provideSupabaseClient(config: SupabaseConfig, sessions: SessionManager): SupabaseClient =
+    createSupabaseClient(supabaseUrl = config.url, supabaseKey = config.anonKey) {
+        install(Auth) {
+            sessionManager = sessions
+        }
+        install(Postgrest) {
+            @OptIn(SupabaseExperimental::class)
+            requireValidSession = true
+        }
+        install(Storage) {
+            @OptIn(SupabaseExperimental::class)
+            requireValidSession = true
+        }
+        defaultSerializer = KotlinXSerializer(
+            json = Json {
+                ignoreUnknownKeys = true
+            },
+        )
     }
-    install(Storage) {
-        @OptIn(SupabaseExperimental::class)
-        requireValidSession = true
-    }
-    defaultSerializer = KotlinXSerializer(
-        json = Json {
-            ignoreUnknownKeys = true
-        },
-    )
-}

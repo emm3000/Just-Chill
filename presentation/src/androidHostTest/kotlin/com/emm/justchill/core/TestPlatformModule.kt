@@ -9,6 +9,8 @@ import com.emm.justchill.hh.auth.GoogleSignInLauncher
 import com.emm.justchill.hh.auth.GoogleSignInResult
 import com.russhwolf.settings.MapSettings
 import com.russhwolf.settings.Settings
+import io.github.jan.supabase.auth.SessionManager
+import io.github.jan.supabase.auth.SettingsSessionManager
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
@@ -51,6 +53,8 @@ val testPlatformModule: Module = module {
     // In-memory Settings (multiplatform-settings-test), replacing SharedPreferencesSettings /
     // NSUserDefaultsSettings. AppPreferences sits on top of it in commonCoreModule.
     single<Settings> { MapSettings() }
+
+    single<SessionManager> { SettingsSessionManager(MapSettings()) }
 
     // Stands in for CrashReportingDiagnosticsLogger / PrintlnDiagnosticsLogger. The graph resolves it eagerly
     // (the appScope single reads it to build its CoroutineExceptionHandler), so it must be bound

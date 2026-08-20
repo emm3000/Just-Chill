@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  android:allowBackup is false, so <cloud-backup> is already closed at the switch. <device-transfer>
+  is not: targeting Android 12+, some manufacturers do not let an app opt out of device-to-device
+  migration, and that path is the reason this file still exists.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="justchill_auth.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="justchill_auth.xml" />
+    </device-transfer>
+</data-extraction-rules>

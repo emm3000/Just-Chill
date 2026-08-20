@@ -15,6 +15,8 @@ import com.emm.justchill.hh.auth.GoogleCredentialClient
 import com.emm.justchill.hh.auth.GoogleSignInLauncher
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.SharedPreferencesSettings
+import io.github.jan.supabase.auth.SessionManager
+import io.github.jan.supabase.auth.SettingsSessionManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
@@ -25,6 +27,7 @@ import org.koin.dsl.module
 // which caused the app to silently open a new empty file after an update, resetting onboarding
 // state and sync cursors. A one-time migration copies existing data from the old Build.ID file.
 private const val PREFS_NAME = "justchill_prefs"
+internal const val AUTH_PREFS_NAME = "justchill_auth"
 private const val PREFS_MIGRATED_FLAG = "_migrated_from_build_id"
 
 // Android platform Koin module — the ONLY place Android-specific DI lives after the commonMain dedup
@@ -38,6 +41,17 @@ val androidPlatformModule = module {
 
     single<DispatchersProvider> { DefaultDispatcher() }
     single<Settings> { SharedPreferencesSettings(provideSharedPreferences(androidContext())) }
+
+    // A file of its own so the extraction rules can exclude the refresh token under a name no
+    // applicationId suffix can move; supabase-kt would otherwise default it into
+    // "<applicationId>_preferences", which device-to-device migration still copies.
+    single<SessionManager> {
+        SettingsSessionManager(
+            SharedPreferencesSettings(
+                androidContext().getSharedPreferences(AUTH_PREFS_NAME, Context.MODE_PRIVATE),
+            ),
+        )
+    }
     single { CurrentActivityHolder() }
 
     // Sync observability sink. Platform-specific because it reports to Crashlytics (Android-only);
