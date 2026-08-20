@@ -1,4 +1,4 @@
-package com.emm.domain.sync
+package com.emm.domain.shared
 
 import com.emm.domain.shared.error.DomainException
 import kotlinx.coroutines.CompletableDeferred
@@ -21,18 +21,18 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class SyncMutexTest {
+class RemoteWriteMutexTest {
 
-    private val syncMutex = SyncMutex()
+    private val remoteWriteMutex = RemoteWriteMutex()
 
     @Test
     fun `a holder that never returns fails the next caller instead of parking it forever`() = runTest {
         val stuck = CompletableDeferred<Unit>()
-        val holder = launch { syncMutex.withLock { stuck.await() } }
+        val holder = launch { remoteWriteMutex.withLock { stuck.await() } }
         testScheduler.runCurrent()
         var blockRan = false
 
-        assertFailsWith<DomainException.Busy> { syncMutex.withLock { blockRan = true } }
+        assertFailsWith<DomainException.Busy> { remoteWriteMutex.withLock { blockRan = true } }
 
         assertFalse(blockRan, "the block must not run for a caller that never got the lock")
         stuck.complete(Unit)
@@ -43,7 +43,7 @@ class SyncMutexTest {
     fun `the timeout bounds the wait for the lock, never the work done while holding it`() = runTest {
         val heldFor = 10.minutes
 
-        val elapsed: Long = syncMutex.withLock {
+        val elapsed: Long = remoteWriteMutex.withLock {
             val startedAt: Long = testScheduler.currentTime
             delay(heldFor)
             testScheduler.currentTime - startedAt
@@ -55,21 +55,21 @@ class SyncMutexTest {
     @Test
     fun `a caller that timed out took nothing, so the lock frees when the holder returns`() = runTest {
         val stuck = CompletableDeferred<Unit>()
-        val holder = launch { syncMutex.withLock { stuck.await() } }
+        val holder = launch { remoteWriteMutex.withLock { stuck.await() } }
         testScheduler.runCurrent()
 
-        assertFailsWith<DomainException.Busy> { syncMutex.withLock { } }
+        assertFailsWith<DomainException.Busy> { remoteWriteMutex.withLock { } }
 
         stuck.complete(Unit)
         holder.join()
-        assertTrue(syncMutex.withLock { true }, "the lock must be free once the holder returns")
+        assertTrue(remoteWriteMutex.withLock { true }, "the lock must be free once the holder returns")
     }
 
     @Test
     fun `a block that throws still releases the lock`() = runTest {
-        assertFailsWith<IllegalStateException> { syncMutex.withLock { error("boom") } }
+        assertFailsWith<IllegalStateException> { remoteWriteMutex.withLock { error("boom") } }
 
-        assertTrue(syncMutex.withLock { true }, "the lock must be free after a failed block")
+        assertTrue(remoteWriteMutex.withLock { true }, "the lock must be free after a failed block")
     }
 
     // Real threads, not runTest: this needs the holder's release and the acquisition deadline to land
@@ -90,18 +90,18 @@ class SyncMutexTest {
             val waiterBusyCount = AtomicInteger(0)
             val waiterAcquiredCount = AtomicInteger(0)
             repeat(RACE_ROUNDS) {
-                val raced: List<SyncMutex> = List(RACE_WIDTH) { SyncMutex(RACE_TIMEOUT) }
-                raced.flatMap { syncMutex ->
+                val raced: List<RemoteWriteMutex> = List(RACE_WIDTH) { RemoteWriteMutex(RACE_TIMEOUT) }
+                raced.flatMap { remoteWriteMutex ->
                     listOf(
                         launch {
                             try {
-                                syncMutex.withLock { delay(RACE_TIMEOUT) }
+                                remoteWriteMutex.withLock { delay(RACE_TIMEOUT) }
                             } catch (ignored: DomainException.Busy) {
                             }
                         },
                         launch {
                             try {
-                                syncMutex.withLock { }
+                                remoteWriteMutex.withLock { }
                                 waiterAcquiredCount.incrementAndGet()
                             } catch (ignored: DomainException.Busy) {
                                 waiterBusyCount.incrementAndGet()
@@ -109,8 +109,8 @@ class SyncMutexTest {
                         },
                     )
                 }.joinAll()
-                raced.forEach { syncMutex ->
-                    assertTrue(syncMutex.isFree(), "a caller that gave up walked off holding the lock")
+                raced.forEach { remoteWriteMutex ->
+                    assertTrue(remoteWriteMutex.isFree(), "a caller that gave up walked off holding the lock")
                 }
             }
             assertTrue(
@@ -128,13 +128,13 @@ class SyncMutexTest {
     @Test
     fun `cancelling a waiting caller surfaces as cancellation and leaks no lock`() = runTest {
         val stuck = CompletableDeferred<Unit>()
-        val holder = launch { syncMutex.withLock { stuck.await() } }
+        val holder = launch { remoteWriteMutex.withLock { stuck.await() } }
         testScheduler.runCurrent()
         var failure: DomainException? = null
 
         val waiter = launch {
             try {
-                syncMutex.withLock { }
+                remoteWriteMutex.withLock { }
             } catch (e: DomainException) {
                 failure = e
             }
@@ -145,7 +145,7 @@ class SyncMutexTest {
         assertNull(failure, "cancellation must propagate as cancellation, got $failure")
         stuck.complete(Unit)
         holder.join()
-        assertTrue(syncMutex.withLock { true }, "a cancelled waiter must not hold the lock")
+        assertTrue(remoteWriteMutex.withLock { true }, "a cancelled waiter must not hold the lock")
     }
 
     private companion object {
@@ -163,12 +163,12 @@ class SyncMutexTest {
 // independent probes below; no single stop-the-world pause spans all of them.
 private const val LEAK_PROBE_ATTEMPTS = 50
 
-private suspend fun SyncMutex.isFree(): Boolean {
+private suspend fun RemoteWriteMutex.isFree(): Boolean {
     repeat(LEAK_PROBE_ATTEMPTS) { if (acquires()) return true }
     return false
 }
 
-private suspend fun SyncMutex.acquires(): Boolean = try {
+private suspend fun RemoteWriteMutex.acquires(): Boolean = try {
     withLock { true }
 } catch (ignored: DomainException.Busy) {
     false

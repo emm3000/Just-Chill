@@ -7,6 +7,7 @@ import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.category.CategoryRepository
+import com.emm.domain.shared.RemoteWriteMutex
 import com.emm.domain.shared.backup.BackupFailureReason
 import com.emm.domain.shared.backup.BackupFailureState
 import com.emm.domain.shared.backup.BackupMetadataStore
@@ -20,7 +21,6 @@ import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 import com.emm.domain.shared.logging.DiagnosticsLogger
-import com.emm.domain.sync.SyncMutex
 import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.hh.shared.toText
@@ -66,7 +66,7 @@ class ProfileViewModelBackupFailureTest {
     private val pruner = mockk<BackupPruner>(relaxed = true)
     private val metadata = mockk<BackupMetadataStore>(relaxed = true)
     private val logger = mockk<DiagnosticsLogger>(relaxed = true)
-    private val syncMutex = SyncMutex()
+    private val remoteWriteMutex = RemoteWriteMutex()
 
     private val sessionFlow = MutableStateFlow<SessionStatus>(SessionStatus.Initializing)
     private val observeSession = mockk<ObserveSessionUseCase>()
@@ -146,7 +146,7 @@ class ProfileViewModelBackupFailureTest {
     @Test
     fun `a lock another operation holds says wait, not try again`() = runTest(testDispatcher) {
         val holder = CompletableDeferred<Unit>()
-        launch { syncMutex.withLock { holder.await() } }
+        launch { remoteWriteMutex.withLock { holder.await() } }
 
         val shown: String = backUpNow()
         holder.complete(Unit)
@@ -154,7 +154,7 @@ class ProfileViewModelBackupFailureTest {
         assertEquals(
             "Hay otra operación en curso — espera, el respaldo se reintenta solo.",
             shown,
-            "the SyncMutex acquire timeout must reach the user as ${BackupFailureReason.Busy}",
+            "the RemoteWriteMutex acquire timeout must reach the user as ${BackupFailureReason.Busy}",
         )
     }
 
@@ -220,7 +220,7 @@ class ProfileViewModelBackupFailureTest {
         uploader = uploader,
         pruner = pruner,
         metadata = metadata,
-        syncMutex = syncMutex,
+        remoteWriteMutex = remoteWriteMutex,
         observeSession = observeSession,
         appVersion = APP_VERSION,
         clock = object : Clock {

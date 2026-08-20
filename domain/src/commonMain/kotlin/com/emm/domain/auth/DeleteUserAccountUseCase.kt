@@ -1,10 +1,10 @@
 package com.emm.domain.auth
 
+import com.emm.domain.shared.RemoteWriteMutex
 import com.emm.domain.shared.backup.BackupEraser
 import com.emm.domain.shared.backup.BackupMetadataStore
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.logging.DiagnosticsLogger
-import com.emm.domain.sync.SyncMutex
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.first
@@ -26,10 +26,10 @@ class DeleteUserAccountUseCase(
     private val authRepository: AuthRepository,
     private val backupEraser: BackupEraser,
     private val backupMetadataStore: BackupMetadataStore,
-    private val syncMutex: SyncMutex,
+    private val remoteWriteMutex: RemoteWriteMutex,
     private val logger: DiagnosticsLogger,
 ) {
-    suspend operator fun invoke() = syncMutex.withLock {
+    suspend operator fun invoke() = remoteWriteMutex.withLock {
         val userId = withStepLogging("session resolve") { resolveAuthenticatedUserId() }
 
         withStepLogging("backup erase") { backupEraser.eraseOwnedBackups(userId) }

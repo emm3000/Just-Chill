@@ -1,4 +1,4 @@
-package com.emm.domain.sync
+package com.emm.domain.shared
 
 import com.emm.domain.shared.error.DomainException
 import kotlinx.coroutines.CancellationException
@@ -9,9 +9,9 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 // Must be wired as a singleton — one lock per process.
-// Account deletion, sync and the backup upload share it: work finishing after the delete_account RPC
+// Account deletion and the backup upload share it: work finishing after the delete_account RPC
 // re-writes what the server just wiped, and the stateless JWT still satisfies the RLS uid claim.
-class SyncMutex(private val acquireTimeout: Duration = ACQUIRE_TIMEOUT) {
+class RemoteWriteMutex(private val acquireTimeout: Duration = ACQUIRE_TIMEOUT) {
 
     private val mutex = Mutex()
 

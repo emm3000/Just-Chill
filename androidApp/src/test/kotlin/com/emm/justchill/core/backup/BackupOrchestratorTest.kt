@@ -4,6 +4,7 @@ import com.emm.data.backup.backupSnapshotName
 import com.emm.domain.auth.AuthUser
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
+import com.emm.domain.shared.RemoteWriteMutex
 import com.emm.domain.shared.backup.BackupFailureReason
 import com.emm.domain.shared.backup.BackupFailureState
 import com.emm.domain.shared.backup.BackupMetadataStore
@@ -13,7 +14,6 @@ import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.BackupUploader
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.logging.DiagnosticsLogger
-import com.emm.domain.sync.SyncMutex
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -58,7 +58,7 @@ class BackupOrchestratorTest {
     private val metadata = mockk<BackupMetadataStore>(relaxed = true)
     private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
     private val logger = mockk<DiagnosticsLogger>(relaxed = true)
-    private val syncMutex = SyncMutex()
+    private val remoteWriteMutex = RemoteWriteMutex()
 
     private val sessionFlow = MutableStateFlow<SessionStatus>(SessionStatus.Initializing)
     private val backgroundFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
@@ -89,7 +89,7 @@ class BackupOrchestratorTest {
             uploader = uploader,
             pruner = pruner,
             metadata = metadata,
-            syncMutex = syncMutex,
+            remoteWriteMutex = remoteWriteMutex,
             observeSession = observeSession,
             appVersion = APP_VERSION,
             clock = fixedClock(now),
@@ -743,7 +743,7 @@ class BackupOrchestratorTest {
     fun `the upload waits for a holder of the shared mutex and runs once it lets go`() = runTest(testDispatcher) {
         coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
         val holderGate = CompletableDeferred<Unit>()
-        val holder = launch { syncMutex.withLock { holderGate.await() } }
+        val holder = launch { remoteWriteMutex.withLock { holderGate.await() } }
         advanceUntilIdle()
 
         val orchestrator = buildOrchestrator()
@@ -767,7 +767,7 @@ class BackupOrchestratorTest {
     fun `a stuck holder fails the cycle as Busy and leaves the consumer alive to retry`() = runTest(testDispatcher) {
         coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
         val stuck = CompletableDeferred<Unit>()
-        val holder = launch { syncMutex.withLock { stuck.await() } }
+        val holder = launch { remoteWriteMutex.withLock { stuck.await() } }
         advanceUntilIdle()
 
         val orchestrator = buildOrchestrator()
@@ -806,7 +806,7 @@ class BackupOrchestratorTest {
         const val PAYLOAD = """{"schemaVersion":3}"""
         const val RETRY_BACKOFF_MILLIS = 6_000L
 
-        // Well inside SyncMutex's acquisition timeout: this test is about the wait, not the give-up.
+        // Well inside RemoteWriteMutex's acquisition timeout: this test is about the wait, not the give-up.
         const val WAITING_ON_LOCK_MILLIS = 5_000L
         const val UPLOAD_DURATION_MILLIS = 1_000L
     }

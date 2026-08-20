@@ -3,6 +3,7 @@ package com.emm.justchill.core.backup
 import com.emm.data.backup.backupSnapshotName
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
+import com.emm.domain.shared.RemoteWriteMutex
 import com.emm.domain.shared.backup.BackupFailureReason
 import com.emm.domain.shared.backup.BackupFailureState
 import com.emm.domain.shared.backup.BackupMetadataStore
@@ -13,7 +14,6 @@ import com.emm.domain.shared.backup.hasLocalChangesSince
 import com.emm.domain.shared.backup.toBackupFailureReason
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.logging.DiagnosticsLogger
-import com.emm.domain.sync.SyncMutex
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
@@ -45,7 +45,7 @@ class BackupOrchestrator(
     private val uploader: BackupUploader,
     private val pruner: BackupPruner,
     private val metadata: BackupMetadataStore,
-    private val syncMutex: SyncMutex,
+    private val remoteWriteMutex: RemoteWriteMutex,
     private val observeSession: ObserveSessionUseCase,
     private val appVersion: String,
     private val clock: Clock,
@@ -242,7 +242,7 @@ class BackupOrchestrator(
         )
         // exportToJson and prune stay outside the lock: neither writes anything a deletion clears, and
         // both would only widen a process-wide lock across Storage calls the delete button waits on.
-        val stillTheSameAccount: Boolean = syncMutex.withLock {
+        val stillTheSameAccount: Boolean = remoteWriteMutex.withLock {
             uploader.upload(userId, backupSnapshotName(takenAt), payload)
             // currentUserId read once and reused for both branches below: two reads of a @Volatile
             // field can disagree.

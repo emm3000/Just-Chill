@@ -3,6 +3,7 @@ package com.emm.justchill.core.backup
 import com.emm.domain.auth.AuthUser
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
+import com.emm.domain.shared.RemoteWriteMutex
 import com.emm.domain.shared.backup.BackupFailureReason
 import com.emm.domain.shared.backup.BackupFailureState
 import com.emm.domain.shared.backup.BackupMetadataStore
@@ -13,7 +14,6 @@ import com.emm.domain.shared.backup.BackupUploader
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 import com.emm.domain.shared.logging.DiagnosticsLogger
-import com.emm.domain.sync.SyncMutex
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
@@ -100,7 +100,7 @@ class BackupOrchestratorHealthTest {
         uploader = uploader,
         pruner = pruner,
         metadata = metadata,
-        syncMutex = SyncMutex(),
+        remoteWriteMutex = RemoteWriteMutex(),
         observeSession = observeSession,
         appVersion = APP_VERSION,
         clock = fixedClock(NOW),

@@ -1,10 +1,10 @@
 package com.emm.domain.auth
 
+import com.emm.domain.shared.RemoteWriteMutex
 import com.emm.domain.shared.backup.BackupEraser
 import com.emm.domain.shared.backup.BackupMetadataStore
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.logging.DiagnosticsLogger
-import com.emm.domain.sync.SyncMutex
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -31,14 +31,14 @@ class DeleteUserAccountUseCaseTest {
     private val authRepository = mockk<AuthRepository>()
     private val backupEraser = mockk<BackupEraser>()
     private val backupMetadataStore = mockk<BackupMetadataStore>()
-    private val syncMutex = SyncMutex()
+    private val remoteWriteMutex = RemoteWriteMutex()
     private val logger = mockk<DiagnosticsLogger>(relaxed = true)
 
     private val useCase = DeleteUserAccountUseCase(
         authRepository = authRepository,
         backupEraser = backupEraser,
         backupMetadataStore = backupMetadataStore,
-        syncMutex = syncMutex,
+        remoteWriteMutex = remoteWriteMutex,
         logger = logger,
     )
 
@@ -185,7 +185,7 @@ class DeleteUserAccountUseCaseTest {
     }
 
     @Test
-    fun `deletion waits for an in-flight holder of the shared SyncMutex`() = runTest {
+    fun `deletion waits for an in-flight holder of the shared RemoteWriteMutex`() = runTest {
         val userId = "uid-4"
         every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
         coEvery { backupEraser.eraseOwnedBackups(userId) } just Runs
@@ -193,9 +193,9 @@ class DeleteUserAccountUseCaseTest {
         every { backupMetadataStore.clear(userId) } just Runs
 
         val syncGate = CompletableDeferred<Unit>()
-        val syncJob = launch { syncMutex.withLock { syncGate.await() } }
+        val syncJob = launch { remoteWriteMutex.withLock { syncGate.await() } }
         val deleteJob = launch { useCase() }
-        // runCurrent, never advanceUntilIdle: virtual time would jump past SyncMutex's acquisition
+        // runCurrent, never advanceUntilIdle: virtual time would jump past RemoteWriteMutex's acquisition
         // timeout and turn this waiting deletion into a Busy failure.
         testScheduler.runCurrent()
 
@@ -212,14 +212,14 @@ class DeleteUserAccountUseCaseTest {
     }
 
     @Test
-    fun `a stuck holder of the shared SyncMutex fails the deletion instead of blocking it forever`() = runTest {
+    fun `a stuck holder of the shared RemoteWriteMutex fails the deletion instead of blocking it forever`() = runTest {
         val userId = "uid-8"
         every { authRepository.sessionStatus } returns flowOf(authenticated(userId))
         coEvery { backupEraser.eraseOwnedBackups(userId) } just Runs
         coEvery { authRepository.deleteAccount() } just Runs
 
         val stuck = CompletableDeferred<Unit>()
-        val holder = launch { syncMutex.withLock { stuck.await() } }
+        val holder = launch { remoteWriteMutex.withLock { stuck.await() } }
         testScheduler.advanceUntilIdle()
 
         assertFailsWith<DomainException.Busy> { useCase() }
@@ -253,7 +253,7 @@ class DeleteUserAccountUseCaseTest {
         coVerify(exactly = 0) { authRepository.deleteAccount() }
         verify(exactly = 0) { backupMetadataStore.clear(any()) }
 
-        assertTrue(syncMutex.withLock { true }, "The shared SyncMutex must be free again")
+        assertTrue(remoteWriteMutex.withLock { true }, "The shared RemoteWriteMutex must be free again")
     }
 
     @Test

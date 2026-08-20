@@ -1,9 +1,9 @@
 package com.emm.justchill.hh.di
 
+import com.emm.domain.shared.RemoteWriteMutex
 import com.emm.domain.shared.backup.BackupMetadataStore
 import com.emm.domain.shared.backup.GetBackupStalenessUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
-import com.emm.domain.sync.SyncMutex
 import com.emm.justchill.core.appScopeQualifier
 import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupOrchestrator
@@ -25,7 +25,7 @@ val backupModule = module {
 
     // Shared between BackupOrchestrator and DeleteUserAccountUseCase so a backup upload and an
     // account deletion never race each other.
-    single { SyncMutex() }
+    single { RemoteWriteMutex() }
 
     single {
         BackupOrchestrator(
@@ -33,7 +33,7 @@ val backupModule = module {
             uploader = get(),
             pruner = get(),
             metadata = get(),
-            syncMutex = get(),
+            remoteWriteMutex = get(),
             observeSession = get(),
             appVersion = get(named("appVersion")),
             clock = get(),
