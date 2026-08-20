@@ -44,15 +44,6 @@ pero admin los bypassea: en un push directo esos checks **no corrieron**.
 - [ ] Detector de drift en CI con el md5 normalizado del schema del server, y mover el guard de
       `relreplident` después del `continue` de idempotencia (`supabase/migrations/`).
 
-### Seguridad
-
-- [ ] La sesión de Supabase sigue en texto plano en `shared_prefs/justchill_auth.xml`. Cifrarla con
-      una clave del Keystore lo cierra; verificá el estado de `androidx.security:security-crypto`.
-- [ ] En iOS la sesión va a `NSUserDefaults` (`KoinIos.kt`): sin cifrar y dentro del backup de iCloud.
-      El lugar de un refresh token es el Keychain, lo que pide un `SessionManager` propio.
-- [ ] Con `allowBackup="false"`, un usuario sin cuenta que pierde el teléfono pierde todo — el backup
-      a Supabase solo corre autenticado. Decidir si se avisa o si el modo sin cuenta deja de soportarse.
-
 ### Cobertura de tests
 
 - [ ] `HighlightQuotedTest.empty pair produces a bold span over zero characters` promete negrita y
