@@ -591,12 +591,18 @@ private fun VersionFooter(appVersion: String, commitHash: String, onCopyClick: (
 @Composable
 private fun CopyableCommitRow(label: String, onCopyClick: () -> Unit) {
     val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
     val radii = LocalEmmRadii.current
+    val interactionSource = remember { MutableInteractionSource() }
     Row(
         modifier = Modifier
             .clip(radii.rXS)
-            .clickable(onClick = onCopyClick)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onCopyClick,
+            )
             .semantics { role = Role.Button }
             .heightIn(min = 48.dp)
             .padding(horizontal = spacing.s4),
@@ -605,8 +611,7 @@ private fun CopyableCommitRow(label: String, onCopyClick: () -> Unit) {
     ) {
         Text(
             text = label,
-            fontSize = 12.sp,
-            fontFamily = InterFontFamily,
+            style = type.caption,
             color = colors.textTertiary,
         )
         Icon(
