@@ -13,6 +13,7 @@ fun EntryProviderScope<NavKey>.reportEntries(bindings: NavHostBindings) {
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         ReportScreen(
             onBack = { nav.pop() },
+            snackbarHostState = bindings.snackbarHostState,
             onAddTransaction = { nav.push(AddTransactionRoute) },
             onShareText = bindings.platform.onShareText,
         )
