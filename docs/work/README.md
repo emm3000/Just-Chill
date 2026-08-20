@@ -19,7 +19,7 @@ Division of labour:
   written into a ticket or an epic.
 
 There is no hand-maintained index anywhere — not in an epic, not in this README, not in
-`PROGRESS.md`. The index is `eza docs/work/backlog` (or `doing/`, `done/`). If you are about to
+`PROGRESS.md`. The index is `eza docs/work/backlog` (or `doing/`). If you are about to
 write a list of ticket names into another file, stop: that list is the exact thing this structure
 exists to kill.
 
