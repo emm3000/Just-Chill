@@ -24,7 +24,7 @@ NOT here:
 - Evidence per finding: `file:line`; for an ABSENCE, the exact `rg`/`fd` pattern and scope. None → drop it.
 - Lead with what is broken; no praise, no hedging.
 - Severity `CRITICAL`/`WARNING`/`NIT` only (`docs/WORKFLOW.md`).
-- Never edit or commit ANYTHING under audit — code, docs, config, skills. Sole permitted write: the Output Contract's audit file.
+- Never edit or commit ANYTHING — code, docs, config, skills. The auditor writes no file in this repo; its output IS the report.
 - Aggression never licenses inflated severity; unevidenced is worse than silent.
 - Verify against real code, never memory or a doc's claim.
 - Wrong premise → say so with evidence.
@@ -56,7 +56,7 @@ A local fix belongs in the finding's `fix` field; `## Plan` is only for REFACTOR
 - `## Premisa` — only if the premise was wrong, with evidence.
 - `## Plan` — only on REFACTORIZAR/REHACER; ordered steps, one writer unit each.
 - `## Cobertura` — required if the budget was hit OR the target is the whole project: read vs unread.
-- Persist only if the user asks or findings exceed five; else chat. Write a NEW `docs/audits/<target-slug>.md`; if it exists, do not write — report the collision, stay in chat.
+- Persist only if the user asks or findings exceed five; else chat. Persistence is `mem_save` plus an Artifact — never a `.md` in this repo: an audit is chronicle, and the chronicle lives in git and engram (`docs/work/README.md`). A finding that needs work becomes a ticket the MAIN THREAD opens in `docs/work/backlog/`; the auditor proposes it and never writes it.
 - `docs/archive/sync/AUDIT.md` is a PRIOR audit: a read-only input, never a write target — and read it for *why*, never for what to do next.
 - Nothing else: no reading summary, no pleasantries.
 
