@@ -82,7 +82,7 @@ fun EmmTextInput(
             modifier = Modifier
                 .fillMaxWidth()
                 .drawBehind {
-                    val stroke = if (isFocused || isError) 2f else 1f
+                    val stroke = if (isFocused || isError) 2.dp.toPx() else 1.dp.toPx()
                     drawLine(
                         color = underlineColor,
                         start = Offset(0f, size.height),
