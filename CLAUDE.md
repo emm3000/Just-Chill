@@ -114,15 +114,15 @@ Six doc types, one job and a death rule each: **`CLAUDE.md`** — how to work he
 only. **`adr/`** — one decision per ADR, target 1 page, ceiling 2 **at writing time**; a published ADR is
 never trimmed to fit, only amended by a new ADR.
 **One live plan per track** — ONLY what remains; closing a unit removes it from the plan in the same
-commit. **`PROGRESS.md`** — backlog items of 1–2 lines + pointer, no essays. **Reference docs**
+commit. **`PROGRESS.md`** — the orientation page: where the app stands, how to check it, untaken ideas. **Reference docs**
 (`WORKFLOW`, `CODE_QUALITY`, `DESIGN_SYSTEM`) — timeless conventions, zero history. **`archive/`** —
 the reasoning of closed work. The chronicle lives in git and engram, never in a live doc; every live
 doc has a read-trigger in the map below, and a doc with no trigger is archive.
 
 ## Docs map (`docs/`)
 
-- `PROGRESS.md` — "where are we now" plus the single open-work checklist; sync debt lives in the
-  work epic instead. **Read it first.**
+- `PROGRESS.md` — where the app stands, how to verify that from a shell, and the ideas nobody has
+  taken. It holds no work list: every committed unit is a ticket in `docs/work/`. **Read it first.**
 - `work/epics/E01-snapshot-backup.md` — the sync/backup epic: constraints outliving every ticket
   under it, remaining work in `work/backlog/`. **Read before touching backup.**
 - `work/epics/E02-migration-coverage.md` — the coverage invariant; `PERSISTENCE.md` — the schema, the
