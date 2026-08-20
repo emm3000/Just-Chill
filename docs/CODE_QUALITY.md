@@ -46,6 +46,27 @@ issues deliberately left outside it — run the task rather than trust a count w
 with every sweep — `detektMainAndroid` covers the same files *with* type resolution, so
 adding it buys tasks, not coverage (`QualityGateConventionPlugin`; item in `docs/PROGRESS.md`).
 
+### One baseline file per analysis task
+
+detekt 2.0 registers an analysis task per source set, and each one derives its OWN baseline file from
+the extension stem `config/detekt/baseline-<module>.xml` — set once in
+`build-logic/.../DetektConventionPlugin.kt`, which `:androidApp` applies directly and the four KMP
+modules (`:domain`, `:data`, `:presentation`, `:ui-android`) get through `justchill.kmp.library`. The
+suffix is the task's source set: `detektMainAndroid` ↔ `baseline-<module>-main.xml`,
+`detektIosMainSourceSet` ↔ `baseline-<module>-iosMainSourceSet.xml`, and so on. `:androidApp:detektMain`
+is the one that fans out — four variants, four files, `baseline-androidApp-{devDebug,devRelease,prodDebug,prodRelease}.xml`.
+Because each task derives its own path, two of them for the same module never overwrite each other.
+
+The stem files themselves (`baseline-<module>.xml`, no suffix) belong to the plain `detekt` task,
+which is `NO-SOURCE` on the KMP modules and is not a gate. **Leave them alone.** They exist today for
+`androidApp`, `data` and `domain` only; `presentation` and `ui-android` have none and need none.
+
+To grandfather pre-existing issues for a source set, run the matching baseline task and commit what it
+writes — the file it writes is the file the analysis task reads, so a wrong guess is self-correcting
+(`./gradlew :data:detektBaselineMainAndroid :data:detektBaselineIosMainSourceSet`). **NEVER baseline
+to dodge a NEW violation** the current change introduced; a baseline only ever grandfathers what
+predates the rule.
+
 ## Three gotchas, all found by measurement
 
 **1. A baseline entry for a file-level rule is permanent amnesty.** The ID carries no count —

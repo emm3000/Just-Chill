@@ -49,5 +49,4 @@ stem baselines (`config/detekt/baseline-<module>.xml`, no source-set suffix)
 belong to it and are now unused by the hook. They are kept rather than deleted so
 a manual `./gradlew detekt` keeps behaving as before.
 
-Baseline scheme (which file belongs to which task) is documented in
-`docs/archive/kmp/ORCHESTRATION.md`.
+Baseline scheme (which file belongs to which task) is documented in `docs/CODE_QUALITY.md`.
