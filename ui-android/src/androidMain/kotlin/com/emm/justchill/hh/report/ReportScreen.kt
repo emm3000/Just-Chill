@@ -24,10 +24,8 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,12 +45,10 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
-import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.MonthSelector
 import com.emm.justchill.core.ui.atoms.SegmentOption
 import com.emm.justchill.core.ui.atoms.Segmented
-import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.hh.report.TRENDS_WINDOW_MONTHS
 import com.emm.justchill.hh.report.components.CategoryBarsCard
 import com.emm.justchill.hh.report.components.ComparisonPill
@@ -71,24 +67,10 @@ import org.koin.compose.viewmodel.koinViewModel
 fun ReportScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
-    snackbarHostState: SnackbarHostState,
     onAddTransaction: () -> Unit = {},
-    onShareText: (String) -> Unit = {},
     vm: ReportViewModel = koinViewModel(),
 ) {
     val state: ReportUiState by vm.state.collectAsStateWithLifecycle()
-
-    LaunchedEffect(vm) {
-        vm.effect.collect { effect ->
-            when (effect) {
-                is ReportEffect.ShowError -> snackbarHostState.showEmmSnackbar(
-                    message = effect.message,
-                    tone = EmmSnackbarTone.Error,
-                )
-                is ReportEffect.ShareReport -> onShareText(effect.text)
-            }
-        }
-    }
 
     ReportScreen(
         state = state,
