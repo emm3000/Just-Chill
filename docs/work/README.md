@@ -25,3 +25,6 @@ exists to kill.
 
 Naming: `E<NN>-<NN>-<kebab-slug>.md` — epic number, ticket number, short slug. Epics live in
 `docs/work/epics/E<NN>-<kebab-slug>.md`.
+
+**Citations are by symbol, not by line.** A line number in prose is a guarantee nothing enforces.
+Name the symbol and let `rg` find it.

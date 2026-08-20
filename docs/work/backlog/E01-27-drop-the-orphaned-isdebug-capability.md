@@ -4,7 +4,9 @@
 
 ## Done when
 
-- [ ] `PlatformHostActions.isDebug` (`ui-android/.../hh/shared/PlatformHostActions.kt:41`) and its Android implementation at `:123` are deleted, along with whatever supplies `debuggable` if that becomes its only reader
+- [ ] `PlatformHostActions.isDebug` (`ui-android/.../hh/shared/PlatformHostActions.kt`) and the
+      `override val isDebug` inside `rememberPlatformHostActions` are deleted, along with the
+      `debuggable` val that feeds it once `isDebug` is its only reader
 - [ ] `rg -n 'isDebug' --type kotlin` returns nothing and `assembleDevDebug` passes
 
 ## Context
