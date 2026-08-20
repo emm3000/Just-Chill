@@ -3,6 +3,7 @@ package com.emm.justchill.core
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
+import androidx.core.content.edit
 import com.emm.data.provideDb
 import com.emm.data.provideSqlDriver
 import com.emm.domain.shared.logging.DiagnosticsLogger
@@ -87,24 +88,24 @@ private fun provideSharedPreferences(context: Context): SharedPreferences {
 }
 
 internal fun migrateBuildIdPrefs(legacy: SharedPreferences, target: SharedPreferences) {
-    val editor = target.edit()
-    for ((key, value) in legacy.all) {
-        when (value) {
-            is Boolean -> editor.putBoolean(key, value)
+    target.edit {
+        for ((key, value) in legacy.all) {
+            when (value) {
+                is Boolean -> putBoolean(key, value)
 
-            is Int -> editor.putInt(key, value)
+                is Int -> putInt(key, value)
 
-            is Long -> editor.putLong(key, value)
+                is Long -> putLong(key, value)
 
-            is Float -> editor.putFloat(key, value)
+                is Float -> putFloat(key, value)
 
-            is String -> editor.putString(key, value)
+                is String -> putString(key, value)
 
-            is Set<*> ->
-                @Suppress("UNCHECKED_CAST")
-                editor.putStringSet(key, value as Set<String>)
+                is Set<*> ->
+                    @Suppress("UNCHECKED_CAST")
+                    putStringSet(key, value as Set<String>)
+            }
         }
+        putBoolean(PREFS_MIGRATED_FLAG, true)
     }
-    editor.putBoolean(PREFS_MIGRATED_FLAG, true)
-    editor.apply()
 }
