@@ -1,12 +1,16 @@
 # Advertising ID: the correct Play Console answer is "No"
 
-JustChill does not use the advertising ID. No release ever has. This file holds the evidence and
-the commands that produce it, so the question does not have to be re-investigated the next time
-Play asks — it will ask again.
+JustChill does not use the advertising ID. It did: `v2.0.0` and `v2.1.0` shipped
+`firebase-analytics`, and their bundles declare the permission for that reason. `50ff8d4d` dropped
+the dependency and every bundle from `v2.2.0` on is clean. This file holds the evidence and the
+commands that produce it, so the question does not have to be re-investigated the next time Play
+asks — it will ask again.
 
-> **Current state (2026-08-10): the declaration says "Yes", which is false.**
-> It was set during the `v2.4.0` upload to clear a rejection. It should go back to "No". See
-> [If Play blocks the "No" answer](#if-play-blocks-the-no-answer) before flipping it.
+> **Current state (2026-08-20): the declaration says "No", and Play will not accept it.**
+> Every pre-submission check fails with *"Incomplete advertising ID declaration"* even though
+> App content lists the declaration as actioned and `Need attention` is empty. Turning managed
+> publishing off did not clear it. A support case is open. See
+> [If Play blocks the "No" answer](#if-play-blocks-the-no-answer).
 
 ## Quick path — re-verify any build in about two minutes
 
@@ -63,10 +67,26 @@ conflict is understood to be on the Play Console side rather than in the binary.
 by `firebase-crashlytics`.
 
 It is an interface, not the analytics SDK. It lets Crashlytics hand breadcrumbs to Firebase
-Analytics *when Analytics is present*. Analytics is not present: `firebase-analytics` has only
-ever existed as an orphan entry in `gradle/libs.versions.toml` and was never added to any module's
-dependencies (`git log -S'firebase-analytics'` confirms this). The connector declares no
+Analytics *when Analytics is present*. Analytics is not present today. The connector declares no
 permissions and contains no advertising-ID code. It is an empty socket.
+
+Analytics **was** present, in `v2.0.0` and `v2.1.0`, as `implementation(libs.firebase.analytics)`
+in what was then `app/build.gradle.kts`. That is where `AD_ID`,
+`ACCESS_ADSERVICES_AD_ID`, `ACCESS_ADSERVICES_ATTRIBUTION` and
+`BIND_GET_INSTALL_REFERRER_SERVICE` in those bundles come from — legitimately.
+
+**The search that missed it is the lesson.** A version catalog accessor spells the dependency with
+dots, not the hyphen the catalog declares, so `git log -S'firebase-analytics'` finds the `.toml`
+entry and not one single call site. It reported an orphan that was in fact wired into the app.
+Search both spellings, always:
+
+```bash
+git log --oneline --all -S'firebase-analytics'   # the catalog declaration
+git log --oneline --all -S'firebase.analytics'   # every actual use
+```
+
+The module was called `app/`, not `androidApp/`, before the KMP migration — a path-scoped search
+over the current name finds nothing in the old tags.
 
 ## Why "Yes" is the wrong answer
 
@@ -87,9 +107,19 @@ reopens something that is already green.
 Do not switch back to "Yes". Open a Play Console support case with the evidence above — the three
 checks are concrete and reproducible, which is what a support case needs.
 
-Note that Play evaluates declarations against releases that are still active in a track, not only
-against the bundle being uploaded. If an old active release is the source of the conflict, letting
-it be superseded may resolve it on its own.
+"Yes" is not even an escape. It produces its own error — *"your declaration says your app uses
+advertising ID, a manifest in one of your active artifacts doesn't include the permission"* — and
+the only way past that is the `Release without permission` button, which ships the release with a
+false declaration permanently attached to the listing.
+
+Play evaluates declarations against artifacts, not only against the bundle being uploaded, and
+**an uploaded bundle can never be deleted** — Play Console offers no way to remove one from the
+library. The artifacts that declare `AD_ID` are `v2.0.0` (versionCode 553) and `v2.1.0`. Both show
+`0 releases`, so if they are still being counted, only Play can stop counting them: ask in the
+support case rather than looking for a button.
+
+There is no urgency to trade the correct answer for a shipped build. The app has no third-party
+users, and reaching the author's own device does not need Play — `assembleProdRelease` does.
 
 ## Checklist before answering the question again
 
@@ -101,11 +131,10 @@ it be superseded may resolve it on its own.
 
 ## Next step
 
-The old wording waited on `v2.4.0`, which never shipped and never will — its Edit was refused. That
-wait is over: `v2.5.0` uploaded and **committed its Edit** with the declaration still reading "Yes",
-so the alpha track finally has a draft that can supersede the release the conflict is suspected to
-live on.
+`v2.5.0` uploaded and **committed its Edit** — the step that refused `v2.4.0` — leaving a draft on
+the alpha track. The declaration was then set to "No", which is where it stands and where it stays.
 
-Publish that draft, then flip the declaration to "No" and re-run the quick path on the release after
-it. If Play refuses the "No", read the section above before touching the answer: an old release
-still active in a track is the first suspect, not the bundle.
+What blocks the release now is not the declaration's content but its state: Play's pre-submission
+check calls it incomplete while App content lists it as actioned. Nothing in this repo can move
+that. The next step belongs to the support case; when it clears, publish the draft and re-run the
+quick path on the release after it.
