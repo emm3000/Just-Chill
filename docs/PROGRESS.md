@@ -27,8 +27,6 @@ pero admin los bypassea: en un push directo esos checks **no corrieron**.
 
 ### Infraestructura
 
-- [ ] Subir el wrapper de Gradle 9.7.0 → 9.7.1. Único warning de `:androidApp:lintProdRelease`; queda
-      visible porque dependabot parsea `libs.versions.toml`, no `gradle-wrapper.properties`.
 - [ ] Decidir si la protección de `trunk` alcanza a admin (`enforce_admins: false` hoy).
 - [ ] `required_linear_history: false` y `allow_force_pushes: true`, ambas a conciencia. Cambiarlas
       exige un `PUT` del objeto de protección completo, no un PATCH.
