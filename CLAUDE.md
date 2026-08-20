@@ -71,16 +71,8 @@ test (`presentation/CLAUDE.md`), and a missing migration — compiled by the gat
 
 ## Delegation
 
-| Tier | Role |
-|---|---|
-| Haiku | Runs and reports — gate/tests/builds/git, zero judgment |
-| Sonnet | Writes from a decision already made — docs, mechanical refactors, tests from a spec |
-| Opus | Decides — architecture, ADRs, plans, reviewers, judges, and code where nothing else catches the error |
-| Main thread | Decides, delegates, verifies conclusions — never reads raw tool output |
-
-Tiebreaker: Sonnet writes where the compiler/a test catches the error; Opus where nothing does (that
-"nothing" list is `## Gotchas` below). The reviewer is always Opus. `model` passed explicitly every
-time, never relying on agent-file frontmatter. Loop + reasoning: `docs/WORKFLOW.md`.
+Tiers, the tiebreaker, the Judgment Day carve-outs and the `model`-passing rule live in
+`docs/WORKFLOW.md` `## Model tier policy`. **Read it before delegating anything.**
 
 ## Writer conventions (they reach every subagent through this file)
 
