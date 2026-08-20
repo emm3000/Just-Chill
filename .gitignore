@@ -20,6 +20,7 @@ local.properties
 
 # Claude Code
 .claude/settings.local.json
+.claude/RESUME.md
 .claude/worktrees/
 .atl/
 docs/*
