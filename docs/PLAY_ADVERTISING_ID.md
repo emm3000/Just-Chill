@@ -35,9 +35,9 @@ there. Skipping this step is how a search bug gets reported as a clean bill of h
 ## Evidence — valid for `v2.4.0` (commit `dcc176a`), nothing newer
 
 All three were run against that bundle and agree. They say nothing about the bundle you are about
-to upload: `git rev-list --count v2.4.0..trunk` says how far `trunk` has moved past that tag. **Re-run the quick path against the
-AAB that will actually be published before answering the question again** — this table is a record,
-not a standing clearance.
+to upload: `git rev-list --count v2.4.0..trunk` says how far `trunk` has moved past that tag.
+**Re-run the quick path against the AAB that will actually be published before answering the
+question again** — this table is a record, not a standing clearance.
 
 | Check | Command | Result |
 |---|---|---|
