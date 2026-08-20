@@ -298,4 +298,24 @@ class EditTransactionViewModelTest {
         assertEquals(1, vm.state.value.categories.size, "the Income category must be on offer")
         assertNull(vm.state.value.categorySelected, "on offer, but not chosen for the user")
     }
+
+    @Test
+    fun `switching the type does not adopt a category of the new type`() = runTest(testDispatcher) {
+        val incomeCategory = Category(
+            categoryId = CategoryId("salary"),
+            name = "Sueldo",
+            icon = "money",
+            color = "green",
+            categoryType = CategoryType.Income,
+        )
+        every { categoryRepository.all() } returns flowOf(listOf(category, incomeCategory))
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(EditTransactionIntent.OnTransactionTypeChange(TransactionType.Income))
+        advanceUntilIdle()
+
+        assertEquals(1, vm.state.value.categories.size, "the Income category must be on offer")
+        assertNull(vm.state.value.categorySelected, "the stored category belongs to the old type")
+    }
 }

@@ -94,13 +94,10 @@ class EditTransactionViewModel(
         loadFrequent(type)
     }
 
-    /**
-     * Returns null, not [list]'s first entry, when there is no stored category: "uncategorized" is
-     * a choice, and falling back would silently hand [recompute] a change to save.
-     */
+    /** "Uncategorized" is a choice: a stored category absent from [list] selects nothing. */
     private fun resolveSelection(list: List<SelectableCategory>): SelectableCategory? {
         val storedId = snapshot?.categoryId ?: return null
-        return list.firstOrNull { it.categoryId == storedId } ?: list.firstOrNull()
+        return list.firstOrNull { it.categoryId == storedId }
     }
 
     private fun loadFrequent(type: TransactionType) = viewModelScope.launch {
@@ -133,9 +130,6 @@ class EditTransactionViewModel(
         val storedDay: LocalDate = oldTransaction.occurredAt.date
 
         val categoriesForType = allCategories[oldTransaction.type.categoryType].orEmpty()
-        val selectedCategory: SelectableCategory? = oldTransaction.categoryId?.let { id ->
-            categoriesForType.firstOrNull { it.categoryId == id }
-        }
 
         snapshot = Snapshot(
             amount = moneyCentsString(oldTransaction.amount),
@@ -155,7 +149,7 @@ class EditTransactionViewModel(
                 accounts = accounts,
                 accountSelected = account,
                 categories = categoriesForType,
-                categorySelected = selectedCategory ?: resolveSelection(categoriesForType),
+                categorySelected = resolveSelection(categoriesForType),
                 isEnabled = false,
                 hasChanges = false,
             )
