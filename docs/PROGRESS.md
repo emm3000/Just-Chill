@@ -32,20 +32,6 @@ pero admin los bypassea: en un push directo esos checks **no corrieron**.
 - [ ] Detector de drift en CI con el md5 normalizado del schema del server, y mover el guard de
       `relreplident` después del `continue` de idempotencia (`supabase/migrations/`).
 
-### Cobertura de tests
-
-- [ ] `HighlightQuotedTest.empty pair produces a bold span over zero characters` promete negrita y
-      solo afirma `span.start == span.end`.
-- [ ] Nada verifica el binding de `DispatchersProvider` en Koin: vive fuera de `appModules()`.
-- [ ] `ReportViewModelTest.rapid month changes are latest-wins…` no verifica cancelación alguna:
-      solo afirma `invocationCount >= 1`.
-- [ ] Sin cobertura en el gate: la escritura al portapapeles del commit, el split short/40-al-copiar,
-      y la rama `SDK_INT < TIRAMISU` del snackbar (`ProfileEntries.kt`).
-- [ ] `GenerateBuildInfoTask.generate()` no tiene test; romper las comillas del `trimMargin()` no pone
-      nada en rojo. Cerrarlo pide `ProjectBuilder`/`GradleRunner`. Omisión elegida.
-- [ ] Flake preexistente en `MviViewModelTest` (`Dispatchers.Main was accessed`): la fuga viene de
-      otro test de la misma JVM.
-
 ### Deuda técnica
 
 - [ ] La app no tiene ícono adaptativo: el manifest apunta a rasters legacy de 48dp. Rehacerlo pide
