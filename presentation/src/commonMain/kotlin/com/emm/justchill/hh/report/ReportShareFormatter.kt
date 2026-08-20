@@ -16,9 +16,9 @@ internal object ReportShareFormatter {
         }
         if (deltaPoints == null) return base
         val comparison = when {
-            deltaPoints > 0 -> " Mejoraste vs. los 6 meses previos."
-            deltaPoints < 0 -> " Empeoraste vs. los 6 meses previos."
-            else -> " Mantuviste el mismo ritmo que los 6 meses previos."
+            deltaPoints > 0 -> " Mejoraste vs. los $TRENDS_WINDOW_MONTHS meses previos."
+            deltaPoints < 0 -> " Empeoraste vs. los $TRENDS_WINDOW_MONTHS meses previos."
+            else -> " Mantuviste el mismo ritmo que los $TRENDS_WINDOW_MONTHS meses previos."
         }
         return base + comparison
     }
@@ -51,12 +51,12 @@ internal object ReportShareFormatter {
     fun buildTrendsShareText(state: ReportUiState): String {
         val t = state.trends
         return buildString {
-            appendLine("Reporte · Tendencias 6 meses")
+            appendLine("Reporte · Tendencias $TRENDS_WINDOW_MONTHS meses")
             // Shared text has no pill and no icon, so the arrow the screen draws has to be
             // written out here or the reader cannot tell an improvement from a slip.
             val deltaStr = t.deltaText?.let { text ->
                 val sign = if (t.deltaIsPositive == true) "↑" else "↓"
-                " ($sign $text vs. 6 meses previos)"
+                " ($sign $text vs. $TRENDS_WINDOW_MONTHS meses previos)"
             }.orEmpty()
             appendLine("Tasa de ahorro: ${t.savingsRatePercent}%$deltaStr")
             appendLine("Promedio mensual: ingresos ${t.averageIncomeFormatted} · gastos ${t.averageExpenseFormatted}")

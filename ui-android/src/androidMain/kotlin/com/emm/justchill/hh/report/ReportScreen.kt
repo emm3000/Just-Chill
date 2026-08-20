@@ -50,6 +50,7 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.MonthSelector
 import com.emm.justchill.core.ui.atoms.SegmentOption
 import com.emm.justchill.core.ui.atoms.Segmented
+import com.emm.justchill.hh.report.TRENDS_WINDOW_MONTHS
 import com.emm.justchill.hh.report.components.CategoryBarsCard
 import com.emm.justchill.hh.report.components.ComparisonPill
 import com.emm.justchill.hh.report.components.MonthPickerSheet
@@ -126,7 +127,7 @@ private fun ReportScreen(
 
         val tabOptions = listOf(
             SegmentOption(ReportTab.Mes, "Mes"),
-            SegmentOption(ReportTab.Tendencias, "Tendencias 6m"),
+            SegmentOption(ReportTab.Tendencias, "Tendencias ${TRENDS_WINDOW_MONTHS}m"),
         )
         Segmented(
             options = tabOptions,

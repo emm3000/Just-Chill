@@ -18,7 +18,7 @@ import kotlinx.datetime.TimeZone
 import kotlin.math.abs
 import kotlin.time.Clock
 
-private const val TRENDS_WINDOW_MONTHS = 6
+const val TRENDS_WINDOW_MONTHS = 6
 private const val MONTHS_FOR_A_MEANINGFUL_TREND = 3
 private const val TOP_EXPENSES_SHOWN = 3
 
