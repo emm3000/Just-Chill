@@ -7,8 +7,8 @@
 
 Replaces the row-replication sync engine with periodic full-JSON snapshot backup to Supabase
 Storage: one blob per snapshot, staggered retention, one restore path (`importFromJson`). Phases
-0–3 (ADR, sign-out fix, export v3, pipeline, health visibility) are closed; restore confidence and
-engine decommission remain.
+0–3 (ADR, sign-out fix, export v3, pipeline, health visibility) are closed; restore confidence
+remains.
 
 ## Constraints
 
