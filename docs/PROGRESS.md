@@ -25,13 +25,6 @@ pero admin los bypassea: en un push directo esos checks **no corrieron**.
 
 ## Trabajo abierto
 
-### Fechas
-
-- [ ] Migrar la columna de Supabase de `date bigint` a `text`, UTC-5 (no `AT TIME ZONE 'UTC'`).
-      SQL en verde, 7/7 vectores; falta secuenciarlo sobre data real. `docs/archive/sync/AUDIT.md` §5.
-- [ ] Detector de drift en CI con el md5 normalizado del schema del server, y mover el guard de
-      `relreplident` después del `continue` de idempotencia (`supabase/migrations/`).
-
 ### Infraestructura
 
 - [ ] Subir el wrapper de Gradle 9.7.0 → 9.7.1. Único warning de `:androidApp:lintProdRelease`; queda
