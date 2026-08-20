@@ -33,6 +33,10 @@ in `docs/PROGRESS.md`; it does not fail the gate.
 `Default{Entity}Repository` delegates to `LocalDataSource` (SQLDelight). Mappers convert between
 `{Entity}Entity` and domain types.
 
+`DefaultBackupRepository` is the one deliberate exception: a snapshot and a restore each have to be
+a single transaction spanning every table, and per-entity `LocalDataSource`s cannot share one, so it
+drives `EmmDatabaseData` and its `*Queries` directly.
+
 ## Persistence
 
 SQLDelight 2.x. Schema, migrations and the generated `EmmDatabaseData` all live under
