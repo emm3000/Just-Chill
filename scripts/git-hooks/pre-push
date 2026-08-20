@@ -1,23 +1,6 @@
 #!/usr/bin/env bash
-# Pre-push: run the project's quality gate.
-#
-# This used to hold its own hand-written list of detekt tasks — and only detekt, no tests at all.
-# That list drifted from the three GitHub workflows and from docs/WORKFLOW.md, and none of
-# the four was a superset of the others. The gate is now defined once, in
-# build-logic/src/main/kotlin/com/emm/buildlogic/QualityGateConventionPlugin.kt, and this hook runs
-# exactly what CI runs.
-#
-# `./gradlew qualityGate` covers, across all four modules:
-#   - detekt over every source set that holds code (NOT plain `./gradlew detekt`, which is
-#     NO-SOURCE on :domain, :data and :ui-android and only ever linted :androidApp)
-#   - the JVM host test suites, including :ui-android — which is where AppGraphKoinTest lives, the
-#     only mechanical guard against a missing Koin binding
-#   - Android lint on the dev variant
-#   - the iOS compile, which proves commonMain stays free of java.* / android.* (docs/adr/003).
-#     CI runs on Linux and skips this part, loudly; on this machine it runs.
-#
-# Fails the push on any finding not already in config/detekt/baseline-*.xml.
-#
+# Pre-push: runs `./gradlew qualityGate` and fails the push on any finding.
+# The gate is defined once, in build-logic/.../QualityGateConventionPlugin.kt — change it there.
 # Skip with: git push --no-verify
 
 set -e
