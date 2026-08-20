@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Decisions, not debt. Anything genuinely unfixed belongs in a backlog ticket; this file
+  is read as the list of checks we chose to stop hearing from, and each one states why.
+-->
+<lint>
+
+    <!-- targetSdk trails compileSdk on purpose: raising it opts the app into that release's
+         behaviour changes, which is a migration to test on a device holding real data. -->
+    <issue id="OldTargetApi" severity="ignore" />
+
+    <!-- Both only report that a newer version exists, which .github/dependabot.yml already
+         does as a monthly grouped PR the quality gate validates in CI. okio is pinned on top
+         of that to whatever supabase-kt and Ktor resolve — see gradle/libs.versions.toml. -->
+    <issue id="GradleDependency" severity="ignore" />
+    <issue id="NewerVersionAvailable" severity="ignore" />
+
+</lint>

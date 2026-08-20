@@ -91,9 +91,6 @@ la única verificación es la local.
       ya medido: prenderla activa también sus otras entradas, y eso son cuatro violaciones
       preexistentes — el `println` de `PrintlnDiagnosticsLogger` (la clase se llama así a propósito) y
       tres `BigDecimal(String)` en `EmmAmountChill.kt`. Decidir cada una es parte del trabajo.
-- [ ] `androidApp/lint-baseline.xml` tiene entradas muertas: el gate imprime "7 errors/warnings were
-      listed in the baseline file but not found in the project". Misma podredumbre que las entradas
-      muertas del baseline de detekt, pero en lint.
 
 ### Bugs
 
@@ -145,6 +142,14 @@ la única verificación es la local.
 
 ### Deuda técnica
 
+- [ ] La app no tiene ícono adaptativo: el manifest apunta a los rasters legacy de 48dp y con
+      `minSdk 28` todo device recibe el tratamiento legacy. Las piezas del generador se borraron
+      porque el retrato ocupaba los 108dp enteros y la máscara le cortaba la cabeza; rehacerlo pide
+      re-autorar el arte a la safe zone de 66dp y el fuente no está en el repo.
+- [ ] Restos del template "Retrofit" con nombre visible: `@string/app_name` vale `"Retrofit"` y lo
+      consume el shortcut de dev (por eso `strings.xml` vive en `src/dev/`), y el tema de la app se
+      llama `Theme.Retrofit`. El label de la app no sale de ahí — el manifest usa `${app_name}` de
+      manifestPlaceholders.
 - [ ] Pasada de performance de Compose: `derivedStateOf`, lambdas recordadas, `contentType` en
       `LazyColumn`.
 - [ ] `CommitHashUi.Available.fullHash` es público y solo lo consume su propio `label`; ningún otro
@@ -155,6 +160,10 @@ la única verificación es la local.
 
 ### Infraestructura
 
+- [ ] Subir el wrapper de Gradle 9.7.0 → 9.7.1. Es el único warning que queda en
+      `:androidApp:lintProdRelease` (`AndroidGradlePluginVersion`) y se deja visible a propósito:
+      dependabot parsea `libs.versions.toml`, no `gradle-wrapper.properties`, así que nada más lo
+      reporta. Va en su propio commit con el gate corrido.
 - [ ] Decidir si la protección de `trunk` alcanza a admin. Hoy `enforce_admins: false`: la cuenta del
       autor bypassea y en ese push los checks requeridos no corrieron.
 - [ ] `required_linear_history: false` y `allow_force_pushes: true`, ambas decididas a conciencia y
