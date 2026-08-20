@@ -87,7 +87,7 @@ ship as bundled font resources — nothing is fetched and nothing falls back to 
 - `bodyL` (the default), `bodyM` — running text.
 - `labelL`, `labelM` — buttons, tabs, chips.
 - `caption` — timestamps and metadata.
-- `eyebrow` — the all-caps section label (§3.4).
+- `eyebrow` — the all-caps section label (§3.5).
 
 Never build a `TextStyle` inline to fill a gap between two roles. Add the role.
 
@@ -107,7 +107,13 @@ code and `SpanishFormatGoldenTest` pins the output.
 - In a hero amount the currency prefix and the decimals are deemphasised — smaller, and either
   `textTertiary` or a lowered alpha — so the integer part carries the glance.
 
-### 3.4 Forbidden
+### 3.4 Italics
+
+Reserved for a secondary meta label at 13sp — the `Variable` marker on a variable-amount recurring
+movement, a transaction note. Never an amount, never primary content. Italic says "this describes
+the row", not "this is the row".
+
+### 3.5 Forbidden
 
 - All caps outside the `Eyebrow` atom. Eyebrow labels a section the way a column header labels a
   table: a role, not decoration. Keep it short; a `·` may join two facts.
