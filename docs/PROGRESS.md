@@ -66,17 +66,6 @@ pero admin los bypassea: en un push directo esos checks **no corrieron**.
 - [ ] Prohibir `SnackbarHostState.showSnackbar` con `ForbiddenMethodCall` (hoy `active: false` en
       `config/detekt/detekt.yml`). Prenderla arrastra 4 violaciones preexistentes que hay que decidir.
 
-### Bugs
-
-- [ ] Cambiar el tipo de un movimiento le elige categoría sin que nadie lo pida:
-      `EditTransactionViewModel.resolveSelection` cae en `?: list.firstOrNull()`.
-- [ ] `ReportScreen` no recibe `SnackbarHostState`, así que `ReportEffect.ShowError` queda en `-> Unit`:
-      un fallo de carga o de compartir no le dice nada al usuario.
-- [ ] `TRENDS_WINDOW_MONTHS = 6` (`ReportViewModel.kt`) está repetido como texto "6 meses" en
-      `ReportShareFormatter.kt`. Cambiar la constante deja el texto compartido mintiendo.
-- [ ] `DefaultAuthRepository.deleteAccount()` dispara el RPC sin `awaitSessionInitialization()`:
-      en la ventana de restore el fallo sale como error de credenciales en vez de reintentable.
-
 ### Seguridad
 
 - [ ] La sesión de Supabase sigue en texto plano en `shared_prefs/justchill_auth.xml`. Cifrarla con
