@@ -25,18 +25,6 @@ pero admin los bypassea: en un push directo esos checks **no corrieron**.
 
 ## Trabajo abierto
 
-### Release y compliance — solo los puede hacer un humano
-
-- [ ] Hostear `docs/PRIVACY_POLICY.md` como URL pública (Play la exige por la eliminación de cuenta).
-- [ ] Completar el Google Play Data Safety form.
-- [ ] Checklist QA: clean install, semana offline-first, sign-in tardío, sign-out, y upgrade real
-      con APK viejo + `adb install -r`.
-- [ ] `v2.4.0` nunca llegó a alpha: el workflow falló al commitear el Edit porque el AAB declara
-      `AD_ID` y Play Console decía que no. **No hay borrador esperando.** Cerrarlo es cortar una
-      release nueva, no publicar a mano.
-- [ ] Devolver la declaración de advertising ID a "No". Se puso en "Yes" para desbloquear ese
-      rechazo y quedó así. Las dos se destraban juntas: `docs/PLAY_ADVERTISING_ID.md`.
-
 ### Fechas
 
 - [ ] Migrar la columna de Supabase de `date bigint` a `text`, UTC-5 (no `AT TIME ZONE 'UTC'`).
