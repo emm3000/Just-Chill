@@ -54,5 +54,6 @@ class HighlightQuotedTest {
         assertEquals(1, result.spanStyles.size)
         val span = result.spanStyles[0]
         assertEquals(span.start, span.end)
+        assertEquals(FontWeight.W700, span.item.fontWeight)
     }
 }
