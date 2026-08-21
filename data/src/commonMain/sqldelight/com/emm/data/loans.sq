@@ -12,6 +12,7 @@ CREATE TABLE loans (
     interestBps INTEGER NOT NULL DEFAULT 0,
     totalDue    INTEGER NOT NULL,
     note        TEXT NOT NULL DEFAULT '',
+    -- `lentAt` is ISO local date-time text with no offset, like `transactions.occurredAt` — not epoch millis.
     lentAt      TEXT NOT NULL,
     createdAt   INTEGER NOT NULL,
     updatedAt   INTEGER NOT NULL,
