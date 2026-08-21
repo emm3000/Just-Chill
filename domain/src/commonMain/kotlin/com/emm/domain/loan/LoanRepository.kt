@@ -5,7 +5,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface LoanRepository {
 
-    fun all(): Flow<List<Loan>>
+    fun balancesByPerson(): Flow<List<PersonBalance>>
+
+    fun byPerson(personKey: String): Flow<List<Loan>>
 
     fun byId(loanId: LoanId): Flow<Loan?>
 
