@@ -1,7 +1,7 @@
 # E01-08 — Cloud cleanup
 
 **Epic:** [E01 — snapshot backup](../epics/E01-snapshot-backup.md)
-**Blocked by:** E01-02
+**Runs after:** the flag flips and one real snapshot exists — see Context.
 
 ## Done when
 
@@ -12,3 +12,8 @@
 
 Destructive and outward-facing: this truncates the proven-garbage rows the production forensics
 in the epic describe, not a reversible local change.
+
+The precondition is an ordering fact, not a missing decision: `SNAPSHOT_BACKUP_ENABLED` has never
+been `true`, so nothing has ever been uploaded and there is no snapshot to pin. This cannot run
+before the flag flips and one cycle completes. Everything up to the confirmation — the exact SQL,
+the row counts, the pinned snapshot's key — can be prepared ahead of that.
