@@ -9,6 +9,11 @@ import com.emm.data.backup.DefaultBackupUploader
 import com.emm.data.backup.DefaultBackupVerifier
 import com.emm.data.category.CategoryLocalDataSource
 import com.emm.data.category.DefaultCategoryRepository
+import com.emm.data.loan.DefaultLoanPaymentRepository
+import com.emm.data.loan.DefaultLoanRepository
+import com.emm.data.loan.LoanLocalDataSource
+import com.emm.data.loan.LoanPaymentLocalDataSource
+import com.emm.data.provideLoanPaymentsQueries
 import com.emm.data.provideTransactionQueries
 import com.emm.data.recurring.DefaultRecurringMovementRepository
 import com.emm.data.recurring.RecurringMovementLocalDataSource
@@ -19,6 +24,8 @@ import com.emm.data.transaction.TransactionStatsLocalDataSource
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.home.GetHomeDataUseCase
+import com.emm.domain.loan.LoanPaymentRepository
+import com.emm.domain.loan.LoanRepository
 import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.shared.backup.BackupEraser
 import com.emm.domain.shared.backup.BackupPruner
@@ -38,6 +45,7 @@ import org.koin.dsl.module
 // stays in androidPlatformModule / iosPlatformModule.
 val dataModule = module {
     single { provideTransactionQueries(get()) }
+    single { provideLoanPaymentsQueries(get()) }
 
     factoryOf(::GetHomeDataUseCase)
 
@@ -47,6 +55,8 @@ val dataModule = module {
     factoryOf(::TransactionStatsLocalDataSource)
     factoryOf(::AccountLocalDataSource)
     factoryOf(::RecurringMovementLocalDataSource)
+    factoryOf(::LoanLocalDataSource)
+    factoryOf(::LoanPaymentLocalDataSource)
 
     // Repository binds.
     factoryOf(::DefaultTransactionRepository) { bind<TransactionRepository>() }
@@ -54,6 +64,8 @@ val dataModule = module {
     factoryOf(::DefaultCategoryRepository) { bind<CategoryRepository>() }
     factoryOf(::DefaultAccountRepository) { bind<AccountRepository>() }
     factoryOf(::DefaultRecurringMovementRepository) { bind<RecurringMovementRepository>() }
+    factoryOf(::DefaultLoanRepository) { bind<LoanRepository>() }
+    factoryOf(::DefaultLoanPaymentRepository) { bind<LoanPaymentRepository>() }
     factoryOf(::DefaultBackupRepository) { bind<BackupRepository>() }
 
     // Written out rather than `factoryOf(::DefaultBackupUploader)`: the class has a second,
