@@ -21,5 +21,4 @@ CREATE TABLE loans (
 );
 
 CREATE INDEX IF NOT EXISTS loans_person_idx ON loans(personKey);
-CREATE INDEX IF NOT EXISTS loans_lentat_idx ON loans(lentAt);
 CREATE INDEX IF NOT EXISTS loans_user_deleted_idx ON loans(userId, deletedAt);

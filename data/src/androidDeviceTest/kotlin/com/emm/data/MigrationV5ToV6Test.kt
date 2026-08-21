@@ -266,7 +266,6 @@ class MigrationV5ToV6Test {
         val loanIndexes = indexNames("loans")
         listOf(
             "loans_person_idx",
-            "loans_lentat_idx",
             "loans_user_deleted_idx",
         ).forEach { name ->
             assertTrue(name in loanIndexes, "index $name must exist, found: $loanIndexes")
