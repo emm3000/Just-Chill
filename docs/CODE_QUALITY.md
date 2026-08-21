@@ -35,9 +35,9 @@ enters only with a test a diff can fail. No third bucket for taste.
   top-level function, so there is no class to measure. No config change fixes that.
 - **Type-resolution rules — blind on `expect`/`actual` pairs.** detekt reads commonMain and
   androidMain as one unit, so it sees each `expect` beside its `actual` and calls the clash a
-  compiler error — nine on `:data`, three on `:presentation`. Unresolvable code is downgraded to a
-  warning and the task passes, so a rule that needs type resolution can stay silent and still leave
-  the gate green. Not Compose-specific: this one reaches every KMP module.
+  compiler error — three of them per pair, so the tally grows with every pair added. Unresolvable
+  code is downgraded to a warning and the task passes, so a rule that needs type resolution can stay
+  silent and still leave the gate green. Not Compose-specific: this one reaches every KMP module.
 
 `CyclomaticComplexMethod`, `ComplexCondition`, `NestedBlockDepth` and `LongParameterList` have no
 annotation escape and **do** fire on Composables — `config/detekt/baseline-ui-android-main.xml` holds
