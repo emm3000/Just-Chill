@@ -9,6 +9,8 @@
   `LoanRepository` and `LoanPaymentRepository` ports
 - [ ] `LoanMath` computes `totalDue = principal + round_half_up(principal * interestBps / 10_000)`
   and `remaining = totalDue - sum of live payments`, both pinned by tests
+- [ ] `personKey` folds diacritics, not only case — `"Juan Pérez"` and `"juan perez"` produce the
+  same key, pinned by a test naming an accented surname
 - [ ] create and update use cases call `LoanMath` for `totalDue` on every write — no call site
   computes it inline
 - [ ] a delete use case exists and its contract is "soft-delete this loan and its live payments in
