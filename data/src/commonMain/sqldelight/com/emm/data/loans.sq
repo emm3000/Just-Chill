@@ -42,11 +42,16 @@ WHERE loanId = ?;
 softDelete:
 UPDATE loans SET deletedAt = ?, updatedAt = ?, syncState = 'Pending' WHERE loanId = ?;
 
--- SQLite guarantees that when min()/max() is used in an aggregate query, bare columns in the
--- result take their values from the row holding that extremum — so `personName` here is the name
--- from this person's most recent loan, which matters because several spellings can fold to one
--- `personKey`. That is also why `lastLentAt` is selected: it is what drives the guarantee, even
--- though nothing reads the column itself.
+-- SQLite guarantees that a bare column in an aggregate query takes its value from the row holding
+-- the min()/max() extremum, but only when the query has exactly one min()/max() aggregate (verified
+-- in sqlite3 3.51: adding a second one, e.g. MIN(l.createdAt), flips `personName` to the wrong row
+-- while MAX keeps returning the right value). This query has exactly one, MAX(l.lentAt), which is
+-- why `personName` here is the name from this person's most recent loan — it matters because
+-- several spellings can fold to one `personKey`. That is also why `lastLentAt` is selected: it is
+-- what drives the guarantee, even though nothing reads the column itself. The pick is undefined
+-- when two loans for one person share the same `lentAt` (reachable: a date picker writing
+-- `T00:00:00`, two loans to the same person on one day) — the consequence is cosmetic, which
+-- spelling of the name is displayed, never which amount.
 balancesByPerson:
 SELECT
     l.personKey AS personKey,

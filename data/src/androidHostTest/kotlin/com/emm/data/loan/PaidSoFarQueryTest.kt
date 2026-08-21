@@ -49,8 +49,10 @@ class PaidSoFarQueryTest {
 
     @Test
     fun `paidSoFar sums only the live payments for that loan`() = runTest {
+        insertLoan(loanId = "loan-2")
         insertPayment(paymentId = "pay-live", loanId = "loan-1", amount = 300L)
         insertPayment(paymentId = "pay-deleted", loanId = "loan-1", amount = 700L, deletedAt = 999L)
+        insertPayment(paymentId = "pay-other-loan", loanId = "loan-2", amount = 900L)
 
         val result = localDataSource.paidSoFar(LoanId("loan-1").value)
 
@@ -59,6 +61,14 @@ class PaidSoFarQueryTest {
 
     private fun exec(sql: String) {
         driver.execute(identifier = null, sql = sql, parameters = 0)
+    }
+
+    private fun insertLoan(loanId: String) {
+        exec(
+            "INSERT INTO loans(loanId, personName, personKey, principal, interestBps, totalDue, note, lentAt, " +
+                "createdAt, updatedAt) " +
+                "VALUES ('$loanId', 'Beto', 'beto', 500, 0, 500, '', '2026-08-10T12:00:00', 0, 0)",
+        )
     }
 
     private fun insertPayment(paymentId: String, loanId: String, amount: Long, deletedAt: Long? = null) {

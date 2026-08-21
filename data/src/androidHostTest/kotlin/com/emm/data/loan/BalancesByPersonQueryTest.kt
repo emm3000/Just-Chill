@@ -48,7 +48,6 @@ class BalancesByPersonQueryTest {
         // A direct join would fan out loan-a's totalDue once per payment (1000 * 2 + 500 = 2500).
         assertEquals(1_500L, row.totalDue)
         assertEquals(500L, row.paidSoFar)
-        assertEquals(1_000L, row.totalDue!! - row.paidSoFar.toLong())
     }
 
     @Test
@@ -76,19 +75,29 @@ class BalancesByPersonQueryTest {
 
     @Test
     fun `two loans whose names fold to the same personKey collapse into one row named after the most recent loan`() {
+        // The max-lentAt row ("Anita") sits in the MIDDLE of rowid order on purpose: a naive pick
+        // that takes either end of insert order would return "Ana" or "Anna" instead, so only the
+        // real min()/max() guarantee makes this assertion pass.
         insertLoan(
-            loanId = "loan-old",
+            loanId = "loan-1",
             personName = "Ana",
             personKey = "ana",
             totalDue = 1_000L,
             lentAt = "2026-08-01T12:00:00",
         )
         insertLoan(
-            loanId = "loan-new",
+            loanId = "loan-2",
             personName = "Anita",
             personKey = "ana",
             totalDue = 500L,
             lentAt = "2026-08-20T12:00:00",
+        )
+        insertLoan(
+            loanId = "loan-3",
+            personName = "Anna",
+            personKey = "ana",
+            totalDue = 200L,
+            lentAt = "2026-08-10T12:00:00",
         )
 
         val row = balances().single()
