@@ -21,7 +21,7 @@ class SessionPayloadCodecTest {
 
     @Test
     fun `a ciphertext half that is empty still round-trips`() {
-        val iv = byteArrayOf(1, 2, 3)
+        val iv = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
 
         val (unwrappedIv, unwrappedCiphertext) = SessionPayloadCodec.unwrap(SessionPayloadCodec.wrap(iv, byteArrayOf()))
 
@@ -43,18 +43,34 @@ class SessionPayloadCodecTest {
 
     @Test
     fun `garbage base64 in the ciphertext half throws IllegalArgumentException`() {
-        val payload = "${base64Of(byteArrayOf(1, 2, 3))}.not!valid"
+        val payload = "${ivHalf()}.not!valid"
+
+        assertFailsWith<IllegalArgumentException> { SessionPayloadCodec.unwrap(payload) }
+    }
+
+    @Test
+    fun `an iv half one byte short of 12 throws IllegalArgumentException`() {
+        val payload = "${base64Of(ByteArray(11))}.${base64Of(byteArrayOf(1, 2, 3))}"
+
+        assertFailsWith<IllegalArgumentException> { SessionPayloadCodec.unwrap(payload) }
+    }
+
+    @Test
+    fun `an iv half one byte over 12 throws IllegalArgumentException`() {
+        val payload = "${base64Of(ByteArray(13))}.${base64Of(byteArrayOf(1, 2, 3))}"
 
         assertFailsWith<IllegalArgumentException> { SessionPayloadCodec.unwrap(payload) }
     }
 
     @Test
     fun `every exception this codec throws for malformed input is one willNeverReadBack treats as unreadable`() {
-        val validHalf = base64Of(byteArrayOf(1, 2, 3))
+        val ciphertextHalf = base64Of(byteArrayOf(1, 2, 3))
         val malformedPayloads = listOf(
             "no-separator-here",
-            "not!valid.$validHalf",
-            "$validHalf.not!valid",
+            "not!valid.$ciphertextHalf",
+            "${ivHalf()}.not!valid",
+            "${base64Of(ByteArray(11))}.$ciphertextHalf",
+            "${base64Of(ByteArray(13))}.$ciphertextHalf",
         )
 
         malformedPayloads.forEach { payload ->
@@ -62,6 +78,8 @@ class SessionPayloadCodecTest {
             assertTrue(thrown.willNeverReadBack(), "expected $thrown to be treated as unreadable")
         }
     }
+
+    private fun ivHalf(): String = base64Of(ByteArray(12))
 
     private fun base64Of(bytes: ByteArray): String = Base64.getEncoder().encodeToString(bytes)
 }

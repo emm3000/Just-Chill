@@ -32,6 +32,11 @@ still keeps it in the clear in `NSUserDefaults`.
   `EmmApp` sweeps at launch instead. The same trap waits on iOS.
 - Encrypting the store is not the same as rotating what is in it. A token that leaked while it was in
   the clear stays valid after the move — closing this epic does not invalidate anything already read.
+- **A malformed payload is rejected in `SessionPayloadCodec`, never left for the cipher to reject.**
+  Of the exceptions reachable at those two sites only `IllegalArgumentException` is one
+  `willNeverReadBack()` matches: let `Cipher.init` do the rejecting and it throws
+  `InvalidAlgorithmParameterException` instead, which lands in the KEEP path and re-warns forever —
+  from a site no host test can reach.
 
 ## Manual device check
 
