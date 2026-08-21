@@ -1,0 +1,45 @@
+package com.emm.data.loan
+
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
+import com.emm.data.Loan_paymentsQueries
+import com.emm.data.shared.ioDispatcher
+import com.emm.data.shared.nowMillis
+import com.emm.data.shared.toOccurredAtText
+import com.emm.domain.loan.LoanPayment
+import com.emm.domain.shared.Money
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import kotlin.time.Clock
+
+class LoanPaymentLocalDataSource(private val lpq: Loan_paymentsQueries, private val clock: Clock) {
+
+    fun byLoan(loanId: String): Flow<List<LoanPayment>> = lpq.byLoan(loanId)
+        .asFlow()
+        .mapToList(ioDispatcher)
+        .map { list -> list.asEntity().asExternalModel() }
+
+    suspend fun paidSoFar(loanId: String): Money = withContext(ioDispatcher) {
+        Money(lpq.paidSoFar(loanId).executeAsOne())
+    }
+
+    suspend fun create(loanPayment: LoanPayment) = withContext(ioDispatcher) {
+        val now = clock.nowMillis()
+        lpq.insert(
+            paymentId = loanPayment.id.value,
+            loanId = loanPayment.loanId.value,
+            amount = loanPayment.amount.cents,
+            method = loanPayment.method.name,
+            paidAt = loanPayment.paidAt.toOccurredAtText(),
+            note = loanPayment.note,
+            createdAt = now,
+            updatedAt = now,
+        )
+    }
+
+    suspend fun softDelete(paymentId: String) = withContext(ioDispatcher) {
+        val now = clock.nowMillis()
+        lpq.softDelete(deletedAt = now, updatedAt = now, paymentId = paymentId)
+    }
+}
