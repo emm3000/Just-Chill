@@ -35,15 +35,19 @@ still keeps it in the clear in `NSUserDefaults`.
 
 ## Manual device check
 
-Host tests stop at `SessionPayloadCodec` (E03-04): the `AndroidKeyStore` round trip, the 128-bit GCM
-tag, and `generateSessionKey`'s corrupt-alias recovery only run on a device.
+Host tests stop at `SessionPayloadCodec`: the `AndroidKeyStore` round trip and the 128-bit GCM tag
+only run on a device.
 
-- **Round trip.** Plant a cleartext session by hand — `adb push` a crafted
+- **Round trip.** Plant a cleartext session under `LEGACY_SESSION_KEY` by hand — `adb push` a crafted
   `shared_prefs/justchill_auth.xml`, `run-as <applicationId> cp` it into place — cold start, and
-  confirm `user.email` surfaces in Perfil. Proves the sweep both encrypted and decrypted for real.
+  confirm `user.email` surfaces in Perfil. Proves the sweep both encrypted (into
+  `ENCRYPTED_SESSION_KEY`) and decrypted for real.
 - **128-bit tag.** Sign in once, kill and relaunch: Perfil still shows the session. A wrong tag length
   fails decryption outright, so there is no separate partial-corruption state to probe.
-- **Corrupt-alias recovery.** With a session already saved, wipe the device's Keystore-backed keys
-  without touching app data (Settings → Security → Encryption & credentials → Clear credentials, or
-  the OS-version equivalent) and relaunch. The app must land on the login screen, never crash at
-  `onCreate`, and a fresh sign-in must persist normally afterward.
+- **Discard vs. keep.** Flip one byte in the ciphertext half of a stored `ENCRYPTED_SESSION_KEY`
+  value, cold start: the app must land on the login screen and log "discarded and signed out". That
+  exercises `AEADBadTagException` through `willNeverReadBack()` into the `prefs.edit { remove(...) }`
+  in `reportUnreadableSession`. Contrast against an untouched value, which must keep the session.
+- **Named gap, not a check.** `generateSessionKey`'s delete-and-regenerate path fires only when the
+  Keystore alias is present but unreadable, and nothing short of instrumented Keystore corruption
+  reaches that state by hand — there is no manual trigger for it.
