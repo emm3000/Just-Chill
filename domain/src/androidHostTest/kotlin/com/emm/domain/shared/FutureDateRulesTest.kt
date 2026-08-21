@@ -1,4 +1,4 @@
-package com.emm.domain.transaction
+package com.emm.domain.shared
 
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
@@ -14,7 +14,7 @@ import kotlin.test.assertFailsWith
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-class TransactionDateRulesTest {
+class FutureDateRulesTest {
 
     private val lima = TimeZone.of("America/Lima")
 

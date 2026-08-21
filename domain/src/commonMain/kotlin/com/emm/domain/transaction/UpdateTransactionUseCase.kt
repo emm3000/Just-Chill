@@ -1,5 +1,6 @@
 package com.emm.domain.transaction
 
+import com.emm.domain.shared.ensureNotFutureDated
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 import kotlinx.datetime.TimeZone

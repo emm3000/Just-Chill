@@ -1,4 +1,4 @@
-package com.emm.domain.transaction
+package com.emm.domain.shared
 
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
@@ -11,7 +11,7 @@ internal fun ensureNotFutureDated(occurredAt: LocalDateTime, clock: Clock, zone:
     val today = clock.now().toLocalDateTime(zone).date
     if (occurredAt.date > today) {
         throw DomainException.ValidationError(
-            "Transaction date ${occurredAt.date} is after today ($today)",
+            "Date ${occurredAt.date} is after today ($today)",
             ValidationCode.DateInTheFuture,
         )
     }
