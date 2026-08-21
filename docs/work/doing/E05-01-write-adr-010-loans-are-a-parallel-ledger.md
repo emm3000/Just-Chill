@@ -4,11 +4,11 @@
 
 ## Done when
 
-- [ ] `docs/adr/010-loans-are-a-parallel-ledger.md` exists, amends nothing, and states the decision
+- [x] `docs/adr/010-loans-are-a-parallel-ledger.md` exists, amends nothing, and states the decision
   (a loan never posts to `transactions`, an account balance or the month report) plus the
   alternative rejected (modelling a loan as a Spend/Income pair)
-- [ ] it cites `PRODUCT_REQUIREMENTS.md` §3 as the acceptance criterion the feature passes
-- [ ] `docs/work/epics/E05-loans.md`'s `**Decision:**` line resolves to this file
+- [x] it cites `PRODUCT_REQUIREMENTS.md` §3 as the acceptance criterion the feature passes
+- [x] `docs/work/epics/E05-loans.md`'s `**Decision:**` line resolves to this file
 
 ## Context
 
