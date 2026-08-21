@@ -12,6 +12,8 @@
   and `restoreFromBackup`, mirroring the triple already in `categories.sq`
 - [ ] `BackupPayloadDecoder` and the restore repository wire both new tables through
 - [ ] a compatibility test proves a v3 export (no loans) restores clean with an empty loans set
+- [ ] the restore rehearsal `PERSISTENCE.md` demands per schema bump runs with loans present,
+  and its `ImportStats` comparison now counts `loans` and `loanPayments` too
 
 ## Context
 
