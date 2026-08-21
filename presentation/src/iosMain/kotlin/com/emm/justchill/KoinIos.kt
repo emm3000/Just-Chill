@@ -7,20 +7,29 @@ import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.core.SupabaseConfig
 import com.emm.justchill.core.appModules
 import com.emm.justchill.core.bootstrapAppGraph
+import com.emm.justchill.core.session.moveSessionToSecureStore
 import com.emm.justchill.hh.auth.GoogleSignInLauncher
 import com.emm.justchill.hh.seetransactions.SeeTransactionsViewModel
+import com.russhwolf.settings.ExperimentalSettingsApi
+import com.russhwolf.settings.ExperimentalSettingsImplementation
+import com.russhwolf.settings.KeychainSettings
 import com.russhwolf.settings.NSUserDefaultsSettings
 import com.russhwolf.settings.Settings
 import io.github.jan.supabase.auth.SessionManager
 import io.github.jan.supabase.auth.SettingsSessionManager
+import kotlinx.cinterop.ExperimentalForeignApi
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.koin.mp.KoinPlatform
+import platform.Foundation.CFBridgingRetain
 import platform.Foundation.NSBundle
 import platform.Foundation.NSUserDefaults
+import platform.Security.kSecAttrAccessible
+import platform.Security.kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+import platform.Security.kSecAttrService
 
 // iOS platform Koin module — the iOS analogue of androidPlatformModule, and the ONLY place iOS-specific
 // DI lives after the commonMain dedup (slice H). Supplies every binding whose construction is
@@ -44,11 +53,9 @@ private val iosPlatformModule = module {
 
     single<Settings> { NSUserDefaultsSettings(NSUserDefaults.standardUserDefaults) }
 
-    // Same store supabase-kt defaults to here, named explicitly because Android had to move off
-    // its own default. The Keychain is where this belongs on iOS — docs/work/epics/E03-session-secrets.md.
-    single<SessionManager> {
-        SettingsSessionManager(NSUserDefaultsSettings(NSUserDefaults.standardUserDefaults))
-    }
+    // supabase-kt defaults SettingsSessionManager to NSUserDefaults on iOS: drop the argument and
+    // the refresh token goes back into the clear — docs/work/epics/E03-session-secrets.md.
+    single<SessionManager> { SettingsSessionManager(keychainSessionSettings()) }
 
     // Diagnostics observability sink. Android reports to Crashlytics; iOS has no crash-reporting SDK
     // wired (ADR 003), so the console is the whole sink here.
@@ -75,16 +82,46 @@ private val iosPlatformModule = module {
     factoryOf(::UnavailableGoogleSignInLauncher) { bind<GoogleSignInLauncher>() }
 }
 
-// Called once from Swift at app launch (iOSApp.init). Swift sees this top-level fn as
-// KoinIosKt.doInitKoin() (the `init` prefix is mangled by the Kotlin/Native Obj-C exporter).
 private fun readMarketingVersionOrUnknown(): String =
     (NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as? String) ?: "unknown"
 
+private const val KEYCHAIN_SERVICE = "com.emm.justchill.session"
+
+private fun legacySessionSettings(): Settings = NSUserDefaultsSettings(NSUserDefaults.standardUserDefaults)
+
+// Both entries are part of every stored item's identity: KeychainSettings merges this whole map into
+// each operation dictionary, and its update path rewrites only the value — so the protection class is
+// written once, at SecItemAdd. Changing EITHER constant orphans every session already stored instead
+// of upgrading it; the lookup reads as an empty store and signs the user out.
+// kSecAttrAccessible is what earns the vararg constructor: KeychainSettings(service) alone leaves the
+// item at kSecAttrAccessibleWhenUnlocked, which rides into the iCloud backup.
+@OptIn(ExperimentalForeignApi::class, ExperimentalSettingsApi::class, ExperimentalSettingsImplementation::class)
+private fun keychainSessionSettings(): Settings = KeychainSettings(
+    kSecAttrService to CFBridgingRetain(KEYCHAIN_SERVICE),
+    kSecAttrAccessible to kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+)
+
+// Called once from Swift at app launch (iOSApp.init). Swift sees this top-level fn as
+// KoinIosKt.doInitKoin() (the `init` prefix is mangled by the Kotlin/Native Obj-C exporter).
+//
+// The sweep is caught because it must never throw: KeychainSettings turns any OSStatus it does not
+// whitelist into an error(), and initKoin is not @Throws, so an exception here terminates the process
+// before Koin exists — with no logger to record it and no recovery but a reinstall, which takes the
+// database with it. Failing is safe by construction: putString throws before legacy.remove runs, so
+// the cleartext value survives and the next launch retries.
 fun initKoin() {
+    val sweep = runCatching { moveSessionToSecureStore(legacySessionSettings(), keychainSessionSettings()) }
     val koinApp = startKoin {
         modules(appModules(iosPlatformModule))
     }
     bootstrapAppGraph(koinApp.koin)
+    sweep.onFailure { failure ->
+        val diagnostics = koinApp.koin.get<DiagnosticsLogger>()
+        diagnostics.warn(
+            "Keychain sweep failed; the session is still in the clear and this launch cannot read it",
+            failure,
+        )
+    }
 }
 
 // Swift-facing resolver for the S2 bootstrap smoke view (ContentView.swift). SwiftUI has no

@@ -2,8 +2,9 @@
 
 ## Why
 
-The Supabase refresh token is the account. It is the one value in this app worth stealing, and iOS
-still keeps it in the clear in `NSUserDefaults`.
+The Supabase refresh token is the account. It is the one value in this app worth stealing, and every
+store a mobile app reaches for by default — `SharedPreferences`, `NSUserDefaults` — keeps it in the
+clear.
 
 ## Constraints
 
@@ -29,7 +30,8 @@ still keeps it in the clear in `NSUserDefaults`.
   Koin `single`, and nothing on the Android startup path — or on the first screen — resolves the
   Supabase client: a migration that only runs inside `loadSession()` does not run at all until the
   user opens the account screen, so the cleartext survives indefinitely on an existing install.
-  `EmmApp` sweeps at launch instead. The same trap waits on iOS.
+  `EmmApp` sweeps at launch instead. iOS has the same trap and sweeps in `initKoin()`, before
+  `startKoin`.
 - Encrypting the store is not the same as rotating what is in it. A token that leaked while it was in
   the clear stays valid after the move — closing this epic does not invalidate anything already read.
 - **A malformed payload is rejected in `SessionPayloadCodec`, never left for the cipher to reject.**
@@ -37,6 +39,14 @@ still keeps it in the clear in `NSUserDefaults`.
   `willNeverReadBack()` matches: let `Cipher.init` do the rejecting and it throws
   `InvalidAlgorithmParameterException` instead, which lands in the KEEP path and re-warns forever —
   from a site no host test can reach.
+- **A sweep on the launch path never throws.** Android's `sweepLegacySession` is `runCatching` so a
+  Keystore that cannot serve a key does not kill `onCreate`. `initKoin` owes the same and more: it
+  runs before Koin exists, so an exception there terminates the process with no logger to record it
+  and no recovery but a reinstall, which takes the database with it.
+- **A Keychain item's identity is its whole property set, and its protection class is written once.**
+  `KeychainSettings` merges every default property into each operation, and `SecItemUpdate` rewrites
+  only the value — so tightening the service name or the accessibility constant later orphans every
+  stored session instead of upgrading it.
 
 ## Manual device check
 
@@ -56,3 +66,11 @@ only run on a device.
 - **Named gap, not a check.** `generateSessionKey`'s delete-and-regenerate path fires only when the
   Keystore alias is present but unreadable, and nothing short of instrumented Keystore corruption
   reaches that state by hand — there is no manual trigger for it.
+
+Nothing on iOS is covered either: host tests stop at `moveSessionToSecureStore` and no iOS test
+source set exists.
+
+- **iOS round trip.** Sign in, kill the app, relaunch: Perfil still shows the session.
+- **iOS sweep.** Sign in on a build predating this move, then launch this one: the session survives
+  AND the simulator's `Library/Preferences/<bundle id>.plist` no longer holds a `session` key. Check
+  both — a sweep that signs the user out passes the second half alone.
