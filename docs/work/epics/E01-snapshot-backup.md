@@ -31,7 +31,7 @@ remains.
 - A failure annotates the snapshot, never replaces it (`Failed` carries a `LastSnapshot`, never a nullable `Int`); warn on the failure count, never on the reason (`fromNameOrNull` can be null).
 - Backup row state resolution and copy live in `:presentation` (`BackupRowUi.severity()`, `toMetaText()`), never in a composable — SwiftUI must reach the same answer.
 - `TooManyFunctions` allows 11 per class; `BackupOrchestrator` and `ProfileViewModel` each sit at exactly 11 — the next member on either needs a top-level hoist first. `DefaultBackupRepository` is at 7.
-- `:ui-android` has no Compose UI test harness, so no flag gate is asserted anywhere; only paired comments at each call site enforce that UI and `bootstrapAppGraph` read the same constant.
+- `:ui-android` has no Compose UI test harness, so no flag gate is asserted anywhere. `SNAPSHOT_BACKUP_ENABLED` has one home (`BackupKillSwitch.kt`) and three readers — `bootstrapAppGraph` plus two in `ProfileScreen`, one of them negated; only `bootstrapAppGraph`'s carries an explaining comment, so this line is the only place that says they move together.
 - `AppGraphKoinTest` cannot see a binding that was never registered — anything reached only via direct `koinInject`/`koin.get` stays invisible; register every new binding or cover it with its own module test.
 - Version gates are frozen literals (`BACKUP_RECURRING_SINCE_VERSION`, `BACKUP_SCHEMA_VERSION_V2`), never the live `BACKUP_SCHEMA_VERSION`; the version bumps in the same commit that changes the shape.
 - Each format version needs its own frozen type, hand-written fixture and compatibility test before the constant moves; gate on the file's `declaredVersion`, never on an array being empty.
