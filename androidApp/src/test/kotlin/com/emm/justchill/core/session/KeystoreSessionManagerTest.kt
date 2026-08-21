@@ -1,6 +1,7 @@
 package com.emm.justchill.core.session
 
 import android.content.SharedPreferences
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import io.github.jan.supabase.auth.exception.NoSessionFoundException
 import io.github.jan.supabase.auth.user.UserSession
 import kotlinx.coroutines.test.runTest
@@ -15,7 +16,8 @@ class KeystoreSessionManagerTest {
 
     private val prefs = FakePreferences()
     private val cipher = FakeSessionCipher()
-    private val manager = KeystoreSessionManager(prefs, cipher)
+    private val diagnostics = RecordingDiagnosticsLogger()
+    private val manager = KeystoreSessionManager(prefs, cipher, diagnostics)
 
     private val session = UserSession(
         accessToken = "access-token",
@@ -83,19 +85,100 @@ class KeystoreSessionManagerTest {
         assertFalse(prefs.values.containsKey(ENCRYPTED_SESSION_KEY))
         assertFalse(prefs.values.containsKey(LEGACY_SESSION_KEY))
     }
+
+    @Test
+    fun `the launch sweep takes the plaintext key away and leaves a readable session behind`() = runTest {
+        prefs.values[LEGACY_SESSION_KEY] = sessionJson.encodeToString(session)
+
+        manager.sweepLegacySession()
+
+        assertFalse(prefs.values.containsKey(LEGACY_SESSION_KEY))
+        assertEquals(session, manager.loadSession())
+    }
+
+    @Test
+    fun `the launch sweep writes nothing when there is no plaintext key`() = runTest {
+        manager.sweepLegacySession()
+
+        assertTrue(prefs.values.isEmpty())
+        assertEquals(0, cipher.encryptions)
+    }
+
+    @Test
+    fun `a keystore that cannot encrypt is reported by the launch sweep, never thrown at onCreate`() = runTest {
+        prefs.values[LEGACY_SESSION_KEY] = sessionJson.encodeToString(session)
+        cipher.writable = false
+
+        manager.sweepLegacySession()
+
+        assertEquals(1, diagnostics.warnings.size)
+        assertTrue(prefs.values.containsKey(LEGACY_SESSION_KEY))
+    }
+
+    @Test
+    fun `a session that will not decrypt is reported once, not on every load after it`() = runTest {
+        manager.saveSession(session)
+        cipher.readable = false
+
+        repeat(2) { assertFailsWith<NoSessionFoundException> { manager.loadSession() } }
+
+        assertEquals(1, diagnostics.warnings.size)
+    }
+
+    @Test
+    fun `a session that will not decrypt stops occupying the file`() = runTest {
+        manager.saveSession(session)
+        cipher.readable = false
+
+        assertFailsWith<NoSessionFoundException> { manager.loadSession() }
+
+        assertFalse(prefs.values.containsKey(ENCRYPTED_SESSION_KEY))
+    }
+
+    @Test
+    fun `the report carries no part of what was stored`() = runTest {
+        manager.saveSession(session)
+        val stored = prefs.values.getValue(ENCRYPTED_SESSION_KEY).orEmpty()
+        cipher.readable = false
+
+        assertFailsWith<NoSessionFoundException> { manager.loadSession() }
+
+        val report = diagnostics.warnings.single()
+        assertFalse(report.contains(session.refreshToken))
+        assertFalse(report.contains(session.accessToken))
+        assertFalse(report.contains(stored))
+    }
+
+    @Test
+    fun `an empty store is not worth reporting`() = runTest {
+        assertFailsWith<NoSessionFoundException> { manager.loadSession() }
+
+        assertTrue(diagnostics.warnings.isEmpty())
+    }
 }
 
 private class FakeSessionCipher : SessionCipher {
 
     var readable: Boolean = true
+    var writable: Boolean = true
     var encryptions: Int = 0
 
     override fun encrypt(plaintext: String): String {
+        check(writable) { "keystore unavailable" }
         encryptions++
         return plaintext.reversed()
     }
 
     override fun decrypt(payload: String): String? = payload.reversed().takeIf { readable }
+}
+
+private class RecordingDiagnosticsLogger : DiagnosticsLogger {
+
+    val warnings: MutableList<String> = mutableListOf()
+
+    override fun warn(message: String, throwable: Throwable?) {
+        warnings += message
+    }
 }
 
 private class FakePreferences : SharedPreferences {

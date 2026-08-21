@@ -2,6 +2,7 @@ package com.emm.justchill.core.session
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.emm.domain.shared.logging.DiagnosticsLogger
 import io.github.jan.supabase.auth.SessionManager
 import io.github.jan.supabase.auth.exception.NoSessionFoundException
 import io.github.jan.supabase.auth.user.UserSession
@@ -18,38 +19,76 @@ internal const val LEGACY_SESSION_KEY = "session"
  */
 internal val sessionJson: Json = Json { encodeDefaults = true }
 
-internal class KeystoreSessionManager(private val prefs: SharedPreferences, private val cipher: SessionCipher) :
-    SessionManager {
+internal class KeystoreSessionManager(
+    private val prefs: SharedPreferences,
+    private val cipher: SessionCipher,
+    private val diagnostics: DiagnosticsLogger,
+) : SessionManager {
+
+    // Every read-then-write of the two keys runs under this monitor. The startup sweep and the
+    // Supabase client's own first load race by design, and unsynchronised they interleave into a
+    // downgrade: the sweep reads the legacy value, the client loads and refreshes, and the sweep
+    // then writes the older session back over the newer one.
+    private val storeLock = Any()
 
     override suspend fun saveSession(session: UserSession) {
-        prefs.edit {
-            putString(ENCRYPTED_SESSION_KEY, cipher.encrypt(sessionJson.encodeToString(session)))
-            remove(LEGACY_SESSION_KEY)
-        }
+        synchronized(storeLock) { writeEncrypted(sessionJson.encodeToString(session)) }
     }
 
     override suspend fun loadSession(): UserSession {
-        val plaintext = adoptLegacySession() ?: readEncryptedSession()
+        val plaintext = synchronized(storeLock) { adoptLegacySession() ?: readEncryptedSession() }
         return sessionJson.decodeFromString(plaintext ?: throw NoSessionFoundException())
     }
 
     override suspend fun deleteSession() {
-        prefs.edit {
-            remove(ENCRYPTED_SESSION_KEY)
-            remove(LEGACY_SESSION_KEY)
+        synchronized(storeLock) {
+            prefs.edit {
+                remove(ENCRYPTED_SESSION_KEY)
+                remove(LEGACY_SESSION_KEY)
+            }
         }
     }
 
-    private fun readEncryptedSession(): String? = prefs.getString(ENCRYPTED_SESSION_KEY, null)?.let(cipher::decrypt)
+    /**
+     * Re-encrypts the cleartext session a pre-Keystore build left behind and drops the cleartext key.
+     *
+     * Called at launch because [loadSession] — the only other caller of the same move — hangs off a
+     * lazy Koin `single` that nothing on the startup path resolves: on an existing install the
+     * cleartext refresh token otherwise survives every launch until the user opens the account
+     * screen. Never throws, so a Keystore that cannot serve a key does not kill `onCreate`.
+     */
+    fun sweepLegacySession() {
+        runCatching { synchronized(storeLock) { adoptLegacySession() } }
+            .onFailure { diagnostics.warn("Legacy session sweep failed; the cleartext key survives", it) }
+    }
+
+    private fun readEncryptedSession(): String? {
+        val stored = prefs.getString(ENCRYPTED_SESSION_KEY, null) ?: return null
+        val plaintext = cipher.decrypt(stored)
+        if (plaintext == null) discardUnreadableSession()
+        return plaintext
+    }
+
+    // Dropped rather than kept, because KeystoreSessionCipher deletes an unusable alias and
+    // generates a new one: the key that could read this blob is already gone, so keeping it would
+    // reproduce the same warning on every cold start for the life of the install.
+    private fun discardUnreadableSession() {
+        prefs.edit { remove(ENCRYPTED_SESSION_KEY) }
+        diagnostics.warn("Stored session could not be decrypted; signed out")
+    }
 
     // Sideloading the previous APK re-creates the cleartext key and makes it the fresher of the
     // two, so this runs ahead of the encrypted key on every load rather than only on first migration.
     private fun adoptLegacySession(): String? {
         val legacy = prefs.getString(LEGACY_SESSION_KEY, null) ?: return null
+        writeEncrypted(legacy)
+        return legacy
+    }
+
+    private fun writeEncrypted(plaintext: String) {
         prefs.edit {
-            putString(ENCRYPTED_SESSION_KEY, cipher.encrypt(legacy))
+            putString(ENCRYPTED_SESSION_KEY, cipher.encrypt(plaintext))
             remove(LEGACY_SESSION_KEY)
         }
-        return legacy
     }
 }

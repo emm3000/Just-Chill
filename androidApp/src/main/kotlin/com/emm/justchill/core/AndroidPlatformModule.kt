@@ -46,12 +46,17 @@ val androidPlatformModule = module {
     // A file of its own so the extraction rules can exclude the refresh token under a name no
     // applicationId suffix can move; supabase-kt would otherwise default it into
     // "<applicationId>_preferences", which device-to-device migration still copies.
-    single<SessionManager> {
+    single {
         KeystoreSessionManager(
             prefs = androidContext().getSharedPreferences(AUTH_PREFS_NAME, Context.MODE_PRIVATE),
             cipher = KeystoreSessionCipher(),
+            diagnostics = get(),
         )
     }
+
+    // Bound by concrete type as well, because EmmApp sweeps the legacy cleartext key at launch and
+    // sweepLegacySession() is not part of the SessionManager port.
+    single<SessionManager> { get<KeystoreSessionManager>() }
     single { CurrentActivityHolder() }
 
     // Sync observability sink. Platform-specific because it reports to Crashlytics (Android-only);

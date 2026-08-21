@@ -25,5 +25,10 @@ still keeps it in the clear in `NSUserDefaults`.
 - **On iOS, off-device backup is the default and has to be opted out of.** `NSUserDefaults` rides
   into the iCloud device backup; a Keychain item only stays out of it with an explicit
   device-only accessibility class.
+- **Moving a credential off a cleartext store has to be eager.** `SessionManager` hangs off a lazy
+  Koin `single`, and nothing on the Android startup path — or on the first screen — resolves the
+  Supabase client: a migration that only runs inside `loadSession()` does not run at all until the
+  user opens the account screen, so the cleartext survives indefinitely on an existing install.
+  `EmmApp` sweeps at launch instead. The same trap waits on iOS.
 - Encrypting the store is not the same as rotating what is in it. A token that leaked while it was in
   the clear stays valid after the move — closing this epic does not invalidate anything already read.

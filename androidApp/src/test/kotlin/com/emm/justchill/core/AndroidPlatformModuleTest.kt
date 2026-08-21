@@ -33,13 +33,14 @@ class AndroidPlatformModuleTest {
     @Test
     fun `androidPlatformModule binds the dispatchers provider no shared module carries`() {
         // `DispatchersProvider` lives outside `appModules()`, so `AppGraphKoinTest` cannot see it:
-        // its only binding is here, and its only consumer is the dev-flavor experiences source.
+        // its only binding is here, and both consumers — EmmApp's launch sweep and the dev-flavor
+        // experiences source — are Android-only.
         val koin = koinApplication { modules(androidPlatformModule) }.koin
 
         try {
             assertIs<DefaultDispatcher>(
                 koin.get<DispatchersProvider>(),
-                "androidPlatformModule no longer binds DispatchersProvider; the dev flavor cannot start.",
+                "androidPlatformModule no longer binds DispatchersProvider; the launch sweep cannot run.",
             )
         } finally {
             koin.close()
