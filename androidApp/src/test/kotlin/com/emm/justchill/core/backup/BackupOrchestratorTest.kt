@@ -13,6 +13,7 @@ import com.emm.domain.shared.backup.BackupPruner
 import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.BackupUploader
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.error.ValidationCode
 import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.coEvery
@@ -182,6 +183,25 @@ class BackupOrchestratorTest {
 
         coVerify(exactly = 2) { uploader.upload(any(), any(), any()) }
         verify(exactly = 1) { metadata.setLastSuccessfulBackupAt(USER_ID, NOW.toEpochMilliseconds()) }
+    }
+
+    @Test
+    fun `an unverified upload records no watermark, prunes nothing, and books Unverified`() = runTest(testDispatcher) {
+        coEvery { backupRepository.latestLocalChangeAt() } returns CHANGED_AT
+        every { metadata.lastSuccessfulBackupAt(USER_ID) } returns null
+        coEvery { uploader.upload(any(), any(), any()) } throws
+            DomainException.ValidationError("read back does not match", ValidationCode.BackupUploadUnverified)
+
+        val orchestrator = buildOrchestrator()
+        orchestrator.start()
+        authenticate()
+
+        backgroundFlow.emit(Unit)
+        advanceUntilIdle()
+
+        verify(exactly = 0) { metadata.setLastSuccessfulBackupAt(any(), any()) }
+        coVerify(exactly = 0) { pruner.prune() }
+        verify(exactly = 1) { metadata.recordFailure(USER_ID, BackupFailureReason.Unverified) }
     }
 
     @Test
