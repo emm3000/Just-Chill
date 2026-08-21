@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -27,6 +28,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.emm.justchill.core.CommitHash
+import com.emm.justchill.core.backup.BackupDisclosureSignal
 import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
@@ -54,6 +56,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         val appPrefs: AppPreferences = koinInject()
         val appVersion: String = koinInject(named("appVersion"))
         val commitHash: String = koinInject<CommitHash>().value
+        val backupDisclosure: BackupDisclosureSignal = koinInject()
+        val disclosurePending: Boolean by backupDisclosure.isPending.collectAsStateWithLifecycle(false)
 
         val startRoute: NavKey = remember {
             if (appPrefs.firstLaunchSeen) startTab else ManifestoRoute()
@@ -95,6 +99,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         current = currentRoute as? BottomBarRoute,
                         onTabClick = { tab -> hostNav.switchTab(tab) },
                         onAddClick = { hostNav.push(AddTransactionRoute) },
+                        showProfileBadge = disclosurePending,
                     )
                 }
             },

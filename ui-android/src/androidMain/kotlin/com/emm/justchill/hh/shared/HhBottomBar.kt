@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
@@ -51,7 +52,12 @@ private val BOTTOM_TABS = listOf(
 )
 
 @Composable
-fun HhBottomBar(current: BottomBarRoute?, onTabClick: (BottomBarRoute) -> Unit, onAddClick: () -> Unit) {
+fun HhBottomBar(
+    current: BottomBarRoute?,
+    onTabClick: (BottomBarRoute) -> Unit,
+    onAddClick: () -> Unit,
+    showProfileBadge: Boolean,
+) {
     val colors = LocalEmmColors.current
 
     Column(
@@ -80,11 +86,10 @@ fun HhBottomBar(current: BottomBarRoute?, onTabClick: (BottomBarRoute) -> Unit, 
                         modifier = Modifier.weight(1f),
                     )
                 } else {
-                    val isActive = tab.route == current
                     RegularBottomBarItem(
-                        label = tab.label,
-                        icon = tab.icon,
-                        isActive = isActive,
+                        tab = tab,
+                        isActive = tab.route == current,
+                        showBadge = showProfileBadge && tab.route == ProfileRoute,
                         onClick = { tab.route?.let(onTabClick) },
                         modifier = Modifier.weight(1f),
                     )
@@ -96,9 +101,9 @@ fun HhBottomBar(current: BottomBarRoute?, onTabClick: (BottomBarRoute) -> Unit, 
 
 @Composable
 private fun RegularBottomBarItem(
-    label: String,
-    icon: ImageVector,
+    tab: BottomTab,
     isActive: Boolean,
+    showBadge: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -119,15 +124,30 @@ private fun RegularBottomBarItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = tint,
-            modifier = Modifier.size(18.dp),
-        )
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(24.dp)) {
+            Icon(
+                imageVector = tab.icon,
+                contentDescription = if (showBadge) "${tab.label}, requiere tu atención" else tab.label,
+                tint = tint,
+                modifier = Modifier.size(18.dp),
+            )
+            if (showBadge) {
+                // The bg ring keeps the dot legible where it overlaps the icon.
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(colors.bg)
+                        .padding(1.5.dp)
+                        .clip(CircleShape)
+                        .background(colors.warning),
+                )
+            }
+        }
         Spacer(Modifier.size(3.dp))
         Text(
-            text = label,
+            text = tab.label,
             color = tint,
             fontSize = 10.sp,
             fontWeight = FontWeight.W500,

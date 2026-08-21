@@ -6,12 +6,14 @@ import com.emm.domain.shared.backup.GetBackupStalenessUseCase
 import com.emm.domain.shared.backup.ImportDataUseCase
 import com.emm.justchill.core.appScopeQualifier
 import com.emm.justchill.core.backup.BackupController
+import com.emm.justchill.core.backup.BackupDisclosureSignal
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.core.backup.DefaultBackupMetadataStore
 import com.emm.justchill.core.lifecycle.backgroundEvents
 import com.emm.justchill.core.lifecycle.resumeEvents
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.withOptions
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -44,4 +46,6 @@ val backupModule = module {
             logger = get(),
         )
     } withOptions { bind<BackupController>() }
+
+    singleOf(::BackupDisclosureSignal)
 }
