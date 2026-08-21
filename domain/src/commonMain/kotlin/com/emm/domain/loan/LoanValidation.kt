@@ -1,18 +1,11 @@
 package com.emm.domain.loan
 
-import com.emm.domain.shared.Money
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 
 internal fun ensurePersonProvided(personName: String) {
     if (personName.isBlank()) {
         throw DomainException.ValidationError("Person is required", ValidationCode.PersonRequired)
-    }
-}
-
-internal fun ensurePositiveAmount(amount: Money) {
-    if (amount.cents <= 0) {
-        throw DomainException.ValidationError("Amount must be greater than zero", ValidationCode.AmountMustBePositive)
     }
 }
 

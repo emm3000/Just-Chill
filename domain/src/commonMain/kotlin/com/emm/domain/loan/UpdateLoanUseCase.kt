@@ -2,6 +2,7 @@ package com.emm.domain.loan
 
 import com.emm.domain.shared.LoanId
 import com.emm.domain.shared.ensureNotFutureDated
+import com.emm.domain.shared.ensurePositiveAmount
 import kotlinx.datetime.TimeZone
 import kotlin.time.Clock
 
