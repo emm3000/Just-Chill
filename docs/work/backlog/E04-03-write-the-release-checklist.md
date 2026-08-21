@@ -9,6 +9,7 @@
   a real upgrade over an old APK with `adb install -r`
 - [ ] it carries the restore drill that ADR 009 Decision 4 requires
 - [ ] it names the Edit-commit step of `uploadRelease.yml` as what the release is judged by
+- [ ] it carries the manual device check from [E03](../epics/E03-session-secrets.md#manual-device-check)
 
 ## Context
 

@@ -32,3 +32,18 @@ still keeps it in the clear in `NSUserDefaults`.
   `EmmApp` sweeps at launch instead. The same trap waits on iOS.
 - Encrypting the store is not the same as rotating what is in it. A token that leaked while it was in
   the clear stays valid after the move — closing this epic does not invalidate anything already read.
+
+## Manual device check
+
+Host tests stop at `SessionPayloadCodec` (E03-04): the `AndroidKeyStore` round trip, the 128-bit GCM
+tag, and `generateSessionKey`'s corrupt-alias recovery only run on a device.
+
+- **Round trip.** Plant a cleartext session by hand — `adb push` a crafted
+  `shared_prefs/justchill_auth.xml`, `run-as <applicationId> cp` it into place — cold start, and
+  confirm `user.email` surfaces in Perfil. Proves the sweep both encrypted and decrypted for real.
+- **128-bit tag.** Sign in once, kill and relaunch: Perfil still shows the session. A wrong tag length
+  fails decryption outright, so there is no separate partial-corruption state to probe.
+- **Corrupt-alias recovery.** With a session already saved, wipe the device's Keystore-backed keys
+  without touching app data (Settings → Security → Encryption & credentials → Clear credentials, or
+  the OS-version equivalent) and relaunch. The app must land on the login screen, never crash at
+  `onCreate`, and a fresh sign-in must persist normally afterward.
