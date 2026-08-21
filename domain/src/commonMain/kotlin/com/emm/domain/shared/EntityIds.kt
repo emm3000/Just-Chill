@@ -13,3 +13,9 @@ value class CategoryId(val value: String)
 
 @JvmInline
 value class RecurringMovementId(val value: String)
+
+@JvmInline
+value class LoanId(val value: String)
+
+@JvmInline
+value class LoanPaymentId(val value: String)
