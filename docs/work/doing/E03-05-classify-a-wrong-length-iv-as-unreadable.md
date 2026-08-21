@@ -11,7 +11,7 @@
 
 ## Context
 
-`SessionPayloadCodec.unwrap` validates Base64, never iv length. A wrong-length iv — reachable from a
-truncated `ENCRYPTED_SESSION_KEY` value — fails later, at `Cipher.init` in
-`KeystoreSessionCipher.decipher`, as `InvalidAlgorithmParameterException`: a type
-`willNeverReadBack()` does not match, so `reportUnreadableSession` re-warns forever instead of discarding.
+`SessionPayloadCodec.unwrap` validates Base64, never iv length. Only external corruption of the
+stored value reaches this — `writeEncrypted` is the sole writer and writes one atomic full string.
+It fails at `Cipher.init` in `KeystoreSessionCipher.decipher` as `InvalidAlgorithmParameterException`,
+a type `willNeverReadBack()` does not match, so `reportUnreadableSession` keeps and re-warns forever.
