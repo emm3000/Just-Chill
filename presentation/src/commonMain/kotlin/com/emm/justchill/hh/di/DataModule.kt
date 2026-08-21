@@ -13,7 +13,6 @@ import com.emm.data.loan.DefaultLoanPaymentRepository
 import com.emm.data.loan.DefaultLoanRepository
 import com.emm.data.loan.LoanLocalDataSource
 import com.emm.data.loan.LoanPaymentLocalDataSource
-import com.emm.data.provideLoanPaymentsQueries
 import com.emm.data.provideTransactionQueries
 import com.emm.data.recurring.DefaultRecurringMovementRepository
 import com.emm.data.recurring.RecurringMovementLocalDataSource
@@ -45,7 +44,6 @@ import org.koin.dsl.module
 // stays in androidPlatformModule / iosPlatformModule.
 val dataModule = module {
     single { provideTransactionQueries(get()) }
-    single { provideLoanPaymentsQueries(get()) }
 
     factoryOf(::GetHomeDataUseCase)
 

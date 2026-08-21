@@ -27,7 +27,7 @@ class PaidSoFarQueryTest {
         driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         EmmDatabaseData.Schema.create(driver)
         db = EmmDatabaseData(driver)
-        localDataSource = LoanPaymentLocalDataSource(db.loan_paymentsQueries, clock)
+        localDataSource = LoanPaymentLocalDataSource(db, clock)
         exec(
             "INSERT INTO loans(loanId, personName, personKey, principal, interestBps, totalDue, note, lentAt, " +
                 "createdAt, updatedAt) " +

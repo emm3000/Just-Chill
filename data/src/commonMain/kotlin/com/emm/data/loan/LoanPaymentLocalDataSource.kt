@@ -2,6 +2,7 @@ package com.emm.data.loan
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import com.emm.data.EmmDatabaseData
 import com.emm.data.Loan_paymentsQueries
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.nowMillis
@@ -13,7 +14,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
-class LoanPaymentLocalDataSource(private val lpq: Loan_paymentsQueries, private val clock: Clock) {
+class LoanPaymentLocalDataSource(private val emmDatabase: EmmDatabaseData, private val clock: Clock) {
+
+    private val lpq: Loan_paymentsQueries
+        get() = emmDatabase.loan_paymentsQueries
 
     fun byLoan(loanId: String): Flow<List<LoanPayment>> = lpq.byLoan(loanId)
         .asFlow()
