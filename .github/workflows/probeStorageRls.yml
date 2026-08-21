@@ -41,6 +41,12 @@ jobs:
       # No fetch-depth here: nothing in this job reads a version out of git.
       - uses: actions/checkout@v7
 
+      # Before the stack, because it needs no stack and a probe that cannot be trusted is not worth
+      # four minutes of Docker. `qualityGate` lints only Kotlin, so this is the ONLY thing enforcing
+      # the probe's own quality — shellcheck ships on GitHub's runners.
+      - name: Lint the probe
+        run: shellcheck -x supabase/tests/backups-rls-probe.sh
+
       # Pinned to a commit, not a floating tag — the same rule the other workflows follow for
       # third-party actions; GitHub's own actions/* stay on tags. Dependabot proposes the bumps.
       # The CLI version is pinned as well: floating it turns an unrelated upstream release into a
