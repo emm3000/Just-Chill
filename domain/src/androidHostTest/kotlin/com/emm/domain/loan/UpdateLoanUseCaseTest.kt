@@ -7,8 +7,10 @@ import com.emm.domain.shared.error.ValidationCode
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -25,6 +27,7 @@ import kotlin.time.Instant
 class UpdateLoanUseCaseTest {
 
     private val loanRepository = mockk<LoanRepository>()
+    private val loanPaymentRepository = mockk<LoanPaymentRepository>()
 
     private val lima = TimeZone.of("America/Lima")
     private val today = LocalDate(2026, Month.AUGUST, 11)
@@ -32,10 +35,21 @@ class UpdateLoanUseCaseTest {
         override fun now(): Instant = LocalDateTime(today, LocalTime(9, 0)).toInstant(lima)
     }
 
-    private val useCase = UpdateLoanUseCase(loanRepository, clock, lima)
+    private val useCase = UpdateLoanUseCase(loanRepository, loanPaymentRepository, clock, lima)
 
     private val loanId = LoanId("loan-1")
     private val lentAt = LocalDateTime(2026, Month.AUGUST, 10, 12, 0)
+
+    private val loan = Loan(
+        id = loanId,
+        personName = "Juan Pérez",
+        personKey = "juan perez",
+        principal = Money(50_000L),
+        interestBps = 0,
+        totalDue = Money(50_000L),
+        note = "",
+        lentAt = lentAt,
+    )
 
     private val anyUpdate = LoanUpdate(
         personName = "Juan Pérez",
@@ -86,7 +100,17 @@ class UpdateLoanUseCaseTest {
     }
 
     @Test
+    fun `update should throw NotFound when the loan does not exist`() = runTest {
+        every { loanRepository.byId(loanId) } returns flowOf(null)
+
+        assertFailsWith<DomainException.NotFound> { useCase(loanId, anyUpdate) }
+        coVerify(exactly = 0) { loanRepository.update(any()) }
+    }
+
+    @Test
     fun `update recomputes totalDue instead of trusting the caller's stale value`() = runTest {
+        every { loanRepository.byId(loanId) } returns flowOf(loan)
+        coEvery { loanPaymentRepository.paidSoFar(loanId) } returns Money.Zero
         coEvery { loanRepository.update(any()) } just Runs
 
         useCase(loanId, anyUpdate.copy(principal = Money(20_000L), interestBps = 500))
@@ -105,6 +129,8 @@ class UpdateLoanUseCaseTest {
 
     @Test
     fun `update derives personKey and trims the stored name`() = runTest {
+        every { loanRepository.byId(loanId) } returns flowOf(loan)
+        coEvery { loanPaymentRepository.paidSoFar(loanId) } returns Money.Zero
         coEvery { loanRepository.update(any()) } just Runs
 
         useCase(loanId, anyUpdate.copy(personName = "  Muñoz  "))
@@ -117,9 +143,36 @@ class UpdateLoanUseCaseTest {
     }
 
     @Test
-    fun `update should propagate DomainException from repository`() = runTest {
-        coEvery { loanRepository.update(any()) } throws DomainException.NotFound("Loan")
+    fun `update throws TotalBelowPaid when the edited total is below what has already been paid`() = runTest {
+        // principal = 50_000, interestBps = 0 -> totalDue = 50_000; 40_000 already paid.
+        every { loanRepository.byId(loanId) } returns flowOf(loan)
+        coEvery { loanPaymentRepository.paidSoFar(loanId) } returns Money(40_000L)
 
-        assertFailsWith<DomainException.NotFound> { useCase(loanId, anyUpdate) }
+        val ex = assertFailsWith<DomainException.ValidationError> {
+            useCase(loanId, anyUpdate.copy(principal = Money(30_000L), interestBps = 0))
+        }
+
+        assertEquals(ValidationCode.TotalBelowPaid, ex.code)
+        coVerify(exactly = 0) { loanRepository.update(any()) }
+    }
+
+    @Test
+    fun `update allows an edited total that exactly equals what has already been paid`() = runTest {
+        every { loanRepository.byId(loanId) } returns flowOf(loan)
+        coEvery { loanPaymentRepository.paidSoFar(loanId) } returns Money(40_000L)
+        coEvery { loanRepository.update(any()) } just Runs
+
+        useCase(loanId, anyUpdate.copy(principal = Money(40_000L), interestBps = 0))
+
+        coVerify(exactly = 1) { loanRepository.update(match { it.totalDue == Money(40_000L) }) }
+    }
+
+    @Test
+    fun `update should propagate DomainException from repository`() = runTest {
+        every { loanRepository.byId(loanId) } returns flowOf(loan)
+        coEvery { loanPaymentRepository.paidSoFar(loanId) } returns Money.Zero
+        coEvery { loanRepository.update(any()) } throws DomainException.DatabaseError(RuntimeException("nope"))
+
+        assertFailsWith<DomainException.DatabaseError> { useCase(loanId, anyUpdate) }
     }
 }

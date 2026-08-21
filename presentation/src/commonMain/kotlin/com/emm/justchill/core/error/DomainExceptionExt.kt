@@ -57,5 +57,6 @@ private fun ValidationCode.toUserMessage(): String = when (this) {
     ValidationCode.PersonRequired -> "Escribe a quién le prestaste"
     ValidationCode.InterestOutOfRange -> "El interés debe estar entre 0% y ${MAX_INTEREST_BPS / BPS_PER_PERCENT}%"
     ValidationCode.PaymentExceedsBalance -> "El abono es mayor que lo que falta pagar"
+    ValidationCode.TotalBelowPaid -> "El nuevo total es menor de lo que ya te pagaron"
     ValidationCode.Unspecified -> "Algo no cuadra con los datos"
 }

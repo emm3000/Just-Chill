@@ -24,5 +24,6 @@ enum class ValidationCode {
     PersonRequired,
     InterestOutOfRange,
     PaymentExceedsBalance,
+    TotalBelowPaid,
     Unspecified,
 }
