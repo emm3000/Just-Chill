@@ -23,6 +23,9 @@ unaddressed scope, not rejected scope, so no row moves.
   redundant with `principal` and `interestBps` on purpose — the SQL rollup reads it, and
   recomputing the same rounding in both Kotlin and SQLite is two implementations of one rule. A
   write that skips `LoanMath` leaves a loan whose total disagrees with its own inputs.
+  `LoanRepository.create`/`update` take a full `Loan`, so that skip is type-legal rather than
+  impossible — a ViewModel injecting `LoanRepository` directly is one Koin binding away from it.
+  Loans go through the use cases.
 - **Deleting a loan must soft-delete its payments in the same write.** The `ON DELETE RESTRICT`
   clause on `loan_payments.loanId` never fires, because this repo soft-deletes and FK clauses only
   act on physical DELETE (`docs/PERSISTENCE.md`). Delete integrity is a use-case obligation, not
