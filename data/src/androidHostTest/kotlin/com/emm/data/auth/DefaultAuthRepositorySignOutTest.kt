@@ -1,8 +1,11 @@
 package com.emm.data.auth
 
 import com.emm.domain.auth.SignOutResult
+import com.emm.domain.shared.error.DomainException
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.MemorySessionManager
+import io.github.jan.supabase.auth.SessionManager
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.minimalConfig
 import io.github.jan.supabase.auth.user.UserInfo
@@ -122,6 +125,21 @@ class DefaultAuthRepositorySignOutTest {
             )
         }
 
+    @Test
+    fun `signOut propagates a failing local clear instead of reporting LocalOnly`() = runTest {
+        val client = respondingClientWithFailingLocalClear()
+        val repository = DefaultAuthRepository(client)
+
+        assertFailsWith<DomainException.Unknown> {
+            repository.signOut()
+        }
+        assertTrue(
+            client.auth.sessionStatus.value is SupabaseSessionStatus.Authenticated,
+            "The failure must come from deleteSession() itself, not an unrelated throw: had " +
+                "clearSession() completed despite it, the session would show NotAuthenticated here.",
+        )
+    }
+
     private suspend fun offlineClientWithSession(): SupabaseClient = createSupabaseClient(
         supabaseUrl = "https://project.supabase.co",
         supabaseKey = "test-anon-key",
@@ -170,6 +188,23 @@ class DefaultAuthRepositorySignOutTest {
         client.auth.importSession(session(), autoRefresh = false)
     }
 
+    /**
+     * The server-side revoke succeeds so the local clear is the only thing that can fail — the
+     * override has to run after `minimalConfig()`, which installs its own in-memory manager first.
+     */
+    private suspend fun respondingClientWithFailingLocalClear(): SupabaseClient = createSupabaseClient(
+        supabaseUrl = "https://project.supabase.co",
+        supabaseKey = "test-anon-key",
+    ) {
+        httpEngine = MockEngine { respondOk() }
+        install(Auth) {
+            minimalConfig()
+            sessionManager = SessionManagerWithFailingDelete()
+        }
+    }.also { client ->
+        client.auth.importSession(session(), autoRefresh = false)
+    }
+
     private fun session(): UserSession = UserSession(
         accessToken = "access-token",
         refreshToken = "refresh-token",
@@ -177,6 +212,21 @@ class DefaultAuthRepositorySignOutTest {
         tokenType = "bearer",
         user = UserInfo(id = "user-1", aud = "authenticated", email = "user@example.com"),
     )
+
+    /**
+     * `saveSession`/`loadSession` delegate to a real in-memory manager so `importSession()` still
+     * works; only `deleteSession()` fails, to isolate the local clear as the one broken step.
+     */
+    private class SessionManagerWithFailingDelete : SessionManager {
+
+        private val delegate = MemorySessionManager()
+
+        override suspend fun saveSession(session: UserSession) = delegate.saveSession(session)
+
+        override suspend fun loadSession(): UserSession = delegate.loadSession()
+
+        override suspend fun deleteSession(): Unit = error("local session deletion failed")
+    }
 
     private companion object {
 
