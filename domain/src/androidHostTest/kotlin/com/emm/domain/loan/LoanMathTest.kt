@@ -16,7 +16,6 @@ class LoanMathTest {
     @Test
     fun `totalDue rounds an exact half cent up, disagreeing with HALF-EVEN`() {
         // raw interest is 2 cents * 2500 bps / 10_000 = 0.5 cents exactly.
-        // HALF-EVEN (NumberFormatEs.integerRounded) would round 0.5 down to the even 0; HALF-UP rounds it to 1.
         val totalDue = totalDue(principal = Money(2L), interestBps = 2500)
 
         assertEquals(Money(3L), totalDue)

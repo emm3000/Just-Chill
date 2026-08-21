@@ -2,12 +2,15 @@ package com.emm.justchill.core.error
 
 import com.emm.domain.auth.MIN_SIGNUP_PASSWORD_LENGTH
 import com.emm.domain.loan.MAX_INTEREST_BPS
+import com.emm.domain.loan.MIN_INTEREST_BPS
 import com.emm.domain.recurring.MAX_DAY_OF_MONTH
 import com.emm.domain.recurring.MIN_DAY_OF_MONTH
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 
 private const val BPS_PER_PERCENT = 100
+private const val MIN_INTEREST_PERCENT = MIN_INTEREST_BPS / BPS_PER_PERCENT
+private const val MAX_INTEREST_PERCENT = MAX_INTEREST_BPS / BPS_PER_PERCENT
 
 fun DomainException.toUserMessage(): String = when (this) {
     is DomainException.NotFound -> "No encontré eso"
@@ -55,7 +58,7 @@ private fun ValidationCode.toUserMessage(): String = when (this) {
     ValidationCode.BackupVersionUnsupported -> "Ese respaldo es de una versión que esta app no puede leer"
     ValidationCode.BackupUploadUnverified -> "No pudimos verificar tu respaldo en la nube — intenta de nuevo"
     ValidationCode.PersonRequired -> "Escribe a quién le prestaste"
-    ValidationCode.InterestOutOfRange -> "El interés debe estar entre 0% y ${MAX_INTEREST_BPS / BPS_PER_PERCENT}%"
+    ValidationCode.InterestOutOfRange -> "El interés debe estar entre $MIN_INTEREST_PERCENT% y $MAX_INTEREST_PERCENT%"
     ValidationCode.PaymentExceedsBalance -> "El abono es mayor que lo que falta pagar"
     ValidationCode.TotalBelowPaid -> "El nuevo total es menor de lo que ya te pagaron"
     ValidationCode.Unspecified -> "Algo no cuadra con los datos"

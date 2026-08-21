@@ -14,8 +14,7 @@ private val ACCENT_FOLD_MAP: Map<Char, Char> = mapOf(
     'ó' to 'o', 'ò' to 'o', 'ô' to 'o', 'ö' to 'o', 'õ' to 'o',
     'ú' to 'u', 'ù' to 'u', 'û' to 'u', 'ü' to 'u',
     // `ñ` folds to `n` deliberately: "Muñoz" typed as "Munoz" is the exact split this feature exists
-    // to prevent. The mirror cost — two genuinely different people merging into one row — is already
-    // accepted in docs/work/epics/E05-loans.md.
+    // to prevent.
     'ñ' to 'n',
     'ç' to 'c',
 )
