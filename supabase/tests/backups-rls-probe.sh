@@ -76,6 +76,11 @@ assert_refused() {
   local actual=$1 description=$2
   if [ "$actual" = '200' ]; then
     fail "$description — the request SUCCEEDED"
+  elif [ "$actual" = '000' ]; then
+    # curl prints 000 when it never reached the server. `set -e` cannot catch it here: the call is
+    # an argument, not the command. Reading it as a refusal would pass this probe against a stack
+    # that is simply down.
+    fail "$description — curl never reached the server, so nothing refused anything"
   else
     pass "$description (HTTP $actual)"
   fi
@@ -114,7 +119,11 @@ assert_listing_holds() {
 }
 
 assert_listing_lacks() {
-  if listing_holds "$1"; then
+  # The array check is what keeps this from failing open: `listing_holds` answers false for a body
+  # jq cannot walk at all, so without it any error response would read as "the object is absent".
+  if ! jq -e 'type == "array"' "$RESPONSE_BODY" >/dev/null 2>&1; then
+    fail "$2 — the response is not a listing"
+  elif listing_holds "$1"; then
     fail "$2 — the object is in the listing"
   else
     pass "$2"
@@ -162,8 +171,9 @@ storage_delete() {
     -H "apikey: $ANON_KEY" -H "Authorization: Bearer $token"
 }
 
-# The service role bypasses RLS. It is used here and in require_bucket only, both outside the
-# assertions — an assertion holding this key would prove nothing.
+# The service role bypasses RLS, so no assertion about ACCESS may hold it. Its two sites are here
+# and require_bucket, and require_bucket does assert under it — on `public == false`, which is
+# bucket metadata rather than RLS, and which anon cannot read at all.
 delete_probe_user() {
   curl -sS -o /dev/null -X DELETE "$API_URL/auth/v1/admin/users/$1" \
     -H "apikey: $SERVICE_ROLE_KEY" -H "Authorization: Bearer $SERVICE_ROLE_KEY" || true
@@ -192,7 +202,14 @@ read_stack_config() {
   ANON_KEY="$(jq -r '.ANON_KEY' <<< "$status_json")"
   SERVICE_ROLE_KEY="$(jq -r '.SERVICE_ROLE_KEY' <<< "$status_json")"
   readonly API_URL ANON_KEY SERVICE_ROLE_KEY
-  [ -n "$API_URL" ] && [ "$API_URL" != 'null' ] || die "'supabase status' returned no API_URL."
+  # Every key is checked, not just the URL: a CLI that renames these fields sends `apikey: null`,
+  # which 401s every call and blames the stack for a client-side rename.
+  local field
+  for field in API_URL ANON_KEY SERVICE_ROLE_KEY; do
+    case "${!field}" in
+      '' | null) die "'supabase status' returned no $field." ;;
+    esac
+  done
 }
 
 require_bucket() {
@@ -271,6 +288,9 @@ assert_prefix_is_owner_only() {
   storage_download "$owner_token" "$snapshot" >/dev/null
   assert_body_holds "$marker" "$owner still downloads its snapshot afterwards"
   storage_list "$owner_token" "$owner_uid/" >/dev/null
+  # The planted key is the one refusal with no identical owner call to pair against, so this listing
+  # has to earn its authority: it must be the owner's real prefix before its silence means anything.
+  assert_listing_holds "$snapshot_name" "$owner re-lists its own prefix and still sees the snapshot"
   assert_listing_lacks "$planted_name" "$owner's prefix holds nothing $intruder planted"
 
   assert_status 200 "$(storage_delete "$owner_token" "$snapshot")" \
