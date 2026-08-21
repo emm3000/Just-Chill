@@ -23,3 +23,44 @@ CREATE TABLE loans (
 
 CREATE INDEX IF NOT EXISTS loans_person_idx ON loans(personKey);
 CREATE INDEX IF NOT EXISTS loans_user_deleted_idx ON loans(userId, deletedAt);
+
+byId:
+SELECT * FROM loans WHERE loanId = ? AND deletedAt IS NULL;
+
+byPerson:
+SELECT * FROM loans WHERE personKey = ? AND deletedAt IS NULL ORDER BY lentAt DESC;
+
+insert:
+INSERT INTO loans(loanId, personName, personKey, principal, interestBps, totalDue, note, lentAt, createdAt, updatedAt, syncState)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending');
+
+updateValues:
+UPDATE loans
+SET personName = ?, personKey = ?, principal = ?, interestBps = ?, totalDue = ?, note = ?, lentAt = ?, updatedAt = ?, syncState = 'Pending'
+WHERE loanId = ?;
+
+softDelete:
+UPDATE loans SET deletedAt = ?, updatedAt = ?, syncState = 'Pending' WHERE loanId = ?;
+
+-- SQLite guarantees that when min()/max() is used in an aggregate query, bare columns in the
+-- result take their values from the row holding that extremum — so `personName` here is the name
+-- from this person's most recent loan, which matters because several spellings can fold to one
+-- `personKey`. That is also why `lastLentAt` is selected: it is what drives the guarantee, even
+-- though nothing reads the column itself.
+balancesByPerson:
+SELECT
+    l.personKey                      AS personKey,
+    l.personName                     AS personName,
+    MAX(l.lentAt)                    AS lastLentAt,
+    SUM(l.totalDue)                  AS totalDue,
+    COALESCE(SUM(paid.paidSoFar), 0) AS paidSoFar
+FROM loans l
+LEFT JOIN (
+    SELECT loanId, SUM(amount) AS paidSoFar
+    FROM loan_payments
+    WHERE deletedAt IS NULL
+    GROUP BY loanId
+) paid ON paid.loanId = l.loanId
+WHERE l.deletedAt IS NULL
+GROUP BY l.personKey
+ORDER BY (SUM(l.totalDue) - COALESCE(SUM(paid.paidSoFar), 0)) DESC, l.personName;
