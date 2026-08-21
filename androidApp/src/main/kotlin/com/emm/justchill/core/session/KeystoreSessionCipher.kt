@@ -33,7 +33,9 @@ internal class KeystoreSessionCipher : SessionCipher {
         return "${encode(cipher.iv)}$PAYLOAD_SEPARATOR${encode(ciphertext)}"
     }
 
-    override fun decrypt(payload: String): String? = runCatching { decipher(payload) }.getOrNull()
+    // runCatching catches Throwable, which would swallow a CancellationException — decipher neither
+    // suspends nor polls for cancellation, so there is none here to swallow.
+    override fun decrypt(payload: String): Result<String> = runCatching { decipher(payload) }
 
     private fun decipher(payload: String): String {
         val separator = payload.indexOf(PAYLOAD_SEPARATOR)

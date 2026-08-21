@@ -6,10 +6,13 @@ import io.github.jan.supabase.auth.exception.NoSessionFoundException
 import io.github.jan.supabase.auth.user.UserSession
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import java.security.KeyStoreException
+import javax.crypto.AEADBadTagException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class KeystoreSessionManagerTest {
@@ -55,7 +58,7 @@ class KeystoreSessionManagerTest {
     @Test
     fun `a session the cipher can no longer read reads as no session at all`() = runTest {
         manager.saveSession(session)
-        cipher.readable = false
+        cipher.failure = AEADBadTagException("mac check in GCM failed")
 
         assertFailsWith<NoSessionFoundException> { manager.loadSession() }
     }
@@ -97,11 +100,12 @@ class KeystoreSessionManagerTest {
     }
 
     @Test
-    fun `the launch sweep writes nothing when there is no plaintext key`() = runTest {
+    fun `the launch sweep writes nothing and reports nothing when there is no plaintext key`() = runTest {
         manager.sweepLegacySession()
 
         assertTrue(prefs.values.isEmpty())
         assertEquals(0, cipher.encryptions)
+        assertTrue(diagnostics.reports.isEmpty())
     }
 
     @Test
@@ -111,24 +115,34 @@ class KeystoreSessionManagerTest {
 
         manager.sweepLegacySession()
 
-        assertEquals(1, diagnostics.warnings.size)
+        assertEquals(1, diagnostics.reports.size)
         assertTrue(prefs.values.containsKey(LEGACY_SESSION_KEY))
     }
 
     @Test
-    fun `a session that will not decrypt is reported once, not on every load after it`() = runTest {
+    fun `a store that works end to end reports nothing at all`() = runTest {
         manager.saveSession(session)
-        cipher.readable = false
+        manager.loadSession()
+        manager.sweepLegacySession()
+        manager.deleteSession()
 
-        repeat(2) { assertFailsWith<NoSessionFoundException> { manager.loadSession() } }
-
-        assertEquals(1, diagnostics.warnings.size)
+        assertTrue(diagnostics.reports.isEmpty())
     }
 
     @Test
-    fun `a session that will not decrypt stops occupying the file`() = runTest {
+    fun `a session whose key is gone is reported once, not on every load after it`() = runTest {
         manager.saveSession(session)
-        cipher.readable = false
+        cipher.failure = AEADBadTagException("mac check in GCM failed")
+
+        repeat(2) { assertFailsWith<NoSessionFoundException> { manager.loadSession() } }
+
+        assertEquals(1, diagnostics.reports.size)
+    }
+
+    @Test
+    fun `a session whose key is gone stops occupying the file`() = runTest {
+        manager.saveSession(session)
+        cipher.failure = AEADBadTagException("mac check in GCM failed")
 
         assertFailsWith<NoSessionFoundException> { manager.loadSession() }
 
@@ -136,30 +150,64 @@ class KeystoreSessionManagerTest {
     }
 
     @Test
-    fun `the report carries no part of what was stored`() = runTest {
+    fun `a session the provider merely failed to read once is kept for the next launch`() = runTest {
         manager.saveSession(session)
-        val stored = prefs.values.getValue(ENCRYPTED_SESSION_KEY).orEmpty()
-        cipher.readable = false
+        val stored = prefs.values[ENCRYPTED_SESSION_KEY]
+        cipher.failure = KeyStoreException("provider unavailable")
 
         assertFailsWith<NoSessionFoundException> { manager.loadSession() }
 
-        val report = diagnostics.warnings.single()
-        assertFalse(report.contains(session.refreshToken))
-        assertFalse(report.contains(session.accessToken))
-        assertFalse(report.contains(stored))
+        assertEquals(stored, prefs.values[ENCRYPTED_SESSION_KEY])
+    }
+
+    @Test
+    fun `a session kept for the next launch reads back once the provider recovers`() = runTest {
+        manager.saveSession(session)
+        cipher.failure = KeyStoreException("provider unavailable")
+        assertFailsWith<NoSessionFoundException> { manager.loadSession() }
+
+        cipher.failure = null
+
+        assertEquals(session, manager.loadSession())
+    }
+
+    @Test
+    fun `the report carries the cause, which is the half that reaches the non-fatal channel`() = runTest {
+        manager.saveSession(session)
+        val failure = AEADBadTagException("mac check in GCM failed")
+        cipher.failure = failure
+
+        assertFailsWith<NoSessionFoundException> { manager.loadSession() }
+
+        assertSame(failure, diagnostics.reports.single().cause)
+    }
+
+    @Test
+    fun `neither the report nor the cause it carries names any part of what was stored`() = runTest {
+        manager.saveSession(session)
+        val stored = prefs.values.getValue(ENCRYPTED_SESSION_KEY).orEmpty()
+        cipher.failure = AEADBadTagException("mac check in GCM failed")
+
+        assertFailsWith<NoSessionFoundException> { manager.loadSession() }
+
+        val report = diagnostics.reports.single()
+        val uploaded = report.message + report.cause?.stackTraceToString()
+        assertFalse(uploaded.contains(session.refreshToken))
+        assertFalse(uploaded.contains(session.accessToken))
+        assertFalse(uploaded.contains(stored))
     }
 
     @Test
     fun `an empty store is not worth reporting`() = runTest {
         assertFailsWith<NoSessionFoundException> { manager.loadSession() }
 
-        assertTrue(diagnostics.warnings.isEmpty())
+        assertTrue(diagnostics.reports.isEmpty())
     }
 }
 
 private class FakeSessionCipher : SessionCipher {
 
-    var readable: Boolean = true
+    var failure: Throwable? = null
     var writable: Boolean = true
     var encryptions: Int = 0
 
@@ -169,15 +217,18 @@ private class FakeSessionCipher : SessionCipher {
         return plaintext.reversed()
     }
 
-    override fun decrypt(payload: String): String? = payload.reversed().takeIf { readable }
+    override fun decrypt(payload: String): Result<String> =
+        failure?.let { Result.failure(it) } ?: Result.success(payload.reversed())
 }
+
+private class Report(val message: String, val cause: Throwable?)
 
 private class RecordingDiagnosticsLogger : DiagnosticsLogger {
 
-    val warnings: MutableList<String> = mutableListOf()
+    val reports: MutableList<Report> = mutableListOf()
 
     override fun warn(message: String, throwable: Throwable?) {
-        warnings += message
+        reports += Report(message, throwable)
     }
 }
 

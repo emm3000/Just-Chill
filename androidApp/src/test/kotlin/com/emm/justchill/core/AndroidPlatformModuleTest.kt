@@ -10,6 +10,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.koinApplication
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertSame
 
 class AndroidPlatformModuleTest {
 
@@ -60,6 +61,14 @@ class AndroidPlatformModuleTest {
             assertIs<KeystoreSessionManager>(
                 koin.get<SessionManager>(),
                 "androidPlatformModule no longer stores the Supabase session encrypted.",
+            )
+            // One instance, not two of the same class: KeystoreSessionManager serialises the launch
+            // sweep against the client's own first load on a monitor it owns, and a second
+            // construction behind the port would give the two paths a monitor each.
+            assertSame(
+                koin.get<KeystoreSessionManager>(),
+                koin.get<SessionManager>(),
+                "The launch sweep and the Supabase client no longer share one session manager.",
             )
         } finally {
             koin.close()
