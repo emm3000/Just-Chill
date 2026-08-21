@@ -105,7 +105,9 @@ internal class KeystoreSessionManager(
 // and discarding on it costs a re-login for a session that would have read fine next launch, so the
 // default is to keep. A KeyStoreException is deliberately absent: it reports an unavailable provider
 // or an uninitialised store, neither of which says anything about this alias.
-private fun Throwable.willNeverReadBack(): Boolean = when (this) {
+// Internal, not private: SessionPayloadCodecTest pins that every exception the codec can throw is
+// one this mapping treats as unreadable, so the mapping's source stays covered too.
+internal fun Throwable.willNeverReadBack(): Boolean = when (this) {
     is AEADBadTagException,
     is KeyPermanentlyInvalidatedException,
     is IllegalArgumentException,

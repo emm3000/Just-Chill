@@ -3,7 +3,6 @@ package com.emm.justchill.core.session
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import java.security.KeyStore
-import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -15,10 +14,11 @@ private const val KEY_ALIAS = "justchill_session_v1"
 private const val KEYSTORE_PROVIDER = "AndroidKeyStore"
 private const val TRANSFORMATION = "AES/GCM/NoPadding"
 private const val KEY_SIZE_BITS = 256
-private const val TAG_SIZE_BITS = 128
 
-// Base64 never emits '.', so splitting on the first one cannot cut either half in two.
-private const val PAYLOAD_SEPARATOR = '.'
+// Applied on decrypt only: an AndroidKeyStore key defaults setRandomizedEncryptionRequired(true),
+// which rejects a caller-supplied IV on encrypt — the provider must draw it, and GCMParameterSpec
+// has no constructor that states a tag length without also stating an IV.
+private const val TAG_SIZE_BITS = 128
 
 internal class KeystoreSessionCipher : SessionCipher {
 
@@ -30,7 +30,7 @@ internal class KeystoreSessionCipher : SessionCipher {
         val ciphertext = cipher.doFinal(plaintext.toByteArray(Charsets.UTF_8))
 
         // GCM breaks if an IV repeats under one key; the provider draws a fresh one per operation.
-        return "${encode(cipher.iv)}$PAYLOAD_SEPARATOR${encode(ciphertext)}"
+        return SessionPayloadCodec.wrap(cipher.iv, ciphertext)
     }
 
     // runCatching catches Throwable, which would swallow a CancellationException — decipher neither
@@ -38,9 +38,7 @@ internal class KeystoreSessionCipher : SessionCipher {
     override fun decrypt(payload: String): Result<String> = runCatching { decipher(payload) }
 
     private fun decipher(payload: String): String {
-        val separator = payload.indexOf(PAYLOAD_SEPARATOR)
-        val iv = decode(payload.substring(0, separator))
-        val ciphertext = decode(payload.substring(separator + 1))
+        val (iv, ciphertext) = SessionPayloadCodec.unwrap(payload)
 
         val cipher = Cipher.getInstance(TRANSFORMATION)
         cipher.init(Cipher.DECRYPT_MODE, sessionKey(), GCMParameterSpec(TAG_SIZE_BITS, iv))
@@ -75,8 +73,4 @@ internal class KeystoreSessionCipher : SessionCipher {
         generator.init(spec)
         return generator.generateKey()
     }
-
-    private fun encode(bytes: ByteArray): String = Base64.getEncoder().encodeToString(bytes)
-
-    private fun decode(value: String): ByteArray = Base64.getDecoder().decode(value)
 }
