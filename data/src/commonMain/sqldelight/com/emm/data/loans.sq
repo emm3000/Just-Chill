@@ -49,11 +49,11 @@ UPDATE loans SET deletedAt = ?, updatedAt = ?, syncState = 'Pending' WHERE loanI
 -- though nothing reads the column itself.
 balancesByPerson:
 SELECT
-    l.personKey                      AS personKey,
-    l.personName                     AS personName,
-    MAX(l.lentAt)                    AS lastLentAt,
-    SUM(l.totalDue)                  AS totalDue,
-    COALESCE(SUM(paid.paidSoFar), 0) AS paidSoFar
+    l.personKey AS personKey,
+    l.personName AS personName,
+    MAX(l.lentAt) AS lastLentAt,
+    CAST(COALESCE(SUM(l.totalDue), 0) AS INTEGER) AS totalDue,
+    CAST(COALESCE(SUM(paid.paidSoFar), 0) AS INTEGER) AS paidSoFar
 FROM loans l
 LEFT JOIN (
     SELECT loanId, SUM(amount) AS paidSoFar

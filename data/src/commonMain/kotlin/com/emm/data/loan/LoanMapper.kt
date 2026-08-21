@@ -43,5 +43,5 @@ fun List<LoanEntity>.asExternalModel() = mapNotNull(LoanEntity::asExternalModelO
 fun BalancesByPerson.asExternalModel() = PersonBalance(
     personKey = personKey,
     personName = personName,
-    remaining = remaining(totalDue = Money(totalDue ?: 0L), paidSoFar = Money(paidSoFar.toLong())),
+    remaining = remaining(totalDue = Money(totalDue), paidSoFar = Money(paidSoFar)),
 )

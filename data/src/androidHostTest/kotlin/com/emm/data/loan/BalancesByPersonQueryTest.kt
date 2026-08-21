@@ -47,7 +47,7 @@ class BalancesByPersonQueryTest {
 
         // A direct join would fan out loan-a's totalDue once per payment (1000 * 2 + 500 = 2500).
         assertEquals(1_500L, row.totalDue)
-        assertEquals(500.0, row.paidSoFar)
+        assertEquals(500L, row.paidSoFar)
         assertEquals(1_000L, row.totalDue!! - row.paidSoFar.toLong())
     }
 
@@ -134,7 +134,7 @@ class BalancesByPersonQueryTest {
 
         val row = balances().single()
 
-        assertEquals(300.0, row.paidSoFar)
+        assertEquals(300L, row.paidSoFar)
     }
 
     private fun balances() = db.loansQueries.balancesByPerson().executeAsList()
