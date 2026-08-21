@@ -17,7 +17,8 @@ private const val KEY_SIZE_BITS = 256
 
 // Applied on decrypt only: an AndroidKeyStore key defaults setRandomizedEncryptionRequired(true),
 // which rejects a caller-supplied IV on encrypt — the provider must draw it, and GCMParameterSpec
-// has no constructor that states a tag length without also stating an IV.
+// has no constructor that states a tag length without also stating an IV — so encrypt trusts
+// AndroidKeyStore's own 128-bit GCM tag default instead.
 private const val TAG_SIZE_BITS = 128
 
 internal class KeystoreSessionCipher : SessionCipher {
@@ -29,7 +30,6 @@ internal class KeystoreSessionCipher : SessionCipher {
         cipher.init(Cipher.ENCRYPT_MODE, sessionKey())
         val ciphertext = cipher.doFinal(plaintext.toByteArray(Charsets.UTF_8))
 
-        // GCM breaks if an IV repeats under one key; the provider draws a fresh one per operation.
         return SessionPayloadCodec.wrap(cipher.iv, ciphertext)
     }
 
