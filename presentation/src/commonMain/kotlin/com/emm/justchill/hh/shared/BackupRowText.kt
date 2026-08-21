@@ -10,6 +10,10 @@ const val BACKUP_DESTINATION_DISCLOSURE: String =
 
 const val BACKUP_DESTINATION_DISCLOSURE_ACTION: String = "Entendido, respaldar"
 
+const val BACKUP_LOCAL_ONLY_WARNING: String =
+    "Nada de esto sale de tu teléfono. Si lo pierdes o cambias de celular sin exportar, tu " +
+        "data se va con él."
+
 fun BackupRowUi.toMetaText(): String = when (this) {
     BackupRowUi.BackingUp -> "Respaldando…"
 

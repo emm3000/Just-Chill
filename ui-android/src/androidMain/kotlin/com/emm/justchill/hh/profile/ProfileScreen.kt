@@ -67,6 +67,7 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.FilledCta
 import com.emm.justchill.hh.shared.BACKUP_DESTINATION_DISCLOSURE
 import com.emm.justchill.hh.shared.BACKUP_DESTINATION_DISCLOSURE_ACTION
+import com.emm.justchill.hh.shared.BACKUP_LOCAL_ONLY_WARNING
 import com.emm.justchill.hh.shared.toMetaText
 
 @Composable
@@ -262,6 +263,9 @@ private fun BackupSection(
                 }
             }
         }
+        if (!SNAPSHOT_BACKUP_ENABLED) {
+            BackupLocalOnlyFooter()
+        }
     }
 }
 
@@ -277,6 +281,23 @@ private fun VerifyBackupRow(op: ProfileOp, onVerifyClick: () -> Unit) {
         enabled = idle || busy,
         onClick = onVerifyClick.takeIf { idle },
         trailing = { ChevronTrailing(enabled = idle || busy) },
+    )
+}
+
+@Composable
+private fun BackupLocalOnlyFooter() {
+    val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
+    Text(
+        text = BACKUP_LOCAL_ONLY_WARNING,
+        fontSize = 13.sp,
+        lineHeight = 18.sp,
+        fontFamily = InterFontFamily,
+        fontWeight = FontWeight.W400,
+        color = colors.textSecondary,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = spacing.s5, end = spacing.s5, top = spacing.s3),
     )
 }
 
