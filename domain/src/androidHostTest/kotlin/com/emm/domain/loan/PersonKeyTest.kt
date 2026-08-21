@@ -24,4 +24,14 @@ class PersonKeyTest {
     fun `leading and trailing whitespace is trimmed`() {
         assertEquals("juan perez", personKey("  Juan Pérez  "))
     }
+
+    @Test
+    fun `a decomposed NFD surname keys the same as its precomposed and unaccented spellings`() {
+        // "Pérez" as NFD: "e" followed by a standalone combining acute accent (U+0301), the shape
+        // contacts pasted from macOS/iCloud arrive in.
+        val decomposed = "Pérez"
+
+        assertEquals(personKey("Pérez"), personKey(decomposed))
+        assertEquals(personKey("Perez"), personKey(decomposed))
+    }
 }

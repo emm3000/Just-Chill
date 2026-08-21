@@ -2,6 +2,11 @@ package com.emm.domain.loan
 
 private val WHITESPACE_RUN = Regex("\\s+")
 
+// Unicode "Combining Diacritical Marks" block (U+0300..U+036F): NFD-decomposed input (e.g.
+// contacts pasted from macOS/iCloud) carries the accent as one of these trailing a plain base letter.
+private const val COMBINING_MARK_RANGE_START = '\u0300'
+private const val COMBINING_MARK_RANGE_END = '\u036F'
+
 private val ACCENT_FOLD_MAP: Map<Char, Char> = mapOf(
     'á' to 'a', 'à' to 'a', 'â' to 'a', 'ä' to 'a', 'ã' to 'a',
     'é' to 'e', 'è' to 'e', 'ê' to 'e', 'ë' to 'e',
@@ -20,5 +25,6 @@ internal fun personKey(personName: String): String {
     val folded = buildString {
         for (char in lowercased) append(ACCENT_FOLD_MAP[char] ?: char)
     }
-    return folded.replace(WHITESPACE_RUN, " ").trim()
+    val withoutCombiningMarks = folded.filterNot { it in COMBINING_MARK_RANGE_START..COMBINING_MARK_RANGE_END }
+    return withoutCombiningMarks.replace(WHITESPACE_RUN, " ").trim()
 }

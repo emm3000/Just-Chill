@@ -17,10 +17,11 @@ class UpdateLoanUseCase(
         ensurePositiveAmount(loanUpdate.principal)
         ensureInterestInRange(loanUpdate.interestBps)
         ensureNotFutureDated(loanUpdate.lentAt, clock, zone)
+        val personName = loanUpdate.personName.trim()
         val loan = Loan(
             id = loanId,
-            personName = loanUpdate.personName.trim(),
-            personKey = personKey(loanUpdate.personName),
+            personName = personName,
+            personKey = personKey(personName),
             principal = loanUpdate.principal,
             interestBps = loanUpdate.interestBps,
             totalDue = totalDue(loanUpdate.principal, loanUpdate.interestBps),

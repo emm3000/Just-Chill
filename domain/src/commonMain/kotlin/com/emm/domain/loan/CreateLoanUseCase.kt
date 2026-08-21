@@ -19,10 +19,11 @@ class CreateLoanUseCase(
         ensurePositiveAmount(loanInsert.principal)
         ensureInterestInRange(loanInsert.interestBps)
         ensureNotFutureDated(loanInsert.lentAt, clock, zone)
+        val personName = loanInsert.personName.trim()
         val loan = Loan(
             id = LoanId(uniqueIdProvider.id),
-            personName = loanInsert.personName.trim(),
-            personKey = personKey(loanInsert.personName),
+            personName = personName,
+            personKey = personKey(personName),
             principal = loanInsert.principal,
             interestBps = loanInsert.interestBps,
             totalDue = totalDue(loanInsert.principal, loanInsert.interestBps),
