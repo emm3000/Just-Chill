@@ -16,16 +16,9 @@ import io.ktor.client.engine.mock.respondOk
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import java.io.IOException
 import kotlin.test.assertEquals
@@ -40,20 +33,7 @@ import io.github.jan.supabase.auth.status.SessionStatus as SupabaseSessionStatus
  * The SupabaseClient has to be real: what these tests pin is supabase-kt's own behaviour, and a
  * mocked Auth would only assert what this repository calls.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 class DefaultAuthRepositorySignOutTest {
-
-    // supabase-kt's Auth plugin builds its coroutine scope on Dispatchers.Main, which does not
-    // exist on a JVM host test until it is set.
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
 
     @Test
     fun `signOut clears the local session and reports LocalOnly when the network is unreachable`() = runTest {
@@ -146,7 +126,7 @@ class DefaultAuthRepositorySignOutTest {
     ) {
         httpEngine = MockEngine { throw IOException("network is unreachable") }
         install(Auth) { minimalConfig() }
-    }.also { client ->
+    }.settled().also { client ->
         client.auth.importSession(session(), autoRefresh = false)
     }
 
@@ -160,7 +140,7 @@ class DefaultAuthRepositorySignOutTest {
     ) {
         httpEngine = MockEngine { request -> throw HttpRequestTimeoutException(request) }
         install(Auth) { minimalConfig() }
-    }.also { client ->
+    }.settled().also { client ->
         client.auth.importSession(session(), autoRefresh = false)
     }
 
@@ -174,7 +154,7 @@ class DefaultAuthRepositorySignOutTest {
             awaitCancellation()
         }
         install(Auth) { minimalConfig() }
-    }.also { client ->
+    }.settled().also { client ->
         client.auth.importSession(session(), autoRefresh = false)
     }
 
@@ -184,7 +164,7 @@ class DefaultAuthRepositorySignOutTest {
     ) {
         httpEngine = MockEngine { respondOk() }
         install(Auth) { minimalConfig() }
-    }.also { client ->
+    }.settled().also { client ->
         client.auth.importSession(session(), autoRefresh = false)
     }
 
@@ -201,9 +181,16 @@ class DefaultAuthRepositorySignOutTest {
             minimalConfig()
             sessionManager = SessionManagerWithFailingDelete()
         }
-    }.also { client ->
+    }.settled().also { client ->
         client.auth.importSession(session(), autoRefresh = false)
     }
+
+    /**
+     * Auth.init() flips Initializing to NotAuthenticated from its own scope on the client's default
+     * dispatcher, and the check is not atomic: an importSession() that lands between that read and
+     * its write is overwritten, and every test here then runs on a session that is gone.
+     */
+    private suspend fun SupabaseClient.settled(): SupabaseClient = also { it.auth.awaitInitialization() }
 
     private fun session(): UserSession = UserSession(
         accessToken = "access-token",

@@ -24,6 +24,7 @@ import io.github.jan.supabase.exceptions.UnauthorizedRestException
 import io.github.jan.supabase.postgrest.postgrest
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -108,9 +109,9 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
      * RPC starts attaching the anon key on a cold start, which RLS answers with 403.
      *
      * The RPC runs first and unguarded: if it throws, the account still exists and nothing else
-     * should. Once it succeeds the account is already gone server-side, so the revoke below is best
-     * effort — its swallow-then-clear copies signOut()'s shape, with clearSession() unconditional
-     * because a deleted account can never again be revoked from this device.
+     * should. Once it succeeds the local clear has to happen whatever the revoke does — a
+     * cancellation included, which is why it sits in a finally under NonCancellable. Only the
+     * clear is uncancellable; the revoke POST stays interruptible so it can never hang the caller.
      */
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun deleteAccount(): Unit = authCall {
@@ -120,11 +121,12 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            // Silently swallowed: this class holds no DiagnosticsLogger, and the caller already
-            // logs this failure — DeleteUserAccountUseCase.withStepLogging wraps this call under
-            // the "remote delete" step regardless of outcome.
+            // Swallowed unlogged because nothing is lost: the RPC above already ran
+            // `delete from auth.users` (supabase/migrations/20260610180000_delete_account.sql),
+            // so this POST has no account left to revoke.
+        } finally {
+            withContext(NonCancellable) { client.auth.clearSession() }
         }
-        client.auth.clearSession()
     }
 
     /**

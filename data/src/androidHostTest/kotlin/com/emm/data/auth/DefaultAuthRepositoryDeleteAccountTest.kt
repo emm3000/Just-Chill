@@ -16,19 +16,18 @@ import io.ktor.client.engine.mock.respondOk
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpStatusCode
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import java.io.IOException
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import io.github.jan.supabase.auth.status.SessionStatus as SupabaseSessionStatus
 
 /**
@@ -36,20 +35,7 @@ import io.github.jan.supabase.auth.status.SessionStatus as SupabaseSessionStatus
  * tests pin is deleteAccount()'s call shape against supabase-kt's own Postgrest/Auth behaviour, not
  * a mock of this repository's own dependency.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 class DefaultAuthRepositoryDeleteAccountTest {
-
-    // The Auth plugin builds its coroutine scope on Dispatchers.Main, which does not exist on a JVM
-    // host test until it is set.
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
 
     // This is the case the whole ticket exists for: a network failure on the revoke POST used to
     // escape before clearSession() ran, leaving the device Authenticated for an account the RPC had
@@ -78,13 +64,41 @@ class DefaultAuthRepositoryDeleteAccountTest {
         assertNull(client.auth.currentSessionOrNull())
     }
 
+    /**
+     * The mirror image of DefaultAuthRepositorySignOutTest's cancellation case, and it has to be:
+     * signOut() must leave the session alone because the user may still own it, while here the RPC
+     * already destroyed the account, so the clear cannot be skipped for any reason — cancellation
+     * included.
+     */
+    @Test
+    fun `deleteAccount clears the session even when a cancellation interrupts the revoke POST`() =
+        runTest(timeout = HANG_BOUND) {
+            val revokeStarted = CompletableDeferred<Unit>()
+            val client = clientWithHangingRevoke { revokeStarted.complete(Unit) }
+            val repository = DefaultAuthRepository(client)
+
+            val deferred = async { repository.deleteAccount() }
+            revokeStarted.await()
+            deferred.cancel()
+
+            assertFailsWith<CancellationException> {
+                deferred.await()
+            }
+            assertTrue(
+                client.auth.sessionStatus.value is SupabaseSessionStatus.NotAuthenticated,
+                "The account is already gone server-side, so a cancelled revoke must still leave " +
+                    "the device signed out — not Authenticated against an account that no longer exists.",
+            )
+            assertNull(client.auth.currentSessionOrNull())
+        }
+
     // The RPC itself failing must short-circuit before signOut()/clearSession() ever run: the
     // account still exists, so the session it belongs to must not be torn down.
     @Test
     fun `deleteAccount propagates a failing RPC and leaves the session untouched`() = runTest {
         val client = clientWithSession { request ->
             if (request.url.encodedPath == RPC_PATH) {
-                respond(content = "", status = HttpStatusCode.InternalServerError)
+                respond(content = RPC_FAILURE_BODY, status = HttpStatusCode.InternalServerError)
             } else {
                 respondOk()
             }
@@ -106,9 +120,32 @@ class DefaultAuthRepositoryDeleteAccountTest {
         httpEngine = MockEngine { request -> handler(request) }
         install(Auth) { minimalConfig() }
         install(Postgrest)
-    }.also { client ->
+    }.settled().also { client ->
         client.auth.importSession(session(), autoRefresh = false)
     }
+
+    private suspend fun clientWithHangingRevoke(onRevokeStarted: () -> Unit): SupabaseClient = createSupabaseClient(
+        supabaseUrl = "https://project.supabase.co",
+        supabaseKey = "test-anon-key",
+    ) {
+        requestTimeout = DISABLED_REQUEST_TIMEOUT
+        httpEngine = MockEngine { request ->
+            if (request.url.encodedPath != LOGOUT_PATH) return@MockEngine respondOk()
+            onRevokeStarted()
+            awaitCancellation()
+        }
+        install(Auth) { minimalConfig() }
+        install(Postgrest)
+    }.settled().also { client ->
+        client.auth.importSession(session(), autoRefresh = false)
+    }
+
+    /**
+     * Auth.init() flips Initializing to NotAuthenticated from its own scope on the client's default
+     * dispatcher, and the check is not atomic: an importSession() that lands between that read and
+     * its write is overwritten, and every test here then runs on a session that is gone.
+     */
+    private suspend fun SupabaseClient.settled(): SupabaseClient = also { it.auth.awaitInitialization() }
 
     private fun session(): UserSession = UserSession(
         accessToken = "access-token",
@@ -119,7 +156,22 @@ class DefaultAuthRepositoryDeleteAccountTest {
     )
 
     private companion object {
+
         const val RPC_PATH = "/rest/v1/rpc/delete_account"
         const val LOGOUT_PATH = "/auth/v1/logout"
+        const val RPC_FAILURE_BODY = """{"code":"XX000","message":"delete_account failed"}"""
+
+        /**
+         * INFINITE is the one value for which ktor launches no timeout coroutine at all. Any finite
+         * one competes with the cancellation under test and wins under load.
+         */
+        val DISABLED_REQUEST_TIMEOUT = Duration.INFINITE
+
+        /**
+         * A real clock covering the whole test body, so load still beats it. It buys an
+         * unambiguous failure — a leaked coroutine, not a session-status assertion blaming a
+         * cancellation defect that never happened — never determinism.
+         */
+        val HANG_BOUND = 10.seconds
     }
 }
