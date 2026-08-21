@@ -8,7 +8,7 @@ own conventions are in `data/CLAUDE.md`.
 - Schema and migrations both live in `data/src/commonMain/sqldelight/com/emm/data/` — read the
   directory, never a list written down somewhere. `.sq` files carry the CREATE TABLE plus that table's
   queries (`backup.sq` is the exception: no table of its own, only cross-table reads). Migrations are
-  `0.sqm`…`4.sqm`, so the current schema is **v5**.
+  `0.sqm`…`5.sqm`, so the current schema is **v6**.
 - Generated database class: `EmmDatabaseData` (package `com.emm.data`), configured in
   `data/build.gradle.kts`.
 - **`transactions.occurredAt` is ISO local text, not an instant** — `'2026-08-10T21:47:33'`, no
@@ -17,8 +17,8 @@ own conventions are in `data/CLAUDE.md`.
 this" depend on the reader's zone, which is the bug the text column removes.
   `createdAt` / `updatedAt` / `deletedAt` stay epoch millis: those are genuine instants.
 - **Soft-delete (tombstones)** since schema v3: deletes are `UPDATE ... SET deletedAt,
-  syncState='Pending'`; every read query filters `deletedAt IS NULL`. Sync metadata columns on all
-  4 tables: `userId` (nullable), `deletedAt` (nullable epoch ms), `syncState` (default `'Pending'`).
+  syncState='Pending'`; every read query filters `deletedAt IS NULL`. Sync metadata columns on
+  every table: `userId` (nullable), `deletedAt` (nullable epoch ms), `syncState` (default `'Pending'`).
 - **The category/type relation IS enforced by the schema.** Since v5 `transactions` and
   `recurring_movements` declare a COMPOSITE foreign key, `(categoryId, type) → categories(categoryId,
   categoryType)`, so a movement can never carry a category of the other type. It lives here and not in

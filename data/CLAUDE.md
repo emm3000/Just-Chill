@@ -63,7 +63,7 @@ exception type here.
 - Host tests (JUnit4 + MockK) in `data/src/androidHostTest/kotlin/` — mappers, enum parsing, backup.
   Run with `./gradlew :data:testAndroidHostTest`.
 - Platform-neutral tests in `data/src/commonTest/kotlin/` (`kotlin.test`), e.g. `Sha256HexTest`.
-- Instrumented tests in `data/src/androidDeviceTest/` — the four `MigrationV*Test`s plus
+- Instrumented tests in `data/src/androidDeviceTest/` — the five `MigrationV*Test`s plus
   `DeleteUseCasesE2ETest` and `RecurringMovementFkTest`. Run them with
   `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator). They are the only thing
   that exercises migrations against the real `AndroidSqliteDriver`; what they prove and how to write
