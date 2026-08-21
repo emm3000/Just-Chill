@@ -102,19 +102,29 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
     }
 
     /**
-     * Known open defect, deferred to docs/work/epics/E01-snapshot-backup.md: supabase-kt 3.7.0 posts
-     * `logout` for every scope, LOCAL included, and catches only RestException. HttpRequestException
-     * is an IOException, so a network failure escapes before clearSession runs and leaves the device
-     * holding a session for a user that no longer exists server-side.
-     *
      * Fires the only Postgrest call in this class without awaiting initialization, because its only
      * caller already did: DeleteUserAccountUseCase.resolveAuthenticatedUserId waits out Initializing
      * under the same lock and refuses unless the session is Authenticated. Move that wait and this
      * RPC starts attaching the anon key on a cold start, which RLS answers with 403.
+     *
+     * The RPC runs first and unguarded: if it throws, the account still exists and nothing else
+     * should. Once it succeeds the account is already gone server-side, so the revoke below is best
+     * effort — its swallow-then-clear copies signOut()'s shape, with clearSession() unconditional
+     * because a deleted account can never again be revoked from this device.
      */
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun deleteAccount(): Unit = authCall {
         client.postgrest.rpc("delete_account")
-        client.auth.signOut(SignOutScope.LOCAL)
+        try {
+            client.auth.signOut(SignOutScope.LOCAL)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // Silently swallowed: this class holds no DiagnosticsLogger, and the caller already
+            // logs this failure — DeleteUserAccountUseCase.withStepLogging wraps this call under
+            // the "remote delete" step regardless of outcome.
+        }
+        client.auth.clearSession()
     }
 
     /**
