@@ -1,0 +1,25 @@
+-- `totalDue` is written by the domain on every write path and never recomputed in SQL. It is
+-- redundant with `principal` and `interestBps` on purpose: the per-person rollup reads it, and
+-- rounding the same interest in both Kotlin and SQLite would be two implementations of one rule.
+--
+-- There is deliberately no `status` column. A loan is settled when its payments cover `totalDue`;
+-- a stored status desyncs from the payments that decide it.
+CREATE TABLE loans (
+    loanId      TEXT NOT NULL PRIMARY KEY,
+    personName  TEXT NOT NULL,
+    personKey   TEXT NOT NULL,
+    principal   INTEGER NOT NULL,
+    interestBps INTEGER NOT NULL DEFAULT 0,
+    totalDue    INTEGER NOT NULL,
+    note        TEXT NOT NULL DEFAULT '',
+    lentAt      TEXT NOT NULL,
+    createdAt   INTEGER NOT NULL,
+    updatedAt   INTEGER NOT NULL,
+    userId      TEXT,
+    deletedAt   INTEGER,
+    syncState   TEXT NOT NULL DEFAULT 'Pending'
+);
+
+CREATE INDEX IF NOT EXISTS loans_person_idx ON loans(personKey);
+CREATE INDEX IF NOT EXISTS loans_lentat_idx ON loans(lentAt);
+CREATE INDEX IF NOT EXISTS loans_user_deleted_idx ON loans(userId, deletedAt);

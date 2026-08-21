@@ -1,0 +1,19 @@
+-- `ON DELETE RESTRICT` guards a physical delete no code path performs: this repo soft-deletes, and
+-- an ON DELETE clause only acts on a real DELETE. Deleting a loan has to soft-delete its payments
+-- in the same write, and that is a use-case obligation the schema cannot enforce.
+CREATE TABLE loan_payments (
+    paymentId TEXT NOT NULL PRIMARY KEY,
+    loanId    TEXT NOT NULL REFERENCES loans(loanId) ON DELETE RESTRICT,
+    amount    INTEGER NOT NULL,
+    method    TEXT NOT NULL,
+    paidAt    TEXT NOT NULL,
+    note      TEXT NOT NULL DEFAULT '',
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    userId    TEXT,
+    deletedAt INTEGER,
+    syncState TEXT NOT NULL DEFAULT 'Pending'
+);
+
+CREATE INDEX IF NOT EXISTS loan_payments_loan_idx ON loan_payments(loanId);
+CREATE INDEX IF NOT EXISTS loan_payments_user_deleted_idx ON loan_payments(userId, deletedAt);
