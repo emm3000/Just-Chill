@@ -21,5 +21,8 @@ enum class ValidationCode {
     BackupVersionUnsupported,
 
     BackupUploadUnverified,
+    PersonRequired,
+    InterestOutOfRange,
+    PaymentExceedsBalance,
     Unspecified,
 }
