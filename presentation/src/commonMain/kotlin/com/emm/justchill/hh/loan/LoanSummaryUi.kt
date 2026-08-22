@@ -17,6 +17,10 @@ data class LoanSummaryUi(
     val isSettled: Boolean,
     val readableLentAt: String,
     val note: String,
+    // `remaining` is spent on display; this is the same figure as the cap the abono form compares
+    // against. Zero by default so a summary that omits it refuses every abono instead of admitting
+    // every one.
+    val remainingCents: Long = 0L,
 )
 
 fun loanSummaryUi(loan: Loan, paidSoFar: Money): LoanSummaryUi {
@@ -31,5 +35,6 @@ fun loanSummaryUi(loan: Loan, paidSoFar: Money): LoanSummaryUi {
         isSettled = remainingMoney.cents == 0L,
         readableLentAt = SpanishDateFormat.longDate(loan.lentAt.date),
         note = loan.note,
+        remainingCents = remainingMoney.cents,
     )
 }

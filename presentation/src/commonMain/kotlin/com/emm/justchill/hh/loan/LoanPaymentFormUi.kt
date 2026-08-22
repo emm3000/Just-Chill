@@ -10,6 +10,9 @@ import kotlinx.datetime.LocalDateTime
 data class LoanPaymentFormUi(
     val loanId: String,
     val today: LocalDate,
+    // The most this abono may be: what the loan still owes, with the edited abono's own old amount
+    // added back in. Filled only by LoanDetailViewModel.withCap.
+    val remainingCents: Long,
     val amountDigits: String = String.Empty,
     val method: PaymentMethod = PaymentMethod.Cash,
     val date: LocalDate? = null,
@@ -19,11 +22,19 @@ data class LoanPaymentFormUi(
     // Captured once when the edit opens, so confirmPayment never has to fall back to "now" and
     // silently rewrite a real historical time. Null when creating.
     val originalPaidAt: LocalDateTime? = null,
-    // Formatted in the ViewModel, where the Money values live — this is already the loan's
-    // remaining balance with the edited payment's own old amount added back in, so it must never
-    // be recomputed from a formatted string on the UI side.
+    // remainingCents formatted, done where the Money values live so no caller has to do money
+    // arithmetic on a display string. Null until the loan has loaded.
     val maxAmountLabel: String? = null,
 ) {
     val dateLabel: String get() = relativeDayLabel(date ?: today, today)
-    val isSaveEnabled: Boolean get() = amountDigits.isSavableAmount()
+
+    // A digit string past Long's range parses to null; reading it as the largest amount there is
+    // keeps the CTA off rather than handing centsToMoney a string it would throw on.
+    private val amountCents: Long get() = amountDigits.toLongOrNull() ?: Long.MAX_VALUE
+
+    // Warns early about the balance RegisterLoanPaymentUseCase enforces; the use case stays the
+    // authority, this only stops the CTA inviting a round trip it knows ends in a rejection.
+    val exceedsRemaining: Boolean get() = amountDigits.isSavableAmount() && amountCents > remainingCents
+
+    val isSaveEnabled: Boolean get() = amountDigits.isSavableAmount() && !exceedsRemaining
 }

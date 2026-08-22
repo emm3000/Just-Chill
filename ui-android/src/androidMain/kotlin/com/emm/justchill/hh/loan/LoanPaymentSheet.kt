@@ -125,6 +125,17 @@ private fun LoanPaymentSheetContent(
 
             FormSection(eyebrow = "MONTO") {
                 AmountCard(amountDigits = form.amountDigits, onClick = onAmountClick)
+                if (form.exceedsRemaining) {
+                    // Same sentence DomainExceptionExt renders for PaymentExceedsBalance: the rule
+                    // reads the same whether the CTA refuses it here or the use case does.
+                    Text(
+                        text = "El abono es mayor que lo que falta pagar",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.W500,
+                        fontFamily = InterFontFamily,
+                        color = colors.danger,
+                    )
+                }
             }
 
             FormSection(eyebrow = "MÉTODO") {
@@ -166,6 +177,32 @@ private fun LoanPaymentSheetContent(
 @Preview
 @Composable
 private fun LoanPaymentSheetContentPreview() {
+    LoanPaymentSheetContentPreviewFrame(
+        form = LoanPaymentFormUi(
+            loanId = "loan-1",
+            today = LocalDate(2026, 8, 21),
+            remainingCents = 16_000L,
+            amountDigits = "5000",
+            note = "Abono en efectivo",
+        ),
+    )
+}
+
+@Preview
+@Composable
+private fun LoanPaymentSheetContentOverRemainingPreview() {
+    LoanPaymentSheetContentPreviewFrame(
+        form = LoanPaymentFormUi(
+            loanId = "loan-1",
+            today = LocalDate(2026, 8, 21),
+            remainingCents = 16_000L,
+            amountDigits = "50000",
+        ),
+    )
+}
+
+@Composable
+private fun LoanPaymentSheetContentPreviewFrame(form: LoanPaymentFormUi) {
     EmmTheme {
         Box(
             modifier = Modifier
@@ -175,12 +212,7 @@ private fun LoanPaymentSheetContentPreview() {
                 .background(LocalEmmColors.current.bg),
         ) {
             LoanPaymentSheetContent(
-                form = LoanPaymentFormUi(
-                    loanId = "loan-1",
-                    today = LocalDate(2026, 8, 21),
-                    amountDigits = "5000",
-                    note = "Abono en efectivo",
-                ),
+                form = form,
                 onAmountClick = {},
                 onDateClick = {},
                 onIntent = {},

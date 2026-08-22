@@ -71,18 +71,32 @@ class LoanDetailViewModel(
                 loadedLoan = loan
                 loadedPayments = payments
                 val paidSoFar = payments.fold(Money.Zero) { acc, payment -> acc + payment.amount }
-                updateState { copy(summary = loanSummaryUi(loan, paidSoFar), payments = payments.toUi()) }
+                val nextSummary = loanSummaryUi(loan, paidSoFar)
+                updateState {
+                    copy(
+                        summary = nextSummary,
+                        payments = payments.toUi(),
+                        // An open form caps its abono; that cap has to follow what is actually left.
+                        payment = payment?.withCap(),
+                    )
+                }
             }
             .launchIn(viewModelScope)
     }
 
-    // Mirrors UpdateLoanPaymentUseCase's own remainingBeforeThis: the ceiling the sheet shows must
-    // agree with what the use case actually enforces, so editing the only abono on a settled loan
-    // shows its old amount as headroom instead of "Máximo S/ 0.00".
-    private fun maxAmountLabel(excluding: Money): String? {
-        val loan = loadedLoan ?: return null
+    // The only place either cap field is set: every form is built capped at nothing and passed
+    // through here, so one can never exist admitting more than the loan allows.
+    //
+    // Mirrors UpdateLoanPaymentUseCase's own remainingBeforeThis — editing the only abono on a
+    // settled loan has its own old amount as headroom, not "Máximo S/ 0.00" — and fills the cents
+    // the CTA compares against and the label the sheet shows from the same Money, so the two can
+    // never disagree.
+    private fun LoanPaymentFormUi.withCap(): LoanPaymentFormUi {
+        val loan = loadedLoan ?: return this
+        val edited = editingPaymentId?.let { id -> loadedPayments.find { it.id.value == id } }
         val paidSoFar = loadedPayments.fold(Money.Zero) { acc, payment -> acc + payment.amount }
-        return formatNeutral(fromCentsToSolesWith(remaining(loan.totalDue, paidSoFar - excluding)))
+        val ceiling = remaining(loan.totalDue, paidSoFar - (edited?.amount ?: Money.Zero))
+        return copy(remainingCents = ceiling.cents, maxAmountLabel = formatNeutral(fromCentsToSolesWith(ceiling)))
     }
 
     override fun onIntent(intent: LoanDetailIntent) {
@@ -109,16 +123,8 @@ class LoanDetailViewModel(
 
     private fun onPaymentFormIntent(intent: LoanDetailIntent.PaymentFormIntent) {
         when (intent) {
-            LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick -> {
-                updateState {
-                    copy(
-                        payment = LoanPaymentFormUi(
-                            loanId = loanId,
-                            today = today(),
-                            maxAmountLabel = maxAmountLabel(excluding = Money.Zero),
-                        ),
-                    )
-                }
+            LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick -> updateState {
+                copy(payment = LoanPaymentFormUi(loanId = loanId, today = today(), remainingCents = 0L).withCap())
             }
 
             is LoanDetailIntent.PaymentFormIntent.OnEditPaymentClick -> onEditPaymentClick(intent.paymentId)
@@ -156,14 +162,14 @@ class LoanDetailViewModel(
                 payment = LoanPaymentFormUi(
                     loanId = loanId,
                     today = today(),
+                    remainingCents = 0L,
                     amountDigits = moneyCentsString(payment.amount),
                     method = payment.method,
                     date = payment.paidAt.date,
                     note = payment.note,
                     editingPaymentId = payment.id.value,
                     originalPaidAt = payment.paidAt,
-                    maxAmountLabel = maxAmountLabel(excluding = payment.amount),
-                ),
+                ).withCap(),
             )
         }
     }
