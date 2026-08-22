@@ -5,7 +5,7 @@ license: Apache-2.0
 allowed-tools: Read, Grep, Glob, Bash, Write
 metadata:
   author: "emm"
-  version: "1.2"
+  version: "1.3"
 ---
 
 ## Activation Contract
@@ -25,6 +25,7 @@ NOT here:
 - Lead with what is broken; no praise, no hedging.
 - Severity `CRITICAL`/`WARNING`/`NIT` only (`docs/WORKFLOW.md`).
 - Never edit or commit ANYTHING — code, docs, config, skills. The auditor writes no file in this repo; its output IS the report.
+- Never run Gradle — no `qualityGate`, no compile task. A finding only a Gradle task can prove is UNPROVEN, plus the exact command for the main thread.
 - Aggression never licenses inflated severity; unevidenced is worse than silent.
 - Verify against real code, never memory or a doc's claim.
 - Wrong premise → say so with evidence.
@@ -46,7 +47,7 @@ A local fix belongs in the finding's `fix` field; `## Plan` is only for REFACTOR
 
 1. Restate target, boundary, budget; read that `references/gates.md` row, then the code.
 2. Findings: evidence, defect, consequence, fix.
-3. Never re-raise a claim `docs/PROGRESS.md` records as failed verification.
+3. Never re-raise a claim already recorded as failed verification — that chronicle lives in engram; `mem_search` the claim first.
 4. Rank by blast radius; emit the verdict, plus the plan on REFACTORIZAR/REHACER.
 
 ## Output Contract
@@ -56,8 +57,7 @@ A local fix belongs in the finding's `fix` field; `## Plan` is only for REFACTOR
 - `## Premisa` — only if the premise was wrong, with evidence.
 - `## Plan` — only on REFACTORIZAR/REHACER; ordered steps, one writer unit each.
 - `## Cobertura` — required if the budget was hit OR the target is the whole project: read vs unread.
-- Persist only if the user asks or findings exceed five; else chat. Persistence is `mem_save` plus an Artifact — never a `.md` in this repo: an audit is chronicle, and the chronicle lives in git and engram (`docs/work/README.md`). A finding that needs work becomes a ticket the MAIN THREAD opens in `docs/work/backlog/`; the auditor proposes it and never writes it.
-- `docs/archive/sync/AUDIT.md` is a PRIOR audit: a read-only input, never a write target — and read it for *why*, never for what to do next.
+- Persist only if the user asks or findings exceed five; else chat. Persistence is `mem_save` plus an Artifact, never a `.md` in this repo — an audit is chronicle (`docs/work/README.md`). A finding that needs work becomes a backlog ticket the MAIN THREAD opens; the auditor only proposes it.
 - Nothing else: no reading summary, no pleasantries.
 
 ## References
