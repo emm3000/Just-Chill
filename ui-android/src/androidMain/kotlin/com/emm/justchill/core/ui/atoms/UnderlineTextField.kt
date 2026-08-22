@@ -1,5 +1,6 @@
 package com.emm.justchill.core.ui.atoms
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
@@ -17,8 +18,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 
@@ -76,4 +79,34 @@ fun UnderlineTextField(
             }
         },
     )
+}
+
+@Preview
+@Composable
+private fun UnderlineTextFieldEmptyPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg)
+                .padding(16.dp),
+        ) {
+            UnderlineTextField(value = "", onValueChange = {}, placeholder = "Ej. Juan")
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun UnderlineTextFieldFilledPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg)
+                .padding(16.dp),
+        ) {
+            UnderlineTextField(value = "Juan", onValueChange = {}, placeholder = "Ej. Juan")
+        }
+    }
 }
