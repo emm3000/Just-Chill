@@ -72,6 +72,21 @@ class DefaultBackupRepositoryWatermarkTest {
     }
 
     @Test
+    fun `a row in loans alone is the watermark`() = runTest {
+        insertLoan(updatedAt = 555L)
+
+        assertEquals(555L, repository.latestLocalChangeAt())
+    }
+
+    @Test
+    fun `a row in loan_payments alone is the watermark`() = runTest {
+        insertLoan(updatedAt = 1L)
+        insertLoanPayment(updatedAt = 666L)
+
+        assertEquals(666L, repository.latestLocalChangeAt())
+    }
+
+    @Test
     fun `the watermark is the maximum across tables, wherever it lives`() = runTest {
         insertAccount(updatedAt = 100L)
         insertCategory(updatedAt = 500L)
@@ -140,6 +155,34 @@ class DefaultBackupRepositoryWatermarkTest {
             occurredAt = "2026-05-23T09:33:20",
             categoryId = null,
             accountId = accountId,
+            createdAt = updatedAt,
+            updatedAt = updatedAt,
+        )
+    }
+
+    private fun insertLoan(loanId: String = "loan-1", updatedAt: Long) {
+        db.loansQueries.insert(
+            loanId = loanId,
+            personName = "Rosa",
+            personKey = "rosa",
+            principal = 300_00L,
+            interestBps = 0L,
+            totalDue = 300_00L,
+            note = "",
+            lentAt = "2026-05-23T09:33:20",
+            createdAt = updatedAt,
+            updatedAt = updatedAt,
+        )
+    }
+
+    private fun insertLoanPayment(paymentId: String = "pay-1", loanId: String = "loan-1", updatedAt: Long) {
+        db.loan_paymentsQueries.insert(
+            paymentId = paymentId,
+            loanId = loanId,
+            amount = 50_00L,
+            method = "Cash",
+            paidAt = "2026-05-24T09:33:20",
+            note = "",
             createdAt = updatedAt,
             updatedAt = updatedAt,
         )
