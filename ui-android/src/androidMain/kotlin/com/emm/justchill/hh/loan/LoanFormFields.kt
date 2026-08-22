@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -30,6 +31,8 @@ import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.hh.transaction.centsToSoles
+
+private val MIN_TOUCH_TARGET = 48.dp
 
 @Composable
 fun AmountCard(amountDigits: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -78,6 +81,8 @@ fun DateRow(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
+            // The padded 14sp label alone measures under the 48dp touch floor at a small font scale.
+            .heightIn(min = MIN_TOUCH_TARGET)
             .clip(radii.rM)
             .background(colors.surface1)
             .border(1.dp, colors.border, radii.rM)
