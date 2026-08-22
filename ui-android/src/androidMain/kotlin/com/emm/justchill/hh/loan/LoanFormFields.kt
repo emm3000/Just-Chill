@@ -20,14 +20,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.hh.transaction.centsToSoles
@@ -69,11 +67,12 @@ fun AmountCard(amountDigits: String, onClick: () -> Unit, modifier: Modifier = M
 fun DateRow(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
+    val type = LocalEmmType.current
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            // The padded 14sp label alone measures under the 48dp touch floor at a small font scale.
+            // The padded label alone measures under the 48dp touch floor at a small font scale.
             .heightIn(min = MIN_TOUCH_TARGET)
             .clip(radii.rM)
             .background(colors.surface1)
@@ -94,13 +93,7 @@ fun DateRow(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
             tint = colors.textTertiary,
             modifier = Modifier.size(16.dp),
         )
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
-            color = colors.textPrimary,
-        )
+        Text(text = label, style = type.labelL, color = colors.textPrimary)
     }
 }
 

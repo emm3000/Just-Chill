@@ -16,14 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
@@ -32,6 +30,7 @@ import com.emm.justchill.core.ui.atoms.PillTone
 fun LoanSummaryCard(summary: LoanSummaryUi, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
+    val type = LocalEmmType.current
     val remainingColor = if (summary.isSettled) colors.textTertiary else colors.textPrimary
 
     Column(
@@ -48,8 +47,7 @@ fun LoanSummaryCard(summary: LoanSummaryUi, modifier: Modifier = Modifier) {
         ) {
             Text(
                 text = "Prestado el ${summary.readableLentAt}",
-                fontSize = 12.sp,
-                fontFamily = InterFontFamily,
+                style = type.caption,
                 color = colors.textTertiary,
             )
             if (summary.isSettled) {
@@ -59,16 +57,12 @@ fun LoanSummaryCard(summary: LoanSummaryUi, modifier: Modifier = Modifier) {
         Spacer(Modifier.height(6.dp))
         Text(
             text = summary.remaining,
-            fontSize = 32.sp,
-            fontWeight = FontWeight.W700,
-            fontFamily = InterFontFamily,
+            style = type.amountCard,
             color = remainingColor,
-            letterSpacing = (-0.5).sp,
         )
         Text(
             text = "Por cobrar",
-            fontSize = 12.sp,
-            fontFamily = InterFontFamily,
+            style = type.caption,
             color = colors.textSecondary,
         )
         Spacer(Modifier.height(12.dp))
@@ -85,9 +79,7 @@ fun LoanSummaryCard(summary: LoanSummaryUi, modifier: Modifier = Modifier) {
             Spacer(Modifier.height(12.dp))
             Text(
                 text = summary.note,
-                fontSize = 13.sp,
-                fontStyle = FontStyle.Italic,
-                fontFamily = InterFontFamily,
+                style = type.bodyM.copy(fontStyle = FontStyle.Italic),
                 color = colors.textSecondary,
             )
         }
@@ -97,16 +89,11 @@ fun LoanSummaryCard(summary: LoanSummaryUi, modifier: Modifier = Modifier) {
 @Composable
 private fun SummaryStatRow(label: String, value: String) {
     val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
 
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(text = label, fontSize = 13.sp, fontFamily = InterFontFamily, color = colors.textSecondary)
-        Text(
-            text = value,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.W600,
-            fontFamily = InterFontFamily,
-            color = colors.textPrimary,
-        )
+        Text(text = label, style = type.bodyM, color = colors.textSecondary)
+        Text(text = value, style = type.amountS, color = colors.textPrimary)
     }
 }
 

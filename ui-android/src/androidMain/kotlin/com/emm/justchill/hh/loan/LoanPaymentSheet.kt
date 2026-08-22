@@ -21,14 +21,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.domain.loan.PaymentMethod
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.SegmentOption
@@ -103,6 +101,7 @@ private fun LoanPaymentSheetContent(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
     val sheetLabel = if (form.editingPaymentId != null) "Editar abono" else "Registrar abono"
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -114,25 +113,12 @@ private fun LoanPaymentSheetContent(
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            Text(
-                text = sheetLabel,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.W600,
-                fontFamily = InterFontFamily,
-                color = colors.textPrimary,
-                letterSpacing = (-0.15).sp,
-            )
+            Text(text = sheetLabel, style = type.titleM, color = colors.textPrimary)
 
             FormSection(eyebrow = "MONTO") {
                 AmountCard(amountDigits = form.amountDigits, onClick = onAmountClick)
                 form.amountError?.let { message ->
-                    Text(
-                        text = message,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.W500,
-                        fontFamily = InterFontFamily,
-                        color = colors.danger,
-                    )
+                    Text(text = message, style = type.labelM, color = colors.danger)
                 }
             }
 

@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
@@ -97,6 +98,7 @@ private fun AmountInputSheetContent(
     subtitle: String? = null,
 ) {
     val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
     // Seeded once per opening: every caller renders the sheet inside an `if (show…)`, so leaving
     // the composition drops the draft and the next opening reads the owner's amount again.
     var draftDigits: String by rememberSaveable { mutableStateOf(amountDigits) }
@@ -113,14 +115,7 @@ private fun AmountInputSheetContent(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text(
-                text = title,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.W600,
-                fontFamily = InterFontFamily,
-                color = colors.textPrimary,
-                letterSpacing = (-0.15).sp,
-            )
+            Text(text = title, style = type.titleM, color = colors.textPrimary)
             IconBtn(
                 icon = Icons.Outlined.Close,
                 onClick = onDismiss,
@@ -142,9 +137,7 @@ private fun AmountInputSheetContent(
             if (subtitle != null) {
                 Text(
                     text = subtitle,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.W400,
-                    fontFamily = InterFontFamily,
+                    style = type.caption,
                     color = colors.textTertiary,
                     modifier = Modifier.padding(top = 4.dp),
                 )
@@ -188,6 +181,8 @@ private fun AmountInputSheetContent(
                 ),
             contentAlignment = Alignment.Center,
         ) {
+            // These three mirror StickyCTA's own inline label — no role holds 15sp Inter W600, and
+            // restyling this side alone would split the two CTAs apart.
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),

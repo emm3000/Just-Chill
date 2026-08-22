@@ -11,10 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
 
 @Composable
@@ -38,14 +37,12 @@ private fun FormSectionPreview() {
             FormSection(eyebrow = "PERSONA") {
                 Text(
                     text = "Juan",
-                    fontSize = 18.sp,
-                    fontFamily = InterFontFamily,
+                    style = LocalEmmType.current.bodyL,
                     color = LocalEmmColors.current.textPrimary,
                 )
                 Text(
                     text = "Contacto frecuente",
-                    fontSize = 13.sp,
-                    fontFamily = InterFontFamily,
+                    style = LocalEmmType.current.bodyM,
                     color = LocalEmmColors.current.textSecondary,
                 )
             }

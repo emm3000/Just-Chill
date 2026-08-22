@@ -25,13 +25,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
@@ -83,6 +81,7 @@ fun PersonLoansScreen(
 @Composable
 private fun LoanRow(loan: LoanRowUi, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
     val remainingColor = if (loan.isSettled) colors.textTertiary else colors.textPrimary
 
     Column {
@@ -105,8 +104,7 @@ private fun LoanRow(loan: LoanRowUi, onClick: () -> Unit) {
                 ) {
                     Text(
                         text = loan.readableLentAt,
-                        fontSize = 12.sp,
-                        fontFamily = InterFontFamily,
+                        style = type.caption,
                         color = colors.textTertiary,
                     )
                     if (loan.isSettled) {
@@ -116,17 +114,13 @@ private fun LoanRow(loan: LoanRowUi, onClick: () -> Unit) {
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = loan.remaining,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.W700,
-                    fontFamily = InterFontFamily,
+                    style = type.amountLead,
                     color = remainingColor,
-                    letterSpacing = (-0.3).sp,
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = "Prestado ${loan.principal} · Total ${loan.totalDue} · Pagado ${loan.paidSoFar}",
-                    fontSize = 12.sp,
-                    fontFamily = InterFontFamily,
+                    style = type.caption,
                     color = colors.textSecondary,
                 )
             }
@@ -138,6 +132,7 @@ private fun LoanRow(loan: LoanRowUi, onClick: () -> Unit) {
 @Composable
 private fun PersonLoansEmptyState(personName: String, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
 
     Column(
         modifier = modifier.padding(horizontal = 24.dp),
@@ -153,9 +148,7 @@ private fun PersonLoansEmptyState(personName: String, modifier: Modifier = Modif
         Spacer(Modifier.height(14.dp))
         Text(
             text = "Sin préstamos con $personName",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.W600,
-            fontFamily = InterFontFamily,
+            style = type.titleL,
             color = colors.textPrimary,
         )
     }

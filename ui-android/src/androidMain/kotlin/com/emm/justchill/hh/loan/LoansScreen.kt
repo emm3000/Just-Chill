@@ -27,13 +27,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.IconTile
@@ -94,6 +92,7 @@ fun LoansScreen(
 @Composable
 private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
     val nameColor = if (person.isSettled) colors.textTertiary else colors.textPrimary
 
     Column {
@@ -114,22 +113,16 @@ private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
 
             Text(
                 text = person.personName,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.W600,
-                fontFamily = InterFontFamily,
+                style = type.titleM,
                 color = nameColor,
-                letterSpacing = (-0.15).sp,
                 modifier = Modifier.weight(1f),
             )
 
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = person.remaining,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
+                    style = type.amountM,
                     color = nameColor,
-                    letterSpacing = (-0.15).sp,
                 )
                 if (person.isSettled) {
                     Spacer(Modifier.height(3.dp))
@@ -144,6 +137,7 @@ private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
 @Composable
 private fun LoansEmptyState(modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
 
     Column(
         modifier = modifier.padding(horizontal = 24.dp),
@@ -159,16 +153,13 @@ private fun LoansEmptyState(modifier: Modifier = Modifier) {
         Spacer(Modifier.height(14.dp))
         Text(
             text = "Aún sin préstamos",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.W600,
-            fontFamily = InterFontFamily,
+            style = type.titleL,
             color = colors.textPrimary,
         )
         Spacer(Modifier.height(6.dp))
         Text(
             text = "Lo que prestes y te devuelvan aparece aquí, por persona",
-            fontSize = 13.sp,
-            fontFamily = InterFontFamily,
+            style = type.bodyM,
             color = colors.textSecondary,
         )
     }
