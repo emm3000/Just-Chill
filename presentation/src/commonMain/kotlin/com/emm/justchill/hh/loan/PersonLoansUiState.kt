@@ -6,4 +6,5 @@ data class PersonLoansUiState(
     val personName: String = "",
     val loans: List<LoanRowUi> = emptyList(),
     val pendingDelete: String? = null,
+    val payment: LoanPaymentFormUi? = null,
 ) : UiState

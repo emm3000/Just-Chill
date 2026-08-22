@@ -16,8 +16,6 @@ import com.emm.justchill.hh.shared.rememberAppNavigator
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
-// PersonLoansEffect.NavigateToAddPayment has no destination yet (E05-09): that branch is a no-op
-// on purpose.
 fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
     entry<LoansRoute> {
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
@@ -50,7 +48,6 @@ fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
             vm.effect.collect { effect ->
                 when (effect) {
                     is PersonLoansEffect.ShowError -> bindings.showMessage(effect.message)
-                    is PersonLoansEffect.NavigateToAddPayment -> Unit
                     is PersonLoansEffect.NavigateToEditLoan -> nav.push(AddEditLoanRoute(effect.loanId))
                 }
             }

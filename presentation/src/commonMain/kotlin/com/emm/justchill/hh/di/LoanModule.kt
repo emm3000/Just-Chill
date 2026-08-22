@@ -2,6 +2,7 @@ package com.emm.justchill.hh.di
 
 import com.emm.domain.loan.CreateLoanUseCase
 import com.emm.domain.loan.DeleteLoanUseCase
+import com.emm.domain.loan.RegisterLoanPaymentUseCase
 import com.emm.domain.loan.UpdateLoanUseCase
 import com.emm.justchill.hh.loan.AddEditLoanViewModel
 import com.emm.justchill.hh.loan.LoansViewModel
@@ -11,11 +12,11 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
-// RegisterLoanPaymentUseCase has no consumer yet (E05-09).
 val loanModule = module {
     factoryOf(::DeleteLoanUseCase)
     factoryOf(::CreateLoanUseCase)
     factoryOf(::UpdateLoanUseCase)
+    factoryOf(::RegisterLoanPaymentUseCase)
 
     viewModelOf(::LoansViewModel)
 
@@ -24,6 +25,9 @@ val loanModule = module {
             personKey = parameters.get(),
             loanRepository = get(),
             deleteLoan = get(),
+            registerLoanPayment = get(),
+            clock = get(),
+            zone = get(),
         )
     }
 
