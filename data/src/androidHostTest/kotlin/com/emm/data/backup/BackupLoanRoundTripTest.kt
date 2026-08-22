@@ -107,11 +107,48 @@ class BackupLoanRoundTripTest {
     }
 
     @Test
-    fun `a tombstoned loan and its payment do not come back`() = runTest {
+    fun `a wipe-and-restore round trip carries forward no tombstoned loan or payment`() = runTest {
         roundTrip()
 
         assertTrue(db.loansQueries.byId("loan-dead").executeAsOneOrNull() == null)
         assertTrue(db.loan_paymentsQueries.byLoan("loan-dead").executeAsList().isEmpty())
+    }
+
+    @Test
+    fun `an import over its own export un-tombstones the rows its own sweep just tombstoned`() = runTest {
+        val json = repository.exportToJson(exportedAt = EXPORTED_AT, appVersion = APP_VERSION)
+
+        val stats = repository.importFromJson(json)
+
+        assertEquals(
+            listOf("loan-interest", "loan-plain"),
+            db.loansQueries.all().executeAsList().map { it.loanId }.sorted(),
+        )
+        assertEquals(
+            listOf("pay-cash", "pay-transfer"),
+            db.loan_paymentsQueries.all().executeAsList().map { it.paymentId }.sorted(),
+        )
+
+        val loan = loan("loan-interest")
+        assertEquals(SEEDED_AT, loan.createdAt)
+        assertEquals("Andrés Muñoz", loan.personName)
+        assertEquals("andres munoz", loan.personKey)
+        assertEquals(1_500_00L, loan.principal)
+        assertEquals(750L, loan.interestBps)
+        assertEquals(1_612_50L, loan.totalDue)
+        assertEquals("Para la mudanza", loan.note)
+        assertEquals("2026-08-01T09:00:00", loan.lentAt)
+
+        val transfer = payment("pay-transfer")
+        assertEquals(SEEDED_AT, transfer.createdAt)
+        assertEquals("loan-interest", transfer.loanId)
+        assertEquals(500_00L, transfer.amount)
+        assertEquals("Transfer", transfer.method)
+        assertEquals("2026-08-12T18:30:00", transfer.paidAt)
+        assertEquals("Primer abono", transfer.note)
+
+        assertEquals(2, stats.loans)
+        assertEquals(2, stats.loanPayments)
     }
 
     @Test
