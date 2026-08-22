@@ -38,6 +38,7 @@ import com.emm.justchill.hh.account.accountEntries
 import com.emm.justchill.hh.auth.authEntries
 import com.emm.justchill.hh.category.categoryEntries
 import com.emm.justchill.hh.home.homeEntries
+import com.emm.justchill.hh.loan.loanEntries
 import com.emm.justchill.hh.onboarding.onboardingEntries
 import com.emm.justchill.hh.profile.profileEntries
 import com.emm.justchill.hh.recurring.recurringEntries
@@ -122,6 +123,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     homeEntries(bindings)
                     seeTransactionsEntries(bindings)
                     accountEntries(bindings)
+                    loanEntries(bindings)
                     categoryEntries(
                         bindings = bindings,
                         onCategoryForTransaction = { created -> pendingCategory = created },
