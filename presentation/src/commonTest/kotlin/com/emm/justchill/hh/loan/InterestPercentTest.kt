@@ -85,4 +85,16 @@ class InterestPercentTest {
     @Test fun sanitizeInterestPercentInput_drops_every_separator_after_the_first() {
         assertEquals("12.56", sanitizeInterestPercentInput("12.5.6"))
     }
+
+    @Test fun sanitizeInterestPercentInput_keeps_exactly_two_decimals() {
+        assertEquals("12.34", sanitizeInterestPercentInput("12.34"))
+    }
+
+    @Test fun sanitizeInterestPercentInput_refuses_a_third_decimal() {
+        assertEquals("12.34", sanitizeInterestPercentInput("12.349"))
+    }
+
+    @Test fun sanitizeInterestPercentInput_keeps_a_trailing_separator() {
+        assertEquals("12.", sanitizeInterestPercentInput("12."))
+    }
 }

@@ -29,15 +29,22 @@ internal fun bpsToPercentText(bps: Int): String {
 
 /**
  * Drops any keystroke [percentTextToBps] would silently discard, so the field never displays text
- * it does not parse. Digits pass through; the first decimal separator (period or comma) is kept,
- * every later one is dropped.
+ * it does not parse. Digits pass through until the fraction holds [PERCENT_DECIMALS] of them — the
+ * ones past that are what [percentTextToBps] truncates; the first decimal separator (period or
+ * comma) is kept, every later one is dropped.
  */
 internal fun sanitizeInterestPercentInput(rawText: String): String {
     val builder = StringBuilder()
     var hasSeparator = false
+    var fractionDigits = 0
     for (ch in rawText) {
         when {
-            ch.isDigit() -> builder.append(ch)
+            ch.isDigit() && !hasSeparator -> builder.append(ch)
+
+            ch.isDigit() && fractionDigits < PERCENT_DECIMALS -> {
+                builder.append(ch)
+                fractionDigits++
+            }
 
             (ch == '.' || ch == ',') && !hasSeparator -> {
                 builder.append(ch)
