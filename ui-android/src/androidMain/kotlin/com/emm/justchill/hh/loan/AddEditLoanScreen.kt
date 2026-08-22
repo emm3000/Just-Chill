@@ -234,3 +234,40 @@ private fun AddEditLoanScreenEmptyPreview() {
         )
     }
 }
+
+@Preview
+@Composable
+private fun AddEditLoanScreenEditPreview() {
+    EmmTheme {
+        AddEditLoanContent(
+            state = AddEditLoanUiState(
+                today = LocalDate(2026, 8, 21),
+                isEdit = true,
+                personName = "María",
+                amountDigits = "35000",
+                interestPercentText = "8",
+                note = "Prestado por transferencia",
+                isSaveEnabled = true,
+            ),
+            onIntent = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun AddEditLoanScreenSavingPreview() {
+    EmmTheme {
+        AddEditLoanContent(
+            state = AddEditLoanUiState(
+                today = LocalDate(2026, 8, 21),
+                personName = "Juan",
+                amountDigits = "20000",
+                interestPercentText = "12.5",
+                isSaveEnabled = true,
+                isSaving = true,
+            ),
+            onIntent = {},
+        )
+    }
+}

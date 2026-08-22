@@ -180,3 +180,50 @@ private fun LoanDetailScreenEmptyPreview() {
         )
     }
 }
+
+@Preview
+@Composable
+private fun LoanDetailScreenSettledPreview() {
+    EmmTheme {
+        LoanDetailScreen(
+            state = LoanDetailUiState(
+                summary = LoanSummaryUi(
+                    personName = "Carlos",
+                    principal = "S/ 300.00",
+                    interestPercentLabel = "10%",
+                    totalDue = "S/ 330.00",
+                    paidSoFar = "S/ 330.00",
+                    remaining = "S/ 0.00",
+                    isSettled = true,
+                    readableLentAt = "2 de mayo de 2026",
+                    note = "Devuelto completo",
+                ),
+                payments = listOf(
+                    LoanPaymentRowUi(
+                        paymentId = "1",
+                        amount = "S/ 330.00",
+                        methodLabel = "Transferencia",
+                        readablePaidAt = "12 de agosto de 2026",
+                        note = "Yape",
+                    ),
+                ),
+            ),
+            onIntent = {},
+            onBack = {},
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun LoanDetailScreenLoadingPreview() {
+    EmmTheme {
+        LoanDetailScreen(
+            state = LoanDetailUiState(),
+            onIntent = {},
+            onBack = {},
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
