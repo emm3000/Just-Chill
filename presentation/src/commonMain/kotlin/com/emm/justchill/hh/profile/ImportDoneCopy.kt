@@ -1,13 +1,5 @@
 package com.emm.justchill.hh.profile
 
-/**
- * Body copy for the "import finished" notification. Every count inflects, the way
- * `DeleteCategoryCopy` and `ReportShareFormatter` already do it. [transactions] is the one clause
- * never omitted, even at zero; [recurring], [loans] and [loanPayments] each skip their clause at
- * zero rather than naming a table the import did nothing to. The participle drops to singular
- * only when exactly one clause is named and that clause's count is 1 — two or more clauses always
- * take the plural participle.
- */
 fun buildImportDoneMessage(transactions: Int, recurring: Int, loans: Int, loanPayments: Int): String {
     val clauses = buildList {
         add(inflect(transactions, "movimiento", "movimientos"))
