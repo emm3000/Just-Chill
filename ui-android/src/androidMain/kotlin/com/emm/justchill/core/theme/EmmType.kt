@@ -28,6 +28,8 @@ private const val TABULAR = "tnum"
 data class EmmType(
     val amountHero: TextStyle,
     val amountL: TextStyle,
+    val amountCard: TextStyle,
+    val amountLead: TextStyle,
     val amountM: TextStyle,
     val amountS: TextStyle,
 
@@ -64,6 +66,23 @@ internal val emmType: EmmType = EmmType(
         lineHeight = 52.sp,
         fontWeight = FontWeight.W500,
         letterSpacing = (-2.08).sp,
+        fontFeatureSettings = TABULAR,
+    ),
+    // A card's content width cannot hold amountHero: eleven mono digits at 48sp overrun it.
+    amountCard = TextStyle(
+        fontFamily = PlexMonoFontFamily,
+        fontSize = 32.sp,
+        lineHeight = 32.sp,
+        fontWeight = FontWeight.W500,
+        letterSpacing = (-1.28).sp,
+        fontFeatureSettings = TABULAR,
+    ),
+    amountLead = TextStyle(
+        fontFamily = PlexMonoFontFamily,
+        fontSize = 18.sp,
+        lineHeight = 24.sp,
+        fontWeight = FontWeight.W500,
+        letterSpacing = (-0.36).sp,
         fontFeatureSettings = TABULAR,
     ),
     amountM = TextStyle(

@@ -81,7 +81,9 @@ ship as bundled font resources — nothing is fetched and nothing falls back to 
 `EmmType.kt` defines them; read the sizes there. Pick by intent:
 
 - `amountHero`, `amountL` — the one number a screen exists to show.
-- `amountM`, `amountS` — an amount inside a row or a summary line.
+- `amountCard` — the one number a *card* exists to show; the screen-hero roles overrun a card's width.
+- `amountLead` — the amount a row leads with, its date and metadata smaller around it.
+- `amountM`, `amountS` — an amount inside a row or a summary line, where the label leads instead.
 - `display`, `headlineL`, `headlineM` — screen and section titles.
 - `titleL`, `titleM` — card titles, list section headers.
 - `bodyL` (the default), `bodyM` — running text.
