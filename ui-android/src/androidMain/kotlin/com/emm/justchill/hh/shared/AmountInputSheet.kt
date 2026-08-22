@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.ModalBottomSheet
@@ -29,15 +28,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
+import com.emm.justchill.core.ui.atoms.CtaHeight
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.hh.transaction.MAX_AMOUNT_DIGITS
@@ -98,6 +99,8 @@ private fun AmountInputSheetContent(
     subtitle: String? = null,
 ) {
     val colors = LocalEmmColors.current
+    val radii = LocalEmmRadii.current
+    val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
     // Seeded once per opening: every caller renders the sheet inside an `if (show…)`, so leaving
     // the composition drops the draft and the next opening reads the owner's amount again.
@@ -111,7 +114,7 @@ private fun AmountInputSheetContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 24.dp, end = 16.dp, bottom = 14.dp),
+                .padding(start = spacing.s6, end = spacing.s4, bottom = spacing.s4),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -126,7 +129,7 @@ private fun AmountInputSheetContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 4.dp),
+                .padding(bottom = spacing.s1),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             AmountHero(
@@ -139,23 +142,23 @@ private fun AmountInputSheetContent(
                     text = subtitle,
                     style = type.caption,
                     color = colors.textTertiary,
-                    modifier = Modifier.padding(top = 4.dp),
+                    modifier = Modifier.padding(top = spacing.s1),
                 )
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(spacing.s4))
 
         Numpad(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = spacing.s4),
             onDigit = { ch -> draftDigits = (draftDigits + ch).take(MAX_AMOUNT_DIGITS) },
             onDoubleZero = { draftDigits = (draftDigits + "00").take(MAX_AMOUNT_DIGITS) },
             onBackspace = { draftDigits = draftDigits.dropLast(1) },
         )
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(spacing.s3))
 
         val confirmEnabled = draftDigits.isNotEmpty() && draftDigits.toLongOrNull() != 0L
         val ctaBg = if (confirmEnabled) colors.accent else colors.surface1
@@ -164,10 +167,10 @@ private fun AmountInputSheetContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 16.dp)
-                .height(52.dp)
-                .clip(RoundedCornerShape(14.dp))
+                .padding(horizontal = spacing.s4)
+                .padding(bottom = spacing.s4)
+                .height(CtaHeight)
+                .clip(radii.rL)
                 .background(ctaBg)
                 .then(
                     if (confirmEnabled) {
@@ -185,7 +188,7 @@ private fun AmountInputSheetContent(
             // restyling this side alone would split the two CTAs apart.
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             ) {
                 Text(
                     text = "Listo",

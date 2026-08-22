@@ -13,12 +13,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
 
 @Composable
 fun FormSection(eyebrow: String, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    val spacing = LocalEmmSpacing.current
+
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(spacing.s3)) {
         Eyebrow(text = eyebrow)
         content()
     }

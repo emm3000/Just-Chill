@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.emm.domain.loan.PaymentMethod
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaInteraction
@@ -101,6 +102,7 @@ private fun LoanPaymentSheetContent(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
     val sheetLabel = if (form.editingPaymentId != null) "Editar abono" else "Registrar abono"
 
@@ -110,8 +112,8 @@ private fun LoanPaymentSheetContent(
                 .fillMaxWidth()
                 .weight(1f, fill = false)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+                .padding(horizontal = spacing.s5),
+            verticalArrangement = Arrangement.spacedBy(spacing.s5),
         ) {
             Text(text = sheetLabel, style = type.titleM, color = colors.textPrimary)
 

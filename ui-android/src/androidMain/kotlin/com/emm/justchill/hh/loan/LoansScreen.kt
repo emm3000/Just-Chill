@@ -31,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconBtn
@@ -48,6 +49,7 @@ fun LoansScreen(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
 
     Column(
         modifier = modifier
@@ -77,7 +79,7 @@ fun LoansScreen(
         if (state.people.isEmpty()) {
             LoansEmptyState(modifier = Modifier.fillMaxSize())
         } else {
-            LazyColumn(contentPadding = PaddingValues(top = 4.dp, bottom = 12.dp)) {
+            LazyColumn(contentPadding = PaddingValues(top = spacing.s1, bottom = spacing.s3)) {
                 items(state.people, key = { it.personKey }) { person ->
                     PersonRow(
                         person = person,
@@ -93,6 +95,7 @@ fun LoansScreen(
 private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
     val nameColor = if (person.isSettled) colors.textTertiary else colors.textPrimary
 
     Column {
@@ -105,9 +108,9 @@ private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
                     onClickLabel = "Ver los préstamos de esta persona",
                     onClick = onClick,
                 )
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = spacing.s4, vertical = spacing.s3),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(spacing.s3),
         ) {
             IconTile(icon = Icons.Outlined.Person, size = IconTileSize.Md)
 
@@ -125,7 +128,7 @@ private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
                     color = nameColor,
                 )
                 if (person.isSettled) {
-                    Spacer(Modifier.height(3.dp))
+                    Spacer(Modifier.height(spacing.s1))
                     Pill(text = "Liquidado", tone = PillTone.Pos)
                 }
             }
@@ -138,9 +141,10 @@ private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
 private fun LoansEmptyState(modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
 
     Column(
-        modifier = modifier.padding(horizontal = 24.dp),
+        modifier = modifier.padding(horizontal = spacing.s6),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -150,13 +154,13 @@ private fun LoansEmptyState(modifier: Modifier = Modifier) {
             tint = colors.textTertiary,
             modifier = Modifier.size(48.dp),
         )
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(spacing.s4))
         Text(
             text = "Aún sin préstamos",
             style = type.titleL,
             color = colors.textPrimary,
         )
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(spacing.s2))
         Text(
             text = "Lo que prestes y te devuelvan aparece aquí, por persona",
             style = type.bodyM,

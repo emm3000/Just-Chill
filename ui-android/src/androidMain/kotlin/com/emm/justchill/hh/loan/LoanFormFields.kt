@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
@@ -36,6 +37,7 @@ private val MIN_TOUCH_TARGET = 48.dp
 fun AmountCard(amountDigits: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
+    val spacing = LocalEmmSpacing.current
 
     Box(
         modifier = modifier
@@ -49,7 +51,7 @@ fun AmountCard(amountDigits: String, onClick: () -> Unit, modifier: Modifier = M
                 onClickLabel = "Cambiar monto",
                 onClick = onClick,
             )
-            .padding(vertical = 20.dp),
+            .padding(vertical = spacing.s5),
         contentAlignment = Alignment.Center,
     ) {
         // One hero for both branches: an empty accumulator reads as 0.00 and the mute tone is what
@@ -67,6 +69,7 @@ fun AmountCard(amountDigits: String, onClick: () -> Unit, modifier: Modifier = M
 fun DateRow(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
+    val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
 
     Row(
@@ -83,9 +86,9 @@ fun DateRow(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
                 onClickLabel = "Cambiar fecha",
                 onClick = onClick,
             )
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+            .padding(horizontal = spacing.s4, vertical = spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
         Icon(
             imageVector = Icons.Outlined.CalendarMonth,

@@ -29,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconBtn
@@ -44,6 +45,7 @@ fun PersonLoansScreen(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
 
     Column(
         modifier = modifier
@@ -66,7 +68,7 @@ fun PersonLoansScreen(
         if (state.loans.isEmpty()) {
             PersonLoansEmptyState(personName = state.personName, modifier = Modifier.fillMaxSize())
         } else {
-            LazyColumn(contentPadding = PaddingValues(top = 4.dp, bottom = 12.dp)) {
+            LazyColumn(contentPadding = PaddingValues(top = spacing.s1, bottom = spacing.s3)) {
                 items(state.loans, key = { it.loanId }) { loan ->
                     LoanRow(
                         loan = loan,
@@ -82,6 +84,7 @@ fun PersonLoansScreen(
 private fun LoanRow(loan: LoanRowUi, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
     val remainingColor = if (loan.isSettled) colors.textTertiary else colors.textPrimary
 
     Column {
@@ -94,13 +97,13 @@ private fun LoanRow(loan: LoanRowUi, onClick: () -> Unit) {
                     onClickLabel = "Ver detalle del préstamo",
                     onClick = onClick,
                 )
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = spacing.s4, vertical = spacing.s3),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.s2),
                 ) {
                     Text(
                         text = loan.readableLentAt,
@@ -111,13 +114,13 @@ private fun LoanRow(loan: LoanRowUi, onClick: () -> Unit) {
                         Pill(text = "Liquidado", tone = PillTone.Pos)
                     }
                 }
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(spacing.s1))
                 Text(
                     text = loan.remaining,
                     style = type.amountLead,
                     color = remainingColor,
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(spacing.s1))
                 Text(
                     text = "Prestado ${loan.principal} · Total ${loan.totalDue} · Pagado ${loan.paidSoFar}",
                     style = type.caption,
@@ -133,9 +136,10 @@ private fun LoanRow(loan: LoanRowUi, onClick: () -> Unit) {
 private fun PersonLoansEmptyState(personName: String, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
 
     Column(
-        modifier = modifier.padding(horizontal = 24.dp),
+        modifier = modifier.padding(horizontal = spacing.s6),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -145,7 +149,7 @@ private fun PersonLoansEmptyState(personName: String, modifier: Modifier = Modif
             tint = colors.textTertiary,
             modifier = Modifier.size(48.dp),
         )
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(spacing.s4))
         Text(
             text = "Sin préstamos con $personName",
             style = type.titleL,

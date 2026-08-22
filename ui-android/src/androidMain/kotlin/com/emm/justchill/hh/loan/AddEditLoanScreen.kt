@@ -31,10 +31,10 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.CtaTone
@@ -94,6 +94,7 @@ private fun AddEditLoanContent(
     onBack: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
 
     var showAmountSheet by rememberSaveable { mutableStateOf(false) }
     var showDateSheet by rememberSaveable { mutableStateOf(false) }
@@ -123,10 +124,10 @@ private fun AddEditLoanContent(
                 .fillMaxWidth()
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+                .padding(horizontal = spacing.s4),
+            verticalArrangement = Arrangement.spacedBy(spacing.s5),
         ) {
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(spacing.s1))
 
             FormSection(eyebrow = "PERSONA") {
                 UnderlineTextField(
@@ -135,8 +136,8 @@ private fun AddEditLoanContent(
                     placeholder = "Ej. Juan",
                 )
                 if (state.personSuggestions.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Spacer(Modifier.height(spacing.s2))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
                         items(state.personSuggestions, key = { it }) { name ->
                             FrequentComboChip(
                                 label = name,
@@ -171,7 +172,7 @@ private fun AddEditLoanContent(
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(spacing.s2))
         }
 
         val ctaLabel = if (state.isEdit) "Guardar cambios" else "Crear préstamo"

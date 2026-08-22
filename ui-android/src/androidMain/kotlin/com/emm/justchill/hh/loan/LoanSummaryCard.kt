@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.Pill
@@ -31,6 +32,7 @@ fun LoanSummaryCard(summary: LoanSummaryUi, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
     val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
     val remainingColor = if (summary.isSettled) colors.textTertiary else colors.textPrimary
 
     Column(
@@ -39,11 +41,11 @@ fun LoanSummaryCard(summary: LoanSummaryUi, modifier: Modifier = Modifier) {
             .clip(radii.rM)
             .background(colors.surface1)
             .border(1.dp, colors.border, radii.rM)
-            .padding(16.dp),
+            .padding(spacing.s4),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
         ) {
             Text(
                 text = "Prestado el ${summary.readableLentAt}",
@@ -54,7 +56,7 @@ fun LoanSummaryCard(summary: LoanSummaryUi, modifier: Modifier = Modifier) {
                 Pill(text = "Liquidado", tone = PillTone.Pos)
             }
         }
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(spacing.s2))
         Text(
             text = summary.remaining,
             style = type.amountCard,
@@ -65,18 +67,18 @@ fun LoanSummaryCard(summary: LoanSummaryUi, modifier: Modifier = Modifier) {
             style = type.caption,
             color = colors.textSecondary,
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(spacing.s3))
         Hairline()
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(spacing.s3))
         SummaryStatRow(label = "Prestado", value = summary.principal)
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(spacing.s2))
         SummaryStatRow(label = "Interés", value = summary.interestPercentLabel)
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(spacing.s2))
         SummaryStatRow(label = "Total a pagar", value = summary.totalDue)
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(spacing.s2))
         SummaryStatRow(label = "Pagado", value = summary.paidSoFar)
         if (summary.note.isNotBlank()) {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(spacing.s3))
             Text(
                 text = summary.note,
                 style = type.bodyM.copy(fontStyle = FontStyle.Italic),

@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconBtn
@@ -42,7 +43,10 @@ internal fun LazyListScope.loanPaymentItems(
     onDeleteClick: (String) -> Unit,
 ) {
     if (payments.isEmpty()) {
-        item { LoanPaymentsEmptyState(modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp)) }
+        item {
+            val spacing = LocalEmmSpacing.current
+            LoanPaymentsEmptyState(modifier = Modifier.fillMaxWidth().padding(vertical = spacing.s6))
+        }
         return
     }
 
@@ -59,19 +63,20 @@ internal fun LazyListScope.loanPaymentItems(
 private fun LoanPaymentRow(payment: LoanPaymentRowUi, onEditClick: () -> Unit, onDeleteClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
 
     Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = spacing.s4, vertical = spacing.s3),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(spacing.s3),
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.s2),
                 ) {
                     Text(
                         text = payment.readablePaidAt,
@@ -80,14 +85,14 @@ private fun LoanPaymentRow(payment: LoanPaymentRowUi, onEditClick: () -> Unit, o
                     )
                     Pill(text = payment.methodLabel, tone = PillTone.Neutral)
                 }
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(spacing.s1))
                 Text(
                     text = payment.amount,
                     style = type.amountLead,
                     color = colors.textPrimary,
                 )
                 if (payment.note.isNotBlank()) {
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(spacing.s1))
                     Text(
                         text = payment.note,
                         style = type.bodyM.copy(fontStyle = FontStyle.Italic),
@@ -118,9 +123,10 @@ private fun LoanPaymentRow(payment: LoanPaymentRowUi, onEditClick: () -> Unit, o
 private fun LoanPaymentsEmptyState(modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
 
     Column(
-        modifier = modifier.padding(horizontal = 24.dp),
+        modifier = modifier.padding(horizontal = spacing.s6),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -130,13 +136,13 @@ private fun LoanPaymentsEmptyState(modifier: Modifier = Modifier) {
             tint = colors.textTertiary,
             modifier = Modifier.size(40.dp),
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(spacing.s3))
         Text(
             text = "Sin abonos todavía",
             style = type.titleM,
             color = colors.textPrimary,
         )
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(spacing.s1))
         Text(
             text = "Los abonos que registres aparecen aquí",
             style = type.bodyM,

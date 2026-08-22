@@ -21,9 +21,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
@@ -41,6 +41,7 @@ fun LoanDetailScreen(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
     val summary = state.summary
 
     Column(
@@ -55,7 +56,7 @@ fun LoanDetailScreen(
                 IconBtn(icon = Icons.AutoMirrored.Outlined.ArrowBack, onClick = onBack, contentDescription = "Volver")
             },
             right = {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
                     IconBtn(
                         icon = Icons.Outlined.Edit,
                         onClick = { onIntent(LoanDetailIntent.OnEditLoanClick) },
@@ -75,13 +76,13 @@ fun LoanDetailScreen(
         if (summary != null) {
             LazyColumn(
                 modifier = Modifier.fillMaxWidth().weight(1f),
-                contentPadding = PaddingValues(bottom = 12.dp),
+                contentPadding = PaddingValues(bottom = spacing.s3),
             ) {
-                item { LoanSummaryCard(summary = summary, modifier = Modifier.fillMaxWidth().padding(16.dp)) }
+                item { LoanSummaryCard(summary = summary, modifier = Modifier.fillMaxWidth().padding(spacing.s4)) }
                 item {
                     Eyebrow(
                         text = "ABONOS",
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                        modifier = Modifier.padding(start = spacing.s4, end = spacing.s4, bottom = spacing.s2),
                     )
                 }
                 loanPaymentItems(
