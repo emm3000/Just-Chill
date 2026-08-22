@@ -1,6 +1,8 @@
 package com.emm.justchill.hh.loan
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,9 +21,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.domain.loan.PaymentMethod
+import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.AmountTone
@@ -34,6 +38,7 @@ import com.emm.justchill.core.ui.atoms.UnderlineTextField
 import com.emm.justchill.hh.shared.AmountInputSheet
 import com.emm.justchill.hh.shared.FormSection
 import com.emm.justchill.hh.transaction.sheets.DatePickerSheet
+import kotlinx.datetime.LocalDate
 
 @Composable
 fun LoanPaymentSheet(form: LoanPaymentFormUi, onIntent: (LoanDetailIntent) -> Unit) {
@@ -41,8 +46,6 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, onIntent: (LoanDetailIntent) -> Un
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showAmountSheet by remember { mutableStateOf(false) }
     var showDateSheet by remember { mutableStateOf(false) }
-    val isEditing = form.editingPaymentId != null
-    val sheetLabel = if (isEditing) "Editar abono" else "Registrar abono"
 
     ModalBottomSheet(
         onDismissRequest = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentDismiss) },
@@ -51,66 +54,12 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, onIntent: (LoanDetailIntent) -> Un
         contentWindowInsets = { WindowInsets.navigationBars },
         dragHandle = { SheetDragHandle() },
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .imePadding(),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f, fill = false)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(18.dp),
-            ) {
-                Text(
-                    text = sheetLabel,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
-                    color = colors.textPrimary,
-                    letterSpacing = (-0.15).sp,
-                )
-
-                FormSection(eyebrow = "MONTO") {
-                    AmountCard(amountDigits = form.amountDigits, onClick = { showAmountSheet = true })
-                }
-
-                FormSection(eyebrow = "MÉTODO") {
-                    Segmented(
-                        options = listOf(
-                            SegmentOption(PaymentMethod.Cash, PaymentMethod.Cash.label),
-                            SegmentOption(PaymentMethod.Transfer, PaymentMethod.Transfer.label),
-                        ),
-                        selected = form.method,
-                        onSelect = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentMethodChange(it)) },
-                    )
-                }
-
-                FormSection(eyebrow = "FECHA") {
-                    DateRow(label = form.dateLabel, onClick = { showDateSheet = true })
-                }
-
-                FormSection(eyebrow = "NOTA · OPCIONAL") {
-                    UnderlineTextField(
-                        value = form.note,
-                        onValueChange = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentNoteChange(it)) },
-                        placeholder = "Ej. Pago en efectivo",
-                    )
-                }
-            }
-
-            StickyCTA(
-                label = sheetLabel,
-                interaction = when {
-                    form.isSaving -> CtaInteraction.Loading
-                    form.isSaveEnabled -> CtaInteraction.Enabled
-                    else -> CtaInteraction.Disabled
-                },
-                onClick = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentConfirm) },
-            )
-        }
+        LoanPaymentSheetContent(
+            form = form,
+            onAmountClick = { showAmountSheet = true },
+            onDateClick = { showDateSheet = true },
+            onIntent = onIntent,
+        )
     }
 
     if (showAmountSheet) {
@@ -133,5 +82,102 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, onIntent: (LoanDetailIntent) -> Un
             },
             onDismiss = { showDateSheet = false },
         )
+    }
+}
+
+@Composable
+private fun LoanPaymentSheetContent(
+    form: LoanPaymentFormUi,
+    onAmountClick: () -> Unit,
+    onDateClick: () -> Unit,
+    onIntent: (LoanDetailIntent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalEmmColors.current
+    val sheetLabel = if (form.editingPaymentId != null) "Editar abono" else "Registrar abono"
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .imePadding(),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = false)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            Text(
+                text = sheetLabel,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.W600,
+                fontFamily = InterFontFamily,
+                color = colors.textPrimary,
+                letterSpacing = (-0.15).sp,
+            )
+
+            FormSection(eyebrow = "MONTO") {
+                AmountCard(amountDigits = form.amountDigits, onClick = onAmountClick)
+            }
+
+            FormSection(eyebrow = "MÉTODO") {
+                Segmented(
+                    options = listOf(
+                        SegmentOption(PaymentMethod.Cash, PaymentMethod.Cash.label),
+                        SegmentOption(PaymentMethod.Transfer, PaymentMethod.Transfer.label),
+                    ),
+                    selected = form.method,
+                    onSelect = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentMethodChange(it)) },
+                )
+            }
+
+            FormSection(eyebrow = "FECHA") {
+                DateRow(label = form.dateLabel, onClick = onDateClick)
+            }
+
+            FormSection(eyebrow = "NOTA · OPCIONAL") {
+                UnderlineTextField(
+                    value = form.note,
+                    onValueChange = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentNoteChange(it)) },
+                    placeholder = "Ej. Pago en efectivo",
+                )
+            }
+        }
+
+        StickyCTA(
+            label = sheetLabel,
+            interaction = when {
+                form.isSaving -> CtaInteraction.Loading
+                form.isSaveEnabled -> CtaInteraction.Enabled
+                else -> CtaInteraction.Disabled
+            },
+            onClick = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentConfirm) },
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun LoanPaymentSheetContentPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg),
+        ) {
+            LoanPaymentSheetContent(
+                form = LoanPaymentFormUi(
+                    loanId = "loan-1",
+                    today = LocalDate(2026, 8, 21),
+                    amountDigits = "5000",
+                    note = "Abono en efectivo",
+                ),
+                onAmountClick = {},
+                onDateClick = {},
+                onIntent = {},
+            )
+        }
     }
 }
