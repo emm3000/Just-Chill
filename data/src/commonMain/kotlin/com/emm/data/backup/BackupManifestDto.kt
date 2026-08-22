@@ -29,8 +29,8 @@ internal data class BackupRowCountsDto(
     val categories: Int,
     val transactions: Int,
     val recurringMovements: Int,
-    val loans: Int,
-    val loanPayments: Int,
+    val loans: Int = 0,
+    val loanPayments: Int = 0,
 )
 
 internal fun buildBackupManifest(fileName: String, payloadBytes: ByteArray): BackupManifestDto {
