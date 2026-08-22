@@ -8,6 +8,7 @@ import com.emm.justchill.hh.di.backupModule
 import com.emm.justchill.hh.di.categoryModule
 import com.emm.justchill.hh.di.dataModule
 import com.emm.justchill.hh.di.homeModule
+import com.emm.justchill.hh.di.loanModule
 import com.emm.justchill.hh.di.profileModule
 import com.emm.justchill.hh.di.recurringModule
 import com.emm.justchill.hh.di.reportModule
@@ -30,6 +31,7 @@ fun appModules(platformModule: Module): List<Module> = listOf(
     accountModule,
     categoryModule,
     homeModule,
+    loanModule,
     recurringModule,
     reportModule,
     profileModule,
