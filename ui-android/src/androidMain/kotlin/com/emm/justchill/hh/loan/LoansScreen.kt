@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
@@ -59,6 +60,12 @@ fun LoansScreen(
         JcTopBar(
             title = "Préstamos",
             left = { IconBtn(icon = Icons.AutoMirrored.Outlined.ArrowBack, onClick = onBack) },
+            right = {
+                IconBtn(
+                    icon = Icons.Outlined.Add,
+                    onClick = { onIntent(LoansIntent.OnAddLoanClick) },
+                )
+            },
         )
         Hairline()
 

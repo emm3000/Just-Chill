@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -68,6 +69,7 @@ fun PersonLoansScreen(
                 items(state.loans, key = { it.loanId }) { loan ->
                     LoanRow(
                         loan = loan,
+                        onEditClick = { onIntent(PersonLoansIntent.OnEditLoanClick(loan.loanId)) },
                         onDeleteClick = { onIntent(PersonLoansIntent.OnDeleteClick(loan.loanId)) },
                     )
                 }
@@ -86,7 +88,7 @@ fun PersonLoansScreen(
 }
 
 @Composable
-private fun LoanRow(loan: LoanRowUi, onDeleteClick: () -> Unit) {
+private fun LoanRow(loan: LoanRowUi, onEditClick: () -> Unit, onDeleteClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val remainingColor = if (loan.isSettled) colors.textTertiary else colors.textPrimary
 
@@ -131,7 +133,10 @@ private fun LoanRow(loan: LoanRowUi, onDeleteClick: () -> Unit) {
                 )
             }
 
-            IconBtn(icon = Icons.Outlined.Delete, tone = IconBtnTone.Danger, onClick = onDeleteClick)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                IconBtn(icon = Icons.Outlined.Edit, onClick = onEditClick)
+                IconBtn(icon = Icons.Outlined.Delete, tone = IconBtnTone.Danger, onClick = onDeleteClick)
+            }
         }
         Hairline()
     }

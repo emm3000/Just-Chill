@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.emm.justchill.hh.shared.AddEditLoanRoute
 import com.emm.justchill.hh.shared.AppNavigator
 import com.emm.justchill.hh.shared.LoansRoute
 import com.emm.justchill.hh.shared.NavHostBindings
@@ -15,8 +16,8 @@ import com.emm.justchill.hh.shared.rememberAppNavigator
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
-// LoansEffect.NavigateToAddLoan and PersonLoansEffect.NavigateToAddPayment/NavigateToEditLoan have
-// no destination yet (E05-08/E05-09): the branches below are no-ops on purpose.
+// PersonLoansEffect.NavigateToAddPayment has no destination yet (E05-09): that branch is a no-op
+// on purpose.
 fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
     entry<LoansRoute> {
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
@@ -27,7 +28,7 @@ fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
             vm.effect.collect { effect ->
                 when (effect) {
                     is LoansEffect.NavigateToPerson -> nav.push(PersonLoansRoute(effect.personKey))
-                    LoansEffect.NavigateToAddLoan -> Unit
+                    LoansEffect.NavigateToAddLoan -> nav.push(AddEditLoanRoute())
                 }
             }
         }
@@ -50,7 +51,7 @@ fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
                 when (effect) {
                     is PersonLoansEffect.ShowError -> bindings.showMessage(effect.message)
                     is PersonLoansEffect.NavigateToAddPayment -> Unit
-                    is PersonLoansEffect.NavigateToEditLoan -> Unit
+                    is PersonLoansEffect.NavigateToEditLoan -> nav.push(AddEditLoanRoute(effect.loanId))
                 }
             }
         }
@@ -60,6 +61,15 @@ fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
             onIntent = vm::onIntent,
             onBack = { nav.pop() },
             modifier = Modifier.fillMaxSize(),
+        )
+    }
+
+    entry<AddEditLoanRoute> { key ->
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        AddEditLoanScreen(
+            onBack = { nav.pop() },
+            snackbarHostState = bindings.snackbarHostState,
+            loanId = key.loanId,
         )
     }
 }
