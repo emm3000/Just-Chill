@@ -134,8 +134,13 @@ private fun LoanRow(loan: LoanRowUi, onEditClick: () -> Unit, onDeleteClick: () 
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                IconBtn(icon = Icons.Outlined.Edit, onClick = onEditClick)
-                IconBtn(icon = Icons.Outlined.Delete, tone = IconBtnTone.Danger, onClick = onDeleteClick)
+                IconBtn(icon = Icons.Outlined.Edit, onClick = onEditClick, contentDescription = "Editar préstamo")
+                IconBtn(
+                    icon = Icons.Outlined.Delete,
+                    tone = IconBtnTone.Danger,
+                    onClick = onDeleteClick,
+                    contentDescription = "Eliminar préstamo",
+                )
             }
         }
         Hairline()
