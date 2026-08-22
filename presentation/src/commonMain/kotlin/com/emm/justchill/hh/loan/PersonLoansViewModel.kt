@@ -21,9 +21,10 @@ class PersonLoansViewModel(
         loanRepository.loansWithBalance(personKey)
             .onEach { balances ->
                 updateState {
-                    // loansWithBalance orders by lentAt DESC, so the first row is this person's
-                    // most recent loan — the same "name follows the latest loan" rule balancesByPerson uses.
-                    copy(personName = balances.firstOrNull()?.loan?.personName.orEmpty(), loans = balances.toUi())
+                    copy(
+                        personName = balances.firstOrNull()?.loan?.personName ?: currentState.personName,
+                        loans = balances.toUi(),
+                    )
                 }
             }
             .launchIn(viewModelScope)

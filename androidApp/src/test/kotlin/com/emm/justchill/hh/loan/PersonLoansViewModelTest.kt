@@ -79,6 +79,18 @@ class PersonLoansViewModelTest {
     }
 
     @Test
+    fun `personName survives its last loan being deleted`() = runTest {
+        every { loanRepository.loansWithBalance("ana") } returns flowOf(listOf(loanBalance()), emptyList())
+
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        val state = vm.state.value
+        assertEquals("Ana", state.personName)
+        assertTrue(state.loans.isEmpty())
+    }
+
+    @Test
     fun `OnDeleteConfirm calls DeleteLoanUseCase with the pending loan id and clears pendingDelete`() = runTest {
         every { loanRepository.loansWithBalance("ana") } returns flowOf(emptyList())
         coEvery { deleteLoan(any()) } returns Unit
