@@ -99,8 +99,13 @@ class AddEditLoanViewModel(
         allPersonNames.filter { it.contains(personName, ignoreCase = true) && it != personName }
 
     private fun save() = launchSafe(
-        onError = { e -> AddEditLoanEffect.ShowError(e.toUserMessage()) },
+        onError = { e ->
+            updateState { copy(isSaving = false) }
+            AddEditLoanEffect.ShowError(e.toUserMessage())
+        },
     ) {
+        if (currentState.isSaving) return@launchSafe
+        updateState { copy(isSaving = true) }
         val s = currentState
         val now: LocalDateTime = clock.now().toLocalDateTime(zone)
         val lentAt = LocalDateTime(s.date ?: now.date, loadedLentAt?.time ?: now.time)

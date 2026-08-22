@@ -17,6 +17,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -136,6 +137,20 @@ class AddEditLoanViewModelTest {
 
         coVerify(exactly = 1) { createLoan(any()) }
         coVerify(exactly = 0) { updateLoan(any(), any()) }
+    }
+
+    @Test
+    fun `Save dispatched twice before the first resolves calls CreateLoanUseCase once`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        coEvery { createLoan(any()) } coAnswers { gate.await() }
+        val vm = viewModel()
+
+        vm.onIntent(AddEditLoanIntent.Save)
+        vm.onIntent(AddEditLoanIntent.Save)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { createLoan(any()) }
+        gate.complete(Unit)
     }
 
     @Test

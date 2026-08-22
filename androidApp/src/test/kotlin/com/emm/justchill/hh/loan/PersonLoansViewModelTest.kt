@@ -17,6 +17,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -173,31 +174,49 @@ class PersonLoansViewModelTest {
     }
 
     @Test
-    fun `OnPaymentConfirm with PaymentExceedsBalance emits ShowError, keeps the sheet open and persists nothing`() =
+    fun `OnPaymentConfirm dispatched twice before the first resolves calls RegisterLoanPaymentUseCase once`() =
         runTest {
             every { loanRepository.loansWithBalance("ana") } returns flowOf(emptyList())
-            val error = DomainException.ValidationError(
-                "Payment of 999900 exceeds remaining balance of 100000",
-                ValidationCode.PaymentExceedsBalance,
-            )
-            coEvery { registerLoanPayment(any()) } throws error
+            val gate = CompletableDeferred<Unit>()
+            coEvery { registerLoanPayment(any()) } coAnswers { gate.await() }
             val vm = viewModel()
-            val effects = mutableListOf<PersonLoansEffect>()
-            val job = launch { vm.effect.collect { effects.add(it) } }
+            advanceUntilIdle()
 
             vm.onIntent(PersonLoansIntent.OnAddPaymentClick("loan-9"))
-            vm.onIntent(PersonLoansIntent.OnPaymentAmountChange("999900"))
+            vm.onIntent(PersonLoansIntent.OnPaymentAmountChange("400000"))
+            vm.onIntent(PersonLoansIntent.OnPaymentConfirm)
             vm.onIntent(PersonLoansIntent.OnPaymentConfirm)
             advanceUntilIdle()
 
-            val showError = effects.filterIsInstance<PersonLoansEffect.ShowError>().firstOrNull()
-            checkNotNull(showError) { "Expected ShowError effect but got: $effects" }
-            assertEquals("El abono es mayor que lo que falta pagar", showError.message)
-            assertEquals("loan-9", vm.state.value.payment?.loanId)
-            assertEquals("999900", vm.state.value.payment?.amountDigits)
             coVerify(exactly = 1) { registerLoanPayment(any()) }
-            job.cancel()
+            gate.complete(Unit)
         }
+
+    @Test
+    fun `OnPaymentConfirm with PaymentExceedsBalance emits ShowError and keeps the sheet open`() = runTest {
+        every { loanRepository.loansWithBalance("ana") } returns flowOf(emptyList())
+        val error = DomainException.ValidationError(
+            "Payment of 999900 exceeds remaining balance of 100000",
+            ValidationCode.PaymentExceedsBalance,
+        )
+        coEvery { registerLoanPayment(any()) } throws error
+        val vm = viewModel()
+        val effects = mutableListOf<PersonLoansEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(PersonLoansIntent.OnAddPaymentClick("loan-9"))
+        vm.onIntent(PersonLoansIntent.OnPaymentAmountChange("999900"))
+        vm.onIntent(PersonLoansIntent.OnPaymentConfirm)
+        advanceUntilIdle()
+
+        val showError = effects.filterIsInstance<PersonLoansEffect.ShowError>().firstOrNull()
+        checkNotNull(showError) { "Expected ShowError effect but got: $effects" }
+        assertEquals("El abono es mayor que lo que falta pagar", showError.message)
+        assertEquals("loan-9", vm.state.value.payment?.loanId)
+        assertEquals("999900", vm.state.value.payment?.amountDigits)
+        coVerify(exactly = 1) { registerLoanPayment(any()) }
+        job.cancel()
+    }
 
     @Test
     fun `OnEditLoanClick emits NavigateToEditLoan with the clicked loan id`() = runTest {

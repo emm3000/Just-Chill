@@ -84,12 +84,19 @@ class PersonLoansViewModel(
         updateState { copy(pendingDelete = null) }
     }
 
-    // Left open on failure, unlike confirmDelete: the form still holds a typed amount worth
-    // fixing, where the delete dialog has nothing left to edit.
+    /**
+     * Left open on failure, unlike confirmDelete: the form still holds a typed amount worth
+     * fixing, where the delete dialog has nothing left to edit.
+     */
     private fun confirmPayment() = launchSafe(
-        onError = { e -> PersonLoansEffect.ShowError(e.toUserMessage()) },
+        onError = { e ->
+            updateState { copy(payment = payment?.copy(isSaving = false)) }
+            PersonLoansEffect.ShowError(e.toUserMessage())
+        },
     ) {
         val form = currentState.payment ?: return@launchSafe
+        if (form.isSaving) return@launchSafe
+        updateState { copy(payment = payment?.copy(isSaving = true)) }
         val timeOfDay = clock.now().toLocalDateTime(zone).time
         registerLoanPayment(
             LoanPaymentInsert(

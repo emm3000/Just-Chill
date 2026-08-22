@@ -15,6 +15,7 @@ data class AddEditLoanUiState(
     val date: LocalDate? = null,
     val note: String = String.Empty,
     val isSaveEnabled: Boolean = false,
+    val isSaving: Boolean = false,
 ) : UiState {
     val dateLabel: String get() = relativeDayLabel(pickerDate, today)
     val pickerDate: LocalDate get() = date ?: today
