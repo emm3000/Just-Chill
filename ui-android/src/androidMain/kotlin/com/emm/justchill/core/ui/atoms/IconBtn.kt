@@ -21,19 +21,22 @@ private const val DISABLED_ALPHA = 0.35f
 /**
  * Disabled dims the button without collapsing its box. `DatePickerSheet` flanks the month label
  * with two of these in a `SpaceBetween` row, so hiding one at the boundary would shift the label.
+ *
+ * [contentDescription] has no default: an unlabelled button is mute to TalkBack, so a caller whose
+ * icon is genuinely decorative has to pass `null` and say so.
  */
-// icon/onClick are the only required params; modifier, tone, enabled and contentDescription each
-// cover an independent axis (layout, color, interactivity, accessibility) — a config object would
-// relocate them, not remove any.
+// icon/onClick/contentDescription are the required params; modifier, tone and enabled each cover an
+// independent axis (layout, color, interactivity) — a config object would relocate them, not remove
+// any.
 @Suppress("LongParameterList")
 @Composable
 fun IconBtn(
     icon: ImageVector,
     onClick: () -> Unit,
+    contentDescription: String?,
     modifier: Modifier = Modifier,
     tone: IconBtnTone = IconBtnTone.Neutral,
     enabled: Boolean = true,
-    contentDescription: String? = null,
 ) {
     val colors = LocalEmmColors.current
 

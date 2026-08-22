@@ -123,12 +123,14 @@ private fun EditTransactionContent(
                 IconBtn(
                     icon = Icons.AutoMirrored.Outlined.ArrowBack,
                     onClick = onBack,
+                    contentDescription = "Volver",
                 )
             },
             right = {
                 IconBtn(
                     icon = Icons.Outlined.Delete,
                     onClick = { showDeleteDialog = true },
+                    contentDescription = if (isSpend) "Eliminar gasto" else "Eliminar ingreso",
                     tone = IconBtnTone.Danger,
                 )
             },

@@ -73,8 +73,20 @@ fun CategoriesScreen(
     ) {
         JcTopBar(
             title = "Categorías",
-            left = { IconBtn(icon = Icons.AutoMirrored.Outlined.ArrowBack, onClick = onBack) },
-            right = { IconBtn(icon = Icons.Outlined.Add, onClick = onAddCategory) },
+            left = {
+                IconBtn(
+                    icon = Icons.AutoMirrored.Outlined.ArrowBack,
+                    onClick = onBack,
+                    contentDescription = "Volver",
+                )
+            },
+            right = {
+                IconBtn(
+                    icon = Icons.Outlined.Add,
+                    onClick = onAddCategory,
+                    contentDescription = "Nueva categoría",
+                )
+            },
         )
 
         if (state.categories.isEmpty()) {

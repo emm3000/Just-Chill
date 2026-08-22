@@ -117,6 +117,7 @@ private fun AddAccountContent(
                 IconBtn(
                     icon = Icons.Outlined.Close,
                     onClick = onBack,
+                    contentDescription = "Cerrar",
                 )
             },
         )

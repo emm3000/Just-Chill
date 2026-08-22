@@ -138,6 +138,7 @@ private fun AddTransactionScreenContent(
                 IconBtn(
                     icon = Icons.Outlined.Close,
                     onClick = popBackStack,
+                    contentDescription = "Cerrar",
                 )
             },
             right = null,

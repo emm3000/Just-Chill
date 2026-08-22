@@ -104,6 +104,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             IconBtn(
                 icon = Icons.Outlined.Close,
                 onClick = onDismiss,
+                contentDescription = "Cerrar",
                 modifier = Modifier.size(36.dp),
             )
         }
@@ -149,6 +150,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             IconBtn(
                 icon = Icons.Outlined.ChevronLeft,
                 onClick = { displayedMonth = displayedMonth.minus(1, DateTimeUnit.MONTH) },
+                contentDescription = "Mes anterior",
                 modifier = Modifier.size(36.dp),
             )
             val monthLabel = remember(displayedMonth) {
@@ -169,6 +171,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             IconBtn(
                 icon = Icons.Outlined.ChevronRight,
                 onClick = { displayedMonth = displayedMonth.plus(1, DateTimeUnit.MONTH) },
+                contentDescription = "Mes siguiente",
                 modifier = Modifier.size(36.dp),
                 enabled = canGoForward,
             )

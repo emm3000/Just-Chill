@@ -150,6 +150,7 @@ private fun AuthContent(
                 IconBtn(
                     icon = Icons.AutoMirrored.Outlined.ArrowBack,
                     onClick = { onIntent(AuthIntent.Back) },
+                    contentDescription = "Volver",
                 )
             },
         )

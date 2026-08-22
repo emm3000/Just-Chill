@@ -146,6 +146,7 @@ private fun AddCategoryContent(
                 IconBtn(
                     icon = Icons.AutoMirrored.Outlined.ArrowBack,
                     onClick = onBack,
+                    contentDescription = "Volver",
                 )
             },
         )
