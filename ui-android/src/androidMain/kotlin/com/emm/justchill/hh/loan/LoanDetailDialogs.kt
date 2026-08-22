@@ -10,7 +10,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
 
 @Composable
 internal fun DeleteLoanDialog(
-    summary: LoanSummaryUi?,
+    summary: LoanSummaryUi,
     isDeleting: Boolean,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
@@ -22,7 +22,7 @@ internal fun DeleteLoanDialog(
         title = { Text("¿Borrar este préstamo?") },
         text = {
             Text(
-                "Prestado el ${summary?.readableLentAt.orEmpty()} por ${summary?.principal.orEmpty()}. " +
+                "Prestado el ${summary.readableLentAt} por ${summary.principal}. " +
                     "Se borra junto con sus abonos registrados.",
             )
         },
@@ -64,7 +64,7 @@ private fun DeleteLoanDialogPreview() {
 
 @Composable
 internal fun DeleteLoanPaymentDialog(
-    payment: LoanPaymentRowUi?,
+    payment: LoanPaymentRowUi,
     isDeleting: Boolean,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
@@ -76,7 +76,7 @@ internal fun DeleteLoanPaymentDialog(
         title = { Text("¿Borrar este abono?") },
         text = {
             Text(
-                "Abono de ${payment?.amount.orEmpty()} del ${payment?.readablePaidAt.orEmpty()}. " +
+                "Abono de ${payment.amount} del ${payment.readablePaidAt}. " +
                     "El préstamo recupera ese monto como pendiente.",
             )
         },

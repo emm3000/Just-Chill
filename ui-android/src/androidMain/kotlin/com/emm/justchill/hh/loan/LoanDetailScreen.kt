@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -105,7 +106,7 @@ fun LoanDetailScreen(
         }
     }
 
-    if (state.pendingDeleteLoan) {
+    if (state.pendingDeleteLoan && summary != null) {
         DeleteLoanDialog(
             summary = summary,
             isDeleting = state.isDeletingLoan,
@@ -114,9 +115,12 @@ fun LoanDetailScreen(
         )
     }
 
-    state.pendingDeletePaymentId?.let { paymentId ->
+    val pendingDeletePayment = remember(state.payments, state.pendingDeletePaymentId) {
+        state.payments.find { it.paymentId == state.pendingDeletePaymentId }
+    }
+    pendingDeletePayment?.let { payment ->
         DeleteLoanPaymentDialog(
-            payment = state.payments.find { it.paymentId == paymentId },
+            payment = payment,
             isDeleting = state.isDeletingPayment,
             onConfirm = { onIntent(LoanDetailIntent.OnDeletePaymentConfirm) },
             onDismiss = { onIntent(LoanDetailIntent.OnDeletePaymentDismiss) },
