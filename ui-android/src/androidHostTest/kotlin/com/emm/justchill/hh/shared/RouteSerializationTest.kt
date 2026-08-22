@@ -73,6 +73,7 @@ class RouteSerializationTest {
         ReportRoute,
         LoansRoute,
         PersonLoansRoute(personKey = "person-1"),
+        LoanDetailRoute(loanId = "loan-1"),
         AddEditLoanRoute(loanId = "loan-1"),
     ).associateBy { it::class }
 

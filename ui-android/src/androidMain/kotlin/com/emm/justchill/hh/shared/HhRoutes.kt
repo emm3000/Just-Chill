@@ -69,4 +69,7 @@ data object LoansRoute : AppRoute
 data class PersonLoansRoute(val personKey: String) : AppRoute
 
 @Serializable
+data class LoanDetailRoute(val loanId: String) : AppRoute
+
+@Serializable
 data class AddEditLoanRoute(val loanId: String? = null) : AppRoute

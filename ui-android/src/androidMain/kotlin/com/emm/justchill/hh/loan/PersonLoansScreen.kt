@@ -1,6 +1,8 @@
 package com.emm.justchill.hh.loan
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,13 +18,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Payments
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -36,7 +34,6 @@ import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconBtn
-import com.emm.justchill.core.ui.atoms.IconBtnTone
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
@@ -69,39 +66,16 @@ fun PersonLoansScreen(
                 items(state.loans, key = { it.loanId }) { loan ->
                     LoanRow(
                         loan = loan,
-                        onAddPaymentClick = { onIntent(PersonLoansIntent.OnAddPaymentClick(loan.loanId)) },
-                        onEditClick = { onIntent(PersonLoansIntent.OnEditLoanClick(loan.loanId)) },
-                        onDeleteClick = { onIntent(PersonLoansIntent.OnDeleteClick(loan.loanId)) },
+                        onClick = { onIntent(PersonLoansIntent.OnLoanClick(loan.loanId)) },
                     )
                 }
             }
         }
     }
-
-    state.pendingDelete?.let { loanId ->
-        val target = remember(loanId, state.loans) { state.loans.find { it.loanId == loanId } }
-        DeleteLoanDialog(
-            loan = target,
-            onConfirm = { onIntent(PersonLoansIntent.OnDeleteConfirm) },
-            onDismiss = { onIntent(PersonLoansIntent.OnDeleteDismiss) },
-        )
-    }
-
-    state.payment?.let { form ->
-        val loanRemaining = remember(form.loanId, state.loans) {
-            state.loans.find { it.loanId == form.loanId }?.remaining
-        }
-        LoanPaymentSheet(form = form, loanRemaining = loanRemaining, onIntent = onIntent)
-    }
 }
 
 @Composable
-private fun LoanRow(
-    loan: LoanRowUi,
-    onAddPaymentClick: () -> Unit,
-    onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit,
-) {
+private fun LoanRow(loan: LoanRowUi, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val remainingColor = if (loan.isSettled) colors.textTertiary else colors.textPrimary
 
@@ -109,9 +83,14 @@ private fun LoanRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClickLabel = "Ver detalle del préstamo",
+                    onClick = onClick,
+                )
                 .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(
@@ -145,23 +124,6 @@ private fun LoanRow(
                     color = colors.textSecondary,
                 )
             }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (!loan.isSettled) {
-                    IconBtn(
-                        icon = Icons.Outlined.Payments,
-                        onClick = onAddPaymentClick,
-                        contentDescription = "Registrar abono",
-                    )
-                }
-                IconBtn(icon = Icons.Outlined.Edit, onClick = onEditClick, contentDescription = "Editar préstamo")
-                IconBtn(
-                    icon = Icons.Outlined.Delete,
-                    tone = IconBtnTone.Danger,
-                    onClick = onDeleteClick,
-                    contentDescription = "Eliminar préstamo",
-                )
-            }
         }
         Hairline()
     }
@@ -191,30 +153,6 @@ private fun PersonLoansEmptyState(personName: String, modifier: Modifier = Modif
             color = colors.textPrimary,
         )
     }
-}
-
-@Composable
-private fun DeleteLoanDialog(loan: LoanRowUi?, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    val colors = LocalEmmColors.current
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("¿Borrar este préstamo?") },
-        text = {
-            Text(
-                "Prestado el ${loan?.readableLentAt.orEmpty()} por ${loan?.principal.orEmpty()}. " +
-                    "Se borra junto con sus abonos registrados.",
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(text = "Borrar", color = colors.danger)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
-        },
-    )
 }
 
 @Preview

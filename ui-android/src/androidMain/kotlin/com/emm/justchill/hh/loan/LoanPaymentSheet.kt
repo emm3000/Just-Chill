@@ -36,14 +36,14 @@ import com.emm.justchill.hh.shared.FormSection
 import com.emm.justchill.hh.transaction.sheets.DatePickerSheet
 
 @Composable
-fun LoanPaymentSheet(form: LoanPaymentFormUi, loanRemaining: String?, onIntent: (PersonLoansIntent) -> Unit) {
+fun LoanPaymentSheet(form: LoanPaymentFormUi, loanRemaining: String?, onIntent: (LoanDetailIntent) -> Unit) {
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showAmountSheet by remember { mutableStateOf(false) }
     var showDateSheet by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
-        onDismissRequest = { onIntent(PersonLoansIntent.OnPaymentDismiss) },
+        onDismissRequest = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentDismiss) },
         sheetState = sheetState,
         containerColor = colors.bg,
         contentWindowInsets = { WindowInsets.navigationBars },
@@ -82,7 +82,7 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, loanRemaining: String?, onIntent: 
                             SegmentOption(PaymentMethod.Transfer, PaymentMethod.Transfer.label),
                         ),
                         selected = form.method,
-                        onSelect = { onIntent(PersonLoansIntent.OnPaymentMethodChange(it)) },
+                        onSelect = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentMethodChange(it)) },
                     )
                 }
 
@@ -93,7 +93,7 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, loanRemaining: String?, onIntent: 
                 FormSection(eyebrow = "NOTA · OPCIONAL") {
                     UnderlineTextField(
                         value = form.note,
-                        onValueChange = { onIntent(PersonLoansIntent.OnPaymentNoteChange(it)) },
+                        onValueChange = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentNoteChange(it)) },
                         placeholder = "Ej. Pago en efectivo",
                     )
                 }
@@ -106,7 +106,7 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, loanRemaining: String?, onIntent: 
                     form.isSaveEnabled -> CtaInteraction.Enabled
                     else -> CtaInteraction.Disabled
                 },
-                onClick = { onIntent(PersonLoansIntent.OnPaymentConfirm) },
+                onClick = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentConfirm) },
             )
         }
     }
@@ -117,7 +117,7 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, loanRemaining: String?, onIntent: 
             title = "Monto del abono",
             tone = AmountTone.Neutral,
             subtitle = loanRemaining?.let { "Máximo $it" },
-            onAmountChange = { onIntent(PersonLoansIntent.OnPaymentAmountChange(it)) },
+            onAmountChange = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentAmountChange(it)) },
             onDismiss = { showAmountSheet = false },
         )
     }
@@ -126,7 +126,7 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, loanRemaining: String?, onIntent: 
         DatePickerSheet(
             currentDate = form.date ?: form.today,
             onConfirm = { date ->
-                onIntent(PersonLoansIntent.OnPaymentDateSelected(date))
+                onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentDateSelected(date))
                 showDateSheet = false
             },
             onDismiss = { showDateSheet = false },
