@@ -152,6 +152,42 @@ class LoanDetailViewModelTest {
     }
 
     @Test
+    fun `a loan that vanishes from byId emits LoanDeleted instead of spinning forever`() = runTest {
+        val loans = MutableStateFlow<Loan?>(loan)
+        every { loanRepository.byId(loanIdValue) } returns loans
+        every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(emptyList())
+        val vm = viewModel()
+        val effects = mutableListOf<LoanDetailEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+        advanceUntilIdle()
+
+        loans.value = null
+        advanceUntilIdle()
+
+        assertEquals(listOf<LoanDetailEffect>(LoanDetailEffect.LoanDeleted), effects)
+        job.cancel()
+    }
+
+    @Test
+    fun `OnDeleteLoanConfirm emits LoanDeleted once even though its own soft delete re-emits null`() = runTest {
+        val loans = MutableStateFlow<Loan?>(loan)
+        every { loanRepository.byId(loanIdValue) } returns loans
+        every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(emptyList())
+        coEvery { deleteLoan(loanIdValue) } coAnswers { loans.value = null }
+        val vm = viewModel()
+        val effects = mutableListOf<LoanDetailEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+        advanceUntilIdle()
+
+        vm.onIntent(LoanDetailIntent.OnDeleteLoanClick)
+        vm.onIntent(LoanDetailIntent.OnDeleteLoanConfirm)
+        advanceUntilIdle()
+
+        assertEquals(1, effects.count { it == LoanDetailEffect.LoanDeleted })
+        job.cancel()
+    }
+
+    @Test
     fun `OnDeleteLoanConfirm with DeleteLoanUseCase throwing emits ShowError and clears pendingDeleteLoan`() = runTest {
         every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
         every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(emptyList())

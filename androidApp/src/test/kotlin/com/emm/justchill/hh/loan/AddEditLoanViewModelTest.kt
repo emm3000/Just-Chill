@@ -182,6 +182,18 @@ class AddEditLoanViewModelTest {
     }
 
     @Test
+    fun `a loanId whose loan no longer exists emits NavigateBack instead of an empty edit form`() = runTest {
+        every { loanRepository.byId(LoanId("loan-gone")) } returns flowOf(null)
+        val vm = viewModel(loanId = "loan-gone")
+        val effects = mutableListOf<AddEditLoanEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+        advanceUntilIdle()
+
+        assertEquals(listOf<AddEditLoanEffect>(AddEditLoanEffect.NavigateBack), effects)
+        job.cancel()
+    }
+
+    @Test
     fun `an interest-only edit preserves the loaded lentAt time-of-day`() = runTest {
         every { loanRepository.byId(LoanId("loan-1")) } returns flowOf(storedLoan)
         val vm = viewModel(loanId = "loan-1")

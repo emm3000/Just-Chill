@@ -81,7 +81,11 @@ class AddEditLoanViewModel(
     }
 
     private suspend fun loadLoan(id: String) {
-        val loan = loanRepository.byId(LoanId(id)).first() ?: return
+        val loan = loanRepository.byId(LoanId(id)).first()
+        if (loan == null) {
+            sendEffect(AddEditLoanEffect.NavigateBack)
+            return
+        }
         loadedLentAt = loan.lentAt
         updateState {
             copy(

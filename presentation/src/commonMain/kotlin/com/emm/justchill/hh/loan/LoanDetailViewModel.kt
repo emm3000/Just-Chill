@@ -38,13 +38,20 @@ class LoanDetailViewModel(
 
     override val initialState = LoanDetailUiState()
 
+    // `byId` re-emits null for this ViewModel's own soft delete, so the delete path and the
+    // vanished-loan path both reach the same exit; only the first one may pop the back stack.
+    private var hasExited = false
+
     init {
         combine(
             loanRepository.byId(LoanId(loanId)),
             loanPaymentRepository.byLoan(LoanId(loanId)),
         ) { loan, payments -> loan to payments }
             .onEach { (loan, payments) ->
-                if (loan == null) return@onEach
+                if (loan == null) {
+                    exitDeletedLoan()
+                    return@onEach
+                }
                 val paidSoFar = payments.fold(Money.Zero) { acc, payment -> acc + payment.amount }
                 updateState { copy(summary = loanSummaryUi(loan, paidSoFar), payments = payments.toUi()) }
             }
@@ -114,6 +121,12 @@ class LoanDetailViewModel(
         if (currentState.isDeletingLoan) return@launchSafe
         updateState { copy(isDeletingLoan = true) }
         deleteLoan(LoanId(loanId))
+        exitDeletedLoan()
+    }
+
+    private fun exitDeletedLoan() {
+        if (hasExited) return
+        hasExited = true
         sendEffect(LoanDetailEffect.LoanDeleted)
     }
 
