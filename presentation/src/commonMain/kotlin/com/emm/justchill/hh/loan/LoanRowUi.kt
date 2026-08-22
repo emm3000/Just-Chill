@@ -11,6 +11,7 @@ data class LoanRowUi(
     val totalDue: String,
     val paidSoFar: String,
     val remaining: String,
+    val isSettled: Boolean,
     val readableLentAt: String,
 )
 
@@ -20,6 +21,7 @@ private fun LoanBalance.toUi() = LoanRowUi(
     totalDue = formatNeutral(fromCentsToSolesWith(loan.totalDue)),
     paidSoFar = formatNeutral(fromCentsToSolesWith(paidSoFar)),
     remaining = formatNeutral(fromCentsToSolesWith(remaining)),
+    isSettled = remaining.cents == 0L,
     readableLentAt = SpanishDateFormat.longDate(loan.lentAt.date),
 )
 
