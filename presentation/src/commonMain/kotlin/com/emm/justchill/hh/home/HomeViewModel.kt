@@ -3,15 +3,20 @@ package com.emm.justchill.hh.home
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.home.GetHomeDataUseCase
 import com.emm.domain.home.HomeData
+import com.emm.domain.loan.LoanRepository
+import com.emm.domain.loan.PersonBalance
 import com.emm.domain.recurring.ConfirmRecurringMovementUseCase
 import com.emm.domain.recurring.PendingRecurring
 import com.emm.domain.recurring.SkipRecurringMovementUseCase
+import com.emm.domain.shared.Money
 import com.emm.domain.shared.RecurringMovementId
 import com.emm.domain.shared.YearMonth
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.recurring.PendingRecurringUi
 import com.emm.justchill.hh.recurring.toPendingRecurringUi
+import com.emm.justchill.hh.shared.formatNeutral
+import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.transaction.toUi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -25,6 +30,7 @@ class HomeViewModel(
     private val getHomeData: GetHomeDataUseCase,
     private val confirmRecurringMovement: ConfirmRecurringMovementUseCase,
     private val skipRecurringMovement: SkipRecurringMovementUseCase,
+    private val loanRepository: LoanRepository,
     private val clock: kotlin.time.Clock,
     private val zone: TimeZone,
 ) : MviViewModel<HomeUiState, HomeIntent, HomeEffect>() {
@@ -39,6 +45,11 @@ class HomeViewModel(
         selectedMonth
             .flatMapLatest { month -> getHomeData(month) }
             .onEach { homeData -> updateState { mapToUiState(homeData) } }
+            .launchIn(viewModelScope)
+
+        // A separate flow on purpose (ADR 010): loans never fold into GetHomeDataUseCase's query.
+        loanRepository.balancesByPerson()
+            .onEach { balances -> updateState { mapToLoansUiState(balances) } }
             .launchIn(viewModelScope)
     }
 
@@ -81,6 +92,14 @@ class HomeViewModel(
         hasAnyTransaction = data.hasAnyTransaction,
         pendingRecurringMovements = data.pendingRecurringMovements.toPendingUi(),
     )
+
+    private fun HomeUiState.mapToLoansUiState(balances: List<PersonBalance>): HomeUiState = copy(
+        loansTotalOwed = formatNeutral(fromCentsToSolesWith(balances.totalRemaining())),
+        hasLoans = balances.isNotEmpty(),
+    )
+
+    private fun List<PersonBalance>.totalRemaining(): Money =
+        fold(Money.Zero) { acc, balance -> acc + balance.remaining }
 
     private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
 

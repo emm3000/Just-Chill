@@ -2,6 +2,8 @@ package com.emm.justchill.hh.home
 
 import com.emm.domain.home.GetHomeDataUseCase
 import com.emm.domain.home.HomeData
+import com.emm.domain.loan.LoanRepository
+import com.emm.domain.loan.PersonBalance
 import com.emm.domain.recurring.ConfirmRecurringMovementUseCase
 import com.emm.domain.recurring.Frequency
 import com.emm.domain.recurring.PendingRecurring
@@ -19,6 +21,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -47,6 +50,7 @@ class HomeViewModelTest {
     private val getHomeData = mockk<GetHomeDataUseCase>()
     private val confirmRecurring = mockk<ConfirmRecurringMovementUseCase>()
     private val skipRecurring = mockk<SkipRecurringMovementUseCase>()
+    private val loanRepository = mockk<LoanRepository>()
 
     private lateinit var viewModel: HomeViewModel
 
@@ -57,7 +61,13 @@ class HomeViewModelTest {
     private val utc = UtcOffset(hours = 0).asTimeZone()
 
     private fun homeViewModel(clock: Clock = fixedClock, zone: TimeZone = utc) =
-        HomeViewModel(getHomeData, confirmRecurring, skipRecurring, clock, zone)
+        HomeViewModel(getHomeData, confirmRecurring, skipRecurring, loanRepository, clock, zone)
+
+    private fun personBalance(
+        personKey: String = "juan",
+        personName: String = "Juan",
+        remaining: Money = Money(10_000L),
+    ) = PersonBalance(personKey = personKey, personName = personName, remaining = remaining)
 
     private val emptyHomeData = HomeData(
         lastTransactions = emptyList(),
@@ -101,6 +111,7 @@ class HomeViewModelTest {
     @Before
     fun setUp() {
         every { getHomeData(any()) } returns flowOf(emptyHomeData)
+        every { loanRepository.balancesByPerson() } returns flowOf(emptyList())
         viewModel = homeViewModel()
     }
 
@@ -336,5 +347,56 @@ class HomeViewModelTest {
 
         assertTrue(effects.any { it is HomeEffect.ShowError })
         job.cancel()
+    }
+
+    @Test
+    fun `loansTotalOwed is the formatted sum of every PersonBalance remaining`() = runTest {
+        every { getHomeData(any()) } returns flowOf(emptyHomeData)
+        every { loanRepository.balancesByPerson() } returns flowOf(
+            listOf(
+                personBalance(personKey = "juan", remaining = Money(25_000L)),
+                personBalance(personKey = "maria", remaining = Money(10_000L)),
+            ),
+        )
+        viewModel = homeViewModel()
+
+        advanceUntilIdle()
+
+        assertEquals("S/ 350.00", viewModel.state.value.loansTotalOwed)
+        assertTrue(viewModel.state.value.hasLoans)
+    }
+
+    @Test
+    fun `loansTotalOwed updates when the loans flow re-emits, with no manual refresh`() = runTest {
+        every { getHomeData(any()) } returns flowOf(emptyHomeData)
+        val loansFlow = MutableStateFlow<List<PersonBalance>>(emptyList())
+        every { loanRepository.balancesByPerson() } returns loansFlow
+        viewModel = homeViewModel()
+        advanceUntilIdle()
+
+        assertEquals("S/ 0.00", viewModel.state.value.loansTotalOwed)
+        assertFalse(viewModel.state.value.hasLoans)
+
+        loansFlow.value = listOf(personBalance(remaining = Money(50_000L)))
+        advanceUntilIdle()
+
+        assertEquals("S/ 500.00", viewModel.state.value.loansTotalOwed)
+        assertTrue(viewModel.state.value.hasLoans)
+    }
+
+    @Test
+    fun `income spend and balance stay whatever GetHomeDataUseCase emitted, regardless of the loans flow`() = runTest {
+        val homeData = emptyHomeData.copy(income = Money(50_000L), spend = Money(20_000L), balance = Money(30_000L))
+        every { getHomeData(any()) } returns flowOf(homeData)
+        every { loanRepository.balancesByPerson() } returns flowOf(
+            listOf(personBalance(remaining = Money(999_999L))),
+        )
+        viewModel = homeViewModel()
+
+        advanceUntilIdle()
+
+        assertEquals(Money(50_000L), viewModel.state.value.income)
+        assertEquals(Money(20_000L), viewModel.state.value.spend)
+        assertEquals(Money(30_000L), viewModel.state.value.balance)
     }
 }

@@ -4,6 +4,8 @@ import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
 import com.emm.justchill.core.mvi.UiState
 import com.emm.justchill.hh.recurring.PendingRecurringUi
+import com.emm.justchill.hh.shared.formatNeutral
+import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.transaction.TransactionUi
 
 data class HomeUiState(
@@ -14,6 +16,8 @@ data class HomeUiState(
     val balance: Money = Money.Zero,
     val hasAnyTransaction: Boolean = false,
     val pendingRecurringMovements: List<PendingRecurringUi> = emptyList(),
+    val loansTotalOwed: String = formatNeutral(fromCentsToSolesWith(Money.Zero)),
+    val hasLoans: Boolean = false,
 ) : UiState {
     val isFirstLaunch: Boolean
         get() = !hasAnyTransaction
