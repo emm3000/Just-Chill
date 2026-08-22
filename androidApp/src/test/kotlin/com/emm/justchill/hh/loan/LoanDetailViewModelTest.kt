@@ -3,6 +3,7 @@ package com.emm.justchill.hh.loan
 import com.emm.domain.loan.DeleteLoanUseCase
 import com.emm.domain.loan.Loan
 import com.emm.domain.loan.LoanPayment
+import com.emm.domain.loan.LoanPaymentInsert
 import com.emm.domain.loan.LoanPaymentRepository
 import com.emm.domain.loan.LoanRepository
 import com.emm.domain.loan.PaymentMethod
@@ -11,11 +12,13 @@ import com.emm.domain.shared.LoanId
 import com.emm.domain.shared.LoanPaymentId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.error.DomainException
+import com.emm.domain.shared.error.ValidationCode
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -33,7 +36,9 @@ import kotlinx.datetime.toInstant
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -112,6 +117,80 @@ class LoanDetailViewModelTest {
     }
 
     @Test
+    fun `OnEditLoanClick emits NavigateToEditLoan`() = runTest {
+        every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+        every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(emptyList())
+        val vm = viewModel()
+        val effects = mutableListOf<LoanDetailEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+        advanceUntilIdle()
+
+        vm.onIntent(LoanDetailIntent.OnEditLoanClick)
+        advanceUntilIdle()
+
+        assertTrue(effects.any { it == LoanDetailEffect.NavigateToEditLoan })
+        job.cancel()
+    }
+
+    @Test
+    fun `OnDeleteLoanConfirm calls DeleteLoanUseCase with the route's loan id and emits LoanDeleted`() = runTest {
+        every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+        every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(emptyList())
+        coEvery { deleteLoan(any()) } returns Unit
+        val vm = viewModel()
+        val effects = mutableListOf<LoanDetailEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+        advanceUntilIdle()
+
+        vm.onIntent(LoanDetailIntent.OnDeleteLoanClick)
+        vm.onIntent(LoanDetailIntent.OnDeleteLoanConfirm)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { deleteLoan(loanIdValue) }
+        assertTrue(effects.any { it == LoanDetailEffect.LoanDeleted })
+        job.cancel()
+    }
+
+    @Test
+    fun `OnDeleteLoanConfirm with DeleteLoanUseCase throwing emits ShowError and clears pendingDeleteLoan`() = runTest {
+        every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+        every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(emptyList())
+        coEvery { deleteLoan(any()) } throws DomainException.NotFound("loan-ghost")
+        val vm = viewModel()
+        val effects = mutableListOf<LoanDetailEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+        advanceUntilIdle()
+
+        vm.onIntent(LoanDetailIntent.OnDeleteLoanClick)
+        vm.onIntent(LoanDetailIntent.OnDeleteLoanConfirm)
+        advanceUntilIdle()
+
+        val showError = effects.filterIsInstance<LoanDetailEffect.ShowError>().firstOrNull()
+        checkNotNull(showError) { "Expected ShowError effect but got: $effects" }
+        assertEquals("No encontré eso", showError.message)
+        assertFalse(vm.state.value.pendingDeleteLoan)
+        job.cancel()
+    }
+
+    @Test
+    fun `OnDeleteLoanConfirm dispatched twice before the first resolves calls DeleteLoanUseCase once`() = runTest {
+        every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+        every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(emptyList())
+        val gate = CompletableDeferred<Unit>()
+        coEvery { deleteLoan(any()) } coAnswers { gate.await() }
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(LoanDetailIntent.OnDeleteLoanClick)
+        vm.onIntent(LoanDetailIntent.OnDeleteLoanConfirm)
+        vm.onIntent(LoanDetailIntent.OnDeleteLoanConfirm)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { deleteLoan(any()) }
+        gate.complete(Unit)
+    }
+
+    @Test
     fun `OnDeletePaymentConfirm calls LoanPaymentRepository delete with the pending id and closes the confirmation`() =
         runTest {
             every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
@@ -185,6 +264,63 @@ class LoanDetailViewModelTest {
 
         coVerify(exactly = 1) { loanPaymentRepository.delete(any()) }
         gate.complete(Unit)
+    }
+
+    @Test
+    fun `OnPaymentConfirm calls RegisterLoanPaymentUseCase with the entered fields and the clock's time of day`() =
+        runTest {
+            every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+            every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(emptyList())
+            coEvery { registerLoanPayment(any()) } returns Unit
+            val vm = viewModel()
+            advanceUntilIdle()
+
+            val paymentDate = LocalDate(2026, Month.MARCH, 4)
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick)
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentAmountChange("400000"))
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentMethodChange(PaymentMethod.Transfer))
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentDateSelected(paymentDate))
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentNoteChange("Abono parcial"))
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentConfirm)
+            advanceUntilIdle()
+
+            val insert = slot<LoanPaymentInsert>()
+            coVerify(exactly = 1) { registerLoanPayment(capture(insert)) }
+            assertEquals(loanIdValue, insert.captured.loanId)
+            assertEquals(Money(400_000L), insert.captured.amount)
+            assertEquals(PaymentMethod.Transfer, insert.captured.method)
+            // The date comes from the picked value, but the time of day comes from the injected
+            // Clock/TimeZone (14:30, the fixture's fixedClock) — never from the picked date's midnight.
+            assertEquals(LocalDateTime(paymentDate, LocalTime(14, 30)), insert.captured.paidAt)
+            assertEquals("Abono parcial", insert.captured.note)
+            assertNull(vm.state.value.payment)
+        }
+
+    @Test
+    fun `OnPaymentConfirm with PaymentExceedsBalance emits ShowError and keeps the sheet open`() = runTest {
+        every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+        every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(emptyList())
+        val error = DomainException.ValidationError(
+            "Payment of 999900 exceeds remaining balance of 100000",
+            ValidationCode.PaymentExceedsBalance,
+        )
+        coEvery { registerLoanPayment(any()) } throws error
+        val vm = viewModel()
+        val effects = mutableListOf<LoanDetailEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+        advanceUntilIdle()
+
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick)
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentAmountChange("999900"))
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentConfirm)
+        advanceUntilIdle()
+
+        val showError = effects.filterIsInstance<LoanDetailEffect.ShowError>().firstOrNull()
+        checkNotNull(showError) { "Expected ShowError effect but got: $effects" }
+        assertEquals("El abono es mayor que lo que falta pagar", showError.message)
+        assertEquals("999900", vm.state.value.payment?.amountDigits)
+        coVerify(exactly = 1) { registerLoanPayment(any()) }
+        job.cancel()
     }
 
     @Test
