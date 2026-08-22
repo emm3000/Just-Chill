@@ -69,6 +69,7 @@ fun PersonLoansScreen(
                 items(state.loans, key = { it.loanId }) { loan ->
                     LoanRow(
                         loan = loan,
+                        onAddPaymentClick = { onIntent(PersonLoansIntent.OnAddPaymentClick(loan.loanId)) },
                         onEditClick = { onIntent(PersonLoansIntent.OnEditLoanClick(loan.loanId)) },
                         onDeleteClick = { onIntent(PersonLoansIntent.OnDeleteClick(loan.loanId)) },
                     )
@@ -85,10 +86,22 @@ fun PersonLoansScreen(
             onDismiss = { onIntent(PersonLoansIntent.OnDeleteDismiss) },
         )
     }
+
+    state.payment?.let { form ->
+        val loanRemaining = remember(form.loanId, state.loans) {
+            state.loans.find { it.loanId == form.loanId }?.remaining
+        }
+        LoanPaymentSheet(form = form, loanRemaining = loanRemaining, onIntent = onIntent)
+    }
 }
 
 @Composable
-private fun LoanRow(loan: LoanRowUi, onEditClick: () -> Unit, onDeleteClick: () -> Unit) {
+private fun LoanRow(
+    loan: LoanRowUi,
+    onAddPaymentClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+) {
     val colors = LocalEmmColors.current
     val remainingColor = if (loan.isSettled) colors.textTertiary else colors.textPrimary
 
@@ -134,6 +147,13 @@ private fun LoanRow(loan: LoanRowUi, onEditClick: () -> Unit, onDeleteClick: () 
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (!loan.isSettled) {
+                    IconBtn(
+                        icon = Icons.Outlined.Payments,
+                        onClick = onAddPaymentClick,
+                        contentDescription = "Registrar abono",
+                    )
+                }
                 IconBtn(icon = Icons.Outlined.Edit, onClick = onEditClick, contentDescription = "Editar préstamo")
                 IconBtn(
                     icon = Icons.Outlined.Delete,
