@@ -174,7 +174,11 @@ private fun AddEditLoanContent(
         StickyCTA(
             label = ctaLabel,
             tone = CtaTone.Accent,
-            interaction = if (state.isSaveEnabled) CtaInteraction.Enabled else CtaInteraction.Disabled,
+            interaction = when {
+                state.isSaving -> CtaInteraction.Loading
+                state.isSaveEnabled -> CtaInteraction.Enabled
+                else -> CtaInteraction.Disabled
+            },
             onClick = { onIntent(AddEditLoanIntent.Save) },
         )
     }
