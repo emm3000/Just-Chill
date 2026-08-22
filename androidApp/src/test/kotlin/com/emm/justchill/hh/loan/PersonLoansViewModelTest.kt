@@ -41,7 +41,6 @@ class PersonLoansViewModelTest {
         principal: Long = 100_000L,
         totalDue: Long = 110_000L,
         paidSoFar: Long = 10_000L,
-        remaining: Long = 100_000L,
         lentAt: String = "2026-08-10T12:00:00",
     ) = LoanBalance(
         loan = Loan(
@@ -55,7 +54,6 @@ class PersonLoansViewModelTest {
             lentAt = LocalDateTime.parse(lentAt),
         ),
         paidSoFar = Money(paidSoFar),
-        remaining = Money(remaining),
     )
 
     private fun viewModel(personKey: String = "ana") = PersonLoansViewModel(personKey, loanRepository, deleteLoan)

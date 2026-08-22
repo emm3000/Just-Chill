@@ -63,8 +63,7 @@ fun LoansWithBalance.asEntity() = LoanEntity(
 
 fun LoansWithBalance.asExternalModelOrNull(): LoanBalance? {
     val loan = asEntity().asExternalModelOrNull() ?: return null
-    val paid = Money(paidSoFar)
-    return LoanBalance(loan = loan, paidSoFar = paid, remaining = remaining(loan.totalDue, paid))
+    return LoanBalance(loan = loan, paidSoFar = Money(paidSoFar))
 }
 
 // Named distinctly from the `List<LoanEntity>.asExternalModel()` above: `List<T>.asExternalModel()`
