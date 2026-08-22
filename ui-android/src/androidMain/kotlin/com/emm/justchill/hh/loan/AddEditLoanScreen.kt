@@ -108,6 +108,7 @@ private fun AddEditLoanContent(
                 IconBtn(
                     icon = Icons.Outlined.Close,
                     onClick = onBack,
+                    contentDescription = "Cerrar",
                 )
             },
         )

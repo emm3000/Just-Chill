@@ -55,7 +55,13 @@ fun PersonLoansScreen(
     ) {
         JcTopBar(
             title = state.personName,
-            left = { IconBtn(icon = Icons.AutoMirrored.Outlined.ArrowBack, onClick = onBack) },
+            left = {
+                IconBtn(
+                    icon = Icons.AutoMirrored.Outlined.ArrowBack,
+                    onClick = onBack,
+                    contentDescription = "Volver",
+                )
+            },
         )
         Hairline()
 

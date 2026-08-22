@@ -59,11 +59,18 @@ fun LoansScreen(
     ) {
         JcTopBar(
             title = "Préstamos",
-            left = { IconBtn(icon = Icons.AutoMirrored.Outlined.ArrowBack, onClick = onBack) },
+            left = {
+                IconBtn(
+                    icon = Icons.AutoMirrored.Outlined.ArrowBack,
+                    onClick = onBack,
+                    contentDescription = "Volver",
+                )
+            },
             right = {
                 IconBtn(
                     icon = Icons.Outlined.Add,
                     onClick = { onIntent(LoansIntent.OnAddLoanClick) },
+                    contentDescription = "Nuevo préstamo",
                 )
             },
         )
@@ -96,6 +103,7 @@ private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
+                    onClickLabel = "Ver los préstamos de esta persona",
                     onClick = onClick,
                 )
                 .padding(horizontal = 16.dp, vertical = 12.dp),
