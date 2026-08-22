@@ -27,8 +27,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.Numpad
@@ -54,7 +56,6 @@ fun AmountInputSheet(
 ) {
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val formattedAmount = if (amountDigits.isEmpty()) "0.00" else formatCentsForDisplay(amountDigits)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -63,6 +64,33 @@ fun AmountInputSheet(
         contentWindowInsets = { WindowInsets.navigationBars },
         dragHandle = { SheetDragHandle() },
     ) {
+        AmountInputSheetContent(
+            amountDigits = amountDigits,
+            title = title,
+            tone = tone,
+            onAmountChange = onAmountChange,
+            subtitle = subtitle,
+            onDismiss = onDismiss,
+        )
+    }
+}
+
+// The content mirrors the shell's six inputs one for one, plus the conventional modifier.
+@Suppress("LongParameterList")
+@Composable
+private fun AmountInputSheetContent(
+    amountDigits: String,
+    title: String,
+    tone: AmountTone,
+    onAmountChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+) {
+    val colors = LocalEmmColors.current
+    val formattedAmount = if (amountDigits.isEmpty()) "0.00" else formatCentsForDisplay(amountDigits)
+
+    Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -175,6 +203,27 @@ fun AmountInputSheet(
                     letterSpacing = (-0.15).sp,
                 )
             }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun AmountInputSheetContentPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg),
+        ) {
+            AmountInputSheetContent(
+                amountDigits = "5000",
+                title = "Monto del abono",
+                tone = AmountTone.Neutral,
+                onAmountChange = {},
+                subtitle = "Máximo S/ 160.00",
+                onDismiss = {},
+            )
         }
     }
 }
