@@ -44,11 +44,11 @@ import com.emm.justchill.hh.transaction.centsToSoles
 import com.emm.justchill.hh.transaction.formatCentsForDisplay
 
 /**
- * The numpad edits a draft seeded from [amountDigits]; [onAmountChange] fires once, when the
+ * The numpad edits a draft seeded from [amountDigits]; [onAmountConfirm] fires once, when the
  * confirm CTA commits it. Closing the sheet — affordance, scrim or back gesture — discards the
  * draft, so the owner keeps the amount it had.
  */
-// amountDigits/title/tone/onAmountChange/onDismiss are the loan and recurring callers' only
+// amountDigits/title/tone/onAmountConfirm/onDismiss are the loan and recurring callers' only
 // required inputs; modifier is conventional and subtitle the one optional extra the recurring
 // sheet adds. Splitting these into a config object would relocate the count, not reduce it.
 @Suppress("LongParameterList")
@@ -57,7 +57,7 @@ fun AmountInputSheet(
     amountDigits: String,
     title: String,
     tone: AmountTone,
-    onAmountChange: (String) -> Unit,
+    onAmountConfirm: (String) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
@@ -77,7 +77,7 @@ fun AmountInputSheet(
             amountDigits = amountDigits,
             title = title,
             tone = tone,
-            onAmountChange = onAmountChange,
+            onAmountConfirm = onAmountConfirm,
             onDismiss = onDismiss,
             subtitle = subtitle,
         )
@@ -91,7 +91,7 @@ private fun AmountInputSheetContent(
     amountDigits: String,
     title: String,
     tone: AmountTone,
-    onAmountChange: (String) -> Unit,
+    onAmountConfirm: (String) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
@@ -179,7 +179,7 @@ private fun AmountInputSheetContent(
                 .then(
                     if (confirmEnabled) {
                         Modifier.clickable {
-                            onAmountChange(draftDigits)
+                            onAmountConfirm(draftDigits)
                             onDismiss()
                         }
                     } else {
@@ -233,7 +233,7 @@ private fun AmountInputSheetContentPreview() {
                 amountDigits = "5000",
                 title = "Monto del abono",
                 tone = AmountTone.Neutral,
-                onAmountChange = {},
+                onAmountConfirm = {},
                 onDismiss = {},
                 subtitle = "Máximo S/ 160.00",
             )
