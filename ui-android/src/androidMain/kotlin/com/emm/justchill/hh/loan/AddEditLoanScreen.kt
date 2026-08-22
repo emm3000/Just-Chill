@@ -27,7 +27,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,6 +43,7 @@ import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.UnderlineTextField
+import com.emm.justchill.core.ui.atoms.rewrittenTo
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.hh.shared.AmountInputSheet
 import com.emm.justchill.hh.shared.FormSection
@@ -150,11 +153,9 @@ private fun AddEditLoanContent(
             }
 
             FormSection(eyebrow = "INTERÉS %") {
-                UnderlineTextField(
-                    value = state.interestPercentText,
-                    onValueChange = { onIntent(AddEditLoanIntent.OnInterestPercentChange(it)) },
-                    placeholder = "0",
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                InterestPercentField(
+                    text = state.interestPercentText,
+                    onTextChange = { onIntent(AddEditLoanIntent.OnInterestPercentChange(it)) },
                 )
             }
 
@@ -206,6 +207,28 @@ private fun AddEditLoanContent(
             onDismiss = { showDateSheet = false },
         )
     }
+}
+
+/**
+ * The one field the ViewModel rewrites on every keystroke — `sanitizeInterestPercentInput` drops
+ * what the parser would truncate — so the caret has to be placed against the text that came back
+ * rather than the text that went in. [lastEdit] caches that caret and nothing else: what renders is
+ * always [text], straight off the state.
+ */
+@Composable
+private fun InterestPercentField(text: String, onTextChange: (String) -> Unit) {
+    var lastEdit by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(text, TextRange(text.length)))
+    }
+    UnderlineTextField(
+        value = lastEdit.rewrittenTo(text),
+        onValueChange = { edited ->
+            lastEdit = edited
+            if (edited.text != text) onTextChange(edited.text)
+        },
+        placeholder = "0",
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+    )
 }
 
 @Preview
