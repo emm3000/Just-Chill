@@ -3,6 +3,7 @@ package com.emm.justchill.hh.loan
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,8 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
@@ -104,5 +107,73 @@ private fun SummaryStatRow(label: String, value: String) {
             fontFamily = InterFontFamily,
             color = colors.textPrimary,
         )
+    }
+}
+
+private val activeLoanSummary = LoanSummaryUi(
+    personName = "Juan",
+    principal = "S/ 1,200.00",
+    interestPercentLabel = "5%",
+    totalDue = "S/ 1,260.00",
+    paidSoFar = "S/ 300.00",
+    remaining = "S/ 960.00",
+    isSettled = false,
+    readableLentAt = "12 de agosto de 2026",
+    note = "Para el arreglo del carro",
+)
+
+@Preview
+@Composable
+private fun LoanSummaryCardPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg)
+                .padding(16.dp),
+        ) {
+            LoanSummaryCard(summary = activeLoanSummary)
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun LoanSummaryCardSettledPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg)
+                .padding(16.dp),
+        ) {
+            LoanSummaryCard(
+                summary = activeLoanSummary.copy(
+                    paidSoFar = "S/ 1,260.00",
+                    remaining = "S/ 0.00",
+                    isSettled = true,
+                ),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun LoanSummaryCardLongNotePreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg)
+                .padding(16.dp),
+        ) {
+            LoanSummaryCard(
+                summary = activeLoanSummary.copy(
+                    note = "Prestado para completar el pago del alquiler de agosto porque el " +
+                        "banco demoró la transferencia del sueldo hasta el día quince",
+                ),
+            )
+        }
     }
 }
