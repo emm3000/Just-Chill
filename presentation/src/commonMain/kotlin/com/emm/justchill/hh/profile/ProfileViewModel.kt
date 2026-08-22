@@ -209,7 +209,16 @@ class ProfileViewModel(
         },
     ) {
         val stats = importData(json)
-        sendEffect(ProfileEffect.Notify(ProfileMessage.ImportDone(stats.transactions, stats.recurring)))
+        sendEffect(
+            ProfileEffect.Notify(
+                ProfileMessage.ImportDone(
+                    transactions = stats.transactions,
+                    recurring = stats.recurring,
+                    loans = stats.loans,
+                    loanPayments = stats.loanPayments,
+                ),
+            ),
+        )
     }
 }
 

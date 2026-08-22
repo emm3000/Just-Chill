@@ -1,27 +1,26 @@
 package com.emm.justchill.hh.profile
 
 /**
- * Body copy for the "import finished" notification.
- *
- * [recurring] joined the count in the same commit that made the v3 import restore that table
- * (`69f28de5`); until then the sentence only ever named `transactions`. `recurring == 0` still
- * names nothing else — a v1/v2 file, or a v3 file whose owner has no templates, must not start
- * naming a table it did nothing to. Only `recurring > 0` grows the sentence.
- *
- * Both counts inflect, the way `DeleteCategoryCopy` and `ReportShareFormatter` already do it. The
- * `transactions` side did not until a device showed the result: `(1, 1)` rendered
- * `"1 movimientos y 1 recurrente importados."` — the two rules side by side in one sentence, which
- * is what made a long-standing wrong plural finally unignorable.
- *
- * The participle only drops to `"importado"` in the `recurring == 0` singular branch. Two singular
- * subjects joined by "y" take a plural participle, so `(1, 1)` keeps `"importados"`.
+ * Body copy for the "import finished" notification. Every count inflects, the way
+ * `DeleteCategoryCopy` and `ReportShareFormatter` already do it. [transactions] is the one clause
+ * never omitted, even at zero; [recurring], [loans] and [loanPayments] each skip their clause at
+ * zero rather than naming a table the import did nothing to. The participle drops to singular
+ * only when exactly one clause is named and that clause's count is 1 — two or more clauses always
+ * take the plural participle.
  */
-fun buildImportDoneMessage(transactions: Int, recurring: Int): String {
-    val transactionsPhrase = if (transactions == 1) "1 movimiento" else "$transactions movimientos"
-    if (recurring == 0) {
-        val participle = if (transactions == 1) "importado" else "importados"
-        return "Listo — $transactionsPhrase $participle."
+fun buildImportDoneMessage(transactions: Int, recurring: Int, loans: Int, loanPayments: Int): String {
+    val clauses = buildList {
+        add(inflect(transactions, "movimiento", "movimientos"))
+        if (recurring > 0) add(inflect(recurring, "recurrente", "recurrentes"))
+        if (loans > 0) add(inflect(loans, "préstamo", "préstamos"))
+        if (loanPayments > 0) add(inflect(loanPayments, "abono", "abonos"))
     }
-    val recurringPhrase = if (recurring == 1) "1 recurrente" else "$recurring recurrentes"
-    return "Listo — $transactionsPhrase y $recurringPhrase importados."
+    val participle = if (clauses.size == 1 && transactions == 1) "importado" else "importados"
+    return "Listo — ${joinClauses(clauses)} $participle."
 }
+
+private fun inflect(count: Int, singular: String, plural: String): String =
+    if (count == 1) "1 $singular" else "$count $plural"
+
+private fun joinClauses(clauses: List<String>): String =
+    if (clauses.size <= 1) clauses.joinToString() else "${clauses.dropLast(1).joinToString(", ")} y ${clauses.last()}"

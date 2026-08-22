@@ -82,15 +82,15 @@ class ProfileViewModelImportTest {
     )
 
     @Test
-    fun `ImportJson happy path emits ImportDone with both counts`() = runTest(testDispatcher) {
+    fun `ImportJson happy path emits ImportDone with all four counts`() = runTest(testDispatcher) {
         coEvery { importData(any()) } returns
             ImportStats(
                 accounts = 2,
                 categories = 5,
                 transactions = 234,
                 recurring = 6,
-                loans = 0,
-                loanPayments = 0,
+                loans = 14,
+                loanPayments = 40,
             )
 
         val vm = buildViewModel()
@@ -101,8 +101,12 @@ class ProfileViewModelImportTest {
         advanceUntilIdle()
 
         assertTrue(
-            effects.any { it is ProfileEffect.Notify && it.message == ProfileMessage.ImportDone(234, 6) },
-            "Expected ImportDone(234, 6) notify not found in $effects",
+            effects.any {
+                it is ProfileEffect.Notify &&
+                    it.message ==
+                    ProfileMessage.ImportDone(transactions = 234, recurring = 6, loans = 14, loanPayments = 40)
+            },
+            "Expected ImportDone(234, 6, 14, 40) notify not found in $effects",
         )
         assertEquals(ProfileOp.None, vm.state.value.op)
 

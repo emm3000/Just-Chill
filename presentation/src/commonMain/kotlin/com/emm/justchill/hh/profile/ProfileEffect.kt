@@ -20,7 +20,8 @@ sealed interface ProfileMessage {
     data object AccountDeleted : ProfileMessage
     data object ExportDone : ProfileMessage
     data object ExportFailed : ProfileMessage
-    data class ImportDone(val transactions: Int, val recurring: Int) : ProfileMessage
+    data class ImportDone(val transactions: Int, val recurring: Int, val loans: Int, val loanPayments: Int) :
+        ProfileMessage
     data object ImportFailed : ProfileMessage
     data object OperationInProgress : ProfileMessage
 

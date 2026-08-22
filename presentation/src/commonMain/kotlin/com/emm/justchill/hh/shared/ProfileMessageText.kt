@@ -16,7 +16,7 @@ fun ProfileMessage.toText(): String = when (this) {
 
     ProfileMessage.ExportFailed -> "No pude exportar — capaz no hay espacio en tu celu?"
 
-    is ProfileMessage.ImportDone -> buildImportDoneMessage(transactions, recurring)
+    is ProfileMessage.ImportDone -> buildImportDoneMessage(transactions, recurring, loans, loanPayments)
 
     ProfileMessage.ImportFailed -> "No pude importar el archivo — capaz está dañado."
 
