@@ -134,7 +134,7 @@ private fun AddEditLoanContent(
                 if (state.personSuggestions.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        items(state.personSuggestions) { name ->
+                        items(state.personSuggestions, key = { it }) { name ->
                             FrequentComboChip(
                                 label = name,
                                 dotColor = null,
