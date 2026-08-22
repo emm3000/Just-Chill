@@ -28,18 +28,13 @@ fun UnderlineTextField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     placeholder: String = "",
-    isError: Boolean = false,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
 ) {
     val colors = LocalEmmColors.current
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
 
-    val lineColor = when {
-        isError -> colors.danger
-        isFocused -> colors.accentFocus
-        else -> colors.border
-    }
+    val lineColor = if (isFocused) colors.accentFocus else colors.border
 
     BasicTextField(
         value = value,
