@@ -65,6 +65,8 @@ import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.emmSwitchColors
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import com.emm.justchill.hh.shared.AmountInputSheet
+import com.emm.justchill.hh.shared.FormSection
 import com.emm.justchill.hh.transaction.centsToSoles
 import com.emm.justchill.hh.transaction.resolvedColor
 import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
@@ -239,20 +241,15 @@ private fun AddEditRecurringMovementContent(
     }
 
     if (showAmountSheet) {
+        val typeLabel = if (state.type == TransactionType.Income) "Ingreso" else "Gasto"
         AmountInputSheet(
             amountDigits = state.amountDigits,
-            type = state.type,
+            title = "Monto del recurrente",
+            tone = if (state.type == TransactionType.Income) AmountTone.Pos else AmountTone.Neg,
+            subtitle = "$typeLabel · se paga cada mes",
             onAmountChange = { onIntent(AddEditRecurringMovementIntent.OnAmountChange(it)) },
             onDismiss = { showAmountSheet = false },
         )
-    }
-}
-
-@Composable
-private fun FormSection(eyebrow: String, content: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Eyebrow(text = eyebrow)
-        content()
     }
 }
 

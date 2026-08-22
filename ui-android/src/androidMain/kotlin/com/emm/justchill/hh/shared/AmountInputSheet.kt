@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.recurring
+package com.emm.justchill.hh.shared
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,7 +29,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.Numpad
@@ -40,17 +39,21 @@ import com.emm.justchill.hh.transaction.MAX_AMOUNT_DIGITS
 import com.emm.justchill.hh.transaction.centsToSoles
 import com.emm.justchill.hh.transaction.formatCentsForDisplay
 
+// amountDigits/title/tone/onAmountChange/onDismiss are the loan and recurring callers' only
+// required inputs; subtitle is the one optional extra the recurring sheet adds. Splitting these
+// six into a config object would relocate the count, not reduce it.
+@Suppress("LongParameterList")
 @Composable
 fun AmountInputSheet(
     amountDigits: String,
-    type: TransactionType,
+    title: String,
+    tone: AmountTone,
     onAmountChange: (String) -> Unit,
+    subtitle: String? = null,
     onDismiss: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val tone = if (type == TransactionType.Income) AmountTone.Pos else AmountTone.Neg
-    val typeLabel = if (type == TransactionType.Income) "Ingreso" else "Gasto"
     val formattedAmount = if (amountDigits.isEmpty()) "0.00" else formatCentsForDisplay(amountDigits)
 
     ModalBottomSheet(
@@ -68,7 +71,7 @@ fun AmountInputSheet(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = "Monto del recurrente",
+                text = title,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.W600,
                 fontFamily = InterFontFamily,
@@ -104,14 +107,16 @@ fun AmountInputSheet(
                 tone = tone,
                 showCaret = true,
             )
-            Text(
-                text = "$typeLabel · se paga cada mes",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.W400,
-                fontFamily = InterFontFamily,
-                color = colors.textTertiary,
-                modifier = Modifier.padding(top = 4.dp),
-            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.W400,
+                    fontFamily = InterFontFamily,
+                    color = colors.textTertiary,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
         }
 
         Spacer(Modifier.height(16.dp))
@@ -120,17 +125,9 @@ fun AmountInputSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            onDigit = { ch ->
-                val newDigits = (amountDigits + ch).take(MAX_AMOUNT_DIGITS)
-                onAmountChange(newDigits)
-            },
-            onDoubleZero = {
-                val newDigits = (amountDigits + "00").take(MAX_AMOUNT_DIGITS)
-                onAmountChange(newDigits)
-            },
-            onBackspace = {
-                onAmountChange(amountDigits.dropLast(1))
-            },
+            onDigit = { ch -> onAmountChange((amountDigits + ch).take(MAX_AMOUNT_DIGITS)) },
+            onDoubleZero = { onAmountChange((amountDigits + "00").take(MAX_AMOUNT_DIGITS)) },
+            onBackspace = { onAmountChange(amountDigits.dropLast(1)) },
         )
 
         Spacer(Modifier.height(12.dp))
@@ -147,9 +144,7 @@ fun AmountInputSheet(
                 .height(52.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(ctaBg)
-                .then(
-                    if (confirmEnabled) Modifier.clickable(onClick = onDismiss) else Modifier,
-                ),
+                .then(if (confirmEnabled) Modifier.clickable(onClick = onDismiss) else Modifier),
             contentAlignment = Alignment.Center,
         ) {
             Row(

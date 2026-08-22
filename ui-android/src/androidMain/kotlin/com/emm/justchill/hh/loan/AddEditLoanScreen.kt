@@ -58,11 +58,12 @@ import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
-import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import com.emm.justchill.hh.shared.AmountInputSheet
+import com.emm.justchill.hh.shared.FormSection
 import com.emm.justchill.hh.transaction.centsToSoles
 import com.emm.justchill.hh.transaction.components.FrequentComboChip
 import com.emm.justchill.hh.transaction.sheets.DatePickerSheet
@@ -200,8 +201,11 @@ private fun AddEditLoanContent(
     }
 
     if (showAmountSheet) {
-        LoanAmountInputSheet(
+        AmountInputSheet(
             amountDigits = state.amountDigits,
+            title = "Monto del préstamo",
+            tone = AmountTone.Neutral,
+            subtitle = null,
             onAmountChange = { onIntent(AddEditLoanIntent.OnAmountChange(it)) },
             onDismiss = { showAmountSheet = false },
         )
@@ -216,14 +220,6 @@ private fun AddEditLoanContent(
             },
             onDismiss = { showDateSheet = false },
         )
-    }
-}
-
-@Composable
-private fun FormSection(eyebrow: String, content: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Eyebrow(text = eyebrow)
-        content()
     }
 }
 
