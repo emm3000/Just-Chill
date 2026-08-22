@@ -23,8 +23,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -90,8 +90,8 @@ private fun AddEditLoanContent(
 ) {
     val colors = LocalEmmColors.current
 
-    var showAmountSheet by remember { mutableStateOf(false) }
-    var showDateSheet by remember { mutableStateOf(false) }
+    var showAmountSheet by rememberSaveable { mutableStateOf(false) }
+    var showDateSheet by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
