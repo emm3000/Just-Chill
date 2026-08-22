@@ -60,6 +60,8 @@ fun AddEditLoanScreen(
     ),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    // Only the effect below needs this: it outlives the recomposition that swaps onBack. Reading it
+    // in the composition body instead would subscribe the composable to it and undo the point.
     val currentOnBack by rememberUpdatedState(onBack)
 
     LaunchedEffect(vm) {
@@ -78,7 +80,7 @@ fun AddEditLoanScreen(
     AddEditLoanContent(
         state = state,
         onIntent = vm::onIntent,
-        onBack = currentOnBack,
+        onBack = onBack,
     )
 }
 
