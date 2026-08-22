@@ -17,7 +17,6 @@ data class HomeUiState(
     val hasAnyTransaction: Boolean = false,
     val pendingRecurringMovements: List<PendingRecurringUi> = emptyList(),
     val loansTotalOwed: String = formatNeutral(fromCentsToSolesWith(Money.Zero)),
-    val hasLoans: Boolean = false,
 ) : UiState {
     val isFirstLaunch: Boolean
         get() = !hasAnyTransaction

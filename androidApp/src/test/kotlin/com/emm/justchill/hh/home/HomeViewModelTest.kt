@@ -363,7 +363,6 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         assertEquals("S/ 350.00", viewModel.state.value.loansTotalOwed)
-        assertTrue(viewModel.state.value.hasLoans)
     }
 
     @Test
@@ -375,13 +374,11 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         assertEquals("S/ 0.00", viewModel.state.value.loansTotalOwed)
-        assertFalse(viewModel.state.value.hasLoans)
 
         loansFlow.value = listOf(personBalance(remaining = Money(50_000L)))
         advanceUntilIdle()
 
         assertEquals("S/ 500.00", viewModel.state.value.loansTotalOwed)
-        assertTrue(viewModel.state.value.hasLoans)
     }
 
     @Test

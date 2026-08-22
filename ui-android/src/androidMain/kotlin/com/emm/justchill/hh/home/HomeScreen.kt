@@ -189,16 +189,14 @@ private fun HomeWithData(
         item { HeroBalance(balance = homeData.balance) }
         item { InOutRow(income = homeData.income, spend = homeData.spend) }
 
-        if (homeData.hasLoans) {
-            item {
-                LoansCard(
-                    totalOwed = homeData.loansTotalOwed,
-                    onClick = navigateToLoans,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 20.dp, start = 24.dp, end = 24.dp),
-                )
-            }
+        item {
+            LoansCard(
+                totalOwed = homeData.loansTotalOwed,
+                onClick = navigateToLoans,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp, start = 24.dp, end = 24.dp),
+            )
         }
 
         if (homeData.pendingRecurringMovements.isNotEmpty()) {

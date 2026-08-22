@@ -95,7 +95,6 @@ class HomeViewModel(
 
     private fun HomeUiState.mapToLoansUiState(balances: List<PersonBalance>): HomeUiState = copy(
         loansTotalOwed = formatNeutral(fromCentsToSolesWith(balances.totalRemaining())),
-        hasLoans = balances.isNotEmpty(),
     )
 
     private fun List<PersonBalance>.totalRemaining(): Money =
