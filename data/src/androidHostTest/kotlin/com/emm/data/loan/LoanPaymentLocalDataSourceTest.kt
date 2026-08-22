@@ -1,5 +1,6 @@
 package com.emm.data.loan
 
+import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
 import com.emm.domain.loan.LoanPayment
@@ -101,6 +102,25 @@ class LoanPaymentLocalDataSourceTest {
         assertEquals("Pending", row.syncState)
         assertEquals(clock.now().toEpochMilliseconds(), row.updatedAt)
     }
+
+    @Test
+    fun `update does not touch a soft-deleted payment`() = runTest {
+        localDataSource.create(payment(amount = 300L))
+        localDataSource.softDelete("pay-1")
+
+        localDataSource.update(payment(amount = 999_00L))
+
+        // `all()` filters `deletedAt IS NULL`, so a tombstoned row never comes back through it —
+        // read the column directly to prove `update:`'s own `AND deletedAt IS NULL` blocked the write.
+        assertEquals(300L, rawAmount("pay-1"))
+    }
+
+    private fun rawAmount(paymentId: String): Long? = driver.executeQuery(
+        identifier = null,
+        sql = "SELECT amount FROM loan_payments WHERE paymentId = '$paymentId'",
+        mapper = { cursor -> QueryResult.Value(if (cursor.next().value) cursor.getLong(0) else null) },
+        parameters = 0,
+    ).value
 
     private fun assertPaymentFields(expected: LoanPayment, actual: LoanPayment) {
         assertEquals(expected.loanId, actual.loanId)

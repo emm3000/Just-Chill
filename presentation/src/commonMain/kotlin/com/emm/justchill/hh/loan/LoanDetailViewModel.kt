@@ -2,6 +2,7 @@ package com.emm.justchill.hh.loan
 
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.loan.DeleteLoanUseCase
+import com.emm.domain.loan.Loan
 import com.emm.domain.loan.LoanPayment
 import com.emm.domain.loan.LoanPaymentInsert
 import com.emm.domain.loan.LoanPaymentRepository
@@ -9,11 +10,14 @@ import com.emm.domain.loan.LoanPaymentUpdate
 import com.emm.domain.loan.LoanRepository
 import com.emm.domain.loan.RegisterLoanPaymentUseCase
 import com.emm.domain.loan.UpdateLoanPaymentUseCase
+import com.emm.domain.loan.remaining
 import com.emm.domain.shared.LoanId
 import com.emm.domain.shared.LoanPaymentId
 import com.emm.domain.shared.Money
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.hh.shared.formatNeutral
+import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.transaction.centsToMoney
 import com.emm.justchill.hh.transaction.moneyCentsString
 import kotlinx.coroutines.flow.combine
@@ -48,9 +52,10 @@ class LoanDetailViewModel(
     // vanished-loan path both reach the same exit; only the first one may pop the back stack.
     private var hasExited = false
 
-    // The domain models behind `state.payments`, kept for OnEditPaymentClick to prefill the form
-    // and for confirmPayment to preserve an edited payment's original time-of-day — LoanPaymentRowUi
-    // only carries already-formatted display strings.
+    // The domain models behind `state.summary`/`state.payments`, kept for OnEditPaymentClick to
+    // prefill the form and compute its amount ceiling — LoanSummaryUi/LoanPaymentRowUi only carry
+    // already-formatted display strings, and Compose must not do money arithmetic on those.
+    private var loadedLoan: Loan? = null
     private var loadedPayments: List<LoanPayment> = emptyList()
 
     init {
@@ -63,11 +68,21 @@ class LoanDetailViewModel(
                     exitDeletedLoan()
                     return@onEach
                 }
+                loadedLoan = loan
                 loadedPayments = payments
                 val paidSoFar = payments.fold(Money.Zero) { acc, payment -> acc + payment.amount }
                 updateState { copy(summary = loanSummaryUi(loan, paidSoFar), payments = payments.toUi()) }
             }
             .launchIn(viewModelScope)
+    }
+
+    // Mirrors UpdateLoanPaymentUseCase's own remainingBeforeThis: the ceiling the sheet shows must
+    // agree with what the use case actually enforces, so editing the only abono on a settled loan
+    // shows its old amount as headroom instead of "Máximo S/ 0.00".
+    private fun maxAmountLabel(excluding: Money): String? {
+        val loan = loadedLoan ?: return null
+        val paidSoFar = loadedPayments.fold(Money.Zero) { acc, payment -> acc + payment.amount }
+        return formatNeutral(fromCentsToSolesWith(remaining(loan.totalDue, paidSoFar - excluding)))
     }
 
     override fun onIntent(intent: LoanDetailIntent) {
@@ -95,7 +110,15 @@ class LoanDetailViewModel(
     private fun onPaymentFormIntent(intent: LoanDetailIntent.PaymentFormIntent) {
         when (intent) {
             LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick -> {
-                updateState { copy(payment = LoanPaymentFormUi(loanId = loanId, today = today())) }
+                updateState {
+                    copy(
+                        payment = LoanPaymentFormUi(
+                            loanId = loanId,
+                            today = today(),
+                            maxAmountLabel = maxAmountLabel(excluding = Money.Zero),
+                        ),
+                    )
+                }
             }
 
             is LoanDetailIntent.PaymentFormIntent.OnEditPaymentClick -> onEditPaymentClick(intent.paymentId)
@@ -138,6 +161,8 @@ class LoanDetailViewModel(
                     date = payment.paidAt.date,
                     note = payment.note,
                     editingPaymentId = payment.id.value,
+                    originalPaidAt = payment.paidAt,
+                    maxAmountLabel = maxAmountLabel(excluding = payment.amount),
                 ),
             )
         }
@@ -200,15 +225,13 @@ class LoanDetailViewModel(
                 ),
             )
         } else {
-            // Preserves the edited payment's original time-of-day, like AddEditLoanViewModel does
-            // for a loan's lentAt: the date picker only ever offers a date, so falling back to
-            // "now" here would silently rewrite a real historical time on every edit.
-            val timeOfDay = loadedPayments.find { it.id.value == editingId }?.paidAt?.time
-                ?: clock.now().toLocalDateTime(zone).time
+            // Preserves the edited payment's original time-of-day: the date picker only ever
+            // offers a date, and `loan_payments.byLoan` is `ORDER BY paidAt DESC`, so stamping
+            // "now" here would silently reorder the abono list on every edit.
+            val timeOfDay = form.originalPaidAt?.time ?: clock.now().toLocalDateTime(zone).time
             updateLoanPayment(
                 LoanPaymentUpdate(
                     id = LoanPaymentId(editingId),
-                    loanId = LoanId(form.loanId),
                     amount = centsToMoney(form.amountDigits),
                     method = form.method,
                     paidAt = LocalDateTime(form.date ?: form.today, timeOfDay),

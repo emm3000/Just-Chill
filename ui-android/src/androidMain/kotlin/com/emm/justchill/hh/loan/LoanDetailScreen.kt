@@ -118,7 +118,7 @@ fun LoanDetailScreen(
     }
 
     state.payment?.let { form ->
-        LoanPaymentSheet(form = form, loanRemaining = summary?.remaining, onIntent = onIntent)
+        LoanPaymentSheet(form = form, onIntent = onIntent)
     }
 }
 

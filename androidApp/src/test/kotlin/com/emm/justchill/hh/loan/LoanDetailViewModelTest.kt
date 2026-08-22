@@ -430,6 +430,60 @@ class LoanDetailViewModelTest {
         }
 
     @Test
+    fun `OnPaymentConfirm while editing composes a newly picked date with the original time of day`() = runTest {
+        every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+        every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(listOf(payment("pay-1", 30_000L)))
+        coEvery { updateLoanPayment(any()) } returns Unit
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        val newDate = LocalDate(2026, Month.MARCH, 4)
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnEditPaymentClick("pay-1"))
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentDateSelected(newDate))
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentConfirm)
+        advanceUntilIdle()
+
+        val update = slot<LoanPaymentUpdate>()
+        coVerify(exactly = 1) { updateLoanPayment(capture(update)) }
+        // 09:00 is the payment() fixture's original paidAt time; the date is the newly picked one.
+        assertEquals(LocalDateTime(newDate, LocalTime(9, 0)), update.captured.paidAt)
+    }
+
+    @Test
+    fun `OnAddPaymentClick sets the sheet's amount ceiling to the loan's plain remaining`() = runTest {
+        every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+        every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(
+            listOf(payment("pay-1", amount = 30_000L), payment("pay-2", amount = 20_000L)),
+        )
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick)
+        advanceUntilIdle()
+
+        assertEquals("S/ 600.00", vm.state.value.payment?.maxAmountLabel)
+    }
+
+    @Test
+    fun `OnEditPaymentClick sets the sheet's amount ceiling to remaining plus the edited payment's own amount`() =
+        runTest {
+            every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+            every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(
+                listOf(payment("pay-1", amount = 30_000L), payment("pay-2", amount = 20_000L)),
+            )
+            val vm = viewModel()
+            advanceUntilIdle()
+
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnEditPaymentClick("pay-2"))
+            advanceUntilIdle()
+
+            // Plain remaining is S/ 600.00 (110_000 totalDue - 50_000 paid); editing pay-2 (20_000)
+            // must add its own amount back so the ceiling reflects what UpdateLoanPaymentUseCase
+            // actually allows, not the balance including the abono being edited.
+            assertEquals("S/ 800.00", vm.state.value.payment?.maxAmountLabel)
+        }
+
+    @Test
     fun `remaining follows the repository flow after an edit with no manual refresh`() = runTest {
         val payments = MutableStateFlow(listOf(payment("pay-1", 30_000L), payment("pay-2", 20_000L)))
         every { loanRepository.byId(loanIdValue) } returns flowOf(loan)

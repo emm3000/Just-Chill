@@ -36,7 +36,7 @@ import com.emm.justchill.hh.shared.FormSection
 import com.emm.justchill.hh.transaction.sheets.DatePickerSheet
 
 @Composable
-fun LoanPaymentSheet(form: LoanPaymentFormUi, loanRemaining: String?, onIntent: (LoanDetailIntent) -> Unit) {
+fun LoanPaymentSheet(form: LoanPaymentFormUi, onIntent: (LoanDetailIntent) -> Unit) {
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showAmountSheet by remember { mutableStateOf(false) }
@@ -118,7 +118,7 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, loanRemaining: String?, onIntent: 
             amountDigits = form.amountDigits,
             title = "Monto del abono",
             tone = AmountTone.Neutral,
-            subtitle = loanRemaining?.let { "Máximo $it" },
+            subtitle = form.maxAmountLabel?.let { "Máximo $it" },
             onAmountChange = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentAmountChange(it)) },
             onDismiss = { showAmountSheet = false },
         )

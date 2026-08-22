@@ -5,7 +5,14 @@ import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
 import com.emm.data.Loan_payments
 import com.emm.data.Loans
+import com.emm.data.loan.LoanPaymentLocalDataSource
+import com.emm.domain.loan.LoanPayment
+import com.emm.domain.loan.PaymentMethod
+import com.emm.domain.shared.LoanId
+import com.emm.domain.shared.LoanPaymentId
+import com.emm.domain.shared.Money
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json
 import org.junit.After
 import org.junit.Before
@@ -108,13 +115,24 @@ class BackupLoanRoundTripTest {
 
     @Test
     fun `a v4 backup exported after an edit carries the edited amount, not the original`() = runTest {
-        db.loan_paymentsQueries.update(
-            amount = 999_00L,
-            method = "Transfer",
-            paidAt = "2026-08-13T09:30:00",
-            note = "Monto corregido",
-            updatedAt = SEEDED_AT + 1,
-            paymentId = "pay-cash",
+        // Driven through LoanPaymentLocalDataSource.update — the real write path the app uses to
+        // edit an abono — rather than a raw query, so this proves the property the ticket cares
+        // about: an edit made the way the app makes it reaches the export payload.
+        val localDataSource = LoanPaymentLocalDataSource(
+            db,
+            clock = object : Clock {
+                override fun now(): Instant = IMPORTED_AT
+            },
+        )
+        localDataSource.update(
+            LoanPayment(
+                id = LoanPaymentId("pay-cash"),
+                loanId = LoanId("loan-plain"),
+                amount = Money(999_00L),
+                method = PaymentMethod.Transfer,
+                paidAt = LocalDateTime.parse("2026-08-13T09:30:00"),
+                note = "Monto corregido",
+            ),
         )
 
         val payload = exportedPayload()

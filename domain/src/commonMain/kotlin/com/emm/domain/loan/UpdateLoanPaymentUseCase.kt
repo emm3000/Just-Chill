@@ -19,8 +19,11 @@ class UpdateLoanPaymentUseCase(
     suspend operator fun invoke(update: LoanPaymentUpdate) {
         ensurePositiveAmount(update.amount)
         ensureNotFutureDated(update.paidAt, clock, zone)
-        val loan = loanRepository.byId(update.loanId).first() ?: throw DomainException.NotFound("Loan")
+        // The loan is derived from the existing payment's own loanId, never taken from the
+        // caller: a `loanId` on `LoanPaymentUpdate` would be persisted nowhere (a payment's loan
+        // never changes) yet could still steer this balance check at the wrong loan.
         val existing = requireExistingPayment(update.id)
+        val loan = loanRepository.byId(existing.loanId).first() ?: throw DomainException.NotFound("Loan")
         val paidSoFar = loanPaymentRepository.paidSoFar(loan.id)
         // The balance excludes the abono being edited: its old amount is subtracted out of
         // paidSoFar before checking the new one, otherwise editing the only abono on a settled
@@ -34,7 +37,7 @@ class UpdateLoanPaymentUseCase(
         }
         val loanPayment = LoanPayment(
             id = update.id,
-            loanId = update.loanId,
+            loanId = existing.loanId,
             amount = update.amount,
             method = update.method,
             paidAt = update.paidAt,

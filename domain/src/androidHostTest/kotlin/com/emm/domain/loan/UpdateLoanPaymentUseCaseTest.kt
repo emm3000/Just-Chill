@@ -64,7 +64,6 @@ class UpdateLoanPaymentUseCaseTest {
 
     private val anyUpdate = LoanPaymentUpdate(
         id = paymentId,
-        loanId = loanId,
         amount = Money(4_000L),
         method = PaymentMethod.Cash,
         paidAt = paidAt,
@@ -93,6 +92,7 @@ class UpdateLoanPaymentUseCaseTest {
 
     @Test
     fun `update should throw NotFound when the loan does not exist`() = runTest {
+        every { loanPaymentRepository.byId(paymentId) } returns flowOf(existingPayment(amount = 4_000L))
         every { loanRepository.byId(loanId) } returns flowOf(null)
 
         assertFailsWith<DomainException.NotFound> { useCase(anyUpdate) }
@@ -101,7 +101,6 @@ class UpdateLoanPaymentUseCaseTest {
 
     @Test
     fun `update should throw NotFound when the payment does not exist`() = runTest {
-        every { loanRepository.byId(loanId) } returns flowOf(loan)
         every { loanPaymentRepository.byId(paymentId) } returns flowOf(null)
 
         assertFailsWith<DomainException.NotFound> { useCase(anyUpdate) }
@@ -167,8 +166,8 @@ class UpdateLoanPaymentUseCaseTest {
     @Test
     fun `update should propagate DomainException from repository`() = runTest {
         every { loanRepository.byId(loanId) } returns flowOf(loan)
-        every { loanPaymentRepository.byId(paymentId) } returns flowOf(existingPayment(amount = 0L))
-        coEvery { loanPaymentRepository.paidSoFar(loanId) } returns Money.Zero
+        every { loanPaymentRepository.byId(paymentId) } returns flowOf(existingPayment(amount = 4_000L))
+        coEvery { loanPaymentRepository.paidSoFar(loanId) } returns Money(6_000L)
         coEvery { loanPaymentRepository.update(any()) } throws DomainException.DatabaseError(RuntimeException("boom"))
 
         val ex = assertFailsWith<DomainException.DatabaseError> { useCase(anyUpdate) }
