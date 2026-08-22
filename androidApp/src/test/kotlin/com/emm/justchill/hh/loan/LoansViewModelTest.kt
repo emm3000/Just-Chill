@@ -6,6 +6,7 @@ import com.emm.domain.shared.Money
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -41,13 +42,32 @@ class LoansViewModelTest {
     }
 
     @Test
-    fun `an empty ledger leaves people empty`() = runTest {
-        every { loanRepository.balancesByPerson() } returns flowOf(emptyList())
+    fun `an empty ledger leaves people empty, then reflects a later push`() = runTest {
+        val balances = MutableStateFlow<List<PersonBalance>>(emptyList())
+        every { loanRepository.balancesByPerson() } returns balances
 
         val viewModel = LoansViewModel(loanRepository)
         advanceUntilIdle()
-
         assertTrue(viewModel.state.value.people.isEmpty())
+
+        balances.value = listOf(PersonBalance(personKey = "ana", personName = "Ana", remaining = Money(150_000L)))
+        advanceUntilIdle()
+
+        assertEquals("Ana", viewModel.state.value.people.single().personName)
+    }
+
+    @Test
+    fun `OnAddLoanClick emits NavigateToAddLoan`() = runTest {
+        every { loanRepository.balancesByPerson() } returns flowOf(emptyList())
+        val viewModel = LoansViewModel(loanRepository)
+        val effects = mutableListOf<LoansEffect>()
+        val job = launch { viewModel.effect.collect { effects.add(it) } }
+
+        viewModel.onIntent(LoansIntent.OnAddLoanClick)
+        advanceUntilIdle()
+
+        assertTrue(effects.any { it is LoansEffect.NavigateToAddLoan })
+        job.cancel()
     }
 
     @Test

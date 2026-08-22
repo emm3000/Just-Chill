@@ -91,6 +91,46 @@ class PersonLoansViewModelTest {
     }
 
     @Test
+    fun `OnAddPaymentClick emits NavigateToAddPayment with the clicked loan id`() = runTest {
+        every { loanRepository.loansWithBalance("ana") } returns flowOf(emptyList())
+        val vm = viewModel()
+        val effects = mutableListOf<PersonLoansEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(PersonLoansIntent.OnAddPaymentClick("loan-9"))
+        advanceUntilIdle()
+
+        assertTrue(effects.any { it == PersonLoansEffect.NavigateToAddPayment("loan-9") })
+        job.cancel()
+    }
+
+    @Test
+    fun `OnEditLoanClick emits NavigateToEditLoan with the clicked loan id`() = runTest {
+        every { loanRepository.loansWithBalance("ana") } returns flowOf(emptyList())
+        val vm = viewModel()
+        val effects = mutableListOf<PersonLoansEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(PersonLoansIntent.OnEditLoanClick("loan-9"))
+        advanceUntilIdle()
+
+        assertTrue(effects.any { it == PersonLoansEffect.NavigateToEditLoan("loan-9") })
+        job.cancel()
+    }
+
+    @Test
+    fun `OnDeleteDismiss clears pendingDelete`() = runTest {
+        every { loanRepository.loansWithBalance("ana") } returns flowOf(emptyList())
+        val vm = viewModel()
+
+        vm.onIntent(PersonLoansIntent.OnDeleteClick("loan-1"))
+        vm.onIntent(PersonLoansIntent.OnDeleteDismiss)
+        advanceUntilIdle()
+
+        assertNull(vm.state.value.pendingDelete)
+    }
+
+    @Test
     fun `OnDeleteConfirm calls DeleteLoanUseCase with the pending loan id and clears pendingDelete`() = runTest {
         every { loanRepository.loansWithBalance("ana") } returns flowOf(emptyList())
         coEvery { deleteLoan(any()) } returns Unit
