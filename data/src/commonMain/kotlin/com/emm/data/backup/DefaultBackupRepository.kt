@@ -40,13 +40,12 @@ class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock
         return encodeAsDomainException { exportJson.encodeToString(payload) }
     }
 
-    override suspend fun importFromJson(json: String): ImportStats {
-        val decoded = decodeBackupPayload(json)
-        val payload = decoded.payload
-        val fileCarriesRecurring = decoded.declaredVersion >= BACKUP_RECURRING_SINCE_VERSION
-        val fileCarriesLoans = decoded.declaredVersion >= BACKUP_LOANS_SINCE_VERSION
-
-        return safeDbCall {
+    override suspend fun importFromJson(json: String): ImportStats = safeDbCall {
+        withContext(ioDispatcher) {
+            val decoded = decodeBackupPayload(json)
+            val payload = decoded.payload
+            val fileCarriesRecurring = decoded.declaredVersion >= BACKUP_RECURRING_SINCE_VERSION
+            val fileCarriesLoans = decoded.declaredVersion >= BACKUP_LOANS_SINCE_VERSION
             val now = clock.nowMillis()
             var restoredTransactions = 0
             var restoredRecurring = 0
