@@ -27,9 +27,10 @@ CREATE INDEX IF NOT EXISTS loans_user_deleted_idx ON loans(userId, deletedAt);
 byId:
 SELECT * FROM loans WHERE loanId = ? AND deletedAt IS NULL;
 
--- Pre-aggregates payments per loan before joining, same shape as `balancesByPerson` and for the same
--- reason. No `GROUP BY` here: the subquery already collapses payments to one row per loan, so a
--- direct join over this result cannot fan out.
+-- No `GROUP BY`: the subquery already collapses payments to one row per loan, so this join can't
+-- fan out. `paidSoFar` must stay unaggregated here: the subquery's SUM(amount) is already `Long?`,
+-- and wrapping it in an outer SUM degrades to `Double` — the money-through-a-float defect `3374dbf8`
+-- fixed in `balancesByPerson`.
 loansWithBalance:
 SELECT
     l.*,

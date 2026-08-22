@@ -351,7 +351,6 @@ class AppGraphKoinTest {
             EditTransactionViewModel::class to { parametersOf("test-transaction-id") },
             // Nullable template id; a non-null value exercises the edit branch over the create one.
             AddEditRecurringMovementViewModel::class to { parametersOf("test-recurring-id") },
-            // personKey off the person-detail nav route.
             PersonLoansViewModel::class to { parametersOf("test-person-key") },
         )
     }
