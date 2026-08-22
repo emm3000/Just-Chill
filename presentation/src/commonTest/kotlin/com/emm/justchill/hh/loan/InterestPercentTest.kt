@@ -1,7 +1,10 @@
 package com.emm.justchill.hh.loan
 
+import com.emm.domain.loan.MAX_INTEREST_BPS
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 class InterestPercentTest {
 
@@ -43,6 +46,12 @@ class InterestPercentTest {
 
     @Test fun percentTextToBps_garbage_input_falls_back_to_zero() {
         assertEquals(0, percentTextToBps("abc"))
+    }
+
+    @Test fun percentTextToBps_overflowing_input_is_out_of_range_not_zero() {
+        val result = percentTextToBps("12345678901234567890")
+        assertNotEquals(0, result)
+        assertTrue(result > MAX_INTEREST_BPS)
     }
 
     @Test fun bpsToPercentText_round_trips_two_decimals() {
