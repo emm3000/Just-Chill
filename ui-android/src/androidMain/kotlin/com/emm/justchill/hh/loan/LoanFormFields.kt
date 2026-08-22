@@ -54,22 +54,14 @@ fun AmountCard(amountDigits: String, onClick: () -> Unit, modifier: Modifier = M
             .padding(vertical = 20.dp),
         contentAlignment = Alignment.Center,
     ) {
-        if (amountDigits.isEmpty()) {
-            Text(
-                text = "S/ —.—",
-                fontSize = 40.sp,
-                fontWeight = FontWeight.W500,
-                fontFamily = InterFontFamily,
-                color = colors.textTertiary,
-                letterSpacing = (-0.8).sp,
-            )
-        } else {
-            AmountHero(
-                value = centsToSoles(amountDigits),
-                tone = AmountTone.Neutral,
-                showCaret = false,
-            )
-        }
+        // One hero for both branches: an empty accumulator reads as 0.00 and the mute tone is what
+        // says "nothing typed yet", so the first digit changes neither the typeface nor the height
+        // and the card stops shoving the form down.
+        AmountHero(
+            value = centsToSoles(amountDigits),
+            tone = if (amountDigits.isEmpty()) AmountTone.Mute else AmountTone.Neutral,
+            showCaret = false,
+        )
     }
 }
 
