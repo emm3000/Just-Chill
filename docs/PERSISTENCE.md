@@ -49,9 +49,9 @@ on `qualityGate`** — the second one is what matters, since nothing here runs `
 **A schema bump also rehearses the restore**, and it is a different question: the suite proves a
 migration preserves rows already on the device, never that a snapshot written *before* the bump can
 still be read *after* it. Before shipping one, import the latest production snapshot onto a clean
-emulator and compare `ImportStats` — `accounts`, `categories`, `transactions`, `recurring` — against
-the pre-bump counts. Any of the four that moved is a failure. Restoring is the only path back from a
-migration that loses data, so a bump that has not been restored from is untested.
+emulator and compare `ImportStats` — `accounts`, `categories`, `transactions`, `recurring`, `loans`,
+`loanPayments` — against the pre-bump counts. Any of the six that moved is a failure. Restoring is the
+only path back from a migration that loses data, so a bump that has not been restored from is untested.
 
 ## The instrumented suite
 

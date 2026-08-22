@@ -46,4 +46,6 @@ internal fun ExportPayloadV1Dto.toCurrent(): ExportPayloadDto = ExportPayloadDto
         )
     },
     recurringMovements = emptyList(),
+    loans = emptyList(),
+    loanPayments = emptyList(),
 )

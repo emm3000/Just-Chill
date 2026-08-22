@@ -69,7 +69,10 @@ class DefaultBackupRepositoryImportTest {
 
         val stats: ImportStats = repository.importFromJson(json)
 
-        assertEquals(ImportStats(accounts = 1, categories = 2, transactions = 3, recurring = 0), stats)
+        assertEquals(
+            ImportStats(accounts = 1, categories = 2, transactions = 3, recurring = 0, loans = 0, loanPayments = 0),
+            stats,
+        )
     }
 
     @Test
@@ -108,7 +111,10 @@ class DefaultBackupRepositoryImportTest {
 
         val stats = repository.importFromJson(EMPTY_PAYLOAD_JSON)
 
-        assertEquals(ImportStats(accounts = 0, categories = 0, transactions = 0, recurring = 0), stats)
+        assertEquals(
+            ImportStats(accounts = 0, categories = 0, transactions = 0, recurring = 0, loans = 0, loanPayments = 0),
+            stats,
+        )
         assertTrue(db.accountsQueries.all().executeAsList().isEmpty())
         assertTrue(db.categoriesQueries.all().executeAsList().isEmpty())
         assertTrue(db.transactionsQueries.all().executeAsList().isEmpty())

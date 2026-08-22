@@ -84,7 +84,14 @@ class ProfileViewModelImportTest {
     @Test
     fun `ImportJson happy path emits ImportDone with both counts`() = runTest(testDispatcher) {
         coEvery { importData(any()) } returns
-            ImportStats(accounts = 2, categories = 5, transactions = 234, recurring = 6)
+            ImportStats(
+                accounts = 2,
+                categories = 5,
+                transactions = 234,
+                recurring = 6,
+                loans = 0,
+                loanPayments = 0,
+            )
 
         val vm = buildViewModel()
         val effects = mutableListOf<ProfileEffect>()
@@ -145,7 +152,14 @@ class ProfileViewModelImportTest {
     @Test
     fun `ImportJson resets op to None after completion`() = runTest(testDispatcher) {
         coEvery { importData(any()) } returns
-            ImportStats(accounts = 1, categories = 1, transactions = 10, recurring = 0)
+            ImportStats(
+                accounts = 1,
+                categories = 1,
+                transactions = 10,
+                recurring = 0,
+                loans = 0,
+                loanPayments = 0,
+            )
 
         val vm = buildViewModel()
 

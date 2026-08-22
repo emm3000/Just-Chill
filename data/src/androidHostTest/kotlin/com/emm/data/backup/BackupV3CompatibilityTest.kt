@@ -14,6 +14,7 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
@@ -45,10 +46,10 @@ class BackupV3CompatibilityTest {
     }
 
     @Test
-    fun `the current shape parses the bytes a version 3 export writes`() = runTest {
-        val payload = importJson.decodeFromString<ExportPayloadDto>(V3_BACKUP)
+    fun `the frozen version 3 shape parses the bytes a version 3 export actually wrote`() = runTest {
+        val payload = importJson.decodeFromString<ExportPayloadV3Dto>(V3_BACKUP)
 
-        assertEquals(BACKUP_SCHEMA_VERSION, payload.schemaVersion)
+        assertEquals(BACKUP_SCHEMA_VERSION_V3, payload.schemaVersion)
         assertEquals(listOf("acc-1"), payload.accounts.map { it.accountId })
         assertEquals(listOf("cat-income", "cat-spend"), payload.categories.map { it.categoryId })
         assertEquals(listOf("tx-1"), payload.transactions.map { it.transactionId })
@@ -57,7 +58,7 @@ class BackupV3CompatibilityTest {
 
     @Test
     fun `every field of a version 3 template survives the round trip through the file`() = runTest {
-        val templates = importJson.decodeFromString<ExportPayloadDto>(V3_BACKUP).recurringMovements
+        val templates = importJson.decodeFromString<ExportPayloadV3Dto>(V3_BACKUP).recurringMovements
 
         val rent = templates.single { it.recurringMovementId == "rec-1" }
         assertEquals("Alquiler", rent.name)
@@ -75,7 +76,7 @@ class BackupV3CompatibilityTest {
 
     @Test
     fun `a version 3 template with no amount and no category reads as null on both`() = runTest {
-        val paused = importJson.decodeFromString<ExportPayloadDto>(V3_BACKUP)
+        val paused = importJson.decodeFromString<ExportPayloadV3Dto>(V3_BACKUP)
             .recurringMovements
             .single { it.recurringMovementId == "rec-2" }
 
@@ -86,10 +87,28 @@ class BackupV3CompatibilityTest {
     }
 
     @Test
+    fun `toCurrent carries every version 3 field across and invents only the lists version 3 lacked`() {
+        val frozen = importJson.decodeFromString<ExportPayloadV3Dto>(V3_BACKUP)
+
+        val current = frozen.toCurrent()
+
+        assertEquals(BACKUP_SCHEMA_VERSION, current.schemaVersion)
+        assertEquals(frozen.exportedAt, current.exportedAt)
+        assertEquals(frozen.appVersion, current.appVersion)
+        assertEquals(frozen.accounts, current.accounts)
+        assertEquals(frozen.categories, current.categories)
+        assertEquals(frozen.transactions, current.transactions)
+        assertEquals(frozen.recurringMovements, current.recurringMovements)
+        assertTrue(current.loans.isEmpty())
+        assertTrue(current.loanPayments.isEmpty())
+    }
+
+    @Test
     fun `a version 3 file with templates declares 3 and carries them through the decode`() {
         val decoded = decodeBackupPayload(V3_BACKUP)
 
-        assertEquals(BACKUP_SCHEMA_VERSION, decoded.declaredVersion)
+        assertEquals(BACKUP_SCHEMA_VERSION_V3, decoded.declaredVersion)
+        assertNotEquals(BACKUP_SCHEMA_VERSION, decoded.declaredVersion)
         assertEquals(BACKUP_SCHEMA_VERSION, decoded.payload.schemaVersion)
         assertEquals(listOf("rec-1", "rec-2"), decoded.payload.recurringMovements.map { it.recurringMovementId })
     }
@@ -98,7 +117,7 @@ class BackupV3CompatibilityTest {
     fun `a version 3 file with no templates is told from a v1 or v2 file only by its declared version`() {
         val decoded = decodeBackupPayload(V3_BACKUP_EMPTY_RECURRING)
 
-        assertEquals(BACKUP_SCHEMA_VERSION, decoded.declaredVersion)
+        assertEquals(BACKUP_SCHEMA_VERSION_V3, decoded.declaredVersion)
         assertEquals(BACKUP_SCHEMA_VERSION, decoded.payload.schemaVersion)
         assertTrue(decoded.payload.recurringMovements.isEmpty())
         assertEquals(listOf("tx-1"), decoded.payload.transactions.map { it.transactionId })
@@ -117,7 +136,10 @@ class BackupV3CompatibilityTest {
     fun `a version 3 file still restores the three tables the older versions carried`() = runTest {
         val stats = repository.importFromJson(V3_BACKUP)
 
-        assertEquals(ImportStats(accounts = 1, categories = 2, transactions = 1, recurring = 2), stats)
+        assertEquals(
+            ImportStats(accounts = 1, categories = 2, transactions = 1, recurring = 2, loans = 0, loanPayments = 0),
+            stats,
+        )
         assertEquals(1, db.accountsQueries.all().executeAsList().size)
         assertEquals(2, db.categoriesQueries.all().executeAsList().size)
         assertEquals(1, db.transactionsQueries.all().executeAsList().size)

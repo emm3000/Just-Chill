@@ -23,7 +23,7 @@ class BackupManifestTest {
             root.keys.toList(),
         )
         assertEquals(
-            listOf("accounts", "categories", "transactions", "recurringMovements"),
+            listOf("accounts", "categories", "transactions", "recurringMovements", "loans", "loanPayments"),
             root.getValue("rowCounts").jsonObject.keys.toList(),
         )
     }
@@ -64,8 +64,17 @@ class BackupManifestTest {
         assertEquals(payload.categories.size, manifest.rowCounts.categories)
         assertEquals(payload.transactions.size, manifest.rowCounts.transactions)
         assertEquals(payload.recurringMovements.size, manifest.rowCounts.recurringMovements)
+        assertEquals(payload.loans.size, manifest.rowCounts.loans)
+        assertEquals(payload.loanPayments.size, manifest.rowCounts.loanPayments)
         assertEquals(
-            BackupRowCountsDto(accounts = 1, categories = 2, transactions = 3, recurringMovements = 1),
+            BackupRowCountsDto(
+                accounts = 1,
+                categories = 2,
+                transactions = 3,
+                recurringMovements = 1,
+                loans = 1,
+                loanPayments = 2,
+            ),
             manifest.rowCounts,
         )
     }
@@ -168,7 +177,8 @@ private fun manifestJsonText(manifestVersion: Int?): String {
           "fileName": "$FILE_NAME",
           "payloadSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
           "payloadSchemaVersion": $BACKUP_SCHEMA_VERSION,
-          "rowCounts": { "accounts": 1, "categories": 2, "transactions": 3, "recurringMovements": 1 }
+          "rowCounts": { "accounts": 1, "categories": 2, "transactions": 3, "recurringMovements": 1,
+                         "loans": 1, "loanPayments": 2 }
         }
     """.trimIndent()
 }
@@ -214,6 +224,31 @@ private fun samplePayload() = ExportPayloadDto(
             createdAt = 1_750_000_000_000,
         ),
     ),
+    loans = listOf(
+        LoanDto(
+            loanId = "loan-1",
+            personName = "Andrés",
+            personKey = "andres",
+            principalCents = 50_000,
+            interestBps = 500,
+            totalDueCents = 52_500,
+            note = "Para la mudanza",
+            lentAt = "2026-08-01T09:00:00",
+        ),
+    ),
+    loanPayments = listOf(
+        loanPayment(id = "pay-1", amountCents = 20_000, method = "Cash"),
+        loanPayment(id = "pay-2", amountCents = 10_000, method = "Transfer"),
+    ),
+)
+
+private fun loanPayment(id: String, amountCents: Long, method: String) = LoanPaymentDto(
+    paymentId = id,
+    loanId = "loan-1",
+    amountCents = amountCents,
+    method = method,
+    paidAt = "2026-08-12T18:30:00",
+    note = "",
 )
 
 private fun transaction(id: String, amountCents: Long, description: String, categoryId: String?) = TransactionDto(

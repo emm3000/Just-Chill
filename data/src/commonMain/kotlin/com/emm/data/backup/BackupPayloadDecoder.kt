@@ -21,6 +21,10 @@ internal fun decodeBackupPayload(json: String): DecodedBackup {
             importJson.decodeFromJsonElement<ExportPayloadDto>(root)
         }
 
+        BACKUP_SCHEMA_VERSION_V3 -> parse {
+            importJson.decodeFromJsonElement<ExportPayloadV3Dto>(root).toCurrent()
+        }
+
         BACKUP_SCHEMA_VERSION_V2 -> parse {
             importJson.decodeFromJsonElement<ExportPayloadV2Dto>(root).toCurrent()
         }

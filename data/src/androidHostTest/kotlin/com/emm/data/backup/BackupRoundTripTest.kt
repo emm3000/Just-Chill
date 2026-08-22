@@ -49,7 +49,7 @@ class BackupRoundTripTest {
     fun `the file declares the current schema version and every live row`() = runTest {
         val payload = exportedPayload()
 
-        assertEquals(3, payload.schemaVersion)
+        assertEquals(BACKUP_SCHEMA_VERSION, payload.schemaVersion)
         assertEquals(EXPORTED_AT, payload.exportedAt)
         assertEquals(APP_VERSION, payload.appVersion)
         assertEquals(LIVE_ACCOUNTS, payload.accounts.size)
@@ -68,6 +68,8 @@ class BackupRoundTripTest {
                 categories = LIVE_CATEGORIES,
                 transactions = LIVE_TRANSACTIONS,
                 recurring = LIVE_RECURRING,
+                loans = 0,
+                loanPayments = 0,
             ),
             stats,
         )

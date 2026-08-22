@@ -5,6 +5,8 @@ import com.emm.data.account.asEntity
 import com.emm.data.account.asExternalModel
 import com.emm.data.category.asEntity
 import com.emm.data.category.asExternalModel
+import com.emm.data.loan.asEntity
+import com.emm.data.loan.asExternalModel
 import com.emm.data.recurring.asEntity
 import com.emm.data.recurring.asExternalModel
 import com.emm.data.shared.ioDispatcher
@@ -42,15 +44,22 @@ class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock
         val decoded = decodeBackupPayload(json)
         val payload = decoded.payload
         val fileCarriesRecurring = decoded.declaredVersion >= BACKUP_RECURRING_SINCE_VERSION
+        val fileCarriesLoans = decoded.declaredVersion >= BACKUP_LOANS_SINCE_VERSION
 
         return safeDbCall {
             val now = clock.nowMillis()
             var restoredTransactions = 0
             var restoredRecurring = 0
+            var restoredLoans = 0
+            var restoredLoanPayments = 0
             db.transaction {
                 db.transactionsQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
                 if (fileCarriesRecurring) {
                     db.recurring_movementsQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
+                }
+                if (fileCarriesLoans) {
+                    db.loan_paymentsQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
+                    db.loansQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
                 }
                 db.categoriesQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
                 db.accountsQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
@@ -61,6 +70,10 @@ class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock
                 if (fileCarriesRecurring) {
                     restoredRecurring = payload.recurringMovements.count { dto -> restore(dto, now) }
                 }
+                if (fileCarriesLoans) {
+                    restoredLoans = payload.loans.count { dto -> restore(dto, now) }
+                    restoredLoanPayments = payload.loanPayments.count { dto -> restore(dto, now) }
+                }
             }
 
             ImportStats(
@@ -68,6 +81,8 @@ class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock
                 categories = payload.categories.size,
                 transactions = restoredTransactions,
                 recurring = restoredRecurring,
+                loans = restoredLoans,
+                loanPayments = restoredLoanPayments,
             )
         }
     }
@@ -189,6 +204,60 @@ class DefaultBackupRepository(private val db: EmmDatabaseData, private val clock
         )
         return true
     }
+
+    private fun restore(dto: LoanDto, now: Long): Boolean {
+        val loan = dto.toEntityOrNull() ?: return false
+        val lentAt = loan.lentAt.toOccurredAtText()
+        db.loansQueries.insertOrIgnoreFromBackup(
+            loanId = loan.id.value,
+            personName = loan.personName,
+            personKey = loan.personKey,
+            principal = loan.principal.cents,
+            interestBps = loan.interestBps.toLong(),
+            totalDue = loan.totalDue.cents,
+            note = loan.note,
+            lentAt = lentAt,
+            createdAt = now,
+            updatedAt = now,
+        )
+        db.loansQueries.restoreFromBackup(
+            personName = loan.personName,
+            personKey = loan.personKey,
+            principal = loan.principal.cents,
+            interestBps = loan.interestBps.toLong(),
+            totalDue = loan.totalDue.cents,
+            note = loan.note,
+            lentAt = lentAt,
+            updatedAt = now,
+            loanId = loan.id.value,
+        )
+        return true
+    }
+
+    private fun restore(dto: LoanPaymentDto, now: Long): Boolean {
+        val payment = dto.toEntityOrNull()?.takeIf { db.holdsLiveLoan(it.loanId.value) } ?: return false
+        val paidAt = payment.paidAt.toOccurredAtText()
+        db.loan_paymentsQueries.insertOrIgnoreFromBackup(
+            paymentId = payment.id.value,
+            loanId = payment.loanId.value,
+            amount = payment.amount.cents,
+            method = payment.method.name,
+            paidAt = paidAt,
+            note = payment.note,
+            createdAt = now,
+            updatedAt = now,
+        )
+        db.loan_paymentsQueries.restoreFromBackup(
+            loanId = payment.loanId.value,
+            amount = payment.amount.cents,
+            method = payment.method.name,
+            paidAt = paidAt,
+            note = payment.note,
+            updatedAt = now,
+            paymentId = payment.id.value,
+        )
+        return true
+    }
 }
 
 internal inline fun <T> encodeAsDomainException(block: () -> T): T = try {
@@ -196,6 +265,11 @@ internal inline fun <T> encodeAsDomainException(block: () -> T): T = try {
 } catch (e: SerializationException) {
     throw DomainException.SerializationError(e)
 }
+
+// `loan_payments.loanId` is NOT NULL, so a payment whose loan is absent cannot be detached the way
+// a transaction's category is — inserting it would abort the whole restore on the foreign key.
+private fun EmmDatabaseData.holdsLiveLoan(loanId: String): Boolean =
+    loansQueries.byId(loanId).executeAsOneOrNull() != null
 
 private fun EmmDatabaseData.usableCategoryId(categoryId: String?, type: String): String? {
     if (categoryId == null) return null
@@ -220,6 +294,14 @@ private fun EmmDatabaseData.snapshot(exportedAt: Long, appVersion: String): Expo
             if (dto.categoryId != null && dto.categoryId !in liveCategoryIds) dto.copy(categoryId = null) else dto
         }
 
+    val exportedLoans = loansQueries.all().executeAsList()
+        .asEntity().asExternalModel().map { it.toDto() }
+    val liveLoanIds = exportedLoans.mapTo(mutableSetOf()) { it.loanId }
+
+    val exportedLoanPayments = loan_paymentsQueries.all().executeAsList()
+        .asEntity().asExternalModel().map { it.toDto() }
+        .filter { it.loanId in liveLoanIds }
+
     return ExportPayloadDto(
         exportedAt = exportedAt,
         appVersion = appVersion,
@@ -227,5 +309,7 @@ private fun EmmDatabaseData.snapshot(exportedAt: Long, appVersion: String): Expo
         categories = exportedCategories,
         transactions = exportedTransactions,
         recurringMovements = exportedRecurring,
+        loans = exportedLoans,
+        loanPayments = exportedLoanPayments,
     )
 }

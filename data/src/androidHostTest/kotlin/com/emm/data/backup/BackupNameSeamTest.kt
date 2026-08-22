@@ -96,7 +96,9 @@ private val PAYLOAD: String = """
       "accounts": [],
       "categories": [],
       "transactions": [],
-      "recurringMovements": []
+      "recurringMovements": [],
+      "loans": [],
+      "loanPayments": []
     }
 """.trimIndent()
 

@@ -384,7 +384,9 @@ private val PAYLOAD: String = """
       ],
       "categories": [],
       "transactions": [],
-      "recurringMovements": []
+      "recurringMovements": [],
+      "loans": [],
+      "loanPayments": []
     }
 """.trimIndent()
 
@@ -396,6 +398,8 @@ private val MALFORMED_PAYLOAD: String = """
       "accounts": "not-a-list",
       "categories": [],
       "transactions": [],
-      "recurringMovements": []
+      "recurringMovements": [],
+      "loans": [],
+      "loanPayments": []
     }
 """.trimIndent()

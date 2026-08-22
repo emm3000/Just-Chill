@@ -67,7 +67,7 @@ class DefaultBackupRepositoryTest {
         val json = repository.exportToJson(exportedAt = 1_748_000_000_000L, appVersion = "1.0.0")
 
         val payload = Json.decodeFromString<ExportPayloadDto>(json)
-        assertEquals(3, payload.schemaVersion)
+        assertEquals(BACKUP_SCHEMA_VERSION, payload.schemaVersion)
         assertEquals(1_748_000_000_000L, payload.exportedAt)
         assertEquals("1.0.0", payload.appVersion)
         assertEquals(1, payload.accounts.size)
@@ -99,11 +99,13 @@ class DefaultBackupRepositoryTest {
     fun `empty state - produces valid JSON with the current schemaVersion and empty arrays`() = runTest {
         val payload = exportedPayload()
 
-        assertEquals(3, payload.schemaVersion)
+        assertEquals(BACKUP_SCHEMA_VERSION, payload.schemaVersion)
         assertTrue(payload.accounts.isEmpty())
         assertTrue(payload.categories.isEmpty())
         assertTrue(payload.transactions.isEmpty())
         assertTrue(payload.recurringMovements.isEmpty())
+        assertTrue(payload.loans.isEmpty())
+        assertTrue(payload.loanPayments.isEmpty())
     }
 
     @Test
@@ -221,7 +223,7 @@ class DefaultBackupRepositoryTest {
 
         spied.exportToJson(exportedAt = 0L, appVersion = "1.0.0")
 
-        assertEquals(listOf(true, true, true, true), spy.readsInsideTransaction)
+        assertEquals(List(6) { true }, spy.readsInsideTransaction)
     }
 
     private class TransactionSpyDriver(private val delegate: SqlDriver) : SqlDriver by delegate {

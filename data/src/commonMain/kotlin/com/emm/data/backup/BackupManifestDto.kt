@@ -29,6 +29,8 @@ internal data class BackupRowCountsDto(
     val categories: Int,
     val transactions: Int,
     val recurringMovements: Int,
+    val loans: Int,
+    val loanPayments: Int,
 )
 
 internal fun buildBackupManifest(fileName: String, payloadBytes: ByteArray): BackupManifestDto {
@@ -51,6 +53,8 @@ internal fun buildBackupManifest(fileName: String, payloadBytes: ByteArray): Bac
             categories = payload.categories.size,
             transactions = payload.transactions.size,
             recurringMovements = payload.recurringMovements.size,
+            loans = payload.loans.size,
+            loanPayments = payload.loanPayments.size,
         ),
     )
 }

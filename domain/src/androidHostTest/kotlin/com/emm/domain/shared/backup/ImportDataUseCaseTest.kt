@@ -16,7 +16,14 @@ class ImportDataUseCaseTest {
 
     @Test
     fun `delegates to backupRepository and returns the stats it provides`() = runTest {
-        val expected = ImportStats(accounts = 2, categories = 5, transactions = 42, recurring = 7)
+        val expected = ImportStats(
+            accounts = 2,
+            categories = 5,
+            transactions = 42,
+            recurring = 7,
+            loans = 3,
+            loanPayments = 11,
+        )
         coEvery { backupRepository.importFromJson(any()) } returns expected
 
         val result = useCase("{}")

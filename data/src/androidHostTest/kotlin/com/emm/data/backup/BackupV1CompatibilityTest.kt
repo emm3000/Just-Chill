@@ -47,7 +47,10 @@ class BackupV1CompatibilityTest {
     fun `a version 1 file still restores everything it carries`() = runTest {
         val stats = repository.importFromJson(V1_BACKUP)
 
-        assertEquals(ImportStats(accounts = 1, categories = 2, transactions = 3, recurring = 0), stats)
+        assertEquals(
+            ImportStats(accounts = 1, categories = 2, transactions = 3, recurring = 0, loans = 0, loanPayments = 0),
+            stats,
+        )
         assertEquals(1, db.accountsQueries.all().executeAsList().size)
         assertEquals(2, db.categoriesQueries.all().executeAsList().size)
         assertEquals(3, db.transactionsQueries.all().executeAsList().size)

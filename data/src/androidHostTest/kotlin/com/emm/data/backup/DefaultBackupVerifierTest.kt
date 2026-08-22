@@ -264,7 +264,7 @@ private fun manifestJson(fileName: String, manifestVersion: Int, digest: String)
       "fileName": "$fileName",
       "payloadSha256": "$digest",
       "payloadSchemaVersion": 1,
-      "rowCounts": { "accounts": 0, "categories": 0, "transactions": 0, "recurringMovements": 0 }
+      "rowCounts": { "accounts": 0, "categories": 0, "transactions": 0, "recurringMovements": 0, "loans": 0, "loanPayments": 0 }
     }
 """.trimIndent()
 
@@ -285,6 +285,8 @@ private fun payloadJson(
         categories = List(categories) { category(it) },
         transactions = List(transactions) { transaction(it) },
         recurringMovements = List(recurring) { recurringMovement(it) },
+        loans = emptyList(),
+        loanPayments = emptyList(),
     ),
 )
 
