@@ -119,7 +119,7 @@ class LoanDetailViewModel(
 
     private fun confirmDeletePayment() = launchSafe(
         onError = { e ->
-            updateState { copy(isDeletingPayment = false) }
+            updateState { copy(isDeletingPayment = false, pendingDeletePaymentId = null) }
             LoanDetailEffect.ShowError(e.toUserMessage())
         },
     ) {
