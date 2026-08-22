@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -165,6 +166,8 @@ private fun LoanPaymentSheetContentPreview() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                // The body is weighted; an unbounded preview measures it against zero and renders empty.
+                .height(560.dp)
                 .background(LocalEmmColors.current.bg),
         ) {
             LoanPaymentSheetContent(
