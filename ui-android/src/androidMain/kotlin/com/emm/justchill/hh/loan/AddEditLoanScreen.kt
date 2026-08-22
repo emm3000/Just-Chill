@@ -224,7 +224,7 @@ private fun AddEditLoanContent(
 }
 
 @Composable
-private fun UnderlineTextField(
+fun UnderlineTextField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -275,12 +275,12 @@ private fun UnderlineTextField(
 }
 
 @Composable
-private fun AmountCard(amountDigits: String, onClick: () -> Unit) {
+fun AmountCard(amountDigits: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(radii.rM)
             .background(colors.surface1)
@@ -313,12 +313,12 @@ private fun AmountCard(amountDigits: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun DateRow(label: String, onClick: () -> Unit) {
+fun DateRow(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(radii.rM)
             .background(colors.surface1)
