@@ -246,9 +246,9 @@ private fun AddEditRecurringMovementContent(
             amountDigits = state.amountDigits,
             title = "Monto del recurrente",
             tone = if (state.type == TransactionType.Income) AmountTone.Pos else AmountTone.Neg,
-            subtitle = "$typeLabel · se paga cada mes",
             onAmountChange = { onIntent(AddEditRecurringMovementIntent.OnAmountChange(it)) },
             onDismiss = { showAmountSheet = false },
+            subtitle = "$typeLabel · se paga cada mes",
         )
     }
 }

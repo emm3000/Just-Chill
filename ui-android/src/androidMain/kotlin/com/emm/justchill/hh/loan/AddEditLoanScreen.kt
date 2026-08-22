@@ -188,7 +188,6 @@ private fun AddEditLoanContent(
             amountDigits = state.amountDigits,
             title = "Monto del préstamo",
             tone = AmountTone.Neutral,
-            subtitle = null,
             onAmountChange = { onIntent(AddEditLoanIntent.OnAmountChange(it)) },
             onDismiss = { showAmountSheet = false },
         )

@@ -23,6 +23,10 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,9 +45,14 @@ import com.emm.justchill.hh.transaction.MAX_AMOUNT_DIGITS
 import com.emm.justchill.hh.transaction.centsToSoles
 import com.emm.justchill.hh.transaction.formatCentsForDisplay
 
+/**
+ * The numpad edits a draft seeded from [amountDigits]; [onAmountChange] fires once, when the
+ * confirm CTA commits it. Closing the sheet — affordance, scrim or back gesture — discards the
+ * draft, so the owner keeps the amount it had.
+ */
 // amountDigits/title/tone/onAmountChange/onDismiss are the loan and recurring callers' only
-// required inputs; subtitle is the one optional extra the recurring sheet adds. Splitting these
-// six into a config object would relocate the count, not reduce it.
+// required inputs; modifier is conventional and subtitle the one optional extra the recurring
+// sheet adds. Splitting these into a config object would relocate the count, not reduce it.
 @Suppress("LongParameterList")
 @Composable
 fun AmountInputSheet(
@@ -51,14 +60,16 @@ fun AmountInputSheet(
     title: String,
     tone: AmountTone,
     onAmountChange: (String) -> Unit,
-    subtitle: String? = null,
     onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
 ) {
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        modifier = modifier,
         sheetState = sheetState,
         containerColor = colors.bg,
         contentWindowInsets = { WindowInsets.navigationBars },
@@ -69,13 +80,13 @@ fun AmountInputSheet(
             title = title,
             tone = tone,
             onAmountChange = onAmountChange,
-            subtitle = subtitle,
             onDismiss = onDismiss,
+            subtitle = subtitle,
         )
     }
 }
 
-// The content mirrors the shell's six inputs one for one, plus the conventional modifier.
+// The content mirrors the shell's inputs one for one, plus the conventional modifier.
 @Suppress("LongParameterList")
 @Composable
 private fun AmountInputSheetContent(
@@ -88,7 +99,10 @@ private fun AmountInputSheetContent(
     subtitle: String? = null,
 ) {
     val colors = LocalEmmColors.current
-    val formattedAmount = if (amountDigits.isEmpty()) "0.00" else formatCentsForDisplay(amountDigits)
+    // Seeded once per opening: every caller renders the sheet inside an `if (show…)`, so leaving
+    // the composition drops the draft and the next opening reads the owner's amount again.
+    var draftDigits: String by rememberSaveable { mutableStateOf(amountDigits) }
+    val formattedDraft = if (draftDigits.isEmpty()) "0.00" else formatCentsForDisplay(draftDigits)
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -131,7 +145,7 @@ private fun AmountInputSheetContent(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             AmountHero(
-                value = centsToSoles(amountDigits),
+                value = centsToSoles(draftDigits),
                 tone = tone,
                 showCaret = true,
             )
@@ -153,14 +167,14 @@ private fun AmountInputSheetContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            onDigit = { ch -> onAmountChange((amountDigits + ch).take(MAX_AMOUNT_DIGITS)) },
-            onDoubleZero = { onAmountChange((amountDigits + "00").take(MAX_AMOUNT_DIGITS)) },
-            onBackspace = { onAmountChange(amountDigits.dropLast(1)) },
+            onDigit = { ch -> draftDigits = (draftDigits + ch).take(MAX_AMOUNT_DIGITS) },
+            onDoubleZero = { draftDigits = (draftDigits + "00").take(MAX_AMOUNT_DIGITS) },
+            onBackspace = { draftDigits = draftDigits.dropLast(1) },
         )
 
         Spacer(Modifier.height(12.dp))
 
-        val confirmEnabled = amountDigits.isNotEmpty() && amountDigits.toLongOrNull() != 0L
+        val confirmEnabled = draftDigits.isNotEmpty() && draftDigits.toLongOrNull() != 0L
         val ctaBg = if (confirmEnabled) colors.accent else colors.surface1
         val ctaFg = if (confirmEnabled) colors.textOnAccent else colors.textTertiary
 
@@ -172,7 +186,16 @@ private fun AmountInputSheetContent(
                 .height(52.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(ctaBg)
-                .then(if (confirmEnabled) Modifier.clickable(onClick = onDismiss) else Modifier),
+                .then(
+                    if (confirmEnabled) {
+                        Modifier.clickable {
+                            onAmountChange(draftDigits)
+                            onDismiss()
+                        }
+                    } else {
+                        Modifier
+                    },
+                ),
             contentAlignment = Alignment.Center,
         ) {
             Row(
@@ -195,7 +218,7 @@ private fun AmountInputSheetContent(
                     color = ctaFg.copy(alpha = 0.6f),
                 )
                 Text(
-                    text = "S/ $formattedAmount",
+                    text = "S/ $formattedDraft",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.W600,
                     fontFamily = InterFontFamily,
@@ -221,8 +244,8 @@ private fun AmountInputSheetContentPreview() {
                 title = "Monto del abono",
                 tone = AmountTone.Neutral,
                 onAmountChange = {},
-                subtitle = "Máximo S/ 160.00",
                 onDismiss = {},
+                subtitle = "Máximo S/ 160.00",
             )
         }
     }

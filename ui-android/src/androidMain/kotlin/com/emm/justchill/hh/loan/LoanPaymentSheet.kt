@@ -68,9 +68,9 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, onIntent: (LoanDetailIntent) -> Un
             amountDigits = form.amountDigits,
             title = "Monto del abono",
             tone = AmountTone.Neutral,
-            subtitle = form.maxAmountLabel?.let { "Máximo $it" },
             onAmountChange = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentAmountChange(it)) },
             onDismiss = { showAmountSheet = false },
+            subtitle = form.maxAmountLabel?.let { "Máximo $it" },
         )
     }
 
