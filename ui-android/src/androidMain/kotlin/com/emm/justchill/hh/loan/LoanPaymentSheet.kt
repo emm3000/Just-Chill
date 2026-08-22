@@ -7,12 +7,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -47,13 +47,21 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, onIntent: (LoanDetailIntent) -> Un
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showAmountSheet by remember { mutableStateOf(false) }
     var showDateSheet by remember { mutableStateOf(false) }
+    // A save already in flight registers the abono whatever happens here, so every gesture the
+    // user reads as "abort" — swipe, scrim, back — has to stop until it lands.
+    val dismissible = !form.isSaving
 
     ModalBottomSheet(
         onDismissRequest = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentDismiss) },
         sheetState = sheetState,
+        sheetGesturesEnabled = dismissible,
         containerColor = colors.bg,
         contentWindowInsets = { WindowInsets.navigationBars },
         dragHandle = { SheetDragHandle() },
+        properties = ModalBottomSheetProperties(
+            shouldDismissOnBackPress = dismissible,
+            shouldDismissOnClickOutside = dismissible,
+        ),
     ) {
         LoanPaymentSheetContent(
             form = form,
@@ -97,11 +105,7 @@ private fun LoanPaymentSheetContent(
     val colors = LocalEmmColors.current
     val sheetLabel = if (form.editingPaymentId != null) "Editar abono" else "Registrar abono"
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .imePadding(),
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
