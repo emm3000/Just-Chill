@@ -64,3 +64,23 @@ LEFT JOIN (
 WHERE l.deletedAt IS NULL
 GROUP BY l.personKey
 ORDER BY (SUM(l.totalDue) - COALESCE(SUM(paid.paidSoFar), 0)) DESC, l.personName;
+
+all:
+SELECT * FROM loans WHERE deletedAt IS NULL;
+
+-- Backup restore — see the equivalent block in accounts.sq for why this is a tombstone plus
+-- INSERT OR IGNORE + UPDATE rather than a DELETE plus INSERT OR REPLACE. Here a DELETE is refused
+-- outright while any payment still references the row: `loan_payments.loanId` is ON DELETE RESTRICT.
+softDeleteAllLive:
+UPDATE loans
+SET deletedAt = :deletedAt, updatedAt = :updatedAt, syncState = 'Pending'
+WHERE deletedAt IS NULL;
+
+insertOrIgnoreFromBackup:
+INSERT OR IGNORE INTO loans(loanId, personName, personKey, principal, interestBps, totalDue, note, lentAt, createdAt, updatedAt, syncState)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending');
+
+restoreFromBackup:
+UPDATE loans
+SET personName = ?, personKey = ?, principal = ?, interestBps = ?, totalDue = ?, note = ?, lentAt = ?, updatedAt = ?, deletedAt = NULL, syncState = 'Pending'
+WHERE loanId = ?;

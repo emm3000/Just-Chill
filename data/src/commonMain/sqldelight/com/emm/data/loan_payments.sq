@@ -34,3 +34,22 @@ SELECT COALESCE(SUM(amount), 0) FROM loan_payments WHERE loanId = ? AND deletedA
 softDeleteByLoan:
 UPDATE loan_payments SET deletedAt = ?, updatedAt = ?, syncState = 'Pending'
 WHERE loanId = ? AND deletedAt IS NULL;
+
+all:
+SELECT * FROM loan_payments WHERE deletedAt IS NULL;
+
+-- Backup restore — see the equivalent block in accounts.sq for the shape. A payment can only be
+-- inserted after its loan exists, so the restore writes `loans` before this table.
+softDeleteAllLive:
+UPDATE loan_payments
+SET deletedAt = :deletedAt, updatedAt = :updatedAt, syncState = 'Pending'
+WHERE deletedAt IS NULL;
+
+insertOrIgnoreFromBackup:
+INSERT OR IGNORE INTO loan_payments(paymentId, loanId, amount, method, paidAt, note, createdAt, updatedAt, syncState)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending');
+
+restoreFromBackup:
+UPDATE loan_payments
+SET loanId = ?, amount = ?, method = ?, paidAt = ?, note = ?, updatedAt = ?, deletedAt = NULL, syncState = 'Pending'
+WHERE paymentId = ?;
