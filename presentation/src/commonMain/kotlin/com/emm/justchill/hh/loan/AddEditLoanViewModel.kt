@@ -59,7 +59,9 @@ class AddEditLoanViewModel(
                 updateState { copy(amountDigits = intent.digits).recalcSaveEnabled() }
             }
 
-            is AddEditLoanIntent.OnInterestPercentChange -> updateState { copy(interestPercentText = intent.value) }
+            is AddEditLoanIntent.OnInterestPercentChange -> {
+                updateState { copy(interestPercentText = sanitizeInterestPercentInput(intent.value)) }
+            }
 
             is AddEditLoanIntent.OnDateSelected -> updateState { copy(date = intent.value) }
 

@@ -69,4 +69,20 @@ class InterestPercentTest {
     @Test fun bpsToPercentText_round_trips_hundred_percent_boundary() {
         assertEquals(10_000, percentTextToBps(bpsToPercentText(10_000)))
     }
+
+    @Test fun sanitizeInterestPercentInput_drops_non_digit_non_separator_characters() {
+        assertEquals("1", sanitizeInterestPercentInput("1o"))
+    }
+
+    @Test fun sanitizeInterestPercentInput_keeps_a_single_dot_separator() {
+        assertEquals("12.5", sanitizeInterestPercentInput("12.5"))
+    }
+
+    @Test fun sanitizeInterestPercentInput_keeps_the_spanish_comma() {
+        assertEquals("12,5", sanitizeInterestPercentInput("12,5"))
+    }
+
+    @Test fun sanitizeInterestPercentInput_drops_every_separator_after_the_first() {
+        assertEquals("12.56", sanitizeInterestPercentInput("12.5.6"))
+    }
 }
