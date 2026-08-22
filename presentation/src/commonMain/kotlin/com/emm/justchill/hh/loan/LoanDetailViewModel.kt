@@ -53,10 +53,6 @@ class LoanDetailViewModel(
 
     override fun onIntent(intent: LoanDetailIntent) {
         when (intent) {
-            LoanDetailIntent.OnAddPaymentClick -> {
-                updateState { copy(payment = LoanPaymentFormUi(loanId = loanId, today = today())) }
-            }
-
             LoanDetailIntent.OnEditLoanClick -> sendEffect(LoanDetailEffect.NavigateToEditLoan)
 
             LoanDetailIntent.OnDeleteLoanClick -> updateState { copy(pendingDeleteLoan = true) }
@@ -79,6 +75,10 @@ class LoanDetailViewModel(
 
     private fun onPaymentFormIntent(intent: LoanDetailIntent.PaymentFormIntent) {
         when (intent) {
+            LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick -> {
+                updateState { copy(payment = LoanPaymentFormUi(loanId = loanId, today = today())) }
+            }
+
             is LoanDetailIntent.PaymentFormIntent.OnPaymentAmountChange -> {
                 updatePayment { copy(amountDigits = intent.digits) }
             }

@@ -197,7 +197,7 @@ class LoanDetailViewModelTest {
             val vm = viewModel()
             advanceUntilIdle()
 
-            vm.onIntent(LoanDetailIntent.OnAddPaymentClick)
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick)
             vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentAmountChange("400000"))
             vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentConfirm)
             vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentConfirm)

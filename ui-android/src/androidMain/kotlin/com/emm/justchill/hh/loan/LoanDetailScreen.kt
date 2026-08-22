@@ -85,7 +85,7 @@ fun LoanDetailScreen(
                 label = "Registrar abono",
                 tone = CtaTone.Accent,
                 interaction = if (summary.isSettled) CtaInteraction.Disabled else CtaInteraction.Enabled,
-                onClick = { onIntent(LoanDetailIntent.OnAddPaymentClick) },
+                onClick = { onIntent(LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick) },
             )
         }
     }
