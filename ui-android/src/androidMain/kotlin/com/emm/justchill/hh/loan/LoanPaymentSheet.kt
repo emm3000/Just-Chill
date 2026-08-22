@@ -125,11 +125,9 @@ private fun LoanPaymentSheetContent(
 
             FormSection(eyebrow = "MONTO") {
                 AmountCard(amountDigits = form.amountDigits, onClick = onAmountClick)
-                if (form.exceedsRemaining) {
-                    // Same sentence DomainExceptionExt renders for PaymentExceedsBalance: the rule
-                    // reads the same whether the CTA refuses it here or the use case does.
+                form.amountError?.let { message ->
                     Text(
-                        text = "El abono es mayor que lo que falta pagar",
+                        text = message,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.W500,
                         fontFamily = InterFontFamily,

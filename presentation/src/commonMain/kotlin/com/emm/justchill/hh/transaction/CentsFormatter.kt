@@ -17,7 +17,10 @@ fun centsToMoney(digits: String): Money {
     return Money(cents)
 }
 
-fun String.isSavableAmount(): Boolean = isNotEmpty() && toLongOrNull() != 0L
+// Anything that is not a positive count of cents fails: empty, zeros, a sign the sanitizer would
+// have stripped, or more digits than a Long holds. Every caller reaches it through sanitizeCentsInput
+// on Android, but the intents carrying these strings are exported to Swift unsanitized.
+fun String.isSavableAmount(): Boolean = (toLongOrNull() ?: 0L) > 0L
 
 fun centsToSoles(digits: String): Double {
     val cents: Long = if (digits.isEmpty()) 0L else digits.toLong()

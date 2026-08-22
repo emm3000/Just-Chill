@@ -14,14 +14,12 @@ data class LoanSummaryUi(
     val totalDue: String,
     val paidSoFar: String,
     val remaining: String,
-    val isSettled: Boolean,
+    val remainingCents: Long,
     val readableLentAt: String,
     val note: String,
-    // `remaining` is spent on display; this is the same figure as the cap the abono form compares
-    // against. Zero by default so a summary that omits it refuses every abono instead of admitting
-    // every one.
-    val remainingCents: Long = 0L,
-)
+) {
+    val isSettled: Boolean get() = remainingCents == 0L
+}
 
 fun loanSummaryUi(loan: Loan, paidSoFar: Money): LoanSummaryUi {
     val remainingMoney = remaining(loan.totalDue, paidSoFar)
@@ -32,9 +30,8 @@ fun loanSummaryUi(loan: Loan, paidSoFar: Money): LoanSummaryUi {
         totalDue = formatNeutral(fromCentsToSolesWith(loan.totalDue)),
         paidSoFar = formatNeutral(fromCentsToSolesWith(paidSoFar)),
         remaining = formatNeutral(fromCentsToSolesWith(remainingMoney)),
-        isSettled = remainingMoney.cents == 0L,
+        remainingCents = remainingMoney.cents,
         readableLentAt = SpanishDateFormat.longDate(loan.lentAt.date),
         note = loan.note,
-        remainingCents = remainingMoney.cents,
     )
 }

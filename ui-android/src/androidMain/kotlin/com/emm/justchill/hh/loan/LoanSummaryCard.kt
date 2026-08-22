@@ -117,7 +117,7 @@ private val activeLoanSummary = LoanSummaryUi(
     totalDue = "S/ 1,260.00",
     paidSoFar = "S/ 300.00",
     remaining = "S/ 960.00",
-    isSettled = false,
+    remainingCents = 96_000L,
     readableLentAt = "12 de agosto de 2026",
     note = "Para el arreglo del carro",
 )
@@ -151,7 +151,7 @@ private fun LoanSummaryCardSettledPreview() {
                 summary = activeLoanSummary.copy(
                     paidSoFar = "S/ 1,260.00",
                     remaining = "S/ 0.00",
-                    isSettled = true,
+                    remainingCents = 0L,
                 ),
             )
         }

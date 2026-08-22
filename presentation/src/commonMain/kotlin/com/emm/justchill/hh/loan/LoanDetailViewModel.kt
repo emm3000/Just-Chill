@@ -76,8 +76,9 @@ class LoanDetailViewModel(
                     copy(
                         summary = nextSummary,
                         payments = payments.toUi(),
-                        // An open form caps its abono; that cap has to follow what is actually left.
-                        payment = payment?.withCap(),
+                        // An open form's cap follows what is left — except mid-save, where the
+                        // write's own re-emission would lower it under an abono that is winning.
+                        payment = payment?.let { form -> if (form.isSaving) form else form.withCap() },
                     )
                 }
             }

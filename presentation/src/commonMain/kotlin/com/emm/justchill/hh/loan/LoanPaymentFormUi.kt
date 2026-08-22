@@ -1,6 +1,8 @@
 package com.emm.justchill.hh.loan
 
 import com.emm.domain.loan.PaymentMethod
+import com.emm.domain.shared.error.ValidationCode
+import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.hh.shared.Empty
 import com.emm.justchill.hh.shared.relativeDayLabel
 import com.emm.justchill.hh.transaction.isSavableAmount
@@ -28,13 +30,14 @@ data class LoanPaymentFormUi(
 ) {
     val dateLabel: String get() = relativeDayLabel(date ?: today, today)
 
-    // A digit string past Long's range parses to null; reading it as the largest amount there is
-    // keeps the CTA off rather than handing centsToMoney a string it would throw on.
-    private val amountCents: Long get() = amountDigits.toLongOrNull() ?: Long.MAX_VALUE
-
-    // Warns early about the balance RegisterLoanPaymentUseCase enforces; the use case stays the
-    // authority, this only stops the CTA inviting a round trip it knows ends in a rejection.
-    val exceedsRemaining: Boolean get() = amountDigits.isSavableAmount() && amountCents > remainingCents
-
     val isSaveEnabled: Boolean get() = amountDigits.isSavableAmount() && !exceedsRemaining
+
+    val amountError: String?
+        get() = if (exceedsRemaining) ValidationCode.PaymentExceedsBalance.toUserMessage() else null
+
+    // Warns early about the balance RegisterLoanPaymentUseCase enforces, so the CTA stops inviting
+    // a round trip it knows ends in a rejection. The use case stays the authority.
+    private val exceedsRemaining: Boolean get() = amountDigits.isSavableAmount() && amountCents > remainingCents
+
+    private val amountCents: Long get() = amountDigits.toLongOrNull() ?: 0L
 }

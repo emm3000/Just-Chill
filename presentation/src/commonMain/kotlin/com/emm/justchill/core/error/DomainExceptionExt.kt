@@ -26,7 +26,8 @@ fun DomainException.toUserMessage(): String = when (this) {
 }
 
 /**
- * The only place a [ValidationCode] becomes words the user reads.
+ * The only place a [ValidationCode] becomes words the user reads — a form warning about a code it
+ * expects the domain to raise calls this rather than writing the sentence again.
  *
  * A `ValidationError`'s own `message` is English and diagnostic; it never reaches the snackbar.
  * Keep every branch on one line — a multiline branch makes ktlint demand a blank line between all
@@ -37,7 +38,7 @@ fun DomainException.toUserMessage(): String = when (this) {
  * threshold would trade the compiler's exhaustiveness check for nothing.
  */
 @Suppress("CyclomaticComplexMethod")
-private fun ValidationCode.toUserMessage(): String = when (this) {
+internal fun ValidationCode.toUserMessage(): String = when (this) {
     ValidationCode.NameRequired -> "El nombre no puede estar vacío"
     ValidationCode.AccountRequired -> "Selecciona una cuenta"
     ValidationCode.AmountRequired -> "Ingresa un monto"
