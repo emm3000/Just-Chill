@@ -155,7 +155,7 @@ private fun AddEditLoanContent(
                             FrequentComboChip(
                                 label = name,
                                 dotColor = null,
-                                onClick = { onIntent(AddEditLoanIntent.OnPersonSuggestionSelected(name)) },
+                                onClick = { onIntent(AddEditLoanIntent.OnPersonNameChange(name)) },
                             )
                         }
                     }

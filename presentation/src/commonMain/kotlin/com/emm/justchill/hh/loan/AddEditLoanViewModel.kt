@@ -36,11 +36,14 @@ class AddEditLoanViewModel(
     // lentAt to "now", which loansWithBalance and balancesByPerson both order and pick by.
     private var loadedLentAt: LocalDateTime? = null
 
+    // Backs the autocomplete filter below; the state's personSuggestions is always the filtered view.
+    private var allPersonNames: List<String> = emptyList()
+
     init {
         loanRepository.balancesByPerson()
             .onEach { balances ->
-                val names = balances.map { it.personName }.distinct().sorted()
-                updateState { copy(personSuggestions = names) }
+                allPersonNames = balances.map { it.personName }.distinct().sorted()
+                updateState { copy(personSuggestions = filterPersonSuggestions(personName)) }
             }
             .launchIn(viewModelScope)
 
@@ -52,11 +55,12 @@ class AddEditLoanViewModel(
     override fun onIntent(intent: AddEditLoanIntent) {
         when (intent) {
             is AddEditLoanIntent.OnPersonNameChange -> {
-                updateState { copy(personName = intent.value).recalcSaveEnabled() }
-            }
-
-            is AddEditLoanIntent.OnPersonSuggestionSelected -> {
-                updateState { copy(personName = intent.value).recalcSaveEnabled() }
+                updateState {
+                    copy(
+                        personName = intent.value,
+                        personSuggestions = filterPersonSuggestions(intent.value),
+                    ).recalcSaveEnabled()
+                }
             }
 
             is AddEditLoanIntent.OnAmountChange -> {
@@ -81,6 +85,7 @@ class AddEditLoanViewModel(
         updateState {
             copy(
                 personName = loan.personName,
+                personSuggestions = filterPersonSuggestions(loan.personName),
                 amountDigits = moneyCentsString(loan.principal),
                 interestPercentText = bpsToPercentText(loan.interestBps),
                 date = loan.lentAt.date,
@@ -88,6 +93,9 @@ class AddEditLoanViewModel(
             ).recalcSaveEnabled()
         }
     }
+
+    private fun filterPersonSuggestions(personName: String): List<String> =
+        allPersonNames.filter { it.contains(personName, ignoreCase = true) && it != personName }
 
     private fun save() = launchSafe(
         onError = { e -> AddEditLoanEffect.ShowError(e.toUserMessage()) },
