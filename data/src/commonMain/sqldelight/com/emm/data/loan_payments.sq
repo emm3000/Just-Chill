@@ -1,6 +1,6 @@
 -- `ON DELETE RESTRICT` guards a physical delete no code path performs: this repo soft-deletes, and
--- an ON DELETE clause only acts on a real DELETE. Deleting a loan has to soft-delete its payments
--- in the same write, and that is a use-case obligation the schema cannot enforce.
+-- an ON DELETE clause only acts on a real DELETE. What has to happen instead is an obligation on
+-- `LoanRepository.delete`, stated there.
 CREATE TABLE loan_payments (
     paymentId TEXT NOT NULL PRIMARY KEY,
     loanId    TEXT NOT NULL REFERENCES loans(loanId) ON DELETE RESTRICT,

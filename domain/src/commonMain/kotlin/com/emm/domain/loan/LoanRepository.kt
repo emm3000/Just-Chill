@@ -15,5 +15,6 @@ interface LoanRepository {
 
     suspend fun update(loan: Loan)
 
+    /** Must soft-delete the loan's live payments in the same call — the schema cannot enforce it. */
     suspend fun delete(loanId: LoanId)
 }

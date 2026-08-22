@@ -101,7 +101,9 @@ class DefaultBackupRepositoryWatermarkTest {
         insertAccount(updatedAt = 100L)
         insertCategory(updatedAt = 200L)
         insertTransaction(updatedAt = 300L)
-        insertTemplate(updatedAt = 999L)
+        insertTemplate(updatedAt = 400L)
+        insertLoan(updatedAt = 500L)
+        insertLoanPayment(updatedAt = 999L)
 
         assertEquals(999L, repository.latestLocalChangeAt())
     }
