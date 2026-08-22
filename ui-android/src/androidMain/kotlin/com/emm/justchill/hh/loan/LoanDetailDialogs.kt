@@ -5,8 +5,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.window.DialogProperties
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
+
+/**
+ * A deletion already in flight lands whatever happens here, so every gesture the user reads as
+ * "abort" — the scrim, the back press, the Cancelar button — has to stop until it does.
+ */
+private fun dismissalProperties(isDeleting: Boolean) = DialogProperties(
+    dismissOnBackPress = !isDeleting,
+    dismissOnClickOutside = !isDeleting,
+)
 
 @Composable
 internal fun DeleteLoanDialog(
@@ -19,6 +29,7 @@ internal fun DeleteLoanDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        properties = dismissalProperties(isDeleting),
         title = { Text("¿Borrar este préstamo?") },
         text = {
             Text(
@@ -32,7 +43,7 @@ internal fun DeleteLoanDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss, enabled = !isDeleting) { Text("Cancelar") }
         },
     )
 }
@@ -62,6 +73,19 @@ private fun DeleteLoanDialogPreview() {
     }
 }
 
+@Preview
+@Composable
+private fun DeleteLoanDialogDeletingPreview() {
+    EmmTheme {
+        DeleteLoanDialog(
+            summary = previewLoanSummary,
+            isDeleting = true,
+            onConfirm = {},
+            onDismiss = {},
+        )
+    }
+}
+
 @Composable
 internal fun DeleteLoanPaymentDialog(
     payment: LoanPaymentRowUi,
@@ -73,6 +97,7 @@ internal fun DeleteLoanPaymentDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        properties = dismissalProperties(isDeleting),
         title = { Text("¿Borrar este abono?") },
         text = {
             Text(
@@ -86,7 +111,7 @@ internal fun DeleteLoanPaymentDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss, enabled = !isDeleting) { Text("Cancelar") }
         },
     )
 }
@@ -106,6 +131,19 @@ private fun DeleteLoanPaymentDialogPreview() {
         DeleteLoanPaymentDialog(
             payment = previewLoanPayment,
             isDeleting = false,
+            onConfirm = {},
+            onDismiss = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun DeleteLoanPaymentDialogDeletingPreview() {
+    EmmTheme {
+        DeleteLoanPaymentDialog(
+            payment = previewLoanPayment,
+            isDeleting = true,
             onConfirm = {},
             onDismiss = {},
         )
