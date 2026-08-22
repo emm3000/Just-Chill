@@ -9,9 +9,13 @@ interface LoanPaymentRepository {
 
     fun byLoan(loanId: LoanId): Flow<List<LoanPayment>>
 
+    fun byId(loanPaymentId: LoanPaymentId): Flow<LoanPayment?>
+
     suspend fun paidSoFar(loanId: LoanId): Money
 
     suspend fun create(loanPayment: LoanPayment)
+
+    suspend fun update(loanPayment: LoanPayment)
 
     suspend fun delete(loanPaymentId: LoanPaymentId)
 }

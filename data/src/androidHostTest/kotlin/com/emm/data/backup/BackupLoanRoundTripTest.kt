@@ -107,6 +107,26 @@ class BackupLoanRoundTripTest {
     }
 
     @Test
+    fun `a v4 backup exported after an edit carries the edited amount, not the original`() = runTest {
+        db.loan_paymentsQueries.update(
+            amount = 999_00L,
+            method = "Transfer",
+            paidAt = "2026-08-13T09:30:00",
+            note = "Monto corregido",
+            updatedAt = SEEDED_AT + 1,
+            paymentId = "pay-cash",
+        )
+
+        val payload = exportedPayload()
+
+        val edited = payload.loanPayments.single { it.paymentId == "pay-cash" }
+        assertEquals(999_00L, edited.amountCents)
+        assertEquals("Transfer", edited.method)
+        assertEquals("2026-08-13T09:30:00", edited.paidAt)
+        assertEquals("Monto corregido", edited.note)
+    }
+
+    @Test
     fun `a wipe-and-restore round trip carries forward no tombstoned loan or payment`() = runTest {
         roundTrip()
 

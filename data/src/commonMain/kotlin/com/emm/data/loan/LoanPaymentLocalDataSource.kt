@@ -2,6 +2,7 @@ package com.emm.data.loan
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.emm.data.EmmDatabaseData
 import com.emm.data.Loan_paymentsQueries
 import com.emm.data.shared.ioDispatcher
@@ -18,6 +19,11 @@ class LoanPaymentLocalDataSource(private val emmDatabase: EmmDatabaseData, priva
 
     private val lpq: Loan_paymentsQueries
         get() = emmDatabase.loan_paymentsQueries
+
+    fun byId(paymentId: String): Flow<LoanPayment?> = lpq.byId(paymentId)
+        .asFlow()
+        .mapToOneOrNull(ioDispatcher)
+        .map { row -> row?.asEntity()?.asExternalModelOrNull() }
 
     fun byLoan(loanId: String): Flow<List<LoanPayment>> = lpq.byLoan(loanId)
         .asFlow()
@@ -39,6 +45,17 @@ class LoanPaymentLocalDataSource(private val emmDatabase: EmmDatabaseData, priva
             note = loanPayment.note,
             createdAt = now,
             updatedAt = now,
+        )
+    }
+
+    suspend fun update(loanPayment: LoanPayment) = withContext(ioDispatcher) {
+        lpq.update(
+            amount = loanPayment.amount.cents,
+            method = loanPayment.method.name,
+            paidAt = loanPayment.paidAt.toOccurredAtText(),
+            note = loanPayment.note,
+            updatedAt = clock.nowMillis(),
+            paymentId = loanPayment.id.value,
         )
     }
 

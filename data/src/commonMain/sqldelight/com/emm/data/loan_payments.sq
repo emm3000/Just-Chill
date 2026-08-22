@@ -18,12 +18,19 @@ CREATE TABLE loan_payments (
 CREATE INDEX IF NOT EXISTS loan_payments_loan_idx ON loan_payments(loanId);
 CREATE INDEX IF NOT EXISTS loan_payments_user_deleted_idx ON loan_payments(userId, deletedAt);
 
+byId:
+SELECT * FROM loan_payments WHERE paymentId = ? AND deletedAt IS NULL;
+
 byLoan:
 SELECT * FROM loan_payments WHERE loanId = ? AND deletedAt IS NULL ORDER BY paidAt DESC;
 
 insert:
 INSERT INTO loan_payments(paymentId, loanId, amount, method, paidAt, note, createdAt, updatedAt, syncState)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending');
+
+update:
+UPDATE loan_payments SET amount = ?, method = ?, paidAt = ?, note = ?, updatedAt = ?, syncState = 'Pending'
+WHERE paymentId = ? AND deletedAt IS NULL;
 
 softDelete:
 UPDATE loan_payments SET deletedAt = ?, updatedAt = ?, syncState = 'Pending' WHERE paymentId = ?;

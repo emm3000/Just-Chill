@@ -14,12 +14,20 @@ class DefaultLoanPaymentRepository(private val localDataSource: LoanPaymentLocal
     override fun byLoan(loanId: LoanId): Flow<List<LoanPayment>> =
         localDataSource.byLoan(loanId.value).catchAsDomainException()
 
+    override fun byId(loanPaymentId: LoanPaymentId): Flow<LoanPayment?> =
+        localDataSource.byId(loanPaymentId.value).catchAsDomainException()
+
     override suspend fun paidSoFar(loanId: LoanId): Money = safeDbCall {
         localDataSource.paidSoFar(loanId.value)
     }
 
     override suspend fun create(loanPayment: LoanPayment): Unit = safeDbCall {
         localDataSource.create(loanPayment)
+        Unit
+    }
+
+    override suspend fun update(loanPayment: LoanPayment): Unit = safeDbCall {
+        localDataSource.update(loanPayment)
         Unit
     }
 

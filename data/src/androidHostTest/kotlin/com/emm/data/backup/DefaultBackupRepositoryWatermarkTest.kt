@@ -118,6 +118,23 @@ class DefaultBackupRepositoryWatermarkTest {
     }
 
     @Test
+    fun `editing a loan payment bumps its updatedAt, which becomes the new watermark`() = runTest {
+        insertLoan(updatedAt = 1L)
+        insertLoanPayment(updatedAt = 2L)
+
+        db.loan_paymentsQueries.update(
+            amount = 999_00L,
+            method = "Transfer",
+            paidAt = "2026-05-24T09:33:20",
+            note = "Corregido",
+            updatedAt = 777L,
+            paymentId = "pay-1",
+        )
+
+        assertEquals(777L, repository.latestLocalChangeAt())
+    }
+
+    @Test
     fun `updatedAt of zero returns zero, not null`() = runTest {
         insertAccount(updatedAt = 0L)
 
