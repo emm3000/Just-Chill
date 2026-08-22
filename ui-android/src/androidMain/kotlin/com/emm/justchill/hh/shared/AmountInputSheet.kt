@@ -1,7 +1,6 @@
 package com.emm.justchill.hh.shared
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,18 +12,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -40,6 +37,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
+import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.hh.transaction.MAX_AMOUNT_DIGITS
 import com.emm.justchill.hh.transaction.centsToSoles
@@ -102,7 +100,10 @@ private fun AmountInputSheetContent(
     // Seeded once per opening: every caller renders the sheet inside an `if (show…)`, so leaving
     // the composition drops the draft and the next opening reads the owner's amount again.
     var draftDigits: String by rememberSaveable { mutableStateOf(amountDigits) }
-    val formattedDraft = if (draftDigits.isEmpty()) "0.00" else formatCentsForDisplay(draftDigits)
+    val draftValue: Double = remember(draftDigits) { centsToSoles(draftDigits) }
+    val formattedDraft: String = remember(draftDigits) {
+        if (draftDigits.isEmpty()) "0.00" else formatCentsForDisplay(draftDigits)
+    }
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -120,22 +121,11 @@ private fun AmountInputSheetContent(
                 color = colors.textPrimary,
                 letterSpacing = (-0.15).sp,
             )
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(colors.surface1)
-                    .border(1.dp, colors.border, CircleShape)
-                    .clickable(onClick = onDismiss),
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Close,
-                    contentDescription = "Cerrar",
-                    tint = colors.textSecondary,
-                    modifier = Modifier.size(13.dp),
-                )
-            }
+            IconBtn(
+                icon = Icons.Outlined.Close,
+                onClick = onDismiss,
+                contentDescription = "Cerrar",
+            )
         }
 
         Column(
@@ -145,7 +135,7 @@ private fun AmountInputSheetContent(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             AmountHero(
-                value = centsToSoles(draftDigits),
+                value = draftValue,
                 tone = tone,
                 showCaret = true,
             )
