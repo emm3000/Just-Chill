@@ -75,6 +75,9 @@ fun LoanDetailScreen(
                 Eyebrow(text = "ABONOS", modifier = Modifier.padding(horizontal = 16.dp))
                 LoanPaymentsList(
                     payments = state.payments,
+                    onEditClick = { paymentId ->
+                        onIntent(LoanDetailIntent.PaymentFormIntent.OnEditPaymentClick(paymentId))
+                    },
                     onDeleteClick = { paymentId -> onIntent(LoanDetailIntent.OnDeletePaymentClick(paymentId)) },
                     modifier = Modifier
                         .fillMaxWidth()

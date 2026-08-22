@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -34,6 +35,7 @@ import com.emm.justchill.core.ui.atoms.PillTone
 @Composable
 fun LoanPaymentsList(
     payments: List<LoanPaymentRowUi>,
+    onEditClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -44,13 +46,17 @@ fun LoanPaymentsList(
 
     LazyColumn(modifier = modifier, contentPadding = PaddingValues(bottom = 12.dp)) {
         items(payments, key = { it.paymentId }) { payment ->
-            LoanPaymentRow(payment = payment, onDeleteClick = { onDeleteClick(payment.paymentId) })
+            LoanPaymentRow(
+                payment = payment,
+                onEditClick = { onEditClick(payment.paymentId) },
+                onDeleteClick = { onDeleteClick(payment.paymentId) },
+            )
         }
     }
 }
 
 @Composable
-private fun LoanPaymentRow(payment: LoanPaymentRowUi, onDeleteClick: () -> Unit) {
+private fun LoanPaymentRow(payment: LoanPaymentRowUi, onEditClick: () -> Unit, onDeleteClick: () -> Unit) {
     val colors = LocalEmmColors.current
 
     Column {
@@ -95,12 +101,19 @@ private fun LoanPaymentRow(payment: LoanPaymentRowUi, onDeleteClick: () -> Unit)
                 }
             }
 
-            IconBtn(
-                icon = Icons.Outlined.Delete,
-                tone = IconBtnTone.Danger,
-                onClick = onDeleteClick,
-                contentDescription = "Eliminar abono",
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                IconBtn(
+                    icon = Icons.Outlined.Edit,
+                    onClick = onEditClick,
+                    contentDescription = "Editar abono",
+                )
+                IconBtn(
+                    icon = Icons.Outlined.Delete,
+                    tone = IconBtnTone.Danger,
+                    onClick = onDeleteClick,
+                    contentDescription = "Eliminar abono",
+                )
+            }
         }
         Hairline()
     }

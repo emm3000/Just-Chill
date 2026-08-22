@@ -41,6 +41,8 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, loanRemaining: String?, onIntent: 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showAmountSheet by remember { mutableStateOf(false) }
     var showDateSheet by remember { mutableStateOf(false) }
+    val isEditing = form.editingPaymentId != null
+    val sheetLabel = if (isEditing) "Editar abono" else "Registrar abono"
 
     ModalBottomSheet(
         onDismissRequest = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentDismiss) },
@@ -63,7 +65,7 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, loanRemaining: String?, onIntent: 
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
                 Text(
-                    text = "Registrar abono",
+                    text = sheetLabel,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.W600,
                     fontFamily = InterFontFamily,
@@ -100,7 +102,7 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, loanRemaining: String?, onIntent: 
             }
 
             StickyCTA(
-                label = "Registrar abono",
+                label = sheetLabel,
                 interaction = when {
                     form.isSaving -> CtaInteraction.Loading
                     form.isSaveEnabled -> CtaInteraction.Enabled

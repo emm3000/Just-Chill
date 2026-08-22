@@ -3,6 +3,7 @@ package com.emm.justchill.hh.di
 import com.emm.domain.loan.CreateLoanUseCase
 import com.emm.domain.loan.DeleteLoanUseCase
 import com.emm.domain.loan.RegisterLoanPaymentUseCase
+import com.emm.domain.loan.UpdateLoanPaymentUseCase
 import com.emm.domain.loan.UpdateLoanUseCase
 import com.emm.justchill.hh.loan.AddEditLoanViewModel
 import com.emm.justchill.hh.loan.LoanDetailViewModel
@@ -18,6 +19,7 @@ val loanModule = module {
     factoryOf(::CreateLoanUseCase)
     factoryOf(::UpdateLoanUseCase)
     factoryOf(::RegisterLoanPaymentUseCase)
+    factoryOf(::UpdateLoanPaymentUseCase)
 
     viewModelOf(::LoansViewModel)
 
@@ -35,6 +37,7 @@ val loanModule = module {
             loanPaymentRepository = get(),
             deleteLoan = get(),
             registerLoanPayment = get(),
+            updateLoanPayment = get(),
             clock = get(),
             zone = get(),
         )

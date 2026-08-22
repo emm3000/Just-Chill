@@ -14,6 +14,7 @@ data class LoanPaymentFormUi(
     val date: LocalDate? = null,
     val note: String = String.Empty,
     val isSaving: Boolean = false,
+    val editingPaymentId: String? = null,
 ) {
     val dateLabel: String get() = relativeDayLabel(date ?: today, today)
     val isSaveEnabled: Boolean get() = amountDigits.isSavableAmount()

@@ -20,6 +20,7 @@ sealed interface LoanDetailIntent : UiIntent {
     // lives here, including the click that opens it.
     sealed interface PaymentFormIntent : LoanDetailIntent {
         data object OnAddPaymentClick : PaymentFormIntent
+        data class OnEditPaymentClick(val paymentId: String) : PaymentFormIntent
         data class OnPaymentAmountChange(val digits: String) : PaymentFormIntent
         data class OnPaymentMethodChange(val method: PaymentMethod) : PaymentFormIntent
         data class OnPaymentDateSelected(val value: LocalDate) : PaymentFormIntent

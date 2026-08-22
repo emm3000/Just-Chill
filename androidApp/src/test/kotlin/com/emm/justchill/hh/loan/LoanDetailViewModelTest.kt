@@ -5,9 +5,11 @@ import com.emm.domain.loan.Loan
 import com.emm.domain.loan.LoanPayment
 import com.emm.domain.loan.LoanPaymentInsert
 import com.emm.domain.loan.LoanPaymentRepository
+import com.emm.domain.loan.LoanPaymentUpdate
 import com.emm.domain.loan.LoanRepository
 import com.emm.domain.loan.PaymentMethod
 import com.emm.domain.loan.RegisterLoanPaymentUseCase
+import com.emm.domain.loan.UpdateLoanPaymentUseCase
 import com.emm.domain.shared.LoanId
 import com.emm.domain.shared.LoanPaymentId
 import com.emm.domain.shared.Money
@@ -53,6 +55,7 @@ class LoanDetailViewModelTest {
     private val loanPaymentRepository = mockk<LoanPaymentRepository>()
     private val deleteLoan = mockk<DeleteLoanUseCase>()
     private val registerLoanPayment = mockk<RegisterLoanPaymentUseCase>()
+    private val updateLoanPayment = mockk<UpdateLoanPaymentUseCase>()
 
     private val lima = TimeZone.of("America/Lima")
     private val today = LocalDate(2026, Month.AUGUST, 10)
@@ -95,6 +98,7 @@ class LoanDetailViewModelTest {
         loanPaymentRepository,
         deleteLoan,
         registerLoanPayment,
+        updateLoanPayment,
         fixedClock,
         lima,
     )
@@ -377,5 +381,100 @@ class LoanDetailViewModelTest {
 
             coVerify(exactly = 1) { registerLoanPayment(any()) }
             gate.complete(Unit)
+        }
+
+    @Test
+    fun `OnEditPaymentClick prefills the payment form from the loaded payment`() = runTest {
+        every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+        every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(
+            listOf(payment("pay-1", amount = 30_000L, note = "Efectivo de agosto")),
+        )
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnEditPaymentClick("pay-1"))
+        advanceUntilIdle()
+
+        val form = checkNotNull(vm.state.value.payment)
+        assertEquals("30000", form.amountDigits)
+        assertEquals(PaymentMethod.Cash, form.method)
+        assertEquals(LocalDate(2026, Month.AUGUST, 5), form.date)
+        assertEquals("Efectivo de agosto", form.note)
+        assertEquals("pay-1", form.editingPaymentId)
+    }
+
+    @Test
+    fun `OnPaymentConfirm while editing calls UpdateLoanPaymentUseCase and preserves the original time of day`() =
+        runTest {
+            every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+            every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(listOf(payment("pay-1", 30_000L)))
+            coEvery { updateLoanPayment(any()) } returns Unit
+            val vm = viewModel()
+            advanceUntilIdle()
+
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnEditPaymentClick("pay-1"))
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentAmountChange("45000"))
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentConfirm)
+            advanceUntilIdle()
+
+            val update = slot<LoanPaymentUpdate>()
+            coVerify(exactly = 1) { updateLoanPayment(capture(update)) }
+            coVerify(exactly = 0) { registerLoanPayment(any()) }
+            assertEquals(LoanPaymentId("pay-1"), update.captured.id)
+            assertEquals(Money(45_000L), update.captured.amount)
+            // The picked value only ever carries a date; the time of day comes from the loaded
+            // payment's own paidAt (09:00 in the payment() fixture), never the clock's 14:30 — an
+            // edit must not silently rewrite a real historical time to "now".
+            assertEquals(LocalDateTime.parse("2026-08-05T09:00:00"), update.captured.paidAt)
+            assertNull(vm.state.value.payment)
+        }
+
+    @Test
+    fun `remaining follows the repository flow after an edit with no manual refresh`() = runTest {
+        val payments = MutableStateFlow(listOf(payment("pay-1", 30_000L), payment("pay-2", 20_000L)))
+        every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+        every { loanPaymentRepository.byLoan(loanIdValue) } returns payments
+        coEvery { updateLoanPayment(any()) } coAnswers {
+            val edited = firstArg<LoanPaymentUpdate>()
+            payments.update { list -> list.map { if (it.id == edited.id) it.copy(amount = edited.amount) else it } }
+        }
+        val vm = viewModel()
+        advanceUntilIdle()
+        assertEquals("S/ 600.00", checkNotNull(vm.state.value.summary).remaining)
+
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnEditPaymentClick("pay-2"))
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentAmountChange("5000"))
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentConfirm)
+        advanceUntilIdle()
+
+        assertEquals("S/ 750.00", checkNotNull(vm.state.value.summary).remaining)
+    }
+
+    @Test
+    fun `OnPaymentConfirm while editing with PaymentExceedsBalance emits ShowError and keeps the sheet open`() =
+        runTest {
+            every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+            every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(listOf(payment("pay-1", 30_000L)))
+            val error = DomainException.ValidationError(
+                "Payment of 999900 exceeds remaining balance of 100000",
+                ValidationCode.PaymentExceedsBalance,
+            )
+            coEvery { updateLoanPayment(any()) } throws error
+            val vm = viewModel()
+            val effects = mutableListOf<LoanDetailEffect>()
+            val job = launch { vm.effect.collect { effects.add(it) } }
+            advanceUntilIdle()
+
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnEditPaymentClick("pay-1"))
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentAmountChange("999900"))
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentConfirm)
+            advanceUntilIdle()
+
+            val showError = effects.filterIsInstance<LoanDetailEffect.ShowError>().firstOrNull()
+            checkNotNull(showError) { "Expected ShowError effect but got: $effects" }
+            assertEquals("El abono es mayor que lo que falta pagar", showError.message)
+            assertEquals("999900", vm.state.value.payment?.amountDigits)
+            assertEquals("pay-1", vm.state.value.payment?.editingPaymentId)
+            job.cancel()
         }
 }
