@@ -7,6 +7,7 @@ import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.hh.category.AddCategoryViewModel
 import com.emm.justchill.hh.loan.AddEditLoanViewModel
+import com.emm.justchill.hh.loan.LoanDetailViewModel
 import com.emm.justchill.hh.loan.PersonLoansViewModel
 import com.emm.justchill.hh.recurring.AddEditRecurringMovementViewModel
 import com.emm.justchill.hh.transaction.EditTransactionViewModel
@@ -332,6 +333,7 @@ class AppGraphKoinTest {
             "CategoriesViewModel",
             "EditTransactionViewModel",
             "HomeViewModel",
+            "LoanDetailViewModel",
             "LoansViewModel",
             "PersonLoansViewModel",
             "ProfileViewModel",
@@ -354,6 +356,7 @@ class AppGraphKoinTest {
             // Nullable template id; a non-null value exercises the edit branch over the create one.
             AddEditRecurringMovementViewModel::class to { parametersOf("test-recurring-id") },
             PersonLoansViewModel::class to { parametersOf("test-person-key") },
+            LoanDetailViewModel::class to { parametersOf("test-loan-id") },
             AddEditLoanViewModel::class to { parametersOf("test-loan-id") },
         )
     }

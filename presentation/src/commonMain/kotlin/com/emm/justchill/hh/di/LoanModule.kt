@@ -5,6 +5,7 @@ import com.emm.domain.loan.DeleteLoanUseCase
 import com.emm.domain.loan.RegisterLoanPaymentUseCase
 import com.emm.domain.loan.UpdateLoanUseCase
 import com.emm.justchill.hh.loan.AddEditLoanViewModel
+import com.emm.justchill.hh.loan.LoanDetailViewModel
 import com.emm.justchill.hh.loan.LoansViewModel
 import com.emm.justchill.hh.loan.PersonLoansViewModel
 import org.koin.core.module.dsl.factoryOf
@@ -24,6 +25,14 @@ val loanModule = module {
         PersonLoansViewModel(
             personKey = parameters.get(),
             loanRepository = get(),
+        )
+    }
+
+    viewModel { parameters ->
+        LoanDetailViewModel(
+            loanId = parameters.get(),
+            loanRepository = get(),
+            loanPaymentRepository = get(),
             deleteLoan = get(),
             registerLoanPayment = get(),
             clock = get(),
