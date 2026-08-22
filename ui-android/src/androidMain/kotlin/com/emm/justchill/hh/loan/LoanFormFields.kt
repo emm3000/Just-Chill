@@ -20,8 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
@@ -102,5 +104,50 @@ fun DateRow(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
             fontFamily = InterFontFamily,
             color = colors.textPrimary,
         )
+    }
+}
+
+@Preview
+@Composable
+private fun AmountCardEmptyPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg)
+                .padding(16.dp),
+        ) {
+            AmountCard(amountDigits = "", onClick = {})
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun AmountCardFilledPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg)
+                .padding(16.dp),
+        ) {
+            AmountCard(amountDigits = "120000", onClick = {})
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun DateRowPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg)
+                .padding(16.dp),
+        ) {
+            DateRow(label = "22 de agosto de 2026", onClick = {})
+        }
     }
 }
