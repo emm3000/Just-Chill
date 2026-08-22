@@ -61,3 +61,9 @@ data class AddEditRecurringMovementRoute(val id: String? = null) : AppRoute
 
 @Serializable
 data object ReportRoute : AppRoute
+
+@Serializable
+data object LoansRoute : AppRoute
+
+@Serializable
+data class PersonLoansRoute(val personKey: String) : AppRoute

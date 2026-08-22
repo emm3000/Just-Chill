@@ -71,6 +71,8 @@ class RouteSerializationTest {
         RecurringMovementsRoute,
         AddEditRecurringMovementRoute(id = "rec-1"),
         ReportRoute,
+        LoansRoute,
+        PersonLoansRoute(personKey = "person-1"),
     ).associateBy { it::class }
 
     private fun concreteRoutesUnder(root: KClass<out AppRoute>): Set<KClass<out AppRoute>> {
