@@ -1,6 +1,8 @@
 package com.emm.justchill.hh.loan
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,8 +24,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.Hairline
@@ -149,5 +153,52 @@ private fun LoanPaymentsEmptyState(modifier: Modifier = Modifier) {
             fontFamily = InterFontFamily,
             color = colors.textSecondary,
         )
+    }
+}
+
+private val loanPayments = listOf(
+    LoanPaymentRowUi(
+        paymentId = "1",
+        amount = "S/ 300.00",
+        methodLabel = "Yape",
+        readablePaidAt = "15 de agosto de 2026",
+        note = "Primer abono",
+    ),
+    LoanPaymentRowUi(
+        paymentId = "2",
+        amount = "S/ 200.00",
+        methodLabel = "Efectivo",
+        readablePaidAt = "20 de agosto de 2026",
+        note = "",
+    ),
+)
+
+@Preview
+@Composable
+private fun LoanPaymentsListPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg)
+                .padding(16.dp),
+        ) {
+            LoanPaymentsList(payments = loanPayments, onDeleteClick = {})
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun LoanPaymentsListEmptyPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg)
+                .padding(16.dp),
+        ) {
+            LoanPaymentsList(payments = emptyList(), onDeleteClick = {})
+        }
     }
 }
