@@ -34,6 +34,8 @@ class PersonLoansViewModelTest {
     private val loanRepository = mockk<LoanRepository>()
     private val deleteLoan = mockk<DeleteLoanUseCase>()
 
+    // Six defaulted params, each asserted independently by the mapping test; totalDue is
+    // deliberately not derived from LoanMath here, so collapsing any of them weakens the proof.
     @Suppress("LongParameterList")
     private fun loanBalance(
         loanId: String = "loan-1",
