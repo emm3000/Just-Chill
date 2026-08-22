@@ -19,6 +19,7 @@ import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.transaction.SelectableCategory
 import com.emm.justchill.hh.transaction.centsToMoney
+import com.emm.justchill.hh.transaction.isSavableAmount
 import com.emm.justchill.hh.transaction.moneyCentsString
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
@@ -191,7 +192,7 @@ class AddEditRecurringMovementViewModel(
 }
 
 private fun AddEditRecurringMovementUiState.recalcSaveEnabled(): AddEditRecurringMovementUiState {
-    val amountValid = isVariableAmount || (amountDigits.isNotEmpty() && amountDigits.toLongOrNull() != 0L)
+    val amountValid = isVariableAmount || amountDigits.isSavableAmount()
     return copy(isSaveEnabled = name.isNotBlank() && selectedAccount != null && amountValid)
 }
 

@@ -3,6 +3,7 @@ package com.emm.justchill.hh.loan
 import com.emm.domain.loan.PaymentMethod
 import com.emm.justchill.hh.shared.Empty
 import com.emm.justchill.hh.shared.relativeDayLabel
+import com.emm.justchill.hh.transaction.isSavableAmount
 import kotlinx.datetime.LocalDate
 
 data class LoanPaymentFormUi(
@@ -14,5 +15,5 @@ data class LoanPaymentFormUi(
     val note: String = String.Empty,
 ) {
     val dateLabel: String get() = relativeDayLabel(date ?: today, today)
-    val isSaveEnabled: Boolean get() = amountDigits.isNotEmpty() && amountDigits.toLongOrNull() != 0L
+    val isSaveEnabled: Boolean get() = amountDigits.isSavableAmount()
 }

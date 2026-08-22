@@ -17,6 +17,8 @@ fun centsToMoney(digits: String): Money {
     return Money(cents)
 }
 
+fun String.isSavableAmount(): Boolean = isNotEmpty() && toLongOrNull() != 0L
+
 fun centsToSoles(digits: String): Double {
     val cents: Long = if (digits.isEmpty()) 0L else digits.toLong()
     return cents / CENTS_PER_UNIT
