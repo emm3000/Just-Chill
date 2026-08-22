@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Insights
+import androidx.compose.material.icons.outlined.People
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,12 +49,14 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.components.EmmCard
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.MoneyInline
 import com.emm.justchill.core.ui.atoms.MonthSelector
 import com.emm.justchill.hh.recurring.ConfirmRecurringSheet
@@ -77,6 +80,7 @@ fun HomeScreen(
     navigateToAdd: () -> Unit = {},
     navigateToEdit: (String) -> Unit = {},
     navigateToReport: () -> Unit = {},
+    navigateToLoans: () -> Unit = {},
 ) {
     val state: HomeUiState by homeViewModel.state.collectAsStateWithLifecycle()
     HomeScreen(
@@ -87,6 +91,7 @@ fun HomeScreen(
         navigateToAdd = navigateToAdd,
         navigateToEdit = navigateToEdit,
         navigateToReport = navigateToReport,
+        navigateToLoans = navigateToLoans,
         onPreviousMonth = { homeViewModel.onIntent(HomeIntent.PreviousMonth) },
         onNextMonth = { homeViewModel.onIntent(HomeIntent.NextMonth) },
         onIntent = homeViewModel::onIntent,
@@ -102,6 +107,7 @@ fun HomeScreen(
     navigateToAdd: () -> Unit = {},
     navigateToEdit: (String) -> Unit = {},
     navigateToReport: () -> Unit = {},
+    navigateToLoans: () -> Unit = {},
     onPreviousMonth: () -> Unit = {},
     onNextMonth: () -> Unit = {},
     onIntent: (HomeIntent) -> Unit = {},
@@ -123,6 +129,7 @@ fun HomeScreen(
             navigateToAll = navigateToAll,
             navigateToEdit = navigateToEdit,
             navigateToReport = navigateToReport,
+            navigateToLoans = navigateToLoans,
             onPreviousMonth = onPreviousMonth,
             onNextMonth = onNextMonth,
             onIntent = onIntent,
@@ -138,6 +145,7 @@ private fun HomeWithData(
     navigateToAll: () -> Unit,
     navigateToEdit: (String) -> Unit,
     navigateToReport: () -> Unit,
+    navigateToLoans: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onIntent: (HomeIntent) -> Unit = {},
@@ -180,6 +188,18 @@ private fun HomeWithData(
         }
         item { HeroBalance(balance = homeData.balance) }
         item { InOutRow(income = homeData.income, spend = homeData.spend) }
+
+        if (homeData.hasLoans) {
+            item {
+                LoansCard(
+                    totalOwed = homeData.loansTotalOwed,
+                    onClick = navigateToLoans,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 20.dp, start = 24.dp, end = 24.dp),
+                )
+            }
+        }
 
         if (homeData.pendingRecurringMovements.isNotEmpty()) {
             item {
@@ -376,6 +396,54 @@ private fun InOutRow(income: Money, spend: Money) {
             Eyebrow(text = "Balance", color = colors.textDisabled)
             Spacer(Modifier.height(4.dp))
             MoneyInline(value = monthBalanceDouble, color = monthBalanceColor)
+        }
+    }
+}
+
+@Composable
+private fun LoansCard(totalOwed: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = LocalEmmColors.current
+    val interactionSource = remember { MutableInteractionSource() }
+
+    EmmCard(
+        modifier = modifier.clickable(
+            interactionSource = interactionSource,
+            indication = null,
+            onClickLabel = "Ver préstamos",
+            onClick = dropUnlessResumed(block = onClick),
+        ),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            IconTile(icon = Icons.Outlined.People)
+
+            Column(modifier = Modifier.weight(1f)) {
+                Eyebrow(text = "Préstamos", color = colors.textDisabled)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Te deben",
+                    style = TextStyle(
+                        fontFamily = InterFontFamily,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.W500,
+                    ),
+                    color = colors.textSecondary,
+                )
+            }
+
+            Text(
+                text = totalOwed,
+                style = TextStyle(
+                    fontFamily = InterFontFamily,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.W700,
+                    letterSpacing = (-0.15).sp,
+                ),
+                color = colors.textPrimary,
+            )
         }
     }
 }

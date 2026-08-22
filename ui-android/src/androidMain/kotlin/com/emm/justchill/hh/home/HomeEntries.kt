@@ -1,7 +1,5 @@
 package com.emm.justchill.hh.home
 
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,6 +13,7 @@ import com.emm.justchill.hh.shared.AddTransactionRoute
 import com.emm.justchill.hh.shared.AppNavigator
 import com.emm.justchill.hh.shared.EditTransactionRoute
 import com.emm.justchill.hh.shared.HomeRoute
+import com.emm.justchill.hh.shared.LoansRoute
 import com.emm.justchill.hh.shared.NavHostBindings
 import com.emm.justchill.hh.shared.ReportRoute
 import com.emm.justchill.hh.shared.SeeTransactionRoute
@@ -24,47 +23,31 @@ import org.koin.compose.viewmodel.koinViewModel
 fun EntryProviderScope<NavKey>.homeEntries(bindings: NavHostBindings) {
     entry<HomeRoute> {
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
-        HomeEntry(
+        val vm: HomeViewModel = koinViewModel()
+        var confirmSheetOpen by remember { mutableStateOf(false) }
+
+        LaunchedEffect(vm) {
+            vm.effect.collect { effect ->
+                when (effect) {
+                    HomeEffect.CloseConfirmSheet -> confirmSheetOpen = false
+
+                    is HomeEffect.ShowError -> bindings.snackbarHostState.showEmmSnackbar(
+                        message = effect.message,
+                        tone = EmmSnackbarTone.Error,
+                    )
+                }
+            }
+        }
+
+        HomeScreen(
+            homeViewModel = vm,
+            confirmSheetOpen = confirmSheetOpen,
+            onConfirmSheetOpenChange = { open -> confirmSheetOpen = open },
             navigateToAll = { nav.switchTab(SeeTransactionRoute) },
             navigateToAdd = { nav.push(AddTransactionRoute) },
             navigateToEdit = { id -> nav.push(EditTransactionRoute(id)) },
             navigateToReport = { nav.push(ReportRoute) },
-            snackbarHostState = bindings.snackbarHostState,
+            navigateToLoans = { nav.push(LoansRoute) },
         )
     }
-}
-
-@Composable
-private fun HomeEntry(
-    navigateToAll: () -> Unit,
-    navigateToAdd: () -> Unit,
-    navigateToEdit: (String) -> Unit,
-    navigateToReport: () -> Unit,
-    snackbarHostState: SnackbarHostState,
-) {
-    val vm: HomeViewModel = koinViewModel()
-    var confirmSheetOpen by remember { mutableStateOf(false) }
-
-    LaunchedEffect(vm) {
-        vm.effect.collect { effect ->
-            when (effect) {
-                HomeEffect.CloseConfirmSheet -> confirmSheetOpen = false
-
-                is HomeEffect.ShowError -> snackbarHostState.showEmmSnackbar(
-                    message = effect.message,
-                    tone = EmmSnackbarTone.Error,
-                )
-            }
-        }
-    }
-
-    HomeScreen(
-        homeViewModel = vm,
-        confirmSheetOpen = confirmSheetOpen,
-        onConfirmSheetOpenChange = { confirmSheetOpen = it },
-        navigateToAll = navigateToAll,
-        navigateToAdd = navigateToAdd,
-        navigateToEdit = navigateToEdit,
-        navigateToReport = navigateToReport,
-    )
 }
