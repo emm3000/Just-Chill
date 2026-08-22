@@ -73,6 +73,7 @@ class RouteSerializationTest {
         ReportRoute,
         LoansRoute,
         PersonLoansRoute(personKey = "person-1"),
+        AddEditLoanRoute(loanId = "loan-1"),
     ).associateBy { it::class }
 
     private fun concreteRoutesUnder(root: KClass<out AppRoute>): Set<KClass<out AppRoute>> {
