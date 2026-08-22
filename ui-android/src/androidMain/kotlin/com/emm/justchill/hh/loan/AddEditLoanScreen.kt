@@ -1,13 +1,8 @@
 package com.emm.justchill.hh.loan
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,20 +10,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,24 +26,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmRadii
-import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.CtaTone
@@ -61,10 +40,10 @@ import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
+import com.emm.justchill.core.ui.atoms.UnderlineTextField
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.hh.shared.AmountInputSheet
 import com.emm.justchill.hh.shared.FormSection
-import com.emm.justchill.hh.transaction.centsToSoles
 import com.emm.justchill.hh.transaction.components.FrequentComboChip
 import com.emm.justchill.hh.transaction.sheets.DatePickerSheet
 import kotlinx.datetime.LocalDate
@@ -219,131 +198,6 @@ private fun AddEditLoanContent(
                 showDateSheet = false
             },
             onDismiss = { showDateSheet = false },
-        )
-    }
-}
-
-@Composable
-fun UnderlineTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    placeholder: String = "",
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-) {
-    val colors = LocalEmmColors.current
-
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        textStyle = TextStyle(
-            color = colors.textPrimary,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
-            letterSpacing = (-0.18).sp,
-        ),
-        cursorBrush = SolidColor(colors.accent),
-        singleLine = true,
-        keyboardOptions = keyboardOptions,
-        modifier = modifier
-            .fillMaxWidth()
-            .drawBehind {
-                drawLine(
-                    color = colors.border,
-                    start = Offset(0f, size.height),
-                    end = Offset(size.width, size.height),
-                    strokeWidth = 1f,
-                )
-            }
-            .padding(vertical = 8.dp),
-        decorationBox = { inner ->
-            Box {
-                if (value.isEmpty()) {
-                    Text(
-                        text = placeholder,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.W400,
-                        fontFamily = InterFontFamily,
-                        color = colors.textTertiary,
-                    )
-                }
-                inner()
-            }
-        },
-    )
-}
-
-@Composable
-fun AmountCard(amountDigits: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(radii.rM)
-            .background(colors.surface1)
-            .border(1.dp, colors.border, radii.rM)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            )
-            .padding(vertical = 20.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (amountDigits.isEmpty()) {
-            Text(
-                text = "S/ —.—",
-                fontSize = 40.sp,
-                fontWeight = FontWeight.W500,
-                fontFamily = InterFontFamily,
-                color = colors.textTertiary,
-                letterSpacing = (-0.8).sp,
-            )
-        } else {
-            AmountHero(
-                value = centsToSoles(amountDigits),
-                tone = AmountTone.Neutral,
-                showCaret = false,
-            )
-        }
-    }
-}
-
-@Composable
-fun DateRow(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(radii.rM)
-            .background(colors.surface1)
-            .border(1.dp, colors.border, radii.rM)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            )
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.CalendarMonth,
-            contentDescription = null,
-            tint = colors.textTertiary,
-            modifier = Modifier.size(16.dp),
-        )
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
-            color = colors.textPrimary,
         )
     }
 }

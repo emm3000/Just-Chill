@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -28,6 +30,7 @@ import com.emm.justchill.core.ui.atoms.SegmentOption
 import com.emm.justchill.core.ui.atoms.Segmented
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.atoms.StickyCTA
+import com.emm.justchill.core.ui.atoms.UnderlineTextField
 import com.emm.justchill.hh.shared.AmountInputSheet
 import com.emm.justchill.hh.shared.FormSection
 import com.emm.justchill.hh.transaction.sheets.DatePickerSheet
@@ -49,49 +52,60 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, loanRemaining: String?, onIntent: 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .imePadding()
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+                .imePadding(),
         ) {
-            Text(
-                text = "Registrar abono",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.W600,
-                fontFamily = InterFontFamily,
-                color = colors.textPrimary,
-                letterSpacing = (-0.15).sp,
-            )
-
-            FormSection(eyebrow = "MONTO") {
-                AmountCard(amountDigits = form.amountDigits, onClick = { showAmountSheet = true })
-            }
-
-            FormSection(eyebrow = "MÉTODO") {
-                Segmented(
-                    options = listOf(
-                        SegmentOption(PaymentMethod.Cash, PaymentMethod.Cash.label),
-                        SegmentOption(PaymentMethod.Transfer, PaymentMethod.Transfer.label),
-                    ),
-                    selected = form.method,
-                    onSelect = { onIntent(PersonLoansIntent.OnPaymentMethodChange(it)) },
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                Text(
+                    text = "Registrar abono",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.W600,
+                    fontFamily = InterFontFamily,
+                    color = colors.textPrimary,
+                    letterSpacing = (-0.15).sp,
                 )
-            }
 
-            FormSection(eyebrow = "FECHA") {
-                DateRow(label = form.dateLabel, onClick = { showDateSheet = true })
-            }
+                FormSection(eyebrow = "MONTO") {
+                    AmountCard(amountDigits = form.amountDigits, onClick = { showAmountSheet = true })
+                }
 
-            FormSection(eyebrow = "NOTA · OPCIONAL") {
-                UnderlineTextField(
-                    value = form.note,
-                    onValueChange = { onIntent(PersonLoansIntent.OnPaymentNoteChange(it)) },
-                    placeholder = "Ej. Pago en efectivo",
-                )
+                FormSection(eyebrow = "MÉTODO") {
+                    Segmented(
+                        options = listOf(
+                            SegmentOption(PaymentMethod.Cash, PaymentMethod.Cash.label),
+                            SegmentOption(PaymentMethod.Transfer, PaymentMethod.Transfer.label),
+                        ),
+                        selected = form.method,
+                        onSelect = { onIntent(PersonLoansIntent.OnPaymentMethodChange(it)) },
+                    )
+                }
+
+                FormSection(eyebrow = "FECHA") {
+                    DateRow(label = form.dateLabel, onClick = { showDateSheet = true })
+                }
+
+                FormSection(eyebrow = "NOTA · OPCIONAL") {
+                    UnderlineTextField(
+                        value = form.note,
+                        onValueChange = { onIntent(PersonLoansIntent.OnPaymentNoteChange(it)) },
+                        placeholder = "Ej. Pago en efectivo",
+                    )
+                }
             }
 
             StickyCTA(
                 label = "Registrar abono",
-                interaction = if (form.isSaveEnabled) CtaInteraction.Enabled else CtaInteraction.Disabled,
+                interaction = when {
+                    form.isSaving -> CtaInteraction.Loading
+                    form.isSaveEnabled -> CtaInteraction.Enabled
+                    else -> CtaInteraction.Disabled
+                },
                 onClick = { onIntent(PersonLoansIntent.OnPaymentConfirm) },
             )
         }
