@@ -32,6 +32,10 @@ class AddEditLoanViewModel(
 
     override val initialState = AddEditLoanUiState(today = today(), isEdit = loanId != null)
 
+    // Set by loadLoan on the edit path; save() reuses its time-of-day so an edit never rewrites
+    // lentAt to "now", which loansWithBalance and balancesByPerson both order and pick by.
+    private var loadedLentAt: LocalDateTime? = null
+
     init {
         loanRepository.balancesByPerson()
             .onEach { balances ->
@@ -73,6 +77,7 @@ class AddEditLoanViewModel(
 
     private suspend fun loadLoan(id: String) {
         val loan = loanRepository.byId(LoanId(id)).first() ?: return
+        loadedLentAt = loan.lentAt
         updateState {
             copy(
                 personName = loan.personName,
@@ -89,7 +94,7 @@ class AddEditLoanViewModel(
     ) {
         val s = currentState
         val now: LocalDateTime = clock.now().toLocalDateTime(zone)
-        val lentAt = LocalDateTime(s.date ?: now.date, now.time)
+        val lentAt = LocalDateTime(s.date ?: now.date, loadedLentAt?.time ?: now.time)
         val principal = centsToMoney(s.amountDigits)
         val interestBps = percentTextToBps(s.interestPercentText)
         val id = loanId
