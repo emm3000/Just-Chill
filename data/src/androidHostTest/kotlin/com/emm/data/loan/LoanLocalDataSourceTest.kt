@@ -40,17 +40,17 @@ class LoanLocalDataSourceTest {
     }
 
     @Test
-    fun `create round-trips every field through byId and byPerson`() = runTest {
+    fun `create round-trips every field through byId and loansWithBalance`() = runTest {
         val loan = loan()
 
         localDataSource.create(loan)
 
         val byIdResult = localDataSource.byId(loan.id.value).first()
-        val byPersonResult = localDataSource.byPerson(loan.personKey).first().single()
+        val loansWithBalanceResult = localDataSource.loansWithBalance(loan.personKey).first().single()
 
         assertNotNull(byIdResult)
         assertLoanFields(loan, byIdResult)
-        assertLoanFields(loan, byPersonResult)
+        assertLoanFields(loan, loansWithBalanceResult.loan)
     }
 
     @Test
@@ -88,16 +88,34 @@ class LoanLocalDataSourceTest {
     }
 
     @Test
-    fun `byPerson excludes a soft-deleted loan`() = runTest {
+    fun `loansWithBalance excludes a soft-deleted loan`() = runTest {
         localDataSource.create(loan(loanId = "loan-live", lentAt = "2026-08-10T12:00:00"))
         localDataSource.create(loan(loanId = "loan-deleted", lentAt = "2026-08-15T12:00:00"))
 
         localDataSource.softDelete("loan-deleted")
 
-        val result = localDataSource.byPerson("ana").first()
+        val result = localDataSource.loansWithBalance("ana").first()
 
         assertEquals(1, result.size)
-        assertEquals("loan-live", result.single().id.value)
+        assertEquals("loan-live", result.single().loan.id.value)
+    }
+
+    @Test
+    fun `loansWithBalance reports paidSoFar and remaining per loan, excluding a soft-deleted payment`() = runTest {
+        localDataSource.create(loan(loanId = "loan-1", totalDue = 10_000L, lentAt = "2026-08-10T12:00:00"))
+        localDataSource.create(loan(loanId = "loan-2", totalDue = 5_000L, lentAt = "2026-08-12T12:00:00"))
+        insertPayment(paymentId = "pay-1", loanId = "loan-1", amount = 1_000L)
+        insertPayment(paymentId = "pay-2", loanId = "loan-1", amount = 2_000L)
+        insertPayment(paymentId = "pay-deleted", loanId = "loan-1", amount = 5_000L, deletedAt = 999L)
+
+        val result = localDataSource.loansWithBalance("ana").first()
+
+        val loanOne = result.single { it.loan.id.value == "loan-1" }
+        val loanTwo = result.single { it.loan.id.value == "loan-2" }
+        assertEquals(Money(3_000L), loanOne.paidSoFar)
+        assertEquals(Money(7_000L), loanOne.remaining)
+        assertEquals(Money(0L), loanTwo.paidSoFar)
+        assertEquals(Money(5_000L), loanTwo.remaining)
     }
 
     private fun assertLoanFields(expected: Loan, actual: Loan) {
@@ -134,10 +152,12 @@ class LoanLocalDataSourceTest {
         driver.execute(identifier = null, sql = sql, parameters = 0)
     }
 
-    private fun insertPayment(paymentId: String, loanId: String, amount: Long) {
+    private fun insertPayment(paymentId: String, loanId: String, amount: Long, deletedAt: Long? = null) {
         exec(
-            "INSERT INTO loan_payments(paymentId, loanId, amount, method, paidAt, note, createdAt, updatedAt) " +
-                "VALUES ('$paymentId', '$loanId', $amount, 'Cash', '2026-08-11T12:00:00', '', 0, 0)",
+            "INSERT INTO loan_payments(paymentId, loanId, amount, method, paidAt, note, createdAt, updatedAt, " +
+                "deletedAt) " +
+                "VALUES ('$paymentId', '$loanId', $amount, 'Cash', '2026-08-11T12:00:00', '', 0, 0, " +
+                "${deletedAt ?: "NULL"})",
         )
     }
 }

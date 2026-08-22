@@ -2,8 +2,10 @@ package com.emm.data.loan
 
 import com.emm.data.BalancesByPerson
 import com.emm.data.Loans
+import com.emm.data.LoansWithBalance
 import com.emm.data.shared.toOccurredAtOrNull
 import com.emm.domain.loan.Loan
+import com.emm.domain.loan.LoanBalance
 import com.emm.domain.loan.PersonBalance
 import com.emm.domain.loan.remaining
 import com.emm.domain.shared.LoanId
@@ -45,3 +47,26 @@ fun BalancesByPerson.asExternalModel() = PersonBalance(
     personName = personName,
     remaining = remaining(totalDue = Money(totalDue), paidSoFar = Money(paidSoFar)),
 )
+
+fun LoansWithBalance.asEntity() = LoanEntity(
+    loanId = loanId,
+    personName = personName,
+    personKey = personKey,
+    principal = principal,
+    interestBps = interestBps,
+    totalDue = totalDue,
+    note = note,
+    lentAt = lentAt,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+)
+
+fun LoansWithBalance.asExternalModelOrNull(): LoanBalance? {
+    val loan = asEntity().asExternalModelOrNull() ?: return null
+    val paid = Money(paidSoFar)
+    return LoanBalance(loan = loan, paidSoFar = paid, remaining = remaining(loan.totalDue, paid))
+}
+
+// Named distinctly from the `List<LoanEntity>.asExternalModel()` above: `List<T>.asExternalModel()`
+// erases to the same JVM signature for any two element types, and the two would clash.
+fun List<LoansWithBalance>.asLoanBalances() = mapNotNull(LoansWithBalance::asExternalModelOrNull)

@@ -7,7 +7,7 @@ interface LoanRepository {
 
     fun balancesByPerson(): Flow<List<PersonBalance>>
 
-    fun byPerson(personKey: String): Flow<List<Loan>>
+    fun loansWithBalance(personKey: String): Flow<List<LoanBalance>>
 
     fun byId(loanId: LoanId): Flow<Loan?>
 

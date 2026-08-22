@@ -27,8 +27,22 @@ CREATE INDEX IF NOT EXISTS loans_user_deleted_idx ON loans(userId, deletedAt);
 byId:
 SELECT * FROM loans WHERE loanId = ? AND deletedAt IS NULL;
 
-byPerson:
-SELECT * FROM loans WHERE personKey = ? AND deletedAt IS NULL ORDER BY lentAt DESC;
+-- Pre-aggregates payments per loan before joining, same shape as `balancesByPerson` and for the same
+-- reason. No `GROUP BY` here: the subquery already collapses payments to one row per loan, so a
+-- direct join over this result cannot fan out.
+loansWithBalance:
+SELECT
+    l.*,
+    COALESCE(paid.paidSoFar, 0) AS paidSoFar
+FROM loans l
+LEFT JOIN (
+    SELECT loanId, SUM(amount) AS paidSoFar
+    FROM loan_payments
+    WHERE deletedAt IS NULL
+    GROUP BY loanId
+) paid ON paid.loanId = l.loanId
+WHERE l.personKey = ? AND l.deletedAt IS NULL
+ORDER BY l.lentAt DESC;
 
 insert:
 INSERT INTO loans(loanId, personName, personKey, principal, interestBps, totalDue, note, lentAt, createdAt, updatedAt, syncState)

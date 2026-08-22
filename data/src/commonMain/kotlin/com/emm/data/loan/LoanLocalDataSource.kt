@@ -9,6 +9,7 @@ import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.nowMillis
 import com.emm.data.shared.toOccurredAtText
 import com.emm.domain.loan.Loan
+import com.emm.domain.loan.LoanBalance
 import com.emm.domain.loan.PersonBalance
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -25,10 +26,10 @@ class LoanLocalDataSource(private val emmDatabase: EmmDatabaseData, private val 
         .mapToOneOrNull(ioDispatcher)
         .map { row -> row?.asEntity()?.asExternalModelOrNull() }
 
-    fun byPerson(personKey: String): Flow<List<Loan>> = lq.byPerson(personKey)
+    fun loansWithBalance(personKey: String): Flow<List<LoanBalance>> = lq.loansWithBalance(personKey)
         .asFlow()
         .mapToList(ioDispatcher)
-        .map { list -> list.asEntity().asExternalModel() }
+        .map { list -> list.asLoanBalances() }
 
     fun balancesByPerson(): Flow<List<PersonBalance>> = lq.balancesByPerson()
         .asFlow()
