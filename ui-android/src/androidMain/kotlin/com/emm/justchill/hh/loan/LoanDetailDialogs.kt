@@ -7,7 +7,12 @@ import androidx.compose.runtime.Composable
 import com.emm.justchill.core.theme.LocalEmmColors
 
 @Composable
-fun DeleteLoanDialog(summary: LoanSummaryUi?, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+internal fun DeleteLoanDialog(
+    summary: LoanSummaryUi?,
+    isDeleting: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
     val colors = LocalEmmColors.current
 
     AlertDialog(
@@ -20,7 +25,7 @@ fun DeleteLoanDialog(summary: LoanSummaryUi?, onConfirm: () -> Unit, onDismiss: 
             )
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
+            TextButton(onClick = onConfirm, enabled = !isDeleting) {
                 Text(text = "Borrar", color = colors.danger)
             }
         },
@@ -31,7 +36,12 @@ fun DeleteLoanDialog(summary: LoanSummaryUi?, onConfirm: () -> Unit, onDismiss: 
 }
 
 @Composable
-fun DeleteLoanPaymentDialog(payment: LoanPaymentRowUi?, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+internal fun DeleteLoanPaymentDialog(
+    payment: LoanPaymentRowUi?,
+    isDeleting: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
     val colors = LocalEmmColors.current
 
     AlertDialog(
@@ -44,7 +54,7 @@ fun DeleteLoanPaymentDialog(payment: LoanPaymentRowUi?, onConfirm: () -> Unit, o
             )
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
+            TextButton(onClick = onConfirm, enabled = !isDeleting) {
                 Text(text = "Borrar", color = colors.danger)
             }
         },

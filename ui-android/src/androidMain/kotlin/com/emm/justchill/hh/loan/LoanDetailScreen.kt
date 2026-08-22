@@ -2,6 +2,7 @@ package com.emm.justchill.hh.loan
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,8 +13,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -87,21 +89,26 @@ fun LoanDetailScreen(
                 interaction = if (summary.isSettled) CtaInteraction.Disabled else CtaInteraction.Enabled,
                 onClick = { onIntent(LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick) },
             )
+        } else {
+            Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = colors.textTertiary)
+            }
         }
     }
 
     if (state.pendingDeleteLoan) {
         DeleteLoanDialog(
             summary = summary,
+            isDeleting = state.isDeletingLoan,
             onConfirm = { onIntent(LoanDetailIntent.OnDeleteLoanConfirm) },
             onDismiss = { onIntent(LoanDetailIntent.OnDeleteLoanDismiss) },
         )
     }
 
     state.pendingDeletePaymentId?.let { paymentId ->
-        val target = remember(paymentId, state.payments) { state.payments.find { it.paymentId == paymentId } }
         DeleteLoanPaymentDialog(
-            payment = target,
+            payment = state.payments.find { it.paymentId == paymentId },
+            isDeleting = state.isDeletingPayment,
             onConfirm = { onIntent(LoanDetailIntent.OnDeletePaymentConfirm) },
             onDismiss = { onIntent(LoanDetailIntent.OnDeletePaymentDismiss) },
         )
