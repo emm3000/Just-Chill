@@ -15,9 +15,9 @@ sealed interface LoanDetailIntent : UiIntent {
     data object OnDeletePaymentConfirm : LoanDetailIntent
     data object OnDeletePaymentDismiss : LoanDetailIntent
 
-    // Grouped so the ViewModel can dispatch all seven in one delegated `when` branch instead of
-    // flattening every case into onIntent's own — the flat shape tripped CyclomaticComplexMethod.
-    // Everything that owns state.payment lives here, including the click that opens it.
+    // Grouped so the ViewModel dispatches them in one delegated `when` branch — flattening them
+    // into onIntent's own puts it over CyclomaticComplexMethod. Everything that owns state.payment
+    // lives here, including the click that opens it.
     sealed interface PaymentFormIntent : LoanDetailIntent {
         data object OnAddPaymentClick : PaymentFormIntent
         data class OnPaymentAmountChange(val digits: String) : PaymentFormIntent

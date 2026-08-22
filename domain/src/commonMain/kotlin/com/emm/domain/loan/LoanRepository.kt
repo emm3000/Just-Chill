@@ -15,7 +15,5 @@ interface LoanRepository {
 
     suspend fun update(loan: Loan)
 
-    // Must soft-delete the loan's live payments in the same call — `ON DELETE RESTRICT` never fires
-    // because this repo soft-deletes.
     suspend fun delete(loanId: LoanId)
 }
