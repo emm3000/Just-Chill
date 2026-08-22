@@ -354,7 +354,6 @@ class AppGraphKoinTest {
             // Nullable template id; a non-null value exercises the edit branch over the create one.
             AddEditRecurringMovementViewModel::class to { parametersOf("test-recurring-id") },
             PersonLoansViewModel::class to { parametersOf("test-person-key") },
-            // Nullable loan id; a non-null value exercises the edit branch over the create one.
             AddEditLoanViewModel::class to { parametersOf("test-loan-id") },
         )
     }
