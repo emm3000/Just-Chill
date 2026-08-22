@@ -4,11 +4,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
@@ -70,19 +72,23 @@ fun LoanDetailScreen(
         Hairline()
 
         if (summary != null) {
-            Column(modifier = Modifier.weight(1f)) {
-                LoanSummaryCard(summary = summary, modifier = Modifier.fillMaxWidth().padding(16.dp))
-                Eyebrow(text = "ABONOS", modifier = Modifier.padding(horizontal = 16.dp))
-                LoanPaymentsList(
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                contentPadding = PaddingValues(bottom = 12.dp),
+            ) {
+                item { LoanSummaryCard(summary = summary, modifier = Modifier.fillMaxWidth().padding(16.dp)) }
+                item {
+                    Eyebrow(
+                        text = "ABONOS",
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                    )
+                }
+                loanPaymentItems(
                     payments = state.payments,
                     onEditClick = { paymentId ->
                         onIntent(LoanDetailIntent.PaymentFormIntent.OnEditPaymentClick(paymentId))
                     },
                     onDeleteClick = { paymentId -> onIntent(LoanDetailIntent.OnDeletePaymentClick(paymentId)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(top = 8.dp),
                 )
             }
 

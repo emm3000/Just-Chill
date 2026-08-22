@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
@@ -36,26 +36,24 @@ import com.emm.justchill.core.ui.atoms.IconBtnTone
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
 
-@Composable
-fun LoanPaymentsList(
+// Items rather than a composable: the detail screen owns the only scroll, so the abonos cannot
+// carry a lazy list of their own without nesting one inside it.
+internal fun LazyListScope.loanPaymentItems(
     payments: List<LoanPaymentRowUi>,
     onEditClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     if (payments.isEmpty()) {
-        LoanPaymentsEmptyState(modifier = modifier)
+        item { LoanPaymentsEmptyState(modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp)) }
         return
     }
 
-    LazyColumn(modifier = modifier, contentPadding = PaddingValues(bottom = 12.dp)) {
-        items(payments, key = { it.paymentId }) { payment ->
-            LoanPaymentRow(
-                payment = payment,
-                onEditClick = { onEditClick(payment.paymentId) },
-                onDeleteClick = { onDeleteClick(payment.paymentId) },
-            )
-        }
+    items(payments, key = { it.paymentId }) { payment ->
+        LoanPaymentRow(
+            payment = payment,
+            onEditClick = { onEditClick(payment.paymentId) },
+            onDeleteClick = { onDeleteClick(payment.paymentId) },
+        )
     }
 }
 
@@ -156,7 +154,7 @@ private fun LoanPaymentsEmptyState(modifier: Modifier = Modifier) {
     }
 }
 
-private val loanPayments = listOf(
+private val previewLoanPayments = listOf(
     LoanPaymentRowUi(
         paymentId = "1",
         amount = "S/ 300.00",
@@ -175,30 +173,30 @@ private val loanPayments = listOf(
 
 @Preview
 @Composable
-private fun LoanPaymentsListPreview() {
+private fun LoanPaymentItemsPreview() {
     EmmTheme {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .height(240.dp)
+                .background(LocalEmmColors.current.bg),
         ) {
-            LoanPaymentsList(payments = loanPayments, onDeleteClick = {})
+            LazyColumn { loanPaymentItems(payments = previewLoanPayments, onEditClick = {}, onDeleteClick = {}) }
         }
     }
 }
 
 @Preview
 @Composable
-private fun LoanPaymentsListEmptyPreview() {
+private fun LoanPaymentItemsEmptyPreview() {
     EmmTheme {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .height(240.dp)
+                .background(LocalEmmColors.current.bg),
         ) {
-            LoanPaymentsList(payments = emptyList(), onDeleteClick = {})
+            LazyColumn { loanPaymentItems(payments = emptyList(), onEditClick = {}, onDeleteClick = {}) }
         }
     }
 }
