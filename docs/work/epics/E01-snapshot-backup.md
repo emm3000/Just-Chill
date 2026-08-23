@@ -65,3 +65,9 @@ remains.
 - Verification is read-only and is not a backup cycle: it never deletes — **not even an orphan payload, which prune deletes on sight** — never touches the watermark, the failure streak or published health, and emits no `BackupEvent`. Two tests pin the no-write property from independent angles.
 - `isNewestPair` is measured against the newest parseable snapshot name, orphan or not. Filtering orphans before indexing makes a walked-back result claim it is the newest — precisely in the window a failed manifest PUT creates, which is the only reason orphans exist.
 - A list or download failure is an error, never `NothingVerified` — collapsing them renders a dead network as "none of your backups verify".
+- The verify phrase must fit the snackbar it is reported in. `EmmSnackbar` draws `maxLines = 2` with
+  `TextOverflow.Ellipsis`, and `toPhrase()` appends clauses in table order, so the tables added last
+  are the first the ellipsis eats. Six clauses already run ~127 characters, ~151 with the
+  `Verificado un respaldo más antiguo` opening. ADR 009 Decision 4 makes per-table counts part of
+  the ship gate, and a count behind an ellipsis is not a reported count — so this blocks flipping
+  `SNAPSHOT_BACKUP_ENABLED`, not any one ticket. No UI test harness exists to catch it.
