@@ -160,13 +160,24 @@ class DefaultBackupVerifierTest {
 
     @Test
     fun `the reported counts are the payload's own, not the ones its manifest states`() = runTest {
-        bucket.seedPair(NEWEST, payloadJson(accounts = 1, categories = 23, transactions = 412, recurring = 3))
+        bucket.seedPair(
+            NEWEST,
+            payloadJson(accounts = 1, categories = 23, transactions = 412, recurring = 3, loans = 2, loanPayments = 5),
+        )
 
         val verified = assertIs<BackupVerification.Verified>(verifier().verifyLatest())
 
         assertEquals(
-            BackupRowCounts(accounts = 1, categories = 23, transactions = 412, recurringMovements = 3),
+            BackupRowCounts(
+                accounts = 1,
+                categories = 23,
+                transactions = 412,
+                recurringMovements = 3,
+                loans = 2,
+                loanPayments = 5,
+            ),
             verified.rowCounts,
+            "a table missing here never reached the counts the verifier reports",
         )
     }
 
@@ -275,6 +286,8 @@ private fun payloadJson(
     categories: Int = 0,
     transactions: Int = 0,
     recurring: Int = 0,
+    loans: Int = 0,
+    loanPayments: Int = 0,
     schemaVersion: Int = BACKUP_SCHEMA_VERSION,
 ): String = fixtureJson.encodeToString(
     ExportPayloadDto(
@@ -285,8 +298,8 @@ private fun payloadJson(
         categories = List(categories) { category(it) },
         transactions = List(transactions) { transaction(it) },
         recurringMovements = List(recurring) { recurringMovement(it) },
-        loans = emptyList(),
-        loanPayments = emptyList(),
+        loans = List(loans) { loan(it) },
+        loanPayments = List(loanPayments) { loanPayment(it) },
     ),
 )
 
@@ -323,6 +336,26 @@ private fun recurringMovement(index: Int) = RecurringMovementDto(
     isActive = true,
     lastConfirmedPeriod = null,
     createdAt = 0L,
+)
+
+private fun loan(index: Int) = LoanDto(
+    loanId = "loan-$index",
+    personName = "Persona $index",
+    personKey = "persona-$index",
+    principalCents = 50_000L,
+    interestBps = 0,
+    totalDueCents = 50_000L,
+    note = "",
+    lentAt = "2026-08-01T09:00:00",
+)
+
+private fun loanPayment(index: Int) = LoanPaymentDto(
+    paymentId = "payment-$index",
+    loanId = "loan-0",
+    amountCents = 1_000L,
+    method = "Cash",
+    paidAt = "2026-08-12T18:30:00",
+    note = "",
 )
 
 private fun snapshotOnDay(day: Int): String = backupSnapshotName(Instant.parse("2026-08-0${day + 1}T14:22:08Z"))

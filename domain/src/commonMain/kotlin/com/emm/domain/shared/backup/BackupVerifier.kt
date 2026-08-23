@@ -15,4 +15,11 @@ sealed interface BackupVerification {
     data class NothingVerified(val pairsInspected: Int) : BackupVerification
 }
 
-data class BackupRowCounts(val accounts: Int, val categories: Int, val transactions: Int, val recurringMovements: Int)
+data class BackupRowCounts(
+    val accounts: Int,
+    val categories: Int,
+    val transactions: Int,
+    val recurringMovements: Int,
+    val loans: Int,
+    val loanPayments: Int,
+)

@@ -618,7 +618,7 @@ class ProfileViewModelTest {
             assertEquals(listOf(ProfileMessage.BackupVerified(VERIFIED_NEWEST)), messages)
             assertEquals(
                 "Verificado: backup-v3-2026-08-16T14-22-08Z.json — 1 cuenta, 23 categorías, " +
-                    "412 movimientos, 3 recurrentes",
+                    "412 movimientos, 3 recurrentes, 1 préstamo, 2 abonos",
                 messages.single().toText(),
             )
         }
@@ -742,6 +742,13 @@ class ProfileViewModelTest {
 
 private val VERIFIED_NEWEST = BackupVerification.Verified(
     fileName = "backup-v3-2026-08-16T14-22-08Z.json",
-    rowCounts = BackupRowCounts(accounts = 1, categories = 23, transactions = 412, recurringMovements = 3),
+    rowCounts = BackupRowCounts(
+        accounts = 1,
+        categories = 23,
+        transactions = 412,
+        recurringMovements = 3,
+        loans = 1,
+        loanPayments = 2,
+    ),
     isNewestPair = true,
 )

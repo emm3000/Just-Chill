@@ -89,6 +89,8 @@ private fun ExportPayloadDto.rowCounts(): BackupRowCounts = BackupRowCounts(
     categories = categories.size,
     transactions = transactions.size,
     recurringMovements = recurringMovements.size,
+    loans = loans.size,
+    loanPayments = loanPayments.size,
 )
 
 private class Snapshot(val fileName: String, val takenAt: Instant, val hasManifest: Boolean)

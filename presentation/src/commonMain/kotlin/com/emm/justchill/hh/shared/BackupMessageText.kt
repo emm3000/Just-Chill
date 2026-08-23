@@ -42,4 +42,6 @@ private fun BackupRowCounts.toPhrase(): String = listOf(
     if (categories == 1) "1 categoría" else "$categories categorías",
     if (transactions == 1) "1 movimiento" else "$transactions movimientos",
     if (recurringMovements == 1) "1 recurrente" else "$recurringMovements recurrentes",
+    if (loans == 1) "1 préstamo" else "$loans préstamos",
+    if (loanPayments == 1) "1 abono" else "$loanPayments abonos",
 ).joinToString(", ")

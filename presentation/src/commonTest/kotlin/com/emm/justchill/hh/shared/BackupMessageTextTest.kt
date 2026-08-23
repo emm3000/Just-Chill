@@ -13,24 +13,40 @@ class BackupMessageTextTest {
 
     @Test
     fun `a verified snapshot is named, and every count it reports is inflected`() {
-        val counts = BackupRowCounts(accounts = 1, categories = 23, transactions = 412, recurringMovements = 3)
+        val counts = BackupRowCounts(
+            accounts = 1,
+            categories = 23,
+            transactions = 412,
+            recurringMovements = 3,
+            loans = 1,
+            loanPayments = 8,
+        )
 
         val shown = verifiedText(counts)
 
         assertEquals(
-            "Verificado: backup-v3-2026-08-16T14-22-08Z.json — 1 cuenta, 23 categorías, 412 movimientos, 3 recurrentes",
+            "Verificado: backup-v3-2026-08-16T14-22-08Z.json — 1 cuenta, 23 categorías, 412 movimientos, " +
+                "3 recurrentes, 1 préstamo, 8 abonos",
             shown,
         )
     }
 
     @Test
     fun `every count inflects on its own, not on whichever one happens to be singular`() {
-        val counts = BackupRowCounts(accounts = 2, categories = 1, transactions = 1, recurringMovements = 0)
+        val counts = BackupRowCounts(
+            accounts = 2,
+            categories = 1,
+            transactions = 1,
+            recurringMovements = 0,
+            loans = 1,
+            loanPayments = 2,
+        )
 
         val shown = verifiedText(counts)
 
         assertEquals(
-            "Verificado: backup-v3-2026-08-16T14-22-08Z.json — 2 cuentas, 1 categoría, 1 movimiento, 0 recurrentes",
+            "Verificado: backup-v3-2026-08-16T14-22-08Z.json — 2 cuentas, 1 categoría, 1 movimiento, " +
+                "0 recurrentes, 1 préstamo, 2 abonos",
             shown,
         )
     }
@@ -41,7 +57,7 @@ class BackupMessageTextTest {
 
         assertEquals(
             "Verificado un respaldo más antiguo: backup-v3-2026-08-16T14-22-08Z.json — " +
-                "0 cuentas, 0 categorías, 0 movimientos, 0 recurrentes",
+                "0 cuentas, 0 categorías, 0 movimientos, 0 recurrentes, 0 préstamos, 0 abonos",
             shown,
         )
     }
@@ -134,7 +150,14 @@ class BackupMessageTextTest {
 
 private fun failedText(reason: BackupFailureReason): String = ProfileMessage.BackupFailed(reason).toText()
 
-private val NO_ROWS = BackupRowCounts(accounts = 0, categories = 0, transactions = 0, recurringMovements = 0)
+private val NO_ROWS = BackupRowCounts(
+    accounts = 0,
+    categories = 0,
+    transactions = 0,
+    recurringMovements = 0,
+    loans = 0,
+    loanPayments = 0,
+)
 
 private fun verifiedText(counts: BackupRowCounts, isNewestPair: Boolean = true): String = ProfileMessage.BackupVerified(
     BackupVerification.Verified(
