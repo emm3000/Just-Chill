@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -165,8 +164,7 @@ private fun HomeWithData(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.bg)
-            .statusBarsPadding(),
+            .background(colors.bg),
     ) {
         item {
             Box(
@@ -486,7 +484,6 @@ private fun FirstLaunchEmpty(onAddClick: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg)
-            .statusBarsPadding()
             .padding(horizontal = 32.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -519,8 +516,7 @@ private fun MonthEmpty(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.bg)
-            .statusBarsPadding(),
+            .background(colors.bg),
     ) {
         Box(
             modifier = Modifier

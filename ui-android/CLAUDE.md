@@ -78,6 +78,10 @@ ever stutters, check compose compiler metrics before blaming the pattern.
   identifiers are **English**.
 - Errors reach the user through `DomainException.toUserMessage()` (`:presentation` `core/error/`),
   never a raw exception message.
+- A screen never applies window insets itself — `AppNavHost`'s `Scaffold` owns them via
+  `contentWindowInsets = WindowInsets.safeDrawing` and hands them down as the content
+  `PaddingValues`; adding `statusBarsPadding`/`navigationBarsPadding`/`imePadding` double-pads.
+  Exception: `ModalBottomSheet` is its own window and sets its own `contentWindowInsets`.
 
 ## Testing
 

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -47,8 +46,7 @@ fun LoanDetailScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(colors.bg)
-            .statusBarsPadding(),
+            .background(colors.bg),
     ) {
         JcTopBar(
             title = summary?.personName.orEmpty(),

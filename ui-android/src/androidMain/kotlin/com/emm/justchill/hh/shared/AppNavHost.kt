@@ -8,8 +8,10 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -104,14 +106,15 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     )
                 }
             },
-            contentWindowInsets = WindowInsets(0),
+            contentWindowInsets = WindowInsets.safeDrawing,
         ) { padding ->
 
             NavDisplay(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(colors.bg)
-                    .padding(padding),
+                    .padding(padding)
+                    .consumeWindowInsets(padding),
                 backStack = backStack,
                 entryDecorators = listOf(
                     rememberSaveableStateHolderNavEntryDecorator(),
