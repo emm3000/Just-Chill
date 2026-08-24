@@ -41,6 +41,7 @@ docs/*
 !docs/WORKFLOW.md
 !docs/CODE_QUALITY.md
 !docs/PERSISTENCE.md
+!docs/RELEASE_CHECKLIST.md
 # Supabase
 supabase.properties
 supabase/.temp/

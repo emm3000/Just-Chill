@@ -135,6 +135,8 @@ doc has a read-trigger in the map below, and a doc with no trigger is archive.
   **Read before a Play submission or a privacy change**; on the advertising ID the console says
   "Yes", wrongly, and that doc is the proof.
 - `DESIGN_SYSTEM.md` — the criteria: which token to reach for and why, never its value. **Read before adding UI.**
+- `RELEASE_CHECKLIST.md` — the ordered gate a release passes, including the ADR 009 restore drill.
+  **Read before tagging a release.**
 - `CODE_QUALITY.md` — detekt's thresholds and blind spots, what only a reviewer can judge, and the date
   rule (injected `Clock` **and** `TimeZone`, no defaults). **Read before a lint rule, a `@Suppress`, a use case, or a date.**
 - `WORKFLOW.md` — the writer/reviewer loop, the reinforced gate, the model-tier policy. **Required
