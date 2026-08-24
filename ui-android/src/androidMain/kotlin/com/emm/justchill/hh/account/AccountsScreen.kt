@@ -58,6 +58,9 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.theme.LocalEmmSpacing
+import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 
 // state/onIntent are the screen's data and event sink; addCategory/addAccount/navigateToLoans are
@@ -106,6 +109,11 @@ fun AccountsScreen(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(top = 4.dp, bottom = 12.dp),
         ) {
+            item {
+                SaldoTotal(totalBalance = state.totalBalance)
+                Hairline()
+            }
+
             item {
                 LoansEntryRow(totalOwed = state.loansTotalOwed, onClick = navigateToLoans)
                 Hairline()
@@ -183,6 +191,27 @@ private fun NewAccountButton(onClick: () -> Unit) {
             fontFamily = InterFontFamily,
             color = colors.textPrimary,
         )
+    }
+}
+
+// Home's hero owned this figure before E06-04 deleted the screen (ADR 010); the label and the
+// `Money.balanceFormatted()` path (AccountsUiState.kt) are recovered from it unchanged, so this
+// reads the same number Home did. Monochrome regardless of sign — DESIGN_SYSTEM.md §1.4, "negative
+// stays monochrome... from the transaction row to the report hero".
+@Composable
+private fun SaldoTotal(totalBalance: String) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.s5, vertical = spacing.s4),
+    ) {
+        Eyebrow(text = "Saldo total")
+        Spacer(Modifier.height(spacing.s2))
+        Text(text = totalBalance, style = type.amountCard, color = colors.textPrimary)
     }
 }
 
@@ -515,6 +544,7 @@ private fun AccountsScreenPreview() {
                 accounts = previewAccounts,
                 movementCounts = previewMovementCounts,
                 loansTotalOwed = "S/ 350.00",
+                totalBalance = "S/ 4,820.00",
             ),
             onIntent = {},
             addCategory = {},
@@ -527,13 +557,34 @@ private fun AccountsScreenPreview() {
 
 @Preview
 @Composable
-private fun AccountsScreenZeroLoansPreview() {
+private fun AccountsScreenZeroTotalsPreview() {
     EmmTheme {
         AccountsScreen(
             state = AccountsUiState(
                 accounts = previewAccounts,
                 movementCounts = previewMovementCounts,
                 loansTotalOwed = "S/ 0.00",
+                totalBalance = "S/ 0.00",
+            ),
+            onIntent = {},
+            addCategory = {},
+            addAccount = {},
+            navigateToLoans = {},
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun AccountsScreenNegativeBalancePreview() {
+    EmmTheme {
+        AccountsScreen(
+            state = AccountsUiState(
+                accounts = previewAccounts,
+                movementCounts = previewMovementCounts,
+                loansTotalOwed = "S/ 120.00",
+                totalBalance = "−S/ 350.00",
             ),
             onIntent = {},
             addCategory = {},

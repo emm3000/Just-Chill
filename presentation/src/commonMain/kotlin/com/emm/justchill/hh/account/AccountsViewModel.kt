@@ -41,6 +41,12 @@ class AccountsViewModel(
         loanRepository.balancesByPerson()
             .onEach { balances -> updateState { copy(loansTotalOwed = balances.totalOwedFormatted()) } }
             .launchIn(viewModelScope)
+
+        // A third, independent flow (ADR 010): the saldo total is TransactionTotals.balance from
+        // the aggregate query, never folded from the `all()` list above and never touched by a loan.
+        transactionRepository.observeTotals()
+            .onEach { totals -> updateState { copy(totalBalance = totals.balance.balanceFormatted()) } }
+            .launchIn(viewModelScope)
     }
 
     override fun onIntent(intent: AccountsIntent) {

@@ -12,7 +12,7 @@ unaddressed scope, not rejected scope, so no row moves.
 ## Constraints
 
 - **A loan is a parallel ledger and never touches money elsewhere.** Lending creates no Spend; an
-  abono creates no Income. Account balances, `liveTotals`, the month report and the Home `Saldo
+  abono creates no Income. Account balances, `liveTotals`, the month report and Cuentas' `Saldo
   total` are all unaffected by every row in `loans` and `loan_payments`. This is the product
   decision the whole feature rests on; wiring a loan into `transactions` reverses it silently.
   Recorded in ADR 010.

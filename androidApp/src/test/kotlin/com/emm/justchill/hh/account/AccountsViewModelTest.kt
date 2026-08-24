@@ -10,6 +10,7 @@ import com.emm.domain.loan.PersonBalance
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.Money
 import com.emm.domain.transaction.TransactionRepository
+import com.emm.domain.transaction.TransactionTotals
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
@@ -56,6 +57,7 @@ class AccountsViewModelTest {
     fun setUp() {
         every { accountRepository.all() } returns flowOf(emptyList())
         every { transactionRepository.all() } returns flowOf(emptyList())
+        every { transactionRepository.observeTotals() } returns flowOf(TransactionTotals.Empty)
         every { loanRepository.balancesByPerson() } returns flowOf(emptyList())
         viewModel = accountsViewModel()
     }
@@ -109,5 +111,73 @@ class AccountsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(listOf(account), viewModel.state.value.accounts)
+    }
+
+    @Test
+    fun `totalBalance defaults to zero, formatted, when there are no transactions`() = runTest {
+        advanceUntilIdle()
+
+        assertEquals("S/ 0.00", viewModel.state.value.totalBalance)
+    }
+
+    @Test
+    fun `totalBalance reaches state formatted from the observeTotals aggregate`() = runTest {
+        every { transactionRepository.observeTotals() } returns flowOf(
+            TransactionTotals(balance = Money(482_000L), movementCount = 12L),
+        )
+        viewModel = accountsViewModel()
+
+        advanceUntilIdle()
+
+        assertEquals("S/ 4,820.00", viewModel.state.value.totalBalance)
+    }
+
+    @Test
+    fun `a negative balance formats correctly, with its sign, instead of reading as positive`() = runTest {
+        every { transactionRepository.observeTotals() } returns flowOf(
+            TransactionTotals(balance = Money(-35_000L), movementCount = 5L),
+        )
+        viewModel = accountsViewModel()
+
+        advanceUntilIdle()
+
+        assertEquals("−S/ 350.00", viewModel.state.value.totalBalance)
+    }
+
+    @Test
+    fun `totalBalance updates when the totals flow re-emits, with no manual refresh`() = runTest {
+        val totalsFlow = MutableStateFlow(TransactionTotals.Empty)
+        every { transactionRepository.observeTotals() } returns totalsFlow
+        viewModel = accountsViewModel()
+        advanceUntilIdle()
+
+        assertEquals("S/ 0.00", viewModel.state.value.totalBalance)
+
+        totalsFlow.value = TransactionTotals(balance = Money(50_000L), movementCount = 1L)
+        advanceUntilIdle()
+
+        assertEquals("S/ 500.00", viewModel.state.value.totalBalance)
+    }
+
+    @Test
+    fun `no loan or abono moves totalBalance by one cent, however large the loans flow emits`() = runTest {
+        // ADR 010: loans are a parallel ledger. observeTotals() and balancesByPerson() are two
+        // separate flows sourced from two different tables — a huge loans emission must leave the
+        // saldo total exactly as the (unrelated) totals flow reported it.
+        every { transactionRepository.observeTotals() } returns flowOf(
+            TransactionTotals(balance = Money(482_000L), movementCount = 12L),
+        )
+        val loansFlow = MutableStateFlow<List<PersonBalance>>(emptyList())
+        every { loanRepository.balancesByPerson() } returns loansFlow
+        viewModel = accountsViewModel()
+        advanceUntilIdle()
+
+        assertEquals("S/ 4,820.00", viewModel.state.value.totalBalance)
+
+        loansFlow.value = listOf(personBalance(remaining = Money(999_999_999L)))
+        advanceUntilIdle()
+
+        assertEquals("S/ 4,820.00", viewModel.state.value.totalBalance)
+        assertEquals("S/ 9,999,999.99", viewModel.state.value.loansTotalOwed)
     }
 }

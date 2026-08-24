@@ -6,10 +6,9 @@
 ## Done when
 
 - [ ] a backup is exported from the installed pre-bump build (`0842d7d` — DB v5, payload v3) and
-      kept, with Reporte's current-month ingresos and gastos totals (Mes tab) plus the Cuentas and
-      Categorías counts recorded first
+      kept, with Cuentas' `Saldo total` plus the Cuentas and Categorías counts recorded first
 - [ ] that same v3 file imports on the v6 build reporting the same movimientos and recurrentes, no
-      préstamos/abonos clause, and the four recorded figures unchanged
+      préstamos/abonos clause, and the three recorded figures unchanged
 - [ ] a v4 file exported from the v6 build, holding at least one loan and one abono, restores onto a
       clean install with every figure above intact and the loan ledger present
 
