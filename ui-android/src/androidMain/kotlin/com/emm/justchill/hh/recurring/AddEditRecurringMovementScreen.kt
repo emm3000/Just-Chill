@@ -573,7 +573,7 @@ private fun ActiveCard(isActive: Boolean, onToggle: (Boolean) -> Unit) {
                     color = colors.textPrimary,
                 )
                 Text(
-                    text = "Mientras esté pausado no genera pendientes en tu Inicio.",
+                    text = "Mientras esté pausado no genera pendientes.",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.W400,
                     fontFamily = InterFontFamily,
