@@ -83,10 +83,7 @@ fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit, modifier:
                 fontWeight = FontWeight.W600,
                 letterSpacing = (-0.1).sp,
             ),
-            color = when (item.type) {
-                TransactionType.Income -> colors.success
-                TransactionType.Spend -> colors.danger
-            },
+            color = if (item.type == TransactionType.Income) colors.success else colors.textPrimary,
         )
     }
 }

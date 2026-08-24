@@ -50,7 +50,7 @@ internal fun DeleteTransactionDialog(
 
     val isSpend = type == TransactionType.Spend
     val title = if (isSpend) "¿Eliminar este gasto?" else "¿Eliminar este ingreso?"
-    val amountColor = if (isSpend) colors.danger else colors.success
+    val amountColor = if (isSpend) colors.textPrimary else colors.success
     val amountDisplay = "S/ " + formatCentsForDisplay(amountCents)
 
     Dialog(

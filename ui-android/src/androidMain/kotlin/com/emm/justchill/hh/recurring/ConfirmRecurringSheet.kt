@@ -59,10 +59,7 @@ fun ConfirmRecurringSheet(
     var amountCents by rememberSaveable(item.id) { mutableLongStateOf(item.fixedAmountCents ?: 0L) }
 
     val amountDouble = amountCents.toDouble() / 100.0
-    val tone = when (item.type) {
-        TransactionType.Income -> AmountTone.Pos
-        TransactionType.Spend -> AmountTone.Neg
-    }
+    val tone = if (item.type == TransactionType.Income) AmountTone.Pos else AmountTone.Neutral
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,

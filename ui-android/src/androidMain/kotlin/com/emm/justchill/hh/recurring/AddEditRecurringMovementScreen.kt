@@ -240,7 +240,7 @@ private fun AddEditRecurringMovementContent(
         AmountInputSheet(
             amountDigits = state.amountDigits,
             title = "Monto del recurrente",
-            tone = if (state.type == TransactionType.Income) AmountTone.Pos else AmountTone.Neg,
+            tone = if (state.type == TransactionType.Income) AmountTone.Pos else AmountTone.Neutral,
             onAmountConfirm = { onIntent(AddEditRecurringMovementIntent.OnAmountChange(it)) },
             onDismiss = { showAmountSheet = false },
             subtitle = "$typeLabel · se paga cada mes",
@@ -362,7 +362,7 @@ private fun AmountCardSection(
 ) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
-    val tone = if (type == TransactionType.Income) AmountTone.Pos else AmountTone.Neg
+    val tone = if (type == TransactionType.Income) AmountTone.Pos else AmountTone.Neutral
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         val cardInteraction = remember { MutableInteractionSource() }

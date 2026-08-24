@@ -423,7 +423,7 @@ private fun MonthSummaryStrip(summary: MonthSummaryUi) {
     val netCents = summary.net.cents
     val netColor = when {
         netCents > 0L -> colors.success
-        netCents < 0L -> colors.danger
+        netCents < 0L -> colors.textPrimary
         else -> colors.textSecondary
     }
 

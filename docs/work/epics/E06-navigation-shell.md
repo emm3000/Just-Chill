@@ -39,3 +39,13 @@ epic re-shapes the shell around what is actually used.
   Home held income, spend and balance that `ReportScreen` also derives, and a transaction list that
   `SeeTransactionsScreen` also renders. Before adding a section to any shell screen, check whether an
   existing screen already owns that number.
+
+- **The catch-up marker on a pending recurring row keeps `danger` on purpose (E06-08).**
+  `PendingRecurringComponents.kt` and `ConfirmRecurringSheet.kt` tint an overdue period label
+  `danger`, never an amount — an overdue recurrente is a broken state, which `danger` is for, and
+  `DESIGN_SYSTEM.md` §4 governs amounts, not labels. Do not sand this down as leftover red.
+
+- **`SavingsRateBlock`'s rate number keeps `danger` on a deficit; its trend pill does not (E06-08).**
+  A negative savings rate is a broken period, not a spend amount, so the rate stays `danger`. The
+  trend-delta pill beside it is a comparison, not the deficit itself, so a negative delta uses
+  `PillTone.Neutral`. Both calls are deliberate — do not unify them.

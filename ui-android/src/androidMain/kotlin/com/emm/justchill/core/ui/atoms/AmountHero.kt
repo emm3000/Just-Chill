@@ -61,7 +61,6 @@ fun AmountHero(
     val mainColor: Color = when (tone) {
         AmountTone.Neutral -> colors.textPrimary
         AmountTone.Pos -> colors.success
-        AmountTone.Neg -> colors.danger
         AmountTone.Mute -> colors.textTertiary
     }
 

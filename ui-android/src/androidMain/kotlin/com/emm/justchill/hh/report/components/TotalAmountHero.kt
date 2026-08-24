@@ -1,7 +1,8 @@
 package com.emm.justchill.hh.report.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -64,29 +65,16 @@ fun TotalAmountHero(totalFormatted: String, type: TransactionType, modifier: Mod
 
 @Preview
 @Composable
-private fun TotalAmountHeroIncomePreview() {
+private fun TotalAmountHeroIncomeAndSpendPreview() {
     EmmTheme {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(LocalEmmColors.current.bg)
                 .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             TotalAmountHero(totalFormatted = "S/ 6,200.00", type = TransactionType.Income)
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun TotalAmountHeroSpendPreview() {
-    EmmTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
-        ) {
             TotalAmountHero(totalFormatted = "S/ 4,580.00", type = TransactionType.Spend)
         }
     }

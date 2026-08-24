@@ -211,7 +211,7 @@ private fun RecurringSummaryCard(
                         fontSize = 15.sp,
                         fontWeight = FontWeight.W600,
                         fontFamily = InterFontFamily,
-                        color = colors.danger,
+                        color = colors.textPrimary,
                         letterSpacing = (-0.15).sp,
                     )
                 }
@@ -328,7 +328,7 @@ private fun RecurringMovementRow(
                         color = colors.textTertiary,
                     )
                 } else {
-                    val amountColor = if (item.type == TransactionType.Income) colors.success else colors.danger
+                    val amountColor = if (item.type == TransactionType.Income) colors.success else colors.textPrimary
                     Text(
                         text = item.formattedAmount,
                         fontSize = 13.sp,

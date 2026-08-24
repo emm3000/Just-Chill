@@ -51,6 +51,8 @@ fun SavingsRateBlock(
             horizontalArrangement = Arrangement.spacedBy(spacing.s3),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // A negative rate keeps `danger`: it is not a spend amount but a deficit period, which
+            // §4 treats as broken, not merely negative.
             val rateColor = if (ratePercent < 0) colors.danger else colors.textPrimary
             val rateAnnotated: AnnotatedString = buildAnnotatedString {
                 withStyle(SpanStyle(color = rateColor)) {
@@ -66,7 +68,7 @@ fun SavingsRateBlock(
             )
 
             if (deltaText != null && deltaIsPositive != null) {
-                val tone = if (deltaIsPositive) PillTone.Pos else PillTone.Neg
+                val tone = if (deltaIsPositive) PillTone.Pos else PillTone.Neutral
                 val icon = if (deltaIsPositive) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward
                 Pill(
                     text = deltaText,
