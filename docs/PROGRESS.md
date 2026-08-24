@@ -42,6 +42,10 @@ Ideas, no compromisos: ninguna tiene ticket y ninguna entra sin pasar el criteri
 - **Widget Android del saldo del mes**, para verlo sin abrir la app.
 - **Búsqueda avanzada** por rango de monto. Las fechas y la categoría ya filtran en SeeTransactions.
 - **Onboarding con data de ejemplo.** Hoy el primer launch es solo el manifiesto (`ManifestoScreen`).
+- **Harness de test de Compose.** `:ui-android` solo tiene `androidHostTest`: sin Robolectric ni
+  `ui-test-junit4`, ningún test puede pinear un bug que vive en un `when` de composición. Uno así
+  —la sección de pendientes de `SeeTransactionsScreen` desaparecía en mes vacío— pasó el gate entero
+  y lo atrapó un reviewer, no la suite. La red hoy son los `@Preview`, y solo miran quienes los abren.
 
 ## Rollback points
 
