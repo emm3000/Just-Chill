@@ -15,7 +15,6 @@
     <ID>InvalidPackageDeclaration:BackupModule.kt:package com.emm.justchill.hh.di</ID>
     <ID>InvalidPackageDeclaration:CategoryModule.kt:package com.emm.justchill.hh.di</ID>
     <ID>InvalidPackageDeclaration:DataModule.kt:package com.emm.justchill.hh.di</ID>
-    <ID>InvalidPackageDeclaration:HomeModule.kt:package com.emm.justchill.hh.di</ID>
     <ID>InvalidPackageDeclaration:ProfileModule.kt:package com.emm.justchill.hh.di</ID>
     <ID>InvalidPackageDeclaration:RecurringModule.kt:package com.emm.justchill.hh.di</ID>
     <ID>InvalidPackageDeclaration:ReportModule.kt:package com.emm.justchill.hh.di</ID>

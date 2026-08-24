@@ -92,7 +92,7 @@ actual.
 ## Screenshots requeridos
 
 Play Store alpha mínimo: **2 capturas por dispositivo**.
-- 4 pantallas a fotografiar: Home, Report, AddTransaction, Profile.
+- 4 pantallas a fotografiar: Ver, Reporte, AddTransaction, Perfil.
 - Formato recomendado: 1080×1920 (FHD vertical).
 - Formato alternativo aceptado: 1080×2400 (algunos celulares modernos).
 

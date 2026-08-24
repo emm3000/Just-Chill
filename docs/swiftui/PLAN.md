@@ -61,7 +61,7 @@ shippable. One slice ≈ 1-3 side-project sessions.
 | # | Slice | Content | SwiftUI/interop skill it teaches |
 |---|-------|---------|----------------------------------|
 | S3 | First vertical: SeeTransactions (read-only) | `NavigationStack` skeleton, minimal `Theme.swift`, the **VM-bridge pattern** (decision 4), transaction list + search + date filters. | The pattern everything else reuses: StateFlow→`@Observable`, intents, effect collection, List, searchable. |
-| S4 | Home + tabs | `TabView` with the bottom-bar tabs, home summary screen, tab-switch navigation (no nav3 `switchTab` semantics — native TabView state). | TabView, per-tab NavigationStack, formatters through the framework. |
+| S4 | Tab shell | `TabView` over the four tabs Android now ships — Ver, Reporte, Cuentas, Perfil — plus the centre add button, and tab-switch navigation (no nav3 `switchTab` semantics — native TabView state). There is no home summary screen to port: Android deleted it. Reporte's own content is S8; this slice builds only the shell. | TabView, per-tab NavigationStack, formatters through the framework. |
 | S5 | Transaction add/edit | Forms, decimal input/keyboard, date picker, category selection via closure (decision 6), edit flow. | Form, sheets, focus/keyboard management, returning results without a result channel. |
 | S6 | Categories CRUD | List + add/edit + delete with confirmation copy (`DeleteCategoryCopy` strings via framework). | Swipe actions, confirmation dialogs. |
 | S7 | Recurring movements | List + add/edit vertical. | Consolidation — same patterns, less hand-holding. |
