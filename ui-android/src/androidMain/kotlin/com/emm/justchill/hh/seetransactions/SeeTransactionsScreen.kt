@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -248,15 +249,26 @@ private fun TransactionListColumn(
             }
         }
 
+        // fillParentMaxHeight() sets height only, not width — these wrap-content Columns need
+        // fillMaxWidth() explicitly, or their CenterHorizontally hugs the left edge instead.
+        // It's a LazyItemScope extension, so it can only be built inside an `item` lambda.
+        val emptyStateModifier: LazyItemScope.() -> Modifier = {
+            if (state.isPendingSectionVisible) {
+                Modifier.fillMaxWidth()
+            } else {
+                Modifier.fillMaxWidth().fillParentMaxHeight()
+            }
+        }
+
         when (state.listDisplayState) {
-            ListDisplayState.Loading -> item { Spacer(Modifier.fillParentMaxHeight()) }
+            ListDisplayState.Loading -> item { Spacer(emptyStateModifier()) }
 
             ListDisplayState.EmptyLedger -> item {
-                EmptyNoTransactionsAtAll(modifier = Modifier.fillParentMaxHeight())
+                EmptyNoTransactionsAtAll(modifier = emptyStateModifier())
             }
 
             ListDisplayState.EmptyMonth -> item {
-                EmptyMonth(modifier = Modifier.fillParentMaxHeight())
+                EmptyMonth(modifier = emptyStateModifier())
             }
 
             ListDisplayState.NoSearchResults -> item {
@@ -264,7 +276,7 @@ private fun TransactionListColumn(
                     query = state.query,
                     activeCategoryName = state.activeCategory?.name,
                     onClear = { onIntent(SeeTransactionsIntent.OnClearFilters) },
-                    modifier = Modifier.fillParentMaxHeight(),
+                    modifier = emptyStateModifier(),
                 )
             }
 
@@ -977,29 +989,40 @@ private fun SeeTransactionsWithPendingPreview() {
     }
 }
 
+/**
+ * Several pending rows above the illustration — the shape most likely in a fresh month where
+ * nothing is confirmed yet. Past three or four rows the illustration falls below the fold, which
+ * is exactly the case the single-item version of this preview did not expose.
+ */
 @Preview
 @Composable
 private fun SeeTransactionsPendingWithEmptyMonthPreview() {
     EmmTheme {
         val pending = remember {
             listOf(
+                "Netflix" to "-S/ 18.00",
+                "Spotify" to "-S/ 15.00",
+                "Gimnasio" to "-S/ 89.00",
+                "Internet" to "-S/ 99.00",
+                "Seguro" to "-S/ 45.00",
+            ).mapIndexed { index, (name, amount) ->
                 PendingRecurringUi(
-                    id = "rm-1@2026-08",
-                    templateId = "rm-1",
+                    id = "rm-$index@2026-08",
+                    templateId = "rm-$index",
                     period = PREVIEW_MONTH,
                     periodLabel = "Agosto 2026",
                     isCatchUp = false,
-                    name = "Netflix",
+                    name = name,
                     type = TransactionType.Spend,
-                    formattedAmount = "-S/ 18.00",
+                    formattedAmount = amount,
                     isVariableAmount = false,
                     dayOfMonth = 15,
                     accountId = "acc-1",
                     categoryId = null,
                     description = "",
                     fixedAmountCents = 1800L,
-                ),
-            )
+                )
+            }
         }
         SeeTransactionsContent(
             state = SeeTransactionsUiState(

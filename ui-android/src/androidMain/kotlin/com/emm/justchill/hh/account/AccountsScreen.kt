@@ -113,7 +113,9 @@ fun AccountsScreen(
 
             if (state.accounts.isEmpty()) {
                 item {
-                    EmptyState(onCreate = addAccount, modifier = Modifier.fillParentMaxHeight())
+                    // fillParentMaxHeight() sets height only, not width — CenterHorizontally
+                    // needs fillMaxWidth() too, or this wrap-content Column hugs the left edge.
+                    EmptyState(onCreate = addAccount, modifier = Modifier.fillMaxWidth().fillParentMaxHeight())
                 }
             } else {
                 items(state.accounts, key = { it.accountId.value }) { account ->
