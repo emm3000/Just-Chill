@@ -20,7 +20,7 @@ val sharedModule = module {
     // LINES (three deliberate reads; DatePickerSheet accounts for two lines) that bypass the graph
     // by design. #7 names every one of them and says which are deliberate; do not infer from this
     // comment that the rest of the app never reads the machine.
-    // FQN avoids an ImportOrdering detekt violation (mirrors HomeViewModel).
+    // FQN avoids an ImportOrdering detekt violation.
     factory { kotlinx.datetime.TimeZone.currentSystemDefault() }
     factory<kotlin.time.Clock> { kotlin.time.Clock.System }
 }

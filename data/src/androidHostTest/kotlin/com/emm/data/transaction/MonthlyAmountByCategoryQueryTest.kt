@@ -60,7 +60,7 @@ class MonthlyAmountByCategoryQueryTest {
     }
 
     @Test
-    fun `rows sum to the month total so Report cannot disagree with Home`() {
+    fun `rows sum to the month total so Report cannot disagree with Ver`() {
         insertTransaction(id = "t-1", categoryId = "cat-live", amount = 1_000)
         insertTransaction(id = "t-2", categoryId = null, amount = 500)
         insertTransaction(id = "t-3", categoryId = "cat-gone", amount = 300)

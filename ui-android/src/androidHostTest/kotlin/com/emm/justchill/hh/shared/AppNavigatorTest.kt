@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 class AppNavigatorTest {
 
     /** Not the platform `startTab` (`SeeTransactionRoute`): the navigator must use the tab it is handed. */
-    private val rootTab: BottomBarRoute = HomeRoute
+    private val rootTab: BottomBarRoute = ProfileRoute
     private val backStack: NavBackStack<NavKey> = NavBackStack(rootTab)
     private var ready: Boolean = true
     private val navigator = AppNavigator(

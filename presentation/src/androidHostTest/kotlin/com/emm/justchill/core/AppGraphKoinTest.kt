@@ -332,7 +332,6 @@ class AppGraphKoinTest {
             "AuthViewModel",
             "CategoriesViewModel",
             "EditTransactionViewModel",
-            "HomeViewModel",
             "LoanDetailViewModel",
             "LoansViewModel",
             "PersonLoansViewModel",

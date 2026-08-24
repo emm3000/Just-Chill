@@ -120,9 +120,9 @@ class SeeTransactionsViewModel(
             .launchIn(viewModelScope)
 
         // A separate flow on purpose: pending recurring movements never depend on the browsed
-        // month or the active filter. It still re-subscribes on selectedMonth, same as Home's
-        // flatMapLatest over GetHomeDataUseCase — the only thing that buys is a fresh today() on
-        // every month-arrow tap, since the use case closes over whatever LocalDate it is called with.
+        // month or the active filter. It still re-subscribes on selectedMonth — the only thing
+        // that buys is a fresh today() on every month-arrow tap, since the use case closes over
+        // whatever LocalDate it is called with.
         selectedMonth
             .flatMapLatest { getPendingRecurringMovements(today()) }
             .onEach { pending -> updateState { mapToPendingUiState(pending) } }

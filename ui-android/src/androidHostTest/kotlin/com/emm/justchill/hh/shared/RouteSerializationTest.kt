@@ -54,7 +54,6 @@ class RouteSerializationTest {
     private val samples: Map<KClass<out AppRoute>, AppRoute> = listOf<AppRoute>(
         ManifestoRoute(isRevisit = true),
         PrivacyPolicyRoute,
-        HomeRoute,
         SeeTransactionRoute,
         AccountsRoute,
         ProfileRoute,

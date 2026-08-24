@@ -105,10 +105,11 @@ SELECT COALESCE(
 FROM transactions
 WHERE accountId = :accountId AND deletedAt IS NULL;
 
--- Home's balance and "has the user ever recorded anything" in one aggregate row.
--- Folding the whole table in memory on every emission was O(rows) per insert; this is O(1) work
--- for the caller. Unknown type values contribute 0 to the balance and are not counted, matching
--- the mapper skip-row policy that hides them from every list in the app.
+-- The running balance and "has the user ever recorded anything" in one aggregate row, backing
+-- TransactionRepository.observeTotals(). Folding the whole table in memory on every emission was
+-- O(rows) per insert; this is O(1) work for the caller. Unknown type values contribute 0 to the
+-- balance and are not counted, matching the mapper skip-row policy that hides them from every
+-- list in the app.
 liveTotals:
 SELECT
     COALESCE(
@@ -199,7 +200,7 @@ WHERE type = :type
 
 -- LEFT JOIN, not INNER: a transaction with no category (or one whose category was
 -- soft-deleted) must still be counted. The Report folds these rows into its month total
--- while Home folds the raw transactions, so an INNER JOIN made the two screens disagree.
+-- while Ver folds the raw transactions, so an INNER JOIN made the two screens disagree.
 -- All such rows collapse into a single bucket with a NULL categoryId, which the UI labels.
 monthlyAmountByCategory:
 SELECT

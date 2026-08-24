@@ -17,9 +17,8 @@ private fun PersonBalance.toUi() = PersonBalanceUi(
 fun List<PersonBalance>.toUi(): List<PersonBalanceUi> = map { it.toUi() }
 
 /**
- * Promoted out of `HomeViewModel` (ADR 010): Home and Cuentas each show the total owed for the
- * same balances, and this is the one formatting path both must go through so the two numbers can
- * never drift apart.
+ * Promoted out of `HomeViewModel` (ADR 010) when Home and Cuentas both showed this total, so the
+ * two could never drift apart. Cuentas is the only consumer now; this stays its formatting path.
  */
 fun List<PersonBalance>.totalOwedFormatted(): String = formatNeutral(fromCentsToSolesWith(totalRemaining()))
 

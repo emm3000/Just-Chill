@@ -20,9 +20,6 @@ data class ManifestoRoute(val isRevisit: Boolean = false) : AppRoute
 data object PrivacyPolicyRoute : AppRoute
 
 @Serializable
-data object HomeRoute : BottomBarRoute
-
-@Serializable
 data object SeeTransactionRoute : BottomBarRoute
 
 @Serializable
@@ -60,7 +57,7 @@ data object RecurringMovementsRoute : AppRoute
 data class AddEditRecurringMovementRoute(val id: String? = null) : AppRoute
 
 @Serializable
-data object ReportRoute : AppRoute
+data object ReportRoute : BottomBarRoute
 
 @Serializable
 data object LoansRoute : AppRoute

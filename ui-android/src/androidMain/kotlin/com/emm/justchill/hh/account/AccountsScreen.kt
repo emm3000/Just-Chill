@@ -188,8 +188,8 @@ private fun NewAccountButton(onClick: () -> Unit) {
 
 @Composable
 private fun LoansEntryRow(totalOwed: String, onClick: () -> Unit) {
-    // ADR 010: totalOwed is a parallel-ledger number, formatted the same way Home formats it —
-    // never derived from `state.accounts` and never folded into any balance on this screen.
+    // ADR 010: totalOwed is a parallel-ledger number, formatted via the shared totalOwedFormatted()
+    // helper — never derived from `state.accounts` and never folded into any balance on this screen.
     EmmListItem(
         icon = Icons.Outlined.People,
         title = "Préstamos",

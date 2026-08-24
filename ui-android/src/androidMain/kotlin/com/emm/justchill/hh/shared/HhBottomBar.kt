@@ -19,7 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -44,8 +44,8 @@ private data class BottomTab(
 )
 
 private val BOTTOM_TABS = listOf(
-    BottomTab(HomeRoute, "Inicio", Icons.Outlined.Home),
     BottomTab(SeeTransactionRoute, "Ver", Icons.AutoMirrored.Outlined.List),
+    BottomTab(ReportRoute, "Reporte", Icons.Outlined.Insights),
     BottomTab(null, "Agregar", Icons.Outlined.Add, isAdd = true),
     BottomTab(AccountsRoute, "Cuentas", Icons.Outlined.AccountBalanceWallet),
     BottomTab(ProfileRoute, "Perfil", Icons.Outlined.Person),

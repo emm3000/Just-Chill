@@ -22,7 +22,6 @@ import com.emm.data.transaction.TransactionLocalDataSource
 import com.emm.data.transaction.TransactionStatsLocalDataSource
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.CategoryRepository
-import com.emm.domain.home.GetHomeDataUseCase
 import com.emm.domain.loan.LoanPaymentRepository
 import com.emm.domain.loan.LoanRepository
 import com.emm.domain.recurring.RecurringMovementRepository
@@ -44,8 +43,6 @@ import org.koin.dsl.module
 // stays in androidPlatformModule / iosPlatformModule.
 val dataModule = module {
     single { provideTransactionQueries(get()) }
-
-    factoryOf(::GetHomeDataUseCase)
 
     // LocalDataSources — most take EmmDatabaseData; the transaction ones take TransactionsQueries.
     factoryOf(::CategoryLocalDataSource)

@@ -20,9 +20,9 @@ person actually promotes in Play Console. Nothing on this page is optional.
 - **Restore drill.** [ADR 009](adr/009-backup-is-a-snapshot-not-row-replication.md) Decision 4
   requires a continuously proven restore before backup ships, enforced by this drill.
   - While `SNAPSHOT_BACKUP_ENABLED` is `false` (its state today), the drill runs over the manual
-    export: export from the installed build, record Home's `Saldo total` and the Cuentas and
-    Categorías counts first, import onto a clean install, and confirm all three figures and the
-    ledger survive.
+    export: export from the installed build, record Reporte's current-month ingresos and gastos
+    totals (Mes tab) and the Cuentas and Categorías counts first, import onto a clean install, and
+    confirm all four figures and the ledger survive.
   - Once the flag flips, the drill runs over the newest verified snapshot instead.
   - Read the figures from the app, not from the import snackbar: `buildImportDoneMessage` never
     reports accounts or categories, and omits any clause whose count is zero.

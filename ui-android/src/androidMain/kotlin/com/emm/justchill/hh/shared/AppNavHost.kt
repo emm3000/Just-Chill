@@ -39,7 +39,6 @@ import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.hh.account.accountEntries
 import com.emm.justchill.hh.auth.authEntries
 import com.emm.justchill.hh.category.categoryEntries
-import com.emm.justchill.hh.home.homeEntries
 import com.emm.justchill.hh.loan.loanEntries
 import com.emm.justchill.hh.onboarding.onboardingEntries
 import com.emm.justchill.hh.profile.profileEntries
@@ -123,7 +122,6 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 entryProvider = entryProvider {
                     onboardingEntries(bindings, appPrefs)
                     authEntries(bindings)
-                    homeEntries(bindings)
                     seeTransactionsEntries(bindings)
                     accountEntries(bindings)
                     loanEntries(bindings)

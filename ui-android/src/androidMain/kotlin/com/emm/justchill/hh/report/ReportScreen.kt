@@ -18,7 +18,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material.icons.outlined.Receipt
@@ -65,7 +64,6 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ReportScreen(
     modifier: Modifier = Modifier,
-    onBack: () -> Unit = {},
     onAddTransaction: () -> Unit = {},
     vm: ReportViewModel = koinViewModel(),
 ) {
@@ -73,7 +71,6 @@ fun ReportScreen(
 
     ReportScreen(
         state = state,
-        onBack = onBack,
         onAddTransaction = onAddTransaction,
         onPreviousMonth = { vm.onIntent(ReportIntent.PreviousMonth) },
         onNextMonth = { vm.onIntent(ReportIntent.NextMonth) },
@@ -89,7 +86,6 @@ fun ReportScreen(
 @Composable
 private fun ReportScreen(
     state: ReportUiState,
-    onBack: () -> Unit,
     onAddTransaction: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
@@ -110,7 +106,7 @@ private fun ReportScreen(
             .fillMaxSize()
             .background(colors.bg),
     ) {
-        ReportTopBar(onBack = onBack, onShare = onShare)
+        ReportTopBar(onShare = onShare)
 
         val tabOptions = listOf(
             SegmentOption(ReportTab.Mes, "Mes"),
@@ -262,7 +258,7 @@ private fun TotalHeroBlock(state: ReportUiState) {
 }
 
 @Composable
-private fun ReportTopBar(onBack: () -> Unit, onShare: () -> Unit) {
+private fun ReportTopBar(onShare: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
@@ -274,11 +270,6 @@ private fun ReportTopBar(onBack: () -> Unit, onShare: () -> Unit) {
             .padding(horizontal = spacing.s4),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TopBarTile(
-            icon = Icons.AutoMirrored.Outlined.ArrowBack,
-            contentDescription = "Volver",
-            onClick = onBack,
-        )
         Text(
             text = "Reporte",
             style = type.titleL,
@@ -453,7 +444,6 @@ private fun ReportScreenMesPreview() {
                 movementCount = 12,
                 averageFormatted = "S/ 517",
             ),
-            onBack = {},
             onAddTransaction = {},
             onPreviousMonth = {},
             onNextMonth = {},
@@ -494,7 +484,6 @@ private fun ReportScreenMesGastosPreview() {
                 movementCount = 26,
                 averageFormatted = "S/ 176",
             ),
-            onBack = {},
             onAddTransaction = {},
             onPreviousMonth = {},
             onNextMonth = {},
@@ -520,7 +509,6 @@ private fun ReportScreenEmptyPreview() {
                 isEmpty = true,
                 isMonthEmpty = true,
             ),
-            onBack = {},
             onAddTransaction = {},
             onPreviousMonth = {},
             onNextMonth = {},
