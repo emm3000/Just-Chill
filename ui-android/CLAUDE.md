@@ -42,6 +42,13 @@ unserializable route crashes `rememberNavBackStack` on process-death restore and
 invisible to the compiler and to the build gate. `RouteSerializationTest` reflects over sealed
 `AppRoute` and round-trips each route through that exact serializer pair to catch it.
 
+**Landmine (a door nobody can open):** a feature's only entry point must never be conditional on
+that feature already having data. `LoansCard` was the sole push of `LoansRoute` and rendered behind
+`hasLoans`, which needs a loan, which needs the screen the card opens — the feature was unreachable
+and `LoansScreen`'s empty state was code no user could ever see (`15b8783a`). Nothing catches this:
+the push exists, so a route-graph check passes, and this module has no UI test harness. Gate the
+*content* of an entry point, never its existence.
+
 **Landmine (nav3 entry caching):** `NavEntry.content` closures are cached until the back stack
 changes. Host state an entry reads must arrive as `() -> T` accessors, never by value — see the
 result channels in `AppNavHost.kt` (`pendingCategory`, `pendingImportJson`).
