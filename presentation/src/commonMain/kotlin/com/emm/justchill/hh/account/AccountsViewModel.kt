@@ -10,6 +10,7 @@ import com.emm.domain.transaction.TransactionRepository
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.loan.totalOwedFormatted
+import com.emm.justchill.hh.shared.balanceFormatted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -45,7 +46,11 @@ class AccountsViewModel(
         // A third, independent flow (ADR 010): the saldo total is TransactionTotals.balance from
         // the aggregate query, never folded from the `all()` list above and never touched by a loan.
         transactionRepository.observeTotals()
-            .onEach { totals -> updateState { copy(totalBalance = totals.balance.balanceFormatted()) } }
+            .onEach { totals ->
+                updateState {
+                    copy(totalBalance = totals.balance.balanceFormatted(), totalBalanceMoney = totals.balance)
+                }
+            }
             .launchIn(viewModelScope)
     }
 

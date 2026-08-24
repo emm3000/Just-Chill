@@ -4,7 +4,7 @@ import com.emm.domain.account.Account
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.Money
 import com.emm.justchill.core.mvi.UiState
-import com.emm.justchill.hh.shared.formatExpense
+import com.emm.justchill.hh.shared.balanceFormatted
 import com.emm.justchill.hh.shared.formatNeutral
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
 
@@ -19,13 +19,8 @@ data class AccountsUiState(
     // Home's hero showed this figure before E06-04 deleted the screen (ADR 010); Cuentas is the
     // only surface left that shows it, sourced from TransactionRepository.observeTotals().
     val totalBalance: String = Money.Zero.balanceFormatted(),
+    // balanceFormatted() collapses zero and positive to the same unsigned string, so the
+    // screen-lead figure carries the raw value too: AccountsScreen.kt keys its tone off this
+    // Money's sign, which the formatted string alone cannot tell apart.
+    val totalBalanceMoney: Money = Money.Zero,
 ) : UiState
-
-/**
- * Reproduces the one sign convention Home's `AmountHero` gave the all-time balance: no `+` for a
- * positive or zero figure — unlike [formatIncome][com.emm.justchill.hh.shared.formatIncome] — so it
- * still reads identically to what Home showed and to the unsigned `loansTotalOwed` beside it, and a
- * negative figure keeps its sign via the same [formatExpense] every negative amount already uses.
- */
-fun Money.balanceFormatted(): String =
-    if (cents < 0L) formatExpense(fromCentsToSolesWith(this)) else formatNeutral(fromCentsToSolesWith(this))

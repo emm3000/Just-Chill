@@ -6,7 +6,8 @@
 ## Done when
 
 - [ ] a backup is exported from the installed pre-bump build (`0842d7d` — DB v5, payload v3) and
-      kept, with Cuentas' `Saldo total` plus the Cuentas and Categorías counts recorded first
+      kept, with `Saldo total` — Home's figure on this pre-bump build, Cuentas' on the v6 build
+      under test — plus the Cuentas and Categorías counts recorded first
 - [ ] that same v3 file imports on the v6 build reporting the same movimientos and recurrentes, no
       préstamos/abonos clause, and the three recorded figures unchanged
 - [ ] a v4 file exported from the v6 build, holding at least one loan and one abono, restores onto a

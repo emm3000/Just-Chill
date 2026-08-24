@@ -160,6 +160,28 @@ class AccountsViewModelTest {
     }
 
     @Test
+    fun `totalBalanceMoney carries the raw sign AccountsScreen keys its tone off, for pos, zero and neg`() = runTest {
+        // The formatted totalBalance string alone can't tell zero from positive apart (both go
+        // through formatNeutral); this pins the raw value the Compose tone mapping actually reads.
+        val totalsFlow = MutableStateFlow(TransactionTotals(balance = Money(482_000L), movementCount = 1L))
+        every { transactionRepository.observeTotals() } returns totalsFlow
+        viewModel = accountsViewModel()
+        advanceUntilIdle()
+
+        assertEquals(Money(482_000L), viewModel.state.value.totalBalanceMoney)
+
+        totalsFlow.value = TransactionTotals.Empty
+        advanceUntilIdle()
+
+        assertEquals(Money.Zero, viewModel.state.value.totalBalanceMoney)
+
+        totalsFlow.value = TransactionTotals(balance = Money(-35_000L), movementCount = 1L)
+        advanceUntilIdle()
+
+        assertEquals(Money(-35_000L), viewModel.state.value.totalBalanceMoney)
+    }
+
+    @Test
     fun `no loan or abono moves totalBalance by one cent, however large the loans flow emits`() = runTest {
         // ADR 010: loans are a parallel ledger. observeTotals() and balancesByPerson() are two
         // separate flows sourced from two different tables — a huge loans emission must leave the

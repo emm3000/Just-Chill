@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountType
 import com.emm.domain.shared.AccountId
+import com.emm.domain.shared.Money
 import com.emm.justchill.components.EmmButton
 import com.emm.justchill.components.EmmButtonVariant
 import com.emm.justchill.components.EmmListItem
@@ -110,7 +111,7 @@ fun AccountsScreen(
             contentPadding = PaddingValues(top = 4.dp, bottom = 12.dp),
         ) {
             item {
-                SaldoTotal(totalBalance = state.totalBalance)
+                TotalBalanceRow(totalBalance = state.totalBalance, totalBalanceMoney = state.totalBalanceMoney)
                 Hairline()
             }
 
@@ -194,24 +195,29 @@ private fun NewAccountButton(onClick: () -> Unit) {
     }
 }
 
-// Home's hero owned this figure before E06-04 deleted the screen (ADR 010); the label and the
-// `Money.balanceFormatted()` path (AccountsUiState.kt) are recovered from it unchanged, so this
-// reads the same number Home did. Monochrome regardless of sign — DESIGN_SYSTEM.md §1.4, "negative
-// stays monochrome... from the transaction row to the report hero".
+// Home's HeroBalance (deleted with the screen, E06-04/ADR 010) tinted a negative balance `danger`;
+// this screen deliberately drops that per DESIGN_SYSTEM.md §4 — "negative stays monochrome, an
+// expense is never red" — so a negative totalBalanceMoney maps to `textPrimary`, not `danger`.
 @Composable
-private fun SaldoTotal(totalBalance: String) {
+private fun TotalBalanceRow(totalBalance: String, totalBalanceMoney: Money) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
 
+    val amountColor = when {
+        totalBalanceMoney.cents > 0L -> colors.success
+        totalBalanceMoney.cents < 0L -> colors.textPrimary
+        else -> colors.textTertiary
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = spacing.s5, vertical = spacing.s4),
+            .padding(horizontal = spacing.s4, vertical = spacing.s4),
     ) {
         Eyebrow(text = "Saldo total")
         Spacer(Modifier.height(spacing.s2))
-        Text(text = totalBalance, style = type.amountCard, color = colors.textPrimary)
+        Text(text = totalBalance, style = type.amountLead, color = amountColor)
     }
 }
 
@@ -545,6 +551,7 @@ private fun AccountsScreenPreview() {
                 movementCounts = previewMovementCounts,
                 loansTotalOwed = "S/ 350.00",
                 totalBalance = "S/ 4,820.00",
+                totalBalanceMoney = Money(482_000L),
             ),
             onIntent = {},
             addCategory = {},
@@ -565,6 +572,7 @@ private fun AccountsScreenZeroTotalsPreview() {
                 movementCounts = previewMovementCounts,
                 loansTotalOwed = "S/ 0.00",
                 totalBalance = "S/ 0.00",
+                totalBalanceMoney = Money.Zero,
             ),
             onIntent = {},
             addCategory = {},
@@ -585,6 +593,7 @@ private fun AccountsScreenNegativeBalancePreview() {
                 movementCounts = previewMovementCounts,
                 loansTotalOwed = "S/ 120.00",
                 totalBalance = "−S/ 350.00",
+                totalBalanceMoney = Money(-35_000L),
             ),
             onIntent = {},
             addCategory = {},
