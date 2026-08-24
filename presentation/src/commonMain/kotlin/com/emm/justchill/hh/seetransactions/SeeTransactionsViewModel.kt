@@ -37,8 +37,10 @@ import kotlin.time.Clock
 
 private const val SEARCH_DEBOUNCE_MS = 250L
 
-// Pendings inject their three use cases directly (E06-03) instead of GetHomeDataUseCase, which
-// E06-04 deletes; folding them into a holder would just relocate the count, not the dependency.
+// Two repositories for the transaction list and its filters, three use cases for the pending
+// section's confirm/skip/source, plus Clock and TimeZone: seven distinct collaborators this
+// ViewModel actually calls, none of them foldable into one another without losing an identity Koin
+// binds separately.
 @Suppress("LongParameterList")
 class SeeTransactionsViewModel(
     categoryRepository: CategoryRepository,
@@ -117,9 +119,12 @@ class SeeTransactionsViewModel(
             .onEach { slice -> updateState { withListSlice(slice, selectedMonth.value) } }
             .launchIn(viewModelScope)
 
-        // A separate flow on purpose, same as Home (ADR 010's reasoning for loans applies here
-        // too): pending recurring movements never depend on the browsed month or the active filter.
-        getPendingRecurringMovements(today())
+        // A separate flow on purpose: pending recurring movements never depend on the browsed
+        // month or the active filter. It still re-subscribes on selectedMonth, same as Home's
+        // flatMapLatest over GetHomeDataUseCase — the only thing that buys is a fresh today() on
+        // every month-arrow tap, since the use case closes over whatever LocalDate it is called with.
+        selectedMonth
+            .flatMapLatest { getPendingRecurringMovements(today()) }
             .onEach { pending -> updateState { mapToPendingUiState(pending) } }
             .launchIn(viewModelScope)
     }

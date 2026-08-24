@@ -2,6 +2,7 @@ package com.emm.justchill.hh.seetransactions
 
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
+import com.emm.domain.category.CategoryType
 import com.emm.domain.recurring.ConfirmRecurringMovementUseCase
 import com.emm.domain.recurring.Frequency
 import com.emm.domain.recurring.GetPendingRecurringMovementsUseCase
@@ -50,9 +51,9 @@ import kotlin.time.Instant
 private val NOON = LocalTime(12, 0)
 
 /**
- * The pending-recurring wiring `SeeTransactionsViewModel` gained when the section moved off Home
- * (E06-03): sourcing, the visibility rule, confirm, skip, and the refresh into the list below.
- * Split out of SeeTransactionsViewModelTest so neither class trips detekt's LargeClass.
+ * The pending-recurring wiring `SeeTransactionsViewModel` owns: sourcing, the visibility rule,
+ * confirm, skip, and the refresh into the list below. Split out of SeeTransactionsViewModelTest so
+ * neither class trips detekt's LargeClass.
  */
 @Suppress("IgnoredReturnValue")
 class SeeTransactionsPendingRecurringViewModelTest {
@@ -182,8 +183,6 @@ class SeeTransactionsPendingRecurringViewModelTest {
             assertFalse(items.single { it.templateId == "rm-now" }.isCatchUp, "August 2026 is the clock's own month")
         }
 
-    // Visibility rule: unfiltered/filtered x current/other month, plus the nothing-pending case.
-
     @Test
     fun `unfiltered, current month, with pending shows the pending section`() = runTest(testDispatcher) {
         pendingFlow.value = listOf(pending())
@@ -234,6 +233,65 @@ class SeeTransactionsPendingRecurringViewModelTest {
 
         assertTrue(vm.state.value.pendingRecurringMovements.isEmpty())
         assertFalse(vm.state.value.isPendingSectionVisible)
+    }
+
+    @Test
+    fun `filtered by category, current month, with pending hides the pending section`() = runTest(testDispatcher) {
+        categoriesFlow.value = listOf(
+            Category(
+                categoryId = CategoryId("cat-1"),
+                name = "Comida",
+                icon = "icon",
+                color = "green",
+                categoryType = CategoryType.Spend,
+            ),
+        )
+        pendingFlow.value = listOf(pending())
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnCategoryToggled("cat-1"))
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.isFilterActive)
+        assertFalse(vm.state.value.isPendingSectionVisible)
+    }
+
+    @Test
+    fun `pending section stays visible when the month has no transactions yet (EmptyMonth)`() =
+        runTest(testDispatcher) {
+            pendingFlow.value = listOf(pending())
+            totalsFlow.value = TransactionTotals(balance = Money(10_000), movementCount = 3)
+            val vm = buildViewModel()
+            advanceUntilIdle()
+
+            assertEquals(ListDisplayState.EmptyMonth, vm.state.value.listDisplayState)
+            assertTrue(vm.state.value.isPendingSectionVisible)
+        }
+
+    @Test
+    fun `pending section stays visible when the whole ledger is empty (EmptyLedger)`() = runTest(testDispatcher) {
+        pendingFlow.value = listOf(pending())
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertEquals(ListDisplayState.EmptyLedger, vm.state.value.listDisplayState)
+        assertTrue(vm.state.value.isPendingSectionVisible)
+    }
+
+    @Test
+    fun `today is re-read on every month change, not just once at construction`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        verify(exactly = 1) { getPendingRecurringMovements(any()) }
+
+        vm.onIntent(SeeTransactionsIntent.OnNextMonth)
+        advanceUntilIdle()
+        verify(exactly = 2) { getPendingRecurringMovements(any()) }
+
+        vm.onIntent(SeeTransactionsIntent.OnPreviousMonth)
+        advanceUntilIdle()
+        verify(exactly = 3) { getPendingRecurringMovements(any()) }
     }
 
     @Test

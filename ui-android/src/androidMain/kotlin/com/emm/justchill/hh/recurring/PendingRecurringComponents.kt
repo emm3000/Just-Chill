@@ -26,7 +26,6 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import kotlinx.datetime.Month
 
-/** Section label shared by every screen that surfaces pending recurring movements. */
 @Composable
 fun PendingRecurringHeader(modifier: Modifier = Modifier) {
     Row(
@@ -38,7 +37,6 @@ fun PendingRecurringHeader(modifier: Modifier = Modifier) {
     }
 }
 
-/** One pending recurring row; tapping it is how [ConfirmRecurringSheet] gets opened. */
 @Composable
 fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current

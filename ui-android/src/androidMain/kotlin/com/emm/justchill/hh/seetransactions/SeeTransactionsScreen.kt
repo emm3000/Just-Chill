@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -84,7 +85,6 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import org.koin.compose.viewmodel.koinViewModel
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
@@ -93,7 +93,7 @@ fun SeeTransactionsScreen(
     onEditTransaction: (String) -> Unit,
     confirmSheetOpen: Boolean,
     onConfirmSheetOpenChange: (Boolean) -> Unit,
-    vm: SeeTransactionsViewModel = koinViewModel(),
+    vm: SeeTransactionsViewModel,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
 
@@ -175,7 +175,7 @@ private fun SeeTransactionsContent(
 
         Hairline()
 
-        TransactionListBody(
+        TransactionListColumn(
             state = state,
             onIntent = onIntent,
             navigateToEdit = navigateToEdit,
@@ -212,39 +212,71 @@ private fun SeeTransactionsContent(
     )
 }
 
-/** The pendings-plus-transactions list, or whichever empty/loading/no-results state applies. */
+/**
+ * One `LazyColumn` for everything below the filters, pendings included — never gated behind
+ * `Content`. `EmptyMonth`/`EmptyLedger` are real states for an account with dues but no bookings
+ * yet, and the pending row is often the only door that lets the author create the first one.
+ */
 @Composable
-private fun TransactionListBody(
+private fun TransactionListColumn(
     state: SeeTransactionsUiState,
     onIntent: (SeeTransactionsIntent) -> Unit,
     navigateToEdit: (String) -> Unit,
     onPendingClick: (PendingRecurringUi) -> Unit,
 ) {
-    when (state.listDisplayState) {
-        ListDisplayState.Loading -> Spacer(Modifier.fillMaxSize())
+    val listState = rememberLazyListState()
 
-        ListDisplayState.EmptyLedger -> EmptyNoTransactionsAtAll(modifier = Modifier.fillMaxSize())
+    LaunchedEffect(state.days.size) {
+        listState.scrollToItem(0)
+    }
 
-        ListDisplayState.EmptyMonth -> EmptyMonth(modifier = Modifier.fillMaxSize())
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        state = listState,
+        contentPadding = PaddingValues(bottom = 16.dp),
+    ) {
+        if (state.isPendingSectionVisible) {
+            item {
+                PendingRecurringHeader(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 24.dp, end = 24.dp, top = 14.dp, bottom = 8.dp),
+                )
+            }
+            items(state.pendingRecurringMovements, PendingRecurringUi::id) { pendingItem ->
+                PendingRecurringRow(item = pendingItem, onClick = { onPendingClick(pendingItem) })
+            }
+        }
 
-        ListDisplayState.NoSearchResults -> EmptyFilteredNoResults(
-            query = state.query,
-            activeCategoryName = state.activeCategory?.name,
-            onClear = { onIntent(SeeTransactionsIntent.OnClearFilters) },
-            modifier = Modifier.fillMaxSize(),
-        )
+        when (state.listDisplayState) {
+            ListDisplayState.Loading -> item { Spacer(Modifier.fillParentMaxHeight()) }
 
-        ListDisplayState.Content -> DayGroupedList(
-            pending = if (state.isPendingSectionVisible) state.pendingRecurringMovements else emptyList(),
-            days = state.days,
-            showMonthYearCaption = state.isFilterActive,
-            onPendingClick = onPendingClick,
-            onItemClick = navigateToEdit,
-        )
+            ListDisplayState.EmptyLedger -> item {
+                EmptyNoTransactionsAtAll(modifier = Modifier.fillParentMaxHeight())
+            }
+
+            ListDisplayState.EmptyMonth -> item {
+                EmptyMonth(modifier = Modifier.fillParentMaxHeight())
+            }
+
+            ListDisplayState.NoSearchResults -> item {
+                EmptyFilteredNoResults(
+                    query = state.query,
+                    activeCategoryName = state.activeCategory?.name,
+                    onClear = { onIntent(SeeTransactionsIntent.OnClearFilters) },
+                    modifier = Modifier.fillParentMaxHeight(),
+                )
+            }
+
+            ListDisplayState.Content -> dayGroupedItems(
+                days = state.days,
+                showMonthYearCaption = state.isFilterActive,
+                onItemClick = navigateToEdit,
+            )
+        }
     }
 }
 
-/** Hosts [ConfirmRecurringSheet] when a pending row was tapped; absent otherwise. */
 @Composable
 private fun PendingConfirmSheetHost(
     pendingItem: PendingRecurringUi?,
@@ -599,72 +631,44 @@ private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: ()
     }
 }
 
-@Composable
-private fun DayGroupedList(
-    pending: List<PendingRecurringUi>,
+private fun LazyListScope.dayGroupedItems(
     days: List<DayGroup>,
     showMonthYearCaption: Boolean,
-    onPendingClick: (PendingRecurringUi) -> Unit,
     onItemClick: (String) -> Unit,
 ) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val listState = rememberLazyListState()
-
-    LaunchedEffect(days.size) {
-        listState.scrollToItem(0)
-    }
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        state = listState,
-        contentPadding = PaddingValues(bottom = 16.dp),
-    ) {
-        if (pending.isNotEmpty()) {
-            item {
-                PendingRecurringHeader(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 24.dp, end = 24.dp, top = 14.dp, bottom = 8.dp),
-                )
-            }
-            items(pending, PendingRecurringUi::id) { item ->
-                PendingRecurringRow(item = item, onClick = { onPendingClick(item) })
+    days.forEach { dayGroup ->
+        stickyHeader(key = "header-${dayGroup.date}", contentType = "day-header") {
+            val colors = LocalEmmColors.current
+            val type = LocalEmmType.current
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(colors.bg)
+                    .padding(top = 14.dp, start = 24.dp, end = 24.dp, bottom = 8.dp),
+            ) {
+                Eyebrow(text = dayGroup.primaryLabel)
+                if (showMonthYearCaption) {
+                    Text(
+                        text = dayGroup.monthYearCaption,
+                        style = type.eyebrow.copy(fontSize = 11.sp, letterSpacing = 1.0.sp),
+                        color = colors.textDisabled,
+                    )
+                }
             }
         }
 
-        days.forEach { dayGroup ->
-            stickyHeader(key = "header-${dayGroup.date}", contentType = "day-header") {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Bottom,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(colors.bg)
-                        .padding(top = 14.dp, start = 24.dp, end = 24.dp, bottom = 8.dp),
-                ) {
-                    Eyebrow(text = dayGroup.primaryLabel)
-                    if (showMonthYearCaption) {
-                        Text(
-                            text = dayGroup.monthYearCaption,
-                            style = type.eyebrow.copy(fontSize = 11.sp, letterSpacing = 1.0.sp),
-                            color = colors.textDisabled,
-                        )
-                    }
-                }
-            }
-
-            items(
-                items = dayGroup.transactions,
-                key = TransactionUi::transactionId,
-                contentType = { "transaction" },
-            ) { tx ->
-                TransactionRow(
-                    tx = tx,
-                    showDate = false,
-                    onClick = { onItemClick(tx.transactionId) },
-                )
-            }
+        items(
+            items = dayGroup.transactions,
+            key = TransactionUi::transactionId,
+            contentType = { "transaction" },
+        ) { tx ->
+            TransactionRow(
+                tx = tx,
+                showDate = false,
+                onClick = { onItemClick(tx.transactionId) },
+            )
         }
     }
 }
@@ -965,6 +969,43 @@ private fun SeeTransactionsWithPendingPreview() {
                 month = PREVIEW_MONTH,
                 days = listOf(previewDayGroup(txs)),
                 movementCount = 1,
+                pendingRecurringMovements = pending,
+            ),
+            onIntent = {},
+            navigateToEdit = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun SeeTransactionsPendingWithEmptyMonthPreview() {
+    EmmTheme {
+        val pending = remember {
+            listOf(
+                PendingRecurringUi(
+                    id = "rm-1@2026-08",
+                    templateId = "rm-1",
+                    period = PREVIEW_MONTH,
+                    periodLabel = "Agosto 2026",
+                    isCatchUp = false,
+                    name = "Netflix",
+                    type = TransactionType.Spend,
+                    formattedAmount = "-S/ 18.00",
+                    isVariableAmount = false,
+                    dayOfMonth = 15,
+                    accountId = "acc-1",
+                    categoryId = null,
+                    description = "",
+                    fixedAmountCents = 1800L,
+                ),
+            )
+        }
+        SeeTransactionsContent(
+            state = SeeTransactionsUiState(
+                month = PREVIEW_MONTH,
+                days = emptyList(),
+                movementCount = 3,
                 pendingRecurringMovements = pending,
             ),
             onIntent = {},
