@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.People
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -51,6 +52,7 @@ import com.emm.domain.account.AccountType
 import com.emm.domain.shared.AccountId
 import com.emm.justchill.components.EmmButton
 import com.emm.justchill.components.EmmButtonVariant
+import com.emm.justchill.components.EmmListItem
 import com.emm.justchill.components.EmmTextInput
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
@@ -58,12 +60,17 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.atoms.Hairline
 
+// state/onIntent are the screen's data and event sink; addCategory/addAccount/navigateToLoans are
+// its three doors, each a distinct destination. Splitting these into a config object would relocate
+// the count, not reduce it.
+@Suppress("LongParameterList")
 @Composable
 fun AccountsScreen(
     state: AccountsUiState,
     onIntent: (AccountsIntent) -> Unit,
     addCategory: () -> Unit,
     addAccount: () -> Unit,
+    navigateToLoans: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
@@ -92,18 +99,23 @@ fun AccountsScreen(
 
         Hairline()
 
-        if (state.accounts.isEmpty()) {
-            EmptyState(
-                onCreate = addAccount,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f),
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(top = 4.dp, bottom = 12.dp),
-            ) {
+        // Always mounted so the Préstamos row survives the accounts-empty branch — a row that
+        // depended on `state.accounts` being non-empty would be a second unreachable-door landmine
+        // (ui-android/CLAUDE.md already records the first, LoansCard on Home).
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(top = 4.dp, bottom = 12.dp),
+        ) {
+            item {
+                LoansEntryRow(totalOwed = state.loansTotalOwed, onClick = navigateToLoans)
+                Hairline()
+            }
+
+            if (state.accounts.isEmpty()) {
+                item {
+                    EmptyState(onCreate = addAccount, modifier = Modifier.fillParentMaxHeight())
+                }
+            } else {
                 items(state.accounts, key = { it.accountId.value }) { account ->
                     AccountRow(
                         account = account,
@@ -170,6 +182,19 @@ private fun NewAccountButton(onClick: () -> Unit) {
             color = colors.textPrimary,
         )
     }
+}
+
+@Composable
+private fun LoansEntryRow(totalOwed: String, onClick: () -> Unit) {
+    // ADR 010: totalOwed is a parallel-ledger number, formatted the same way Home formats it —
+    // never derived from `state.accounts` and never folded into any balance on this screen.
+    EmmListItem(
+        icon = Icons.Outlined.People,
+        title = "Préstamos",
+        metadata = "Te deben",
+        amount = totalOwed,
+        onClick = onClick,
+    )
 }
 
 @Composable
@@ -463,30 +488,55 @@ private fun EmptyState(onCreate: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
+private val previewAccounts = listOf(
+    Account(accountId = AccountId("1"), name = "Yape", type = AccountType.Wallet),
+    Account(accountId = AccountId("2"), name = "Plin", type = AccountType.Wallet),
+    Account(accountId = AccountId("3"), name = "BCP", type = AccountType.Bank),
+    Account(accountId = AccountId("4"), name = "BBVA", type = AccountType.Bank),
+    Account(accountId = AccountId("5"), name = "Cash", type = AccountType.Cash),
+)
+
+private val previewMovementCounts = mapOf(
+    AccountId("1") to 32,
+    AccountId("2") to 8,
+    AccountId("3") to 14,
+    AccountId("4") to 4,
+    AccountId("5") to 11,
+)
+
 @Preview
 @Composable
 private fun AccountsScreenPreview() {
     EmmTheme {
         AccountsScreen(
             state = AccountsUiState(
-                accounts = listOf(
-                    Account(accountId = AccountId("1"), name = "Yape", type = AccountType.Wallet),
-                    Account(accountId = AccountId("2"), name = "Plin", type = AccountType.Wallet),
-                    Account(accountId = AccountId("3"), name = "BCP", type = AccountType.Bank),
-                    Account(accountId = AccountId("4"), name = "BBVA", type = AccountType.Bank),
-                    Account(accountId = AccountId("5"), name = "Cash", type = AccountType.Cash),
-                ),
-                movementCounts = mapOf(
-                    AccountId("1") to 32,
-                    AccountId("2") to 8,
-                    AccountId("3") to 14,
-                    AccountId("4") to 4,
-                    AccountId("5") to 11,
-                ),
+                accounts = previewAccounts,
+                movementCounts = previewMovementCounts,
+                loansTotalOwed = "S/ 350.00",
             ),
             onIntent = {},
             addCategory = {},
             addAccount = {},
+            navigateToLoans = {},
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun AccountsScreenZeroLoansPreview() {
+    EmmTheme {
+        AccountsScreen(
+            state = AccountsUiState(
+                accounts = previewAccounts,
+                movementCounts = previewMovementCounts,
+                loansTotalOwed = "S/ 0.00",
+            ),
+            onIntent = {},
+            addCategory = {},
+            addAccount = {},
+            navigateToLoans = {},
             modifier = Modifier.fillMaxSize(),
         )
     }
@@ -501,6 +551,7 @@ private fun AccountsScreenEmptyPreview() {
             onIntent = {},
             addCategory = {},
             addAccount = {},
+            navigateToLoans = {},
             modifier = Modifier.fillMaxSize(),
         )
     }

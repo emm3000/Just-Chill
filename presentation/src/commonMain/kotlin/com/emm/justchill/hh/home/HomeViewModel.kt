@@ -8,15 +8,13 @@ import com.emm.domain.loan.PersonBalance
 import com.emm.domain.recurring.ConfirmRecurringMovementUseCase
 import com.emm.domain.recurring.PendingRecurring
 import com.emm.domain.recurring.SkipRecurringMovementUseCase
-import com.emm.domain.shared.Money
 import com.emm.domain.shared.RecurringMovementId
 import com.emm.domain.shared.YearMonth
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.hh.loan.totalOwedFormatted
 import com.emm.justchill.hh.recurring.PendingRecurringUi
 import com.emm.justchill.hh.recurring.toPendingRecurringUi
-import com.emm.justchill.hh.shared.formatNeutral
-import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.transaction.toUi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -94,11 +92,8 @@ class HomeViewModel(
     )
 
     private fun HomeUiState.mapToLoansUiState(balances: List<PersonBalance>): HomeUiState = copy(
-        loansTotalOwed = formatNeutral(fromCentsToSolesWith(balances.totalRemaining())),
+        loansTotalOwed = balances.totalOwedFormatted(),
     )
-
-    private fun List<PersonBalance>.totalRemaining(): Money =
-        fold(Money.Zero) { acc, balance -> acc + balance.remaining }
 
     private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
 

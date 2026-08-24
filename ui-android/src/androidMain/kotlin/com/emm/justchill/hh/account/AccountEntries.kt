@@ -11,6 +11,7 @@ import com.emm.justchill.hh.shared.AccountsRoute
 import com.emm.justchill.hh.shared.AddAccountRoute
 import com.emm.justchill.hh.shared.AppNavigator
 import com.emm.justchill.hh.shared.CategoryRoute
+import com.emm.justchill.hh.shared.LoansRoute
 import com.emm.justchill.hh.shared.NavHostBindings
 import com.emm.justchill.hh.shared.rememberAppNavigator
 import org.koin.compose.viewmodel.koinViewModel
@@ -34,6 +35,7 @@ fun EntryProviderScope<NavKey>.accountEntries(bindings: NavHostBindings) {
             onIntent = vm::onIntent,
             addCategory = { nav.push(CategoryRoute()) },
             addAccount = { nav.push(AddAccountRoute) },
+            navigateToLoans = { nav.push(LoansRoute) },
             modifier = Modifier.fillMaxSize(),
         )
     }
