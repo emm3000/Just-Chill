@@ -8,7 +8,7 @@ import com.emm.justchill.core.mvi.UiState
 data class ReportUiState(
     val month: YearMonth,
     val isCurrentMonth: Boolean = false,
-    val selectedType: TransactionType = TransactionType.Income,
+    val selectedType: TransactionType = TransactionType.Spend,
     val selectedTab: ReportTab = ReportTab.Mes,
     val totalFormatted: String = "S/ 0.00",
     val comparisonText: String? = null,

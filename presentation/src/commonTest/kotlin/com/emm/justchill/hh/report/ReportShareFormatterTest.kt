@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.report
 
 import com.emm.domain.shared.YearMonth
+import com.emm.domain.transaction.TransactionType
 import kotlinx.datetime.Month
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -11,6 +12,13 @@ class ReportShareFormatterTest {
     // Which month it is does not matter to a formatter — that it is STATED does. ReportUiState used
     // to default it to YearMonth.current(), so these tests silently ran against the wall clock.
     private val may2026 = YearMonth(2026, Month.MAY)
+
+    // ── initial selectedType ────────────────────────────────────────────────
+
+    @Test
+    fun `ReportUiState defaults selectedType to Spend`() {
+        assertEquals(TransactionType.Spend, ReportUiState(month = may2026).selectedType)
+    }
 
     // ── buildContextSentence ──────────────────────────────────────────────
 

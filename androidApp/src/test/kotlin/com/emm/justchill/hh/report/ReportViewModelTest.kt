@@ -84,13 +84,13 @@ class ReportViewModelTest {
     }
 
     @Test
-    fun `initial state has current month and Income type`() = runTest(testDispatcher) {
+    fun `initial state has current month and Spend type`() = runTest(testDispatcher) {
         stubEmptyReport()
         val vm = buildViewModel()
         advanceUntilIdle()
 
         assertEquals(currentMonth, vm.state.value.month)
-        assertEquals(TransactionType.Income, vm.state.value.selectedType)
+        assertEquals(TransactionType.Spend, vm.state.value.selectedType)
     }
 
     @Test
@@ -269,10 +269,10 @@ class ReportViewModelTest {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        vm.onIntent(ReportIntent.SelectType(TransactionType.Spend))
+        vm.onIntent(ReportIntent.SelectType(TransactionType.Income))
         advanceUntilIdle()
 
-        assertEquals(TransactionType.Spend, vm.state.value.selectedType)
+        assertEquals(TransactionType.Income, vm.state.value.selectedType)
     }
 
     @Test
@@ -318,12 +318,12 @@ class ReportViewModelTest {
     }
 
     @Test
-    fun `report with income amounts updates totalFormatted and shares`() = runTest(testDispatcher) {
+    fun `report with spend amounts updates totalFormatted and shares`() = runTest(testDispatcher) {
         val catId = CategoryId("cat-1")
-        val income = CategoryAmount(catId, "Sueldo", "wallet", "green", Money(450_000L))
+        val spend = CategoryAmount(catId, "Comida", "wallet", "red", Money(450_000L))
 
-        coEvery { getMonthlyAmountByCategory(any(), TransactionType.Income) } returns listOf(income)
-        coEvery { getMonthlyAmountByCategory(any(), TransactionType.Spend) } returns emptyList()
+        coEvery { getMonthlyAmountByCategory(any(), TransactionType.Income) } returns emptyList()
+        coEvery { getMonthlyAmountByCategory(any(), TransactionType.Spend) } returns listOf(spend)
         coEvery { getMonthlyComparison(any(), any()) } returns null
         coEvery { getMonthlySectionStats(any(), any()) } returns MonthlySectionStats(1, Money(450_000L))
         coEvery { getSavingsRate(any(), any(), any()) } returns emptySavingsRate()
@@ -335,7 +335,7 @@ class ReportViewModelTest {
         val state = vm.state.value
         assertTrue(state.totalFormatted.contains("4"), "Expected non-zero total, got: ${state.totalFormatted}")
         assertEquals(1, state.shares.size)
-        assertEquals("Sueldo", state.shares.first().name)
+        assertEquals("Comida", state.shares.first().name)
         assertEquals(false, state.isEmpty)
         assertEquals(false, state.isMonthEmpty)
     }

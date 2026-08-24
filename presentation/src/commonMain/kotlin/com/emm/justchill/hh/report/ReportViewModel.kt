@@ -38,7 +38,7 @@ class ReportViewModel(
         ReportUiState(
             month = opening,
             isCurrentMonth = isCurrent(opening),
-            selectedType = TransactionType.Income,
+            selectedType = TransactionType.Spend,
         )
     }
 

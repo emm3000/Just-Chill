@@ -121,6 +121,14 @@ class AddTransactionViewModelTest {
     }
 
     @Test
+    fun `initial state defaults transactionType to Spend`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertEquals(TransactionType.Spend, vm.state.value.transactionType)
+    }
+
+    @Test
     fun `an untouched date saves as the day it is saved on, not the day the screen opened`() = runTest(testDispatcher) {
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -232,18 +240,32 @@ class AddTransactionViewModelTest {
     }
 
     @Test
+    fun `OnReset restores transactionType to the Spend default`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Income))
+        advanceUntilIdle()
+
+        vm.onIntent(AddTransactionIntent.OnReset)
+        advanceUntilIdle()
+
+        assertEquals(TransactionType.Spend, vm.state.value.transactionType)
+    }
+
+    @Test
     fun `frequentCombos populated on init when combos match accounts and categories`() = runTest(testDispatcher) {
-        val combo = FrequentCombo(AccountId("bcp"), CategoryId("salary"), TransactionType.Income)
-        coEvery { getFrequentCombos.invoke(TransactionType.Income, any<Int>(), any<Int>()) } returns listOf(combo)
+        val combo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
+        coEvery { getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>()) } returns listOf(combo)
 
         val vm = buildViewModel()
         advanceUntilIdle()
 
         val combos = vm.state.value.frequentCombos
         assertEquals(1, combos.size)
-        assertEquals("BCP · Sueldo", combos[0].label)
-        assertEquals("bcp", combos[0].accountId)
-        assertEquals("salary", combos[0].categoryId)
+        assertEquals("Yape · Comida", combos[0].label)
+        assertEquals("yape", combos[0].accountId)
+        assertEquals("food", combos[0].categoryId)
     }
 
     @Test
@@ -264,13 +286,13 @@ class AddTransactionViewModelTest {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        vm.onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Spend))
+        vm.onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Income))
         advanceUntilIdle()
 
         val combos = vm.state.value.frequentCombos
         assertEquals(1, combos.size)
-        assertEquals("Yape · Comida", combos[0].label)
-        coVerify(atLeast = 1) { getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>()) }
+        assertEquals("BCP · Sueldo", combos[0].label)
+        coVerify(atLeast = 1) { getFrequentCombos.invoke(TransactionType.Income, any<Int>(), any<Int>()) }
     }
 
     @Test
@@ -297,8 +319,8 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `OnFrequentComboSelected sets accountSelected and categorySelected`() = runTest(testDispatcher) {
-        val combo = FrequentCombo(AccountId("bcp"), CategoryId("salary"), TransactionType.Income)
-        coEvery { getFrequentCombos.invoke(TransactionType.Income, any<Int>(), any<Int>()) } returns listOf(combo)
+        val combo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
+        coEvery { getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>()) } returns listOf(combo)
 
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -308,14 +330,14 @@ class AddTransactionViewModelTest {
         advanceUntilIdle()
 
         val state = vm.state.value
-        assertEquals("bcp", state.accountSelected?.accountId?.value)
-        assertEquals("salary", state.categorySelected?.categoryId?.value)
+        assertEquals("yape", state.accountSelected?.accountId?.value)
+        assertEquals("food", state.categorySelected?.categoryId?.value)
     }
 
     @Test
     fun `OnFrequentComboSelected does not change transactionType`() = runTest(testDispatcher) {
-        val combo = FrequentCombo(AccountId("bcp"), CategoryId("salary"), TransactionType.Income)
-        coEvery { getFrequentCombos.invoke(TransactionType.Income, any<Int>(), any<Int>()) } returns listOf(combo)
+        val combo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
+        coEvery { getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>()) } returns listOf(combo)
 
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -330,8 +352,8 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `FocusAmountField effect is emitted when OnFrequentComboSelected is handled`() = runTest(testDispatcher) {
-        val combo = FrequentCombo(AccountId("bcp"), CategoryId("salary"), TransactionType.Income)
-        coEvery { getFrequentCombos.invoke(TransactionType.Income, any<Int>(), any<Int>()) } returns listOf(combo)
+        val combo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
+        coEvery { getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>()) } returns listOf(combo)
 
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -403,27 +425,27 @@ class AddTransactionViewModelTest {
     }
 
     @Test
-    fun `a category created from an Income movement joins the Income list`() = runTest(testDispatcher) {
+    fun `a category created from a Spend movement joins the Spend list`() = runTest(testDispatcher) {
         val vm = buildViewModel()
         advanceUntilIdle()
         val created = SelectableCategory(
-            categoryId = CategoryId("bonus"),
-            name = "Bono",
-            iconId = "money",
-            categoryType = CategoryType.Income,
-            colorId = "green",
+            categoryId = CategoryId("subscriptions"),
+            name = "Suscripciones",
+            iconId = "card",
+            categoryType = CategoryType.Spend,
+            colorId = "blue",
         )
 
         vm.onIntent(AddTransactionIntent.OnNewValueFromOthers(created))
         advanceUntilIdle()
 
         val state = vm.state.value
-        assertEquals(TransactionType.Income, state.transactionType)
+        assertEquals(TransactionType.Spend, state.transactionType)
         assertEquals(created, state.categorySelected)
         assertEquals(created, state.categories.first(), "the new one is offered first")
         assertTrue(
-            state.categories.all { it.categoryType == CategoryType.Income },
-            "an Income movement must not be offered Spend categories: ${'$'}{state.categories}",
+            state.categories.all { it.categoryType == CategoryType.Spend },
+            "a Spend movement must not be offered Income categories: ${'$'}{state.categories}",
         )
     }
 
@@ -432,18 +454,18 @@ class AddTransactionViewModelTest {
         val vm = buildViewModel()
         advanceUntilIdle()
         val before = vm.state.value
-        val spendCategory = SelectableCategory(
-            categoryId = CategoryId("food"),
-            name = "Comida",
-            iconId = "food",
-            categoryType = CategoryType.Spend,
-            colorId = "blue",
+        val incomeCategory = SelectableCategory(
+            categoryId = CategoryId("salary"),
+            name = "Sueldo",
+            iconId = "money",
+            categoryType = CategoryType.Income,
+            colorId = "green",
         )
 
-        vm.onIntent(AddTransactionIntent.OnNewValueFromOthers(spendCategory))
+        vm.onIntent(AddTransactionIntent.OnNewValueFromOthers(incomeCategory))
         advanceUntilIdle()
 
         assertEquals(before.categorySelected, vm.state.value.categorySelected)
-        assertTrue(vm.state.value.categories.all { it.categoryType == CategoryType.Income })
+        assertTrue(vm.state.value.categories.all { it.categoryType == CategoryType.Spend })
     }
 }

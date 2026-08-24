@@ -134,7 +134,7 @@ class AddTransactionViewModel(
 
     private fun reset() {
         updateState {
-            val defaultType = TransactionType.Income
+            val defaultType = TransactionType.Spend
             copy(
                 amount = "",
                 description = String.Empty,

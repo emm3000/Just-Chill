@@ -16,7 +16,7 @@ data class AddTransactionUiState(
     val date: LocalDate? = null,
     val amount: String = "",
     val description: String = String.Empty,
-    val transactionType: TransactionType = TransactionType.Income,
+    val transactionType: TransactionType = TransactionType.Spend,
     val isEnabled: Boolean = false,
     val hasChanges: Boolean = false,
     val accounts: List<Account> = emptyList(),

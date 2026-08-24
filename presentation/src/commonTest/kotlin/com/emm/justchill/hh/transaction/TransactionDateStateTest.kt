@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.transaction
 
+import com.emm.domain.transaction.TransactionType
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import kotlin.test.Test
@@ -96,5 +97,17 @@ class TransactionDateStateTest {
             AddTransactionUiState(today = today, date = day).dateLabel,
             EditTransactionUiState(date = day, today = today).dateLabel,
         )
+    }
+
+    // ── initial transactionType ────────────────────────────────────────────────
+
+    @Test
+    fun add_state_defaults_transactionType_to_Spend() {
+        assertEquals(TransactionType.Spend, AddTransactionUiState(today = today).transactionType)
+    }
+
+    @Test
+    fun edit_state_defaults_transactionType_to_Spend() {
+        assertEquals(TransactionType.Spend, EditTransactionUiState(date = today, today = today).transactionType)
     }
 }
