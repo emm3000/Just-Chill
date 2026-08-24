@@ -242,4 +242,18 @@ class ConfirmRecurringMovementUseCaseTest {
         )
         assertEquals("Netflix mensual", repository.lastConfirmInsert?.description)
     }
+
+    @Test
+    fun `invoke blank description falls back to template name`() = runTest {
+        val blankDescriptionTemplate = fixedTemplate.copy(id = RecurringMovementId("rm-blank"), description = "   ")
+        repository.addTemplate(blankDescriptionTemplate)
+
+        useCase(
+            templateId = RecurringMovementId("rm-blank"),
+            yearMonth = may2026,
+            callerAmount = null,
+        )
+
+        assertEquals("Netflix", repository.lastConfirmInsert?.description)
+    }
 }

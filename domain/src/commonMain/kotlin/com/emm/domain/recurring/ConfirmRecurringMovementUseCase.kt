@@ -42,7 +42,7 @@ class ConfirmRecurringMovementUseCase(private val repository: RecurringMovementR
             id = TransactionId(Uuid.random().toString()),
             type = template.type,
             amount = resolvedAmount,
-            description = template.description,
+            description = template.description.ifBlank { template.name },
             categoryId = template.categoryId,
             occurredAt = LocalDateTime(template.dueDate(yearMonth), MIDNIGHT),
             accountId = template.accountId,
