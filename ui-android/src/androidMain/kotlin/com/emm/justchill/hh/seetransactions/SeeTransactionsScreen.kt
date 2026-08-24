@@ -69,6 +69,10 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.MoneyInline
 import com.emm.justchill.core.ui.atoms.MonthSelector
+import com.emm.justchill.hh.recurring.ConfirmRecurringSheet
+import com.emm.justchill.hh.recurring.PendingRecurringHeader
+import com.emm.justchill.hh.recurring.PendingRecurringRow
+import com.emm.justchill.hh.recurring.PendingRecurringUi
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.shared.monthYearLabel
@@ -85,13 +89,20 @@ import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 @Composable
-fun SeeTransactionsScreen(onEditTransaction: (String) -> Unit, vm: SeeTransactionsViewModel = koinViewModel()) {
+fun SeeTransactionsScreen(
+    onEditTransaction: (String) -> Unit,
+    confirmSheetOpen: Boolean,
+    onConfirmSheetOpenChange: (Boolean) -> Unit,
+    vm: SeeTransactionsViewModel = koinViewModel(),
+) {
     val state by vm.state.collectAsStateWithLifecycle()
 
     SeeTransactionsContent(
         state = state,
         onIntent = vm::onIntent,
         navigateToEdit = onEditTransaction,
+        confirmSheetOpen = confirmSheetOpen,
+        onConfirmSheetOpenChange = onConfirmSheetOpenChange,
     )
 }
 
@@ -100,11 +111,22 @@ private fun SeeTransactionsContent(
     state: SeeTransactionsUiState,
     onIntent: (SeeTransactionsIntent) -> Unit,
     navigateToEdit: (String) -> Unit,
+    confirmSheetOpen: Boolean = false,
+    onConfirmSheetOpenChange: (Boolean) -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
 
     var showFilterSheet by rememberSaveable { mutableStateOf(false) }
     var searchRequested by rememberSaveable { mutableStateOf(false) }
+    var confirmSheetItem by rememberSaveable { mutableStateOf<String?>(null) }
+
+    if (!confirmSheetOpen && confirmSheetItem != null) {
+        confirmSheetItem = null
+    }
+
+    val pendingMap = remember(state.pendingRecurringMovements) {
+        state.pendingRecurringMovements.associateBy { it.id }
+    }
 
     val isSearchOpen = searchRequested || state.query.isNotBlank()
 
@@ -153,26 +175,15 @@ private fun SeeTransactionsContent(
 
         Hairline()
 
-        when (state.listDisplayState) {
-            ListDisplayState.Loading -> Spacer(Modifier.fillMaxSize())
-
-            ListDisplayState.EmptyLedger -> EmptyNoTransactionsAtAll(modifier = Modifier.fillMaxSize())
-
-            ListDisplayState.EmptyMonth -> EmptyMonth(modifier = Modifier.fillMaxSize())
-
-            ListDisplayState.NoSearchResults -> EmptyFilteredNoResults(
-                query = state.query,
-                activeCategoryName = state.activeCategory?.name,
-                onClear = { onIntent(SeeTransactionsIntent.OnClearFilters) },
-                modifier = Modifier.fillMaxSize(),
-            )
-
-            ListDisplayState.Content -> DayGroupedList(
-                days = state.days,
-                showMonthYearCaption = state.isFilterActive,
-                onItemClick = navigateToEdit,
-            )
-        }
+        TransactionListBody(
+            state = state,
+            onIntent = onIntent,
+            navigateToEdit = navigateToEdit,
+            onPendingClick = { pending ->
+                confirmSheetItem = pending.id
+                onConfirmSheetOpenChange(true)
+            },
+        )
     }
 
     if (showFilterSheet) {
@@ -190,6 +201,76 @@ private fun SeeTransactionsContent(
             onDismiss = { showFilterSheet = false },
         )
     }
+
+    PendingConfirmSheetHost(
+        pendingItem = if (confirmSheetOpen) confirmSheetItem?.let(pendingMap::get) else null,
+        onIntent = onIntent,
+        onDismiss = {
+            confirmSheetItem = null
+            onConfirmSheetOpenChange(false)
+        },
+    )
+}
+
+/** The pendings-plus-transactions list, or whichever empty/loading/no-results state applies. */
+@Composable
+private fun TransactionListBody(
+    state: SeeTransactionsUiState,
+    onIntent: (SeeTransactionsIntent) -> Unit,
+    navigateToEdit: (String) -> Unit,
+    onPendingClick: (PendingRecurringUi) -> Unit,
+) {
+    when (state.listDisplayState) {
+        ListDisplayState.Loading -> Spacer(Modifier.fillMaxSize())
+
+        ListDisplayState.EmptyLedger -> EmptyNoTransactionsAtAll(modifier = Modifier.fillMaxSize())
+
+        ListDisplayState.EmptyMonth -> EmptyMonth(modifier = Modifier.fillMaxSize())
+
+        ListDisplayState.NoSearchResults -> EmptyFilteredNoResults(
+            query = state.query,
+            activeCategoryName = state.activeCategory?.name,
+            onClear = { onIntent(SeeTransactionsIntent.OnClearFilters) },
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        ListDisplayState.Content -> DayGroupedList(
+            pending = if (state.isPendingSectionVisible) state.pendingRecurringMovements else emptyList(),
+            days = state.days,
+            showMonthYearCaption = state.isFilterActive,
+            onPendingClick = onPendingClick,
+            onItemClick = navigateToEdit,
+        )
+    }
+}
+
+/** Hosts [ConfirmRecurringSheet] when a pending row was tapped; absent otherwise. */
+@Composable
+private fun PendingConfirmSheetHost(
+    pendingItem: PendingRecurringUi?,
+    onIntent: (SeeTransactionsIntent) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    if (pendingItem == null) return
+
+    ConfirmRecurringSheet(
+        item = pendingItem,
+        onConfirm = { callerAmount ->
+            onIntent(
+                SeeTransactionsIntent.ConfirmRecurring(
+                    templateId = pendingItem.templateId,
+                    period = pendingItem.period,
+                    callerAmount = callerAmount,
+                ),
+            )
+        },
+        onSkip = {
+            onIntent(
+                SeeTransactionsIntent.SkipRecurring(templateId = pendingItem.templateId, period = pendingItem.period),
+            )
+        },
+        onDismiss = onDismiss,
+    )
 }
 
 @Composable
@@ -519,7 +600,13 @@ private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: ()
 }
 
 @Composable
-private fun DayGroupedList(days: List<DayGroup>, showMonthYearCaption: Boolean, onItemClick: (String) -> Unit) {
+private fun DayGroupedList(
+    pending: List<PendingRecurringUi>,
+    days: List<DayGroup>,
+    showMonthYearCaption: Boolean,
+    onPendingClick: (PendingRecurringUi) -> Unit,
+    onItemClick: (String) -> Unit,
+) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val listState = rememberLazyListState()
@@ -533,6 +620,19 @@ private fun DayGroupedList(days: List<DayGroup>, showMonthYearCaption: Boolean, 
         state = listState,
         contentPadding = PaddingValues(bottom = 16.dp),
     ) {
+        if (pending.isNotEmpty()) {
+            item {
+                PendingRecurringHeader(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 24.dp, end = 24.dp, top = 14.dp, bottom = 8.dp),
+                )
+            }
+            items(pending, PendingRecurringUi::id) { item ->
+                PendingRecurringRow(item = item, onClick = { onPendingClick(item) })
+            }
+        }
+
         days.forEach { dayGroup ->
             stickyHeader(key = "header-${dayGroup.date}", contentType = "day-header") {
                 Row(
@@ -815,6 +915,57 @@ private fun SeeTransactionsPopulatedPreview() {
                 days = listOf(previewDayGroup(txs)),
                 movementCount = 1,
                 activeCategory = ActiveCategoryInfo("4", "Ocio"),
+            ),
+            onIntent = {},
+            navigateToEdit = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun SeeTransactionsWithPendingPreview() {
+    EmmTheme {
+        val txs: List<TransactionUi> = remember {
+            listOf(
+                TransactionUi(
+                    transactionId = Uuid.random().toString(),
+                    type = TransactionType.Spend,
+                    amount = formatExpense("84.20"),
+                    description = "Mercado del lunes",
+                    occurredAt = PREVIEW_OCCURRED_AT,
+                    readableDate = "HOY",
+                    readableTime = "14:30",
+                    category = CategoryUi(iconId = null, colorId = "green"),
+                ),
+            )
+        }
+        val pending = remember {
+            listOf(
+                PendingRecurringUi(
+                    id = "rm-1@2026-08",
+                    templateId = "rm-1",
+                    period = PREVIEW_MONTH,
+                    periodLabel = "Agosto 2026",
+                    isCatchUp = false,
+                    name = "Netflix",
+                    type = TransactionType.Spend,
+                    formattedAmount = "-S/ 18.00",
+                    isVariableAmount = false,
+                    dayOfMonth = 15,
+                    accountId = "acc-1",
+                    categoryId = null,
+                    description = "",
+                    fixedAmountCents = 1800L,
+                ),
+            )
+        }
+        SeeTransactionsContent(
+            state = SeeTransactionsUiState(
+                month = PREVIEW_MONTH,
+                days = listOf(previewDayGroup(txs)),
+                movementCount = 1,
+                pendingRecurringMovements = pending,
             ),
             onIntent = {},
             navigateToEdit = {},

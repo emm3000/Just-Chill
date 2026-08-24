@@ -4,15 +4,22 @@ import androidx.lifecycle.viewModelScope
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryType
+import com.emm.domain.recurring.ConfirmRecurringMovementUseCase
+import com.emm.domain.recurring.GetPendingRecurringMovementsUseCase
+import com.emm.domain.recurring.PendingRecurring
+import com.emm.domain.recurring.SkipRecurringMovementUseCase
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
+import com.emm.domain.shared.RecurringMovementId
 import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionFilter
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionTotals
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
+import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.hh.recurring.toPendingRecurringUi
 import com.emm.justchill.hh.transaction.toUi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -30,9 +37,15 @@ import kotlin.time.Clock
 
 private const val SEARCH_DEBOUNCE_MS = 250L
 
+// Pendings inject their three use cases directly (E06-03) instead of GetHomeDataUseCase, which
+// E06-04 deletes; folding them into a holder would just relocate the count, not the dependency.
+@Suppress("LongParameterList")
 class SeeTransactionsViewModel(
     categoryRepository: CategoryRepository,
     transactionRepository: TransactionRepository,
+    private val getPendingRecurringMovements: GetPendingRecurringMovementsUseCase,
+    private val confirmRecurringMovement: ConfirmRecurringMovementUseCase,
+    private val skipRecurringMovement: SkipRecurringMovementUseCase,
     private val clock: Clock,
     private val zone: TimeZone,
 ) : MviViewModel<SeeTransactionsUiState, SeeTransactionsIntent, SeeTransactionsEffect>() {
@@ -103,6 +116,12 @@ class SeeTransactionsViewModel(
             }
             .onEach { slice -> updateState { withListSlice(slice, selectedMonth.value) } }
             .launchIn(viewModelScope)
+
+        // A separate flow on purpose, same as Home (ADR 010's reasoning for loans applies here
+        // too): pending recurring movements never depend on the browsed month or the active filter.
+        getPendingRecurringMovements(today())
+            .onEach { pending -> updateState { mapToPendingUiState(pending) } }
+            .launchIn(viewModelScope)
     }
 
     override fun onIntent(intent: SeeTransactionsIntent) {
@@ -136,6 +155,31 @@ class SeeTransactionsViewModel(
                 filter.value = TransactionFilter.None
                 updateState { copy(query = "") }
             }
+
+            is SeeTransactionsIntent.ConfirmRecurring -> onConfirmRecurring(intent)
+
+            is SeeTransactionsIntent.SkipRecurring -> onSkipRecurring(intent)
+        }
+    }
+
+    private fun onConfirmRecurring(intent: SeeTransactionsIntent.ConfirmRecurring) {
+        launchSafe(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) }) {
+            confirmRecurringMovement(
+                templateId = RecurringMovementId(intent.templateId),
+                yearMonth = intent.period,
+                callerAmount = intent.callerAmount,
+            )
+            sendEffect(SeeTransactionsEffect.CloseConfirmSheet)
+        }
+    }
+
+    private fun onSkipRecurring(intent: SeeTransactionsIntent.SkipRecurring) {
+        launchSafe(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) }) {
+            skipRecurringMovement(
+                templateId = RecurringMovementId(intent.templateId),
+                yearMonth = intent.period,
+            )
+            sendEffect(SeeTransactionsEffect.CloseConfirmSheet)
         }
     }
 
@@ -150,6 +194,18 @@ class SeeTransactionsViewModel(
 
     /** Read once per mapping pass so every [DayGroup] in one emission agrees on HOY/AYER. */
     private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
+
+    /**
+     * The current month comes from the clock, not the selected one: browsing to March must not
+     * relabel March's own pending row, and it must not decide whether the section is visible either.
+     */
+    private fun SeeTransactionsUiState.mapToPendingUiState(pending: List<PendingRecurring>): SeeTransactionsUiState {
+        val currentMonth = YearMonth.current(clock, zone)
+        return copy(
+            pendingRecurringMovements = pending.map { it.toPendingRecurringUi(currentMonth) },
+            currentMonth = currentMonth,
+        )
+    }
 
     /** Name breaks ties so two categories tied at zero usage don't swap places between emissions. */
     private fun buildCategoryFilterState(

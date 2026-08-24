@@ -59,6 +59,8 @@ import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.MoneyInline
 import com.emm.justchill.core.ui.atoms.MonthSelector
 import com.emm.justchill.hh.recurring.ConfirmRecurringSheet
+import com.emm.justchill.hh.recurring.PendingRecurringHeader
+import com.emm.justchill.hh.recurring.PendingRecurringRow
 import com.emm.justchill.hh.recurring.PendingRecurringUi
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
@@ -199,7 +201,7 @@ private fun HomeWithData(
 
         if (homeData.pendingRecurringMovements.isNotEmpty()) {
             item {
-                PendientesHeader(
+                PendingRecurringHeader(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 8.dp),
@@ -258,72 +260,6 @@ private fun HomeWithData(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun PendientesHeader(modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Eyebrow(text = "Pendientes")
-    }
-}
-
-@Composable
-private fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val interactionSource = remember { MutableInteractionSource() }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = dropUnlessResumed(block = onClick),
-            )
-            .padding(horizontal = 24.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = item.name,
-                style = TextStyle(
-                    fontFamily = InterFontFamily,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.W500,
-                    letterSpacing = (-0.15).sp,
-                ),
-                color = colors.textPrimary,
-            )
-            Text(
-                text = if (item.isCatchUp) "Día ${item.dayOfMonth} · ${item.periodLabel}" else "Día ${item.dayOfMonth}",
-                style = TextStyle(
-                    fontFamily = InterFontFamily,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.W400,
-                ),
-                color = if (item.isCatchUp) colors.danger else colors.textTertiary,
-            )
-        }
-        Text(
-            text = item.formattedAmount,
-            style = TextStyle(
-                fontFamily = InterFontFamily,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.W600,
-                letterSpacing = (-0.1).sp,
-            ),
-            color = when (item.type) {
-                TransactionType.Income -> colors.success
-                TransactionType.Spend -> colors.danger
-            },
-        )
     }
 }
 

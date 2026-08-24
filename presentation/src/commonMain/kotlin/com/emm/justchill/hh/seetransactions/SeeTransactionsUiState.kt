@@ -4,6 +4,7 @@ import com.emm.domain.category.CategoryType
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
 import com.emm.justchill.core.mvi.UiState
+import com.emm.justchill.hh.recurring.PendingRecurringUi
 
 data class CategorySheetItem(
     val id: String,
@@ -40,6 +41,9 @@ data class SeeTransactionsUiState(
     val sheetItems: List<CategorySheetItem> = emptyList(),
     val incomeCount: Int = 0,
     val spendCount: Int = 0,
+    val pendingRecurringMovements: List<PendingRecurringUi> = emptyList(),
+    /** The clock's real month, refreshed each time [pendingRecurringMovements] re-emits. */
+    val currentMonth: YearMonth = month,
 ) : UiState {
 
     val isFilterActive: Boolean
@@ -60,4 +64,11 @@ data class SeeTransactionsUiState(
             isFilterActive -> ListDisplayState.NoSearchResults
             else -> ListDisplayState.EmptyMonth
         }
+
+    /**
+     * Pending recurring movements are about "now": a filtered list stays filtered, and browsing a
+     * past or future month must not surface today's pending row under a month it doesn't belong to.
+     */
+    val isPendingSectionVisible: Boolean
+        get() = !isFilterActive && month == currentMonth && pendingRecurringMovements.isNotEmpty()
 }

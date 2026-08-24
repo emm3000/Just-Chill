@@ -3,6 +3,10 @@ package com.emm.justchill.hh.seetransactions
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryType
+import com.emm.domain.recurring.ConfirmRecurringMovementUseCase
+import com.emm.domain.recurring.GetPendingRecurringMovementsUseCase
+import com.emm.domain.recurring.PendingRecurring
+import com.emm.domain.recurring.SkipRecurringMovementUseCase
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
@@ -75,12 +79,28 @@ class SeeTransactionsViewModelTest {
         every { observeTotals() } returns totalsFlow
         every { fetchAllWithCategoryInRange(any(), any()) } returns monthTransactionsFlow
     }
+    private val pendingFlow = MutableStateFlow(emptyList<PendingRecurring>())
+    private val getPendingRecurringMovements = mockk<GetPendingRecurringMovementsUseCase> {
+        every { this@mockk(any()) } returns pendingFlow
+    }
+    private val confirmRecurring = mockk<ConfirmRecurringMovementUseCase>()
+    private val skipRecurring = mockk<SkipRecurringMovementUseCase>()
 
     /** At this clock (noon UTC), nothing below depends on which zone runs the suite by accident. */
     private fun buildViewModel(clock: Clock = fixedClock, zone: TimeZone = TimeZone.UTC): SeeTransactionsViewModel {
         every { transactionRepository.searchWithCategory(any()) } returns flowOf(emptyList())
-        return SeeTransactionsViewModel(categoryRepository, transactionRepository, clock, zone)
+        return newViewModel(clock, zone)
     }
+
+    private fun newViewModel(clock: Clock, zone: TimeZone) = SeeTransactionsViewModel(
+        categoryRepository,
+        transactionRepository,
+        getPendingRecurringMovements,
+        confirmRecurring,
+        skipRecurring,
+        clock,
+        zone,
+    )
 
     private fun tx(
         id: String,
@@ -324,12 +344,7 @@ class SeeTransactionsViewModelTest {
 
             // Built by hand rather than through buildViewModel: the helper re-stubs
             // searchWithCategory, which would undo the failing stub this test is about.
-            val vm = SeeTransactionsViewModel(
-                categoryRepository,
-                transactionRepository,
-                fixedClock,
-                TimeZone.UTC,
-            )
+            val vm = newViewModel(fixedClock, TimeZone.UTC)
             advanceUntilIdle()
 
             vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
@@ -355,18 +370,8 @@ class SeeTransactionsViewModelTest {
             tx("t-1", TransactionType.Spend, 1_000, daysIntoMonth = 15),
         )
 
-        val lima = SeeTransactionsViewModel(
-            categoryRepository,
-            transactionRepository,
-            eveningInLima,
-            TimeZone.of("America/Lima"),
-        )
-        val karachi = SeeTransactionsViewModel(
-            categoryRepository,
-            transactionRepository,
-            eveningInLima,
-            TimeZone.of("Asia/Karachi"),
-        )
+        val lima = newViewModel(eveningInLima, TimeZone.of("America/Lima"))
+        val karachi = newViewModel(eveningInLima, TimeZone.of("Asia/Karachi"))
         advanceUntilIdle()
 
         assertEquals("HOY", lima.state.value.days.single().primaryLabel)
