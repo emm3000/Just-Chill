@@ -68,3 +68,17 @@ exception type here.
   `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator). They are the only thing
   that exercises migrations against the real `AndroidSqliteDriver`; what they prove and how to write
   one is [`docs/PERSISTENCE.md`](../docs/PERSISTENCE.md).
+
+### Building a `SupabaseClient` in a test
+
+**`awaitInitialization()` goes between `createSupabaseClient` and `importSession`, always** — every
+call site wraps it as `settled()`. `Auth.init()` launches on the client's own dispatcher and ends at
+`initDone()`, whose check-then-act on `sessionStatus` is not atomic (supabase-kt `Utils.kt`): an
+`importSession()` landing between its read and its write is overwritten with `NotAuthenticated`, and
+every test then runs on a session that is gone.
+
+**`Dispatchers.setMain`/`resetMain` are inert here — do not add them.** `minimalConfig()` sets
+`enableLifecycleCallbacks = false`, and `addLifecycleCallbacks` returns on that flag before the
+single `scope.launch(Dispatchers.Main)` that is auth-kt's only Main dispatch on Android. A test that
+builds the real graph instead of `minimalConfig()` does reach it — `AppGraphKoinTest` in
+`:presentation` is the one that does.
