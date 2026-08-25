@@ -117,7 +117,7 @@ complexity:
     active: true
     allowedFunctionParameters: 5
     allowedConstructorParameters: 6
-    ignoreDefaultParameters: false
+    ignoreDefaultParameters: true
     ignoreDataClasses: true
     ignoreAnnotatedParameter: []
   MethodOverloading:

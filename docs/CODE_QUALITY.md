@@ -23,7 +23,7 @@ enters only with a test a diff can fail. No third bucket for taste.
 | `ComplexCondition` | 3 | |
 | `NestedBlockDepth` | 4 | |
 | `ReturnCount` | 2 | `equals` excluded, lambdas excluded |
-| `LongParameterList` | 5 function / 6 constructor | data classes ignored |
+| `LongParameterList` | 5 function / 6 constructor | data classes ignored; `ignoreDefaultParameters: true` |
 | `MagicNumber` | active | `-1, 0, 1, 2` allowed; constants, properties and local vals ignored; test source sets *and* `**/*.kts` excluded (`:672`); `ignoreNamedArgument: true` (`:684`); `ignoreAnnotated: ['Composable', 'Preview']` (`:688`) |
 | `CognitiveComplexMethod` | **disabled** | |
 
@@ -196,6 +196,15 @@ fails review.
 `core/ui/atoms/` is the design system — `DESIGN_SYSTEM.md` holds its criteria, not a component index;
 `com/emm/justchill/components/` holds legacy `Emm*` widgets that are *not* the design system; and
 `hh/shared/` is the cross-feature package, not a feature package (`ui-android/CLAUDE.md`).
+
+A parameter carrying a default does not count toward `LongParameterList`. The number that measures
+coupling is the count of parameters every caller must supply, not the count declared — a defaulted
+parameter is opt-in surface, which is Compose's own idiom (`androidx.compose.material3.Button` takes
+ten parameters, eight of them defaulted). A composable with two required parameters and a dozen
+defaulted ones is not the same defect as one with eight required parameters and none, and the rule as
+configured before this could not tell them apart. `ignoreDefaultParameters` does not launder a real
+overage: a caller reads only the arguments it passes, and `LongMethod` and this section's own
+decomposition rule already own the size of what a composable builds out of what it receives.
 
 ## Use cases
 
