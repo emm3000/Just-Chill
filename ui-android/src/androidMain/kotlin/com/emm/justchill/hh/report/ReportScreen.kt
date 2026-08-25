@@ -72,13 +72,7 @@ fun ReportScreen(
     ReportScreen(
         state = state,
         onAddTransaction = onAddTransaction,
-        onPreviousMonth = { vm.onIntent(ReportIntent.PreviousMonth) },
-        onNextMonth = { vm.onIntent(ReportIntent.NextMonth) },
-        onJumpToCurrent = { vm.onIntent(ReportIntent.JumpToCurrent) },
-        onTypeSelect = { vm.onIntent(ReportIntent.SelectType(it)) },
-        onTabSelect = { vm.onIntent(ReportIntent.SelectTab(it)) },
-        onShare = { vm.onIntent(ReportIntent.ShareReport) },
-        onSelectMonth = { vm.onIntent(ReportIntent.SelectMonth(it)) },
+        onIntent = vm::onIntent,
         modifier = modifier,
     )
 }
@@ -87,13 +81,7 @@ fun ReportScreen(
 private fun ReportScreen(
     state: ReportUiState,
     onAddTransaction: () -> Unit,
-    onPreviousMonth: () -> Unit,
-    onNextMonth: () -> Unit,
-    onJumpToCurrent: () -> Unit,
-    onTypeSelect: (TransactionType) -> Unit,
-    onTabSelect: (ReportTab) -> Unit,
-    onShare: () -> Unit,
-    onSelectMonth: (YearMonth) -> Unit,
+    onIntent: (ReportIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
@@ -106,7 +94,7 @@ private fun ReportScreen(
             .fillMaxSize()
             .background(colors.bg),
     ) {
-        ReportTopBar(onShare = onShare)
+        ReportTopBar(onShare = { onIntent(ReportIntent.ShareReport) })
 
         val tabOptions = listOf(
             SegmentOption(ReportTab.Month, "Mes"),
@@ -115,7 +103,7 @@ private fun ReportScreen(
         Segmented(
             options = tabOptions,
             selected = state.selectedTab,
-            onSelect = onTabSelect,
+            onSelect = { onIntent(ReportIntent.SelectTab(it)) },
             modifier = Modifier.padding(horizontal = spacing.s4),
         )
 
@@ -131,12 +119,8 @@ private fun ReportScreen(
             when (state.selectedTab) {
                 ReportTab.Month -> MonthContent(
                     state = state,
-                    onPreviousMonth = onPreviousMonth,
-                    onNextMonth = onNextMonth,
-                    onJumpToCurrent = onJumpToCurrent,
-                    onTypeSelect = onTypeSelect,
+                    onIntent = onIntent,
                     onAddTransaction = onAddTransaction,
-                    onShare = onShare,
                     onLabelClick = { showMonthSheet = true },
                 )
 
@@ -151,7 +135,7 @@ private fun ReportScreen(
         MonthPickerSheet(
             current = state.month,
             onSelect = { selected ->
-                onSelectMonth(selected)
+                onIntent(ReportIntent.SelectMonth(selected))
                 showMonthSheet = false
             },
             onDismiss = { showMonthSheet = false },
@@ -162,12 +146,8 @@ private fun ReportScreen(
 @Composable
 private fun MonthContent(
     state: ReportUiState,
-    onPreviousMonth: () -> Unit,
-    onNextMonth: () -> Unit,
-    onJumpToCurrent: () -> Unit,
-    onTypeSelect: (TransactionType) -> Unit,
+    onIntent: (ReportIntent) -> Unit,
     onAddTransaction: () -> Unit,
-    onShare: () -> Unit,
     onLabelClick: () -> Unit,
 ) {
     val spacing = LocalEmmSpacing.current
@@ -179,13 +159,13 @@ private fun MonthContent(
     ) {
         MonthSelector(
             label = state.month.monthYearLabel(),
-            onPrevious = onPreviousMonth,
-            onNext = onNextMonth,
+            onPrevious = { onIntent(ReportIntent.PreviousMonth) },
+            onNext = { onIntent(ReportIntent.NextMonth) },
             onLabelClick = onLabelClick,
         )
         if (!state.isCurrentMonth) {
             Spacer(Modifier.size(spacing.s2))
-            TodayPill(onClick = onJumpToCurrent)
+            TodayPill(onClick = { onIntent(ReportIntent.JumpToCurrent) })
         }
     }
 
@@ -194,7 +174,7 @@ private fun MonthContent(
     } else {
         ToggleIncomeExpense(
             selected = state.selectedType,
-            onSelect = onTypeSelect,
+            onSelect = { onIntent(ReportIntent.SelectType(it)) },
         )
 
         if (state.isEmpty) {
@@ -211,7 +191,7 @@ private fun MonthContent(
                 averageFormatted = state.averageFormatted,
             )
 
-            ShareReportButton(onClick = onShare)
+            ShareReportButton(onClick = { onIntent(ReportIntent.ShareReport) })
         }
     }
 }
@@ -445,13 +425,7 @@ private fun ReportScreenMonthPreview() {
                 averageFormatted = "S/ 517",
             ),
             onAddTransaction = {},
-            onPreviousMonth = {},
-            onNextMonth = {},
-            onJumpToCurrent = {},
-            onTypeSelect = {},
-            onTabSelect = {},
-            onShare = {},
-            onSelectMonth = {},
+            onIntent = {},
         )
     }
 }
@@ -485,13 +459,7 @@ private fun ReportScreenMonthSpendPreview() {
                 averageFormatted = "S/ 176",
             ),
             onAddTransaction = {},
-            onPreviousMonth = {},
-            onNextMonth = {},
-            onJumpToCurrent = {},
-            onTypeSelect = {},
-            onTabSelect = {},
-            onShare = {},
-            onSelectMonth = {},
+            onIntent = {},
         )
     }
 }
@@ -510,13 +478,7 @@ private fun ReportScreenEmptyPreview() {
                 isMonthEmpty = true,
             ),
             onAddTransaction = {},
-            onPreviousMonth = {},
-            onNextMonth = {},
-            onJumpToCurrent = {},
-            onTypeSelect = {},
-            onTabSelect = {},
-            onShare = {},
-            onSelectMonth = {},
+            onIntent = {},
         )
     }
 }
