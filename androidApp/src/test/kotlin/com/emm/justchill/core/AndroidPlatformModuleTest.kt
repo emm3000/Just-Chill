@@ -4,7 +4,7 @@ import android.content.Context
 import com.emm.justchill.BuildInfo
 import com.emm.justchill.core.session.KeystoreSessionManager
 import com.emm.justchill.core.shortcuts.ShortcutPublisher
-import com.emm.justchill.hh.transaction.GetShortcutCombos
+import com.emm.justchill.hh.transaction.GetSpendShortcutCombos
 import io.github.jan.supabase.auth.SessionManager
 import io.mockk.mockk
 import org.junit.Test
@@ -79,20 +79,19 @@ class AndroidPlatformModuleTest {
     }
 
     @Test
-    fun `androidPlatformModule binds the shortcut publisher over a real Context`() {
-        // GetShortcutCombos lives in :presentation's appModules(), unreachable from this module
-        // alone — a mock stands in so this test proves the binding, not the whole app graph
+    fun `androidPlatformModule binds the shortcut publisher`() {
+        // GetSpendShortcutCombos lives in :presentation's appModules(), unreachable from this
+        // module alone — a mock stands in so this test proves the binding, not the whole app graph
         // AppGraphKoinTest already owns (and cannot reach this Context-dependent single, either).
         val koin = koinApplication {
             androidContext(mockk<Context>(relaxed = true))
-            modules(androidPlatformModule, module { single { mockk<GetShortcutCombos>() } })
+            modules(androidPlatformModule, module { single { mockk<GetSpendShortcutCombos>() } })
         }.koin
 
         try {
-            assertIs<ShortcutPublisher>(
-                koin.get<ShortcutPublisher>(),
-                "androidPlatformModule no longer publishes launcher shortcuts.",
-            )
+            // No assertion body on purpose: a missing or unresolvable definition throws out of
+            // `get`, which is the failure this test exists to produce.
+            koin.get<ShortcutPublisher>()
         } finally {
             koin.close()
         }

@@ -7,7 +7,7 @@ import com.emm.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.domain.transaction.UpdateTransactionUseCase
 import com.emm.justchill.hh.transaction.AddTransactionViewModel
 import com.emm.justchill.hh.transaction.EditTransactionViewModel
-import com.emm.justchill.hh.transaction.GetShortcutCombos
+import com.emm.justchill.hh.transaction.GetSpendShortcutCombos
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -19,7 +19,7 @@ val transactionModule = module {
     factoryOf(::DeleteTransactionUseCase)
     factoryOf(::GetTopUsedCategoryIdsUseCase)
     factoryOf(::GetFrequentCombosUseCase)
-    factoryOf(::GetShortcutCombos)
+    factoryOf(::GetSpendShortcutCombos)
 
     viewModelOf(::AddTransactionViewModel)
 

@@ -11,14 +11,14 @@ import com.emm.justchill.hh.shared.ACTION_ADD_TRANSACTION
 import com.emm.justchill.hh.shared.EXTRA_ACCOUNT_ID
 import com.emm.justchill.hh.shared.EXTRA_CATEGORY_ID
 import com.emm.justchill.hh.shared.EXTRA_TYPE
-import com.emm.justchill.hh.transaction.GetShortcutCombos
+import com.emm.justchill.hh.transaction.GetSpendShortcutCombos
 import com.emm.justchill.hh.transaction.ShortcutCombo
 
 /**
  * Publishes the launcher's dynamic combo shortcuts (E09-03). The static `loans` shortcut is
  * declared in `shortcuts.xml`, not here, so it survives every call untouched.
  */
-class ShortcutPublisher(private val context: Context, private val getShortcutCombos: GetShortcutCombos) {
+class ShortcutPublisher(private val context: Context, private val getShortcutCombos: GetSpendShortcutCombos) {
 
     suspend fun publish() {
         val shortcuts = getShortcutCombos().mapIndexed { rank, combo -> combo.toShortcutInfo(rank) }
@@ -34,8 +34,8 @@ class ShortcutPublisher(private val context: Context, private val getShortcutCom
         intent.putExtra(EXTRA_CATEGORY_ID, categoryId)
         intent.putExtra(EXTRA_TYPE, type)
         return ShortcutInfoCompat.Builder(context, "combo-$accountId-$categoryId-$type")
-            .setShortLabel(shortLabel)
-            .setLongLabel(longLabel)
+            .setShortLabel(title)
+            .setLongLabel(subtitle)
             .setIcon(IconCompat.createWithResource(context, R.mipmap.ic_launcher_first_round))
             .setRank(rank)
             .setIntent(intent)

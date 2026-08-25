@@ -17,6 +17,7 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.shared.Empty
+import com.emm.justchill.hh.shared.comboLabel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
@@ -251,7 +252,7 @@ class AddTransactionViewModel(
             accountId = combo.accountId.value,
             categoryId = combo.categoryId.value,
             type = combo.type,
-            label = "${account.name} · ${category.name}",
+            label = comboLabel(account.name, category.name),
             colorId = category.colorId,
         )
     }

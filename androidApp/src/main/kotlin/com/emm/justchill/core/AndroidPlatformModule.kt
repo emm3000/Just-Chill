@@ -98,7 +98,7 @@ val androidPlatformModule = module {
     factoryOf(::ActivityGoogleSignInLauncher) { bind<GoogleSignInLauncher>() }
 
     // Launcher shortcuts: ShortcutManagerCompat needs an Android Context, so the publisher built
-    // from :presentation's GetShortcutCombos lives here rather than beside it (E09-03).
+    // from :presentation's GetSpendShortcutCombos lives here rather than beside it (E09-03).
     single { ShortcutPublisher(androidContext(), get()) }
 }
 

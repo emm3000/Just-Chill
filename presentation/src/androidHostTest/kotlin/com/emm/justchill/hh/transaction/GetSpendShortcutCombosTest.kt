@@ -14,13 +14,14 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class GetShortcutCombosTest {
+class GetSpendShortcutCombosTest {
 
     private val bcp = Account(AccountId("bcp"), "BCP")
     private val yape = Account(AccountId("yape"), "Yape")
@@ -28,12 +29,14 @@ class GetShortcutCombosTest {
     private val transport = Category(CategoryId("transport"), "Transporte", "icon", "color", CategoryType.Spend)
 
     private val getFrequentCombos = mockk<GetFrequentCombosUseCase>()
-    private val accountRepository = mockk<AccountRepository>()
+    private val accountRepository = mockk<AccountRepository> {
+        every { all() } returns flowOf(listOf(bcp, yape))
+    }
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns flowOf(listOf(food, transport))
     }
 
-    private val getShortcutCombos = GetShortcutCombos(getFrequentCombos, accountRepository, categoryRepository)
+    private val getShortcutCombos = GetSpendShortcutCombos(getFrequentCombos, accountRepository, categoryRepository)
 
     @Test
     fun `asks GetFrequentCombosUseCase for Spend`() = runTest {
@@ -41,14 +44,13 @@ class GetShortcutCombosTest {
 
         getShortcutCombos()
 
-        coVerify { getFrequentCombos(TransactionType.Spend) }
+        coVerify { getFrequentCombos(TransactionType.Spend, limit = 5) }
     }
 
     @Test
     fun `fewer combos than the cap are returned as-is`() = runTest {
         coEvery { getFrequentCombos(any(), any(), any()) } returns
             listOf(FrequentCombo(bcp.accountId, food.categoryId, TransactionType.Spend))
-        coEvery { accountRepository.find(bcp.accountId) } returns bcp
 
         val result = getShortcutCombos()
 
@@ -61,8 +63,6 @@ class GetShortcutCombosTest {
             FrequentCombo(AccountId("deleted"), food.categoryId, TransactionType.Spend),
             FrequentCombo(yape.accountId, transport.categoryId, TransactionType.Spend),
         )
-        coEvery { accountRepository.find(AccountId("deleted")) } returns null
-        coEvery { accountRepository.find(yape.accountId) } returns yape
 
         val result = getShortcutCombos()
 
@@ -75,8 +75,6 @@ class GetShortcutCombosTest {
             FrequentCombo(bcp.accountId, CategoryId("deleted"), TransactionType.Spend),
             FrequentCombo(yape.accountId, food.categoryId, TransactionType.Spend),
         )
-        coEvery { accountRepository.find(bcp.accountId) } returns bcp
-        coEvery { accountRepository.find(yape.accountId) } returns yape
 
         val result = getShortcutCombos()
 
@@ -84,15 +82,14 @@ class GetShortcutCombosTest {
     }
 
     @Test
-    fun `short label is the category alone, long label names the account too`() = runTest {
+    fun `title is the category alone, subtitle names the account too`() = runTest {
         coEvery { getFrequentCombos(any(), any(), any()) } returns
             listOf(FrequentCombo(bcp.accountId, food.categoryId, TransactionType.Spend))
-        coEvery { accountRepository.find(bcp.accountId) } returns bcp
 
         val combo = getShortcutCombos().single()
 
-        assertEquals("Comida", combo.shortLabel)
-        assertEquals("BCP · Comida", combo.longLabel)
+        assertEquals("Comida", combo.title)
+        assertEquals("BCP · Comida", combo.subtitle)
         assertEquals("Spend", combo.type)
     }
 
@@ -105,7 +102,6 @@ class GetShortcutCombosTest {
             FrequentCombo(yape.accountId, transport.categoryId, TransactionType.Spend),
         )
         coEvery { getFrequentCombos(any(), any(), any()) } returns combos
-        coEvery { accountRepository.find(any()) } returns bcp
 
         val result = getShortcutCombos()
 
@@ -124,6 +120,6 @@ class GetShortcutCombosTest {
         val result = getShortcutCombos()
 
         assertTrue(result.isEmpty())
-        coVerify(exactly = 0) { accountRepository.find(any()) }
+        verify(exactly = 0) { accountRepository.all() }
     }
 }
