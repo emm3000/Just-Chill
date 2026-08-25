@@ -17,6 +17,7 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.shared.Empty
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
@@ -227,10 +228,10 @@ class AddTransactionViewModel(
     private fun loadFrequent(type: TransactionType) {
         loadFrequentJob?.cancel()
         loadFrequentJob = viewModelScope.launch {
-            val ids = runCatching { getTopUsedCategoryIds(type) }.getOrDefault(emptyList())
+            val ids = loadOrEmpty { getTopUsedCategoryIds(type) }
             updateState { copy(frequentCategoryIds = ids.map { it.value }) }
 
-            rawCombos = runCatching { getFrequentCombos(type) }.getOrDefault(emptyList())
+            rawCombos = loadOrEmpty { getFrequentCombos(type) }
             val comboUiList = buildComboUi(rawCombos, currentState.accounts, allCategories)
             updateState { copy(frequentCombos = comboUiList) }
         }
@@ -292,6 +293,18 @@ private fun findLastUsedAccount(accounts: List<Account>, lastUsedAccountId: Acco
     } else {
         accounts.firstOrNull()
     }
+
+// Intentional broad catch: a missing frequent-combo row beats a crashed screen. CancellationException
+// must not be swallowed — loadFrequentJob relies on it to stop a stale call; catching it here would
+// let that stale call run to completion anyway and overwrite the newer call's result with an empty list.
+@Suppress("TooGenericExceptionCaught")
+private suspend fun <T> loadOrEmpty(block: suspend () -> List<T>): List<T> = try {
+    block()
+} catch (e: CancellationException) {
+    throw e
+} catch (_: Exception) {
+    emptyList()
+}
 
 // The day is the user's, the hour is the moment of the save — both decided here, not from
 // the state's cached `today`.
