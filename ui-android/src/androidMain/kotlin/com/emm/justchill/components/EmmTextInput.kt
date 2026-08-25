@@ -24,14 +24,18 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
+
+private data class UnderlineTarget(val color: Color, val strokeWidth: Dp)
 
 @Composable
 fun EmmTextInput(
@@ -59,12 +63,13 @@ fun EmmTextInput(
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
 
+    val underlineTarget = when {
+        isError -> UnderlineTarget(colors.danger, 2.dp)
+        isFocused -> UnderlineTarget(colors.accentFocus, 2.dp)
+        else -> UnderlineTarget(colors.border, 1.dp)
+    }
     val underlineColor by animateColorAsState(
-        targetValue = when {
-            isError -> colors.danger
-            isFocused -> colors.accentFocus
-            else -> colors.border
-        },
+        targetValue = underlineTarget.color,
         label = "underline",
     )
 
@@ -82,12 +87,11 @@ fun EmmTextInput(
             modifier = Modifier
                 .fillMaxWidth()
                 .drawBehind {
-                    val stroke = if (isFocused || isError) 2.dp.toPx() else 1.dp.toPx()
                     drawLine(
                         color = underlineColor,
                         start = Offset(0f, size.height),
                         end = Offset(size.width, size.height),
-                        strokeWidth = stroke,
+                        strokeWidth = underlineTarget.strokeWidth.toPx(),
                     )
                 }
                 .padding(vertical = spacing.s3),

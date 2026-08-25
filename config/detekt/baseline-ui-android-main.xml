@@ -2,9 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:AddTransactionScreen.kt:@Composable private fun AddTransactionScreenContent</ID>
-    <ID>CyclomaticComplexMethod:EmmButton.kt:@Composable fun EmmButton</ID>
-    <ID>CyclomaticComplexMethod:EmmTextInput.kt:@Composable fun EmmTextInput</ID>
     <ID>LongParameterList:AccountPickerSheet.kt:@Composable private fun AccountRow</ID>
     <ID>LongParameterList:AmountHero.kt:@Composable fun AmountHero</ID>
     <ID>LongParameterList:AuthScreen.kt:@Composable private fun AuthFieldInput</ID>

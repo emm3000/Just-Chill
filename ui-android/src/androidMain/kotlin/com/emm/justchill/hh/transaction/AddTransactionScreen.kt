@@ -59,6 +59,9 @@ import com.emm.justchill.hh.transaction.sheets.NoteSheet
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 
+private data class CtaContent(val label: String, val sublabel: String?)
+private data class ActionContent(val topBarTitle: String, val amountTone: AmountTone, val ctaVerb: String)
+
 @Composable
 fun AddTransactionScreen(
     vm: AddTransactionViewModel,
@@ -115,10 +118,15 @@ private fun AddTransactionScreenContent(
     val ctaAmount = remember(state.amount) {
         "S/ ${formatCentsForDisplay(state.amount)}"
     }
-    val ctaLabel = when {
-        noAccounts -> "Crea una cuenta primero"
-        isSpend -> "Anotar gasto"
-        else -> "Anotar ingreso"
+    val action = if (isSpend) {
+        ActionContent(topBarTitle = "Nuevo gasto", amountTone = AmountTone.Neutral, ctaVerb = "Anotar gasto")
+    } else {
+        ActionContent(topBarTitle = "Nuevo ingreso", amountTone = AmountTone.Pos, ctaVerb = "Anotar ingreso")
+    }
+    val cta = if (noAccounts) {
+        CtaContent(label = "Crea una cuenta primero", sublabel = null)
+    } else {
+        CtaContent(label = action.ctaVerb, sublabel = ctaAmount)
     }
 
     Column(
@@ -127,7 +135,7 @@ private fun AddTransactionScreenContent(
             .background(colors.bg),
     ) {
         JcTopBar(
-            title = if (isSpend) "Nuevo gasto" else "Nuevo ingreso",
+            title = action.topBarTitle,
             left = {
                 IconBtn(
                     icon = Icons.Outlined.Close,
@@ -157,7 +165,7 @@ private fun AddTransactionScreenContent(
             AmountHero(
                 value = centsToSoles(state.amount),
                 size = 48.sp,
-                tone = if (isSpend) AmountTone.Neutral else AmountTone.Pos,
+                tone = action.amountTone,
                 showCaret = true,
             )
         }
@@ -255,9 +263,9 @@ private fun AddTransactionScreenContent(
         )
 
         StickyCTA(
-            label = ctaLabel,
-            sublabel = if (noAccounts) null else ctaAmount,
-            inlineSublabel = !noAccounts,
+            label = cta.label,
+            sublabel = cta.sublabel,
+            inlineSublabel = cta.sublabel != null,
             tone = CtaTone.Accent,
             interaction = if (state.isEnabled) CtaInteraction.Enabled else CtaInteraction.Disabled,
             onClick = { onIntent(AddTransactionIntent.OnSave) },

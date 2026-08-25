@@ -27,6 +27,8 @@ import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 
+private data class EmmButtonStyle(val background: Color, val textColor: Color, val border: BorderStroke?)
+
 @Composable
 fun EmmButton(
     text: String,
@@ -44,25 +46,18 @@ fun EmmButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
-    val bg: Color = when {
-        !enabled -> colors.surface1
-        variant == EmmButtonVariant.Primary -> colors.accent
-        variant == EmmButtonVariant.Secondary -> colors.surface1
-        else -> Color.Transparent
-    }
+    val style = when {
+        !enabled -> EmmButtonStyle(colors.surface1, colors.textDisabled, border = null)
 
-    val textColor: Color = when {
-        !enabled -> colors.textDisabled
-        variant == EmmButtonVariant.Primary -> colors.textOnAccent
-        variant == EmmButtonVariant.Destructive -> colors.danger
-        else -> colors.textPrimary
-    }
+        variant == EmmButtonVariant.Primary -> EmmButtonStyle(colors.accent, colors.textOnAccent, border = null)
 
-    val border: BorderStroke? = when {
-        !enabled -> null
-        variant == EmmButtonVariant.Secondary -> BorderStroke(1.dp, colors.border)
-        variant == EmmButtonVariant.Destructive -> BorderStroke(1.dp, colors.danger)
-        else -> null
+        variant == EmmButtonVariant.Secondary ->
+            EmmButtonStyle(colors.surface1, colors.textPrimary, BorderStroke(1.dp, colors.border))
+
+        variant == EmmButtonVariant.Destructive ->
+            EmmButtonStyle(Color.Transparent, colors.danger, BorderStroke(1.dp, colors.danger))
+
+        else -> EmmButtonStyle(Color.Transparent, colors.textPrimary, border = null)
     }
 
     val pressOverlay: Color = if (isPressed && enabled) Color.Black.copy(alpha = 0.08f) else Color.Transparent
@@ -70,8 +65,8 @@ fun EmmButton(
     Row(
         modifier = modifier
             .clip(radii.rS)
-            .background(bg)
-            .then(border?.let { Modifier.border(it, radii.rS) } ?: Modifier)
+            .background(style.background)
+            .then(style.border?.let { Modifier.border(it, radii.rS) } ?: Modifier)
             .background(pressOverlay)
             .clickable(
                 enabled = enabled && !isLoading,
@@ -88,14 +83,14 @@ fun EmmButton(
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
-                    color = textColor,
+                    color = style.textColor,
                     strokeWidth = 2.dp,
                 )
             } else {
                 Text(
                     text = text,
                     style = type.labelL,
-                    color = textColor,
+                    color = style.textColor,
                 )
             }
         }
