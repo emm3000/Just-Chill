@@ -2,13 +2,9 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>LongParameterList:AccountPickerSheet.kt:@Composable private fun AccountRow</ID>
     <ID>LongParameterList:CategoryFilterSheet.kt:@Composable internal fun CategoryFilterSheet</ID>
-    <ID>LongParameterList:CategoryPickerSheet.kt:@Composable private fun CategoryRow</ID>
     <ID>LongParameterList:DeleteTransactionDialog.kt:@Composable internal fun DeleteTransactionDialog</ID>
     <ID>LongParameterList:ProfileScreen.kt:@Composable private fun ProfileRowWithTrailing</ID>
-    <ID>LongParameterList:ReportScreen.kt:@Composable private fun MonthContent</ID>
-    <ID>LongParameterList:ReportScreen.kt:@Composable private fun ReportScreen</ID>
     <ID>TooManyFunctions:AccountsScreen.kt:com.emm.justchill.hh.account.AccountsScreen.kt</ID>
     <ID>TooManyFunctions:AddCategoryScreen.kt:com.emm.justchill.hh.category.AddCategoryScreen.kt</ID>
     <ID>TooManyFunctions:AddEditRecurringMovementScreen.kt:com.emm.justchill.hh.recurring.AddEditRecurringMovementScreen.kt</ID>
