@@ -93,6 +93,8 @@ class AppNavigatorTest {
         assertEquals(frozen, backStack.toList(), "replaceAll ran mid-transition")
         navigator.popToTransaction()
         assertEquals(frozen, backStack.toList(), "popToTransaction ran mid-transition")
+        navigator.pushToTop(LoansRoute)
+        assertEquals(frozen, backStack.toList(), "pushToTop ran mid-transition")
     }
 
     @Test
@@ -162,5 +164,50 @@ class AppNavigatorTest {
         navigator.popToTransaction()
 
         assertEquals(frozen, backStack.toList(), "with no transaction screen to reach, the stack was drained empty")
+    }
+
+    @Test
+    fun `pushToTop reveals a buried route equal to the target, dropping only what sits above it`() {
+        navigator.push(LoansRoute)
+        navigator.push(PersonLoansRoute("carlos"))
+
+        navigator.pushToTop(LoansRoute)
+
+        assertEquals(
+            listOf<NavKey>(rootTab, LoansRoute),
+            backStack.toList(),
+            "push's contains guard leaves a buried route buried; a shortcut must still land on it",
+        )
+    }
+
+    @Test
+    fun `pushToTop is a no-op when the target is already on top`() {
+        navigator.push(LoansRoute)
+        val frozen: List<NavKey> = backStack.toList()
+
+        navigator.pushToTop(LoansRoute)
+
+        assertEquals(frozen, backStack.toList())
+    }
+
+    @Test
+    fun `pushToTop pushes the route when it is nowhere in the stack`() {
+        navigator.pushToTop(LoansRoute)
+
+        assertEquals(listOf<NavKey>(rootTab, LoansRoute), backStack.toList())
+    }
+
+    @Test
+    fun `pushToTop replaces a buried route of the same type but a different value`() {
+        navigator.push(AddTransactionRoute(preselectedAccountId = "account-1"))
+        navigator.push(CategoryRoute())
+
+        navigator.pushToTop(AddTransactionRoute(preselectedAccountId = "account-2"))
+
+        assertEquals(
+            listOf<NavKey>(rootTab, AddTransactionRoute(preselectedAccountId = "account-2")),
+            backStack.toList(),
+            "a different combo replaces the stale one instead of stacking a second AddTransactionRoute",
+        )
     }
 }
