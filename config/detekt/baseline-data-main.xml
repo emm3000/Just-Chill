@@ -3,10 +3,5 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>InjectDispatcher:Dispatchers.android.kt:IO</ID>
-    <ID>TooManyFunctions:TransactionMappers.kt:com.emm.data.transaction.TransactionMappers.kt</ID>
-    <ID>UnnecessaryNotNullOperator:TransactionMappers.kt:categoryColor!!</ID>
-    <ID>UnnecessaryNotNullOperator:TransactionMappers.kt:categoryIcon!!</ID>
-    <ID>UnnecessaryNotNullOperator:TransactionMappers.kt:categoryId!!</ID>
-    <ID>UnnecessaryNotNullOperator:TransactionMappers.kt:categoryName!!</ID>
   </CurrentIssues>
 </SmellBaseline>
