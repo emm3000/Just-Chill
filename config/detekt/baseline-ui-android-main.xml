@@ -3,24 +3,12 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>LongParameterList:AccountPickerSheet.kt:@Composable private fun AccountRow</ID>
-    <ID>LongParameterList:AmountHero.kt:@Composable fun AmountHero</ID>
-    <ID>LongParameterList:AuthScreen.kt:@Composable private fun AuthFieldInput</ID>
     <ID>LongParameterList:CategoryFilterSheet.kt:@Composable internal fun CategoryFilterSheet</ID>
-    <ID>LongParameterList:CategoryPickerSheet.kt:@Composable fun CategoryPickerSheet</ID>
     <ID>LongParameterList:CategoryPickerSheet.kt:@Composable private fun CategoryRow</ID>
     <ID>LongParameterList:DeleteTransactionDialog.kt:@Composable internal fun DeleteTransactionDialog</ID>
-    <ID>LongParameterList:DeleteTransactionDialog.kt:@Composable private fun DialogActionButton</ID>
-    <ID>LongParameterList:EmmButton.kt:@Composable fun EmmButton</ID>
-    <ID>LongParameterList:EmmDropDown.kt:@Composable fun &lt;T&gt; EmmDropDown</ID>
-    <ID>LongParameterList:EmmListItem.kt:@Composable fun EmmListItem</ID>
-    <ID>LongParameterList:EmmTextInput.kt:@Composable fun EmmTextInput</ID>
-    <ID>LongParameterList:InfinityScroll.kt:@Composable internal fun &lt;T&gt; EndlessLazyColumn</ID>
-    <ID>LongParameterList:ProfileScreen.kt:@Composable fun ProfileScreen</ID>
     <ID>LongParameterList:ProfileScreen.kt:@Composable private fun ProfileRowWithTrailing</ID>
     <ID>LongParameterList:ReportScreen.kt:@Composable private fun MonthContent</ID>
     <ID>LongParameterList:ReportScreen.kt:@Composable private fun ReportScreen</ID>
-    <ID>LongParameterList:StickyCTA.kt:@Composable fun StickyCTA</ID>
-    <ID>LongParameterList:TransactionFormControls.kt:@Composable internal fun QuickChip</ID>
     <ID>TooManyFunctions:AccountsScreen.kt:com.emm.justchill.hh.account.AccountsScreen.kt</ID>
     <ID>TooManyFunctions:AddCategoryScreen.kt:com.emm.justchill.hh.category.AddCategoryScreen.kt</ID>
     <ID>TooManyFunctions:AddEditRecurringMovementScreen.kt:com.emm.justchill.hh.recurring.AddEditRecurringMovementScreen.kt</ID>
