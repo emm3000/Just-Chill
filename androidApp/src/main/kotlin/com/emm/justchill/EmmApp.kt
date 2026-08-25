@@ -60,8 +60,6 @@ class EmmApp : Application() {
         }
     }
 
-    // Off the cold-start path on purpose: a set that lags one launch behind is acceptable
-    // (E09-03), so this rides the same fire-and-forget scope sweepLegacySession does.
     private fun publishShortcuts(koin: Koin) {
         startupScope.launch {
             withContext(koin.get<DispatchersProvider>().ioDispatcher) {
