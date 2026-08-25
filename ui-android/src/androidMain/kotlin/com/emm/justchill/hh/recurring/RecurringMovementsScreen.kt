@@ -18,31 +18,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -57,7 +48,6 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
-import com.emm.justchill.hh.category.findById
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.shared.formatNeutral
@@ -228,210 +218,6 @@ private fun RecurringSummaryCard(
             }
         }
     }
-}
-
-@Composable
-private fun DayBadge(dayOfMonth: Int) {
-    val colors = LocalEmmColors.current
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .size(34.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(colors.surface2)
-            .border(1.dp, colors.border, RoundedCornerShape(8.dp)),
-    ) {
-        Text(
-            text = dayOfMonth.toString().padStart(2, '0'),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.W700,
-            fontFamily = InterFontFamily,
-            color = colors.textPrimary,
-            letterSpacing = (-0.1).sp,
-        )
-        Text(
-            text = "DEL MES",
-            fontSize = 9.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
-            color = colors.textTertiary,
-            letterSpacing = 0.2.sp,
-        )
-    }
-}
-
-@Composable
-private fun RecurringMovementRow(
-    item: RecurringMovementUi,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit,
-    trailingBadge: (@Composable () -> Unit)? = null,
-) {
-    val colors = LocalEmmColors.current
-
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            DayBadge(item.dayOfMonth)
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.name,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
-                    color = colors.textPrimary,
-                    letterSpacing = (-0.15).sp,
-                )
-                Spacer(Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    item.categoryColor?.let { colorKey ->
-                        val dotColor = remember(colorKey) { findById(colorKey).primary }
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(dotColor),
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = "${item.categoryName} · ${item.accountName}",
-                            fontSize = 12.sp,
-                            fontFamily = InterFontFamily,
-                            color = colors.textTertiary,
-                        )
-                    } ?: run {
-                        Text(
-                            text = item.accountName,
-                            fontSize = 12.sp,
-                            fontFamily = InterFontFamily,
-                            color = colors.textTertiary,
-                        )
-                    }
-                }
-            }
-
-            Column(horizontalAlignment = Alignment.End) {
-                if (item.isVariableAmount) {
-                    Text(
-                        text = "Variable",
-                        fontSize = 13.sp,
-                        fontFamily = InterFontFamily,
-                        fontStyle = FontStyle.Italic,
-                        color = colors.textTertiary,
-                    )
-                } else {
-                    val amountColor = if (item.type == TransactionType.Income) colors.success else colors.textPrimary
-                    Text(
-                        text = item.formattedAmount,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.W600,
-                        fontFamily = InterFontFamily,
-                        color = amountColor,
-                        letterSpacing = (-0.1).sp,
-                    )
-                }
-                trailingBadge?.let {
-                    Spacer(Modifier.height(3.dp))
-                    it()
-                }
-            }
-
-            RecurringRowMenu(onEdit = onEdit, onDelete = onDelete)
-        }
-        Hairline()
-    }
-}
-
-@Composable
-private fun RecurringRowMenu(onEdit: () -> Unit, onDelete: () -> Unit) {
-    val colors = LocalEmmColors.current
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(32.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = { expanded = !expanded },
-                ),
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.MoreVert,
-                contentDescription = "Opciones",
-                tint = colors.textTertiary,
-                modifier = Modifier.size(18.dp),
-            )
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            containerColor = colors.surface2,
-        ) {
-            DropdownMenuItem(
-                text = {
-                    Text(
-                        text = "Editar",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.W500,
-                        fontFamily = InterFontFamily,
-                        color = colors.textPrimary,
-                        letterSpacing = (-0.15).sp,
-                    )
-                },
-                leadingIcon = { MenuIcon(Icons.Outlined.Edit) },
-                onClick = {
-                    expanded = false
-                    onEdit()
-                },
-            )
-            DropdownMenuItem(
-                text = {
-                    Text(
-                        text = "Borrar",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.W500,
-                        fontFamily = InterFontFamily,
-                        color = colors.danger,
-                        letterSpacing = (-0.15).sp,
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = null,
-                        tint = colors.danger,
-                        modifier = Modifier.size(20.dp),
-                    )
-                },
-                onClick = {
-                    expanded = false
-                    onDelete()
-                },
-            )
-        }
-    }
-}
-
-@Composable
-private fun MenuIcon(icon: ImageVector) {
-    val colors = LocalEmmColors.current
-    Icon(
-        imageVector = icon,
-        contentDescription = null,
-        tint = colors.textSecondary,
-        modifier = Modifier.size(20.dp),
-    )
 }
 
 @Composable
