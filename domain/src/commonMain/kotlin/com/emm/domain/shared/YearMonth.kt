@@ -1,11 +1,9 @@
 package com.emm.domain.shared
 
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 data class YearMonth(val year: Int, val month: Month) : Comparable<YearMonth> {
@@ -40,11 +38,6 @@ data class YearMonth(val year: Int, val month: Month) : Comparable<YearMonth> {
     )
 
     companion object {
-        fun current(clock: Clock, timeZone: TimeZone): YearMonth {
-            val today: LocalDateTime = clock.now().toLocalDateTime(timeZone)
-            return YearMonth(year = today.year, month = today.month)
-        }
-
         fun of(date: LocalDate): YearMonth = YearMonth(year = date.year, month = date.month)
 
         fun of(epochMillis: Long, timeZone: TimeZone): YearMonth =

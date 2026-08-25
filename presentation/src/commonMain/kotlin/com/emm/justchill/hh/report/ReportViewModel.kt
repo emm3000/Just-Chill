@@ -55,8 +55,9 @@ class ReportViewModel(
 
     init {
         reloadReport()
-        // Report's browsed month never follows the calendar — unlike Ver, a rollover here only
-        // ever corrects isCurrentMonth and the trends window, never `state.month`.
+        // The seed emission is also the initial trends load, which is why init does not call
+        // reloadTrends() itself; and this updateState is the only isCurrentMonth correction that
+        // survives a trends load that fails.
         calendarMonth
             .onEach {
                 updateState { copy(isCurrentMonth = isCurrent(month)) }
@@ -151,7 +152,7 @@ class ReportViewModel(
         trendsJob = launchSafe(onError = { e -> ReportEffect.ShowError(e.toUserMessage()) }) {
             val currentYm = calendarMonth.value
 
-            val savingsRate = getSavingsRate(currentYm, TRENDS_WINDOW_MONTHS)
+            val savingsRate = getSavingsRate(currentYm, months = TRENDS_WINDOW_MONTHS)
             val topExpenses = getTopCategories(
                 TransactionType.Spend,
                 currentYm,
@@ -183,6 +184,7 @@ class ReportViewModel(
             val topItems = topExpenses.map { it.toTopCategoryItem() }
 
             updateState {
+                // The captured currentYm, not isCurrent(): the bars above used it, and one pass must not answer twice.
                 copy(
                     isCurrentMonth = month == currentYm,
                     trends = TrendsUiData(

@@ -33,7 +33,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/** Mid-May-2026, so `YearMonth.of(FIXED_DATE)` is May 2026 regardless of where a month boundary falls. */
 private val FIXED_DATE = LocalDate(2026, Month.MAY, 15)
 
 class ReportViewModelTest {
@@ -49,7 +48,7 @@ class ReportViewModelTest {
     private val getSavingsRate = mockk<GetSavingsRateUseCase>()
     private val getTopCategories = mockk<GetTopCategoriesOverMonthsUseCase>()
 
-    private val currentMonth = YearMonth(2026, Month.MAY)
+    private val currentMonth = YearMonth.of(FIXED_DATE)
 
     private fun buildViewModel(dates: MutableStateFlow<LocalDate> = MutableStateFlow(FIXED_DATE)): ReportViewModel =
         ReportViewModel(
@@ -151,6 +150,25 @@ class ReportViewModelTest {
 
         assertFalse(vm.state.value.isCurrentMonth, "the rollover must correct isCurrentMonth with no interaction")
         assertEquals(YearMonth(2026, Month.AUGUST), vm.state.value.month, "the month must not move")
+
+        vm.onIntent(ReportIntent.JumpToCurrent)
+        advanceUntilIdle()
+        assertEquals(
+            YearMonth(2026, Month.SEPTEMBER),
+            vm.state.value.month,
+            "JumpToCurrent reads the rolled-over month",
+        )
+        assertTrue(vm.state.value.isCurrentMonth)
+
+        dates.value = LocalDate(2026, Month.OCTOBER, 1)
+        advanceUntilIdle()
+
+        assertFalse(vm.state.value.isCurrentMonth)
+        assertEquals(
+            YearMonth(2026, Month.SEPTEMBER),
+            vm.state.value.month,
+            "a month reached by JumpToCurrent stays put too",
+        )
     }
 
     @Test

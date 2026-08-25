@@ -57,3 +57,4 @@ epic re-shapes the shell around what is actually used.
 
 - **Report's browsed month never follows a midnight rollover (E06-10).** A rollover only corrects
   `isCurrentMonth` and the trends window; `state.month` stays put no matter how it got there.
+  `ReportViewModelTest`'s `a month rollover corrects isCurrentMonth with no month move` pins it.

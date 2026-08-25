@@ -4,7 +4,7 @@ import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.mvi.UiState
 
-/** [isCurrentMonth] is computed by the ViewModel, which holds the zone the screen lacks. */
+/** [isCurrentMonth] is computed by the ViewModel, which holds the live calendar month the screen lacks. */
 data class ReportUiState(
     val month: YearMonth,
     val isCurrentMonth: Boolean = false,
