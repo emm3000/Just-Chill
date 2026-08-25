@@ -13,7 +13,6 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Today's date, kept current on its own. A screen that shows HOY/AYER labels or a pending-movement
@@ -53,9 +52,7 @@ class ClockTodayFlow(private val clock: Clock, private val zone: TimeZone, priva
             val now = clock.now()
             val date = now.toLocalDateTime(zone).date
             emit(date)
-            // Floored: an arithmetic slip yielding zero or less would spin this loop hot forever,
-            // and distinctUntilChanged would emit nothing while it burned the battery.
-            delay(maxOf(date.plus(1, DateTimeUnit.DAY).atStartOfDayIn(zone) - now, 1.seconds))
+            delay(date.plus(1, DateTimeUnit.DAY).atStartOfDayIn(zone) - now)
         }
     }
 }

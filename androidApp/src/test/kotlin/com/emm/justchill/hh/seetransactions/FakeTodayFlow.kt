@@ -6,10 +6,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.LocalDate
 
 /**
- * Stands in for `ClockTodayFlow` so a rollover test drives [dates] directly instead of fighting
- * virtual time — collecting the real one inside `runTest` never terminates, because its
- * self-rescheduling `delay` shares the test scheduler. `ClockTodayFlowTest` pins the midnight
- * arithmetic this fake skips.
+ * Drives the date by hand; `presentation/CLAUDE.md` says why a ViewModel test never collects the
+ * real `ClockTodayFlow`.
  */
 internal class FakeTodayFlow(private val dates: MutableStateFlow<LocalDate>) : TodayFlow {
 

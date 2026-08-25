@@ -33,7 +33,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.datetime.LocalDate
 
@@ -57,6 +56,7 @@ class SeeTransactionsViewModel(
 
     private val filter = MutableStateFlow(TransactionFilter.None)
     private val selectedMonth = MutableStateFlow(initialState.month)
+    private var calendarMonth = initialState.month
 
     init {
         combine(categoryRepository.all(), filter) { categories, current ->
@@ -132,23 +132,13 @@ class SeeTransactionsViewModel(
             .onEach { (date, pending) -> updateState { mapToPendingUiState(pending, date) } }
             .launchIn(viewModelScope)
 
-        // The browsed month tracks the calendar only while the user never moved it away. `scan`
-        // carries the previous calendar month alongside the current one so the check needs no
-        // mutable field: it advances exactly when it still equals the PREVIOUS tick's calendar
-        // month. A user who arrowed away fails that check and keeps their month; a user who never
-        // moved (or arrowed back) rolls over with the calendar.
+        // Follows a rollover only while the browsed month still sits on the calendar month, so a
+        // month the user arrowed away to stays put and an untouched one moves with the date.
         today
             .map { date -> YearMonth.of(date) }
-            .distinctUntilChanged()
-            .scan(CalendarMonthTick(previous = null, current = null)) { tick, month ->
-                CalendarMonthTick(previous = tick.current, current = month)
-            }
-            .onEach { tick ->
-                val previous = tick.previous
-                val current = tick.current
-                if (previous != null && current != null && selectedMonth.value == previous) {
-                    selectMonth(current)
-                }
+            .onEach { month ->
+                if (month != calendarMonth && selectedMonth.value == calendarMonth) selectMonth(month)
+                calendarMonth = month
             }
             .launchIn(viewModelScope)
     }
@@ -288,9 +278,6 @@ internal data class ListSlice(val month: YearMonth?, val days: List<DayGroup>, v
         val EmptyResults = ListSlice(month = null, days = emptyList(), summary = null)
     }
 }
-
-/** One `today` tick paired with the calendar month before it, so a rollover check needs no mutable field. */
-private data class CalendarMonthTick(val previous: YearMonth?, val current: YearMonth?)
 
 /**
  * Applies a slice, unless it is a late answer for a month the user has already left — that one
