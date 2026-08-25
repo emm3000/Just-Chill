@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,7 +53,7 @@ import org.koin.compose.koinInject
 import org.koin.core.qualifier.named
 
 @Composable
-fun AppNavHost(modifier: Modifier = Modifier) {
+fun AppNavHost(modifier: Modifier = Modifier, shortcutAction: String? = null, shortcutRequestId: Int = 0) {
     EmmTheme {
         val colors = LocalEmmColors.current
         val appPrefs: AppPreferences = koinInject()
@@ -66,6 +67,11 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         }
         val backStack: NavBackStack<NavKey> = rememberNavBackStack(startRoute)
         val hostNav: AppNavigator = rememberAppNavigator(backStack)
+        LaunchedEffect(shortcutRequestId) {
+            val route = routeForShortcutAction(shortcutAction) ?: return@LaunchedEffect
+            if (!appPrefs.firstLaunchSeen) return@LaunchedEffect
+            if (backStack.lastOrNull() != route) backStack.add(route)
+        }
         var pendingCategory by remember { mutableStateOf<SelectableCategory?>(null) }
         var pendingImportJson by remember { mutableStateOf<String?>(null) }
         val snackbarHostState = remember { SnackbarHostState() }
