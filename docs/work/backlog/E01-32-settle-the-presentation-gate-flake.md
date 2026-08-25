@@ -17,3 +17,8 @@ on `Dispatchers.Default` and reaches `Dispatchers.Main` via `setupPlatform`, lan
 `tearDown()` ran `resetMain()`; the `IllegalStateException` parks in kotlinx-coroutines-test's
 global collector and fails whichever `runTest` starts next. Reported as 6/6 under tight `--rerun`
 loops and 4/4 on a stashed clean trunk; six tight loops here passed 6/6. Does not gate the flag.
+
+A second sighting during E06-06 points elsewhere: twice, only in invocations that also ran detekt,
+with the suppressed cause a cancelled `Dispatchers.Main` coroutine plus a cancelled `Dispatchers.IO`
+one — the shape of `TransactionDateEndToEndTest`'s leaked ViewModel coroutines, not supabase-kt's.
+It did not recur in 20+ later runs. Rule that suspect in or out before chasing the reported one.
