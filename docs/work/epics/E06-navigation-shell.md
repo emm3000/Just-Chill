@@ -50,6 +50,7 @@ epic re-shapes the shell around what is actually used.
   trend-delta pill beside it is a comparison, not the deficit itself, so a negative delta uses
   `PillTone.Neutral`. Both calls are deliberate — do not unify them.
 
-- **Ver's browsed month follows a midnight rollover only while it still sits on the calendar month
-  (E06-06)** — a month the user arrowed away to never moves. `SeeTransactionsViewModelTest`'s two
-  rollover tests pin both directions.
+- **Ver's browsed month follows a midnight rollover only while it equals the calendar month the
+  rollover leaves (E06-06).** Always advancing would drag a deliberately browsed month back to
+  today's; never advancing would strand an app left open past midnight on yesterday's month.
+  `SeeTransactionsViewModelTest`'s two rollover tests pin both directions.

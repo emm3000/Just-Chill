@@ -132,13 +132,12 @@ class SeeTransactionsViewModel(
             .onEach { (date, pending) -> updateState { mapToPendingUiState(pending, date) } }
             .launchIn(viewModelScope)
 
-        // Follows a rollover only while the browsed month still sits on the calendar month, so a
-        // month the user arrowed away to stays put and an untouched one moves with the date.
         today
             .map { date -> YearMonth.of(date) }
             .onEach { month ->
-                if (month != calendarMonth && selectedMonth.value == calendarMonth) selectMonth(month)
+                val previousCalendarMonth = calendarMonth
                 calendarMonth = month
+                if (month != previousCalendarMonth && selectedMonth.value == previousCalendarMonth) selectMonth(month)
             }
             .launchIn(viewModelScope)
     }
