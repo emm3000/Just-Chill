@@ -210,3 +210,20 @@ private fun LoansScreenEmptyPreview() {
         )
     }
 }
+
+@Preview
+@PreviewRedmi15C
+@Composable
+private fun PersonRowOverflowPreview() {
+    EmmTheme {
+        PersonRow(
+            person = PersonBalanceUi(
+                personKey = "maria-fernanda",
+                personName = "María Fernanda Rodríguez Quispe",
+                remaining = "S/ 999,999.99",
+                isSettled = false,
+            ),
+            onClick = {},
+        )
+    }
+}

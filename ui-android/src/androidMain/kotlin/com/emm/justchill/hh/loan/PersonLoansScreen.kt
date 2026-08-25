@@ -206,3 +206,30 @@ private fun PersonLoansScreenEmptyPreview() {
         )
     }
 }
+
+@Preview
+@PreviewRedmi15C
+@Composable
+private fun PersonLoansScreenOverflowPreview() {
+    EmmTheme {
+        PersonLoansScreen(
+            state = PersonLoansUiState(
+                personName = "María Fernanda Rodríguez Quispe",
+                loans = listOf(
+                    LoanRowUi(
+                        loanId = "1",
+                        principal = "S/ 200.00",
+                        totalDue = "S/ 210.00",
+                        paidSoFar = "S/ 50.00",
+                        remaining = "S/ 160.00",
+                        isSettled = false,
+                        readableLentAt = "3 de julio",
+                    ),
+                ),
+            ),
+            onIntent = {},
+            onBack = {},
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}

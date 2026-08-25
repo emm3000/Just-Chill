@@ -30,6 +30,7 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.hh.report.CategoryShare
 import com.emm.justchill.hh.report.domainColorToUi
 import kotlinx.coroutines.delay
@@ -139,6 +140,32 @@ private fun IncomeByCategoryBarsPreview() {
                     CategoryShare("3", "Ventas IG", "S/ 380.00", 6, "green"),
                     CategoryShare("4", "Yapes", "S/ 120.00", 2, "orange"),
                 ),
+            )
+        }
+    }
+}
+
+@Preview
+@PreviewRedmi15CWidth
+@Composable
+private fun CategoryShareRowOverflowPreview() {
+    EmmTheme {
+        val colors = LocalEmmColors.current
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colors.bg)
+                .padding(16.dp),
+        ) {
+            CategoryShareRow(
+                share = CategoryShare(
+                    categoryId = "1",
+                    name = "Cuidado personal y salud",
+                    amountFormatted = "S/ 999,999.99",
+                    percentage = 100,
+                    colorKey = "red",
+                ),
+                animationDelayMs = 0L,
             )
         }
     }

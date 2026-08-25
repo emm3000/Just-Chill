@@ -241,3 +241,38 @@ private fun LoanDetailScreenLoadingPreview() {
         )
     }
 }
+
+@Preview
+@PreviewRedmi15C
+@Composable
+private fun LoanDetailScreenOverflowPreview() {
+    EmmTheme {
+        LoanDetailScreen(
+            state = LoanDetailUiState(
+                summary = LoanSummaryUi(
+                    personName = "María Fernanda Rodríguez Quispe",
+                    principal = "S/ 200.00",
+                    interestPercentLabel = "5%",
+                    totalDue = "S/ 210.00",
+                    paidSoFar = "S/ 50.00",
+                    remaining = "S/ 160.00",
+                    remainingCents = 16_000L,
+                    readableLentAt = "3 de julio de 2026",
+                    note = "Para el arreglo del carro",
+                ),
+                payments = listOf(
+                    LoanPaymentRowUi(
+                        paymentId = "1",
+                        amount = "S/ 50.00",
+                        methodLabel = "Efectivo",
+                        readablePaidAt = "10 de julio de 2026",
+                        note = "",
+                    ),
+                ),
+            ),
+            onIntent = {},
+            onBack = {},
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}

@@ -52,6 +52,7 @@ import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.JcTopBar
+import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 
 @Composable
 fun CategoriesScreen(
@@ -408,6 +409,25 @@ private fun CategoriesScreenEmptyPreview() {
             onAddCategory = {},
             onBack = {},
             modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+@Preview
+@PreviewRedmi15CWidth
+@Composable
+private fun CategoryRowOverflowPreview() {
+    EmmTheme {
+        CategoryRow(
+            category = Category(
+                CategoryId("1"),
+                "Cuidado personal y salud",
+                "wallet",
+                "green",
+                CategoryType.Spend,
+            ),
+            movementCount = 999,
+            onClick = {},
         )
     }
 }

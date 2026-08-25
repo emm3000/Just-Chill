@@ -23,12 +23,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.domain.account.Account
+import com.emm.domain.category.CategoryType
+import com.emm.domain.shared.AccountId
+import com.emm.domain.shared.CategoryId
+import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
+import com.emm.justchill.hh.transaction.SelectableCategory
 import com.emm.justchill.hh.transaction.resolvedColor
 
 @Composable
@@ -131,5 +139,32 @@ internal fun SelectorPillsRow(
                 },
             )
         }
+    }
+}
+
+@Preview
+@PreviewRedmi15CWidth
+@Composable
+private fun SelectorPillsRowOverflowPreview() {
+    EmmTheme {
+        SelectorPillsRow(
+            state = AddEditRecurringMovementUiState(
+                selectedAccount = Account(
+                    accountId = AccountId("1"),
+                    name = "Tarjeta de crédito BCP",
+                ),
+                selectedCategory = SelectableCategory(
+                    categoryId = CategoryId("1"),
+                    name = "Cuidado personal y salud",
+                    iconId = "wallet",
+                    categoryType = CategoryType.Spend,
+                    colorId = "green",
+                ),
+                dayOfMonth = 31,
+            ),
+            onOpenAccount = {},
+            onOpenCategory = {},
+            onOpenDay = {},
+        )
     }
 }

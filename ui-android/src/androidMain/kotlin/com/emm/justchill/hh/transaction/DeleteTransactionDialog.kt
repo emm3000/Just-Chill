@@ -34,6 +34,7 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 
 @Composable
 internal fun DeleteTransactionDialog(
@@ -207,6 +208,23 @@ private fun DeleteTransactionDialogPreview() {
             amountCents = "8540",
             accountName = "Yape",
             categoryName = "Comida",
+            categoryColor = Color(0xFFC97A5C),
+            onConfirm = {},
+            onDismiss = {},
+        )
+    }
+}
+
+@Preview
+@PreviewRedmi15CWidth
+@Composable
+private fun DeleteTransactionDialogOverflowPreview() {
+    EmmTheme {
+        DeleteTransactionDialog(
+            type = TransactionType.Spend,
+            amountCents = "99999999",
+            accountName = "Tarjeta de crédito BCP",
+            categoryName = "Cuidado personal y salud",
             categoryColor = Color(0xFFC97A5C),
             onConfirm = {},
             onDismiss = {},

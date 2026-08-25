@@ -25,6 +25,7 @@ import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.IconTileTone
+import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.report.TopCategoryItem
 import com.emm.justchill.hh.report.domainColorToUi
@@ -146,6 +147,32 @@ private fun TopExpensesCardPreview() {
                         totalFormatted = "S/ 900",
                         topMetaText = "Top en 6 de 6 meses",
                     ),
+                ),
+            )
+        }
+    }
+}
+
+@Preview
+@PreviewRedmi15CWidth
+@Composable
+private fun TopCategoryRowOverflowPreview() {
+    EmmTheme {
+        val colors = LocalEmmColors.current
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colors.bg)
+                .padding(16.dp),
+        ) {
+            TopCategoryRow(
+                item = TopCategoryItem(
+                    categoryId = "1",
+                    name = "Cuidado personal y salud",
+                    iconKey = "Fastfood",
+                    colorKey = "red",
+                    totalFormatted = "S/ 999,999.99",
+                    topMetaText = "Top en 6 de 6 meses",
                 ),
             )
         }
