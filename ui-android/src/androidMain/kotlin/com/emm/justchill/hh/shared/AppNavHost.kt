@@ -68,9 +68,7 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcutAction: String? = null, sh
         val backStack: NavBackStack<NavKey> = rememberNavBackStack(startRoute)
         val hostNav: AppNavigator = rememberAppNavigator(backStack)
         LaunchedEffect(shortcutRequestId) {
-            val route = routeForShortcutAction(shortcutAction) ?: return@LaunchedEffect
-            if (!appPrefs.firstLaunchSeen) return@LaunchedEffect
-            if (backStack.lastOrNull() != route) backStack.add(route)
+            shortcutRouteToPush(shortcutAction, appPrefs.firstLaunchSeen, backStack.lastOrNull())?.let(backStack::add)
         }
         var pendingCategory by remember { mutableStateOf<SelectableCategory?>(null) }
         var pendingImportJson by remember { mutableStateOf<String?>(null) }

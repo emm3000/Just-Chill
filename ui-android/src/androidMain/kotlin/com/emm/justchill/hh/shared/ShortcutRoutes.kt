@@ -8,3 +8,6 @@ internal fun routeForShortcutAction(action: String?): NavKey? = when (action) {
     ACTION_OPEN_LOANS -> LoansRoute
     else -> null
 }
+
+internal fun shortcutRouteToPush(action: String?, firstLaunchSeen: Boolean, currentTop: NavKey?): NavKey? =
+    routeForShortcutAction(action)?.takeIf { firstLaunchSeen && it != currentTop }

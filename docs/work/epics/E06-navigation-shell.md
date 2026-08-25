@@ -59,12 +59,6 @@ epic re-shapes the shell around what is actually used.
   `isCurrentMonth` and the trends window; `state.month` stays put no matter how it got there.
   `ReportViewModelTest`'s `a month rollover corrects isCurrentMonth with no month move` pins it.
 
-- **The launcher shortcut's action string is repeated in three files and nothing pins them together
-  (E06-11).** `ACTION_OPEN_LOANS` in `ShortcutRoutes.kt` must equal the `android:action` in BOTH
-  `androidApp/src/main/res/xml/shortcuts.xml` and `androidApp/src/dev/res/xml/shortcuts.xml` — flavor
-  resources shadow `main` for the same filename, so the dev copy is not redundant. `ShortcutRoutesTest`
-  asserts through the constant, so it can never see drift from the XML; only launching the shortcut can.
-
 - **`MainActivity` consumes the launch intent only when `savedInstanceState == null` (E06-11).**
   A rotation or a process-death restore re-delivers the same intent, and without that guard it drags
   the user back to the shortcut's route from wherever they had navigated.
