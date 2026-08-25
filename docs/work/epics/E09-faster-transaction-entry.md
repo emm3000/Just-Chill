@@ -62,6 +62,14 @@ The remaining cost is not the form — it is *reaching* it. Every ticket here sh
   `AddTransactionUiState.hasChanges` today. Anyone wiring a discard-changes prompt to it must fix
   this first, or every shortcut launch will claim the user has unsaved work.
 
+- **The launcher's shortcut slots are a shared, floor-limited budget (E09-03).** Manifest and dynamic
+  shortcuts both count against `getMaxShortcutCountPerActivity()`, which the platform only guarantees
+  to be at least five. Prod publishes one static (`loans`) plus three combos; **dev already declares
+  two statics** (`loans` and `random`), so it sits exactly at the floor. Adding a third static
+  shortcut would make `setDynamicShortcuts` throw `IllegalArgumentException` on a floor device — and
+  that throw is swallowed, so the symptom is combos quietly never appearing. Count both flavors
+  before adding any shortcut, static or dynamic.
+
 ## Rejected, with the reason
 
 - **Notification with `RemoteInput`** — wins on raw taps, loses on real cost: typing "comida" is more
