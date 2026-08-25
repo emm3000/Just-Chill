@@ -287,11 +287,7 @@ private fun SectionHeader(text: String) {
 }
 
 @Composable
-private fun CategoryRow(
-    category: SelectableCategory,
-    isActive: Boolean,
-    onClick: () -> Unit,
-) {
+private fun CategoryRow(category: SelectableCategory, isActive: Boolean, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     Row(
         modifier = Modifier

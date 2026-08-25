@@ -180,12 +180,7 @@ fun AccountPickerSheet(
 }
 
 @Composable
-private fun AccountRow(
-    account: Account,
-    isActive: Boolean,
-    swatchColor: Color,
-    onClick: () -> Unit,
-) {
+private fun AccountRow(account: Account, isActive: Boolean, swatchColor: Color, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val icon: ImageVector = when (account.type) {
         AccountType.Bank -> Icons.Outlined.AccountBalance
