@@ -14,8 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -29,11 +27,11 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.atoms.EmmRowMenu
 import com.emm.justchill.core.ui.atoms.Hairline
-import com.emm.justchill.core.ui.atoms.IconBtn
-import com.emm.justchill.core.ui.atoms.IconBtnTone
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
+import com.emm.justchill.core.ui.preview.PreviewRedmi15C
 
 // Items rather than a composable: the detail screen owns the only scroll, so the abonos cannot
 // carry a lazy list of their own without nesting one inside it.
@@ -101,19 +99,7 @@ private fun LoanPaymentRow(payment: LoanPaymentRowUi, onEditClick: () -> Unit, o
                 }
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                IconBtn(
-                    icon = Icons.Outlined.Edit,
-                    onClick = onEditClick,
-                    contentDescription = "Editar abono",
-                )
-                IconBtn(
-                    icon = Icons.Outlined.Delete,
-                    tone = IconBtnTone.Danger,
-                    onClick = onDeleteClick,
-                    contentDescription = "Eliminar abono",
-                )
-            }
+            EmmRowMenu(contentDescription = "Opciones del abono", onEdit = onEditClick, onDelete = onDeleteClick)
         }
         Hairline()
     }
@@ -169,6 +155,7 @@ private val previewLoanPayments = listOf(
 )
 
 @Preview
+@PreviewRedmi15C
 @Composable
 private fun LoanPaymentItemsPreview() {
     EmmTheme {
@@ -184,6 +171,7 @@ private fun LoanPaymentItemsPreview() {
 }
 
 @Preview
+@PreviewRedmi15C
 @Composable
 private fun LoanPaymentItemsEmptyPreview() {
     EmmTheme {
