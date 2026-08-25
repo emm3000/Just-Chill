@@ -1,11 +1,10 @@
 package com.emm.justchill.hh.di
 
 import com.emm.domain.shared.UniqueIdProvider
+import com.emm.justchill.core.lifecycle.resumeEvents
 import com.emm.justchill.core.time.ClockTodayFlow
 import com.emm.justchill.core.time.TodayFlow
 import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
-import org.koin.core.module.dsl.bind
-import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -17,7 +16,10 @@ val sharedModule = module {
 
     // Depends on the two factories below, so it lives beside them: any ViewModel that needs a
     // live "today" gets it from here instead of re-deriving one from a one-shot Clock read.
-    factoryOf(::ClockTodayFlow) { bind<TodayFlow>() }
+    // resumeEvents() is supplied here rather than called inside the class, so ClockTodayFlow holds
+    // no platform seam and a test can hand it a plain flow (backupModule wires the same signal the
+    // same way).
+    factory<TodayFlow> { ClockTodayFlow(clock = get(), zone = get(), resumeEvents = resumeEvents()) }
 
     // The composition root is where reading the machine belongs, and these two factories are
     // the ONLY way a Clock or a TimeZone enters the injected graph: no use case and no

@@ -1,6 +1,9 @@
 package com.emm.justchill.core.time
 
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -11,7 +14,9 @@ import kotlinx.datetime.asTimeZone
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
@@ -29,14 +34,29 @@ import kotlin.time.Instant
  */
 class ClockTodayFlowTest {
 
-    private class MovingClock(var instant: Instant) : Clock {
-        override fun now(): Instant = instant
+    /**
+     * Reads the virtual clock, so moving time moves the date too: a clock frozen while virtual time
+     * advances lets a premature wake re-read the same date, which `distinctUntilChanged` then hides.
+     * [slept] is the one thing virtual time cannot model — real time passing while `delay` is frozen,
+     * which is what deep sleep does to Android's uptime-scheduled `delay`.
+     */
+    private class MovingClock(private val start: Instant, private val scheduler: TestCoroutineScheduler) : Clock {
+
+        var slept: Duration = Duration.ZERO
+
+        var reads: Int = 0
+            private set
+
+        override fun now(): Instant {
+            reads++
+            return start + scheduler.currentTime.milliseconds + slept
+        }
     }
 
     @Test
     fun `emits today immediately on collection`() = runTest {
-        val clock = MovingClock(Instant.parse("2026-08-15T12:00:00Z"))
-        val todayFlow = ClockTodayFlow(clock, TimeZone.UTC)
+        val clock = MovingClock(Instant.parse("2026-08-15T12:00:00Z"), testScheduler)
+        val todayFlow = ClockTodayFlow(clock, TimeZone.UTC, emptyFlow())
         val dates = mutableListOf<LocalDate>()
 
         backgroundScope.launch { todayFlow().collect { dates += it } }
@@ -46,9 +66,25 @@ class ClockTodayFlowTest {
     }
 
     @Test
+    fun `nothing wakes the flow between one day boundary and the next`() = runTest {
+        val clock = MovingClock(Instant.parse("2026-08-15T12:00:00Z"), testScheduler)
+        val todayFlow = ClockTodayFlow(clock, TimeZone.UTC, emptyFlow())
+
+        backgroundScope.launch { todayFlow().collect { } }
+        runCurrent()
+        assertEquals(1, clock.reads, "one read, for the date it just emitted")
+
+        advanceTimeBy(12.hours - 1.seconds)
+
+        // Clock reads, not emissions: a poll re-reads the same date and distinctUntilChanged
+        // swallows it, so the emitted list alone cannot tell a tick apart from a day boundary.
+        assertEquals(1, clock.reads, "a day boundary is the event; nothing may wake this flow in between")
+    }
+
+    @Test
     fun `re-emits exactly at the next local midnight, not before`() = runTest {
-        val clock = MovingClock(Instant.parse("2026-08-15T12:00:00Z"))
-        val todayFlow = ClockTodayFlow(clock, TimeZone.UTC)
+        val clock = MovingClock(Instant.parse("2026-08-15T12:00:00Z"), testScheduler)
+        val todayFlow = ClockTodayFlow(clock, TimeZone.UTC, emptyFlow())
         val dates = mutableListOf<LocalDate>()
 
         backgroundScope.launch { todayFlow().collect { dates += it } }
@@ -58,9 +94,6 @@ class ClockTodayFlowTest {
         advanceTimeBy(12.hours - 1.seconds)
         assertEquals(listOf(LocalDate(2026, 8, 15)), dates, "midnight has not arrived yet")
 
-        // Move the clock itself past local midnight too, so the loop's next iteration reads it —
-        // the trap the ticket warns about: virtual time moving is not the clock moving.
-        clock.instant = Instant.parse("2026-08-16T00:00:01Z")
         advanceTimeBy(2.seconds)
 
         assertEquals(listOf(LocalDate(2026, 8, 15), LocalDate(2026, 8, 16)), dates)
@@ -70,9 +103,9 @@ class ClockTodayFlowTest {
     fun `the emitted date is read in the injected zone, not the device default`() = runTest {
         // Both zones asserted from the SAME instant: on a machine whose own clock sits in the
         // asserted zone, checking only one zone would let the bug hide.
-        val nearMidnight = MovingClock(Instant.parse("2026-09-01T02:00:00Z"))
-        val lima = ClockTodayFlow(nearMidnight, UtcOffset(hours = -5).asTimeZone())
-        val utc = ClockTodayFlow(nearMidnight, UtcOffset(hours = 0).asTimeZone())
+        val nearMidnight = MovingClock(Instant.parse("2026-09-01T02:00:00Z"), testScheduler)
+        val lima = ClockTodayFlow(nearMidnight, UtcOffset(hours = -5).asTimeZone(), emptyFlow())
+        val utc = ClockTodayFlow(nearMidnight, UtcOffset(hours = 0).asTimeZone(), emptyFlow())
         val limaDates = mutableListOf<LocalDate>()
         val utcDates = mutableListOf<LocalDate>()
 
@@ -89,8 +122,8 @@ class ClockTodayFlowTest {
         // Spring-forward in Los Angeles: 2026-03-08 has only 23 hours, because 02:00 PST becomes
         // 03:00 PDT partway through it. A delay hard-coded to a fixed 24h would miss this rollover.
         val laZone = TimeZone.of("America/Los_Angeles")
-        val clock = MovingClock(Instant.parse("2026-03-08T08:00:00Z")) // 2026-03-08T00:00 PST
-        val todayFlow = ClockTodayFlow(clock, laZone)
+        val clock = MovingClock(Instant.parse("2026-03-08T08:00:00Z"), testScheduler) // 2026-03-08T00:00 PST
+        val todayFlow = ClockTodayFlow(clock, laZone, emptyFlow())
         val dates = mutableListOf<LocalDate>()
 
         backgroundScope.launch { todayFlow().collect { dates += it } }
@@ -100,9 +133,29 @@ class ClockTodayFlowTest {
         advanceTimeBy(23.hours - 1.seconds)
         assertEquals(listOf(LocalDate(2026, 3, 8)), dates, "23h have not yet passed in Los Angeles")
 
-        clock.instant = Instant.parse("2026-03-09T07:00:01Z") // just past 2026-03-09T00:00 PDT
         advanceTimeBy(2.seconds)
 
         assertEquals(listOf(LocalDate(2026, 3, 8), LocalDate(2026, 3, 9)), dates)
+    }
+
+    @Test
+    fun `a foreground resume delivers the date the midnight wake has not fired for yet`() = runTest {
+        // A device dozing across midnight: 13 real hours pass, but Android schedules `delay`
+        // against uptime, which does not advance in deep sleep — so the midnight wake is still
+        // pending. Returning to the app is what must show the user the right day.
+        val resumes = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+        val clock = MovingClock(Instant.parse("2026-08-15T12:00:00Z"), testScheduler)
+        val todayFlow = ClockTodayFlow(clock, TimeZone.UTC, resumes)
+        val dates = mutableListOf<LocalDate>()
+
+        backgroundScope.launch { todayFlow().collect { dates += it } }
+        runCurrent()
+        assertEquals(listOf(LocalDate(2026, 8, 15)), dates)
+
+        clock.slept = 13.hours
+        resumes.emit(Unit)
+        runCurrent()
+
+        assertEquals(listOf(LocalDate(2026, 8, 15), LocalDate(2026, 8, 16)), dates)
     }
 }

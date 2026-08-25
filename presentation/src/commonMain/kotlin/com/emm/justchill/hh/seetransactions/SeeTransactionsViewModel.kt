@@ -36,17 +36,9 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Clock
 
 private const val SEARCH_DEBOUNCE_MS = 250L
 
-// Two repositories for the transaction list and its filters, three use cases for the pending
-// section's confirm/skip/source, plus TodayFlow, Clock and TimeZone: eight distinct collaborators
-// this ViewModel actually calls, none of them foldable into one another without losing an identity
-// Koin binds separately.
-@Suppress("LongParameterList")
 class SeeTransactionsViewModel(
     categoryRepository: CategoryRepository,
     transactionRepository: TransactionRepository,
@@ -54,23 +46,17 @@ class SeeTransactionsViewModel(
     private val confirmRecurringMovement: ConfirmRecurringMovementUseCase,
     private val skipRecurringMovement: SkipRecurringMovementUseCase,
     todayFlow: TodayFlow,
-    private val clock: Clock,
-    private val zone: TimeZone,
 ) : MviViewModel<SeeTransactionsUiState, SeeTransactionsIntent, SeeTransactionsEffect>() {
 
-    override val initialState = SeeTransactionsUiState(month = YearMonth.current(clock, zone))
+    // The screen's only derivation of "what day is it" — which is why no Clock reaches this class.
+    // A second one would let the pending list and the HOY/AYER headers disagree about the date.
+    private val today: StateFlow<LocalDate> = todayFlow()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, todayFlow.today())
+
+    override val initialState = SeeTransactionsUiState(month = YearMonth.of(today.value))
 
     private val filter = MutableStateFlow(TransactionFilter.None)
-    private val selectedMonth = MutableStateFlow(YearMonth.current(clock, zone))
-
-    /**
-     * The one live source of "what day is it" for this screen: a single shared hot flow instead of
-     * an independent midnight timer per consumer, so the pending list and the HOY/AYER headers can
-     * never briefly disagree about the date. `Eagerly`: the month-rollover collector below has to
-     * stay live even while nothing else is observing state.
-     */
-    private val today: StateFlow<LocalDate> = todayFlow()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, clock.now().toLocalDateTime(zone).date)
+    private val selectedMonth = MutableStateFlow(initialState.month)
 
     init {
         combine(categoryRepository.all(), filter) { categories, current ->
@@ -142,8 +128,8 @@ class SeeTransactionsViewModel(
         // or the active filter. Driven by the shared `today` instead, so a movement that comes due
         // at midnight appears with no user interaction.
         today
-            .flatMapLatest { date -> getPendingRecurringMovements(date) }
-            .onEach { pending -> updateState { mapToPendingUiState(pending) } }
+            .flatMapLatest { date -> getPendingRecurringMovements(date).map { pending -> date to pending } }
+            .onEach { (date, pending) -> updateState { mapToPendingUiState(pending, date) } }
             .launchIn(viewModelScope)
 
         // The browsed month tracks the calendar only while the user never moved it away. `scan`
@@ -236,11 +222,15 @@ class SeeTransactionsViewModel(
     }
 
     /**
-     * The current month comes from the clock, not the selected one: browsing to March must not
-     * relabel March's own pending row, and it must not decide whether the section is visible either.
+     * The month comes from the date that produced [pending], not from the selected one: browsing to
+     * March must not relabel March's own pending row, and it must not decide whether the section is
+     * visible either.
      */
-    private fun SeeTransactionsUiState.mapToPendingUiState(pending: List<PendingRecurring>): SeeTransactionsUiState {
-        val currentMonth = YearMonth.current(clock, zone)
+    private fun SeeTransactionsUiState.mapToPendingUiState(
+        pending: List<PendingRecurring>,
+        today: LocalDate,
+    ): SeeTransactionsUiState {
+        val currentMonth = YearMonth.of(today)
         return copy(
             pendingRecurringMovements = pending.map { it.toPendingRecurringUi(currentMonth) },
             currentMonth = currentMonth,

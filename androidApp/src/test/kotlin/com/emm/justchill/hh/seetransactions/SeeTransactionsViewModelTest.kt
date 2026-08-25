@@ -18,7 +18,6 @@ import com.emm.domain.transaction.TransactionTotals
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
 import com.emm.justchill.MainDispatcherRule
-import com.emm.justchill.core.time.TodayFlow
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -34,21 +33,18 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Month
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.UtcOffset
-import kotlinx.datetime.asTimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
-import kotlin.time.Instant
 
 /** Midday, so nothing in these tests depends on where a day boundary falls. */
 private val NOON = LocalTime(12, 0)
+
+/** Mid-month, so nothing in these tests depends on where a month boundary falls. */
+private val TODAY = LocalDate(2026, 8, 15)
 
 // Every call inside a MockK `verify { }` block records an expectation instead of consuming a
 // result, so IgnoredReturnValue fires on all of them here and means nothing. Suppressed on
@@ -62,10 +58,6 @@ class SeeTransactionsViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
-    /** Mid-month noon UTC: `YearMonth.current(fixedClock)` is August 2026 in every timezone. */
-    private val fixedClock = object : Clock {
-        override fun now(): Instant = Instant.parse("2026-08-15T12:00:00Z")
-    }
     private val currentMonth = YearMonth(2026, Month.AUGUST)
 
     private val categoriesFlow = MutableStateFlow(emptyList<Category>())
@@ -80,6 +72,7 @@ class SeeTransactionsViewModelTest {
         every { observeCategoryUsageCounts() } returns usageCountsFlow
         every { observeTotals() } returns totalsFlow
         every { fetchAllWithCategoryInRange(any(), any()) } returns monthTransactionsFlow
+        every { searchWithCategory(any()) } returns flowOf(emptyList())
     }
     private val pendingFlow = MutableStateFlow(emptyList<PendingRecurring>())
     private val getPendingRecurringMovements = mockk<GetPendingRecurringMovementsUseCase> {
@@ -88,34 +81,13 @@ class SeeTransactionsViewModelTest {
     private val confirmRecurring = mockk<ConfirmRecurringMovementUseCase>()
     private val skipRecurring = mockk<SkipRecurringMovementUseCase>()
 
-    /**
-     * At this clock (noon UTC), nothing below depends on which zone runs the suite by accident.
-     * `today` defaults to whatever the real `ClockTodayFlow` would report for [clock]/[zone] — a
-     * fake, so a rollover test can hold onto it and drive `today.value` directly instead of fighting
-     * virtual time; `ClockTodayFlowTest` is what pins the delay arithmetic this fake stands in for.
-     */
-    private fun buildViewModel(
-        clock: Clock = fixedClock,
-        zone: TimeZone = TimeZone.UTC,
-        today: MutableStateFlow<LocalDate> = MutableStateFlow(clock.now().toLocalDateTime(zone).date),
-    ): SeeTransactionsViewModel {
-        every { transactionRepository.searchWithCategory(any()) } returns flowOf(emptyList())
-        return newViewModel(clock, zone, today)
-    }
-
-    private fun newViewModel(
-        clock: Clock,
-        zone: TimeZone,
-        today: MutableStateFlow<LocalDate> = MutableStateFlow(clock.now().toLocalDateTime(zone).date),
-    ) = SeeTransactionsViewModel(
+    private fun buildViewModel(today: MutableStateFlow<LocalDate> = MutableStateFlow(TODAY)) = SeeTransactionsViewModel(
         categoryRepository,
         transactionRepository,
         getPendingRecurringMovements,
         confirmRecurring,
         skipRecurring,
-        TodayFlow { today },
-        clock,
-        zone,
+        FakeTodayFlow(today),
     )
 
     private fun tx(
@@ -153,7 +125,7 @@ class SeeTransactionsViewModelTest {
         )
 
     @Test
-    fun `initial month is the clock's current month and the list queries its exact bounds`() = runTest(testDispatcher) {
+    fun `initial month is today's month and the list queries its exact bounds`() = runTest(testDispatcher) {
         val vm = buildViewModel()
         advanceUntilIdle()
 
@@ -167,24 +139,21 @@ class SeeTransactionsViewModelTest {
     }
 
     @Test
-    fun `the initial month is read in the injected zone, not the device's`() = runTest(testDispatcher) {
-        // Both zones are asserted: on a machine whose own clock sits in the asserted zone, checking
-        // only one zone would let the bug hide.
-        val nearMidnight = object : Clock {
-            override fun now(): Instant = Instant.parse("2026-09-01T02:00:00Z")
-        }
+    fun `the initial month is the month of the date todayFlow reports`() = runTest(testDispatcher) {
+        // Zone-correct date derivation is ClockTodayFlow's job, pinned in ClockTodayFlowTest. What
+        // this pins is that the initial month and its first range query come from that one date,
+        // not from a clock the ViewModel reads for itself.
         val august = YearMonth(2026, Month.AUGUST)
         val september = YearMonth(2026, Month.SEPTEMBER)
         stubRange(august, flowOf(emptyList()))
         stubRange(september, flowOf(emptyList()))
-        every { transactionRepository.searchWithCategory(any()) } returns flowOf(emptyList())
 
-        val inLima = buildViewModel(nearMidnight, UtcOffset(hours = -5).asTimeZone())
-        val inUtc = buildViewModel(nearMidnight, UtcOffset(hours = 0).asTimeZone())
+        val onAugust31 = buildViewModel(MutableStateFlow(LocalDate(2026, 8, 31)))
+        val onSeptember1 = buildViewModel(MutableStateFlow(LocalDate(2026, 9, 1)))
         advanceUntilIdle()
 
-        assertEquals(august, inLima.state.value.month)
-        assertEquals(september, inUtc.state.value.month)
+        assertEquals(august, onAugust31.state.value.month)
+        assertEquals(september, onSeptember1.state.value.month)
         verify {
             transactionRepository.fetchAllWithCategoryInRange(august.startInclusiveDay(), august.endExclusiveDay())
             transactionRepository.fetchAllWithCategoryInRange(
@@ -271,7 +240,7 @@ class SeeTransactionsViewModelTest {
     @Test
     fun `the browsed month follows a midnight rollover when the user never moved it`() = runTest(testDispatcher) {
         val today = MutableStateFlow(LocalDate(2026, 8, 31))
-        val vm = buildViewModel(fixedClock, TimeZone.UTC, today)
+        val vm = buildViewModel(today)
         advanceUntilIdle()
         assertEquals(currentMonth, vm.state.value.month, "August IS the month on 31 August")
 
@@ -284,7 +253,7 @@ class SeeTransactionsViewModelTest {
     @Test
     fun `the browsed month does not follow a midnight rollover once the user arrowed away`() = runTest(testDispatcher) {
         val today = MutableStateFlow(LocalDate(2026, 8, 31))
-        val vm = buildViewModel(fixedClock, TimeZone.UTC, today)
+        val vm = buildViewModel(today)
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.OnPreviousMonth)
@@ -387,9 +356,7 @@ class SeeTransactionsViewModelTest {
             monthTransactionsFlow.value = listOf(tx("t-aug", TransactionType.Spend, 1_000))
             totalsFlow.value = TransactionTotals(balance = Money(10_000), movementCount = 3)
 
-            // Built by hand rather than through buildViewModel: the helper re-stubs
-            // searchWithCategory, which would undo the failing stub this test is about.
-            val vm = newViewModel(fixedClock, TimeZone.UTC)
+            val vm = buildViewModel()
             advanceUntilIdle()
 
             vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
@@ -405,29 +372,26 @@ class SeeTransactionsViewModelTest {
         }
 
     @Test
-    fun `the day header resolves HOY against the injected zone, not the machine's`() = runTest(testDispatcher) {
-        // 2026-08-15 22:00 in Lima is already 2026-08-16 08:00 in Karachi, so a movement on the
-        // 15th is HOY for one user and AYER for the other.
-        val eveningInLima = object : Clock {
-            override fun now(): Instant = Instant.parse("2026-08-16T03:00:00Z")
-        }
+    fun `the day header labels a row HOY or AYER against the date todayFlow reports`() = runTest(testDispatcher) {
+        // Zone-correct date derivation is ClockTodayFlow's job, pinned in ClockTodayFlowTest; this
+        // only checks that the ViewModel labels its rows against todayFlow's value.
         monthTransactionsFlow.value = listOf(
             tx("t-1", TransactionType.Spend, 1_000, daysIntoMonth = 15),
         )
 
-        val lima = newViewModel(eveningInLima, TimeZone.of("America/Lima"))
-        val karachi = newViewModel(eveningInLima, TimeZone.of("Asia/Karachi"))
+        val onTheDay = buildViewModel(MutableStateFlow(LocalDate(2026, 8, 15)))
+        val theDayAfter = buildViewModel(MutableStateFlow(LocalDate(2026, 8, 16)))
         advanceUntilIdle()
 
-        assertEquals("HOY", lima.state.value.days.single().primaryLabel)
-        assertEquals("AYER", karachi.state.value.days.single().primaryLabel)
+        assertEquals("HOY", onTheDay.state.value.days.single().primaryLabel)
+        assertEquals("AYER", theDayAfter.state.value.days.single().primaryLabel)
     }
 
     @Test
     fun `HOY relabels to AYER across a midnight rollover with no user interaction`() = runTest(testDispatcher) {
         monthTransactionsFlow.value = listOf(tx("t-1", TransactionType.Spend, 1_000, daysIntoMonth = 15))
         val today = MutableStateFlow(LocalDate(2026, 8, 15))
-        val vm = buildViewModel(fixedClock, TimeZone.UTC, today)
+        val vm = buildViewModel(today)
         advanceUntilIdle()
         assertEquals("HOY", vm.state.value.days.single().primaryLabel)
 

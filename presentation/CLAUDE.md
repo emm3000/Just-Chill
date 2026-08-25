@@ -79,6 +79,9 @@ that Android satisfies from `:androidApp` instead: `PrintlnDiagnosticsLogger` fo
   and `TimeZone` bound, every `Clock`/`TimeZone` field on a `com.emm.` class must be the bound
   instance. That is the net for a hand-written `viewModel { }`/`factory { }` block forgetting a
   `get()` — `profileModule` did exactly that, and resolution-only tests never noticed.
+- **A ViewModel that injects `TodayFlow` takes a fake in its tests** — collecting the real
+  `ClockTodayFlow` inside `runTest` hangs instead of failing, because its self-rescheduling `delay`
+  shares the test scheduler and `advanceUntilIdle()` never returns.
 - `commonTest/` — pure `kotlin.test` suites (formatters, mappers, copy).
 - MockK is JVM-only: nothing from `androidHostTest` may leak into `commonMain` (the iOS compile
   gate breaks).
