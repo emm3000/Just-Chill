@@ -156,7 +156,7 @@ fun RecurringMovementsScreen(
             state.activeItems.find { it.id == id } ?: state.pausedItems.find { it.id == id }
         }
         DeleteRecurringDialog(
-            name = item?.name ?: "",
+            name = item?.name.orEmpty(),
             onConfirm = { onIntent(RecurringMovementsIntent.ConfirmDelete) },
             onDismiss = { onIntent(RecurringMovementsIntent.DismissDelete) },
         )

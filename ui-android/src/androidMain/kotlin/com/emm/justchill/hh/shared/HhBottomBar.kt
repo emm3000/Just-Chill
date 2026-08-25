@@ -57,11 +57,12 @@ fun HhBottomBar(
     onTabClick: (BottomBarRoute) -> Unit,
     onAddClick: () -> Unit,
     showProfileBadge: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(colors.bg)
             .navigationBarsPadding(),

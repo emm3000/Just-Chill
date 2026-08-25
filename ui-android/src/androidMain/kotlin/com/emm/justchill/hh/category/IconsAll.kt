@@ -74,10 +74,7 @@ import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material.icons.rounded.Wifi
 import com.emm.justchill.hh.shared.stripSpanishAccents
 
-fun String.normalizeForSearch(): String =
-    stripSpanishAccents()
-        .lowercase()
-        .trim()
+fun String.normalizeForSearch(): String = stripSpanishAccents().lowercase().trim()
 
 object AppIconCatalog {
 

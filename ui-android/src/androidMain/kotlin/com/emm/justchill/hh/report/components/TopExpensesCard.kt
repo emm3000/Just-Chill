@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.QuestionMark
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -73,7 +71,7 @@ private fun TopCategoryRow(item: TopCategoryItem) {
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
 
-    val icon = AppIconCatalog.findById(item.iconKey)?.icon ?: Icons.Rounded.QuestionMark
+    val icon = AppIconCatalog.findById(item.iconKey).icon
 
     Row(
         modifier = Modifier.fillMaxWidth(),

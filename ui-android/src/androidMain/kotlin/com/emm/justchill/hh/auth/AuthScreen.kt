@@ -126,11 +126,7 @@ private fun AuthMessage.toText(): String = when (this) {
 }
 
 @Composable
-private fun AuthContent(
-    state: AuthUiState,
-    onIntent: (AuthIntent) -> Unit,
-    showGoogleSignIn: Boolean = true,
-) {
+private fun AuthContent(state: AuthUiState, onIntent: (AuthIntent) -> Unit, showGoogleSignIn: Boolean = true) {
     val colors = LocalEmmColors.current
 
     Column(
@@ -170,8 +166,8 @@ private fun AuthContent(
 private fun AuthFormStep(
     state: AuthUiState.Form,
     onIntent: (AuthIntent) -> Unit,
-    showGoogleSignIn: Boolean = true,
     modifier: Modifier = Modifier,
+    showGoogleSignIn: Boolean = true,
 ) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current

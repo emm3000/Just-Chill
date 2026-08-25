@@ -58,7 +58,7 @@ fun <T> EmmDropDown(
         )
 
         val selected: String by remember(itemSelected) {
-            mutableStateOf(itemSelected?.toString() ?: "")
+            mutableStateOf(itemSelected?.toString().orEmpty())
         }
 
         ExposedDropdownMenuBox(

@@ -475,8 +475,6 @@ private fun ColorRow(selected: CategoryColor, onSelect: (CategoryColor) -> Unit)
 
 @Composable
 private fun ColorDot(color: CategoryColor, selected: Boolean, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
-
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier

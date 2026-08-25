@@ -142,7 +142,7 @@ fun AccountsScreen(
         ManageCategoriesRow(onClick = addCategory)
     }
 
-    state.pendingEdit?.let {
+    state.pendingEdit?.let { _ ->
         EditAccountDialog(
             name = state.editName,
             onNameChange = { onIntent(AccountsIntent.OnEditNameChange(it)) },
@@ -284,7 +284,6 @@ private fun formatMovements(count: Int): String = when (count) {
 
 @Composable
 private fun AccountIconTile(icon: ImageVector, tintColor: Color) {
-    val colors = LocalEmmColors.current
     val shape = RoundedCornerShape(8.dp)
 
     Box(

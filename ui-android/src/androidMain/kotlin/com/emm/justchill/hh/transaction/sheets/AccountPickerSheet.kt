@@ -263,7 +263,6 @@ private fun AccountRow(
     }
 }
 
-@Composable
 internal fun accountSwatchColor(
     name: String,
     type: AccountType,
