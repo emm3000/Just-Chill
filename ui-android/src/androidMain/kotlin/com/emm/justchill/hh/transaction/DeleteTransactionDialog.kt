@@ -62,15 +62,17 @@ internal fun DeleteTransactionDialog(
     }
 }
 
+// The content mirrors the dialog shell's inputs one for one; the Dialog wrapper adds none of its own.
+@Suppress("LongParameterList")
 @Composable
 private fun DeleteTransactionDialogContent(
     type: TransactionType,
     amountCents: String,
+    accountName: String?,
+    categoryName: String?,
+    categoryColor: Color?,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
-    accountName: String? = null,
-    categoryName: String? = null,
-    categoryColor: Color? = null,
 ) {
     val colors = LocalEmmColors.current
     val typography = LocalEmmType.current
