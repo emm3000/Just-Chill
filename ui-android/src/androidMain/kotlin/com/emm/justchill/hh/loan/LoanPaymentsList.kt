@@ -31,7 +31,6 @@ import com.emm.justchill.core.ui.atoms.EmmRowMenu
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
-import com.emm.justchill.core.ui.preview.PreviewRedmi15C
 
 // Items rather than a composable: the detail screen owns the only scroll, so the abonos cannot
 // carry a lazy list of their own without nesting one inside it.
@@ -155,7 +154,6 @@ private val previewLoanPayments = listOf(
 )
 
 @Preview
-@PreviewRedmi15C
 @Composable
 private fun LoanPaymentItemsPreview() {
     EmmTheme {
@@ -171,7 +169,6 @@ private fun LoanPaymentItemsPreview() {
 }
 
 @Preview
-@PreviewRedmi15C
 @Composable
 private fun LoanPaymentItemsEmptyPreview() {
     EmmTheme {
