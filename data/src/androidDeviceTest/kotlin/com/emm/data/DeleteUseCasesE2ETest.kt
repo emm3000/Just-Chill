@@ -20,7 +20,6 @@ import com.emm.domain.category.CategoryType
 import com.emm.domain.category.CategoryUpsert
 import com.emm.domain.category.DeleteCategoryUseCase
 import com.emm.domain.recurring.DeleteRecurringMovementUseCase
-import com.emm.domain.recurring.RecurringMovementInsert
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
@@ -131,7 +130,11 @@ class DeleteUseCasesE2ETest {
         return txId
     }
 
-    private suspend fun insertRecurring(id: String, accountId: AccountId, categoryId: CategoryId?): RecurringMovementId {
+    private suspend fun insertRecurring(
+        id: String,
+        accountId: AccountId,
+        categoryId: CategoryId?,
+    ): RecurringMovementId {
         // Insert via direct SQL to supply our own id (the DataSource generates a UUID on create).
         database.recurring_movementsQueries.insert(
             id = id,

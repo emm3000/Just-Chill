@@ -16,6 +16,64 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+private fun SqlDriver.exec(sql: String) = execute(null, sql, 0)
+
+private val accountsTableV2 = """
+    CREATE TABLE accounts (
+        accountId  TEXT NOT NULL PRIMARY KEY,
+        name       TEXT NOT NULL,
+        type       TEXT NOT NULL DEFAULT 'Bank',
+        currency   TEXT NOT NULL DEFAULT 'PEN',
+        updatedAt  INTEGER NOT NULL,
+        createdAt  INTEGER NOT NULL
+    );
+""".trimIndent()
+
+private val categoriesTableV2 = """
+    CREATE TABLE categories (
+        categoryId    TEXT NOT NULL PRIMARY KEY,
+        name          TEXT NOT NULL,
+        icon          TEXT NOT NULL,
+        color         TEXT NOT NULL,
+        categoryType  TEXT NOT NULL,
+        isDefault     INTEGER NOT NULL DEFAULT 0,
+        updatedAt     INTEGER NOT NULL,
+        createdAt     INTEGER NOT NULL
+    );
+""".trimIndent()
+
+private val transactionsTableV2 = """
+    CREATE TABLE transactions (
+        transactionId  TEXT NOT NULL PRIMARY KEY,
+        type           TEXT NOT NULL,
+        amount         INTEGER NOT NULL,
+        description    TEXT NOT NULL DEFAULT '',
+        date           INTEGER NOT NULL,
+        categoryId     TEXT REFERENCES categories(categoryId) ON DELETE SET NULL,
+        accountId      TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
+        createdAt      INTEGER NOT NULL,
+        updatedAt      INTEGER NOT NULL
+    );
+""".trimIndent()
+
+private val recurringMovementsTableV2 = """
+    CREATE TABLE recurring_movements (
+        id                  TEXT NOT NULL PRIMARY KEY,
+        name                TEXT NOT NULL,
+        type                TEXT NOT NULL,
+        amount              INTEGER,
+        description         TEXT NOT NULL DEFAULT '',
+        categoryId          TEXT REFERENCES categories(categoryId) ON DELETE SET NULL,
+        accountId           TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
+        frequency           TEXT NOT NULL DEFAULT 'Monthly',
+        dayOfMonth          INTEGER NOT NULL,
+        isActive            INTEGER NOT NULL DEFAULT 1,
+        lastConfirmedPeriod TEXT,
+        createdAt           INTEGER NOT NULL,
+        updatedAt           INTEGER NOT NULL
+    );
+""".trimIndent()
+
 @RunWith(AndroidJUnit4::class)
 class MigrationV2ToV3Test {
 
@@ -26,74 +84,10 @@ class MigrationV2ToV3Test {
         override val version: Long = 2
 
         override fun create(driver: SqlDriver): QueryResult.Value<Unit> {
-            driver.execute(
-                null,
-                """
-                CREATE TABLE accounts (
-                    accountId  TEXT NOT NULL PRIMARY KEY,
-                    name       TEXT NOT NULL,
-                    type       TEXT NOT NULL DEFAULT 'Bank',
-                    currency   TEXT NOT NULL DEFAULT 'PEN',
-                    updatedAt  INTEGER NOT NULL,
-                    createdAt  INTEGER NOT NULL
-                );
-                """.trimIndent(),
-                0,
-            )
-            driver.execute(
-                null,
-                """
-                CREATE TABLE categories (
-                    categoryId    TEXT NOT NULL PRIMARY KEY,
-                    name          TEXT NOT NULL,
-                    icon          TEXT NOT NULL,
-                    color         TEXT NOT NULL,
-                    categoryType  TEXT NOT NULL,
-                    isDefault     INTEGER NOT NULL DEFAULT 0,
-                    updatedAt     INTEGER NOT NULL,
-                    createdAt     INTEGER NOT NULL
-                );
-                """.trimIndent(),
-                0,
-            )
-            driver.execute(
-                null,
-                """
-                CREATE TABLE transactions (
-                    transactionId  TEXT NOT NULL PRIMARY KEY,
-                    type           TEXT NOT NULL,
-                    amount         INTEGER NOT NULL,
-                    description    TEXT NOT NULL DEFAULT '',
-                    date           INTEGER NOT NULL,
-                    categoryId     TEXT REFERENCES categories(categoryId) ON DELETE SET NULL,
-                    accountId      TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
-                    createdAt      INTEGER NOT NULL,
-                    updatedAt      INTEGER NOT NULL
-                );
-                """.trimIndent(),
-                0,
-            )
-            driver.execute(
-                null,
-                """
-                CREATE TABLE recurring_movements (
-                    id                  TEXT NOT NULL PRIMARY KEY,
-                    name                TEXT NOT NULL,
-                    type                TEXT NOT NULL,
-                    amount              INTEGER,
-                    description         TEXT NOT NULL DEFAULT '',
-                    categoryId          TEXT REFERENCES categories(categoryId) ON DELETE SET NULL,
-                    accountId           TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
-                    frequency           TEXT NOT NULL DEFAULT 'Monthly',
-                    dayOfMonth          INTEGER NOT NULL,
-                    isActive            INTEGER NOT NULL DEFAULT 1,
-                    lastConfirmedPeriod TEXT,
-                    createdAt           INTEGER NOT NULL,
-                    updatedAt           INTEGER NOT NULL
-                );
-                """.trimIndent(),
-                0,
-            )
+            driver.exec(accountsTableV2)
+            driver.exec(categoriesTableV2)
+            driver.exec(transactionsTableV2)
+            driver.exec(recurringMovementsTableV2)
             return QueryResult.Unit
         }
 
@@ -120,10 +114,35 @@ class MigrationV2ToV3Test {
         )
         database = EmmDatabaseData(driver)
 
-        driver.execute(null, "INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt) VALUES ('A1', 'BCP', 'Bank', 'PEN', 1000, 1000)", 0)
-        driver.execute(null, "INSERT INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt) VALUES ('C1', 'Sueldo', 'salary', 'green', 'Income', 0, 1000, 1000)", 0)
-        driver.execute(null, "INSERT INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt) VALUES ('TX1', 'Income', 350000, 'Sueldo mayo', 2000, 'C1', 'A1', 2000, 2000)", 0)
-        driver.execute(null, "INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, createdAt, updatedAt) VALUES ('RM1', 'Netflix', 'Spend', 4490, '', 'C1', 'A1', 'Monthly', 5, 1, 3000, 3000)", 0)
+        driver.exec(
+            """
+            INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt)
+            VALUES ('A1', 'BCP', 'Bank', 'PEN', 1000, 1000)
+            """.trimIndent(),
+        )
+        driver.exec(
+            """
+            INSERT INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt)
+            VALUES ('C1', 'Sueldo', 'salary', 'green', 'Income', 0, 1000, 1000)
+            """.trimIndent(),
+        )
+        driver.exec(
+            """
+            INSERT INTO transactions(
+                transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt
+            )
+            VALUES ('TX1', 'Income', 350000, 'Sueldo mayo', 2000, 'C1', 'A1', 2000, 2000)
+            """.trimIndent(),
+        )
+        driver.exec(
+            """
+            INSERT INTO recurring_movements(
+                id, name, type, amount, description, categoryId, accountId,
+                frequency, dayOfMonth, isActive, createdAt, updatedAt
+            )
+            VALUES ('RM1', 'Netflix', 'Spend', 4490, '', 'C1', 'A1', 'Monthly', 5, 1, 3000, 3000)
+            """.trimIndent(),
+        )
     }
 
     @After
