@@ -35,7 +35,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 
-private data class UnderlineTarget(val color: Color, val strokeWidth: Dp)
+private data class UnderlineStyle(val color: Color, val strokeWidth: Dp)
 
 @Composable
 fun EmmTextInput(
@@ -64,9 +64,9 @@ fun EmmTextInput(
     val isFocused by interactionSource.collectIsFocusedAsState()
 
     val underlineTarget = when {
-        isError -> UnderlineTarget(colors.danger, 2.dp)
-        isFocused -> UnderlineTarget(colors.accentFocus, 2.dp)
-        else -> UnderlineTarget(colors.border, 1.dp)
+        isError -> UnderlineStyle(colors.danger, 2.dp)
+        isFocused -> UnderlineStyle(colors.accentFocus, 2.dp)
+        else -> UnderlineStyle(colors.border, 1.dp)
     }
     val underlineColor by animateColorAsState(
         targetValue = underlineTarget.color,

@@ -60,7 +60,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 
 private data class CtaContent(val label: String, val sublabel: String?)
-private data class ActionContent(val topBarTitle: String, val amountTone: AmountTone, val ctaVerb: String)
+private data class TransactionKindContent(val topBarTitle: String, val amountTone: AmountTone, val ctaLabel: String)
 
 @Composable
 fun AddTransactionScreen(
@@ -118,15 +118,15 @@ private fun AddTransactionScreenContent(
     val ctaAmount = remember(state.amount) {
         "S/ ${formatCentsForDisplay(state.amount)}"
     }
-    val action = if (isSpend) {
-        ActionContent(topBarTitle = "Nuevo gasto", amountTone = AmountTone.Neutral, ctaVerb = "Anotar gasto")
+    val kind = if (isSpend) {
+        TransactionKindContent(topBarTitle = "Nuevo gasto", amountTone = AmountTone.Neutral, ctaLabel = "Anotar gasto")
     } else {
-        ActionContent(topBarTitle = "Nuevo ingreso", amountTone = AmountTone.Pos, ctaVerb = "Anotar ingreso")
+        TransactionKindContent(topBarTitle = "Nuevo ingreso", amountTone = AmountTone.Pos, ctaLabel = "Anotar ingreso")
     }
     val cta = if (noAccounts) {
         CtaContent(label = "Crea una cuenta primero", sublabel = null)
     } else {
-        CtaContent(label = action.ctaVerb, sublabel = ctaAmount)
+        CtaContent(label = kind.ctaLabel, sublabel = ctaAmount)
     }
 
     Column(
@@ -135,7 +135,7 @@ private fun AddTransactionScreenContent(
             .background(colors.bg),
     ) {
         JcTopBar(
-            title = action.topBarTitle,
+            title = kind.topBarTitle,
             left = {
                 IconBtn(
                     icon = Icons.Outlined.Close,
@@ -165,7 +165,7 @@ private fun AddTransactionScreenContent(
             AmountHero(
                 value = centsToSoles(state.amount),
                 size = 48.sp,
-                tone = action.amountTone,
+                tone = kind.amountTone,
                 showCaret = true,
             )
         }

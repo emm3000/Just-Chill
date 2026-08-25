@@ -142,7 +142,7 @@ fun AccountsScreen(
         ManageCategoriesRow(onClick = addCategory)
     }
 
-    state.pendingEdit?.let { _ ->
+    if (state.pendingEdit != null) {
         EditAccountDialog(
             name = state.editName,
             onNameChange = { onIntent(AccountsIntent.OnEditNameChange(it)) },
