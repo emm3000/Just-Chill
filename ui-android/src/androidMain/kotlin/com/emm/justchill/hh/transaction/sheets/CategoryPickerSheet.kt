@@ -209,9 +209,6 @@ fun CategoryPickerSheet(
                         CategoryRow(
                             category = category,
                             isActive = isActive,
-                            accentColor = colors.accent,
-                            textPrimary = colors.textPrimary,
-                            activeBg = colors.surface1,
                             onClick = {
                                 onSelect(category)
                                 onDismiss()
@@ -224,9 +221,6 @@ fun CategoryPickerSheet(
                         CategoryRow(
                             category = category,
                             isActive = isActive,
-                            accentColor = colors.accent,
-                            textPrimary = colors.textPrimary,
-                            activeBg = colors.surface1,
                             onClick = {
                                 onSelect(category)
                                 onDismiss()
@@ -239,9 +233,6 @@ fun CategoryPickerSheet(
                         CategoryRow(
                             category = category,
                             isActive = isActive,
-                            accentColor = colors.accent,
-                            textPrimary = colors.textPrimary,
-                            activeBg = colors.surface1,
                             onClick = {
                                 onSelect(category)
                                 onDismiss()
@@ -299,15 +290,13 @@ private fun SectionHeader(text: String) {
 private fun CategoryRow(
     category: SelectableCategory,
     isActive: Boolean,
-    accentColor: Color,
-    textPrimary: Color,
-    activeBg: Color,
     onClick: () -> Unit,
 ) {
+    val colors = LocalEmmColors.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(if (isActive) activeBg else Color.Transparent)
+            .background(if (isActive) colors.surface1 else Color.Transparent)
             .clickable(onClick = onClick)
             .padding(horizontal = 24.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -325,7 +314,7 @@ private fun CategoryRow(
             fontSize = 15.sp,
             fontWeight = FontWeight.W500,
             fontFamily = InterFontFamily,
-            color = textPrimary,
+            color = colors.textPrimary,
             letterSpacing = (-0.15).sp,
             modifier = Modifier.weight(1f),
         )
@@ -336,7 +325,7 @@ private fun CategoryRow(
                 modifier = Modifier
                     .size(22.dp)
                     .clip(CircleShape)
-                    .background(accentColor),
+                    .background(colors.accent),
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Close,

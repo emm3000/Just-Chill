@@ -128,10 +128,6 @@ fun AccountPickerSheet(
                         account = account,
                         isActive = isActive,
                         swatchColor = swatchColor,
-                        accentColor = colors.accent,
-                        textPrimary = colors.textPrimary,
-                        textTertiary = colors.textTertiary,
-                        activeBg = colors.surface1,
                         onClick = {
                             onSelect(account)
                             onDismiss()
@@ -188,12 +184,9 @@ private fun AccountRow(
     account: Account,
     isActive: Boolean,
     swatchColor: Color,
-    accentColor: Color,
-    textPrimary: Color,
-    textTertiary: Color,
-    activeBg: Color,
     onClick: () -> Unit,
 ) {
+    val colors = LocalEmmColors.current
     val icon: ImageVector = when (account.type) {
         AccountType.Bank -> Icons.Outlined.AccountBalance
         AccountType.Cash -> Icons.Outlined.AttachMoney
@@ -213,7 +206,7 @@ private fun AccountRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(if (isActive) activeBg else Color.Transparent)
+            .background(if (isActive) colors.surface1 else Color.Transparent)
             .clickable(onClick = onClick)
             .padding(horizontal = 24.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -232,7 +225,7 @@ private fun AccountRow(
                 fontSize = 15.sp,
                 fontWeight = FontWeight.W500,
                 fontFamily = InterFontFamily,
-                color = textPrimary,
+                color = colors.textPrimary,
                 letterSpacing = (-0.15).sp,
             )
             Text(
@@ -240,7 +233,7 @@ private fun AccountRow(
                 fontSize = 11.sp,
                 fontFamily = InterFontFamily,
                 fontWeight = FontWeight.W500,
-                color = textTertiary,
+                color = colors.textTertiary,
             )
         }
 
@@ -250,7 +243,7 @@ private fun AccountRow(
                 modifier = Modifier
                     .size(24.dp)
                     .clip(CircleShape)
-                    .background(accentColor),
+                    .background(colors.accent),
             ) {
                 Icon(
                     imageVector = Icons.Outlined.AccountBalanceWallet,
