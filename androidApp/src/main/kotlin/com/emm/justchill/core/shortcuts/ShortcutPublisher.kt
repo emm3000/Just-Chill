@@ -37,13 +37,14 @@ class ShortcutPublisher(private val context: Context, private val getShortcutCom
         }
     }
 
+    // No `Intent.apply { }`: Intent's own `type` property (the MIME type) would shadow
+    // ShortcutCombo.type inside that lambda's implicit receiver and silently extra a null.
     private fun ShortcutCombo.toShortcutInfo(rank: Int): ShortcutInfoCompat {
-        val intent = Intent(context, MainActivity::class.java).apply {
-            action = ACTION_ADD_TRANSACTION
-            putExtra(EXTRA_ACCOUNT_ID, accountId)
-            putExtra(EXTRA_CATEGORY_ID, categoryId)
-            putExtra(EXTRA_TYPE, type)
-        }
+        val intent = Intent(context, MainActivity::class.java)
+        intent.action = ACTION_ADD_TRANSACTION
+        intent.putExtra(EXTRA_ACCOUNT_ID, accountId)
+        intent.putExtra(EXTRA_CATEGORY_ID, categoryId)
+        intent.putExtra(EXTRA_TYPE, type)
         return ShortcutInfoCompat.Builder(context, "combo-$accountId-$categoryId-$type")
             .setShortLabel(shortLabel)
             .setLongLabel(longLabel)
