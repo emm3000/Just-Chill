@@ -3,11 +3,9 @@ package com.emm.justchill.hh.category
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,21 +14,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -227,80 +217,6 @@ private fun Section(eyebrow: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun PreviewChip(
-    name: String,
-    icon: IconCatalog,
-    color: CategoryColor,
-    type: CategoryType,
-    modifier: Modifier = Modifier,
-) {
-    val colors = LocalEmmColors.current
-
-    val displayName = name.trim().ifBlank { "Tu categoría" }
-    val nameColor = if (name.isBlank()) colors.textTertiary else colors.textPrimary
-    val shape = RoundedCornerShape(999.dp)
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = modifier
-            .clip(shape)
-            .background(colors.surface1)
-            .border(1.dp, colors.border, shape)
-            .padding(start = 10.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(34.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(colors.surface3),
-        ) {
-            Icon(
-                imageVector = icon.icon,
-                contentDescription = null,
-                tint = color.primary,
-                modifier = Modifier.size(18.dp),
-            )
-        }
-        Text(
-            text = displayName,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.W600,
-            fontFamily = InterFontFamily,
-            color = nameColor,
-            letterSpacing = (-0.15).sp,
-        )
-        TypeBadge(type = type)
-    }
-}
-
-@Composable
-private fun TypeBadge(type: CategoryType) {
-    val colors = LocalEmmColors.current
-    val isIncome = type == CategoryType.Income
-    val bg = if (isIncome) colors.posMuted else colors.negMuted
-    val fg = if (isIncome) colors.success else colors.danger
-    val label = if (isIncome) "Ingreso" else "Gasto"
-
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(bg)
-            .padding(horizontal = 9.dp, vertical = 3.dp),
-    ) {
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.W600,
-            fontFamily = InterFontFamily,
-            color = fg,
-            letterSpacing = 0.sp,
-        )
-    }
-}
-
-@Composable
 private fun NameInput(
     value: String,
     onValueChange: (String) -> Unit,
@@ -402,99 +318,6 @@ private fun TypeSegCell(label: String, selected: Boolean, onClick: () -> Unit, m
             fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
             color = fg,
         )
-    }
-}
-
-@Composable
-private fun IconGrid(selected: IconCatalog, accent: Color, onSelect: (IconCatalog) -> Unit) {
-    LazyHorizontalGrid(
-        rows = GridCells.Fixed(2),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(0.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(112.dp),
-    ) {
-        items(AppIconCatalog.catalog, key = IconCatalog::id) { icon ->
-            IconCell(
-                icon = icon,
-                selected = icon == selected,
-                accent = accent,
-                onClick = { onSelect(icon) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun IconCell(icon: IconCatalog, selected: Boolean, accent: Color, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val shape = RoundedCornerShape(12.dp)
-    val border = if (selected) accent else colors.border
-    val bg = if (selected) accent.copy(alpha = 0.14f) else colors.surface1
-    val tint = if (selected) accent else colors.textSecondary
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(52.dp)
-            .clip(shape)
-            .background(bg)
-            .border(1.dp, border, shape)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            ),
-    ) {
-        Icon(
-            imageVector = icon.icon,
-            contentDescription = icon.name,
-            tint = tint,
-            modifier = Modifier.size(20.dp),
-        )
-    }
-}
-
-@Composable
-private fun ColorRow(selected: CategoryColor, onSelect: (CategoryColor) -> Unit) {
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        contentPadding = PaddingValues(horizontal = 2.dp),
-    ) {
-        items(allColors, key = CategoryColor::id) { color ->
-            ColorDot(
-                color = color,
-                selected = color == selected,
-                onClick = { onSelect(color) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun ColorDot(color: CategoryColor, selected: Boolean, onClick: () -> Unit) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(44.dp)
-            .clip(CircleShape)
-            .background(color.primary)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            ),
-    ) {
-        if (selected) {
-            Icon(
-                imageVector = Icons.Outlined.Check,
-                contentDescription = "Seleccionado",
-                tint = Color.White,
-                modifier = Modifier.size(18.dp),
-            )
-        }
     }
 }
 
