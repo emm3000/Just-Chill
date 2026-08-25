@@ -2,13 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>ArgumentListWrapping:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$( null, "SELECT amount FROM transactions WHERE transactionId = 'TX1'", { cursor -&gt; QueryResult.Value(if (cursor.next().value) cursor.getLong(0) else null) }, 0 )</ID>
-    <ID>ArgumentListWrapping:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$( null, "SELECT name FROM accounts WHERE accountId = 'A1'", { cursor -&gt; QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null) }, 0 )</ID>
-    <ID>ArgumentListWrapping:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$( null, "SELECT name FROM categories WHERE categoryId = 'C1'", { cursor -&gt; QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null) }, 0 )</ID>
-    <ID>ArgumentListWrapping:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$( null, "SELECT name FROM recurring_movements WHERE id = 'RM1'", { cursor -&gt; QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null) }, 0 )</ID>
-    <ID>ArgumentListWrapping:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$(null, "INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt) VALUES ('A1', 'BCP', 'Bank', 'PEN', 1000, 1000)", 0)</ID>
-    <ID>ArgumentListWrapping:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$(null, "INSERT INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt) VALUES ('C1', 'Sueldo', 'salary', 'green', 'Income', 0, 1000, 1000)", 0)</ID>
-    <ID>ArgumentListWrapping:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$(null, "INSERT INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt) VALUES ('TX1', 'Income', 350000, 'Sueldo mayo', 2000, 'C1', 'A1', 2000, 2000)", 0)</ID>
     <ID>ArgumentListWrapping:MigrationV2ToV3Test.kt:MigrationV2ToV3Test$(null, "INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt) VALUES ('A1', 'BCP', 'Bank', 'PEN', 1000, 1000)", 0)</ID>
     <ID>ArgumentListWrapping:MigrationV2ToV3Test.kt:MigrationV2ToV3Test$(null, "INSERT INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt) VALUES ('C1', 'Sueldo', 'salary', 'green', 'Income', 0, 1000, 1000)", 0)</ID>
     <ID>ArgumentListWrapping:MigrationV2ToV3Test.kt:MigrationV2ToV3Test$(null, "INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, createdAt, updatedAt) VALUES ('RM1', 'Netflix', 'Spend', 4490, '', 'C1', 'A1', 'Monthly', 5, 1, 3000, 3000)", 0)</ID>
@@ -16,21 +9,12 @@
     <ID>FunctionSignature:DeleteUseCasesE2ETest.kt:DeleteUseCasesE2ETest$private suspend fun insertRecurring: RecurringMovementId</ID>
     <ID>LongMethod:MigrationV2ToV3Test.kt:MigrationV2ToV3Test.&lt;no name provided&gt;$override fun create: QueryResult.Value&lt;Unit&gt;</ID>
     <ID>MaxLineLength:DeleteUseCasesE2ETest.kt:DeleteUseCasesE2ETest$private suspend</ID>
-    <ID>MaxLineLength:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$"INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, createdAt, updatedAt) VALUES ('RM1', 'Netflix', 'Spend', 4490, '', 'C1', 'A1', 'Monthly', 5, 1, 3000, 3000)"</ID>
-    <ID>MaxLineLength:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$driver.execute(null, "INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt) VALUES ('A1', 'BCP', 'Bank', 'PEN', 1000, 1000)", 0)</ID>
-    <ID>MaxLineLength:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$driver.execute(null, "INSERT INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt) VALUES ('C1', 'Sueldo', 'salary', 'green', 'Income', 0, 1000, 1000)", 0)</ID>
-    <ID>MaxLineLength:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$driver.execute(null, "INSERT INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt) VALUES ('TX1', 'Income', 350000, 'Sueldo mayo', 2000, 'C1', 'A1', 2000, 2000)", 0)</ID>
     <ID>MaxLineLength:MigrationV2ToV3Test.kt:MigrationV2ToV3Test$driver.execute(null, "INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt) VALUES ('A1', 'BCP', 'Bank', 'PEN', 1000, 1000)", 0)</ID>
     <ID>MaxLineLength:MigrationV2ToV3Test.kt:MigrationV2ToV3Test$driver.execute(null, "INSERT INTO categories(categoryId, name, icon, color, categoryType, isDefault, updatedAt, createdAt) VALUES ('C1', 'Sueldo', 'salary', 'green', 'Income', 0, 1000, 1000)", 0)</ID>
     <ID>MaxLineLength:MigrationV2ToV3Test.kt:MigrationV2ToV3Test$driver.execute(null, "INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, createdAt, updatedAt) VALUES ('RM1', 'Netflix', 'Spend', 4490, '', 'C1', 'A1', 'Monthly', 5, 1, 3000, 3000)", 0)</ID>
     <ID>MaxLineLength:MigrationV2ToV3Test.kt:MigrationV2ToV3Test$driver.execute(null, "INSERT INTO transactions(transactionId, type, amount, description, date, categoryId, accountId, createdAt, updatedAt) VALUES ('TX1', 'Income', 350000, 'Sueldo mayo', 2000, 'C1', 'A1', 2000, 2000)", 0)</ID>
     <ID>MaximumLineLength:DeleteUseCasesE2ETest.kt:DeleteUseCasesE2ETest${</ID>
-    <ID>MaximumLineLength:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$)</ID>
     <ID>MaximumLineLength:MigrationV2ToV3Test.kt:MigrationV2ToV3Test$)</ID>
     <ID>NoUnusedImports:DeleteUseCasesE2ETest.kt:com.emm.data.DeleteUseCasesE2ETest.kt</ID>
-    <ID>TrailingCommaOnCallSite:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$( null, "SELECT amount FROM transactions WHERE transactionId = 'TX1'", { cursor -&gt; QueryResult.Value(if (cursor.next().value) cursor.getLong(0) else null) }, 0 )</ID>
-    <ID>TrailingCommaOnCallSite:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$( null, "SELECT name FROM accounts WHERE accountId = 'A1'", { cursor -&gt; QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null) }, 0 )</ID>
-    <ID>TrailingCommaOnCallSite:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$( null, "SELECT name FROM categories WHERE categoryId = 'C1'", { cursor -&gt; QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null) }, 0 )</ID>
-    <ID>TrailingCommaOnCallSite:MigrationV1ToV2Test.kt:MigrationV1ToV2Test$( null, "SELECT name FROM recurring_movements WHERE id = 'RM1'", { cursor -&gt; QueryResult.Value(if (cursor.next().value) cursor.getString(0) else null) }, 0 )</ID>
   </CurrentIssues>
 </SmellBaseline>

@@ -4,9 +4,11 @@ import com.emm.buildlogic.internal.BuildConventions
 import com.emm.buildlogic.internal.libs
 import com.emm.buildlogic.internal.library
 import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.DetektCreateBaselineTask
 import dev.detekt.gradle.extensions.DetektExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.SourceTask
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
 
@@ -29,11 +31,7 @@ class DetektConventionPlugin : Plugin<Project> {
         }
 
         tasks.withType<Detekt>().configureEach {
-            // Both excludes are needed: Ant patterns match the path RELATIVE to each source root,
-            // and SQLDelight registers `<module>/build/generated/sqldelight/code/<db>/<sourceSet>`
-            // as a root, so `**/build/**` only ever sees `com/emm/data/TransactionsQueries.kt`.
-            exclude("**/build/**")
-            exclude { element -> BuildConventions.isGeneratedSource(element.file.invariantSeparatorsPath) }
+            excludeGeneratedSources()
             jvmTarget.set(BuildConventions.JVM_TARGET)
             reports {
                 html.required.set(true)
@@ -41,5 +39,17 @@ class DetektConventionPlugin : Plugin<Project> {
                 checkstyle.required.set(false)
             }
         }
+
+        tasks.withType<DetektCreateBaselineTask>().configureEach {
+            excludeGeneratedSources()
+        }
+    }
+
+    // Both excludes are needed: Ant patterns match the path RELATIVE to each source root, and
+    // SQLDelight registers `<module>/build/generated/sqldelight/code/<db>/<sourceSet>` as a root,
+    // so `**/build/**` only ever sees `com/emm/data/TransactionsQueries.kt`.
+    private fun SourceTask.excludeGeneratedSources() {
+        exclude("**/build/**")
+        exclude { element -> BuildConventions.isGeneratedSource(element.file.invariantSeparatorsPath) }
     }
 }

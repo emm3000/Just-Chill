@@ -137,6 +137,5 @@
     <ID>UnusedParameter:Experiences.kt:navController: NavController</ID>
     <ID>UnusedParameter:PaddingScreen.kt:modifier: Modifier = Modifier</ID>
     <ID>UnusedPrivateFunction:EmmAmountChill.kt:@PreviewLightDark @Composable private fun AmountPreview</ID>
-    <ID>UnusedPrivateFunction:EmmComponentsPreview.kt:@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 1600) @Composable private fun EmmComponentsGallery</ID>
   </CurrentIssues>
 </SmellBaseline>
