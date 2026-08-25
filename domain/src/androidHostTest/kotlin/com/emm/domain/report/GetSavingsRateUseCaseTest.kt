@@ -13,24 +13,17 @@ import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.UtcOffset
-import kotlinx.datetime.asTimeZone
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.time.Clock
-import kotlin.time.Instant
 
 class GetSavingsRateUseCaseTest {
 
     private val repository = mockk<TransactionStatsRepository>()
     private val useCase = GetSavingsRateUseCase(repository)
 
-    private val fixedClock: Clock = object : Clock {
-        override fun now(): Instant = Instant.parse("2026-05-15T12:00:00Z")
-    }
+    private val currentMonth = YearMonth(2026, Month.MAY)
 
     private val amountsByMonth = mutableMapOf<YearMonth, Pair<Long, Long>>()
 
@@ -78,24 +71,11 @@ class GetSavingsRateUseCaseTest {
     }
 
     @Test
-    fun `the window ends at the month of the injected zone, not the device's`() = runTest {
-        val nearMidnight: Clock = object : Clock {
-            override fun now(): Instant = Instant.parse("2026-09-01T02:00:00Z")
-        }
-
-        val atLima = useCase(clock = nearMidnight, zone = UtcOffset(hours = -5).asTimeZone(), months = 1)
-        val atUtc = useCase(clock = nearMidnight, zone = UtcOffset(hours = 0).asTimeZone(), months = 1)
-
-        assertEquals(YearMonth(2026, Month.AUGUST), atLima.monthly.single().yearMonth)
-        assertEquals(YearMonth(2026, Month.SEPTEMBER), atUtc.monthly.single().yearMonth)
-    }
-
-    @Test
     fun `happy path - returns correct savings rate and delta`() = runTest {
         val priorEnd = stubMonths(YearMonth(2026, Month.MAY), count = 6, income = 600_000L, expense = 400_000L)
         stubMonths(priorEnd, count = 6, income = 500_000L, expense = 400_000L)
 
-        val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
+        val result = useCase(currentMonth, months = 6)
 
         assertEquals(33, result.currentRatePercent)
         assertEquals(13, result.deltaPointsVsPrior)
@@ -106,7 +86,7 @@ class GetSavingsRateUseCaseTest {
     fun `the whole window is read in a single round-trip, oldest month first`() = runTest {
         val ranges = slot<List<MonthRange>>()
 
-        useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
+        useCase(currentMonth, months = 6)
 
         coVerify(exactly = 1) { repository.monthlyAmountByCategoryForRanges(capture(ranges)) }
         assertEquals(12, ranges.captured.size)
@@ -120,7 +100,7 @@ class GetSavingsRateUseCaseTest {
     fun `each range covers exactly its own calendar month`() = runTest {
         val ranges = slot<List<MonthRange>>()
 
-        useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
+        useCase(currentMonth, months = 6)
 
         coVerify { repository.monthlyAmountByCategoryForRanges(capture(ranges)) }
         ranges.captured.forEach { range ->
@@ -135,7 +115,7 @@ class GetSavingsRateUseCaseTest {
 
     @Test
     fun `returns zero rate when income is zero`() = runTest {
-        val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
+        val result = useCase(currentMonth, months = 6)
 
         assertEquals(0, result.currentRatePercent)
         assertNull(result.deltaPointsVsPrior)
@@ -145,7 +125,7 @@ class GetSavingsRateUseCaseTest {
     fun `overspending reports a negative rate instead of hiding it as zero`() = runTest {
         stubMonths(YearMonth(2026, Month.MAY), count = 1, income = 100_000L, expense = 150_000L)
 
-        val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
+        val result = useCase(currentMonth, months = 6)
 
         assertEquals(-50, result.currentRatePercent)
     }
@@ -154,7 +134,7 @@ class GetSavingsRateUseCaseTest {
     fun `rate reaches 100 when nothing is spent`() = runTest {
         stubMonths(YearMonth(2026, Month.MAY), count = 1, income = 100_000L, expense = 0L)
 
-        val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
+        val result = useCase(currentMonth, months = 6)
 
         assertEquals(100, result.currentRatePercent)
     }
@@ -164,7 +144,7 @@ class GetSavingsRateUseCaseTest {
         val priorEnd = stubMonths(YearMonth(2026, Month.MAY), count = 6, income = 100_000L, expense = 150_000L)
         stubMonths(priorEnd, count = 6, income = 100_000L, expense = 250_000L)
 
-        val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
+        val result = useCase(currentMonth, months = 6)
 
         assertEquals(-50, result.currentRatePercent)
         assertEquals(100, result.deltaPointsVsPrior)
@@ -174,14 +154,14 @@ class GetSavingsRateUseCaseTest {
     fun `null delta when prior period has no income`() = runTest {
         stubMonths(YearMonth(2026, Month.MAY), count = 6, income = 600_000L, expense = 400_000L)
 
-        val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
+        val result = useCase(currentMonth, months = 6)
 
         assertNull(result.deltaPointsVsPrior)
     }
 
     @Test
     fun `monthly list has oldest month first`() = runTest {
-        val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
+        val result = useCase(currentMonth, months = 6)
 
         assertEquals(6, result.monthly.size)
         assertEquals(Month.DECEMBER, result.monthly.first().yearMonth.month)
@@ -195,7 +175,7 @@ class GetSavingsRateUseCaseTest {
         stubMonth(may, TransactionType.Income, 60_000L)
         stubMonth(april, TransactionType.Spend, 40_000L)
 
-        val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
+        val result = useCase(currentMonth, months = 6)
 
         val byMonth = result.monthly.associateBy { it.yearMonth }
         assertEquals(Money(60_000L), byMonth.getValue(may).income)
@@ -208,7 +188,7 @@ class GetSavingsRateUseCaseTest {
     fun `averages divide by the whole window when every month has data`() = runTest {
         stubMonths(YearMonth(2026, Month.MAY), count = 6, income = 60_000L, expense = 40_000L)
 
-        val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
+        val result = useCase(currentMonth, months = 6)
 
         assertEquals(6, result.monthsWithData)
         assertEquals(Money(60_000L), result.averageIncome)
@@ -219,7 +199,7 @@ class GetSavingsRateUseCaseTest {
     fun `averages divide by the months that have data, not by the window size`() = runTest {
         stubMonths(YearMonth(2026, Month.MAY), count = 1, income = 60_000L, expense = 40_000L)
 
-        val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
+        val result = useCase(currentMonth, months = 6)
 
         assertEquals(1, result.monthsWithData)
         assertEquals(Money(60_000L), result.averageIncome)
@@ -232,7 +212,7 @@ class GetSavingsRateUseCaseTest {
         stubMonth(may, TransactionType.Spend, 40_000L)
         stubMonth(may.previous(), TransactionType.Income, 60_000L)
 
-        val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
+        val result = useCase(currentMonth, months = 6)
 
         assertEquals(2, result.monthsWithData)
         assertEquals(Money(30_000L), result.averageIncome)
@@ -241,7 +221,7 @@ class GetSavingsRateUseCaseTest {
 
     @Test
     fun `averages are zero on an empty window instead of dividing by zero`() = runTest {
-        val result = useCase(clock = fixedClock, zone = TimeZone.UTC, months = 6)
+        val result = useCase(currentMonth, months = 6)
 
         assertEquals(0, result.monthsWithData)
         assertEquals(Money.Zero, result.averageIncome)

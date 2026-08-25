@@ -54,3 +54,6 @@ epic re-shapes the shell around what is actually used.
   rollover leaves (E06-06).** Always advancing would drag a deliberately browsed month back to
   today's; never advancing would strand an app left open past midnight on yesterday's month.
   `SeeTransactionsViewModelTest`'s two rollover tests pin both directions.
+
+- **Report's browsed month never follows a midnight rollover (E06-10).** A rollover only corrects
+  `isCurrentMonth` and the trends window; `state.month` stays put no matter how it got there.

@@ -51,9 +51,10 @@ import kotlin.time.Instant
  * `ProcessLifecycleOwner` — an Android runtime this host test does not have. Its resolution
  * is covered instead by [every single bootstrapAppGraph resolves is bound], which resolves it
  * the way it does. Resolving is safe because both lifecycle actuals are `callbackFlow` builders:
- * nothing touches `ProcessLifecycleOwner` until something collects. `SeeTransactionsViewModel`'s
- * `today` collects `resumeEvents()` eagerly from its constructor and stays queued for the reason
- * `setUp` gives — do not add `advanceUntilIdle()` to this class.
+ * nothing touches `ProcessLifecycleOwner` until something collects. Every ViewModel that injects
+ * `TodayFlow` (`SeeTransactionsViewModel`, `ReportViewModel`) eagerly collects `resumeEvents()`
+ * from its constructor and stays queued for the reason `setUp` gives — do not add
+ * `advanceUntilIdle()` to this class.
  *
  * ### The boundary, stated so nobody assumes past it
  *

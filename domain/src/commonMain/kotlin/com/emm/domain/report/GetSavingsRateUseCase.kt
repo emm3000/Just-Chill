@@ -3,15 +3,13 @@ package com.emm.domain.report
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionStatsRepository
-import kotlinx.datetime.TimeZone
-import kotlin.time.Clock
 
 private const val PERCENT_MULTIPLIER = 100
 
 class GetSavingsRateUseCase(private val transactionStatsRepository: TransactionStatsRepository) {
 
-    suspend operator fun invoke(clock: Clock, zone: TimeZone, months: Int = 6): SavingsRate {
-        val span = buildSpan(YearMonth.current(clock, zone), months * 2)
+    suspend operator fun invoke(currentMonth: YearMonth, months: Int = 6): SavingsRate {
+        val span = buildSpan(currentMonth, months * 2)
         val priorWindow = span.take(months)
         val currentWindow = span.drop(months)
 

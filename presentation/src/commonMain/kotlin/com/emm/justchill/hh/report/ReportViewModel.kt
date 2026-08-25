@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.report
 
+import androidx.lifecycle.viewModelScope
 import com.emm.domain.report.CategoryAmount
 import com.emm.domain.report.GetMonthlyAmountByCategoryUseCase
 import com.emm.domain.report.GetMonthlyComparisonUseCase
@@ -11,30 +12,37 @@ import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.core.time.TodayFlow
 import com.emm.justchill.hh.shared.monthAbbrevLabel
 import com.emm.justchill.hh.shared.monthLabel
 import kotlinx.coroutines.Job
-import kotlinx.datetime.TimeZone
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlin.math.abs
-import kotlin.time.Clock
 
 const val TRENDS_WINDOW_MONTHS = 6
 private const val MONTHS_FOR_A_MEANINGFUL_TREND = 3
 private const val TOP_EXPENSES_SHOWN = 3
 
-@Suppress("LongParameterList")
 class ReportViewModel(
     private val getMonthlyAmountByCategory: GetMonthlyAmountByCategoryUseCase,
     private val getMonthlyComparison: GetMonthlyComparisonUseCase,
     private val getMonthlySectionStats: GetMonthlySectionStatsUseCase,
     private val getSavingsRate: GetSavingsRateUseCase,
     private val getTopCategories: GetTopCategoriesOverMonthsUseCase,
-    private val clock: Clock,
-    private val zone: TimeZone,
+    todayFlow: TodayFlow,
 ) : MviViewModel<ReportUiState, ReportIntent, ReportEffect>() {
 
+    private val calendarMonth: StateFlow<YearMonth> = todayFlow()
+        .map { date -> YearMonth.of(date) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, YearMonth.of(todayFlow.today()))
+
     override val initialState: ReportUiState = run {
-        val opening = YearMonth.current(clock, zone)
+        val opening = calendarMonth.value
         ReportUiState(
             month = opening,
             isCurrentMonth = isCurrent(opening),
@@ -47,13 +55,20 @@ class ReportViewModel(
 
     init {
         reloadReport()
-        reloadTrends()
+        // Report's browsed month never follows the calendar — unlike Ver, a rollover here only
+        // ever corrects isCurrentMonth and the trends window, never `state.month`.
+        calendarMonth
+            .onEach {
+                updateState { copy(isCurrentMonth = isCurrent(month)) }
+                reloadTrends()
+            }
+            .launchIn(viewModelScope)
     }
 
     override fun onIntent(intent: ReportIntent) = when (intent) {
         ReportIntent.PreviousMonth -> showMonth(currentState.month.previous())
         ReportIntent.NextMonth -> showMonth(currentState.month.next())
-        ReportIntent.JumpToCurrent -> showMonth(YearMonth.current(clock, zone))
+        ReportIntent.JumpToCurrent -> showMonth(calendarMonth.value)
         is ReportIntent.SelectMonth -> showMonth(intent.month)
         is ReportIntent.SelectType -> onSelectType(intent.type)
         is ReportIntent.SelectTab -> onSelectTab(intent.tab)
@@ -79,8 +94,7 @@ class ReportViewModel(
         reloadReport()
     }
 
-    /** No resume hook: an idle screen does not notice a midnight rollover until the next intent arrives. */
-    private fun isCurrent(month: YearMonth): Boolean = month == YearMonth.current(clock, zone)
+    private fun isCurrent(month: YearMonth): Boolean = month == calendarMonth.value
 
     private fun reloadReport() {
         reportJob?.cancel()
@@ -135,16 +149,16 @@ class ReportViewModel(
     private fun reloadTrends() {
         trendsJob?.cancel()
         trendsJob = launchSafe(onError = { e -> ReportEffect.ShowError(e.toUserMessage()) }) {
-            val savingsRate = getSavingsRate(clock = clock, zone = zone, months = TRENDS_WINDOW_MONTHS)
+            val currentYm = calendarMonth.value
+
+            val savingsRate = getSavingsRate(currentYm, TRENDS_WINDOW_MONTHS)
             val topExpenses = getTopCategories(
                 TransactionType.Spend,
-                clock = clock,
-                zone = zone,
+                currentYm,
                 months = TRENDS_WINDOW_MONTHS,
                 topN = TOP_EXPENSES_SHOWN,
             )
 
-            val currentYm = YearMonth.current(clock, zone)
             val isEarlyState = savingsRate.monthsWithData < MONTHS_FOR_A_MEANINGFUL_TREND
 
             val deltaText = savingsRate.deltaPointsVsPrior?.let { delta -> "${abs(delta)} pts" }
@@ -170,8 +184,6 @@ class ReportViewModel(
 
             updateState {
                 copy(
-                    // Same read the bars above used, so one pass cannot answer "is this the current
-                    // month" two different ways.
                     isCurrentMonth = month == currentYm,
                     trends = TrendsUiData(
                         savingsRatePercent = savingsRate.currentRatePercent,

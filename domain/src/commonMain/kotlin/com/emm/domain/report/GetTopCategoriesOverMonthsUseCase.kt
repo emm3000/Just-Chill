@@ -5,19 +5,16 @@ import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
-import kotlinx.datetime.TimeZone
-import kotlin.time.Clock
 
 class GetTopCategoriesOverMonthsUseCase(private val transactionStatsRepository: TransactionStatsRepository) {
 
     suspend operator fun invoke(
         type: TransactionType,
-        clock: Clock,
-        zone: TimeZone,
+        currentMonth: YearMonth,
         months: Int = 6,
         topN: Int = 3,
     ): List<CategoryAggregate> {
-        val window = YearMonth.windowEndingAt(YearMonth.current(clock, zone), months)
+        val window = YearMonth.windowEndingAt(currentMonth, months)
 
         val monthlyResults: List<List<CategoryAmount>> = transactionStatsRepository
             .monthlyAmountByCategoryForRanges(window.map { it.range() })
