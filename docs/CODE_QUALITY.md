@@ -99,6 +99,20 @@ A deadline hidden in a library config counts too: a Ktor `requestTimeout` raced 
 virtual time is wall clock wearing a different hat. Where a test genuinely needs real threads, assert
 the precondition, not the outcome — a race that needs two cores proves nothing on one.
 
+## `runCatching` around a suspend call swallows the cancellation
+
+`runCatching` catches `Throwable`, and `CancellationException` is one. Inside a coroutine that
+anything cancels, it does not tolerate a failure — it converts the cancellation into a
+`Result.failure`, hands back the default, and lets the body **run on**. `MviViewModel.updateState`
+is a synchronous CAS with no suspension point, so a state write after that point executes even
+though the job is dead: a cancelled loader finishes and overwrites the newer call's result with its
+empty default. detekt sees nothing, and a `StandardTestDispatcher` test very likely passes — its
+FIFO queue puts the stale resume before the winner, which is the benign ordering.
+
+Use the idiom the repo already uses in `BackupFailures.kt`, `DeleteUserAccountUseCase`,
+`MviViewModel.launchSafe` and a dozen more: catch `CancellationException` first and rethrow it, then
+catch `Exception` for the failure you actually meant to tolerate.
+
 ## Arbitration and suppression
 
 - Passing the gate is *necessary, never sufficient* — a reviewer may require a change detekt is

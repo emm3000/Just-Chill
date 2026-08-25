@@ -44,6 +44,24 @@ The remaining cost is not the form — it is *reaching* it. Every ticket here sh
   `StatusBarManager.requestAddTileService` (API 33+) is the only realistic adoption path, and
   `minSdk = 28` means it needs a version guard. The tile is cosmetic: below API 33, do not offer it.
 
+- **The preselect is consumed once per ViewModel, and it has to be (E09-01).** The entry's
+  `LaunchedEffect(key)` restarts whenever the composition is rebuilt while the ViewModel survives —
+  rotation, theme or locale change, and pop-back from `CategoryRoute`, which this screen reaches
+  through its own `onAddNewCategory`. Without `preselectConsumed` the second firing silently reverts
+  whatever the user had chosen. Any future entry point that hands the form a starting state inherits
+  this, not just shortcuts.
+
+- **A populated `AddTransactionRoute` no longer dedupes against a bare one (E09-01).**
+  `AppNavigator.push` guards with `backStack.contains(route)`, which is data-class equality, so two
+  add-transaction entries can coexist and back then needs two presses. `AppNavHost` adds a shortcut's
+  route with `backStack::add`, bypassing `AppNavigator.push` entirely and guarding only
+  `it != currentTop`. Whoever pushes a combo route owns that guard.
+
+- **A form opened with a preselection arrives with `hasChanges = true`**, because the preselected
+  type goes through `changeTransactionType`, which ends in `touched()`. Nothing reads
+  `AddTransactionUiState.hasChanges` today. Anyone wiring a discard-changes prompt to it must fix
+  this first, or every shortcut launch will claim the user has unsaved work.
+
 ## Rejected, with the reason
 
 - **Notification with `RemoteInput`** — wins on raw taps, loses on real cost: typing "comida" is more
