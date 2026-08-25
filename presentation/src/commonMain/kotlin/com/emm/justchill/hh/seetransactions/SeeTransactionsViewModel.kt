@@ -19,9 +19,12 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.core.time.TodayFlow
 import com.emm.justchill.hh.recurring.toPendingRecurringUi
 import com.emm.justchill.hh.transaction.toUi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -30,6 +33,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.scan
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -38,9 +43,9 @@ import kotlin.time.Clock
 private const val SEARCH_DEBOUNCE_MS = 250L
 
 // Two repositories for the transaction list and its filters, three use cases for the pending
-// section's confirm/skip/source, plus Clock and TimeZone: seven distinct collaborators this
-// ViewModel actually calls, none of them foldable into one another without losing an identity Koin
-// binds separately.
+// section's confirm/skip/source, plus TodayFlow, Clock and TimeZone: eight distinct collaborators
+// this ViewModel actually calls, none of them foldable into one another without losing an identity
+// Koin binds separately.
 @Suppress("LongParameterList")
 class SeeTransactionsViewModel(
     categoryRepository: CategoryRepository,
@@ -48,6 +53,7 @@ class SeeTransactionsViewModel(
     private val getPendingRecurringMovements: GetPendingRecurringMovementsUseCase,
     private val confirmRecurringMovement: ConfirmRecurringMovementUseCase,
     private val skipRecurringMovement: SkipRecurringMovementUseCase,
+    todayFlow: TodayFlow,
     private val clock: Clock,
     private val zone: TimeZone,
 ) : MviViewModel<SeeTransactionsUiState, SeeTransactionsIntent, SeeTransactionsEffect>() {
@@ -56,6 +62,15 @@ class SeeTransactionsViewModel(
 
     private val filter = MutableStateFlow(TransactionFilter.None)
     private val selectedMonth = MutableStateFlow(YearMonth.current(clock, zone))
+
+    /**
+     * The one live source of "what day is it" for this screen: a single shared hot flow instead of
+     * an independent midnight timer per consumer, so the pending list and the HOY/AYER headers can
+     * never briefly disagree about the date. `Eagerly`: the month-rollover collector below has to
+     * stay live even while nothing else is observing state.
+     */
+    private val today: StateFlow<LocalDate> = todayFlow()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, clock.now().toLocalDateTime(zone).date)
 
     init {
         combine(categoryRepository.all(), filter) { categories, current ->
@@ -97,35 +112,58 @@ class SeeTransactionsViewModel(
                 // Both branches catch their own failures: a `.catch` out here would kill the whole
                 // collector on the first database error, leaving the month arrows dead until the
                 // ViewModel is recreated. Caught inside, a broken query degrades to an empty slice.
+                // Combined with the shared `today` so a midnight rollover re-labels HOY/AYER without
+                // re-running the query underneath the rows.
                 if (currentFilter.isEmpty) {
-                    transactionRepository
-                        .fetchAllWithCategoryInRange(month.startInclusiveDay(), month.endExclusiveDay())
-                        .map { transactions ->
-                            ListSlice(
-                                month = month,
-                                days = transactions.toDayGroups(today()),
-                                summary = transactions.toMonthSummary(),
-                            )
-                        }
-                        .catch { emit(ListSlice.emptyFor(month)) }
+                    combine(
+                        transactionRepository
+                            .fetchAllWithCategoryInRange(month.startInclusiveDay(), month.endExclusiveDay()),
+                        today,
+                    ) { transactions, todayDate ->
+                        ListSlice(
+                            month = month,
+                            days = transactions.toDayGroups(todayDate),
+                            summary = transactions.toMonthSummary(),
+                        )
+                    }.catch { emit(ListSlice.emptyFor(month)) }
                 } else {
-                    transactionRepository.searchWithCategory(currentFilter)
-                        .map { transactions ->
-                            ListSlice(month = null, days = transactions.toDayGroups(today()), summary = null)
-                        }
-                        .catch { emit(ListSlice.EmptyResults) }
+                    combine(
+                        transactionRepository.searchWithCategory(currentFilter),
+                        today,
+                    ) { transactions, todayDate ->
+                        ListSlice(month = null, days = transactions.toDayGroups(todayDate), summary = null)
+                    }.catch { emit(ListSlice.EmptyResults) }
                 }
             }
             .onEach { slice -> updateState { withListSlice(slice, selectedMonth.value) } }
             .launchIn(viewModelScope)
 
-        // A separate flow on purpose: pending recurring movements never depend on the browsed
-        // month or the active filter. It still re-subscribes on selectedMonth — the only thing
-        // that buys is a fresh today() on every month-arrow tap, since the use case closes over
-        // whatever LocalDate it is called with.
-        selectedMonth
-            .flatMapLatest { getPendingRecurringMovements(today()) }
+        // A separate flow on purpose: pending recurring movements never depend on the browsed month
+        // or the active filter. Driven by the shared `today` instead, so a movement that comes due
+        // at midnight appears with no user interaction.
+        today
+            .flatMapLatest { date -> getPendingRecurringMovements(date) }
             .onEach { pending -> updateState { mapToPendingUiState(pending) } }
+            .launchIn(viewModelScope)
+
+        // The browsed month tracks the calendar only while the user never moved it away. `scan`
+        // carries the previous calendar month alongside the current one so the check needs no
+        // mutable field: it advances exactly when it still equals the PREVIOUS tick's calendar
+        // month. A user who arrowed away fails that check and keeps their month; a user who never
+        // moved (or arrowed back) rolls over with the calendar.
+        today
+            .map { date -> YearMonth.of(date) }
+            .distinctUntilChanged()
+            .scan(CalendarMonthTick(previous = null, current = null)) { tick, month ->
+                CalendarMonthTick(previous = tick.current, current = month)
+            }
+            .onEach { tick ->
+                val previous = tick.previous
+                val current = tick.current
+                if (previous != null && current != null && selectedMonth.value == previous) {
+                    selectMonth(current)
+                }
+            }
             .launchIn(viewModelScope)
     }
 
@@ -197,9 +235,6 @@ class SeeTransactionsViewModel(
         updateState { copy(month = month) }
     }
 
-    /** Read once per mapping pass so every [DayGroup] in one emission agrees on HOY/AYER. */
-    private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
-
     /**
      * The current month comes from the clock, not the selected one: browsing to March must not
      * relabel March's own pending row, and it must not decide whether the section is visible either.
@@ -263,6 +298,9 @@ internal data class ListSlice(val month: YearMonth?, val days: List<DayGroup>, v
         val EmptyResults = ListSlice(month = null, days = emptyList(), summary = null)
     }
 }
+
+/** One `today` tick paired with the calendar month before it, so a rollover check needs no mutable field. */
+private data class CalendarMonthTick(val previous: YearMonth?, val current: YearMonth?)
 
 /**
  * Applies a slice, unless it is a late answer for a month the user has already left — that one

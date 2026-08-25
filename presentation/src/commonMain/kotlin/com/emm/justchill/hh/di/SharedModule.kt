@@ -1,7 +1,11 @@
 package com.emm.justchill.hh.di
 
 import com.emm.domain.shared.UniqueIdProvider
+import com.emm.justchill.core.time.ClockTodayFlow
+import com.emm.justchill.core.time.TodayFlow
 import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -10,6 +14,10 @@ import org.koin.dsl.module
 // binding belongs in commonMain.
 val sharedModule = module {
     factory { DefaultUniqueIdProvider } bind UniqueIdProvider::class
+
+    // Depends on the two factories below, so it lives beside them: any ViewModel that needs a
+    // live "today" gets it from here instead of re-deriving one from a one-shot Clock read.
+    factoryOf(::ClockTodayFlow) { bind<TodayFlow>() }
 
     // The composition root is where reading the machine belongs, and these two factories are
     // the ONLY way a Clock or a TimeZone enters the injected graph: no use case and no

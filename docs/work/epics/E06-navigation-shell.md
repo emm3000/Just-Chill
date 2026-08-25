@@ -49,3 +49,10 @@ epic re-shapes the shell around what is actually used.
   A negative savings rate is a broken period, not a spend amount, so the rate stays `danger`. The
   trend-delta pill beside it is a comparison, not the deficit itself, so a negative delta uses
   `PillTone.Neutral`. Both calls are deliberate — do not unify them.
+
+- **Ver's browsed month follows the calendar only until the user picks a different one (E06-06).**
+  `SeeTransactionsViewModel`'s month-rollover collector advances `selectedMonth` exactly when it
+  still equals the calendar month recorded at the previous `today` tick — always advancing would drag
+  a deliberately browsed month back to today's; never advancing would leave an app left open past
+  midnight stuck on yesterday's month. `SeeTransactionsViewModelTest`'s two rollover tests pin both
+  directions; don't "simplify" the check to an unconditional jump.

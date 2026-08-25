@@ -18,6 +18,7 @@ import com.emm.domain.transaction.TransactionTotals
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
 import com.emm.justchill.MainDispatcherRule
+import com.emm.justchill.core.time.TodayFlow
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -36,6 +37,7 @@ import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.UtcOffset
 import kotlinx.datetime.asTimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -86,18 +88,32 @@ class SeeTransactionsViewModelTest {
     private val confirmRecurring = mockk<ConfirmRecurringMovementUseCase>()
     private val skipRecurring = mockk<SkipRecurringMovementUseCase>()
 
-    /** At this clock (noon UTC), nothing below depends on which zone runs the suite by accident. */
-    private fun buildViewModel(clock: Clock = fixedClock, zone: TimeZone = TimeZone.UTC): SeeTransactionsViewModel {
+    /**
+     * At this clock (noon UTC), nothing below depends on which zone runs the suite by accident.
+     * `today` defaults to whatever the real `ClockTodayFlow` would report for [clock]/[zone] — a
+     * fake, so a rollover test can hold onto it and drive `today.value` directly instead of fighting
+     * virtual time; `ClockTodayFlowTest` is what pins the delay arithmetic this fake stands in for.
+     */
+    private fun buildViewModel(
+        clock: Clock = fixedClock,
+        zone: TimeZone = TimeZone.UTC,
+        today: MutableStateFlow<LocalDate> = MutableStateFlow(clock.now().toLocalDateTime(zone).date),
+    ): SeeTransactionsViewModel {
         every { transactionRepository.searchWithCategory(any()) } returns flowOf(emptyList())
-        return newViewModel(clock, zone)
+        return newViewModel(clock, zone, today)
     }
 
-    private fun newViewModel(clock: Clock, zone: TimeZone) = SeeTransactionsViewModel(
+    private fun newViewModel(
+        clock: Clock,
+        zone: TimeZone,
+        today: MutableStateFlow<LocalDate> = MutableStateFlow(clock.now().toLocalDateTime(zone).date),
+    ) = SeeTransactionsViewModel(
         categoryRepository,
         transactionRepository,
         getPendingRecurringMovements,
         confirmRecurring,
         skipRecurring,
+        TodayFlow { today },
         clock,
         zone,
     )
@@ -253,6 +269,35 @@ class SeeTransactionsViewModelTest {
     }
 
     @Test
+    fun `the browsed month follows a midnight rollover when the user never moved it`() = runTest(testDispatcher) {
+        val today = MutableStateFlow(LocalDate(2026, 8, 31))
+        val vm = buildViewModel(fixedClock, TimeZone.UTC, today)
+        advanceUntilIdle()
+        assertEquals(currentMonth, vm.state.value.month, "August IS the month on 31 August")
+
+        today.value = LocalDate(2026, 9, 1)
+        advanceUntilIdle()
+
+        assertEquals(currentMonth.next(), vm.state.value.month, "the browsed month must follow the calendar")
+    }
+
+    @Test
+    fun `the browsed month does not follow a midnight rollover once the user arrowed away`() = runTest(testDispatcher) {
+        val today = MutableStateFlow(LocalDate(2026, 8, 31))
+        val vm = buildViewModel(fixedClock, TimeZone.UTC, today)
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnPreviousMonth)
+        advanceUntilIdle()
+        assertEquals(currentMonth.previous(), vm.state.value.month)
+
+        today.value = LocalDate(2026, 9, 1)
+        advanceUntilIdle()
+
+        assertEquals(currentMonth.previous(), vm.state.value.month, "a deliberately browsed month must not move")
+    }
+
+    @Test
     fun `an active filter switches the stream to global search and leaves the month window`() =
         runTest(testDispatcher) {
             val vm = buildViewModel()
@@ -376,6 +421,20 @@ class SeeTransactionsViewModelTest {
 
         assertEquals("HOY", lima.state.value.days.single().primaryLabel)
         assertEquals("AYER", karachi.state.value.days.single().primaryLabel)
+    }
+
+    @Test
+    fun `HOY relabels to AYER across a midnight rollover with no user interaction`() = runTest(testDispatcher) {
+        monthTransactionsFlow.value = listOf(tx("t-1", TransactionType.Spend, 1_000, daysIntoMonth = 15))
+        val today = MutableStateFlow(LocalDate(2026, 8, 15))
+        val vm = buildViewModel(fixedClock, TimeZone.UTC, today)
+        advanceUntilIdle()
+        assertEquals("HOY", vm.state.value.days.single().primaryLabel)
+
+        today.value = LocalDate(2026, 8, 16)
+        advanceUntilIdle()
+
+        assertEquals("AYER", vm.state.value.days.single().primaryLabel)
     }
 
     @Test

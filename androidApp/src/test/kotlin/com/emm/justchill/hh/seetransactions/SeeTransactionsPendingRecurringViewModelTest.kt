@@ -21,6 +21,7 @@ import com.emm.domain.transaction.TransactionTotals
 import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionWithCategory
 import com.emm.justchill.MainDispatcherRule
+import com.emm.justchill.core.time.TodayFlow
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -37,8 +38,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.UtcOffset
-import kotlinx.datetime.asTimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -90,12 +90,22 @@ class SeeTransactionsPendingRecurringViewModelTest {
     private val confirmRecurring = mockk<ConfirmRecurringMovementUseCase>()
     private val skipRecurring = mockk<SkipRecurringMovementUseCase>()
 
-    private fun buildViewModel(clock: Clock = fixedClock, zone: TimeZone = TimeZone.UTC) = SeeTransactionsViewModel(
+    /**
+     * `today` defaults to whatever the real `ClockTodayFlow` would report for [clock]/[zone] — a
+     * fake, so a rollover test can hold onto it and drive `today.value` directly instead of fighting
+     * virtual time; `ClockTodayFlowTest` is what pins the delay arithmetic this fake stands in for.
+     */
+    private fun buildViewModel(
+        clock: Clock = fixedClock,
+        zone: TimeZone = TimeZone.UTC,
+        today: MutableStateFlow<LocalDate> = MutableStateFlow(clock.now().toLocalDateTime(zone).date),
+    ) = SeeTransactionsViewModel(
         categoryRepository,
         transactionRepository,
         getPendingRecurringMovements,
         confirmRecurring,
         skipRecurring,
+        TodayFlow { today },
         clock,
         zone,
     )
@@ -139,19 +149,16 @@ class SeeTransactionsPendingRecurringViewModelTest {
     )
 
     @Test
-    fun `pending list is sourced from GetPendingRecurringMovementsUseCase with today in the injected zone`() =
+    fun `pending list is sourced from GetPendingRecurringMovementsUseCase with whatever date todayFlow reports`() =
         runTest(testDispatcher) {
-            val nearMidnight = object : Clock {
-                override fun now(): Instant = Instant.parse("2026-09-01T02:00:00Z")
-            }
+            // Zone-correct date derivation is ClockTodayFlow's job, pinned in ClockTodayFlowTest;
+            // this only checks the ViewModel forwards todayFlow's value to the use case unchanged.
+            val today = MutableStateFlow(LocalDate(2026, 8, 31))
 
-            buildViewModel(nearMidnight, UtcOffset(hours = -5).asTimeZone())
+            buildViewModel(today = today)
             advanceUntilIdle()
+
             verify { getPendingRecurringMovements(LocalDate(2026, 8, 31)) }
-
-            buildViewModel(nearMidnight, UtcOffset(hours = 0).asTimeZone())
-            advanceUntilIdle()
-            verify { getPendingRecurringMovements(LocalDate(2026, 9, 1)) }
         }
 
     @Test
@@ -280,18 +287,36 @@ class SeeTransactionsPendingRecurringViewModelTest {
     }
 
     @Test
-    fun `today is re-read on every month change, not just once at construction`() = runTest(testDispatcher) {
+    fun `pending recurring does not re-query when only the browsed month changes`() = runTest(testDispatcher) {
+        // Pendings never depended on the browsed month — driven by todayFlow instead, so arrowing
+        // through months must not cancel and re-subscribe the pending source.
         val vm = buildViewModel()
         advanceUntilIdle()
         verify(exactly = 1) { getPendingRecurringMovements(any()) }
 
         vm.onIntent(SeeTransactionsIntent.OnNextMonth)
         advanceUntilIdle()
-        verify(exactly = 2) { getPendingRecurringMovements(any()) }
-
         vm.onIntent(SeeTransactionsIntent.OnPreviousMonth)
         advanceUntilIdle()
-        verify(exactly = 3) { getPendingRecurringMovements(any()) }
+
+        verify(exactly = 1) { getPendingRecurringMovements(any()) }
+    }
+
+    @Test
+    fun `a recurring movement due at midnight appears with no user interaction`() = runTest(testDispatcher) {
+        val today = MutableStateFlow(LocalDate(2026, 8, 15))
+        val vm = buildViewModel(today = today)
+        advanceUntilIdle()
+        assertTrue(vm.state.value.pendingRecurringMovements.isEmpty())
+
+        // The real use case reacts to the date it is queried with; setting the stubbed flow's value
+        // before the date rolls stands in for a movement becoming newly due at midnight.
+        pendingFlow.value = listOf(pending())
+        today.value = LocalDate(2026, 8, 16)
+        advanceUntilIdle()
+
+        assertEquals(1, vm.state.value.pendingRecurringMovements.size, "the newly due movement must appear")
+        verify { getPendingRecurringMovements(LocalDate(2026, 8, 16)) }
     }
 
     @Test
