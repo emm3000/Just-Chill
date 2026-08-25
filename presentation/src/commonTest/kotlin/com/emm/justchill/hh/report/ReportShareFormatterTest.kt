@@ -94,26 +94,26 @@ class ReportShareFormatterTest {
         assertEquals("Top en 0 de 6 meses", ReportShareFormatter.buildTopMetaText(0, 6))
     }
 
-    // ── buildMesShareText ─────────────────────────────────────────────────
+    // ── buildMonthShareText ───────────────────────────────────────────────
 
     @Test
-    fun `buildMesShareText contains JustChill footer`() {
+    fun `buildMonthShareText contains JustChill footer`() {
         val state = ReportUiState(month = may2026)
-        val result = ReportShareFormatter.buildMesShareText(state)
+        val result = ReportShareFormatter.buildMonthShareText(state)
         assertTrue(result.contains("— JustChill"), "Footer missing from: $result")
     }
 
     @Test
-    fun `buildMesShareText includes singular movimiento when count is 1`() {
+    fun `buildMonthShareText includes singular movimiento when count is 1`() {
         val state = ReportUiState(month = may2026, movementCount = 1, averageFormatted = "S/ 500")
-        val result = ReportShareFormatter.buildMesShareText(state)
+        val result = ReportShareFormatter.buildMonthShareText(state)
         assertTrue(result.contains("1 movimiento"), "Expected singular 'movimiento' in: $result")
     }
 
     @Test
-    fun `buildMesShareText includes plural movimientos when count is not 1`() {
+    fun `buildMonthShareText includes plural movimientos when count is not 1`() {
         val state = ReportUiState(month = may2026, movementCount = 5, averageFormatted = "S/ 200")
-        val result = ReportShareFormatter.buildMesShareText(state)
+        val result = ReportShareFormatter.buildMonthShareText(state)
         assertTrue(result.contains("5 movimientos"), "Expected plural 'movimientos' in: $result")
     }
 

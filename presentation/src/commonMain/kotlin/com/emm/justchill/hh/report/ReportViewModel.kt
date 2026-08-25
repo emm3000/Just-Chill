@@ -84,8 +84,8 @@ class ReportViewModel(
     private fun onSelectTab(tab: ReportTab) {
         updateState { copy(selectedTab = tab) }
         when (tab) {
-            ReportTab.Mes -> reloadReport()
-            ReportTab.Tendencias -> reloadTrends()
+            ReportTab.Month -> reloadReport()
+            ReportTab.Trends -> reloadTrends()
         }
     }
 
@@ -206,8 +206,8 @@ class ReportViewModel(
     private fun buildAndShareReport() {
         val state = currentState
         val text = when (state.selectedTab) {
-            ReportTab.Mes -> ReportShareFormatter.buildMesShareText(state)
-            ReportTab.Tendencias -> ReportShareFormatter.buildTrendsShareText(state)
+            ReportTab.Month -> ReportShareFormatter.buildMonthShareText(state)
+            ReportTab.Trends -> ReportShareFormatter.buildTrendsShareText(state)
         }
         sendEffect(ReportEffect.ShareReport(text))
     }

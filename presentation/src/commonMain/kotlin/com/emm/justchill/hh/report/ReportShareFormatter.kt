@@ -25,7 +25,7 @@ internal object ReportShareFormatter {
 
     fun buildTopMetaText(monthsInTop: Int, totalMonths: Int): String = "Top en $monthsInTop de $totalMonths meses"
 
-    fun buildMesShareText(state: ReportUiState): String = buildString {
+    fun buildMonthShareText(state: ReportUiState): String = buildString {
         appendLine("Reporte de ${state.month.monthLabel()} ${state.month.year}")
         val typeLabel = when (state.selectedType) {
             TransactionType.Income -> "Ingresos"

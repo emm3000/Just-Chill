@@ -109,8 +109,8 @@ private fun ReportScreen(
         ReportTopBar(onShare = onShare)
 
         val tabOptions = listOf(
-            SegmentOption(ReportTab.Mes, "Mes"),
-            SegmentOption(ReportTab.Tendencias, "Tendencias ${TRENDS_WINDOW_MONTHS}m"),
+            SegmentOption(ReportTab.Month, "Mes"),
+            SegmentOption(ReportTab.Trends, "Tendencias ${TRENDS_WINDOW_MONTHS}m"),
         )
         Segmented(
             options = tabOptions,
@@ -129,7 +129,7 @@ private fun ReportScreen(
             Spacer(Modifier.height(spacing.s4))
 
             when (state.selectedTab) {
-                ReportTab.Mes -> MesContent(
+                ReportTab.Month -> MonthContent(
                     state = state,
                     onPreviousMonth = onPreviousMonth,
                     onNextMonth = onNextMonth,
@@ -140,7 +140,7 @@ private fun ReportScreen(
                     onLabelClick = { showMonthSheet = true },
                 )
 
-                ReportTab.Tendencias -> TrendsContent(trends = state.trends)
+                ReportTab.Trends -> TrendsContent(trends = state.trends)
             }
 
             Spacer(Modifier.height(spacing.s8))
@@ -160,7 +160,7 @@ private fun ReportScreen(
 }
 
 @Composable
-private fun MesContent(
+private fun MonthContent(
     state: ReportUiState,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
@@ -420,14 +420,14 @@ private fun EmptyState(type: TransactionType, onAddTransaction: () -> Unit) {
 
 @Preview
 @Composable
-private fun ReportScreenMesPreview() {
+private fun ReportScreenMonthPreview() {
     EmmTheme {
         ReportScreen(
             state = ReportUiState(
                 month = YearMonth(2026, Month.MAY),
                 isCurrentMonth = true,
                 selectedType = TransactionType.Income,
-                selectedTab = ReportTab.Mes,
+                selectedTab = ReportTab.Month,
                 totalFormatted = "S/ 6,200.00",
                 comparisonText = "vs. abril",
                 comparisonDirectionUp = true,
@@ -458,14 +458,14 @@ private fun ReportScreenMesPreview() {
 
 @Preview
 @Composable
-private fun ReportScreenMesGastosPreview() {
+private fun ReportScreenMonthSpendPreview() {
     EmmTheme {
         ReportScreen(
             state = ReportUiState(
                 month = YearMonth(2026, Month.MARCH),
                 isCurrentMonth = false,
                 selectedType = TransactionType.Spend,
-                selectedTab = ReportTab.Mes,
+                selectedTab = ReportTab.Month,
                 totalFormatted = "S/ 4,580.00",
                 comparisonText = "vs. marzo",
                 comparisonDirectionUp = false,

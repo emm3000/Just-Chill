@@ -37,7 +37,7 @@
     <ID>LongParameterList:InfinityScroll.kt:@Composable internal fun &lt;T&gt; EndlessLazyColumn</ID>
     <ID>LongParameterList:ProfileScreen.kt:@Composable fun ProfileScreen</ID>
     <ID>LongParameterList:ProfileScreen.kt:@Composable private fun ProfileRowWithTrailing</ID>
-    <ID>LongParameterList:ReportScreen.kt:@Composable private fun MesContent</ID>
+    <ID>LongParameterList:ReportScreen.kt:@Composable private fun MonthContent</ID>
     <ID>LongParameterList:ReportScreen.kt:@Composable private fun ReportScreen</ID>
     <ID>LongParameterList:StickyCTA.kt:@Composable fun StickyCTA</ID>
     <ID>LongParameterList:TransactionFormControls.kt:@Composable internal fun QuickChip</ID>

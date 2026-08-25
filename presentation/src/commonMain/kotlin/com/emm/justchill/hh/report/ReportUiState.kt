@@ -9,7 +9,7 @@ data class ReportUiState(
     val month: YearMonth,
     val isCurrentMonth: Boolean = false,
     val selectedType: TransactionType = TransactionType.Spend,
-    val selectedTab: ReportTab = ReportTab.Mes,
+    val selectedTab: ReportTab = ReportTab.Month,
     val totalFormatted: String = "S/ 0.00",
     val comparisonText: String? = null,
     val comparisonDirectionUp: Boolean? = null,

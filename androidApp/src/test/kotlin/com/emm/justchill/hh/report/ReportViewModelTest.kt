@@ -274,10 +274,10 @@ class ReportViewModelTest {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        vm.onIntent(ReportIntent.SelectTab(ReportTab.Tendencias))
+        vm.onIntent(ReportIntent.SelectTab(ReportTab.Trends))
         advanceUntilIdle()
 
-        assertEquals(ReportTab.Tendencias, vm.state.value.selectedTab)
+        assertEquals(ReportTab.Trends, vm.state.value.selectedTab)
     }
 
     @Test
