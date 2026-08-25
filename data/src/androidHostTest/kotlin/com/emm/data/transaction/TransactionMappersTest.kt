@@ -103,13 +103,58 @@ class TransactionMappersTest {
     }
 
     @Test
-    fun `toDomainOrNull - single missing category field still produces null category`() {
+    fun `toDomainOrNull - missing categoryId still produces null category`() {
+        val entity = transactionWithCategoryEntity(
+            type = "Income",
+            categoryId = null,
+            categoryName = "Comida",
+            categoryIcon = "food",
+            categoryColor = "#FF0000",
+            categoryType = "Spend",
+        )
+        val result = entity.toDomainOrNull()
+        assertNotNull(result)
+        assertNull(result.category)
+    }
+
+    @Test
+    fun `toDomainOrNull - missing categoryName still produces null category`() {
         val entity = transactionWithCategoryEntity(
             type = "Income",
             categoryId = "cat-1",
             categoryName = null,
             categoryIcon = "food",
             categoryColor = "#FF0000",
+            categoryType = "Spend",
+        )
+        val result = entity.toDomainOrNull()
+        assertNotNull(result)
+        assertNull(result.category)
+    }
+
+    @Test
+    fun `toDomainOrNull - missing categoryIcon still produces null category`() {
+        val entity = transactionWithCategoryEntity(
+            type = "Income",
+            categoryId = "cat-1",
+            categoryName = "Comida",
+            categoryIcon = null,
+            categoryColor = "#FF0000",
+            categoryType = "Spend",
+        )
+        val result = entity.toDomainOrNull()
+        assertNotNull(result)
+        assertNull(result.category)
+    }
+
+    @Test
+    fun `toDomainOrNull - missing categoryColor still produces null category`() {
+        val entity = transactionWithCategoryEntity(
+            type = "Income",
+            categoryId = "cat-1",
+            categoryName = "Comida",
+            categoryIcon = "food",
+            categoryColor = null,
             categoryType = "Spend",
         )
         val result = entity.toDomainOrNull()

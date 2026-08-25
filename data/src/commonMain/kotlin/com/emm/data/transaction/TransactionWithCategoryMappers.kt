@@ -76,20 +76,17 @@ fun TransactionWithCategoryEntity.toDomainOrNull(): TransactionWithCategory? {
 
 private fun TransactionWithCategoryEntity.resolveCategory(): Category? {
     val parsedType = categoryType?.let { enumValueOrNull<CategoryType>(it) } ?: return null
-    return categoryId?.let { id ->
-        categoryName?.let { name ->
-            categoryIcon?.let { icon ->
-                categoryColor?.let { color ->
-                    Category(
-                        categoryId = CategoryId(id),
-                        name = name,
-                        icon = icon,
-                        color = color,
-                        categoryType = parsedType,
-                    )
-                }
-            }
-        }
+    val allFieldsPresent = categoryId != null && categoryName != null && categoryIcon != null && categoryColor != null
+    return if (allFieldsPresent) {
+        Category(
+            categoryId = CategoryId(categoryId),
+            name = categoryName,
+            icon = categoryIcon,
+            color = categoryColor,
+            categoryType = parsedType,
+        )
+    } else {
+        null
     }
 }
 
