@@ -25,7 +25,6 @@ mandatory review (`docs/WORKFLOW.md`) and must not introduce a `java.*`/`android
 gate's iOS compile is what proves it.
 
 Ten of the fourteen are mechanical: four `FunctionSignature`, one `ClassSignature`, one
-`ArgumentListWrapping` (collapse to one line — see `CLAUDE.md`), and three `UseOrEmpty` that want
-`orEmpty()`. The `amount!!` is the only one carrying behavior risk; `docs/CODE_QUALITY.md`'s date
-rule applies if `SpanishDateFormat` is touched at all — injected `Clock` **and** `TimeZone`, no
-defaults.
+`ArgumentListWrapping` (collapse to one line — see `CLAUDE.md`), three `UseOrEmpty` that want
+`orEmpty()`. The `amount!!` is the only one carrying behavior risk, and `docs/CODE_QUALITY.md`'s
+date rule binds any `SpanishDateFormat` edit: injected `Clock` **and** `TimeZone`, no defaults.
