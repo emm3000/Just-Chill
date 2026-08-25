@@ -18,10 +18,11 @@
 
 ## Context
 
-`TransactionMappers.kt` sits on the read path every transaction list renders. The four `!!` are not a
-schema problem: `resolveCategory` already guards every field but hoists the check into
-`val allFieldsPresent`, and smart cast cannot see through a boolean in a variable — no `.sq` change
-is in scope. Its `TooManyFunctions` is the costly one: a file-level entry is amnesty at any size
+`TransactionMappers.kt` sits on the read path every transaction list renders. The four `!!` are
+simply redundant — `resolveCategory` already guards every field, and K2 smart-casts through the
+boolean `val` holding that guard, which is why the rule is named `UnnecessaryNotNullOperator`.
+Deleting the four operators is the whole fix; no `.sq` change and no restructuring are in scope.
+Its `TooManyFunctions` is the costly one: a file-level entry is amnesty at any size
 (E07), so the file wants splitting by responsibility. If no split reads better than the file does
 today, say so and keep the entry rather than forcing one.
 
