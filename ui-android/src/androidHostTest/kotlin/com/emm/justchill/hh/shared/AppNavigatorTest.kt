@@ -19,18 +19,18 @@ class AppNavigatorTest {
 
     @Test
     fun `push puts the route on top`() {
-        navigator.push(AddTransactionRoute)
+        navigator.push(AddTransactionRoute())
 
-        assertEquals(listOf<NavKey>(rootTab, AddTransactionRoute), backStack.toList())
+        assertEquals(listOf<NavKey>(rootTab, AddTransactionRoute()), backStack.toList())
     }
 
     @Test
     fun `push ignores a second tap on the route already on top`() {
-        navigator.push(AddTransactionRoute)
-        navigator.push(AddTransactionRoute)
+        navigator.push(AddTransactionRoute())
+        navigator.push(AddTransactionRoute())
 
         assertEquals(
-            listOf<NavKey>(rootTab, AddTransactionRoute),
+            listOf<NavKey>(rootTab, AddTransactionRoute()),
             backStack.toList(),
             "a double-tapped add button pushed the same key twice: nav3 renders one entry, back needs two presses",
         )
@@ -50,11 +50,11 @@ class AppNavigatorTest {
 
     @Test
     fun `push refuses a route already deeper in the stack`() {
-        navigator.push(AddTransactionRoute)
+        navigator.push(AddTransactionRoute())
         navigator.push(CategoryRoute())
         val frozen: List<NavKey> = backStack.toList()
 
-        navigator.push(AddTransactionRoute)
+        navigator.push(AddTransactionRoute())
 
         assertEquals(
             frozen,
@@ -67,7 +67,7 @@ class AppNavigatorTest {
     @Test
     fun `push refuses a sign-in screen when one is already in the stack`() {
         navigator.push(AuthRoute)
-        navigator.push(AddTransactionRoute)
+        navigator.push(AddTransactionRoute())
         val frozen: List<NavKey> = backStack.toList()
 
         navigator.push(AuthRoute)
@@ -77,7 +77,7 @@ class AppNavigatorTest {
 
     @Test
     fun `no operation touches the stack while the scene is mid transition`() {
-        navigator.push(AddTransactionRoute)
+        navigator.push(AddTransactionRoute())
         navigator.push(CategoryRoute(propagateToTransaction = true))
         val frozen: List<NavKey> = backStack.toList()
 
@@ -97,7 +97,7 @@ class AppNavigatorTest {
 
     @Test
     fun `pop removes the top entry`() {
-        navigator.push(AddTransactionRoute)
+        navigator.push(AddTransactionRoute())
 
         navigator.pop()
 
@@ -117,7 +117,7 @@ class AppNavigatorTest {
 
     @Test
     fun `switchTab roots the stack at the start tab and puts the target on top`() {
-        navigator.push(AddTransactionRoute)
+        navigator.push(AddTransactionRoute())
 
         navigator.switchTab(AccountsRoute)
 
@@ -126,7 +126,7 @@ class AppNavigatorTest {
 
     @Test
     fun `switchTab to the start tab leaves a single entry`() {
-        navigator.push(AddTransactionRoute)
+        navigator.push(AddTransactionRoute())
 
         navigator.switchTab(rootTab)
 
@@ -135,7 +135,7 @@ class AppNavigatorTest {
 
     @Test
     fun `replaceAll drops everything below the new root`() {
-        navigator.push(AddTransactionRoute)
+        navigator.push(AddTransactionRoute())
         navigator.push(CategoryRoute())
 
         navigator.replaceAll(ReportRoute)
@@ -145,12 +145,12 @@ class AppNavigatorTest {
 
     @Test
     fun `popToTransaction truncates back down to the transaction screen`() {
-        navigator.push(AddTransactionRoute)
+        navigator.push(AddTransactionRoute())
         navigator.push(CategoryRoute(propagateToTransaction = true))
 
         navigator.popToTransaction()
 
-        assertEquals(listOf<NavKey>(rootTab, AddTransactionRoute), backStack.toList())
+        assertEquals(listOf<NavKey>(rootTab, AddTransactionRoute()), backStack.toList())
     }
 
     @Test

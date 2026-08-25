@@ -5,6 +5,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.serialization.NavBackStackSerializer
 import androidx.navigation3.runtime.serialization.NavKeySerializer
 import com.emm.domain.category.CategoryType
+import com.emm.domain.transaction.TransactionType
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import org.junit.Test
@@ -58,7 +59,11 @@ class RouteSerializationTest {
         AccountsRoute,
         ProfileRoute,
         AuthRoute,
-        AddTransactionRoute,
+        AddTransactionRoute(
+            preselectedAccountId = "acc-1",
+            preselectedCategoryId = "cat-1",
+            preselectedType = TransactionType.Income,
+        ),
         EditTransactionRoute(transactionId = "tx-1"),
         AddAccountRoute,
         CategoriesListRoute,

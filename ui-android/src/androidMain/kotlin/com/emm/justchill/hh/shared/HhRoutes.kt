@@ -2,6 +2,7 @@ package com.emm.justchill.hh.shared
 
 import androidx.navigation3.runtime.NavKey
 import com.emm.domain.category.CategoryType
+import com.emm.domain.transaction.TransactionType
 import kotlinx.serialization.Serializable
 
 /**
@@ -32,7 +33,11 @@ data object ProfileRoute : BottomBarRoute
 data object AuthRoute : AppRoute
 
 @Serializable
-data object AddTransactionRoute : AppRoute
+data class AddTransactionRoute(
+    val preselectedAccountId: String? = null,
+    val preselectedCategoryId: String? = null,
+    val preselectedType: TransactionType? = null,
+) : AppRoute
 
 @Serializable
 data class EditTransactionRoute(val transactionId: String) : AppRoute

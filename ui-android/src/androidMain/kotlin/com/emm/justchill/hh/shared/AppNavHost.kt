@@ -104,7 +104,7 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcutAction: String? = null, sh
                     HhBottomBar(
                         current = currentRoute as? BottomBarRoute,
                         onTabClick = { tab -> hostNav.switchTab(tab) },
-                        onAddClick = { hostNav.push(AddTransactionRoute) },
+                        onAddClick = { hostNav.push(AddTransactionRoute()) },
                         showProfileBadge = disclosurePending,
                     )
                 }
