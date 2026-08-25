@@ -42,6 +42,7 @@ import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.UnderlineTextField
 import com.emm.justchill.core.ui.atoms.rewrittenTo
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import com.emm.justchill.core.ui.preview.PreviewRedmi15C
 import com.emm.justchill.hh.shared.AmountInputSheet
 import com.emm.justchill.hh.shared.FormSection
 import com.emm.justchill.hh.transaction.components.FrequentComboChip
@@ -227,6 +228,7 @@ private fun InterestPercentField(text: String, onTextChange: (String) -> Unit) {
 }
 
 @Preview
+@PreviewRedmi15C
 @Composable
 private fun AddEditLoanScreenPreview() {
     EmmTheme {
@@ -245,6 +247,7 @@ private fun AddEditLoanScreenPreview() {
 }
 
 @Preview
+@PreviewRedmi15C
 @Composable
 private fun AddEditLoanScreenEmptyPreview() {
     EmmTheme {
@@ -256,6 +259,7 @@ private fun AddEditLoanScreenEmptyPreview() {
 }
 
 @Preview
+@PreviewRedmi15C
 @Composable
 private fun AddEditLoanScreenEditPreview() {
     EmmTheme {
@@ -275,6 +279,7 @@ private fun AddEditLoanScreenEditPreview() {
 }
 
 @Preview
+@PreviewRedmi15C
 @Composable
 private fun AddEditLoanScreenSavingPreview() {
     EmmTheme {

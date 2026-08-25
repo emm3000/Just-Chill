@@ -31,6 +31,7 @@ import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.IconBtnTone
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
+import com.emm.justchill.core.ui.preview.PreviewRedmi15C
 
 @Composable
 fun LoanDetailScreen(
@@ -132,6 +133,7 @@ fun LoanDetailScreen(
 }
 
 @Preview
+@PreviewRedmi15C
 @Composable
 private fun LoanDetailScreenPreview() {
     EmmTheme {
@@ -166,6 +168,7 @@ private fun LoanDetailScreenPreview() {
 }
 
 @Preview
+@PreviewRedmi15C
 @Composable
 private fun LoanDetailScreenEmptyPreview() {
     EmmTheme {
@@ -191,6 +194,7 @@ private fun LoanDetailScreenEmptyPreview() {
 }
 
 @Preview
+@PreviewRedmi15C
 @Composable
 private fun LoanDetailScreenSettledPreview() {
     EmmTheme {
@@ -225,6 +229,7 @@ private fun LoanDetailScreenSettledPreview() {
 }
 
 @Preview
+@PreviewRedmi15C
 @Composable
 private fun LoanDetailScreenLoadingPreview() {
     EmmTheme {

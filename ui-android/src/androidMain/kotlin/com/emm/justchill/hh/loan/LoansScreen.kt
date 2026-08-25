@@ -39,6 +39,7 @@ import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
+import com.emm.justchill.core.ui.preview.PreviewRedmi15C
 
 @Composable
 fun LoansScreen(
@@ -168,6 +169,7 @@ private fun LoansEmptyState(modifier: Modifier = Modifier) {
 }
 
 @Preview
+@PreviewRedmi15C
 @Composable
 private fun LoansScreenPreview() {
     EmmTheme {
@@ -196,6 +198,7 @@ private fun LoansScreenPreview() {
 }
 
 @Preview
+@PreviewRedmi15C
 @Composable
 private fun LoansScreenEmptyPreview() {
     EmmTheme {
