@@ -35,7 +35,7 @@ fun EmmRowMenu(contentDescription: String, onEdit: () -> Unit, onDelete: () -> U
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(32.dp)
+                .size(48.dp)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
