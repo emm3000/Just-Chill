@@ -3,9 +3,7 @@ package com.emm.justchill.hh.profile
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,18 +19,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Category
-import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material.icons.outlined.CloudDone
-import androidx.compose.material.icons.outlined.CloudSync
-import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.FileDownload
-import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Shield
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,30 +34,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.emm.justchill.core.backup.SNAPSHOT_BACKUP_ENABLED
 import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
-import com.emm.justchill.core.ui.atoms.Eyebrow
-import com.emm.justchill.core.ui.atoms.FilledCta
-import com.emm.justchill.hh.shared.BACKUP_DESTINATION_DISCLOSURE
-import com.emm.justchill.hh.shared.BACKUP_DESTINATION_DISCLOSURE_ACTION
-import com.emm.justchill.hh.shared.BACKUP_LOCAL_ONLY_WARNING
-import com.emm.justchill.hh.shared.toMetaText
 
 @Composable
 fun ProfileScreen(
@@ -185,167 +163,6 @@ fun ProfileScreen(
     }
 }
 
-private class SnapshotBackupActions(
-    val onBackUpNow: () -> Unit,
-    val onVerify: () -> Unit,
-    val onAcknowledgeDestination: () -> Unit,
-)
-
-@Composable
-private fun BackupSection(
-    state: ProfileUiState,
-    onExportClick: () -> Unit,
-    onImportClick: () -> Unit,
-    snapshotActions: SnapshotBackupActions,
-) {
-    var showImportDialog by remember { mutableStateOf(false) }
-
-    if (showImportDialog) {
-        ImportBackupDialog(
-            isSignedIn = state.session is SessionUiState.SignedIn,
-            onConfirm = {
-                showImportDialog = false
-                onImportClick()
-            },
-            onDismiss = { showImportDialog = false },
-        )
-    }
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        SectionHeader(text = "Respaldo")
-        ProfileGroup {
-            ProfileRowWithTrailing(
-                icon = Icons.Outlined.FileDownload,
-                label = "Exportar mi data",
-                meta = if (state.op == ProfileOp.Exporting) "Preparando…" else "Guardar como archivo",
-                metaIsPrimary = true,
-                enabled = state.op == ProfileOp.None || state.op == ProfileOp.Exporting,
-                onClick = onExportClick.takeIf { state.op == ProfileOp.None },
-                trailing = {
-                    ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.Exporting)
-                },
-            )
-            HairlineDivider()
-            ProfileRowWithTrailing(
-                icon = Icons.Outlined.FileUpload,
-                label = "Importar respaldo",
-                meta = if (state.op == ProfileOp.Importing) "Importando…" else "Reemplaza todo",
-                metaIsPrimary = false,
-                enabled = state.op == ProfileOp.None || state.op == ProfileOp.Importing,
-                onClick = { showImportDialog = true }.takeIf { state.op == ProfileOp.None },
-                trailing = {
-                    ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.Importing)
-                },
-            )
-            if (SNAPSHOT_BACKUP_ENABLED) {
-                HairlineDivider()
-                ProfileRowWithTrailing(
-                    icon = Icons.Outlined.CloudUpload,
-                    label = "Respaldar ahora",
-                    meta = if (state.op == ProfileOp.BackingUp) "Respaldando…" else "Sube una copia a la nube",
-                    metaIsPrimary = true,
-                    enabled = state.op == ProfileOp.None || state.op == ProfileOp.BackingUp,
-                    onClick = snapshotActions.onBackUpNow.takeIf { state.op == ProfileOp.None },
-                    trailing = {
-                        ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.BackingUp)
-                    },
-                )
-                HairlineDivider()
-                VerifyBackupRow(op = state.op, onVerifyClick = snapshotActions.onVerify)
-                HairlineDivider()
-                LastBackupRow(row = state.backupRow)
-                if (state.backupRow == BackupRowUi.DisclosurePending) {
-                    BackupDestinationDisclosure(onAcknowledge = snapshotActions.onAcknowledgeDestination)
-                }
-            }
-        }
-        if (!SNAPSHOT_BACKUP_ENABLED) {
-            BackupLocalOnlyFooter()
-        }
-    }
-}
-
-@Composable
-private fun VerifyBackupRow(op: ProfileOp, onVerifyClick: () -> Unit) {
-    val busy: Boolean = op == ProfileOp.VerifyingBackup
-    val idle: Boolean = op == ProfileOp.None
-    ProfileRowWithTrailing(
-        icon = Icons.Outlined.CloudSync,
-        label = "Verificar respaldo",
-        meta = if (busy) "Verificando…" else "Revisa que el último se pueda restaurar",
-        metaIsPrimary = true,
-        enabled = idle || busy,
-        onClick = onVerifyClick.takeIf { idle },
-        trailing = { ChevronTrailing(enabled = idle || busy) },
-    )
-}
-
-@Composable
-private fun BackupLocalOnlyFooter() {
-    val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
-    Text(
-        text = BACKUP_LOCAL_ONLY_WARNING,
-        fontSize = 13.sp,
-        lineHeight = 18.sp,
-        fontFamily = InterFontFamily,
-        fontWeight = FontWeight.W400,
-        color = colors.textSecondary,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = spacing.s5, end = spacing.s5, top = spacing.s3),
-    )
-}
-
-@Composable
-private fun BackupDestinationDisclosure(onAcknowledge: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = spacing.s5, end = spacing.s5, bottom = spacing.s4),
-        verticalArrangement = Arrangement.spacedBy(spacing.s3),
-    ) {
-        Text(
-            text = BACKUP_DESTINATION_DISCLOSURE,
-            fontSize = 13.sp,
-            lineHeight = 18.sp,
-            fontFamily = InterFontFamily,
-            fontWeight = FontWeight.W400,
-            color = colors.textSecondary,
-        )
-        FilledCta(label = BACKUP_DESTINATION_DISCLOSURE_ACTION, onClick = onAcknowledge)
-    }
-}
-
-@Composable
-private fun LastBackupRow(row: BackupRowUi) {
-    val colors = LocalEmmColors.current
-    val metaColor: Color? = when (row.severity()) {
-        BackupRowSeverity.Normal -> null
-        BackupRowSeverity.Warning -> colors.warning
-        BackupRowSeverity.Danger -> colors.danger
-    }
-    ProfileRowWithTrailing(
-        icon = Icons.Outlined.CloudDone,
-        label = "Último respaldo",
-        meta = row.toMetaText(),
-        metaIsPrimary = true,
-        metaColor = metaColor,
-        onClick = null,
-        trailing = {
-            if (row is BackupRowUi.BackingUp) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(16.dp),
-                    strokeWidth = 2.dp,
-                    color = colors.textTertiary,
-                )
-            }
-        },
-    )
-}
-
 @Composable
 private fun AccountSection(
     state: ProfileUiState,
@@ -427,148 +244,6 @@ private fun AccountSection(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun SectionHeader(text: String) {
-    val spacing = LocalEmmSpacing.current
-    Eyebrow(
-        text = text,
-        modifier = Modifier.padding(
-            start = spacing.s5,
-            end = spacing.s5,
-            top = spacing.s5,
-            bottom = spacing.s2,
-        ),
-    )
-}
-
-@Composable
-private fun ProfileGroup(content: @Composable () -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        content()
-    }
-}
-
-@Composable
-private fun HairlineDivider() {
-    val colors = LocalEmmColors.current
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(colors.border),
-    )
-}
-
-@Composable
-private fun ProfileRow(icon: ImageVector, label: String, meta: String, metaIsPrimary: Boolean, onClick: () -> Unit) {
-    ProfileRowWithTrailing(
-        icon = icon,
-        label = label,
-        meta = meta,
-        metaIsPrimary = metaIsPrimary,
-        onClick = onClick,
-        trailing = { ChevronTrailing(enabled = true) },
-    )
-}
-
-@Composable
-private fun ChevronTrailing(enabled: Boolean) {
-    val colors = LocalEmmColors.current
-    Icon(
-        imageVector = Icons.Outlined.ChevronRight,
-        contentDescription = null,
-        tint = if (enabled) colors.textTertiary else colors.textDisabled,
-        modifier = Modifier.size(16.dp),
-    )
-}
-
-@Composable
-private fun ProfileRowWithTrailing(
-    icon: ImageVector,
-    label: String,
-    meta: String,
-    metaIsPrimary: Boolean,
-    onClick: (() -> Unit)?,
-    trailing: @Composable () -> Unit,
-    metaColor: Color? = null,
-    enabled: Boolean = true,
-) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
-
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val bg: Color = if (onClick != null && isPressed) colors.surface1 else Color.Transparent
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(bg)
-            .then(
-                if (onClick != null) {
-                    Modifier.clickable(
-                        interactionSource = interactionSource,
-                        indication = null,
-                        onClick = onClick,
-                    )
-                } else {
-                    Modifier
-                },
-            )
-            .padding(horizontal = spacing.s5, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        IconTileSmall(icon = icon, tint = if (enabled) colors.textSecondary else colors.textDisabled)
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = label,
-                style = type.bodyL.copy(fontWeight = FontWeight.W500),
-                color = if (enabled) colors.textPrimary else colors.textDisabled,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (meta.isNotEmpty()) {
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = meta,
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
-                    fontFamily = InterFontFamily,
-                    fontWeight = FontWeight.W400,
-                    color = if (enabled) {
-                        metaColor ?: if (metaIsPrimary) colors.textSecondary else colors.textTertiary
-                    } else {
-                        colors.textDisabled
-                    },
-                )
-            }
-        }
-        trailing()
-    }
-}
-
-@Composable
-private fun IconTileSmall(icon: ImageVector, tint: Color = LocalEmmColors.current.textSecondary) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(32.dp)
-            .clip(radii.rXS)
-            .background(colors.surface2),
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = tint,
-            modifier = Modifier.size(17.dp),
-        )
     }
 }
 
