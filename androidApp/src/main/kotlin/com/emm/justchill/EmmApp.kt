@@ -8,6 +8,7 @@ import com.emm.justchill.core.appModules
 import com.emm.justchill.core.bootstrapAppGraph
 import com.emm.justchill.core.platform.CurrentActivityHolder
 import com.emm.justchill.core.session.KeystoreSessionManager
+import com.emm.justchill.core.shortcuts.ShortcutPublisher
 import com.emm.justchill.experiences.readjsonfromassets.experiencesModule
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -47,12 +48,24 @@ class EmmApp : Application() {
         sweepLegacySession(koinApp.koin)
 
         bootstrapAppGraph(koinApp.koin)
+
+        publishShortcuts(koinApp.koin)
     }
 
     private fun sweepLegacySession(koin: Koin) {
         startupScope.launch {
             withContext(koin.get<DispatchersProvider>().ioDispatcher) {
                 koin.get<KeystoreSessionManager>().sweepLegacySession()
+            }
+        }
+    }
+
+    // Off the cold-start path on purpose: a set that lags one launch behind is acceptable
+    // (E09-03), so this rides the same fire-and-forget scope sweepLegacySession does.
+    private fun publishShortcuts(koin: Koin) {
+        startupScope.launch {
+            withContext(koin.get<DispatchersProvider>().ioDispatcher) {
+                koin.get<ShortcutPublisher>().publish()
             }
         }
     }

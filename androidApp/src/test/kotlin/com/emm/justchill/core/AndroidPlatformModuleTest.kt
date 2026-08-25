@@ -3,11 +3,14 @@ package com.emm.justchill.core
 import android.content.Context
 import com.emm.justchill.BuildInfo
 import com.emm.justchill.core.session.KeystoreSessionManager
+import com.emm.justchill.core.shortcuts.ShortcutPublisher
+import com.emm.justchill.hh.transaction.GetShortcutCombos
 import io.github.jan.supabase.auth.SessionManager
 import io.mockk.mockk
 import org.junit.Test
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.koinApplication
+import org.koin.dsl.module
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertSame
@@ -69,6 +72,26 @@ class AndroidPlatformModuleTest {
                 koin.get<KeystoreSessionManager>(),
                 koin.get<SessionManager>(),
                 "The launch sweep and the Supabase client no longer share one session manager.",
+            )
+        } finally {
+            koin.close()
+        }
+    }
+
+    @Test
+    fun `androidPlatformModule binds the shortcut publisher over a real Context`() {
+        // GetShortcutCombos lives in :presentation's appModules(), unreachable from this module
+        // alone — a mock stands in so this test proves the binding, not the whole app graph
+        // AppGraphKoinTest already owns (and cannot reach this Context-dependent single, either).
+        val koin = koinApplication {
+            androidContext(mockk<Context>(relaxed = true))
+            modules(androidPlatformModule, module { single { mockk<GetShortcutCombos>() } })
+        }.koin
+
+        try {
+            assertIs<ShortcutPublisher>(
+                koin.get<ShortcutPublisher>(),
+                "androidPlatformModule no longer publishes launcher shortcuts.",
             )
         } finally {
             koin.close()
