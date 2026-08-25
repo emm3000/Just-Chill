@@ -2,19 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>ArgumentListWrapping:SpanishDateFormat.kt:SpanishDateFormat$( "", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo", )</ID>
-    <ID>ClassSignature:SupabaseConfig.kt:SupabaseConfig</ID>
-    <ID>FunctionSignature:CentsFormatter.kt:fun formatCentsForDisplay: String</ID>
-    <ID>FunctionSignature:SpanishDateFormat.kt:SpanishDateFormat$fun longDate: String</ID>
-    <ID>FunctionSignature:SpanishDateFormat.kt:fun String.titlecaseFirstChar: String</ID>
-    <ID>FunctionSignature:SpanishSearch.kt:fun String.stripSpanishAccents: String</ID>
     <ID>InjectDispatcher:CoreModule.kt:Default</ID>
-    <ID>MagicNumber:NumberFormatEs.kt:NumberFormatEs$0.5</ID>
-    <ID>MagicNumber:NumberFormatEs.kt:NumberFormatEs$100.0</ID>
-    <ID>MagicNumber:NumberFormatEs.kt:NumberFormatEs$3</ID>
-    <ID>UnsafeCallOnNullableType:RecurringMovementUi.kt:amount!!</ID>
-    <ID>UseOrEmpty:AddEditRecurringMovementViewModel.kt:AddEditRecurringMovementViewModel$s.selectedAccount?.accountId?.value ?: ""</ID>
-    <ID>UseOrEmpty:EditTransactionViewModel.kt:EditTransactionViewModel$accountRepository.all().firstOrNull() ?: emptyList()</ID>
-    <ID>UseOrEmpty:RecurringMovementUi.kt:accountName ?: ""</ID>
   </CurrentIssues>
 </SmellBaseline>

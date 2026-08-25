@@ -21,16 +21,14 @@ data class RecurringMovementUi(
 )
 
 fun RecurringMovementDetails.toRecurringMovementUi(): RecurringMovementUi {
-    val isVariable = amount == null
-    val formatted = when {
-        isVariable -> "Variable"
-
-        else -> {
-            val raw = fromCentsToSolesWith(amount!!)
-            when (type) {
-                TransactionType.Income -> formatIncome(raw)
-                TransactionType.Spend -> formatExpense(raw)
-            }
+    val fixedAmount = amount
+    val formatted = if (fixedAmount == null) {
+        "Variable"
+    } else {
+        val raw = fromCentsToSolesWith(fixedAmount)
+        when (type) {
+            TransactionType.Income -> formatIncome(raw)
+            TransactionType.Spend -> formatExpense(raw)
         }
     }
     return RecurringMovementUi(
@@ -38,11 +36,11 @@ fun RecurringMovementDetails.toRecurringMovementUi(): RecurringMovementUi {
         name = name,
         type = type,
         formattedAmount = formatted,
-        isVariableAmount = isVariable,
+        isVariableAmount = fixedAmount == null,
         dayOfMonth = dayOfMonth,
         isActive = isActive,
         categoryName = categoryName,
         categoryColor = categoryColor,
-        accountName = accountName ?: "",
+        accountName = accountName.orEmpty(),
     )
 }
