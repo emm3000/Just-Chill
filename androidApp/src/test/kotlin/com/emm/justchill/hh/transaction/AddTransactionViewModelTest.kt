@@ -79,12 +79,26 @@ class AddTransactionViewModelTest {
         categoryType = CategoryType.Income,
     )
 
+    // Ordered before category2 so "the first Income category" (the ordinary default a type switch
+    // picks) is never "salary" — the id the resolved-preselect tests below use — keeping a test that
+    // asserts on the default unambiguous from one that asserts on a resolved match.
+    private val category3 = Category(
+        categoryId = CategoryId("bonus"),
+        name = "Bono",
+        icon = "gift",
+        color = "purple",
+        categoryType = CategoryType.Income,
+    )
+
     private val accountRepository = mockk<AccountRepository> {
-        every { all() } returns flowOf(listOf(account1, account2))
+        every { all() } returns flowOf(listOf(account1, account2), listOf(account1, account2))
     }
 
     private val categoryRepository = mockk<CategoryRepository> {
-        every { all() } returns flowOf(listOf(category1, category2))
+        every { all() } returns flowOf(
+            listOf(category1, category3, category2),
+            listOf(category1, category3, category2),
+        )
     }
 
     private val createTransaction = mockk<CreateTransactionUseCase>(relaxed = true)
@@ -530,6 +544,78 @@ class AddTransactionViewModelTest {
             "the type still switches even when the ids do not resolve",
         )
         assertEquals(defaultAccountId, state.accountSelected?.accountId?.value)
-        assertEquals(category2.categoryId.value, state.categorySelected?.categoryId?.value)
+        // category3, not category2/"salary": proves this is the ordinary type-switch default, not a
+        // coincidental match against the requested (nonexistent) id.
+        assertEquals(category3.categoryId.value, state.categorySelected?.categoryId?.value)
     }
+
+    @Test
+    fun `OnPreselectCombo with every field null touches nothing`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        val before = vm.state.value
+
+        vm.onIntent(AddTransactionIntent.OnPreselectCombo(accountId = null, categoryId = null, type = null))
+        advanceUntilIdle()
+
+        val state = vm.state.value
+        assertEquals(before.accountSelected, state.accountSelected)
+        assertEquals(before.categorySelected, state.categorySelected)
+        assertEquals(before.transactionType, state.transactionType)
+        assertEquals(before.hasChanges, state.hasChanges)
+    }
+
+    @Test
+    fun `a repeat OnPreselectCombo does not re-apply and clobber the user's own edit`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        val request = AddTransactionIntent.OnPreselectCombo(
+            accountId = "bcp",
+            categoryId = "salary",
+            type = TransactionType.Income,
+        )
+
+        vm.onIntent(request)
+        advanceUntilIdle()
+
+        // The user picks a different account, then TransactionEntries' LaunchedEffect(key) restarts
+        // (rotation, or popping back from CategoryRoute) and resends the identical route-derived intent.
+        vm.onIntent(AddTransactionIntent.OnAccountSelected(account1))
+        vm.onIntent(request)
+        advanceUntilIdle()
+
+        assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
+    }
+
+    @Test
+    fun `an expired preselect does not resolve once the id later appears`() = runTest(testDispatcher) {
+        every { accountRepository.all() } returns flowOf(listOf(account1), listOf(account1, account2))
+
+        val vm = buildViewModel()
+        vm.onIntent(AddTransactionIntent.OnPreselectCombo(accountId = "bcp", categoryId = null, type = null))
+        advanceUntilIdle()
+
+        assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
+    }
+
+    @Test
+    fun `a type switch that diverges from a pending preselect expires it instead of a cross-type save`() =
+        runTest(testDispatcher) {
+            val vm = buildViewModel()
+            // Sent before data loads: registers, and the switch to Income runs immediately.
+            vm.onIntent(
+                AddTransactionIntent.OnPreselectCombo(
+                    accountId = "bcp",
+                    categoryId = "salary",
+                    type = TransactionType.Income,
+                ),
+            )
+            // The user taps the type toggle themselves before accounts/categories have loaded.
+            vm.onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Spend))
+            advanceUntilIdle()
+
+            val state = vm.state.value
+            assertEquals(TransactionType.Spend, state.transactionType)
+            assertEquals("yape", state.accountSelected?.accountId?.value)
+            assertEquals(category1.categoryId.value, state.categorySelected?.categoryId?.value)
+        }
 }
