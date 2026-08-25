@@ -609,7 +609,11 @@ class AddTransactionViewModelTest {
                 accountsRead = true
                 flowOf(listOf(account1, account2))
             }
-            coEvery { transactionStatsRepository.lastUsedAccountId() } coAnswers { awaitCancellation() }
+            var lastUsedReadReached = false
+            coEvery { transactionStatsRepository.lastUsedAccountId() } coAnswers {
+                lastUsedReadReached = true
+                awaitCancellation()
+            }
             val store = ViewModelStore()
 
             val vm = buildViewModel()
@@ -618,6 +622,7 @@ class AddTransactionViewModelTest {
             store.clear()
             advanceUntilIdle()
 
+            assertTrue(lastUsedReadReached)
             assertFalse(accountsRead)
         }
 
