@@ -72,7 +72,7 @@ class AddTransactionViewModel(
 
     init {
         viewModelScope.launch {
-            cachedLastUsedAccountId = runCatching { transactionStatsRepository.lastUsedAccountId() }.getOrNull()
+            cachedLastUsedAccountId = loadOrNull { transactionStatsRepository.lastUsedAccountId() }
 
             combine(
                 flow = accountRepository.all(),
@@ -229,10 +229,10 @@ class AddTransactionViewModel(
     private fun loadFrequent(type: TransactionType) {
         loadFrequentJob?.cancel()
         loadFrequentJob = viewModelScope.launch {
-            val ids = loadOrEmpty { getTopUsedCategoryIds(type) }
+            val ids = loadOrNull { getTopUsedCategoryIds(type) }.orEmpty()
             updateState { copy(frequentCategoryIds = ids.map { it.value }) }
 
-            rawCombos = loadOrEmpty { getFrequentCombos(type) }
+            rawCombos = loadOrNull { getFrequentCombos(type) }.orEmpty()
             val comboUiList = buildComboUi(rawCombos, currentState.accounts, allCategories)
             updateState { copy(frequentCombos = comboUiList) }
         }
@@ -295,16 +295,16 @@ private fun findLastUsedAccount(accounts: List<Account>, lastUsedAccountId: Acco
         accounts.firstOrNull()
     }
 
-// Intentional broad catch: a missing frequent-combo row beats a crashed screen. CancellationException
-// must not be swallowed — loadFrequentJob relies on it to stop a stale call; catching it here would
-// let that stale call run to completion anyway and overwrite the newer call's result with an empty list.
+// Intentional broad catch: a missing row beats a crashed screen. CancellationException must not be
+// swallowed — loadFrequentJob relies on it to stop a stale call; catching it here would let that
+// stale call run to completion anyway and overwrite the newer call's result with its own null.
 @Suppress("TooGenericExceptionCaught")
-private suspend fun <T> loadOrEmpty(block: suspend () -> List<T>): List<T> = try {
+private suspend fun <T> loadOrNull(block: suspend () -> T): T? = try {
     block()
 } catch (e: CancellationException) {
     throw e
 } catch (_: Exception) {
-    emptyList()
+    null
 }
 
 // The day is the user's, the hour is the moment of the save — both decided here, not from

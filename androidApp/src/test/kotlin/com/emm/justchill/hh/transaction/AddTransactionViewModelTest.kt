@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.transaction
 
+import androidx.lifecycle.ViewModelStore
 import com.emm.domain.account.Account
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.Category
@@ -20,10 +21,12 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -35,6 +38,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
@@ -596,6 +600,26 @@ class AddTransactionViewModelTest {
 
         assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
     }
+
+    @Test
+    fun `a cleared screen stops init instead of running on past the cancelled last-used read`() =
+        runTest(testDispatcher) {
+            var accountsRead = false
+            every { accountRepository.all() } answers {
+                accountsRead = true
+                flowOf(listOf(account1, account2))
+            }
+            coEvery { transactionStatsRepository.lastUsedAccountId() } coAnswers { awaitCancellation() }
+            val store = ViewModelStore()
+
+            val vm = buildViewModel()
+            store.put("addTransaction", vm)
+            runCurrent()
+            store.clear()
+            advanceUntilIdle()
+
+            assertFalse(accountsRead)
+        }
 
     @Test
     fun `a type switch that diverges from a pending preselect expires it instead of a cross-type save`() =
