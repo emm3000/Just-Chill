@@ -175,7 +175,7 @@ class AddEditRecurringMovementViewModel(
             amount = if (s.isVariableAmount) null else resolveAmount(s.amountDigits),
             description = s.description,
             categoryId = s.selectedCategory?.categoryId?.let { CategoryId(it.value) },
-            accountId = AccountId(s.selectedAccount?.accountId?.value ?: ""),
+            accountId = AccountId(s.selectedAccount?.accountId?.value.orEmpty()),
             dayOfMonth = s.dayOfMonth,
             isActive = s.isActive,
         )

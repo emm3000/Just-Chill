@@ -26,7 +26,14 @@ object SpanishDateFormat {
 
     /** Full Spanish weekday names — DayOfWeek FULL. ISO index 1 (Monday)..7 (Sunday). */
     private val FULL_WEEKDAYS: Array<String> = arrayOf(
-        "", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo",
+        "",
+        "lunes",
+        "martes",
+        "miércoles",
+        "jueves",
+        "viernes",
+        "sábado",
+        "domingo",
     )
 
     fun fullMonth(month: Month): String = FULL_MONTHS[month.number]
@@ -35,8 +42,7 @@ object SpanishDateFormat {
 
     fun fullWeekday(isoDayNumber: Int): String = FULL_WEEKDAYS[isoDayNumber]
 
-    fun longDate(date: LocalDate): String =
-        "${date.dayOfMonth} de ${fullMonth(date.month)} de ${date.year}"
+    fun longDate(date: LocalDate): String = "${date.dayOfMonth} de ${fullMonth(date.month)} de ${date.year}"
 
     fun dayShortMonth(date: LocalDate): String = "${date.dayOfMonth} ${shortMonth(date.month)}"
 
@@ -71,5 +77,4 @@ object SpanishDateFormat {
  * Titlecases only the first character, with no locale — safe because the app is Spanish-only and
  * the Latin alphabet needs none.
  */
-fun String.titlecaseFirstChar(): String =
-    if (isEmpty()) this else this[0].uppercaseChar() + substring(1)
+fun String.titlecaseFirstChar(): String = if (isEmpty()) this else this[0].uppercaseChar() + substring(1)

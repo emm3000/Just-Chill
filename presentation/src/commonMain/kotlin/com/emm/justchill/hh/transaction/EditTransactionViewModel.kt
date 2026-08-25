@@ -120,7 +120,7 @@ class EditTransactionViewModel(
     }
 
     private fun loadCurrentTransaction() = viewModelScope.launch {
-        val accounts: List<Account> = accountRepository.all().firstOrNull() ?: emptyList()
+        val accounts: List<Account> = accountRepository.all().firstOrNull().orEmpty()
         val categoriesList = categoryRepository.all().firstOrNull().orEmpty().map(::toSelectable)
         allCategories.clear()
         allCategories.putAll(categoriesList.groupBy(SelectableCategory::categoryType))
