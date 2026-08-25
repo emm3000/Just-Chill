@@ -51,11 +51,11 @@ The remaining cost is not the form — it is *reaching* it. Every ticket here sh
   whatever the user had chosen. Any future entry point that hands the form a starting state inherits
   this, not just shortcuts.
 
-- **A populated `AddTransactionRoute` no longer dedupes against a bare one (E09-01).**
-  `AppNavigator.push` guards with `backStack.contains(route)`, which is data-class equality, so two
-  add-transaction entries can coexist and back then needs two presses. `AppNavHost` adds a shortcut's
-  route with `backStack::add`, bypassing `AppNavigator.push` entirely and guarding only
-  `it != currentTop`. Whoever pushes a combo route owns that guard.
+- **A shortcut navigates with `AppNavigator.pushToTop`, never `push` (E09-02).** `push` guards with
+  `backStack.contains(route)` — a whole-stack scan, so it is a duplicate guard and never a move-to-top:
+  once the target is buried it silently does nothing, and the user taps a launcher icon and goes
+  nowhere. This regressed the shipped Préstamos shortcut once already. `pushToTop` matches by runtime
+  class, pops what sits above, then reveals an equal route or replaces one carrying a stale combo.
 
 - **A form opened with a preselection arrives with `hasChanges = true`**, because the preselected
   type goes through `changeTransactionType`, which ends in `touched()`. Nothing reads
