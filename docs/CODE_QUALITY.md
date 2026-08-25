@@ -118,8 +118,9 @@ catch `Exception` for the failure you actually meant to tolerate.
 reaches it if something below re-typed it first — `safeDbCall` and `catchAsDomainException` sit
 under every repository read, and a `DomainException.Unknown` is not a cancellation, so the loader's
 own arm never fires. Any new catch-all boundary owes the same first arm, and a `Flow.catch` lambda
-owes it explicitly: `catch` rethrows only the collecting job's own cancellation cause and hands
-every other `CancellationException` to the lambda.
+owes it explicitly: `catch` rethrows in two cases — the collecting job's own cancellation cause, and
+whatever the collector's `emit` threw. Any other `CancellationException` still reaches the
+lambda, so it owes the arm.
 
 ## Arbitration and suppression
 
