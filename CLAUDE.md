@@ -132,8 +132,8 @@ doc has a read-trigger in the map below, and a doc with no trigger is archive.
 - `adr/` — filenames state the decision; each header declares what it amends or supersedes. 009 is
   the one to read first for anything sync-shaped. **Read before changing anything an ADR decided.**
 - `PLAY_ADVERTISING_ID.md`, `PLAY_STORE_LISTING.md`, `PRIVACY_POLICY.md` — the store-facing set.
-  **Read before a Play submission or a privacy change**; on the advertising ID the console says
-  "Yes", wrongly, and that doc is the proof.
+  **Read before a Play submission or a privacy change**; the advertising-ID answer is "No", and a
+  still-active release in ANY track can fail it even when the bundle being uploaded is clean.
 - `DESIGN_SYSTEM.md` — the criteria: which token to reach for and why, never its value. **Read before adding UI.**
 - `RELEASE_CHECKLIST.md` — the ordered gate a release passes, including the ADR 009 restore drill.
   **Read before tagging a release.**

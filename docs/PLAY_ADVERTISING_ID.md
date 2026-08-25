@@ -6,12 +6,6 @@ the dependency and every bundle from `v2.2.0` on is clean. This file holds the e
 commands that produce it, so the question does not have to be re-investigated the next time Play
 asks — it will ask again.
 
-> **Current state (2026-08-20): the declaration says "No", and Play will not accept it.**
-> Every pre-submission check fails with *"Incomplete advertising ID declaration"* even though
-> App content lists the declaration as actioned and `Need attention` is empty. Turning managed
-> publishing off did not clear it. A support case is open. See
-> [If Play blocks the "No" answer](#if-play-blocks-the-no-answer).
-
 ## Quick path — re-verify any build in about two minutes
 
 ```bash
@@ -102,24 +96,21 @@ Declaring that the app uses the advertising ID is not a harmless way to make a r
 The practical risk is that a "Yes" set to unblock one release is never revisited, because nobody
 reopens something that is already green.
 
-## If Play blocks the "No" answer
+## If Play calls a correct "No" declaration incomplete
 
-Do not switch back to "Yes". Open a Play Console support case with the evidence above — the three
-checks are concrete and reproducible, which is what a support case needs.
+Play validates a declaration against every artifact still active in **any** track, not only against
+the bundle being uploaded — `Internal testing` and `Closed testing` count exactly as much as
+`Production`. An old release left active in one of those tracks with a manifest that carries
+`com.google.android.gms.permission.AD_ID` will fail an otherwise correct "No" for a brand-new,
+clean bundle. Check every track for a still-active release that predates `50ff8d4d`, and update or
+replace it — that is the fix, not a support case.
 
-"Yes" is not even an escape. It produces its own error — *"your declaration says your app uses
-advertising ID, a manifest in one of your active artifacts doesn't include the permission"* — and
-the only way past that is the `Release without permission` button, which ships the release with a
-false declaration permanently attached to the listing.
-
-Play evaluates declarations against artifacts, not only against the bundle being uploaded, and
-**an uploaded bundle can never be deleted** — Play Console offers no way to remove one from the
-library. The artifacts that declare `AD_ID` are `v2.0.0` (versionCode 553) and `v2.1.0`. Both show
-`0 releases`, so if they are still being counted, only Play can stop counting them: ask in the
-support case rather than looking for a button.
-
-There is no urgency to trade the correct answer for a shipped build. The app has no third-party
-users, and reaching the author's own device does not need Play — `assembleProdRelease` does.
+Do not switch to "Yes" to unblock a release. "Yes" is not an escape either: it produces its own
+error — *"your declaration says your app uses advertising ID, a manifest in one of your active
+artifacts doesn't include the permission"* — and the only way past that is the `Release without
+permission` button, which ships the release with a false declaration permanently attached to the
+listing. **An uploaded bundle can never be deleted** — Play Console offers no way to remove one
+from the library, so an old artifact stays reachable through whatever track still serves it.
 
 ## Checklist before answering the question again
 
@@ -127,14 +118,6 @@ users, and reaching the author's own device does not need Play — `assembleProd
 - [ ] Control test passed (known permissions found, `AD_ID` not found)
 - [ ] Manifest merger report still reports 0 mentions
 - [ ] No `play-services-measurement` or `play-services-ads-identifier` on the release classpath
+- [ ] No still-active release in **any** track (internal testing, closed testing, production)
+      carries the permission
 - [ ] Answered **No**
-
-## Next step
-
-`v2.5.0` uploaded and **committed its Edit** — the step that refused `v2.4.0` — leaving a draft on
-the alpha track. The declaration was then set to "No", which is where it stands and where it stays.
-
-What blocks the release now is not the declaration's content but its state: Play's pre-submission
-check calls it incomplete while App content lists it as actioned. Nothing in this repo can move
-that. The next step belongs to the support case; when it clears, publish the draft and re-run the
-quick path on the release after it.
