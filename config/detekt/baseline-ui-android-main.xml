@@ -5,9 +5,5 @@
     <ID>LongParameterList:CategoryFilterSheet.kt:@Composable internal fun CategoryFilterSheet</ID>
     <ID>LongParameterList:DeleteTransactionDialog.kt:@Composable internal fun DeleteTransactionDialog</ID>
     <ID>LongParameterList:ProfileRow.kt:@Composable internal fun ProfileRowWithTrailing</ID>
-    <ID>TooManyFunctions:AccountsScreen.kt:com.emm.justchill.hh.account.AccountsScreen.kt</ID>
-    <ID>TooManyFunctions:AddCategoryScreen.kt:com.emm.justchill.hh.category.AddCategoryScreen.kt</ID>
-    <ID>TooManyFunctions:AddEditRecurringMovementScreen.kt:com.emm.justchill.hh.recurring.AddEditRecurringMovementScreen.kt</ID>
-    <ID>TooManyFunctions:RecurringMovementsScreen.kt:com.emm.justchill.hh.recurring.RecurringMovementsScreen.kt</ID>
   </CurrentIssues>
 </SmellBaseline>
