@@ -46,6 +46,32 @@ internal fun DeleteTransactionDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        DeleteTransactionDialogContent(
+            type = type,
+            amountCents = amountCents,
+            accountName = accountName,
+            categoryName = categoryName,
+            categoryColor = categoryColor,
+            onConfirm = onConfirm,
+            onDismiss = onDismiss,
+        )
+    }
+}
+
+@Composable
+private fun DeleteTransactionDialogContent(
+    type: TransactionType,
+    amountCents: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    accountName: String? = null,
+    categoryName: String? = null,
+    categoryColor: Color? = null,
+) {
     val colors = LocalEmmColors.current
     val typography = LocalEmmType.current
 
@@ -54,118 +80,113 @@ internal fun DeleteTransactionDialog(
     val amountColor = if (isSpend) colors.textPrimary else colors.success
     val amountDisplay = "S/ " + formatCentsForDisplay(amountCents)
 
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 24.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(colors.surface2)
+            .padding(20.dp),
     ) {
-        Column(
+        Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
-                .padding(horizontal = 24.dp)
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(colors.surface2)
-                .padding(20.dp),
+                .size(40.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(colors.negMuted)
+                .border(1.dp, colors.border, RoundedCornerShape(12.dp)),
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(colors.negMuted)
-                    .border(1.dp, colors.border, RoundedCornerShape(12.dp)),
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Delete,
-                    contentDescription = null,
-                    tint = colors.danger,
-                    modifier = Modifier.size(20.dp),
+            Icon(
+                imageVector = Icons.Outlined.Delete,
+                contentDescription = null,
+                tint = colors.danger,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Text(
+            text = title,
+            style = typography.headlineM,
+            color = colors.textPrimary,
+        )
+
+        Spacer(Modifier.height(6.dp))
+
+        Text(
+            text = "Esta acción no se puede deshacer.",
+            style = typography.bodyM,
+            color = colors.textSecondary,
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(colors.surface1)
+                .border(1.dp, colors.border, RoundedCornerShape(14.dp))
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+        ) {
+            if (categoryColor != null) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(categoryColor),
                 )
+                Spacer(Modifier.width(8.dp))
             }
-
-            Spacer(Modifier.height(16.dp))
-
             Text(
-                text = title,
-                style = typography.headlineM,
+                text = categoryName ?: "—",
+                style = typography.labelL,
                 color = colors.textPrimary,
             )
-
-            Spacer(Modifier.height(6.dp))
-
-            Text(
-                text = "Esta acción no se puede deshacer.",
-                style = typography.bodyM,
-                color = colors.textSecondary,
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(colors.surface1)
-                    .border(1.dp, colors.border, RoundedCornerShape(14.dp))
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
-            ) {
-                if (categoryColor != null) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(categoryColor),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                }
+            if (accountName != null) {
                 Text(
-                    text = categoryName ?: "—",
+                    text = " / ",
                     style = typography.labelL,
-                    color = colors.textPrimary,
+                    color = colors.textTertiary,
                 )
-                if (accountName != null) {
-                    Text(
-                        text = " / ",
-                        style = typography.labelL,
-                        color = colors.textTertiary,
-                    )
-                    Text(
-                        text = accountName,
-                        style = typography.labelL,
-                        color = colors.textSecondary,
-                    )
-                }
-                Spacer(Modifier.weight(1f))
                 Text(
-                    text = amountDisplay,
-                    style = typography.amountM,
-                    color = amountColor,
+                    text = accountName,
+                    style = typography.labelL,
+                    color = colors.textSecondary,
                 )
             }
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = amountDisplay,
+                style = typography.amountM,
+                color = amountColor,
+            )
+        }
 
-            Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(16.dp))
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                DialogActionButton(
-                    label = "Cancelar",
-                    bg = colors.surface1,
-                    border = colors.border,
-                    textColor = colors.textPrimary,
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f),
-                )
-                DialogActionButton(
-                    label = "Eliminar",
-                    bg = colors.danger,
-                    border = colors.danger,
-                    textColor = colors.textOnAccent,
-                    onClick = onConfirm,
-                    modifier = Modifier.weight(1f),
-                )
-            }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            DialogActionButton(
+                label = "Cancelar",
+                bg = colors.surface1,
+                border = colors.border,
+                textColor = colors.textPrimary,
+                onClick = onDismiss,
+                modifier = Modifier.weight(1f),
+            )
+            DialogActionButton(
+                label = "Eliminar",
+                bg = colors.danger,
+                border = colors.danger,
+                textColor = colors.textOnAccent,
+                onClick = onConfirm,
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }
@@ -203,7 +224,7 @@ private fun DialogActionButton(
 @Composable
 private fun DeleteTransactionDialogPreview() {
     EmmTheme {
-        DeleteTransactionDialog(
+        DeleteTransactionDialogContent(
             type = TransactionType.Spend,
             amountCents = "8540",
             accountName = "Yape",
@@ -220,7 +241,7 @@ private fun DeleteTransactionDialogPreview() {
 @Composable
 private fun DeleteTransactionDialogOverflowPreview() {
     EmmTheme {
-        DeleteTransactionDialog(
+        DeleteTransactionDialogContent(
             type = TransactionType.Spend,
             amountCents = "99999999",
             accountName = "Tarjeta de crédito BCP",
