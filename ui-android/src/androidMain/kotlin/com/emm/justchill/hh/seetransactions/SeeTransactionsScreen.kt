@@ -5,33 +5,24 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
-import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.FilterList
-import androidx.compose.material.icons.outlined.Receipt
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,15 +35,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -69,15 +54,12 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
-import com.emm.justchill.core.ui.atoms.MoneyInline
-import com.emm.justchill.core.ui.atoms.MonthSelector
 import com.emm.justchill.hh.recurring.ConfirmRecurringSheet
 import com.emm.justchill.hh.recurring.PendingRecurringHeader
 import com.emm.justchill.hh.recurring.PendingRecurringRow
 import com.emm.justchill.hh.recurring.PendingRecurringUi
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
-import com.emm.justchill.hh.shared.monthYearLabel
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.components.TransactionRow
@@ -318,255 +300,6 @@ private fun PendingConfirmSheetHost(
 }
 
 @Composable
-private fun ScreenHeader(isCategoryFilterActive: Boolean, onSearch: () -> Unit, onFilter: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp, start = 24.dp, end = 24.dp, bottom = 14.dp),
-    ) {
-        Text(
-            text = "Transacciones",
-            style = type.headlineM.copy(fontSize = 22.sp, letterSpacing = (-0.44).sp),
-            color = colors.textPrimary,
-            modifier = Modifier.weight(1f),
-        )
-        HeaderAction(
-            icon = Icons.Outlined.Search,
-            contentDescription = "Buscar transacciones",
-            onClick = onSearch,
-        )
-        Spacer(Modifier.width(8.dp))
-        HeaderAction(
-            icon = Icons.Outlined.FilterList,
-            contentDescription = if (isCategoryFilterActive) {
-                "Filtrar por categoría, filtro activo"
-            } else {
-                "Filtrar por categoría"
-            },
-            onClick = onFilter,
-            showBadge = isCategoryFilterActive,
-        )
-    }
-}
-
-@Composable
-private fun HeaderAction(
-    icon: ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-    showBadge: Boolean = false,
-) {
-    val colors = LocalEmmColors.current
-    val shape = RoundedCornerShape(12.dp)
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(44.dp)
-            .clip(shape)
-            .background(colors.surface1)
-            .border(1.dp, colors.border, shape)
-            .clickable(onClick = onClick),
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = colors.textPrimary,
-            modifier = Modifier.size(20.dp),
-        )
-        if (showBadge) {
-            // The surface1 ring keeps the accent dot legible where the badge overlaps the icon.
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 9.dp, end = 9.dp)
-                    .size(9.dp)
-                    .clip(CircleShape)
-                    .background(colors.surface1)
-                    .padding(1.5.dp)
-                    .clip(CircleShape)
-                    .background(colors.accent),
-            )
-        }
-    }
-}
-
-@Composable
-private fun MonthSection(state: SeeTransactionsUiState, onPreviousMonth: () -> Unit, onNextMonth: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 14.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        MonthSelector(
-            label = state.month.monthYearLabel(),
-            onPrevious = onPreviousMonth,
-            onNext = onNextMonth,
-        )
-    }
-
-    val summary = state.summary
-    if (summary != null && state.listDisplayState == ListDisplayState.Content) {
-        MonthSummaryStrip(summary = summary)
-    }
-}
-
-@Composable
-private fun MonthSummaryStrip(summary: MonthSummaryUi) {
-    val colors = LocalEmmColors.current
-
-    val netCents = summary.net.cents
-    val netColor = when {
-        netCents > 0L -> colors.success
-        netCents < 0L -> colors.textPrimary
-        else -> colors.textSecondary
-    }
-
-    Row(
-        modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        SummaryCell(
-            label = "Ingresos",
-            value = summary.income.cents.toDouble() / 100.0,
-            valueColor = colors.textPrimary,
-        )
-        SummaryDivider()
-        SummaryCell(
-            label = "Gastos",
-            value = summary.spend.cents.toDouble() / 100.0,
-            valueColor = colors.textSecondary,
-        )
-        SummaryDivider()
-        SummaryCell(
-            label = "Balance",
-            value = netCents.toDouble() / 100.0,
-            valueColor = netColor,
-        )
-    }
-}
-
-@Composable
-private fun SummaryCell(label: String, value: Double, valueColor: Color) {
-    val colors = LocalEmmColors.current
-    Column {
-        Eyebrow(text = label, color = colors.textDisabled)
-        Spacer(Modifier.height(4.dp))
-        MoneyInline(value = value, color = valueColor)
-    }
-}
-
-@Composable
-private fun SummaryDivider() {
-    val colors = LocalEmmColors.current
-    Box(
-        modifier = Modifier
-            .width(1.dp)
-            .height(28.dp)
-            .background(colors.border),
-    )
-}
-
-@Composable
-private fun SearchBar(query: String, onQueryChange: (String) -> Unit, onClose: () -> Unit) {
-    val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp, start = 24.dp, end = 24.dp, bottom = 14.dp),
-    ) {
-        SearchInput(
-            query = query,
-            onQueryChange = onQueryChange,
-            focusRequester = focusRequester,
-            modifier = Modifier.weight(1f),
-        )
-        Spacer(Modifier.width(8.dp))
-        HeaderAction(
-            icon = Icons.Outlined.Close,
-            contentDescription = "Cerrar búsqueda",
-            onClick = onClose,
-        )
-    }
-}
-
-@Composable
-private fun SearchInput(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    focusRequester: FocusRequester,
-    modifier: Modifier = Modifier,
-) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(colors.surface1)
-            .border(1.dp, colors.border, RoundedCornerShape(12.dp))
-            .padding(horizontal = 12.dp, vertical = 11.dp),
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Search,
-            contentDescription = null,
-            tint = colors.textTertiary,
-            modifier = Modifier.size(15.dp),
-        )
-        Spacer(Modifier.width(10.dp))
-        BasicTextField(
-            value = query,
-            onValueChange = onQueryChange,
-            singleLine = true,
-            textStyle = type.labelM.copy(
-                color = colors.textPrimary,
-                fontSize = 13.sp,
-                letterSpacing = 0.sp,
-            ),
-            cursorBrush = SolidColor(colors.accent),
-            decorationBox = { inner ->
-                if (query.isEmpty()) {
-                    Text(
-                        text = "Buscar por descripción o monto",
-                        style = type.labelM.copy(
-                            color = colors.textTertiary,
-                            fontSize = 13.sp,
-                            letterSpacing = 0.sp,
-                        ),
-                    )
-                }
-                inner()
-            },
-            modifier = Modifier
-                .weight(1f)
-                .focusRequester(focusRequester),
-        )
-        if (query.isNotEmpty()) {
-            Spacer(Modifier.width(8.dp))
-            Icon(
-                imageVector = Icons.Outlined.Close,
-                contentDescription = "Limpiar búsqueda",
-                tint = colors.textTertiary,
-                modifier = Modifier
-                    .size(14.dp)
-                    .clickable { onQueryChange("") },
-            )
-        }
-    }
-}
-
-@Composable
 private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
@@ -680,175 +413,6 @@ private fun LazyListScope.dayGroupedItems(
                 tx = tx,
                 showDate = false,
                 onClick = { onItemClick(tx.transactionId) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun EmptyNoTransactionsAtAll(modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-
-    Column(
-        modifier = modifier.padding(horizontal = 24.dp, vertical = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(56.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(colors.surface1)
-                .border(1.dp, colors.border, RoundedCornerShape(16.dp)),
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Receipt,
-                contentDescription = null,
-                tint = colors.textTertiary,
-                modifier = Modifier.size(22.dp),
-            )
-        }
-        Spacer(Modifier.height(18.dp))
-        Text(
-            text = "Aún sin transacciones",
-            style = type.titleL.copy(fontSize = 15.sp, letterSpacing = (-0.075).sp),
-            color = colors.textPrimary,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = "Las que registres aparecerán acá agrupadas por día.",
-            style = type.caption.copy(lineHeight = 18.sp),
-            color = colors.textTertiary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.widthIn(max = 260.dp),
-        )
-    }
-}
-
-@Composable
-private fun EmptyMonth(modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-
-    Column(
-        modifier = modifier.padding(horizontal = 24.dp, vertical = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.CalendarMonth,
-            contentDescription = null,
-            tint = colors.textTertiary,
-            modifier = Modifier.size(26.dp),
-        )
-        Spacer(Modifier.height(18.dp))
-        Text(
-            text = "Sin movimientos este mes",
-            style = type.titleL.copy(fontSize = 15.sp, letterSpacing = (-0.075).sp),
-            color = colors.textPrimary,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = "Cambia de mes con las flechas de arriba.",
-            style = type.caption.copy(lineHeight = 18.sp),
-            color = colors.textTertiary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.widthIn(max = 240.dp),
-        )
-    }
-}
-
-@Composable
-private fun EmptyFilteredNoResults(
-    query: String,
-    activeCategoryName: String?,
-    onClear: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-
-    val headline = buildAnnotatedString {
-        withStyle(
-            SpanStyle(
-                color = colors.textPrimary,
-                fontSize = 15.sp,
-                fontFamily = type.labelM.fontFamily,
-                fontWeight = FontWeight.W600,
-                letterSpacing = (-0.15).sp,
-            ),
-        ) { append("Sin resultados para ") }
-
-        when {
-            activeCategoryName != null -> withStyle(
-                SpanStyle(
-                    color = colors.accent,
-                    fontFamily = type.labelM.fontFamily,
-                    fontWeight = FontWeight.W600,
-                    fontSize = 15.sp,
-                    letterSpacing = (-0.15).sp,
-                ),
-            ) { append("«$activeCategoryName»") }
-
-            query.isNotEmpty() -> withStyle(
-                SpanStyle(
-                    color = colors.accent,
-                    fontFamily = type.labelM.fontFamily,
-                    fontWeight = FontWeight.W600,
-                    fontSize = 15.sp,
-                    letterSpacing = (-0.15).sp,
-                ),
-            ) { append("«$query»") }
-        }
-    }
-
-    Column(
-        modifier = modifier.padding(horizontal = 24.dp, vertical = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        if (activeCategoryName != null || query.isNotEmpty()) {
-            Text(text = headline, textAlign = TextAlign.Center)
-        } else {
-            Text(
-                text = "Sin movimientos con esos filtros",
-                style = type.labelM.copy(fontSize = 15.sp, letterSpacing = (-0.15).sp),
-                color = colors.textPrimary,
-                textAlign = TextAlign.Center,
-            )
-        }
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = "Prueba con otro nombre, otro monto, o limpia los filtros activos.",
-            style = type.caption.copy(lineHeight = 18.sp),
-            color = colors.textTertiary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.widthIn(max = 240.dp),
-        )
-        Spacer(Modifier.height(20.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .clip(RoundedCornerShape(999.dp))
-                .border(1.dp, colors.borderFocus, RoundedCornerShape(999.dp))
-                .clickable { onClear() }
-                .padding(horizontal = 14.dp, vertical = 9.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Close,
-                contentDescription = null,
-                tint = colors.textPrimary,
-                modifier = Modifier.size(11.dp),
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                text = "Limpiar filtros",
-                style = type.labelM.copy(fontSize = 12.sp, letterSpacing = 0.sp),
-                color = colors.textPrimary,
             )
         }
     }
