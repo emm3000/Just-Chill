@@ -201,10 +201,10 @@ A parameter carrying a default does not count toward `LongParameterList`. The nu
 coupling is the count of parameters every caller must supply, not the count declared — a defaulted
 parameter is opt-in surface, which is Compose's own idiom (`androidx.compose.material3.Button` takes
 ten parameters, eight of them defaulted). A composable with two required parameters and a dozen
-defaulted ones is not the same defect as one with eight required parameters and none, and the rule as
-configured before this could not tell them apart. `ignoreDefaultParameters` does not launder a real
-overage: a caller reads only the arguments it passes, and `LongMethod` and this section's own
-decomposition rule already own the size of what a composable builds out of what it receives.
+defaulted ones is not the same defect as one with eight required and none, and a rule counting
+declared parameters cannot tell them apart. The flag does not launder a real overage: a caller reads
+only the arguments it passes, and `LongMethod` and this section's decomposition rule already own the
+size of what a composable builds out of what it receives.
 
 ## Use cases
 
