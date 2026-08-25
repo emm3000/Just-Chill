@@ -17,12 +17,6 @@
 
 ## Context
 
-E06-06 built `TodayFlow` (`presentation/.../core/time/`) and wired only `SeeTransactionsViewModel` to
-it. `ReportViewModel` still re-reads `YearMonth.current(clock, zone)` per interaction, so it is
-correct only because the user keeps tapping.
-
-Report and Ver want opposite rollover behaviour: Ver follows the calendar when the user never chose a
-month, Report never moves the browsed month at all. Reuse the date, not that policy.
-
-Collecting the real `ClockTodayFlow` inside `runTest` hangs forever — inject a fake over a
-`MutableStateFlow`, as the Ver tests do. `presentation/CLAUDE.md` records why.
+E06-06 built `TodayFlow` (`presentation/.../core/time/`) and wired only `SeeTransactionsViewModel`.
+`ReportViewModel` re-reads `YearMonth.current(clock, zone)` per tap. Ver tracks the calendar, Report
+never moves its month: reuse the date, not the policy. Tests take a fake (`presentation/CLAUDE.md`).
