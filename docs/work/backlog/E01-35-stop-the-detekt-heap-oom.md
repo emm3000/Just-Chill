@@ -12,7 +12,8 @@
 
 ## Context
 
-Observed once during the E05-08 review: `:androidApp:detektProdDebugUnitTest` died with
-`java.lang.OutOfMemoryError: Java heap space` analysing `BackupOrchestratorTest.kt` under detekt
-2.0.0-alpha.6, and the identical command went green on the next run. A gate that is red once and
-green on re-run is a gate people learn to re-run.
+Seen twice under detekt 2.0.0-alpha.6, each time green on the identical re-run: during the E05-08
+review `:androidApp:detektProdDebugUnitTest` died with `java.lang.OutOfMemoryError: Java heap space`
+analysing `BackupOrchestratorTest.kt`, and during E07-05 the dev-flavor sibling
+`:androidApp:detektDevDebugUnitTest` died the same way. Two flavors, so it is heap pressure on the
+worker, not one file. A gate that is red once and green on re-run is a gate people learn to re-run.
