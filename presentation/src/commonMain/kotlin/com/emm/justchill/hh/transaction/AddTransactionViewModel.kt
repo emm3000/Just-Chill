@@ -48,6 +48,15 @@ class AddTransactionViewModel(
 
     private var rawCombos: List<FrequentCombo> = emptyList()
 
+    private data class PendingPreselect(val accountId: String?, val categoryId: String?, val type: TransactionType?)
+
+    private var pendingPreselect: PendingPreselect? = null
+
+    // False until init's combine has emitted at least once: an empty accounts/categories lookup
+    // before that point means "not loaded yet", not "the id is gone" — only a lookup made once this
+    // is true is allowed to give up on pendingPreselect.
+    private var dataLoaded: Boolean = false
+
     init {
         viewModelScope.launch {
             cachedLastUsedAccountId = runCatching { transactionStatsRepository.lastUsedAccountId() }.getOrNull()
@@ -59,6 +68,7 @@ class AddTransactionViewModel(
                 allCategories.clear()
                 val categoryMap = categories.groupBy(SelectableCategory::categoryType).toMutableMap()
                 allCategories.putAll(categoryMap)
+                dataLoaded = true
                 updateState {
                     copy(
                         accounts = accounts,
@@ -69,6 +79,7 @@ class AddTransactionViewModel(
                         frequentCombos = buildComboUi(rawCombos, accounts, allCategories),
                     ).validate()
                 }
+                applyPendingPreselect(accounts, definitive = true)
             }.launchIn(viewModelScope)
 
             loadFrequent(currentState.transactionType)
@@ -101,6 +112,12 @@ class AddTransactionViewModel(
 
             is AddTransactionIntent.OnFrequentComboSelected -> selectFrequentCombo(intent.value)
 
+            is AddTransactionIntent.OnPreselectCombo -> applyPendingPreselect(
+                accounts = currentState.accounts,
+                definitive = dataLoaded,
+                newRequest = PendingPreselect(intent.accountId, intent.categoryId, intent.type),
+            )
+
             AddTransactionIntent.OnReset -> reset()
 
             is AddTransactionIntent.OnNewValueFromOthers -> addCategoryFromOthers(intent.value)
@@ -119,9 +136,8 @@ class AddTransactionViewModel(
     }
 
     private fun selectFrequentCombo(combo: FrequentComboUi) {
-        val account = currentState.accounts.find { it.accountId.value == combo.accountId }
-        val category = allCategories[combo.type.categoryType].orEmpty()
-            .find { it.categoryId.value == combo.categoryId }
+        val account = findAccount(currentState.accounts, combo.accountId)
+        val category = findCategory(allCategories, combo.type.categoryType, combo.categoryId)
         if (account == null || category == null) return
         updateState {
             copy(
@@ -130,6 +146,47 @@ class AddTransactionViewModel(
             ).touched()
         }
         sendEffect(AddTransactionEffect.FocusAmountField)
+    }
+
+    /**
+     * Registers [newRequest] (from `OnPreselectCombo`) if given, then attempts to resolve whatever
+     * is pending. [definitive] must only be true once `accountRepository.all()`/
+     * `categoryRepository.all()` are known to have emitted — an empty match before then means "not
+     * loaded yet", not "gone", so a non-definitive miss leaves [pendingPreselect] in place for the
+     * next attempt (fired again from init's `combine` block) instead of falling back to the
+     * ordinary defaults.
+     */
+    private fun applyPendingPreselect(
+        accounts: List<Account>,
+        definitive: Boolean,
+        newRequest: PendingPreselect? = null,
+    ) {
+        val meaningfulRequest = newRequest?.takeIf {
+            it.accountId != null || it.categoryId != null || it.type != null
+        }
+        if (meaningfulRequest != null) {
+            pendingPreselect = meaningfulRequest
+            meaningfulRequest.type?.let(::changeTransactionType)
+        }
+
+        val pending = pendingPreselect ?: return
+        val categoryType = (pending.type ?: currentState.transactionType).categoryType
+        val account = findAccount(accounts, pending.accountId)
+        val category = findCategory(allCategories, categoryType, pending.categoryId)
+        val accountMissing = pending.accountId != null && account == null
+        val categoryMissing = pending.categoryId != null && category == null
+
+        if (accountMissing || categoryMissing) {
+            if (definitive) pendingPreselect = null
+        } else {
+            pendingPreselect = null
+            updateState {
+                copy(
+                    accountSelected = account ?: accountSelected,
+                    categorySelected = category ?: categorySelected,
+                ).validate()
+            }
+        }
     }
 
     private fun reset() {
@@ -206,19 +263,13 @@ class AddTransactionViewModel(
         )
     }
 
+    // The day is the user's, the hour is the moment of the save — both decided here, not from
+    // the state's cached `today`.
     private fun addTransaction() = launchSafe(
         onError = { AddTransactionEffect.ShowError(it.toUserMessage()) },
     ) {
-        createTransaction(createTransactionInsert())
-        cachedLastUsedAccountId = currentState.accountSelected?.accountId
-        sendEffect(AddTransactionEffect.TransactionSaved)
-    }
-
-    // The day is the user's, the hour is the moment of the save — both decided here, not from
-    // the state's cached `today`.
-    private fun createTransactionInsert(): TransactionInsert {
         val now: LocalDateTime = clock.now().toLocalDateTime(zone)
-        return TransactionInsert(
+        val insert = TransactionInsert(
             type = currentState.transactionType,
             description = currentState.description,
             occurredAt = LocalDateTime(currentState.date ?: now.date, now.time),
@@ -227,6 +278,9 @@ class AddTransactionViewModel(
             accountId = currentState.accountSelected?.accountId
                 ?: error("accountSelected required to build TransactionInsert — UI should have disabled save"),
         )
+        createTransaction(insert)
+        cachedLastUsedAccountId = currentState.accountSelected?.accountId
+        sendEffect(AddTransactionEffect.TransactionSaved)
     }
 
     private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
@@ -241,6 +295,15 @@ private fun mapToUi(categories: List<Category>): List<SelectableCategory> = cate
         colorId = it.color,
     )
 }
+
+private fun findAccount(accounts: List<Account>, accountId: String?): Account? =
+    accountId?.let { id -> accounts.find { it.accountId.value == id } }
+
+private fun findCategory(
+    categories: Map<CategoryType, List<SelectableCategory>>,
+    categoryType: CategoryType,
+    categoryId: String?,
+): SelectableCategory? = categoryId?.let { id -> categories[categoryType].orEmpty().find { it.categoryId.value == id } }
 
 private fun AddTransactionUiState.validate(): AddTransactionUiState = copy(isEnabled = missingField == null)
 

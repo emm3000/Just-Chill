@@ -468,4 +468,68 @@ class AddTransactionViewModelTest {
         assertEquals(before.categorySelected, vm.state.value.categorySelected)
         assertTrue(vm.state.value.categories.all { it.categoryType == CategoryType.Spend })
     }
+
+    @Test
+    fun `OnPreselectCombo resolves once data arrives when sent before it loads`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        // Sent before the first advanceUntilIdle(): init's combine has not emitted yet.
+        vm.onIntent(
+            AddTransactionIntent.OnPreselectCombo(
+                accountId = "bcp",
+                categoryId = "salary",
+                type = TransactionType.Income,
+            ),
+        )
+        advanceUntilIdle()
+
+        val state = vm.state.value
+        assertEquals(TransactionType.Income, state.transactionType)
+        assertEquals("bcp", state.accountSelected?.accountId?.value)
+        assertEquals("salary", state.categorySelected?.categoryId?.value)
+    }
+
+    @Test
+    fun `OnPreselectCombo resolves immediately when data is already loaded`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(
+            AddTransactionIntent.OnPreselectCombo(
+                accountId = "bcp",
+                categoryId = "salary",
+                type = TransactionType.Income,
+            ),
+        )
+        advanceUntilIdle()
+
+        val state = vm.state.value
+        assertEquals(TransactionType.Income, state.transactionType)
+        assertEquals("bcp", state.accountSelected?.accountId?.value)
+        assertEquals("salary", state.categorySelected?.categoryId?.value)
+    }
+
+    @Test
+    fun `OnPreselectCombo with a missing id keeps the ordinary defaults`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        val defaultAccountId = vm.state.value.accountSelected?.accountId?.value
+
+        vm.onIntent(
+            AddTransactionIntent.OnPreselectCombo(
+                accountId = "deleted-account",
+                categoryId = "deleted-category",
+                type = TransactionType.Income,
+            ),
+        )
+        advanceUntilIdle()
+
+        val state = vm.state.value
+        assertEquals(
+            TransactionType.Income,
+            state.transactionType,
+            "the type still switches even when the ids do not resolve",
+        )
+        assertEquals(defaultAccountId, state.accountSelected?.accountId?.value)
+        assertEquals(category2.categoryId.value, state.categorySelected?.categoryId?.value)
+    }
 }

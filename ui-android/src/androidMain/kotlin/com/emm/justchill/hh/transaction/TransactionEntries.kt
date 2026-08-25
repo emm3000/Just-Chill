@@ -17,9 +17,19 @@ fun EntryProviderScope<NavKey>.transactionEntries(
     pendingCategory: () -> SelectableCategory?,
     onPendingCategoryConsumed: () -> Unit,
 ) {
-    entry<AddTransactionRoute> {
+    entry<AddTransactionRoute> { key ->
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         val vm: AddTransactionViewModel = koinViewModel()
+
+        LaunchedEffect(key) {
+            vm.onIntent(
+                AddTransactionIntent.OnPreselectCombo(
+                    accountId = key.preselectedAccountId,
+                    categoryId = key.preselectedCategoryId,
+                    type = key.preselectedType,
+                ),
+            )
+        }
 
         LaunchedEffect(pendingCategory()) {
             pendingCategory()?.let { selectableCategory ->
