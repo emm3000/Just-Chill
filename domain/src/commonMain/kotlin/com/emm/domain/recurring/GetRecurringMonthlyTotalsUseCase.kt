@@ -9,13 +9,15 @@ class GetRecurringMonthlyTotalsUseCase {
         val activeList = list.filter { it.isActive }
         if (activeList.isEmpty()) return RecurringMonthlyTotals.Empty
 
-        val incomeTotal = activeList
-            .filter { it.type == TransactionType.Income && it.amount != null }
-            .fold(Money.Zero) { acc, item -> acc + item.amount!! }
+        val incomeTotal = activeList.fold(Money.Zero) { acc, item ->
+            val amount = item.amount
+            if (item.type == TransactionType.Income && amount != null) acc + amount else acc
+        }
 
-        val expenseTotal = activeList
-            .filter { it.type == TransactionType.Spend && it.amount != null }
-            .fold(Money.Zero) { acc, item -> acc + item.amount!! }
+        val expenseTotal = activeList.fold(Money.Zero) { acc, item ->
+            val amount = item.amount
+            if (item.type == TransactionType.Spend && amount != null) acc + amount else acc
+        }
 
         val activeVariableCount = activeList.count { it.amount == null }
 
