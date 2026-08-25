@@ -4,17 +4,13 @@
 
 ## Done when
 
-- [ ] one overflow menu serves both the account row and the recurring-movement row —
-      `AccountRowMenu` (`hh/account/AccountRow.kt`) and `RecurringRowMenu`
-      (`hh/recurring/RecurringMovementRow.kt`) stop being two copies
-- [ ] `MenuIcon` exists once, not once per feature
-- [ ] the shared component takes its `contentDescription` from the caller: the account row says
-      "Opciones de cuenta" and the recurring row says "Opciones" — that difference is a real
-      accessibility label, not drift to normalise away
-- [ ] the component lands where `DESIGN_SYSTEM.md` and `CODE_QUALITY.md` say it belongs — the design
-      system (`core/ui/atoms/`) or the cross-feature package (`hh/shared/`), decided and stated, not
-      a third copy
-- [ ] both screens render identically and no Spanish copy changes beyond the two labels above
+- [ ] `EmmRowMenu(contentDescription, onEdit, onDelete)` lives in `core/ui/atoms/EmmRowMenu.kt` and
+      serves both rows — `AccountRowMenu` (`hh/account/AccountRow.kt`), `RecurringRowMenu`
+      (`hh/recurring/RecurringMovementRow.kt`) and both copies of `MenuIcon` are gone
+- [ ] the caller supplies the `contentDescription`: the account row says "Opciones de cuenta" and the
+      recurring row says "Opciones" — that difference is a real accessibility label, not drift to
+      normalise away
+- [ ] no other Spanish copy changes, and both rows render identically on a device
 - [ ] `./gradlew qualityGate --rerun-tasks` and `./gradlew assembleDevDebug` both pass
 
 ## Context
@@ -22,7 +18,6 @@
 Surfaced by E07-04's split, which relocated both menus but was forbidden from merging them: a
 baseline burn-down may only shrink a baseline, and this is not a baseline entry.
 
-The two menus differ in **one line** out of ~45 — the `contentDescription`. `MenuIcon` is
-byte-identical. Read `docs/CODE_QUALITY.md` on DRY-over-knowledge before assuming that settles it:
-two rows that look alike today can still encode different knowledge. Decide whether an overflow menu
-with edit and delete is one idea or two, and say which in the closing commit.
+Measured with `diff`: each menu taken with its private `MenuIcon` is 89 lines, and the two differ in
+exactly two — the function name and the `contentDescription`. What repeats is style tokens, not
+business logic, which is why the merged component is an atom and not a feature helper.
