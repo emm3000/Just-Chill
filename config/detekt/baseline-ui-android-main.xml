@@ -4,12 +4,10 @@
   <CurrentIssues>
     <ID>LongParameterList:CategoryFilterSheet.kt:@Composable internal fun CategoryFilterSheet</ID>
     <ID>LongParameterList:DeleteTransactionDialog.kt:@Composable internal fun DeleteTransactionDialog</ID>
-    <ID>LongParameterList:ProfileScreen.kt:@Composable private fun ProfileRowWithTrailing</ID>
+    <ID>LongParameterList:ProfileRow.kt:@Composable internal fun ProfileRowWithTrailing</ID>
     <ID>TooManyFunctions:AccountsScreen.kt:com.emm.justchill.hh.account.AccountsScreen.kt</ID>
     <ID>TooManyFunctions:AddCategoryScreen.kt:com.emm.justchill.hh.category.AddCategoryScreen.kt</ID>
     <ID>TooManyFunctions:AddEditRecurringMovementScreen.kt:com.emm.justchill.hh.recurring.AddEditRecurringMovementScreen.kt</ID>
-    <ID>TooManyFunctions:ProfileScreen.kt:com.emm.justchill.hh.profile.ProfileScreen.kt</ID>
     <ID>TooManyFunctions:RecurringMovementsScreen.kt:com.emm.justchill.hh.recurring.RecurringMovementsScreen.kt</ID>
-    <ID>TooManyFunctions:SeeTransactionsScreen.kt:com.emm.justchill.hh.seetransactions.SeeTransactionsScreen.kt</ID>
   </CurrentIssues>
 </SmellBaseline>
