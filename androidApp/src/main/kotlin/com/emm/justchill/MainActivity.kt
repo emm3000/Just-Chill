@@ -12,10 +12,14 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.emm.justchill.hh.shared.AppNavHost
+import com.emm.justchill.hh.shared.EXTRA_ACCOUNT_ID
+import com.emm.justchill.hh.shared.EXTRA_CATEGORY_ID
+import com.emm.justchill.hh.shared.EXTRA_TYPE
+import com.emm.justchill.hh.shared.ShortcutIntent
 
 class MainActivity : ComponentActivity() {
 
-    private var shortcutAction by mutableStateOf<String?>(null)
+    private var shortcut by mutableStateOf(ShortcutIntent())
     private var shortcutRequestId by mutableIntStateOf(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,13 +32,13 @@ class MainActivity : ComponentActivity() {
         // Only a fresh process consumes the launch intent — a rotation or a process-death restore
         // re-delivers the same intent and would otherwise yank the user back to the shortcut route.
         if (savedInstanceState == null) {
-            shortcutAction = intent?.action
+            shortcut = intent.toShortcutIntent()
             shortcutRequestId++
         }
         // EmmTheme is applied inside AppNavHost (the unified commonMain nav host).
         setContent {
             AppNavHost(
-                shortcutAction = shortcutAction,
+                shortcut = shortcut,
                 shortcutRequestId = shortcutRequestId,
             )
         }
@@ -43,7 +47,16 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        shortcutAction = intent.action
+        shortcut = intent.toShortcutIntent()
         shortcutRequestId++
     }
+
+    // MainActivity is exported (it is the launcher activity), so any app on the device can start it
+    // with arbitrary extras — read only plain strings here, never a nav-runtime or :domain type.
+    private fun Intent?.toShortcutIntent(): ShortcutIntent = ShortcutIntent(
+        action = this?.action,
+        accountId = this?.getStringExtra(EXTRA_ACCOUNT_ID),
+        categoryId = this?.getStringExtra(EXTRA_CATEGORY_ID),
+        type = this?.getStringExtra(EXTRA_TYPE),
+    )
 }

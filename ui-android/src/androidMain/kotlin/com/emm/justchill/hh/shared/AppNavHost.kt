@@ -53,7 +53,7 @@ import org.koin.compose.koinInject
 import org.koin.core.qualifier.named
 
 @Composable
-fun AppNavHost(modifier: Modifier = Modifier, shortcutAction: String? = null, shortcutRequestId: Int = 0) {
+fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = ShortcutIntent(), shortcutRequestId: Int = 0) {
     EmmTheme {
         val colors = LocalEmmColors.current
         val appPrefs: AppPreferences = koinInject()
@@ -68,7 +68,7 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcutAction: String? = null, sh
         val backStack: NavBackStack<NavKey> = rememberNavBackStack(startRoute)
         val hostNav: AppNavigator = rememberAppNavigator(backStack)
         LaunchedEffect(shortcutRequestId) {
-            shortcutRouteToPush(shortcutAction, appPrefs.firstLaunchSeen, backStack.lastOrNull())?.let(backStack::add)
+            shortcutRouteToPush(shortcut, appPrefs.firstLaunchSeen, backStack.lastOrNull())?.let(hostNav::push)
         }
         var pendingCategory by remember { mutableStateOf<SelectableCategory?>(null) }
         var pendingImportJson by remember { mutableStateOf<String?>(null) }
