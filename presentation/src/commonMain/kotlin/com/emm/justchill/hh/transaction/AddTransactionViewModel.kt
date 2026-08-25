@@ -18,7 +18,6 @@ import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.shared.Empty
 import com.emm.justchill.hh.shared.comboLabel
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
@@ -294,18 +293,6 @@ private fun findLastUsedAccount(accounts: List<Account>, lastUsedAccountId: Acco
     } else {
         accounts.firstOrNull()
     }
-
-// Intentional broad catch: a missing row beats a crashed screen. CancellationException must not be
-// swallowed — loadFrequentJob relies on it to stop a stale call; catching it here would let that
-// stale call run to completion anyway and overwrite the newer call's result with its own null.
-@Suppress("TooGenericExceptionCaught")
-private suspend fun <T> loadOrNull(block: suspend () -> T): T? = try {
-    block()
-} catch (e: CancellationException) {
-    throw e
-} catch (_: Exception) {
-    null
-}
 
 // The day is the user's, the hour is the moment of the save — both decided here, not from
 // the state's cached `today`.

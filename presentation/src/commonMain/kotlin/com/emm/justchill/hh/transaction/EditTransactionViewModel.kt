@@ -101,7 +101,7 @@ class EditTransactionViewModel(
     }
 
     private fun loadFrequent(type: TransactionType) = viewModelScope.launch {
-        val ids = runCatching { getTopUsedCategoryIds(type) }.getOrDefault(emptyList())
+        val ids = loadOrNull { getTopUsedCategoryIds(type) }.orEmpty()
         updateState { copy(frequentCategoryIds = ids.map { it.value }) }
     }
 
