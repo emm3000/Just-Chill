@@ -9,6 +9,7 @@ import com.emm.domain.category.CategoryType
 import com.emm.domain.recurring.CreateRecurringMovementUseCase
 import com.emm.domain.recurring.Frequency
 import com.emm.domain.recurring.RecurringMovement
+import com.emm.domain.recurring.RecurringMovementInsert
 import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.recurring.UpdateRecurringMovementUseCase
 import com.emm.domain.shared.AccountId
@@ -22,6 +23,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -251,13 +253,12 @@ class AddEditRecurringMovementViewModelTest {
 
         assertNotNull(vm.state.value.selectedAccount)
         assertEquals("acc-1", vm.state.value.selectedAccount?.accountId?.value)
-        assertNull(vm.state.value.pendingAccountId)
     }
 
     @Test
     fun `edit mode - category resolved even when categories flow emits after template load`() = runTest {
-        // Without a pendingCategoryId safety net, the category would silently resolve to null and
-        // wipe the saved category.
+        // The template's id lands whenever the catalog carries it: nothing expires it on the
+        // first failed lookup, so the saved category cannot be silently wiped.
         val categoriesFlow = MutableSharedFlow<List<Category>>(replay = 1)
         every { categoryRepository.all() } returns categoriesFlow
 
@@ -275,7 +276,6 @@ class AddEditRecurringMovementViewModelTest {
 
         assertNotNull(vm.state.value.selectedCategory)
         assertEquals("cat-1", vm.state.value.selectedCategory?.categoryId?.value)
-        assertNull(vm.state.value.pendingCategoryId)
     }
 
     @Test
@@ -286,7 +286,6 @@ class AddEditRecurringMovementViewModelTest {
 
         assertNotNull(vm.state.value.selectedAccount)
         assertEquals("acc-1", vm.state.value.selectedAccount?.accountId?.value)
-        assertNull(vm.state.value.pendingAccountId)
     }
 
     private val spendCategory = Category(CategoryId("cat-spend"), "Bar", "bar", "purple", CategoryType.Spend)
@@ -319,6 +318,51 @@ class AddEditRecurringMovementViewModelTest {
         // and it would only surface at save time as a generic database error.
         assertNull(vm.state.value.selectedCategory)
         assertEquals(listOf("cat-income"), vm.state.value.categories.map { it.categoryId.value })
+    }
+
+    @Test
+    fun `switching the type away and back re-offers the template's own category`() = runTest {
+        every { categoryRepository.all() } returns flowOf(listOf(spendCategory, incomeCategory))
+        val template = testTemplate.copy(categoryId = CategoryId("cat-spend"))
+        coEvery { recurringRepository.find(RecurringMovementId("rm-1")) } returns template
+        val vm = createViewModel(id = "rm-1")
+        advanceUntilIdle()
+
+        vm.onIntent(AddEditRecurringMovementIntent.OnTypeChange(TransactionType.Income))
+        advanceUntilIdle()
+        assertNull(vm.state.value.selectedCategory)
+
+        vm.onIntent(AddEditRecurringMovementIntent.OnTypeChange(TransactionType.Spend))
+        advanceUntilIdle()
+
+        assertEquals("cat-spend", vm.state.value.selectedCategory?.categoryId?.value)
+    }
+
+    @Test
+    fun `a category deleted while the form is open is not written on save`() = runTest {
+        val categoriesFlow = MutableSharedFlow<List<Category>>(replay = 1)
+        every { categoryRepository.all() } returns categoriesFlow
+        coEvery { createRecurring(any()) } returns Unit
+        categoriesFlow.emit(listOf(spendCategory))
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(AddEditRecurringMovementIntent.OnNameChange("Netflix"))
+        vm.onIntent(AddEditRecurringMovementIntent.OnAmountChange("1800"))
+        vm.onIntent(AddEditRecurringMovementIntent.OnCategorySelected(vm.state.value.categories.single()))
+        advanceUntilIdle()
+        assertNotNull(vm.state.value.selectedCategory)
+
+        categoriesFlow.emit(emptyList())
+        advanceUntilIdle()
+        assertNull(vm.state.value.selectedCategory, "the row the selection pointed at is gone")
+
+        vm.onIntent(AddEditRecurringMovementIntent.Save)
+        advanceUntilIdle()
+
+        val insert = slot<RecurringMovementInsert>()
+        coVerify { createRecurring(capture(insert)) }
+        assertNull(insert.captured.categoryId, "a deleted category must never reach the database")
     }
 
     @Test

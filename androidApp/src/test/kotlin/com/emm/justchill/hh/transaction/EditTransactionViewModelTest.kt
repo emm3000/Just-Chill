@@ -22,6 +22,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -197,7 +198,6 @@ class EditTransactionViewModelTest {
         vm.onIntent(EditTransactionIntent.OnDateSelected(LocalDate(2026, Month.JUNE, 13)))
         advanceUntilIdle()
 
-        assertEquals(true, vm.state.value.hasChanges)
         assertEquals(true, vm.state.value.isEnabled)
     }
 
@@ -209,7 +209,6 @@ class EditTransactionViewModelTest {
         vm.onIntent(EditTransactionIntent.OnDateSelected(marchDay))
         advanceUntilIdle()
 
-        assertEquals(false, vm.state.value.hasChanges)
         assertEquals(false, vm.state.value.isEnabled)
     }
 
@@ -255,7 +254,7 @@ class EditTransactionViewModelTest {
         advanceUntilIdle()
 
         assertNull(vm.state.value.categorySelected, "nobody picked this")
-        assertFalse(vm.state.value.hasChanges, "opening a screen is not an edit")
+        assertFalse(vm.state.value.isEnabled, "opening a screen is not an edit")
     }
 
     @Test
@@ -297,6 +296,34 @@ class EditTransactionViewModelTest {
 
         assertEquals(1, vm.state.value.categories.size, "the Income category must be on offer")
         assertNull(vm.state.value.categorySelected, "on offer, but not chosen for the user")
+    }
+
+    @Test
+    fun `a category deleted while the form is open stops being selected`() = runTest(testDispatcher) {
+        val categories = MutableSharedFlow<List<Category>>(replay = 1)
+        every { categoryRepository.all() } returns categories
+        categories.emit(listOf(category))
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        assertEquals(category.categoryId, vm.state.value.categorySelected?.categoryId)
+
+        categories.emit(emptyList())
+        advanceUntilIdle()
+
+        assertNull(vm.state.value.categorySelected, "the row the selection pointed at is gone")
+    }
+
+    @Test
+    fun `deleting targets the route's transaction even when the row never loaded`() = runTest(testDispatcher) {
+        coEvery { transactionRepository.find(TransactionId("tx-1")) } returns null
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        vm.onIntent(EditTransactionIntent.OnDelete)
+        advanceUntilIdle()
+
+        coVerify { deleteTransaction.invoke(TransactionId("tx-1")) }
     }
 
     @Test

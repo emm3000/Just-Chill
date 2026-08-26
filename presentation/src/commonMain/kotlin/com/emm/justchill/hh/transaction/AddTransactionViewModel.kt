@@ -50,7 +50,7 @@ class AddTransactionViewModel(
 
             combine(
                 flow = accountRepository.all(),
-                flow2 = categoryRepository.all().map(::mapToUi),
+                flow2 = categoryRepository.all().map { categories -> categories.map(Category::toSelectable) },
             ) { accounts, categories ->
                 Catalog.Loaded(accounts, categories.groupBy(SelectableCategory::categoryType))
             }
@@ -140,16 +140,6 @@ class AddTransactionViewModel(
     }
 
     private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
-}
-
-private fun mapToUi(categories: List<Category>): List<SelectableCategory> = categories.map {
-    SelectableCategory(
-        categoryId = it.categoryId,
-        name = it.name,
-        iconId = it.icon,
-        categoryType = it.categoryType,
-        colorId = it.color,
-    )
 }
 
 // The day is the user's, the hour is the moment of the save — both decided here, not from

@@ -12,14 +12,6 @@ import com.emm.justchill.hh.shared.comboLabel
 import com.emm.justchill.hh.shared.relativeDayLabel
 import kotlinx.datetime.LocalDate
 
-sealed interface Catalog {
-
-    data object Loading : Catalog
-
-    data class Loaded(val accounts: List<Account>, val categories: Map<CategoryType, List<SelectableCategory>>) :
-        Catalog
-}
-
 data class FrequentUsage(
     val loadedFor: TransactionType,
     val categoryIds: List<String>,

@@ -36,6 +36,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
+import com.emm.justchill.hh.transaction.Catalog
 import com.emm.justchill.hh.transaction.SelectableCategory
 import com.emm.justchill.hh.transaction.resolvedColor
 
@@ -149,17 +150,27 @@ private fun SelectorPillsRowOverflowPreview() {
     EmmTheme {
         SelectorPillsRow(
             state = AddEditRecurringMovementUiState(
-                selectedAccount = Account(
-                    accountId = AccountId("1"),
-                    name = "Tarjeta de crédito BCP",
+                catalog = Catalog.Loaded(
+                    accounts = listOf(
+                        Account(
+                            accountId = AccountId("1"),
+                            name = "Tarjeta de crédito BCP",
+                        ),
+                    ),
+                    categories = mapOf(
+                        CategoryType.Spend to listOf(
+                            SelectableCategory(
+                                categoryId = CategoryId("1"),
+                                name = "Cuidado personal y salud",
+                                iconId = "wallet",
+                                categoryType = CategoryType.Spend,
+                                colorId = "green",
+                            ),
+                        ),
+                    ),
                 ),
-                selectedCategory = SelectableCategory(
-                    categoryId = CategoryId("1"),
-                    name = "Cuidado personal y salud",
-                    iconId = "wallet",
-                    categoryType = CategoryType.Spend,
-                    colorId = "green",
-                ),
+                accountId = AccountId("1"),
+                categoryId = CategoryId("1"),
                 dayOfMonth = 31,
             ),
             onOpenAccount = {},
