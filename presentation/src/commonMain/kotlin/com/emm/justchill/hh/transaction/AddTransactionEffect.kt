@@ -7,6 +7,4 @@ sealed interface AddTransactionEffect : UiEffect {
     data object TransactionSaved : AddTransactionEffect
 
     data class ShowError(val message: String) : AddTransactionEffect
-
-    data object FocusAmountField : AddTransactionEffect
 }

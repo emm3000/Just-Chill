@@ -57,11 +57,6 @@ The remaining cost is not the form — it is *reaching* it. Every ticket here sh
   nowhere. This regressed the shipped Préstamos shortcut once already. `pushToTop` matches by runtime
   class, pops what sits above, then reveals an equal route or replaces one carrying a stale combo.
 
-- **A form opened with a preselection arrives with `hasChanges = true`**, because the preselected
-  type goes through `changeTransactionType`, which ends in `touched()`. Nothing reads
-  `AddTransactionUiState.hasChanges` today. Anyone wiring a discard-changes prompt to it must fix
-  this first, or every shortcut launch will claim the user has unsaved work.
-
 - **The launcher's shortcut slots are a shared, floor-limited budget (E09-03).** Manifest and dynamic
   shortcuts both count against `getMaxShortcutCountPerActivity()`, which the platform only guarantees
   to be at least five. Prod publishes one static (`loans`) plus three combos; **dev already declares

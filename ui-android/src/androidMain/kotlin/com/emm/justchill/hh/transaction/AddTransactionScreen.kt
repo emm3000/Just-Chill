@@ -61,7 +61,7 @@ import kotlinx.datetime.Month
 
 private fun ctaInteraction(state: AddTransactionUiState): CtaInteraction = when {
     state.isSaving -> CtaInteraction.Loading
-    state.isEnabled -> CtaInteraction.Enabled
+    state.missingField == null -> CtaInteraction.Enabled
     else -> CtaInteraction.Disabled
 }
 
@@ -88,8 +88,6 @@ fun AddTransactionScreen(
                     message = effect.message,
                     tone = EmmSnackbarTone.Error,
                 )
-
-                AddTransactionEffect.FocusAmountField -> Unit // Numpad field; no focus action needed.
             }
         }
     }

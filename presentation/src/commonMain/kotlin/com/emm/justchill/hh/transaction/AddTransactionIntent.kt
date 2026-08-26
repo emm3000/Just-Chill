@@ -26,7 +26,5 @@ sealed interface AddTransactionIntent : UiIntent {
     data class OnPreselectCombo(val accountId: String?, val categoryId: String?, val type: TransactionType?) :
         AddTransactionIntent
 
-    data object OnReset : AddTransactionIntent
-
     data object OnSave : AddTransactionIntent
 }

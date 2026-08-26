@@ -16,7 +16,6 @@ import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
-import com.emm.justchill.hh.shared.Empty
 import com.emm.justchill.hh.shared.comboLabel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
@@ -89,7 +88,7 @@ class AddTransactionViewModel(
                         categorySelected = categorySelected
                             ?: allCategories[transactionType.categoryType]?.firstOrNull(),
                         frequentCombos = buildComboUi(rawCombos, accounts, allCategories),
-                    ).validate()
+                    )
                 }
                 resolvePendingPreselect(accounts)
             }.launchIn(viewModelScope)
@@ -104,31 +103,25 @@ class AddTransactionViewModel(
         // every intent but the handful that cross midnight.
         updateState { copy(today = today()) }
         when (intent) {
-            is AddTransactionIntent.OnAmountChange -> updateState { copy(amount = intent.value).touched() }
+            is AddTransactionIntent.OnAmountChange -> updateState { copy(amount = intent.value) }
 
-            is AddTransactionIntent.OnDescriptionChange -> updateState { copy(description = intent.value).touched() }
+            is AddTransactionIntent.OnDescriptionChange -> updateState { copy(description = intent.value) }
 
             is AddTransactionIntent.OnTransactionTypeChange -> changeTransactionType(intent.value)
 
-            is AddTransactionIntent.OnDateSelected -> updateState { copy(date = intent.value).touched() }
+            is AddTransactionIntent.OnDateSelected -> updateState { copy(date = intent.value) }
 
             AddTransactionIntent.OnSave -> addTransaction()
 
-            is AddTransactionIntent.OnAccountSelected -> updateState { copy(accountSelected = intent.value).touched() }
+            is AddTransactionIntent.OnAccountSelected -> updateState { copy(accountSelected = intent.value) }
 
-            is AddTransactionIntent.OnCategorySelected -> updateState {
-                copy(
-                    categorySelected = intent.value,
-                ).touched()
-            }
+            is AddTransactionIntent.OnCategorySelected -> updateState { copy(categorySelected = intent.value) }
 
             is AddTransactionIntent.OnFrequentComboSelected -> selectFrequentCombo(intent.value)
 
             is AddTransactionIntent.OnPreselectCombo -> registerPreselect(
                 PendingPreselect(intent.accountId, intent.categoryId, intent.type),
             )
-
-            AddTransactionIntent.OnReset -> reset()
 
             is AddTransactionIntent.OnNewValueFromOthers -> addCategoryFromOthers(intent.value)
         }
@@ -140,7 +133,7 @@ class AddTransactionViewModel(
                 transactionType = type,
                 categories = allCategories[type.categoryType].orEmpty(),
                 categorySelected = allCategories[type.categoryType]?.firstOrNull(),
-            ).touched()
+            )
         }
         loadFrequent(type)
     }
@@ -153,9 +146,8 @@ class AddTransactionViewModel(
             copy(
                 accountSelected = account,
                 categorySelected = category,
-            ).touched()
+            )
         }
-        sendEffect(AddTransactionEffect.FocusAmountField)
     }
 
     private fun registerPreselect(request: PendingPreselect) {
@@ -183,26 +175,8 @@ class AddTransactionViewModel(
                 copy(
                     accountSelected = account ?: accountSelected,
                     categorySelected = category ?: categorySelected,
-                ).validate()
+                )
             }
-        }
-    }
-
-    private fun reset() {
-        updateState {
-            val defaultType = TransactionType.Spend
-            copy(
-                amount = "",
-                description = String.Empty,
-                date = null,
-                today = today(),
-                transactionType = defaultType,
-                categories = allCategories[defaultType.categoryType].orEmpty(),
-                categorySelected = allCategories[defaultType.categoryType]?.firstOrNull(),
-                accountSelected = findLastUsedAccount(accounts, cachedLastUsedAccountId),
-                isEnabled = false,
-                hasChanges = false,
-            )
         }
     }
 
@@ -221,7 +195,7 @@ class AddTransactionViewModel(
             copy(
                 categories = updatedCategories,
                 categorySelected = category,
-            ).touched()
+            )
         }
     }
 
@@ -314,7 +288,3 @@ private fun AddTransactionUiState.toInsert(now: LocalDateTime): TransactionInser
     accountId = accountSelected?.accountId
         ?: error("accountSelected required to build TransactionInsert — UI should have disabled save"),
 )
-
-private fun AddTransactionUiState.validate(): AddTransactionUiState = copy(isEnabled = missingField == null)
-
-private fun AddTransactionUiState.touched(): AddTransactionUiState = validate().copy(hasChanges = true)

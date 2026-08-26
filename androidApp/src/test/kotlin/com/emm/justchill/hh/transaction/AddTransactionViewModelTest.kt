@@ -24,7 +24,6 @@ import io.mockk.slot
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -263,35 +262,6 @@ class AddTransactionViewModelTest {
         }
 
     @Test
-    fun `OnReset puts the date back to unset`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        vm.onIntent(AddTransactionIntent.OnDateSelected(LocalDate(2026, Month.JUNE, 13)))
-        advanceUntilIdle()
-
-        vm.onIntent(AddTransactionIntent.OnReset)
-        advanceUntilIdle()
-
-        assertNull(vm.state.value.date)
-        assertEquals("Hoy", vm.state.value.dateLabel)
-    }
-
-    @Test
-    fun `OnReset restores transactionType to the Spend default`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        vm.onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Income))
-        advanceUntilIdle()
-
-        vm.onIntent(AddTransactionIntent.OnReset)
-        advanceUntilIdle()
-
-        assertEquals(TransactionType.Spend, vm.state.value.transactionType)
-    }
-
-    @Test
     fun `frequentCombos populated on init when combos match accounts and categories`() = runTest(testDispatcher) {
         val combo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
         coEvery { getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>()) } returns listOf(combo)
@@ -389,26 +359,6 @@ class AddTransactionViewModelTest {
     }
 
     @Test
-    fun `FocusAmountField effect is emitted when OnFrequentComboSelected is handled`() = runTest(testDispatcher) {
-        val combo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
-        coEvery { getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>()) } returns listOf(combo)
-
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        val effects = mutableListOf<AddTransactionEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
-
-        val comboUi = vm.state.value.frequentCombos.first()
-        vm.onIntent(AddTransactionIntent.OnFrequentComboSelected(comboUi))
-        advanceUntilIdle()
-
-        job.cancel()
-        val focusEffects = effects.filterIsInstance<AddTransactionEffect.FocusAmountField>()
-        assertEquals(1, focusEffects.size)
-    }
-
-    @Test
     fun `accountSelected is last-used account on init when history exists`() = runTest(testDispatcher) {
         coEvery { transactionStatsRepository.lastUsedAccountId() } returns AccountId("bcp")
 
@@ -434,22 +384,6 @@ class AddTransactionViewModelTest {
         advanceUntilIdle()
 
         assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
-    }
-
-    @Test
-    fun `OnReset restores last-used account pre-selection`() = runTest(testDispatcher) {
-        coEvery { transactionStatsRepository.lastUsedAccountId() } returns AccountId("bcp")
-
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        vm.onIntent(AddTransactionIntent.OnAccountSelected(account1))
-        advanceUntilIdle()
-
-        vm.onIntent(AddTransactionIntent.OnReset)
-        advanceUntilIdle()
-
-        assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
     }
 
     @Test
@@ -586,7 +520,6 @@ class AddTransactionViewModelTest {
         assertEquals(before.accountSelected, state.accountSelected)
         assertEquals(before.categorySelected, state.categorySelected)
         assertEquals(before.transactionType, state.transactionType)
-        assertEquals(before.hasChanges, state.hasChanges)
     }
 
     @Test
