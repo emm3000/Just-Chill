@@ -6,15 +6,17 @@
 
 - [ ] `hasChanges` is gone from `AddTransactionUiState`, and E09's constraint about it — the one
       warning the next writer about a field nothing reads — is removed in the same commit
-- [ ] `isEnabled` is gone; `AddTransactionScreen` reads `missingField == null`
+- [ ] `isEnabled` is gone; `AddTransactionScreen`'s `ctaInteraction` reads `missingField == null`
+- [ ] `touched()` and `validate()` are gone, and all eleven call sites drop the suffix
 - [ ] `reset()`, `AddTransactionIntent.OnReset` and their three tests are gone
 - [ ] `AddTransactionEffect.FocusAmountField`, its `sendEffect` and its test are gone
-- [ ] `touched()` and `validate()` are collapsed into at most one helper
-- [ ] `rg 'OnReset|FocusAmountField' --type kotlin` returns nothing
+- [ ] `rg 'hasChanges|OnReset|FocusAmountField' presentation ui-android androidApp` finds nothing
+      outside `EditTransaction`, which E10-04 takes
+- [ ] `./gradlew qualityGate` is green, with `:androidApp:testDevDebugUnitTest --rerun`
 
 ## Context
 
 Each one is provably unread: `hasChanges` has no consumer outside `:presentation`, `OnReset` no
 Composable and no Swift caller, and `AddTransactionScreen` handles `FocusAmountField` with `-> Unit`.
-Deleting them also frees the two detekt ceilings the class is wedged against — eleven class
-functions and seven top-level — which E10-03 needs before it can extract anything.
+`validate()` only ever set `isEnabled`, and `touched()` only ever called `validate()` and set
+`hasChanges` — so both vanish with the two fields rather than merging into one.
