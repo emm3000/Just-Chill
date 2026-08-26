@@ -565,6 +565,56 @@ class AddTransactionViewModelTest {
     }
 
     @Test
+    fun `a preselect whose category id is dangling still lands the account id that resolves`() =
+        runTest(testDispatcher) {
+            val vm = buildViewModel()
+
+            vm.onIntent(
+                AddTransactionIntent.OnPreselectCombo(
+                    accountId = "bcp",
+                    categoryId = "deleted-category",
+                    type = TransactionType.Income,
+                ),
+            )
+            advanceUntilIdle()
+
+            val state = vm.state.value
+            assertEquals("bcp", state.accountSelected?.accountId?.value)
+            // The dangling id falls back to the Income default on its own; it does not take the
+            // account down with it.
+            assertEquals(category3.categoryId.value, state.categorySelected?.categoryId?.value)
+        }
+
+    @Test
+    fun `the chip row never shows the previous type's suggestions after a type switch`() = runTest(testDispatcher) {
+        val spendCombo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
+        coEvery { getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>()) } returns listOf(spendCombo)
+        coEvery {
+            getTopUsedCategoryIds.invoke(TransactionType.Spend, any<Int>(), any<Int>())
+        } returns listOf(CategoryId("food"))
+        // The Income reads never land, so nothing but the read-time type filter can empty the row.
+        val incomeReads = CompletableDeferred<Unit>()
+        coEvery { getTopUsedCategoryIds.invoke(TransactionType.Income, any<Int>(), any<Int>()) } coAnswers {
+            incomeReads.await()
+            emptyList()
+        }
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        assertEquals(listOf("Yape · Comida"), vm.state.value.frequentCombos.map { it.label })
+        assertEquals(listOf("food"), vm.state.value.frequentCategoryIds)
+
+        vm.onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Income))
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.frequentCombos.isEmpty(), "a Spend combo cannot be offered on an Income movement")
+        assertTrue(vm.state.value.frequentCategoryIds.isEmpty())
+
+        incomeReads.complete(Unit)
+        advanceUntilIdle()
+    }
+
+    @Test
     fun `a cleared screen stops init instead of running on past the cancelled last-used read`() =
         runTest(testDispatcher) {
             var accountsRead = false
