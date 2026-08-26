@@ -21,11 +21,13 @@ out of that one habit. This track removes the habit, not the symptoms.
   `transactionType` cannot go stale; a list a reducer has to remember to clear always can. Prefer the
   getter to the extra line in the `copy`.
 
-- **detekt cannot see this class of defect, and it never will.** Three measured reasons: `LongMethod`
-  does not inspect `init` blocks — `SeeTransactionsViewModel`'s is 83 lines and green with no
-  `@Suppress` and no baseline entry — `CognitiveComplexMethod` is off in
-  `config/detekt/detekt.yml`, and `CyclomaticComplexMethod` at 14 is out of reach: the repo's largest
-  `when` scores about 11. A green gate is not evidence in this track.
+- **detekt cannot see this class of defect in a ViewModel, and it never will.** Three measured
+  reasons: `LongMethod` does not inspect `init` blocks — `SeeTransactionsViewModel`'s is 83 lines and
+  green with no `@Suppress` and no baseline entry — `CognitiveComplexMethod` is off in
+  `config/detekt/detekt.yml`, and no `onIntent` here comes near `CyclomaticComplexMethod`'s 14: the
+  largest `when` in the repo scores about 11. That rule does bite one layer up — E10-01 pushed
+  `AddTransactionScreenContent` to 16 with a three-arm `when` at a call site — so read a green gate as
+  evidence about the Composables, never about the state behind them.
 
 - **`AuthViewModel` is the reference, and it is already in this repo.** Nine intents, four use cases,
   zero mutable fields: the re-entrancy guard lives in the sealed state and `launchSubmitting`'s
