@@ -38,6 +38,7 @@ val loanModule = module {
             deleteLoan = get(),
             registerLoanPayment = get(),
             updateLoanPayment = get(),
+            todayFlow = get(),
             clock = get(),
             zone = get(),
         )
@@ -49,6 +50,7 @@ val loanModule = module {
             loanRepository = get(),
             createLoan = get(),
             updateLoan = get(),
+            todayFlow = get(),
             clock = get(),
             zone = get(),
         )

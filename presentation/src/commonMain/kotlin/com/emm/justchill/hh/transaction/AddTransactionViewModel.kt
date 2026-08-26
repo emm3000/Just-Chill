@@ -14,6 +14,7 @@ import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.core.time.TodayFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -23,7 +24,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -37,11 +37,13 @@ class AddTransactionViewModel(
     private val transactionStatsRepository: TransactionStatsRepository,
     accountRepository: AccountRepository,
     categoryRepository: CategoryRepository,
+    private val todayFlow: TodayFlow,
+    // Only the hour of the save comes from these; the day is TodayFlow's answer.
     private val clock: Clock,
     private val zone: TimeZone,
 ) : MviViewModel<AddTransactionUiState, AddTransactionIntent, AddTransactionEffect>() {
 
-    override val initialState = AddTransactionUiState(today = today())
+    override val initialState = AddTransactionUiState(today = todayFlow.today())
 
     init {
         viewModelScope.launch {
@@ -68,10 +70,10 @@ class AddTransactionViewModel(
     }
 
     override fun onIntent(intent: AddTransactionIntent) {
-        // Every interaction re-reads the clock, so a screen left open overnight stops claiming that
+        // Every interaction re-reads the date, so a screen left open overnight stops claiming that
         // yesterday is "Hoy". StateFlow drops the emission when the day has not changed, which is
         // every intent but the handful that cross midnight.
-        updateState { copy(today = today()) }
+        updateState { copy(today = todayFlow.today()) }
         when (intent) {
             is AddTransactionIntent.OnAmountChange -> updateState { copy(amount = intent.value) }
             is AddTransactionIntent.OnDescriptionChange -> updateState { copy(description = intent.value) }
@@ -138,8 +140,6 @@ class AddTransactionViewModel(
             sendEffect(AddTransactionEffect.TransactionSaved)
         }
     }
-
-    private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
 }
 
 // The day is the user's, the hour is the moment of the save — both decided here, not from

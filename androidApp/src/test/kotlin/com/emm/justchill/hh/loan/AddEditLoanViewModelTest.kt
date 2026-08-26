@@ -11,6 +11,7 @@ import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.error.toUserMessage
+import com.emm.justchill.core.time.FakeTodayFlow
 import com.emm.justchill.hh.transaction.moneyCentsString
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -18,6 +19,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -55,6 +57,7 @@ class AddEditLoanViewModelTest {
     )
 
     private val fixedClock = MovableClock(instantAt(today, hour = 14, minute = 30))
+    private val todayDates = MutableStateFlow(today)
 
     private val loanRepository = mockk<LoanRepository> {
         every { balancesByPerson() } returns flowOf(emptyList())
@@ -82,9 +85,25 @@ class AddEditLoanViewModelTest {
         loanRepository = loanRepository,
         createLoan = createLoan,
         updateLoan = updateLoan,
+        todayFlow = FakeTodayFlow(todayDates),
         clock = fixedClock,
         zone = lima,
     )
+
+    /**
+     * The Clock this ViewModel still holds answers "what hour", never "what day". Pointing
+     * TodayFlow at a different day than the clock's is the only way to tell the two apart.
+     */
+    @Test
+    fun `today is TodayFlow's day, not the clock's`() = runTest {
+        val christmas = LocalDate(2026, Month.DECEMBER, 25)
+        todayDates.value = christmas
+
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        assertEquals(christmas, vm.state.value.today)
+    }
 
     @Test
     fun `create with CreateLoanUseCase throwing PersonRequired emits ShowError with the Spanish message`() = runTest {

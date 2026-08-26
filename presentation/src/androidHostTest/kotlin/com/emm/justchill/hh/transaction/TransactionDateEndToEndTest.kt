@@ -16,10 +16,12 @@ import com.emm.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.UpdateTransactionUseCase
+import com.emm.justchill.core.time.TodayFlow
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -32,6 +34,7 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -202,7 +205,8 @@ class TransactionDateEndToEndTest {
 
         val karachi = editViewModel(zone = TimeZone.of("Asia/Karachi")).awaitLoaded()
 
-        // Same value, other side of the planet. The row carries no zone to be re-read in.
+        // Same value, other side of the planet — and the day the screen thinks it is has already
+        // rolled over there. The row carries no zone to be re-read in.
         assertEquals(LocalDate(2026, Month.MARCH, 4), karachi.state.value.date)
     }
 
@@ -224,6 +228,7 @@ class TransactionDateEndToEndTest {
         },
         accountRepository = accountRepository,
         categoryRepository = categoryRepository,
+        todayFlow = todayFlowIn(lima),
         clock = clock,
         zone = lima,
     )
@@ -236,9 +241,18 @@ class TransactionDateEndToEndTest {
         transactionRepository = transactionRepository,
         deleteTransaction = mockk<DeleteTransactionUseCase>(relaxed = true),
         getTopUsedCategoryIds = getTopUsedCategoryIds,
-        clock = clock,
-        zone = zone,
+        todayFlow = todayFlowIn(zone),
     )
+
+    /**
+     * A fake, as `presentation/CLAUDE.md` requires — but one reading the same movable clock the
+     * rest of this test drives, so "today" can never disagree with the instant being stored.
+     */
+    private fun todayFlowIn(zone: TimeZone): TodayFlow = object : TodayFlow {
+        override fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
+
+        override fun invoke(): Flow<LocalDate> = flowOf(today())
+    }
 
     /**
      * The writes run on `Dispatchers.IO`, which the test scheduler does not drive — so these wait

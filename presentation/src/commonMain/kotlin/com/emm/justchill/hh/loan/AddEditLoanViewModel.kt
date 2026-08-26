@@ -9,6 +9,7 @@ import com.emm.domain.loan.UpdateLoanUseCase
 import com.emm.domain.shared.LoanId
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.core.time.TodayFlow
 import com.emm.justchill.hh.transaction.centsToMoney
 import com.emm.justchill.hh.transaction.isSavableAmount
 import com.emm.justchill.hh.transaction.moneyCentsString
@@ -16,22 +17,24 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
+@Suppress("LongParameterList")
 class AddEditLoanViewModel(
     private val loanId: String?,
     private val loanRepository: LoanRepository,
     private val createLoan: CreateLoanUseCase,
     private val updateLoan: UpdateLoanUseCase,
+    todayFlow: TodayFlow,
+    // Only the hour a loan is stamped with comes from these; the day is TodayFlow's answer.
     private val clock: Clock,
     private val zone: TimeZone,
 ) : MviViewModel<AddEditLoanUiState, AddEditLoanIntent, AddEditLoanEffect>() {
 
-    override val initialState = AddEditLoanUiState(today = today(), isEdit = loanId != null)
+    override val initialState = AddEditLoanUiState(today = todayFlow.today(), isEdit = loanId != null)
 
     // Set by loadLoan on the edit path; save() reuses its time-of-day so an edit never rewrites
     // lentAt to "now", which loansWithBalance and balancesByPerson both order and pick by.
@@ -140,8 +143,6 @@ class AddEditLoanViewModel(
         }
         sendEffect(AddEditLoanEffect.NavigateBack)
     }
-
-    private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
 }
 
 private fun AddEditLoanUiState.recalcSaveEnabled(): AddEditLoanUiState =

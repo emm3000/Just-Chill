@@ -16,6 +16,7 @@ import com.emm.domain.shared.Money
 import com.emm.domain.shared.error.DomainException
 import com.emm.domain.shared.error.ValidationCode
 import com.emm.justchill.MainDispatcherRule
+import com.emm.justchill.core.time.FakeTodayFlow
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -69,6 +70,7 @@ class LoanDetailViewModelTest {
     )
 
     private val fixedClock = MovableClock(instantAt(today, hour = 14, minute = 30))
+    private val todayDates = MutableStateFlow(today)
 
     private val loanIdValue = LoanId("loan-1")
 
@@ -99,6 +101,7 @@ class LoanDetailViewModelTest {
         deleteLoan,
         registerLoanPayment,
         updateLoanPayment,
+        FakeTodayFlow(todayDates),
         fixedClock,
         lima,
     )
@@ -447,6 +450,25 @@ class LoanDetailViewModelTest {
         coVerify(exactly = 1) { updateLoanPayment(capture(update)) }
         // 09:00 is the payment() fixture's original paidAt time; the date is the newly picked one.
         assertEquals(LocalDateTime(newDate, LocalTime(9, 0)), update.captured.paidAt)
+    }
+
+    /**
+     * The Clock this ViewModel still holds answers "what hour", never "what day". Pointing
+     * TodayFlow at a different day than the clock's is the only way to tell the two apart.
+     */
+    @Test
+    fun `the payment sheet opens on TodayFlow's day, not the clock's`() = runTest {
+        every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+        every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(emptyList())
+        val christmas = LocalDate(2026, Month.DECEMBER, 25)
+        todayDates.value = christmas
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick)
+        advanceUntilIdle()
+
+        assertEquals(christmas, vm.state.value.payment?.today)
     }
 
     @Test

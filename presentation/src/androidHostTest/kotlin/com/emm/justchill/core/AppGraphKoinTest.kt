@@ -199,11 +199,11 @@ class AppGraphKoinTest {
      * green. That is not hypothetical. `ProfileModule` omitted `clock = get()` for the whole life
      * of the class and nothing here noticed; it was found by reading, not by failing.
      *
-     * The two hand-written blocks are where this can go wrong, because they list arguments by hand
-     * and a hand-written list can forget one: `profileModule`'s `viewModel { }` and
-     * `transactionModule`'s parametrised `EditTransactionViewModel` block. The constructor DSL
-     * cannot forget. The sweep is not limited to those two, though — it checks every definition, so
-     * converting any class to a hand-written block later inherits the guard for free.
+     * The hand-written blocks are where this can go wrong, because they list arguments by hand and
+     * a hand-written list can forget one: `profileModule`'s `viewModel { }` and `loanModule`'s two
+     * parametrised blocks. The constructor DSL cannot forget. The sweep is not limited to those,
+     * though — it checks every definition, so converting any class to a hand-written block later
+     * inherits the guard for free.
      *
      * Binding sentinels is what makes the difference observable: a clock at a fixed instant and a
      * zone the machine is not in. `assertSame`, not `assertEquals` — two `Clock.System` references

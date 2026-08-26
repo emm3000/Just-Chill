@@ -14,16 +14,13 @@ import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.UpdateTransactionUseCase
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.core.time.TodayFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Clock
 
 @Suppress("LongParameterList")
 class EditTransactionViewModel(
@@ -34,11 +31,10 @@ class EditTransactionViewModel(
     private val transactionRepository: TransactionRepository,
     private val deleteTransaction: DeleteTransactionUseCase,
     private val getTopUsedCategoryIds: GetTopUsedCategoryIdsUseCase,
-    private val clock: Clock,
-    private val zone: TimeZone,
+    private val todayFlow: TodayFlow,
 ) : MviViewModel<EditTransactionUiState, EditTransactionIntent, EditTransactionEffect>() {
 
-    override val initialState = EditTransactionUiState(date = today(), today = today())
+    override val initialState = EditTransactionUiState(date = todayFlow.today(), today = todayFlow.today())
 
     init {
         combine(
@@ -54,10 +50,10 @@ class EditTransactionViewModel(
     }
 
     override fun onIntent(intent: EditTransactionIntent) {
-        // Every interaction re-reads the clock, so a screen left open overnight stops labelling
+        // Every interaction re-reads the date, so a screen left open overnight stops labelling
         // yesterday's transaction "Hoy". StateFlow drops the emission when the day has not changed.
         // Only the label moves: `date` is the transaction's own day and is never re-resolved.
-        updateState { copy(today = today()) }
+        updateState { copy(today = todayFlow.today()) }
         when (intent) {
             is EditTransactionIntent.OnAmountChange -> updateState { copy(amount = intent.value) }
             is EditTransactionIntent.OnDescriptionChange -> updateState { copy(description = intent.value) }
@@ -112,8 +108,6 @@ class EditTransactionViewModel(
         deleteTransaction(TransactionId(transactionId))
         sendEffect(EditTransactionEffect.TransactionDeleted)
     }
-
-    private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
 }
 
 // The hour comes from the row, never from the clock; and when the date is untouched, `date` still

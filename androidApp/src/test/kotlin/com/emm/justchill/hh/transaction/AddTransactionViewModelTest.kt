@@ -16,6 +16,7 @@ import com.emm.domain.transaction.TransactionInsert
 import com.emm.domain.transaction.TransactionStatsRepository
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.MainDispatcherRule
+import com.emm.justchill.core.time.FakeTodayFlow
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -65,6 +66,13 @@ class AddTransactionViewModelTest {
     )
 
     private val fixedClock = MovableClock(instantAt(today, hour = 14, minute = 30))
+    private val todayDates = MutableStateFlow(today)
+
+    /** The clock supplies the hour of the save; TodayFlow is the only source of the day. */
+    private fun crossMidnightInto(date: LocalDate, hour: Int, minute: Int) {
+        fixedClock.instant = instantAt(date, hour, minute)
+        todayDates.value = date
+    }
 
     private val account1 = Account(AccountId("yape"), "Yape")
     private val account2 = Account(AccountId("bcp"), "BCP")
@@ -125,6 +133,7 @@ class AddTransactionViewModelTest {
         transactionStatsRepository = transactionStatsRepository,
         accountRepository = accountRepository,
         categoryRepository = categoryRepository,
+        todayFlow = FakeTodayFlow(todayDates),
         clock = fixedClock,
         zone = lima,
     )
@@ -152,7 +161,7 @@ class AddTransactionViewModelTest {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        fixedClock.instant = instantAt(tomorrow, hour = 0, minute = 5)
+        crossMidnightInto(tomorrow, hour = 0, minute = 5)
 
         vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
         advanceUntilIdle()
@@ -174,7 +183,7 @@ class AddTransactionViewModelTest {
         vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
         advanceUntilIdle()
 
-        fixedClock.instant = instantAt(tomorrow, hour = 0, minute = 5)
+        crossMidnightInto(tomorrow, hour = 0, minute = 5)
 
         vm.onIntent(AddTransactionIntent.OnSave)
         advanceUntilIdle()
@@ -184,13 +193,28 @@ class AddTransactionViewModelTest {
         assertEquals(LocalDateTime(picked, LocalTime(0, 5)), insert.captured.occurredAt)
     }
 
+    /**
+     * The Clock this ViewModel still holds answers "what hour", never "what day". Pointing
+     * TodayFlow at a different day than the clock's is the only way to tell the two apart.
+     */
+    @Test
+    fun `today is TodayFlow's day, not the clock's`() = runTest(testDispatcher) {
+        val christmas = LocalDate(2026, Month.DECEMBER, 25)
+        todayDates.value = christmas
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertEquals(christmas, vm.state.value.today)
+    }
+
     @Test
     fun `today catches up on the next interaction after midnight`() = runTest(testDispatcher) {
         val vm = buildViewModel()
         advanceUntilIdle()
         assertEquals(today, vm.state.value.today)
 
-        fixedClock.instant = instantAt(tomorrow, hour = 0, minute = 5)
+        crossMidnightInto(tomorrow, hour = 0, minute = 5)
         vm.onIntent(AddTransactionIntent.OnAmountChange("1"))
         advanceUntilIdle()
 
@@ -206,7 +230,7 @@ class AddTransactionViewModelTest {
         advanceUntilIdle()
         assertEquals("Hoy", vm.state.value.dateLabel)
 
-        fixedClock.instant = instantAt(tomorrow, hour = 0, minute = 5)
+        crossMidnightInto(tomorrow, hour = 0, minute = 5)
         vm.onIntent(AddTransactionIntent.OnAmountChange("1"))
         advanceUntilIdle()
 

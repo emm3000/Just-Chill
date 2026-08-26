@@ -16,6 +16,7 @@ import com.emm.domain.shared.LoanPaymentId
 import com.emm.domain.shared.Money
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.core.time.TodayFlow
 import com.emm.justchill.hh.shared.formatNeutral
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.transaction.centsToMoney
@@ -23,17 +24,17 @@ import com.emm.justchill.hh.transaction.moneyCentsString
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
-// Eight independent dependencies, each already minimal: the loan id off the route, the two
+// Nine independent dependencies, each already minimal: the loan id off the route, the two
 // repositories the summary is combined from, the three use cases for the writes that carry
-// invariants (cascade delete, payment validation on create and on edit), and Clock/TimeZone the
-// graph binds by identity (AppGraphKoinTest) — folding any pair into a holder would lose that
-// identity check, not the count.
+// invariants (cascade delete, payment validation on create and on edit), TodayFlow for the day a
+// payment form opens on, and Clock/TimeZone — kept for the time of day only — which the graph binds
+// by identity (AppGraphKoinTest); folding any pair into a holder would lose that identity check,
+// not the count.
 @Suppress("LongParameterList")
 class LoanDetailViewModel(
     private val loanId: String,
@@ -42,6 +43,7 @@ class LoanDetailViewModel(
     private val deleteLoan: DeleteLoanUseCase,
     private val registerLoanPayment: RegisterLoanPaymentUseCase,
     private val updateLoanPayment: UpdateLoanPaymentUseCase,
+    private val todayFlow: TodayFlow,
     private val clock: Clock,
     private val zone: TimeZone,
 ) : MviViewModel<LoanDetailUiState, LoanDetailIntent, LoanDetailEffect>() {
@@ -125,7 +127,8 @@ class LoanDetailViewModel(
     private fun onPaymentFormIntent(intent: LoanDetailIntent.PaymentFormIntent) {
         when (intent) {
             LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick -> updateState {
-                copy(payment = LoanPaymentFormUi(loanId = loanId, today = today(), remainingCents = 0L).withCap())
+                val form = LoanPaymentFormUi(loanId = loanId, today = todayFlow.today(), remainingCents = 0L)
+                copy(payment = form.withCap())
             }
 
             is LoanDetailIntent.PaymentFormIntent.OnEditPaymentClick -> onEditPaymentClick(intent.paymentId)
@@ -162,7 +165,7 @@ class LoanDetailViewModel(
             copy(
                 payment = LoanPaymentFormUi(
                     loanId = loanId,
-                    today = today(),
+                    today = todayFlow.today(),
                     remainingCents = 0L,
                     amountDigits = moneyCentsString(payment.amount),
                     method = payment.method,
@@ -248,6 +251,4 @@ class LoanDetailViewModel(
         }
         updateState { copy(payment = null) }
     }
-
-    private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
 }

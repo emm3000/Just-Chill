@@ -17,12 +17,14 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.domain.transaction.TransactionUpdate
 import com.emm.domain.transaction.UpdateTransactionUseCase
 import com.emm.justchill.MainDispatcherRule
+import com.emm.justchill.core.time.FakeTodayFlow
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -31,16 +33,12 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Month
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import kotlin.time.Clock
-import kotlin.time.Instant
 
 class EditTransactionViewModelTest {
 
@@ -49,18 +47,8 @@ class EditTransactionViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
-    private val lima = TimeZone.of("America/Lima")
     private val today = LocalDate(2026, Month.AUGUST, 10)
-
-    private class MovableClock(var instant: Instant) : Clock {
-        override fun now(): Instant = instant
-    }
-
-    private fun instantAt(date: LocalDate, hour: Int, minute: Int): Instant = Instant.fromEpochMilliseconds(
-        LocalDateTime(date, LocalTime(hour, minute)).toInstant(lima).toEpochMilliseconds(),
-    )
-
-    private val fixedClock = MovableClock(instantAt(today, hour = 14, minute = 30))
+    private val todayDates = MutableStateFlow(today)
 
     private val account = Account(AccountId("bcp"), "BCP")
 
@@ -112,8 +100,7 @@ class EditTransactionViewModelTest {
         transactionRepository = transactionRepository,
         deleteTransaction = deleteTransaction,
         getTopUsedCategoryIds = getTopUsedCategoryIds,
-        clock = fixedClock,
-        zone = lima,
+        todayFlow = FakeTodayFlow(todayDates),
     )
 
     @Test
@@ -133,7 +120,7 @@ class EditTransactionViewModelTest {
     }
 
     @Test
-    fun `today comes from the injected clock`() = runTest(testDispatcher) {
+    fun `today comes from the injected TodayFlow`() = runTest(testDispatcher) {
         val vm = buildViewModel()
         advanceUntilIdle()
 
@@ -149,7 +136,7 @@ class EditTransactionViewModelTest {
         advanceUntilIdle()
         assertEquals("Hoy", vm.state.value.dateLabel)
 
-        fixedClock.instant = instantAt(LocalDate(2026, Month.AUGUST, 11), hour = 0, minute = 5)
+        todayDates.value = LocalDate(2026, Month.AUGUST, 11)
         vm.onIntent(EditTransactionIntent.OnAmountChange("9000"))
         advanceUntilIdle()
 
@@ -158,21 +145,11 @@ class EditTransactionViewModelTest {
     }
 
     @Test
-    fun `an evening transaction keeps its own day, in any zone`() = runTest(testDispatcher) {
+    fun `an evening transaction keeps its own day`() = runTest(testDispatcher) {
         val evening = storedTransaction.copy(occurredAt = LocalDateTime(marchDay, LocalTime(23, 30)))
         coEvery { transactionRepository.find(TransactionId("tx-1")) } returns evening
 
-        val vm = EditTransactionViewModel(
-            transactionId = "tx-1",
-            accountRepository = accountRepository,
-            categoryRepository = categoryRepository,
-            updateTransaction = updateTransaction,
-            transactionRepository = transactionRepository,
-            deleteTransaction = deleteTransaction,
-            getTopUsedCategoryIds = getTopUsedCategoryIds,
-            clock = fixedClock,
-            zone = TimeZone.of("Asia/Karachi"),
-        )
+        val vm = buildViewModel()
         advanceUntilIdle()
 
         assertEquals(marchDay, vm.state.value.date)
