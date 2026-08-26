@@ -17,6 +17,16 @@ out of that one habit. This track removes the habit, not the symptoms.
   stored in a field is a cache with no invalidation — it is how a selection outlives the row it
   points at and a movement gets filed under a deleted category with no error.
 
+- **A save writes the resolved selection, never the raw id.** The id in the state is what the user
+  chose; what reaches the database is what the catalog can still resolve. That is the half of the
+  id-based shape that stops a deleted row being written — the storage rule above governs storage
+  only, and a form can satisfy it perfectly and still write an id whose row is gone.
+
+- **A getter whose deletion leaves the suite green is not covered, however it reads.** E10-04 found
+  three selection getters pinned by nothing: the fixtures held one candidate, so a bare
+  `firstOrNull()` answered correctly. Prove coverage by deleting the lookup — tier by tier where a
+  getter has tiers — and watching it go red.
+
 - **An id-based selection has no expiry.** It resolves the instant the catalog can resolve it, so a
   preselected id that is missing when the catalog first loads still lands if a later emission carries
   it. The resolved-object shape had to expire such an id on the first failed lookup, because nothing
