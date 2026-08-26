@@ -256,13 +256,22 @@ class AddTransactionViewModel(
         )
     }
 
-    private fun addTransaction() = launchSafe(
-        onError = { AddTransactionEffect.ShowError(it.toUserMessage()) },
-    ) {
-        val insert = currentState.toInsert(clock.now().toLocalDateTime(zone))
-        createTransaction(insert)
-        cachedLastUsedAccountId = currentState.accountSelected?.accountId
-        sendEffect(AddTransactionEffect.TransactionSaved)
+    private fun addTransaction() {
+        if (currentState.isSaving) return
+        updateState { copy(isSaving = true) }
+        launchSafe(
+            onError = {
+                updateState { copy(isSaving = false) }
+                AddTransactionEffect.ShowError(it.toUserMessage())
+            },
+        ) {
+            val insert = currentState.toInsert(clock.now().toLocalDateTime(zone))
+            createTransaction(insert)
+            cachedLastUsedAccountId = currentState.accountSelected?.accountId
+            // Left true on purpose: the screen pops on this effect, and lowering it here would
+            // re-enable the CTA during the navigation frame.
+            sendEffect(AddTransactionEffect.TransactionSaved)
+        }
     }
 
     private fun today(): LocalDate = clock.now().toLocalDateTime(zone).date

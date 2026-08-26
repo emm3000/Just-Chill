@@ -59,6 +59,12 @@ import com.emm.justchill.hh.transaction.sheets.NoteSheet
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 
+private fun ctaInteraction(state: AddTransactionUiState): CtaInteraction = when {
+    state.isSaving -> CtaInteraction.Loading
+    state.isEnabled -> CtaInteraction.Enabled
+    else -> CtaInteraction.Disabled
+}
+
 private data class CtaContent(val label: String, val sublabel: String?)
 private data class TransactionKindContent(val topBarTitle: String, val amountTone: AmountTone, val ctaLabel: String)
 
@@ -267,7 +273,7 @@ private fun AddTransactionScreenContent(
             sublabel = cta.sublabel,
             inlineSublabel = cta.sublabel != null,
             tone = CtaTone.Accent,
-            interaction = if (state.isEnabled) CtaInteraction.Enabled else CtaInteraction.Disabled,
+            interaction = ctaInteraction(state),
             onClick = { onIntent(AddTransactionIntent.OnSave) },
         )
     }

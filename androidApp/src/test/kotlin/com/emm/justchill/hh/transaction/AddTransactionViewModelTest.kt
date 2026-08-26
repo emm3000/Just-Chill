@@ -21,6 +21,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -241,6 +242,25 @@ class AddTransactionViewModelTest {
         coVerify { createTransaction.invoke(capture(insert)) }
         assertEquals(LocalDateTime(picked, LocalTime(14, 30)), insert.captured.occurredAt)
     }
+
+    @Test
+    fun `a second OnSave sent before the write resolves does not call createTransaction again`() =
+        runTest(testDispatcher) {
+            val gate = CompletableDeferred<Unit>()
+            coEvery { createTransaction.invoke(any()) } coAnswers { gate.await() }
+
+            val vm = buildViewModel()
+            advanceUntilIdle()
+
+            vm.onIntent(AddTransactionIntent.OnSave)
+            vm.onIntent(AddTransactionIntent.OnSave)
+            advanceUntilIdle()
+
+            gate.complete(Unit)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { createTransaction.invoke(any()) }
+        }
 
     @Test
     fun `OnReset puts the date back to unset`() = runTest(testDispatcher) {

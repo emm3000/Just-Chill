@@ -19,6 +19,7 @@ data class AddTransactionUiState(
     val transactionType: TransactionType = TransactionType.Spend,
     val isEnabled: Boolean = false,
     val hasChanges: Boolean = false,
+    val isSaving: Boolean = false,
     val accounts: List<Account> = emptyList(),
     val accountSelected: Account? = null,
     val categories: List<SelectableCategory> = emptyList(),
