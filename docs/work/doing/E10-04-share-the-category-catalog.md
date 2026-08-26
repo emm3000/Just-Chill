@@ -16,6 +16,7 @@
 
 ## Context
 
-The same `MutableMap<CategoryType, List<SelectableCategory>>` is declared in three files and is the
-source of eleven of the repo's thirteen mutable fields. `EditTransactionViewModel` also keeps
-`oldTransaction` and `snapshot`, a third copy of data the state already holds.
+The same `MutableMap<CategoryType, List<SelectableCategory>>` is declared in two files —
+`EditTransactionViewModel` and `AddEditRecurringMovementViewModel`; E10-03 removed the third.
+`EditTransactionViewModel` also keeps `oldTransaction` and `snapshot`, a third copy of data the
+state already holds. `TodayFlow` is already bound in `SharedModule`, and `FakeTodayFlow` exists.
