@@ -54,6 +54,16 @@ class AddEditRecurringMovementViewModelTest {
 
     private val testAccount = Account(accountId = AccountId("acc-1"), name = "BCP", type = AccountType.Bank)
 
+    /**
+     * Deliberately FIRST in every catalog this suite builds, and never the one a template points
+     * at. `selectedAccount` falls back to `accounts.firstOrNull()`, so a fixture holding one
+     * account answers correctly even with the id lookup deleted — every edit-mode assertion below
+     * would then pass while pinning nothing.
+     */
+    private val decoyAccount = Account(accountId = AccountId("acc-0"), name = "Interbank", type = AccountType.Bank)
+
+    private val allAccounts = listOf(decoyAccount, testAccount)
+
     private val testTemplate = RecurringMovement(
         id = RecurringMovementId("rm-1"),
         name = "Netflix",
@@ -71,7 +81,7 @@ class AddEditRecurringMovementViewModelTest {
 
     @Before
     fun setUp() {
-        every { accountRepository.all() } returns flowOf(listOf(testAccount))
+        every { accountRepository.all() } returns flowOf(allAccounts)
         every { categoryRepository.all() } returns flowOf(emptyList())
     }
 
@@ -202,7 +212,10 @@ class AddEditRecurringMovementViewModelTest {
         vm.onIntent(AddEditRecurringMovementIntent.Save)
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { updateRecurring(RecurringMovementId("rm-1"), any()) }
+        val insert = slot<RecurringMovementInsert>()
+        coVerify(exactly = 1) { updateRecurring(RecurringMovementId("rm-1"), capture(insert)) }
+        // The template's own account, not whichever one the catalog happens to list first.
+        assertEquals("acc-1", insert.captured.accountId.value)
         assertTrue(effects.any { it is AddEditRecurringMovementEffect.NavigateBack })
         job.cancel()
     }
@@ -248,7 +261,7 @@ class AddEditRecurringMovementViewModelTest {
 
         assertNull(vm.state.value.selectedAccount)
 
-        accountsFlow.emit(listOf(testAccount))
+        accountsFlow.emit(allAccounts)
         advanceUntilIdle()
 
         assertNotNull(vm.state.value.selectedAccount)

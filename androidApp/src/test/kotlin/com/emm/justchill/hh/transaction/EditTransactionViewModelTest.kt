@@ -292,6 +292,19 @@ class EditTransactionViewModelTest {
     }
 
     @Test
+    fun `a stored category the catalog can no longer offer does not arm save at rest`() = runTest(testDispatcher) {
+        // DeleteCategoryUseCase soft-deletes unconditionally and categories.sq:all filters
+        // `deletedAt IS NULL`, so the row keeps a categoryId nothing in the catalog resolves.
+        every { categoryRepository.all() } returns flowOf(emptyList())
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertNull(vm.state.value.categorySelected, "the row it pointed at is gone")
+        assertFalse(vm.state.value.isEnabled, "opening a screen is not an edit the user made")
+    }
+
+    @Test
     fun `deleting targets the route's transaction even when the row never loaded`() = runTest(testDispatcher) {
         coEvery { transactionRepository.find(TransactionId("tx-1")) } returns null
 

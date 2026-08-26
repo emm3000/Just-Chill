@@ -25,10 +25,10 @@ data class EditTransactionUiState(
 ) : UiState {
     val dateLabel: String get() = relativeDayLabel(date, today)
 
-    val accounts: List<Account> get() = loadedCatalog?.accounts.orEmpty()
+    val accounts: List<Account> get() = catalog.accounts
 
     val categories: List<SelectableCategory>
-        get() = loadedCatalog?.categories?.get(transactionType.categoryType).orEmpty()
+        get() = catalog.loaded?.categories?.get(transactionType.categoryType).orEmpty()
 
     val accountSelected: Account? get() = accounts.find { it.accountId == accountId }
 
@@ -49,11 +49,6 @@ data class EditTransactionUiState(
 
     val isEnabled: Boolean get() = hasEdits && missingField == null
 
-    private val loadedCatalog: Catalog.Loaded? get() = catalog as? Catalog.Loaded
-
-    // Compares the RESOLVED selection, not the raw id: an id pointing at a row the catalog no
-    // longer carries is not an edit the user made, and saving it would file the movement under a
-    // category that is gone.
     private val hasEdits: Boolean
         get() {
             val stored: Transaction = original ?: return false
@@ -61,7 +56,21 @@ data class EditTransactionUiState(
                 description != stored.description ||
                 date != stored.occurredAt.date ||
                 transactionType != stored.type ||
+                // An unresolvable account leaves accountSelected null, which reads as an edit
+                // here but is held shut by missingField; the category has no such second guard.
                 accountSelected?.accountId != stored.accountId ||
-                categorySelected?.categoryId != stored.categoryId
+                categoryEdited(stored.categoryId)
         }
+
+    /**
+     * Compares the RESOLVED selection, so a save can never file the movement under a category that
+     * is gone — but a stored category the catalog can no longer offer is not an edit the *user*
+     * made. `DeleteCategoryUseCase` soft-deletes unconditionally and `categories.sq:all` filters
+     * `deletedAt IS NULL`, so without this the CTA is armed the moment such a screen opens.
+     */
+    private fun categoryEdited(storedId: CategoryId?): Boolean = when {
+        storedId == null -> categorySelected != null
+        categories.none { it.categoryId == storedId } -> false
+        else -> categorySelected?.categoryId != storedId
+    }
 }

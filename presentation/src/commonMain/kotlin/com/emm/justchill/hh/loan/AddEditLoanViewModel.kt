@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
@@ -28,7 +29,7 @@ class AddEditLoanViewModel(
     private val loanRepository: LoanRepository,
     private val createLoan: CreateLoanUseCase,
     private val updateLoan: UpdateLoanUseCase,
-    todayFlow: TodayFlow,
+    private val todayFlow: TodayFlow,
     // Only the hour a loan is stamped with comes from these; the day is TodayFlow's answer.
     private val clock: Clock,
     private val zone: TimeZone,
@@ -114,8 +115,10 @@ class AddEditLoanViewModel(
         if (currentState.isSaving) return@launchSafe
         updateState { copy(isSaving = true) }
         val s = currentState
-        val now: LocalDateTime = clock.now().toLocalDateTime(zone)
-        val lentAt = LocalDateTime(s.date ?: now.date, loadedLentAt?.time ?: now.time)
+        // The day is the user's pick or, untouched, TodayFlow's answer; the clock is here only
+        // for the hour, and only when this loan has no recorded one to preserve.
+        val timeOfDay: LocalTime = clock.now().toLocalDateTime(zone).time
+        val lentAt = LocalDateTime(s.date ?: todayFlow.today(), loadedLentAt?.time ?: timeOfDay)
         val principal = centsToMoney(s.amountDigits)
         val interestBps = percentTextToBps(s.interestPercentText)
         val id = loanId

@@ -24,7 +24,9 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
@@ -133,7 +135,8 @@ class AddTransactionViewModel(
                 AddTransactionEffect.ShowError(it.toUserMessage())
             },
         ) {
-            val insert = currentState.toInsert(clock.now().toLocalDateTime(zone))
+            val timeOfDay = clock.now().toLocalDateTime(zone).time
+            val insert = currentState.toInsert(day = todayFlow.today(), time = timeOfDay)
             createTransaction(insert)
             // Left true on purpose: the screen pops on this effect, and lowering it here would
             // re-enable the CTA during the navigation frame.
@@ -142,12 +145,12 @@ class AddTransactionViewModel(
     }
 }
 
-// The day is the user's, the hour is the moment of the save — both decided here, not from
-// the state's cached `today`.
-private fun AddTransactionUiState.toInsert(now: LocalDateTime): TransactionInsert = TransactionInsert(
+// The day is the user's pick or, untouched, TodayFlow's answer — never a second derivation from
+// the clock, which is here only for the hour the save actually happens at.
+private fun AddTransactionUiState.toInsert(day: LocalDate, time: LocalTime): TransactionInsert = TransactionInsert(
     type = transactionType,
     description = description,
-    occurredAt = LocalDateTime(date ?: now.date, now.time),
+    occurredAt = LocalDateTime(date ?: day, time),
     amount = centsToMoney(amount),
     categoryId = categorySelected?.categoryId,
     accountId = accountSelected?.accountId

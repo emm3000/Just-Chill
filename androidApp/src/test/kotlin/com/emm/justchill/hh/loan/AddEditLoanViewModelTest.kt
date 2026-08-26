@@ -2,6 +2,7 @@ package com.emm.justchill.hh.loan
 
 import com.emm.domain.loan.CreateLoanUseCase
 import com.emm.domain.loan.Loan
+import com.emm.domain.loan.LoanInsert
 import com.emm.domain.loan.LoanRepository
 import com.emm.domain.loan.LoanUpdate
 import com.emm.domain.loan.UpdateLoanUseCase
@@ -91,8 +92,9 @@ class AddEditLoanViewModelTest {
     )
 
     /**
-     * The Clock this ViewModel still holds answers "what hour", never "what day". Pointing
-     * TodayFlow at a different day than the clock's is the only way to tell the two apart.
+     * The Clock this ViewModel still holds answers "what hour", never "what day" — neither for the
+     * initial state nor for the lentAt a save stamps. The two tests below pin one each, by
+     * pointing TodayFlow at a day the clock does not agree with.
      */
     @Test
     fun `today is TodayFlow's day, not the clock's`() = runTest {
@@ -103,6 +105,25 @@ class AddEditLoanViewModelTest {
         advanceUntilIdle()
 
         assertEquals(christmas, vm.state.value.today)
+    }
+
+    @Test
+    fun `an untouched date is lent on TodayFlow's day, at the clock's hour`() = runTest {
+        coEvery { createLoan(any()) } returns Unit
+        // The two disagree on purpose: the day must come from TodayFlow and the hour from the
+        // clock, which is the only split that tells a second date derivation apart from none.
+        val christmas = LocalDate(2026, Month.DECEMBER, 25)
+        todayDates.value = christmas
+        val vm = viewModel()
+
+        vm.onIntent(AddEditLoanIntent.OnPersonNameChange("Ana"))
+        vm.onIntent(AddEditLoanIntent.OnAmountChange("150000"))
+        vm.onIntent(AddEditLoanIntent.Save)
+        advanceUntilIdle()
+
+        val insert = slot<LoanInsert>()
+        coVerify { createLoan(capture(insert)) }
+        assertEquals(LocalDateTime(christmas, LocalTime(14, 30)), insert.captured.lentAt)
     }
 
     @Test

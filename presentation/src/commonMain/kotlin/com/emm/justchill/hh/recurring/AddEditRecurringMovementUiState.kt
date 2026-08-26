@@ -27,9 +27,10 @@ data class AddEditRecurringMovementUiState(
     /** Null is "Sin categoría", which the save writes as such. */
     val categoryId: CategoryId? = null,
 ) : UiState {
-    val accounts: List<Account> get() = loadedCatalog?.accounts.orEmpty()
+    val accounts: List<Account> get() = catalog.accounts
 
-    val categories: List<SelectableCategory> get() = loadedCatalog?.categories?.get(type.categoryType).orEmpty()
+    val categories: List<SelectableCategory>
+        get() = catalog.loaded?.categories?.get(type.categoryType).orEmpty()
 
     /** The first account is both the create-mode default and what a deleted account falls back to. */
     val selectedAccount: Account? get() = accounts.find { it.accountId == accountId } ?: accounts.firstOrNull()
@@ -38,6 +39,4 @@ data class AddEditRecurringMovementUiState(
 
     val isSaveEnabled: Boolean
         get() = name.isNotBlank() && selectedAccount != null && (isVariableAmount || amountDigits.isSavableAmount())
-
-    private val loadedCatalog: Catalog.Loaded? get() = catalog as? Catalog.Loaded
 }

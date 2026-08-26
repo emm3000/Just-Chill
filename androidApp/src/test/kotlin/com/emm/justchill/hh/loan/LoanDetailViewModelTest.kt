@@ -453,8 +453,9 @@ class LoanDetailViewModelTest {
     }
 
     /**
-     * The Clock this ViewModel still holds answers "what hour", never "what day". Pointing
-     * TodayFlow at a different day than the clock's is the only way to tell the two apart.
+     * The Clock this ViewModel still holds answers "what hour", never "what day" — for neither of
+     * the two ways a payment sheet opens. Both tests below point TodayFlow at a day the clock does
+     * not agree with, which is the only way to tell the two sources apart.
      */
     @Test
     fun `the payment sheet opens on TodayFlow's day, not the clock's`() = runTest {
@@ -468,6 +469,22 @@ class LoanDetailViewModelTest {
         vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick)
         advanceUntilIdle()
 
+        assertEquals(christmas, vm.state.value.payment?.today)
+    }
+
+    @Test
+    fun `the edit-payment sheet opens on TodayFlow's day, not the clock's`() = runTest {
+        every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+        every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(listOf(payment("pay-1", 10_000L)))
+        val christmas = LocalDate(2026, Month.DECEMBER, 25)
+        todayDates.value = christmas
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnEditPaymentClick("pay-1"))
+        advanceUntilIdle()
+
+        // `today` is the sheet's fallback day, distinct from the abono's own `date`.
         assertEquals(christmas, vm.state.value.payment?.today)
     }
 

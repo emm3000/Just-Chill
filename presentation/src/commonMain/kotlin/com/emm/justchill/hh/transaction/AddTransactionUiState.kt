@@ -50,9 +50,9 @@ data class AddTransactionUiState(
 
     val pickerDate: LocalDate get() = date ?: today
 
-    val accounts: List<Account> get() = loadedCatalog?.accounts.orEmpty()
+    val accounts: List<Account> get() = catalog.accounts
 
-    val hasNoAccounts: Boolean get() = loadedCatalog?.accounts?.isEmpty() == true
+    val hasNoAccounts: Boolean get() = catalog.loaded?.accounts?.isEmpty() == true
 
     val categories: List<SelectableCategory> get() = categoriesOf(transactionType.categoryType)
 
@@ -78,14 +78,12 @@ data class AddTransactionUiState(
         else -> null
     }
 
-    private val loadedCatalog: Catalog.Loaded? get() = catalog as? Catalog.Loaded
-
     // The chip row may never render the previous type's suggestions, not even for the frame between
     // a type switch and the reads that answer it.
     private val usageForCurrentType: FrequentUsage? get() = frequentUsage?.takeIf { it.loadedFor == transactionType }
 
     private fun categoriesOf(type: CategoryType): List<SelectableCategory> {
-        val known = loadedCatalog?.categories?.get(type).orEmpty()
+        val known = catalog.loaded?.categories?.get(type).orEmpty()
         val pending = extraCategories.filter { extra ->
             extra.categoryType == type && known.none { it.categoryId == extra.categoryId }
         }

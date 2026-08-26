@@ -68,7 +68,11 @@ class AddTransactionViewModelTest {
     private val fixedClock = MovableClock(instantAt(today, hour = 14, minute = 30))
     private val todayDates = MutableStateFlow(today)
 
-    /** The clock supplies the hour of the save; TodayFlow is the only source of the day. */
+    /**
+     * A real midnight: the clock's hour and TodayFlow's day move together, the way a device does.
+     * Moving together is exactly why the tests using this cannot tell the two sources apart — the
+     * three below point them at different days for that.
+     */
     private fun crossMidnightInto(date: LocalDate, hour: Int, minute: Int) {
         fixedClock.instant = instantAt(date, hour, minute)
         todayDates.value = date
@@ -194,8 +198,9 @@ class AddTransactionViewModelTest {
     }
 
     /**
-     * The Clock this ViewModel still holds answers "what hour", never "what day". Pointing
-     * TodayFlow at a different day than the clock's is the only way to tell the two apart.
+     * The Clock this ViewModel still holds answers "what hour", never "what day" — not for the
+     * initial state, not on an interaction, and not at the save. The three tests below pin one
+     * of those each, by pointing TodayFlow at a day the clock does not agree with.
      */
     @Test
     fun `today is TodayFlow's day, not the clock's`() = runTest(testDispatcher) {
@@ -206,6 +211,39 @@ class AddTransactionViewModelTest {
         advanceUntilIdle()
 
         assertEquals(christmas, vm.state.value.today)
+    }
+
+    @Test
+    fun `an interaction re-reads the day from TodayFlow, not from the clock`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        assertEquals(today, vm.state.value.today)
+
+        // Only TodayFlow moves. The clock stays on the 10th, so re-deriving the day from it here
+        // answers with yesterday and this fails.
+        todayDates.value = tomorrow
+        vm.onIntent(AddTransactionIntent.OnAmountChange("1"))
+        advanceUntilIdle()
+
+        assertEquals(tomorrow, vm.state.value.today)
+    }
+
+    @Test
+    fun `an untouched date is saved as TodayFlow's day, at the clock's hour`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        // The two disagree on purpose: the day must come from TodayFlow and the hour from the
+        // clock, which is the only split that tells a second date derivation apart from none.
+        todayDates.value = tomorrow
+        vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnSave)
+        advanceUntilIdle()
+
+        val insert = slot<TransactionInsert>()
+        coVerify { createTransaction.invoke(capture(insert)) }
+        assertEquals(LocalDateTime(tomorrow, LocalTime(14, 30)), insert.captured.occurredAt)
     }
 
     @Test
