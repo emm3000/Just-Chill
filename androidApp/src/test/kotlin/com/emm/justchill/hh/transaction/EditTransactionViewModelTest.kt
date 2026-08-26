@@ -50,7 +50,29 @@ class EditTransactionViewModelTest {
     private val today = LocalDate(2026, Month.AUGUST, 10)
     private val todayDates = MutableStateFlow(today)
 
+    /**
+     * Deliberately FIRST in the catalog, and never what the stored movement points at or what any
+     * test picks. `accountSelected` and `categorySelected` are plain lookups with no fallback, so
+     * a fixture of one answers correctly even with the lookup deleted — every assertion about a
+     * selection would then pass while pinning nothing.
+     */
+    private val decoyAccount = Account(AccountId("interbank"), "Interbank")
+
     private val account = Account(AccountId("bcp"), "BCP")
+
+    /** Neither stored nor first: only a live pick can put this one on screen or in a write. */
+    private val pickedAccount = Account(AccountId("yape"), "Yape")
+
+    private val accounts = listOf(decoyAccount, account, pickedAccount)
+
+    /** The decoy's category half — same reasoning, and never what the stored movement points at. */
+    private val decoyCategory = Category(
+        categoryId = CategoryId("transport"),
+        name = "Transporte",
+        icon = "bus",
+        color = "yellow",
+        categoryType = CategoryType.Spend,
+    )
 
     private val category = Category(
         categoryId = CategoryId("food"),
@@ -59,6 +81,8 @@ class EditTransactionViewModelTest {
         color = "blue",
         categoryType = CategoryType.Spend,
     )
+
+    private val categories = listOf(decoyCategory, category)
 
     /** Recorded on 4 March 2026 at 09:15 — a day that is neither today nor yesterday. */
     private val marchDay = LocalDate(2026, Month.MARCH, 4)
@@ -75,10 +99,10 @@ class EditTransactionViewModelTest {
     )
 
     private val accountRepository = mockk<AccountRepository> {
-        every { all() } returns flowOf(listOf(account))
+        every { all() } returns flowOf(accounts)
     }
     private val categoryRepository = mockk<CategoryRepository> {
-        every { all() } returns flowOf(listOf(category))
+        every { all() } returns flowOf(categories)
     }
     private val transactionRepository = mockk<TransactionRepository>()
     private val updateTransaction = mockk<UpdateTransactionUseCase>(relaxed = true)
@@ -88,7 +112,6 @@ class EditTransactionViewModelTest {
     @Before
     fun setupDefaults() {
         coEvery { transactionRepository.find(TransactionId("tx-1")) } returns storedTransaction
-        coEvery { accountRepository.find(account.accountId) } returns account
         coEvery { getTopUsedCategoryIds.invoke(any(), any(), any()) } returns emptyList()
     }
 
@@ -220,6 +243,82 @@ class EditTransactionViewModelTest {
         val update = slot<TransactionUpdate>()
         coVerify { updateTransaction.invoke(storedTransaction, capture(update)) }
         assertEquals(storedTransaction.occurredAt, update.captured.occurredAt)
+    }
+
+    @Test
+    fun `the loaded movement's own account is selected, not the catalog's first`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertEquals(account.accountId, vm.state.value.accountSelected?.accountId)
+        assertFalse(vm.state.value.isEnabled, "resolving the stored account is not an edit")
+    }
+
+    @Test
+    fun `the account the user picks is the account the update carries`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        // Neither stored nor first in the catalog, so nothing but the id lookup can answer with it.
+        vm.onIntent(EditTransactionIntent.OnAccountSelected(pickedAccount))
+        advanceUntilIdle()
+        assertEquals(pickedAccount.accountId, vm.state.value.accountSelected?.accountId)
+
+        vm.onIntent(EditTransactionIntent.OnSave)
+        advanceUntilIdle()
+
+        val update = slot<TransactionUpdate>()
+        coVerify { updateTransaction.invoke(storedTransaction, capture(update)) }
+        assertEquals(pickedAccount.accountId, update.captured.accountId)
+    }
+
+    @Test
+    fun `a picked category of the current type wins over the stored one`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        assertEquals(category.categoryId, vm.state.value.categorySelected?.categoryId, "stored, before any pick")
+
+        val picked = vm.state.value.categories.single { it.categoryId == decoyCategory.categoryId }
+        vm.onIntent(EditTransactionIntent.OnCategorySelected(picked))
+        advanceUntilIdle()
+
+        // The stored category is still on offer, so only the live pick can produce this answer.
+        assertEquals(decoyCategory.categoryId, vm.state.value.categorySelected?.categoryId)
+
+        vm.onIntent(EditTransactionIntent.OnSave)
+        advanceUntilIdle()
+
+        val update = slot<TransactionUpdate>()
+        coVerify { updateTransaction.invoke(storedTransaction, capture(update)) }
+        assertEquals(decoyCategory.categoryId, update.captured.categoryId)
+    }
+
+    @Test
+    fun `switching type away and back re-offers the movement's own category`() = runTest(testDispatcher) {
+        val incomeCategory = Category(
+            categoryId = CategoryId("salary"),
+            name = "Sueldo",
+            icon = "money",
+            color = "green",
+            categoryType = CategoryType.Income,
+        )
+        every { categoryRepository.all() } returns flowOf(categories + incomeCategory)
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(EditTransactionIntent.OnTransactionTypeChange(TransactionType.Income))
+        advanceUntilIdle()
+        vm.onIntent(EditTransactionIntent.OnCategorySelected(vm.state.value.categories.single()))
+        advanceUntilIdle()
+        assertEquals(incomeCategory.categoryId, vm.state.value.categorySelected?.categoryId)
+
+        vm.onIntent(EditTransactionIntent.OnTransactionTypeChange(TransactionType.Spend))
+        advanceUntilIdle()
+
+        // The live pick is an Income id the Spend list cannot resolve: only the stored-id tier
+        // can answer here, and answering null would be a silent uncategorize on the next save.
+        assertEquals(category.categoryId, vm.state.value.categorySelected?.categoryId)
     }
 
     @Test

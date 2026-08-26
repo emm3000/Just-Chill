@@ -250,6 +250,26 @@ class AddEditRecurringMovementViewModelTest {
     }
 
     @Test
+    fun `create mode - the first account is pre-selected with no pick`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        // Nothing has set accountId, so only the fallback half of the getter can answer.
+        assertEquals(decoyAccount.accountId, vm.state.value.selectedAccount?.accountId)
+    }
+
+    @Test
+    fun `edit mode - a template pointing outside the catalog falls back to the first account`() = runTest {
+        coEvery { recurringRepository.find(RecurringMovementId("rm-1")) } returns
+            testTemplate.copy(accountId = AccountId("acc-deleted"))
+        val vm = createViewModel(id = "rm-1")
+        advanceUntilIdle()
+
+        // The id is set and unresolvable — the other half of what the getter's KDoc promises.
+        assertEquals(decoyAccount.accountId, vm.state.value.selectedAccount?.accountId)
+    }
+
+    @Test
     fun `edit mode - account resolved even when accounts flow emits after template load`() = runTest {
         val accountsFlow = MutableSharedFlow<List<Account>>(replay = 1)
         every { accountRepository.all() } returns accountsFlow
