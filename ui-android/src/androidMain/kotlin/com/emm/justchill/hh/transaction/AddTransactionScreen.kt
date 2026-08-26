@@ -336,7 +336,10 @@ private fun AddTransactionPreview() {
         AddTransactionScreenContent(
             state = AddTransactionUiState(
                 today = LocalDate(2026, Month.AUGUST, 10),
-                categories = categories,
+                catalog = Catalog.Loaded(
+                    accounts = emptyList(),
+                    categories = categories.groupBy(SelectableCategory::categoryType),
+                ),
                 amount = "8540",
                 transactionType = TransactionType.Spend,
             ),

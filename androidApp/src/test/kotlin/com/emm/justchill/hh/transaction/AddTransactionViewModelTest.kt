@@ -23,6 +23,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -544,11 +545,20 @@ class AddTransactionViewModelTest {
     }
 
     @Test
-    fun `an expired preselect does not resolve once the id later appears`() = runTest(testDispatcher) {
-        every { accountRepository.all() } returns flowOf(listOf(account1), listOf(account1, account2))
+    fun `a preselected id that resolves late does not override the choice made in between`() = runTest(testDispatcher) {
+        val accounts = MutableStateFlow(listOf(account1))
+        every { accountRepository.all() } returns accounts
 
         val vm = buildViewModel()
+        // "bcp" is not in the catalog yet, so the preselect falls back to the only account there is.
         vm.onIntent(AddTransactionIntent.OnPreselectCombo(accountId = "bcp", categoryId = null, type = null))
+        advanceUntilIdle()
+        assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
+
+        vm.onIntent(AddTransactionIntent.OnAccountSelected(account1))
+        advanceUntilIdle()
+
+        accounts.value = listOf(account1, account2)
         advanceUntilIdle()
 
         assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
@@ -580,7 +590,7 @@ class AddTransactionViewModelTest {
         }
 
     @Test
-    fun `a type switch that diverges from a pending preselect expires it instead of a cross-type save`() =
+    fun `a type switch after a preselect keeps the account and never offers the other type's category`() =
         runTest(testDispatcher) {
             val vm = buildViewModel()
             // Sent before data loads: registers, and the switch to Income runs immediately.
@@ -597,7 +607,10 @@ class AddTransactionViewModelTest {
 
             val state = vm.state.value
             assertEquals(TransactionType.Spend, state.transactionType)
-            assertEquals("yape", state.accountSelected?.accountId?.value)
+            // An account carries no type, so the preselected one survives the switch.
+            assertEquals("bcp", state.accountSelected?.accountId?.value)
+            // "salary" is an Income category and is resolved inside the Spend list, where it does
+            // not exist — so the Spend default answers instead. A cross-type pair has no encoding.
             assertEquals(category1.categoryId.value, state.categorySelected?.categoryId?.value)
         }
 }
