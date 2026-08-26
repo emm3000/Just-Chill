@@ -58,6 +58,8 @@ class AddTransactionViewModel(
                 .launchIn(viewModelScope)
         }
 
+        // Reading `state` here resolves MviViewModel's lazy `_state`, which evaluates
+        // `initialState` — so `initialState` must stay declared above this block.
         state.map { it.transactionType }
             .distinctUntilChanged()
             .flatMapLatest(::loadFrequentUsage)

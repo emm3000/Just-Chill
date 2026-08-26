@@ -545,7 +545,7 @@ class AddTransactionViewModelTest {
     }
 
     @Test
-    fun `a preselected id that resolves late does not override the choice made in between`() = runTest(testDispatcher) {
+    fun `a preselected id lands as soon as a later catalog emission carries it`() = runTest(testDispatcher) {
         val accounts = MutableStateFlow(listOf(account1))
         every { accountRepository.all() } returns accounts
 
@@ -555,13 +555,52 @@ class AddTransactionViewModelTest {
         advanceUntilIdle()
         assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
 
-        vm.onIntent(AddTransactionIntent.OnAccountSelected(account1))
-        advanceUntilIdle()
-
         accounts.value = listOf(account1, account2)
         advanceUntilIdle()
 
-        assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
+        // No interaction in between: the id was never consumed, only unresolvable, so the account
+        // it names is selected the moment the catalog can name it.
+        assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
+    }
+
+    @Test
+    fun `the empty-account CTA condition stays false until the catalog answers`() = runTest(testDispatcher) {
+        every { accountRepository.all() } returns flowOf(emptyList())
+
+        val vm = buildViewModel()
+        // Nothing has said there are no accounts yet — only that none have arrived.
+        assertFalse(vm.state.value.hasNoAccounts, "the empty-state CTA must not flash before the catalog answers")
+
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.hasNoAccounts)
+    }
+
+    @Test
+    fun `a category picked under Spend survives a round trip through Income`() = runTest(testDispatcher) {
+        val otherSpendCategory = Category(
+            categoryId = CategoryId("transport"),
+            name = "Transporte",
+            icon = "bus",
+            color = "red",
+            categoryType = CategoryType.Spend,
+        )
+        every { categoryRepository.all() } returns flowOf(listOf(category1, otherSpendCategory, category3, category2))
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        val picked = vm.state.value.categories.first { it.categoryId == otherSpendCategory.categoryId }
+        vm.onIntent(AddTransactionIntent.OnCategorySelected(picked))
+        vm.onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Income))
+        advanceUntilIdle()
+        assertEquals(category3.categoryId.value, vm.state.value.categorySelected?.categoryId?.value)
+
+        vm.onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Spend))
+        advanceUntilIdle()
+
+        // The pick is an id the Spend list still resolves; only the Income view of it was missing.
+        assertEquals("transport", vm.state.value.categorySelected?.categoryId?.value)
     }
 
     @Test

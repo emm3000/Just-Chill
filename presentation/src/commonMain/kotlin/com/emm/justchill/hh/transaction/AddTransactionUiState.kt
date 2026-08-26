@@ -22,7 +22,7 @@ sealed interface Catalog {
 
 data class FrequentUsage(
     val loadedFor: TransactionType,
-    val categoryIds: List<String> = emptyList(),
+    val categoryIds: List<String>,
     val combos: List<FrequentCombo> = emptyList(),
 )
 
@@ -60,6 +60,8 @@ data class AddTransactionUiState(
 
     val accounts: List<Account> get() = loadedCatalog?.accounts.orEmpty()
 
+    val hasNoAccounts: Boolean get() = loadedCatalog?.accounts?.isEmpty() == true
+
     val categories: List<SelectableCategory> get() = categoriesOf(transactionType.categoryType)
 
     val accountSelected: Account?
@@ -72,7 +74,11 @@ data class AddTransactionUiState(
 
     val frequentCategoryIds: List<String> get() = usageForCurrentType?.categoryIds.orEmpty()
 
-    val frequentCombos: List<FrequentComboUi> get() = usageForCurrentType?.combos.orEmpty().mapNotNull(::toComboUi)
+    val frequentCombos: List<FrequentComboUi>
+        get() {
+            val candidates = categories
+            return usageForCurrentType?.combos.orEmpty().mapNotNull { toComboUi(it, candidates) }
+        }
 
     val missingField: MissingField? get() = when {
         centsToSoles(amount) <= 0.0 -> MissingField.Amount
@@ -91,12 +97,12 @@ data class AddTransactionUiState(
         val pending = extraCategories.filter { extra ->
             extra.categoryType == type && known.none { it.categoryId == extra.categoryId }
         }
-        return pending + known
+        return if (pending.isEmpty()) known else pending + known
     }
 
-    private fun toComboUi(combo: FrequentCombo): FrequentComboUi? {
+    private fun toComboUi(combo: FrequentCombo, candidates: List<SelectableCategory>): FrequentComboUi? {
         val account = accounts.find { it.accountId == combo.accountId }
-        val category = categoriesOf(combo.type.categoryType).find { it.categoryId == combo.categoryId }
+        val category = candidates.find { it.categoryId == combo.categoryId }
         if (account == null || category == null) return null
         return FrequentComboUi(
             accountId = combo.accountId.value,

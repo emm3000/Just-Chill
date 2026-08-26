@@ -17,6 +17,11 @@ out of that one habit. This track removes the habit, not the symptoms.
   stored in a field is a cache with no invalidation — it is how a selection outlives the row it
   points at and a movement gets filed under a deleted category with no error.
 
+- **An id-based selection has no expiry.** It resolves the instant the catalog can resolve it, so a
+  preselected id that is missing when the catalog first loads still lands if a later emission carries
+  it. The resolved-object shape had to expire such an id on the first failed lookup, because nothing
+  re-derived it afterwards.
+
 - **Filtering at read time beats clearing at write time.** A list the state derives per
   `transactionType` cannot go stale; a list a reducer has to remember to clear always can. Prefer the
   getter to the extra line in the `copy`.

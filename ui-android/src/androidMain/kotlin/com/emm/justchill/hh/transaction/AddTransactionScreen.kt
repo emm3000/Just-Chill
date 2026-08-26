@@ -117,7 +117,7 @@ private fun AddTransactionScreenContent(
     var showNoteSheet by rememberSaveable { mutableStateOf(false) }
 
     val isSpend = state.transactionType == TransactionType.Spend
-    val noAccounts = state.accounts.isEmpty()
+    val noAccounts = state.hasNoAccounts
 
     val ctaAmount = remember(state.amount) {
         "S/ ${formatCentsForDisplay(state.amount)}"
