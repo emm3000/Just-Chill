@@ -259,12 +259,14 @@ class TransactionDateEndToEndTest {
      * on the ViewModel's own signals rather than on `advanceUntilIdle`, which would return while
      * the row was still in flight and make every assertion below it a coin toss.
      */
-    private suspend fun AddTransactionViewModel.awaitReady(): AddTransactionViewModel = also {
+    private suspend fun AddTransactionViewModel.awaitReady(): AddTransactionViewModel {
         state.first { it.accountSelected != null }
+        return this
     }
 
-    private suspend fun EditTransactionViewModel.awaitLoaded(): EditTransactionViewModel = also {
+    private suspend fun EditTransactionViewModel.awaitLoaded(): EditTransactionViewModel {
         state.first { it.accountSelected != null }
+        return this
     }
 
     /** Seeds a row through the real write path and returns the text it stored. */

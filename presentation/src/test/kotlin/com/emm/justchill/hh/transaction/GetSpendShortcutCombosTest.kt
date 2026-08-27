@@ -114,6 +114,9 @@ class GetSpendShortcutCombosTest {
     }
 
     @Test
+    // MockK verify{} records an expectation instead of consuming a result — IgnoredReturnValue
+    // doesn't know that.
+    @Suppress("IgnoredReturnValue")
     fun `no combos in the window returns an empty list without touching the repositories`() = runTest {
         coEvery { getFrequentCombos(any(), any(), any()) } returns emptyList()
 
