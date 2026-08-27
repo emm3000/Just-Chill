@@ -19,30 +19,7 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
 
         contributeToQualityGate("testAndroidHostTest")
 
-        val hasIosTargets = findProperty("justchill.kmp.ios") != "false"
-
-        if (hasIosTargets) {
-            if (QualityGateConventionPlugin.isMacOsHost) {
-                // The only mechanical proof that the exported core stays free of `java.*` and
-                // `android.*` — nothing else in the gate compiles it for a non-JVM, non-Android
-                // target. See docs/adr/003.
-                tasks.named(QualityGateConventionPlugin.GATE_TASK) {
-                    dependsOn(tasks.matching { it.name.startsWith("compileKotlinIos") })
-                }
-            } else {
-                logger.lifecycle(
-                    "qualityGate($path): iOS compile skipped — Kotlin/Native needs a macOS host. " +
-                        "detekt still covers iosMain.",
-                )
-            }
-        }
-
         extensions.configure<KotlinMultiplatformExtension> {
-            if (hasIosTargets) {
-                iosArm64()
-                iosSimulatorArm64()
-            }
-
             val android = (this as ExtensionAware).extensions
                 .getByName("android") as KotlinMultiplatformAndroidLibraryTarget
 
