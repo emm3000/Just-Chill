@@ -4,20 +4,24 @@
 
 ## Done when
 
-- [ ] every detekt rule that silently stopped firing on `:data` while resolution was broken is
-      listed; that list, not the error count, is what this ticket is about
-- [ ] `:data:detektMainAndroid --rerun-tasks` still reports no compiler errors, and each listed rule
-      is shown either firing or provably clean
-- [ ] `docs/CODE_QUALITY.md` records what a compiler-error line under detekt costs, now that the
-      `iosMain` example it used is gone
-- [ ] `./gradlew qualityGate --rerun-tasks` and `./gradlew assembleDevDebug` both pass
+- [ ] `:data:detektDebug --rerun-tasks` reports no `compiler errors found during analysis` line.
+      It reports **472** today; `:presentation`, `:ui-android` and `:androidApp` report none, so the
+      cause is specific to this module.
+- [ ] The seven `@file:Suppress("RedundantSuspendModifier")` in `:data`'s `*LocalDataSource.kt` are
+      deleted and detekt stays green — they exist only because the broken analysis cannot see that
+      `withContext` suspends.
+- [ ] Every detekt rule that needs type resolution is shown either firing on `:data` or provably
+      clean; that list, not the error count, is what this ticket is about.
+- [ ] `./gradlew qualityGate --rerun-tasks` and `./gradlew assembleDevDebug` both pass.
 
 ## Context
 
-**The nine errors are gone as of E11-02** (`b93f8090`): they were the three `expect` declarations in
-`:data`, not the excluded SQLDelight output this ticket first blamed. `:data:detektMainAndroid
---rerun-tasks` now analyses clean. What survives is box 2 — nobody has ever listed which rules were
-silently off — and box 4.
+`DetektConventionPlugin.excludeGeneratedSources()` drops SQLDelight output from detekt's
+*resolution* scope as well as its *analysis* scope, so hand-written code referencing
+`TransactionsQueries` is analysed against unresolved symbols. Its task exposes `classpath`
+separately from `source` — putting the generated roots on the former only would resolve without
+linting, if the alpha honours the split.
 
-Excluding generated sources is still right: SQLDelight output is not ours to lint. Whether that
-exclude also costs resolution scope is now an open question rather than a measured fact.
+E11-02 cleared the nine errors this ticket opened on (they were `expect` declarations). E11-05's
+conversion to a plain Android library raised the count to 472 and manufactured 26 false positives
+with it, so the original hypothesis is back, larger.
