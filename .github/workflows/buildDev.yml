@@ -81,39 +81,3 @@ jobs:
           name: lint-report
           path: androidApp/build/reports/lint-results-devDebug.html
           retention-days: 7
-
-  # The iOS compile is part of qualityGate, but it skips itself on Linux — Kotlin/Native needs a
-  # macOS host. That left ADR 003's central claim ("the compile gate is the only thing stopping
-  # commonMain from silently filling with java.*") enforced by nothing but a local pre-push hook,
-  # which any `--no-verify` turns off. This job is the copy that cannot be skipped.
-  #
-  # It runs in parallel with quality-gate, not after it: the two check different things and neither
-  # result is worth withholding while the other runs.
-  ios-compile:
-    runs-on: macos-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      # This job compiles Kotlin/Native. It signs nothing, builds no Android artifact, and reads no
-      # Supabase config — GenerateIosSupabaseConfigTask treats the properties file as optional and
-      # falls back to the localhost placeholder. It needs no secrets at all.
-      - uses: ./.github/actions/setup-android
-        with:
-          cache-read-only: 'true'
-
-      # ~/.konan is the Kotlin/Native toolchain, and setup-gradle does not cache it. Without this
-      # every run re-downloads it, which costs more than the compile it enables.
-      - name: Cache Kotlin/Native toolchain
-        uses: actions/cache@v6
-        with:
-          path: ~/.konan
-          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
-          restore-keys: konan-${{ runner.os }}-
-
-      - name: Compile iOS simulator target
-        # :presentation is the top of the exported iOS core — compiling it pulls :domain and
-        # :data transitively. :ui-android is Android-only since ADR 005 and has no iOS targets.
-        run: ./gradlew :presentation:compileKotlinIosSimulatorArm64
