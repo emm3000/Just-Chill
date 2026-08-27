@@ -8,9 +8,9 @@
       referencing them
 - [ ] every detekt rule that silently stopped firing on `:androidApp` because of them is listed —
       that list, not the error count, is the point of this ticket
-- [ ] the shared root cause with [E01-37](E01-37-restore-detekt-type-resolution-in-data.md) is
-      confirmed or ruled out; if it is the same exclude-drops-resolution-scope mechanism, the two
-      tickets close together
+- [ ] the remaining errors are placed against `BuildConfig` — E01-37's fix (the module's own Kotlin
+      classes on detekt's `classpath`) already took `devDebug` from 15 to 13 by resolving the
+      generated `BuildInfo.kt`, and `BuildConfig` is Java, so no Kotlin output dir will carry it
 - [ ] either the errors are gone, or the closing commit records why detekt `2.0.0-alpha.6` cannot fix
       it and `docs/CODE_QUALITY.md` names the limitation beside the `:data` one
 - [ ] `./gradlew qualityGate --rerun-tasks` and `./gradlew assembleDevDebug` both pass
@@ -22,6 +22,5 @@ accuracy of reporting.` and still exits 0. The count is non-deterministic — 12
 the same sources — which is itself worth explaining.
 
 Confirmed pre-existing during E09-02, by running the task in a worktree at `4ea73a6a`, before that
-ticket touched any code. Same symptom as E01-37 in a different module; that ticket's suspicion is
-that excluding generated sources drops them from detekt's *resolution* scope as well as its
-*analysis* scope.
+ticket touched any code. E01-37 settled the shared half — `excludeGeneratedSources` did drop
+generated code from the resolution scope — and what survives here is the Java-generated remainder.

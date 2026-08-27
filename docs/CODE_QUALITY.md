@@ -36,8 +36,13 @@ enters only with a test a diff can fail. No third bucket for taste.
 - **Type-resolution rules — blind wherever detekt cannot resolve a symbol.** Unresolvable code is
   downgraded to a warning and the task passes, so a rule that needs type resolution can stay silent
   and still leave the gate green. What a module owes is the `compiler errors found during analysis`
-  line its `detekt<Variant>` task prints; `:data`'s is open as
-  [E01-37](work/backlog/E01-37-restore-detekt-type-resolution-in-data.md).
+  line its `detekt<Variant>` task prints. What keeps that line off four of the five modules is
+  `DetektConventionPlugin.putOwnClassesOnAnalysisClasspath`: AGP 9's built-in Kotlin empties the
+  `classesDirs` half of detekt's own `classpath` convention, so anything `excludeGeneratedSources`
+  drops from `source` resolves to nothing until the compile task's output is wired back — and
+  deleting that wiring deletes analysis silently rather than reddening the gate. `:androidApp` still
+  owes 10–13, over a Java-generated `BuildConfig` no Kotlin `destinationDirectory` carries
+  ([E07-06](work/backlog/E07-06-name-androidapp-detekt-resolution-errors.md)).
 
 `CyclomaticComplexMethod`, `ComplexCondition`, `NestedBlockDepth` and `LongParameterList` have no
 annotation escape and **do** fire on Composables — `config/detekt/baseline-ui-android-debug.xml`
