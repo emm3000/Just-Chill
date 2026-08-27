@@ -12,8 +12,14 @@
 
 ## Context
 
-Seen twice under detekt 2.0.0-alpha.6, each time green on the identical re-run: during the E05-08
-review `:androidApp:detektProdDebugUnitTest` died with `java.lang.OutOfMemoryError: Java heap space`
-analysing `BackupOrchestratorTest.kt`, and during E07-05 the dev-flavor sibling
-`:androidApp:detektDevDebugUnitTest` died the same way. Two flavors, so it is heap pressure on the
-worker, not one file. A gate that is red once and green on re-run is a gate people learn to re-run.
+Seen under detekt 2.0.0-alpha.6, always green on the identical re-run: twice on
+`:androidApp:detekt*DebugUnitTest` analysing `BackupOrchestratorTest.kt`, then — on a clean tree at
+`3370b6c8` — in two of three consecutive `qualityGate --rerun-tasks`, one killing
+`:ui-android:detektDebug` on `CategoryResolve.kt` and the next taking that task and both
+`:androidApp` siblings at once. A third module, task and file end the "one pathological file"
+reading, and the frequency moved from twice in weeks to twice in three runs.
+
+There is no detekt worker to hand heap to: `detekt.use.worker.api` defaults to false, so analysis
+runs in the Gradle daemon and `org.gradle.jvmargs` is the only lever. `c77746d9` (E01-37) is the
+trigger, not the cause. A gate that is red once and green on re-run is a gate people learn to
+re-run.
