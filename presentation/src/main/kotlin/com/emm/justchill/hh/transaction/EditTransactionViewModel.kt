@@ -71,7 +71,7 @@ class EditTransactionViewModel(
     }
 
     private suspend fun loadFrequent(type: TransactionType) {
-        val ids = getTopUsedCategoryIds(type)
+        val ids = loadOrNull { getTopUsedCategoryIds(type) }.orEmpty()
         updateState { copy(frequentCategoryIds = ids.map { it.value }) }
     }
 
