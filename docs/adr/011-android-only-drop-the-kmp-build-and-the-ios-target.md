@@ -91,4 +91,5 @@
 - `docs/swiftui/PLAN.md` moves to `docs/archive/`.
 - ADR 003's standing constraint 8 (platform-neutral logic stays out of `:androidApp`) loses the
   beneficiary that justified it. It survives as module hygiene, nothing more.
-- The work is tracked as epic E11: [`docs/work/epics/E11-android-only.md`](../work/epics/E11-android-only.md).
+- The work was tracked as epic E11, closed and archived at
+  [`docs/archive/E11-android-only.md`](../archive/E11-android-only.md).
