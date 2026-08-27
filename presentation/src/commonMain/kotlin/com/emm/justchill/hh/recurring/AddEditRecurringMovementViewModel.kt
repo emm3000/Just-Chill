@@ -113,7 +113,7 @@ class AddEditRecurringMovementViewModel(
             // "sin categoría" instead of as an id whose row is gone.
             categoryId = s.selectedCategory?.categoryId,
             accountId = s.selectedAccount?.accountId
-                ?: error("selectedAccount required to build RecurringMovementInsert — UI should have disabled save"),
+                ?: error("selectedAccount required to build the insert — UI should have disabled save"),
             dayOfMonth = s.dayOfMonth,
             isActive = s.isActive,
         )
