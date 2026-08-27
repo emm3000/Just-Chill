@@ -1,25 +1,11 @@
 # :data — CLAUDE.md
 
-Kotlin Multiplatform library (`android` + `iosArm64` + `iosSimulatorArm64`). Implements `:domain`
-repository interfaces. SQLDelight is the local source of truth; Supabase (`supabase-kt`) backs the
-optional auth (`auth/`) and the backup pipeline (`backup/`). The row-replication sync engine that
-used to live in `sync/` is gone (`docs/work/epics/E01-snapshot-backup.md`, ADR 009).
+Android library (`com.android.library`, ADR 011 — no iOS target). Implements `:domain` repository
+interfaces. SQLDelight is the local source of truth; Supabase (`supabase-kt`) backs the optional auth
+(`auth/`) and the backup pipeline (`backup/`). The row-replication sync engine that used to live in
+`sync/` is gone (`docs/work/epics/E01-snapshot-backup.md`, ADR 009).
 
 Root package: `com.emm.data.<entity>`. `minSdk = 26`. Depends on `:domain` only.
-
-Almost everything lives in `commonMain`. Only three concerns are platform-split, and only **two** of
-them are genuine `expect/actual` pairs — do not add a third without a real platform reason:
-
-| File | Why it is platform-split |
-|---|---|
-| `DatabaseDriver` | `AndroidSqliteDriver` vs `NativeSqliteDriver`. **Not** an `expect/actual` pair, and structurally cannot be: Android's `provideSqlDriver` takes a `Context` and iOS's takes nothing, so the signatures cannot match. They are two independent platform-only files, each picked by its own Koin module (+ `DefaultCategorySeed.ios.kt`, iOS-only, because there is no `onCreate` hook to seed from). |
-| `shared/Dispatchers.kt` | `expect val ioDispatcher` — `Dispatchers.IO` is JVM-only, absent in commonMain. |
-| `shared/SqliteExceptions.kt` | Two `expect fun`s — `SQLiteException` / `SQLiteConstraintException` are Android types. |
-
-Those three `expect` declarations are also why `:data:detektMainAndroid` reports nine compiler
-errors: detekt analyses commonMain and androidMain as one unit, so it sees each `expect` and its
-`actual` together. Three errors per pair, and the same effect gives `:presentation` three. It does
-not fail the gate, and what that costs is in [`docs/CODE_QUALITY.md`](../docs/CODE_QUALITY.md).
 
 ## Layer conventions
 
@@ -40,7 +26,7 @@ drives `EmmDatabaseData` and its `*Queries` directly.
 ## Persistence
 
 SQLDelight 2.x. Schema, migrations and the generated `EmmDatabaseData` all live under
-`data/src/commonMain/sqldelight/`. The schema rules, the migration obligation and the migration-test
+`data/src/main/sqldelight/`. The schema rules, the migration obligation and the migration-test
 mechanics are [`docs/PERSISTENCE.md`](../docs/PERSISTENCE.md) — **read it before touching a `.sq`, a
 `.sqm` or a migration test.**
 
@@ -60,12 +46,12 @@ exception type here.
 
 ## Testing
 
-- Host tests (JUnit4 + MockK) in `data/src/androidHostTest/kotlin/` — mappers, enum parsing, backup.
-  Run with `./gradlew :data:testAndroidHostTest`.
-- Platform-neutral tests in `data/src/commonTest/kotlin/` (`kotlin.test`), e.g. `Sha256HexTest`.
-- Instrumented tests in `data/src/androidDeviceTest/` — the five `MigrationV*Test`s plus
+- Host tests (JUnit4 + MockK) in `data/src/test/kotlin/` — mappers, enum parsing, backup, plus the
+  platform-neutral ones (`kotlin.test`, e.g. `Sha256HexTest`) that used to sit in `commonTest`. Run
+  with `./gradlew :data:testDebugUnitTest`.
+- Instrumented tests in `data/src/androidTest/` — the five `MigrationV*Test`s plus
   `DeleteUseCasesE2ETest` and `RecurringMovementFkTest`. Run them with
-  `./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator). They are the only thing
+  `./gradlew :data:connectedDebugAndroidTest` (needs a device/emulator). They are the only thing
   that exercises migrations against the real `AndroidSqliteDriver`; what they prove and how to write
   one is [`docs/PERSISTENCE.md`](../docs/PERSISTENCE.md).
 
