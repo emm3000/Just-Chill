@@ -19,19 +19,19 @@ import org.koin.dsl.module
 import org.koin.dsl.onClose
 
 /**
- * JVM stand-in for `androidPlatformModule` / `iosPlatformModule` — the `platformModule` seam that
+ * JVM stand-in for `androidPlatformModule` — the `platformModule` seam that
  * `appModules(platformModule)` is parameterized by.
  *
- * It supplies the SAME binding set the two real platform modules do, so the rest of the graph
+ * It supplies the SAME binding set the real platform module does, so the rest of the graph
  * (every feature module plus the supabase/auth/data/commonCore wiring) can be built and
  * resolved off-device by [AppGraphKoinTest]. Construction is REAL wherever that is cheap — a real
  * SQLDelight schema on an in-memory JDBC driver, a real Settings store, a real Supabase client —
  * because the whole point is proving the production graph actually wires up, not that mocks do.
  *
  * ONE binding is deliberately absent: `DispatchersProvider`. `androidPlatformModule` binds it, but
- * its only consumer is the Android dev-flavor `experiencesModule`, which is appended by `:androidApp`
- * and is not part of `appModules()`, so binding it here would assert wiring that no shared consumer
- * resolves.
+ * its only consumers are `EmmApp.sweepLegacySession` and the Android dev-flavor `experiencesModule`,
+ * neither of which is part of `appModules()`, so binding it here would assert wiring that no shared
+ * consumer resolves.
  *
  * [CommitHash] is absent for the same reason. It is resolved by `AppNavHost` in `:ui-android`,
  * outside `appModules()`, so binding it here would have asserted nothing about the production
@@ -41,8 +41,8 @@ import org.koin.dsl.onClose
 val testPlatformModule: Module = module {
 
     // Real SQLDelight schema over an in-memory JDBC database (the driver :data's own host tests use).
-    // The Android driver seeds default categories from its onCreate callback and iOS calls
-    // seedDefaultCategoriesIfEmpty; neither is reproduced here because DI resolution never reads rows.
+    // The Android driver seeds default categories from its onCreate callback; that is not reproduced
+    // here because DI resolution never reads rows.
     single<SqlDriver> {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         EmmDatabaseData.Schema.create(driver)
@@ -50,8 +50,8 @@ val testPlatformModule: Module = module {
     } onClose { it?.close() }
     single { provideDb(get()) }
 
-    // In-memory Settings (multiplatform-settings-test), replacing SharedPreferencesSettings /
-    // NSUserDefaultsSettings. AppPreferences sits on top of it in commonCoreModule.
+    // In-memory Settings (multiplatform-settings-test), replacing SharedPreferencesSettings.
+    // AppPreferences sits on top of it in commonCoreModule.
     single<Settings> { MapSettings() }
 
     single<SessionManager> { SettingsSessionManager(MapSettings()) }
@@ -64,8 +64,8 @@ val testPlatformModule: Module = module {
     // Stamped into exported backups and shown in the Profile footer; a literal is enough off-device.
     single(named("appVersion")) { "0.0.0-test" }
 
-    // Blank, exactly like iOS: AuthViewModel hides the Google button and short-circuits
-    // submitWithGoogle on a blank id, so the launcher below is never actually invoked.
+    // Blank: AuthViewModel hides the Google button and short-circuits submitWithGoogle on a blank
+    // id, so the launcher below is never actually invoked.
     single(named("googleServerClientId")) { "" }
 
     // The offline/anonymous fallback both platforms apply when supabase.properties is absent.
@@ -81,8 +81,8 @@ val testPlatformModule: Module = module {
 }
 
 /**
- * No-op launcher mirroring iOS's `UnavailableGoogleSignInLauncher` (which lives in iosMain and is
- * therefore unreachable from here). Never invoked: the test only constructs the graph.
+ * No-op `GoogleSignInLauncher`: `AuthViewModel`'s Koin dependency must resolve to something, and no
+ * real launcher works off-device. Never invoked: the test only constructs the graph.
  */
 private class NoOpGoogleSignInLauncher : GoogleSignInLauncher {
     override suspend fun signIn(serverClientId: String): GoogleSignInResult =

@@ -17,10 +17,9 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
-// Single commonMain auth wiring (replaces :androidApp/hh/di/AuthModule.kt + KoinIos.kt's iosAuthModule).
-// DefaultAuthRepository takes SupabaseClient (supabaseModule). The Google sign-in launcher and the
-// googleServerClientId string are platform-provided (Android: ActivityGoogleSignInLauncher +
-// BuildConfig; iOS: the no-op UnavailableGoogleSignInLauncher + "").
+// Single commonMain auth wiring (replaces :androidApp/hh/di/AuthModule.kt). DefaultAuthRepository
+// takes SupabaseClient (supabaseModule). The Google sign-in launcher and the googleServerClientId
+// string are platform-provided by androidPlatformModule (ActivityGoogleSignInLauncher + BuildConfig).
 val authModule = module {
     factoryOf(::DefaultAuthRepository) { bind<AuthRepository>() }
 
@@ -38,8 +37,7 @@ val authModule = module {
             signUp = get(),
             signInWithGoogle = get(),
             resendConfirmationEmail = get(),
-            // Platform-provided: Android BuildConfig.GOOGLE_WEB_CLIENT_ID; iOS "" (button hidden,
-            // submitWithGoogle short-circuits on a blank id).
+            // Platform-provided: androidPlatformModule's BuildConfig.GOOGLE_WEB_CLIENT_ID.
             googleServerClientId = get(named("googleServerClientId")),
             googleSignInLauncher = get<GoogleSignInLauncher>(),
         )

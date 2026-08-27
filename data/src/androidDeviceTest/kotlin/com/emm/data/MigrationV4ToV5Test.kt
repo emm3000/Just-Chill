@@ -309,7 +309,7 @@ class MigrationV4ToV5Test {
     // The only case that can fail on statement order: `INSERT INTO transactions_new SELECT` is
     // validated against the new key as it copies, so 4.sqm has to repair before it rebuilds.
     @Test
-    fun the_migration_completes_with_foreign_keys_enabled_the_way_ios_runs_it() {
+    fun the_migration_completes_with_foreign_keys_enabled() {
         insertV4Transaction(id = "TX-MISMATCH", type = "Income", categoryId = "'C-SPEND'")
         insertV4Transaction(id = "TX-OK", type = "Income", categoryId = "'C-INCOME'")
         insertV4Transaction(id = "TX-ORPHAN", type = "Spend", categoryId = "'C-GONE'")

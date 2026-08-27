@@ -36,11 +36,9 @@ import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
-// Single commonMain :data wiring shared by both platforms (replaces :androidApp's hhModule +
-// dbModule's queries/use-case AND KoinIos.kt's iosDataModule datasource/repo binds). The
-// platform-specific DB single (driver construction + provideDb + iOS seeding) does NOT live here —
-// the SqlDriver is built differently per platform (AndroidSqliteDriver vs NativeSqliteDriver), so it
-// stays in androidPlatformModule / iosPlatformModule.
+// Single commonMain :data wiring (replaces :androidApp's hhModule + dbModule's queries/use-case
+// binds). The platform-specific DB single (driver construction + provideDb) does NOT live here — it
+// needs androidContext(), so it stays in androidPlatformModule.
 val dataModule = module {
     single { provideTransactionQueries(get()) }
 

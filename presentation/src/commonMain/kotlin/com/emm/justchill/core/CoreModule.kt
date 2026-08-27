@@ -13,9 +13,9 @@ import org.koin.dsl.module
 val appScopeQualifier = named("appScope")
 
 // Platform-agnostic core wiring. AppPreferences sits over the platform Settings single
-// (SharedPreferencesSettings on Android / NSUserDefaultsSettings on iOS), both provided by the
-// platform module. The Settings impl, DispatchersProvider, appVersion, and the Supabase/Google
-// platform config all stay platform-side (see androidPlatformModule / iosPlatformModule).
+// (SharedPreferencesSettings), provided by the platform module. The Settings impl,
+// DispatchersProvider, appVersion, and the Supabase/Google platform config all stay platform-side
+// (see androidPlatformModule).
 val commonCoreModule = module {
     single { AppPreferences(get()) }
 

@@ -150,8 +150,7 @@ class MigrationV5ToV6Test {
             context = context,
             name = null,
             callback = object : AndroidSqliteDriver.Callback(schema = schemaV5) {
-                // Foreign keys ON for the whole test: the chain then runs the way iOS runs it, and
-                // an orphan payment is rejected instead of stored.
+                // Foreign keys ON for the whole test: an orphan payment is rejected instead of stored.
                 override fun onOpen(db: SupportSQLiteDatabase) {
                     db.setForeignKeyConstraintsEnabled(true)
                 }

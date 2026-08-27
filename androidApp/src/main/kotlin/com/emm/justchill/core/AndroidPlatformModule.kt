@@ -60,8 +60,7 @@ val androidPlatformModule = module {
     single<SessionManager> { get<KeystoreSessionManager>() }
     single { CurrentActivityHolder() }
 
-    // Sync observability sink. Platform-specific because it reports to Crashlytics (Android-only);
-    // iOS binds a println implementation of the same port in KoinIos.kt.
+    // Sync observability sink. Platform-specific because it reports to Crashlytics.
     single<DiagnosticsLogger> { CrashReportingDiagnosticsLogger() }
 
     // Platform-provided app version (no BuildConfig in commonMain). Consumed by ProfileViewModel
@@ -93,7 +92,7 @@ val androidPlatformModule = module {
         )
     }
 
-    // Google Sign-In launcher (Android-only; iOS uses the no-op UnavailableGoogleSignInLauncher).
+    // Google Sign-In launcher.
     factoryOf(::GoogleCredentialClient)
     factoryOf(::ActivityGoogleSignInLauncher) { bind<GoogleSignInLauncher>() }
 

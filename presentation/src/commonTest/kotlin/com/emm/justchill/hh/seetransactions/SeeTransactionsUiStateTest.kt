@@ -10,8 +10,7 @@ import kotlin.test.assertTrue
 
 /**
  * The list's empty/loading precedence is decided here, not in a UI `when`. Every consumer of
- * [SeeTransactionsUiState] — Android today, SwiftUI next — reads one value and renders it, so
- * these cases are the whole contract.
+ * [SeeTransactionsUiState] reads one value and renders it, so these cases are the whole contract.
  */
 class SeeTransactionsUiStateTest {
 
