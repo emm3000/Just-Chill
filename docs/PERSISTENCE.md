@@ -8,7 +8,10 @@ own conventions are in `data/CLAUDE.md`.
 - Schema and migrations both live in `data/src/main/sqldelight/com/emm/data/` — read the
   directory, never a list written down somewhere. `.sq` files carry the CREATE TABLE plus that table's
   queries (`backup.sq` is the exception: no table of its own, only cross-table reads). Migrations are
-  `0.sqm`…`5.sqm`, so the current schema is **v6**.
+  `0.sqm`…`5.sqm`, so the current schema is **v6**. **Both kinds move freely but never rename** — E11
+  moved the whole directory out of `commonMain` and touched no name. A `.sqm`'s digit is the version
+  it migrates from, mirrored by every migration test's `oldVersion`; a `.sq`'s name becomes its
+  generated `<Name>Queries` class.
 - Generated database class: `EmmDatabaseData` (package `com.emm.data`), configured in
   `data/build.gradle.kts`.
 - **`transactions.occurredAt` is ISO local text, not an instant** — `'2026-08-10T21:47:33'`, no
