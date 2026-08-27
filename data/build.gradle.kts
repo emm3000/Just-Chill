@@ -51,7 +51,12 @@ dependencies {
     // declared so the digest the backups are verified against is ours to pin. See the
     // catalog note on the `okio` version.
     implementation(libs.okio)
-    implementation(libs.android.driver)
+    // api, not implementation: DatabaseDriver.provideSqlDriver()'s return type and
+    // EmmDatabaseData's constructor both expose SqlDriver, and androidApp's Koin module
+    // (single { provideSqlDriver(...) }) builds one directly, so it needs the type on its own
+    // compile classpath. The KMP android target's project-dependency publishing exposed this
+    // transitively even as `implementation`; a plain com.android.library does not.
+    api(libs.android.driver)
     api(libs.ktor.client.okhttp)
     api(platform(libs.supabase.bom))
 
