@@ -9,6 +9,9 @@
   repo corrected on 2026-08-11 in `043cace`).
 - **Scope superseded by**: [ADR 005](005-native-swiftui-ios-over-the-kmp-core.md) (frozen UI, thaw
   checklist), which keeps this ADR's compile-gate invariant (point 2) and constraint 8 intact.
+- **Scope superseded by**: [ADR 011](011-android-only-drop-the-kmp-build-and-the-ios-target.md) —
+  the compile-gate invariant (point 2) that ADR 005 kept is removed, and constraint 8 survives as
+  module hygiene with the beneficiary that justified it gone. Nothing iOS-shaped here is live.
 
 > Resumen (es): iOS pasa a estado **congelado**, no cerrado. Se mantiene una sola cosa del ritual —
 > `:ui-android:compileKotlinIosSimulatorArm64` en el gate, 12.9s medidos — porque es lo único que impide

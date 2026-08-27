@@ -3,6 +3,8 @@
 - **Status**: Accepted
 - **Date**: 2026-08-10
 - **Deciders**: Edgardo Muñoz
+- **Superseded by**: [ADR 011](011-android-only-drop-the-kmp-build-and-the-ios-target.md) **in
+  full** — the SwiftUI track, `JustChillKit`, SKIE and the relocated compile gate all end there.
 
 > Resumen (es): iOS se descongela — pero no para volver a Compose Multiplatform, sino como app
 > **SwiftUI nativa** sobre el core KMP (`:domain` + `:data` + `:presentation`, exportados como el
