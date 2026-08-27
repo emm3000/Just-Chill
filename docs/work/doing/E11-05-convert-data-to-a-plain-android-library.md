@@ -15,9 +15,8 @@
       `add("commonMainApi", ...)` became a plain `api(platform(libs.supabase.bom))`, and both
       `kotlin("test")` became `kotlin("test-junit")`.
 - [ ] **`QualityGateConventionPlugin.COMPILE_GATE_TASKS` names the new instrumented compile task.**
-      It holds `compileAndroidDeviceTest` today, and its KDoc says why detekt cannot replace it:
-      detekt downgrades unresolvable code to a warning and passes.
-- [ ] `DETEKT_GATE_TASKS` names whatever replaces `detektAndroidDeviceTestSourceSet`.
+      It holds `compileAndroidDeviceTest` today, and its KDoc says why detekt cannot replace it.
+      `DETEKT_GATE_TASKS` needs the same for `detektAndroidDeviceTestSourceSet`.
 - [ ] `verifySqlDelightMigration` still runs — it aggregates `verifyCommonMainEmmDatabaseDataMigration`,
       whose name embeds the source set.
 - [ ] `./gradlew :data:assembleDebugAndroidTest` succeeds and the six migration tests,
