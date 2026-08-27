@@ -30,8 +30,8 @@ import org.koin.dsl.onClose
  *
  * ONE binding is deliberately absent: `DispatchersProvider`. `androidPlatformModule` binds it, but
  * its only consumer is the Android dev-flavor `experiencesModule`, which is appended by `:androidApp`
- * and is not part of `appModules()`. `iosPlatformModule` omits it for the same reason, so binding it
- * here would assert wiring that no shared consumer resolves.
+ * and is not part of `appModules()`, so binding it here would assert wiring that no shared consumer
+ * resolves.
  *
  * [CommitHash] is absent for the same reason. It is resolved by `AppNavHost` in `:ui-android`,
  * outside `appModules()`, so binding it here would have asserted nothing about the production

@@ -74,7 +74,7 @@ val androidPlatformModule = module {
     // Bound by TYPE, not under a qualifier: producer and consumer are in different Gradle modules,
     // and CommitHash (:presentation) is the declaration both import. See its KDoc.
     //
-    // Deliberately not in testPlatformModule / KoinIos: its only consumer is :ui-android's Compose
+    // Deliberately not in testPlatformModule: its only consumer is :ui-android's Compose
     // host, which is Android-only and outside appModules(), so AppGraphKoinTest would be asserting
     // wiring no shared consumer resolves — the same reason DispatchersProvider is absent there.
     // AndroidPlatformModuleTest is what guards this line instead: deleting it turns that test red.
