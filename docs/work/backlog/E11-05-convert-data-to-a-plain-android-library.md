@@ -5,8 +5,9 @@
 
 ## Done when
 
-- [ ] `data/build.gradle.kts` applies `com.android.library` and `org.jetbrains.kotlin.android`, not
-      `justchill.kmp.library`.
+- [ ] `data/build.gradle.kts` applies `com.android.library` plus `justchill.detekt` and
+      `justchill.quality.gate` directly, and **no** `org.jetbrains.kotlin.android` — AGP 9's
+      built-in Kotlin support rejects that plugin outright.
 - [ ] Every `.sq` and `.sqm` moved from `commonMain/sqldelight` to `src/main/sqldelight` under the
       same file name, and the SQLDelight database configuration points at it.
 - [ ] `src/main/kotlin` holds what `commonMain` and `androidMain` held; `src/test/kotlin` holds what

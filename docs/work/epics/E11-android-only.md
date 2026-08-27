@@ -20,5 +20,7 @@ multiplatform build is a plain Android Kotlin one — three `com.android.library
   a reviewed convention and nothing enforces it.
 - `multiplatform-settings` stays. It is a KMP-branded library resolving to an Android artifact, and
   swapping it would rewrite where real preference data lives.
+- A converted module's detekt baseline splits per variant: one violation now lives in both
+  `baseline-<module>-debug.xml` and `-release.xml`, and a burn-down has to shrink both.
 - SQLDelight `.sq` and `.sqm` files change path but never name — E02's migration coverage is keyed on
   the file name.

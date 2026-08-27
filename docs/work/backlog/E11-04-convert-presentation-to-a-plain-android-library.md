@@ -5,8 +5,9 @@
 
 ## Done when
 
-- [ ] `presentation/build.gradle.kts` applies `com.android.library` and
-      `org.jetbrains.kotlin.android`, not `justchill.kmp.library`.
+- [ ] `presentation/build.gradle.kts` applies `com.android.library` plus `justchill.detekt` and
+      `justchill.quality.gate` directly, and **no** `org.jetbrains.kotlin.android` — AGP 9's
+      built-in Kotlin support rejects that plugin outright.
 - [ ] `libs.jetbrains.lifecycle.viewmodel` is replaced by the androidx `lifecycle-viewmodel`
       artifact, and the module still declares no Compose dependency.
 - [ ] `src/main/kotlin` holds what `commonMain` and `androidMain` held; `src/test/kotlin` holds what
