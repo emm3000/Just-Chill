@@ -45,3 +45,16 @@ on the flow side, and a `SavedStateHandle` decision nobody has made. Google's ca
   No ViewModel switches dispatcher (`rg 'withContext|Dispatchers\.' presentation/src/main/kotlin/com/emm/justchill/hh`
   is empty); `:data` owns its own threading. A `withContext(IO)` in a ViewModel is a second
   threading policy, not an optimisation.
+
+- **A funnelled collector dies with its first error.** `launchSafeIn` catches *outside* `collect()`,
+  so one `DomainException` ends that flow for the rest of the ViewModel's life. `AccountsViewModel`
+  and `SeeTransactionsViewModel` outlive `switchTab`'s backstack rewrite as the same instance — a
+  bottom-bar tab you leave and return to never gets a fresh collector — so the user gets one
+  snackbar, then a permanently frozen list, with no route back short of process death. Every other
+  `launchSafeIn` site (`LoansViewModel` included) pays the same death sentence for as long as its
+  own instance lives. It beats the crash it replaced, and it is not free.
+
+- **`stateIn`/`shareIn` upstreams bypass the funnel entirely.** Today the only two sites are
+  `ReportViewModel.calendarMonth` and `SeeTransactionsViewModel.today`, both fed by `todayFlow()`,
+  whose chain is `Clock`-only with no repository in it — so nothing can raise a `DomainException`
+  there. The day anything data-backed gets `stateIn`'d, that error has no door.
