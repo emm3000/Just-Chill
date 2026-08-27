@@ -26,15 +26,12 @@ kotlin {
         androidResources { enable = true }
     }
 
-    // Android is the only target since slice S2 (docs/swiftui/PLAN.md): the iOS app consumes
-    // :presentation through the JustChillKit framework. Because there is nothing to share, the UI
-    // lives in androidMain and depends on Google's Compose artifacts directly instead of the
-    // Compose Multiplatform ports — see this module's CLAUDE.md for why that swap was worth making.
+    // This module depends on Google's Compose artifacts directly instead of the Compose
+    // Multiplatform ports — see this module's CLAUDE.md for why that swap was worth making.
     sourceSets {
         androidMain.dependencies {
-            // The compose-free presentation layer (MVI core, ViewModels, DI, formatters) — extracted
-            // in slice S1 of docs/swiftui/PLAN.md. api: :androidApp reaches appModules/AppGraph
-            // through this module.
+            // The compose-free presentation layer (MVI core, ViewModels, DI, formatters). api:
+            // :androidApp reaches appModules/AppGraph through this module.
             api(project(":presentation"))
             implementation(project(":domain"))
             // :data is reached directly so the Koin wiring that binds its impls
