@@ -237,7 +237,7 @@ private class FakeVerifiableBucket : BackupObjectStore {
 
     override suspend fun download(key: String): ByteArray {
         calls += "download $key"
-        if (key == failDownloadOf) throw IllegalStateException("the socket died")
+        if (key == failDownloadOf) error("the socket died")
         return objects.getValue(key)
     }
 

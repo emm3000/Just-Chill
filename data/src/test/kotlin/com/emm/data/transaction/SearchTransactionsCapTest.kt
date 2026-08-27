@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.time.Clock
@@ -74,7 +75,8 @@ class SearchTransactionsCapTest {
     }
 
     private fun insert(id: String, description: String, minutesFromStart: Int) {
-        val occurredAt = "2026-08-%02dT00:%02d:00".format(1 + minutesFromStart / 60, minutesFromStart % 60)
+        val occurredAt =
+            "2026-08-%02dT00:%02d:00".format(Locale.ROOT, 1 + minutesFromStart / 60, minutesFromStart % 60)
         exec(
             "INSERT INTO transactions(transactionId, type, amount, description, occurredAt, categoryId, " +
                 "accountId, createdAt, updatedAt) " +

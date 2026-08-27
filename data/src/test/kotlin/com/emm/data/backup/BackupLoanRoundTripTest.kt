@@ -257,6 +257,8 @@ class BackupLoanRoundTripTest {
         db.loan_paymentsQueries.softDeleteByLoan(deletedAt = SEEDED_AT, updatedAt = SEEDED_AT, loanId = "loan-dead")
     }
 
+    // Mirrors loansQueries.insert's own column list 1:1 — nothing here groups naturally.
+    @Suppress("LongParameterList")
     private fun insertLoan(
         loanId: String,
         personName: String,
@@ -281,6 +283,8 @@ class BackupLoanRoundTripTest {
         )
     }
 
+    // Mirrors loan_paymentsQueries.insert's own column list 1:1 — nothing here groups naturally.
+    @Suppress("LongParameterList")
     private fun insertPayment(
         paymentId: String,
         loanId: String,

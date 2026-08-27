@@ -157,6 +157,9 @@ class SupabaseBackupObjectStoreTest {
 
     private suspend fun clientWithoutSession(): SupabaseClient = settled(client())
 
+    // InjectDispatcher: awaitInitialization() awaits Auth.init(), which launches on the client's
+    // own dispatcher (see data/CLAUDE.md) — a real dispatcher is needed here, not the test's.
+    @Suppress("InjectDispatcher")
     private suspend fun settled(client: SupabaseClient): SupabaseClient = client.also {
         withContext(Dispatchers.Default) { it.auth.awaitInitialization() }
     }

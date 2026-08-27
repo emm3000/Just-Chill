@@ -308,7 +308,7 @@ private class FakePrunableObjectStore(names: List<String>) : BackupObjectStore {
     override suspend fun list(prefix: String, limit: Int, offset: Int): ObjectPage {
         calls += "list $prefix from $offset"
         failList?.let { throw it }
-        if (offset == failListAtOffset) throw IllegalStateException("the socket died mid-listing")
+        if (offset == failListAtOffset) error("the socket died mid-listing")
 
         val folders = if (offset == 0) foldersOnFirstPage else 0
         val firstObject = (offset - foldersOnFirstPage).coerceAtLeast(0)
@@ -328,7 +328,7 @@ private class FakePrunableObjectStore(names: List<String>) : BackupObjectStore {
 
     override suspend fun delete(key: String) {
         calls += "delete $key"
-        if (key in failDeleteOf) throw IllegalStateException("boom")
+        if (key in failDeleteOf) error("boom")
         objects -= key.removePrefix(PREFIX)
     }
 

@@ -218,7 +218,7 @@ private class FakeErasableObjectStore(keys: List<String>) : BackupObjectStore {
 
     override suspend fun list(prefix: String, limit: Int, offset: Int): ObjectPage {
         calls += "list $prefix from $offset"
-        if (prefix in failListOf) throw IllegalStateException("the socket died")
+        if (prefix in failListOf) error("the socket died")
         if (neverEnds) return ObjectPage(names = emptyList(), serverReturned = limit)
 
         val page: List<String> = rowsUnder(prefix).drop(offset).take(limit)
@@ -231,7 +231,7 @@ private class FakeErasableObjectStore(keys: List<String>) : BackupObjectStore {
 
     override suspend fun delete(key: String) {
         calls += "delete $key"
-        if (key in failDeleteOf) throw IllegalStateException("boom")
+        if (key in failDeleteOf) error("boom")
         if (key in survivesDeleteSilently) return
         objects -= key
     }

@@ -589,6 +589,8 @@ class BackupRoundTripTest {
         )
     }
 
+    // Mirrors transactionsQueries.insert's own column list 1:1 — nothing here groups naturally.
+    @Suppress("LongParameterList")
     private fun insertTransaction(
         transactionId: String,
         type: String,
@@ -611,6 +613,8 @@ class BackupRoundTripTest {
         )
     }
 
+    // Mirrors recurring_movementsQueries.insert's own column list 1:1 — nothing here groups naturally.
+    @Suppress("LongParameterList")
     private fun insertTemplate(
         id: String,
         name: String,

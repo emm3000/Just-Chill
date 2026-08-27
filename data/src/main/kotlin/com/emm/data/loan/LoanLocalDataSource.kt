@@ -1,3 +1,10 @@
+// detekt 2.0.0-alpha.6 misresolves `withContext` (an inline suspend fun) under AGP 9's
+// built-in-Kotlin compile and flags every suspend fun here that only wraps one as redundant;
+// removing suspend/withContext would run these DB writes off the caller's dispatcher instead of
+// IO. detektMainAndroid (KMP) never saw this on byte-identical source before E11-05 — a known
+// detekt false-positive class: https://github.com/detekt/detekt/issues/8019.
+@file:Suppress("RedundantSuspendModifier")
+
 package com.emm.data.loan
 
 import app.cash.sqldelight.coroutines.asFlow

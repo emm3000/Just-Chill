@@ -130,11 +130,9 @@ class DeleteUseCasesE2ETest {
         return txId
     }
 
-    private suspend fun insertRecurring(
-        id: String,
-        accountId: AccountId,
-        categoryId: CategoryId?,
-    ): RecurringMovementId {
+    // No suspend: unlike its siblings, this bypasses the repository for direct SQL (own id
+    // instead of the DataSource's generated UUID), so the body never crosses a suspend call.
+    private fun insertRecurring(id: String, accountId: AccountId, categoryId: CategoryId?): RecurringMovementId {
         // Insert via direct SQL to supply our own id (the DataSource generates a UUID on create).
         database.recurring_movementsQueries.insert(
             id = id,

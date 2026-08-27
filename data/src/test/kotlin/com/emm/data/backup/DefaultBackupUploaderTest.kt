@@ -321,21 +321,21 @@ private class FakeBackupObjectStore : BackupObjectStore {
     override suspend fun upload(key: String, bytes: ByteArray) {
         calls += "upload $key"
         failUpload?.let { throw it }
-        if (key == failUploadOf) throw IllegalStateException("boom")
+        if (key == failUploadOf) error("boom")
         objects[key] = bytes
     }
 
     override suspend fun download(key: String): ByteArray {
         calls += "download $key"
         failDownload?.let { throw it }
-        if (key == failDownloadOf) throw IllegalStateException("boom")
+        if (key == failDownloadOf) error("boom")
         return readBackInstead[key] ?: objects.getValue(key)
     }
 
     override suspend fun delete(key: String) {
         calls += "delete $key"
         failDelete?.let { throw it }
-        if (key == failDeleteOf) throw IllegalStateException("boom")
+        if (key == failDeleteOf) error("boom")
         objects -= key
     }
 
