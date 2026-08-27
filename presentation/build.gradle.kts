@@ -25,9 +25,7 @@ kotlin {
             // The DI modules bind :data implementations (Default* repositories, SQLDelight wiring)
             // to :domain interfaces — same layering as ui-android had since slice H. ViewModel
             // purity (VMs take :domain interfaces only) stays a convention, reviewed not enforced.
-            // api (not implementation) because the framework block export()s :data — export
-            // requires the exported project on the api configuration.
-            api(projects.data)
+            implementation(projects.data)
             // Multiplatform ViewModel + viewModelScope WITHOUT the compose runtime (ui-android uses
             // the -compose variant of the same artifact).
             implementation(libs.jetbrains.lifecycle.viewmodel)
