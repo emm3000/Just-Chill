@@ -149,9 +149,12 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 # Generates KSerializer for @Serializable nav routes and sync DTOs. Applied by :androidApp, :data, :ui-android.
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinVersion" }
 # Plain (non-Android) Kotlin JVM library plugin. Applied by :domain alone — ADR 011 Decision 3.
-# No version, same reason as android-library above: build-logic's `kotlin-multiplatform` marker
-# dependency puts the same kotlin-gradle-plugin jar (jvm/android/multiplatform share one artifact)
-# on the buildscript classpath first, and Gradle refuses to version-check a plugin it can already see.
+# No version, same reason as android-library above, but a different supplier: build-logic's own
+# `kotlin-dsl` plugin (build-logic/build.gradle.kts) applies org.jetbrains.kotlin.jvm internally to
+# compile build-logic's own Kotlin sources, which puts it on the shared classloader first. Confirmed
+# by re-adding version.ref = "kotlinVersion" here after E11-07 deleted the KMP marker that used to
+# get blamed for this — the "already on the classpath with an unknown version" failure was unchanged,
+# so kotlin-dsl, not the marker, was always the real supplier.
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
