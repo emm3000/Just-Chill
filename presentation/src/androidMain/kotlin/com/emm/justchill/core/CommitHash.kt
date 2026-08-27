@@ -26,11 +26,7 @@ import kotlin.jvm.JvmInline
  * through `:ui-android`.
  *
  * `androidMain` rather than `commonMain` because both sides of the contract are Android-only:
- * `androidPlatformModule` (`:androidApp`) produces it, `AppNavHost` (`:ui-android`) consumes it,
- * and no `iosMain` code — `KoinIos.kt` included — mentions it. Keeping it out of `commonMain`
- * keeps it out of the Kotlin/Native compilation and out of the `JustChillKit` export. If iOS ever
- * needs a commit footer, moving this back to `commonMain` is the first step, and it would then
- * have to stop being a `@JvmInline value class`: Kotlin/Native does not export those to Obj-C.
+ * `androidPlatformModule` (`:androidApp`) produces it, `AppNavHost` (`:ui-android`) consumes it.
  */
 @JvmInline
 value class CommitHash(val value: String)
