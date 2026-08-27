@@ -1,6 +1,6 @@
 # :data — CLAUDE.md
 
-Android library (`com.android.library`, ADR 011 — no iOS target). Implements `:domain` repository
+Android library (`com.android.library`, ADR 011). Implements `:domain` repository
 interfaces. SQLDelight is the local source of truth; Supabase (`supabase-kt`) backs the optional auth
 (`auth/`) and the backup pipeline (`backup/`). The row-replication sync engine that used to live in
 `sync/` is gone (`docs/work/epics/E01-snapshot-backup.md`, ADR 009).
@@ -47,8 +47,7 @@ exception type here.
 ## Testing
 
 - Host tests (JUnit4 + MockK) in `data/src/test/kotlin/` — mappers, enum parsing, backup, plus the
-  platform-neutral ones (`kotlin.test`, e.g. `Sha256HexTest`) that used to sit in `commonTest`. Run
-  with `./gradlew :data:testDebugUnitTest`.
+  plain `kotlin.test` ones (e.g. `Sha256HexTest`). Run with `./gradlew :data:testDebugUnitTest`.
 - Instrumented tests in `data/src/androidTest/` — the five `MigrationV*Test`s plus
   `DeleteUseCasesE2ETest` and `RecurringMovementFkTest`. Run them with
   `./gradlew :data:connectedDebugAndroidTest` (needs a device/emulator). They are the only thing

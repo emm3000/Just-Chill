@@ -3,16 +3,13 @@
 Android's Compose UI module: screens, navigation, theme and widgets. It renders what
 `:presentation` exposes and owns nothing else — no ViewModels, no DI, no formatters.
 
-**Android-only** (ADR 011 dropped the iOS target).
-
 Root package `com.emm.justchill.{hh.<feature>, core, components}`. `minSdk = 28`. Depends on
 `:presentation` (api), `:domain`, `:data`.
 
 ## Where things live
 
-Plain `com.android.library` (ADR 011/E11-03) — one `src/main`, one `src/test`, no KMP plugin, no
-`commonMain` to keep code out of. Compose comes from Google's own BOM-managed artifacts, not the
-JetBrains Compose Multiplatform ports — those would have pulled in a material3 alpha.
+Plain `com.android.library` (ADR 011/E11-03) — one `src/main`, one `src/test`. Compose comes from
+Google's own BOM-managed artifacts.
 
 A feature owns `hh/<feature>/` — its Screens plus `<Feature>Entries.kt` for nav wiring.
 Cross-feature: `hh/shared/` (nav host, bottom bar, atoms), `core/theme/`, `components/`.
@@ -23,11 +20,11 @@ No modules here, and no exception. `appModules(platformModule)` / `bootstrapAppG
 `:presentation` (`core/AppGraph.kt`), the Android platform module lives in `:androidApp`, and a new
 feature registers its Koin module in `:presentation`'s `appModules()`.
 
-## No expect/actual
+## The capability seam
 
-There is none — one target, one source set. `hh/shared/PlatformHostActions.kt`'s capability flags
-(`supportsBackup`, `showGoogleSignIn`, …) are plain constants; the seam survives because the nav
-entries read it, and collapsing that is a separate change.
+`hh/shared/PlatformHostActions.kt`'s flags (`supportsBackup`, `showGoogleSignIn`, …) are plain
+constants; the seam survives because the nav entries read it, and collapsing that is a separate
+change.
 
 ## Navigation
 

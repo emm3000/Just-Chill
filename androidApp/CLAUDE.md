@@ -4,7 +4,9 @@ Thin Android entry point. Almost nothing belongs here: the ViewModels, the MVI c
 Koin graph live in `:presentation`, and the Compose UI lives in `:ui-android`. Read
 `presentation/CLAUDE.md` before adding a feature, `ui-android/CLAUDE.md` before adding a screen.
 
-Root package `com.emm.justchill`, `minSdk = 28`, `compileSdk = 37`. Depends on `:ui-android`,
+`com.android.application` on AGP 9's built-in Kotlin support — no separate `kotlin.android` plugin,
+same as the three libraries. Root package `com.emm.justchill`, `minSdk = 28`, `compileSdk = 37`.
+Depends on `:ui-android`,
 `:domain` and `:data` — the last two **directly**, not transitively, because
 `AndroidPlatformModule` constructs the SQLDelight driver itself.
 
@@ -40,5 +42,5 @@ dev flavor for a telemetry-free app" claim true. Firebase **Analytics is not use
 
 - `MainDispatcherRule` — **use it in every ViewModel test that touches `viewModelScope`**.
 - **The MockK ViewModel tests live here, not in `:presentation`**, even though the ViewModels are in
-  `presentation/src/commonMain`: they sit in the same package and rely on MockK's JVM engine. That
+  `presentation/src/main`: they sit in the same package and rely on MockK's JVM engine. That
   placement is deliberate — keep it unless you move the whole suite.

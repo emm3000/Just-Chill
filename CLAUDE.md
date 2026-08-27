@@ -1,9 +1,8 @@
 # CLAUDE.md — per-module guidance lives in each module's own `CLAUDE.md`
 
-> **KMP core, Android-only UI.** Android renders Compose (`:ui-android`) over the shared KMP core.
-> ADR 011 dropped the iOS target ADR 005 started — there is no other platform left to own a UI.
-> Android-only *capabilities* may live in `:androidApp`; their platform-neutral *logic* stays in the
-> KMP core.
+> **Android-only Kotlin project (ADR 011).** `:androidApp` (`com.android.application`) over three
+> `com.android.library` modules and a `kotlin("jvm")` `:domain`. Android-only *capabilities* may
+> live in `:androidApp`; their platform-neutral *logic* stays in the core.
 >
 > **No third-party users, but the author runs the release daily** on a device holding real accumulated
 > data — UI is cheap to redo, a destructive migration is not.
@@ -13,32 +12,30 @@
 ```bash
 ./gradlew assembleDevDebug      # dev debug build; prod release is assembleProdRelease
 ./gradlew qualityGate           # THE gate — see Gotchas
-./gradlew test                  # all JVM host tests; per module :<module>:testAndroidHostTest;
-                                # the MockK ViewModel suite is :androidApp:testDevDebugUnitTest
+./gradlew test                  # every module's host tests; per module :<module>:testDebugUnitTest,
+                                # :domain:test, and :androidApp:testDevDebugUnitTest for the MockK
+                                # ViewModel suite
 ```
 
-KMP host-test tasks go `UP-TO-DATE` across sessions — `--rerun` forces a real run, **per-task**. There is
-no `:domain:test`, and no instrumented source set outside `:data`.
+Test tasks go `UP-TO-DATE` across sessions — `--rerun` forces a real run, **per-task**.
+`data/src/androidTest` is the only instrumented source set.
 
 ## Project Layout
 
 - Toolchain, SDK levels and versions: `build-logic/.../BuildConventions.kt` +
   `gradle/libs.versions.toml` — `minSdk` disagrees per module on purpose. Flavors `dev`/`prod` on
   `:androidApp` only; signing, Crashlytics and the absent Analytics: `androidApp/CLAUDE.md`.
-- Compose Multiplatform is **gone** — `:ui-android` renders Google's Compose under the BOM;
-  `:presentation` still uses JetBrains' `lifecycle-viewmodel` — E11-04 swaps it for the androidx
-  artifact.
 
 ## Architecture
 
-Clean Architecture, five modules, four of them KMP. Dependency direction is top to bottom:
+Clean Architecture, five modules. Dependency direction is top to bottom:
 
 | Module | Role | Root package |
 |---|---|---|
 | `:androidApp` | thin Android entry point (Activity, platform Koin module) | `com.emm.justchill.*` |
 | `:ui-android` | Android-only Compose UI (screens, nav, theme) | `com.emm.justchill.{hh.<feature>, core, components}` |
 | `:presentation` | compose-free MVI core, ViewModels, Koin DI, formatters | same packages as `:ui-android` on purpose |
-| `:data` | implements domain interfaces (commonMain/androidMain) | `com.emm.data.<entity>` |
+| `:data` | implements domain interfaces (SQLDelight, Supabase) | `com.emm.data.<entity>` |
 | `:domain` | pure Kotlin, no framework deps | `com.emm.domain.<entity>` |
 
 `:ui-android` sits on `:presentation` as a Gradle dependency. Same Kotlin packages across that
@@ -63,7 +60,7 @@ with **snapshot backup**; the engine is gone, the sync schema stays. **Read
 
 ## Testing
 
-JUnit4 + MockK + `kotlinx-coroutines-test` as JVM host tests (`androidHostTest`); `:domain` use cases
+JUnit4 + MockK + `kotlinx-coroutines-test` as JVM host tests (`src/test`); `:domain` use cases
 are the primary surface. Two failure modes have one net each: a missing Koin binding, caught by a host
 test (`presentation/CLAUDE.md`), and a missing migration — compiled by the gate, run only on a device.
 
@@ -87,12 +84,15 @@ Tiers, the tiebreaker, the Judgment Day carve-outs and the `model`-passing rule 
 
 This is the Opus list (`docs/WORKFLOW.md` model-tier policy) — a Sonnet writer does not write here.
 
-- **`./gradlew qualityGate` is the gate.** One definition — `build-logic/.../QualityGateConventionPlugin.kt`,
-  invoked by the pre-push hook and all three workflows: detekt over every module source set holding
-  code, the host test suites, dev lint, plus `:build-logic:test` named explicitly (an included build
-  is unreachable by task-name matching; its sources are the one code the gate runs and never lints).
-  Change the plugin, not the callers. **Never gate on plain `./gradlew detekt`** — `NO-SOURCE` on all
-  four KMP modules; it only lints `:androidApp`.
+- **`./gradlew qualityGate` is the gate**, invoked by the pre-push hook and all three workflows. The
+  plugin — `build-logic/.../QualityGateConventionPlugin.kt` — matches `detektMain`/`detektTest`,
+  `:data`'s instrumented compile and `verifySqlDelightMigration`, and names `:build-logic:test`
+  explicitly (an included build is unreachable by task-name matching; its sources are the one code
+  the gate runs and never lints). **The test suites and dev lint are not in the plugin** — each
+  module names its own in its `build.gradle.kts`, and a module that stops naming one leaves the gate
+  silently: the gate runs less, it does not fail. **Never gate on plain `./gradlew detekt`** — it
+  passes while covering strictly less, `src/main` + `src/test` only, missing `data/src/androidTest`
+  and `:androidApp`'s flavor source sets.
 - **Third-party actions in `.github/` are pinned to a commit SHA on purpose** — they hold the signing
   and Play/Firebase credentials, and a floating `@v1` can be repointed upstream. Do not "tidy" them
   into tags; dependabot proposes bumps. GitHub's own `actions/*` stay on tags.

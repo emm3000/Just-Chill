@@ -9,16 +9,17 @@ Root packages: `com.emm.justchill.{core, hh.<feature>}` — unchanged from the e
 
 ## The one rule
 
-**NO Compose dependency may ever appear here.** That is the module's reason to exist: it is the
-structural guarantee that ViewModels never touch UI types. Models carry semantic ids (`iconId`,
-`colorId`), never `ImageVector`/`Color` — resolution happens at render time in each UI
-(`ui-android .../CategoryResolve.kt` on Android). If a state class needs something visual, it
+**NO Compose dependency may ever appear here.** That is the module's reason to exist: ViewModels
+never touch UI types. **Nothing mechanical enforces it** — ADR 011 Decision 4 traded the module
+boundary that did for a reviewed convention, so a Compose import here compiles and the gate stays
+green. `rg 'androidx\.compose' presentation/src/main` is the check, and it returns nothing today.
+Models carry semantic ids (`iconId`, `colorId`), never `ImageVector`/`Color` — resolution happens at
+render time in `:ui-android` (`CategoryResolve.kt`). If a state class needs something visual, it
 carries the id and the UI resolves it.
 
-**ViewModel purity** is the convention that sits beside it: a ViewModel takes `:domain` interfaces,
-never SQLDelight types or a `Default*` implementation. Unlike the no-Compose rule this one is only
-reviewed, not structural — the module *does* depend on `:data`, deliberately, so the Koin wiring can
-exist once instead of once per platform.
+**ViewModel purity** sits beside it, equally unenforced: a ViewModel takes `:domain` interfaces,
+never SQLDelight types or a `Default*` implementation. The module *does* depend on `:data`,
+deliberately, so the Koin modules can bind those interfaces to their implementations in one place.
 
 Because of that, `:ui-android` declares this module's state classes stable on its side rather than
 here (`ui-android/CLAUDE.md`). Keep them immutable (`val` + immutable collections) or that
@@ -26,8 +27,7 @@ declaration becomes a lie.
 
 ## Where things live
 
-Plain `com.android.library` (ADR 011/E11-04) — one `src/main`, one `src/test`, no KMP plugin, no
-`commonMain`/`androidMain` split.
+Plain `com.android.library` (ADR 011/E11-04) — one `src/main`, one `src/test`.
 
 `core/` holds `AppGraph` (`appModules`/`bootstrapAppGraph`), `DispatchersProvider`, `CommitHash.kt`
 — the one DI contract that is Android-only on both ends (`androidPlatformModule` and `AppNavHost`
@@ -39,8 +39,8 @@ module in `hh/di/`; pure helpers and `UiStrings` sit in `hh/shared/`.
 ## Testing
 
 - `./gradlew :presentation:testDebugUnitTest`.
-- `src/test/` holds both what used to be two source sets: pure `kotlin.test` suites (formatters,
-  mappers, copy) alongside anything needing MockK, JDBC SQLite or `Dispatchers.setMain`. Home of
+- `src/test/` holds pure `kotlin.test` suites (formatters, mappers, copy) alongside anything needing
+  MockK, JDBC SQLite or `Dispatchers.setMain`. Home of
   `core/AppGraphKoinTest.kt`, which resolves the WHOLE Koin graph off-device against
   `TestPlatformModule`. A missing binding compiles clean and passes the Android build — this test
   is the only net before a user hits it. Register every new ViewModel there.
