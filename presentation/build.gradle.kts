@@ -62,7 +62,7 @@ dependencies {
     implementation(libs.koin.core)
     // viewModelOf DSL for the DI modules — the compose-free base of koin-compose-viewmodel.
     implementation(libs.koin.core.viewmodel)
-    // ProcessLifecycleOwner for the resumeEvents() actual (core/lifecycle).
+    // ProcessLifecycleOwner for resumeEvents() (core/lifecycle).
     implementation(libs.androidx.lifecycle.process)
 
     // kotlin("test") alone resolves the platform-agnostic artifact, whose `Test` annotation is an
