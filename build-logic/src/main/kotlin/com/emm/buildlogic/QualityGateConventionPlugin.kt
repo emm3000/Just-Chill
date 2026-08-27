@@ -10,9 +10,8 @@ class QualityGateConventionPlugin : Plugin<Project> {
         target.tasks.register(GATE_TASK) {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
             description =
-                "Runs every check that must pass before pushing: detekt, host tests, " +
-                    ":build-logic:test, and (on macOS) the iOS compile. Invoked by the pre-push " +
-                    "hook and by CI."
+                "Runs every check that must pass before pushing: detekt, host tests, and " +
+                    ":build-logic:test. Invoked by the pre-push hook and by CI."
 
             dependsOn(
                 target.tasks.matching {
@@ -44,7 +43,6 @@ class QualityGateConventionPlugin : Plugin<Project> {
          */
         val DETEKT_GATE_TASKS = setOf(
             "detektMainAndroid",
-            "detektIosMainSourceSet",
             "detektCommonTestSourceSet",
             "detektAndroidHostTestSourceSet",
             "detektAndroidDeviceTestSourceSet",
@@ -65,9 +63,6 @@ class QualityGateConventionPlugin : Plugin<Project> {
          * upgrade of an installed app. SQLDelight wires it only into `check`, which nothing here runs.
          */
         val SCHEMA_GATE_TASKS = setOf("verifySqlDelightMigration")
-
-        val isMacOsHost: Boolean
-            get() = System.getProperty("os.name").orEmpty().startsWith("Mac")
     }
 }
 
