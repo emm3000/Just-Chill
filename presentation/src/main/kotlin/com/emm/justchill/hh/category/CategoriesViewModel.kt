@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.category
 
-import androidx.lifecycle.viewModelScope
 import com.emm.domain.category.CategoryRepository
 import com.emm.domain.category.CategoryUpsert
 import com.emm.domain.category.DeleteCategoryUseCase
@@ -10,7 +9,6 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class CategoriesViewModel(
@@ -43,7 +41,7 @@ class CategoriesViewModel(
                     )
                 }
             }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { e -> CategoriesEffect.ShowMessage(e.toUserMessage()) })
     }
 
     override fun onIntent(intent: CategoriesIntent) {

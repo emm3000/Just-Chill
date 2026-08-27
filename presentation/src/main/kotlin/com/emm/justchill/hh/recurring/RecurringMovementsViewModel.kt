@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.recurring
 
-import androidx.lifecycle.viewModelScope
 import com.emm.domain.recurring.DeleteRecurringMovementUseCase
 import com.emm.domain.recurring.GetRecurringMonthlyTotalsUseCase
 import com.emm.domain.recurring.RecurringMovementRepository
@@ -9,7 +8,6 @@ import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.shared.formatNeutral
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class RecurringMovementsViewModel(
@@ -44,7 +42,7 @@ class RecurringMovementsViewModel(
                     )
                 }
             }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { e -> RecurringMovementsEffect.ShowError(e.toUserMessage()) })
     }
 
     override fun onIntent(intent: RecurringMovementsIntent) {

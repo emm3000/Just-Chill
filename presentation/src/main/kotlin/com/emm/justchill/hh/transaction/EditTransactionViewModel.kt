@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.transaction
 
-import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
@@ -16,10 +15,8 @@ import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.core.time.TodayFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 
 @Suppress("LongParameterList")
@@ -44,7 +41,7 @@ class EditTransactionViewModel(
             Catalog.Loaded(accounts, categories.groupBy(SelectableCategory::categoryType))
         }
             .onEach { loaded -> updateState { copy(catalog = loaded) } }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { EditTransactionEffect.ShowError(it.toUserMessage()) })
 
         loadCurrentTransaction()
     }
@@ -70,16 +67,18 @@ class EditTransactionViewModel(
     // clear a selection the new type cannot offer.
     private fun changeTransactionType(type: TransactionType) {
         updateState { copy(transactionType = type) }
-        loadFrequent(type)
+        launchSafe(onError = { EditTransactionEffect.ShowError(it.toUserMessage()) }) { loadFrequent(type) }
     }
 
-    private fun loadFrequent(type: TransactionType) = viewModelScope.launch {
+    private suspend fun loadFrequent(type: TransactionType) {
         val ids = loadOrNull { getTopUsedCategoryIds(type) }.orEmpty()
         updateState { copy(frequentCategoryIds = ids.map { it.value }) }
     }
 
-    private fun loadCurrentTransaction() = viewModelScope.launch {
-        val stored: Transaction = transactionRepository.find(TransactionId(transactionId)) ?: return@launch
+    private fun loadCurrentTransaction() = launchSafe(
+        onError = { EditTransactionEffect.ShowError(it.toUserMessage()) },
+    ) {
+        val stored: Transaction = transactionRepository.find(TransactionId(transactionId)) ?: return@launchSafe
         updateState {
             copy(
                 original = stored,

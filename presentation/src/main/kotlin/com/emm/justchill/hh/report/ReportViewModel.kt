@@ -18,7 +18,6 @@ import com.emm.justchill.hh.shared.monthLabel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -62,7 +61,7 @@ class ReportViewModel(
                 updateState { copy(isCurrentMonth = isCurrent(month)) }
                 reloadTrends()
             }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { e -> ReportEffect.ShowError(e.toUserMessage()) })
     }
 
     override fun onIntent(intent: ReportIntent) = when (intent) {

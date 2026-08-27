@@ -1,9 +1,8 @@
 package com.emm.justchill.hh.loan
 
-import androidx.lifecycle.viewModelScope
 import com.emm.domain.loan.LoanRepository
+import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class PersonLoansViewModel(personKey: String, loanRepository: LoanRepository) :
@@ -19,7 +18,7 @@ class PersonLoansViewModel(personKey: String, loanRepository: LoanRepository) :
                     )
                 }
             }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { e -> PersonLoansEffect.ShowError(e.toUserMessage()) })
     }
 
     override fun onIntent(intent: PersonLoansIntent) {

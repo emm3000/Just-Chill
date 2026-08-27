@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.loan
 
-import androidx.lifecycle.viewModelScope
 import com.emm.domain.loan.DeleteLoanUseCase
 import com.emm.domain.loan.Loan
 import com.emm.domain.loan.LoanPayment
@@ -22,7 +21,6 @@ import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.transaction.centsToMoney
 import com.emm.justchill.hh.transaction.moneyCentsString
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -82,7 +80,7 @@ class LoanDetailViewModel(
                     )
                 }
             }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { e -> LoanDetailEffect.ShowError(e.toUserMessage()) })
     }
 
     // The only place either cap field is set: every form is built capped at nothing and passed

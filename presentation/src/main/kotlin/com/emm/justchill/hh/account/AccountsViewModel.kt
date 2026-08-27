@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.account
 
-import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.account.AccountUpsert
 import com.emm.domain.account.DeleteAccountUseCase
@@ -12,7 +11,6 @@ import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.loan.totalOwedFormatted
 import com.emm.justchill.hh.shared.balanceFormatted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class AccountsViewModel(
@@ -34,12 +32,12 @@ class AccountsViewModel(
             .onEach { (accounts, counts) ->
                 updateState { copy(accounts = accounts, movementCounts = counts) }
             }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { e -> AccountsEffect.ShowMessage(e.toUserMessage()) })
 
         // A separate flow on purpose (ADR 010): loans never fold into the accounts query.
         loanRepository.balancesByPerson()
             .onEach { balances -> updateState { copy(loansTotalOwed = balances.totalOwedFormatted()) } }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { e -> AccountsEffect.ShowMessage(e.toUserMessage()) })
 
         // A third, independent flow (ADR 010): the saldo total is TransactionTotals.balance from
         // the aggregate query, never folded from the `all()` list above and never touched by a loan.
@@ -49,7 +47,7 @@ class AccountsViewModel(
                     copy(totalBalance = totals.balance.balanceFormatted(), totalBalanceMoney = totals.balance)
                 }
             }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { e -> AccountsEffect.ShowMessage(e.toUserMessage()) })
     }
 
     override fun onIntent(intent: AccountsIntent) {

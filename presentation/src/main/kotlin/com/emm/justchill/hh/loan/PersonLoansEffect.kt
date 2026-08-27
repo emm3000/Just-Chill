@@ -4,4 +4,5 @@ import com.emm.justchill.core.mvi.UiEffect
 
 sealed interface PersonLoansEffect : UiEffect {
     data class NavigateToLoanDetail(val loanId: String) : PersonLoansEffect
+    data class ShowError(val message: String) : PersonLoansEffect
 }

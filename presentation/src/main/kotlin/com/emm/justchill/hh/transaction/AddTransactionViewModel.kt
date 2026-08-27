@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.transaction
 
-import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
@@ -20,10 +19,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
@@ -48,7 +45,11 @@ class AddTransactionViewModel(
 ) {
 
     init {
-        viewModelScope.launch {
+        // Nested on purpose: `accountRepository.all()` below is called when the combine is BUILT, so
+        // hoisting it would read the catalog while the last-used account is still pending — the
+        // account chip would flash `accounts.first()` before lastUsedAccountId lands, and a cleared
+        // screen would still start the read its cancellation is supposed to stop.
+        launchSafe(onError = { AddTransactionEffect.ShowError(it.toUserMessage()) }) {
             val lastUsedAccountId = loadOrNull { transactionStatsRepository.lastUsedAccountId() }
             updateState { copy(lastUsedAccountId = lastUsedAccountId) }
 
@@ -59,14 +60,14 @@ class AddTransactionViewModel(
                 Catalog.Loaded(accounts, categories.groupBy(SelectableCategory::categoryType))
             }
                 .onEach { loaded -> updateState { copy(catalog = loaded) } }
-                .launchIn(viewModelScope)
+                .launchSafeIn(onError = { AddTransactionEffect.ShowError(it.toUserMessage()) })
         }
 
         state.map { it.transactionType }
             .distinctUntilChanged()
             .flatMapLatest(::loadFrequentUsage)
             .onEach { usage -> updateState { copy(frequentUsage = usage) } }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { AddTransactionEffect.ShowError(it.toUserMessage()) })
     }
 
     override fun onIntent(intent: AddTransactionIntent) {

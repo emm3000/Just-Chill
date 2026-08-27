@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.profile
 
-import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.auth.DeleteUserAccountUseCase
 import com.emm.domain.auth.ObserveSessionUseCase
@@ -24,7 +23,6 @@ import com.emm.justchill.core.mvi.MviViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlin.time.Clock
@@ -56,7 +54,7 @@ class ProfileViewModel(
             .onEach { (catCount, accCount) ->
                 updateState { copy(categoryCount = catCount, accountCount = accCount) }
             }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = ProfileEffect::ShowError)
 
         observeSession()
             .onEach { status ->
@@ -67,15 +65,15 @@ class ProfileViewModel(
                 }
                 updateState { copy(session = sessionUiState) }
             }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = ProfileEffect::ShowError)
 
         backupController.isBackingUp
             .onEach(::onBackupProgress)
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = ProfileEffect::ShowError)
 
         backupController.events
             .onEach { event -> sendEffect(ProfileEffect.Notify(event.toProfileMessage())) }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = ProfileEffect::ShowError)
 
         combine(
             state.map { it.session }.distinctUntilChanged(),
@@ -87,7 +85,7 @@ class ProfileViewModel(
                 val row: BackupRowUi = resolveBackupRow(sessionUiState, health, backingUp, getBackupStaleness, logger)
                 updateState { copy(backupRow = row) }
             }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = ProfileEffect::ShowError)
     }
 
     override fun onIntent(intent: ProfileIntent) {

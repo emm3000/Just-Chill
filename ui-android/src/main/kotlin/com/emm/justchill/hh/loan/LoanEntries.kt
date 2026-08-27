@@ -25,6 +25,7 @@ fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
         LoansEntry(
             onNavigateToPerson = { personKey -> nav.push(PersonLoansRoute(personKey)) },
             onNavigateToAddLoan = { nav.push(AddEditLoanRoute()) },
+            onShowError = bindings.showMessage,
             onBack = { nav.pop() },
         )
     }
@@ -34,6 +35,7 @@ fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
         PersonLoansEntry(
             personKey = key.personKey,
             onNavigateToLoanDetail = { loanId -> nav.push(LoanDetailRoute(loanId)) },
+            onShowError = bindings.showMessage,
             onBack = { nav.pop() },
         )
     }
@@ -60,17 +62,24 @@ fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
 }
 
 @Composable
-private fun LoansEntry(onNavigateToPerson: (String) -> Unit, onNavigateToAddLoan: () -> Unit, onBack: () -> Unit) {
+private fun LoansEntry(
+    onNavigateToPerson: (String) -> Unit,
+    onNavigateToAddLoan: () -> Unit,
+    onShowError: (String) -> Unit,
+    onBack: () -> Unit,
+) {
     val vm: LoansViewModel = koinViewModel()
     val state by vm.state.collectAsStateWithLifecycle()
     val currentNavigateToPerson by rememberUpdatedState(onNavigateToPerson)
     val currentNavigateToAddLoan by rememberUpdatedState(onNavigateToAddLoan)
+    val currentShowError by rememberUpdatedState(onShowError)
 
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
             when (effect) {
                 is LoansEffect.NavigateToPerson -> currentNavigateToPerson(effect.personKey)
                 LoansEffect.NavigateToAddLoan -> currentNavigateToAddLoan()
+                is LoansEffect.ShowError -> currentShowError(effect.message)
             }
         }
     }
@@ -79,15 +88,22 @@ private fun LoansEntry(onNavigateToPerson: (String) -> Unit, onNavigateToAddLoan
 }
 
 @Composable
-private fun PersonLoansEntry(personKey: String, onNavigateToLoanDetail: (String) -> Unit, onBack: () -> Unit) {
+private fun PersonLoansEntry(
+    personKey: String,
+    onNavigateToLoanDetail: (String) -> Unit,
+    onShowError: (String) -> Unit,
+    onBack: () -> Unit,
+) {
     val vm: PersonLoansViewModel = koinViewModel { parametersOf(personKey) }
     val state by vm.state.collectAsStateWithLifecycle()
     val currentNavigateToLoanDetail by rememberUpdatedState(onNavigateToLoanDetail)
+    val currentShowError by rememberUpdatedState(onShowError)
 
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
             when (effect) {
                 is PersonLoansEffect.NavigateToLoanDetail -> currentNavigateToLoanDetail(effect.loanId)
+                is PersonLoansEffect.ShowError -> currentShowError(effect.message)
             }
         }
     }

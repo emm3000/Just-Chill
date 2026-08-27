@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.recurring
 
-import androidx.lifecycle.viewModelScope
 import com.emm.domain.account.AccountRepository
 import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
@@ -19,10 +18,8 @@ import com.emm.justchill.hh.transaction.centsToMoney
 import com.emm.justchill.hh.transaction.moneyCentsString
 import com.emm.justchill.hh.transaction.toSelectable
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 
 class AddEditRecurringMovementViewModel(
     private val id: String?,
@@ -43,10 +40,12 @@ class AddEditRecurringMovementViewModel(
             Catalog.Loaded(accounts, categories.groupBy(SelectableCategory::categoryType))
         }
             .onEach { loaded -> updateState { copy(catalog = loaded) } }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { e -> AddEditRecurringMovementEffect.ShowError(e.toUserMessage()) })
 
         if (id != null) {
-            viewModelScope.launch { loadTemplate(id) }
+            launchSafe(onError = { e -> AddEditRecurringMovementEffect.ShowError(e.toUserMessage()) }) {
+                loadTemplate(id)
+            }
         }
     }
 

@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.loan
 
-import androidx.lifecycle.viewModelScope
 import com.emm.domain.loan.CreateLoanUseCase
 import com.emm.domain.loan.LoanInsert
 import com.emm.domain.loan.LoanRepository
@@ -14,9 +13,7 @@ import com.emm.justchill.hh.transaction.centsToMoney
 import com.emm.justchill.hh.transaction.isSavableAmount
 import com.emm.justchill.hh.transaction.moneyCentsString
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
@@ -50,10 +47,10 @@ class AddEditLoanViewModel(
                 allPersonNames = balances.map { it.personName }.distinct().sorted()
                 updateState { copy(personSuggestions = filterPersonSuggestions(personName)) }
             }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { e -> AddEditLoanEffect.ShowError(e.toUserMessage()) })
 
         if (loanId != null) {
-            viewModelScope.launch { loadLoan(loanId) }
+            launchSafe(onError = { e -> AddEditLoanEffect.ShowError(e.toUserMessage()) }) { loadLoan(loanId) }
         }
     }
 

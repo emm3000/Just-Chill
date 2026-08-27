@@ -30,7 +30,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -66,7 +65,7 @@ class SeeTransactionsViewModel(
             if (activeId != null && categories.none { it.categoryId == activeId }) {
                 filter.value = current.copy(categoryIds = emptySet())
             }
-        }.launchIn(viewModelScope)
+        }.launchSafeIn(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) })
 
         combine(
             categoryRepository.all(),
@@ -85,13 +84,13 @@ class SeeTransactionsViewModel(
                     )
                 }
             }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) })
 
         transactionRepository.observeTotals()
             .map<TransactionTotals, Long?> { totals -> totals.movementCount }
             .catch { emit(null) }
             .onEach { count -> updateState { copy(movementCount = count) } }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) })
 
         combine(selectedMonth, filter, ::Pair)
             .debounce { (_, currentFilter) -> if (currentFilter.query.isBlank()) 0L else SEARCH_DEBOUNCE_MS }
@@ -124,7 +123,7 @@ class SeeTransactionsViewModel(
                 }
             }
             .onEach { slice -> updateState { withListSlice(slice, selectedMonth.value) } }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) })
 
         // A separate flow on purpose: pending recurring movements never depend on the browsed month
         // or the active filter. Driven by the shared `today` instead, so a movement that comes due
@@ -132,7 +131,7 @@ class SeeTransactionsViewModel(
         today
             .flatMapLatest { date -> getPendingRecurringMovements(date).map { pending -> date to pending } }
             .onEach { (date, pending) -> updateState { mapToPendingUiState(pending, date) } }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) })
 
         today
             .map { date -> YearMonth.of(date) }
@@ -141,7 +140,7 @@ class SeeTransactionsViewModel(
                 calendarMonth = month
                 if (month != previousCalendarMonth && selectedMonth.value == previousCalendarMonth) selectMonth(month)
             }
-            .launchIn(viewModelScope)
+            .launchSafeIn(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) })
     }
 
     override fun onIntent(intent: SeeTransactionsIntent) {
