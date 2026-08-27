@@ -1,20 +1,10 @@
 plugins {
     id("justchill.kmp.library")
-    // Generates IosSupabaseConfig into iosMain from root supabase.properties. iOS has no
-    // BuildConfig, so this is the counterpart of :androidApp's buildConfigField block. Moved here
-    // from :ui-android in slice S2: the config's only consumer is KoinIos.kt, which lives here now.
-    id("justchill.ios.supabase.config")
-    // SKIE rewrites the framework's Swift interface: sealed -> Swift enums (exhaustive
-    // onEnum(of:)), Flow/StateFlow -> AsyncSequence, suspend -> async. Without it the MVI surface
-    // (sealed intents/effects, StateFlow state) is unusable from Swift.
-    alias(libs.plugins.skie)
 }
 
 // The compose-free presentation layer: MVI core, every feature's ViewModel/UiState/Intent/Effect,
-// the Koin DI modules and the shared formatters/strings. :ui-android (Compose) sits on top of it;
-// the iOS SwiftUI app will consume it through the exported framework (slice S2 of
-// docs/swiftui/PLAN.md). NO compose dependency may ever appear here — that is the whole point
-// of the module.
+// the Koin DI modules and the shared formatters/strings. :ui-android (Compose) sits on top of it.
+// NO compose dependency may ever appear here — that is the whole point of the module.
 kotlin {
     compilerOptions {
         freeCompilerArgs.addAll(
@@ -26,19 +16,6 @@ kotlin {
     android {
         namespace = "com.emm.presentation"
         minSdk = 28
-    }
-
-    // The iOS app consumes this module as the JustChillKit framework (slice S2). :domain and :data
-    // are export()ed so their public types (use cases, entities, repository interfaces) appear in
-    // the framework's Swift interface instead of as opaque forward declarations. Consumed by
-    // iosApp/; built by the iOS link tasks only — the Android gate is unaffected.
-    listOf(iosArm64(), iosSimulatorArm64()).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "JustChillKit"
-            isStatic = true
-            export(project(":domain"))
-            export(project(":data"))
-        }
     }
 
     sourceSets {
@@ -84,11 +61,5 @@ kotlin {
             implementation(libs.multiplatform.settings.no.arg)
             implementation(libs.mockk)
         }
-    }
-}
-
-skie {
-    analytics {
-        enabled.set(false)
     }
 }
