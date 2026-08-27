@@ -74,9 +74,3 @@ class QualityGateConventionPlugin : Plugin<Project> {
         val SCHEMA_GATE_TASKS = setOf("verifySqlDelightMigration")
     }
 }
-
-internal fun Project.contributeToQualityGate(vararg taskNames: String) {
-    tasks.named(QualityGateConventionPlugin.GATE_TASK) {
-        dependsOn(taskNames.toList())
-    }
-}

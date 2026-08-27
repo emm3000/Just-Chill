@@ -13,10 +13,8 @@ fun marker(plugin: Provider<PluginDependency>): String = plugin.get().run {
 }
 
 dependencies {
-    implementation(marker(libs.plugins.kotlin.multiplatform))
-    implementation(marker(libs.plugins.android.kotlin.multiplatform.library))
-    // Not redundant, and not compiler-enforced: ApplicationAndroidComponentsExtension resolves
-    // through the KMP-library marker above too, the same AGP artifact undeclared.
+    // Brings AGP's application-components API onto build-logic's own compile classpath —
+    // BuildInfoConventionPlugin.kt imports ApplicationAndroidComponentsExtension from it.
     implementation(marker(libs.plugins.android.application))
     implementation(marker(libs.plugins.detekt))
 
@@ -26,10 +24,6 @@ dependencies {
 
 gradlePlugin {
     plugins {
-        register("kmpLibrary") {
-            id = "justchill.kmp.library"
-            implementationClass = "com.emm.buildlogic.KmpLibraryConventionPlugin"
-        }
         register("detekt") {
             id = "justchill.detekt"
             implementationClass = "com.emm.buildlogic.DetektConventionPlugin"
