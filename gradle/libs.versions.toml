@@ -161,6 +161,11 @@ google-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "go
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinVersion" }
 # Generates KSerializer for @Serializable nav routes and sync DTOs. Applied by :androidApp, :data, :ui-android.
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinVersion" }
+# Plain (non-Android) Kotlin JVM library plugin. Applied by :domain alone — ADR 011 Decision 3.
+# No version, same reason as android-library above: build-logic's `kotlin-multiplatform` marker
+# dependency puts the same kotlin-gradle-plugin jar (jvm/android/multiplatform share one artifact)
+# on the buildscript classpath first, and Gradle refuses to version-check a plugin it can already see.
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 

@@ -1,24 +1,25 @@
 plugins {
-    id("justchill.kmp.library")
+    alias(libs.plugins.kotlin.jvm)
+    id("justchill.detekt")
+    id("justchill.quality.gate")
 }
 
 kotlin {
-    android {
-        namespace = "com.emm.domain"
-        minSdk = 26
-    }
+    jvmToolchain(17)
+}
 
-    sourceSets {
-        commonMain.dependencies {
-            implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.kotlinx.datetime)
-        }
-        commonTest.dependencies {
-            implementation(kotlin("test"))
-            implementation(libs.kotlinx.coroutines.test)
-        }
-        getByName("androidHostTest").dependencies {
-            implementation(libs.mockk)
-        }
-    }
+// justchill.kmp.library was the only caller of contributeToQualityGate("testAndroidHostTest"), and
+// `test` is in none of QualityGateConventionPlugin's task-name sets, so without this line
+// :domain's tests would silently leave the gate.
+tasks.named("qualityGate") {
+    dependsOn("test")
+}
+
+dependencies {
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.datetime)
+
+    testImplementation(kotlin("test"))
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
 }
