@@ -35,10 +35,6 @@ kotlin {
             implementation(libs.android.driver)
             api(libs.ktor.client.okhttp)
         }
-        iosMain.dependencies {
-            implementation(libs.sqldelight.native.driver)
-            api(libs.ktor.client.darwin)
-        }
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
