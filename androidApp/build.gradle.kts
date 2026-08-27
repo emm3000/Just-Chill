@@ -221,8 +221,8 @@ dependencies {
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.google.identity.googleid)
 
-    // multiplatform-settings: CoreModule builds the SharedPreferencesSettings that backs the
-    // ui-android AppPreferences. ui-android consumes it as `implementation`, so it is not exposed
-    // transitively — this module references Settings/SharedPreferencesSettings directly.
+    // multiplatform-settings: CoreModule builds the SharedPreferencesSettings that backs
+    // :presentation's AppPreferences. :presentation consumes it as `implementation`, so it is not
+    // exposed transitively — this module references Settings/SharedPreferencesSettings directly.
     implementation(libs.multiplatform.settings)
 }
