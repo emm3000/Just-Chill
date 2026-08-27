@@ -25,7 +25,7 @@ jobs:
   # needs the gate to pass first. Gradle already parallelises tasks within one invocation.
   quality-gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
         with:
@@ -53,11 +53,12 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: unit-test-report
+          if-no-files-found: error
           path: |
-            domain/build/reports/tests/testAndroidHostTest/
-            data/build/reports/tests/testAndroidHostTest/
-            presentation/build/reports/tests/testAndroidHostTest/
-            ui-android/build/reports/tests/testAndroidHostTest/
+            domain/build/reports/tests/test/
+            data/build/reports/tests/testDebugUnitTest/
+            presentation/build/reports/tests/testDebugUnitTest/
+            ui-android/build/reports/tests/testDebugUnitTest/
             androidApp/build/reports/tests/testDevDebugUnitTest/
           retention-days: 7
 

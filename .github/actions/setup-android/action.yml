@@ -64,6 +64,6 @@ runs:
     # tag can be repointed at new code by whoever controls the upstream repo.
     # Dependabot (.github/dependabot.yml) proposes the bumps.
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@4733eaac7c1b0da527e4206b7671e0061de1ce37 # v6
+      uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       with:
         cache-read-only: ${{ inputs.cache-read-only }}
