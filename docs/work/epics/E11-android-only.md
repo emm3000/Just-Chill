@@ -24,3 +24,8 @@ multiplatform build is a plain Android Kotlin one — three `com.android.library
   `baseline-<module>-debug.xml` and `-release.xml`, and a burn-down has to shrink both.
 - SQLDelight `.sq` and `.sqm` files change path but never name — E02's migration coverage is keyed on
   the file name.
+- The catalog's `kotlin-jvm` alias carries no version, on purpose: build-logic's `kotlin-multiplatform`
+  marker dependency already puts the shared kotlin-gradle-plugin jar on the buildscript classpath, and
+  a version pin there makes Gradle refuse `:domain`'s plugin resolution ("already on the classpath
+  with an unknown version"). E11-07 removing that marker removes this jar too — give `kotlin-jvm` an
+  explicit version in the same change, or `:domain` stops building.
