@@ -37,23 +37,22 @@ class QualityGateConventionPlugin : Plugin<Project> {
         private const val TEST_TASK = "test"
 
         /**
-         * An allowlist, not `tasks.withType<Detekt>()`, which sweeps in the per-source-set task KMP
-         * registers across the whole hierarchy. Every entry here covers a source set no other does —
-         * `detektMainAndroid` covers commonMain and androidMain WITH type resolution.
+         * An allowlist, not `tasks.withType<Detekt>()`, which would sweep in per-variant tasks
+         * already aggregated below. Every entry here covers a source set no other does.
          *
-         * `detektMainAndroid`/`detektCommonTestSourceSet`/`detektAndroidHostTestSourceSet` are still
-         * named for `:domain`, the one module left on `justchill.kmp.library` (E11-06 removes them).
-         * A plain `com.android.library` needs none of these three: `detektMain` already aggregates its
-         * `detektDebug`/`detektRelease` (type-resolved, `src/main`), and `detektTest` already
-         * aggregates `detektDebugUnitTest` AND `detektDebugAndroidTest` (both type-resolved, `src/test`
-         * and `src/androidTest`) — confirmed with `:data:detektMain --dry-run` /
-         * `:data:detektTest --dry-run` after E11-05's conversion. `detektAndroidDeviceTestSourceSet`
-         * named only `:data`'s instrumented source set and has no replacement to add: it is dropped.
+         * `detektMain` and `detektTest` are all a module needs, on either shape now in the graph:
+         * for the three `com.android.library` modules, `detektMain` aggregates `detektDebug`/
+         * `detektRelease` (type-resolved, `src/main`) and `detektTest` aggregates
+         * `detektDebugUnitTest` AND `detektDebugAndroidTest` (both type-resolved, `src/test` and
+         * `src/androidTest`) — confirmed with `:data:detektMain --dry-run` / `:data:detektTest
+         * --dry-run` after E11-05's conversion. For `:domain`'s plain `org.jetbrains.kotlin.jvm`
+         * (E11-06), the same two names resolve directly to `src/main` and `src/test` with no
+         * variant aggregation needed — confirmed the same way. No module is left on
+         * `justchill.kmp.library`; ADR 011's KMP-era names (`detektMainAndroid`,
+         * `detektCommonTestSourceSet`, `detektAndroidHostTestSourceSet`,
+         * `detektAndroidDeviceTestSourceSet`) have no replacement to add and are dropped for good.
          */
         val DETEKT_GATE_TASKS = setOf(
-            "detektMainAndroid",
-            "detektCommonTestSourceSet",
-            "detektAndroidHostTestSourceSet",
             "detektMain",
             "detektTest",
         )
