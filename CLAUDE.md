@@ -1,10 +1,9 @@
 # CLAUDE.md — per-module guidance lives in each module's own `CLAUDE.md`
 
-> **KMP everywhere; each platform owns its UI.** Android renders Compose (`:ui-android`); iOS is native
-> SwiftUI over the `JustChillKit` framework `:presentation` exports with SKIE (ADR 005; slices in
-> `docs/swiftui/PLAN.md`). Keep the iOS compile in every gate run — it is the only thing stopping the
-> exported core from silently filling with `java.*`. Android-only *capabilities* may live in
-> `:androidApp`; their platform-neutral *logic* stays in the KMP core.
+> **KMP core, Android-only UI.** Android renders Compose (`:ui-android`) over the shared KMP core.
+> ADR 011 dropped the iOS target ADR 005 started — there is no other platform left to own a UI.
+> Android-only *capabilities* may live in `:androidApp`; their platform-neutral *logic* stays in the
+> KMP core.
 >
 > **No third-party users, but the author runs the release daily** on a device holding real accumulated
 > data — UI is cheap to redo, a destructive migration is not.
@@ -140,7 +139,7 @@ doc has a read-trigger in the map below, and a doc with no trigger is archive.
 - `CODE_QUALITY.md` — detekt's thresholds and blind spots, what only a reviewer can judge, and the date
   rule (injected `Clock` **and** `TimeZone`, no defaults). **Read before a lint rule, a `@Suppress`, a use case, or a date.**
 - `WORKFLOW.md` — the writer/reviewer loop, the reinforced gate, the model-tier policy. **Required
-  before any unit of work.** `swiftui/PLAN.md` — the iOS slices that remain.
+  before any unit of work.**
 - `PRODUCT_REQUIREMENTS.md` — the Won't-have rows (ADRs amend them **by row id**), the NFRs and the
   acceptance criterion. **Read before scoping a feature.**
 - `archive/` — closed tracks kept for the reasoning. Release state lives in `PROGRESS.md`;

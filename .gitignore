@@ -28,8 +28,6 @@ docs/*
 !docs/adr/**
 !docs/archive/
 !docs/archive/**
-!docs/swiftui/
-!docs/swiftui/**
 !docs/work/
 !docs/work/**
 !docs/PRODUCT_REQUIREMENTS.md

@@ -147,7 +147,7 @@ premise that the risk was zero.
   superseded point 1's frozen-UI scope and the UI-relevant items of the thaw checklist (the modals,
   `startTab`), while explicitly keeping ADR 003's compile-gate invariant (point 2) and constraint 8
   intact. Point 6 — "Drop per-slice human simulator verification. Frozen means compile-verified
-  only." — does not survive ADR 005 Decision 1 unfreezing iOS as a learning track: `docs/swiftui/PLAN.md`
+  only." — does not survive ADR 005 Decision 1 unfreezing iOS as a learning track: `docs/archive/PLAN.md`
   now sets the live per-slice bar as the Android gate green, the iOS app compiling **and running**,
   trunk shippable (`PLAN.md:90-91`), and names `xcodebuild` / a manual Xcode run as part of the
   per-slice gate (`PLAN.md:122-124`). Points 3, 4, and 7 stand exactly as ADR 003 wrote them; this ADR
