@@ -12,6 +12,6 @@
 - [ ] `PROGRESS.md`, `PERSISTENCE.md`, `CODE_QUALITY.md`, `WORKFLOW.md` and `RELEASE_CHECKLIST.md`
       name no iOS gate step and no KMP source set.
 - [ ] `git grep -lni 'iosMain\|SKIE\|JustChillKit\|commonMain\|androidHostTest' -- ':!docs/archive'
-      ':!docs/adr' ':!docs/work'` returns nothing.
+      ':!docs/adr' ':!docs/work/epics/E11-android-only.md'` returns nothing.
 - [ ] The headers of ADR 003 and ADR 005 each declare they are superseded by ADR 011.
 - [ ] `./gradlew qualityGate --rerun-tasks` passes.

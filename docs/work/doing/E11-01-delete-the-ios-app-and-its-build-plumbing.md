@@ -18,8 +18,8 @@
       opt-out the plugin no longer reads.
 - [ ] `E01-18-render-disclosurepending-on-ios.md` is `git rm`'d: it renders a SKIE-exported case
       on a screen that will never exist.
-- [ ] `docs/swiftui/PLAN.md` is in `docs/archive/` and `git grep -l 'docs/swiftui' -- ':!docs/archive'`
-      returns nothing.
+- [ ] `docs/swiftui/PLAN.md` is in `docs/archive/swiftui/` and
+      `git grep -l 'docs/swiftui' -- ':!docs/archive' ':!docs/adr' ':!docs/work'` returns nothing.
 - [ ] `./gradlew qualityGate --rerun-tasks` passes.
 
 ## Context
