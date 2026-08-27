@@ -5,7 +5,7 @@ own conventions are in `data/CLAUDE.md`.
 
 ## Schema
 
-- Schema and migrations both live in `data/src/commonMain/sqldelight/com/emm/data/` — read the
+- Schema and migrations both live in `data/src/main/sqldelight/com/emm/data/` — read the
   directory, never a list written down somewhere. `.sq` files carry the CREATE TABLE plus that table's
   queries (`backup.sq` is the exception: no table of its own, only cross-table reads). Migrations are
   `0.sqm`…`5.sqm`, so the current schema is **v6**.
@@ -40,8 +40,8 @@ Distribution, and every push to trunk distributes to that device. The rule also 
 missing migration is the one defect this repo cannot test its way out of, because it only fires when
 an already-installed app opens a newer schema.
 
-The schema snapshot lives in `data/src/commonMain/sqldelight/databases/`; regenerate with
-`./gradlew :data:generateCommonMainEmmDatabaseDataSchema` when bumping the version.
+The schema snapshot lives in `data/src/main/sqldelight/databases/`; regenerate with
+`./gradlew :data:generateDebugEmmDatabaseDataSchema` when bumping the version.
 `./gradlew :data:verifySqlDelightMigration` replays the `.sqm` files over that snapshot and fails if
 the result differs from the `.sq` CREATE statements. It is on `check` (SQLDelight wires it there) **and
 on `qualityGate`** — the second one is what matters, since nothing here runs `check`.
@@ -55,20 +55,21 @@ only path back from a migration that loses data, so a bump that has not been res
 
 ## The instrumented suite
 
-Migration tests live in `data/src/androidDeviceTest/` and run with
-`./gradlew :data:connectedAndroidDeviceTest` (needs a device/emulator). They are the only thing that
+Migration tests live in `data/src/androidTest/` and run with
+`./gradlew :data:connectedDebugAndroidTest` (needs a device/emulator). They are the only thing that
 exercises migrations against the real `AndroidSqliteDriver` — **run them before shipping any schema
 change.** Gotcha: `kotlin.assert()` is a no-op on ART; always use `kotlin.test.assertTrue`.
 
 Two migrations are **destructive**, and they are the reason that suite exists. `3.sqm` rebuilds
 `transactions` because SQLite cannot change a column's type; `4.sqm` rebuilds `transactions` AND
-`recurring_movements` because it cannot add a table constraint either, and repairs the data first — on
-iOS the copy runs with foreign keys ON, so repairing afterwards would repair rows that never crossed.
+`recurring_movements` because it cannot add a table constraint either, and repairs the data first —
+with foreign keys ON the `INSERT INTO transactions_new SELECT` is validated against the new key as it
+copies, so repairing afterwards would repair rows that never crossed.
 `MigrationV3ToV4Test` and `MigrationV4ToV5Test` are what say the rows, the indexes, the types and the
 ability to open the app at all survive them. Two of `MigrationV4ToV5Test`'s cases migrate with
-**foreign keys ON** — the iOS configuration, and the only one under which statement order in `4.sqm`
-matters at all. Android runs them off here (`onOpen` after `onUpgrade`), so a suite that only tested
-Android would pass whatever order the migration were written in.
+**foreign keys ON**, the only configuration under which statement order in `4.sqm` matters at all —
+a device never provides it, so a suite that only reproduced the device path would pass whatever order
+the migration were written in. Why that is worth testing anyway: `work/epics/E02-migration-coverage.md`.
 
 The coverage invariant — one test per *starting* version, not per migration step — is
 `work/epics/E02-migration-coverage.md`.

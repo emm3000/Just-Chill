@@ -1,10 +1,6 @@
 # Workflow — How We Execute Every Unit of Work
 
-> How we execute every unit of work in this repo — iOS slices, the sync redesign, bugfixes, docs,
-> anything else. Carved out of the KMP migration's orchestration doc after Slices 1–3 proved the loop,
-> that doc is now closed and archived (`archive/kmp/ORCHESTRATION.md` — slice ledger, landmines,
-> established patterns), but the loop it proved now applies repo-wide, not just to KMP. This file is
-> the one that stays current.
+> How we execute every unit of work in this repo — the sync redesign, bugfixes, docs, anything else.
 
 ## Roles
 
@@ -32,10 +28,11 @@
 ### 1. Scope (orchestrator, inline)
 Before delegating, map the unit cheaply so the writer prompt is precise:
 - List the affected files (`fd -e kt` or equivalent), check for existing tests.
-- If the unit touches the iOS-exported core (`:presentation` commonMain) or crosses a module
-  boundary: `rg` for leaks — `import (java|javax|android)\.`, `BuildConfig`, `R.`/
-  `stringResource`/`painterResource`/`Font(R.`, `@Preview`/`tooling.preview`, `LocalConfiguration`,
-  `koin.androidx`.
+- If the unit touches `:presentation` or crosses a module boundary: `rg` for UI leaks —
+  `androidx\.compose`, `BuildConfig`, `R\.`/`stringResource`/`painterResource`/`Font(R.`,
+  `@Preview`/`tooling.preview`, `LocalConfiguration`, `koin.androidx`. `:presentation` is an Android
+  library holding `androidx.lifecycle` and nothing else from androidx; `:domain` needs no grep at
+  all, since nothing Android resolves on its classpath.
 - If the unit touches DI: read the feature's Koin module — does it bind a `:data` repository, and is
   the binding in the right module.
 - This stays inline (1–3 reads + greps). Do NOT read the whole feature — that is what the writer's
@@ -59,8 +56,8 @@ Before delegating, map the unit cheaply so the writer prompt is precise:
 
 ### 3. Cheap-verify (orchestrator, inline)
 - `git log --oneline` — commit landed.
-- A quick, unit-appropriate regression check (e.g. `rg -l 'import (java|javax|android)\.'
-  presentation/src/commonMain` for anything touching the iOS-exported core).
+- A quick, unit-appropriate regression check (e.g. `rg -l 'androidx\.compose' presentation/src/main`
+  for anything touching `:presentation`).
 - Do NOT re-run the full gate here (expensive) — the reviewer does that.
 
 ### 4. Reviewer prompt must include
@@ -96,8 +93,10 @@ Before delegating, map the unit cheaply so the writer prompt is precise:
 
 **Tiering: the full adversarial review runs only where nothing else catches the error.**
 - **Reviewed (mandatory):** Supabase/SQLDelight schema or migrations, backup/restore correctness,
-  auth, DI graph changes, the iOS-exported surface (`:presentation` commonMain), `.github/` — the
-  same list that mandates Opus judges for Judgment Day.
+  auth, DI graph changes, a Compose or UI type reaching `:presentation`, `.github/` — the same list
+  that mandates Opus judges for Judgment Day. `:presentation` is on it because ADR 011 Decision 4
+  demoted its compose-free purity from a module boundary to a reviewed convention: the import
+  compiles, and the reviewer is the only thing left that rejects it.
 - **Gate-only (no reviewer):** UI composition, copy, presentation-layer wiring, docs, tests-only
   changes, mechanical refactors. The reinforced gate plus the orchestrator's cheap-verify is the
   whole check.
@@ -113,16 +112,16 @@ the review budget belongs to the paths that are not.
 ./gradlew assembleDevDebug # plus the build, which the gate deliberately excludes
 ```
 
-**Do not maintain a task list here.** This section used to spell one out, and it drifted: it was
-missing `:data:detektAndroidDeviceTestSourceSet`, while the pre-push hook was missing every test
-and CI was missing `:ui-android:testAndroidHostTest`. Four hand-written lists, none a superset of
-the others. The gate now has exactly one definition —
-`build-logic/src/main/kotlin/com/emm/buildlogic/QualityGateConventionPlugin.kt` — and the hook, the
+**Do not maintain a task list here.** This section used to spell one out, and four hand-written
+lists — this doc, the pre-push hook, and CI — drifted apart, none a superset of the others. The gate
+has exactly one definition,
+`build-logic/src/main/kotlin/com/emm/buildlogic/QualityGateConventionPlugin.kt`, and the hook, the
 three workflows and this doc all invoke it.
 
-`qualityGate` covers, per module: detekt over every source set that holds code, the JVM host test
-suites, Android lint on the dev variant, and the iOS compile. To change what the gate means, edit
-the plugin; everything downstream follows.
+`qualityGate` covers, per module: detekt (`detektMain`, `detektTest`), that module's own host test
+suite, `:data`'s instrumented compile plus `verifySqlDelightMigration`, and `:androidApp`'s dev
+lint. The plugin owns everything but the test suites and lint, which each module names in its own
+`build.gradle.kts` — the trap that splits is in the root `CLAUDE.md` under Gotchas.
 
 "Per module" means the five in `settings.gradle.kts`. `build-logic` is an **included build**, not a
 module, so task-name matching never reaches it: one task is named rather than matched,
@@ -131,20 +130,10 @@ else. Tests only — `build-logic` applies no detekt (its build file applies jus
 detekt entry there is an `implementation` marker so `DetektConventionPlugin` can be *written*), so
 its own sources are the one body of code the gate runs and never lints.
 
-Two properties worth knowing:
-
-- **The iOS compile is host-gated.** Kotlin/Native only builds iOS binaries on macOS, so the gate
-  adds it there and logs the skip elsewhere — CI on Linux runs everything else. It is the real proof
-  the de-JVM worked, and per `docs/adr/003` it is the one thing keeping frozen iOS revivable.
-- **iosMain detekt has no type resolution** (Kotlin/Native has none in detekt 2.0), so TR-dependent
-  rules do not fire there. Treat it as style and structure, not a deep semantic gate. It is JVM
-  analysis, though, so it runs on any host — including CI.
+The whole gate runs on any host — all three workflows run it on `ubuntu-latest`.
 
 A green gate still does NOT catch a missing Koin binding at the DI graph level; that is what
-`presentation/src/androidHostTest/.../core/AppGraphKoinTest.kt` is for, and it is on the gate.
-
-Never gate on plain `./gradlew detekt`: it is **NO-SOURCE on every KMP module** and only ever
-linted `:androidApp`.
+`presentation/src/test/.../core/AppGraphKoinTest.kt` is for, and it is on the gate.
 
 ## Why writer and reviewer are always separate agents
 
@@ -175,8 +164,8 @@ single highest-risk spot; the full ledger and landmines are in `docs/archive/kmp
   (UI, formatters, tests, docs) — NOT when the diff is merely small, and NEVER for the reviewer above.
   Diff size does not predict risk.
 - **Opus judges are mandatory for Judgment Day** when the change touches: Supabase or SQLDelight
-  migrations, auth, the surface exported to iOS (`:presentation` commonMain), or `.github/` (signing
-  keys and credentials).
+  migrations, auth, `:presentation`'s compose-free purity, or `.github/` (signing keys and
+  credentials).
 - **The writer never reviews its own work.** The reviewer is always a separate agent with fresh
   context.
 - **Haiku needs a strict output contract** or it summarizes wrong: it returns exit code plus failing

@@ -33,39 +33,36 @@ enters only with a test a diff can fail. No third bucket for taste.
   rule is Compose-specific.
 - **`LargeClass` — blind structurally.** It counts lines in a *class*; a Compose screen is a
   top-level function, so there is no class to measure. No config change fixes that.
-- **Type-resolution rules — blind on `expect`/`actual` pairs.** detekt reads commonMain and
-  androidMain as one unit, so it sees each `expect` beside its `actual` and calls the clash a
-  compiler error — three of them per pair, so the tally grows with every pair added. Unresolvable
-  code is downgraded to a warning and the task passes, so a rule that needs type resolution can stay
-  silent and still leave the gate green. Not Compose-specific: this one reaches every KMP module.
+- **Type-resolution rules — blind wherever detekt cannot resolve a symbol.** Unresolvable code is
+  downgraded to a warning and the task passes, so a rule that needs type resolution can stay silent
+  and still leave the gate green. What a module owes is the `compiler errors found during analysis`
+  line its `detekt<Variant>` task prints; `:data`'s is open as
+  [E01-37](work/backlog/E01-37-restore-detekt-type-resolution-in-data.md).
 
 `CyclomaticComplexMethod`, `ComplexCondition`, `NestedBlockDepth` and `LongParameterList` have no
-annotation escape and **do** fire on Composables — `config/detekt/baseline-ui-android-main.xml` holds
-entries of both kinds. `TooManyFunctions` per file is the rule the repo *leans on* for Compose, not
-the only one that reaches it. `:ui-android:detektAndroidMainSourceSet` is deliberately outside
-`qualityGate`: `detektMainAndroid` covers the same files *with* type resolution, so adding it buys
-tasks, not coverage (`QualityGateConventionPlugin`).
+annotation escape and **do** fire on Composables — `config/detekt/baseline-ui-android-debug.xml`
+carries three `LongParameterList` entries against them. `TooManyFunctions` per file is the rule the
+repo *leans on* for Compose, not the only one that reaches it.
 
 ### One baseline file per analysis task
 
-detekt 2.0 registers an analysis task per source set, and each one derives its OWN baseline file from
+detekt 2.0 registers an analysis task per variant, and each one derives its OWN baseline file from
 the extension stem `config/detekt/baseline-<module>.xml` — set once in
-`build-logic/.../DetektConventionPlugin.kt`, which `:androidApp` applies directly and the four KMP
-modules (`:domain`, `:data`, `:presentation`, `:ui-android`) get through `justchill.kmp.library`. The
-suffix is the task's source set: `detektMainAndroid` ↔ `baseline-<module>-main.xml`,
-`detektIosMainSourceSet` ↔ `baseline-<module>-iosMainSourceSet.xml`, and so on. `:androidApp:detektMain`
-is the one that fans out — four variants, four files, `baseline-androidApp-{devDebug,devRelease,prodDebug,prodRelease}.xml`.
-Because each task derives its own path, two of them for the same module never overwrite each other.
+`build-logic/.../DetektConventionPlugin.kt`, which all five modules apply through `justchill.detekt`.
+The suffix is the variant, and the gate's two aggregates fan out into them: `detektMain` runs
+`detektDebug` + `detektRelease` over `src/main`, so one violation there lands in
+`baseline-<module>-debug.xml` AND `-release.xml`; `detektTest` runs `detektDebugUnitTest` +
+`detektDebugAndroidTest`. `:androidApp` fans out further, over its flavors —
+`baseline-androidApp-{devDebug,devRelease,prodDebug,prodRelease}.xml`. Because each task derives its
+own path, two of them for the same module never overwrite each other.
 
 The stem files themselves (`baseline-<module>.xml`, no suffix) belong to the plain `detekt` task,
-which is `NO-SOURCE` on the KMP modules and is not a gate. **Leave them alone.** They exist today for
-`androidApp`, `data` and `domain` only; `presentation` and `ui-android` have none and need none.
+which is not on the gate. **Leave them alone.**
 
-To grandfather pre-existing issues for a source set, run the matching baseline task and commit what it
-writes — the file it writes is the file the analysis task reads, so a wrong guess is self-correcting
-(`./gradlew :data:detektBaselineMainAndroid :data:detektBaselineIosMainSourceSet`). **NEVER baseline
-to dodge a NEW violation** the current change introduced; a baseline only ever grandfathers what
-predates the rule.
+To grandfather pre-existing issues, run the matching baseline task and commit what it writes — the
+file it writes is the file the analysis task reads, so a wrong guess is self-correcting
+(`./gradlew :data:detektBaselineMain`). **NEVER baseline to dodge a NEW violation** the current
+change introduced; a baseline only ever grandfathers what predates the rule.
 
 ## Three gotchas, all found by measurement
 
@@ -146,7 +143,7 @@ why, never the what.**
   warnings about non-obvious consequences, invariants no test pins, deliberate duplication markers,
   `@Suppress` justifications. Each is 1–3 lines of present-tense fact. **Zero history:** a sentence
   about what the code used to be, what replaced what, or what a review said is deleted, not rephrased.
-- **No KDoc by default**, on any declaration, exported to iOS or not. **This bullet decides
+- **No KDoc by default**, on any declaration. **This bullet decides
   EXISTENCE, never form** — read alone it has been misread as "KDoc never". What survives picks its
   syntax by POSITION: KDoc on a declaration something else calls (the only form the IDE shows at the
   call site, and the only one whose `[Symbol]` a rename keeps honest); `//` on a statement inside a
