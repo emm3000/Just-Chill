@@ -12,6 +12,9 @@
       entry.
 - [ ] `rg -i 'multiplatform' --glob '*.gradle.kts' --glob '*.toml'` matches nothing but
       `multiplatform-settings`.
+- [ ] `kotlin-jvm` in the catalog carries an explicit version. It is unversioned today only because
+      build-logic's `kotlin-multiplatform` marker puts the kotlin-gradle-plugin jar on the buildscript
+      classpath; deleting that marker without pinning here stops `:domain` building.
 - [ ] `./gradlew :build-logic:test` passes and `QualityGateConventionPlugin` still names it
       explicitly.
 - [ ] `./gradlew qualityGate --rerun-tasks` passes.
