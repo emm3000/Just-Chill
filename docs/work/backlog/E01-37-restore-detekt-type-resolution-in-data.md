@@ -4,27 +4,20 @@
 
 ## Done when
 
-- [ ] the nine errors `:data:detektMainAndroid` reports are named — which symbols fail to resolve and
-      which source files reference them
-- [ ] every detekt rule that silently stopped firing on `:data` because of them is listed; that list,
-      not the error count, is what this ticket is about
-- [ ] either the errors are gone and `:data:detektMainAndroid` analyses with full type resolution, or
-      the closing commit records that detekt `2.0.0-alpha.6` cannot separate the two concerns and
-      this ticket dies with that finding
-- [ ] `docs/CODE_QUALITY.md` names the limitation beside the iosMain one it already documents
+- [ ] every detekt rule that silently stopped firing on `:data` while resolution was broken is
+      listed; that list, not the error count, is what this ticket is about
+- [ ] `:data:detektMainAndroid --rerun-tasks` still reports no compiler errors, and each listed rule
+      is shown either firing or provably clean
+- [ ] `docs/CODE_QUALITY.md` records what a compiler-error line under detekt costs, now that the
+      `iosMain` example it used is gone
 - [ ] `./gradlew qualityGate --rerun-tasks` and `./gradlew assembleDevDebug` both pass
 
 ## Context
 
-`:data:detektMainAndroid` prints `There were 9 compiler errors found during analysis. This affects
-accuracy of reporting.` and still exits 0. Pre-existing since `c94e2901`, surfaced by the E07-01
-review.
+**The nine errors are gone as of E11-02** (`b93f8090`): they were the three `expect` declarations in
+`:data`, not the excluded SQLDelight output this ticket first blamed. `:data:detektMainAndroid
+--rerun-tasks` now analyses clean. What survives is box 2 — nobody has ever listed which rules were
+silently off — and box 4.
 
-Excluding generated sources is right — SQLDelight output is not ours to lint — but the exclude drops
-them from detekt's *resolution* scope as well as its *analysis* scope, so hand-written `:data` code
-referencing `TransactionsQueries` and friends is analysed against unresolved symbols, and rules
-needing type resolution stop firing silently, with no failing task.
-
-Worth checking first: detekt's task exposes `classpath` separately from `source`. Putting the
-generated roots on the former without adding them to the latter would resolve the types without
-linting them — if the alpha honours that split.
+Excluding generated sources is still right: SQLDelight output is not ours to lint. Whether that
+exclude also costs resolution scope is now an open question rather than a measured fact.
