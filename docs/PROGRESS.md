@@ -25,7 +25,7 @@ eza docs/work/backlog                                # el trabajo con ticket
 GitHub ya impone la historia lineal en `trunk` y le cerró el force-push, así que el merge commit
 y la reescritura de historia ya pusheada no dependen de que te acuerdes. Lo que sigue dependiendo
 de vos: `enforce_admins: false` es deliberado — pusheás directo a `trunk`, y en ese camino
-`quality-gate` e `ios-compile` **no corren**. La única red ahí es el hook de pre-push, que corre
+`quality-gate` **no corre**. La única red ahí es el hook de pre-push, que corre
 `qualityGate` local. Si alguna vez querés que el CI sea la red, hay que prender `enforce_admins`,
 y desde ese momento cada cambio necesita branch y PR. Toda la protección se cambia con un `PUT`
 del objeto completo, nunca un PATCH.
