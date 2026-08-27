@@ -25,6 +25,7 @@ multiplatform build is a plain Android Kotlin one — three `com.android.library
 - SQLDelight `.sq` and `.sqm` files change path but never name — E02's migration coverage is keyed on
   the file name.
 - `:domain`'s `kotlin-jvm` catalog alias is unversioned on purpose — build-logic's `kotlin-dsl` plugin
-  embeds a Kotlin older than the project's, so build-logic/build.gradle.kts pins the real
-  kotlin-gradle-plugin jar explicitly instead. Drop that pin and `:domain` silently compiles against
-  the wrong stdlib — no gate task fails, only opt-in/API mismatches downstream give it away.
+  embeds a Kotlin older than the project's, so `build-logic/build.gradle.kts` pins the real
+  kotlin-gradle-plugin jar explicitly instead. Drop that pin and `:domain` compiles against a stdlib a
+  minor version behind: the gate goes red, but on opt-in errors in the source, naming nothing about
+  the classpath. `:domain:dependencies --configuration compileClasspath` is what answers it.
