@@ -18,8 +18,8 @@
       It holds `compileAndroidDeviceTest` today, and its KDoc says why detekt cannot replace it:
       detekt downgrades unresolvable code to a warning and passes.
 - [ ] `DETEKT_GATE_TASKS` names whatever replaces `detektAndroidDeviceTestSourceSet`.
-- [ ] `verifySqlDelightMigration` still runs in the gate — it aggregates a task whose name embeds the
-      source set (`verifyCommonMainEmmDatabaseDataMigration`).
+- [ ] `verifySqlDelightMigration` still runs — it aggregates `verifyCommonMainEmmDatabaseDataMigration`,
+      whose name embeds the source set.
 - [ ] `./gradlew :data:assembleDebugAndroidTest` succeeds and the six migration tests,
       `RecurringMovementFkTest` and `DeleteUseCasesE2ETest` all compile.
 - [ ] The gate runs `:data:testDebugUnitTest`, the executed count matches the `@Test` count, and no
@@ -28,5 +28,4 @@
 
 ## Context
 
-Read `docs/PERSISTENCE.md` and `docs/work/epics/E02-migration-coverage.md` first: four snapshots
-(`3.db`…`6.db`) and six `.sqm` are what the migration verification checks against.
+Read `docs/PERSISTENCE.md` and `docs/work/epics/E02-migration-coverage.md` first.
