@@ -96,9 +96,9 @@ This is the Opus list (`docs/WORKFLOW.md` model-tier policy) — a Sonnet writer
 - **Third-party actions in `.github/` are pinned to a commit SHA on purpose** — they hold the signing
   and Play/Firebase credentials, and a floating `@v1` can be repointed upstream. Do not "tidy" them
   into tags; dependabot proposes bumps. GitHub's own `actions/*` stay on tags.
-- **`versionName` is `git describe --match "v[0-9]*"`, and the filter is load-bearing** — the repo
-  carries non-release tags and a bare `describe` returns the nearest one (builds once shipped
-  `versionName = "pre-kmp"`). Same filter in `/release`.
+- **`versionName` is `git describe --tags --abbrev=0 --match "v[0-9]*"`** — the filter is load-bearing
+  (the repo carries non-release tags; builds once shipped `versionName = "pre-kmp"`), and `--abbrev=0`
+  means it is always the bare tag, so `versionCode` is what names a build. Same filter in `/release`.
 - **A tag push does not ship.** `uploadRelease.yml` uploads the AAB to the alpha track as a **draft**; publishing it is manual in Play Console. A green workflow reached no one.
 - **`run:` blocks take secrets through `env:`**, never `${{ }}` spliced into the script text. Validate workflow edits with `actionlint` — it catches errors a YAML parse cannot.
 - **Every route the nav host can push MUST be `@Serializable`.** Android's reflective
