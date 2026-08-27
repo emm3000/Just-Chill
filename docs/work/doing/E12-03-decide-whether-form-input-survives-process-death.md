@@ -5,8 +5,8 @@
 
 ## Done when — branch B, accept the loss (branch A, `SavedStateHandle`, is rejected)
 
-- [ ] ADR 012 records that typed form input dies with the process, and why.
-- [ ] E12 gains one constraint line pointing at the ADR.
+- [x] ADR 012 records that typed form input dies with the process, and why.
+- [x] E12 gains one constraint line pointing at the ADR.
 
 ## Context
 

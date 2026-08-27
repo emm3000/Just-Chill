@@ -34,6 +34,13 @@ on the flow side, and a `SavedStateHandle` decision nobody has made. Google's ca
   cannot be tested through `state.value`, and disagrees with the ViewModel the moment either side
   misses a beat.
 
+- **A sheet, a dialog or any visibility flag the UI keeps rendering lives in `UiState`, never in
+  `remember` or `rememberSaveable`**
+  ([ADR 012](../../adr/012-typed-form-input-dies-with-the-process.md)). The fields inside it live in
+  the ViewModel, so they survive a configuration change and die with the process: `rememberSaveable`
+  outlives them and `remember` dies before them. Only `UiState` matches, and a mismatch ships as a
+  restored sheet over empty fields.
+
 - **`sendEffect` and `updateState` run on `viewModelScope`, and so does every repository call.**
   No ViewModel switches dispatcher (`rg 'withContext|Dispatchers\.' presentation/src/main/kotlin/com/emm/justchill/hh`
   is empty); `:data` owns its own threading. A `withContext(IO)` in a ViewModel is a second
