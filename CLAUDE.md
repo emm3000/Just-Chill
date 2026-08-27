@@ -15,8 +15,6 @@
 ./gradlew qualityGate           # THE gate — see Gotchas
 ./gradlew test                  # all JVM host tests; per module :<module>:testAndroidHostTest;
                                 # the MockK ViewModel suite is :androidApp:testDevDebugUnitTest
-./gradlew :presentation:compileKotlinIosSimulatorArm64      # proves zero java.*/android.* leak
-./gradlew :presentation:linkDebugFrameworkIosSimulatorArm64 # links JustChillKit + runs SKIE
 ```
 
 KMP host-test tasks go `UP-TO-DATE` across sessions — `--rerun` forces a real run, **per-task**. There is
@@ -28,7 +26,8 @@ no `:domain:test`, and no instrumented source set outside `:data`.
   `gradle/libs.versions.toml` — `minSdk` disagrees per module on purpose. Flavors `dev`/`prod` on
   `:androidApp` only; signing, Crashlytics and the absent Analytics: `androidApp/CLAUDE.md`.
 - Compose Multiplatform is **gone** — `:ui-android` renders Google's Compose under the BOM;
-  `:presentation` still uses JetBrains' `lifecycle-viewmodel`, which has to compile for iOS.
+  `:presentation` still uses JetBrains' `lifecycle-viewmodel` — E11-04 swaps it for the androidx
+  artifact.
 
 ## Architecture
 
@@ -38,14 +37,14 @@ Clean Architecture, five modules, four of them KMP. Dependency direction is top 
 |---|---|---|
 | `:androidApp` | thin Android entry point (Activity, platform Koin module) | `com.emm.justchill.*` |
 | `:ui-android` | Android-only Compose UI (screens, nav, theme) | `com.emm.justchill.{hh.<feature>, core, components}` |
-| `:presentation` | compose-free MVI core, ViewModels, Koin DI, formatters; exports `JustChillKit` (SKIE) to iOS | same packages as `:ui-android` on purpose |
-| `:data` | implements domain interfaces (commonMain/androidMain/iosMain) | `com.emm.data.<entity>` |
+| `:presentation` | compose-free MVI core, ViewModels, Koin DI, formatters | same packages as `:ui-android` on purpose |
+| `:data` | implements domain interfaces (commonMain/androidMain) | `com.emm.data.<entity>` |
 | `:domain` | pure Kotlin, no framework deps | `com.emm.domain.<entity>` |
 
-`iosApp/` sits on `:presentation` directly; `:ui-android` sits on it as a Gradle dependency. Same Kotlin
-packages across that boundary on purpose — explicit imports are required where same-package symbols
-crossed modules. ViewModels cannot touch Compose; conventions around it (ViewModel purity, why
-`:presentation` depends on `:data`) are in `presentation/CLAUDE.md`.
+`:ui-android` sits on `:presentation` as a Gradle dependency. Same Kotlin packages across that
+boundary on purpose — explicit imports are required where same-package symbols crossed modules.
+ViewModels cannot touch Compose; conventions around it (ViewModel purity, why `:presentation`
+depends on `:data`) are in `presentation/CLAUDE.md`.
 
 The app is **local-first**: SQLDelight on-device is the single source of truth, fully usable with no
 account and no network. **Sync is being removed, not repaired**: ADR 009 replaces row replication
@@ -90,10 +89,10 @@ This is the Opus list (`docs/WORKFLOW.md` model-tier policy) — a Sonnet writer
 
 - **`./gradlew qualityGate` is the gate.** One definition — `build-logic/.../QualityGateConventionPlugin.kt`,
   invoked by the pre-push hook and all three workflows: detekt over every module source set holding
-  code, the host test suites, dev lint, (macOS) the iOS compile, plus `:build-logic:test` named
-  explicitly (an included build is unreachable by task-name matching; its sources are the one code the
-  gate runs and never lints). Change the plugin, not the callers. **Never gate on plain
-  `./gradlew detekt`** — `NO-SOURCE` on all four KMP modules; it only lints `:androidApp`.
+  code, the host test suites, dev lint, plus `:build-logic:test` named explicitly (an included build
+  is unreachable by task-name matching; its sources are the one code the gate runs and never lints).
+  Change the plugin, not the callers. **Never gate on plain `./gradlew detekt`** — `NO-SOURCE` on all
+  four KMP modules; it only lints `:androidApp`.
 - **Third-party actions in `.github/` are pinned to a commit SHA on purpose** — they hold the signing
   and Play/Firebase credentials, and a floating `@v1` can be repointed upstream. Do not "tidy" them
   into tags; dependabot proposes bumps. GitHub's own `actions/*` stay on tags.
