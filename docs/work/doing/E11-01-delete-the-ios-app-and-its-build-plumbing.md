@@ -19,7 +19,12 @@
 - [ ] `E01-18-render-disclosurepending-on-ios.md` is `git rm`'d: it renders a SKIE-exported case
       on a screen that will never exist.
 - [ ] `docs/swiftui/PLAN.md` is in `docs/archive/swiftui/` and
-      `git grep -l 'docs/swiftui' -- ':!docs/archive' ':!docs/adr' ':!docs/work'` returns nothing.
+      `git grep -l 'docs/swiftui' -- ':!docs/archive' ':!docs/adr' ':!docs/work/doing/E11-01-*'`
+      returns nothing.
+- [ ] `trunk`'s branch-protection required status checks name no `ios-compile` context. Nothing in
+      the tree records that context, so no grep and no gate task can catch this — check it by hand
+      (`gh api repos/<owner>/<repo>/branches/trunk/protection --jq '.required_status_checks.contexts'`)
+      and remove it there if it still appears.
 - [ ] `./gradlew qualityGate --rerun-tasks` passes.
 
 ## Context
