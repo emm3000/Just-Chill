@@ -11,6 +11,8 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.SourceTask
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidExtension
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 class DetektConventionPlugin : Plugin<Project> {
 
@@ -43,6 +45,8 @@ class DetektConventionPlugin : Plugin<Project> {
         tasks.withType<DetektCreateBaselineTask>().configureEach {
             excludeGeneratedSources()
         }
+
+        putOwnClassesOnAnalysisClasspath()
     }
 
     // Both excludes are needed: Ant patterns match the path RELATIVE to each source root, and
@@ -51,5 +55,31 @@ class DetektConventionPlugin : Plugin<Project> {
     private fun SourceTask.excludeGeneratedSources() {
         exclude("**/build/**")
         exclude { element -> BuildConventions.isGeneratedSource(element.file.invariantSeparatorsPath) }
+    }
+
+    // detekt's own `classpath` convention is `compilation.output.classesDirs + libraries`, and AGP 9's
+    // built-in Kotlin leaves `classesDirs` EMPTY: without this, whatever `excludeGeneratedSources`
+    // drops from `source` sits on no input at all, and detekt answers unresolved symbols by
+    // downgrading the file to untyped analysis and exiting 0.
+    private fun Project.putOwnClassesOnAnalysisClasspath() {
+        val kotlinTarget = extensions.findByType(KotlinAndroidExtension::class.java)?.target ?: return
+        kotlinTarget.compilations.configureEach {
+            val compileTask = compileTaskProvider.map { it as KotlinJvmCompile }
+            val classes = compileTask.flatMap { it.destinationDirectory }
+            val libraries = compileTask.map { it.libraries }
+            val friends = compileTask.map { it.friendPaths }
+            val suffix = name.replaceFirstChar(Char::uppercase)
+
+            tasks.withType<Detekt>().matching { it.name == "detekt$suffix" }.configureEach {
+                classpath.setFrom(classes, libraries)
+                friendPaths.setFrom(classes, friends)
+            }
+            tasks.withType<DetektCreateBaselineTask>()
+                .matching { it.name == "detektBaseline$suffix" }
+                .configureEach {
+                    classpath.setFrom(classes, libraries)
+                    friendPaths.setFrom(classes, friends)
+                }
+        }
     }
 }
