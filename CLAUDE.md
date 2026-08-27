@@ -93,6 +93,10 @@ This is the Opus list (`docs/WORKFLOW.md` model-tier policy) — a Sonnet writer
   silently: the gate runs less, it does not fail. **Never gate on plain `./gradlew detekt`** — it
   passes while covering strictly less, `src/main` + `src/test` only, missing `data/src/androidTest`
   and `:androidApp`'s flavor source sets.
+- **`:domain`'s stdlib comes from a pin in `build-logic/build.gradle.kts`, not the catalog** — the
+  unversioned `kotlin-jvm` alias is deliberate (both comments say why). Drop the pin and `:domain`
+  compiles a minor version behind: the gate reddens on opt-in errors in `:domain` source, naming
+  nothing about the classpath. `:domain:dependencies --configuration compileClasspath` answers it.
 - **Third-party actions in `.github/` are pinned to a commit SHA on purpose** — they hold the signing
   and Play/Firebase credentials, and a floating `@v1` can be repointed upstream. Do not "tidy" them
   into tags; dependabot proposes bumps. GitHub's own `actions/*` stay on tags.
