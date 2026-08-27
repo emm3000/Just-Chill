@@ -76,6 +76,7 @@ class RemoteWriteMutexTest {
     // on two threads within the same nanoseconds, and virtual time orders every event on one thread.
     // A loaded machine can turn more acquisitions into Busy, including a spurious one on a free lock,
     // but isFree()'s independent probes below make one pause defeating all of them implausible.
+    @Suppress("InjectDispatcher")
     @Test
     fun `a release racing the deadline never leaves the lock held by the caller that gave up`() =
         runBlocking(Dispatchers.Default) {
