@@ -14,8 +14,6 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
-// Domain use-case + ViewModel wiring only. Repository + data-source binds live
-// in commonMain hh/di/DataModule.kt (commonMain depends on :data since slice H).
 val recurringModule = module {
     factoryOf(::GetPendingRecurringMovementsUseCase)
     factoryOf(::ConfirmRecurringMovementUseCase)

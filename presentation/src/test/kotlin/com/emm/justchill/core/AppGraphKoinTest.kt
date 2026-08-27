@@ -40,8 +40,8 @@ import kotlin.time.Instant
 /**
  * Whole-graph Koin resolution test — the CI guard for the project's highest runtime risk.
  *
- * Since the commonMain DI dedup, every binding except the platform seam lives in one place and is
- * assembled by `appModules(platformModule)`. A missing, mistyped or wrongly qualified binding there
+ * Every binding except the platform seam lives in one place and is assembled by
+ * `appModules(platformModule)`. A missing, mistyped or wrongly qualified binding there
  * compiles cleanly AND survives `assembleDevDebug`: it only surfaces as a crash the moment a user
  * navigates to the affected screen. This test closes that gap by building the real graph against
  * [testPlatformModule] and resolving EVERY definition it contains.

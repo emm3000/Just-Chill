@@ -61,7 +61,7 @@ dependencies {
     // kotlin("test") alone resolves the platform-agnostic artifact, whose `Test` annotation is an
     // unimplemented `expect`. Classic KGP silently substituted the JUnit-backed variant for an
     // Android/JVM module; AGP's built-in Kotlin support (this module) does not, so it is named
-    // explicitly — the former commonTest/androidHostTest suites import `kotlin.test.Test` directly.
+    // explicitly — Sha256HexTest and friends import `kotlin.test.Test` directly.
     testImplementation(kotlin("test-junit"))
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)

@@ -61,7 +61,7 @@ androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "a
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion" }
-# AndroidJUnitRunner — the instrumentation runner for :data's androidDeviceTest source set.
+# AndroidJUnitRunner — the instrumentation runner for :data's androidTest source set.
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "lifecycleLivedataKtx" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleLivedataKtx" }
@@ -111,7 +111,7 @@ ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "kto
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktorClientOkhttp" }
 # iOS SQLDelight driver — same SQLDelight version as the Android driver.
 sqldelight-native-driver = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
-# okio — :data commonMain only, for `ByteString.sha256()` on the backup payload. See the version note.
+# okio — :data only, for `ByteString.sha256()` on the backup payload. See the version note.
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
 # multiplatform-settings — the Settings interface behind :presentation's AppPreferences; :androidApp

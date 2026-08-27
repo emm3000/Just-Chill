@@ -17,9 +17,9 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
-// Single commonMain auth wiring (replaces :androidApp/hh/di/AuthModule.kt). DefaultAuthRepository
-// takes SupabaseClient (supabaseModule). The Google sign-in launcher and the googleServerClientId
-// string are platform-provided by androidPlatformModule (ActivityGoogleSignInLauncher + BuildConfig).
+// DefaultAuthRepository takes SupabaseClient (supabaseModule). The Google sign-in launcher and the
+// googleServerClientId string are platform-provided by androidPlatformModule
+// (ActivityGoogleSignInLauncher + BuildConfig).
 val authModule = module {
     factoryOf(::DefaultAuthRepository) { bind<AuthRepository>() }
 

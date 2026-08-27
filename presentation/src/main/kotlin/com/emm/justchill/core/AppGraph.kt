@@ -18,12 +18,11 @@ import com.emm.justchill.hh.di.transactionModule
 import org.koin.core.Koin
 import org.koin.core.module.Module
 
-// The single shared Koin module list. The platform module supplies the platform-specific singles (DB
-// driver, Settings, SupabaseConfig, app version, Google sign-in launcher, dispatchers); everything
-// else — feature modules + supabase/auth/data wiring + commonCore — is identical on both platforms
-// and lives here. startKoin {} itself is NOT shared: Android needs androidContext() /
-// androidLogger() from koin-android, absent in commonMain. Android also appends its flavor-only
-// experiencesModule to the returned list.
+// The single shared Koin module list, minus the platform-specific singles (DB driver, Settings,
+// SupabaseConfig, app version, Google sign-in launcher, dispatchers) supplied via platformModule —
+// androidPlatformModule in production, testPlatformModule off-device. startKoin {} itself is NOT
+// called here: it needs androidContext() / androidLogger() from koin-android, so :androidApp calls
+// it directly. :androidApp also appends its flavor-only experiencesModule to the returned list.
 fun appModules(platformModule: Module): List<Module> = listOf(
     transactionModule,
     seetransactionsModule,

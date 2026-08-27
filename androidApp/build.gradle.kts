@@ -214,8 +214,8 @@ dependencies {
 
     testImplementation(libs.mockk)
 
-    // nav3 (runtime + UI) is inherited transitively from :ui-android commonMain, which now hosts the
-    // unified AppNavHost. :androidApp no longer references androidx.navigation3 types directly.
+    // nav3 (runtime + UI) is inherited transitively from :ui-android, which hosts the unified
+    // AppNavHost. :androidApp no longer references androidx.navigation3 types directly.
 
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)

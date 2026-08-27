@@ -32,9 +32,9 @@ private const val PREFS_NAME = "justchill_prefs"
 internal const val AUTH_PREFS_NAME = "justchill_auth"
 private const val PREFS_MIGRATED_FLAG = "_migrated_from_build_id"
 
-// Android platform Koin module — the ONLY place Android-specific DI lives after the commonMain dedup
-// (slice H). Supplies every binding whose construction is Android-specific; the platform-agnostic
-// graph (feature modules + supabase/sync/auth/data/commonCore wiring) is shared via appModules().
+// Android platform Koin module — the ONLY place Android-specific DI lives. Supplies every binding
+// whose construction is Android-specific; the platform-agnostic graph (feature modules +
+// supabase/sync/auth/data/commonCore wiring) is shared via appModules().
 val androidPlatformModule = module {
 
     // SQLDelight: AndroidSqliteDriver (with its onCreate default-category seed) + EmmDatabaseData.
@@ -63,8 +63,8 @@ val androidPlatformModule = module {
     // Sync observability sink. Platform-specific because it reports to Crashlytics.
     single<DiagnosticsLogger> { CrashReportingDiagnosticsLogger() }
 
-    // Platform-provided app version (no BuildConfig in commonMain). Consumed by ProfileViewModel
-    // via the "appVersion" qualifier; stamped into exported backups.
+    // Platform-provided app version (:presentation cannot generate BuildConfig itself). Consumed by
+    // ProfileViewModel via the "appVersion" qualifier; stamped into exported backups.
     single(named("appVersion")) { BuildConfig.VERSION_NAME }
 
     // The git commit this APK was built from, FULL 40-char sha. Consumed by AppNavHost, which hands
@@ -83,8 +83,8 @@ val androidPlatformModule = module {
     // absent; the Google button stays hidden so submitWithGoogle never reaches the launcher.
     single(named("googleServerClientId")) { BuildConfig.GOOGLE_WEB_CLIENT_ID }
 
-    // Supabase connection settings injected into the commonMain supabaseModule. Empty URL falls back
-    // to the localhost placeholder so the app stays usable in anonymous/offline mode.
+    // Supabase connection settings injected into supabaseModule. Empty URL falls back to the
+    // localhost placeholder so the app stays usable in anonymous/offline mode.
     single<SupabaseConfig> {
         SupabaseConfig(
             url = BuildConfig.SUPABASE_URL.ifBlank { "http://localhost:54321" },

@@ -9,8 +9,6 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 
 // Cross-cutting agnostic/domain wiring shared across features.
-// DefaultUniqueIdProvider lives in ui-android commonMain (slice 8a), so this
-// binding belongs in commonMain.
 val sharedModule = module {
     factory { DefaultUniqueIdProvider } bind UniqueIdProvider::class
 

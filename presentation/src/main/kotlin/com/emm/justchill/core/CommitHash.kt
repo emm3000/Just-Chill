@@ -19,14 +19,11 @@ import kotlin.jvm.JvmInline
  * `NoDefinitionFoundException` at launch. Koin resolves this by `KClass`, so there is no longer a
  * string either side can misspell. That is the whole of it.
  *
- * ### Why it lives here, and in androidMain
+ * ### Why it lives here
  *
  * `:presentation` is where this project's DI contracts live — [SupabaseConfig] is the one next
  * door. `:ui-android` sees it through `api(project(":presentation"))`, and `:androidApp` sees it
  * through `:ui-android`.
- *
- * `androidMain` rather than `commonMain` because both sides of the contract are Android-only:
- * `androidPlatformModule` (`:androidApp`) produces it, `AppNavHost` (`:ui-android`) consumes it.
  */
 @JvmInline
 value class CommitHash(val value: String)

@@ -46,8 +46,6 @@ dependencies {
     // to :domain interfaces — same layering as ui-android had since slice H. ViewModel
     // purity (VMs take :domain interfaces only) stays a convention, reviewed not enforced.
     implementation(projects.data)
-    // ViewModel + viewModelScope. androidx directly now — :presentation no longer needs the
-    // JetBrains multiplatform port (jetbrains-lifecycle-viewmodel), which compiled for iOS too.
     implementation(libs.androidx.lifecycle.viewmodel)
     // Supabase's KotlinXSerializer config in supabaseModule needs kotlinx-serialization-json
     // directly (declared rather than relied on transitively via :data's api(supabase)).
@@ -66,7 +64,7 @@ dependencies {
     // kotlin("test") alone resolves the platform-agnostic artifact, whose `Test` annotation is an
     // unimplemented `expect`. Classic KGP silently substituted the JUnit-backed variant for an
     // Android/JVM module; AGP's built-in Kotlin support (this module) does not, so it is named
-    // explicitly — the former commonTest suites import `kotlin.test.Test` directly.
+    // explicitly — DeleteCategoryCopyTest and friends import `kotlin.test.Test` directly.
     testImplementation(kotlin("test-junit"))
     // Home of AppGraphKoinTest: the whole Koin graph resolved off-device against a fake platform
     // module — the only net that catches a missing binding before a user does. Everything here is

@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
             shortcut = intent.toShortcutIntent()
             shortcutRequestId++
         }
-        // EmmTheme is applied inside AppNavHost (the unified commonMain nav host).
+        // EmmTheme is applied inside AppNavHost, not here.
         setContent {
             AppNavHost(
                 shortcut = shortcut,
