@@ -2,6 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>InjectDispatcher:Dispatchers.android.kt:IO</ID>
+    <ID>InjectDispatcher:Dispatchers.kt:IO</ID>
   </CurrentIssues>
 </SmellBaseline>

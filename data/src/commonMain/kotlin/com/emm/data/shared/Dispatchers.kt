@@ -1,5 +1,6 @@
 package com.emm.data.shared
 
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 
-expect val ioDispatcher: CoroutineDispatcher
+val ioDispatcher: CoroutineDispatcher = Dispatchers.IO

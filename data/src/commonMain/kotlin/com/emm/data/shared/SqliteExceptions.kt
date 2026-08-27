@@ -1,5 +1,8 @@
 package com.emm.data.shared
 
-expect fun Throwable.isSqliteConstraintViolation(): Boolean
+import android.database.sqlite.SQLiteConstraintException
+import android.database.sqlite.SQLiteException
 
-expect fun Throwable.isSqliteException(): Boolean
+fun Throwable.isSqliteConstraintViolation(): Boolean = this is SQLiteConstraintException
+
+fun Throwable.isSqliteException(): Boolean = this is SQLiteException
