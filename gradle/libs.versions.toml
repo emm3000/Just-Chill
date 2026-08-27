@@ -150,6 +150,11 @@ jetbrains-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lif
 [plugins]
 
 android-application = { id = "com.android.application", version.ref = "androidApplication" }
+# No version: the com.android.library plugin class ships inside the same AGP jar that
+# com.android.application already puts on the buildscript classpath, and Gradle refuses to
+# version-check a plugin id it can already see there. First plain com.android.library user in the
+# repo: E11-03 (ADR 011) converts :ui-android off com.android.kotlin.multiplatform.library.
+android-library = { id = "com.android.library" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServicesVersion" }
 google-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleCrashlyticsVersion" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinVersion" }

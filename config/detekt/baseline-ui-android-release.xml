@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LongParameterList:CategoryFilterSheet.kt:@Composable internal fun CategoryFilterSheet</ID>
+    <ID>LongParameterList:DeleteTransactionDialog.kt:@Composable internal fun DeleteTransactionDialog</ID>
+    <ID>LongParameterList:ProfileRow.kt:@Composable internal fun ProfileRowWithTrailing</ID>
+  </CurrentIssues>
+</SmellBaseline>
