@@ -10,10 +10,9 @@ Root package `com.emm.justchill.{hh.<feature>, core, components}`. `minSdk = 28`
 
 ## Where things live
 
-Everything is in `androidMain` — there is no `commonMain`, and **do not move code back into one**.
-A KMP `commonMain` can only resolve artifacts that publish multiplatform metadata, so keeping UI
-there forces the JetBrains Compose Multiplatform ports, and with them a material3 alpha in the
-production UI. `androidMain` takes Google's own BOM-managed artifacts instead.
+Plain `com.android.library` (ADR 011/E11-03) — one `src/main`, one `src/test`, no KMP plugin, no
+`commonMain` to keep code out of. Compose comes from Google's own BOM-managed artifacts, not the
+JetBrains Compose Multiplatform ports — those would have pulled in a material3 alpha.
 
 A feature owns `hh/<feature>/` — its Screens plus `<Feature>Entries.kt` for nav wiring.
 Cross-feature: `hh/shared/` (nav host, bottom bar, atoms), `core/theme/`, `components/`.
@@ -68,7 +67,7 @@ ever stutters, check compose compiler metrics before blaming the pattern.
 
 - Google's Compose, every artifact governed by `androidx-compose-bom` — **never add a `version.ref`
   to a Compose library**, the BOM decides. Tokens in `core/theme/` are the source of truth.
-- Resources are ordinary Android resources under `androidMain/res/` (`font/`, `drawable/`), reached
+- Resources are ordinary Android resources under `src/main/res/` (`font/`, `drawable/`), reached
   through `com.emm.justchill.shared.R` — not `composeResources` / `Res.*`.
 - `koin-compose` still pulls a handful of `org.jetbrains.compose.*` artifacts. They are shims whose
   only dependency is the matching `androidx.compose.*` one, so nothing extra ships; swapping to
@@ -84,6 +83,6 @@ ever stutters, check compose compiler metrics before blaming the pattern.
 
 ## Testing
 
-`./gradlew :ui-android:testAndroidHostTest`. Pure UI logic gets a plain function next to the screen
+`./gradlew :ui-android:testDebugUnitTest`. Pure UI logic gets a plain function next to the screen
 and a test here — that is what `commitHashUi()` is. The Koin graph test and the formatter/mapper
 suites belong to `:presentation`.
