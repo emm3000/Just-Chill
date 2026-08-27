@@ -4,11 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.emm.domain.shared.error.DomainException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -31,13 +33,20 @@ abstract class MviViewModel<S : UiState, I : UiIntent, E : UiEffect>(protected v
         viewModelScope.launch { _effect.send(effect) }
     }
 
-    // Intentional broad catch: launchSafe is the VM-level adapter that funnels every
-    // non-domain throwable into DomainException.Unknown(cause = e), preserving the original.
+    protected fun launchSafe(onError: (DomainException) -> E, block: suspend () -> Unit): Job =
+        viewModelScope.launch { funnel(onError, block) }
+
+    /** The flow side of [launchSafe]: collecting is the block, and [funnel]'s policy is the same one. */
+    protected fun <T> Flow<T>.launchSafeIn(onError: (DomainException) -> E): Job =
+        viewModelScope.launch { funnel(onError) { collect() } }
+
+    // Intentional broad catch: this is the VM-level adapter that funnels every non-domain throwable
+    // into DomainException.Unknown(cause = e), preserving the original.
     // CancellationException is rethrown first — it is an Exception, so the broad catch below would
     // otherwise turn every cancelled job into a spurious error effect (sendEffect launches on the
     // still-alive viewModelScope, so the snackbar really does reach the user).
     @Suppress("TooGenericExceptionCaught")
-    protected fun launchSafe(onError: (DomainException) -> E, block: suspend () -> Unit) = viewModelScope.launch {
+    private suspend fun funnel(onError: (DomainException) -> E, block: suspend () -> Unit) {
         try {
             block()
         } catch (e: CancellationException) {

@@ -4,6 +4,8 @@ import com.emm.domain.shared.error.DomainException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -21,8 +23,10 @@ import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 /**
- * Contract tests for [MviViewModel.launchSafe] — the one funnel every ViewModel routes its
- * suspending work through, so its exception policy is app-wide behaviour.
+ * Contract tests for [MviViewModel.launchSafe] and its flow-side sibling `launchSafeIn` — the one
+ * funnel every ViewModel routes its suspending work and its collectors through, so its exception
+ * policy is app-wide behaviour. Both share a single catch-and-map, and both are pinned here so a
+ * future split cannot let the two drift.
  *
  * Cancellation is the case that bites in production: `ReportViewModel` keeps a latest-wins job and
  * cancels the in-flight one on every filter change, so a `launchSafe` that mistakes cancellation
@@ -45,7 +49,7 @@ class MviViewModelTest {
 
     @Test
     fun `cancelling a launchSafe job does not emit an error effect`() = runTest {
-        val viewModel = LaunchSafeViewModel()
+        val viewModel = FunnelViewModel()
         val effects: List<TestEffect> = collectEffects(viewModel)
 
         val job: Job = viewModel.runSafe { awaitCancellation() }
@@ -59,7 +63,7 @@ class MviViewModelTest {
 
     @Test
     fun `a domain exception in the block reaches onError untouched`() = runTest {
-        val viewModel = LaunchSafeViewModel()
+        val viewModel = FunnelViewModel()
         val effects: List<TestEffect> = collectEffects(viewModel)
         val failure = DomainException.NotFound("Transaction")
 
@@ -71,7 +75,7 @@ class MviViewModelTest {
 
     @Test
     fun `a non-domain exception reaches onError wrapped as Unknown, preserving the cause`() = runTest {
-        val viewModel = LaunchSafeViewModel()
+        val viewModel = FunnelViewModel()
         val effects: List<TestEffect> = collectEffects(viewModel)
         val failure = IllegalStateException("boom")
 
@@ -82,11 +86,50 @@ class MviViewModelTest {
         assertSame(failure, unknown.cause, "the original throwable must survive as the cause")
     }
 
+    @Test
+    fun `cancelling a launchSafeIn collector does not emit an error effect`() = runTest {
+        val viewModel = FunnelViewModel()
+        val effects: List<TestEffect> = collectEffects(viewModel)
+
+        val job: Job = viewModel.collectSafe(flow { awaitCancellation() })
+        runCurrent()
+        job.cancel()
+        settle()
+
+        assertTrue(job.isCancelled, "the collector must end cancelled")
+        assertEquals(emptyList(), effects, "cancellation is not a failure: no effect may be emitted")
+    }
+
+    @Test
+    fun `a domain exception in the collected flow reaches onError untouched`() = runTest {
+        val viewModel = FunnelViewModel()
+        val effects: List<TestEffect> = collectEffects(viewModel)
+        val failure = DomainException.NotFound("Loan")
+
+        viewModel.collectSafe(flow { throw failure })
+        settle()
+
+        assertSame(failure, effects.single().error, "a DomainException must be handed over as-is")
+    }
+
+    @Test
+    fun `a non-domain exception in the collected flow reaches onError wrapped as Unknown`() = runTest {
+        val viewModel = FunnelViewModel()
+        val effects: List<TestEffect> = collectEffects(viewModel)
+        val failure = IllegalStateException("boom")
+
+        viewModel.collectSafe(flow { throw failure })
+        settle()
+
+        val unknown = assertIs<DomainException.Unknown>(effects.single().error)
+        assertSame(failure, unknown.cause, "the original throwable must survive as the cause")
+    }
+
     /**
      * Returns a live view of everything the VM emits. The channel behind `effect` is BUFFERED, so
      * the collector only has to exist before the assertions, not before the emission.
      */
-    private fun TestScope.collectEffects(viewModel: LaunchSafeViewModel): List<TestEffect> {
+    private fun TestScope.collectEffects(viewModel: FunnelViewModel): List<TestEffect> {
         val effects = mutableListOf<TestEffect>()
         backgroundScope.launch { viewModel.effect.collect { effects += it } }
         runCurrent()
@@ -112,10 +155,13 @@ private object TestIntent : UiIntent
 
 private class TestEffect(val error: DomainException) : UiEffect
 
-private class LaunchSafeViewModel : MviViewModel<TestState, TestIntent, TestEffect>(TestState) {
+private class FunnelViewModel : MviViewModel<TestState, TestIntent, TestEffect>(TestState) {
 
     override fun onIntent(intent: TestIntent) = Unit
 
     /** `launchSafe` is protected; only a subclass can hand its [Job] to the test. */
     fun runSafe(block: suspend () -> Unit): Job = launchSafe(onError = ::TestEffect, block = block)
+
+    /** Same reason as [runSafe]: `launchSafeIn` is a protected extension. */
+    fun collectSafe(source: Flow<Unit>): Job = source.launchSafeIn(onError = ::TestEffect)
 }
