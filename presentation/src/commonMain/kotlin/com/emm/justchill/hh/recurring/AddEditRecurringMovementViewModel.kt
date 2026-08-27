@@ -9,7 +9,6 @@ import com.emm.domain.recurring.RecurringMovement
 import com.emm.domain.recurring.RecurringMovementInsert
 import com.emm.domain.recurring.RecurringMovementRepository
 import com.emm.domain.recurring.UpdateRecurringMovementUseCase
-import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.RecurringMovementId
 import com.emm.justchill.core.error.toUserMessage
@@ -113,7 +112,8 @@ class AddEditRecurringMovementViewModel(
             // The RESOLVED selection, so a category deleted while the form was open is written as
             // "sin categoría" instead of as an id whose row is gone.
             categoryId = s.selectedCategory?.categoryId,
-            accountId = AccountId(s.selectedAccount?.accountId?.value.orEmpty()),
+            accountId = s.selectedAccount?.accountId
+                ?: error("selectedAccount required to build RecurringMovementInsert — UI should have disabled save"),
             dayOfMonth = s.dayOfMonth,
             isActive = s.isActive,
         )

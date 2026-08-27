@@ -188,6 +188,26 @@ class AddEditRecurringMovementViewModelTest {
     }
 
     @Test
+    fun `create mode - save with no resolvable account writes nothing and emits ShowError`() = runTest {
+        every { accountRepository.all() } returns flowOf(emptyList())
+        val vm = createViewModel(id = null)
+        advanceUntilIdle()
+
+        val effects = mutableListOf<AddEditRecurringMovementEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(AddEditRecurringMovementIntent.OnNameChange("Netflix"))
+        vm.onIntent(AddEditRecurringMovementIntent.OnAmountChange("1800"))
+        vm.onIntent(AddEditRecurringMovementIntent.Save)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { createRecurring(any()) }
+        coVerify(exactly = 0) { updateRecurring(any(), any()) }
+        assertTrue(effects.any { it is AddEditRecurringMovementEffect.ShowError })
+        job.cancel()
+    }
+
+    @Test
     fun `edit mode - loads template and pre-populates fields`() = runTest {
         coEvery { recurringRepository.find(RecurringMovementId("rm-1")) } returns testTemplate
         val vm = createViewModel(id = "rm-1")
