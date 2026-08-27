@@ -47,9 +47,8 @@ class QualityGateConventionPlugin : Plugin<Project> {
          * `src/androidTest`) — confirmed with `:data:detektMain --dry-run` / `:data:detektTest
          * --dry-run` after E11-05's conversion. For `:domain`'s plain `org.jetbrains.kotlin.jvm`
          * (E11-06), the same two names resolve directly to `src/main` and `src/test` with no
-         * variant aggregation needed — confirmed the same way. No module is left on
-         * `justchill.kmp.library`; ADR 011's KMP-era names (`detektMainAndroid`,
-         * `detektCommonTestSourceSet`, `detektAndroidHostTestSourceSet`,
+         * variant aggregation needed — confirmed the same way. ADR 011's KMP-era names
+         * (`detektMainAndroid`, `detektCommonTestSourceSet`, `detektAndroidHostTestSourceSet`,
          * `detektAndroidDeviceTestSourceSet`) have no replacement to add and are dropped for good.
          */
         val DETEKT_GATE_TASKS = setOf(
@@ -61,8 +60,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
          * detekt over `androidTest` is not a substitute for compiling it: detekt downgrades
          * unresolvable code to a warning and passes, so a domain signature change would break the
          * instrumented suite and leave the gate green. `compileDebugAndroidTestKotlin` is `:data`'s
-         * instrumented compile task since E11-05 (was `compileAndroidDeviceTest` under
-         * `justchill.kmp.library`).
+         * instrumented compile task since E11-05.
          */
         val COMPILE_GATE_TASKS = setOf("compileDebugAndroidTestKotlin")
 

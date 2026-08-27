@@ -4,8 +4,6 @@ plugins {
     // org.jetbrains.kotlin.android outright ("no longer required since AGP 9.0" —
     // https://kotl.in/gradle/agp-built-in-kotlin). See androidApp/build.gradle.kts, which is
     // already on this model.
-    // The KMP modules used to get detekt/qualityGate via justchill.kmp.library; this module
-    // applies them directly now.
     id("justchill.detekt")
     id("justchill.quality.gate")
     alias(libs.plugins.kotlin.compose)

@@ -8,7 +8,6 @@ kotlin {
     jvmToolchain(17)
 }
 
-// justchill.kmp.library was the only caller of contributeToQualityGate("testAndroidHostTest"), and
 // `test` is in none of QualityGateConventionPlugin's task-name sets, so without this line
 // :domain's tests would silently leave the gate.
 tasks.named("qualityGate") {

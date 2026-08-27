@@ -3,7 +3,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    // The KMP modules get these via justchill.kmp.library; this module applies them directly.
     id("justchill.detekt")
     id("justchill.quality.gate")
     // Generates BuildInfo.kt (the commit HEAD points at), once per variant, into a directory AGP
