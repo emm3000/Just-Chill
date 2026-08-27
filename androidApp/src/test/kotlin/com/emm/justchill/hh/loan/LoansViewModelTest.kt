@@ -8,6 +8,7 @@ import com.emm.justchill.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -69,6 +70,30 @@ class LoansViewModelTest {
         advanceUntilIdle()
 
         assertTrue(effects.any { it is LoansEffect.ShowError })
+        job.cancel()
+    }
+
+    @Test
+    fun `a locked database is retried, and the same instance keeps taking pushes afterwards`() = runTest {
+        val balances = MutableStateFlow<List<PersonBalance>>(emptyList())
+        var subscriptions = 0
+        every { loanRepository.balancesByPerson() } returns flow {
+            subscriptions++
+            if (subscriptions == 1) throw DomainException.DatabaseError(RuntimeException("database is locked"))
+            emitAll(balances)
+        }
+        val viewModel = LoansViewModel(loanRepository)
+        val effects = mutableListOf<LoansEffect>()
+        val job = launch { viewModel.effect.collect { effects.add(it) } }
+        advanceUntilIdle()
+
+        assertTrue(effects.isEmpty(), "a failure the retry absorbs never reaches the user")
+
+        // No new LoansViewModel here on purpose: the screen the user came back to holds this one.
+        balances.value = listOf(PersonBalance(personKey = "ana", personName = "Ana", remaining = Money(150_000L)))
+        advanceUntilIdle()
+
+        assertEquals("Ana", viewModel.state.value.people.single().personName)
         job.cancel()
     }
 

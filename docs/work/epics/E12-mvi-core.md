@@ -46,13 +46,17 @@ on the flow side, and a `SavedStateHandle` decision nobody has made. Google's ca
   is empty); `:data` owns its own threading. A `withContext(IO)` in a ViewModel is a second
   threading policy, not an optimisation.
 
-- **A funnelled collector dies with its first error.** `launchSafeIn` catches *outside* `collect()`,
-  so one `DomainException` ends that flow for the rest of the ViewModel's life. `AccountsViewModel`
-  and `SeeTransactionsViewModel` outlive `switchTab`'s backstack rewrite as the same instance — a
-  bottom-bar tab you leave and return to never gets a fresh collector — so the user gets one
-  snackbar, then a permanently frozen list, with no route back short of process death. Every other
-  `launchSafeIn` site (`LoansViewModel` included) pays the same death sentence for as long as its
-  own instance lives. It beats the crash it replaced, and it is not free.
+- **A funnelled collector survives three failures, then dies for the ViewModel's life.**
+  `launchSafeIn` re-subscribes up to three times with exponential backoff (200/400/800 ms) and only
+  then lets the error through, so a failure episode is one snackbar however many attempts it took.
+  That heals what actually reaches it — SQLite lock contention — without the user ever knowing, and
+  it rests on SQLDelight's `Query.asFlow()` being a cold flow that re-runs its query per collector.
+  What it does not heal is a failure that persists: the catch is still *outside* `collect()`, so the
+  fourth one ends that flow for good. `AccountsViewModel` and `SeeTransactionsViewModel` outlive
+  `switchTab`'s backstack rewrite as the same instance — a bottom-bar tab you leave and return to
+  never gets a fresh collector — so a database that stays broken still leaves a frozen list with no
+  route back short of process death. Every other `launchSafeIn` site pays the same, for as long as
+  its own instance lives.
 
 - **`stateIn`/`shareIn` upstreams bypass the funnel entirely.** Today the only two sites are
   `ReportViewModel.calendarMonth` and `SeeTransactionsViewModel.today`, both fed by `todayFlow()`,

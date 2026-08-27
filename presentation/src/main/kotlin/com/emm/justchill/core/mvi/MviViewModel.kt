@@ -6,14 +6,19 @@ import com.emm.domain.shared.error.DomainException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+private const val COLLECTOR_RETRIES = 3L
+private const val COLLECTOR_RETRY_BASE_DELAY_MS = 200L
 
 abstract class MviViewModel<S : UiState, I : UiIntent, E : UiEffect>(protected val initialState: S) : ViewModel() {
 
@@ -36,9 +41,29 @@ abstract class MviViewModel<S : UiState, I : UiIntent, E : UiEffect>(protected v
     protected fun launchSafe(onError: (DomainException) -> E, block: suspend () -> Unit): Job =
         viewModelScope.launch { funnel(onError, block) }
 
-    /** The flow side of [launchSafe]: collecting is the block, and [funnel]'s policy is the same one. */
+    /**
+     * The flow side of [launchSafe]: collecting is the block, and [funnel]'s policy is the same one
+     * once [retryOnFailure] is spent — so one failure episode is one effect, however many attempts
+     * it took.
+     */
     protected fun <T> Flow<T>.launchSafeIn(onError: (DomainException) -> E): Job =
-        viewModelScope.launch { funnel(onError) { collect() } }
+        viewModelScope.launch { funnel(onError) { retryOnFailure().collect() } }
+
+    /**
+     * A collector that dies is dead for the ViewModel's life — [funnel] catches *outside*
+     * `collect()`, and a bottom-bar tab never gets a fresh one. Re-subscribing is what re-reads:
+     * SQLDelight's `Query.asFlow()` is a cold `flow { }` that re-runs its query for every collector.
+     * What that heals is SQLite lock contention, gone long before a user could act on a snackbar.
+     *
+     * The `CancellationException` arm is not a copy of [funnel]'s: `retryWhen` rethrows only the
+     * collecting job's OWN cancellation cause, so any other one reaches this predicate and would
+     * otherwise count as a retryable failure.
+     */
+    private fun <T> Flow<T>.retryOnFailure(): Flow<T> = retryWhen { cause, attempt ->
+        val retryable = cause !is CancellationException && attempt < COLLECTOR_RETRIES
+        if (retryable) delay(COLLECTOR_RETRY_BASE_DELAY_MS shl attempt.toInt())
+        retryable
+    }
 
     // Intentional broad catch: this is the VM-level adapter that funnels every non-domain throwable
     // into DomainException.Unknown(cause = e), preserving the original.

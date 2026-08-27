@@ -5,15 +5,15 @@
 
 ## Done when
 
-- [ ] A `DomainException` raised inside `AccountsViewModel`, `SeeTransactionsViewModel`, or
+- [x] A `DomainException` raised inside `AccountsViewModel`, `SeeTransactionsViewModel`, or
       `LoansViewModel`'s init-time collector no longer permanently freezes that screen: a test
       drives the failure, then proves the list updates again on a later emission — without
       recreating the ViewModel.
-- [ ] Picked: `retryWhen` inside `launchSafeIn` — bounded re-subscription with exponential backoff,
+- [x] Picked: `retryWhen` inside `launchSafeIn` — bounded re-subscription with exponential backoff,
       the error effect firing only once the retries are spent, so four attempts never mean four
       snackbars. `MviViewModelTest` pins that policy the way it already pins `launchSafe`'s, the
       cancellation arm included.
-- [ ] `./gradlew qualityGate --rerun-tasks` and `./gradlew :androidApp:testDevDebugUnitTest --rerun`
+- [x] `./gradlew qualityGate --rerun-tasks` and `./gradlew :androidApp:testDevDebugUnitTest --rerun`
       pass.
 
 ## Context
