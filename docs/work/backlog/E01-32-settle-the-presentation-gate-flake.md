@@ -22,3 +22,8 @@ A second sighting during E06-06 points elsewhere: twice, only in invocations tha
 with the suppressed cause a cancelled `Dispatchers.Main` coroutine plus a cancelled `Dispatchers.IO`
 one — the shape of `TransactionDateEndToEndTest`'s leaked ViewModel coroutines, not supabase-kt's.
 It did not recur in 20+ later runs. Rule that suspect in or out before chasing the reported one.
+
+A third sighting during E12-07 narrows it: same "only in an invocation that also ran detekt", but the
+failing test was `ClockTodayFlowTest`, not `TransactionDateEndToEndTest`. The victim varies and the
+detekt condition does not — so the leak is whichever `runTest` starts next, and the suspect is the
+run shape, not one test.
