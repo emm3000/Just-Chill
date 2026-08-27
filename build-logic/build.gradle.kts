@@ -17,6 +17,11 @@ dependencies {
     // BuildInfoConventionPlugin.kt imports ApplicationAndroidComponentsExtension from it.
     implementation(marker(libs.plugins.android.application))
     implementation(marker(libs.plugins.detekt))
+    // Pins the shared kotlin-gradle-plugin jar (the one behind the unversioned kotlin-jvm alias
+    // :domain applies) to the project's actual Kotlin version. Without this, kotlin-dsl's own
+    // (older) embedded Kotlin wins the classpath race silently, and :domain compiles against a
+    // stdlib a full minor version behind the rest of the project. See the kotlin-jvm catalog entry.
+    implementation("org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:${libs.versions.kotlinVersion.get()}")
 
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))
