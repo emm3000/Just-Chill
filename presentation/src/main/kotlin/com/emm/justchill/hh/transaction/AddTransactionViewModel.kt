@@ -43,9 +43,9 @@ class AddTransactionViewModel(
     // Only the hour of the save comes from these; the day is TodayFlow's answer.
     private val clock: Clock,
     private val zone: TimeZone,
-) : MviViewModel<AddTransactionUiState, AddTransactionIntent, AddTransactionEffect>() {
-
-    override val initialState = AddTransactionUiState(today = todayFlow.today())
+) : MviViewModel<AddTransactionUiState, AddTransactionIntent, AddTransactionEffect>(
+    AddTransactionUiState(today = todayFlow.today()),
+) {
 
     init {
         viewModelScope.launch {
@@ -62,8 +62,6 @@ class AddTransactionViewModel(
                 .launchIn(viewModelScope)
         }
 
-        // Reading `state` here resolves MviViewModel's lazy `_state`, which evaluates
-        // `initialState` — so `initialState` must stay declared above this block.
         state.map { it.transactionType }
             .distinctUntilChanged()
             .flatMapLatest(::loadFrequentUsage)

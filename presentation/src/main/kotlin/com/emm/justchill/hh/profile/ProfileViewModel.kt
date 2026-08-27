@@ -44,9 +44,7 @@ class ProfileViewModel(
     observeSession: ObserveSessionUseCase,
     private val appVersion: String,
     private val clock: Clock,
-) : MviViewModel<ProfileUiState, ProfileIntent, ProfileEffect>() {
-
-    override val initialState = ProfileUiState()
+) : MviViewModel<ProfileUiState, ProfileIntent, ProfileEffect>(ProfileUiState()) {
 
     init {
         combine(

@@ -5,17 +5,17 @@
 
 ## Done when
 
-- [ ] `MviViewModel` takes `initialState` in its constructor as a `protected val`;
+- [x] `MviViewModel` takes `initialState` in its constructor as a `protected val`;
       `rg 'by lazy' presentation/src/main/kotlin/com/emm/justchill/core/mvi` returns nothing.
-- [ ] `rg 'override val initialState' presentation/src ui-android/src androidApp/src` returns
+- [x] `rg 'override val initialState' presentation/src ui-android/src androidApp/src` returns
       nothing — the sixteen ViewModels and `MviViewModelTest`'s `LaunchSafeViewModel` pass it to
       `super`.
-- [ ] `ReportViewModel` and `SeeTransactionsViewModel` seed their opening month from
+- [x] `ReportViewModel` and `SeeTransactionsViewModel` seed their opening month from
       `todayFlow.today()` — the expression their `stateIn` seeds already use — because a constructor
       argument cannot read an instance property.
-- [ ] The ordering comment in `AddTransactionViewModel.init` ("must stay declared above this
+- [x] The ordering comment in `AddTransactionViewModel.init` ("must stay declared above this
       block") is gone: `rg -i 'lazy' presentation/src/main/kotlin/com/emm/justchill/hh` returns nothing.
-- [ ] `./gradlew qualityGate --rerun-tasks` and `./gradlew :androidApp:testDevDebugUnitTest --rerun`
+- [x] `./gradlew qualityGate --rerun-tasks` and `./gradlew :androidApp:testDevDebugUnitTest --rerun`
       pass.
 
 ## Context

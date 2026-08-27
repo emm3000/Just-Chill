@@ -9,13 +9,13 @@ class AddCategoryViewModel(
     private val createCategory: CreateCategoryUseCase,
     initialType: CategoryType,
     initialName: String,
-) : MviViewModel<AddCategoryUiState, AddCategoryIntent, AddCategoryEffect>() {
-
-    override val initialState = AddCategoryUiState(
+) : MviViewModel<AddCategoryUiState, AddCategoryIntent, AddCategoryEffect>(
+    AddCategoryUiState(
         categoryType = initialType,
         name = initialName,
         isAllFieldValidated = initialName.isNotBlank(),
-    )
+    ),
+) {
 
     override fun onIntent(intent: AddCategoryIntent) {
         when (intent) {

@@ -16,9 +16,9 @@ class RecurringMovementsViewModel(
     recurringMovementRepository: RecurringMovementRepository,
     private val getTotals: GetRecurringMonthlyTotalsUseCase,
     private val deleteRecurring: DeleteRecurringMovementUseCase,
-) : MviViewModel<RecurringMovementsUiState, RecurringMovementsIntent, RecurringMovementsEffect>() {
-
-    override val initialState = RecurringMovementsUiState()
+) : MviViewModel<RecurringMovementsUiState, RecurringMovementsIntent, RecurringMovementsEffect>(
+    RecurringMovementsUiState(),
+) {
 
     init {
         recurringMovementRepository.allWithDetails()

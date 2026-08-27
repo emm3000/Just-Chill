@@ -5,9 +5,7 @@ import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 
 class AddAccountViewModel(private val createAccount: CreateAccountUseCase) :
-    MviViewModel<AddAccountUiState, AddAccountIntent, AddAccountEffect>() {
-
-    override val initialState = AddAccountUiState()
+    MviViewModel<AddAccountUiState, AddAccountIntent, AddAccountEffect>(AddAccountUiState()) {
 
     override fun onIntent(intent: AddAccountIntent) {
         when (intent) {

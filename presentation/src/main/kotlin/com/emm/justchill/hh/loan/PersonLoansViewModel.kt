@@ -7,9 +7,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class PersonLoansViewModel(personKey: String, loanRepository: LoanRepository) :
-    MviViewModel<PersonLoansUiState, PersonLoansIntent, PersonLoansEffect>() {
-
-    override val initialState = PersonLoansUiState()
+    MviViewModel<PersonLoansUiState, PersonLoansIntent, PersonLoansEffect>(PersonLoansUiState()) {
 
     init {
         loanRepository.loansWithBalance(personKey)

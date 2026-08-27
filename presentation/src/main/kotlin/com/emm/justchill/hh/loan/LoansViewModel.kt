@@ -6,9 +6,8 @@ import com.emm.justchill.core.mvi.MviViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-class LoansViewModel(loanRepository: LoanRepository) : MviViewModel<LoansUiState, LoansIntent, LoansEffect>() {
-
-    override val initialState = LoansUiState()
+class LoansViewModel(loanRepository: LoanRepository) :
+    MviViewModel<LoansUiState, LoansIntent, LoansEffect>(LoansUiState()) {
 
     init {
         loanRepository.balancesByPerson()

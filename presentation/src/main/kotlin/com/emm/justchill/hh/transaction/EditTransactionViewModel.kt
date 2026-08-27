@@ -32,9 +32,9 @@ class EditTransactionViewModel(
     private val deleteTransaction: DeleteTransactionUseCase,
     private val getTopUsedCategoryIds: GetTopUsedCategoryIdsUseCase,
     private val todayFlow: TodayFlow,
-) : MviViewModel<EditTransactionUiState, EditTransactionIntent, EditTransactionEffect>() {
-
-    override val initialState = EditTransactionUiState(date = todayFlow.today(), today = todayFlow.today())
+) : MviViewModel<EditTransactionUiState, EditTransactionIntent, EditTransactionEffect>(
+    EditTransactionUiState(date = todayFlow.today(), today = todayFlow.today()),
+) {
 
     init {
         combine(

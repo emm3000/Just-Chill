@@ -35,20 +35,19 @@ class ReportViewModel(
     private val getSavingsRate: GetSavingsRateUseCase,
     private val getTopCategories: GetTopCategoriesOverMonthsUseCase,
     todayFlow: TodayFlow,
-) : MviViewModel<ReportUiState, ReportIntent, ReportEffect>() {
+) : MviViewModel<ReportUiState, ReportIntent, ReportEffect>(
+    // Same seed calendarMonth's stateIn below uses, read before that StateFlow's first collection
+    // — so it always equals calendarMonth.value here, and the opening month is always "current".
+    ReportUiState(
+        month = YearMonth.of(todayFlow.today()),
+        isCurrentMonth = true,
+        selectedType = TransactionType.Spend,
+    ),
+) {
 
     private val calendarMonth: StateFlow<YearMonth> = todayFlow()
         .map { date -> YearMonth.of(date) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, YearMonth.of(todayFlow.today()))
-
-    override val initialState: ReportUiState = run {
-        val opening = calendarMonth.value
-        ReportUiState(
-            month = opening,
-            isCurrentMonth = isCurrent(opening),
-            selectedType = TransactionType.Spend,
-        )
-    }
 
     private var reportJob: Job? = null
     private var trendsJob: Job? = null

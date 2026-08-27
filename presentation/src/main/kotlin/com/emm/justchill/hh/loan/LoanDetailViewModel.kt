@@ -46,9 +46,7 @@ class LoanDetailViewModel(
     private val todayFlow: TodayFlow,
     private val clock: Clock,
     private val zone: TimeZone,
-) : MviViewModel<LoanDetailUiState, LoanDetailIntent, LoanDetailEffect>() {
-
-    override val initialState = LoanDetailUiState()
+) : MviViewModel<LoanDetailUiState, LoanDetailIntent, LoanDetailEffect>(LoanDetailUiState()) {
 
     // `byId` re-emits null for this ViewModel's own soft delete, so the delete path and the
     // vanished-loan path both reach the same exit; only the first one may pop the back stack.

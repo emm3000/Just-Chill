@@ -45,14 +45,16 @@ class SeeTransactionsViewModel(
     private val confirmRecurringMovement: ConfirmRecurringMovementUseCase,
     private val skipRecurringMovement: SkipRecurringMovementUseCase,
     todayFlow: TodayFlow,
-) : MviViewModel<SeeTransactionsUiState, SeeTransactionsIntent, SeeTransactionsEffect>() {
+) : MviViewModel<SeeTransactionsUiState, SeeTransactionsIntent, SeeTransactionsEffect>(
+    // Same seed `today`'s stateIn below uses, read before that StateFlow's first collection — so
+    // it always equals today.value here.
+    SeeTransactionsUiState(month = YearMonth.of(todayFlow.today())),
+) {
 
     // The screen's only derivation of "what day is it" — which is why no Clock reaches this class.
     // A second one would let the pending list and the HOY/AYER headers disagree about the date.
     private val today: StateFlow<LocalDate> = todayFlow()
         .stateIn(viewModelScope, SharingStarted.Eagerly, todayFlow.today())
-
-    override val initialState = SeeTransactionsUiState(month = YearMonth.of(today.value))
 
     private val filter = MutableStateFlow(TransactionFilter.None)
     private val selectedMonth = MutableStateFlow(initialState.month)

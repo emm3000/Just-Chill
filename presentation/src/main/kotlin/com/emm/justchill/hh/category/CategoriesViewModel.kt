@@ -18,9 +18,7 @@ class CategoriesViewModel(
     transactionRepository: TransactionRepository,
     private val updateCategory: UpdateCategoryUseCase,
     private val deleteCategory: DeleteCategoryUseCase,
-) : MviViewModel<CategoriesUiState, CategoriesIntent, CategoriesEffect>() {
-
-    override val initialState = CategoriesUiState()
+) : MviViewModel<CategoriesUiState, CategoriesIntent, CategoriesEffect>(CategoriesUiState()) {
 
     init {
         combine(

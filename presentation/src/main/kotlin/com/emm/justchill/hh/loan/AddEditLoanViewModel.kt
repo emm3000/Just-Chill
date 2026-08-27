@@ -33,9 +33,9 @@ class AddEditLoanViewModel(
     // Only the hour a loan is stamped with comes from these; the day is TodayFlow's answer.
     private val clock: Clock,
     private val zone: TimeZone,
-) : MviViewModel<AddEditLoanUiState, AddEditLoanIntent, AddEditLoanEffect>() {
-
-    override val initialState = AddEditLoanUiState(today = todayFlow.today(), isEdit = loanId != null)
+) : MviViewModel<AddEditLoanUiState, AddEditLoanIntent, AddEditLoanEffect>(
+    AddEditLoanUiState(today = todayFlow.today(), isEdit = loanId != null),
+) {
 
     // Set by loadLoan on the edit path; save() reuses its time-of-day so an edit never rewrites
     // lentAt to "now", which loansWithBalance and balancesByPerson both order and pick by.

@@ -112,9 +112,7 @@ private object TestIntent : UiIntent
 
 private class TestEffect(val error: DomainException) : UiEffect
 
-private class LaunchSafeViewModel : MviViewModel<TestState, TestIntent, TestEffect>() {
-
-    override val initialState: TestState = TestState
+private class LaunchSafeViewModel : MviViewModel<TestState, TestIntent, TestEffect>(TestState) {
 
     override fun onIntent(intent: TestIntent) = Unit
 

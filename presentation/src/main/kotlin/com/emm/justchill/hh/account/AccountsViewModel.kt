@@ -21,9 +21,7 @@ class AccountsViewModel(
     private val loanRepository: LoanRepository,
     private val updateAccount: UpdateAccountUseCase,
     private val deleteAccount: DeleteAccountUseCase,
-) : MviViewModel<AccountsUiState, AccountsIntent, AccountsEffect>() {
-
-    override val initialState = AccountsUiState()
+) : MviViewModel<AccountsUiState, AccountsIntent, AccountsEffect>(AccountsUiState()) {
 
     init {
         combine(

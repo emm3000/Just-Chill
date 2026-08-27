@@ -15,9 +15,7 @@ class AuthViewModel(
     private val resendConfirmationEmail: ResendConfirmationEmailUseCase,
     private val googleServerClientId: String,
     private val googleSignInLauncher: GoogleSignInLauncher,
-) : MviViewModel<AuthUiState, AuthIntent, AuthEffect>() {
-
-    override val initialState: AuthUiState = AuthUiState.Form()
+) : MviViewModel<AuthUiState, AuthIntent, AuthEffect>(AuthUiState.Form()) {
 
     // Pure dispatch — each handler owns its own state guard.
     override fun onIntent(intent: AuthIntent) = when (intent) {

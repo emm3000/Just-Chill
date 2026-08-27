@@ -31,9 +31,9 @@ class AddEditRecurringMovementViewModel(
     private val recurringRepository: RecurringMovementRepository,
     private val createRecurring: CreateRecurringMovementUseCase,
     private val updateRecurring: UpdateRecurringMovementUseCase,
-) : MviViewModel<AddEditRecurringMovementUiState, AddEditRecurringMovementIntent, AddEditRecurringMovementEffect>() {
-
-    override val initialState = AddEditRecurringMovementUiState(isEdit = id != null)
+) : MviViewModel<AddEditRecurringMovementUiState, AddEditRecurringMovementIntent, AddEditRecurringMovementEffect>(
+    AddEditRecurringMovementUiState(isEdit = id != null),
+) {
 
     init {
         combine(
