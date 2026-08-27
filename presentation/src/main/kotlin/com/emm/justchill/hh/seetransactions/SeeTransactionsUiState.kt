@@ -44,6 +44,11 @@ data class SeeTransactionsUiState(
     val pendingRecurringMovements: List<PendingRecurringUi> = emptyList(),
     /** The clock's real month, refreshed each time [pendingRecurringMovements] re-emits. */
     val currentMonth: YearMonth = month,
+    /**
+     * The id of the [PendingRecurringUi] the confirm sheet is open for, resolved from
+     * [pendingRecurringMovements]; `null` means the sheet is closed (ADR 012 Decision 2).
+     */
+    val confirmSheetPendingId: String? = null,
 ) : UiState {
 
     val isFilterActive: Boolean

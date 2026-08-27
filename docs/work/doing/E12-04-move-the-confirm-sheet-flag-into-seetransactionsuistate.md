@@ -5,13 +5,13 @@
 
 ## Done when
 
-- [ ] `SeeTransactionsEffect.CloseConfirmSheet` is deleted;
+- [x] `SeeTransactionsEffect.CloseConfirmSheet` is deleted;
       `rg CloseConfirmSheet presentation/src ui-android/src` returns nothing.
-- [ ] `SeeTransactionsUiState` carries the sheet visibility and `SeeTransactionsEntries` reads it
+- [x] `SeeTransactionsUiState` carries the sheet visibility and `SeeTransactionsEntries` reads it
       from `state` — the `remember { mutableStateOf(false) }` flag is gone.
-- [ ] Opening and closing the sheet are intents, and `SeeTransactionsViewModelTest` covers
+- [x] Opening and closing the sheet are intents, and `SeeTransactionsViewModelTest` covers
       close-after-confirm through `state.value`.
-- [ ] `./gradlew qualityGate --rerun-tasks` and `./gradlew :androidApp:testDevDebugUnitTest --rerun`
+- [x] `./gradlew qualityGate --rerun-tasks` and `./gradlew :androidApp:testDevDebugUnitTest --rerun`
       pass.
 
 ## Context

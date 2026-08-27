@@ -41,6 +41,7 @@ import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /** Midday, so nothing here depends on where a day boundary falls. */
@@ -302,21 +303,41 @@ class SeeTransactionsPendingRecurringViewModelTest {
     }
 
     @Test
-    fun `ConfirmRecurring with fixed amount calls the use case and emits CloseConfirmSheet`() =
+    fun `ConfirmRecurring with fixed amount calls the use case and closes the confirm sheet`() =
         runTest(testDispatcher) {
             coEvery { confirmRecurring(any(), any(), any()) } returns Unit
             val vm = buildViewModel()
-
-            val effects = mutableListOf<SeeTransactionsEffect>()
-            val job = launch { vm.effect.collect { effects.add(it) } }
+            vm.onIntent(SeeTransactionsIntent.OnPendingClicked("rm-1"))
 
             vm.onIntent(SeeTransactionsIntent.ConfirmRecurring("rm-1", period, Money(1800L)))
             advanceUntilIdle()
 
             coVerify(exactly = 1) { confirmRecurring(RecurringMovementId("rm-1"), period, Money(1800L)) }
-            assertTrue(effects.any { it is SeeTransactionsEffect.CloseConfirmSheet })
-            job.cancel()
+            assertNull(vm.state.value.confirmSheetPendingId)
         }
+
+    @Test
+    fun `OnPendingClicked opens the confirm sheet for that pending id`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnPendingClicked("rm-1"))
+
+        assertEquals("rm-1", vm.state.value.confirmSheetPendingId)
+    }
+
+    @Test
+    fun `OnConfirmSheetDismissed closes the sheet without touching the use cases`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        vm.onIntent(SeeTransactionsIntent.OnPendingClicked("rm-1"))
+
+        vm.onIntent(SeeTransactionsIntent.OnConfirmSheetDismissed)
+
+        assertNull(vm.state.value.confirmSheetPendingId)
+        coVerify(exactly = 0) { confirmRecurring(any(), any(), any()) }
+        coVerify(exactly = 0) { skipRecurring(any(), any()) }
+    }
 
     @Test
     fun `ConfirmRecurring DomainException surfaces as ShowError carrying toUserMessage, not the raw exception`() =
@@ -339,20 +360,17 @@ class SeeTransactionsPendingRecurringViewModelTest {
         }
 
     @Test
-    fun `SkipRecurring settles the period and emits CloseConfirmSheet`() = runTest(testDispatcher) {
+    fun `SkipRecurring settles the period and closes the confirm sheet`() = runTest(testDispatcher) {
         coEvery { skipRecurring(any(), any()) } returns Unit
         val vm = buildViewModel()
-
-        val effects = mutableListOf<SeeTransactionsEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        vm.onIntent(SeeTransactionsIntent.OnPendingClicked("rm-1"))
 
         vm.onIntent(SeeTransactionsIntent.SkipRecurring("rm-1", period))
         advanceUntilIdle()
 
         coVerify(exactly = 1) { skipRecurring(RecurringMovementId("rm-1"), period) }
         coVerify(exactly = 0) { confirmRecurring(any(), any(), any()) }
-        assertTrue(effects.any { it is SeeTransactionsEffect.CloseConfirmSheet })
-        job.cancel()
+        assertNull(vm.state.value.confirmSheetPendingId)
     }
 
     @Test

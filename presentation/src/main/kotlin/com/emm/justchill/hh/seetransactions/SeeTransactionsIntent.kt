@@ -18,4 +18,10 @@ sealed interface SeeTransactionsIntent : UiIntent {
 
     /** Settles [period] with no transaction — the month the user genuinely did not pay. */
     data class SkipRecurring(val templateId: String, val period: YearMonth) : SeeTransactionsIntent
+
+    /** Opens the confirm sheet for the tapped pending row. */
+    data class OnPendingClicked(val pendingId: String) : SeeTransactionsIntent
+
+    /** The user dismissed the confirm sheet without confirming or skipping. */
+    data object OnConfirmSheetDismissed : SeeTransactionsIntent
 }

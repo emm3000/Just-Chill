@@ -72,20 +72,13 @@ import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 @Composable
-fun SeeTransactionsScreen(
-    onEditTransaction: (String) -> Unit,
-    confirmSheetOpen: Boolean,
-    onConfirmSheetOpenChange: (Boolean) -> Unit,
-    vm: SeeTransactionsViewModel,
-) {
+fun SeeTransactionsScreen(onEditTransaction: (String) -> Unit, vm: SeeTransactionsViewModel) {
     val state by vm.state.collectAsStateWithLifecycle()
 
     SeeTransactionsContent(
         state = state,
         onIntent = vm::onIntent,
         navigateToEdit = onEditTransaction,
-        confirmSheetOpen = confirmSheetOpen,
-        onConfirmSheetOpenChange = onConfirmSheetOpenChange,
     )
 }
 
@@ -94,18 +87,11 @@ private fun SeeTransactionsContent(
     state: SeeTransactionsUiState,
     onIntent: (SeeTransactionsIntent) -> Unit,
     navigateToEdit: (String) -> Unit,
-    confirmSheetOpen: Boolean = false,
-    onConfirmSheetOpenChange: (Boolean) -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
 
     var showFilterSheet by rememberSaveable { mutableStateOf(false) }
     var searchRequested by rememberSaveable { mutableStateOf(false) }
-    var confirmSheetItem by rememberSaveable { mutableStateOf<String?>(null) }
-
-    if (!confirmSheetOpen && confirmSheetItem != null) {
-        confirmSheetItem = null
-    }
 
     val pendingMap = remember(state.pendingRecurringMovements) {
         state.pendingRecurringMovements.associateBy { it.id }
@@ -162,10 +148,7 @@ private fun SeeTransactionsContent(
             state = state,
             onIntent = onIntent,
             navigateToEdit = navigateToEdit,
-            onPendingClick = { pending ->
-                confirmSheetItem = pending.id
-                onConfirmSheetOpenChange(true)
-            },
+            onPendingClick = { pending -> onIntent(SeeTransactionsIntent.OnPendingClicked(pending.id)) },
         )
     }
 
@@ -186,12 +169,9 @@ private fun SeeTransactionsContent(
     }
 
     PendingConfirmSheetHost(
-        pendingItem = if (confirmSheetOpen) confirmSheetItem?.let(pendingMap::get) else null,
+        pendingItem = state.confirmSheetPendingId?.let(pendingMap::get),
         onIntent = onIntent,
-        onDismiss = {
-            confirmSheetItem = null
-            onConfirmSheetOpenChange(false)
-        },
+        onDismiss = { onIntent(SeeTransactionsIntent.OnConfirmSheetDismissed) },
     )
 }
 

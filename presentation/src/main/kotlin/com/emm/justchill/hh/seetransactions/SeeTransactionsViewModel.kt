@@ -178,6 +178,11 @@ class SeeTransactionsViewModel(
             is SeeTransactionsIntent.ConfirmRecurring -> onConfirmRecurring(intent)
 
             is SeeTransactionsIntent.SkipRecurring -> onSkipRecurring(intent)
+
+            is SeeTransactionsIntent.OnPendingClicked ->
+                updateState { copy(confirmSheetPendingId = intent.pendingId) }
+
+            SeeTransactionsIntent.OnConfirmSheetDismissed -> updateState { copy(confirmSheetPendingId = null) }
         }
     }
 
@@ -188,7 +193,7 @@ class SeeTransactionsViewModel(
                 yearMonth = intent.period,
                 callerAmount = intent.callerAmount,
             )
-            sendEffect(SeeTransactionsEffect.CloseConfirmSheet)
+            updateState { copy(confirmSheetPendingId = null) }
         }
     }
 
@@ -198,7 +203,7 @@ class SeeTransactionsViewModel(
                 templateId = RecurringMovementId(intent.templateId),
                 yearMonth = intent.period,
             )
-            sendEffect(SeeTransactionsEffect.CloseConfirmSheet)
+            updateState { copy(confirmSheetPendingId = null) }
         }
     }
 
