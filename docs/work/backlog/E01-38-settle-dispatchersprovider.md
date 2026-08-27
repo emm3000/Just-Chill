@@ -7,7 +7,7 @@
 - [ ] `TestPlatformModule.kt`'s comment about `DispatchersProvider`'s consumers is corrected — it
       names the dev-flavor `experiencesModule` as the only one, and `EmmApp`'s `sweepLegacySession`
       also resolves it, in `androidApp/src/main`
-- [ ] `DispatchersProvider` either earns its place in `:presentation` commonMain or leaves it: both
+- [ ] `DispatchersProvider` either earns its place in `:presentation` or leaves it: both
       consumers live in `:androidApp`, so today nothing outside `:androidApp` needs it there
 - [ ] `./gradlew qualityGate --rerun-tasks` and `./gradlew assembleDevDebug` both pass
 

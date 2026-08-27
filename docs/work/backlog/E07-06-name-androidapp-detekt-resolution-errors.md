@@ -12,7 +12,7 @@
       confirmed or ruled out; if it is the same exclude-drops-resolution-scope mechanism, the two
       tickets close together
 - [ ] either the errors are gone, or the closing commit records why detekt `2.0.0-alpha.6` cannot fix
-      it and `docs/CODE_QUALITY.md` names the limitation beside the iosMain and `:data` ones
+      it and `docs/CODE_QUALITY.md` names the limitation beside the `:data` one
 - [ ] `./gradlew qualityGate --rerun-tasks` and `./gradlew assembleDevDebug` both pass
 
 ## Context

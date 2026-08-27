@@ -4,7 +4,7 @@
 
 ## Done when
 
-- [ ] `:presentation:testAndroidHostTest` either reproduces `UncaughtExceptionsBeforeTest` under a
+- [ ] `:presentation:testDebugUnitTest` either reproduces `UncaughtExceptionsBeforeTest` under a
       written procedure, or the report is recorded as unreproducible and this ticket dies
 - [ ] if it reproduces, the fix stops `AppGraphKoinTest` from leaking a late `Dispatchers.Main`
       dispatch past `resetMain()` — never a retry, a sleep or an `@Ignore`

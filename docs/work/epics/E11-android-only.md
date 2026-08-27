@@ -10,12 +10,9 @@ multiplatform build is a plain Android Kotlin one — three `com.android.library
 
 ## Constraints
 
-- A module that leaves `justchill.kmp.library` must re-register its test task with
-  `contributeToQualityGate` — the gate does not fail when it stops naming a suite, it just runs less.
-- Conversion order is consumer before dependency (`:ui-android`, `:presentation`, `:data`, `:domain`):
-  a KMP `commonMain` cannot resolve a JVM-only or plain-Android artifact.
-- `:domain` is `kotlin("jvm")` on purpose — with the iOS compile gone it is the only mechanical thing
-  left that stops `android.*` reaching the core.
+- `:domain` is `kotlin("jvm")` on purpose — it is the only mechanical thing that stops `android.*`
+  reaching the core, and the root `CLAUDE.md`'s gate gotcha owns the per-module test-task
+  registration that replaced `contributeToQualityGate`.
 - `:presentation` carries no Compose dependency. ADR 005 made that a module boundary; after E11 it is
   a reviewed convention and nothing enforces it.
 - `multiplatform-settings` stays. It is a KMP-branded library resolving to an Android artifact, and

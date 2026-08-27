@@ -29,12 +29,6 @@ epic re-shapes the shell around what is actually used.
   `onBack`; a tab has nothing to go back to. A leftover back button on a tab pops the start
   destination.
 
-- **`SeeTransactionRoute` is the start tab, and iOS no longer disagrees.** ADR 003's open item 6
-  recorded a divergence where `PlatformHostActions.ios.kt` set `HomeRoute` while Android set
-  `SeeTransactionRoute`; that iOS file no longer exists (`ui-android/src` holds only `androidMain`
-  and `androidHostTest`), and this epic settles the question on the Android side. Do not reintroduce
-  a second start tab when iOS thaws.
-
 - **A screen that recomputes another screen's numbers is the liability this epic is paying off.**
   Home held income, spend and balance that `ReportScreen` also derives, and a transaction list that
   `SeeTransactionsScreen` also renders. Before adding a section to any shell screen, check whether an
