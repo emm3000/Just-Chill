@@ -40,22 +40,32 @@ class QualityGateConventionPlugin : Plugin<Project> {
          * An allowlist, not `tasks.withType<Detekt>()`, which sweeps in the per-source-set task KMP
          * registers across the whole hierarchy. Every entry here covers a source set no other does —
          * `detektMainAndroid` covers commonMain and androidMain WITH type resolution.
+         *
+         * `detektMainAndroid`/`detektCommonTestSourceSet`/`detektAndroidHostTestSourceSet` are still
+         * named for `:domain`, the one module left on `justchill.kmp.library` (E11-06 removes them).
+         * A plain `com.android.library` needs none of these three: `detektMain` already aggregates its
+         * `detektDebug`/`detektRelease` (type-resolved, `src/main`), and `detektTest` already
+         * aggregates `detektDebugUnitTest` AND `detektDebugAndroidTest` (both type-resolved, `src/test`
+         * and `src/androidTest`) — confirmed with `:data:detektMain --dry-run` /
+         * `:data:detektTest --dry-run` after E11-05's conversion. `detektAndroidDeviceTestSourceSet`
+         * named only `:data`'s instrumented source set and has no replacement to add: it is dropped.
          */
         val DETEKT_GATE_TASKS = setOf(
             "detektMainAndroid",
             "detektCommonTestSourceSet",
             "detektAndroidHostTestSourceSet",
-            "detektAndroidDeviceTestSourceSet",
             "detektMain",
             "detektTest",
         )
 
         /**
-         * detekt over `androidDeviceTest` is not a substitute for compiling it: detekt downgrades
+         * detekt over `androidTest` is not a substitute for compiling it: detekt downgrades
          * unresolvable code to a warning and passes, so a domain signature change would break the
-         * instrumented suite and leave the gate green.
+         * instrumented suite and leave the gate green. `compileDebugAndroidTestKotlin` is `:data`'s
+         * instrumented compile task since E11-05 (was `compileAndroidDeviceTest` under
+         * `justchill.kmp.library`).
          */
-        val COMPILE_GATE_TASKS = setOf("compileAndroidDeviceTest")
+        val COMPILE_GATE_TASKS = setOf("compileDebugAndroidTestKotlin")
 
         /**
          * The only automated check that a schema change came with a migration: a `.sq` edited
