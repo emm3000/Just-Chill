@@ -1,10 +1,8 @@
 # :presentation — CLAUDE.md
 
 The compose-free presentation layer: MVI core, every feature's ViewModel/UiState/Intent/Effect, the
-Koin DI modules, formatters, `UiStrings` and the preferences ports. Both UIs sit on it —
-`:ui-android` (Android Compose) as a Gradle dependency, the SwiftUI iOS app through the
-**JustChillKit** framework this module declares (static, SKIE-processed, exports `:domain` +
-`:data`).
+Koin DI modules, formatters, `UiStrings` and the preferences ports. `:ui-android` sits on it as a
+Gradle dependency.
 
 Root packages: `com.emm.justchill.{core, hh.<feature>}` — unchanged from the extraction on purpose
 (zero import churn in consumers). Android namespace: `com.emm.presentation`. minSdk 28.
@@ -12,9 +10,8 @@ Root packages: `com.emm.justchill.{core, hh.<feature>}` — unchanged from the e
 ## The one rule
 
 **NO Compose dependency may ever appear here.** That is the module's reason to exist: it is the
-structural guarantee that ViewModels never touch UI types, and it is what makes the module
-exportable to Swift. Models carry semantic ids (`iconId`, `colorId`), never
-`ImageVector`/`Color` — resolution happens at render time in each UI
+structural guarantee that ViewModels never touch UI types. Models carry semantic ids (`iconId`,
+`colorId`), never `ImageVector`/`Color` — resolution happens at render time in each UI
 (`ui-android .../CategoryResolve.kt` on Android). If a state class needs something visual, it
 carries the id and the UI resolves it.
 
@@ -35,30 +32,10 @@ feature owns `hh/<feature>/` (ViewModel + UiState + Intent + Effect + `toUi` map
 module in `hh/di/`; pure helpers and `UiStrings` sit in `hh/shared/`.
 
 `androidMain/` holds the lifecycle actuals under `core/lifecycle/`, plus `core/CommitHash.kt` — the
-one DI contract that is Android-only on both ends, deliberately outside `commonMain` so it never
-reaches the iOS compile or `JustChillKit`. Its KDoc owns the whole rationale (why a value class and
-not a qualifier, why this source set); don't restate it elsewhere.
-`iosMain/` holds its
-counterpart, `KoinIos.kt` — the iOS entry point (`initKoin`, `iosPlatformModule`, and one typed
-resolver per Swift-facing ViewModel) — and, unlike `androidMain`, two ordinary port implementations
-that Android satisfies from `:androidApp` instead: `PrintlnDiagnosticsLogger` for `DiagnosticsLogger` and
-`UnavailableGoogleSignInLauncher` for the still-deferred iOS Google sign-in. Both are bound in
-`iosPlatformModule`.
-
-## Framework / SKIE
-
-- `JustChillKit` is declared in this module's build file; iosApp's Xcode script phase runs
-  `:presentation:embedAndSignAppleFrameworkForXcode`.
-- SKIE (version in the catalog, analytics disabled): sealed → Swift enums, `Flow`/`StateFlow` →
-  `AsyncSequence`, suspend → async. It runs on the **link** tasks, not `compileKotlinIos*` — a
-  green compile has not exercised SKIE; a green `linkDebugFrameworkIosSimulatorArm64` has.
-- Kotlin upgrades now wait for SKIE's support window — check the SKIE↔Kotlin matrix before
-  bumping `kotlinVersion`.
-- Swift sees top-level functions per file facade (`KoinIosKt.*`); `init*` names are mangled
-  (`initKoin` → `doInitKoin`). Kotlin `description` properties collide with `NSObject.description`
-  and surface as `description_`.
-- Swift cannot call Koin's reified `get()` — each ViewModel the Swift side needs gets a typed
-  resolver in `KoinIos.kt` (`fun seeTransactionsViewModel(): SeeTransactionsViewModel`).
+one DI contract that is Android-only on both ends, deliberately outside `commonMain` because both
+sides of the contract (`androidPlatformModule` and `AppNavHost`) are Android-only. Its KDoc owns the
+whole rationale (why a value class and not a qualifier, why this source set); don't restate it
+elsewhere.
 
 ## Testing
 
@@ -83,11 +60,9 @@ that Android satisfies from `:androidApp` instead: `PrintlnDiagnosticsLogger` fo
   `ClockTodayFlow` inside `runTest` hangs instead of failing, because its self-rescheduling `delay`
   shares the test scheduler and `advanceUntilIdle()` never returns.
 - `commonTest/` — pure `kotlin.test` suites (formatters, mappers, copy).
-- MockK is JVM-only: nothing from `androidHostTest` may leak into `commonMain` (the iOS compile
-  gate breaks).
+- MockK is JVM-only: nothing from `androidHostTest` may leak into `commonMain`.
 
 ## Gate
 
-On the standard `qualityGate` via the convention plugin: detekt (main/iosMain source sets), host
-tests, and — on macOS — the iOS compiles. This module carries the compile-gate invariant (ADR 005):
-the exported core stays free of `java.*`/`android.*`.
+On the standard `qualityGate` via the convention plugin: detekt (`detektMainAndroid`, covering
+`commonMain` + `androidMain`) and host tests.
