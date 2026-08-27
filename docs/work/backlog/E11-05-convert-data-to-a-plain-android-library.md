@@ -6,20 +6,27 @@
 ## Done when
 
 - [ ] `data/build.gradle.kts` applies `com.android.library` plus `justchill.detekt` and
-      `justchill.quality.gate` directly, and **no** `org.jetbrains.kotlin.android` — AGP 9's
-      built-in Kotlin support rejects that plugin outright.
-- [ ] Every `.sq` and `.sqm` moved from `commonMain/sqldelight` to `src/main/sqldelight` under the
-      same file name, and the SQLDelight database configuration points at it.
-- [ ] `src/main/kotlin` holds what `commonMain` and `androidMain` held; `src/test/kotlin` holds what
-      `commonTest` and `androidHostTest` held; `src/androidTest/kotlin` holds what `androidDeviceTest`
-      held.
-- [ ] `src/main/AndroidManifest.xml` is still the module's manifest.
-- [ ] `./gradlew :data:assembleDebugAndroidTest` succeeds and the six migration tests plus
-      `RecurringMovementFkTest` and `DeleteUseCasesE2ETest` still compile.
-- [ ] `./gradlew qualityGate --rerun-tasks` runs `:data:testDebugUnitTest`.
-- [ ] `./gradlew qualityGate --rerun-tasks` passes.
+      `justchill.quality.gate` directly, and no `org.jetbrains.kotlin.android`.
+- [ ] Every `.sq`, `.sqm` and `databases/*.db` snapshot moved from `commonMain/sqldelight` to
+      `src/main/sqldelight` under its own name, and `schemaOutputDirectory` points at the new path.
+- [ ] `src/main/kotlin` ← `commonMain` + `androidMain`; `src/test/kotlin` ← `commonTest` +
+      `androidHostTest`; `src/androidTest/kotlin` ← `androidDeviceTest`.
+- [ ] `withDeviceTest { instrumentationRunner }` became `defaultConfig { testInstrumentationRunner }`,
+      `add("commonMainApi", ...)` became a plain `api(platform(libs.supabase.bom))`, and both
+      `kotlin("test")` became `kotlin("test-junit")`.
+- [ ] **`QualityGateConventionPlugin.COMPILE_GATE_TASKS` names the new instrumented compile task.**
+      It holds `compileAndroidDeviceTest` today, and its KDoc says why detekt cannot replace it:
+      detekt downgrades unresolvable code to a warning and passes.
+- [ ] `DETEKT_GATE_TASKS` names whatever replaces `detektAndroidDeviceTestSourceSet`.
+- [ ] `verifySqlDelightMigration` still runs in the gate — it aggregates a task whose name embeds the
+      source set (`verifyCommonMainEmmDatabaseDataMigration`).
+- [ ] `./gradlew :data:assembleDebugAndroidTest` succeeds and the six migration tests,
+      `RecurringMovementFkTest` and `DeleteUseCasesE2ETest` all compile.
+- [ ] The gate runs `:data:testDebugUnitTest`, the executed count matches the `@Test` count, and no
+      `baseline-data*.xml` is orphaned or gains an entry.
+- [ ] `./gradlew qualityGate --rerun-tasks` and `./gradlew assembleDevDebug` both pass.
 
 ## Context
 
-The device suite is E02's migration coverage — read `docs/work/epics/E02-migration-coverage.md` and
-`docs/PERSISTENCE.md` before moving a `.sqm`.
+Read `docs/PERSISTENCE.md` and `docs/work/epics/E02-migration-coverage.md` first: four snapshots
+(`3.db`…`6.db`) and six `.sqm` are what the migration verification checks against.
