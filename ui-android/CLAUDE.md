@@ -3,8 +3,7 @@
 Android's Compose UI module: screens, navigation, theme and widgets. It renders what
 `:presentation` exposes and owns nothing else — no ViewModels, no DI, no formatters.
 
-**Android-only** (`justchill.kmp.ios=false` in this module's gradle.properties — ADR 005): the iOS
-app is native SwiftUI over `:presentation`'s JustChillKit framework.
+**Android-only** (ADR 011 dropped the iOS target).
 
 Root package `com.emm.justchill.{hh.<feature>, core, components}`. `minSdk = 28`. Depends on
 `:presentation` (api), `:domain`, `:data`.
