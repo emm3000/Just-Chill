@@ -1,14 +1,15 @@
 # :domain — CLAUDE.md
 
-Kotlin Multiplatform library and the bottom of the graph — no module dependencies at all. Targets:
-`android` (host tests only) + `iosArm64` + `iosSimulatorArm64`.
+Plain `org.jetbrains.kotlin.jvm` library (ADR 011 — no Android or multiplatform plugin) and the
+bottom of the graph — no module dependencies at all.
 
-Only `kotlinx-coroutines-core` and `kotlinx-datetime` are allowed here. Anything from `java.*`,
-`android.*`, SQLDelight, Supabase or Ktor breaks the iOS compile — that break is the guardrail
-working as intended, not an obstacle to route around.
+Only `kotlinx-coroutines-core` and `kotlinx-datetime` are allowed here. `android.*`/`androidx.*`
+simply cannot resolve — with no Android artifact on this module's compile classpath, that is a
+dependency-graph guarantee, not a convention to police. SQLDelight, Supabase and Ktor stay out by
+convention: :domain declares repository interfaces, `:data` implements them.
 
 Root package `com.emm.domain.<entity>`: one directory per entity under
-`domain/src/commonMain/kotlin/com/emm/domain/`, plus `shared/`. Read the directory instead of a list
+`domain/src/main/kotlin/com/emm/domain/`, plus `shared/`. Read the directory instead of a list
 written here. Naming is `[Verb][Noun]UseCase`, `{Entity}` with no suffix, and `{Entity}Repository`,
 each in its entity's package.
 
