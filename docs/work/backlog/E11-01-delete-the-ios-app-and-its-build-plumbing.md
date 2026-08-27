@@ -14,6 +14,10 @@
       `build-logic/build.gradle.kts` registers neither.
 - [ ] `QualityGateConventionPlugin` names no `detektIosMainSourceSet` and matches no
       `compileKotlinIos` task.
+- [ ] `ui-android/gradle.properties` is deleted — its only content is the `justchill.kmp.ios`
+      opt-out the plugin no longer reads.
+- [ ] `E01-18-render-disclosurepending-on-ios.md` is `git rm`'d: it renders a SKIE-exported case
+      on a screen that will never exist.
 - [ ] `docs/swiftui/PLAN.md` is in `docs/archive/` and `git grep -l 'docs/swiftui' -- ':!docs/archive'`
       returns nothing.
 - [ ] `./gradlew qualityGate --rerun-tasks` passes.
