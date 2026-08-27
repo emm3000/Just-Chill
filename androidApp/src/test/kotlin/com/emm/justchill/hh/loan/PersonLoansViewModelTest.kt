@@ -5,9 +5,11 @@ import com.emm.domain.loan.LoanBalance
 import com.emm.domain.loan.LoanRepository
 import com.emm.domain.shared.LoanId
 import com.emm.domain.shared.Money
+import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -97,6 +99,20 @@ class PersonLoansViewModelTest {
         val row = vm.state.value.loans.single()
         assertEquals("S/ 500.00", row.paidSoFar)
         assertEquals("S/ 600.00", row.remaining)
+    }
+
+    @Test
+    fun `a failed loansWithBalance read emits ShowError instead of leaving the list empty`() = runTest {
+        every { loanRepository.loansWithBalance("ana") } returns
+            flow { throw DomainException.DatabaseError(RuntimeException("disk full")) }
+        val vm = viewModel()
+        val effects = mutableListOf<PersonLoansEffect>()
+        val job = launch { vm.effect.collect { effects.add(it) } }
+
+        advanceUntilIdle()
+
+        assertTrue(effects.any { it is PersonLoansEffect.ShowError })
+        job.cancel()
     }
 
     @Test

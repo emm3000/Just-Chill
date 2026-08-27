@@ -3,10 +3,12 @@ package com.emm.justchill.hh.loan
 import com.emm.domain.loan.LoanRepository
 import com.emm.domain.loan.PersonBalance
 import com.emm.domain.shared.Money
+import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -54,6 +56,20 @@ class LoansViewModelTest {
         advanceUntilIdle()
 
         assertEquals("Ana", viewModel.state.value.people.single().personName)
+    }
+
+    @Test
+    fun `a failed balancesByPerson read emits ShowError instead of leaving the list empty`() = runTest {
+        every { loanRepository.balancesByPerson() } returns
+            flow { throw DomainException.DatabaseError(RuntimeException("disk full")) }
+        val viewModel = LoansViewModel(loanRepository)
+        val effects = mutableListOf<LoansEffect>()
+        val job = launch { viewModel.effect.collect { effects.add(it) } }
+
+        advanceUntilIdle()
+
+        assertTrue(effects.any { it is LoansEffect.ShowError })
+        job.cancel()
     }
 
     @Test
