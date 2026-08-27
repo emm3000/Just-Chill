@@ -349,7 +349,6 @@ naming:
     active: true
     mustBeFirst: true
     multiplatformTargets:
-      - 'android'
       - 'js'
       - 'jvm'
       - 'native'
