@@ -29,8 +29,10 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.domain.shared.YearMonth
+import com.emm.justchill.core.theme.EmmSpacing
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
@@ -49,18 +51,14 @@ internal fun ScreenHeader(
 ) {
     val spacing = LocalEmmSpacing.current
 
-    // A 48dp target (DESIGN_SYSTEM.md §4) wraps its 20dp glyph in 14dp of nothing. The header
-    // gives that back at the screen edge, so the icons still sit on the 24dp column the rows use.
-    val edgeGiveback = (spacing.s12 - spacing.s5) / 2
-
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .padding(
                 top = spacing.s3,
-                start = spacing.s6 - edgeGiveback,
-                end = spacing.s6 - edgeGiveback,
+                start = spacing.s6 - spacing.headerEdgeGiveback,
+                end = spacing.s6 - spacing.headerEdgeGiveback,
             ),
     ) {
         if (month != null) {
@@ -188,3 +186,8 @@ internal fun HeaderAction(
         }
     }
 }
+
+// A 48dp target (DESIGN_SYSTEM.md §4) wraps its 20dp glyph in 14dp of nothing. The header rows
+// give that back at the screen edge, so the icons still sit on the 24dp column the list rows use.
+internal val EmmSpacing.headerEdgeGiveback: Dp
+    get() = (s12 - s5) / 2

@@ -28,11 +28,13 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 
 @Composable
 internal fun SearchBar(query: String, onQueryChange: (String) -> Unit, onClose: () -> Unit) {
     val focusRequester = remember { FocusRequester() }
+    val spacing = LocalEmmSpacing.current
 
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
@@ -40,7 +42,12 @@ internal fun SearchBar(query: String, onQueryChange: (String) -> Unit, onClose: 
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp, start = 24.dp, end = 24.dp, bottom = 14.dp),
+            .padding(
+                top = 12.dp,
+                start = 24.dp,
+                end = spacing.s6 - spacing.headerEdgeGiveback,
+                bottom = 14.dp,
+            ),
     ) {
         SearchInput(
             query = query,
