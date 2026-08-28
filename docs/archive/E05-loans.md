@@ -1,6 +1,6 @@
 # E05 — Loans
 
-**Decision:** [ADR 010](../../adr/010-loans-are-a-parallel-ledger.md)
+**Decision:** [ADR 010](../adr/010-loans-are-a-parallel-ledger.md)
 
 ## Why
 

@@ -93,5 +93,5 @@ is expected back. This ADR decides whether it enters that ledger, and what it ca
 
 - The invariants outliving every ticket under this decision — derived settled-ness, `totalDue` on
   every write path, cascade soft-delete, `personKey`, the backup payload — are in
-  [`docs/work/epics/E05-loans.md`](../work/epics/E05-loans.md).
+  [`docs/archive/E05-loans.md`](../archive/E05-loans.md).
 - Decision 3 is money math; the display side is `NumberFormatEs` and its golden test.

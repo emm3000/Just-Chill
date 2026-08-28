@@ -19,6 +19,7 @@ private val ACCENT_FOLD_MAP: Map<Char, Char> = mapOf(
     'ç' to 'c',
 )
 
+/** Accepted cost: two different people whose names normalize to the same key share one row. */
 internal fun personKey(personName: String): String {
     val lowercased = personName.lowercase()
     val folded = buildString {

@@ -32,8 +32,12 @@ this" depend on the reader's zone, which is the bug the text column removes.
   uncategorized movement needs no special case; and it carries **no `ON DELETE` clause**, because
   `SET NULL` on a composite key would try to null `type`, which is `NOT NULL`.
 - The remaining FK clauses (`transactions.accountId → accounts ON DELETE RESTRICT`, same on
-  `recurring_movements`) **only fire on physical DELETE — never on soft-delete**. Deletion integrity
-  is enforced in domain use cases (`DeleteAccountUseCase`, `DeleteCategoryUseCase`), not by them.
+  `recurring_movements`, plus `loan_payments.loanId → loans`) **only fire on physical DELETE — never
+  on soft-delete**. Deletion integrity is enforced above the schema, not by them, and each entity
+  answers it differently: `DeleteAccountUseCase` refuses while live dependents exist,
+  `DeleteCategoryUseCase` deliberately holds no rule at all, and `DeleteLoanUseCase` is a bare
+  passthrough whose cascade soft-delete of the loan's payments lives in the data source —
+  `LoanLocalDataSource.softDelete`'s transaction, contracted by `LoanRepository.delete`'s KDoc.
 
 ## Migrations are mandatory
 

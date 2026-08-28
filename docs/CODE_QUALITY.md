@@ -238,6 +238,13 @@ ViewModels in `:presentation` inject `:domain` repositories directly wherever th
 **Test:** a use case whose whole body is one `repository.x(...)` call on a READ is a rename, not a
 layer. Writes earn one far more often than reads, because a write is where the invariants are.
 
+**A repository write taking a fully-built aggregate makes skipping its use case type-legal.**
+`LoanRepository.create`/`update` take a whole `Loan` whose `totalDue` the domain already computed via
+`LoanMath`, and `AddEditLoanViewModel` injects that same repository for its reads, so nothing
+compiles against the rule: **loan writes go through `CreateLoanUseCase`/`UpdateLoanUseCase`.**
+**Test:** a ViewModel calling `LoanRepository.create` or `update` fails review, however well-formed
+the `Loan` it hands over looks.
+
 The leak stops at `:presentation`: `:ui-android` and `:androidApp` production code import no
 `:domain` repository (only `androidApp/src/test`, which mocks them).
 

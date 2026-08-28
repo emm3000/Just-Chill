@@ -36,6 +36,8 @@ remains.
 - `AppGraphKoinTest` cannot see a binding that was never registered — anything reached only via direct `koinInject`/`koin.get` stays invisible; register every new binding or cover it with its own module test.
 - Version gates are frozen literals (`BACKUP_RECURRING_SINCE_VERSION`, `BACKUP_SCHEMA_VERSION_V2`), never the live `BACKUP_SCHEMA_VERSION`; the version bumps in the same commit that changes the shape.
 - Each format version needs its own frozen type, hand-written fixture and compatibility test before the constant moves; gate on the file's `declaredVersion`, never on an array being empty.
+- A new table reaches a snapshot only once it is wired the whole way through — an `ExportPayloadDto` field, an export read, a `*_SINCE_VERSION` gate (one gate can cover a table group: `loans` and `loanPayments` share `BACKUP_LOANS_SINCE_VERSION`), `softDeleteAllLive` plus `insertOrIgnoreFromBackup` and `restoreFromBackup` inside `importFromJson`'s transaction, and an `ImportStats` count.
+- An unwired table is not erased by a restore: it is simply absent from every snapshot, so it dies with the device, and an in-place restore leaves its rows stale against a ledger that was replaced whole.
 - The category detach (`clearCategoryOnTypeChange`) runs on every version, unversioned; the recurring restore runs last inside the import transaction so it reads the file's own categories.
 - From v3 on, every exported file is unreadable on any older installed build — `decodePayload` refuses an unknown version.
 - Upload order carries the meaning: payload → read-back → manifest; `<name>.json.manifest.json` existing states the payload was verified. Holds only because the bucket forbids `update` and uploads use `upsert = false`.
