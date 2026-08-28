@@ -14,7 +14,5 @@ sealed interface ReportIntent : UiIntent {
     data object ShareReport : ReportIntent
 
     data object OnMonthSheetRequested : ReportIntent
-
-    /** The user dismissed the month picker sheet. */
     data object OnMonthSheetDismissed : ReportIntent
 }
