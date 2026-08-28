@@ -7,6 +7,7 @@ import com.emm.domain.account.DeleteAccountUseCase
 import com.emm.domain.account.UpdateAccountUseCase
 import com.emm.domain.loan.LoanRepository
 import com.emm.domain.shared.YearMonth
+import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionRepository
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
@@ -14,10 +15,12 @@ import com.emm.justchill.core.time.TodayFlow
 import com.emm.justchill.hh.loan.owingNames
 import com.emm.justchill.hh.loan.totalOwedFormatted
 import com.emm.justchill.hh.loan.totalOwedIsPositive
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -40,10 +43,18 @@ class AccountsViewModel(
         .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Eagerly, initialState.month)
 
+    // flatMapLatest, not combine: a query captured once at init would survive the midnight rollover
+    // `month` already tracks, leaving every row attributed to the wrong month. This re-subscribes
+    // instead, so a month change re-queries the bounded slice rather than only relabeling it.
+    private val monthTransactions: Flow<List<Transaction>> = month
+        .flatMapLatest { current ->
+            transactionRepository.allInRange(current.startInclusiveDay(), current.endExclusiveDay())
+        }
+
     init {
         combine(
             accountRepository.all(),
-            transactionRepository.all(),
+            monthTransactions,
             month,
             ::accountsMonthSlice,
         )

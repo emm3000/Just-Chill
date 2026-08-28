@@ -13,6 +13,7 @@ class FakeTransactionRepository : TransactionRepository {
     var lastUpdate: TransactionUpdate? = null
     var lastDeleted: TransactionId? = null
     var transactionToReturn: Transaction? = null
+    var inRange: List<Transaction> = emptyList()
     var allWithCategory: List<TransactionWithCategory> = emptyList()
     var rangeWithCategory: List<TransactionWithCategory> = emptyList()
     var searchWithCategoryToReturn: List<TransactionWithCategory> = emptyList()
@@ -26,7 +27,7 @@ class FakeTransactionRepository : TransactionRepository {
 
     override suspend fun find(transactionId: TransactionId): Transaction? = transactionToReturn
 
-    override fun all(): Flow<List<Transaction>> = flowOf(emptyList())
+    override fun allInRange(startInclusive: String, endExclusive: String): Flow<List<Transaction>> = flowOf(inRange)
 
     override fun fetchAllWithCategory(): Flow<List<TransactionWithCategory>> = flowOf(allWithCategory)
 

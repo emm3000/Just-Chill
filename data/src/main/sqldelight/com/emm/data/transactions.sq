@@ -102,6 +102,18 @@ WHERE t.deletedAt IS NULL
   AND t.occurredAt < :startOfNextMonth
 ORDER BY t.occurredAt DESC;
 
+-- Same lexicographic-bound shape as completeTransactionsByDateRange, but no joins: this is what
+-- accountsMonthSlice (:presentation) folds now instead of `all()`'s whole live table (E14-06). An
+-- unknown type value never reaches that fold at all -- TransactionMappers.asExternalModelOrNull()
+-- already drops a row it cannot parse, the same skip-row policy liveTotals enforces with a CASE WHEN
+-- because ITS caller never goes through that mapper.
+transactionsByDateRange:
+SELECT * FROM transactions
+WHERE deletedAt IS NULL
+  AND occurredAt >= :startInclusive
+  AND occurredAt < :endExclusive
+ORDER BY occurredAt DESC;
+
 -- Unknown type values (e.g. from a newer app version on another device) contribute 0,
 -- consistent with the mapper skip-row policy: a row the app cannot interpret is invisible
 -- everywhere rather than partially visible (misclassified as a spend).

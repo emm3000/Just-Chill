@@ -11,7 +11,9 @@ interface TransactionRepository {
 
     suspend fun find(transactionId: TransactionId): Transaction?
 
-    fun all(): Flow<List<Transaction>>
+    // No plain `all()` here: `allInRange` replaced its one caller (AccountsViewModel, E14-06), and
+    // an unused read method is a liability nothing else in this interface carries.
+    fun allInRange(startInclusive: String, endExclusive: String): Flow<List<Transaction>>
 
     fun fetchAllWithCategory(): Flow<List<TransactionWithCategory>>
 

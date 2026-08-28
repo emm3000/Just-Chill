@@ -21,7 +21,8 @@ class DefaultTransactionRepository(private val localDataSource: TransactionLocal
         localDataSource.create(transactionInsert)
     }
 
-    override fun all(): Flow<List<Transaction>> = localDataSource.all().catchAsDomainException()
+    override fun allInRange(startInclusive: String, endExclusive: String): Flow<List<Transaction>> =
+        localDataSource.byDateRange(startInclusive, endExclusive).catchAsDomainException()
 
     override fun fetchAllWithCategory(): Flow<List<TransactionWithCategory>> = localDataSource.completeTransactions()
         .map { it.toDomain() }

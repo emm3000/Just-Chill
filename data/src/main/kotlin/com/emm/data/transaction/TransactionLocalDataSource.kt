@@ -42,12 +42,6 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries, private va
         Unit
     }
 
-    fun all(): Flow<List<Transaction>> = tq
-        .all()
-        .asFlow()
-        .mapToList(ioDispatcher)
-        .map { list -> list.asEntity().asExternalModel() }
-
     fun completeTransactions(): Flow<List<TransactionWithCategoryEntity>> = tq.completeTransactions()
         .asFlow()
         .mapToList(ioDispatcher)
@@ -60,6 +54,12 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries, private va
         .asFlow()
         .mapToList(ioDispatcher)
         .map { list -> list.map(CompleteTransactionsByDateRange::asEntity) }
+
+    fun byDateRange(startInclusive: String, endExclusive: String): Flow<List<Transaction>> = tq
+        .transactionsByDateRange(startInclusive, endExclusive)
+        .asFlow()
+        .mapToList(ioDispatcher)
+        .map { list -> list.asEntity().asExternalModel() }
 
     fun liveTotals(): Flow<TransactionTotalsEntity> = tq.liveTotals()
         .asFlow()

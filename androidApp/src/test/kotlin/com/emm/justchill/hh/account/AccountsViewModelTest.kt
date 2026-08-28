@@ -88,7 +88,7 @@ class AccountsViewModelTest {
     @Before
     fun setUp() {
         every { accountRepository.all() } returns flowOf(emptyList())
-        every { transactionRepository.all() } returns flowOf(emptyList())
+        every { transactionRepository.allInRange(any(), any()) } returns flowOf(emptyList())
         every { loanRepository.balancesByPerson() } returns flowOf(emptyList())
         viewModel = accountsViewModel()
     }
@@ -96,7 +96,7 @@ class AccountsViewModelTest {
     @Test
     fun `each account nets only its own movements, only from the current month`() = runTest {
         every { accountRepository.all() } returns flowOf(listOf(bcp, cash))
-        every { transactionRepository.all() } returns flowOf(
+        every { transactionRepository.allInRange(any(), any()) } returns flowOf(
             listOf(
                 movement("t-1", bcp, TransactionType.Spend, 19_345L),
                 movement("t-2", cash, TransactionType.Spend, 10_000L, day = LocalDate(2026, 7, 31)),
@@ -116,7 +116,7 @@ class AccountsViewModelTest {
     @Test
     fun `an account whose income outweighs its spend nets positive, signed`() = runTest {
         every { accountRepository.all() } returns flowOf(listOf(bcp, cash))
-        every { transactionRepository.all() } returns flowOf(
+        every { transactionRepository.allInRange(any(), any()) } returns flowOf(
             listOf(
                 movement("t-1", bcp, TransactionType.Income, 350_000L),
                 movement("t-2", bcp, TransactionType.Spend, 50_000L),
@@ -137,7 +137,7 @@ class AccountsViewModelTest {
     @Test
     fun `the header totals the whole month, both directions, across every account`() = runTest {
         every { accountRepository.all() } returns flowOf(listOf(bcp, cash))
-        every { transactionRepository.all() } returns flowOf(
+        every { transactionRepository.allInRange(any(), any()) } returns flowOf(
             listOf(
                 movement("t-1", bcp, TransactionType.Spend, 19_345L),
                 movement("t-2", cash, TransactionType.Spend, 2_550L),
@@ -156,7 +156,7 @@ class AccountsViewModelTest {
     @Test
     fun `the month follows the clock past midnight, re-attributing what the header counts`() = runTest {
         every { accountRepository.all() } returns flowOf(listOf(bcp))
-        every { transactionRepository.all() } returns flowOf(
+        every { transactionRepository.allInRange(any(), any()) } returns flowOf(
             listOf(movement("t-1", bcp, TransactionType.Spend, 19_345L, day = LocalDate(2026, 8, 31))),
         )
         viewModel = accountsViewModel()
@@ -259,7 +259,7 @@ class AccountsViewModelTest {
         // ADR 010: loans are a parallel ledger. balancesByPerson() and all() are two separate flows
         // over two different tables — a huge loans emission must leave every monthly net untouched.
         every { accountRepository.all() } returns flowOf(listOf(bcp))
-        every { transactionRepository.all() } returns flowOf(
+        every { transactionRepository.allInRange(any(), any()) } returns flowOf(
             listOf(movement("t-1", bcp, TransactionType.Spend, 19_345L)),
         )
         val loansFlow = MutableStateFlow<List<PersonBalance>>(emptyList())
