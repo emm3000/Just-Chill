@@ -104,6 +104,7 @@ class SeeTransactionsViewModelTest {
         description = "movimiento $id",
         occurredAt = LocalDateTime(LocalDate(month.year, month.month, daysIntoMonth), NOON),
         accountId = AccountId("acc-1"),
+        accountName = "BCP",
         category = null,
     )
 

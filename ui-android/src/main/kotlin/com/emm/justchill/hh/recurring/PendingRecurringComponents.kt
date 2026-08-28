@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -24,6 +26,8 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.atoms.IconTile
+import com.emm.justchill.core.ui.atoms.IconTileSize
 import kotlinx.datetime.Month
 
 @Composable
@@ -50,10 +54,13 @@ fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit, modifier:
                 indication = null,
                 onClick = dropUnlessResumed(block = onClick),
             )
-            .padding(horizontal = 24.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // Same tile size as TransactionRow, so a pending row's text starts on the same column.
+        IconTile(icon = Icons.Outlined.Repeat, size = IconTileSize.Lg)
+
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = item.name,

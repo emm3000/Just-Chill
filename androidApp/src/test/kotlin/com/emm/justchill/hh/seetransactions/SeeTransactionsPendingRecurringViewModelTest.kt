@@ -130,6 +130,7 @@ class SeeTransactionsPendingRecurringViewModelTest {
         description = "movimiento $id",
         occurredAt = LocalDateTime(LocalDate(period.year, period.month, 5), NOON),
         accountId = AccountId("acc-1"),
+        accountName = "BCP",
         category = null,
     )
 

@@ -60,17 +60,6 @@ object SpanishDateFormat {
     fun monthYear(year: Int, month: Month): String = "${fullMonth(month)} $year"
 
     fun dayFullMonth(date: LocalDate): String = "${date.dayOfMonth} ${fullMonth(date.month)}"
-
-    fun readableTime(hour24: Int, minute: Int): String {
-        val isPm = hour24 >= 12
-        val hour12 = when {
-            hour24 % 12 == 0 -> 12
-            else -> hour24 % 12
-        }
-        val mm = minute.toString().padStart(2, '0')
-        val marker = if (isPm) "p. m." else "a. m."
-        return "$hour12:$mm $marker"
-    }
 }
 
 /**

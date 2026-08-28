@@ -5,10 +5,9 @@ import com.emm.domain.transaction.TransactionWithCategory
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
-import com.emm.justchill.hh.shared.relativeDayLabel
-import com.emm.justchill.hh.shared.timeLabel
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+
+private const val UNKNOWN_CATEGORY = "Sin categoría"
 
 data class TransactionUi(
     val transactionId: String,
@@ -16,12 +15,23 @@ data class TransactionUi(
     val amount: String,
     val description: String,
     val occurredAt: LocalDateTime,
-    val readableDate: String,
-    val readableTime: String,
+    val categoryName: String,
+    val accountName: String,
     val category: CategoryUi,
-)
+) {
 
-private fun TransactionWithCategory.toUi(today: LocalDate): TransactionUi {
+    /** What the user wrote; a blank one names the movement instead of announcing the blank. */
+    val title: String get() = description.ifBlank { categoryName }
+
+    /** Whatever [title] left unsaid — the category drops out once it is the title itself. */
+    val subtitle: String
+        get() = listOfNotNull(
+            categoryName.takeIf { description.isNotBlank() },
+            accountName.takeIf { it.isNotBlank() },
+        ).joinToString(" · ")
+}
+
+private fun TransactionWithCategory.toUi(): TransactionUi {
     val formattedNumber: String = fromCentsToSolesWith(amount)
     return TransactionUi(
         transactionId = transactionId.value,
@@ -32,8 +42,8 @@ private fun TransactionWithCategory.toUi(today: LocalDate): TransactionUi {
         },
         description = description,
         occurredAt = occurredAt,
-        readableDate = relativeDayLabel(occurredAt.date, today),
-        readableTime = timeLabel(occurredAt.time),
+        categoryName = category?.name ?: UNKNOWN_CATEGORY,
+        accountName = accountName,
         category = CategoryUi(
             iconId = category?.icon,
             colorId = category?.color,
@@ -41,9 +51,4 @@ private fun TransactionWithCategory.toUi(today: LocalDate): TransactionUi {
     )
 }
 
-/**
- * [today] is threaded in from the caller's clock rather than read here, so every row in one mapping
- * pass resolves its Hoy/Ayer against the same day — and so a ViewModel's injected clock reaches the
- * label instead of being bypassed by an ambient one.
- */
-fun List<TransactionWithCategory>.toUi(today: LocalDate) = map { it.toUi(today) }
+fun List<TransactionWithCategory>.toUi(): List<TransactionUi> = map { it.toUi() }

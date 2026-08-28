@@ -1,7 +1,6 @@
 package com.emm.justchill.hh.shared
 
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Month
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -9,8 +8,6 @@ import kotlin.test.assertEquals
 class DayLabelsTest {
 
     private val today = LocalDate(2026, Month.AUGUST, 10)
-
-    // ── relativeDayLabel ──────────────────────────────────────────────────────
 
     @Test
     fun today_is_Hoy() {
@@ -47,27 +44,5 @@ class DayLabelsTest {
         val date = LocalDate(2026, Month.AUGUST, 10)
         assertEquals("Hoy", relativeDayLabel(date, today))
         assertEquals("Ayer", relativeDayLabel(date, LocalDate(2026, Month.AUGUST, 11)))
-    }
-
-    // ── timeLabel ─────────────────────────────────────────────────────────────
-
-    @Test
-    fun timeLabel_renders_the_wall_clock_time_it_is_given() {
-        // No zone, no conversion: the label shows the hour the movement was recorded at, and it
-        // shows the same hour on a phone in Lima and a phone in Karachi. That used to depend on
-        // where the device was, because the row carried an instant and this had to guess a zone.
-        assertEquals("9:05 a. m.", timeLabel(LocalTime(9, 5)))
-        assertEquals("3:45 p. m.", timeLabel(LocalTime(15, 45)))
-    }
-
-    @Test
-    fun timeLabel_renders_midnight_and_noon_with_the_right_marker() {
-        assertEquals("12:00 a. m.", timeLabel(LocalTime(0, 0)))
-        assertEquals("12:00 p. m.", timeLabel(LocalTime(12, 0)))
-    }
-
-    @Test
-    fun timeLabel_ignores_the_seconds_the_column_carries() {
-        assertEquals("9:05 a. m.", timeLabel(LocalTime(9, 5, 33)))
     }
 }

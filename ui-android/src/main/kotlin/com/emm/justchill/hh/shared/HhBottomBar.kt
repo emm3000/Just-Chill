@@ -44,9 +44,9 @@ private data class BottomTab(
 )
 
 private val BOTTOM_TABS = listOf(
-    BottomTab(SeeTransactionRoute, "Ver", Icons.AutoMirrored.Outlined.List),
+    BottomTab(SeeTransactionRoute, "Movimientos", Icons.AutoMirrored.Outlined.List),
     BottomTab(ReportRoute, "Reporte", Icons.Outlined.Insights),
-    BottomTab(null, "Agregar", Icons.Outlined.Add, isAdd = true),
+    BottomTab(null, "Anotar", Icons.Outlined.Add, isAdd = true),
     BottomTab(AccountsRoute, "Cuentas", Icons.Outlined.AccountBalanceWallet),
     BottomTab(ProfileRoute, "Perfil", Icons.Outlined.Person),
 )

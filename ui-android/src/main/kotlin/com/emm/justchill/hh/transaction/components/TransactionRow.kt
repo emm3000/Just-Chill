@@ -27,18 +27,16 @@ import com.emm.justchill.hh.transaction.resolvedColor
 import com.emm.justchill.hh.transaction.resolvedIcon
 
 @Composable
-fun TransactionRow(tx: TransactionUi, showDate: Boolean, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
+fun TransactionRow(tx: TransactionUi, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
 
     val amountColor = if (tx.type == TransactionType.Income) colors.success else colors.textPrimary
 
-    val subtitle = if (showDate) "${tx.readableDate} · ${tx.readableTime}" else tx.readableTime
-
     val baseModifier = modifier
         .fillMaxWidth()
         .let { if (onClick != null) it.clickable(onClick = onClick) else it }
-        .padding(horizontal = 24.dp, vertical = 12.dp)
+        .padding(horizontal = 24.dp, vertical = 8.dp)
 
     Row(
         modifier = baseModifier,
@@ -47,14 +45,14 @@ fun TransactionRow(tx: TransactionUi, showDate: Boolean, onClick: (() -> Unit)?,
     ) {
         IconTile(
             icon = tx.category.resolvedIcon,
-            size = IconTileSize.Sm,
+            size = IconTileSize.Lg,
             tone = IconTileTone.Swatch,
             swatch = tx.category.resolvedColor.primary,
         )
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = tx.description.ifBlank { "Sin descripción" },
+                text = tx.title,
                 style = TextStyle(
                     fontFamily = InterFontFamily,
                     fontSize = 15.sp,
@@ -67,7 +65,7 @@ fun TransactionRow(tx: TransactionUi, showDate: Boolean, onClick: (() -> Unit)?,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = subtitle,
+                text = tx.subtitle,
                 style = type.caption.copy(fontSize = 12.sp, letterSpacing = 0.sp),
                 color = colors.textTertiary,
                 maxLines = 1,

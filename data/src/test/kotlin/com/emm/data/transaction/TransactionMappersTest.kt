@@ -206,6 +206,7 @@ class TransactionMappersTest {
     private fun transactionWithCategoryEntity(
         id: String = "tx-1",
         type: String = "Income",
+        accountName: String? = "BCP",
         categoryId: String? = "cat-1",
         categoryName: String? = "Comida",
         categoryIcon: String? = "food",
@@ -218,6 +219,7 @@ class TransactionMappersTest {
         description = "desc",
         occurredAt = "2026-08-10T21:47:33",
         accountId = "acc-1",
+        accountName = accountName,
         categoryId = categoryId,
         categoryName = categoryName,
         categoryIcon = categoryIcon,

@@ -13,5 +13,6 @@ data class TransactionWithCategory(
     val description: String,
     val occurredAt: LocalDateTime,
     val accountId: AccountId,
+    val accountName: String,
     val category: Category?,
 )

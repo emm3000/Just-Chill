@@ -21,6 +21,7 @@ fun CompleteTransactions.asEntity() = TransactionWithCategoryEntity(
     description = description,
     occurredAt = occurredAt,
     accountId = accountId,
+    accountName = accountName,
     categoryId = categoryId,
     categoryName = categoryName,
     categoryIcon = categoryIcon,
@@ -35,6 +36,7 @@ fun CompleteTransactionsByDateRange.asEntity() = TransactionWithCategoryEntity(
     description = description,
     occurredAt = occurredAt,
     accountId = accountId,
+    accountName = accountName,
     categoryId = categoryId,
     categoryName = categoryName,
     categoryIcon = categoryIcon,
@@ -49,6 +51,7 @@ fun SearchTransactions.asEntity() = TransactionWithCategoryEntity(
     description = description,
     occurredAt = occurredAt,
     accountId = accountId,
+    accountName = accountName,
     categoryId = categoryId,
     categoryName = categoryName,
     categoryIcon = categoryIcon,
@@ -69,6 +72,7 @@ fun TransactionWithCategoryEntity.toDomainOrNull(): TransactionWithCategory? {
             description = description,
             occurredAt = parsedOccurredAt,
             accountId = AccountId(accountId),
+            accountName = accountName.orEmpty(),
             category = resolveCategory(),
         )
     }

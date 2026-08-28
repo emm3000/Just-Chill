@@ -5,6 +5,7 @@ import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
 import com.emm.justchill.core.mvi.UiState
 import com.emm.justchill.hh.recurring.PendingRecurringUi
+import kotlinx.datetime.LocalDate
 
 data class CategorySheetItem(
     val id: String,
@@ -44,6 +45,8 @@ data class SeeTransactionsUiState(
     val pendingRecurringMovements: List<PendingRecurringUi> = emptyList(),
     /** The clock's real month, refreshed each time [pendingRecurringMovements] re-emits. */
     val currentMonth: YearMonth = month,
+    /** The clock's day, refreshed with [currentMonth]; `null` until that first emission. */
+    val today: LocalDate? = null,
     /**
      * The id of the [PendingRecurringUi] the confirm sheet is open for, resolved from
      * [pendingRecurringMovements]; `null` means the sheet is closed (ADR 012 Decision 2).
@@ -78,6 +81,14 @@ data class SeeTransactionsUiState(
             isFilterActive -> ListDisplayState.NoSearchResults
             else -> ListDisplayState.EmptyMonth
         }
+
+    /**
+     * The nudge is about the day the user is living, so it shows only where that day would be:
+     * the browsed month is the real one, nothing is filtering across months, and no group stands
+     * for today already.
+     */
+    val isTodayNudgeVisible: Boolean
+        get() = !isFilterActive && month == currentMonth && today != null && days.none { it.date == today }
 
     /**
      * Pending recurring movements are about "now": a filtered list stays filtered, and browsing a

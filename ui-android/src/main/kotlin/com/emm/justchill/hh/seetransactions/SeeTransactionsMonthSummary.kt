@@ -1,100 +1,76 @@
 package com.emm.justchill.hh.seetransactions
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
+import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.theme.PlexMonoFontFamily
+import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.Eyebrow
-import com.emm.justchill.core.ui.atoms.MoneyInline
-import com.emm.justchill.core.ui.atoms.MonthSelector
-import com.emm.justchill.hh.shared.monthYearLabel
+import com.emm.justchill.hh.shared.balanceFormatted
+import com.emm.justchill.hh.shared.formatNeutral
+import com.emm.justchill.hh.shared.fromCentsToSolesWith
 
+private const val CENTS_PER_SOL = 100.0
+
+/**
+ * One hero per screen (DESIGN_SYSTEM.md §1): the month's spend takes the amount role, and income
+ * and balance step down to a single line under it.
+ */
 @Composable
-internal fun MonthSection(state: SeeTransactionsUiState, onPreviousMonth: () -> Unit, onNextMonth: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 14.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        MonthSelector(
-            label = state.month.monthYearLabel(),
-            onPrevious = onPreviousMonth,
-            onNext = onNextMonth,
-        )
-    }
+internal fun MonthSummary(summary: MonthSummaryUi, modifier: Modifier = Modifier) {
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
 
-    val summary = state.summary
-    if (summary != null && state.listDisplayState == ListDisplayState.Content) {
-        MonthSummaryStrip(summary = summary)
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = spacing.s6, end = spacing.s6, top = spacing.s8),
+        verticalArrangement = Arrangement.spacedBy(spacing.s2),
+    ) {
+        Eyebrow(text = "Gastaste este mes")
+        AmountHero(value = summary.spend.cents / CENTS_PER_SOL, size = type.amountHero.fontSize)
+        SecondaryLine(summary = summary)
     }
 }
 
 @Composable
-private fun MonthSummaryStrip(summary: MonthSummaryUi) {
-    val colors = LocalEmmColors.current
-
-    val netCents = summary.net.cents
-    val netColor = when {
-        netCents > 0L -> colors.success
-        netCents < 0L -> colors.textPrimary
-        else -> colors.textSecondary
-    }
+private fun SecondaryLine(summary: MonthSummaryUi) {
+    val spacing = LocalEmmSpacing.current
 
     Row(
-        modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        modifier = Modifier.padding(top = spacing.s1),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s4),
     ) {
-        SummaryCell(
-            label = "Ingresos",
-            value = summary.income.cents.toDouble() / 100.0,
-            valueColor = colors.textPrimary,
-        )
-        SummaryDivider()
-        SummaryCell(
-            label = "Gastos",
-            value = summary.spend.cents.toDouble() / 100.0,
-            valueColor = colors.textSecondary,
-        )
-        SummaryDivider()
-        SummaryCell(
-            label = "Balance",
-            value = netCents.toDouble() / 100.0,
-            valueColor = netColor,
-        )
+        SecondaryAmount(label = "Ingresos", value = formatNeutral(fromCentsToSolesWith(summary.income)))
+        SecondaryAmount(label = "Balance", value = summary.net.balanceFormatted())
     }
 }
 
 @Composable
-private fun SummaryCell(label: String, value: Double, valueColor: Color) {
+private fun SecondaryAmount(label: String, value: String) {
     val colors = LocalEmmColors.current
-    Column {
-        Eyebrow(text = label, color = colors.textDisabled)
-        Spacer(Modifier.height(4.dp))
-        MoneyInline(value = value, color = valueColor)
-    }
-}
+    val type = LocalEmmType.current
 
-@Composable
-private fun SummaryDivider() {
-    val colors = LocalEmmColors.current
-    Box(
-        modifier = Modifier
-            .width(1.dp)
-            .height(28.dp)
-            .background(colors.border),
+    Text(
+        text = buildAnnotatedString {
+            append("$label ")
+            withStyle(SpanStyle(fontFamily = PlexMonoFontFamily, color = colors.textSecondary)) {
+                append(value)
+            }
+        },
+        style = type.bodyM,
+        color = colors.textTertiary,
+        maxLines = 1,
     )
 }

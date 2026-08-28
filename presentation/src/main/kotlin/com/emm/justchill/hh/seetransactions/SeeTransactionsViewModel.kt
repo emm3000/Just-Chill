@@ -248,6 +248,7 @@ class SeeTransactionsViewModel(
         return copy(
             pendingRecurringMovements = pending.map { it.toPendingRecurringUi(currentMonth) },
             currentMonth = currentMonth,
+            today = today,
         )
     }
 
@@ -320,7 +321,7 @@ internal fun SeeTransactionsUiState.withListSlice(slice: ListSlice, selectedMont
 private fun List<TransactionWithCategory>.toDayGroups(today: LocalDate): List<DayGroup> =
     groupBy { transaction -> transaction.occurredAt.date }
         .map { (date, transactions) ->
-            DayGroup(date = date, today = today, transactions = transactions.toUi(today))
+            DayGroup(date = date, today = today, transactions = transactions.toUi())
         }
 
 private fun List<TransactionWithCategory>.toMonthSummary(): MonthSummaryUi {

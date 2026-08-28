@@ -57,15 +57,6 @@ class SpanishFormatGoldenTest {
         assertEquals("domingo", SpanishDateFormat.fullWeekday(7))
     }
 
-    @Test fun readableTime_matches_h_mm_a() {
-        // ofPattern("h:mm a", es), 12-hour, "a. m." / "p. m."
-        assertEquals("3:45 p. m.", SpanishDateFormat.readableTime(15, 45))
-        assertEquals("9:05 a. m.", SpanishDateFormat.readableTime(9, 5))
-        assertEquals("12:00 a. m.", SpanishDateFormat.readableTime(0, 0))
-        assertEquals("12:00 p. m.", SpanishDateFormat.readableTime(12, 0))
-        assertEquals("11:59 p. m.", SpanishDateFormat.readableTime(23, 59))
-    }
-
     @Test fun titlecaseFirstChar_only_touches_first_char() {
         assertEquals("13 jun", "13 jun".titlecaseFirstChar()) // leading digit unchanged
         assertEquals("Septiembre 2026", "septiembre 2026".titlecaseFirstChar())

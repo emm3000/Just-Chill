@@ -7,6 +7,7 @@ data class TransactionWithCategoryEntity(
     val description: String,
     val occurredAt: String,
     val accountId: String,
+    val accountName: String?,
     val categoryId: String?,
     val categoryName: String?,
     val categoryIcon: String?,

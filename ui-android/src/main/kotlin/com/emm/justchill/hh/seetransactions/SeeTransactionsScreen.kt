@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -50,7 +51,6 @@ import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
-import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.hh.recurring.ConfirmRecurringSheet
 import com.emm.justchill.hh.recurring.PendingRecurringHeader
 import com.emm.justchill.hh.recurring.PendingRecurringRow
@@ -69,13 +69,18 @@ import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 @Composable
-fun SeeTransactionsScreen(onEditTransaction: (String) -> Unit, vm: SeeTransactionsViewModel) {
+fun SeeTransactionsScreen(
+    onEditTransaction: (String) -> Unit,
+    onAddTransaction: () -> Unit,
+    vm: SeeTransactionsViewModel,
+) {
     val state by vm.state.collectAsStateWithLifecycle()
 
     SeeTransactionsContent(
         state = state,
         onIntent = vm::onIntent,
         navigateToEdit = onEditTransaction,
+        navigateToAdd = onAddTransaction,
     )
 }
 
@@ -84,6 +89,7 @@ private fun SeeTransactionsContent(
     state: SeeTransactionsUiState,
     onIntent: (SeeTransactionsIntent) -> Unit,
     navigateToEdit: (String) -> Unit,
+    navigateToAdd: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
 
@@ -106,19 +112,24 @@ private fun SeeTransactionsContent(
             )
         } else {
             ScreenHeader(
-                isCategoryFilterActive = state.activeCategory != null,
+                state = state,
+                onPreviousMonth = { onIntent(SeeTransactionsIntent.OnPreviousMonth) },
+                onNextMonth = { onIntent(SeeTransactionsIntent.OnNextMonth) },
                 onSearch = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnSearchRequested) },
                 onFilter = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnFilterSheetRequested) },
             )
         }
 
-        if (state.isMonthSelectorVisible) {
-            MonthSection(
-                state = state,
-                onPreviousMonth = { onIntent(SeeTransactionsIntent.OnPreviousMonth) },
-                onNextMonth = { onIntent(SeeTransactionsIntent.OnNextMonth) },
-            )
+        val summary = state.summary
+        if (summary != null && state.listDisplayState == ListDisplayState.Content) {
+            MonthSummary(summary = summary)
         }
+
+        if (state.isTodayNudgeVisible) {
+            TodayNudgeCard(onClick = navigateToAdd)
+        }
+
+        Spacer(Modifier.height(8.dp))
 
         val activeCategory = state.activeCategory
         if (activeCategory != null) {
@@ -128,8 +139,6 @@ private fun SeeTransactionsContent(
                 onClear = { onIntent(SeeTransactionsIntent.OnClearCategoryFilter) },
             )
         }
-
-        Hairline()
 
         TransactionListColumn(
             state = state,
@@ -376,11 +385,7 @@ private fun LazyListScope.dayGroupedItems(
             key = TransactionUi::transactionId,
             contentType = { "transaction" },
         ) { tx ->
-            TransactionRow(
-                tx = tx,
-                showDate = false,
-                onClick = { onItemClick(tx.transactionId) },
-            )
+            TransactionRow(tx = tx, onClick = { onItemClick(tx.transactionId) })
         }
     }
 }
@@ -393,6 +398,7 @@ private fun SeeTransactionsEmptyPreview() {
             state = SeeTransactionsUiState(month = PREVIEW_MONTH, movementCount = 0L),
             onIntent = {},
             navigateToEdit = {},
+            navigateToAdd = {},
         )
     }
 }
@@ -409,8 +415,8 @@ private fun SeeTransactionsMonthPreview() {
                     amount = formatExpense("84.20"),
                     description = "Mercado del lunes",
                     occurredAt = PREVIEW_OCCURRED_AT,
-                    readableDate = "HOY",
-                    readableTime = "14:30",
+                    categoryName = "Supermercado",
+                    accountName = "BCP",
                     category = CategoryUi(iconId = null, colorId = "green"),
                 ),
                 TransactionUi(
@@ -419,9 +425,19 @@ private fun SeeTransactionsMonthPreview() {
                     amount = formatIncome("3,200.00"),
                     description = "Sueldo",
                     occurredAt = PREVIEW_OCCURRED_AT,
-                    readableDate = "HOY",
-                    readableTime = "09:00",
+                    categoryName = "Ingresos",
+                    accountName = "BCP",
                     category = CategoryUi(iconId = null, colorId = "gray"),
+                ),
+                TransactionUi(
+                    transactionId = Uuid.random().toString(),
+                    type = TransactionType.Spend,
+                    amount = formatExpense("12.00"),
+                    description = "",
+                    occurredAt = PREVIEW_OCCURRED_AT,
+                    categoryName = "Transporte",
+                    accountName = "Efectivo",
+                    category = CategoryUi(iconId = null, colorId = "blue"),
                 ),
             )
         }
@@ -434,6 +450,7 @@ private fun SeeTransactionsMonthPreview() {
             ),
             onIntent = {},
             navigateToEdit = {},
+            navigateToAdd = {},
         )
     }
 }
@@ -450,8 +467,8 @@ private fun SeeTransactionsPopulatedPreview() {
                     amount = formatExpense("84.20"),
                     description = "Mercado del lunes",
                     occurredAt = PREVIEW_OCCURRED_AT,
-                    readableDate = "HOY",
-                    readableTime = "14:30",
+                    categoryName = "Supermercado",
+                    accountName = "BCP",
                     category = CategoryUi(iconId = null, colorId = "green"),
                 ),
             )
@@ -465,6 +482,7 @@ private fun SeeTransactionsPopulatedPreview() {
             ),
             onIntent = {},
             navigateToEdit = {},
+            navigateToAdd = {},
         )
     }
 }
@@ -481,8 +499,8 @@ private fun SeeTransactionsWithPendingPreview() {
                     amount = formatExpense("84.20"),
                     description = "Mercado del lunes",
                     occurredAt = PREVIEW_OCCURRED_AT,
-                    readableDate = "HOY",
-                    readableTime = "14:30",
+                    categoryName = "Supermercado",
+                    accountName = "BCP",
                     category = CategoryUi(iconId = null, colorId = "green"),
                 ),
             )
@@ -516,6 +534,7 @@ private fun SeeTransactionsWithPendingPreview() {
             ),
             onIntent = {},
             navigateToEdit = {},
+            navigateToAdd = {},
         )
     }
 }
@@ -561,9 +580,11 @@ private fun SeeTransactionsPendingWithEmptyMonthPreview() {
                 days = emptyList(),
                 movementCount = 3,
                 pendingRecurringMovements = pending,
+                today = LocalDate(2026, 8, 10),
             ),
             onIntent = {},
             navigateToEdit = {},
+            navigateToAdd = {},
         )
     }
 }
@@ -582,6 +603,7 @@ private fun SeeTransactionsNoResultsPreview() {
             ),
             onIntent = {},
             navigateToEdit = {},
+            navigateToAdd = {},
         )
     }
 }

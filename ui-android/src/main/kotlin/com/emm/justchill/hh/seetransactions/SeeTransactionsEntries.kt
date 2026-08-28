@@ -5,6 +5,7 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import com.emm.justchill.hh.shared.AddTransactionRoute
 import com.emm.justchill.hh.shared.AppNavigator
 import com.emm.justchill.hh.shared.EditTransactionRoute
 import com.emm.justchill.hh.shared.NavHostBindings
@@ -32,6 +33,7 @@ fun EntryProviderScope<NavKey>.seeTransactionsEntries(bindings: NavHostBindings)
             onEditTransaction = { id ->
                 nav.push(EditTransactionRoute(id))
             },
+            onAddTransaction = { nav.push(AddTransactionRoute()) },
             vm = vm,
         )
     }
