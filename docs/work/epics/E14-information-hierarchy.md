@@ -32,10 +32,14 @@ information shown and the navigation to change. This epic does that, one screen 
   (`TransactionUiTest` pins the fallbacks); a composable that reintroduces "Sin descripción" or
   reads `description` directly is the defect this ticket removed.
 
-- **`SeeTransactionsViewModel` sits at detekt's constructor cap (E14-01).** `detekt.yml` sets
-  `LongParameterList.allowedConstructorParameters: 6` and the class has six. A datum the screen needs
-  next joins through the query (`completeTransactions` already carries the category and the account
-  name), not through a seventh constructor parameter.
+- **`SeeTransactionsViewModel` and `AccountsViewModel` sit at detekt's constructor cap (E14-01,
+  E14-03).** `detekt.yml` sets `LongParameterList.allowedConstructorParameters: 6` and both classes
+  have six. A datum either screen needs next joins through the query or an existing flow, not
+  through a seventh constructor parameter.
+
+- **Accounts have no opening balance, so no screen may show an account "balance" (E14-03).** Every
+  per-account figure is a month-scoped net said to be one ("este mes"); a "Saldo" label over a
+  lifetime sum is the lie E14-03 removed, and no test can catch its return — only this line.
 
 - **The screen's 48dp header targets keep their glyphs on the rows' 24dp column by giving the
   padding back at the edge, not by shrinking the target (E14-01).** `SeeTransactionsHeader` derives
