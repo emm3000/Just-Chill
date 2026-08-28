@@ -18,6 +18,7 @@ import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.time.FakeTodayFlow
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -33,6 +34,11 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+// Every call inside a MockK `verify { }` block records an expectation instead of consuming a
+// result, so IgnoredReturnValue fires on all of them here and means nothing. Suppressed on this
+// class rather than repo-wide, same as SeeTransactionsViewModelTest: outside a verification block,
+// "called it and dropped the result" is a real bug in a test, and the rule should keep catching it.
+@Suppress("IgnoredReturnValue")
 class AccountsViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
@@ -111,6 +117,10 @@ class AccountsViewModelTest {
         assertEquals(1, rowFor(bcp).movementCount)
         assertEquals("S/ 0.00", rowFor(cash).net)
         assertEquals(0, rowFor(cash).movementCount)
+        // Proves the exact bounds queried, not just that some list came back and got filtered: an
+        // inverted start/end would still pass every assertion above via the mock's `any()` stub.
+        val august = YearMonth(2026, Month.AUGUST)
+        verify { transactionRepository.allInRange(august.startInclusiveDay(), august.endExclusiveDay()) }
     }
 
     @Test
@@ -164,6 +174,8 @@ class AccountsViewModelTest {
 
         assertEquals(YearMonth(2026, Month.AUGUST), viewModel.state.value.month)
         assertEquals("S/ 193.45", viewModel.state.value.monthSpent)
+        val august = YearMonth(2026, Month.AUGUST)
+        verify { transactionRepository.allInRange(august.startInclusiveDay(), august.endExclusiveDay()) }
 
         today.value = LocalDate(2026, 9, 1)
         advanceUntilIdle()
@@ -171,6 +183,10 @@ class AccountsViewModelTest {
         assertEquals(YearMonth(2026, Month.SEPTEMBER), viewModel.state.value.month)
         assertEquals("S/ 0.00", viewModel.state.value.monthSpent)
         assertEquals("S/ 0.00", rowFor(bcp).net)
+        // Proves the rollover re-queries rather than only relabeling the August result: a dead
+        // flatMapLatest would leave this call never made, while the assertions above still pass.
+        val september = YearMonth(2026, Month.SEPTEMBER)
+        verify { transactionRepository.allInRange(september.startInclusiveDay(), september.endExclusiveDay()) }
     }
 
     @Test

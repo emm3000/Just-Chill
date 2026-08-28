@@ -30,6 +30,11 @@ internal fun accountsMonthSlice(
 ): AccountsMonthSlice {
     // The month a movement belongs to is the one it carries. No zone, no conversion, nothing that
     // can put the same movement in a different month on a different device.
+    //
+    // Load-bearing, not redundant: `month` reaches the caller's combine() twice, once directly and
+    // once through the flatMapLatest that re-queries `transactions` on it, so a rollover can emit an
+    // intermediate tuple pairing the NEW month with the OLD month's still-in-flight rows. Without
+    // this filter that tuple would render on screen: last month's money, labelled this month.
     val byAccount = transactions
         .filter { YearMonth.of(it.occurredAt.date) == month }
         .groupBy { it.accountId }
