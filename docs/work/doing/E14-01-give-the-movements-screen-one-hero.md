@@ -26,6 +26,5 @@
 
 ## Context
 
-The label is "Movimientos", not "Inicio": E06 retired a Home tab under that name and the app already
-says "movimientos" everywhere else. Category and account names are not in `TransactionUi` today —
-source them in the `:presentation` mapper, never resolve them in a composable.
+"Movimientos", not "Inicio": E06 retired a Home tab under that name. Category and account names
+are not in `TransactionUi` today — source them in the `:presentation` mapper, never in a composable.
