@@ -1,7 +1,6 @@
 # E14-03 — Make the accounts screen tell the truth
 
 **Epic:** [E14 — Information hierarchy](../epics/E14-information-hierarchy.md)
-**Blocked by:** E14-01
 
 ## Done when
 

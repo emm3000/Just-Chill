@@ -1,7 +1,6 @@
 # E14-02 — Reshape the add-transaction form
 
 **Epic:** [E14 — Information hierarchy](../epics/E14-information-hierarchy.md)
-**Blocked by:** E14-01
 
 ## Done when
 

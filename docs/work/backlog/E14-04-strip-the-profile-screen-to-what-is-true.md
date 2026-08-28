@@ -1,7 +1,6 @@
 # E14-04 — Strip the profile screen to what is true
 
 **Epic:** [E14 — Information hierarchy](../epics/E14-information-hierarchy.md)
-**Blocked by:** E14-01
 
 ## Done when
 
