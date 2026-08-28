@@ -19,7 +19,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -97,10 +96,6 @@ private fun EditTransactionContent(
 ) {
     val colors = LocalEmmColors.current
 
-    var showAccountSheet by rememberSaveable { mutableStateOf(false) }
-    var showCategorySheet by rememberSaveable { mutableStateOf(false) }
-    var showDateSheet by rememberSaveable { mutableStateOf(false) }
-    var showNoteSheet by rememberSaveable { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     val isSpend = state.transactionType == TransactionType.Spend
@@ -165,7 +160,7 @@ private fun EditTransactionContent(
                 eyebrow = "CUENTA",
                 value = state.accountSelected?.name ?: "—",
                 dotColor = state.accountSelected?.let { accountDotColor(it.name, colors) },
-                onClick = { showAccountSheet = true },
+                onClick = { onIntent(EditTransactionIntent.OnSheetRequested(TransactionSheet.Account)) },
                 modifier = Modifier.weight(1f),
             )
 
@@ -173,7 +168,7 @@ private fun EditTransactionContent(
                 eyebrow = "CATEGORÍA",
                 value = state.categorySelected?.name ?: "—",
                 dotColor = state.categorySelected?.resolvedColor?.primary,
-                onClick = { showCategorySheet = true },
+                onClick = { onIntent(EditTransactionIntent.OnSheetRequested(TransactionSheet.Category)) },
                 modifier = Modifier.weight(1f),
             )
 
@@ -181,14 +176,14 @@ private fun EditTransactionContent(
                 eyebrow = "FECHA",
                 value = state.dateLabel,
                 dotColor = null,
-                onClick = { showDateSheet = true },
+                onClick = { onIntent(EditTransactionIntent.OnSheetRequested(TransactionSheet.Date)) },
                 modifier = Modifier.weight(1f),
             )
         }
 
         NoteRow(
             note = state.description,
-            onClick = { showNoteSheet = true },
+            onClick = { onIntent(EditTransactionIntent.OnSheetRequested(TransactionSheet.Note)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 6.dp),
@@ -223,40 +218,40 @@ private fun EditTransactionContent(
         )
     }
 
-    if (showAccountSheet) {
+    if (state.openSheet == TransactionSheet.Account) {
         AccountPickerSheet(
             accounts = state.accounts,
             selectedAccountId = state.accountSelected?.accountId?.value,
             onSelect = { onIntent(EditTransactionIntent.OnAccountSelected(it)) },
-            onDismiss = { showAccountSheet = false },
+            onDismiss = { onIntent(EditTransactionIntent.OnSheetDismissed) },
             onAddNew = { onAddNewAccount() },
         )
     }
 
-    if (showCategorySheet) {
+    if (state.openSheet == TransactionSheet.Category) {
         CategoryPickerSheet(
             categories = state.categories,
             selectedCategoryId = state.categorySelected?.categoryId?.value,
             onSelect = { onIntent(EditTransactionIntent.OnCategorySelected(it)) },
-            onAddNew = { showCategorySheet = false },
-            onDismiss = { showCategorySheet = false },
+            onAddNew = { onIntent(EditTransactionIntent.OnSheetDismissed) },
+            onDismiss = { onIntent(EditTransactionIntent.OnSheetDismissed) },
             frequentCategoryIds = state.frequentCategoryIds,
         )
     }
 
-    if (showDateSheet) {
+    if (state.openSheet == TransactionSheet.Date) {
         DatePickerSheet(
             currentDate = state.date,
             onConfirm = { date -> onIntent(EditTransactionIntent.OnDateSelected(date)) },
-            onDismiss = { showDateSheet = false },
+            onDismiss = { onIntent(EditTransactionIntent.OnSheetDismissed) },
         )
     }
 
-    if (showNoteSheet) {
+    if (state.openSheet == TransactionSheet.Note) {
         NoteSheet(
             initialNote = state.description,
             onSave = { note -> onIntent(EditTransactionIntent.OnDescriptionChange(note)) },
-            onDismiss = { showNoteSheet = false },
+            onDismiss = { onIntent(EditTransactionIntent.OnSheetDismissed) },
         )
     }
 

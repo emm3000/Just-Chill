@@ -434,4 +434,19 @@ class EditTransactionViewModelTest {
         assertEquals(1, vm.state.value.categories.size, "the Income category must be on offer")
         assertNull(vm.state.value.categorySelected, "the stored category belongs to the old type")
     }
+
+    @Test
+    fun `OnSheetRequested opens the requested sheet and OnSheetDismissed closes it`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        assertNull(vm.state.value.openSheet)
+
+        vm.onIntent(EditTransactionIntent.OnSheetRequested(TransactionSheet.Note))
+        advanceUntilIdle()
+        assertEquals(TransactionSheet.Note, vm.state.value.openSheet)
+
+        vm.onIntent(EditTransactionIntent.OnSheetDismissed)
+        advanceUntilIdle()
+        assertNull(vm.state.value.openSheet)
+    }
 }

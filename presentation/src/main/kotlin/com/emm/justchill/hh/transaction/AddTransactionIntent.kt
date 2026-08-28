@@ -27,4 +27,10 @@ sealed interface AddTransactionIntent : UiIntent {
         AddTransactionIntent
 
     data object OnSave : AddTransactionIntent
+
+    /** Opens [sheet] over the screen. */
+    data class OnSheetRequested(val sheet: TransactionSheet) : AddTransactionIntent
+
+    /** The user dismissed whichever sheet was open. */
+    data object OnSheetDismissed : AddTransactionIntent
 }

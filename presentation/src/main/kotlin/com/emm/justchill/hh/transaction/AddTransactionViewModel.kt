@@ -86,6 +86,8 @@ class AddTransactionViewModel(
             is AddTransactionIntent.OnFrequentComboSelected -> selectFrequentCombo(intent.value)
             is AddTransactionIntent.OnPreselectCombo -> registerPreselect(intent)
             is AddTransactionIntent.OnNewValueFromOthers -> addCategoryFromOthers(intent.value)
+            is AddTransactionIntent.OnSheetRequested -> updateState { copy(openSheet = intent.sheet) }
+            AddTransactionIntent.OnSheetDismissed -> updateState { copy(openSheet = null) }
         }
     }
 

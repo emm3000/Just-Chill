@@ -764,4 +764,31 @@ class AddTransactionViewModelTest {
             // not exist — so the Spend default answers instead. A cross-type pair has no encoding.
             assertEquals(category1.categoryId.value, state.categorySelected?.categoryId?.value)
         }
+
+    @Test
+    fun `OnSheetRequested opens the requested sheet and OnSheetDismissed closes it`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        assertNull(vm.state.value.openSheet)
+
+        vm.onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Account))
+        advanceUntilIdle()
+        assertEquals(TransactionSheet.Account, vm.state.value.openSheet)
+
+        vm.onIntent(AddTransactionIntent.OnSheetDismissed)
+        advanceUntilIdle()
+        assertNull(vm.state.value.openSheet)
+    }
+
+    @Test
+    fun `only one sheet is ever open — requesting a second replaces the first`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Category))
+        vm.onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Date))
+        advanceUntilIdle()
+
+        assertEquals(TransactionSheet.Date, vm.state.value.openSheet)
+    }
 }

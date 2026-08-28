@@ -45,6 +45,8 @@ data class AddTransactionUiState(
      * preselect. Only the first registration may act; every repeat is a no-op.
      */
     val preselectConsumed: Boolean = false,
+    /** The sheet currently rendered over this screen; `null` means none is (ADR 012 Decision 2). */
+    val openSheet: TransactionSheet? = null,
 ) : UiState {
     val dateLabel: String get() = date?.let { relativeDayLabel(it, today) } ?: "Hoy"
 

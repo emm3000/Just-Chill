@@ -22,6 +22,8 @@ data class EditTransactionUiState(
     val accountId: AccountId? = null,
     val categoryId: CategoryId? = null,
     val frequentCategoryIds: List<String> = emptyList(),
+    /** The sheet currently rendered over this screen; `null` means none is (ADR 012 Decision 2). */
+    val openSheet: TransactionSheet? = null,
 ) : UiState {
     val dateLabel: String get() = relativeDayLabel(date, today)
 

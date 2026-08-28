@@ -60,6 +60,8 @@ class EditTransactionViewModel(
             is EditTransactionIntent.OnCategorySelected -> updateState { copy(categoryId = intent.value.categoryId) }
             EditTransactionIntent.OnSave -> saveChanges()
             EditTransactionIntent.OnDelete -> performDelete()
+            is EditTransactionIntent.OnSheetRequested -> updateState { copy(openSheet = intent.sheet) }
+            EditTransactionIntent.OnSheetDismissed -> updateState { copy(openSheet = null) }
         }
     }
 
