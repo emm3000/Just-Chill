@@ -17,6 +17,8 @@ data class AccountsUiState(
     val pendingDelete: Account? = null,
     // Loans are a parallel ledger (ADR 010): this total never folds into any account's monthly net.
     val loansTotalOwed: String = formatNeutral(fromCentsToSolesWith(Money.Zero)),
+    /** The total's own sign (DESIGN_SYSTEM.md §1.4) — [loansPeople] can be non-empty at zero. */
+    val loansTotalOwedIsPositive: Boolean = false,
     /** Whoever still owes something, settled people excluded — the screen names them and counts them. */
     val loansPeople: List<String> = emptyList(),
 ) : UiState

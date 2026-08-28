@@ -11,15 +11,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import com.emm.domain.shared.Money
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.theme.PlexMonoFontFamily
 import com.emm.justchill.core.ui.atoms.AmountHero
+import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
-import com.emm.justchill.hh.shared.balanceFormatted
 import com.emm.justchill.hh.shared.formatNeutral
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
+import com.emm.justchill.hh.shared.positiveMoneyFormatted
 
 private const val CENTS_PER_SOL = 100.0
 
@@ -53,19 +55,30 @@ private fun SecondaryLine(summary: MonthSummaryUi) {
         horizontalArrangement = Arrangement.spacedBy(spacing.s4),
     ) {
         SecondaryAmount(label = "Ingresos", value = formatNeutral(fromCentsToSolesWith(summary.income)))
-        SecondaryAmount(label = "Balance", value = summary.net.balanceFormatted())
+        SecondaryAmount(
+            label = "Balance",
+            value = summary.net.positiveMoneyFormatted(),
+            tone = balanceTone(summary.net),
+        )
     }
 }
 
+/**
+ * DESIGN_SYSTEM.md §1.4: `net` is a month balance, so a positive one is positive money — `success`;
+ * zero or negative keeps this line's own monochrome (`textSecondary`, not a row's `textPrimary`).
+ */
+internal fun balanceTone(net: Money): AmountTone = if (net.cents > 0L) AmountTone.Pos else AmountTone.Neutral
+
 @Composable
-private fun SecondaryAmount(label: String, value: String) {
+private fun SecondaryAmount(label: String, value: String, tone: AmountTone = AmountTone.Neutral) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
+    val valueColor = if (tone == AmountTone.Pos) colors.success else colors.textSecondary
 
     Text(
         text = buildAnnotatedString {
             append("$label ")
-            withStyle(SpanStyle(fontFamily = PlexMonoFontFamily, color = colors.textSecondary)) {
+            withStyle(SpanStyle(fontFamily = PlexMonoFontFamily, color = valueColor)) {
                 append(value)
             }
         },

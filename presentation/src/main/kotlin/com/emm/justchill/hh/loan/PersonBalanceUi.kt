@@ -32,6 +32,12 @@ fun List<PersonBalance>.toUi(): List<PersonBalanceUi> = map { it.toUi() }
  */
 fun List<PersonBalance>.totalOwedFormatted(): String = totalRemaining().positiveMoneyFormatted()
 
+/**
+ * The aggregate's own sign — never [owingNames]' emptiness. Two balances can offset to a zero
+ * total while [owingNames] still names whoever holds the positive half.
+ */
+fun List<PersonBalance>.totalOwedIsPositive(): Boolean = totalRemaining().cents > 0L
+
 fun List<PersonBalance>.owingNames(): List<String> = filter { it.remaining.cents > 0L }.map { it.personName }
 
 private fun List<PersonBalance>.totalRemaining(): Money = fold(Money.Zero) { acc, balance -> acc + balance.remaining }

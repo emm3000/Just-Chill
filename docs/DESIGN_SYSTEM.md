@@ -25,8 +25,10 @@ Five rules that govern everything below. When in doubt, return here.
 4. **Positive is tinted; negative stays monochrome.** An income amount takes `success`; an expense
    amount stays `textPrimary` — an expense is never red. `danger` means destructive or broken, not
    "money leaving". This holds from the transaction row to the report hero; break it on one screen
-   and red becomes ambiguous on all of them. A positive aggregate — a month net, a total owed — is
-   positive money too: signed `+` and `success`; only a zero steps down to the muted role.
+   and red becomes ambiguous on all of them. A signed net or balance shown as an aggregate — a month
+   net, a total owed — extends the same rule: positive takes `+` and `success`, zero or negative
+   stays monochrome. A magnitude under its own label ("Por cobrar", "Entran") is not a net; it keeps
+   the income/expense semantics above, unsigned.
 
 5. **Hairline over shadow.** Dark UIs read shadows as smudges. Separate surfaces with space, a 1dp
    `border` hairline, or a surface step. There is not one elevation shadow in `:ui-android` — keep
@@ -97,7 +99,8 @@ Never build a `TextStyle` inline to fill a gap between two roles. Add the role.
 ### 3.3 Number formatting
 
 The rules only — `presentation/.../hh/shared/NumberFormatEs.kt` and `CurrencyFormat.kt` own the
-code and `SpanishFormatGoldenTest` pins the output.
+code; `SpanishFormatGoldenTest` pins `NumberFormatEs.kt`'s output, `CurrencyFormatTest` pins
+`CurrencyFormat.kt`'s.
 
 - Grouping is **comma-thousands, dot-decimals** (`1,234.56`). That is es-PE, and it is the reverse
   of the Spanish convention most references show. It is hardcoded rather than locale-derived, so it

@@ -238,6 +238,23 @@ class AccountsViewModelTest {
     }
 
     @Test
+    fun `debts that cancel to zero total render muted, whoever the people list still names`() = runTest {
+        every { loanRepository.balancesByPerson() } returns flowOf(
+            listOf(
+                personBalance(personKey = "carlos", personName = "Carlos", remaining = Money(50_000L)),
+                personBalance(personKey = "diego", personName = "Diego", remaining = Money(-50_000L)),
+            ),
+        )
+        viewModel = accountsViewModel()
+
+        advanceUntilIdle()
+
+        assertEquals("S/ 0.00", viewModel.state.value.loansTotalOwed)
+        assertFalse(viewModel.state.value.loansTotalOwedIsPositive)
+        assertEquals(listOf("Carlos"), viewModel.state.value.loansPeople)
+    }
+
+    @Test
     fun `no loan or abono moves an account net by one cent, however large the loans flow emits`() = runTest {
         // ADR 010: loans are a parallel ledger. balancesByPerson() and all() are two separate flows
         // over two different tables — a huge loans emission must leave every monthly net untouched.

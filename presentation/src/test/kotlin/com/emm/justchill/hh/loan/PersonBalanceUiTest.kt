@@ -3,14 +3,15 @@ package com.emm.justchill.hh.loan
 import com.emm.domain.loan.PersonBalance
 import com.emm.domain.shared.Money
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class PersonBalanceUiTest {
 
-    private fun balance(remaining: Long) = PersonBalance(
-        personKey = "ana",
-        personName = "Ana",
+    private fun balance(remaining: Long, personKey: String = "ana", personName: String = "Ana") = PersonBalance(
+        personKey = personKey,
+        personName = personName,
         remaining = Money(remaining),
     )
 
@@ -20,5 +21,17 @@ class PersonBalanceUiTest {
 
     @Test fun toUi_nonzero_remaining_is_not_settled() {
         assertFalse(listOf(balance(remaining = 100L)).toUi().single().isSettled)
+    }
+
+    @Test
+    fun `two balances that offset to zero total, owingNames still names the positive half`() {
+        val balances = listOf(
+            balance(remaining = 50_000L, personKey = "carlos", personName = "Carlos"),
+            balance(remaining = -50_000L, personKey = "diego", personName = "Diego"),
+        )
+
+        assertFalse(balances.totalOwedIsPositive())
+        assertEquals("S/ 0.00", balances.totalOwedFormatted())
+        assertEquals(listOf("Carlos"), balances.owingNames())
     }
 }

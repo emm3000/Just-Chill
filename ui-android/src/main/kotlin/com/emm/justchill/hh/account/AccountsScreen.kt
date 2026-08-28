@@ -65,6 +65,7 @@ fun AccountsScreen(
             item {
                 LoansSection(
                     totalOwed = state.loansTotalOwed,
+                    totalOwedIsPositive = state.loansTotalOwedIsPositive,
                     people = state.loansPeople,
                     onClick = navigateToLoans,
                 )
@@ -202,6 +203,7 @@ private fun AccountsScreenPreview() {
                 monthSpent = "S/ 193.45",
                 monthIncome = "S/ 3,500.00",
                 loansTotalOwed = "+S/ 500.00",
+                loansTotalOwedIsPositive = true,
                 loansPeople = listOf("Carlos"),
             ),
             onIntent = {},

@@ -52,9 +52,11 @@ information shown and the navigation to change. This epic does that, one screen 
   `DateAction`/`NoteAction` are the pattern. Dropping that modifier passes every gate and reopens
   `DESIGN_SYSTEM.md` §4.
 
-- **A positive aggregate is positive money too, not just a positive transaction (E14-05).**
-  `Money.positiveMoneyFormatted()` (`:presentation`) is what signs `+` on a month net or a total
-  owed; a new aggregate reaching for `formatNeutral`/`balanceFormatted` instead reopens the
-  monochrome-positive bug this ticket closed. Resolve the tint through `AmountTone.color()`
-  (`:ui-android`) too — an inline `if (positive) success else textPrimary` in a composable is the
-  same regression with no shared fix.
+- **A signed net/balance aggregate is positive money too; a transaction's own amount or a magnitude
+  under its own label is not (E14-05).** `Money.positiveMoneyFormatted()` (`:presentation`) and
+  `AmountTone.color()` (`:ui-android`) are where a NEW net or balance aggregate — a month net, a
+  total owed — must route its sign and tint; reaching for `formatNeutral`/`balanceFormatted` or an
+  inline `if` there reopens the monochrome-positive bug this ticket closed. `TransactionRow`,
+  `RecurringMovementRow` and `TotalAmountHero`'s `TransactionType`-driven `if`, and
+  `LoanSummaryCard`'s unsigned "Por cobrar", are correct as they stand — neither a transaction nor a
+  labeled magnitude is a net, so neither owes this refactor.

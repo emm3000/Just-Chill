@@ -22,10 +22,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.IconTileTone
+import com.emm.justchill.core.ui.atoms.color
 
 /**
  * Always mounted, however empty the ledger is: this row is the only door to `LoansRoute` inside the
@@ -33,7 +35,7 @@ import com.emm.justchill.core.ui.atoms.IconTileTone
  * `ui-android/CLAUDE.md` records.
  */
 @Composable
-internal fun LoansSection(totalOwed: String, people: List<String>, onClick: () -> Unit) {
+internal fun LoansSection(totalOwed: String, totalOwedIsPositive: Boolean, people: List<String>, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
@@ -82,7 +84,7 @@ internal fun LoansSection(totalOwed: String, people: List<String>, onClick: () -
             Text(
                 text = totalOwed,
                 style = type.amountM,
-                color = if (people.isEmpty()) colors.textTertiary else colors.success,
+                color = loansTotalTone(totalOwedIsPositive).color(colors),
             )
 
             Icon(
@@ -94,6 +96,13 @@ internal fun LoansSection(totalOwed: String, people: List<String>, onClick: () -
         }
     }
 }
+
+/**
+ * DESIGN_SYSTEM.md §1.4: the total's own sign, not [people]'s emptiness — two balances can offset
+ * to a zero total while the debtor still names someone.
+ */
+internal fun loansTotalTone(totalOwedIsPositive: Boolean): AmountTone =
+    if (totalOwedIsPositive) AmountTone.Pos else AmountTone.Mute
 
 internal fun loansSubtitle(people: List<String>): String = when (people.size) {
     0 -> "Nadie te debe"

@@ -13,6 +13,7 @@ import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.core.time.TodayFlow
 import com.emm.justchill.hh.loan.owingNames
 import com.emm.justchill.hh.loan.totalOwedFormatted
+import com.emm.justchill.hh.loan.totalOwedIsPositive
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -62,7 +63,11 @@ class AccountsViewModel(
         loanRepository.balancesByPerson()
             .onEach { balances ->
                 updateState {
-                    copy(loansTotalOwed = balances.totalOwedFormatted(), loansPeople = balances.owingNames())
+                    copy(
+                        loansTotalOwed = balances.totalOwedFormatted(),
+                        loansTotalOwedIsPositive = balances.totalOwedIsPositive(),
+                        loansPeople = balances.owingNames(),
+                    )
                 }
             }
             .launchSafeIn(onError = { e -> AccountsEffect.ShowMessage(e.toUserMessage()) })
