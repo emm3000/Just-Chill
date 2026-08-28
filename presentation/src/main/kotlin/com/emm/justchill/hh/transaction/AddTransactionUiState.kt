@@ -71,7 +71,9 @@ data class AddTransactionUiState(
     val frequentCombos: List<FrequentComboUi>
         get() {
             val candidates = categories
-            return usageForCurrentType?.combos.orEmpty().mapNotNull { toComboUi(it, candidates) }
+            return usageForCurrentType?.combos.orEmpty()
+                .mapNotNull { toComboUi(it, candidates) }
+                .take(FREQUENT_COMBO_CAP)
         }
 
     val missingField: MissingField? get() = when {
@@ -103,6 +105,12 @@ data class AddTransactionUiState(
             label = comboLabel(account.name, category.name),
             colorId = category.colorId,
         )
+    }
+
+    private companion object {
+        // The use case resolves five so that pruning a deleted account or category cannot empty the
+        // row; the form offers the three most-used of what survives, never a browsable list.
+        const val FREQUENT_COMBO_CAP = 3
     }
 }
 

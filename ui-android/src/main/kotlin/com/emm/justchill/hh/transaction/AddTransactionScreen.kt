@@ -4,15 +4,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -23,31 +23,33 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.category.CategoryType
 import com.emm.domain.shared.CategoryId
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
+import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
+import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
-import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.hh.account.accountDotColor
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.allColors
 import com.emm.justchill.hh.category.findById
+import com.emm.justchill.hh.transaction.components.ACCOUNT_CHIP_WEIGHT
+import com.emm.justchill.hh.transaction.components.CATEGORY_CHIP_WEIGHT
+import com.emm.justchill.hh.transaction.components.FormMetaRow
 import com.emm.justchill.hh.transaction.components.FrequentComboChip
-import com.emm.justchill.hh.transaction.components.NoteRow
-import com.emm.justchill.hh.transaction.components.QuickChip
+import com.emm.justchill.hh.transaction.components.SelectorChip
 import com.emm.justchill.hh.transaction.components.SignToggle
 import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
 import com.emm.justchill.hh.transaction.sheets.CategoryPickerSheet
@@ -63,7 +65,7 @@ private fun ctaInteraction(state: AddTransactionUiState): CtaInteraction = when 
 }
 
 private data class CtaContent(val label: String, val sublabel: String?)
-private data class TransactionKindContent(val topBarTitle: String, val amountTone: AmountTone, val ctaLabel: String)
+private data class TransactionKindContent(val amountTone: AmountTone, val ctaLabel: String)
 
 @Composable
 fun AddTransactionScreen(
@@ -107,6 +109,8 @@ private fun AddTransactionScreenContent(
     onAddNewAccount: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
+    val type = LocalEmmType.current
 
     val isSpend = state.transactionType == TransactionType.Spend
     val noAccounts = state.hasNoAccounts
@@ -115,9 +119,9 @@ private fun AddTransactionScreenContent(
         "S/ ${formatCentsForDisplay(state.amount)}"
     }
     val kind = if (isSpend) {
-        TransactionKindContent(topBarTitle = "Nuevo gasto", amountTone = AmountTone.Neutral, ctaLabel = "Anotar gasto")
+        TransactionKindContent(amountTone = AmountTone.Neutral, ctaLabel = "Anotar gasto")
     } else {
-        TransactionKindContent(topBarTitle = "Nuevo ingreso", amountTone = AmountTone.Pos, ctaLabel = "Anotar ingreso")
+        TransactionKindContent(amountTone = AmountTone.Pos, ctaLabel = "Anotar ingreso")
     }
     val cta = if (noAccounts) {
         CtaContent(label = "Crea una cuenta primero", sublabel = null)
@@ -130,37 +134,23 @@ private fun AddTransactionScreenContent(
             .fillMaxSize()
             .background(colors.bg),
     ) {
-        JcTopBar(
-            title = kind.topBarTitle,
-            left = {
-                IconBtn(
-                    icon = Icons.Outlined.Close,
-                    onClick = popBackStack,
-                    contentDescription = "Cerrar",
-                )
-            },
-            right = null,
-        )
-
-        SignToggle(
+        FormHeader(
             isSpend = isSpend,
+            onClose = popBackStack,
             onIncomeClick = { onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Income)) },
             onSpendClick = { onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Spend)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 2.dp),
         )
 
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 0.dp)
-                .padding(top = 20.dp, bottom = 18.dp),
+                .padding(horizontal = spacing.s6)
+                .padding(top = spacing.s8, bottom = spacing.s6),
         ) {
             AmountHero(
                 value = centsToSoles(state.amount),
-                size = 48.sp,
+                size = type.amountL.fontSize,
                 tone = kind.amountTone,
                 showCaret = true,
             )
@@ -169,75 +159,59 @@ private fun AddTransactionScreenContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                .padding(horizontal = spacing.s4),
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
         ) {
             if (noAccounts) {
-                QuickChip(
-                    eyebrow = "CUENTA",
-                    value = "Crear cuenta",
-                    dotColor = colors.accent,
+                SelectorChip(
+                    label = "Crear cuenta",
+                    dotColor = null,
                     onClick = onAddNewAccount,
-                    cta = true,
-                    modifier = Modifier.weight(1f),
+                    trailingIcon = Icons.Outlined.Add,
+                    modifier = Modifier.weight(ACCOUNT_CHIP_WEIGHT),
                 )
             } else {
-                QuickChip(
-                    eyebrow = "CUENTA",
-                    value = state.accountSelected?.name ?: "—",
-                    dotColor = state.accountSelected?.let {
-                        accountDotColor(it.name, colors)
-                    },
+                SelectorChip(
+                    label = state.accountSelected?.name ?: "—",
+                    dotColor = state.accountSelected?.let { accountDotColor(it.name, colors) },
                     onClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Account)) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(ACCOUNT_CHIP_WEIGHT),
                 )
             }
 
-            QuickChip(
-                eyebrow = "CATEGORÍA",
-                value = state.categorySelected?.name ?: "—",
+            SelectorChip(
+                label = state.categorySelected?.name ?: "—",
                 dotColor = state.categorySelected?.resolvedColor?.primary,
                 onClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Category)) },
-                modifier = Modifier.weight(1f),
-            )
-
-            QuickChip(
-                eyebrow = "FECHA",
-                value = state.dateLabel,
-                dotColor = null,
-                onClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Date)) },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(CATEGORY_CHIP_WEIGHT),
             )
         }
 
-        NoteRow(
+        FormMetaRow(
+            dateLabel = state.dateLabel,
             note = state.description,
-            onClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Note)) },
+            onDateClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Date)) },
+            onNoteClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Note)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp),
+                .padding(horizontal = spacing.s6),
         )
 
-        if (state.frequentCombos.isNotEmpty()) {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp),
+        if (state.frequentCombos.isEmpty()) {
+            Spacer(Modifier.weight(1f))
+        } else {
+            FrequentCombos(
+                combos = state.frequentCombos,
+                selectedAccountId = state.accountSelected?.accountId?.value,
+                selectedCategoryId = state.categorySelected?.categoryId?.value,
+                onSelect = { combo -> onIntent(AddTransactionIntent.OnFrequentComboSelected(combo)) },
                 modifier = Modifier
+                    .weight(1f)
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-            ) {
-                items(state.frequentCombos) { combo ->
-                    FrequentComboChip(
-                        label = combo.label,
-                        dotColor = combo.colorId?.let { findById(it).primary },
-                        onClick = { onIntent(AddTransactionIntent.OnFrequentComboSelected(combo)) },
-                    )
-                }
-            }
+                    .padding(horizontal = spacing.s4)
+                    .padding(top = spacing.s3),
+            )
         }
-
-        Spacer(Modifier.weight(1f))
 
         Numpad(
             onDigit = { digit ->
@@ -254,8 +228,8 @@ private fun AddTransactionScreenContent(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp)
-                .padding(bottom = 6.dp),
+                .padding(horizontal = spacing.s4)
+                .padding(bottom = spacing.s2),
         )
 
         StickyCTA(
@@ -303,6 +277,53 @@ private fun AddTransactionScreenContent(
             onSave = { note -> onIntent(AddTransactionIntent.OnDescriptionChange(note)) },
             onDismiss = { onIntent(AddTransactionIntent.OnSheetDismissed) },
         )
+    }
+}
+
+@Composable
+private fun FormHeader(isSpend: Boolean, onClose: () -> Unit, onIncomeClick: () -> Unit, onSpendClick: () -> Unit) {
+    val spacing = LocalEmmSpacing.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.s4, vertical = spacing.s2),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        IconBtn(icon = Icons.Outlined.Close, onClick = onClose, contentDescription = "Cerrar")
+        SignToggle(isSpend = isSpend, onIncomeClick = onIncomeClick, onSpendClick = onSpendClick)
+        // The pill is centred by what balances the close button, so the empty side keeps its width.
+        Spacer(Modifier.size(spacing.s12))
+    }
+}
+
+@Composable
+private fun FrequentCombos(
+    combos: List<FrequentComboUi>,
+    selectedAccountId: String?,
+    selectedCategoryId: String?,
+    onSelect: (FrequentComboUi) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val spacing = LocalEmmSpacing.current
+
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(spacing.s1)) {
+        Eyebrow(text = "Tus combinaciones frecuentes", modifier = Modifier.padding(start = spacing.s2))
+
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+            verticalArrangement = Arrangement.spacedBy(spacing.s1),
+        ) {
+            combos.forEach { combo ->
+                FrequentComboChip(
+                    label = combo.label,
+                    dotColor = combo.colorId?.let { findById(it).primary },
+                    onClick = { onSelect(combo) },
+                    active = combo.accountId == selectedAccountId && combo.categoryId == selectedCategoryId,
+                )
+            }
+        }
     }
 }
 

@@ -23,12 +23,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
+import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
@@ -41,8 +41,10 @@ import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.hh.account.accountDotColor
-import com.emm.justchill.hh.transaction.components.NoteRow
-import com.emm.justchill.hh.transaction.components.QuickChip
+import com.emm.justchill.hh.transaction.components.ACCOUNT_CHIP_WEIGHT
+import com.emm.justchill.hh.transaction.components.CATEGORY_CHIP_WEIGHT
+import com.emm.justchill.hh.transaction.components.FormMetaRow
+import com.emm.justchill.hh.transaction.components.SelectorChip
 import com.emm.justchill.hh.transaction.components.SignToggle
 import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
 import com.emm.justchill.hh.transaction.sheets.CategoryPickerSheet
@@ -95,6 +97,8 @@ private fun EditTransactionContent(
     onAddNewAccount: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
+    val type = LocalEmmType.current
 
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -125,25 +129,29 @@ private fun EditTransactionContent(
             },
         )
 
-        SignToggle(
-            isSpend = isSpend,
-            onIncomeClick = { onIntent(EditTransactionIntent.OnTransactionTypeChange(TransactionType.Income)) },
-            onSpendClick = { onIntent(EditTransactionIntent.OnTransactionTypeChange(TransactionType.Spend)) },
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 2.dp),
-        )
+                .padding(horizontal = spacing.s4),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            SignToggle(
+                isSpend = isSpend,
+                onIncomeClick = { onIntent(EditTransactionIntent.OnTransactionTypeChange(TransactionType.Income)) },
+                onSpendClick = { onIntent(EditTransactionIntent.OnTransactionTypeChange(TransactionType.Spend)) },
+            )
+        }
 
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(top = 20.dp, bottom = 18.dp),
+                .padding(horizontal = spacing.s6)
+                .padding(top = spacing.s8, bottom = spacing.s6),
         ) {
             AmountHero(
                 value = centsToSoles(state.amount),
-                size = 48.sp,
+                size = type.amountL.fontSize,
                 tone = if (isSpend) AmountTone.Neutral else AmountTone.Pos,
                 showCaret = true,
             )
@@ -152,41 +160,32 @@ private fun EditTransactionContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                .padding(horizontal = spacing.s4),
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
         ) {
-            QuickChip(
-                eyebrow = "CUENTA",
-                value = state.accountSelected?.name ?: "—",
+            SelectorChip(
+                label = state.accountSelected?.name ?: "—",
                 dotColor = state.accountSelected?.let { accountDotColor(it.name, colors) },
                 onClick = { onIntent(EditTransactionIntent.OnSheetRequested(TransactionSheet.Account)) },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(ACCOUNT_CHIP_WEIGHT),
             )
 
-            QuickChip(
-                eyebrow = "CATEGORÍA",
-                value = state.categorySelected?.name ?: "—",
+            SelectorChip(
+                label = state.categorySelected?.name ?: "—",
                 dotColor = state.categorySelected?.resolvedColor?.primary,
                 onClick = { onIntent(EditTransactionIntent.OnSheetRequested(TransactionSheet.Category)) },
-                modifier = Modifier.weight(1f),
-            )
-
-            QuickChip(
-                eyebrow = "FECHA",
-                value = state.dateLabel,
-                dotColor = null,
-                onClick = { onIntent(EditTransactionIntent.OnSheetRequested(TransactionSheet.Date)) },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(CATEGORY_CHIP_WEIGHT),
             )
         }
 
-        NoteRow(
+        FormMetaRow(
+            dateLabel = state.dateLabel,
             note = state.description,
-            onClick = { onIntent(EditTransactionIntent.OnSheetRequested(TransactionSheet.Note)) },
+            onDateClick = { onIntent(EditTransactionIntent.OnSheetRequested(TransactionSheet.Date)) },
+            onNoteClick = { onIntent(EditTransactionIntent.OnSheetRequested(TransactionSheet.Note)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp),
+                .padding(horizontal = spacing.s6),
         )
 
         Spacer(Modifier.weight(1f))
@@ -206,8 +205,8 @@ private fun EditTransactionContent(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp)
-                .padding(bottom = 6.dp),
+                .padding(horizontal = spacing.s4)
+                .padding(bottom = spacing.s2),
         )
 
         StickyCTA(

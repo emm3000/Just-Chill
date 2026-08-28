@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.theme.PlexMonoFontFamily
 
 val CtaHeight = 52.dp
 
@@ -100,13 +101,15 @@ fun StickyCTA(
                         fontWeight = FontWeight.W600,
                         fontFamily = InterFontFamily,
                     )
+                    // The inline sublabel is the amount the button is about to write, and money is
+                    // mono (DESIGN_SYSTEM.md §3.1).
                     Text(
                         text = sublabel,
                         color = fgColor.copy(alpha = 0.9f),
                         style = TextStyle(
-                            fontFamily = InterFontFamily,
+                            fontFamily = PlexMonoFontFamily,
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.W600,
+                            fontWeight = FontWeight.W500,
                             letterSpacing = (-0.15).sp,
                             fontFeatureSettings = "tnum",
                         ),

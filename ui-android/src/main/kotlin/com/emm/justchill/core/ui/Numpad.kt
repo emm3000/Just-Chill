@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,15 +24,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.PlexMonoFontFamily
 
 @Composable
 fun Numpad(onDigit: (Char) -> Unit, onDoubleZero: () -> Unit, onBackspace: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
-
-    val hairline = colors.border
-    val hairline2 = colors.borderFocus
-    val surface2 = colors.surface2
+    val radii = LocalEmmRadii.current
 
     val rows = listOf(
         listOf(NumKey.Digit('1'), NumKey.Digit('2'), NumKey.Digit('3')),
@@ -40,9 +39,7 @@ fun Numpad(onDigit: (Char) -> Unit, onDoubleZero: () -> Unit, onBackspace: () ->
         listOf(NumKey.DoubleZero, NumKey.Digit('0'), NumKey.Backspace),
     )
 
-    val shapeRadius = 12.dp
-
-    androidx.compose.foundation.layout.Column(
+    Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -52,19 +49,19 @@ fun Numpad(onDigit: (Char) -> Unit, onDoubleZero: () -> Unit, onBackspace: () ->
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 row.forEach { key ->
-                    val isAccent = key is NumKey.DoubleZero || key is NumKey.Backspace
-                    val bgColor = if (isAccent) surface2 else Color.Transparent
-                    val borderColor = if (isAccent) hairline2 else hairline
-                    val shape = androidx.compose.foundation.shape.RoundedCornerShape(shapeRadius)
+                    // The two editing keys are the only filled ones: a digit is the default action
+                    // and reads as the ground, the keys that are not digits step forward off it.
+                    val isEditingKey = key is NumKey.DoubleZero || key is NumKey.Backspace
+                    val bgColor = if (isEditingKey) colors.surface1 else Color.Transparent
 
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .weight(1f)
                             .height(52.dp)
-                            .clip(shape)
+                            .clip(radii.rM)
                             .background(bgColor)
-                            .border(BorderStroke(1.dp, borderColor), shape)
+                            .border(BorderStroke(1.dp, colors.border), radii.rM)
                             .clickable {
                                 when (key) {
                                     is NumKey.Digit -> onDigit(key.ch)

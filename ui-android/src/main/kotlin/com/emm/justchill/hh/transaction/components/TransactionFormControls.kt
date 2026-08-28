@@ -6,21 +6,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -30,17 +25,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
-import com.emm.justchill.core.theme.PlexMonoFontFamily
-import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.theme.LocalEmmSpacing
+import com.emm.justchill.core.theme.LocalEmmType
 
+// Both segments hold the same width so the pill keeps its size and its centre when the selection
+// moves; sizing each to its own label would shift "Ingreso"/"Gasto" sideways on every tap.
+private val SignSegmentWidth: Dp = 96.dp
+
+/**
+ * Selection reads through the text ladder and one surface step — never a tint. An expense is not
+ * red and an income is not green here (`DESIGN_SYSTEM.md` §1.4); the amount above carries that.
+ */
 @Composable
 internal fun SignToggle(
     isSpend: Boolean,
@@ -49,305 +53,176 @@ internal fun SignToggle(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
-    val containerShape = RoundedCornerShape(12.dp)
-    val cellShape = RoundedCornerShape(9.dp)
+    val radii = LocalEmmRadii.current
+    val spacing = LocalEmmSpacing.current
 
     Row(
         modifier = modifier
-            .clip(containerShape)
-            .background(colors.surface1)
-            .border(1.dp, colors.border, containerShape)
-            .padding(3.dp)
-            .height(38.dp),
+            .height(spacing.s12)
+            .clip(radii.rFull)
+            .background(colors.bg)
+            .border(1.dp, colors.border, radii.rFull),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        val incomeActive = !isSpend
-        Row(
+        SignSegment(label = "Ingreso", selected = !isSpend, onClick = onIncomeClick)
+        SignSegment(label = "Gasto", selected = isSpend, onClick = onSpendClick)
+    }
+}
+
+@Composable
+private fun SignSegment(label: String, selected: Boolean, onClick: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val radii = LocalEmmRadii.current
+    val spacing = LocalEmmSpacing.current
+    val type = LocalEmmType.current
+
+    // The target is the whole segment; the fill sits inset inside it, so a tap on the pill's edge
+    // still selects (DESIGN_SYSTEM.md §4). Selection is a surface step and a weight — neither
+    // reaches TalkBack, so it is stated.
+    Box(
+        modifier = Modifier
+            .width(SignSegmentWidth)
+            .fillMaxHeight()
+            .semantics { this.selected = selected }
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            ),
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
-                .weight(1f)
                 .fillMaxSize()
-                .clip(cellShape)
-                .then(
-                    if (incomeActive) {
-                        Modifier
-                            .background(colors.surface3)
-                            .border(1.dp, colors.borderFocus, cellShape)
-                    } else {
-                        Modifier
-                    },
-                )
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onIncomeClick,
-                ),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(spacing.s1)
+                .clip(radii.rFull)
+                .background(if (selected) colors.surface2 else Color.Transparent),
         ) {
             Text(
-                text = "+",
-                color = colors.success,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.W700,
-                fontFamily = PlexMonoFontFamily,
-            )
-            Spacer(Modifier.size(6.dp))
-            Text(
-                text = "Ingreso",
-                fontSize = 12.sp,
-                fontWeight = if (incomeActive) FontWeight.W600 else FontWeight.W500,
-                fontFamily = InterFontFamily,
-                color = if (incomeActive) colors.textPrimary else colors.textTertiary,
+                text = label,
+                style = type.labelL,
+                fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
+                color = if (selected) colors.textPrimary else colors.textTertiary,
             )
         }
+    }
+}
 
+// The two chips share a row and not its width: a category name ("Supermercado") is the longest
+// label the form carries, an account is a bank's four letters.
+internal const val ACCOUNT_CHIP_WEIGHT = 1f
+internal const val CATEGORY_CHIP_WEIGHT = 1.6f
+
+@Composable
+internal fun SelectorChip(
+    label: String,
+    dotColor: Color?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    trailingIcon: ImageVector = Icons.Outlined.KeyboardArrowDown,
+) {
+    val colors = LocalEmmColors.current
+    val radii = LocalEmmRadii.current
+    val spacing = LocalEmmSpacing.current
+    val type = LocalEmmType.current
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .height(spacing.s12)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            ),
+    ) {
         Row(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxSize()
-                .clip(cellShape)
-                .then(
-                    if (isSpend) {
-                        Modifier
-                            .background(colors.surface3)
-                            .border(1.dp, colors.borderFocus, cellShape)
-                    } else {
-                        Modifier
-                    },
-                )
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onSpendClick,
-                ),
-            horizontalArrangement = Arrangement.Center,
+                .fillMaxWidth()
+                .height(spacing.s10)
+                .clip(radii.rFull)
+                .background(colors.surface1)
+                .border(1.dp, colors.border, radii.rFull)
+                .padding(horizontal = spacing.s3),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
         ) {
+            if (dotColor != null) {
+                ChipDot(color = dotColor)
+            }
             Text(
-                text = "−",
-                color = colors.danger,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.W700,
-                fontFamily = PlexMonoFontFamily,
+                text = label,
+                style = type.labelL,
+                color = colors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
             )
-            Spacer(Modifier.size(6.dp))
-            Text(
-                text = "Gasto",
-                fontSize = 12.sp,
-                fontWeight = if (isSpend) FontWeight.W600 else FontWeight.W500,
-                fontFamily = InterFontFamily,
-                color = if (isSpend) colors.textPrimary else colors.textTertiary,
+            Icon(
+                imageVector = trailingIcon,
+                contentDescription = null,
+                tint = colors.textTertiary,
+                modifier = Modifier.size(spacing.s4),
             )
         }
     }
 }
 
 @Composable
-internal fun QuickChip(
-    eyebrow: String,
-    value: String,
+internal fun FrequentComboChip(
+    label: String,
     dotColor: Color?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    cta: Boolean = false,
+    active: Boolean = false,
 ) {
     val colors = LocalEmmColors.current
-    val chipShape = RoundedCornerShape(10.dp)
+    val radii = LocalEmmRadii.current
+    val spacing = LocalEmmSpacing.current
+    val type = LocalEmmType.current
 
-    val borderColor = if (cta) colors.accent else colors.border
-    val eyebrowColor: Color? = if (cta) colors.accent else null
-    val valueColor = if (cta) colors.accent else colors.textPrimary
-    val trailingIcon = if (cta) Icons.Outlined.Add else Icons.Outlined.KeyboardArrowDown
-    val trailingTint = if (cta) colors.accent else colors.textDisabled
-
-    Row(
+    Box(
+        contentAlignment = Alignment.Center,
         modifier = modifier
-            .clip(chipShape)
-            .background(colors.surface1)
-            .border(1.dp, borderColor, chipShape)
+            .height(spacing.s12)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick,
-            )
-            .padding(horizontal = 10.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(7.dp),
+            ),
     ) {
-        if (dotColor != null) {
-            Box(
-                modifier = Modifier
-                    .size(6.dp)
-                    .clip(CircleShape)
-                    .background(dotColor),
-            )
-        }
-
-        Column(modifier = Modifier.weight(1f)) {
-            Eyebrow(text = eyebrow, color = eyebrowColor)
+        Row(
+            modifier = Modifier
+                .height(spacing.s8)
+                .clip(radii.rFull)
+                .background(if (active) colors.surface2 else colors.surface1)
+                .border(1.dp, if (active) colors.borderFocus else colors.border, radii.rFull)
+                .padding(horizontal = spacing.s3),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+        ) {
+            if (dotColor != null) {
+                ChipDot(color = dotColor)
+            }
             Text(
-                text = value,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.W600,
-                fontFamily = InterFontFamily,
-                color = valueColor,
-                letterSpacing = (-0.06).sp,
+                text = label,
+                style = type.labelM,
+                color = colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         }
-
-        Icon(
-            imageVector = trailingIcon,
-            contentDescription = null,
-            tint = trailingTint,
-            modifier = Modifier.size(11.dp),
-        )
     }
 }
 
 @Composable
-internal fun FrequentComboChip(label: String, dotColor: Color?, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val chipShape = RoundedCornerShape(999.dp)
+private fun ChipDot(color: Color) {
+    val spacing = LocalEmmSpacing.current
 
-    Row(
-        modifier = modifier
-            .clip(chipShape)
-            .background(colors.surface1)
-            .border(1.dp, colors.border, chipShape)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            )
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(7.dp),
-    ) {
-        if (dotColor != null) {
-            Box(
-                modifier = Modifier
-                    .size(6.dp)
-                    .clip(CircleShape)
-                    .background(dotColor),
-            )
-        }
-
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.W600,
-            fontFamily = InterFontFamily,
-            color = colors.textPrimary,
-            letterSpacing = (-0.06).sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-@Composable
-internal fun NoteRow(note: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    if (note.isBlank()) {
-        NoteEmptyButton(onClick = onClick, modifier = modifier)
-    } else {
-        NoteFilledCard(note = note, onClick = onClick, modifier = modifier)
-    }
-}
-
-@Composable
-private fun NoteEmptyButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val interactionSource = remember { MutableInteractionSource() }
-
-    Row(
-        modifier = modifier.clickable(
-            interactionSource = interactionSource,
-            indication = null,
-            onClick = onClick,
-        ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Add,
-            contentDescription = null,
-            tint = colors.textTertiary,
-            modifier = Modifier.size(11.dp),
-        )
-        Spacer(Modifier.size(5.dp))
-        Text(
-            text = "Agregar nota",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
-            color = colors.textTertiary,
-        )
-    }
-}
-
-@Composable
-private fun NoteFilledCard(note: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-    val interactionSource = remember { MutableInteractionSource() }
-
-    Row(
-        modifier = modifier
-            .clip(radii.rM)
-            .background(colors.surface1)
-            .border(1.dp, colors.border, radii.rM)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-            )
-            .height(IntrinsicSize.Min),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(3.dp)
-                .background(colors.accent),
-        )
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            Text(
-                text = "NOTA",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.W500,
-                fontFamily = InterFontFamily,
-                color = colors.textTertiary,
-                letterSpacing = 1.4.sp,
-            )
-            Text(
-                text = note,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.W400,
-                fontFamily = InterFontFamily,
-                fontStyle = FontStyle.Italic,
-                color = colors.textSecondary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(40.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Edit,
-                contentDescription = "Editar nota",
-                tint = colors.textTertiary,
-                modifier = Modifier.size(14.dp),
-            )
-        }
-    }
+    Box(
+        modifier = Modifier
+            .size(spacing.s2)
+            .clip(CircleShape)
+            .background(color),
+    )
 }
