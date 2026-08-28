@@ -69,6 +69,9 @@ CREATE INDEX IF NOT EXISTS transactions_user_deleted_idx ON transactions(userId,
 all:
 SELECT * FROM transactions WHERE deletedAt IS NULL ORDER BY occurredAt DESC;
 
+-- No `deletedAt IS NULL` on the accounts join, unlike the categories one: accountId is a NOT NULL
+-- FK and DeleteAccountUseCase refuses while the account still holds live transactions, so a live
+-- row can never point at an account that is gone. Filtering here would only blank a real name.
 completeTransactions:
 SELECT
     t.*,

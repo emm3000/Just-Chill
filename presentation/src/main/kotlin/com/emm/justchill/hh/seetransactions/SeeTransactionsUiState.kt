@@ -45,7 +45,7 @@ data class SeeTransactionsUiState(
     val pendingRecurringMovements: List<PendingRecurringUi> = emptyList(),
     /** The clock's real month, refreshed each time [pendingRecurringMovements] re-emits. */
     val currentMonth: YearMonth = month,
-    /** The clock's day, refreshed with [currentMonth]; `null` until that first emission. */
+    /** The clock's day, straight off [com.emm.justchill.core.time.TodayFlow]; `null` before its first emission. */
     val today: LocalDate? = null,
     /**
      * The id of the [PendingRecurringUi] the confirm sheet is open for, resolved from
@@ -82,13 +82,13 @@ data class SeeTransactionsUiState(
             else -> ListDisplayState.EmptyMonth
         }
 
-    /**
-     * The nudge is about the day the user is living, so it shows only where that day would be:
-     * the browsed month is the real one, nothing is filtering across months, and no group stands
-     * for today already.
-     */
+    /** [ListDisplayState.EmptyLedger] already fills the screen with the same invitation. */
     val isTodayNudgeVisible: Boolean
-        get() = !isFilterActive && month == currentMonth && today != null && days.none { it.date == today }
+        get() = !isFilterActive &&
+            month == currentMonth &&
+            today != null &&
+            listDisplayState != ListDisplayState.EmptyLedger &&
+            days.none { it.date == today }
 
     /**
      * Pending recurring movements are about "now": a filtered list stays filtered, and browsing a

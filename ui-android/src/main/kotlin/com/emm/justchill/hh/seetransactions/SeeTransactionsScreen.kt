@@ -49,6 +49,7 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.hh.recurring.ConfirmRecurringSheet
@@ -112,16 +113,14 @@ private fun SeeTransactionsContent(
             )
         } else {
             ScreenHeader(
-                state = state,
-                onPreviousMonth = { onIntent(SeeTransactionsIntent.OnPreviousMonth) },
-                onNextMonth = { onIntent(SeeTransactionsIntent.OnNextMonth) },
-                onSearch = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnSearchRequested) },
-                onFilter = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnFilterSheetRequested) },
+                month = state.month.takeIf { state.isMonthSelectorVisible },
+                isCategoryFilterActive = state.activeCategory != null,
+                onIntent = onIntent,
             )
         }
 
-        val summary = state.summary
-        if (summary != null && state.listDisplayState == ListDisplayState.Content) {
+        val summary = state.summary?.takeIf { state.listDisplayState == ListDisplayState.Content }
+        if (summary != null) {
             MonthSummary(summary = summary)
         }
 
@@ -129,7 +128,9 @@ private fun SeeTransactionsContent(
             TodayNudgeCard(onClick = navigateToAdd)
         }
 
-        Spacer(Modifier.height(8.dp))
+        if (summary != null || state.isTodayNudgeVisible) {
+            Spacer(Modifier.height(LocalEmmSpacing.current.s2))
+        }
 
         val activeCategory = state.activeCategory
         if (activeCategory != null) {
@@ -600,6 +601,24 @@ private fun SeeTransactionsNoResultsPreview() {
                 movementCount = 5,
                 query = "café",
                 activeCategory = ActiveCategoryInfo("1", "Comida"),
+            ),
+            onIntent = {},
+            navigateToEdit = {},
+            navigateToAdd = {},
+        )
+    }
+}
+
+/** The calendar's longest month name, beside both header actions — the title's step-down case. */
+@Preview
+@Composable
+private fun SeeTransactionsLongMonthPreview() {
+    EmmTheme {
+        SeeTransactionsContent(
+            state = SeeTransactionsUiState(
+                month = YearMonth(2026, Month.SEPTEMBER),
+                movementCount = 12,
+                today = LocalDate(2026, 9, 10),
             ),
             onIntent = {},
             navigateToEdit = {},

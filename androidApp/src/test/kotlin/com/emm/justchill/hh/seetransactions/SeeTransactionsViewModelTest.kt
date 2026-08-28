@@ -24,6 +24,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -90,6 +91,18 @@ class SeeTransactionsViewModelTest {
         skipRecurring,
         FakeTodayFlow(today),
     )
+
+    @Test
+    fun `today reaches the state even when the pending flow never emits`() = runTest(testDispatcher) {
+        // The nudge card reads state.today. Sourcing it from the pending stream made a broken
+        // recurring query silently hide the nudge instead of only the pending rows.
+        every { getPendingRecurringMovements(any()) } returns emptyFlow()
+
+        val viewModel = buildViewModel()
+        advanceUntilIdle()
+
+        assertEquals(TODAY, viewModel.state.value.today)
+    }
 
     private fun tx(
         id: String,

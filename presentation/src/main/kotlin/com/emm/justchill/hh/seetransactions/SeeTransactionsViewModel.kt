@@ -134,6 +134,7 @@ class SeeTransactionsViewModel(
             .launchSafeIn(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) })
 
         today
+            .onEach { date -> updateState { copy(today = date) } }
             .map { date -> YearMonth.of(date) }
             .onEach { month ->
                 val previousCalendarMonth = calendarMonth
@@ -248,7 +249,6 @@ class SeeTransactionsViewModel(
         return copy(
             pendingRecurringMovements = pending.map { it.toPendingRecurringUi(currentMonth) },
             currentMonth = currentMonth,
-            today = today,
         )
     }
 

@@ -20,10 +20,8 @@ data class TransactionUi(
     val category: CategoryUi,
 ) {
 
-    /** What the user wrote; a blank one names the movement instead of announcing the blank. */
     val title: String get() = description.ifBlank { categoryName }
 
-    /** Whatever [title] left unsaid — the category drops out once it is the title itself. */
     val subtitle: String
         get() = listOfNotNull(
             categoryName.takeIf { description.isNotBlank() },

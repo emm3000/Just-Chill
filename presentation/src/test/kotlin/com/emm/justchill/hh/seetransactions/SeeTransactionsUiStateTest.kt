@@ -133,6 +133,19 @@ class SeeTransactionsUiStateTest {
         assertFalse(state.isTodayNudgeVisible)
     }
 
+    @Test fun the_today_nudge_hides_on_an_empty_ledger_that_already_says_so_full_screen() {
+        val state = SeeTransactionsUiState(month = august, movementCount = 0, today = LocalDate(2026, 8, 11))
+
+        assertFalse(state.isTodayNudgeVisible)
+    }
+
+    @Test fun the_today_nudge_survives_an_empty_month_inside_a_stocked_ledger() {
+        val state = SeeTransactionsUiState(month = august, movementCount = 12, today = LocalDate(2026, 8, 11))
+
+        assertEquals(ListDisplayState.EmptyMonth, state.listDisplayState)
+        assertTrue(state.isTodayNudgeVisible)
+    }
+
     @Test fun the_today_nudge_stays_hidden_until_the_clock_has_named_a_day() {
         val state = SeeTransactionsUiState(month = august, movementCount = 12)
 

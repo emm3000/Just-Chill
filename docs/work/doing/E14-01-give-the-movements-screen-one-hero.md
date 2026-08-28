@@ -32,14 +32,24 @@ are not in `TransactionUi` today — source them in the `:presentation` mapper, 
 ## Status
 
 Everything but the screenshot is proved and shipped; the ticket stays open for that one check.
+Reviewer round 1 (FIX-FIRST on c0ae0562) is answered in full.
 
-- Header, hero, nudge, rows, pending tile, tab labels: implemented; `qualityGate --rerun-tasks` and
-  `assembleDevDebug` both green.
 - Proofs: `TransactionUiTest` (title/subtitle fallbacks), `SeeTransactionsUiStateTest`
-  (`isTodayNudgeVisible`, shown + four hidden cases), `:ui-android:compileDebugKotlin` for the
-  previews.
-- **Open:** the emulator screenshot against the "Inicio · propuesta" artboard. Three divergences to
-  judge there: `TransactionRow`'s tile went `Sm` → `Lg` (the artboard's 40px, and the only size that
-  makes the pending row's `Lg` tile align), the rule under the summary block is gone (the artboard
-  draws none, and it would double the nudge card's own border), and the month title steps down from
-  28sp when it must — "Septiembre 2026" does not fit beside both header actions on a phone.
+  (`isTodayNudgeVisible`: shown, plus hidden on a dated-today group, a past month, an active filter,
+  an empty ledger and a clock that has not spoken), `SeeTransactionsViewModelTest`
+  (`today` lands even when the pending flow never emits), `:ui-android:compileDebugKotlin` for the
+  previews. `qualityGate --rerun-tasks` and `assembleDevDebug` green.
+
+- **Open:** the emulator screenshot against the "Inicio · propuesta" artboard. Four deliberate
+  divergences to judge there:
+  - Header chevrons and actions are 48dp, not the artboard's 32/40px — DESIGN_SYSTEM §4 makes 48
+    non-negotiable. The outer padding gives back the 14dp a 48dp target wraps its 20dp glyph in, so
+    the icons still stand on the 24dp column the rows use.
+  - `TransactionRow`'s tile went `Sm` → `Lg`: the artboard's 40px, and the only size that makes the
+    pending row's `Lg` tile line up with it.
+  - No rule under the summary block: the artboard draws none, and it would double the nudge card's
+    own border.
+  - The month title steps down from 28sp when it must. Measured against the bundled Inter faces:
+    "Septiembre 2026" wants 230dp; the title gets 228dp at 448dp wide (27sp), 191dp at 411 (23sp),
+    173dp at 393 (21sp). Below ~370dp it reaches the 18sp floor and ellipsises — the floor stays a
+    real type token rather than shrinking the screen title under the row titles.

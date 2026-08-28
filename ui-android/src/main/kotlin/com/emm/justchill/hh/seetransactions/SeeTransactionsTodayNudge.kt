@@ -23,7 +23,6 @@ import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 
-/** The only door on this screen to today's entry, so it must never be gated on having data. */
 @Composable
 internal fun TodayNudgeCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
@@ -44,7 +43,7 @@ internal fun TodayNudgeCard(onClick: () -> Unit, modifier: Modifier = Modifier) 
     ) {
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(spacing.s1),
         ) {
             Text(text = "Hoy no anotaste nada", style = type.labelL, color = colors.textPrimary)
             Text(text = "30 segundos y listo", style = type.caption, color = colors.textTertiary)
