@@ -49,10 +49,21 @@ data class SeeTransactionsUiState(
      * [pendingRecurringMovements]; `null` means the sheet is closed (ADR 012 Decision 2).
      */
     val confirmSheetPendingId: String? = null,
+    /** Whether the category filter sheet is rendered over this screen (ADR 012 Decision 2). */
+    val showFilterSheet: Boolean = false,
+    /**
+     * Whether the search bar replaces the header, even before any character is typed — closing it
+     * is [isSearchOpen]'s other half, alongside a non-blank [query] (ADR 012 Decision 2).
+     */
+    val searchRequested: Boolean = false,
 ) : UiState {
 
     val isFilterActive: Boolean
         get() = query.isNotBlank() || activeCategory != null
+
+    /** Open once requested, and still open while there is a query left to clear. */
+    val isSearchOpen: Boolean
+        get() = searchRequested || query.isNotBlank()
 
     /**
      * A filter turns the list into a cross-month search, so the month selector steps aside; in

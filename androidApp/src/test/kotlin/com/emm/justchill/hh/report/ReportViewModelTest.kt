@@ -484,19 +484,18 @@ class ReportViewModelTest {
     }
 
     @Test
-    fun `OnMonthSheetRequested opens the month sheet and OnMonthSheetDismissed closes it`() =
-        runTest(testDispatcher) {
-            stubEmptyReport()
-            val vm = buildViewModel()
-            advanceUntilIdle()
-            assertFalse(vm.state.value.showMonthSheet)
+    fun `OnMonthSheetRequested opens the month sheet and OnMonthSheetDismissed closes it`() = runTest(testDispatcher) {
+        stubEmptyReport()
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        assertFalse(vm.state.value.showMonthSheet)
 
-            vm.onIntent(ReportIntent.OnMonthSheetRequested)
-            advanceUntilIdle()
-            assertTrue(vm.state.value.showMonthSheet)
+        vm.onIntent(ReportIntent.OnMonthSheetRequested)
+        advanceUntilIdle()
+        assertTrue(vm.state.value.showMonthSheet)
 
-            vm.onIntent(ReportIntent.OnMonthSheetDismissed)
-            advanceUntilIdle()
-            assertFalse(vm.state.value.showMonthSheet)
-        }
+        vm.onIntent(ReportIntent.OnMonthSheetDismissed)
+        advanceUntilIdle()
+        assertFalse(vm.state.value.showMonthSheet)
+    }
 }

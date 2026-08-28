@@ -615,4 +615,53 @@ class SeeTransactionsViewModelTest {
         assertEquals("", state.query)
         assertFalse(state.isFilterActive)
     }
+
+    @Test
+    fun `OnFilterSheetRequested opens the filter sheet and OnFilterSheetDismissed closes it`() =
+        runTest(testDispatcher) {
+            val vm = buildViewModel()
+            advanceUntilIdle()
+            assertFalse(vm.state.value.showFilterSheet)
+
+            vm.onIntent(SeeTransactionsIntent.OnFilterSheetRequested)
+            advanceUntilIdle()
+            assertTrue(vm.state.value.showFilterSheet)
+
+            vm.onIntent(SeeTransactionsIntent.OnFilterSheetDismissed)
+            advanceUntilIdle()
+            assertFalse(vm.state.value.showFilterSheet)
+        }
+
+    @Test
+    fun `OnSearchRequested opens search and OnSearchClosed closes it again`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        assertFalse(vm.state.value.isSearchOpen)
+
+        vm.onIntent(SeeTransactionsIntent.OnSearchRequested)
+        advanceUntilIdle()
+        assertTrue(vm.state.value.isSearchOpen)
+
+        vm.onIntent(SeeTransactionsIntent.OnSearchClosed)
+        advanceUntilIdle()
+        assertFalse(vm.state.value.isSearchOpen)
+    }
+
+    @Test
+    fun `OnSearchClosed clears the query as well as searchRequested`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnSearchRequested)
+        vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
+        advanceTimeBy(300L)
+        advanceUntilIdle()
+        assertEquals("café", vm.state.value.query)
+
+        vm.onIntent(SeeTransactionsIntent.OnSearchClosed)
+        advanceUntilIdle()
+
+        assertEquals("", vm.state.value.query)
+        assertFalse(vm.state.value.isSearchOpen)
+    }
 }

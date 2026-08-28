@@ -24,4 +24,16 @@ sealed interface SeeTransactionsIntent : UiIntent {
 
     /** The user dismissed the confirm sheet without confirming or skipping. */
     data object OnConfirmSheetDismissed : SeeTransactionsIntent
+
+    /** Opens the category filter sheet. */
+    data object OnFilterSheetRequested : SeeTransactionsIntent
+
+    /** The user dismissed the category filter sheet. */
+    data object OnFilterSheetDismissed : SeeTransactionsIntent
+
+    /** The user tapped the search icon; the search bar replaces the header. */
+    data object OnSearchRequested : SeeTransactionsIntent
+
+    /** The user closed search, from the back gesture or the search bar's own close button. */
+    data object OnSearchClosed : SeeTransactionsIntent
 }

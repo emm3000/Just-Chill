@@ -5,15 +5,15 @@
 
 ## Done when
 
-- [ ] `AddTransactionScreen` and `EditTransaction` read `showAccountSheet`, `showCategorySheet`,
+- [x] `AddTransactionScreen` and `EditTransaction` read `showAccountSheet`, `showCategorySheet`,
       `showDateSheet` and `showNoteSheet` from `state`; opening and closing each one is an intent.
-- [ ] `AddEditLoanScreen`'s `showAmountSheet` and `showDateSheet`, `ReportScreen`'s `showMonthSheet`,
+- [x] `AddEditLoanScreen`'s `showAmountSheet` and `showDateSheet`, `ReportScreen`'s `showMonthSheet`,
       and `SeeTransactionsScreen`'s `showFilterSheet` and `searchRequested` move the same way.
-- [ ] Each affected ViewModel test drives open then close through `onIntent` and asserts
+- [x] Each affected ViewModel test drives open then close through `onIntent` and asserts
       `state.value`.
-- [ ] `rg rememberSaveable ui-android/src` returns only the out-of-scope drafts below,
+- [x] `rg rememberSaveable ui-android/src` returns only the out-of-scope drafts below,
       `AppNavHost`'s `rememberSaveableStateHolderNavEntryDecorator`, and `AuthScreen`'s comment.
-- [ ] `./gradlew qualityGate --rerun-tasks` and `./gradlew :androidApp:testDevDebugUnitTest --rerun`
+- [x] `./gradlew qualityGate --rerun-tasks` and `./gradlew :androidApp:testDevDebugUnitTest --rerun`
       pass.
 
 ## Context

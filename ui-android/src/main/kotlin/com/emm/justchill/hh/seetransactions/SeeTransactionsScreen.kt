@@ -28,10 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -90,38 +87,28 @@ private fun SeeTransactionsContent(
 ) {
     val colors = LocalEmmColors.current
 
-    var showFilterSheet by rememberSaveable { mutableStateOf(false) }
-    var searchRequested by rememberSaveable { mutableStateOf(false) }
-
     val pendingMap = remember(state.pendingRecurringMovements) {
         state.pendingRecurringMovements.associateBy { it.id }
     }
 
-    val isSearchOpen = searchRequested || state.query.isNotBlank()
-
-    fun closeSearch() {
-        searchRequested = false
-        onIntent(SeeTransactionsIntent.OnQueryChanged(""))
-    }
-
-    BackHandler(enabled = isSearchOpen) { closeSearch() }
+    BackHandler(enabled = state.isSearchOpen) { onIntent(SeeTransactionsIntent.OnSearchClosed) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg),
     ) {
-        if (isSearchOpen) {
+        if (state.isSearchOpen) {
             SearchBar(
                 query = state.query,
                 onQueryChange = { onIntent(SeeTransactionsIntent.OnQueryChanged(it)) },
-                onClose = { closeSearch() },
+                onClose = { onIntent(SeeTransactionsIntent.OnSearchClosed) },
             )
         } else {
             ScreenHeader(
                 isCategoryFilterActive = state.activeCategory != null,
-                onSearch = { searchRequested = true },
-                onFilter = { showFilterSheet = true },
+                onSearch = { onIntent(SeeTransactionsIntent.OnSearchRequested) },
+                onFilter = { onIntent(SeeTransactionsIntent.OnFilterSheetRequested) },
             )
         }
 
@@ -152,7 +139,7 @@ private fun SeeTransactionsContent(
         )
     }
 
-    if (showFilterSheet) {
+    if (state.showFilterSheet) {
         CategoryFilterSheet(
             items = state.sheetItems,
             incomeCount = state.incomeCount,
@@ -164,7 +151,7 @@ private fun SeeTransactionsContent(
                 ?: CategoryType.Spend,
             onSelect = { onIntent(SeeTransactionsIntent.OnCategorySelected(it)) },
             onClear = { onIntent(SeeTransactionsIntent.OnClearCategoryFilter) },
-            onDismiss = { showFilterSheet = false },
+            onDismiss = { onIntent(SeeTransactionsIntent.OnFilterSheetDismissed) },
         )
     }
 
