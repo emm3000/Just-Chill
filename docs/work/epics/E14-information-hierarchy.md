@@ -51,3 +51,10 @@ information shown and the navigation to change. This epic does that, one screen 
   48dp band gets a ~20dp touch box unless it carries `fillMaxHeight()` itself — `FormMetaRow`'s
   `DateAction`/`NoteAction` are the pattern. Dropping that modifier passes every gate and reopens
   `DESIGN_SYSTEM.md` §4.
+
+- **A positive aggregate is positive money too, not just a positive transaction (E14-05).**
+  `Money.positiveMoneyFormatted()` (`:presentation`) is what signs `+` on a month net or a total
+  owed; a new aggregate reaching for `formatNeutral`/`balanceFormatted` instead reopens the
+  monochrome-positive bug this ticket closed. Resolve the tint through `AmountTone.color()`
+  (`:ui-android`) too — an inline `if (positive) success else textPrimary` in a composable is the
+  same regression with no shared fix.

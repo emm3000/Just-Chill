@@ -175,16 +175,19 @@ private val previewAccounts = listOf(
         account = Account(accountId = AccountId("1"), name = "BCP", type = AccountType.Bank),
         movementCount = 5,
         net = "−S/ 193.45",
+        netIsPositive = false,
     ),
     AccountMonthUi(
         account = Account(accountId = AccountId("2"), name = "Efectivo", type = AccountType.Cash),
         movementCount = 0,
         net = "S/ 0.00",
+        netIsPositive = false,
     ),
     AccountMonthUi(
         account = Account(accountId = AccountId("3"), name = "Yape", type = AccountType.Wallet),
         movementCount = 12,
-        net = "S/ 1,240.00",
+        net = "+S/ 1,240.00",
+        netIsPositive = true,
     ),
 )
 

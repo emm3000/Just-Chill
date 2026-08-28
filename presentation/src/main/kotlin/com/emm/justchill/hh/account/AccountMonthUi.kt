@@ -5,15 +5,16 @@ import com.emm.domain.shared.Money
 import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionType
-import com.emm.justchill.hh.shared.balanceFormatted
 import com.emm.justchill.hh.shared.formatNeutral
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
+import com.emm.justchill.hh.shared.positiveMoneyFormatted
 
 /**
  * An account has no opening balance, so [net] is a monthly net and never a balance — the screen owes
- * the user the "este mes" caption that says so.
+ * the user the "este mes" caption that says so. [netIsPositive] is the raw sign [net] already
+ * formats into `+`/`−`/nothing — DESIGN_SYSTEM.md §1.4 tone lives at the render site, not here.
  */
-data class AccountMonthUi(val account: Account, val movementCount: Int, val net: String)
+data class AccountMonthUi(val account: Account, val movementCount: Int, val net: String, val netIsPositive: Boolean)
 
 internal data class AccountsMonthSlice(
     val month: YearMonth,
@@ -37,7 +38,13 @@ internal fun accountsMonthSlice(
         month = month,
         accounts = accounts.map { account ->
             val own = byAccount[account.accountId].orEmpty()
-            AccountMonthUi(account = account, movementCount = own.size, net = own.net().balanceFormatted())
+            val net = own.net()
+            AccountMonthUi(
+                account = account,
+                movementCount = own.size,
+                net = net.positiveMoneyFormatted(),
+                netIsPositive = net.cents > 0L,
+            )
         },
         spent = byAccount.values.flatten().total(TransactionType.Spend).unsigned(),
         income = byAccount.values.flatten().total(TransactionType.Income).unsigned(),

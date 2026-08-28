@@ -18,3 +18,11 @@ fun formatNeutral(value: String): String = "$CURRENCY_SYMBOL $value"
  */
 fun Money.balanceFormatted(): String =
     if (cents < 0L) formatExpense(fromCentsToSolesWith(this)) else formatNeutral(fromCentsToSolesWith(this))
+
+/**
+ * DESIGN_SYSTEM.md §1.4: a positive aggregate — a month net, a total owed — is positive money,
+ * signed `+` here so the call site can tint it `success`. Zero has no direction to point in and
+ * negative already carries [balanceFormatted]'s `−`; both fall through to it unsigned-of-a-plus.
+ */
+fun Money.positiveMoneyFormatted(): String =
+    if (cents > 0L) formatIncome(fromCentsToSolesWith(this)) else balanceFormatted()

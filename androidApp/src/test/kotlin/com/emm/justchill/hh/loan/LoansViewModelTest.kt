@@ -30,7 +30,7 @@ class LoansViewModelTest {
     private val loanRepository = mockk<LoanRepository>()
 
     @Test
-    fun `balancesByPerson maps to PersonBalanceUi with the money formatted neutral`() = runTest {
+    fun `balancesByPerson maps to PersonBalanceUi with the money signed positive`() = runTest {
         every { loanRepository.balancesByPerson() } returns flowOf(
             listOf(PersonBalance(personKey = "ana", personName = "Ana", remaining = Money(150_000L))),
         )
@@ -41,7 +41,8 @@ class LoansViewModelTest {
         val person = viewModel.state.value.people.single()
         assertEquals("ana", person.personKey)
         assertEquals("Ana", person.personName)
-        assertEquals("S/ 1,500.00", person.remaining)
+        assertEquals("+S/ 1,500.00", person.remaining)
+        assertTrue(person.remainingIsPositive)
     }
 
     @Test

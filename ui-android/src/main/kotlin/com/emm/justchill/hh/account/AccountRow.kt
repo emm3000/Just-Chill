@@ -23,9 +23,11 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.EmmRowMenu
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconTileSize
+import com.emm.justchill.core.ui.atoms.color
 
 // EmmRowMenu wraps an 18dp glyph in a 48dp target (DESIGN_SYSTEM.md §4); the row gives the surplus
 // back at the screen edge so the glyph still sits on the 24dp column the header and the tiles use.
@@ -74,7 +76,7 @@ internal fun AccountRow(row: AccountMonthUi, onEdit: () -> Unit, onDelete: () ->
                 Text(
                     text = row.net,
                     style = type.amountM,
-                    color = if (row.movementCount == 0) colors.textTertiary else colors.textPrimary,
+                    color = accountNetTone(row.movementCount, row.netIsPositive).color(colors),
                 )
                 Text(text = "este mes", style = type.caption, color = colors.textTertiary)
             }
@@ -89,6 +91,16 @@ internal fun accountSubtitle(typeLabel: String, movementCount: Int): String = wh
     0 -> "Sin movimientos este mes"
     1 -> "$typeLabel · 1 movimiento"
     else -> "$typeLabel · $movementCount movimientos"
+}
+
+/**
+ * DESIGN_SYSTEM.md §1.4: a positive net is positive money — `success` — but only once the account
+ * has activity; a silent account keeps its muted step regardless of what its empty net would sign.
+ */
+internal fun accountNetTone(movementCount: Int, netIsPositive: Boolean): AmountTone = when {
+    movementCount == 0 -> AmountTone.Mute
+    netIsPositive -> AmountTone.Pos
+    else -> AmountTone.Neutral
 }
 
 @Composable

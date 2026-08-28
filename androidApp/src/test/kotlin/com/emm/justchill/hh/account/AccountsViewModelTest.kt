@@ -30,6 +30,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class AccountsViewModelTest {
 
@@ -112,7 +114,7 @@ class AccountsViewModelTest {
     }
 
     @Test
-    fun `an account whose income outweighs its spend nets positive, unsigned`() = runTest {
+    fun `an account whose income outweighs its spend nets positive, signed`() = runTest {
         every { accountRepository.all() } returns flowOf(listOf(bcp, cash))
         every { transactionRepository.all() } returns flowOf(
             listOf(
@@ -125,9 +127,11 @@ class AccountsViewModelTest {
 
         advanceUntilIdle()
 
-        assertEquals("S/ 3,000.00", rowFor(bcp).net)
+        assertEquals("+S/ 3,000.00", rowFor(bcp).net)
+        assertTrue(rowFor(bcp).netIsPositive)
         assertEquals(2, rowFor(bcp).movementCount)
         assertEquals("−S/ 25.50", rowFor(cash).net)
+        assertFalse(rowFor(cash).netIsPositive)
     }
 
     @Test

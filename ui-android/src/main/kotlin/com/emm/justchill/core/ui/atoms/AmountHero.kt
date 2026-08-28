@@ -58,11 +58,7 @@ fun AmountHero(
 ) {
     val colors = LocalEmmColors.current
 
-    val mainColor: Color = when (tone) {
-        AmountTone.Neutral -> colors.textPrimary
-        AmountTone.Pos -> colors.success
-        AmountTone.Mute -> colors.textTertiary
-    }
+    val mainColor: Color = tone.color(colors)
 
     val absValue = abs(value)
     val isNegative = value < 0

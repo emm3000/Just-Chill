@@ -25,7 +25,8 @@ Five rules that govern everything below. When in doubt, return here.
 4. **Positive is tinted; negative stays monochrome.** An income amount takes `success`; an expense
    amount stays `textPrimary` — an expense is never red. `danger` means destructive or broken, not
    "money leaving". This holds from the transaction row to the report hero; break it on one screen
-   and red becomes ambiguous on all of them.
+   and red becomes ambiguous on all of them. A positive aggregate — a month net, a total owed — is
+   positive money too: signed `+` and `success`; only a zero steps down to the muted role.
 
 5. **Hairline over shadow.** Dark UIs read shadows as smudges. Separate surfaces with space, a 1dp
    `border` hairline, or a surface step. There is not one elevation shadow in `:ui-android` — keep

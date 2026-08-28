@@ -32,6 +32,7 @@ import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.IconTile
@@ -39,6 +40,7 @@ import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
+import com.emm.justchill.core.ui.atoms.color
 import com.emm.justchill.core.ui.preview.PreviewRedmi15C
 
 @Composable
@@ -96,6 +98,7 @@ private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
     val nameColor = if (person.isSettled) colors.textTertiary else colors.textPrimary
+    val remainingColor = personRemainingTone(person.isSettled, person.remainingIsPositive).color(colors)
 
     Column {
         Row(
@@ -124,7 +127,7 @@ private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
                 Text(
                     text = person.remaining,
                     style = type.amountM,
-                    color = nameColor,
+                    color = remainingColor,
                 )
                 if (person.isSettled) {
                     Spacer(Modifier.height(spacing.s1))
@@ -134,6 +137,16 @@ private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
         }
         Hairline()
     }
+}
+
+/**
+ * DESIGN_SYSTEM.md §1.4: what one tap from Cuentas shows must read the same as `LoansSection` —
+ * a positive remaining is positive money, `success`; settled is the muted step it already had.
+ */
+internal fun personRemainingTone(isSettled: Boolean, remainingIsPositive: Boolean): AmountTone = when {
+    isSettled -> AmountTone.Mute
+    remainingIsPositive -> AmountTone.Pos
+    else -> AmountTone.Neutral
 }
 
 @Composable
@@ -179,14 +192,16 @@ private fun LoansScreenPreview() {
                     PersonBalanceUi(
                         personKey = "juan",
                         personName = "Juan",
-                        remaining = "S/ 250.00",
+                        remaining = "+S/ 250.00",
                         isSettled = false,
+                        remainingIsPositive = true,
                     ),
                     PersonBalanceUi(
                         personKey = "maria",
                         personName = "María",
                         remaining = "S/ 0.00",
                         isSettled = true,
+                        remainingIsPositive = false,
                     ),
                 ),
             ),
@@ -220,8 +235,9 @@ private fun PersonRowOverflowPreview() {
             person = PersonBalanceUi(
                 personKey = "maria-fernanda",
                 personName = "María Fernanda Rodríguez Quispe",
-                remaining = "S/ 999,999.99",
+                remaining = "+S/ 999,999.99",
                 isSettled = false,
+                remainingIsPositive = true,
             ),
             onClick = {},
         )
