@@ -12,4 +12,10 @@ sealed interface ReportIntent : UiIntent {
     data class SelectTab(val tab: ReportTab) : ReportIntent
     data class SelectMonth(val month: YearMonth) : ReportIntent
     data object ShareReport : ReportIntent
+
+    /** Opens the month picker sheet. */
+    data object OnMonthSheetRequested : ReportIntent
+
+    /** The user dismissed the month picker sheet. */
+    data object OnMonthSheetDismissed : ReportIntent
 }

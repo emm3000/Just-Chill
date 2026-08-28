@@ -72,6 +72,8 @@ class ReportViewModel(
         is ReportIntent.SelectType -> onSelectType(intent.type)
         is ReportIntent.SelectTab -> onSelectTab(intent.tab)
         ReportIntent.ShareReport -> buildAndShareReport()
+        ReportIntent.OnMonthSheetRequested -> updateState { copy(showMonthSheet = true) }
+        ReportIntent.OnMonthSheetDismissed -> updateState { copy(showMonthSheet = false) }
     }
 
     private fun onSelectType(type: TransactionType) {

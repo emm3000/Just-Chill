@@ -25,10 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -87,8 +84,6 @@ private fun ReportScreen(
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
 
-    var showMonthSheet by rememberSaveable { mutableStateOf(false) }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -121,7 +116,7 @@ private fun ReportScreen(
                     state = state,
                     onIntent = onIntent,
                     onAddTransaction = onAddTransaction,
-                    onLabelClick = { showMonthSheet = true },
+                    onLabelClick = { onIntent(ReportIntent.OnMonthSheetRequested) },
                 )
 
                 ReportTab.Trends -> TrendsContent(trends = state.trends)
@@ -131,14 +126,14 @@ private fun ReportScreen(
         }
     }
 
-    if (showMonthSheet) {
+    if (state.showMonthSheet) {
         MonthPickerSheet(
             current = state.month,
             onSelect = { selected ->
                 onIntent(ReportIntent.SelectMonth(selected))
-                showMonthSheet = false
+                onIntent(ReportIntent.OnMonthSheetDismissed)
             },
-            onDismiss = { showMonthSheet = false },
+            onDismiss = { onIntent(ReportIntent.OnMonthSheetDismissed) },
         )
     }
 }

@@ -22,4 +22,6 @@ data class ReportUiState(
     val movementCount: Int = 0,
     val averageFormatted: String = "S/ 0",
     val trends: TrendsUiData = TrendsUiData(),
+    /** Whether the month picker sheet is rendered over this screen (ADR 012 Decision 2). */
+    val showMonthSheet: Boolean = false,
 ) : UiState
