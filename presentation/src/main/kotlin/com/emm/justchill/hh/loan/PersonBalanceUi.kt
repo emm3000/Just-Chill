@@ -2,6 +2,7 @@ package com.emm.justchill.hh.loan
 
 import com.emm.domain.loan.PersonBalance
 import com.emm.domain.shared.Money
+import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.shared.formatNeutral
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
 
@@ -17,9 +18,15 @@ private fun PersonBalance.toUi() = PersonBalanceUi(
 fun List<PersonBalance>.toUi(): List<PersonBalanceUi> = map { it.toUi() }
 
 /**
- * Promoted out of `HomeViewModel` (ADR 010) when Home and Cuentas both showed this total, so the
- * two could never drift apart. Cuentas is the only consumer now; this stays its formatting path.
+ * Money owed to the user, so a non-zero total is signed `+` and tinted `success` at the call site
+ * (DESIGN_SYSTEM.md §1.4/§3.3); zero carries no sign, having no direction to point in.
  */
-fun List<PersonBalance>.totalOwedFormatted(): String = formatNeutral(fromCentsToSolesWith(totalRemaining()))
+fun List<PersonBalance>.totalOwedFormatted(): String {
+    val total = totalRemaining()
+    val amount = fromCentsToSolesWith(total)
+    return if (total.cents > 0L) formatIncome(amount) else formatNeutral(amount)
+}
+
+fun List<PersonBalance>.owingNames(): List<String> = filter { it.remaining.cents > 0L }.map { it.personName }
 
 private fun List<PersonBalance>.totalRemaining(): Money = fold(Money.Zero) { acc, balance -> acc + balance.remaining }

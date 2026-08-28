@@ -6,12 +6,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,49 +17,66 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.emm.domain.account.Account
-import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmRadii
+import com.emm.justchill.core.theme.LocalEmmSpacing
+import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.EmmRowMenu
 import com.emm.justchill.core.ui.atoms.Hairline
+import com.emm.justchill.core.ui.atoms.IconTileSize
+
+// EmmRowMenu wraps an 18dp glyph in a 48dp target (DESIGN_SYSTEM.md §4); the row gives the surplus
+// back at the screen edge so the glyph still sits on the 24dp column the header and the tiles use.
+private val RowMenuEdgeGiveback: Dp = 15.dp
 
 @Composable
-internal fun AccountRow(account: Account, movementCount: Int, onEdit: () -> Unit, onDelete: () -> Unit) {
+internal fun AccountRow(row: AccountMonthUi, onEdit: () -> Unit, onDelete: () -> Unit) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
+    val type = LocalEmmType.current
 
     Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(
+                    start = spacing.s6,
+                    end = spacing.s6 - RowMenuEdgeGiveback,
+                    top = spacing.s4,
+                    bottom = spacing.s4,
+                ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(spacing.s3),
         ) {
             AccountIconTile(
-                icon = account.type.toIcon(),
-                tintColor = accountDotColor(account.name, colors),
+                icon = row.account.type.toIcon(),
+                tintColor = accountDotColor(row.account.name, colors),
             )
 
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(spacing.s1),
+            ) {
+                Text(text = row.account.name, style = type.titleM, color = colors.textPrimary)
                 Text(
-                    text = account.name,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
-                    color = colors.textPrimary,
-                    letterSpacing = (-0.15).sp,
-                )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = "${account.type.toLabel()} · ${formatMovements(movementCount)}",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.W400,
-                    fontFamily = InterFontFamily,
+                    text = accountSubtitle(row.account.type.toLabel(), row.movementCount),
+                    style = type.labelM,
                     color = colors.textTertiary,
                 )
+            }
+
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(spacing.s1),
+            ) {
+                Text(
+                    text = row.net,
+                    style = type.amountM,
+                    color = if (row.movementCount == 0) colors.textTertiary else colors.textPrimary,
+                )
+                Text(text = "este mes", style = type.caption, color = colors.textTertiary)
             }
 
             EmmRowMenu(contentDescription = "Opciones de cuenta", onEdit = onEdit, onDelete = onDelete)
@@ -71,29 +85,31 @@ internal fun AccountRow(account: Account, movementCount: Int, onEdit: () -> Unit
     }
 }
 
-private fun formatMovements(count: Int): String = when (count) {
-    0 -> "Sin movimientos"
-    1 -> "1 movimiento"
-    else -> "$count movimientos"
+internal fun accountSubtitle(typeLabel: String, movementCount: Int): String = when (movementCount) {
+    0 -> "Sin movimientos este mes"
+    1 -> "$typeLabel · 1 movimiento"
+    else -> "$typeLabel · $movementCount movimientos"
 }
 
 @Composable
 private fun AccountIconTile(icon: ImageVector, tintColor: Color) {
-    val shape = RoundedCornerShape(8.dp)
+    val colors = LocalEmmColors.current
+    val radii = LocalEmmRadii.current
+    val tile = IconTileSize.Lg
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(34.dp)
-            .clip(shape)
-            .background(tintColor.copy(alpha = 0.18f))
-            .border(1.dp, tintColor.copy(alpha = 0.32f), shape),
+            .size(tile.tileSize)
+            .clip(radii.rM)
+            .background(colors.surface1)
+            .border(1.dp, colors.border, radii.rM),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = tintColor,
-            modifier = Modifier.size(16.dp),
+            modifier = Modifier.size(tile.iconSize),
         )
     }
 }

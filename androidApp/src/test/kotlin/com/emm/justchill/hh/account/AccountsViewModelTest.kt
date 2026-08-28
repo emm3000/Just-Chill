@@ -9,9 +9,13 @@ import com.emm.domain.loan.LoanRepository
 import com.emm.domain.loan.PersonBalance
 import com.emm.domain.shared.AccountId
 import com.emm.domain.shared.Money
+import com.emm.domain.shared.TransactionId
+import com.emm.domain.shared.YearMonth
+import com.emm.domain.transaction.Transaction
 import com.emm.domain.transaction.TransactionRepository
-import com.emm.domain.transaction.TransactionTotals
+import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.MainDispatcherRule
+import com.emm.justchill.core.time.FakeTodayFlow
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +23,9 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
+import kotlinx.datetime.atTime
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -36,6 +43,7 @@ class AccountsViewModelTest {
     private val loanRepository = mockk<LoanRepository>()
     private val updateAccount = mockk<UpdateAccountUseCase>()
     private val deleteAccount = mockk<DeleteAccountUseCase>()
+    private val today = MutableStateFlow(LocalDate(2026, 8, 15))
 
     private lateinit var viewModel: AccountsViewModel
 
@@ -45,6 +53,7 @@ class AccountsViewModelTest {
         loanRepository,
         updateAccount,
         deleteAccount,
+        FakeTodayFlow(today),
     )
 
     private fun personBalance(
@@ -53,35 +62,160 @@ class AccountsViewModelTest {
         remaining: Money = Money(10_000L),
     ) = PersonBalance(personKey = personKey, personName = personName, remaining = remaining)
 
+    private val bcp = Account(accountId = AccountId("acc-1"), name = "BCP", type = AccountType.Bank)
+    private val cash = Account(accountId = AccountId("acc-2"), name = "Efectivo", type = AccountType.Cash)
+
+    private fun movement(
+        id: String,
+        account: Account,
+        type: TransactionType,
+        cents: Long,
+        day: LocalDate = LocalDate(2026, 8, 10),
+    ) = Transaction(
+        transactionId = TransactionId(id),
+        type = type,
+        amount = Money(cents),
+        description = "",
+        occurredAt = day.atTime(hour = 12, minute = 0),
+        accountId = account.accountId,
+        categoryId = null,
+    )
+
+    private fun rowFor(account: Account) = viewModel.state.value.accounts.first { it.account == account }
+
     @Before
     fun setUp() {
         every { accountRepository.all() } returns flowOf(emptyList())
         every { transactionRepository.all() } returns flowOf(emptyList())
-        every { transactionRepository.observeTotals() } returns flowOf(TransactionTotals.Empty)
         every { loanRepository.balancesByPerson() } returns flowOf(emptyList())
         viewModel = accountsViewModel()
     }
 
     @Test
-    fun `loansTotalOwed defaults to zero, formatted, when there are no loans`() = runTest {
-        advanceUntilIdle()
-
-        assertEquals("S/ 0.00", viewModel.state.value.loansTotalOwed)
-    }
-
-    @Test
-    fun `loansTotalOwed is the formatted sum of every PersonBalance remaining, not raw cents`() = runTest {
-        every { loanRepository.balancesByPerson() } returns flowOf(
+    fun `each account nets only its own movements, only from the current month`() = runTest {
+        every { accountRepository.all() } returns flowOf(listOf(bcp, cash))
+        every { transactionRepository.all() } returns flowOf(
             listOf(
-                personBalance(personKey = "juan", remaining = Money(25_000L)),
-                personBalance(personKey = "maria", remaining = Money(10_000L)),
+                movement("t-1", bcp, TransactionType.Spend, 19_345L),
+                movement("t-2", cash, TransactionType.Spend, 10_000L, day = LocalDate(2026, 7, 31)),
+                movement("t-3", cash, TransactionType.Income, 90_000L, day = LocalDate(2026, 9, 1)),
             ),
         )
         viewModel = accountsViewModel()
 
         advanceUntilIdle()
 
-        assertEquals("S/ 350.00", viewModel.state.value.loansTotalOwed)
+        assertEquals("−S/ 193.45", rowFor(bcp).net)
+        assertEquals(1, rowFor(bcp).movementCount)
+        assertEquals("S/ 0.00", rowFor(cash).net)
+        assertEquals(0, rowFor(cash).movementCount)
+    }
+
+    @Test
+    fun `an account whose income outweighs its spend nets positive, unsigned`() = runTest {
+        every { accountRepository.all() } returns flowOf(listOf(bcp, cash))
+        every { transactionRepository.all() } returns flowOf(
+            listOf(
+                movement("t-1", bcp, TransactionType.Income, 350_000L),
+                movement("t-2", bcp, TransactionType.Spend, 50_000L),
+                movement("t-3", cash, TransactionType.Spend, 2_550L),
+            ),
+        )
+        viewModel = accountsViewModel()
+
+        advanceUntilIdle()
+
+        assertEquals("S/ 3,000.00", rowFor(bcp).net)
+        assertEquals(2, rowFor(bcp).movementCount)
+        assertEquals("−S/ 25.50", rowFor(cash).net)
+    }
+
+    @Test
+    fun `the header totals the whole month, both directions, across every account`() = runTest {
+        every { accountRepository.all() } returns flowOf(listOf(bcp, cash))
+        every { transactionRepository.all() } returns flowOf(
+            listOf(
+                movement("t-1", bcp, TransactionType.Spend, 19_345L),
+                movement("t-2", cash, TransactionType.Spend, 2_550L),
+                movement("t-3", bcp, TransactionType.Income, 350_000L),
+                movement("t-4", cash, TransactionType.Income, 100_000L, day = LocalDate(2026, 7, 2)),
+            ),
+        )
+        viewModel = accountsViewModel()
+
+        advanceUntilIdle()
+
+        assertEquals("S/ 218.95", viewModel.state.value.monthSpent)
+        assertEquals("S/ 3,500.00", viewModel.state.value.monthIncome)
+    }
+
+    @Test
+    fun `the month follows the clock past midnight, re-attributing what the header counts`() = runTest {
+        every { accountRepository.all() } returns flowOf(listOf(bcp))
+        every { transactionRepository.all() } returns flowOf(
+            listOf(movement("t-1", bcp, TransactionType.Spend, 19_345L, day = LocalDate(2026, 8, 31))),
+        )
+        viewModel = accountsViewModel()
+        advanceUntilIdle()
+
+        assertEquals(YearMonth(2026, Month.AUGUST), viewModel.state.value.month)
+        assertEquals("S/ 193.45", viewModel.state.value.monthSpent)
+
+        today.value = LocalDate(2026, 9, 1)
+        advanceUntilIdle()
+
+        assertEquals(YearMonth(2026, Month.SEPTEMBER), viewModel.state.value.month)
+        assertEquals("S/ 0.00", viewModel.state.value.monthSpent)
+        assertEquals("S/ 0.00", rowFor(bcp).net)
+    }
+
+    @Test
+    fun `an account with no movement at all still gets a row`() = runTest {
+        every { accountRepository.all() } returns flowOf(listOf(bcp, cash))
+
+        viewModel = accountsViewModel()
+        advanceUntilIdle()
+
+        assertEquals(listOf(bcp, cash), viewModel.state.value.accounts.map { it.account })
+    }
+
+    @Test
+    fun `loansTotalOwed defaults to zero, unsigned, when there are no loans`() = runTest {
+        advanceUntilIdle()
+
+        assertEquals("S/ 0.00", viewModel.state.value.loansTotalOwed)
+        assertEquals(emptyList(), viewModel.state.value.loansPeople)
+    }
+
+    @Test
+    fun `loansTotalOwed is the signed sum of every PersonBalance remaining, not raw cents`() = runTest {
+        every { loanRepository.balancesByPerson() } returns flowOf(
+            listOf(
+                personBalance(personKey = "juan", personName = "Juan", remaining = Money(25_000L)),
+                personBalance(personKey = "maria", personName = "María", remaining = Money(10_000L)),
+            ),
+        )
+        viewModel = accountsViewModel()
+
+        advanceUntilIdle()
+
+        assertEquals("+S/ 350.00", viewModel.state.value.loansTotalOwed)
+        assertEquals(listOf("Juan", "María"), viewModel.state.value.loansPeople)
+    }
+
+    @Test
+    fun `a settled person owes nothing and so names nobody`() = runTest {
+        every { loanRepository.balancesByPerson() } returns flowOf(
+            listOf(
+                personBalance(personKey = "juan", personName = "Juan", remaining = Money.Zero),
+                personBalance(personKey = "maria", personName = "María", remaining = Money(10_000L)),
+            ),
+        )
+        viewModel = accountsViewModel()
+
+        advanceUntilIdle()
+
+        assertEquals(listOf("María"), viewModel.state.value.loansPeople)
     }
 
     @Test
@@ -96,110 +230,29 @@ class AccountsViewModelTest {
         loansFlow.value = listOf(personBalance(remaining = Money(50_000L)))
         advanceUntilIdle()
 
-        assertEquals("S/ 500.00", viewModel.state.value.loansTotalOwed)
+        assertEquals("+S/ 500.00", viewModel.state.value.loansTotalOwed)
     }
 
     @Test
-    fun `accounts stay whatever the account flow emitted, regardless of the loans flow`() = runTest {
-        val account = Account(accountId = AccountId("acc-1"), name = "BCP", type = AccountType.Bank)
-        every { accountRepository.all() } returns flowOf(listOf(account))
-        every { loanRepository.balancesByPerson() } returns flowOf(
-            listOf(personBalance(remaining = Money(999_999L))),
-        )
-        viewModel = accountsViewModel()
-
-        advanceUntilIdle()
-
-        assertEquals(listOf(account), viewModel.state.value.accounts)
-    }
-
-    @Test
-    fun `totalBalance defaults to zero, formatted, when there are no transactions`() = runTest {
-        advanceUntilIdle()
-
-        assertEquals("S/ 0.00", viewModel.state.value.totalBalance)
-    }
-
-    @Test
-    fun `totalBalance reaches state formatted from the observeTotals aggregate`() = runTest {
-        every { transactionRepository.observeTotals() } returns flowOf(
-            TransactionTotals(balance = Money(482_000L), movementCount = 12L),
-        )
-        viewModel = accountsViewModel()
-
-        advanceUntilIdle()
-
-        assertEquals("S/ 4,820.00", viewModel.state.value.totalBalance)
-    }
-
-    @Test
-    fun `a negative balance formats correctly, with its sign, instead of reading as positive`() = runTest {
-        every { transactionRepository.observeTotals() } returns flowOf(
-            TransactionTotals(balance = Money(-35_000L), movementCount = 5L),
-        )
-        viewModel = accountsViewModel()
-
-        advanceUntilIdle()
-
-        assertEquals("−S/ 350.00", viewModel.state.value.totalBalance)
-    }
-
-    @Test
-    fun `totalBalance updates when the totals flow re-emits, with no manual refresh`() = runTest {
-        val totalsFlow = MutableStateFlow(TransactionTotals.Empty)
-        every { transactionRepository.observeTotals() } returns totalsFlow
-        viewModel = accountsViewModel()
-        advanceUntilIdle()
-
-        assertEquals("S/ 0.00", viewModel.state.value.totalBalance)
-
-        totalsFlow.value = TransactionTotals(balance = Money(50_000L), movementCount = 1L)
-        advanceUntilIdle()
-
-        assertEquals("S/ 500.00", viewModel.state.value.totalBalance)
-    }
-
-    @Test
-    fun `totalBalanceMoney carries the raw sign AccountsScreen keys its tone off, for pos, zero and neg`() = runTest {
-        // The formatted totalBalance string alone can't tell zero from positive apart (both go
-        // through formatNeutral); this pins the raw value the Compose tone mapping actually reads.
-        val totalsFlow = MutableStateFlow(TransactionTotals(balance = Money(482_000L), movementCount = 1L))
-        every { transactionRepository.observeTotals() } returns totalsFlow
-        viewModel = accountsViewModel()
-        advanceUntilIdle()
-
-        assertEquals(Money(482_000L), viewModel.state.value.totalBalanceMoney)
-
-        totalsFlow.value = TransactionTotals.Empty
-        advanceUntilIdle()
-
-        assertEquals(Money.Zero, viewModel.state.value.totalBalanceMoney)
-
-        totalsFlow.value = TransactionTotals(balance = Money(-35_000L), movementCount = 1L)
-        advanceUntilIdle()
-
-        assertEquals(Money(-35_000L), viewModel.state.value.totalBalanceMoney)
-    }
-
-    @Test
-    fun `no loan or abono moves totalBalance by one cent, however large the loans flow emits`() = runTest {
-        // ADR 010: loans are a parallel ledger. observeTotals() and balancesByPerson() are two
-        // separate flows sourced from two different tables — a huge loans emission must leave the
-        // saldo total exactly as the (unrelated) totals flow reported it.
-        every { transactionRepository.observeTotals() } returns flowOf(
-            TransactionTotals(balance = Money(482_000L), movementCount = 12L),
+    fun `no loan or abono moves an account net by one cent, however large the loans flow emits`() = runTest {
+        // ADR 010: loans are a parallel ledger. balancesByPerson() and all() are two separate flows
+        // over two different tables — a huge loans emission must leave every monthly net untouched.
+        every { accountRepository.all() } returns flowOf(listOf(bcp))
+        every { transactionRepository.all() } returns flowOf(
+            listOf(movement("t-1", bcp, TransactionType.Spend, 19_345L)),
         )
         val loansFlow = MutableStateFlow<List<PersonBalance>>(emptyList())
         every { loanRepository.balancesByPerson() } returns loansFlow
         viewModel = accountsViewModel()
         advanceUntilIdle()
 
-        assertEquals("S/ 4,820.00", viewModel.state.value.totalBalance)
+        assertEquals("−S/ 193.45", rowFor(bcp).net)
 
         loansFlow.value = listOf(personBalance(remaining = Money(999_999_999L)))
         advanceUntilIdle()
 
-        assertEquals("S/ 4,820.00", viewModel.state.value.totalBalance)
-        assertEquals("S/ 9,999,999.99", viewModel.state.value.loansTotalOwed)
+        assertEquals("−S/ 193.45", rowFor(bcp).net)
+        assertEquals("S/ 193.45", viewModel.state.value.monthSpent)
+        assertEquals("+S/ 9,999,999.99", viewModel.state.value.loansTotalOwed)
     }
 }
