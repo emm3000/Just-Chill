@@ -62,3 +62,16 @@ on the flow side, and a `SavedStateHandle` decision nobody has made. Google's ca
   `ReportViewModel.calendarMonth` and `SeeTransactionsViewModel.today`, both fed by `todayFlow()`,
   whose chain is `Clock`-only with no repository in it — so nothing can raise a `DomainException`
   there. The day anything data-backed gets `stateIn`'d, that error has no door.
+
+- **One sheet-visibility field per screen: an enum when the screen has more than one mutually
+  exclusive sheet, a `Boolean` when it has exactly one.** Every sheet is a `ModalBottomSheet`, so
+  two cannot be open at once; four booleans spell sixteen states of which five are legal, and the
+  enum makes the rest unrepresentable rather than merely unreached. `SeeTransactionsUiState` is the
+  one screen carrying both shapes, because its confirm sheet is keyed by an id.
+
+- **A `when` helper split out of `onIntent` takes a nested sealed sub-interface, never the wide
+  intent type with an `else`.** `LoanDetailViewModel.onPaymentFormIntent` and
+  `SeeTransactionsViewModel.onScreenChromeIntent` are the two sites, and detekt's
+  `CyclomaticComplexMethod` ceiling of 14 is what forces the split — `SeeTransactions` reached 17.
+  The wide-typed version clears that ceiling just as well while silently swallowing any label added
+  to `onIntent` and forgotten in the helper.
