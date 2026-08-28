@@ -36,6 +36,7 @@ import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -246,5 +247,32 @@ class AddEditLoanViewModelTest {
         val update = slot<LoanUpdate>()
         coVerify { updateLoan(LoanId("loan-1"), capture(update)) }
         assertEquals(marchLentAt, update.captured.lentAt)
+    }
+
+    @Test
+    fun `OnSheetRequested opens the requested sheet and OnSheetDismissed closes it`() = runTest {
+        val vm = viewModel()
+        advanceUntilIdle()
+        assertNull(vm.state.value.openSheet)
+
+        vm.onIntent(AddEditLoanIntent.OnSheetRequested(LoanFormSheet.Amount))
+        advanceUntilIdle()
+        assertEquals(LoanFormSheet.Amount, vm.state.value.openSheet)
+
+        vm.onIntent(AddEditLoanIntent.OnSheetDismissed)
+        advanceUntilIdle()
+        assertNull(vm.state.value.openSheet)
+    }
+
+    @Test
+    fun `only one sheet is ever open — requesting a second replaces the first`() = runTest {
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(AddEditLoanIntent.OnSheetRequested(LoanFormSheet.Amount))
+        vm.onIntent(AddEditLoanIntent.OnSheetRequested(LoanFormSheet.Date))
+        advanceUntilIdle()
+
+        assertEquals(LoanFormSheet.Date, vm.state.value.openSheet)
     }
 }

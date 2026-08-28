@@ -78,6 +78,10 @@ class AddEditLoanViewModel(
             is AddEditLoanIntent.OnNoteChange -> updateState { copy(note = intent.value) }
 
             AddEditLoanIntent.Save -> save()
+
+            is AddEditLoanIntent.OnSheetRequested -> updateState { copy(openSheet = intent.sheet) }
+
+            AddEditLoanIntent.OnSheetDismissed -> updateState { copy(openSheet = null) }
         }
     }
 

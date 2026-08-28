@@ -94,9 +94,6 @@ private fun AddEditLoanContent(
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
 
-    var showAmountSheet by rememberSaveable { mutableStateOf(false) }
-    var showDateSheet by rememberSaveable { mutableStateOf(false) }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -145,7 +142,10 @@ private fun AddEditLoanContent(
             }
 
             FormSection(eyebrow = "MONTO") {
-                AmountCard(amountDigits = state.amountDigits, onClick = { showAmountSheet = true })
+                AmountCard(
+                    amountDigits = state.amountDigits,
+                    onClick = { onIntent(AddEditLoanIntent.OnSheetRequested(LoanFormSheet.Amount)) },
+                )
             }
 
             FormSection(eyebrow = "INTERÉS %") {
@@ -156,7 +156,10 @@ private fun AddEditLoanContent(
             }
 
             FormSection(eyebrow = "FECHA") {
-                DateRow(label = state.dateLabel, onClick = { showDateSheet = true })
+                DateRow(
+                    label = state.dateLabel,
+                    onClick = { onIntent(AddEditLoanIntent.OnSheetRequested(LoanFormSheet.Date)) },
+                )
             }
 
             FormSection(eyebrow = "NOTA · OPCIONAL") {
@@ -183,24 +186,24 @@ private fun AddEditLoanContent(
         )
     }
 
-    if (showAmountSheet) {
+    if (state.openSheet == LoanFormSheet.Amount) {
         AmountInputSheet(
             amountDigits = state.amountDigits,
             title = "Monto del préstamo",
             tone = AmountTone.Neutral,
             onAmountConfirm = { onIntent(AddEditLoanIntent.OnAmountChange(it)) },
-            onDismiss = { showAmountSheet = false },
+            onDismiss = { onIntent(AddEditLoanIntent.OnSheetDismissed) },
         )
     }
 
-    if (showDateSheet) {
+    if (state.openSheet == LoanFormSheet.Date) {
         DatePickerSheet(
             currentDate = state.pickerDate,
             onConfirm = { date ->
                 onIntent(AddEditLoanIntent.OnDateSelected(date))
-                showDateSheet = false
+                onIntent(AddEditLoanIntent.OnSheetDismissed)
             },
-            onDismiss = { showDateSheet = false },
+            onDismiss = { onIntent(AddEditLoanIntent.OnSheetDismissed) },
         )
     }
 }
