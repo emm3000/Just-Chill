@@ -184,11 +184,7 @@ class SeeTransactionsViewModel(
 
             SeeTransactionsIntent.OnConfirmSheetDismissed -> updateState { copy(confirmSheetPendingId = null) }
 
-            SeeTransactionsIntent.OnFilterSheetRequested,
-            SeeTransactionsIntent.OnFilterSheetDismissed,
-            SeeTransactionsIntent.OnSearchRequested,
-            SeeTransactionsIntent.OnSearchClosed,
-            -> onScreenChromeIntent(intent)
+            is SeeTransactionsIntent.ScreenChromeIntent -> onScreenChromeIntent(intent)
         }
     }
 
@@ -213,21 +209,20 @@ class SeeTransactionsViewModel(
         }
     }
 
-    /** Grouped out of [onIntent] on its own: these four carry no domain effect, only screen chrome. */
-    private fun onScreenChromeIntent(intent: SeeTransactionsIntent) {
+    private fun onScreenChromeIntent(intent: SeeTransactionsIntent.ScreenChromeIntent) {
         when (intent) {
-            SeeTransactionsIntent.OnFilterSheetRequested -> updateState { copy(showFilterSheet = true) }
+            SeeTransactionsIntent.ScreenChromeIntent.OnFilterSheetRequested ->
+                updateState { copy(showFilterSheet = true) }
 
-            SeeTransactionsIntent.OnFilterSheetDismissed -> updateState { copy(showFilterSheet = false) }
+            SeeTransactionsIntent.ScreenChromeIntent.OnFilterSheetDismissed ->
+                updateState { copy(showFilterSheet = false) }
 
-            SeeTransactionsIntent.OnSearchRequested -> updateState { copy(searchRequested = true) }
+            SeeTransactionsIntent.ScreenChromeIntent.OnSearchRequested -> updateState { copy(searchRequested = true) }
 
-            SeeTransactionsIntent.OnSearchClosed -> {
+            SeeTransactionsIntent.ScreenChromeIntent.OnSearchClosed -> {
                 filter.value = filter.value.copy(query = "")
                 updateState { copy(searchRequested = false, query = "") }
             }
-
-            else -> Unit
         }
     }
 

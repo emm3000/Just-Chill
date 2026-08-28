@@ -91,7 +91,7 @@ private fun SeeTransactionsContent(
         state.pendingRecurringMovements.associateBy { it.id }
     }
 
-    BackHandler(enabled = state.isSearchOpen) { onIntent(SeeTransactionsIntent.OnSearchClosed) }
+    BackHandler(enabled = state.isSearchOpen) { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnSearchClosed) }
 
     Column(
         modifier = Modifier
@@ -102,13 +102,13 @@ private fun SeeTransactionsContent(
             SearchBar(
                 query = state.query,
                 onQueryChange = { onIntent(SeeTransactionsIntent.OnQueryChanged(it)) },
-                onClose = { onIntent(SeeTransactionsIntent.OnSearchClosed) },
+                onClose = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnSearchClosed) },
             )
         } else {
             ScreenHeader(
                 isCategoryFilterActive = state.activeCategory != null,
-                onSearch = { onIntent(SeeTransactionsIntent.OnSearchRequested) },
-                onFilter = { onIntent(SeeTransactionsIntent.OnFilterSheetRequested) },
+                onSearch = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnSearchRequested) },
+                onFilter = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnFilterSheetRequested) },
             )
         }
 
@@ -151,7 +151,7 @@ private fun SeeTransactionsContent(
                 ?: CategoryType.Spend,
             onSelect = { onIntent(SeeTransactionsIntent.OnCategorySelected(it)) },
             onClear = { onIntent(SeeTransactionsIntent.OnClearCategoryFilter) },
-            onDismiss = { onIntent(SeeTransactionsIntent.OnFilterSheetDismissed) },
+            onDismiss = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnFilterSheetDismissed) },
         )
     }
 

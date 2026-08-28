@@ -23,9 +23,7 @@ sealed interface EditTransactionIntent : UiIntent {
 
     data object OnDelete : EditTransactionIntent
 
-    /** Opens [sheet] over the screen. */
     data class OnSheetRequested(val sheet: TransactionSheet) : EditTransactionIntent
 
-    /** The user dismissed whichever sheet was open. */
     data object OnSheetDismissed : EditTransactionIntent
 }

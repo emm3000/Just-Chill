@@ -25,15 +25,12 @@ sealed interface SeeTransactionsIntent : UiIntent {
     /** The user dismissed the confirm sheet without confirming or skipping. */
     data object OnConfirmSheetDismissed : SeeTransactionsIntent
 
-    /** Opens the category filter sheet. */
-    data object OnFilterSheetRequested : SeeTransactionsIntent
-
-    /** The user dismissed the category filter sheet. */
-    data object OnFilterSheetDismissed : SeeTransactionsIntent
-
-    /** The user tapped the search icon; the search bar replaces the header. */
-    data object OnSearchRequested : SeeTransactionsIntent
-
-    /** The user closed search, from the back gesture or the search bar's own close button. */
-    data object OnSearchClosed : SeeTransactionsIntent
+    // Grouped so the ViewModel dispatches them in one delegated `when` branch — flattening them
+    // into onIntent's own puts it over CyclomaticComplexMethod.
+    sealed interface ScreenChromeIntent : SeeTransactionsIntent {
+        data object OnFilterSheetRequested : ScreenChromeIntent
+        data object OnFilterSheetDismissed : ScreenChromeIntent
+        data object OnSearchRequested : ScreenChromeIntent
+        data object OnSearchClosed : ScreenChromeIntent
+    }
 }

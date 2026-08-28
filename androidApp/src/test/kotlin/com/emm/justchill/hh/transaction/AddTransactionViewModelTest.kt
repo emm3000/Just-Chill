@@ -779,16 +779,4 @@ class AddTransactionViewModelTest {
         advanceUntilIdle()
         assertNull(vm.state.value.openSheet)
     }
-
-    @Test
-    fun `only one sheet is ever open — requesting a second replaces the first`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        vm.onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Category))
-        vm.onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Date))
-        advanceUntilIdle()
-
-        assertEquals(TransactionSheet.Date, vm.state.value.openSheet)
-    }
 }

@@ -623,11 +623,11 @@ class SeeTransactionsViewModelTest {
             advanceUntilIdle()
             assertFalse(vm.state.value.showFilterSheet)
 
-            vm.onIntent(SeeTransactionsIntent.OnFilterSheetRequested)
+            vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnFilterSheetRequested)
             advanceUntilIdle()
             assertTrue(vm.state.value.showFilterSheet)
 
-            vm.onIntent(SeeTransactionsIntent.OnFilterSheetDismissed)
+            vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnFilterSheetDismissed)
             advanceUntilIdle()
             assertFalse(vm.state.value.showFilterSheet)
         }
@@ -638,30 +638,32 @@ class SeeTransactionsViewModelTest {
         advanceUntilIdle()
         assertFalse(vm.state.value.isSearchOpen)
 
-        vm.onIntent(SeeTransactionsIntent.OnSearchRequested)
+        vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnSearchRequested)
         advanceUntilIdle()
         assertTrue(vm.state.value.isSearchOpen)
 
-        vm.onIntent(SeeTransactionsIntent.OnSearchClosed)
+        vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnSearchClosed)
         advanceUntilIdle()
         assertFalse(vm.state.value.isSearchOpen)
     }
 
     @Test
-    fun `OnSearchClosed clears the query as well as searchRequested`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
-        advanceUntilIdle()
+    fun `OnSearchClosed clears the query as well as searchRequested, and requeries the month range`() =
+        runTest(testDispatcher) {
+            val vm = buildViewModel()
+            advanceUntilIdle()
 
-        vm.onIntent(SeeTransactionsIntent.OnSearchRequested)
-        vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
-        advanceTimeBy(300L)
-        advanceUntilIdle()
-        assertEquals("café", vm.state.value.query)
+            vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnSearchRequested)
+            vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
+            advanceTimeBy(300L)
+            advanceUntilIdle()
+            assertEquals("café", vm.state.value.query)
 
-        vm.onIntent(SeeTransactionsIntent.OnSearchClosed)
-        advanceUntilIdle()
+            vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnSearchClosed)
+            advanceUntilIdle()
 
-        assertEquals("", vm.state.value.query)
-        assertFalse(vm.state.value.isSearchOpen)
-    }
+            assertEquals("", vm.state.value.query)
+            assertFalse(vm.state.value.isSearchOpen)
+            verify(exactly = 2) { transactionRepository.fetchAllWithCategoryInRange(any(), any()) }
+        }
 }

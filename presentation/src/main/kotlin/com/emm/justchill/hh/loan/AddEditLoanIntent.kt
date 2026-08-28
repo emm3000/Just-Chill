@@ -11,9 +11,7 @@ sealed interface AddEditLoanIntent : UiIntent {
     data class OnNoteChange(val value: String) : AddEditLoanIntent
     data object Save : AddEditLoanIntent
 
-    /** Opens [sheet] over the screen. */
     data class OnSheetRequested(val sheet: LoanFormSheet) : AddEditLoanIntent
 
-    /** The user dismissed whichever sheet was open. */
     data object OnSheetDismissed : AddEditLoanIntent
 }

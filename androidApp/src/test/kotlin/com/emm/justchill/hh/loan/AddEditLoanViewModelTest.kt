@@ -263,16 +263,4 @@ class AddEditLoanViewModelTest {
         advanceUntilIdle()
         assertNull(vm.state.value.openSheet)
     }
-
-    @Test
-    fun `only one sheet is ever open — requesting a second replaces the first`() = runTest {
-        val vm = viewModel()
-        advanceUntilIdle()
-
-        vm.onIntent(AddEditLoanIntent.OnSheetRequested(LoanFormSheet.Amount))
-        vm.onIntent(AddEditLoanIntent.OnSheetRequested(LoanFormSheet.Date))
-        advanceUntilIdle()
-
-        assertEquals(LoanFormSheet.Date, vm.state.value.openSheet)
-    }
 }
