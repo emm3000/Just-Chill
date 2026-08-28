@@ -41,3 +41,9 @@ information shown and the navigation to change. This epic does that, one screen 
   padding back at the edge, not by shrinking the target (E14-01).** `SeeTransactionsHeader` derives
   the inset from `spacing.s12 - spacing.s5`; a literal that "tidies" it to a smaller box reopens
   the `DESIGN_SYSTEM.md` §4 violation the review caught.
+
+- **A child of a fixed-height row is NOT 48dp tall by inheritance (E14-02).**
+  `Alignment.CenterVertically` measures children at intrinsic height, so a clickable link inside a
+  48dp band gets a ~20dp touch box unless it carries `fillMaxHeight()` itself — `FormMetaRow`'s
+  `DateAction`/`NoteAction` are the pattern. Dropping that modifier passes every gate and reopens
+  `DESIGN_SYSTEM.md` §4.
