@@ -148,11 +148,7 @@ fun ProfileScreen(
         }
 
         Spacer(Modifier.height(spacing.s6))
-        VersionFooter(
-            appVersion = appVersion,
-            commitHash = commitHash,
-            onCopyClick = onCopyCommitHashClick,
-        )
+        CommitFooter(commitHash = commitHash, onCopyClick = onCopyCommitHashClick)
         Spacer(Modifier.height(spacing.s4))
     }
 }
@@ -218,7 +214,7 @@ private fun AccountSection(
 }
 
 @Composable
-private fun VersionFooter(appVersion: String, commitHash: String, onCopyClick: () -> Unit) {
+private fun CommitFooter(commitHash: String, onCopyClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
@@ -226,12 +222,6 @@ private fun VersionFooter(appVersion: String, commitHash: String, onCopyClick: (
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = "Versión $appVersion · alpha",
-            style = type.caption,
-            color = colors.textTertiary,
-            textAlign = TextAlign.Center,
-        )
         when (val commit = commitHashUi(commitHash)) {
             is CommitHashUi.Available -> CopyableCommitRow(
                 label = commit.label,

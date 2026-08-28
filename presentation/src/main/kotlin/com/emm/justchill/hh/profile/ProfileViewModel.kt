@@ -22,11 +22,13 @@ import com.emm.justchill.core.backup.BackupEvent
 import com.emm.justchill.core.backup.BackupHealth
 import com.emm.justchill.core.backup.LocalExportHistory
 import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.core.time.TodayFlow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.datetime.LocalDate
 import kotlin.time.Clock
 
 @Suppress("LongParameterList")
@@ -40,15 +42,20 @@ class ProfileViewModel(
     private val getBackupStaleness: GetBackupStalenessUseCase,
     private val logger: DiagnosticsLogger,
     private val localExportHistory: LocalExportHistory,
+    private val todayFlow: TodayFlow,
     categoryRepository: CategoryRepository,
     getRecurringMonthlySummary: GetRecurringMonthlySummaryUseCase,
     observeSession: ObserveSessionUseCase,
     private val appVersion: String,
     private val clock: Clock,
-) : MviViewModel<ProfileUiState, ProfileIntent, ProfileEffect>(ProfileUiState()) {
+) : MviViewModel<ProfileUiState, ProfileIntent, ProfileEffect>(
+    ProfileUiState(lastExport = localExportHistory.toLastExportUi(todayFlow.today())),
+) {
 
     init {
-        updateState { copy(lastExport = localExportHistory.toLastExportUi()) }
+        todayFlow()
+            .onEach { today -> updateState { copy(lastExport = localExportHistory.toLastExportUi(today)) } }
+            .launchSafeIn(onError = ProfileEffect::ShowError)
 
         categoryRepository.all()
             .onEach { categories ->
@@ -209,12 +216,9 @@ class ProfileViewModel(
         sendEffect(ProfileEffect.ExportReady(json))
     }
 
-    // Raised by the host once the file is written, never when the json is handed over: a picker the
-    // user backs out of leaves nothing on disk, and a row claiming an export nobody has is the lie
-    // this screen exists to stop telling.
     private fun exportSaved() {
         localExportHistory.recordExport()
-        updateState { copy(lastExport = localExportHistory.toLastExportUi()) }
+        updateState { copy(lastExport = localExportHistory.toLastExportUi(todayFlow.today())) }
     }
 
     private fun importFromJson(json: String) = launchOp(
@@ -240,8 +244,8 @@ class ProfileViewModel(
     }
 }
 
-private fun LocalExportHistory.toLastExportUi(): LastExportUi =
-    daysSinceLastExport()?.let(LastExportUi::DaysAgo) ?: LastExportUi.Never
+private fun LocalExportHistory.toLastExportUi(today: LocalDate): LastExportUi =
+    daysSinceLastExport(today)?.let(LastExportUi::DaysAgo) ?: LastExportUi.Never
 
 private fun BackupEvent.toProfileMessage(): ProfileMessage = when (this) {
     BackupEvent.Succeeded -> ProfileMessage.BackupDone

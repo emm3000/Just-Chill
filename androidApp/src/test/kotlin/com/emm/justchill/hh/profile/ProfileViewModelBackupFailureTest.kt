@@ -26,6 +26,7 @@ import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.core.backup.LocalExportHistory
+import com.emm.justchill.core.time.FakeTodayFlow
 import com.emm.justchill.hh.shared.toText
 import io.mockk.coEvery
 import io.mockk.every
@@ -42,6 +43,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import org.junit.Before
 import org.junit.Rule
@@ -84,8 +86,9 @@ class ProfileViewModelBackupFailureTest {
             flowOf(RecurringMonthlySummary(activeCount = 0, monthlyOutflow = Money.Zero))
     }
     private val localExportHistory = mockk<LocalExportHistory>(relaxed = true) {
-        every { daysSinceLastExport() } returns null
+        every { daysSinceLastExport(any()) } returns null
     }
+    private val todayFlow = FakeTodayFlow(MutableStateFlow(LocalDate(2026, 8, 28)))
 
     @Before
     fun setUp() {
@@ -251,6 +254,7 @@ class ProfileViewModelBackupFailureTest {
         logger = logger,
         categoryRepository = categoryRepository,
         localExportHistory = localExportHistory,
+        todayFlow = todayFlow,
         getRecurringMonthlySummary = getRecurringMonthlySummary,
         observeSession = observeSession,
         appVersion = APP_VERSION,

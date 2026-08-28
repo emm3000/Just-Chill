@@ -1,6 +1,7 @@
 package com.emm.justchill.core.backup
 
 import com.russhwolf.settings.Settings
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toLocalDateTime
@@ -12,11 +13,12 @@ import kotlin.time.Instant
 // DefaultBackupMetadataStore key is per-user by construction.
 class LocalExportHistory(private val settings: Settings, private val clock: Clock, private val timeZone: TimeZone) {
 
-    fun daysSinceLastExport(): Int? {
+    /** [today] is the caller's, never this class's: `TodayFlow` is the app's one source of it. */
+    fun daysSinceLastExport(today: LocalDate): Int? {
         val exportedAt: Long = settings.getLong(KEY_LAST_EXPORT_AT, NEVER)
         if (exportedAt == NEVER) return null
         val exportDay = Instant.fromEpochMilliseconds(exportedAt).toLocalDateTime(timeZone).date
-        return exportDay.daysUntil(clock.now().toLocalDateTime(timeZone).date).coerceAtLeast(0)
+        return exportDay.daysUntil(today).coerceAtLeast(0)
     }
 
     fun recordExport() = settings.putLong(KEY_LAST_EXPORT_AT, clock.now().toEpochMilliseconds())

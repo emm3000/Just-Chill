@@ -28,14 +28,16 @@ interface PlatformHostActions {
     val supportsBackup: Boolean
     val onShareText: (String) -> Unit
     val onOpenEmailApp: () -> Unit
+
+    /**
+     * `onSaved` fires only once the bytes are on disk. A picker the user backed out of and a write
+     * that failed are both silent on this channel — an implementation that fires it earlier lets a
+     * caller record an export nobody has.
+     */
     val requestExport: (json: String, onSaved: () -> Unit) -> Unit
     val requestImport: () -> Unit
 }
 
-/**
- * [onSaved] fires only once the bytes are on disk. The caller learns nothing from a picker the user
- * backed out of, and nothing from a write that failed — both are silent on this channel.
- */
 private class PendingExport(val json: String, val onSaved: () -> Unit)
 
 /**

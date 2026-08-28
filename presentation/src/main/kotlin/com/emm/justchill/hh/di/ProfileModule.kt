@@ -17,6 +17,7 @@ val profileModule = module {
             getBackupStaleness = get(),
             logger = get(),
             localExportHistory = get(),
+            todayFlow = get(),
             categoryRepository = get(),
             getRecurringMonthlySummary = get(),
             observeSession = get(),

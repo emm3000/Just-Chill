@@ -23,6 +23,7 @@ import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupEvent
 import com.emm.justchill.core.backup.BackupHealth
 import com.emm.justchill.core.backup.LocalExportHistory
+import com.emm.justchill.core.time.FakeTodayFlow
 import com.emm.justchill.hh.shared.toMetaText
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -37,6 +38,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -80,8 +82,9 @@ class ProfileViewModelBackupRowTest {
             flowOf(RecurringMonthlySummary(activeCount = 0, monthlyOutflow = Money.Zero))
     }
     private val localExportHistory = mockk<LocalExportHistory>(relaxed = true) {
-        every { daysSinceLastExport() } returns null
+        every { daysSinceLastExport(any()) } returns null
     }
+    private val todayFlow = FakeTodayFlow(MutableStateFlow(LocalDate(2026, 8, 28)))
 
     private val sessionFlow = MutableSharedFlow<SessionStatus>(replay = 1)
     private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
@@ -103,6 +106,7 @@ class ProfileViewModelBackupRowTest {
             logger = logger,
             categoryRepository = categoryRepository,
             localExportHistory = localExportHistory,
+            todayFlow = todayFlow,
             getRecurringMonthlySummary = getRecurringMonthlySummary,
             observeSession = observeSession,
             appVersion = "1.0.0",

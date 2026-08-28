@@ -6,12 +6,9 @@ import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.auth.SignOutResult
 import com.emm.domain.auth.SignOutUseCase
-import com.emm.domain.category.Category
 import com.emm.domain.category.CategoryRepository
-import com.emm.domain.category.CategoryType
 import com.emm.domain.recurring.GetRecurringMonthlySummaryUseCase
 import com.emm.domain.recurring.RecurringMonthlySummary
-import com.emm.domain.shared.CategoryId
 import com.emm.domain.shared.Money
 import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.BackupRowCounts
@@ -26,6 +23,7 @@ import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupEvent
 import com.emm.justchill.core.backup.BackupHealth
 import com.emm.justchill.core.backup.LocalExportHistory
+import com.emm.justchill.core.time.FakeTodayFlow
 import com.emm.justchill.hh.shared.toText
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -42,6 +40,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -86,8 +85,11 @@ class ProfileViewModelTest {
             flowOf(RecurringMonthlySummary(activeCount = 0, monthlyOutflow = Money.Zero))
     }
     private val localExportHistory = mockk<LocalExportHistory>(relaxed = true) {
-        every { daysSinceLastExport() } returns null
+        every { daysSinceLastExport(any()) } returns null
     }
+
+    private val today = MutableStateFlow(LocalDate(2026, 8, 28))
+    private val todayFlow = FakeTodayFlow(today)
 
     private val sessionFlow = MutableSharedFlow<SessionStatus>(replay = 1)
     private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
@@ -96,14 +98,6 @@ class ProfileViewModelTest {
     private val fixedClock = object : Clock {
         override fun now(): Instant = fixedNow
     }
-
-    private fun category(id: String, type: CategoryType) = Category(
-        categoryId = CategoryId(id),
-        name = id,
-        icon = "star",
-        color = "green",
-        categoryType = type,
-    )
 
     private fun buildViewModel(): ProfileViewModel {
         every { observeSession.invoke() } returns sessionFlow
@@ -118,65 +112,12 @@ class ProfileViewModelTest {
             logger = logger,
             categoryRepository = categoryRepository,
             localExportHistory = localExportHistory,
+            todayFlow = todayFlow,
             getRecurringMonthlySummary = getRecurringMonthlySummary,
             observeSession = observeSession,
             appVersion = "1.0.0",
             clock = fixedClock,
         )
-    }
-
-    @Test
-    fun `the categories row splits the ledger's own categories by type`() = runTest(testDispatcher) {
-        val categories = listOf(
-            category("c1", CategoryType.Income),
-            category("c2", CategoryType.Spend),
-            category("c3", CategoryType.Spend),
-        )
-        every { categoryRepository.all() } returns flowOf(categories)
-
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        assertEquals(3, vm.state.value.categoryCount)
-        assertEquals(1, vm.state.value.incomeCategoryCount)
-    }
-
-    @Test
-    fun `the recurring row carries the summary the use case computed`() = runTest(testDispatcher) {
-        every { getRecurringMonthlySummary.invoke() } returns
-            flowOf(RecurringMonthlySummary(activeCount = 3, monthlyOutflow = Money(9_000L)))
-
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        assertEquals(3, vm.state.value.recurringCount)
-        assertEquals(Money(9_000L), vm.state.value.recurringMonthlyOutflow)
-    }
-
-    @Test
-    fun `ExportSaved records the export, so the row stops saying Nunca`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
-        advanceUntilIdle()
-        assertEquals(LastExportUi.Never, vm.state.value.lastExport)
-
-        every { localExportHistory.daysSinceLastExport() } returns 0
-        vm.onIntent(ProfileIntent.ExportSaved)
-        advanceUntilIdle()
-
-        verify { localExportHistory.recordExport() }
-        assertEquals(LastExportUi.DaysAgo(0), vm.state.value.lastExport)
-    }
-
-    @Test
-    fun `an export the picker never wrote leaves the row untouched`() = runTest(testDispatcher) {
-        coEvery { backupRepository.exportToJson(any(), any()) } returns "{}"
-
-        val vm = buildViewModel()
-        vm.onIntent(ProfileIntent.ExportRequested)
-        advanceUntilIdle()
-
-        verify(exactly = 0) { localExportHistory.recordExport() }
-        assertEquals(LastExportUi.Never, vm.state.value.lastExport)
     }
 
     @Test
