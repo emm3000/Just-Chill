@@ -18,4 +18,4 @@
 
 Read `docs/work/epics/E01-snapshot-backup.md` before touching the Respaldo rows. The login row is
 the only door to `AuthRoute` (`ProfileEntries.onSignInClick`), which serves E01's cloud backup —
-gate it, never delete it. `ProfileScreen` already reads the flag twice; reuse, do not add a reader.
+gate it, never delete it. `BackupSection` already reads the flag twice; reuse, do not add a reader.
