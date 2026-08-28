@@ -49,8 +49,8 @@ fun Numpad(onDigit: (Char) -> Unit, onDoubleZero: () -> Unit, onBackspace: () ->
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 row.forEach { key ->
-                    // The two editing keys are the only filled ones: a digit is the default action
-                    // and reads as the ground, the keys that are not digits step forward off it.
+                    // A digit is the default action and reads as the ground; the keys that edit
+                    // what is already typed step forward off it.
                     val isEditingKey = key is NumKey.DoubleZero || key is NumKey.Backspace
                     val bgColor = if (isEditingKey) colors.surface1 else Color.Transparent
 

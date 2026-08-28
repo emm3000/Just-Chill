@@ -6,9 +6,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
@@ -20,10 +22,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
+
+// A glyph that trails 14sp text, not a gap: it tracks the label's size, never the spacing scale.
+private val MetaIconSize: Dp = 12.dp
 
 /**
  * Date and note are inline links, not rows: neither is a decision the user has to make — the day
@@ -56,13 +62,18 @@ private fun DateAction(label: String, onClick: () -> Unit, modifier: Modifier = 
     val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
 
+    // "Hoy" and its chevron measure under 48dp both ways; the row is stretched to the floor rather
+    // than centred at its intrinsic size (DESIGN_SYSTEM.md §4).
     Row(
-        modifier = modifier.clickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = null,
-            onClickLabel = "Cambiar la fecha",
-            onClick = onClick,
-        ),
+        modifier = modifier
+            .fillMaxHeight()
+            .widthIn(min = spacing.s12)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClickLabel = "Cambiar la fecha",
+                onClick = onClick,
+            ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.s1),
     ) {
@@ -71,7 +82,7 @@ private fun DateAction(label: String, onClick: () -> Unit, modifier: Modifier = 
             imageVector = Icons.Outlined.KeyboardArrowDown,
             contentDescription = null,
             tint = colors.textTertiary,
-            modifier = Modifier.size(spacing.s3),
+            modifier = Modifier.size(MetaIconSize),
         )
     }
 }
@@ -85,12 +96,14 @@ private fun NoteAction(note: String, onClick: () -> Unit, modifier: Modifier = M
     val empty = note.isBlank()
 
     Row(
-        modifier = modifier.clickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = null,
-            onClickLabel = if (empty) "Agregar una nota" else "Editar la nota",
-            onClick = onClick,
-        ),
+        modifier = modifier
+            .fillMaxHeight()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClickLabel = if (empty) "Agregar una nota" else "Editar la nota",
+                onClick = onClick,
+            ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.s1),
     ) {
@@ -99,7 +112,7 @@ private fun NoteAction(note: String, onClick: () -> Unit, modifier: Modifier = M
                 imageVector = Icons.Outlined.Add,
                 contentDescription = null,
                 tint = colors.textSecondary,
-                modifier = Modifier.size(spacing.s3),
+                modifier = Modifier.size(MetaIconSize),
             )
         }
         Text(

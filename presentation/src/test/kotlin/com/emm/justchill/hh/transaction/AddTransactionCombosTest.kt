@@ -52,6 +52,25 @@ class AddTransactionCombosTest {
     }
 
     @Test
+    fun `a combo naming a deleted account is pruned before the cap applies`() {
+        val closed = Account(AccountId("closed"), "Cuenta cerrada")
+        val state = stateWith(
+            listOf(
+                combo(bcp, market),
+                combo(closed, taxi),
+                combo(bcp, coffee),
+                combo(yape, market),
+            ),
+        )
+
+        assertEquals(
+            listOf("BCP · Supermercado", "BCP · Café", "Yape · Supermercado"),
+            state.frequentCombos.map { it.label },
+            "capping before pruning would leave the row two chips short",
+        )
+    }
+
+    @Test
     fun `fewer combos than the cap are offered as-is`() {
         val state = stateWith(listOf(combo(bcp, market)))
 

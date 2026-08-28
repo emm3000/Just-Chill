@@ -41,6 +41,10 @@ import com.emm.justchill.core.theme.LocalEmmType
 // moves; sizing each to its own label would shift "Ingreso"/"Gasto" sideways on every tap.
 private val SignSegmentWidth: Dp = 96.dp
 
+// Marks, not gaps — the spacing scale governs the distance between them, never their own size.
+private val ChipDotSize: Dp = 8.dp
+private val ChipChevronSize: Dp = 16.dp
+
 /**
  * Selection reads through the text ladder and one surface step — never a tint. An expense is not
  * red and an income is not green here (`DESIGN_SYSTEM.md` §1.4); the amount above carries that.
@@ -113,10 +117,15 @@ private fun SignSegment(label: String, selected: Boolean, onClick: () -> Unit) {
 internal const val ACCOUNT_CHIP_WEIGHT = 1f
 internal const val CATEGORY_CHIP_WEIGHT = 1.6f
 
+/**
+ * [onClickLabel] is what TalkBack reads as the action: the chip's own text is the current value —
+ * "BCP", "Supermercado" — and says nothing about what tapping it does.
+ */
 @Composable
 internal fun SelectorChip(
     label: String,
     dotColor: Color?,
+    onClickLabel: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     trailingIcon: ImageVector = Icons.Outlined.KeyboardArrowDown,
@@ -133,6 +142,7 @@ internal fun SelectorChip(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
+                onClickLabel = onClickLabel,
                 onClick = onClick,
             ),
     ) {
@@ -162,7 +172,7 @@ internal fun SelectorChip(
                 imageVector = trailingIcon,
                 contentDescription = null,
                 tint = colors.textTertiary,
-                modifier = Modifier.size(spacing.s4),
+                modifier = Modifier.size(ChipChevronSize),
             )
         }
     }
@@ -217,11 +227,9 @@ internal fun FrequentComboChip(
 
 @Composable
 private fun ChipDot(color: Color) {
-    val spacing = LocalEmmSpacing.current
-
     Box(
         modifier = Modifier
-            .size(spacing.s2)
+            .size(ChipDotSize)
             .clip(CircleShape)
             .background(color),
     )

@@ -166,6 +166,7 @@ private fun AddTransactionScreenContent(
                 SelectorChip(
                     label = "Crear cuenta",
                     dotColor = null,
+                    onClickLabel = "Crear una cuenta",
                     onClick = onAddNewAccount,
                     trailingIcon = Icons.Outlined.Add,
                     modifier = Modifier.weight(ACCOUNT_CHIP_WEIGHT),
@@ -174,6 +175,7 @@ private fun AddTransactionScreenContent(
                 SelectorChip(
                     label = state.accountSelected?.name ?: "—",
                     dotColor = state.accountSelected?.let { accountDotColor(it.name, colors) },
+                    onClickLabel = "Cambiar la cuenta",
                     onClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Account)) },
                     modifier = Modifier.weight(ACCOUNT_CHIP_WEIGHT),
                 )
@@ -182,6 +184,7 @@ private fun AddTransactionScreenContent(
             SelectorChip(
                 label = state.categorySelected?.name ?: "—",
                 dotColor = state.categorySelected?.resolvedColor?.primary,
+                onClickLabel = "Cambiar la categoría",
                 onClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Category)) },
                 modifier = Modifier.weight(CATEGORY_CHIP_WEIGHT),
             )
