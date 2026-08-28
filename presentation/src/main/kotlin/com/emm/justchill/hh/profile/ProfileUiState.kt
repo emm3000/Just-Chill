@@ -1,5 +1,6 @@
 package com.emm.justchill.hh.profile
 
+import com.emm.domain.shared.Money
 import com.emm.domain.shared.backup.BackupFailureReason
 import com.emm.justchill.core.mvi.UiState
 
@@ -7,6 +8,13 @@ sealed interface SessionUiState {
     data object Initializing : SessionUiState
     data object SignedOut : SessionUiState
     data class SignedIn(val email: String?) : SessionUiState
+}
+
+sealed interface LastExportUi {
+
+    data object Never : LastExportUi
+
+    data class DaysAgo(val days: Int) : LastExportUi
 }
 
 sealed interface LastSnapshot {
@@ -69,7 +77,10 @@ enum class ProfileOp { None, Exporting, Importing, DeletingAccount, SigningOut, 
 data class ProfileUiState(
     val op: ProfileOp = ProfileOp.None,
     val categoryCount: Int = 0,
-    val accountCount: Int = 0,
+    val incomeCategoryCount: Int = 0,
+    val recurringCount: Int = 0,
+    val recurringMonthlyOutflow: Money = Money.Zero,
+    val lastExport: LastExportUi = LastExportUi.Never,
     val session: SessionUiState = SessionUiState.Initializing,
     val backupRow: BackupRowUi = BackupRowUi.NeedsAccount,
 ) : UiState

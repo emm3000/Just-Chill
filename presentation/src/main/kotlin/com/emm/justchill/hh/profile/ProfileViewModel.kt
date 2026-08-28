@@ -1,12 +1,13 @@
 package com.emm.justchill.hh.profile
 
-import com.emm.domain.account.AccountRepository
 import com.emm.domain.auth.DeleteUserAccountUseCase
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.auth.SignOutResult
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.category.CategoryRepository
+import com.emm.domain.category.CategoryType
+import com.emm.domain.recurring.GetRecurringMonthlySummaryUseCase
 import com.emm.domain.shared.backup.BackupFailureReason
 import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.BackupVerification
@@ -19,6 +20,7 @@ import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupEvent
 import com.emm.justchill.core.backup.BackupHealth
+import com.emm.justchill.core.backup.LocalExportHistory
 import com.emm.justchill.core.mvi.MviViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.combine
@@ -37,22 +39,33 @@ class ProfileViewModel(
     private val backupVerifier: BackupVerifier,
     private val getBackupStaleness: GetBackupStalenessUseCase,
     private val logger: DiagnosticsLogger,
+    private val localExportHistory: LocalExportHistory,
     categoryRepository: CategoryRepository,
-    accountRepository: AccountRepository,
+    getRecurringMonthlySummary: GetRecurringMonthlySummaryUseCase,
     observeSession: ObserveSessionUseCase,
     private val appVersion: String,
     private val clock: Clock,
 ) : MviViewModel<ProfileUiState, ProfileIntent, ProfileEffect>(ProfileUiState()) {
 
     init {
-        combine(
-            categoryRepository.all(),
-            accountRepository.all(),
-        ) { categories, accounts ->
-            categories.size to accounts.size
-        }
-            .onEach { (catCount, accCount) ->
-                updateState { copy(categoryCount = catCount, accountCount = accCount) }
+        updateState { copy(lastExport = localExportHistory.toLastExportUi()) }
+
+        categoryRepository.all()
+            .onEach { categories ->
+                updateState {
+                    copy(
+                        categoryCount = categories.size,
+                        incomeCategoryCount = categories.count { it.categoryType == CategoryType.Income },
+                    )
+                }
+            }
+            .launchSafeIn(onError = ProfileEffect::ShowError)
+
+        getRecurringMonthlySummary()
+            .onEach { summary ->
+                updateState {
+                    copy(recurringCount = summary.activeCount, recurringMonthlyOutflow = summary.monthlyOutflow)
+                }
             }
             .launchSafeIn(onError = ProfileEffect::ShowError)
 
@@ -91,6 +104,7 @@ class ProfileViewModel(
     override fun onIntent(intent: ProfileIntent) {
         when (intent) {
             ProfileIntent.ExportRequested -> exportRequested()
+            ProfileIntent.ExportSaved -> exportSaved()
             is ProfileIntent.ImportJson -> importFromJson(intent.json)
             ProfileIntent.SignOut -> performSignOut()
             ProfileIntent.DeleteAccount -> deleteAccount()
@@ -195,6 +209,14 @@ class ProfileViewModel(
         sendEffect(ProfileEffect.ExportReady(json))
     }
 
+    // Raised by the host once the file is written, never when the json is handed over: a picker the
+    // user backs out of leaves nothing on disk, and a row claiming an export nobody has is the lie
+    // this screen exists to stop telling.
+    private fun exportSaved() {
+        localExportHistory.recordExport()
+        updateState { copy(lastExport = localExportHistory.toLastExportUi()) }
+    }
+
     private fun importFromJson(json: String) = launchOp(
         op = ProfileOp.Importing,
         onError = { e ->
@@ -217,6 +239,9 @@ class ProfileViewModel(
         )
     }
 }
+
+private fun LocalExportHistory.toLastExportUi(): LastExportUi =
+    daysSinceLastExport()?.let(LastExportUi::DaysAgo) ?: LastExportUi.Never
 
 private fun BackupEvent.toProfileMessage(): ProfileMessage = when (this) {
     BackupEvent.Succeeded -> ProfileMessage.BackupDone

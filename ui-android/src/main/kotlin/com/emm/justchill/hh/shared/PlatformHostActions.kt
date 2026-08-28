@@ -28,9 +28,15 @@ interface PlatformHostActions {
     val supportsBackup: Boolean
     val onShareText: (String) -> Unit
     val onOpenEmailApp: () -> Unit
-    val requestExport: (json: String) -> Unit
+    val requestExport: (json: String, onSaved: () -> Unit) -> Unit
     val requestImport: () -> Unit
 }
+
+/**
+ * [onSaved] fires only once the bytes are on disk. The caller learns nothing from a picker the user
+ * backed out of, and nothing from a write that failed — both are silent on this channel.
+ */
+private class PendingExport(val json: String, val onSaved: () -> Unit)
 
 /**
  * Call at the [AppNavHost] root, never inside an `entry<...> { }` body: the SAF launchers must be
@@ -46,19 +52,20 @@ fun rememberPlatformHostActions(
     val context = LocalContext.current
     val currentOnImport by rememberUpdatedState(onImport)
 
-    var pendingExportJson by remember { mutableStateOf<String?>(null) }
+    var pendingExport by remember { mutableStateOf<PendingExport?>(null) }
 
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json"),
     ) { uri ->
-        val json = pendingExportJson
-        pendingExportJson = null
-        if (uri != null && json != null) {
+        val pending = pendingExport
+        pendingExport = null
+        if (uri != null && pending != null) {
             val ok = runCatching {
                 context.contentResolver.openOutputStream(uri)?.use { stream ->
-                    stream.bufferedWriter().use { it.write(json) }
+                    stream.bufferedWriter().use { it.write(pending.json) }
                 } != null
             }.getOrDefault(false)
+            if (ok) pending.onSaved()
             val message = if (ok) ProfileMessage.ExportDone else ProfileMessage.ExportFailed
             scope.launch {
                 snackbarHostState.showEmmSnackbar(
@@ -110,8 +117,8 @@ fun rememberPlatformHostActions(
                 }
             }
 
-            override val requestExport: (String) -> Unit = { json ->
-                pendingExportJson = json
+            override val requestExport: (String, () -> Unit) -> Unit = { json, onSaved ->
+                pendingExport = PendingExport(json, onSaved)
                 exportLauncher.launch(suggestedExportFilename())
             }
 

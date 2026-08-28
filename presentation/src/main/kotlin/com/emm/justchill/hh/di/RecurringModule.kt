@@ -4,6 +4,7 @@ import com.emm.domain.recurring.ConfirmRecurringMovementUseCase
 import com.emm.domain.recurring.CreateRecurringMovementUseCase
 import com.emm.domain.recurring.DeleteRecurringMovementUseCase
 import com.emm.domain.recurring.GetPendingRecurringMovementsUseCase
+import com.emm.domain.recurring.GetRecurringMonthlySummaryUseCase
 import com.emm.domain.recurring.GetRecurringMonthlyTotalsUseCase
 import com.emm.domain.recurring.SkipRecurringMovementUseCase
 import com.emm.domain.recurring.UpdateRecurringMovementUseCase
@@ -19,6 +20,7 @@ val recurringModule = module {
     factoryOf(::ConfirmRecurringMovementUseCase)
     factoryOf(::SkipRecurringMovementUseCase)
     factoryOf(::GetRecurringMonthlyTotalsUseCase)
+    factoryOf(::GetRecurringMonthlySummaryUseCase)
     factoryOf(::CreateRecurringMovementUseCase)
     factoryOf(::UpdateRecurringMovementUseCase)
     factoryOf(::DeleteRecurringMovementUseCase)

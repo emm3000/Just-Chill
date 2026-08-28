@@ -1,6 +1,7 @@
 package com.emm.justchill.hh.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -27,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.InterFontFamily
@@ -36,16 +38,21 @@ import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
 
+private val TileSize: Dp = 40.dp
+private val TileGlyphSize: Dp = 18.dp
+private val RowVerticalPadding: Dp = 14.dp
+private val RowGap: Dp = 14.dp
+
 @Composable
 internal fun SectionHeader(text: String) {
     val spacing = LocalEmmSpacing.current
     Eyebrow(
         text = text,
         modifier = Modifier.padding(
-            start = spacing.s5,
-            end = spacing.s5,
-            top = spacing.s5,
-            bottom = spacing.s2,
+            start = spacing.s6,
+            end = spacing.s6,
+            top = spacing.s6,
+            bottom = spacing.s1,
         ),
     )
 }
@@ -55,17 +62,6 @@ internal fun ProfileGroup(content: @Composable () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         content()
     }
-}
-
-@Composable
-internal fun HairlineDivider() {
-    val colors = LocalEmmColors.current
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(colors.border),
-    )
 }
 
 @Composable
@@ -125,11 +121,11 @@ internal fun ProfileRowWithTrailing(
                     Modifier
                 },
             )
-            .padding(horizontal = spacing.s5, vertical = 12.dp),
+            .padding(horizontal = spacing.s6, vertical = RowVerticalPadding),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(RowGap),
     ) {
-        IconTileSmall(icon = icon, tint = if (enabled) colors.textSecondary else colors.textDisabled)
+        IconTile(icon = icon, tint = if (enabled) colors.textSecondary else colors.textDisabled)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
@@ -159,21 +155,22 @@ internal fun ProfileRowWithTrailing(
 }
 
 @Composable
-private fun IconTileSmall(icon: ImageVector, tint: Color = LocalEmmColors.current.textSecondary) {
+private fun IconTile(icon: ImageVector, tint: Color) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(32.dp)
-            .clip(radii.rXS)
-            .background(colors.surface2),
+            .size(TileSize)
+            .clip(radii.rM)
+            .background(colors.surface1)
+            .border(width = 1.dp, color = colors.border, shape = radii.rM),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = tint,
-            modifier = Modifier.size(17.dp),
+            modifier = Modifier.size(TileGlyphSize),
         )
     }
 }

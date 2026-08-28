@@ -1,12 +1,14 @@
 package com.emm.justchill.hh.profile
 
-import com.emm.domain.account.AccountRepository
 import com.emm.domain.auth.AuthUser
 import com.emm.domain.auth.DeleteUserAccountUseCase
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SessionStatus
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.category.CategoryRepository
+import com.emm.domain.recurring.GetRecurringMonthlySummaryUseCase
+import com.emm.domain.recurring.RecurringMonthlySummary
+import com.emm.domain.shared.Money
 import com.emm.domain.shared.RemoteWriteMutex
 import com.emm.domain.shared.backup.BackupFailureReason
 import com.emm.domain.shared.backup.BackupFailureState
@@ -23,6 +25,7 @@ import com.emm.domain.shared.error.ValidationCode
 import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.backup.BackupOrchestrator
+import com.emm.justchill.core.backup.LocalExportHistory
 import com.emm.justchill.hh.shared.toText
 import io.mockk.coEvery
 import io.mockk.every
@@ -76,8 +79,12 @@ class ProfileViewModelBackupFailureTest {
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns flowOf(emptyList())
     }
-    private val accountRepository = mockk<AccountRepository> {
-        every { all() } returns flowOf(emptyList())
+    private val getRecurringMonthlySummary = mockk<GetRecurringMonthlySummaryUseCase> {
+        every { this@mockk.invoke() } returns
+            flowOf(RecurringMonthlySummary(activeCount = 0, monthlyOutflow = Money.Zero))
+    }
+    private val localExportHistory = mockk<LocalExportHistory>(relaxed = true) {
+        every { daysSinceLastExport() } returns null
     }
 
     @Before
@@ -243,7 +250,8 @@ class ProfileViewModelBackupFailureTest {
         getBackupStaleness = mockk<GetBackupStalenessUseCase>(relaxed = true),
         logger = logger,
         categoryRepository = categoryRepository,
-        accountRepository = accountRepository,
+        localExportHistory = localExportHistory,
+        getRecurringMonthlySummary = getRecurringMonthlySummary,
         observeSession = observeSession,
         appVersion = APP_VERSION,
         clock = object : Clock {

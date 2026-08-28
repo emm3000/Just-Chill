@@ -4,6 +4,7 @@ import com.emm.justchill.core.mvi.UiIntent
 
 sealed interface ProfileIntent : UiIntent {
     data object ExportRequested : ProfileIntent
+    data object ExportSaved : ProfileIntent
     data class ImportJson(val json: String) : ProfileIntent
     data object SignOut : ProfileIntent
     data object DeleteAccount : ProfileIntent

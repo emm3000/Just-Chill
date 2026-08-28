@@ -11,8 +11,7 @@ const val BACKUP_DESTINATION_DISCLOSURE: String =
 const val BACKUP_DESTINATION_DISCLOSURE_ACTION: String = "Entendido, respaldar"
 
 const val BACKUP_LOCAL_ONLY_WARNING: String =
-    "Nada de esto sale de tu teléfono. Si lo pierdes o cambias de celular sin exportar, tu " +
-        "data se va con él."
+    "Nada sale de tu teléfono. Si lo pierdes o lo cambias sin exportar, tu data se va con él."
 
 fun BackupRowUi.toMetaText(): String = when (this) {
     BackupRowUi.BackingUp -> "Respaldando…"
@@ -28,9 +27,9 @@ fun BackupRowUi.toMetaText(): String = when (this) {
     is BackupRowUi.Failed -> failedMetaText(reason, lastSnapshot)
 
     is BackupRowUi.Stale ->
-        "${backupAgeLabel(daysSinceLastBackup).titlecaseFirstChar()} · hay cambios sin respaldar"
+        "${daysAgoLabel(daysSinceLastBackup).titlecaseFirstChar()} · hay cambios sin respaldar"
 
-    is BackupRowUi.UpToDate -> backupAgeLabel(daysSinceLastBackup).titlecaseFirstChar()
+    is BackupRowUi.UpToDate -> daysAgoLabel(daysSinceLastBackup).titlecaseFirstChar()
 }
 
 private fun failedMetaText(reason: BackupFailureReason?, lastSnapshot: LastSnapshot): String {
@@ -41,11 +40,11 @@ private fun failedMetaText(reason: BackupFailureReason?, lastSnapshot: LastSnaps
         LastSnapshot.AgeUnknown -> "No pude respaldar · ${action ?: "intenta de nuevo"}"
 
         is LastSnapshot.DaysAgo ->
-            "${backupAgeLabel(lastSnapshot.days).titlecaseFirstChar()} · ${action ?: "no pude actualizar"}"
+            "${daysAgoLabel(lastSnapshot.days).titlecaseFirstChar()} · ${action ?: "no pude actualizar"}"
     }
 }
 
-private fun backupAgeLabel(days: Int): String = when (days) {
+internal fun daysAgoLabel(days: Int): String = when (days) {
     0 -> "hoy"
     1 -> "ayer"
     else -> "hace $days días"

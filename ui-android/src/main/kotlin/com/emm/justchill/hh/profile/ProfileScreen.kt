@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.ContentCopy
@@ -40,11 +39,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.emm.domain.shared.Money
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.hh.shared.categoriesMetaText
+import com.emm.justchill.hh.shared.recurringMetaText
 
 @Composable
 fun ProfileScreen(
@@ -53,7 +55,6 @@ fun ProfileScreen(
     appVersion: String = "",
     commitHash: String = "",
     onCategoriesClick: () -> Unit = {},
-    onAccountsClick: () -> Unit = {},
     onRecurringClick: () -> Unit = {},
     onAboutClick: () -> Unit = {},
     onExportClick: () -> Unit = {},
@@ -82,42 +83,35 @@ fun ProfileScreen(
             style = type.headlineL,
             color = colors.textPrimary,
             modifier = Modifier.padding(
-                start = spacing.s5,
-                end = spacing.s5,
+                start = spacing.s6,
+                end = spacing.s6,
                 top = spacing.s6,
-                bottom = spacing.s4,
+                bottom = spacing.s1,
             ),
         )
 
-        AccountSection(
-            state = state,
-            onSignInClick = onSignInClick,
-            onSignOutClick = onSignOutClick,
-            onDeleteAccountClick = onDeleteAccountClick,
-        )
+        (state.session as? SessionUiState.SignedIn)?.let { signedIn ->
+            AccountSection(
+                session = signedIn,
+                op = state.op,
+                onSignOutClick = onSignOutClick,
+                onDeleteAccountClick = onDeleteAccountClick,
+            )
+        }
 
         SectionHeader(text = "Gestionar")
         ProfileGroup {
             ProfileRow(
                 icon = Icons.Outlined.Category,
                 label = "Categorías",
-                meta = "${state.categoryCount} totales",
-                metaIsPrimary = true,
+                meta = categoriesMetaText(state.categoryCount, state.incomeCategoryCount),
+                metaIsPrimary = false,
                 onClick = onCategoriesClick,
             )
-            HairlineDivider()
-            ProfileRow(
-                icon = Icons.Outlined.AccountBalanceWallet,
-                label = "Cuentas",
-                meta = "${state.accountCount} activas",
-                metaIsPrimary = true,
-                onClick = onAccountsClick,
-            )
-            HairlineDivider()
             ProfileRow(
                 icon = Icons.Outlined.Repeat,
                 label = "Movimientos recurrentes",
-                meta = "Pagos y cobros fijos",
+                meta = recurringMetaText(state.recurringCount, state.recurringMonthlyOutflow),
                 metaIsPrimary = false,
                 onClick = onRecurringClick,
             )
@@ -127,6 +121,7 @@ fun ProfileScreen(
             state = state,
             onExportClick = onExportClick,
             onImportClick = onImportClick,
+            onSignInClick = onSignInClick,
             snapshotActions = SnapshotBackupActions(
                 onBackUpNow = onBackUpNowClick,
                 onVerify = onVerifyBackupClick,
@@ -139,15 +134,14 @@ fun ProfileScreen(
             ProfileRow(
                 icon = Icons.Outlined.Info,
                 label = "Acerca de JustChill",
-                meta = "El manifiesto",
+                meta = "El manifiesto · v$appVersion",
                 metaIsPrimary = false,
                 onClick = onAboutClick,
             )
-            HairlineDivider()
             ProfileRow(
                 icon = Icons.Outlined.Shield,
                 label = "Privacidad",
-                meta = "100% local",
+                meta = "100 % local, sin cuenta",
                 metaIsPrimary = false,
                 onClick = onPrivacyClick,
             )
@@ -165,8 +159,8 @@ fun ProfileScreen(
 
 @Composable
 private fun AccountSection(
-    state: ProfileUiState,
-    onSignInClick: () -> Unit,
+    session: SessionUiState.SignedIn,
+    op: ProfileOp,
     onSignOutClick: () -> Unit,
     onDeleteAccountClick: () -> Unit,
 ) {
@@ -185,64 +179,40 @@ private fun AccountSection(
     Column(modifier = Modifier.fillMaxWidth()) {
         SectionHeader(text = "Cuenta")
         ProfileGroup {
-            when (val session = state.session) {
-                SessionUiState.Initializing,
-                SessionUiState.SignedOut,
-                -> {
-                    ProfileRow(
-                        icon = Icons.Outlined.Shield,
-                        label = "Iniciar sesión",
-                        meta = "Respalda tus datos en la nube",
-                        metaIsPrimary = false,
-                        onClick = onSignInClick,
-                    )
-                }
-
-                is SessionUiState.SignedIn -> {
-                    ProfileRowWithTrailing(
-                        icon = Icons.Outlined.AccountCircle,
-                        label = session.email ?: "Tu cuenta",
-                        meta = "",
-                        metaIsPrimary = false,
-                        onClick = null,
-                        trailing = {},
-                    )
-                    HairlineDivider()
-                    ProfileRowWithTrailing(
-                        icon = Icons.Outlined.Shield,
-                        label = "Cerrar sesión",
-                        meta = if (state.op == ProfileOp.SigningOut) {
-                            "Cerrando sesión…"
-                        } else {
-                            "Tus datos siguen en este teléfono"
-                        },
-                        metaIsPrimary = false,
-                        enabled = state.op == ProfileOp.None || state.op == ProfileOp.SigningOut,
-                        onClick = onSignOutClick.takeIf { state.op == ProfileOp.None },
-                        trailing = {
-                            ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.SigningOut)
-                        },
-                    )
-                    HairlineDivider()
-                    ProfileRowWithTrailing(
-                        icon = Icons.Outlined.Delete,
-                        label = "Eliminar cuenta",
-                        meta = if (state.op == ProfileOp.DeletingAccount) {
-                            "Eliminando…"
-                        } else {
-                            "Borra tu cuenta y tus datos en la nube"
-                        },
-                        metaIsPrimary = false,
-                        enabled = state.op == ProfileOp.None || state.op == ProfileOp.DeletingAccount,
-                        onClick = { showDeleteAccountDialog = true }.takeIf { state.op == ProfileOp.None },
-                        trailing = {
-                            ChevronTrailing(
-                                enabled = state.op == ProfileOp.None || state.op == ProfileOp.DeletingAccount,
-                            )
-                        },
-                    )
-                }
-            }
+            ProfileRowWithTrailing(
+                icon = Icons.Outlined.AccountCircle,
+                label = session.email ?: "Tu cuenta",
+                meta = "",
+                metaIsPrimary = false,
+                onClick = null,
+                trailing = {},
+            )
+            ProfileRowWithTrailing(
+                icon = Icons.Outlined.Shield,
+                label = "Cerrar sesión",
+                meta = if (op == ProfileOp.SigningOut) {
+                    "Cerrando sesión…"
+                } else {
+                    "Tus datos siguen en este teléfono"
+                },
+                metaIsPrimary = false,
+                enabled = op == ProfileOp.None || op == ProfileOp.SigningOut,
+                onClick = onSignOutClick.takeIf { op == ProfileOp.None },
+                trailing = { ChevronTrailing(enabled = op == ProfileOp.None || op == ProfileOp.SigningOut) },
+            )
+            ProfileRowWithTrailing(
+                icon = Icons.Outlined.Delete,
+                label = "Eliminar cuenta",
+                meta = if (op == ProfileOp.DeletingAccount) {
+                    "Eliminando…"
+                } else {
+                    "Borra tu cuenta y tus datos en la nube"
+                },
+                metaIsPrimary = false,
+                enabled = op == ProfileOp.None || op == ProfileOp.DeletingAccount,
+                onClick = { showDeleteAccountDialog = true }.takeIf { op == ProfileOp.None },
+                trailing = { ChevronTrailing(enabled = op == ProfileOp.None || op == ProfileOp.DeletingAccount) },
+            )
         }
     }
 }
@@ -319,7 +289,14 @@ private fun CopyableCommitRow(label: String, onCopyClick: () -> Unit) {
 private fun ProfileScreenPreview() {
     EmmTheme {
         ProfileScreen(
-            state = ProfileUiState(categoryCount = 12, accountCount = 5),
+            state = ProfileUiState(
+                categoryCount = 24,
+                incomeCategoryCount = 7,
+                recurringCount = 3,
+                recurringMonthlyOutflow = Money(9_000L),
+                lastExport = LastExportUi.DaysAgo(3),
+                session = SessionUiState.SignedOut,
+            ),
             appVersion = "1.0.0",
             commitHash = "4e47828d1f2a3b4c5d6e7f8091a2b3c4d5e6f708",
         )

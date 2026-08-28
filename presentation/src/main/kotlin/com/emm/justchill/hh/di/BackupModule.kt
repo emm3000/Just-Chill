@@ -9,6 +9,7 @@ import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupDisclosureSignal
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.core.backup.DefaultBackupMetadataStore
+import com.emm.justchill.core.backup.LocalExportHistory
 import com.emm.justchill.core.lifecycle.backgroundEvents
 import com.emm.justchill.core.lifecycle.resumeEvents
 import org.koin.core.module.dsl.bind
@@ -24,6 +25,8 @@ val backupModule = module {
     factoryOf(::GetBackupStalenessUseCase)
 
     factoryOf(::DefaultBackupMetadataStore) { bind<BackupMetadataStore>() }
+
+    factoryOf(::LocalExportHistory)
 
     // Shared between BackupOrchestrator and DeleteUserAccountUseCase so a backup upload and an
     // account deletion never race each other.

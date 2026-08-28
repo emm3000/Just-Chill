@@ -1,10 +1,12 @@
 package com.emm.justchill.hh.profile
 
-import com.emm.domain.account.AccountRepository
 import com.emm.domain.auth.DeleteUserAccountUseCase
 import com.emm.domain.auth.ObserveSessionUseCase
 import com.emm.domain.auth.SignOutUseCase
 import com.emm.domain.category.CategoryRepository
+import com.emm.domain.recurring.GetRecurringMonthlySummaryUseCase
+import com.emm.domain.recurring.RecurringMonthlySummary
+import com.emm.domain.shared.Money
 import com.emm.domain.shared.backup.BackupRepository
 import com.emm.domain.shared.backup.BackupVerifier
 import com.emm.domain.shared.backup.GetBackupStalenessUseCase
@@ -15,6 +17,7 @@ import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupHealth
+import com.emm.justchill.core.backup.LocalExportHistory
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -57,8 +60,12 @@ class ProfileViewModelImportTest {
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns flowOf(emptyList())
     }
-    private val accountRepository = mockk<AccountRepository> {
-        every { all() } returns flowOf(emptyList())
+    private val getRecurringMonthlySummary = mockk<GetRecurringMonthlySummaryUseCase> {
+        every { this@mockk.invoke() } returns
+            flowOf(RecurringMonthlySummary(activeCount = 0, monthlyOutflow = Money.Zero))
+    }
+    private val localExportHistory = mockk<LocalExportHistory>(relaxed = true) {
+        every { daysSinceLastExport() } returns null
     }
 
     private val fixedClock = object : Clock {
@@ -75,7 +82,8 @@ class ProfileViewModelImportTest {
         getBackupStaleness = getBackupStaleness,
         logger = logger,
         categoryRepository = categoryRepository,
-        accountRepository = accountRepository,
+        localExportHistory = localExportHistory,
+        getRecurringMonthlySummary = getRecurringMonthlySummary,
         observeSession = observeSession,
         appVersion = "1.0.0",
         clock = fixedClock,

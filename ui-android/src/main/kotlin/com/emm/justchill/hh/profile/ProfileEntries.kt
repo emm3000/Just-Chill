@@ -19,7 +19,6 @@ import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
-import com.emm.justchill.hh.shared.AccountsRoute
 import com.emm.justchill.hh.shared.AppNavigator
 import com.emm.justchill.hh.shared.AuthRoute
 import com.emm.justchill.hh.shared.CategoriesListRoute
@@ -81,7 +80,9 @@ private fun ProfileEntry(
                     tone = EmmSnackbarTone.Error,
                 )
 
-                is ProfileEffect.ExportReady -> bindings.platform.requestExport(effect.json)
+                is ProfileEffect.ExportReady -> bindings.platform.requestExport(effect.json) {
+                    vm.onIntent(ProfileIntent.ExportSaved)
+                }
 
                 is ProfileEffect.Notify -> bindings.snackbarHostState.showEmmSnackbar(
                     message = effect.message.toText(),
@@ -125,7 +126,6 @@ private fun ProfileEntry(
         appVersion = appVersion,
         commitHash = commitHash,
         onCategoriesClick = { nav.push(CategoriesListRoute) },
-        onAccountsClick = { nav.push(AccountsRoute) },
         onRecurringClick = { nav.push(RecurringMovementsRoute) },
         onAboutClick = { nav.push(ManifestoRoute(isRevisit = true)) },
         onExportClick = {
