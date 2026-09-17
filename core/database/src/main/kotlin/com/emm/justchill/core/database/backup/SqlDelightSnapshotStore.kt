@@ -51,7 +51,7 @@ private fun JustChillDatabase.readLive(): LocalSnapshot = LocalSnapshot(
 )
 
 private fun JustChillDatabase.replaceWith(snapshot: LocalSnapshot, now: Long): ImportStats {
-    var restoredLoanPayments = 0
+    var restoredLoanPayments: Int = 0
     transaction {
         transactionsQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
         if (snapshot.recurringMovements != null) {
