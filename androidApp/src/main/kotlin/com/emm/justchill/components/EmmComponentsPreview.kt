@@ -36,10 +36,6 @@ import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.hh.shared.formatNeutral
 
-/**
- * Visual reference for the design system components. Open in Android Studio Preview
- * to review tokens together. Not used in production.
- */
 @Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 1600)
 @Composable
 private fun EmmComponentsGallery() {

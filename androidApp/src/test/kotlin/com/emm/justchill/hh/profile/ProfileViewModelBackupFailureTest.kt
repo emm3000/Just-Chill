@@ -53,10 +53,9 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 /**
- * Every case here taps Respaldar on a real [BackupOrchestrator] wired to a real [ProfileViewModel],
- * fails the port that raises that exception in production, and reads the sentence off the effect.
- * Rendering [ProfileMessage.BackupFailed] straight from a reason would prove the copy exists and
- * nothing about whether a failing backup can reach it.
+ * Each case taps Respaldar on a real [BackupOrchestrator] wired to a real [ProfileViewModel] and
+ * fails the port that raises that exception in production: rendering [ProfileMessage.BackupFailed]
+ * straight from a reason would prove the copy exists, not that a failing backup can reach it.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModelBackupFailureTest {

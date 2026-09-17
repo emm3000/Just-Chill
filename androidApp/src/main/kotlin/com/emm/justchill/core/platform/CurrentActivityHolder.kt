@@ -5,12 +5,6 @@ import android.app.Application
 import android.os.Bundle
 import java.lang.ref.WeakReference
 
-/**
- * Tracks the currently foregrounded Activity via [Application.ActivityLifecycleCallbacks].
- *
- * Register an instance via [Application.registerActivityLifecycleCallbacks] in [Application.onCreate].
- * The same instance must be provided as a Koin singleton so it can be injected where needed.
- */
 class CurrentActivityHolder : Application.ActivityLifecycleCallbacks {
 
     private var activityRef: WeakReference<Activity>? = null
@@ -30,7 +24,6 @@ class CurrentActivityHolder : Application.ActivityLifecycleCallbacks {
         }
     }
 
-    // Unused lifecycle callbacks — required by the interface.
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
     override fun onActivityStarted(activity: Activity) = Unit
     override fun onActivityStopped(activity: Activity) = Unit

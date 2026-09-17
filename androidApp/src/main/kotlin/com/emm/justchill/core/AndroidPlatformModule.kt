@@ -32,12 +32,9 @@ private const val PREFS_NAME = "justchill_prefs"
 internal const val AUTH_PREFS_NAME = "justchill_auth"
 private const val PREFS_MIGRATED_FLAG = "_migrated_from_build_id"
 
-// Android platform Koin module — the ONLY place Android-specific DI lives. Supplies every binding
-// whose construction is Android-specific; the platform-agnostic graph (feature modules +
-// supabase/sync/auth/data/commonCore wiring) is shared via appModules().
+// The ONLY place Android-specific DI lives; the platform-agnostic graph is shared via appModules().
 val androidPlatformModule = module {
 
-    // SQLDelight: AndroidSqliteDriver (with its onCreate default-category seed) + EmmDatabaseData.
     single { provideSqlDriver(androidContext()) }
     single { provideDb(get()) }
 
@@ -60,23 +57,14 @@ val androidPlatformModule = module {
     single<SessionManager> { get<KeystoreSessionManager>() }
     single { CurrentActivityHolder() }
 
-    // Sync observability sink. Platform-specific because it reports to Crashlytics.
     single<DiagnosticsLogger> { CrashReportingDiagnosticsLogger() }
 
-    // Platform-provided app version (:presentation cannot generate BuildConfig itself). Consumed by
-    // ProfileViewModel via the "appVersion" qualifier; stamped into exported backups.
+    // :presentation cannot generate BuildConfig itself.
     single(named("appVersion")) { BuildConfig.VERSION_NAME }
 
-    // The git commit this APK was built from, FULL 40-char sha. Consumed by AppNavHost, which hands
-    // it to the profile footer; the footer shows the first 7 and copies all 40.
-    //
-    // Bound by TYPE, not under a qualifier: producer and consumer are in different Gradle modules,
-    // and CommitHash (:presentation) is the declaration both import. See its KDoc.
-    //
-    // Deliberately not in testPlatformModule: its only consumer is :ui-android's Compose
-    // host, which is Android-only and outside appModules(), so AppGraphKoinTest would be asserting
-    // wiring no shared consumer resolves — the same reason DispatchersProvider is absent there.
-    // AndroidPlatformModuleTest is what guards this line instead: deleting it turns that test red.
+    // Bound by TYPE, not a qualifier: producer and consumer are different Gradle modules sharing
+    // CommitHash (:presentation). Deliberately not in testPlatformModule: its only consumer is
+    // :ui-android's Android-only Compose host; AndroidPlatformModuleTest guards this binding instead.
     single { CommitHash(BuildInfo.commitHash) }
 
     // Google Sign-In web client id, consumed by AuthViewModel. Empty when supabase.properties is
@@ -92,12 +80,11 @@ val androidPlatformModule = module {
         )
     }
 
-    // Google Sign-In launcher.
     factoryOf(::GoogleCredentialClient)
     factoryOf(::ActivityGoogleSignInLauncher) { bind<GoogleSignInLauncher>() }
 
-    // Launcher shortcuts: ShortcutManagerCompat needs an Android Context, so the publisher built
-    // from :presentation's GetSpendShortcutCombos lives here rather than beside it (E09-03).
+    // ShortcutManagerCompat needs an Android Context, so the publisher built from :presentation's
+    // GetSpendShortcutCombos lives here rather than beside it.
     single { ShortcutPublisher(androidContext(), get()) }
 }
 

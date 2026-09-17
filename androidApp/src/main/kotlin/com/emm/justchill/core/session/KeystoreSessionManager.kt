@@ -15,10 +15,8 @@ internal const val ENCRYPTED_SESSION_KEY = "session_encrypted"
 // The key SettingsSessionManager wrote, and the only reason this class reads two of them.
 internal const val LEGACY_SESSION_KEY = "session"
 
-/**
- * Without `encodeDefaults` a written payload omits `expiresAt`, and `UserSession`'s default
- * recomputes it as `now + expiresIn` on the next read — silently extending the session.
- */
+// Without encodeDefaults a written payload omits expiresAt, and UserSession's default recomputes it
+// as now + expiresIn on the next read — silently extending the session.
 internal val sessionJson: Json = Json { encodeDefaults = true }
 
 internal class KeystoreSessionManager(
@@ -27,10 +25,9 @@ internal class KeystoreSessionManager(
     private val diagnostics: DiagnosticsLogger,
 ) : SessionManager {
 
-    // Every read-then-write of the two keys runs under this monitor. The startup sweep and the
-    // Supabase client's own first load race by design, and unsynchronised they interleave into a
-    // downgrade: the sweep reads the legacy value, the client loads and refreshes, and the sweep
-    // then writes the older session back over the newer one.
+    // Every read-then-write of the two keys runs under this monitor: the startup sweep and the
+    // Supabase client's first load race by design, and unsynchronised they can interleave into a
+    // downgrade — the sweep writing the older session back over the client's newer one.
     private val storeLock = Any()
 
     override suspend fun saveSession(session: UserSession) {
@@ -51,14 +48,9 @@ internal class KeystoreSessionManager(
         }
     }
 
-    /**
-     * Re-encrypts the cleartext session a pre-Keystore build left behind and drops the cleartext key.
-     *
-     * Called at launch because [loadSession] — the only other caller of the same move — hangs off a
-     * lazy Koin `single` that nothing on the startup path resolves: on an existing install the
-     * cleartext refresh token otherwise survives every launch until the user opens the account
-     * screen. Never throws, so a Keystore that cannot serve a key does not kill `onCreate`.
-     */
+    // Re-encrypts the cleartext session a pre-Keystore build left behind and drops the cleartext key.
+    // Runs at launch because loadSession, the only other caller, hangs off a lazy Koin single that
+    // nothing on the startup path resolves; never throws, so a dead Keystore does not kill onCreate.
     fun sweepLegacySession() {
         runCatching { synchronized(storeLock) { adoptLegacySession() } }
             .onFailure { diagnostics.warn("Legacy session sweep failed; the cleartext key survives", it) }
@@ -99,12 +91,9 @@ internal class KeystoreSessionManager(
     }
 }
 
-// Only these prove the payload can never read back: a GCM tag mismatch means it was written under a
-// different key, an invalidated key is not coming back, and a payload the encoder cannot have
-// produced is garbage. Everything else — a provider that failed to load this once — is transient,
-// and discarding on it costs a re-login for a session that would have read fine next launch, so the
-// default is to keep. A KeyStoreException is deliberately absent: it reports an unavailable provider
-// or an uninitialised store, neither of which says anything about this alias.
+// Only these prove the payload can never read back — a bad tag, an invalidated key, or garbage the
+// encoder could not have produced. Everything else is transient: discarding on it would cost a
+// re-login for a session that might read fine next launch, so the default is to keep it.
 internal fun Throwable.willNeverReadBack(): Boolean = when (this) {
     is AEADBadTagException,
     is KeyPermanentlyInvalidatedException,

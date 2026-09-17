@@ -346,8 +346,6 @@ class ProfileViewModelBackupRowTest {
         assertEquals(BackupRowSeverity.Danger, row.severity())
     }
 
-    // ── The destination disclosure (ADR 009 Decision 5, unit 3c) ───────────────────
-
     @Test
     fun `a signed-in device whose destination was never disclosed asks before anything else`() =
         runTest(testDispatcher) {
