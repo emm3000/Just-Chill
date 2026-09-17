@@ -52,7 +52,8 @@ guess.
 If the user gave an explicit version, normalize to `vX.Y.Z` (add `v` prefix if missing). Validate it matches `^v\d+\.\d+\.\d+(-[\w.]+)?$`.
 
 If the user gave `patch`/`minor`/`major`, read the latest **release** tag. The `--match` filter is
-not optional — the same filter and the same reason are in `androidApp/build.gradle.kts`.
+not optional — the same filter and the same reason are in
+`build-logic/convention/src/main/kotlin/com/emm/buildlogic/AndroidReleaseConventionPlugin.kt`.
 ```bash
 git describe --tags --abbrev=0 --match "v[0-9]*" 2>/dev/null
 ```

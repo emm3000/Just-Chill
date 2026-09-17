@@ -2,6 +2,7 @@
 paths:
   - ".github/**"
   - "androidApp/build.gradle.kts"
+  - "build-logic/convention/src/main/kotlin/com/emm/buildlogic/AndroidReleaseConventionPlugin.kt"
   - ".claude/commands/release.md"
   - "scripts/git-hooks/**"
 ---
