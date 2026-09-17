@@ -36,7 +36,7 @@ Review the pending changes (staged + unstaged) against `CLAUDE.md` and `.claude/
    - `Clock` and `TimeZone` injected, no defaults? Every catch-all rethrows `CancellationException` first?
 
 6. **Hygiene**
-   - Comments beyond the four exceptions in `kotlin-style.md`? Explicit types on properties and locals?
+   - Comments beyond the three exceptions in `kotlin-style.md`? Explicit types on properties and locals?
    - Spanish only in user-facing values, tuteo never voseo; English identifiers?
    - Sensitive files in the diff (`keystore.properties`, `local.properties`, `key/`, `google-services.json`)?
 

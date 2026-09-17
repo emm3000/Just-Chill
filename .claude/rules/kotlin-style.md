@@ -38,12 +38,11 @@ Primary constructor parameters always carry their type — Kotlin requires it.
 
 The code is the explanation. If a line needs a comment to be understood, the fix is a better name or an extracted function with a name that says it — see `naming.md`. A test method's name is its documentation.
 
-Exceptions survive, and only these. Each is one to three lines of present-tense fact; a surviving comment names a constraint the code cannot show.
+Three exceptions survive, and only these. Each is one to three lines of present-tense fact; a surviving comment names a constraint the code cannot show.
 
 1. **Why a non-obvious constraint exists.** The code can show *what* the value is, never *why* it was chosen: the exclusive `>` on `BACKUP_STALE_AFTER_DAYS`, `ñ` folding to `n` in `personKey`. Without it, someone "fixes" the value back.
 2. **A warning of consequences.** A workaround, an ordering requirement, a known platform bug, an invariant no test pins.
 3. **An external reference.** An ADR, a spec, a migration note the code cannot carry.
-4. **A `@Suppress` justification**, re-checked whenever the thing it suppresses changes.
 
 A constraint lives once, at the declaration it constrains, never at a call site or on a consuming type. A comment describing behaviour enforced elsewhere is a copy, and copies diverge. Zero history: a sentence about what the code used to be or what a review said is deleted, not rephrased.
 

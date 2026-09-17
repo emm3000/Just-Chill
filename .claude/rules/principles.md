@@ -47,7 +47,7 @@ A function either orchestrates named steps or performs one step. Never both. Thi
 | Letter | Status here |
 |---|---|
 | **SRP** | Adopted. One reason to change per class. **Test:** an SRP finding names the *two unrelated reasons* the unit would change; if the reviewer cannot name two, it is not a finding. |
-| **ISP** | Weak. The `:domain` `*Repository` interfaces are wide and most consumers use one or two methods. **Test:** an ISP finding names a consumer a split would actually decouple, never a method count. |
+| **ISP** | Adopted. Small, purpose-built interfaces. |
 | **DIP** | Adopted, and it is the layer seam. The domain declares the interface, the infrastructure implements it — see `architecture.md`. **Test:** a DIP finding points at a forbidden import line or a module dependency that should not exist. |
 | **OCP** | Adopted **only after the second real variant appears**. Applied early it is YAGNI with a respectable name. Rule of three — duplicate twice, abstract on the third. |
 | **LSP** | Low ceremony. Inheritance is rare here; sealed hierarchies and composition make it nearly moot. |

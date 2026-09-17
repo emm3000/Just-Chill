@@ -33,7 +33,7 @@ Manual capture of income and spending in soles, in under fifteen seconds per mov
 
 These bind on every change, including a new file created before any Kotlin has been read.
 
-- **No comments.** No KDoc, no `//`, no banners, no commented-out code. The code explains itself or it gets renamed. Four narrow exceptions in `.claude/rules/kotlin-style.md`.
+- **No comments.** No KDoc, no `//`, no banners, no commented-out code. The code explains itself or it gets renamed. Three narrow exceptions in `.claude/rules/kotlin-style.md`.
 - **Explicit types** on every property and local `val` / `var`, and the supertype when the abstraction is what matters. Omit only when the right-hand side is a constructor call that already names the type.
 - **Only the repo's atoms** (`ui-android/.../core/ui/atoms/`) in feature screens. Never a raw Material3 control. See `.claude/rules/ui-components.md`.
 - **MVI per feature**: one `UiState` (all `val`), one `onIntent(intent)` entry point on `MviViewModel<S, I, E>`, effects consumed once and never stored in state. ViewModels live in `:presentation` and never import Compose.
