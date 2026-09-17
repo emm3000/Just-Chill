@@ -152,6 +152,9 @@ single highest-risk spot; the full ledger and landmines are in `docs/archive/kmp
 | Opus | Decides. | Architecture, ADR content, plans, reviewers, Judgment Day judges, and writers where nothing catches the error |
 | Main thread | Decides, delegates, verifies conclusions. Never reads raw tool output. | — |
 
+Tier names are roles, not model ids. The Opus tier is the strongest reasoning model available —
+`fable` (Fable 5.1) today, `opus` as the fallback; the Agent call's `model` parameter names it.
+
 - **Tiebreaker for code writers: Sonnet writes where the compiler or a test catches the error. Opus
   writes where nothing catches it.** In this repo the "nothing catches it" list IS the `## Gotchas`
   section of `CLAUDE.md`.
@@ -173,7 +176,8 @@ single highest-risk spot; the full ledger and landmines are in `docs/archive/kmp
 
 ### Enforcement note
 
-`model` is passed explicitly on every delegation. Agent-file frontmatter (e.g.
-`~/.claude/agents/jd-judge-a.md`, `jd-judge-b.md`) carries `model: sonnet` by default, and the Agent
-tool's `model` parameter overrides it — omitting it silently downgrades a judge to Sonnet. The
-incident chronicle lives in git/engram.
+`model` is passed explicitly on every delegation. An agent definition's frontmatter can carry its
+own `model:`, and the Agent tool's `model` parameter overrides it — omitting the parameter silently
+runs whatever the definition or the session default says. That downgraded a Judgment Day judge to
+Sonnet once; the incident chronicle lives in git/engram. No judge agent files exist today: judges
+are spawned as general-purpose agents with `model` set on the call.
