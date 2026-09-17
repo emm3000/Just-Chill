@@ -22,7 +22,6 @@ data class EditTransactionUiState(
     val accountId: AccountId? = null,
     val categoryId: CategoryId? = null,
     val frequentCategoryIds: List<String> = emptyList(),
-    // null means no sheet is open (ADR 012 Decision 2).
     val openSheet: TransactionSheet? = null,
 ) : UiState {
     val dateLabel: String get() = relativeDayLabel(date, today)

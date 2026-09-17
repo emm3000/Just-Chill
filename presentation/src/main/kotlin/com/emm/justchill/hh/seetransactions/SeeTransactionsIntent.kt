@@ -23,8 +23,7 @@ sealed interface SeeTransactionsIntent : UiIntent {
 
     data object OnConfirmSheetDismissed : SeeTransactionsIntent
 
-    // Grouped so the ViewModel dispatches them in one delegated `when` branch — flattening them
-    // into onIntent's own puts it over CyclomaticComplexMethod.
+    // Grouped for the same CyclomaticComplexMethod reason as LoanDetailIntent.PaymentFormIntent.
     sealed interface ScreenChromeIntent : SeeTransactionsIntent {
         data object OnFilterSheetRequested : ScreenChromeIntent
         data object OnFilterSheetDismissed : ScreenChromeIntent
