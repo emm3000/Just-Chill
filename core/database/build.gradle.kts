@@ -1,7 +1,6 @@
 plugins {
     id("justchill.android.library")
     id("justchill.sqldelight")
-    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -21,20 +20,11 @@ qualityGate {
 dependencies {
     implementation(projects.core.domain)
     implementation(libs.coroutines.extensions)
-    api(libs.supabase.auth.kt)
-    api(libs.supabase.postgrest.kt)
-    api(libs.supabase.storage.kt)
-    implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.datetime)
-    // Declared so the digest backups are verified against is pinned here, not by supabase-kt.
-    implementation(libs.okio)
     api(libs.android.driver)
-    api(libs.ktor.client.okhttp)
-    api(platform(libs.supabase.bom))
 
     testImplementation(libs.sqlite.driver)
-    testImplementation(libs.ktor.client.mock)
 
     androidTestImplementation(kotlin("test-junit"))
     androidTestImplementation(libs.junit)

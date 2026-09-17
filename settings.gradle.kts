@@ -42,15 +42,17 @@ rootProject.name = "JustChill"
 // The module map. Read the middle column as the question each module answers.
 //
 //   :core:domain    who am I?         business rules, zero framework   Android
-//   :core:database  where do I live?  SQLDelight + Supabase            Android
+//   :core:database  where do I live?  SQLDelight                       Android
+//   :core:backup    who keeps a copy? Supabase, Ktor, the Snapshot     Android
 //   :presentation   what do I think?  ViewModels, MVI, Koin, format    Android
 //   :ui-android     how do I look?    Compose screens, nav, theme      Android only
 //   :androidApp     how do I ship?    manifest, signing, flavors       Android only
 //
 // Dependency order, top of the graph down:
-//   androidApp -> ui-android -> presentation -> core:database -> core:domain
+//   androidApp -> ui-android -> presentation -> core:database, core:backup -> core:domain
 include(":androidApp")
 include(":ui-android")
 include(":presentation")
+include(":core:backup")
 include(":core:database")
 include(":core:domain")

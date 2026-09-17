@@ -1,0 +1,71 @@
+{
+    "schemaVersion": 4,
+    "exportedAt": 1755000000000,
+    "appVersion": "1.2.3",
+    "accounts": [
+        {
+            "accountId": "acc-1",
+            "name": "Yape",
+            "type": "Cash",
+            "currency": "PEN"
+        }
+    ],
+    "categories": [
+        {
+            "categoryId": "cat-1",
+            "name": "Comida",
+            "icon": "work",
+            "color": "#00FF00",
+            "categoryType": "Spend"
+        }
+    ],
+    "transactions": [
+        {
+            "transactionId": "tx-1",
+            "type": "Spend",
+            "amountCents": 10000,
+            "description": "Almuerzo",
+            "occurredAt": "2026-05-23T09:33:20",
+            "accountId": "acc-1",
+            "categoryId": "cat-1"
+        }
+    ],
+    "recurringMovements": [
+        {
+            "recurringMovementId": "rec-1",
+            "name": "Alquiler",
+            "type": "Spend",
+            "amountCents": 120000,
+            "description": "Depa",
+            "categoryId": "cat-1",
+            "accountId": "acc-1",
+            "frequency": "Monthly",
+            "dayOfMonth": 5,
+            "isActive": true,
+            "lastConfirmedPeriod": "2026-08",
+            "createdAt": 13
+        }
+    ],
+    "loans": [
+        {
+            "loanId": "loan-1",
+            "personName": "Rosa",
+            "personKey": "rosa",
+            "principalCents": 30000,
+            "interestBps": 0,
+            "totalDueCents": 30000,
+            "note": "Prestamo",
+            "lentAt": "2026-05-23T09:33:20"
+        }
+    ],
+    "loanPayments": [
+        {
+            "paymentId": "pay-1",
+            "loanId": "loan-1",
+            "amountCents": 5000,
+            "method": "Cash",
+            "paidAt": "2026-05-24T09:33:20",
+            "note": "Abono"
+        }
+    ]
+}

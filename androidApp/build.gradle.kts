@@ -81,6 +81,7 @@ tasks.named("qualityGate") {
 dependencies {
 
     implementation(projects.core.domain)
+    implementation(projects.core.backup)
     implementation(projects.core.database)
     implementation(projects.uiAndroid)
 
@@ -117,4 +118,8 @@ dependencies {
 
     // CoreModule builds SharedPreferencesSettings, which :presentation does not expose.
     implementation(libs.multiplatform.settings)
+
+    // The Snapshot's end-to-end tests live here: only the app sees both :core:backup, which writes
+    // the file, and :core:database, which holds the rows it restores into.
+    testImplementation(libs.sqlite.driver)
 }
