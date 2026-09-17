@@ -1,32 +1,36 @@
 # Workflow — How We Execute Every Unit of Work
 
-> How we execute every unit of work in this repo — the sync redesign, bugfixes, docs, anything else.
+> One GitHub issue in, one rebased PR out. Every unit — feature slice, bugfix, doc, refactor —
+> takes the same path; the model tier policy at the end decides who runs each step.
 
-## Roles
+## The unit
 
-- **Orchestrator** (main thread): scopes the unit, delegates, verifies cheaply, keeps its own
-  context clean. Does not write non-trivial work inline — see the Model Tier Policy below for the
-  bounded-read / mechanical-write exceptions.
-- **Writer** (delegated sub-agent, fresh context, full task prompt): does the actual work for one
-  unit — the move, the fix, the doc, the slice. Model tier per the policy below.
-- **Reviewer** (delegated sub-agent, fresh context, a **different agent instance** — no shared
-  context with the writer): adversarial double-check of the writer's commit. Finds breakage or risky
-  changes the gate can't catch. **Always Opus when it runs — but it no longer runs on every unit**:
-  the Review policy below decides whether a unit gets one. Not to be confused with Judgment Day's
-  judges, a separate, on-demand two-panel protocol with its own (narrower) Sonnet carve-out.
+A unit of work is one GitHub issue of `emm3000/Just-Chill` labelled `ready-for-agent`. The label
+vocabulary is `docs/agents/triage-labels.md`; the `gh` operations are `docs/agents/issue-tracker.md`;
+the open board is `gh issue list --label ready-for-agent`, never a list in a doc.
+
+- The issue IS the work: a `Done when` list of falsifiable conditions plus at most 3 lines of
+  context. An epic under `docs/work/epics/` IS the constraints that outlive every issue under it.
+  Git plus engram are the chronicle. A fact goes in exactly one of the three.
+- New issues come from the `ticket-writer` agent, from the PRD and an epic — never hand-written into
+  a doc. `mattpocock-skills:grilling` stress-tests a plan before it is ticketed.
+- Citations are by symbol, never by line.
 
 ## The loop
 
 ```
-1. Orchestrator SCOPES (inline, cheap)
-2. Orchestrator delegates → WRITER              ── writes + commits the unit
-3. Orchestrator CHEAP-VERIFY (inline)            ── git state + a quick, unit-appropriate check
-4. Orchestrator delegates → REVIEWER             ── adversarial, fresh context
-5. SHIP (reviewer verdict) or FIX-FIRST loop back to writer
+1. Orchestrator SCOPES the issue (inline, cheap) and picks the dispatch-log row
+2. Orchestrator delegates → WRITER        ── worktree, branch, commits, PR that closes the issue
+3. CI runs qualityGate on the PR
+4. Orchestrator delegates → pr-reviewer   ── MERGE or FIX FIRST (tiered, capped)
+5. Orchestrator rebase-merges, appends the dispatch-log row, closes the cycle
 ```
 
 ### 1. Scope (orchestrator, inline)
-Before delegating, map the unit cheaply so the writer prompt is precise:
+
+Map the issue cheaply so the writer prompt is precise, in 1–3 reads plus greps — the whole feature
+is what the writer's fresh context is for.
+
 - List the affected files (`fd -e kt` or equivalent), check for existing tests.
 - If the unit touches `:presentation` or crosses a module boundary: `rg` for UI leaks —
   `androidx\.compose`, `BuildConfig`, `R\.`/`stringResource`/`painterResource`/`Font(R.`,
@@ -35,62 +39,57 @@ Before delegating, map the unit cheaply so the writer prompt is precise:
   all, since nothing Android resolves on its classpath.
 - If the unit touches DI: read the feature's Koin module — does it bind a `:data` repository, and is
   the binding in the right module.
-- This stays inline (1–3 reads + greps). Do NOT read the whole feature — that is what the writer's
-  fresh context is for.
+- Pick the row of `docs/agents/dispatch-log.md` `## Rows` that matches the work; its `Model:effort`
+  is the writer's, passed explicitly on the Agent call.
+- Bugs with an unknown cause get `mattpocock-skills:diagnosing-bugs` before any writer is dispatched;
+  reading legwork goes to `mattpocock-skills:research`.
 
-### 2. Writer prompt must include
-- Repo root, branch, "commit here, do NOT branch/push" (unless the unit is explicitly meant to open
-  a PR).
-- Pointers to read: the relevant ADR(s), `docs/PROGRESS.md`, prior engram memos, the previous unit's
-  commit hash if this continues one.
-- Exact scope: the file list / what to change, and the package-path-stability rule where it applies.
-- Pre-scoped blockers from step 1.
+### 2. Writer
+
+Runs in its own git worktree on a branch, commits, opens a PR whose body says `Closes #<issue>`, and
+reports the PR number. Its prompt carries:
+
+- Repo root, the issue number, "own worktree and branch, open a PR, do NOT push to `trunk`".
+- Pointers to read: the epic, the relevant ADR(s), `docs/PROGRESS.md`, prior engram memos.
+- Exact scope: the file list, the `Done when` list (it wins over the file list), the pre-scoped
+  blockers from step 1.
 - For a move/refactor unit: a dependency-closure directive — map transitive imports from the
   consuming layer first; co-move non-platform dependencies with it, watching for `internal`→`public`
   visibility flips; hoist platform-specific symbols to callbacks the consuming layer wires in (e.g. the
   nav host).
-- The reinforced gate (below).
+- The reinforced gate (below), run locally before the PR opens.
 - Conventions: English code and docs, Spanish only for UI strings; `rg`/`fd`/`bat`/`sd`; conventional
-  commit, **NO Co-Authored-By** (a PreToolUse hook in `.claude/settings.json` blocks it); linear
-  history; no push unless told.
-- Save gotchas to engram.
+  commits, **NO Co-Authored-By** (a PreToolUse hook in `.claude/settings.json` blocks it); linear
+  history; gotchas saved to engram.
+- `mattpocock-skills:tdd` when the slice is a test-first one (a new rule, a bug with a known cause).
 
-### 3. Cheap-verify (orchestrator, inline)
-- `git log --oneline` — commit landed.
-- A quick, unit-appropriate regression check (e.g. `rg -l 'androidx\.compose' presentation/src/main`
-  for anything touching `:presentation`).
-- Do NOT re-run the full gate here (expensive) — the reviewer does that.
+### 3. CI
 
-### 4. Reviewer prompt must include
-- "FRESH context, adversarial, do NOT trust the writer's self-report."
-- The commit hash + what the unit was supposed to do.
-- `docs/CODE_QUALITY.md` — the reviewer owns its second half (SRP, DIP, YAGNI, DRY-over-knowledge,
-  the use-case admission rule); detekt cannot see any of it, so a green gate says nothing about it.
-- Checklist: diff scope sane; no duplicates/leftovers; DI graph bound exactly once where DI is
-  touched (zero = runtime crash the build gate misses, double = also wrong); leak grep where it
-  applies; behavior preservation (moved/changed bodies match except documented swaps); cross-module
-  same-package gotcha where it applies; **re-run the full gate from scratch** (`--rerun-tasks`).
-- Output: severity-tagged findings (`CRITICAL`/`WARNING`/`NIT`) + one-line verdict **SHIP** or
-  **FIX-FIRST**. Review only — no fixes, no commit.
-- **A comment finding has exactly two shapes: DELETE, or KEEP naming the constraint it carries.**
-  "Inconsistent with the surrounding style" is not a comment finding — style is what the diff looks
-  like, and the policy is about whether the sentence should exist at all. This is not hypothetical:
-  3c's review reported a comment as a KDoc-vs-line-comment inconsistency, the orchestrator forwarded
-  it as a reformatting instruction, and the round shipped the same sentence in a different syntax
-  while the sentence itself was a copy of a rule enforced in another file.
+`qualityGate` runs on the PR. The reviewer reads `gh pr checks`; nobody reruns the gate by hand.
 
-### 5. Decide
-- **SHIP** → report to user, move to the next unit.
-- **FIX-FIRST** → send findings back to the writer agent (or a fix agent). No re-review by default —
-  see the Review policy cap below.
+### 4. Review (pr-reviewer, always the Opus tier)
+
+The `pr-reviewer` agent takes the PR number, fresh context, adversarial, read-only. It returns
+severity-tagged findings and one verdict — **MERGE**, or **FIX FIRST** with the blocking items and
+one cause word (`checklist`, `judgment`, `spec`) for the dispatch log. Whether it runs at all is the
+review policy below. A diff that is not a PR (a spike, a branch under audit) gets
+`mattpocock-skills:code-review` instead.
+
+### 5. Merge (orchestrator)
+
+- **MERGE** → `gh pr merge --rebase`. The repository allows rebase merges only, and `trunk` requires
+  linear history: a stale base is rebased by the writer, never merged.
+- **FIX FIRST** → findings back to the writer, in the same worktree; cap below.
+- Append the PR row to `docs/agents/dispatch-log.md` `## Recent`, fold the oldest into `## Summary`
+  when Recent passes 20. `Closes #n` closes the issue on merge. Report to the user.
 
 ## Review policy — risk-tiered and capped
 
 **Cap: at most one review + one fix round per unit.**
-- SHIP → done. Fixes that follow a SHIP verdict (nits, copy) are covered by the gate, not by another
+- MERGE → done. Fixes that follow a MERGE verdict (nits, copy) are covered by the gate, not by another
   review round.
-- FIX-FIRST → writer fixes → done. One exception: a fix touching a finding the reviewer tagged
-  **CRITICAL** gets one re-review, scoped to that finding only.
+- FIX FIRST → writer fixes → done. One exception: a fix touching a finding the reviewer tagged
+  blocking gets one re-review, scoped to that finding only.
 
 **Tiering: the full adversarial review runs only where nothing else catches the error.**
 - **Reviewed (mandatory):** Supabase/SQLDelight schema or migrations, backup/restore correctness,
@@ -99,8 +98,7 @@ Before delegating, map the unit cheaply so the writer prompt is precise:
   demoted its compose-free purity from a module boundary to a reviewed convention: the import
   compiles, and the reviewer is the only thing left that rejects it.
 - **Gate-only (no reviewer):** UI composition, copy, presentation-layer wiring, docs, tests-only
-  changes, mechanical refactors. The reinforced gate plus the orchestrator's cheap-verify is the
-  whole check.
+  changes, mechanical refactors. CI's gate plus the orchestrator's read of the PR is the whole check.
 - A unit spanning both tiers gets one review scoped to its high-risk part.
 
 Rationale: this app has no third-party users and the author runs the release daily on real data. The
@@ -113,11 +111,9 @@ the review budget belongs to the paths that are not.
 ./gradlew assembleDevDebug # plus the build, which the gate deliberately excludes
 ```
 
-**Do not maintain a task list here.** This section used to spell one out, and four hand-written
-lists — this doc, the pre-push hook, and CI — drifted apart, none a superset of the others. The gate
-has exactly one definition,
-`build-logic/src/main/kotlin/com/emm/buildlogic/QualityGateConventionPlugin.kt`, and the hook, the
-three workflows and this doc all invoke it.
+**Do not maintain a task list here.** The gate has exactly one definition,
+`build-logic/src/main/kotlin/com/emm/buildlogic/QualityGateConventionPlugin.kt`, and the pre-push
+hook, the workflows and this doc all invoke it; hand-written copies drift.
 
 `qualityGate` covers, per module: detekt (`detektMain`, `detektTest`), that module's own host test
 suite, `:data`'s instrumented compile plus `verifySqlDelightMigration`, and `:androidApp`'s dev
@@ -139,10 +135,9 @@ A green gate still does NOT catch a missing Koin binding at the DI graph level; 
 ## Why writer and reviewer are always separate agents
 
 The Android build can be green while DI is broken (missing repository binding → runtime crash only
-when the screen opens). A fresh-context reviewer that traces the Koin graph and re-runs the gate
-catches what the writer — and the compiler — miss. Cost is justified: a broken unit merged silently
-costs more than one review pass. Confirmed worth it on Slice 3 of the KMP migration (DI was the
-single highest-risk spot; the full ledger and landmines are in `docs/archive/kmp/ORCHESTRATION.md`).
+when the screen opens). A fresh-context reviewer that traces the Koin graph catches what the writer
+— and the compiler — miss, and a broken unit merged silently costs more than one review pass. The
+writer never reviews its own work.
 
 ## Model tier policy
 
@@ -154,7 +149,8 @@ single highest-risk spot; the full ledger and landmines are in `docs/archive/kmp
 | Main thread | Decides, delegates, verifies conclusions. Never reads raw tool output. | — |
 
 Tier names are roles, not model ids. The Opus tier is the strongest reasoning model available —
-`fable` (Fable 5.1) today, `opus` as the fallback; the Agent call's `model` parameter names it.
+`fable` (Fable 5.1) today, `opus` as the fallback; the Agent call's `model` parameter names it. The
+effort that goes with each tier is a row of `docs/agents/dispatch-log.md`, tuned from that log.
 
 - **Tiebreaker for code writers: Sonnet writes where the compiler or a test catches the error. Opus
   writes where nothing catches it.** In this repo the "nothing catches it" list IS the `## Gotchas`
@@ -170,8 +166,7 @@ Tier names are roles, not model ids. The Opus tier is the strongest reasoning mo
 - **Opus judges are mandatory for Judgment Day** when the change touches: Supabase or SQLDelight
   migrations, auth, `:presentation`'s compose-free purity, or `.github/` (signing keys and
   credentials).
-- **The writer never reviews its own work.** The reviewer is always a separate agent with fresh
-  context.
+- **ADRs and `CONTEXT.md` are Opus work through `mattpocock-skills:domain-modeling`.**
 - **Haiku needs a strict output contract** or it summarizes wrong: it returns exit code plus failing
   task names verbatim, and nothing interpreted.
 
@@ -180,5 +175,6 @@ Tier names are roles, not model ids. The Opus tier is the strongest reasoning mo
 `model` is passed explicitly on every delegation. An agent definition's frontmatter can carry its
 own `model:`, and the Agent tool's `model` parameter overrides it — omitting the parameter silently
 runs whatever the definition or the session default says. That downgraded a Judgment Day judge to
-Sonnet once; the incident chronicle lives in git/engram. No judge agent files exist today: judges
-are spawned as general-purpose agents with `model` set on the call.
+Sonnet once; the incident chronicle lives in git/engram. Judges are spawned as general-purpose
+agents with `model` set on the call; `pr-reviewer` and `ticket-writer` carry `model: opus` in their
+frontmatter and the call still names it.
