@@ -187,7 +187,7 @@ internal fun HeaderAction(
     }
 }
 
-// A 48dp target (DESIGN_SYSTEM.md §4) wraps its 20dp glyph in 14dp of nothing. The header rows
-// give that back at the screen edge, so the icons still sit on the 24dp column the list rows use.
+// A 48dp target wraps its 20dp glyph in 14dp of nothing. The header rows give that back at the
+// screen edge, so the icons still sit on the 24dp column the list rows use.
 internal val EmmSpacing.headerEdgeGiveback: Dp
     get() = (s12 - s5) / 2

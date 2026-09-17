@@ -16,11 +16,9 @@ internal fun TextFieldValue.rewrittenTo(filtered: String): TextFieldValue {
 }
 
 /**
- * How many of the first [cursor] characters of [typed] survive into [filtered] — the caret's offset
- * once the rewrite lands. [filtered] must be what a left-to-right filter that only DELETES made of
- * [typed]: such a filter never re-accepts a character class it has started rejecting, so matching
- * [filtered] greedily against [typed] recovers exactly the characters it kept. [filtered] that is
- * no subsequence of [typed] came from outside this edit, and the caret belongs at its end.
+ * How many of the first [cursor] characters of [typed] survive into [filtered] — the caret's
+ * offset once the rewrite lands. [filtered] must be [typed] with characters only deleted, so
+ * greedily matching it against [typed] recovers exactly what survived, caret included.
  */
 internal fun cursorAfterFiltering(typed: String, cursor: Int, filtered: String): Int {
     var kept = 0

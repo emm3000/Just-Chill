@@ -62,8 +62,8 @@ private fun DateAction(label: String, onClick: () -> Unit, modifier: Modifier = 
     val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
 
-    // "Hoy" and its chevron measure under 48dp both ways; the row is stretched to the floor rather
-    // than centred at its intrinsic size (DESIGN_SYSTEM.md §4).
+    // "Hoy" and its chevron measure under 48dp both ways; the row is stretched to the floor
+    // rather than centred at its intrinsic size.
     Row(
         modifier = modifier
             .fillMaxHeight()

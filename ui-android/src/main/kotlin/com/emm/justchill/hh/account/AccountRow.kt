@@ -29,7 +29,7 @@ import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.color
 
-// EmmRowMenu wraps an 18dp glyph in a 48dp target (DESIGN_SYSTEM.md §4); the row gives the surplus
+// EmmRowMenu wraps an 18dp glyph in a 48dp target; the row gives the surplus
 // back at the screen edge so the glyph still sits on the 24dp column the header and the tiles use.
 private val RowMenuEdgeGiveback: Dp = 15.dp
 
@@ -94,8 +94,8 @@ internal fun accountSubtitle(typeLabel: String, movementCount: Int): String = wh
 }
 
 /**
- * DESIGN_SYSTEM.md §1.4: a positive net is positive money — `success` — but only once the account
- * has activity; a silent account keeps its muted step regardless of what its empty net would sign.
+ * A positive net is positive money — `success` — but only once the account has activity; a
+ * silent account keeps its muted step regardless of what its empty net would sign.
  */
 internal fun accountNetTone(movementCount: Int, netIsPositive: Boolean): AmountTone = when {
     movementCount == 0 -> AmountTone.Mute

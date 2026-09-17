@@ -103,8 +103,8 @@ private fun NewAccountButton(onClick: () -> Unit) {
 }
 
 /**
- * The month's spend is this screen's one hero (DESIGN_SYSTEM.md §1.1); income shares its size and
- * steps down a tone rather than competing for the glance.
+ * The month's spend is this screen's one hero; income shares its size and steps down a tone
+ * rather than competing for the glance.
  */
 @Composable
 private fun MonthSummaryStrip(state: AccountsUiState) {

@@ -26,8 +26,8 @@ import com.emm.justchill.hh.shared.positiveMoneyFormatted
 private const val CENTS_PER_SOL = 100.0
 
 /**
- * One hero per screen (DESIGN_SYSTEM.md §1): the month's spend takes the amount role, and income
- * and balance step down to a single line under it.
+ * One hero per screen: the month's spend takes the amount role, and income and balance step down
+ * to a single line under it.
  */
 @Composable
 internal fun MonthSummary(summary: MonthSummaryUi, modifier: Modifier = Modifier) {
@@ -64,8 +64,8 @@ private fun SecondaryLine(summary: MonthSummaryUi) {
 }
 
 /**
- * DESIGN_SYSTEM.md §1.4: `net` is a month balance, so a positive one is positive money — `success`;
- * zero or negative keeps this line's own monochrome (`textSecondary`, not a row's `textPrimary`).
+ * `net` is a month balance, so a positive one is positive money — `success`; zero or negative
+ * keeps this line's own monochrome (`textSecondary`, not a row's `textPrimary`).
  */
 internal fun balanceTone(net: Money): AmountTone = if (net.cents > 0L) AmountTone.Pos else AmountTone.Neutral
 

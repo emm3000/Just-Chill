@@ -98,8 +98,8 @@ internal fun LoansSection(totalOwed: String, totalOwedIsPositive: Boolean, peopl
 }
 
 /**
- * DESIGN_SYSTEM.md §1.4: the total's own sign, not [people]'s emptiness — two balances can offset
- * to a zero total while the debtor still names someone.
+ * The total's own sign is what matters, not [people]'s emptiness — two balances can offset to a
+ * zero total while the debtor still names someone.
  */
 internal fun loansTotalTone(totalOwedIsPositive: Boolean): AmountTone =
     if (totalOwedIsPositive) AmountTone.Pos else AmountTone.Mute

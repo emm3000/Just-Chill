@@ -140,8 +140,8 @@ private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
 }
 
 /**
- * DESIGN_SYSTEM.md §1.4: what one tap from Cuentas shows must read the same as `LoansSection` —
- * a positive remaining is positive money, `success`; settled is the muted step it already had.
+ * What one tap from Cuentas shows must read the same as `LoansSection` — a positive remaining is
+ * positive money, `success`; settled is the muted step it already had.
  */
 internal fun personRemainingTone(isSettled: Boolean, remainingIsPositive: Boolean): AmountTone = when {
     isSettled -> AmountTone.Mute
