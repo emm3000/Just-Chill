@@ -27,7 +27,7 @@ NOT here:
 - Aggression never licenses inflated severity; unevidenced is worse than silent.
 - Verify against real code, never memory or a doc's claim.
 - Wrong premise → say so with evidence.
-- Delegate to a general-purpose agent with `model` EXPLICITLY opus; never frontmatter-only (`docs/adr/007-*.md`).
+- Delegate to a general-purpose agent with `model` EXPLICITLY opus; never frontmatter-only (ADR 014).
 - Main thread fixes the boundary; the auditor never asks — it states its assumption in one line.
 - English report; code, identifiers, paths as-is. The verdict words stay `MANTENER`/`REFACTORIZAR`/`REHACER`.
 
