@@ -38,39 +38,18 @@ class QualityGateConventionPlugin : Plugin<Project> {
         private const val BUILD_LOGIC_BUILD = "build-logic"
         private const val TEST_TASK = ":convention:test"
 
-        /**
-         * An allowlist, not `tasks.withType<Detekt>()`, which would sweep in per-variant tasks
-         * already aggregated below. Every entry here covers a source set no other does.
-         *
-         * `detektMain` and `detektTest` are all a module needs, on either shape now in the graph:
-         * for the three `com.android.library` modules, `detektMain` aggregates `detektDebug`/
-         * `detektRelease` (type-resolved, `src/main`) and `detektTest` aggregates
-         * `detektDebugUnitTest` AND `detektDebugAndroidTest` (both type-resolved, `src/test` and
-         * `src/androidTest`) — confirmed with `:data:detektMain --dry-run` / `:data:detektTest
-         * --dry-run` after E11-05's conversion. For `:domain`'s plain `org.jetbrains.kotlin.jvm`
-         * (E11-06), the same two names resolve directly to `src/main` and `src/test` with no
-         * variant aggregation needed — confirmed the same way. ADR 011's KMP-era names
-         * (`detektMainAndroid`, `detektCommonTestSourceSet`, `detektAndroidHostTestSourceSet`,
-         * `detektAndroidDeviceTestSourceSet`) have no replacement to add and are dropped for good.
-         */
+        // An allowlist: `withType<Detekt>()` would also run the per-variant tasks these two aggregate.
         val DETEKT_GATE_TASKS = setOf(
             "detektMain",
             "detektTest",
         )
 
-        /**
-         * detekt over `androidTest` is not a substitute for compiling it: detekt downgrades
-         * unresolvable code to a warning and passes, so a domain signature change would break the
-         * instrumented suite and leave the gate green. `compileDebugAndroidTestKotlin` is `:data`'s
-         * instrumented compile task since E11-05.
-         */
+        // detekt passes on unresolvable code, so only compiling `androidTest` catches a signature
+        // change that breaks the instrumented suite.
         val COMPILE_GATE_TASKS = setOf("compileDebugAndroidTestKotlin")
 
-        /**
-         * The only automated check that a schema change came with a migration: a `.sq` edited
-         * without a matching `.sqm` compiles and passes every test here, then breaks on the first
-         * upgrade of an installed app. SQLDelight wires it only into `check`, which nothing here runs.
-         */
+        // The only check that a `.sq` change shipped its `.sqm`. SQLDelight wires it into `check`
+        // alone, which the gate never runs.
         val SCHEMA_GATE_TASKS = setOf("verifySqlDelightMigration")
     }
 }

@@ -111,6 +111,7 @@ internal class ConventionPluginFixture(private val projectDirectory: File) {
                     println("REPORT optIn=" + compilations.flatMap { it.compilerOptions.optIn.get() }.distinct().sorted().joinToString(","))
                     val declared = project.configurations.flatMap { configuration -> configuration.dependencies.map { configuration.name to it } }
                     println("REPORT projectDependencies=" + declared.map { it.second }.filterIsInstance<org.gradle.api.artifacts.ProjectDependency>().map { it.path }.filter { it != project.path }.distinct().sorted().joinToString(","))
+                    println("REPORT implementationDependencies=" + declared.filter { it.first == "implementation" }.map { it.second.name }.distinct().sorted().joinToString(","))
                     println("REPORT testDependencies=" + declared.filter { it.first == "testImplementation" }.map { it.second.name }.distinct().sorted().joinToString(","))
                     println("REPORT plugins=" + listOf("justchill.detekt", "justchill.quality.gate").filter { project.pluginManager.hasPlugin(it) }.joinToString(","))
                     val gate = project.tasks.findByName("qualityGate")

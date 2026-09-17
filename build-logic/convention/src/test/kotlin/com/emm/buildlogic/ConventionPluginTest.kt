@@ -5,6 +5,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ConventionPluginTest {
 
@@ -62,6 +63,10 @@ class ConventionPluginTest {
 
         assertEquals("true", report["compose"])
         assertEquals(":core:domain,:core:ui", report["projectDependencies"])
+        assertTrue(
+            report.getValue("implementationDependencies").split(',').containsAll(FEATURE_DEPENDENCIES),
+            report.getValue("implementationDependencies"),
+        )
         assertEquals("testDebugUnitTest", report["gatedTests"])
     }
 
@@ -110,6 +115,14 @@ class ConventionPluginTest {
                 COROUTINES_OPT_INS
 
         const val ANDROID_TEST_DEPENDENCIES: String = "junit,kotlin-test-junit,kotlinx-coroutines-test,mockk"
+
+        val FEATURE_DEPENDENCIES: List<String> = listOf(
+            "koin-bom",
+            "koin-core",
+            "koin-compose-viewmodel",
+            "lifecycle-viewmodel",
+            "lifecycle-viewmodel-compose",
+        )
 
         const val CHECK_PLUGINS: String = "justchill.detekt,justchill.quality.gate"
 
