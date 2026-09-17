@@ -8,7 +8,7 @@ Root package `com.emm.data.<entity>`, `minSdk = 28`. Depends on `:domain` only. 
 
 ## Persistence
 
-Schema, migrations, snapshots and the generated `EmmDatabaseData` live under `data/src/main/sqldelight/`. The rules a change must honour, the FK-on test and the restore drill: `.claude/rules/sqldelight.md`.
+Schema, migrations, snapshots and the generated `EmmDatabaseData` live under `data/src/main/sqldelight/`; `justchill.sqldelight` configures the database with `verifyMigrations` on. The rules a change must honour, the FK-on test and the restore drill: `.claude/rules/sqldelight.md`.
 
 Two migrations are destructive, and they are why the instrumented suite exists. `3.sqm` rebuilds `transactions` because SQLite cannot change a column's type. `4.sqm` rebuilds `transactions` and `recurring_movements` because SQLite cannot add a table constraint, and it repairs the data first: with foreign keys on, `INSERT INTO transactions_new SELECT` is checked against the new key as it copies, so a repair afterwards would fix rows that never crossed. `MigrationV3ToV4Test` and `MigrationV4ToV5Test` guard them.
 

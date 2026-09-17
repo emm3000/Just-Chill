@@ -10,7 +10,7 @@ Thin Android entry point: `MainActivity`, `EmmApp`, and the Android halves of th
 
 ## Product flavors
 
-Dimension `tier`. `dev` adds `applicationIdSuffix = ".dev"` and carries `src/dev/kotlin/.../experiences/`, a personal Compose playground outside the product, shipping its own `experiencesModule` (`prod` has an empty stub of the same file). `prod` gets release signing from `keystore.properties`. Crashlytics is declared for every variant, but `src/dev/AndroidManifest.xml` sets `firebase_crashlytics_collection_enabled=false`, which keeps the privacy policy's "the dev flavor is telemetry-free" claim true. Firebase Analytics is not used.
+Dimension `tier`. `dev` adds `applicationIdSuffix = ".dev"` and carries `src/dev/kotlin/.../experiences/`, a personal Compose playground outside the product, shipping its own `experiencesModule` (`prod` has an empty stub of the same file). `justchill.android.release` owns the version from git, R8 and the `release` signing config from `keystore.properties`; `prod` opts into that config. Crashlytics is declared for every variant, but `src/dev/AndroidManifest.xml` sets `firebase_crashlytics_collection_enabled=false`, which keeps the privacy policy's "the dev flavor is telemetry-free" claim true. Firebase Analytics is not used.
 
 ## Session
 

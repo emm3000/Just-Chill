@@ -1,32 +1,13 @@
-import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
 import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
     id("justchill.android.application")
+    id("justchill.android.release")
     id("justchill.build.info")
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.services)
-    alias(libs.plugins.google.crashlytics)
 }
-
-// Signing credentials are optional AT CONFIGURE TIME, and that is the whole point. They are absent
-// on a fresh clone, on forks, and on Dependabot PRs — GitHub does not expose repo secrets to
-// Dependabot-triggered runs, so the setup action produced an empty file and every lookup below
-// returned null. Reading them unconditionally aborted configuration of :androidApp, and Gradle
-// configures this module for ANY task in the build: the iOS compile job, which signs nothing and
-// does not even build Android, died on this line.
-//
-// Signing proves who published, not that the code works, so no validation job needs it. The
-// assertion that a release must be signed lives in uploadRelease.yml, which checks the secrets
-// before it builds — the one place where a missing key has to be fatal.
-val keystorePropertiesFile = rootProject.file("keystore.properties")
-val keystoreProperties = Properties()
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-}
-val hasReleaseSigning = keystoreProperties.getProperty("keyAlias") != null
-val uploadsCrashlyticsMapping: Boolean = providers.gradleProperty("justchill.crashlyticsMappingUpload").orNull == "true"
 
 val supabasePropertiesFile = rootProject.file("supabase.properties")
 val supabaseProperties = Properties()
@@ -34,54 +15,13 @@ if (supabasePropertiesFile.exists()) {
     supabaseProperties.load(FileInputStream(supabasePropertiesFile))
 }
 
-fun gitCommitCount(): Int = runCatching {
-    providers.exec {
-        commandLine("git", "rev-list", "--count", "HEAD")
-    }.standardOutput.asText.get().trim().toInt()
-}.getOrDefault(1)
-
-// --match is not optional: the repo carries non-release tags (pre-kmp, post-s5, pre-redesign)
-// and a bare `describe` returns whichever one is nearest, so builds shipped versionName "pre-kmp".
-fun gitLatestTag(): String = runCatching {
-    providers.exec {
-        commandLine("git", "describe", "--tags", "--abbrev=0", "--match", "v[0-9]*")
-    }.standardOutput.asText.get().trim().removePrefix("v")
-}.getOrDefault("0.0.0-dev")
-
 android {
     namespace = "com.emm.justchill"
 
     defaultConfig {
         applicationId = "com.emm.justchill"
-        versionCode = gitCommitCount()
-        versionName = gitLatestTag()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    signingConfigs {
-        // Created only when the credentials are actually present. Without them the prod release
-        // builds UNSIGNED rather than failing to configure, which is what lets a validation job
-        // exercise R8, resource shrinking and manifest merging without holding the release key.
-        if (hasReleaseSigning) {
-            create("config") {
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
-                storeFile = file(keystoreProperties.getProperty("storeFile"))
-                storePassword = keystoreProperties.getProperty("storePassword")
-            }
-        }
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            configure<CrashlyticsExtension> {
-                mappingFileUploadEnabled = uploadsCrashlyticsMapping
-            }
-        }
     }
 
     val flavorDimension = "tier"
@@ -104,12 +44,7 @@ android {
             dimension = flavorDimension
             manifestPlaceholders["app_name"] = "Just Chill"
             manifestPlaceholders["flavor_suffix"] = ""
-            // Indexing signingConfigs for a config that was never created throws, so this follows
-            // the same condition. An unsigned prod artifact never reaches anyone: uploadRelease.yml
-            // refuses to build without the credentials, and Play rejects unsigned uploads anyway.
-            if (hasReleaseSigning) {
-                signingConfig = signingConfigs["config"]
-            }
+            signingConfig = signingConfigs.findByName("release")
             buildConfigField("String", "SUPABASE_URL", "\"${supabaseProperties.getProperty("prod.supabase.url", "")}\"")
             buildConfigField("String", "SUPABASE_ANON_KEY", "\"${supabaseProperties.getProperty("prod.supabase.anonKey", "")}\"")
             buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${supabaseProperties.getProperty("prod.google.webClientId", "")}\"")
