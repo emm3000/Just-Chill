@@ -132,9 +132,7 @@ composeCompiler {
     reportsDestination = layout.buildDirectory.dir("compose_reports")
 }
 
-// This module's contribution to `./gradlew qualityGate` (detekt is wired in by the plugin itself).
-// Only the dev-debug unit tests and the dev lint variant: the prod variants run the same code
-// through a signing config the gate has no reason to need.
+// Dev variants only: the prod flavor adds a signing config the gate has no reason to need.
 tasks.named("qualityGate") {
     dependsOn("testDevDebugUnitTest", "lintDevDebug")
 }
@@ -146,8 +144,7 @@ dependencies {
     implementation(projects.uiAndroid)
 
     implementation(libs.androidx.core.ktx)
-    // Material Components is NOT dead code: res/values/themes.xml inherits from
-    // Theme.Material3.DayNight.NoActionBar, so removing it breaks the manifest theme.
+    // res/values/themes.xml inherits Theme.Material3.DayNight.NoActionBar from it.
     implementation(libs.material)
 
     implementation(libs.androidx.activity.compose)
@@ -163,11 +160,8 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation(libs.androidx.material.icons.extended)
 
-    // Nav2 + AppCompat are used ONLY by the `dev` experiences playground
-    // (src/dev/.../experiences/), never by the product. Scoped to the flavor so a prod build
-    // does not carry them. coil-compose used to be declared here and had zero usages — removed.
-    // Quoted form on purpose: AGP does not generate a typed `devImplementation` DSL accessor for
-    // flavor configurations, so `devImplementation(...)` fails to compile the build script.
+    // Only the dev experiences playground uses these. Quoted: AGP generates no typed accessor
+    // for flavor configurations.
     "devImplementation"(libs.androidx.navigation.compose)
     "devImplementation"(libs.androidx.appcompat)
 
@@ -176,15 +170,10 @@ dependencies {
 
     implementation(libs.androidx.activity.ktx)
 
-    // nav3 (runtime + UI) is inherited transitively from :ui-android, which hosts the unified
-    // AppNavHost. :androidApp no longer references androidx.navigation3 types directly.
-
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.google.identity.googleid)
 
-    // multiplatform-settings: CoreModule builds the SharedPreferencesSettings that backs
-    // :presentation's AppPreferences. :presentation consumes it as `implementation`, so it is not
-    // exposed transitively — this module references Settings/SharedPreferencesSettings directly.
+    // CoreModule builds SharedPreferencesSettings, which :presentation does not expose.
     implementation(libs.multiplatform.settings)
 }
