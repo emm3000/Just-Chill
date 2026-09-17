@@ -3,6 +3,7 @@ package com.emm.justchill.core.database.backup
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.justchill.core.database.JustChillDatabase
+import com.emm.justchill.core.domain.shared.backup.SnapshotStore
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -12,11 +13,11 @@ import kotlin.test.assertNull
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-class DefaultBackupRepositoryWatermarkTest {
+class SqlDelightSnapshotStoreWatermarkTest {
 
     private lateinit var driver: SqlDriver
     private lateinit var db: JustChillDatabase
-    private lateinit var repository: DefaultBackupRepository
+    private lateinit var store: SnapshotStore
 
     private val clock = object : Clock {
         override fun now(): Instant = Instant.parse("2026-08-14T00:00:00Z")
@@ -28,7 +29,7 @@ class DefaultBackupRepositoryWatermarkTest {
         JustChillDatabase.Schema.create(driver)
         driver.execute(null, "PRAGMA foreign_keys=ON", 0)
         db = JustChillDatabase(driver)
-        repository = DefaultBackupRepository(db = db, clock = clock)
+        store = SqlDelightSnapshotStore(db = db, clock = clock)
     }
 
     @After
@@ -38,21 +39,21 @@ class DefaultBackupRepositoryWatermarkTest {
 
     @Test
     fun `empty database returns null`() = runTest {
-        assertNull(repository.latestLocalChangeAt())
+        assertNull(store.latestLocalChangeAt())
     }
 
     @Test
     fun `a row in accounts alone is the watermark`() = runTest {
         insertAccount(updatedAt = 111L)
 
-        assertEquals(111L, repository.latestLocalChangeAt())
+        assertEquals(111L, store.latestLocalChangeAt())
     }
 
     @Test
     fun `a row in categories alone is the watermark`() = runTest {
         insertCategory(updatedAt = 222L)
 
-        assertEquals(222L, repository.latestLocalChangeAt())
+        assertEquals(222L, store.latestLocalChangeAt())
     }
 
     @Test
@@ -60,7 +61,7 @@ class DefaultBackupRepositoryWatermarkTest {
         insertAccount(updatedAt = 1L)
         insertTransaction(updatedAt = 333L)
 
-        assertEquals(333L, repository.latestLocalChangeAt())
+        assertEquals(333L, store.latestLocalChangeAt())
     }
 
     @Test
@@ -68,14 +69,14 @@ class DefaultBackupRepositoryWatermarkTest {
         insertAccount(updatedAt = 1L)
         insertTemplate(updatedAt = 444L)
 
-        assertEquals(444L, repository.latestLocalChangeAt())
+        assertEquals(444L, store.latestLocalChangeAt())
     }
 
     @Test
     fun `a row in loans alone is the watermark`() = runTest {
         insertLoan(updatedAt = 555L)
 
-        assertEquals(555L, repository.latestLocalChangeAt())
+        assertEquals(555L, store.latestLocalChangeAt())
     }
 
     @Test
@@ -83,7 +84,7 @@ class DefaultBackupRepositoryWatermarkTest {
         insertLoan(updatedAt = 1L)
         insertLoanPayment(updatedAt = 666L)
 
-        assertEquals(666L, repository.latestLocalChangeAt())
+        assertEquals(666L, store.latestLocalChangeAt())
     }
 
     @Test
@@ -93,7 +94,7 @@ class DefaultBackupRepositoryWatermarkTest {
         insertTransaction(updatedAt = 200L)
         insertTemplate(updatedAt = 300L)
 
-        assertEquals(500L, repository.latestLocalChangeAt())
+        assertEquals(500L, store.latestLocalChangeAt())
     }
 
     @Test
@@ -105,7 +106,7 @@ class DefaultBackupRepositoryWatermarkTest {
         insertLoan(updatedAt = 500L)
         insertLoanPayment(updatedAt = 999L)
 
-        assertEquals(999L, repository.latestLocalChangeAt())
+        assertEquals(999L, store.latestLocalChangeAt())
     }
 
     @Test
@@ -114,7 +115,7 @@ class DefaultBackupRepositoryWatermarkTest {
 
         db.accountsQueries.softDelete(deletedAt = 999L, updatedAt = 999L, accountId = "acc-1")
 
-        assertEquals(999L, repository.latestLocalChangeAt())
+        assertEquals(999L, store.latestLocalChangeAt())
     }
 
     @Test
@@ -131,14 +132,14 @@ class DefaultBackupRepositoryWatermarkTest {
             paymentId = "pay-1",
         )
 
-        assertEquals(777L, repository.latestLocalChangeAt())
+        assertEquals(777L, store.latestLocalChangeAt())
     }
 
     @Test
     fun `updatedAt of zero returns zero, not null`() = runTest {
         insertAccount(updatedAt = 0L)
 
-        assertEquals(0L, repository.latestLocalChangeAt())
+        assertEquals(0L, store.latestLocalChangeAt())
     }
 
     private fun insertAccount(accountId: String = "acc-1", updatedAt: Long) {

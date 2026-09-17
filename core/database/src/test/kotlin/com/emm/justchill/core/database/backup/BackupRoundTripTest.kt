@@ -36,7 +36,7 @@ class BackupRoundTripTest {
         JustChillDatabase.Schema.create(driver)
         driver.execute(null, "PRAGMA foreign_keys=ON", 0)
         db = JustChillDatabase(driver)
-        repository = DefaultBackupRepository(db = db, clock = clock)
+        repository = DefaultBackupRepository(SqlDelightSnapshotStore(db = db, clock = clock))
         seedFixture()
     }
 

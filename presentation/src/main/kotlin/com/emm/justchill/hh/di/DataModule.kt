@@ -7,6 +7,7 @@ import com.emm.justchill.core.database.backup.DefaultBackupPruner
 import com.emm.justchill.core.database.backup.DefaultBackupRepository
 import com.emm.justchill.core.database.backup.DefaultBackupUploader
 import com.emm.justchill.core.database.backup.DefaultBackupVerifier
+import com.emm.justchill.core.database.backup.SqlDelightSnapshotStore
 import com.emm.justchill.core.database.category.CategoryLocalDataSource
 import com.emm.justchill.core.database.category.DefaultCategoryRepository
 import com.emm.justchill.core.database.loan.DefaultLoanPaymentRepository
@@ -30,6 +31,7 @@ import com.emm.justchill.core.domain.shared.backup.BackupPruner
 import com.emm.justchill.core.domain.shared.backup.BackupRepository
 import com.emm.justchill.core.domain.shared.backup.BackupUploader
 import com.emm.justchill.core.domain.shared.backup.BackupVerifier
+import com.emm.justchill.core.domain.shared.backup.SnapshotStore
 import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.domain.transaction.TransactionStatsRepository
 import org.koin.core.module.dsl.bind
@@ -56,6 +58,7 @@ val dataModule = module {
     factoryOf(::DefaultRecurringMovementRepository) { bind<RecurringMovementRepository>() }
     factoryOf(::DefaultLoanRepository) { bind<LoanRepository>() }
     factoryOf(::DefaultLoanPaymentRepository) { bind<LoanPaymentRepository>() }
+    factoryOf(::SqlDelightSnapshotStore) { bind<SnapshotStore>() }
     factoryOf(::DefaultBackupRepository) { bind<BackupRepository>() }
 
     // Written out rather than factoryOf(::DefaultBackupUploader): the class has a second, internal

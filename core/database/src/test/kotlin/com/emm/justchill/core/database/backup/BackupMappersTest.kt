@@ -95,7 +95,7 @@ class BackupMappersTest {
         val dto = original.toDto()
         val jsonStr = json.encodeToString(dto)
         val decoded = json.decodeFromString<CategoryDto>(jsonStr)
-        val restored = decoded.toEntity()
+        val restored = decoded.toEntityOrNull()
 
         assertEquals(original, restored)
     }
@@ -112,8 +112,8 @@ class BackupMappersTest {
             )
             val restored = json.decodeFromString<CategoryDto>(
                 json.encodeToString(original.toDto()),
-            ).toEntity()
-            assertEquals(categoryType, restored.categoryType)
+            ).toEntityOrNull()
+            assertEquals(categoryType, restored?.categoryType)
         }
     }
 
