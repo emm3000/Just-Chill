@@ -36,3 +36,5 @@ Dimension `tier`. `dev` adds `applicationIdSuffix = ".dev"` and carries `src/dev
 ## Testing
 
 `./gradlew :androidApp:testDevDebugUnitTest`; no instrumented source set. The MockK ViewModel tests live here, not in `:presentation`, although the ViewModels are in `presentation/src/main`: same package, MockK's JVM engine. Keep that placement unless you move the whole suite. `MainDispatcherRule` goes in every ViewModel test that touches `viewModelScope`.
+
+The snapshot tests that run a JSON file into real SQLite live here too (`src/test/.../core/backup/`), for the same reason: only the app sees `:core:backup`, which writes the file, and `:core:database`, which owns the rows. `src/test/resources/backup/snapshot-v4-trunk.json` is what the exporter produced before the split, and `GoldenSnapshotRestoreTest` fails the day a format change stops reading it.
