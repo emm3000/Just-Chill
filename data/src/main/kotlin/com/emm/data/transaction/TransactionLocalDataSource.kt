@@ -18,10 +18,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
-/**
- * Search is global (cross-month) by design, so this is the only read path without a date window;
- * the cap keeps its worst case at a fixed size.
- */
+// Search is global (cross-month) by design, so this is the only read path without a date window;
+// the cap keeps its worst case at a fixed size.
 private const val SEARCH_RESULT_CAP = 200L
 
 class TransactionLocalDataSource(private val tq: TransactionsQueries, private val clock: Clock) {

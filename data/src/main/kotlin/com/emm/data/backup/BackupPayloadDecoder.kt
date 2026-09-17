@@ -41,11 +41,8 @@ internal fun decodeBackupPayload(json: String): DecodedBackup {
     return DecodedBackup(declaredVersion = declaredVersion, payload = payload)
 }
 
-/**
- * A payload the current build cannot decode is a snapshot that cannot be restored, which is the
- * whole answer a verification needs: it walks back to an older pair instead of reporting why this
- * one lost.
- */
+// A payload the current build cannot decode is a snapshot that cannot be restored, which is the
+// whole answer a verification needs: it walks back to an older pair instead of reporting why this one lost.
 @Suppress("SwallowedException")
 internal fun decodeBackupPayloadOrNull(json: String): DecodedBackup? = try {
     decodeBackupPayload(json)

@@ -115,9 +115,8 @@ class BackupLoanRoundTripTest {
 
     @Test
     fun `a v4 backup exported after an edit carries the edited amount, not the original`() = runTest {
-        // Driven through LoanPaymentLocalDataSource.update — the real write path the app uses to
-        // edit an abono — rather than a raw query, so this proves the property the ticket cares
-        // about: an edit made the way the app makes it reaches the export payload.
+        // Driven through LoanPaymentLocalDataSource.update, the app's real write path for editing an
+        // abono, rather than a raw query, so the edit reaches the export payload the way the app makes it.
         val localDataSource = LoanPaymentLocalDataSource(
             db,
             clock = object : Clock {

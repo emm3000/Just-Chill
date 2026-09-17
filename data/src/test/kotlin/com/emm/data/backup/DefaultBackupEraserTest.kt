@@ -182,11 +182,9 @@ private fun eraserOver(store: FakeErasableObjectStore): DefaultBackupEraser = De
 
 private fun storeOf(vararg keys: String): FakeErasableObjectStore = FakeErasableObjectStore(keys.toList())
 
-/**
- * Models what `SupabaseBackupObjectStore.list` returns for one prefix: the objects directly under it
- * as prefix-relative names, plus one folder pseudo-row per distinct first segment below it. Both
- * kinds count towards `serverReturned`, and a folder is only reachable by listing it in turn.
- */
+// Models what SupabaseBackupObjectStore.list returns for one prefix: the objects directly under it
+// as prefix-relative names, plus one folder pseudo-row per distinct first segment below it. Both
+// kinds count towards serverReturned, and a folder is only reachable by listing it in turn.
 private class FakeErasableObjectStore(keys: List<String>) : BackupObjectStore {
 
     private val objects: MutableList<String> = keys.toMutableList()

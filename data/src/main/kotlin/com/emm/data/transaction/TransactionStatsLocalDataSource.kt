@@ -20,11 +20,8 @@ class TransactionStatsLocalDataSource(private val tq: TransactionsQueries) {
         ).executeAsList().map { it.asEntity() }
     }
 
-    /**
-     * The read transaction is not decoration: without it the months could be read either side of a
-     * concurrent write, and the Trends tab would draw a bar chart no single state of the database
-     * ever produced.
-     */
+    // The read transaction is not decoration: without it the months could be read either side of a
+    // concurrent write, and the Trends tab would draw a bar chart no single state of the database ever produced.
     suspend fun monthlyAmountByCategoryForRanges(ranges: List<MonthRange>): List<List<MonthlyAmountByTypeEntity>> =
         withContext(ioDispatcher) {
             tq.transactionWithResult {
