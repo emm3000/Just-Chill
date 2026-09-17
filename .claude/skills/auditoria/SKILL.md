@@ -61,4 +61,4 @@ A local fix belongs in the finding's `fix` field; `## Plan` is only for REFACTOR
 ## References
 
 - `references/gates.md` — reading order, budgets.
-- `docs/agents/multi-session.md`, `docs/PROGRESS.md`, `CLAUDE.md` `## Non-negotiable rules`.
+- `docs/agents/multi-session.md`, `CLAUDE.md` `## Non-negotiable rules`.

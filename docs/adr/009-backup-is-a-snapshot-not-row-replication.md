@@ -196,7 +196,7 @@ authoritative because nothing reads rows out of it.
   The retention/pinning behaviour and the version-aware import sweep are enforced by tests named in
   the plan. "Every DB schema migration is preceded by a pinned snapshot" is enforced only by the
   release-checklist line Decision 4 creates — if that line is not written, the rule is prose.
-- Build order, the verified traps and the phase gates: [`docs/work/epics/E01-snapshot-backup.md`](../work/epics/E01-snapshot-backup.md).
-- Findings, production forensics and the loop's root cause: [`docs/archive/sync/AUDIT.md`](../archive/sync/AUDIT.md).
+- Build order, the verified traps and the phase gates: `docs/work/epics/E01-snapshot-backup.md` (since removed).
+- Findings, production forensics and the loop's root cause: `docs/archive/sync/AUDIT.md` (since removed).
   The old engine's phased repair plan is closed by this ADR; nothing of it remains outside git history.
-- Status: [`docs/PROGRESS.md`](../PROGRESS.md).
+- Status: `docs/PROGRESS.md` (since removed).

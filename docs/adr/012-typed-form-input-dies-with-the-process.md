@@ -95,6 +95,6 @@
 
 - The alignment is real work and is not this ADR: `SeeTransactionsScreen`'s confirm sheet is E12-04,
   the remaining flags are E12-05. The constraint that outlives both tickets lives in
-  [`docs/work/epics/E12-mvi-core.md`](../work/epics/E12-mvi-core.md).
+  `docs/work/epics/E12-mvi-core.md` (since removed).
 - Sheet-internal draft state (`AmountInputSheet.draftDigits` and its kin) is a sheet's own scratch
   space, not screen state, and this ADR does not decide it.

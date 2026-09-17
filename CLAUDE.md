@@ -102,9 +102,8 @@ Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-
 
 ### Design and reference docs
 
-- `docs/PROGRESS.md` — where the app stands and how to verify it from a shell. Read it first.
-- `docs/PERSISTENCE.md` — the schema, the migration obligation, the restore drill. Read before a `.sq`, a `.sqm` or a migration test.
-- `docs/work/epics/` — the constraints that outlive every issue under an epic; `E01` before touching `data/src/**/backup/`.
+- `gh issue list --label ready-for-agent` — the committed work. No doc holds a work list.
+- `data/CLAUDE.md` `## Backup` before touching `data/src/**/backup/`; `.claude/rules/sqldelight.md` before a `.sq`, a `.sqm` or a migration test.
 - `docs/PRODUCT_REQUIREMENTS.md` — the Won't-have rows (ADRs amend them by row id), the NFRs, the acceptance criterion. Read before scoping a feature.
 - `docs/play/` (advertising ID, listing, privacy policy) and `docs/release.md` — the store-facing set. Read before a Play submission, a privacy change or a release tag.
 

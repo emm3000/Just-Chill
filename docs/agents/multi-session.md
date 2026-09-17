@@ -4,7 +4,7 @@ How the owner runs several Claude Code sessions on this repo in parallel, and wh
 
 ## The unit
 
-One GitHub issue of `emm3000/Just-Chill` labelled `ready-for-agent`. The label vocabulary is `docs/agents/triage-labels.md`, the `gh` operations are `docs/agents/issue-tracker.md`, the open board is `gh issue list --label ready-for-agent`, never a list in a doc. The issue IS the work: a `Done when` list of falsifiable conditions plus at most 3 lines of context. An epic under `docs/work/epics/` IS the constraints that outlive every issue under it. Git plus engram are the chronicle; a fact goes in exactly one of the three. New issues come from the `ticket-writer` agent, from the PRD and an epic; `mattpocock-skills:grilling` stress-tests a plan before it is ticketed.
+One GitHub issue of `emm3000/Just-Chill` labelled `ready-for-agent`. The label vocabulary is `docs/agents/triage-labels.md`, the `gh` operations are `docs/agents/issue-tracker.md`, the open board is `gh issue list --label ready-for-agent`, never a list in a doc. The issue IS the work: a `Done when` list of falsifiable conditions plus at most 3 lines of context. Constraints that outlive an issue live in `.claude/rules/` and the module `CLAUDE.md` files. Git plus engram are the chronicle; a fact goes in exactly one place. New issues come from the `ticket-writer` agent, from the PRD and the ADRs; `mattpocock-skills:grilling` stress-tests a plan before it is ticketed.
 
 ## The loop
 
@@ -43,7 +43,7 @@ One GitHub issue of `emm3000/Just-Chill` labelled `ready-for-agent`. The label v
 
 Every dispatch to a peer session must include:
 
-- Issue number, docs to read first (the epic, the relevant ADRs, `docs/PROGRESS.md`, prior engram memos), branch name, and the peer's **own** worktree path (see Isolation below).
+- Issue number, docs to read first (the relevant ADRs, rules and module `CLAUDE.md`, prior engram memos), branch name, and the peer's **own** worktree path (see Isolation below).
 - The line: *"The issue's acceptance criteria are the contract and win over any file list here; run every criterion check before opening the PR."* Prefer criteria phrased as a command with expected empty output.
 - The file list (`fd -e kt`) and their tests, plus the pre-scoped blockers. For a move/refactor, a dependency-closure directive: transitive imports mapped from the consuming layer, non-platform dependencies co-moved, platform symbols hoisted to callbacks.
 - Gates: `./gradlew qualityGate assembleDevDebug` green before every commit (the gate excludes the build on purpose; its definition: `.claude/rules/github-workflows.md`); conventional commits; no `Co-Authored-By` (a PreToolUse hook in `.claude/settings.json` blocks it); English code and docs, Spanish only for UI strings; `rg` / `fd` / `bat` / `sd`; gotchas saved to engram.

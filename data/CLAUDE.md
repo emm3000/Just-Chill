@@ -26,7 +26,7 @@ What this module exports: `app.cash.sqldelight:coroutines-extensions` is `implem
 - Every failure path in `DefaultBackup{Uploader,Pruner,Verifier}` logs its own named reason; a new path adds a reason, never reuses one.
 - Prune: slots (`SnapshotRetention`, 7 + 8 + 12) fill from snapshots that exist, never today's calendar. Any read failure aborts before the first delete; a failed delete is recorded and the run continues. An orphan payload is deleted; a pair with a bad manifest is kept.
 - Verify is read-only and not a cycle: it deletes nothing, orphans included, touches no watermark, streak or health, and emits no `BackupEvent`. `isNewestPair` is measured against the newest parseable name, orphan or not. A list or download failure is an error, never `NothingVerified`.
-- `storage.protect_delete()` refuses direct deletes; delete through the Storage API. Storage calls are bounded by the 120s `transferTimeout`, not Postgrest's timeout.
+- `storage.protect_delete()` refuses direct deletes; delete through the Storage API. Storage calls are bounded by the 120s `transferTimeout`, not Postgrest's 10s `requestTimeout`; `SupabaseModule` configures neither.
 - RLS stays as is: `with check (user_id = (select auth.uid()))`, `to authenticated`; `delete_account()` is `security definer` with `set search_path = ''`. `supabase/tests/backups-rls-probe.sh` is its only proof, run by `probeStorageRls` and kept off `qualityGate` (no Docker, no network). Its owner-side assertions are what make each refusal mean something.
 
 ## Testing

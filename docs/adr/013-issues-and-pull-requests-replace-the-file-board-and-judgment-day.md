@@ -6,6 +6,8 @@
 - **Supersedes in part**: [ADR 007](007-one-way-of-working-writer-reviewer-and-model-tiers.md),
   Decision points 4 and 5 (the Judgment Day two-judge panel and its global judge definitions).
   Decision points 1, 2 and 3 — separate writer and reviewer, the model tiers, the tiebreaker — stand.
+- **Amended 2026-09-17**: `docs/work/epics/` is gone too. The unit is the issue alone; the
+  constraints an epic held now live in `.claude/rules/` and the module `CLAUDE.md` files.
 
 > Resumen (es): el tablero de tickets deja de ser una carpeta de archivos y pasa a ser GitHub Issues
 > con el vocabulario `ready-for-agent`. Cada issue produce un PR; la única revisión es el agente
