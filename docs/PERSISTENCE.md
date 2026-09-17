@@ -8,10 +8,9 @@ own conventions are in `data/CLAUDE.md`.
 - Schema and migrations both live in `data/src/main/sqldelight/com/emm/data/` — read the
   directory, never a list written down somewhere. `.sq` files carry the CREATE TABLE plus that table's
   queries (`backup.sq` is the exception: no table of its own, only cross-table reads). Migrations are
-  `0.sqm`…`5.sqm`, so the current schema is **v6**. **Both kinds move freely but never rename** — E11
-  moved the whole directory out of `commonMain` and touched no name. A `.sqm`'s digit is the version
-  it migrates from, mirrored by every migration test's `oldVersion`; a `.sq`'s name becomes its
-  generated `<Name>Queries` class.
+  `0.sqm`…`5.sqm`, so the current schema is **v6**. **Both kinds move freely but never rename.** A
+  `.sqm`'s digit is the version it migrates from, mirrored by every migration test's `oldVersion`; a
+  `.sq`'s name becomes its generated `<Name>Queries` class.
 - Generated database class: `EmmDatabaseData` (package `com.emm.data`), configured in
   `data/build.gradle.kts`.
 - **`transactions.occurredAt` is ISO local text, not an instant** — `'2026-08-10T21:47:33'`, no
@@ -64,8 +63,15 @@ only path back from a migration that loses data, so a bump that has not been res
 
 Migration tests live in `data/src/androidTest/` and run with
 `./gradlew :data:connectedDebugAndroidTest` (needs a device/emulator). They are the only thing that
-exercises migrations against the real `AndroidSqliteDriver` — **run them before shipping any schema
-change.** Gotcha: `kotlin.assert()` is a no-op on ART; always use `kotlin.test.assertTrue`.
+exercises migrations against the real `AndroidSqliteDriver`, and the author's own device holds the
+oldest data in existence — **run them before shipping any schema change.** Gotcha: `kotlin.assert()`
+is a no-op on ART; always use `kotlin.test.assertTrue`.
+
+**Coverage is per starting version, never per migration step.** A device opens once and runs
+`1 → current` in a single `Schema.migrate` call, so every historical version needs its own test
+reaching `EmmDatabaseData.Schema.version`. A test that proves `N → N+1` proves nothing about the
+chain a device executes, and a test that stops mid-chain still passes as long as its reads are raw
+SQL — passing is not evidence the chain works; only the target version of `Schema.migrate` is.
 
 Two migrations are **destructive**, and they are the reason that suite exists. `3.sqm` rebuilds
 `transactions` because SQLite cannot change a column's type; `4.sqm` rebuilds `transactions` AND
@@ -76,10 +82,13 @@ copies, so repairing afterwards would repair rows that never crossed.
 ability to open the app at all survive them. Two of `MigrationV4ToV5Test`'s cases migrate with
 **foreign keys ON**, the only configuration under which statement order in `4.sqm` matters at all —
 a device never provides it, so a suite that only reproduced the device path would pass whatever order
-the migration were written in. Why that is worth testing anyway: `work/epics/E02-migration-coverage.md`.
-
-The coverage invariant — one test per *starting* version, not per migration step — is
-`work/epics/E02-migration-coverage.md`.
+the migration were written in. Why that is worth testing anyway: `SQLiteOpenHelper` owns the upgrade
+transaction and foreign keys cannot be switched on inside one, so `csm()`'s `onOpen` turns them on
+only after the chain has run, and SQLite never re-checks rows already written. A migration that
+writes an FK-violating row is therefore silent on device and stays silent; a test that enables
+foreign keys in `onOpen` and then calls `Schema.migrate` itself is the only check of the chain's own
+writes against the schema it declares. `MigrationV1ToV2Test` does it; dropping that callback would
+keep it green while proving less.
 
 ## Migration tests: use raw SQL against historical schemas
 

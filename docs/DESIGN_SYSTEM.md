@@ -1,10 +1,17 @@
 # JustChill — Design System
 
-> **`ui-android/src/androidMain/kotlin/com/emm/justchill/core/theme/` is the source of truth.**
+> **`ui-android/src/main/kotlin/com/emm/justchill/core/theme/` is the source of truth.**
 > `EmmColors.kt`, `EmmType.kt`, `EmmSpacing.kt` and `EmmRadii.kt` hold every value. This document
 > explains *why* a token exists and *when* to reach for it — it never repeats a value the code
 > already holds. Need a hex, an sp or a dp? Open the file. A doc that copies a value is a cache
 > with no invalidation.
+>
+> **Nothing enforces a rule on this page.** detekt sees Kotlin, not dp; `qualityGate` goes green on
+> a 14dp tap target. So: the doc is the truth and a conformance fix changes the code, never the
+> rule — relaxing a rule is an amendment written here with its reason. A deliberate exception is
+> stated at the site in one line naming the constraint, never left to look like a bug. Conformance
+> is verified on a device, not in a diff; a green gate proves only that it compiles. A screen that
+> needs a new value amends this page first, never a literal in the screen.
 
 ---
 
@@ -13,7 +20,10 @@
 Five rules that govern everything below. When in doubt, return here.
 
 1. **Numbers are the hero.** The amount is what the user came for; everything else recedes. The
-   amount roles are the largest type in the app and the only ones in the mono family (§3.1).
+   amount roles are the largest type in the app and the only ones in the mono family (§3.1). A
+   screen's summary has **one** hero amount: one value in an `amount*` hero role, the others
+   stepping down to `textSecondary` on one line. A second hero-sized number is three equal numbers
+   again.
 
 2. **Negative space is a component.** Whitespace is a deliberate element with a name, a size and a
    reason. Crowding is a design failure, not a layout problem.
@@ -28,7 +38,11 @@ Five rules that govern everything below. When in doubt, return here.
    and red becomes ambiguous on all of them. A signed net or balance shown as an aggregate — a month
    net, a total owed — extends the same rule: positive takes `+` and `success`, zero or negative
    stays monochrome. A magnitude under its own label ("Por cobrar", "Entran") is not a net; it keeps
-   the income/expense semantics above, unsigned.
+   the income/expense semantics above, unsigned. A new net or balance aggregate routes its sign and
+   tint through `Money.positiveMoneyFormatted()` (`:presentation`) and `AmountTone.color()`
+   (`:ui-android`); `formatNeutral`/`balanceFormatted` or an inline `if` there reopens the
+   monochrome-positive bug. `TransactionRow`, `RecurringMovementRow`, `TotalAmountHero` and
+   `LoanSummaryCard`'s unsigned "Por cobrar" are correct as they stand: none of them is a net.
 
 5. **Hairline over shadow.** Dark UIs read shadows as smudges. Separate surfaces with space, a 1dp
    `border` hairline, or a surface step. There is not one elevation shadow in `:ui-android` — keep
@@ -64,9 +78,6 @@ Six muted tones chosen to coexist on `bg` without competing, `catGraphite` as th
 A category tints an icon or a dot, never a whole surface. The domain stores a colour *name*
 (`"green"`, `"blue"`…) and `hh/report/ReportFormat.kt` maps it to a token — so the palette can be
 retuned without a data migration.
-
-> `core/theme/Color.kt` is the pre-token palette, still imported by two legacy screens. It is not
-> part of this system and nothing new reads from it.
 
 ---
 
@@ -139,7 +150,13 @@ Base unit **4dp** — every dimension on screen is a multiple of it. The scale i
 - Card internal padding: `s4` on all sides.
 - Between sections of distinct purpose: `s6`.
 - Touch target minimum **48×48dp** — Material's accessibility floor, non-negotiable. An icon that
-  looks 20dp still sits in a 48dp box; `core/ui/atoms/IconBtn.kt` is the pattern.
+  looks 20dp still sits in a 48dp box; `core/ui/atoms/IconBtn.kt` is the pattern. A child of a
+  fixed-height row is NOT 48dp by inheritance: `Alignment.CenterVertically` measures children at
+  intrinsic height, so a clickable inside a 48dp band gets a ~20dp touch box unless it carries
+  `fillMaxHeight()` itself (`FormMetaRow`'s `DateAction`/`NoteAction`). A 48dp header target keeps
+  its glyph on the rows' 24dp column by giving the padding back at the edge
+  (`SeeTransactionsHeader` derives the inset from `spacing.s12 - spacing.s5`), never by shrinking
+  the target.
 - Default to the smallest radius that reads right. Sharp corners carry the architectural feel;
   over-rounding makes it a toy.
 
@@ -182,6 +199,13 @@ ones no single file can tell you:
   invents a total the data does not have.
 - **The bar decorates, the row carries the meaning.** TalkBack reads the label-and-amount row
   (`contentDescription` on the row); the graphic itself is hidden from it.
+- **A transaction row is titled by what the user wrote, then by the category, never by a
+  placeholder.** `TransactionUi.title`/`subtitle` derive it in `:presentation` (`TransactionUiTest`
+  pins the fallbacks); a composable that reintroduces "Sin descripción" or reads `description`
+  directly is the defect that removed.
+- **No screen shows an account "balance".** Accounts have no opening balance, so every per-account
+  figure is a month-scoped net and says so ("este mes"); a "Saldo" label over a lifetime sum is a
+  lie no test can catch.
 
 ---
 

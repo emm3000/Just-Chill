@@ -6,7 +6,7 @@ paths:
 
 # Schema and migrations
 
-Read `docs/PERSISTENCE.md` and `docs/work/epics/E02-migration-coverage.md` before changing anything here.
+Read `docs/PERSISTENCE.md` before changing anything here.
 
 - A `.sq` CREATE TABLE never changes without a matching `.sqm`; never reset the schema. The author's device holds the oldest real data, and a missing migration only fires there.
 - A schema bump regenerates the snapshot (`:data:generateDebugEmmDatabaseDataSchema`); `:data:verifySqlDelightMigration` runs on `qualityGate`.
