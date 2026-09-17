@@ -1,149 +1,117 @@
-# CLAUDE.md — per-module guidance lives in each module's own `CLAUDE.md`
+# CLAUDE.md
 
-> **Android-only Kotlin project (ADR 011).** `:androidApp` (`com.android.application`) over three
-> `com.android.library` modules and a `kotlin("jvm")` `:domain`. Android-only *capabilities* may
-> live in `:androidApp`; their platform-neutral *logic* stays in the core.
->
-> **No third-party users, but the author runs the release daily** on a device holding real accumulated
-> data — UI is cheap to redo, a destructive migration is not.
+Operating manifest for this repo. Loaded in every session.
 
-## Build & Development Commands
+## Mandatory state
 
-```bash
-./gradlew assembleDevDebug      # dev debug build; prod release is assembleProdRelease
-./gradlew qualityGate           # THE gate — see Gotchas
-./gradlew test                  # every module's host tests; per module :<module>:testDebugUnitTest,
-                                # :domain:test, and :androidApp:testDevDebugUnitTest for the MockK
-                                # ViewModel suite
+The product is a **local-first** personal finance app. SQLDelight on device is the source of truth for reads and writes; the app is fully usable with no account and no network. Supabase exists for one thing, the opt-in **snapshot backup** (ADR 009): no row replication, no multi-device convergence. The sync engine is gone and is not coming back; its schema stays.
+
+No third-party users, but **the author runs the release daily on a device holding real accumulated data**. UI is cheap to redo; a destructive migration is not.
+
+## Modules
+
+```
+androidApp   -> ui-android, presentation, data, domain
+ui-android   -> presentation, data, domain
+presentation -> data, domain
+data         -> domain
 ```
 
-Test tasks go `UP-TO-DATE` across sessions — `--rerun` forces a real run, **per-task**.
-`data/src/androidTest` is the only instrumented source set.
+- `:domain` — **pure Kotlin** (`kotlin("jvm")`): models, value objects, use cases and the repository interfaces. `kotlinx-coroutines-core` and `kotlinx-datetime` only.
+- `:data` — the domain interfaces implemented: SQLDelight (`EmmDatabaseData`, the schema and migrations), Supabase auth and backup, mappers.
+- `:presentation` — the compose-free MVI core, every ViewModel with its `UiState` / `Intent` / `Effect`, the Koin modules, formatters.
+- `:ui-android` — Compose screens, navigation, theme tokens and atoms. Same Kotlin packages as `:presentation` on purpose.
+- `:androidApp` — `MainActivity`, `EmmApp`, the platform Koin module, the `dev` / `prod` flavors, shortcuts, the session keystore.
 
-## Project Layout
+Shared Gradle configuration lives in convention plugins under `build-logic/` (`justchill.*`): detekt, the quality gate, build info. A module build file applies its plugins and declares its own dependencies. `gradle/libs.versions.toml` is the only place a version is written, with one exception: `:domain`'s stdlib comes from a pin in `build-logic/build.gradle.kts`, and dropping it compiles `:domain` a minor version behind and reddens the gate on opt-in errors that name nothing about the classpath.
 
-- Toolchain, SDK levels and versions: `build-logic/.../BuildConventions.kt` +
-  `gradle/libs.versions.toml` — `minSdk` disagrees per module on purpose. Flavors `dev`/`prod` on
-  `:androidApp` only; signing, Crashlytics and the absent Analytics: `androidApp/CLAUDE.md`.
+## Product
 
-## Architecture
+Manual capture of income and spending in soles, in under fifteen seconds per movement; accounts, categories, recurring movements, a month report, and informal loans as a parallel ledger. Spanish only, free, no ads, no bank sync. The Won't-have rows and the acceptance criterion: `docs/PRODUCT_REQUIREMENTS.md`.
 
-Clean Architecture, five modules. Dependency direction is top to bottom:
+## Non-negotiable rules
 
-| Module | Role | Root package |
-|---|---|---|
-| `:androidApp` | thin Android entry point (Activity, platform Koin module) | `com.emm.justchill.*` |
-| `:ui-android` | Android-only Compose UI (screens, nav, theme) | `com.emm.justchill.{hh.<feature>, core, components}` |
-| `:presentation` | compose-free MVI core, ViewModels, Koin DI, formatters | same packages as `:ui-android` on purpose |
-| `:data` | implements domain interfaces (SQLDelight, Supabase) | `com.emm.data.<entity>` |
-| `:domain` | pure Kotlin, no framework deps | `com.emm.domain.<entity>` |
+These bind on every change, including a new file created before any Kotlin has been read.
 
-`:ui-android` sits on `:presentation` as a Gradle dependency. Same Kotlin packages across that
-boundary on purpose — explicit imports are required where same-package symbols crossed modules.
-ViewModels cannot touch Compose; conventions around it (ViewModel purity, why `:presentation`
-depends on `:data`) are in `presentation/CLAUDE.md`.
+- **No comments.** No KDoc, no `//`, no banners, no commented-out code. The code explains itself or it gets renamed. Four narrow exceptions in `.claude/rules/kotlin-style.md`.
+- **Explicit types** on every property and local `val` / `var`, and the supertype when the abstraction is what matters. Omit only when the right-hand side is a constructor call that already names the type.
+- **Only the repo's atoms** (`ui-android/.../core/ui/atoms/`) in feature screens. Never a raw Material3 control. See `.claude/rules/ui-components.md`.
+- **MVI per feature**: one `UiState` (all `val`), one `onIntent(intent)` entry point on `MviViewModel<S, I, E>`, effects consumed once and never stored in state. ViewModels live in `:presentation` and never import Compose.
+- **`:domain` stays pure Kotlin.** If it needs to reach outward, invert with an interface in `:domain`. Failure modes extend sealed `DomainException`, never a new exception type.
+- **Dates take an injected `Clock` and `TimeZone`, no defaults.**
+- **Rebuild, never adapt.** When existing code, config or structure does not fit the target architecture, replace it with a clean implementation. No shims, wrappers or compatibility patches over legacy.
+- **`./gradlew qualityGate assembleDevDebug` green** before every commit. `qualityGate` is the gate; plain `./gradlew detekt` covers strictly less and is never a substitute.
+- **Every route the nav host can push is `@Serializable`.** The crash is on process-death restore only, invisible to the compiler; `RouteSerializationTest` is the net.
+- **A `CREATE TABLE` change ships its three artifacts**: the `.sq` edit, the `N.sqm`, the `databases/(N+1).db`, plus an instrumented test per starting version. See `.claude/rules/sqldelight.md`.
+- **English for every identifier; Spanish only in user-facing values**, addressing the reader as tú, never vos.
+- **Never add `Co-Authored-By`** from Claude, Anthropic or any AI assistant to a commit message; a hook blocks it. Conventional commits, linear history, never push without being asked.
 
-The app is **local-first**: SQLDelight on-device is the single source of truth, fully usable with no
-account and no network. **Sync is being removed, not repaired**: ADR 009 replaces row replication
-with **snapshot backup**; the engine is gone, the sync schema stays. **Read
-`docs/work/epics/E01-snapshot-backup.md` before touching `data/src/**/backup/`.**
+## Detailed rules
 
-**Data flow:** `Screen` → `ViewModel` → use case → `Repository` interface → `Default{Entity}Repository` → `LocalDataSource` (SQLDelight). The use case is there **only where there is domain logic** — a pure read goes from `ViewModel` straight to the `Repository` interface. Rationale + the measurement: `docs/CODE_QUALITY.md`.
+Path-scoped, loaded when matching files are touched:
 
-### Contracts that span modules
+| File | Covers |
+|---|---|
+| `.claude/rules/architecture.md` | Layer boundaries, dependency inversion, use-case admission, errors, the MVI contract, Koin, routes |
+| `.claude/rules/naming.md` | Uncle Bob, official Kotlin, naming patterns by layer, English identifiers |
+| `.claude/rules/kotlin-style.md` | Explicit types, comment policy, Kotlin idioms, detekt and its baselines, Compose sizing |
+| `.claude/rules/principles.md` | YAGNI, KISS, SOLID with its tests, DRY with its caveat, what is rejected |
+| `.claude/rules/ui-components.md` | The atoms iron rule, which token to reach for and why |
+| `.claude/rules/sqldelight.md` | Schema changes: the three artifacts a migration ships, the migration test |
+| `.claude/rules/github-workflows.md` | CI, the gate's definition, pinned actions, the release upload |
 
-- **MVI** — `MviViewModel<S, I, E>` and every ViewModel/UiState/Intent/Effect live in `:presentation`
-  (`core/mvi/`); the Screens consuming them live in `:ui-android`.
-- **Errors** — sealed `DomainException` (`:domain/shared/error/`) → `SafeCall.kt` translates SQLDelight
-  exceptions into it → `DomainExceptionExt.kt` renders the Spanish message. Add failure modes by
-  extending `DomainException`, never a new exception type.
+Each module carries a `CLAUDE.md` with its build and test facts and its feature gotchas.
 
-## Testing
+## Stack
 
-JUnit4 + MockK + `kotlinx-coroutines-test` as JVM host tests (`src/test`); `:domain` use cases
-are the primary surface. Two failure modes have one net each: a missing Koin binding, caught by a host
-test (`presentation/CLAUDE.md`), and a missing migration — compiled by the gate, run only on a device.
+Kotlin, Jetpack Compose, Navigation 3, Koin, SQLDelight 2, supabase-kt with Ktor, Crashlytics on `prod` only. No Analytics.
 
-## Delegation
+## Commands
 
-The loop and the review policy are `docs/WORKFLOW.md`; the tuned tier table is
-`docs/agents/dispatch-log.md` `## Rows`, its reasoning ADR 007. `model` is explicit on every Agent
-call. **Read `docs/WORKFLOW.md` before delegating anything.**
+- `./gradlew qualityGate` — detekt per module, host tests, `:data`'s instrumented compile, `verifySqlDelightMigration`, `:build-logic:test`. Defined once in `QualityGateConventionPlugin.kt`; the pre-push hook and CI run exactly it.
+- `./gradlew assembleDevDebug` — dev debug build; `assembleProdRelease` for the release.
+- `./gradlew test` — every module's host tests; per module `:<module>:testDebugUnitTest`, `:domain:test`, and `:androidApp:testDevDebugUnitTest` for the MockK ViewModel suite.
+- `./gradlew :data:connectedDebugAndroidTest` — the migration suite, on the `medium_phone` emulator, the only AVD.
+- Test tasks go `UP-TO-DATE` across sessions: `--rerun` forces a real run, per task.
 
-## Writer conventions (they reach every subagent through this file)
+## Test stack
 
-- **Comments climb a ladder, in order: delete → rename → redesign → comment.** In a test file the test
-  method name IS the rename rung. A surviving comment names a constraint the code cannot show — one
-  comment, one fact. Full rule: `docs/CODE_QUALITY.md`.
-- **English for every identifier; Spanish only in user-data VALUES.** `name = "Sueldo"` is data;
-  `val sueldo` is a violation — name fixture locals by role (`incomeCategory`).
-- **That Spanish addresses the reader as `tú`, never `vos`.** Tuteo is the house register; a voseo
-  string is a defect even when it reads well. A test can pin the wrong one — `DeleteCategoryCopyTest`
-  did — so grep the expectation, not just the source.
-- **No prose names a source set, plugin, target or module that does not exist.** `src/main`,
-  `src/test` and `:data`'s `src/androidTest` are what exist; a historical mention survives only if
-  deleting it loses a fact the code cannot give back (why `--match "v[0-9]*"` is not optional).
+JUnit4, MockK, `kotlinx-coroutines-test`, plain `kotlin.test` where it suffices. Test names are backtick sentences naming the rule (`` `refuses while live dependents exist`() ``). Fixture locals are named by role. `MainDispatcherRule` goes in every ViewModel test that touches `viewModelScope`; a ViewModel that injects `TodayFlow` takes a fake.
 
-## Gotchas
+## Custom slash commands
 
-This is the top-tier list (`docs/agents/dispatch-log.md` row 3) — nothing catches the error here.
+- `/checks` — `./gradlew qualityGate assembleDevDebug`, failures grouped by module.
+- `/feature <Name>` — full MVI scaffold across `:presentation` and `:ui-android`.
+- `/agents-review` — review the pending diff against these rules.
+- `/release` — tag trunk and upload a draft to the Play alpha track.
+- `/wave <issues>` — boot one peer session per ticket and dispatch.
 
-- **`./gradlew qualityGate` is the gate**, and **never plain `./gradlew detekt`** (it covers strictly
-  less). What the gate matches, what each module must name itself, the SHA-pinned actions, the
-  `versionName` filter, the draft-only upload and the `env:` secrets rule: `.claude/rules/github-workflows.md`,
-  auto-loaded on any read under `.github/`, the app's `build.gradle.kts` or `/release`.
-- **`:domain`'s stdlib comes from a pin in `build-logic/build.gradle.kts`, not the catalog** — the
-  unversioned `kotlin-jvm` alias is deliberate (both comments say why). Drop the pin and `:domain`
-  compiles a minor version behind: the gate reddens on opt-in errors in `:domain` source, naming
-  nothing about the classpath. `:domain:dependencies --configuration compileClasspath` answers it.
-- **Every route the nav host can push MUST be `@Serializable`** — the crash is on process-death restore
-  only, invisible to the compiler. Mechanism and the test that pins it: `.claude/rules/navigation.md`.
+## Final rule
+
+If a doc contradicts the current code, the code wins and the doc gets updated afterwards.
 
 ## Agent skills
 
-Issues and specs are GitHub Issues for `emm3000/Just-Chill` via `gh` (`docs/agents/issue-tracker.md`);
-the triage vocabulary is `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`
-(`docs/agents/triage-labels.md`); domain docs are single-context, `docs/adr/` at the root and no
-`CONTEXT.md` yet (`docs/agents/domain.md`).
+### Issue tracker
 
-## Docs contract
+Issues and specs live in GitHub Issues for `emm3000/Just-Chill` via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
-Six doc types, one job and a death rule each: **`CLAUDE.md`** — how to work here, ≤150 lines, pointers
-only; a module's ≤40, only how it is built, tested and what it must not depend on. **`.claude/rules/`**
-— a path-scoped invariant the compiler cannot catch, auto-loaded on any read under its `paths:`.
-**`adr/`** — one decision per ADR, target 1 page, ceiling 2 **at writing time**; a published ADR is
-never trimmed to fit, only amended by a new ADR. **`work/epics/`** — the constraints outliving every
-issue under an epic, ≤80 lines. **`PROGRESS.md`** — the orientation page: where the app stands, how
-to check it. **Reference docs** (`WORKFLOW`, `CODE_QUALITY`, `DESIGN_SYSTEM`, `PERSISTENCE`) —
-timeless conventions, zero history. **`archive/`** — the reasoning of closed work. The chronicle lives
-in git and engram, never in a live doc; every live doc has a read-trigger in the map below, and a doc
-with no trigger is archive.
+### Triage labels
 
-## Docs map (`docs/`)
+Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
 
-- `PROGRESS.md` — where the app stands and how to verify that from a shell. It holds no work list:
-  every committed unit is a GitHub issue. **Read it first.**
-- `work/epics/E01-snapshot-backup.md` — the sync/backup epic: constraints outliving every ticket
-  under it; remaining work is its open issues. **Read before touching backup.**
-- `work/epics/E07-baseline-burndown.md` — **read before touching a detekt baseline.**
-  `work/epics/E12-mvi-core.md` — **read before touching `MviViewModel` or a ViewModel's effects.**
-- `PERSISTENCE.md` — the schema, the migration obligation, the coverage invariant and the test
-  mechanics. **Read before touching a `.sq`, a `.sqm` or a migration test** (`.claude/rules/sqldelight.md`
-  auto-loads the pointer and the hard invariants on any such read).
-- `agents/issue-tracker.md` + `agents/triage-labels.md` — the board: GitHub Issues, the `gh`
-  operations, the `ready-for-agent` vocabulary. **Read before opening, taking or closing an issue.**
-- `adr/` — filenames state the decision; each header declares what it amends or supersedes. 009 is
-  the one to read first for anything sync-shaped, 013 for the way of working. **Read before
-  changing anything an ADR decided.**
-- `PLAY_ADVERTISING_ID.md`, `PLAY_STORE_LISTING.md`, `PRIVACY_POLICY.md` — the store-facing set.
-  **Read before a Play submission or a privacy change**; the advertising-ID answer is "No", and a
-  still-active release in ANY track can fail it even when the bundle being uploaded is clean.
-- `DESIGN_SYSTEM.md` — the criteria: which token to reach for and why, never its value. **Read before adding UI.**
-- `RELEASE_CHECKLIST.md` — the ordered gate a release passes, including the ADR 009 restore drill.
-  **Read before tagging a release.**
-- `CODE_QUALITY.md` — detekt's blind spots, what only a reviewer can judge, and the date rule
-  (injected `Clock` **and** `TimeZone`, no defaults). **Read before a lint rule, a `@Suppress`, a use case, or a date.**
-- `WORKFLOW.md` — the writer/reviewer loop and the review policy. **Required before any unit of work.**
-- `PRODUCT_REQUIREMENTS.md` — the Won't-have rows (ADRs amend them **by row id**), the NFRs and the
-  acceptance criterion. **Read before scoping a feature.**
-- `archive/` — closed tracks kept for the reasoning.
+### Design and reference docs
+
+- `docs/PROGRESS.md` — where the app stands and how to verify it from a shell. Read it first.
+- `docs/PERSISTENCE.md` — the schema, the migration obligation, the restore drill. Read before a `.sq`, a `.sqm` or a migration test.
+- `docs/work/epics/` — the constraints that outlive every issue under an epic; `E01` before touching `data/src/**/backup/`.
+- `docs/PRODUCT_REQUIREMENTS.md` — the Won't-have rows (ADRs amend them by row id), the NFRs, the acceptance criterion. Read before scoping a feature.
+- `docs/PLAY_ADVERTISING_ID.md`, `docs/PLAY_STORE_LISTING.md`, `docs/PRIVACY_POLICY.md`, `docs/RELEASE_CHECKLIST.md` — the store-facing set. Read before a Play submission, a privacy change or a release tag.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+### Multi-session orchestration
+
+Playbook for the writer/reviewer loop and for dispatching to parallel peer sessions. Read it before dispatching any ticket. See `docs/agents/multi-session.md`.
