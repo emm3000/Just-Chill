@@ -6,7 +6,8 @@ import kotlin.math.roundToLong
 
 object NumberFormatEs {
 
-    // Reversed from conventional Spanish (dot-thousands, comma-decimal) to match es-PE; the golden test pins it.
+    // Reversed from conventional Spanish (dot-thousands, comma-decimal) to match es-PE;
+    // SpanishFormatGoldenTest pins it.
     private const val GROUP = ','
     private const val DECIMAL = '.'
 
@@ -29,10 +30,11 @@ object NumberFormatEs {
         return sb.toString()
     }
 
-    /** Grouped integer, no fraction part. [value] must be >= 0. */
+    // value must be >= 0; unchecked.
     fun integer(value: Long): String = groupDigits(value.toString())
 
-    /** Rounds like `NumberFormat.getNumberInstance(es-PE)` at 0 fraction digits: HALF_EVEN (banker's), not HALF_UP. */
+    // Rounds like NumberFormat.getNumberInstance(es-PE) at 0 fraction digits: HALF_EVEN (banker's),
+    // not HALF_UP.
     fun integerRounded(value: Double): String = groupDigits(roundHalfEven(abs(value)).toString())
 
     private const val MIDPOINT = 0.5
@@ -51,7 +53,7 @@ object NumberFormatEs {
 
     private const val CENTS_PER_SOL = 100L
 
-    /** Two fraction digits from an exact cents amount; callers needing a sign prefix add it themselves. */
+    // Callers needing a sign prefix add it themselves.
     fun cents(cents: Long): String {
         val abs = abs(cents)
         val grouped = groupDigits((abs / CENTS_PER_SOL).toString())
@@ -59,6 +61,7 @@ object NumberFormatEs {
         return "$grouped$DECIMAL$centsStr"
     }
 
-    /** Rounds HALF_UP to the nearest cent before delegating to [cents]. */
+    // Rounds HALF_UP to the nearest cent before delegating to cents(), unlike integerRounded's
+    // HALF_EVEN.
     fun decimal2(value: Double): String = cents((abs(value) * CENTS_PER_SOL).roundToLong())
 }

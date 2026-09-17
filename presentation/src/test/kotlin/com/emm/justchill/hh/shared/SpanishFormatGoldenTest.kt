@@ -5,16 +5,12 @@ import kotlinx.datetime.Month
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Golden tests pinning the hand-rolled Spanish formatters to the exact strings the old JVM
- * `java.time` / `java.text` localized formatters produced on the build JDK (captured empirically
- * for the `es` / `es-PE` locales). If any of these drift, the Spanish UX has changed.
- */
+// Pins the hand-rolled Spanish formatters to the exact strings the JVM java.time/java.text
+// localized formatters produce for the es/es-PE locales. If any of these drift, the Spanish UX has
+// changed.
 class SpanishFormatGoldenTest {
 
     private val jun13 = LocalDate(2026, Month.JUNE, 13)
-
-    // ---- SpanishDateFormat ----
 
     @Test fun longDate_matches_FormatStyle_LONG() {
         // ofLocalizedDate(LONG, es) -> "13 de junio de 2026"
@@ -58,12 +54,10 @@ class SpanishFormatGoldenTest {
     }
 
     @Test fun titlecaseFirstChar_only_touches_first_char() {
-        assertEquals("13 jun", "13 jun".titlecaseFirstChar()) // leading digit unchanged
+        assertEquals("13 jun", "13 jun".titlecaseFirstChar())
         assertEquals("Septiembre 2026", "septiembre 2026".titlecaseFirstChar())
         assertEquals("", "".titlecaseFirstChar())
     }
-
-    // ---- NumberFormatEs ----
 
     @Test fun decimal2_matches_DecimalFormat_and_esPE_NumberFormat() {
         assertEquals("0.00", NumberFormatEs.decimal2(0.0))
@@ -93,8 +87,6 @@ class SpanishFormatGoldenTest {
         assertEquals("1,236", NumberFormatEs.integerRounded(1235.5)) // .5 -> nearest even (1236)
         assertEquals("1,234,568", NumberFormatEs.integerRounded(1234567.6))
     }
-
-    // ---- SpanishSearch ----
 
     @Test fun stripSpanishAccents_maps_accented_to_base() {
         assertEquals("cafe", "café".stripSpanishAccents())

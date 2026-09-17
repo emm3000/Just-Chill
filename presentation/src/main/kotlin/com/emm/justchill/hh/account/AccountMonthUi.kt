@@ -9,11 +9,8 @@ import com.emm.justchill.hh.shared.formatNeutral
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.shared.positiveMoneyFormatted
 
-/**
- * An account has no opening balance, so [net] is a monthly net and never a balance — the screen owes
- * the user the "este mes" caption that says so. [netIsPositive] is the raw sign [net] already
- * formats into `+`/`−`/nothing — DESIGN_SYSTEM.md §1.4 tone lives at the render site, not here.
- */
+// An account has no opening balance, so net is a monthly net and never a balance — the screen owes
+// the user the "este mes" caption that says so.
 data class AccountMonthUi(val account: Account, val movementCount: Int, val net: String, val netIsPositive: Boolean)
 
 internal data class AccountsMonthSlice(
@@ -28,13 +25,9 @@ internal fun accountsMonthSlice(
     transactions: List<Transaction>,
     month: YearMonth,
 ): AccountsMonthSlice {
-    // The month a movement belongs to is the one it carries. No zone, no conversion, nothing that
-    // can put the same movement in a different month on a different device.
-    //
-    // Load-bearing, not redundant: `month` reaches the caller's combine() twice, once directly and
-    // once through the flatMapLatest that re-queries `transactions` on it, so a rollover can emit an
-    // intermediate tuple pairing the NEW month with the OLD month's still-in-flight rows. Without
-    // this filter that tuple would render on screen: last month's money, labelled this month.
+    // Load-bearing, not redundant: month reaches the caller's combine() twice, directly and through
+    // the flatMapLatest re-querying transactions on it, so a rollover can emit an intermediate tuple
+    // pairing the NEW month with the OLD month's still-in-flight rows.
     val byAccount = transactions
         .filter { YearMonth.of(it.occurredAt.date) == month }
         .groupBy { it.accountId }

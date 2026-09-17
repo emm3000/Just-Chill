@@ -7,12 +7,8 @@ import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.hh.shared.comboLabel
 import kotlinx.coroutines.flow.first
 
-/**
- * Shortcut-ready combos for the launcher — ids, type and both labels as plain strings, so
- * `:androidApp` never needs a `:domain` enum to build an `Intent` (E09-03). Spend only: a shortcut
- * exists to log money that just left the wallet, and income is a planned monthly event nobody
- * reaches for a launcher shortcut to record.
- */
+// Plain strings, not domain enums, so :androidApp never needs a :domain type to build an Intent
+// (E09-03). Spend only: income is a planned monthly event nobody reaches for a shortcut to record.
 class GetSpendShortcutCombos(
     private val getFrequentCombos: GetFrequentCombosUseCase,
     private val accountRepository: AccountRepository,

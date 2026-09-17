@@ -41,7 +41,6 @@ import org.koin.dsl.module
 val dataModule = module {
     single { provideTransactionQueries(get()) }
 
-    // LocalDataSources — most take EmmDatabaseData; the transaction ones take TransactionsQueries.
     factoryOf(::CategoryLocalDataSource)
     factoryOf(::TransactionLocalDataSource)
     factoryOf(::TransactionStatsLocalDataSource)
@@ -50,7 +49,6 @@ val dataModule = module {
     factoryOf(::LoanLocalDataSource)
     factoryOf(::LoanPaymentLocalDataSource)
 
-    // Repository binds.
     factoryOf(::DefaultTransactionRepository) { bind<TransactionRepository>() }
     factoryOf(::DefaultTransactionStatsRepository) { bind<TransactionStatsRepository>() }
     factoryOf(::DefaultCategoryRepository) { bind<CategoryRepository>() }
@@ -60,13 +58,9 @@ val dataModule = module {
     factoryOf(::DefaultLoanPaymentRepository) { bind<LoanPaymentRepository>() }
     factoryOf(::DefaultBackupRepository) { bind<BackupRepository>() }
 
-    // Written out rather than `factoryOf(::DefaultBackupUploader)`: the class has a second,
-    // `internal` constructor taking its storage seam, which only :data (and its tests) can see. The
-    // constructor DSL would have to resolve a reference this module cannot name. Same for the
-    // verifier and the eraser, and for the pruner, which additionally takes the graph's Clock and TimeZone —
-    // spelled as get() because neither carries a default any more (docs/CODE_QUALITY.md, Dates), and
-    // AppGraphKoinTest asserts by identity that this block really passed the bound instances rather
-    // than its own.
+    // Written out rather than factoryOf(::DefaultBackupUploader): the class has a second, internal
+    // constructor taking its storage seam, which only :data (and its tests) can see, and the
+    // constructor DSL would have to resolve a reference this module cannot name.
     factory<BackupUploader> { DefaultBackupUploader(get()) }
     factory<BackupVerifier> { DefaultBackupVerifier(get()) }
     factory<BackupPruner> { DefaultBackupPruner(get(), get(), get()) }

@@ -4,13 +4,8 @@ import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Golden assertions for the day-header hierarchy of the transactions tab: the date is the
- * prominent label ("Martes 13"), the month/year is a caption the search mode adds back.
- *
- * Every date here is fixed, including the reference "today" — it is an input to [DayGroup], not an
- * ambient clock read, so a run that crosses midnight cannot change any answer below.
- */
+// Every date here is fixed, including the reference "today" — it is an input to DayGroup, not an
+// ambient clock read, so a run that crosses midnight cannot change any answer below.
 class DayGroupTest {
 
     private val today = LocalDate(2026, 8, 10)

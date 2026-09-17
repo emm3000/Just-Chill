@@ -14,7 +14,6 @@ data class RecurringMovementUi(
     val isVariableAmount: Boolean,
     val dayOfMonth: Int,
     val isActive: Boolean,
-    /** null when category was deleted or never assigned */
     val categoryName: String? = null,
     val categoryColor: String? = null,
     val accountName: String = "",

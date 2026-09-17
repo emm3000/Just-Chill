@@ -73,8 +73,6 @@ class BackupRowTextTest {
 
     @Test
     fun `a local database read failure gets the generic retry, not a false promise`() {
-        // The no-snapshot case (LocalDatabase renders the generic fallback) is pinned by
-        // `group membership is pinned per reason...` below; this keeps only what that test doesn't cover.
         assertEquals(
             "Ayer · no pude actualizar",
             failed(BackupFailureReason.LocalDatabase, days = 1).toMetaText(),
@@ -107,14 +105,9 @@ class BackupRowTextTest {
         )
     }
 
-    /**
-     * `toFailureAction` is `private` to `BackupRowText.kt`, so group membership is observed through
-     * `toMetaText()` instead: a reason with no remedy renders the exact same generic fallback as
-     * `null` does, and a reason with a remedy never does. [EXPECTED_REMEDY_GROUP] names every
-     * [BackupFailureReason] explicitly and the first assertion below requires it to cover
-     * [BackupFailureReason.entries] exactly, so a reason added to the enum without a matching entry
-     * here fails on that coverage check instead of silently inheriting the no-remedy group.
-     */
+    // toFailureAction is private, so group membership is observed through toMetaText() instead.
+    // EXPECTED_REMEDY_GROUP must cover BackupFailureReason.entries exactly, so a reason added
+    // without a matching entry fails here instead of silently joining the no-remedy group.
     @Test
     fun `group membership is pinned per reason, and a new reason cannot join a group silently`() {
         assertEquals(
@@ -197,12 +190,8 @@ class BackupRowTextTest {
         assertTrue("Sin respaldo" !in text)
     }
 
-    /**
-     * The sentence ADR 009 Decision 5 requires on screen: this device's WHOLE ledger, including rows
-     * written under a previous account, goes into THIS account's backup, and signing out does not
-     * erase it. A copy edit that drops any one fact stops satisfying the decision, so every fact is
-     * asserted rather than the string.
-     */
+    // ADR 009 Decision 5 requires every one of these facts on screen, so each is asserted
+    // separately rather than matching the whole string.
     @Test
     fun `the disclosure names the whole ledger and the previous account`() {
         assertTrue("TODO" in BACKUP_DESTINATION_DISCLOSURE, BACKUP_DESTINATION_DISCLOSURE)

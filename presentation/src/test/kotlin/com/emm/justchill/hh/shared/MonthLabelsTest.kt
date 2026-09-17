@@ -5,15 +5,7 @@ import kotlinx.datetime.Month
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * These tests exist because the app once carried two Spanish month tables — this file's own
- * hand-written one and [SpanishDateFormat]'s — and they disagreed. Home rendered "Setiembre 2026"
- * while the transaction list rendered "septiembre", and the month grid rendered "Set" while a
- * transaction row rendered "sept". Nothing failed; the two tables were simply never compared.
- *
- * [allLabelsComeFromTheOneMonthTable] is that comparison, and it is the point of the suite: it
- * fails the moment a second table reappears here.
- */
+// allLabelsComeFromTheOneMonthTable fails the moment a second Spanish month table reappears here.
 class MonthLabelsTest {
 
     private val september = YearMonth(2026, Month.SEPTEMBER)

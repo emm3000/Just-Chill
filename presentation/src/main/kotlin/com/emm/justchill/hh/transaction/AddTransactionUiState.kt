@@ -20,10 +20,7 @@ data class FrequentUsage(
 
 data class AddTransactionUiState(
     val today: LocalDate,
-    /**
-     * The day the transaction is recorded for, or `null` while unpicked. `null` is not "no date" —
-     * it is *the day this gets saved on*, staying unresolved until the save happens.
-     */
+    // null is not "no date" — it is the day this gets saved on, staying unresolved until save.
     val date: LocalDate? = null,
     val amount: String = "",
     val description: String = String.Empty,
@@ -33,19 +30,15 @@ data class AddTransactionUiState(
     val lastUsedAccountId: AccountId? = null,
     val accountId: AccountId? = null,
     val categoryId: CategoryId? = null,
-    /**
-     * Bridges the frame between creating a category here and the repository flow re-emitting with
-     * it. The catalog's row supersedes it by id, so this can never serve a stale copy.
-     */
+    // Bridges the frame between creating a category here and the repository flow re-emitting with
+    // it. The catalog's row supersedes it by id, so this can never serve a stale copy.
     val extraCategories: List<SelectableCategory> = emptyList(),
     val frequentUsage: FrequentUsage? = null,
-    /**
-     * nav3 disposes and recreates this screen's composition on events the ViewModel survives —
-     * rotation, and popping back from CategoryRoute in particular — which re-sends the same
-     * preselect. Only the first registration may act; every repeat is a no-op.
-     */
+    // nav3 disposes and recreates this screen's composition on events the ViewModel survives —
+    // rotation, and popping back from CategoryRoute in particular — which re-sends the same
+    // preselect. Only the first registration may act; every repeat is a no-op.
     val preselectConsumed: Boolean = false,
-    /** The sheet currently rendered over this screen; `null` means none is (ADR 012 Decision 2). */
+    // null means no sheet is open (ADR 012 Decision 2).
     val openSheet: TransactionSheet? = null,
 ) : UiState {
     val dateLabel: String get() = date?.let { relativeDayLabel(it, today) } ?: "Hoy"

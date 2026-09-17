@@ -45,10 +45,8 @@ class AddTransactionViewModel(
 ) {
 
     init {
-        // Nested on purpose: `accountRepository.all()` below is called when the combine is BUILT, so
-        // hoisting it would read the catalog while the last-used account is still pending — the
-        // account chip would flash `accounts.first()` before lastUsedAccountId lands, and a cleared
-        // screen would still start the read its cancellation is supposed to stop.
+        // Nested on purpose: hoisting accountRepository.all() would read the catalog while the
+        // last-used account is still pending, flashing accounts.first() before it lands.
         launchSafe(onError = { AddTransactionEffect.ShowError(it.toUserMessage()) }) {
             val lastUsedAccountId = loadOrNull { transactionStatsRepository.lastUsedAccountId() }
             updateState { copy(lastUsedAccountId = lastUsedAccountId) }
@@ -107,10 +105,8 @@ class AddTransactionViewModel(
         }
     }
 
-    /**
-     * The schema refuses a cross-type (categoryId, type) pair; the route always carries the
-     * movement's type, so this guard should never fire.
-     */
+    // The schema refuses a cross-type (categoryId, type) pair; the route always carries the
+    // movement's type, so this guard should never fire.
     private fun addCategoryFromOthers(category: SelectableCategory) {
         if (category.categoryType != currentState.transactionType.categoryType) return
         updateState {

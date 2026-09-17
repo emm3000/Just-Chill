@@ -23,24 +23,16 @@ import kotlin.test.assertIs
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-/**
- * Contract tests for [MviViewModel.launchSafe] and its flow-side sibling `launchSafeIn` — the one
- * funnel every ViewModel routes its suspending work and its collectors through, so its exception
- * policy is app-wide behaviour. Both share a single catch-and-map, and both are pinned here so a
- * future split cannot let the two drift. Where they deliberately differ is the retry: only the flow
- * side re-subscribes, because only a collector's death outlives the call that started it.
- *
- * Cancellation is the case that bites in production: `ReportViewModel` keeps a latest-wins job and
- * cancels the in-flight one on every filter change, so a `launchSafe` that mistakes cancellation
- * for a failure turns an ordinary re-query into a spurious error snackbar.
- */
+// launchSafe and launchSafeIn are the one funnel every ViewModel routes its suspending work and
+// collectors through, so their exception policy is app-wide behaviour and is pinned here so a
+// future split cannot let the two drift.
 class MviViewModelTest {
 
     @Before
     fun setUp() {
-        // launchSafe runs on viewModelScope (Dispatchers.Main.immediate). Standard rather than
-        // Unconfined so the test drives the suspend/cancel ordering explicitly; runTest adopts this
-        // dispatcher's scheduler, which is what makes runCurrent/advanceUntilIdle steer the VM.
+        // Standard rather than Unconfined so the test drives the suspend/cancel ordering explicitly;
+        // runTest adopts this dispatcher's scheduler, which is what makes runCurrent/advanceUntilIdle
+        // steer the VM.
         Dispatchers.setMain(StandardTestDispatcher())
     }
 
@@ -184,10 +176,8 @@ class MviViewModelTest {
         assertSame(failure, unknown.cause, "the original throwable must survive as the cause")
     }
 
-    /**
-     * Returns a live view of everything the VM emits. The channel behind `effect` is BUFFERED, so
-     * the collector only has to exist before the assertions, not before the emission.
-     */
+    // The channel behind effect is BUFFERED, so the collector only has to exist before the
+    // assertions, not before the emission.
     private fun TestScope.collectEffects(viewModel: FunnelViewModel): List<TestEffect> {
         val effects = mutableListOf<TestEffect>()
         backgroundScope.launch { viewModel.effect.collect { effects += it } }
@@ -195,13 +185,8 @@ class MviViewModelTest {
         return effects
     }
 
-    /**
-     * Drains everything the ViewModel queued, the effect collector included.
-     *
-     * `advanceUntilIdle` stops as soon as no FOREGROUND task is left, and the collector above runs
-     * in `backgroundScope`. On its own it therefore returns before the collector appends, and every
-     * "no effect was emitted" assertion here would pass vacuously. `runCurrent` has no such filter.
-     */
+    // advanceUntilIdle stops as soon as no FOREGROUND task is left, and collectEffects' collector
+    // runs in backgroundScope; runCurrent has no such filter and is what actually drains it.
     private fun TestScope.settle() {
         advanceUntilIdle()
         runCurrent()
@@ -218,9 +203,8 @@ private class FunnelViewModel : MviViewModel<TestState, TestIntent, TestEffect>(
 
     override fun onIntent(intent: TestIntent) = Unit
 
-    /** `launchSafe` is protected; only a subclass can hand its [Job] to the test. */
+    // launchSafe/launchSafeIn are protected; only a subclass can hand their Job to the test.
     fun runSafe(block: suspend () -> Unit): Job = launchSafe(onError = ::TestEffect, block = block)
 
-    /** Same reason as [runSafe]: `launchSafeIn` is a protected extension. */
     fun collectSafe(source: Flow<Unit>): Job = source.launchSafeIn(onError = ::TestEffect)
 }

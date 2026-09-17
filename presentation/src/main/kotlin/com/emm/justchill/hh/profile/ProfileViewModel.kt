@@ -143,10 +143,8 @@ class ProfileViewModel(
         }
     }
 
-    // Not a backup cycle: it never touches the streak, the watermark or backup health, so a failure
-    // is a Notify like every other backup failure — never a ShowError, which would read as expired
-    // credentials. Signed out there is nothing to reach, so it refuses instead of failing: the
-    // account prompt is actionable and BackupVerifyFailed invites a retry that cannot succeed.
+    // Not a backup cycle: a failure is a Notify like every other backup failure, never a ShowError,
+    // which would read as expired credentials.
     private fun verifyBackup() {
         val refusal: ProfileMessage? = when {
             currentState.op != ProfileOp.None -> ProfileMessage.OperationInProgress
@@ -258,19 +256,6 @@ private fun BackupVerification.toProfileMessage(): ProfileMessage = when (this) 
     is BackupVerification.NothingVerified -> ProfileMessage.BackupNotVerified(pairsInspected)
 }
 
-/**
- * ```
- * resolveBackupRow          not signed in ............... NeedsAccount
- *                           destination undisclosed ..... DisclosurePending
- *                           a cycle is running .......... BackingUp
- *                           no watermark ................ failing ? Failed(reason, None) : Never
- *                           a watermark ................. ↓
- * snapshotRow               the staleness read threw .... failing ? Failed(reason, AgeUnknown)
- *                                                                 : Unreadable
- *                           otherwise ................... failing ? Failed(reason, DaysAgo(…))
- *                                                                 : isStale ? Stale : UpToDate
- * ```
- */
 private suspend fun resolveBackupRow(
     sessionUiState: SessionUiState,
     health: BackupHealth,

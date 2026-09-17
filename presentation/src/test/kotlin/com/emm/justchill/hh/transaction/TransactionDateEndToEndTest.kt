@@ -43,19 +43,9 @@ import kotlin.test.assertNotNull
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-/**
- * The date, driven the whole way down: ViewModel → use case → data source → SQLite, and back.
- *
- * **This test exists because the previous fix's regression test did not do this.** It called the
- * data source directly, handed it the value it expected back, and asserted that SQL had stored
- * what it was given. It passed. Meanwhile the ViewModel and the use case — the two layers it
- * skipped — were between them rewriting the date into a different day, and two reviewers found it
- * only by reading the code.
- *
- * Nothing here is mocked except the collaborators that have nothing to do with a date. The
- * transaction repository is the real one over a real in-memory database, so what is asserted is
- * the value the column actually holds.
- */
+// The date, driven the whole way down: ViewModel -> use case -> data source -> SQLite, and back.
+// Nothing here is mocked except collaborators that have nothing to do with a date; the transaction
+// repository is the real one over a real in-memory database.
 class TransactionDateEndToEndTest {
 
     private val testDispatcher = StandardTestDispatcher()
@@ -66,7 +56,7 @@ class TransactionDateEndToEndTest {
 
     private val lima = TimeZone.of("America/Lima")
 
-    /** 10 August 2026, 14:30 in Lima. Movable so a test can hold a screen across midnight. */
+    // Movable so a test can hold a screen across midnight.
     private class MovableClock(var instant: Instant) : Clock {
         override fun now(): Instant = instant
     }
@@ -111,8 +101,6 @@ class TransactionDateEndToEndTest {
         driver.close()
     }
 
-    // ── create ────────────────────────────────────────────────────────────────
-
     @Test
     fun `the day the user picked is the day the column holds`() = runTest(testDispatcher) {
         val vm = addViewModel().awaitReady()
@@ -122,7 +110,6 @@ class TransactionDateEndToEndTest {
         vm.onIntent(AddTransactionIntent.OnSave)
         assertEquals(AddTransactionEffect.TransactionSaved, vm.effect.first())
 
-        // The picked day, at the wall-clock time of the save. Read straight out of SQLite.
         assertEquals("2026-06-13T14:30:00", storedOccurredAt("tx-1"))
     }
 
@@ -140,12 +127,8 @@ class TransactionDateEndToEndTest {
         assertEquals("2026-08-11T00:05:00", storedOccurredAt("tx-1"))
     }
 
-    // ── edit ──────────────────────────────────────────────────────────────────
-
     @Test
     fun `editing only the amount leaves the stored date byte-for-byte identical`() = runTest(testDispatcher) {
-        // The CRITICAL, end to end. A fix that only satisfied the storage layer passed its own
-        // test here and still corrupted the date, because the corruption happened above it.
         val stored = seedTransaction("2026-03-04T09:15:33")
 
         val vm = editViewModel().awaitLoaded()
@@ -159,8 +142,7 @@ class TransactionDateEndToEndTest {
 
     @Test
     fun `an evening transaction survives an amount-only edit without moving a day`() = runTest(testDispatcher) {
-        // 23:30 is the hour that used to shift forward by one: read as an instant it fell on
-        // the next UTC day, and the round trip through midnight never came back.
+        // 23:30 local is past midnight UTC, the case a naive instant conversion shifts a day forward.
         val stored = seedTransaction("2026-03-04T23:30:00")
 
         val vm = editViewModel().awaitLoaded()
@@ -185,8 +167,6 @@ class TransactionDateEndToEndTest {
 
     @Test
     fun `re-saving the same transaction never drifts`() = runTest(testDispatcher) {
-        // Idempotency, which is what an inverse pair of conversions failed to be. Five round trips
-        // through the whole stack have to land on the value the first one did.
         seedTransaction("2026-03-04T23:30:00")
 
         repeat(5) {
@@ -209,8 +189,6 @@ class TransactionDateEndToEndTest {
         // rolled over there. The row carries no zone to be re-read in.
         assertEquals(LocalDate(2026, Month.MARCH, 4), karachi.state.value.date)
     }
-
-    // ── helpers ───────────────────────────────────────────────────────────────
 
     private fun addViewModel(): AddTransactionViewModel = AddTransactionViewModel(
         createTransaction = CreateTransactionUseCase(
@@ -244,21 +222,16 @@ class TransactionDateEndToEndTest {
         todayFlow = todayFlowIn(zone),
     )
 
-    /**
-     * A fake, as `presentation/CLAUDE.md` requires — but one reading the same movable clock the
-     * rest of this test drives, so "today" can never disagree with the instant being stored.
-     */
+    // Reads the same movable clock the rest of this test drives, so "today" can never disagree
+    // with the instant being stored.
     private fun todayFlowIn(zone: TimeZone): TodayFlow = object : TodayFlow {
         override fun today(): LocalDate = clock.now().toLocalDateTime(zone).date
 
         override fun invoke(): Flow<LocalDate> = flowOf(today())
     }
 
-    /**
-     * The writes run on `Dispatchers.IO`, which the test scheduler does not drive — so these wait
-     * on the ViewModel's own signals rather than on `advanceUntilIdle`, which would return while
-     * the row was still in flight and make every assertion below it a coin toss.
-     */
+    // The writes run on Dispatchers.IO, which the test scheduler does not drive — so these wait on
+    // the ViewModel's own signals rather than advanceUntilIdle, which would return mid-write.
     private suspend fun AddTransactionViewModel.awaitReady(): AddTransactionViewModel {
         state.first { it.accountSelected != null }
         return this
@@ -269,7 +242,6 @@ class TransactionDateEndToEndTest {
         return this
     }
 
-    /** Seeds a row through the real write path and returns the text it stored. */
     private suspend fun seedTransaction(occurredAt: String): String {
         db.transactionsQueries.insert(
             transactionId = "tx-edit",

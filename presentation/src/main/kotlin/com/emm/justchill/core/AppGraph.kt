@@ -18,11 +18,8 @@ import com.emm.justchill.hh.di.transactionModule
 import org.koin.core.Koin
 import org.koin.core.module.Module
 
-// The single shared Koin module list, minus the platform-specific singles (DB driver, Settings,
-// SupabaseConfig, app version, Google sign-in launcher, dispatchers) supplied via platformModule —
-// androidPlatformModule in production, testPlatformModule off-device. startKoin {} itself is NOT
-// called here: it needs androidContext() / androidLogger() from koin-android, so :androidApp calls
-// it directly. :androidApp also appends its flavor-only experiencesModule to the returned list.
+// startKoin {} is not called here: it needs androidContext() / androidLogger() from koin-android,
+// so :androidApp calls it directly with this list plus platformModule and its own experiencesModule.
 fun appModules(platformModule: Module): List<Module> = listOf(
     transactionModule,
     seetransactionsModule,
@@ -41,12 +38,8 @@ fun appModules(platformModule: Module): List<Module> = listOf(
     platformModule,
 )
 
-// Shared post-startKoin sequence (mirrors the old EmmApp.onCreate / initKoin tails). Both platforms
-// call this immediately after startKoin returns.
 fun bootstrapAppGraph(koin: Koin) {
-    // Kill switch, off today: skipping start() registers no trigger and launches no request
-    // consumer — and that consumer is the only caller of the private cycle — so nothing can export,
-    // upload or prune. The single stays bound and lazily resolvable; only its loops are off. See
-    // BackupKillSwitch.kt.
+    // SNAPSHOT_BACKUP_ENABLED off: skipping start() leaves BackupOrchestrator bound and lazily
+    // resolvable, only its export/upload/prune loops are off. See BackupKillSwitch.kt.
     if (SNAPSHOT_BACKUP_ENABLED) koin.get<BackupOrchestrator>().start()
 }

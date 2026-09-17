@@ -8,11 +8,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-/**
- * The rule that keeps the month label and the rows under it describing the same month: the label
- * moves the instant the arrow is tapped, so an emission that answers for a month the user already
- * left must be dropped instead of applied under the new heading.
- */
+// The label moves the instant the arrow is tapped, so an emission that answers for a month the
+// user already left must be dropped instead of applied under the new heading.
 class SeeTransactionsListSliceTest {
 
     private val august = YearMonth(2026, Month.AUGUST)

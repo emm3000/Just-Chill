@@ -89,7 +89,7 @@ class ReportViewModel(
         }
     }
 
-    /** The single place the shown month changes, so `month` and its flag always move together. */
+    // The single place the shown month changes, so month and its flag always move together.
     private fun showMonth(month: YearMonth) {
         updateState { copy(month = month, isCurrentMonth = isCurrent(month)) }
         reloadReport()

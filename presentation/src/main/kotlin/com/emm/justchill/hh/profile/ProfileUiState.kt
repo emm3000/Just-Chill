@@ -40,10 +40,8 @@ sealed interface BackupRowUi {
 
     data object Unreadable : BackupRowUi
 
-    /**
-     * @property reason may be null even on a real, ongoing failure streak — this case is chosen on
-     *   `consecutiveFailures > 0`, never on `reason != null`.
-     */
+    // reason may be null even on a real, ongoing failure streak — this case is chosen on
+    // consecutiveFailures > 0, never on reason != null.
     data class Failed(val reason: BackupFailureReason?, val lastSnapshot: LastSnapshot) : BackupRowUi
 
     data class Stale(val daysSinceLastBackup: Int) : BackupRowUi

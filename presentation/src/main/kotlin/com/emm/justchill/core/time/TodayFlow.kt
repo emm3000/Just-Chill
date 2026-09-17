@@ -14,15 +14,6 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
-/**
- * Today's date, kept current on its own. A screen that shows HOY/AYER labels or a pending-movement
- * list needs this instead of a one-shot read: the day it opened on goes stale the moment midnight
- * passes underneath it.
- *
- * [today] answers the same question synchronously, for an initial state or a `MutableStateFlow`
- * seed. It exists so a consumer of the stream never needs a `Clock` and a `TimeZone` of its own to
- * derive the date a second, independent way.
- */
 interface TodayFlow {
 
     fun today(): LocalDate
@@ -30,15 +21,9 @@ interface TodayFlow {
     operator fun invoke(): Flow<LocalDate>
 }
 
-/**
- * Emits today's date, then sleeps until the next local midnight and emits again, forever. A day
- * boundary is the event this flow reacts to, not a poll — nothing wakes it up in between.
- *
- * [resumeEvents] is the second event, and it is not redundant: `delay` on Android is scheduled
- * against `SystemClock.uptimeMillis()`, which does not advance in deep sleep, so a phone that dozes
- * across midnight fires the midnight wake late by the whole doze duration. `distinctUntilChanged`
- * swallows a resume that lands on an unchanged date, and the late wake once it finally arrives.
- */
+// resumeEvents is not redundant: delay on Android is scheduled against SystemClock.uptimeMillis(),
+// which does not advance in deep sleep, so a phone dozing across midnight fires the wake late by
+// the whole doze duration. distinctUntilChanged swallows the late wake once it finally arrives.
 class ClockTodayFlow(private val clock: Clock, private val zone: TimeZone, private val resumeEvents: Flow<Unit>) :
     TodayFlow {
 

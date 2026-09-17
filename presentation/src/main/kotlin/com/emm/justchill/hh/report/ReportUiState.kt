@@ -4,7 +4,7 @@ import com.emm.domain.shared.YearMonth
 import com.emm.domain.transaction.TransactionType
 import com.emm.justchill.core.mvi.UiState
 
-/** [isCurrentMonth] is computed by the ViewModel, which holds the live calendar month the screen lacks. */
+// isCurrentMonth is computed by the ViewModel, which holds the live calendar month the screen lacks.
 data class ReportUiState(
     val month: YearMonth,
     val isCurrentMonth: Boolean = false,
@@ -22,6 +22,6 @@ data class ReportUiState(
     val movementCount: Int = 0,
     val averageFormatted: String = "S/ 0",
     val trends: TrendsUiData = TrendsUiData(),
-    /** Whether the month picker sheet is rendered over this screen (ADR 012 Decision 2). */
+    // ADR 012 Decision 2.
     val showMonthSheet: Boolean = false,
 ) : UiState

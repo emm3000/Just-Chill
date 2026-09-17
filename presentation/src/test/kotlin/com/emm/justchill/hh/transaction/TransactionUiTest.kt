@@ -12,10 +12,8 @@ import kotlinx.datetime.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * The two lines of a transaction row are decided here, never in the composable: the title is what
- * the user wrote, and the row falls back to what the app knows rather than to a placeholder.
- */
+// The two lines of a transaction row are decided here, never in the composable: the title is what
+// the user wrote, and the row falls back to what the app knows rather than to a placeholder.
 class TransactionUiTest {
 
     private val spendCategory = Category(

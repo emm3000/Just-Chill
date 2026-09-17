@@ -16,7 +16,7 @@ data class AddEditLoanUiState(
     val note: String = String.Empty,
     val isSaveEnabled: Boolean = false,
     val isSaving: Boolean = false,
-    /** The sheet currently rendered over this screen; `null` means none is (ADR 012 Decision 2). */
+    // null means no sheet is open (ADR 012 Decision 2).
     val openSheet: LoanFormSheet? = null,
 ) : UiState {
     val dateLabel: String get() = relativeDayLabel(pickerDate, today)

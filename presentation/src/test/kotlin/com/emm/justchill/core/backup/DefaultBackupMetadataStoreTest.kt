@@ -82,11 +82,8 @@ class DefaultBackupMetadataStoreTest {
         assertEquals(BackupFailureState(2, BackupFailureReason.Unverified), store.failureState("user-a"))
     }
 
-    /**
-     * The reason is stored by enum NAME, so this is also the test that fails if the persisted form
-     * ever quietly becomes the ordinal — reordering the enum would then rewrite history on every
-     * device that already had a value.
-     */
+    // Fails if the persisted form ever quietly becomes the ordinal — reordering the enum would
+    // then rewrite history on every device that already had a value.
     @Test
     fun `the reason is persisted under its own name`() {
         store.recordFailure("user-a", BackupFailureReason.LocalDatabase)
@@ -104,15 +101,8 @@ class DefaultBackupMetadataStoreTest {
         assertEquals(BackupFailureState.None, store.failureState("user-a"))
     }
 
-    /**
-     * **The torn-write fix, stated structurally.** The count and the reason used to be two keys, and
-     * `Settings` has no transaction: two writes are two commits, so a process killed between them
-     * left a streak carrying the previous outage's reason — or a reason with no streak. One key, one
-     * commit, and the half-written pair stops being representable on disk.
-     *
-     * Asserted over the backing map rather than through a round-trip, because a round-trip passes
-     * just as happily with two keys. This is the only test that can see the difference.
-     */
+    // Asserted over the backing map rather than a round-trip, because a round-trip passes just as
+    // happily with two keys — Settings has no transaction, so two writes could tear on a kill.
     @Test
     fun `both halves of the streak are stored under a single key`() {
         store.recordFailure("user-a", BackupFailureReason.Network)
@@ -120,11 +110,8 @@ class DefaultBackupMetadataStoreTest {
         assertEquals(1, settings.keys.size, "The streak must be one key, not a pair: ${settings.keys}")
     }
 
-    /**
-     * A value this build cannot parse — an older spelling, a truncation, anything — degrades to
-     * [BackupFailureState.None]. It must never throw: this is the read that runs while the app is
-     * trying to REPORT a backup failure, and crashing there loses the failure and the app with it.
-     */
+    // Must never throw: this is the read that runs while the app is trying to REPORT a backup
+    // failure, and crashing there loses the failure and the app with it.
     @Test
     fun `an unparseable stored value reads as no failure at all`() {
         store.recordFailure("user-a", BackupFailureReason.Network)
@@ -133,19 +120,16 @@ class DefaultBackupMetadataStoreTest {
         settings.putString(key, "not-a-streak")
         assertEquals(BackupFailureState.None, store.failureState("user-a"))
 
-        // An unparseable count discards the whole reading, reason included. Parsing the two halves
-        // independently would answer (0, Network) here — a reason hanging off a streak of zero, the
-        // exact disagreeing pair the single-key encoding exists to make impossible.
+        // An unparseable count discards the whole reading, reason included: parsing the two halves
+        // independently would answer (0, Network), the disagreeing pair the single key rules out.
         settings.putString(key, "abc|Network")
         assertEquals(BackupFailureState.None, store.failureState("user-a"))
 
-        // Same rule for a count no Int can hold.
         settings.putString(key, "99999999999999|Network")
         assertEquals(BackupFailureState.None, store.failureState("user-a"))
 
-        // A count with a reason this build no longer has a name for keeps the count — the streak is
-        // the fact a UI warns on, and losing it because a label was renamed would hide a broken
-        // device. See BackupHealth: (5, null) is a real value and 3b must handle it.
+        // A count with a reason this build no longer has a name for keeps the count: (5, null) is a
+        // real BackupHealth value.
         settings.putString(key, "5|HashMismatch")
         assertEquals(BackupFailureState(5, null), store.failureState("user-a"))
     }
@@ -190,8 +174,6 @@ class DefaultBackupMetadataStoreTest {
         assertEquals(BackupFailureState(1, BackupFailureReason.Network), store.failureState("user-b"))
     }
 
-    // ── The destination disclosure (ADR 009 Decision 5, unit 3c) ───────────────────
-
     @Test
     fun `a destination nobody disclosed reads as null`() {
         assertNull(store.destinationDisclosedAt("user-a"))
@@ -204,10 +186,6 @@ class DefaultBackupMetadataStoreTest {
         assertEquals(1_755_000_000_000L, store.destinationDisclosedAt("user-a"))
     }
 
-    /**
-     * The disclosure is about ONE destination, so disclosing account A's must say nothing about
-     * account B's: B's bucket is a different place this device's ledger would land in.
-     */
     @Test
     fun `disclosing one account's destination leaves every other account undisclosed`() {
         store.setDestinationDisclosed("user-a", 1_755_000_000_000L)
@@ -252,10 +230,7 @@ class DefaultBackupMetadataStoreTest {
         )
     }
 
-    /**
-     * Two users whose ids are prefixes of one another is what a naive concatenation gets wrong, and
-     * every key in this class is built the same way — so proving it once covers all of them.
-     */
+    // Every key in this class is built the same concatenation, so proving it once covers all of them.
     @Test
     fun `keys built for one user never collide with another whose id extends it`() {
         store.setLastSuccessfulBackupAt("user", 100L)

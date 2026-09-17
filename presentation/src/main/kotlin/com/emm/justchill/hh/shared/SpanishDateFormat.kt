@@ -5,26 +5,24 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.number
 
-/**
- * Locale tables are hardcoded to match, byte-for-byte, the JVM `es`/`es-PE` formatter output
- * (`SpanishFormatGoldenTest` pins it). This is the only Spanish month table in the app —
- * `MonthLabelsTest` fails the build if a second one reappears.
- */
+// Locale tables are hardcoded to match, byte-for-byte, the JVM es/es-PE formatter output
+// (SpanishFormatGoldenTest pins it). This is the only Spanish month table in the app —
+// MonthLabelsTest fails the build if a second one reappears.
 object SpanishDateFormat {
 
-    /** Full Spanish month names — "MMMM". Index 1..12. */
+    // Index 1..12; index 0 is an unused placeholder.
     private val FULL_MONTHS: Array<String> = arrayOf(
         "", "enero", "febrero", "marzo", "abril", "mayo", "junio",
         "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
     )
 
-    /** Short Spanish month names — "MMM". Note "sept" (4 chars), matching the JVM `es` output. */
+    // "sept" is 4 characters, matching the JVM es output.
     private val SHORT_MONTHS: Array<String> = arrayOf(
         "", "ene", "feb", "mar", "abr", "may", "jun",
         "jul", "ago", "sept", "oct", "nov", "dic",
     )
 
-    /** Full Spanish weekday names — DayOfWeek FULL. ISO index 1 (Monday)..7 (Sunday). */
+    // ISO index 1 (Monday)..7 (Sunday); index 0 is an unused placeholder.
     private val FULL_WEEKDAYS: Array<String> = arrayOf(
         "",
         "lunes",
@@ -62,8 +60,6 @@ object SpanishDateFormat {
     fun dayFullMonth(date: LocalDate): String = "${date.dayOfMonth} ${fullMonth(date.month)}"
 }
 
-/**
- * Titlecases only the first character, with no locale — safe because the app is Spanish-only and
- * the Latin alphabet needs none.
- */
+// Titlecases only the first character, with no locale — safe because the app is Spanish-only and
+// the Latin alphabet needs none.
 fun String.titlecaseFirstChar(): String = if (isEmpty()) this else this[0].uppercaseChar() + substring(1)
