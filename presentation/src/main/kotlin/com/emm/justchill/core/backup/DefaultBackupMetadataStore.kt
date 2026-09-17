@@ -1,8 +1,8 @@
 package com.emm.justchill.core.backup
 
-import com.emm.domain.shared.backup.BackupFailureReason
-import com.emm.domain.shared.backup.BackupFailureState
-import com.emm.domain.shared.backup.BackupMetadataStore
+import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
+import com.emm.justchill.core.domain.shared.backup.BackupFailureState
+import com.emm.justchill.core.domain.shared.backup.BackupMetadataStore
 import com.russhwolf.settings.Settings
 
 // Key strings and the -1L "never" sentinel are load-bearing: an install already holds values under

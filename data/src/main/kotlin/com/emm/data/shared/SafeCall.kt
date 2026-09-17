@@ -1,6 +1,6 @@
 package com.emm.data.shared
 
-import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.DomainException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlin.coroutines.cancellation.CancellationException

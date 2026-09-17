@@ -1,9 +1,9 @@
 package com.emm.justchill.hh.recurring
 
-import com.emm.domain.account.Account
-import com.emm.domain.shared.AccountId
-import com.emm.domain.shared.CategoryId
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.account.Account
+import com.emm.justchill.core.domain.shared.AccountId
+import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.mvi.UiState
 import com.emm.justchill.hh.transaction.Catalog
 import com.emm.justchill.hh.transaction.SelectableCategory

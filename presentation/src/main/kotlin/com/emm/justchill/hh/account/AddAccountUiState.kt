@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.account
 
-import com.emm.domain.account.AccountType
+import com.emm.justchill.core.domain.account.AccountType
 import com.emm.justchill.core.mvi.UiState
 import com.emm.justchill.hh.shared.Empty
 

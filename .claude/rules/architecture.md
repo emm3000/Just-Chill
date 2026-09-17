@@ -4,7 +4,7 @@ paths:
   - "ui-android/src/*/kotlin/**"
   - "presentation/src/*/kotlin/**"
   - "data/src/*/kotlin/**"
-  - "domain/src/*/kotlin/**"
+  - "core/domain/src/*/kotlin/**"
 ---
 
 # Architecture rules
@@ -15,7 +15,7 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 
 | Layer | Contains |
 |---|---|
-| `:domain` | Pure Kotlin. Models, value objects, use cases, and the **interfaces** the outer layers implement. |
+| `:core:domain` | Pure Kotlin. Models, value objects, use cases, and the **interfaces** the outer layers implement. |
 | `:data` | Implementations of the domain interfaces: SQLDelight, Supabase auth and backup, mappers. |
 | `:presentation` | Compose-free MVI core, ViewModels with their `UiState` / `Intent` / `Effect`, Koin modules, formatters, `UiStrings`. |
 | `:ui-android` | Compose screens, navigation, theme tokens and atoms. |
@@ -30,17 +30,17 @@ presentation -> data, domain
 data         -> domain
 ```
 
-- `:domain` is pure Kotlin (`kotlin("jvm")`): `kotlinx-coroutines-core` and `kotlinx-datetime` only. No Android, no SQLDelight, no Supabase, no Ktor. `android.*` cannot resolve there; the rest is convention, reviewed.
+- `:core:domain` is pure Kotlin (`kotlin("jvm")`): `kotlinx-coroutines-core` and `kotlinx-datetime` only. No Android, no SQLDelight, no Supabase, no Ktor. `android.*` cannot resolve there; the rest is convention, reviewed.
 - Whatever asks "what day is it" takes an injected `Clock` **and** an injected `TimeZone`, and neither parameter carries a default: a default never blocks an explicit argument, so a test passing a fake clock also passes against the ambient one. `hh/di/SharedModule.kt` is the only place a clock or a zone enters the graph; `AppGraphKoinTest` asserts by identity that every graph-built `com.emm.` class holds the bound instances. `TodayFlow.today()` is the one way a ViewModel derives the date.
-- `:presentation` depends on `:data` for one reason: the Koin modules in `hh/di/` bind interface to implementation in one place. A ViewModel takes `:domain` interfaces, never a SQLDelight type or a `Default*` implementation.
-- `:ui-android` and `:androidApp` production code import no `:domain` repository; the leak stops at `:presentation`.
+- `:presentation` depends on `:data` for one reason: the Koin modules in `hh/di/` bind interface to implementation in one place. A ViewModel takes `:core:domain` interfaces, never a SQLDelight type or a `Default*` implementation.
+- `:ui-android` and `:androidApp` production code import no `:core:domain` repository; the leak stops at `:presentation`.
 - SQLDelight on device is the source of truth for reads and writes. Supabase holds snapshot backups (ADR 009); nothing reads rows from it.
 
 ## Dependency inversion is the seam
 
 The domain declares the contract; the infrastructure obeys it. The domain never imports an implementation.
 
-- Repository interfaces (`{Entity}Repository`) live in `:domain`. Implementations (`Default{Entity}Repository` over a `{Entity}LocalDataSource`) live in `:data`.
+- Repository interfaces (`{Entity}Repository`) live in `:core:domain`. Implementations (`Default{Entity}Repository` over a `{Entity}LocalDataSource`) live in `:data`.
 - A platform capability `:presentation` needs (`GoogleSignInLauncher`, `DispatchersProvider`) is an interface in `:presentation`, implemented in `:androidApp` and bound in `androidPlatformModule`.
 
 ## A use case only where there is domain logic
@@ -51,7 +51,7 @@ Loan writes always go through `CreateLoanUseCase` / `UpdateLoanUseCase`: `LoanRe
 
 ## Errors
 
-Sealed `DomainException` (`domain/.../shared/error/`) is the one failure type. `:data`'s `shared/SafeCall.kt` (`safeDbCall`, `catchAsDomainException`) translates SQLDelight exceptions into it; `:presentation`'s `core/error/DomainExceptionExt.kt` renders the Spanish message. Add a failure mode by extending `DomainException`, never with a new exception type.
+Sealed `DomainException` (`core/domain/.../shared/error/`) is the one failure type. `:data`'s `shared/SafeCall.kt` (`safeDbCall`, `catchAsDomainException`) translates SQLDelight exceptions into it; `:presentation`'s `core/error/DomainExceptionExt.kt` renders the Spanish message. Add a failure mode by extending `DomainException`, never with a new exception type.
 
 Every catch-all owes a `CancellationException` arm first. `runCatching` and `catch (e: Exception)` both swallow it, the body runs on, and a cancelled loader overwrites the winner. Rethrow cancellation, then catch `Exception` (`MviViewModel.launchSafe` is the pattern); a `Flow.catch` lambda owes the arm explicitly.
 
@@ -111,4 +111,4 @@ Routes live in `ui-android/.../hh/shared/HhRoutes.kt` as subtypes of sealed `App
 
 ## When a new dependency crosses a layer
 
-Before adding a dependency to any package, check the direction above. If the change needs `:domain` to reach outward, the design is wrong: invert it with an interface in `:domain`.
+Before adding a dependency to any package, check the direction above. If the change needs `:core:domain` to reach outward, the design is wrong: invert it with an interface in `:core:domain`.

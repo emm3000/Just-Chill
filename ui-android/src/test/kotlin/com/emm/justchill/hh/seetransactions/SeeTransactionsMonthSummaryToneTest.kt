@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.seetransactions
 
-import com.emm.domain.shared.Money
+import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.ui.atoms.AmountTone
 import kotlin.test.Test
 import kotlin.test.assertEquals

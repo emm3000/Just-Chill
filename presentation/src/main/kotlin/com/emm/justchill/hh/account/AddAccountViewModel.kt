@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.account
 
-import com.emm.domain.account.CreateAccountUseCase
+import com.emm.justchill.core.domain.account.CreateAccountUseCase
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 

@@ -1,8 +1,8 @@
 package com.emm.justchill.hh.report
 
-import com.emm.domain.report.CategoryAggregate
-import com.emm.domain.report.CategoryAmount
-import com.emm.domain.shared.Money
+import com.emm.justchill.core.domain.report.CategoryAggregate
+import com.emm.justchill.core.domain.report.CategoryAmount
+import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.hh.shared.UiStrings
 
 internal fun buildShares(amounts: List<CategoryAmount>, total: Money): List<CategoryShare> {

@@ -1,7 +1,7 @@
 package com.emm.data.auth
 
-import com.emm.domain.auth.AuthUser
-import com.emm.domain.auth.SessionStatus
+import com.emm.justchill.core.domain.auth.AuthUser
+import com.emm.justchill.core.domain.auth.SessionStatus
 import io.github.jan.supabase.auth.status.RefreshFailureCause
 import io.github.jan.supabase.auth.user.UserInfo
 import io.github.jan.supabase.auth.user.UserSession

@@ -41,16 +41,16 @@ rootProject.name = "JustChill"
 
 // The module map. Read the middle column as the question each module answers.
 //
-//   :domain        who am I?         business rules, zero framework   Android
+//   :core:domain   who am I?         business rules, zero framework   Android
 //   :data          where do I live?  SQLDelight + Supabase            Android
 //   :presentation  what do I think?  ViewModels, MVI, Koin, format    Android
 //   :ui-android    how do I look?    Compose screens, nav, theme      Android only
 //   :androidApp    how do I ship?    manifest, signing, flavors       Android only
 //
 // Dependency order, top of the graph down:
-//   androidApp -> ui-android -> presentation -> data -> domain
+//   androidApp -> ui-android -> presentation -> data -> core:domain
 include(":androidApp")
 include(":ui-android")
 include(":presentation")
 include(":data")
-include(":domain")
+include(":core:domain")

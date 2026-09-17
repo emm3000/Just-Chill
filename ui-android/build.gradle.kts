@@ -14,7 +14,7 @@ composeCompiler {
 
 dependencies {
     api(projects.presentation)
-    implementation(projects.domain)
+    implementation(projects.core.domain)
     implementation(projects.data)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.core)

@@ -1,8 +1,8 @@
 package com.emm.justchill.hh.shared
 
-import com.emm.domain.shared.backup.BackupFailureReason
-import com.emm.domain.shared.backup.BackupRowCounts
-import com.emm.domain.shared.backup.BackupVerification
+import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
+import com.emm.justchill.core.domain.shared.backup.BackupRowCounts
+import com.emm.justchill.core.domain.shared.backup.BackupVerification
 import com.emm.justchill.hh.profile.ProfileMessage
 
 fun ProfileMessage.Backup.toBackupText(): String = when (this) {

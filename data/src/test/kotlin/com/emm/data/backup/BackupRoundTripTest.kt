@@ -8,7 +8,7 @@ import com.emm.data.Categories
 import com.emm.data.EmmDatabaseData
 import com.emm.data.Recurring_movements
 import com.emm.data.Transactions
-import com.emm.domain.shared.backup.ImportStats
+import com.emm.justchill.core.domain.shared.backup.ImportStats
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.After

@@ -1,0 +1,26 @@
+package com.emm.justchill.core.domain.transaction
+
+import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.domain.shared.startOfDayDaysAgo
+import kotlinx.datetime.TimeZone
+import kotlin.time.Clock
+
+class GetTopUsedCategoryIdsUseCase(
+    private val transactionStatsRepository: TransactionStatsRepository,
+    private val clock: Clock,
+    private val zone: TimeZone,
+) {
+    suspend operator fun invoke(
+        type: TransactionType,
+        windowDays: Int = WINDOW_DAYS,
+        limit: Int = DEFAULT_LIMIT,
+    ): List<CategoryId> {
+        val startInclusive = startOfDayDaysAgo(windowDays, clock, zone)
+        return transactionStatsRepository.topUsedCategoryIds(type, startInclusive, limit)
+    }
+
+    private companion object {
+        const val WINDOW_DAYS = 90
+        const val DEFAULT_LIMIT = 6
+    }
+}

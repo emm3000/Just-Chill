@@ -1,9 +1,9 @@
 package com.emm.justchill.hh.recurring
 
-import com.emm.domain.recurring.DeleteRecurringMovementUseCase
-import com.emm.domain.recurring.GetRecurringMonthlyTotalsUseCase
-import com.emm.domain.recurring.RecurringMovementRepository
-import com.emm.domain.shared.RecurringMovementId
+import com.emm.justchill.core.domain.recurring.DeleteRecurringMovementUseCase
+import com.emm.justchill.core.domain.recurring.GetRecurringMonthlyTotalsUseCase
+import com.emm.justchill.core.domain.recurring.RecurringMovementRepository
+import com.emm.justchill.core.domain.shared.RecurringMovementId
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.shared.formatNeutral

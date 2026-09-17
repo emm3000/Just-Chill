@@ -11,19 +11,19 @@ No third-party users, but **the author runs the release daily on a device holdin
 ## Modules
 
 ```
-androidApp   -> ui-android, presentation, data, domain
-ui-android   -> presentation, data, domain
-presentation -> data, domain
-data         -> domain
+androidApp   -> ui-android, presentation, data, core:domain
+ui-android   -> presentation, data, core:domain
+presentation -> data, core:domain
+data         -> core:domain
 ```
 
-- `:domain` — **pure Kotlin** (`kotlin("jvm")`): models, value objects, use cases and the repository interfaces. `kotlinx-coroutines-core` and `kotlinx-datetime` only.
+- `:core:domain` — **pure Kotlin** (`kotlin("jvm")`): models, value objects, use cases and the repository interfaces. `kotlinx-coroutines-core` and `kotlinx-datetime` only.
 - `:data` — the domain interfaces implemented: SQLDelight (`EmmDatabaseData`, the schema and migrations), Supabase auth and backup, mappers.
 - `:presentation` — the compose-free MVI core, every ViewModel with its `UiState` / `Intent` / `Effect`, the Koin modules, formatters.
 - `:ui-android` — Compose screens, navigation, theme tokens and atoms. Same Kotlin packages as `:presentation` on purpose.
 - `:androidApp` — `MainActivity`, `EmmApp`, the platform Koin module, the `dev` / `prod` flavors, shortcuts, the session keystore.
 
-Shared Gradle configuration lives in convention plugins under `build-logic/convention` (`justchill.*`): `android.application`, `android.library`, `android.compose`, `android.feature`, `android.release`, `jvm.library`, `sqldelight`, detekt, the quality gate, build info. They set the namespace from the module path, SDKs (`minSdk` 28), Java 17, opt-ins, test dependencies and each library's unit tests in the gate. A module build file applies its plugins and declares its own dependencies. `gradle/libs.versions.toml` is the only place a version is written, with one exception: `:domain`'s stdlib comes from a pin in `build-logic/convention/build.gradle.kts`, and dropping it compiles `:domain` a minor version behind and reddens the gate on opt-in errors that name nothing about the classpath.
+Shared Gradle configuration lives in convention plugins under `build-logic/convention` (`justchill.*`): `android.application`, `android.library`, `android.compose`, `android.feature`, `android.release`, `jvm.library`, `sqldelight`, detekt, the quality gate, build info. They set the namespace from the module path, SDKs (`minSdk` 28), Java 17, opt-ins, test dependencies and each library's unit tests in the gate. A module build file applies its plugins and declares its own dependencies. `gradle/libs.versions.toml` is the only place a version is written, with one exception: `:core:domain`'s stdlib comes from a pin in `build-logic/convention/build.gradle.kts`, and dropping it compiles `:core:domain` a minor version behind and reddens the gate on opt-in errors that name nothing about the classpath.
 
 ## Product
 
@@ -37,7 +37,7 @@ These bind on every change, including a new file created before any Kotlin has b
 - **Explicit types** on every property and local `val` / `var`, and the supertype when the abstraction is what matters. Omit only when the right-hand side is a constructor call that already names the type.
 - **Only the repo's atoms** (`ui-android/.../core/ui/atoms/`) in feature screens. Never a raw Material3 control. See `.claude/rules/ui-components.md`.
 - **MVI per feature**: one `UiState` (all `val`), one `onIntent(intent)` entry point on `MviViewModel<S, I, E>`, effects consumed once and never stored in state. ViewModels live in `:presentation` and never import Compose.
-- **`:domain` stays pure Kotlin.** If it needs to reach outward, invert with an interface in `:domain`. Failure modes extend sealed `DomainException`, never a new exception type.
+- **`:core:domain` stays pure Kotlin.** If it needs to reach outward, invert with an interface in `:core:domain`. Failure modes extend sealed `DomainException`, never a new exception type.
 - **Dates take an injected `Clock` and `TimeZone`, no defaults.**
 - **Rebuild, never adapt.** When existing code, config or structure does not fit the target architecture, replace it with a clean implementation. No shims, wrappers or compatibility patches over legacy.
 - **`./gradlew qualityGate assembleDevDebug` green** before every commit. `qualityGate` is the gate; plain `./gradlew detekt` covers strictly less and is never a substitute.
@@ -70,7 +70,7 @@ Kotlin, Jetpack Compose, Navigation 3, Koin, SQLDelight 2, supabase-kt with Ktor
 
 - `./gradlew qualityGate` — detekt per module, host tests, `:data`'s instrumented compile, `verifySqlDelightMigration`, `checkModuleBoundaries`, `checkComposeFreeViewModels`, `:androidApp:lintDevDebug`, `:build-logic:convention:test`. Defined once in `QualityGateConventionPlugin.kt`; the pre-push hook and CI run exactly it.
 - `./gradlew assembleDevDebug` — dev debug build; `assembleProdRelease` for the release.
-- `./gradlew test` — every module's host tests; per module `:<module>:testDebugUnitTest`, `:domain:test`, and `:androidApp:testDevDebugUnitTest` for the MockK ViewModel suite.
+- `./gradlew test` — every module's host tests; per module `:<module>:testDebugUnitTest`, `:core:domain:test`, and `:androidApp:testDevDebugUnitTest` for the MockK ViewModel suite.
 - `./gradlew :data:connectedDebugAndroidTest` — the migration suite, on the `medium_phone` emulator, the only AVD.
 - Test tasks go `UP-TO-DATE` across sessions: `--rerun` forces a real run, per task.
 

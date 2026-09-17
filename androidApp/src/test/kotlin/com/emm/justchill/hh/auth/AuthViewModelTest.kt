@@ -1,12 +1,13 @@
 package com.emm.justchill.hh.auth
 
-import com.emm.domain.auth.AuthUser
-import com.emm.domain.auth.ResendConfirmationEmailUseCase
-import com.emm.domain.auth.SignInUseCase
-import com.emm.domain.auth.SignInWithGoogleUseCase
-import com.emm.domain.auth.SignUpUseCase
-import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.MainDispatcherRule
+import com.emm.justchill.core.domain.auth.AuthUser
+import com.emm.justchill.core.domain.auth.ResendConfirmationEmailUseCase
+import com.emm.justchill.core.domain.auth.SignInUseCase
+import com.emm.justchill.core.domain.auth.SignInWithGoogleUseCase
+import com.emm.justchill.core.domain.auth.SignUpResult
+import com.emm.justchill.core.domain.auth.SignUpUseCase
+import com.emm.justchill.core.domain.shared.error.DomainException
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -46,7 +47,7 @@ class AuthViewModelTest {
     )
 
     private fun TestScope.navigateToCheckEmail(vm: AuthViewModel) {
-        coEvery { signUp.invoke(any(), any()) } returns com.emm.domain.auth.SignUpResult.ConfirmationPending
+        coEvery { signUp.invoke(any(), any()) } returns SignUpResult.ConfirmationPending
         vm.onIntent(AuthIntent.ToggleMode)
         vm.onIntent(AuthIntent.EmailChanged("user@example.com"))
         vm.onIntent(AuthIntent.PasswordChanged("pass1234"))
@@ -99,7 +100,7 @@ class AuthViewModelTest {
 
     @Test
     fun `signUp ConfirmationPending transitions to CheckEmail with trimmed email`() = runTest(testDispatcher) {
-        coEvery { signUp.invoke(any(), any()) } returns com.emm.domain.auth.SignUpResult.ConfirmationPending
+        coEvery { signUp.invoke(any(), any()) } returns SignUpResult.ConfirmationPending
 
         val vm = buildViewModel()
         vm.onIntent(AuthIntent.EmailChanged("  user@example.com  "))
@@ -114,7 +115,7 @@ class AuthViewModelTest {
 
     @Test
     fun `signUp ConfirmationPending does not emit NavigateBack`() = runTest(testDispatcher) {
-        coEvery { signUp.invoke(any(), any()) } returns com.emm.domain.auth.SignUpResult.ConfirmationPending
+        coEvery { signUp.invoke(any(), any()) } returns SignUpResult.ConfirmationPending
 
         val vm = buildViewModel()
         val effects = mutableListOf<AuthEffect>()
@@ -134,7 +135,7 @@ class AuthViewModelTest {
     @Test
     fun `signUp SignedIn emits NavigateBack`() = runTest(testDispatcher) {
         coEvery { signUp.invoke(any(), any()) } returns
-            com.emm.domain.auth.SignUpResult.SignedIn(AuthUser("uid1", "user@example.com"))
+            SignUpResult.SignedIn(AuthUser("uid1", "user@example.com"))
 
         val vm = buildViewModel()
         val effects = mutableListOf<AuthEffect>()
@@ -160,7 +161,7 @@ class AuthViewModelTest {
         assertIs<AuthUiState.CheckEmail>(vm.state.value)
 
         coEvery { signIn.invoke(any(), any()) } returns AuthUser("uid1", "u@e.com")
-        coEvery { signUp.invoke(any(), any()) } returns com.emm.domain.auth.SignUpResult.ConfirmationPending
+        coEvery { signUp.invoke(any(), any()) } returns SignUpResult.ConfirmationPending
 
         vm.onIntent(AuthIntent.Submit)
         advanceUntilIdle()

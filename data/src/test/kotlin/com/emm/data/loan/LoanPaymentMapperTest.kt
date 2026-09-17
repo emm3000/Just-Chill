@@ -1,7 +1,7 @@
 package com.emm.data.loan
 
-import com.emm.domain.loan.PaymentMethod
-import com.emm.domain.shared.Money
+import com.emm.justchill.core.domain.loan.PaymentMethod
+import com.emm.justchill.core.domain.shared.Money
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

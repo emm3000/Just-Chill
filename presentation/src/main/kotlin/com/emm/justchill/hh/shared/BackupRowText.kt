@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.shared
 
-import com.emm.domain.shared.backup.BackupFailureReason
+import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
 import com.emm.justchill.hh.profile.BackupRowUi
 import com.emm.justchill.hh.profile.LastSnapshot
 

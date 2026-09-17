@@ -6,11 +6,11 @@ import com.emm.data.EmmDatabaseData
 import com.emm.data.Loan_payments
 import com.emm.data.Loans
 import com.emm.data.loan.LoanPaymentLocalDataSource
-import com.emm.domain.loan.LoanPayment
-import com.emm.domain.loan.PaymentMethod
-import com.emm.domain.shared.LoanId
-import com.emm.domain.shared.LoanPaymentId
-import com.emm.domain.shared.Money
+import com.emm.justchill.core.domain.loan.LoanPayment
+import com.emm.justchill.core.domain.loan.PaymentMethod
+import com.emm.justchill.core.domain.shared.LoanId
+import com.emm.justchill.core.domain.shared.LoanPaymentId
+import com.emm.justchill.core.domain.shared.Money
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json

@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.shared
 
 import androidx.navigation3.runtime.NavKey
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.transaction.TransactionType
 
 const val ACTION_OPEN_LOANS = "com.emm.justchill.action.OPEN_LOANS"
 const val ACTION_ADD_TRANSACTION = "com.emm.justchill.action.ADD_TRANSACTION"
@@ -10,7 +10,7 @@ const val EXTRA_CATEGORY_ID = "com.emm.justchill.extra.CATEGORY_ID"
 const val EXTRA_TYPE = "com.emm.justchill.extra.TYPE"
 
 /**
- * The only shape a launcher intent may cross into `:androidApp` as: nav3 and `:domain` types
+ * The only shape a launcher intent may cross into `:androidApp` as: nav3 and `:core:domain` types
  * cannot follow, since `ui-android/build.gradle.kts` declares nav3 `implementation`, not `api`.
  */
 data class ShortcutIntent(

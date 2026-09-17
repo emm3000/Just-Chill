@@ -1,8 +1,8 @@
 package com.emm.justchill.hh.account
 
-import com.emm.domain.account.Account
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.YearMonth
+import com.emm.justchill.core.domain.account.Account
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.mvi.UiState
 import com.emm.justchill.hh.shared.formatNeutral
 import com.emm.justchill.hh.shared.fromCentsToSolesWith

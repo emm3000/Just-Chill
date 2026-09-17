@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.transaction
 
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.transaction.TransactionType
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import kotlin.test.Test

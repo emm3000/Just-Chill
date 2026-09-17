@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.__feature__
 
-import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.mvi.UiEffect
 
 sealed interface __Feature__Effect : UiEffect {

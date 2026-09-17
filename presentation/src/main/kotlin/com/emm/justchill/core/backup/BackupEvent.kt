@@ -1,6 +1,6 @@
 package com.emm.justchill.core.backup
 
-import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.DomainException
 
 sealed interface BackupEvent {
 

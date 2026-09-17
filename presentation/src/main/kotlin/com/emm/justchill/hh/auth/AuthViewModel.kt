@@ -1,10 +1,10 @@
 package com.emm.justchill.hh.auth
 
-import com.emm.domain.auth.ResendConfirmationEmailUseCase
-import com.emm.domain.auth.SignInUseCase
-import com.emm.domain.auth.SignInWithGoogleUseCase
-import com.emm.domain.auth.SignUpResult
-import com.emm.domain.auth.SignUpUseCase
+import com.emm.justchill.core.domain.auth.ResendConfirmationEmailUseCase
+import com.emm.justchill.core.domain.auth.SignInUseCase
+import com.emm.justchill.core.domain.auth.SignInWithGoogleUseCase
+import com.emm.justchill.core.domain.auth.SignUpResult
+import com.emm.justchill.core.domain.auth.SignUpUseCase
 import com.emm.justchill.core.mvi.MviViewModel
 import kotlinx.coroutines.delay
 

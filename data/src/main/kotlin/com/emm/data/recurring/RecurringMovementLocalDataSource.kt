@@ -7,12 +7,12 @@ import com.emm.data.Recurring_movementsQueries
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.nowMillis
 import com.emm.data.shared.toOccurredAtText
-import com.emm.domain.recurring.RecurringMovement
-import com.emm.domain.recurring.RecurringMovementDetails
-import com.emm.domain.recurring.RecurringMovementInsert
-import com.emm.domain.shared.error.DomainException
-import com.emm.domain.shared.error.ValidationCode
-import com.emm.domain.transaction.TransactionInsert
+import com.emm.justchill.core.domain.recurring.RecurringMovement
+import com.emm.justchill.core.domain.recurring.RecurringMovementDetails
+import com.emm.justchill.core.domain.recurring.RecurringMovementInsert
+import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.ValidationCode
+import com.emm.justchill.core.domain.transaction.TransactionInsert
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -121,7 +121,7 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData,
     }
 
     // Period keys are zero-padded "YYYY-MM", so string ordering is chronological and needs no parsing.
-    // parsePeriodKey in :domain is the only one of the two that bounds a well-formed key; a key it
+    // parsePeriodKey in :core:domain is the only one of the two that bounds a well-formed key; a key it
     // rejects still sorts here by raw bytes, settling every future period while it stays listed as owed.
     private fun ensureNotSettled(recurringId: String, period: String) {
         val settledThrough = rmq.find(recurringId).executeAsOneOrNull()?.lastConfirmedPeriod ?: return

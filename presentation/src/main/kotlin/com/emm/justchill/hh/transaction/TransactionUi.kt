@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.transaction
 
-import com.emm.domain.transaction.TransactionType
-import com.emm.domain.transaction.TransactionWithCategory
+import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.transaction.TransactionWithCategory
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.shared.fromCentsToSolesWith

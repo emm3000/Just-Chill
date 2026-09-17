@@ -8,7 +8,7 @@ android {
 }
 
 dependencies {
-    api(projects.domain)
+    api(projects.core.domain)
     implementation(projects.data)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.kotlinx.serialization.json)

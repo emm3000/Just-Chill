@@ -1,10 +1,10 @@
 package com.emm.justchill.hh.di
 
-import com.emm.domain.transaction.CreateTransactionUseCase
-import com.emm.domain.transaction.DeleteTransactionUseCase
-import com.emm.domain.transaction.GetFrequentCombosUseCase
-import com.emm.domain.transaction.GetTopUsedCategoryIdsUseCase
-import com.emm.domain.transaction.UpdateTransactionUseCase
+import com.emm.justchill.core.domain.transaction.CreateTransactionUseCase
+import com.emm.justchill.core.domain.transaction.DeleteTransactionUseCase
+import com.emm.justchill.core.domain.transaction.GetFrequentCombosUseCase
+import com.emm.justchill.core.domain.transaction.GetTopUsedCategoryIdsUseCase
+import com.emm.justchill.core.domain.transaction.UpdateTransactionUseCase
 import com.emm.justchill.hh.transaction.AddTransactionViewModel
 import com.emm.justchill.hh.transaction.EditTransactionViewModel
 import com.emm.justchill.hh.transaction.GetSpendShortcutCombos

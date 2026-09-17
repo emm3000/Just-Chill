@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.di
 
-import com.emm.domain.shared.UniqueIdProvider
+import com.emm.justchill.core.domain.shared.UniqueIdProvider
 import com.emm.justchill.core.lifecycle.resumeEvents
 import com.emm.justchill.core.time.ClockTodayFlow
 import com.emm.justchill.core.time.TodayFlow

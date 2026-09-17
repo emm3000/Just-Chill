@@ -4,8 +4,8 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.serialization.NavBackStackSerializer
 import androidx.navigation3.runtime.serialization.NavKeySerializer
-import com.emm.domain.category.CategoryType
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.domain.transaction.TransactionType
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import org.junit.Test

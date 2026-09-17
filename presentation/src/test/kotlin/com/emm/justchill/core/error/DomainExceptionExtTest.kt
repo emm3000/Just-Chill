@@ -1,7 +1,7 @@
 package com.emm.justchill.core.error
 
-import com.emm.domain.shared.error.DomainException
-import com.emm.domain.shared.error.ValidationCode
+import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.ValidationCode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

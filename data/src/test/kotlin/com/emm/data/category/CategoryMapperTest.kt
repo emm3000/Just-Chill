@@ -1,6 +1,6 @@
 package com.emm.data.category
 
-import com.emm.domain.category.CategoryType
+import com.emm.justchill.core.domain.category.CategoryType
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

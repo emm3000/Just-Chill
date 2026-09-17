@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
     }
 
     // MainActivity is exported (it is the launcher activity), so any app on the device can start it
-    // with arbitrary extras — read only plain strings here, never a nav-runtime or :domain type.
+    // with arbitrary extras — read only plain strings here, never a nav-runtime or :core:domain type.
     private fun Intent?.toShortcutIntent(): ShortcutIntent = ShortcutIntent(
         action = this?.action,
         accountId = this?.getStringExtra(EXTRA_ACCOUNT_ID),

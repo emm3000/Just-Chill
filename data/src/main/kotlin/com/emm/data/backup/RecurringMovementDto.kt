@@ -1,15 +1,15 @@
 package com.emm.data.backup
 
 import com.emm.data.shared.enumValueOrNull
-import com.emm.domain.recurring.Frequency
-import com.emm.domain.recurring.RecurringMovement
-import com.emm.domain.recurring.parsePeriodKey
-import com.emm.domain.recurring.periodKey
-import com.emm.domain.shared.AccountId
-import com.emm.domain.shared.CategoryId
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.RecurringMovementId
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.recurring.Frequency
+import com.emm.justchill.core.domain.recurring.RecurringMovement
+import com.emm.justchill.core.domain.recurring.parsePeriodKey
+import com.emm.justchill.core.domain.recurring.periodKey
+import com.emm.justchill.core.domain.shared.AccountId
+import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.RecurringMovementId
+import com.emm.justchill.core.domain.transaction.TransactionType
 import kotlinx.serialization.Serializable
 
 internal const val BACKUP_RECURRING_SINCE_VERSION: Int = 3

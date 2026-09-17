@@ -3,11 +3,11 @@ package com.emm.data.loan
 import com.emm.data.Loan_payments
 import com.emm.data.shared.enumValueOrNull
 import com.emm.data.shared.toOccurredAtOrNull
-import com.emm.domain.loan.LoanPayment
-import com.emm.domain.loan.PaymentMethod
-import com.emm.domain.shared.LoanId
-import com.emm.domain.shared.LoanPaymentId
-import com.emm.domain.shared.Money
+import com.emm.justchill.core.domain.loan.LoanPayment
+import com.emm.justchill.core.domain.loan.PaymentMethod
+import com.emm.justchill.core.domain.shared.LoanId
+import com.emm.justchill.core.domain.shared.LoanPaymentId
+import com.emm.justchill.core.domain.shared.Money
 
 fun Loan_payments.asEntity() = LoanPaymentEntity(
     paymentId = paymentId,

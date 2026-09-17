@@ -4,9 +4,9 @@ import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
-import com.emm.domain.shared.backup.ImportStats
-import com.emm.domain.shared.error.DomainException
-import com.emm.domain.shared.error.ValidationCode
+import com.emm.justchill.core.domain.shared.backup.ImportStats
+import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.ValidationCode
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.After

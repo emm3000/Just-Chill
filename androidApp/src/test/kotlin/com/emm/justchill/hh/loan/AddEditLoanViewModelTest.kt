@@ -1,16 +1,16 @@
 package com.emm.justchill.hh.loan
 
-import com.emm.domain.loan.CreateLoanUseCase
-import com.emm.domain.loan.Loan
-import com.emm.domain.loan.LoanInsert
-import com.emm.domain.loan.LoanRepository
-import com.emm.domain.loan.LoanUpdate
-import com.emm.domain.loan.UpdateLoanUseCase
-import com.emm.domain.shared.LoanId
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.error.DomainException
-import com.emm.domain.shared.error.ValidationCode
 import com.emm.justchill.MainDispatcherRule
+import com.emm.justchill.core.domain.loan.CreateLoanUseCase
+import com.emm.justchill.core.domain.loan.Loan
+import com.emm.justchill.core.domain.loan.LoanInsert
+import com.emm.justchill.core.domain.loan.LoanRepository
+import com.emm.justchill.core.domain.loan.LoanUpdate
+import com.emm.justchill.core.domain.loan.UpdateLoanUseCase
+import com.emm.justchill.core.domain.shared.LoanId
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.ValidationCode
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.time.FakeTodayFlow
 import com.emm.justchill.hh.transaction.moneyCentsString

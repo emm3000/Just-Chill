@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.profile
 
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.backup.BackupFailureReason
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
 import com.emm.justchill.core.mvi.UiState
 
 sealed interface SessionUiState {

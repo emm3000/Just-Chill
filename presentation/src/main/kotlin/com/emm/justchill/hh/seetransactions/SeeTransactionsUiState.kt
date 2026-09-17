@@ -1,8 +1,8 @@
 package com.emm.justchill.hh.seetransactions
 
-import com.emm.domain.category.CategoryType
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.YearMonth
+import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.mvi.UiState
 import com.emm.justchill.hh.recurring.PendingRecurringUi
 import kotlinx.datetime.LocalDate

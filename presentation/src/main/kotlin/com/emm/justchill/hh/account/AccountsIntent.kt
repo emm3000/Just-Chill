@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.account
 
-import com.emm.domain.account.Account
+import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.mvi.UiIntent
 
 sealed interface AccountsIntent : UiIntent {

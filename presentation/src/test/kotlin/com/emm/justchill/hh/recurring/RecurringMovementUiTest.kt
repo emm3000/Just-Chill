@@ -1,8 +1,8 @@
 package com.emm.justchill.hh.recurring
 
-import com.emm.domain.recurring.RecurringMovementDetails
-import com.emm.domain.shared.Money
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.recurring.RecurringMovementDetails
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.transaction.TransactionType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

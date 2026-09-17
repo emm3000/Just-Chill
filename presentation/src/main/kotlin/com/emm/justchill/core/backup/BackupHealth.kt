@@ -1,6 +1,6 @@
 package com.emm.justchill.core.backup
 
-import com.emm.domain.shared.backup.BackupFailureReason
+import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
 
 data class BackupHealth(
     val lastSuccessfulBackupAt: Long?,

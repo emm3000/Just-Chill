@@ -1,8 +1,8 @@
 package com.emm.buildlogic
 
 import com.emm.buildlogic.internal.BuildConventions
-import com.emm.buildlogic.internal.libs
 import com.emm.buildlogic.internal.library
+import com.emm.buildlogic.internal.libs
 import dev.detekt.gradle.Detekt
 import dev.detekt.gradle.DetektCreateBaselineTask
 import dev.detekt.gradle.extensions.DetektExtension
@@ -19,12 +19,14 @@ class DetektConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
         pluginManager.apply("dev.detekt")
 
+        val baselineName: String = BuildConventions.baselineNameOf(path)
+
         extensions.configure<DetektExtension> {
             parallel.set(true)
             buildUponDefaultConfig.set(true)
             autoCorrect.set(false)
             config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
-            baseline.set(file("$rootDir/config/detekt/baseline-$name.xml"))
+            baseline.set(file("$rootDir/config/detekt/baseline-$baselineName.xml"))
         }
 
         dependencies.apply {

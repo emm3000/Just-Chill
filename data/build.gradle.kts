@@ -14,7 +14,7 @@ android {
 }
 
 dependencies {
-    implementation(projects.domain)
+    implementation(projects.core.domain)
     implementation(libs.coroutines.extensions)
     api(libs.supabase.auth.kt)
     api(libs.supabase.postgrest.kt)

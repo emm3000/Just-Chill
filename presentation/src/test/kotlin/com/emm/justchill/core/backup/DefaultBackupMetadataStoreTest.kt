@@ -1,7 +1,7 @@
 package com.emm.justchill.core.backup
 
-import com.emm.domain.shared.backup.BackupFailureReason
-import com.emm.domain.shared.backup.BackupFailureState
+import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
+import com.emm.justchill.core.domain.shared.backup.BackupFailureState
 import com.russhwolf.settings.MapSettings
 import org.junit.Before
 import org.junit.Test

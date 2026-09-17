@@ -1,6 +1,6 @@
 package com.emm.data.backup
 
-import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.DomainException
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.TimeZone
 import org.junit.Test

@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.loan
 
-import com.emm.domain.loan.MAX_INTEREST_BPS
+import com.emm.justchill.core.domain.loan.MAX_INTEREST_BPS
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals

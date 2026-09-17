@@ -1,15 +1,15 @@
 package com.emm.data.backup
 
-import com.emm.domain.account.Account
-import com.emm.domain.account.AccountType
-import com.emm.domain.category.Category
-import com.emm.domain.category.CategoryType
-import com.emm.domain.shared.AccountId
-import com.emm.domain.shared.CategoryId
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.TransactionId
-import com.emm.domain.transaction.Transaction
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.account.Account
+import com.emm.justchill.core.domain.account.AccountType
+import com.emm.justchill.core.domain.category.Category
+import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.domain.shared.AccountId
+import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.TransactionId
+import com.emm.justchill.core.domain.transaction.Transaction
+import com.emm.justchill.core.domain.transaction.TransactionType
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

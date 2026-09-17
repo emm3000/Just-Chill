@@ -2,10 +2,10 @@ package com.emm.data.category
 
 import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.safeDbCall
-import com.emm.domain.category.Category
-import com.emm.domain.category.CategoryRepository
-import com.emm.domain.category.CategoryUpsert
-import com.emm.domain.shared.CategoryId
+import com.emm.justchill.core.domain.category.Category
+import com.emm.justchill.core.domain.category.CategoryRepository
+import com.emm.justchill.core.domain.category.CategoryUpsert
+import com.emm.justchill.core.domain.shared.CategoryId
 import kotlinx.coroutines.flow.Flow
 
 class DefaultCategoryRepository(private val localDataSource: CategoryLocalDataSource) : CategoryRepository {

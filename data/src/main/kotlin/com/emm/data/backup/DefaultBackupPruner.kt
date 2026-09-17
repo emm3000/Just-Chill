@@ -1,9 +1,9 @@
 package com.emm.data.backup
 
-import com.emm.domain.shared.backup.BackupPruneReport
-import com.emm.domain.shared.backup.BackupPruner
-import com.emm.domain.shared.backup.RetentionCandidate
-import com.emm.domain.shared.backup.SnapshotRetention
+import com.emm.justchill.core.domain.shared.backup.BackupPruneReport
+import com.emm.justchill.core.domain.shared.backup.BackupPruner
+import com.emm.justchill.core.domain.shared.backup.RetentionCandidate
+import com.emm.justchill.core.domain.shared.backup.SnapshotRetention
 import io.github.jan.supabase.SupabaseClient
 import kotlinx.datetime.TimeZone
 import kotlin.coroutines.cancellation.CancellationException

@@ -1,6 +1,6 @@
 package com.emm.data.backup
 
-import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.DomainException
 
 internal const val BACKUP_LIST_PAGE_SIZE: Int = 1000
 

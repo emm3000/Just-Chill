@@ -1,0 +1,17 @@
+package com.emm.justchill.core.domain.category
+
+import com.emm.justchill.core.domain.shared.CategoryId
+import kotlinx.coroutines.flow.Flow
+
+interface CategoryRepository {
+
+    fun all(): Flow<List<Category>>
+
+    suspend fun create(categoryUpsert: CategoryUpsert)
+
+    suspend fun count(): Long
+
+    suspend fun update(categoryId: CategoryId, categoryUpsert: CategoryUpsert)
+
+    suspend fun delete(categoryId: CategoryId)
+}

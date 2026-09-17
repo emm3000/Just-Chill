@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.shared
 
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.transaction.TransactionType
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

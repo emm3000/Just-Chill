@@ -2,7 +2,7 @@
 
 Thin Android entry point: `MainActivity`, `EmmApp`, and the Android halves of the ports `:presentation` declares (the platform Koin module, `DispatchersProvider`, the Crashlytics `DiagnosticsLogger` sink, `CurrentActivityHolder`, the Google sign-in launcher), plus the `@Preview` host in `components/`. ViewModels, the MVI core and the Koin graph are `:presentation`; Compose UI is `:ui-android`.
 
-`com.android.application` on AGP 9's built-in Kotlin, root package `com.emm.justchill`, `minSdk = 28`, `compileSdk = 37`. Depends on `:ui-android`, and on `:domain` and `:data` directly because `AndroidPlatformModule` constructs the SQLDelight driver itself.
+`com.android.application` on AGP 9's built-in Kotlin, root package `com.emm.justchill`, `minSdk = 28`, `compileSdk = 37`. Depends on `:ui-android`, and on `:core:domain` and `:data` directly because `AndroidPlatformModule` constructs the SQLDelight driver itself.
 
 ## Platform Koin module
 
@@ -24,7 +24,7 @@ Dimension `tier`. `dev` adds `applicationIdSuffix = ".dev"` and carries `src/dev
 ## Spend shortcuts
 
 - The amount digits are irreducible: every entry point shortens the path to the amount pad and never adds a field, chip row or sheet to `AddTransactionScreen`.
-- Which combos to surface is core logic (`GetFrequentCombosUseCase`, `:domain`); pushing them to the launcher is Android (`ShortcutManagerCompat`, `TileService`, Glance stay here or in `:ui-android`).
+- Which combos to surface is core logic (`GetFrequentCombosUseCase`, `:core:domain`); pushing them to the launcher is Android (`ShortcutManagerCompat`, `TileService`, Glance stay here or in `:ui-android`).
 - `selectFrequentCombo` no-ops until the account and category catalogs land, and a preselection from outside the app always arrives on a cold start, before them. It survives late data (a host test pins the ordering) and is consumed once per ViewModel (`preselectConsumed`): the entry's `LaunchedEffect(key)` restarts on rotation, theme change and pop-back, and a second firing silently reverts the user's choice.
 - A combo can name a deleted account or category: resolve by id, fall back to the normal defaults, never crash, never show an empty selection.
 - Flavor resources replace, never merge: `src/main/res/xml/shortcuts.xml` and `src/dev/res/xml/shortcuts.xml` are two full copies, every change lands in both, and `ShortcutXmlActionsTest` pins the action strings against both.

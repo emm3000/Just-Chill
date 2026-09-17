@@ -2,10 +2,10 @@ package com.emm.data.account
 
 import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.safeDbCall
-import com.emm.domain.account.Account
-import com.emm.domain.account.AccountRepository
-import com.emm.domain.account.AccountUpsert
-import com.emm.domain.shared.AccountId
+import com.emm.justchill.core.domain.account.Account
+import com.emm.justchill.core.domain.account.AccountRepository
+import com.emm.justchill.core.domain.account.AccountUpsert
+import com.emm.justchill.core.domain.shared.AccountId
 import kotlinx.coroutines.flow.Flow
 
 class DefaultAccountRepository(private val localDataSource: AccountLocalDataSource) : AccountRepository {

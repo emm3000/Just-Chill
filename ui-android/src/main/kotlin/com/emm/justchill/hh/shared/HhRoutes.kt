@@ -1,8 +1,8 @@
 package com.emm.justchill.hh.shared
 
 import androidx.navigation3.runtime.NavKey
-import com.emm.domain.category.CategoryType
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.domain.transaction.TransactionType
 import kotlinx.serialization.Serializable
 
 /**

@@ -1,10 +1,10 @@
 package com.emm.justchill.hh.di
 
-import com.emm.domain.loan.CreateLoanUseCase
-import com.emm.domain.loan.DeleteLoanUseCase
-import com.emm.domain.loan.RegisterLoanPaymentUseCase
-import com.emm.domain.loan.UpdateLoanPaymentUseCase
-import com.emm.domain.loan.UpdateLoanUseCase
+import com.emm.justchill.core.domain.loan.CreateLoanUseCase
+import com.emm.justchill.core.domain.loan.DeleteLoanUseCase
+import com.emm.justchill.core.domain.loan.RegisterLoanPaymentUseCase
+import com.emm.justchill.core.domain.loan.UpdateLoanPaymentUseCase
+import com.emm.justchill.core.domain.loan.UpdateLoanUseCase
 import com.emm.justchill.hh.loan.AddEditLoanViewModel
 import com.emm.justchill.hh.loan.LoanDetailViewModel
 import com.emm.justchill.hh.loan.LoansViewModel

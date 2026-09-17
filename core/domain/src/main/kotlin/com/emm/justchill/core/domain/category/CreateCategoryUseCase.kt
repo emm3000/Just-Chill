@@ -1,0 +1,33 @@
+package com.emm.justchill.core.domain.category
+
+import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.domain.shared.UniqueIdProvider
+import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.ValidationCode
+
+class CreateCategoryUseCase(private val repository: CategoryRepository, private val idProvider: UniqueIdProvider) {
+
+    suspend operator fun invoke(name: String, icon: String, color: String, categoryType: CategoryType): Category {
+        val trimmed = name.trim()
+        if (trimmed.isBlank()) {
+            throw DomainException.ValidationError("Name cannot be empty", ValidationCode.NameRequired)
+        }
+        val categoryId = CategoryId(idProvider.id)
+        repository.create(
+            CategoryUpsert(
+                categoryId = categoryId,
+                name = trimmed,
+                icon = icon,
+                color = color,
+                categoryType = categoryType,
+            ),
+        )
+        return Category(
+            categoryId = categoryId,
+            name = trimmed,
+            icon = icon,
+            color = color,
+            categoryType = categoryType,
+        )
+    }
+}
