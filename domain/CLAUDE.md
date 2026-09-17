@@ -26,7 +26,7 @@ Repository interfaces declared here must not reference SQLDelight, Supabase, or 
 `TransactionRepository` lives here; its SQLDelight-backed `DefaultTransactionRepository` lives in
 `:data`.
 
-The app is local-first; sync is **backup-only, one device at a time** (ADR 006). The row-replication
-engine is gone (`docs/work/epics/E01-snapshot-backup.md`, ADR 009); auth ports live in `auth/`.
-`sync/` now holds only `SyncMutex`, shared by `DeleteUserAccountUseCase` and `BackupOrchestrator` so
-an account deletion and a backup upload never race each other. See ADRs 001 / 006 / 009.
+The app is local-first; backup is a snapshot, **one device at a time** (ADR 006, ADR 009). The
+row-replication engine is gone (`docs/work/epics/E01-snapshot-backup.md`); auth ports live in
+`auth/`. `shared/RemoteWriteMutex.kt` is shared by `DeleteUserAccountUseCase` and
+`BackupOrchestrator` so an account deletion and a backup upload never race each other.

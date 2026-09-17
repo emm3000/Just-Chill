@@ -2,7 +2,7 @@
 
 > Copy listo para pegar en Google Play Console (alpha cerrada).
 > Normalizado a **tú** (peruano), coherente con el manifesto in-app
-> post-S5 y la política de privacidad.
+> y la política de privacidad.
 >
 > El copy de la ficha sigue vigente. El `versionName` sale del último tag de
 > git, no de este archivo.
@@ -96,7 +96,7 @@ Play Store alpha mínimo: **2 capturas por dispositivo**.
 - Formato recomendado: 1080×1920 (FHD vertical).
 - Formato alternativo aceptado: 1080×2400 (algunos celulares modernos).
 
-Si no las tomaste durante S5 device-verif, puedes generarlas con:
+Puedes generarlas con:
 
 ```bash
 # 1. abrir cada pantalla en el emulador / device
@@ -106,14 +106,4 @@ adb shell screencap -p /sdcard/sc.png && adb pull /sdcard/sc.png home1.png
 ## Ícono de Play Store
 
 Ya existe: `androidApp/src/prod/ic_launcher_first-playstore.png` (512×512).
-Usa ese — no hay que regenerar. (El módulo `:app` pasó a llamarse `:androidApp` en la migración KMP;
-hay una copia equivalente en `androidApp/src/dev/`.)
-
-## Notas estratégicas
-
-- **Distribución alpha cerrada**: 5-10 testers reclutados directamente.
-  No buscar instalación orgánica.
-- **No promocionar**: el manifesto es el pitch. Que se contagie por
-  WhatsApp, no por SEO.
-- **No abrir reseñas públicas** todavía — alpha cerrada las desactiva
-  por default.
+Usa ese — no hay que regenerar. Hay una copia equivalente en `androidApp/src/dev/`.
