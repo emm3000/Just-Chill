@@ -36,6 +36,8 @@ Reviews and other roles keep the playbook rules: a `pr-reviewer` on every PR, re
 
 Every row is a bet until `docs/agents/dispatch-log.md` says otherwise. When a row shows two or more first-review FIX FIRST verdicts for reasons the checklist did not cover, raise it one step and note why here.
 
+- A module-wide sweep that needs judgment per line (which comment survives, which rationale is a duplicate) takes row 3, opus:medium. Wave #129-#133 ran it on sonnet:medium: all 5 PRs came back FIX FIRST, 3 for judgment (partial sweeps, kept history, repeated rationale).
+
 ## Execution Steps
 
 1. For each issue run `gh issue view <n> --json title,labels,body`. Confirm the label and derive a short lowercase pane name from the title (one word, no digits).

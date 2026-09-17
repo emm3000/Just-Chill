@@ -23,3 +23,8 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 
 | PR | Issue | Row | Model:effort | First review | Cause |
 |---|---|---|---|---|---|
+| #134 | #129 | 1 (raised to 2: comment survival is judgment) | sonnet:medium | FIX FIRST | spec |
+| #136 | #130 | 1 (raised to 2: comment survival is judgment) | sonnet:medium | FIX FIRST | checklist |
+| #137 | #133 | 1 (raised to 2: comment survival is judgment) | sonnet:medium | FIX FIRST | judgment |
+| #135 | #132 | 1 (raised to 2: comment survival is judgment) | sonnet:medium | FIX FIRST | judgment |
+| #139 | #131 | 1 (raised to 2: comment survival is judgment) | sonnet:medium | FIX FIRST | judgment |
