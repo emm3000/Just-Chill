@@ -1,12 +1,12 @@
 package com.emm.justchill.hh.di
 
+import com.emm.justchill.core.backup.DefaultBackupEraser
+import com.emm.justchill.core.backup.DefaultBackupPruner
+import com.emm.justchill.core.backup.DefaultBackupRepository
+import com.emm.justchill.core.backup.DefaultBackupUploader
+import com.emm.justchill.core.backup.DefaultBackupVerifier
 import com.emm.justchill.core.database.account.AccountLocalDataSource
 import com.emm.justchill.core.database.account.DefaultAccountRepository
-import com.emm.justchill.core.database.backup.DefaultBackupEraser
-import com.emm.justchill.core.database.backup.DefaultBackupPruner
-import com.emm.justchill.core.database.backup.DefaultBackupRepository
-import com.emm.justchill.core.database.backup.DefaultBackupUploader
-import com.emm.justchill.core.database.backup.DefaultBackupVerifier
 import com.emm.justchill.core.database.backup.SqlDelightSnapshotStore
 import com.emm.justchill.core.database.category.CategoryLocalDataSource
 import com.emm.justchill.core.database.category.DefaultCategoryRepository

@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.di
 
-import com.emm.justchill.core.database.auth.DefaultAuthRepository
+import com.emm.justchill.core.backup.auth.DefaultAuthRepository
 import com.emm.justchill.core.domain.auth.AuthRepository
 import com.emm.justchill.core.domain.auth.DeleteUserAccountUseCase
 import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
