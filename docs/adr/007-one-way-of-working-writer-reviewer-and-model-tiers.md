@@ -164,8 +164,8 @@ premise that the risk was zero.
 
 ## Notes
 
-- `docs/WORKFLOW.md` is the living procedure this ADR formalizes — loop, reinforced gate, and the
-  full model-tier policy. This ADR is the record of *why*; `WORKFLOW.md` is *how*, and is the doc that
-  stays current as the loop evolves.
+- `docs/agents/multi-session.md` (formerly `docs/WORKFLOW.md`) is the living procedure this ADR
+  formalizes — loop, gate, and the full model-tier policy. This ADR is the record of *why*; the
+  playbook is *how*, and is the doc that stays current as the loop evolves.
 - `docs/archive/kmp/ORCHESTRATION.md` keeps the KMP slice ledger and landmines this loop was proved
   against; historical, not superseded by this ADR.

@@ -1,6 +1,6 @@
 # Dispatch log
 
-The model-tier table in `docs/WORKFLOW.md` is tuned from this log. A row with two or more `judgment` FIX FIRST verdicts moves one step up. A row that stays MERGE across many PRs may move one step down.
+The model-tier table in `.claude/skills/wave/SKILL.md` is tuned from this log; the loop it serves is `docs/agents/multi-session.md`. A row with two or more `judgment` FIX FIRST verdicts moves one step up. A row that stays MERGE across many PRs may move one step down.
 
 The log has a fixed size. The Summary keeps the totals per row forever. Recent keeps only the last 20 PRs. At cycle close the orchestrator appends the new PR to Recent. When Recent passes 20 rows, it adds the oldest rows to the Summary counts and deletes them.
 

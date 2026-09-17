@@ -31,7 +31,7 @@ assume a tracker and a pull request.
 2. **One PR per issue, rebase-merged.** The writer works in its own worktree and opens a PR whose
    body closes the issue; `trunk` keeps linear history.
 3. **`pr-reviewer` is the only review.** Fresh context, read-only, top tier, `blocking|minor`
-   findings, one verdict; it runs where `docs/WORKFLOW.md`'s risk-tiered policy says so, at most once
+   findings, one verdict; it runs where the risk-tiered policy (now `docs/agents/multi-session.md`) says so, at most once
    plus one fix round per unit. Judgment Day, its judges and their Sonnet carve-out are retired;
    `mattpocock-skills:code-review` covers a diff that is not a PR. `model` stays explicit on every
    Agent call (ADR 007's lesson survives the panel).

@@ -13,7 +13,7 @@ metadata:
 ACTIVATE: existing target, no fresh diff — feature flow, module, `.github/`, docs vs code, project state.
 
 NOT here:
-- fresh writer change → the `pr-reviewer` agent (`docs/WORKFLOW.md` step 4)
+- fresh writer change → the `pr-reviewer` agent (`docs/agents/multi-session.md` `## Review cycle`)
 - pending diff/PR/branch/path → `code-review`, `security-review`, `simplify`
 - NEVER `cavecrew-reviewer`/`cavecrew-investigator`: Haiku default, compressed output, breaks the Output Contract
 
@@ -61,4 +61,4 @@ A local fix belongs in the finding's `fix` field; `## Plan` is only for REFACTOR
 ## References
 
 - `references/gates.md` — reading order, budgets.
-- `docs/WORKFLOW.md`, `docs/PROGRESS.md`, `CLAUDE.md` `## Gotchas`.
+- `docs/agents/multi-session.md`, `docs/PROGRESS.md`, `CLAUDE.md` `## Non-negotiable rules`.

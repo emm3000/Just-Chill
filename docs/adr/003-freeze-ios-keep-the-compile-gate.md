@@ -133,8 +133,8 @@ Ordered by what fails first and most silently.
 
 - This ADR does not amend ADR 001 or ADR 002; the local-first architecture and the sync cursor are
   unaffected.
-- `docs/archive/kmp/ORCHESTRATION.md` keeps its ledger and landmines, and `docs/WORKFLOW.md` keeps the
-  reinforced-gate definition, both of which stay accurate and useful. What this ADR retires is the
+- `docs/archive/kmp/ORCHESTRATION.md` keeps its ledger and landmines, and `docs/agents/multi-session.md`
+  (formerly `docs/WORKFLOW.md`) keeps the reinforced-gate definition, both of which stay accurate and useful. What this ADR retires is the
   per-slice *sub-agent protocol* around that gate, not the gate itself.
 - Reversing this ADR is cheap in the direction of more rigour: reinstating the ceremony is a docs
   change. That asymmetry is deliberate.
