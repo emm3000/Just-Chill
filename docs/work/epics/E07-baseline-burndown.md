@@ -24,7 +24,7 @@ stays small enough to review: `:domain` + `:data` → `:presentation` → `:ui-a
   flagged `EmptyFunctionBlock` and `TooManyFunctions` the check task does not. Never commit a
   baseline for a source set whose check task reports zero findings; delete the file instead.
 - **The stem files `baseline-{androidApp,data,domain}.xml` are not part of this track.** They belong
-  to the plain `detekt` task, which is `NO-SOURCE` on the KMP modules and is not a gate.
+  to the plain `detekt` task, which is not on the gate (`docs/CODE_QUALITY.md`).
 - **A file-level rule entry is permanent amnesty at any size.** `TooManyFunctions:Foo.kt` carries no
   count, so the file is exempt forever. These are the entries worth spending the most effort on.
 - **`:androidApp`'s 128 dev-flavor entries are out of scope until the sandbox decision is made.**
