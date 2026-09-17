@@ -12,8 +12,8 @@ import kotlin.test.assertTrue
 // value and renders it, so these cases are the whole contract.
 class SeeTransactionsUiStateTest {
 
-    // Stated, not read. The state used to default `month` to YearMonth.current(), which quietly
-    // made every case below depend on the day it ran; none of them is about a month at all.
+    // Stated, not read: none of the cases below is about a month at all, so a real clock read here
+    // would make them depend on the day the suite runs.
     private val august = YearMonth(2026, Month.AUGUST)
 
     private val day = DayGroup(
@@ -45,9 +45,7 @@ class SeeTransactionsUiStateTest {
     }
 
     @Test fun searching_an_empty_ledger_resolves_to_the_empty_ledger_alone() {
-        // Previously hasNoTransactionsAtAll and hasNoResultsForFilter were both true here and only
-        // the screen's `when` ordering broke the tie. A ledger with nothing in it cannot have
-        // search results to miss, so the ledger state wins.
+        // A ledger with nothing in it cannot have search results to miss, so the ledger state wins.
         val state = SeeTransactionsUiState(month = august, movementCount = 0, query = "café")
 
         assertEquals(ListDisplayState.EmptyLedger, state.listDisplayState)

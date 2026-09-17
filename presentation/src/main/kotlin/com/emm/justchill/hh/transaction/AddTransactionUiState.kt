@@ -38,7 +38,6 @@ data class AddTransactionUiState(
     // rotation, and popping back from CategoryRoute in particular — which re-sends the same
     // preselect. Only the first registration may act; every repeat is a no-op.
     val preselectConsumed: Boolean = false,
-    // null means no sheet is open (ADR 012 Decision 2).
     val openSheet: TransactionSheet? = null,
 ) : UiState {
     val dateLabel: String get() = date?.let { relativeDayLabel(it, today) } ?: "Hoy"

@@ -18,6 +18,4 @@ fun resumeEvents(): Flow<Unit> = callbackFlow {
     val lifecycle = ProcessLifecycleOwner.get().lifecycle
     lifecycle.addObserver(observer)
     awaitClose { lifecycle.removeObserver(observer) }
-}.flowOn(Dispatchers.Main.immediate)
-// flowOn(Main): LifecycleRegistry enforces main-thread addObserver/removeObserver, but the
-// orchestrator collects this flow on its Dispatchers.Default application scope.
+}.flowOn(Dispatchers.Main.immediate) // see BackgroundEvents.kt for why
