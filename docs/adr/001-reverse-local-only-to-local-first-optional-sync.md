@@ -65,7 +65,7 @@ Adopt **local-first architecture with OPTIONAL sync**:
 ### Negative / costs
 - **Integrity shift is a real footgun.** SQLDelight FK actions (`ON DELETE SET NULL` for `categoryId`, `ON DELETE RESTRICT` for `accountId`) fire only on a physical row DELETE, NOT on `UPDATE ... SET deletedAt`. Once delete is soft, those guarantees MUST be reimplemented in use cases: `DeleteCategoryUseCase` must explicitly null `categoryId` on live transactions and recurring movements (and mark them `Pending` so the de-link propagates), and `DeleteAccountUseCase`'s `countByAccount` RESTRICT check must filter `deletedAt IS NULL`. Every read path across the four tables must add `deletedAt IS NULL` or risk surfacing ghost rows.
 - **Client-clock `updatedAt`** means device clock skew can mis-order LWW. Accepted for the single-user case.
-- **Privacy posture reversal.** The app now (optionally) transmits and stores personal financial data off-device. This forces a rewrite of `docs/PRIVACY_POLICY.md` and a corresponding Google Play Data Safety form declaration. This is a legal/compliance obligation, not just code, and is gated as the final delivery slice.
+- **Privacy posture reversal.** The app now (optionally) transmits and stores personal financial data off-device. This forces a rewrite of `docs/play/privacy-policy.md` and a corresponding Google Play Data Safety form declaration. This is a legal/compliance obligation, not just code, and is gated as the final delivery slice.
 - The anon key shipped in `BuildConfig` is public by design; security rests entirely on RLS. The `service_role` key must never be embedded.
 - Three previously-signed "Won't Have" requirements (W-02/W-03/W-11) are reclassified as "optional (opt-in)" in the PRD, with a dated note.
 

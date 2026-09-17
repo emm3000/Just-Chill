@@ -23,7 +23,7 @@ decisión se firma en un ADR.
 | W-07 | **Cursos / lecciones de educación financiera** | No es una app de contenido. |
 | W-08 | **Notificaciones push diarias / gamificación / badges** | Anti-complejidad. ADR 009 se apoya en esta fila: no hay feature que exija un servidor que lea las filas. |
 | W-09 | **Suscripción premium / paywall** | Gratis, sin paywall. Un muro sobre features básicas es traición al posicionamiento. |
-| W-10 | **Anuncios** | Sin ads. La declaración de advertising ID en Play Console tiene que decir "No" (`PLAY_ADVERTISING_ID.md`). |
+| W-10 | **Anuncios** | Sin ads. La declaración de advertising ID en Play Console tiene que decir "No" (`docs/play/advertising-id.md`). |
 | W-12 | **OCR / lectura automática de notificaciones Yape** | Se eligió el mensaje radical (manual, 30 segundos) por sobre la integración audaz. |
 
 ### Revisados como opcionales opt-in (ADR 001)

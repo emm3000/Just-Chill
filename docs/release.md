@@ -40,9 +40,9 @@ person actually promotes in Play Console. Nothing on this page is optional.
   - Read the figures from the app, not from the import snackbar: `buildImportDoneMessage` never
     reports accounts or categories, and omits any clause whose count is zero.
 - **The declarations agree.** The advertising-ID answer, the Data Safety form,
-  [`PRIVACY_POLICY.md`](PRIVACY_POLICY.md) and [`PLAY_STORE_LISTING.md`](PLAY_STORE_LISTING.md)
+  [`play/privacy-policy.md`](play/privacy-policy.md) and [`play/listing.md`](play/listing.md)
   describe one app; changing one without the rest produces two official statements that contradict
-  each other. Re-verify the advertising ID with [`PLAY_ADVERTISING_ID.md`](PLAY_ADVERTISING_ID.md)
+  each other. Re-verify the advertising ID with [`play/advertising-id.md`](play/advertising-id.md)
   rather than re-deriving it.
 - **If this release flips `SNAPSHOT_BACKUP_ENABLED`**, update the privacy policy, the store listing
   and the Data Safety answer in this same release — the app stops being "nothing leaves your phone".

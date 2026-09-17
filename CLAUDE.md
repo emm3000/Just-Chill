@@ -106,7 +106,7 @@ Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-
 - `docs/PERSISTENCE.md` — the schema, the migration obligation, the restore drill. Read before a `.sq`, a `.sqm` or a migration test.
 - `docs/work/epics/` — the constraints that outlive every issue under an epic; `E01` before touching `data/src/**/backup/`.
 - `docs/PRODUCT_REQUIREMENTS.md` — the Won't-have rows (ADRs amend them by row id), the NFRs, the acceptance criterion. Read before scoping a feature.
-- `docs/PLAY_ADVERTISING_ID.md`, `docs/PLAY_STORE_LISTING.md`, `docs/PRIVACY_POLICY.md`, `docs/RELEASE_CHECKLIST.md` — the store-facing set. Read before a Play submission, a privacy change or a release tag.
+- `docs/play/` (advertising ID, listing, privacy policy) and `docs/release.md` — the store-facing set. Read before a Play submission, a privacy change or a release tag.
 
 ### Domain docs
 

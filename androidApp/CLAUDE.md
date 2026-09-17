@@ -19,7 +19,7 @@ Dimension `tier`. `dev` adds `applicationIdSuffix = ".dev"` and carries `src/dev
 - `allowBackup="false"` stays. A Keystore key is device-bound and does not survive a restore, so encrypting the store does not make Auto Backup safe.
 - The cleartext sweep is eager and never throws: `EmmApp` runs `sweepLegacySession` at launch under `runCatching`, because `SessionManager` is a lazy Koin `single` nothing on the startup path resolves. Moving a credential does not rotate it.
 - A malformed payload is rejected in `SessionPayloadCodec`, never left to the cipher. Only `IllegalArgumentException` matches `willNeverReadBack()`; `Cipher.init` throws `InvalidAlgorithmParameterException`, which lands in the KEEP path and re-warns forever from a site no host test reaches.
-- Host tests stop at `SessionPayloadCodec`. The Keystore round trip is the manual device check in `docs/RELEASE_CHECKLIST.md`.
+- Host tests stop at `SessionPayloadCodec`. The Keystore round trip is the manual device check in `docs/release.md`.
 
 ## Spend shortcuts
 
