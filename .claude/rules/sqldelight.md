@@ -6,7 +6,7 @@ paths:
 
 # SQLDelight schema rules
 
-`EmmDatabaseData` on device is the source of truth. Every schema change is a migration unit with its own falsifier. The full reasoning, the destructive migrations and the restore drill: `docs/PERSISTENCE.md`, read before changing anything here.
+`EmmDatabaseData` on device is the source of truth. Every schema change is a migration unit with its own falsifier. Why `3.sqm` and `4.sqm` are destructive: `data/CLAUDE.md`. The category/type composite key: ADR 008 and the header of `transactions.sq`.
 
 ## The snapshot is part of the diff
 
@@ -30,4 +30,9 @@ paths:
 - Never use `Schema.create` in a migration test: it builds the latest schema and skips the migration under test.
 - `kotlin.assert()` is a no-op on ART; use `kotlin.test.assertTrue`.
 - Prove the test is not vacuous before trusting it: set its `oldVersion` to the current schema version so the migration is skipped, watch it fail on the missing column, restore it.
+- Foreign keys: `csm()`'s `onOpen` turns them on only after the upgrade chain ran (they cannot be switched on inside `SQLiteOpenHelper`'s upgrade transaction), and SQLite never re-checks rows already written, so an FK-violating row written by a migration is silent on device forever. A test that enables foreign keys in its own `onOpen` and then calls `Schema.migrate` is the only check of the chain's writes; `MigrationV1ToV2Test` does it and `MigrationV4ToV5Test` flips them on for the cases where `4.sqm`'s statement order matters. Never drop that callback: the test stays green while proving less.
 - Run the suite with `./gradlew :data:connectedDebugAndroidTest` on the `medium_phone` emulator before shipping any schema change; the gate only compiles it.
+
+## The restore drill
+
+The suite proves a migration keeps rows already on the device, never that a snapshot written before the bump still restores after it. Before shipping a bump, import the latest production snapshot onto a clean `medium_phone` emulator and compare the six `ImportStats` counts (`accounts`, `categories`, `transactions`, `recurring`, `loans`, `loanPayments`) against the pre-bump counts. Any count that moved is a failure. Restore is the only way back from a migration that loses data, so a bump never restored from is untested.
