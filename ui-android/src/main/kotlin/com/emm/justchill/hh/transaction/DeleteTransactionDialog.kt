@@ -62,7 +62,6 @@ internal fun DeleteTransactionDialog(
     }
 }
 
-// The content mirrors the dialog shell's inputs one for one; the Dialog wrapper adds none of its own.
 @Suppress("LongParameterList")
 @Composable
 private fun DeleteTransactionDialogContent(

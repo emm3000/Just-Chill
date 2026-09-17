@@ -540,11 +540,6 @@ private fun SeeTransactionsWithPendingPreview() {
     }
 }
 
-/**
- * Several pending rows above the illustration — the shape most likely in a fresh month where
- * nothing is confirmed yet. Past three or four rows the illustration falls below the fold, which
- * is exactly the case the single-item version of this preview did not expose.
- */
 @Preview
 @Composable
 private fun SeeTransactionsPendingWithEmptyMonthPreview() {
@@ -609,7 +604,6 @@ private fun SeeTransactionsNoResultsPreview() {
     }
 }
 
-/** The calendar's longest month name, beside both header actions — the title's step-down case. */
 @Preview
 @Composable
 private fun SeeTransactionsLongMonthPreview() {

@@ -4,9 +4,9 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 
 /**
- * This edit rewritten to [filtered], with the caret left after the same surviving characters it
- * stood after — a refused keystroke leaves it put instead of walking it over a character that was
- * never inserted. An unchanged rewrite hands the value straight back, IME composition and all.
+ * The early return preserves IME composition state; a rebuilt [TextFieldValue] would drop it.
+ * A refused keystroke otherwise leaves the caret put instead of walking it over a character
+ * that was never inserted.
  */
 internal fun TextFieldValue.rewrittenTo(filtered: String): TextFieldValue {
     if (text == filtered) return this
@@ -16,9 +16,8 @@ internal fun TextFieldValue.rewrittenTo(filtered: String): TextFieldValue {
 }
 
 /**
- * How many of the first [cursor] characters of [typed] survive into [filtered] — the caret's
- * offset once the rewrite lands. [filtered] must be [typed] with characters only deleted, so
- * greedily matching it against [typed] recovers exactly what survived, caret included.
+ * [filtered] must be [typed] with characters only deleted; this greedily matches it against
+ * [typed] to recover exactly what survived, caret included.
  */
 internal fun cursorAfterFiltering(typed: String, cursor: Int, filtered: String): Int {
     var kept = 0
