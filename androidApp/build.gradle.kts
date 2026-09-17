@@ -67,9 +67,9 @@ composeCompiler {
     reportsDestination = layout.buildDirectory.dir("compose_reports")
 }
 
-// The flavor names live here because the flavors do. detektMain and detektTest aggregate all four
-// variants; these three cover every source set once. Tests and lint stay on dev: the prod flavor
-// adds a signing config the gate has no reason to need.
+// detektMain and detektTest aggregate all four variants; these three cover every production and
+// unit-test source set once, and leave androidTest to its own task. Tests and lint stay on dev: the
+// prod flavor adds a signing config the gate has no reason to need.
 qualityGate {
     detektTasks.addAll("detektDevDebug", "detektDevDebugUnitTest", "detektProdRelease")
 }

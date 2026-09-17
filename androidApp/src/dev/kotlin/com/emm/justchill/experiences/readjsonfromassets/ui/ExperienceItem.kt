@@ -2,7 +2,7 @@ package com.emm.justchill.experiences.readjsonfromassets.ui
 
 import androidx.compose.ui.graphics.Color
 
-data class ExperienceItemUiState(
+data class ExperienceItem(
     val title: String,
     val description: String,
     val date: String,

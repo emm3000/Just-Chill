@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.stateIn
 
 class ExperiencesViewModel(experiencesReader: ExperiencesReader) : ViewModel() {
 
-    val experiences: StateFlow<Result<List<ExperienceItemUiState>>> = experiencesReader.read()
+    val experiences: StateFlow<Result<List<ExperienceItem>>> = experiencesReader.read()
         .mapResult(List<Experience>::toUi)
         .stateIn(
             scope = viewModelScope,

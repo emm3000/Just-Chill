@@ -61,7 +61,7 @@ When you delete code, delete it. Git has the history.
 
 ## detekt
 
-Config lives in `config/detekt/detekt.yml`, the only source of thresholds; read the file, a copy here goes stale. `./gradlew qualityGate` runs `detektMain` and `detektTest` per module and must be green before every commit; plain `./gradlew detekt` covers strictly less and is never the gate. The rules that shape code the most:
+Config lives in `config/detekt/detekt.yml`, the only source of thresholds; read the file, a copy here goes stale. `./gradlew qualityGate` runs `detektMain` and `detektTest` per module, and on `:androidApp` `detektDevDebug`, `detektDevDebugUnitTest` and `detektProdRelease` instead, and must be green before every commit; plain `./gradlew detekt` covers strictly less and is never the gate. The rules that shape code the most:
 
 - `CyclomaticComplexMethod` (14) and `NestedBlockDepth` (allowedDepth 4, a fifth level fails). Nested `also` / `apply` / `run` / `let` chains get refactored into named intermediate functions or an early return.
 - `ReturnCount` (2, labeled returns excluded). More than two real returns means the function should be split.

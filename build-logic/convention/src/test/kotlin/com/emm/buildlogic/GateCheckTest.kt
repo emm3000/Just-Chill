@@ -1,8 +1,11 @@
 package com.emm.buildlogic
 
+import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class GateCheckTest {
@@ -15,17 +18,18 @@ class GateCheckTest {
 
     @Test
     fun `every edge ADR 015 allows passes the boundary check`() {
-        fixture.check(
-            task = BOUNDARY_TASK,
-            modules = mapOf(
-                ":androidApp" to module(":feature:loan", ":core:ui", ":core:domain"),
-                ":feature:loan" to module(":core:domain", ":core:ui"),
-                ":core:ui" to module(":core:domain"),
-                ":core:domain" to module(),
-                ":ui-android" to module(":presentation"),
-                ":presentation" to module(),
-            ),
+        val modules: Map<String, String> = mapOf(
+            ":androidApp" to module(":feature:loan", ":core:ui", ":core:domain"),
+            ":feature:loan" to module(":core:domain", ":core:ui"),
+            ":core:ui" to module(":core:domain"),
+            ":core:domain" to module(),
+            ":ui-android" to module(":presentation"),
+            ":presentation" to module(),
         )
+
+        val result: BuildResult = fixture.check(task = BOUNDARY_TASK, modules = modules)
+
+        modules.keys.forEach { path -> assertSucceeded(result, "$path:$BOUNDARY_TASK") }
     }
 
     @Test
@@ -34,6 +38,19 @@ class GateCheckTest {
             task = ":feature:loan:$BOUNDARY_TASK",
             modules = mapOf(
                 ":feature:loan" to module(":feature:report"),
+                ":feature:report" to module(),
+            ),
+        )
+
+        assertTrue(output.contains(":feature:loan depends on :feature:report"), output)
+    }
+
+    @Test
+    fun `a forbidden edge declared in a test configuration fails the boundary check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":feature:loan:$BOUNDARY_TASK",
+            modules = mapOf(
+                ":feature:loan" to module(testDependencies = arrayOf(":feature:report")),
                 ":feature:report" to module(),
             ),
         )
@@ -79,7 +96,7 @@ class GateCheckTest {
 
     @Test
     fun `a ViewModel or UiState free of compose passes the compose check`() {
-        fixture.check(
+        val result: BuildResult = fixture.check(
             task = ":feature:loan:$COMPOSE_TASK",
             modules = mapOf(":feature:loan" to module()),
             sources = mapOf(
@@ -87,6 +104,8 @@ class GateCheckTest {
                 "feature/loan/src/main/kotlin/LoanScreen.kt" to COMPOSE_SOURCE,
             ),
         )
+
+        assertSucceeded(result, ":feature:loan:$COMPOSE_TASK")
     }
 
     @Test
@@ -100,11 +119,30 @@ class GateCheckTest {
         assertTrue(output.contains("LoanUiState.kt"), output)
     }
 
-    private fun module(vararg dependencies: String): String = buildString {
+    @Test
+    fun `a UiState outside the main source set fails the compose check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":feature:loan:$COMPOSE_TASK",
+            modules = mapOf(":feature:loan" to module()),
+            sources = mapOf("feature/loan/src/test/kotlin/LoanUiState.kt" to COMPOSE_SOURCE),
+        )
+
+        assertTrue(output.contains("src/test/kotlin/LoanUiState.kt"), output)
+    }
+
+    private fun assertSucceeded(result: BuildResult, taskPath: String) {
+        assertEquals(TaskOutcome.SUCCESS, result.task(taskPath)?.outcome, taskPath)
+    }
+
+    private fun module(
+        vararg dependencies: String,
+        testDependencies: Array<String> = emptyArray(),
+    ): String = buildString {
         appendLine("""plugins { id("justchill.jvm.library") }""")
-        if (dependencies.isNotEmpty()) {
+        if (dependencies.isNotEmpty() || testDependencies.isNotEmpty()) {
             appendLine("dependencies {")
             dependencies.forEach { appendLine("""    implementation(project("$it"))""") }
+            testDependencies.forEach { appendLine("""    testImplementation(project("$it"))""") }
             appendLine("}")
         }
     }

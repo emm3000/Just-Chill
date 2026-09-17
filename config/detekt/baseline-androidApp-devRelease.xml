@@ -14,7 +14,6 @@
     <ID>FinalNewline:Experience.kt:com.emm.justchill.experiences.readjsonfromassets.domain.Experience.kt</ID>
     <ID>FinalNewline:ExperienceBundle.kt:com.emm.justchill.experiences.ExperienceBundle.kt</ID>
     <ID>FinalNewline:ExperienceItem.kt:com.emm.justchill.experiences.ExperienceItem.kt</ID>
-    <ID>FinalNewline:ExperienceItemUiState.kt:com.emm.justchill.experiences.readjsonfromassets.ui.ExperienceItemUiState.kt</ID>
     <ID>FinalNewline:Experiences.kt:com.emm.justchill.experiences.readjsonfromassets.ui.Experiences.kt</ID>
     <ID>FinalNewline:ExperiencesDataSource.kt:com.emm.justchill.experiences.readjsonfromassets.data.ExperiencesDataSource.kt</ID>
     <ID>FinalNewline:ExperiencesLocalDataSource.kt:com.emm.justchill.experiences.readjsonfromassets.data.ExperiencesLocalDataSource.kt</ID>
@@ -59,7 +58,6 @@
     <ID>NewLineAtEndOfFile:Experience.kt:com.emm.justchill.experiences.readjsonfromassets.domain.Experience.kt</ID>
     <ID>NewLineAtEndOfFile:ExperienceBundle.kt:com.emm.justchill.experiences.ExperienceBundle.kt</ID>
     <ID>NewLineAtEndOfFile:ExperienceItem.kt:com.emm.justchill.experiences.ExperienceItem.kt</ID>
-    <ID>NewLineAtEndOfFile:ExperienceItemUiState.kt:com.emm.justchill.experiences.readjsonfromassets.ui.ExperienceItemUiState.kt</ID>
     <ID>NewLineAtEndOfFile:Experiences.kt:com.emm.justchill.experiences.readjsonfromassets.ui.Experiences.kt</ID>
     <ID>NewLineAtEndOfFile:ExperiencesDataSource.kt:com.emm.justchill.experiences.readjsonfromassets.data.ExperiencesDataSource.kt</ID>
     <ID>NewLineAtEndOfFile:ExperiencesLocalDataSource.kt:com.emm.justchill.experiences.readjsonfromassets.data.ExperiencesLocalDataSource.kt</ID>

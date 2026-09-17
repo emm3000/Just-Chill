@@ -1,7 +1,7 @@
 package com.emm.justchill.experiences
 
 import com.emm.justchill.core.Feature
-import com.emm.justchill.experiences.readjsonfromassets.ui.ExperienceItemUiState
+import com.emm.justchill.experiences.readjsonfromassets.ui.ExperienceItem
 import java.time.LocalDate
 
 data class ExperienceBundle(
@@ -22,7 +22,7 @@ fun Feature.toBundle() = ExperienceBundle(
     resource = resource
 )
 
-fun ExperienceItemUiState.toBundle() = ExperienceBundle(
+fun ExperienceItem.toBundle() = ExperienceBundle(
     title = title,
     description = description,
     date = date,
