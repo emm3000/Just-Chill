@@ -144,7 +144,6 @@ class UpdateLoanUseCaseTest {
 
     @Test
     fun `update throws TotalBelowPaid when the edited total is below what has already been paid`() = runTest {
-        // principal = 50_000, interestBps = 0 -> totalDue = 50_000; 40_000 already paid.
         every { loanRepository.byId(loanId) } returns flowOf(loan)
         coEvery { loanPaymentRepository.paidSoFar(loanId) } returns Money(40_000L)
 

@@ -49,11 +49,8 @@ class RemoteWriteMutex(private val acquireTimeout: Duration = ACQUIRE_TIMEOUT) {
     }
 
     private companion object {
-        // Covers an ordinary account deletion (10s session resolve, the 10s Postgrest RPC, local
-        // clears) and stops well short of the 120s Storage transferTimeout a single stalled upload
-        // call is allowed. It does NOT cover the worst case — requireValidSession can force a 10s
-        // token refresh ahead of the RPC — and the waiter then fails Busy and retries, which is the
-        // designed give-up rather than a longer wait behind a delete button.
+        // Covers an ordinary account deletion but not the worst case (a forced 10s token refresh);
+        // that waiter fails Busy and retries by design, rather than waiting longer behind a delete button.
         val ACQUIRE_TIMEOUT: Duration = 30.seconds
     }
 }
