@@ -51,7 +51,8 @@ Before delegating, map the unit cheaply so the writer prompt is precise:
   nav host).
 - The reinforced gate (below).
 - Conventions: English code and docs, Spanish only for UI strings; `rg`/`fd`/`bat`/`sd`; conventional
-  commit, **NO Co-Authored-By**; linear history; no push unless told.
+  commit, **NO Co-Authored-By** (a PreToolUse hook in `.claude/settings.json` blocks it); linear
+  history; no push unless told.
 - Save gotchas to engram.
 
 ### 3. Cheap-verify (orchestrator, inline)

@@ -172,5 +172,18 @@
       "Read(./**/.env)",
       "Read(./**/.env.*)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -e '.tool_input.command | (test(\"git +commit\") and test(\"co-authored-by\"; \"i\")) | not' > /dev/null || { echo 'Blocked: Co-Authored-By trailers are forbidden in this repo (CLAUDE.md)' >&2; exit 2; }"
+          }
+        ]
+      }
+    ]
   }
 }
