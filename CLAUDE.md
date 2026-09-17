@@ -66,8 +66,9 @@ test (`presentation/CLAUDE.md`), and a missing migration — compiled by the gat
 
 ## Delegation
 
-Tiers, the tiebreaker, the Judgment Day carve-outs and the `model`-passing rule live in
-`docs/WORKFLOW.md` `## Model tier policy`. **Read it before delegating anything.**
+The loop and the review policy are `docs/WORKFLOW.md`; the tuned tier table is
+`docs/agents/dispatch-log.md` `## Rows`, its reasoning ADR 007. `model` is explicit on every Agent
+call. **Read `docs/WORKFLOW.md` before delegating anything.**
 
 ## Writer conventions (they reach every subagent through this file)
 
@@ -79,10 +80,13 @@ Tiers, the tiebreaker, the Judgment Day carve-outs and the `model`-passing rule 
 - **That Spanish addresses the reader as `tú`, never `vos`.** Tuteo is the house register; a voseo
   string is a defect even when it reads well. A test can pin the wrong one — `DeleteCategoryCopyTest`
   did — so grep the expectation, not just the source.
+- **No prose names a source set, plugin, target or module that does not exist.** `src/main`,
+  `src/test` and `:data`'s `src/androidTest` are what exist; a historical mention survives only if
+  deleting it loses a fact the code cannot give back (why `--match "v[0-9]*"` is not optional).
 
 ## Gotchas
 
-This is the Opus list (`docs/WORKFLOW.md` model-tier policy) — a Sonnet writer does not write here.
+This is the top-tier list (`docs/agents/dispatch-log.md` row 3) — nothing catches the error here.
 
 - **`./gradlew qualityGate` is the gate**, and **never plain `./gradlew detekt`** (it covers strictly
   less). What the gate matches, what each module must name itself, the SHA-pinned actions, the
@@ -93,57 +97,53 @@ This is the Opus list (`docs/WORKFLOW.md` model-tier policy) — a Sonnet writer
   compiles a minor version behind: the gate reddens on opt-in errors in `:domain` source, naming
   nothing about the classpath. `:domain:dependencies --configuration compileClasspath` answers it.
 - **Every route the nav host can push MUST be `@Serializable`** — the crash is on process-death restore
-  only, invisible to the compiler. Mechanism and the test that pins it: `ui-android/CLAUDE.md` `## Navigation`.
+  only, invisible to the compiler. Mechanism and the test that pins it: `.claude/rules/navigation.md`.
 
 ## Agent skills
 
-### Issue tracker
-
-Issues and specs live in GitHub Issues for `emm3000/Just-Chill` via the `gh` CLI. See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context: `docs/adr/` at the root, no `CONTEXT.md` yet. See `docs/agents/domain.md`.
+Issues and specs are GitHub Issues for `emm3000/Just-Chill` via `gh` (`docs/agents/issue-tracker.md`);
+the triage vocabulary is `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`
+(`docs/agents/triage-labels.md`); domain docs are single-context, `docs/adr/` at the root and no
+`CONTEXT.md` yet (`docs/agents/domain.md`).
 
 ## Docs contract
 
 Six doc types, one job and a death rule each: **`CLAUDE.md`** — how to work here, ≤150 lines, pointers
-only. **`adr/`** — one decision per ADR, target 1 page, ceiling 2 **at writing time**; a published ADR is
-never trimmed to fit, only amended by a new ADR.
-**One live plan per track** — ONLY what remains; closing a unit removes it from the plan in the same
-commit. **`PROGRESS.md`** — the orientation page: where the app stands, how to check it, untaken ideas. **Reference docs**
-(`WORKFLOW`, `CODE_QUALITY`, `DESIGN_SYSTEM`) — timeless conventions, zero history. **`archive/`** —
-the reasoning of closed work. The chronicle lives in git and engram, never in a live doc; every live
-doc has a read-trigger in the map below, and a doc with no trigger is archive.
+only; a module's ≤40, only how it is built, tested and what it must not depend on. **`.claude/rules/`**
+— a path-scoped invariant the compiler cannot catch, auto-loaded on any read under its `paths:`.
+**`adr/`** — one decision per ADR, target 1 page, ceiling 2 **at writing time**; a published ADR is
+never trimmed to fit, only amended by a new ADR. **`work/epics/`** — the constraints outliving every
+issue under an epic, ≤80 lines. **`PROGRESS.md`** — the orientation page: where the app stands, how
+to check it. **Reference docs** (`WORKFLOW`, `CODE_QUALITY`, `DESIGN_SYSTEM`, `PERSISTENCE`) —
+timeless conventions, zero history. **`archive/`** — the reasoning of closed work. The chronicle lives
+in git and engram, never in a live doc; every live doc has a read-trigger in the map below, and a doc
+with no trigger is archive.
 
 ## Docs map (`docs/`)
 
-- `PROGRESS.md` — where the app stands, how to verify that from a shell, and the ideas nobody has
-  taken. It holds no work list: every committed unit is a GitHub issue. **Read it first.**
+- `PROGRESS.md` — where the app stands and how to verify that from a shell. It holds no work list:
+  every committed unit is a GitHub issue. **Read it first.**
 - `work/epics/E01-snapshot-backup.md` — the sync/backup epic: constraints outliving every ticket
   under it; remaining work is its open issues. **Read before touching backup.**
-- `work/epics/E02-migration-coverage.md` — the coverage invariant; `PERSISTENCE.md` — the schema, the
-  migration obligation and the test mechanics. **Read both before touching a `.sq`, a `.sqm` or a migration test**
-  (`.claude/rules/sqldelight.md` auto-loads the pointer and the hard invariants on any such read).
+- `work/epics/E07-baseline-burndown.md` — **read before touching a detekt baseline.**
+  `work/epics/E12-mvi-core.md` — **read before touching `MviViewModel` or a ViewModel's effects.**
+- `PERSISTENCE.md` — the schema, the migration obligation, the coverage invariant and the test
+  mechanics. **Read before touching a `.sq`, a `.sqm` or a migration test** (`.claude/rules/sqldelight.md`
+  auto-loads the pointer and the hard invariants on any such read).
 - `agents/issue-tracker.md` + `agents/triage-labels.md` — the board: GitHub Issues, the `gh`
   operations, the `ready-for-agent` vocabulary. **Read before opening, taking or closing an issue.**
 - `adr/` — filenames state the decision; each header declares what it amends or supersedes. 009 is
-  the one to read first for anything sync-shaped. **Read before changing anything an ADR decided.**
+  the one to read first for anything sync-shaped, 013 for the way of working. **Read before
+  changing anything an ADR decided.**
 - `PLAY_ADVERTISING_ID.md`, `PLAY_STORE_LISTING.md`, `PRIVACY_POLICY.md` — the store-facing set.
   **Read before a Play submission or a privacy change**; the advertising-ID answer is "No", and a
   still-active release in ANY track can fail it even when the bundle being uploaded is clean.
 - `DESIGN_SYSTEM.md` — the criteria: which token to reach for and why, never its value. **Read before adding UI.**
 - `RELEASE_CHECKLIST.md` — the ordered gate a release passes, including the ADR 009 restore drill.
   **Read before tagging a release.**
-- `CODE_QUALITY.md` — detekt's thresholds and blind spots, what only a reviewer can judge, and the date
-  rule (injected `Clock` **and** `TimeZone`, no defaults). **Read before a lint rule, a `@Suppress`, a use case, or a date.**
-- `WORKFLOW.md` — the writer/reviewer loop, the reinforced gate, the model-tier policy. **Required
-  before any unit of work.**
+- `CODE_QUALITY.md` — detekt's blind spots, what only a reviewer can judge, and the date rule
+  (injected `Clock` **and** `TimeZone`, no defaults). **Read before a lint rule, a `@Suppress`, a use case, or a date.**
+- `WORKFLOW.md` — the writer/reviewer loop and the review policy. **Required before any unit of work.**
 - `PRODUCT_REQUIREMENTS.md` — the Won't-have rows (ADRs amend them **by row id**), the NFRs and the
   acceptance criterion. **Read before scoping a feature.**
-- `archive/` — closed tracks kept for the reasoning. Release state lives in `PROGRESS.md`;
-  `pre-kmp` is the rollback point before the KMP migration.
+- `archive/` — closed tracks kept for the reasoning.
