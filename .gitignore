@@ -30,6 +30,8 @@ docs/*
 !docs/archive/**
 !docs/work/
 !docs/work/**
+!docs/agents/
+!docs/agents/**
 !docs/PRODUCT_REQUIREMENTS.md
 !docs/DESIGN_SYSTEM.md
 !docs/PROGRESS.md

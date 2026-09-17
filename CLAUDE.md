@@ -84,31 +84,30 @@ Tiers, the tiebreaker, the Judgment Day carve-outs and the `model`-passing rule 
 
 This is the Opus list (`docs/WORKFLOW.md` model-tier policy) — a Sonnet writer does not write here.
 
-- **`./gradlew qualityGate` is the gate**, invoked by the pre-push hook and all three workflows. The
-  plugin — `build-logic/.../QualityGateConventionPlugin.kt` — matches `detektMain`/`detektTest`,
-  `:data`'s instrumented compile and `verifySqlDelightMigration`, and names `:build-logic:test`
-  explicitly (an included build is unreachable by task-name matching; its sources are the one code
-  the gate runs and never lints). **The test suites and dev lint are not in the plugin** — each
-  module names its own in its `build.gradle.kts`, and a module that stops naming one leaves the gate
-  silently: the gate runs less, it does not fail. **Never gate on plain `./gradlew detekt`** — it
-  passes while covering strictly less, `src/main` + `src/test` only, missing `data/src/androidTest`
-  and `:androidApp`'s flavor source sets.
+- **`./gradlew qualityGate` is the gate**, and **never plain `./gradlew detekt`** (it covers strictly
+  less). What the gate matches, what each module must name itself, the SHA-pinned actions, the
+  `versionName` filter, the draft-only upload and the `env:` secrets rule: `.claude/rules/github-workflows.md`,
+  auto-loaded on any read under `.github/`, the app's `build.gradle.kts` or `/release`.
 - **`:domain`'s stdlib comes from a pin in `build-logic/build.gradle.kts`, not the catalog** — the
   unversioned `kotlin-jvm` alias is deliberate (both comments say why). Drop the pin and `:domain`
   compiles a minor version behind: the gate reddens on opt-in errors in `:domain` source, naming
   nothing about the classpath. `:domain:dependencies --configuration compileClasspath` answers it.
-- **Third-party actions in `.github/` are pinned to a commit SHA on purpose** — they hold the signing
-  and Play/Firebase credentials, and a floating `@v1` can be repointed upstream. Do not "tidy" them
-  into tags; dependabot proposes bumps. GitHub's own `actions/*` stay on tags.
-- **`versionName` is `git describe --tags --abbrev=0 --match "v[0-9]*"`** — the filter is load-bearing
-  (the repo carries non-release tags; builds once shipped `versionName = "pre-kmp"`), and `--abbrev=0`
-  means it is always the bare tag, so `versionCode` is what names a build. Same filter in `/release`.
-- **A tag push does not ship.** `uploadRelease.yml` uploads the AAB to the alpha track as a **draft**; publishing it is manual in Play Console. A green workflow reached no one.
-- **`run:` blocks take secrets through `env:`**, never `${{ }}` spliced into the script text. Validate workflow edits with `actionlint` — it catches errors a YAML parse cannot.
-- **Every route the nav host can push MUST be `@Serializable`.** Android's reflective
-  `rememberNavBackStack(vararg NavKey)` re-resolves each entry via `Class.forName(name).kotlin.serializer()`
-  — miss the annotation and the app dies only on process-death restore, invisible to the compiler.
-  `RouteSerializationTest` round-trips every sealed `AppRoute` through that serializer.
+- **Every route the nav host can push MUST be `@Serializable`** — the crash is on process-death restore
+  only, invisible to the compiler. Mechanism and the test that pins it: `ui-android/CLAUDE.md` `## Navigation`.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live in GitHub Issues for `emm3000/Just-Chill` via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `docs/adr/` at the root, no `CONTEXT.md` yet. See `docs/agents/domain.md`.
 
 ## Docs contract
 
