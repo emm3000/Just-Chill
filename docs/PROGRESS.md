@@ -7,7 +7,7 @@
 ## Dónde estamos ahora
 
 - App Android de finanzas personales, local-first, en Play Store alpha cerrada.
-- Toda migración preserva la data y se prueba con `:data:connectedAndroidDeviceTest` antes de
+- Toda migración preserva la data y se prueba con `:data:connectedDebugAndroidTest` antes de
   `trunk`. El porqué — la instalación del autor tiene data real — lo dice el header de `CLAUDE.md`.
 - El trabajo comprometido no se lista acá: vive en GitHub Issues. El índice es
   `gh issue list --label ready-for-agent`; las ideas sin compromiso son issues con `needs-triage`.
