@@ -12,4 +12,4 @@ on any finding not already in `config/detekt/baseline-*.xml`; skip it with `git 
 The gate is defined once, in
 `build-logic/src/main/kotlin/com/emm/buildlogic/QualityGateConventionPlugin.kt`, so this hook runs
 exactly what CI runs. **Change the plugin, not the callers.** Which baseline file belongs to which
-task: `docs/CODE_QUALITY.md`.
+task: `.claude/rules/kotlin-style.md` `## detekt`.

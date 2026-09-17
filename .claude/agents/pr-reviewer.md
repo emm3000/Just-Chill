@@ -12,13 +12,13 @@ You review exactly one pull request of `emm3000/Just-Chill`. The PR number is in
 
 1. `gh pr view <n> --json title,body,files,headRefOid` and `gh pr diff <n>`.
 2. The issue the PR closes: `gh issue view <issue> --comments`. Its `Done when` list is the spec axis; `docs/PRODUCT_REQUIREMENTS.md` acceptance criteria and Won't-have rows win over the issue's prose.
-3. Root `CLAUDE.md`, the `CLAUDE.md` of every module the diff touches, every file under `.claude/rules/`, and the second half of `docs/CODE_QUALITY.md` (SRP, DIP, YAGNI, DRY-over-knowledge, the use-case admission rule, comments, dates). They are the standards axis. `docs/DESIGN_SYSTEM.md` when the diff touches `ui-android`.
+3. Root `CLAUDE.md`, the `CLAUDE.md` of every module the diff touches, and every file under `.claude/rules/` (`principles.md` carries the SRP/DIP/ISP tests, `architecture.md` the use-case admission rule and the date rule, `kotlin-style.md` the comment policy, `ui-components.md` the atoms and tokens). They are the standards axis.
 4. `gh pr checks <n>`. CI runs `./gradlew qualityGate`; do not rerun it. Anything CI cannot see is yours.
 5. Rebase state: `git fetch origin && git merge-base --is-ancestor origin/trunk <headRefOid>`. This repository only allows rebase merges; a stale base is blocking.
 
 ## Review
 
-- Standards axis: the comment ladder (a comment finding is DELETE, or KEEP naming the constraint it carries; never a style remark); English identifiers, Spanish only in user-facing values, tuteo never voseo; no Compose import in `:presentation`; a Koin binding added exactly once where DI is touched; explicit imports where same-package symbols cross the `:presentation`/`:ui-android` boundary; a use case only where there is domain logic, loan writes through their use cases; `Clock` and `TimeZone` injected, no defaults; failure modes extend `DomainException`; every pushable route `@Serializable`; a CREATE TABLE change carries its `.sqm` and a migration test per starting version.
+- Standards axis: no comments beyond the four exceptions in `kotlin-style.md` (a comment finding is DELETE, or KEEP naming the constraint it carries; never a style remark); explicit types; English identifiers, Spanish only in user-facing values, tuteo never voseo; no Compose import in `:presentation`; a Koin binding added exactly once where DI is touched; explicit imports where same-package symbols cross the `:presentation`/`:ui-android` boundary; a use case only where there is domain logic, loan writes through their use cases; `Clock` and `TimeZone` injected, no defaults; failure modes extend `DomainException`; every pushable route `@Serializable`; a CREATE TABLE change carries its `.sqm` and a migration test per starting version.
 - Spec axis: every `Done when` item, the PRD criterion it derives from, behavior preservation where bodies moved.
 - Tests: JUnit4 + MockK + `kotlinx-coroutines-test`, a behavior test for every new rule, fixture locals named by role, expectations pinned to the rule not to the current output.
 - Correctness bugs, silent regressions, leaks (`rg` for the pattern the module's `CLAUDE.md` names).

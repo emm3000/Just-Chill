@@ -129,7 +129,7 @@ Storage: one blob per snapshot, staggered retention, one restore path (`importFr
 - `Storage.Config.transferTimeout` (120s) bounds every Storage call including list/delete, not the
   10s Postgrest `requestTimeout`; neither is configured in `SupabaseModule`.
 - Whatever asks "what day is it" takes an injected `Clock` and `TimeZone`, no default
-  (`docs/CODE_QUALITY.md`, Dates). Staleness needs both `BACKUP_STALE_AFTER_DAYS` (3 calendar days)
+  (`.claude/rules/architecture.md`). Staleness needs both `BACKUP_STALE_AFTER_DAYS` (3 calendar days)
   AND a ledger that moved since the last verified snapshot.
 - `hasLocalChangesSince` in `:domain` is the single predicate for "is there anything to back up" —
   the cycle gate and the UI warning must not be able to disagree.

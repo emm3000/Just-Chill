@@ -4,11 +4,11 @@ Read the row for the target before opening any source file.
 
 | Target | Read first | File budget |
 |---|---|---|
-| Feature / screen flow | `docs/DESIGN_SYSTEM.md`, then the screen, its ViewModel, its use cases | 15 |
+| Feature / screen flow | `.claude/rules/ui-components.md`, then the screen, its ViewModel, its use cases | 15 |
 | Architecture / module | `CLAUDE.md` `## Architecture`, then that module's own `CLAUDE.md` (only `androidApp/`, `ui-android/`, `presentation/`, `domain/`, `data/` ship one; `build-logic/` and `supabase/` have none) and the `.claude/rules/` file scoped to it | 20 |
 | Sync | `docs/work/epics/E01-snapshot-backup.md` and `docs/adr/009-backup-is-a-snapshot-not-row-replication.md` BEFORE any source file. The forensic audit is archived at `docs/archive/sync/AUDIT.md` — read it for *why*, never for what to do next | 20 |
 | Supabase / SQLDelight migrations | `docs/PERSISTENCE.md` and `.claude/rules/sqldelight.md`, then `supabase/migrations/` against the SQLDelight schema. Flag any drift — this is the class that broke production for two months (commit `72a9b03`) | 15 |
-| Dates | `docs/CODE_QUALITY.md` `## Dates` — the live rule is an injected `Clock` AND an injected `TimeZone`, neither carrying a default, and it names its own allowed exceptions | 15 |
+| Dates | `.claude/rules/architecture.md` `## Layers and dependency direction` — the live rule is an injected `Clock` AND an injected `TimeZone`, neither carrying a default, and it names its own allowed exceptions | 15 |
 | `.github/` pipelines | `.claude/rules/github-workflows.md` — pinned SHAs, the `git describe --match "v[0-9]*"` filter, secrets via `env:` | 10 |
 | Docs vs code | the code is the truth, the doc is the suspect | 20 |
 | Whole project | do not attempt exhaustively. Sample the rows above, declare the sample, and emit `## Coverage` | 30 |
