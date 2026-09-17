@@ -135,8 +135,6 @@ class UpdateLoanPaymentUseCaseTest {
 
     @Test
     fun `update accepts a payment that exactly settles what remains after excluding its own old amount`() = runTest {
-        // Excluding this payment's old 4_000, the loan already has 2_000 paid elsewhere against a
-        // 10_000 totalDue, leaving exactly 8_000 room for the new amount.
         every { loanRepository.byId(loanId) } returns flowOf(loan)
         every { loanPaymentRepository.byId(paymentId) } returns flowOf(existingPayment(amount = 4_000L))
         coEvery { loanPaymentRepository.paidSoFar(loanId) } returns Money(6_000L)
@@ -149,8 +147,6 @@ class UpdateLoanPaymentUseCaseTest {
 
     @Test
     fun `update rejects an amount exceeding remaining once its own old amount is excluded`() = runTest {
-        // Two payments made this loan's totalDue (10_000): this one at 4_000, another at 6_000.
-        // Excluding this one's old amount leaves 6_000 already paid, so remaining before it is 4_000.
         every { loanRepository.byId(loanId) } returns flowOf(loan)
         every { loanPaymentRepository.byId(paymentId) } returns flowOf(existingPayment(amount = 4_000L))
         coEvery { loanPaymentRepository.paidSoFar(loanId) } returns Money(10_000L)

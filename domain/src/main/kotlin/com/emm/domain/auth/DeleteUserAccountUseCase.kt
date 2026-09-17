@@ -11,17 +11,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration.Companion.seconds
 
-/**
- * The cloud backup sweep precedes the deletion RPC because it cannot follow it: `delete_account()`
- * runs `delete from auth.users` and `deleteAccount()` clears the local session right after, so
- * `ownedPrefix()` would throw `Unauthorized` for any sweep placed later.
- *
- * The metadata clear cannot follow the RPC either, for the same dead session, and it must not
- * precede the sweep: `clear` also drops `destinationDisclosedAt`, which gates every upload, so a
- * clear before an aborted sweep leaves backups switched off after a deletion that removed nothing,
- * recoverable only by the user re-entering Perfil. It therefore sits in the single gap between the
- * finished sweep and the RPC.
- */
+// Step order is fixed: sweep, then metadata clear, then the RPC. `deleteAccount()` kills the
+// session, so a sweep or clear placed after it throws `Unauthorized`; a clear before an aborted
+// sweep drops `destinationDisclosedAt` and leaves backups off with nothing actually deleted.
 class DeleteUserAccountUseCase(
     private val authRepository: AuthRepository,
     private val backupEraser: BackupEraser,

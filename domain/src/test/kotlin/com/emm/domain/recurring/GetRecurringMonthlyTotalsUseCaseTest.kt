@@ -30,7 +30,7 @@ class GetRecurringMonthlyTotalsUseCaseTest {
             isActive = isActive,
         )
 
-    // @Suppress: no test builds RecurringMovement any more; kept as the template-shaped fixture.
+    // Kept unused as the template-shaped fixture; no test currently calls it.
     @Suppress("unused")
     private fun rm(id: String, type: TransactionType, amount: Money? = Money(10_000L), isActive: Boolean = true) =
         RecurringMovement(
