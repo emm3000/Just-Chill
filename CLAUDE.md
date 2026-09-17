@@ -123,14 +123,14 @@ doc has a read-trigger in the map below, and a doc with no trigger is archive.
 ## Docs map (`docs/`)
 
 - `PROGRESS.md` — where the app stands, how to verify that from a shell, and the ideas nobody has
-  taken. It holds no work list: every committed unit is a ticket in `docs/work/`. **Read it first.**
+  taken. It holds no work list: every committed unit is a GitHub issue. **Read it first.**
 - `work/epics/E01-snapshot-backup.md` — the sync/backup epic: constraints outliving every ticket
-  under it, remaining work in `work/backlog/`. **Read before touching backup.**
+  under it; remaining work is its open issues. **Read before touching backup.**
 - `work/epics/E02-migration-coverage.md` — the coverage invariant; `PERSISTENCE.md` — the schema, the
   migration obligation and the test mechanics. **Read both before touching a `.sq`, a `.sqm` or a migration test**
   (`.claude/rules/sqldelight.md` auto-loads the pointer and the hard invariants on any such read).
-- `work/README.md` — the board's rules: directory-is-status, immutable IDs, ceilings. **Read before
-  opening, taking or closing a ticket.**
+- `agents/issue-tracker.md` + `agents/triage-labels.md` — the board: GitHub Issues, the `gh`
+  operations, the `ready-for-agent` vocabulary. **Read before opening, taking or closing an issue.**
 - `adr/` — filenames state the decision; each header declares what it amends or supersedes. 009 is
   the one to read first for anything sync-shaped. **Read before changing anything an ADR decided.**
 - `PLAY_ADVERTISING_ID.md`, `PLAY_STORE_LISTING.md`, `PRIVACY_POLICY.md` — the store-facing set.

@@ -42,7 +42,7 @@ enters only with a test a diff can fail. No third bucket for taste.
   drops from `source` resolves to nothing until the compile task's output is wired back — and
   deleting that wiring deletes analysis silently rather than reddening the gate. `:androidApp` still
   owes 10–13, over a Java-generated `BuildConfig` no Kotlin `destinationDirectory` carries
-  ([E07-06](work/backlog/E07-06-name-androidapp-detekt-resolution-errors.md)).
+  (E07-06, issue #91).
 
 `CyclomaticComplexMethod`, `ComplexCondition`, `NestedBlockDepth` and `LongParameterList` have no
 annotation escape and **do** fire on Composables — `config/detekt/baseline-ui-android-debug.xml`
@@ -128,7 +128,7 @@ lambda, so it owes the arm.
 
 - Passing the gate is *necessary, never sufficient* — a reviewer may require a change detekt is
   perfectly happy with. In the other direction, a detekt failure becomes a baseline entry **only
-  together with a ticket in `docs/work/` naming it**; a silent addition is not allowed.
+  together with a GitHub issue naming it**; a silent addition is not allowed.
 - **Removing an entry, or changing detekt config:** regenerate into a scratch file and diff against
   the committed one. Whoever touches the file next does it, at minimum — and a config that silently
   matches nothing (gotcha 2) shows up as "no change" and as nothing else.

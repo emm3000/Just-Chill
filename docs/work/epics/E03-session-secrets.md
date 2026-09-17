@@ -21,7 +21,7 @@ store a mobile app reaches for by default — `SharedPreferences` — keeps it i
 - **Android Auto Backup stays off.** `allowBackup="false"` exists precisely so the token cannot ride
   into Google's cloud, and encrypting the store does not make it safe to turn back on: a Keystore key
   is device-bound and does not survive a restore. The cost of that choice is tracked separately, in
-  [E01-29](../backlog/E01-29-decide-what-a-lost-phone-costs.md).
+  E01-29 (closed; its reasoning is in git and engram).
 - **Moving a credential off a cleartext store has to be eager.** `SessionManager` hangs off a lazy
   Koin `single`, and nothing on the Android startup path — or on the first screen — resolves the
   Supabase client: a migration that only runs inside `loadSession()` does not run at all until the

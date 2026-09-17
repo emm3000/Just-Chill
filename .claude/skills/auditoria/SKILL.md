@@ -57,7 +57,7 @@ A local fix belongs in the finding's `fix` field; `## Plan` is only for REFACTOR
 - `## Premisa` — only if the premise was wrong, with evidence.
 - `## Plan` — only on REFACTORIZAR/REHACER; ordered steps, one writer unit each.
 - `## Cobertura` — required if the budget was hit OR the target is the whole project: read vs unread.
-- Persist only if the user asks or findings exceed five; else chat. Persistence is `mem_save` plus an Artifact, never a `.md` in this repo — an audit is chronicle (`docs/work/README.md`). A finding that needs work becomes a backlog ticket the MAIN THREAD opens; the auditor only proposes it.
+- Persist only if the user asks or findings exceed five; else chat. Persistence is `mem_save` plus an Artifact, never a `.md` in this repo — an audit is chronicle, and the chronicle lives in git and engram. A finding that needs work becomes a GitHub issue the MAIN THREAD opens; the auditor only proposes it.
 - Nothing else: no reading summary, no pleasantries.
 
 ## References

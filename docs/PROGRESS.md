@@ -2,14 +2,15 @@
 
 > Leé esto primero, y después el `CLAUDE.md` del módulo que vayas a tocar. Acá no se anota
 > hash de commit, conteo de commits ni número de línea: el commit que los escribe ya los
-> deja viejos. Acá tampoco se anota trabajo: si hay compromiso, es un ticket en `docs/work/`.
+> deja viejos. Acá tampoco se anota trabajo: si hay compromiso, es un issue de GitHub.
 
 ## Dónde estamos ahora
 
 - App Android de finanzas personales, local-first, en Play Store alpha cerrada.
 - Toda migración preserva la data y se prueba con `:data:connectedAndroidDeviceTest` antes de
   `trunk`. El porqué — la instalación del autor tiene data real — lo dice el header de `CLAUDE.md`.
-- El trabajo comprometido no se lista acá: vive en `docs/work/`. El índice es `eza docs/work/backlog`.
+- El trabajo comprometido no se lista acá: vive en GitHub Issues. El índice es
+  `gh issue list --label ready-for-agent`.
 
 ## Cómo se verifica el estado
 
@@ -19,7 +20,7 @@ git rev-list --count --merges origin/trunk..trunk   # debe dar 0: la historia es
 gh api repos/emm3000/Just-Chill/branches/trunk/protection \
   --jq '{checks: .required_status_checks.contexts, admins: .enforce_admins.enabled,
          linear: .required_linear_history.enabled, force: .allow_force_pushes.enabled}'
-eza docs/work/backlog                                # el trabajo con ticket
+gh issue list --label ready-for-agent               # el trabajo con ticket
 ```
 
 GitHub ya impone la historia lineal en `trunk` y le cerró el force-push, así que el merge commit
@@ -33,7 +34,7 @@ del objeto completo, nunca un PATCH.
 ## Ideas sin ticket
 
 Ideas, no compromisos: ninguna tiene ticket y ninguna entra sin pasar el criterio de aceptación de
-`docs/PRODUCT_REQUIREMENTS.md` §3. Abrir ticket en `docs/work/` recién cuando se tome una.
+`docs/PRODUCT_REQUIREMENTS.md` §3. Abrir un issue recién cuando se tome una.
 
 - **Tema claro.** Hoy la app es solo dark: nada en `:ui-android` lee `isSystemInDarkTheme`.
 - **Export CSV** para abrir en Excel. Hoy el único formato de salida es el JSON del backup.
