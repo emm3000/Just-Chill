@@ -64,7 +64,7 @@ When you delete code, delete it. Git has the history.
 
 Config lives in `config/detekt/detekt.yml`, the only source of thresholds; read the file, a copy here goes stale. `./gradlew qualityGate` runs `detektMain` and `detektTest` per module and must be green before every commit; plain `./gradlew detekt` covers strictly less and is never the gate. The rules that shape code the most:
 
-- `CyclomaticComplexMethod` (14) and `NestedBlockDepth` (4). Nested `also` / `apply` / `run` / `let` chains get refactored into named intermediate functions or an early return.
+- `CyclomaticComplexMethod` (14) and `NestedBlockDepth` (allowedDepth 4, a fifth level fails). Nested `also` / `apply` / `run` / `let` chains get refactored into named intermediate functions or an early return.
 - `ReturnCount` (2, labeled returns excluded). More than two real returns means the function should be split.
 - `TooManyFunctions` (8 per file) is the rule the repo leans on for Compose decomposition.
 - `LongMethod` (60) has no test exclusion: a long test method is a red gate, and so is `MultiLineIfElse` in a test.
@@ -105,7 +105,7 @@ A parameter carrying a default does not count toward coupling: the number that m
 
 ### Check before committing
 
-1. More than 3 levels of nesting? Extract a function.
+1. More than 4 levels of nesting (`NestedBlockDepth`)? Extract a function.
 2. A chain of `else if`? Use `when`, or extract functions.
 3. A function doing several things? Split it — see `principles.md`, SLAP.
 4. Nested `also` / `apply` / `run` / `let`? Refactor into named steps.

@@ -21,13 +21,13 @@ Review the pending changes (staged + unstaged) against `CLAUDE.md` and `.claude/
    - A new ViewModel bound once in `hh/di/` and added to `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`?
 
 3. **UI**
-   - Any raw Material3 control (`Button`, `TextField`, `OutlinedTextField`, `Card`, `IconButton`, `Switch`)?
+   - Any raw Material3 control (`Button`, `TextField`, `OutlinedTextField`, `Card`, `IconButton`, a `Switch` without `emmSwitchColors`)?
    - Any literal `Color(0x...)`, `.sp` or `.dp` outside `core/theme/`?
    - New shared components live in `core/ui/atoms/` with a `@Preview` in `EmmTheme`?
    - Every new route `@Serializable`?
 
 4. **Detekt (config/detekt/detekt.yml)**
-   - Nesting ≤ 3? No nested `also/apply/run/let`? ≤ 2 returns per function (labeled returns excluded)?
+   - Nesting within detekt `NestedBlockDepth` (allowedDepth 4, a fifth level fails)? No nested `also/apply/run/let`? ≤ 2 returns per function (labeled returns excluded)?
    - A new baseline entry only for a pre-existing finding, with its GitHub issue?
 
 5. **Local-first and data**

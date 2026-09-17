@@ -9,9 +9,9 @@ The design system lives in `:ui-android`: the atoms under `core/ui/atoms/` (`com
 
 ## The iron rule
 
-Feature screens call **only** the repo's atoms. **Never** a raw Material3 control — no `Button`, `TextField`, `OutlinedTextField`, `Card`, `IconButton`, `Switch`, `Snackbar`, `TopAppBar`. The atoms for those are `FilledCta` / `OutlinedCta` / `StickyCTA`, `UnderlineTextField`, `IconBtn`, `EmmSwitch`, `showEmmSnackbar`, `JcTopBar`.
+Feature screens call **only** the repo's atoms. **Never** a raw Material3 control — no `Button`, `TextField`, `OutlinedTextField`, `Card`, `IconButton`, `Snackbar`, `TopAppBar`. The atoms for those are `FilledCta` / `OutlinedCta` / `StickyCTA`, `UnderlineTextField`, `IconBtn`, `showEmmSnackbar`, `JcTopBar`.
 
-`Text` and `Icon` have no atom; they are allowed only with a `LocalEmmType` role and a `LocalEmmColors` token, never an inline `TextStyle` or a literal color. `ModalBottomSheet` is the one Material3 container in use, always with `SheetDragHandle`.
+`Switch` has no atom: it is allowed only with `colors = emmSwitchColors(...)` from `core/ui/atoms/EmmSwitch.kt`, never Material's default colours. `Text` and `Icon` have no atom; they are allowed only with a `LocalEmmType` role and a `LocalEmmColors` token, never an inline `TextStyle` or a literal color. `ModalBottomSheet` is the one Material3 container in use, always with `SheetDragHandle`.
 
 A custom component written inside a screen never replaces an atom that exists for that purpose. If the atom does not fit, extend or modify it first.
 

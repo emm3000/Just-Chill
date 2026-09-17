@@ -10,8 +10,10 @@ class QualityGateConventionPlugin : Plugin<Project> {
         target.tasks.register(GATE_TASK) {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
             description =
-                "Runs every check that must pass before pushing: detekt, host tests, and " +
-                    ":build-logic:test. Invoked by the pre-push hook and by CI."
+                "Runs every check that must pass before pushing: detektMain and detektTest, " +
+                    "compileDebugAndroidTestKotlin, verifySqlDelightMigration, :build-logic:test on the root, " +
+                    "plus the host tests and lintDevDebug each module's build file adds. " +
+                    "Invoked by the pre-push hook and by CI."
 
             dependsOn(
                 target.tasks.matching {

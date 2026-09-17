@@ -35,4 +35,10 @@ paths:
 
 ## The restore drill
 
-The suite proves a migration keeps rows already on the device, never that a snapshot written before the bump still restores after it. Before shipping a bump, import the latest production snapshot onto a clean `medium_phone` emulator and compare the six `ImportStats` counts (`accounts`, `categories`, `transactions`, `recurring`, `loans`, `loanPayments`) against the pre-bump counts. Any count that moved is a failure. Restore is the only way back from a migration that loses data, so a bump never restored from is untested.
+The suite proves a migration keeps rows already on the device, never that a snapshot written before the bump still restores after it. Before shipping a bump, run it on `medium_phone` with the dev flavor (`com.emm.justchill.dev`), never on a second AVD and never with a seeded database file:
+
+1. Install the pre-bump build (`./gradlew installDevDebug` from `trunk`), import the latest production snapshot through the app, and record the six `ImportStats` counts (`accounts`, `categories`, `transactions`, `recurring`, `loans`, `loanPayments`).
+2. The owner wipes the dev app's data. Agents are denied `adb uninstall` and `adb shell pm clear`, so this step is always the owner's.
+3. Install the post-bump build, import the same file, and compare the six counts. Any count that moved is a failure.
+
+Restore is the only way back from a migration that loses data, so a bump never restored from is untested.
