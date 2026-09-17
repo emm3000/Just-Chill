@@ -69,7 +69,6 @@ class BackupOrchestratorHealthTest {
 
     private val failures = mutableMapOf<String, BackupFailureState>()
 
-    // Seeded disclosed: these tests are about the streak, not about the disclosure gate.
     private val disclosed = mutableMapOf(USER_ID to DISCLOSED_AT)
 
     @Before

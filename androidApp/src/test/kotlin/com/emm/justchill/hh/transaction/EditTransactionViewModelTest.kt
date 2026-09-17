@@ -50,8 +50,6 @@ class EditTransactionViewModelTest {
     private val today = LocalDate(2026, Month.AUGUST, 10)
     private val todayDates = MutableStateFlow(today)
 
-    // Deliberately FIRST in the catalog, and never what the stored movement points at, so a
-    // fixture of one cannot pass a selection assertion by luck if the id lookup gets deleted.
     private val decoyAccount = Account(AccountId("interbank"), "Interbank")
 
     private val account = Account(AccountId("bcp"), "BCP")
@@ -61,7 +59,6 @@ class EditTransactionViewModelTest {
 
     private val accounts = listOf(decoyAccount, account, pickedAccount)
 
-    // The decoy's category half — same reasoning, and never what the stored movement points at.
     private val decoyCategory = Category(
         categoryId = CategoryId("transport"),
         name = "Transporte",

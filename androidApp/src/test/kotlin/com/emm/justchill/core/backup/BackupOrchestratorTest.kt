@@ -658,11 +658,9 @@ class BackupOrchestratorTest {
         coVerify(exactly = 1) { uploader.upload(USER_ID, backupSnapshotName(NOW), PAYLOAD) }
     }
 
-    /**
-     * An automatic cycle is headless — it never passes through `ProfileViewModel` — so a banner
-     * cannot satisfy "disclosed before the first upload"; only a refusal to upload can. It is a
-     * refusal and not a failure: no streak, no reason, no watermark.
-     */
+    // An automatic cycle is headless — it never passes through `ProfileViewModel` — so a banner
+    // cannot satisfy "disclosed before the first upload"; only a refusal to upload can. It is a
+    // refusal and not a failure: no streak, no reason, no watermark.
     @Test
     fun `an undisclosed destination uploads nothing and books no failure`() = runTest(testDispatcher) {
         disclosed.clear()
@@ -697,10 +695,8 @@ class BackupOrchestratorTest {
         coVerify(exactly = 0) { uploader.upload(any(), any(), any()) }
     }
 
-    /**
-     * A gate that never opens means backups silently never run again, and nothing else in this
-     * repo would turn red for that.
-     */
+    // A gate that never opens means backups silently never run again, and nothing else in this
+    // repo would turn red for that.
     @Test
     fun `acknowledging the destination lets the very next cycle upload`() = runTest(testDispatcher) {
         disclosed.clear()
