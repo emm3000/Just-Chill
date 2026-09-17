@@ -4,6 +4,19 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import java.io.File
 
+internal const val GIT_VARIABLE_PREFIX: String = "GIT_"
+
+internal fun leakedGitEnvironment(repository: File): Map<String, String> {
+    val gitDirectory: File = File(repository, ".git")
+    return mapOf(
+        "GIT_DIR" to gitDirectory.absolutePath,
+        "GIT_WORK_TREE" to repository.absolutePath,
+        "GIT_INDEX_FILE" to File(gitDirectory, "index").absolutePath,
+        "GIT_OBJECT_DIRECTORY" to File(gitDirectory, "objects").absolutePath,
+        "GIT_COMMON_DIR" to gitDirectory.absolutePath,
+    )
+}
+
 internal class ConventionPluginFixture(
     private val projectDirectory: File,
     private val ambientEnvironment: Map<String, String> = emptyMap(),
@@ -49,9 +62,13 @@ internal class ConventionPluginFixture(
     }
 
     fun git(vararg arguments: String): String {
-        val process: Process = gitBuilder(arguments.toList()).start()
+        val errorFile: File = File.createTempFile("convention-git", ".log")
+        val process: Process = gitBuilder(arguments.toList()).redirectError(errorFile).start()
         val output: String = process.inputStream.bufferedReader().readText()
-        check(process.waitFor() == 0) { "git ${arguments.joinToString(" ")} failed: $output" }
+        val failed: Boolean = process.waitFor() != 0
+        val errors: String = errorFile.readText()
+        errorFile.delete()
+        check(!failed) { "git ${arguments.joinToString(" ")} failed: $output$errors" }
         return output.trim()
     }
 
@@ -60,7 +77,6 @@ internal class ConventionPluginFixture(
     private fun gitBuilder(arguments: List<String>): ProcessBuilder {
         val builder: ProcessBuilder = ProcessBuilder(listOf("git") + GIT_IDENTITY + arguments)
             .directory(projectDirectory)
-            .redirectErrorStream(true)
         builder.environment().putAll(ambientEnvironment)
         builder.environment().keys.removeAll { it.startsWith(GIT_VARIABLE_PREFIX) }
         return builder
@@ -75,10 +91,14 @@ internal class ConventionPluginFixture(
         }
     }
 
-    private fun runner(arguments: List<String>): GradleRunner = GradleRunner.create()
-        .withProjectDir(projectDirectory)
-        .withPluginClasspath()
-        .withArguments(arguments + listOf("-g", gradleUserHome, "--stacktrace"))
+    private fun runner(arguments: List<String>): GradleRunner {
+        val runner: GradleRunner = GradleRunner.create()
+            .withProjectDir(projectDirectory)
+            .withPluginClasspath()
+            .withArguments(arguments + listOf("-g", gradleUserHome, "--stacktrace"))
+        if (ambientEnvironment.isEmpty()) return runner
+        return runner.withEnvironment(System.getenv() + ambientEnvironment)
+    }
 
     private fun writeSettings(includes: List<String>) {
         val catalog: File = File(rootDirectory, "gradle/libs.versions.toml")
@@ -135,8 +155,6 @@ internal class ConventionPluginFixture(
 
     private companion object {
         const val REPORT_PREFIX: String = "REPORT "
-
-        const val GIT_VARIABLE_PREFIX: String = "GIT_"
 
         val rootDirectory: File = File(System.getProperty("justchill.rootDir"))
 

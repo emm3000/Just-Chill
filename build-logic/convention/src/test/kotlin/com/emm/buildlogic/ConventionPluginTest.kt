@@ -4,6 +4,7 @@ import com.emm.buildlogic.internal.BuildConventions
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -163,6 +164,31 @@ class ConventionPluginTest {
 
         assertEquals("3", report["versionCode"])
         assertEquals("1.2.3", report["versionName"])
+    }
+
+    @Test
+    fun `the versions come from the project repository under a leaked git environment`() {
+        val outsider: File = temporaryFolder.newFolder("outsider")
+        val keeper: ConventionPluginFixture = ConventionPluginFixture(outsider)
+        keeper.git("init", "-q")
+        keeper.git("commit", "-q", "--allow-empty", "-m", "outsider")
+
+        val probe: ConventionPluginFixture = ConventionPluginFixture(
+            projectDirectory = temporaryFolder.newFolder("probe"),
+            ambientEnvironment = leakedGitEnvironment(outsider),
+        )
+        probe.git("init", "-q")
+        probe.git("commit", "-q", "--allow-empty", "-m", "first")
+        probe.git("commit", "-q", "--allow-empty", "-m", "second")
+        probe.git("tag", "v1.2.3")
+        probe.git("commit", "-q", "--allow-empty", "-m", "third")
+        probe.git("tag", "pre-kmp")
+
+        val report: Map<String, String> = probe.report(RELEASE_PLUGINS, APPLICATION_CONFIGURATION)
+
+        assertEquals("3", report["versionCode"])
+        assertEquals("1.2.3", report["versionName"])
+        assertEquals("outsider", keeper.git("log", "--format=%s"))
     }
 
     @Test

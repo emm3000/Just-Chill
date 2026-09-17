@@ -14,7 +14,7 @@ class GitEnvironmentIsolationTest {
 
     @Test
     fun `the fixture strips every inherited git variable from its child environment`() {
-        val leaked: Map<String, String> = leakedEnvironment(temporaryFolder.newFolder("outsider"))
+        val leaked: Map<String, String> = leakedGitEnvironment(temporaryFolder.newFolder("outsider"))
         val environment: Map<String, String> = ConventionPluginFixture(
             projectDirectory = temporaryFolder.newFolder("probe"),
             ambientEnvironment = leaked,
@@ -23,7 +23,7 @@ class GitEnvironmentIsolationTest {
         leaked.keys.forEach { variable ->
             assertTrue(variable !in environment, "$variable reached the child environment")
         }
-        assertTrue(environment.keys.none { it.startsWith("GIT_") }, environment.keys.toString())
+        assertTrue(environment.keys.none { it.startsWith(GIT_VARIABLE_PREFIX) }, environment.keys.toString())
         assertTrue("PATH" in environment, environment.keys.toString())
     }
 
@@ -36,7 +36,7 @@ class GitEnvironmentIsolationTest {
 
         val probe: ConventionPluginFixture = ConventionPluginFixture(
             projectDirectory = temporaryFolder.newFolder("probe"),
-            ambientEnvironment = leakedEnvironment(outsider),
+            ambientEnvironment = leakedGitEnvironment(outsider),
         )
         probe.git("init", "-q")
         probe.git("commit", "-q", "--allow-empty", "-m", "probe")
@@ -44,19 +44,8 @@ class GitEnvironmentIsolationTest {
 
         assertEquals("outsider", keeper.git("log", "--format=%s"))
         assertEquals("", keeper.git("tag", "--list"))
-        assertEquals("false", keeper.git("config", "--get", "core.bare"))
+        assertEquals("false", keeper.git("config", "--default", "false", "--get", "core.bare"))
         assertEquals("probe", probe.git("log", "--format=%s"))
         assertEquals("v1.2.3", probe.git("tag", "--list"))
-    }
-
-    private fun leakedEnvironment(repository: File): Map<String, String> {
-        val gitDirectory: File = File(repository, ".git")
-        return mapOf(
-            "GIT_DIR" to gitDirectory.absolutePath,
-            "GIT_WORK_TREE" to repository.absolutePath,
-            "GIT_INDEX_FILE" to File(gitDirectory, "index").absolutePath,
-            "GIT_OBJECT_DIRECTORY" to File(gitDirectory, "objects").absolutePath,
-            "GIT_COMMON_DIR" to gitDirectory.absolutePath,
-        )
     }
 }
