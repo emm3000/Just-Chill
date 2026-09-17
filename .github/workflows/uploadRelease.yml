@@ -35,7 +35,7 @@ jobs:
       # unsigned artifact so that validation jobs and Dependabot PRs can run without the release
       # key. That degradation must NOT be silent here: this is the one workflow where an unsigned
       # build is a defect, so the requirement is asserted explicitly, before any work happens,
-      # instead of being an accidental side effect of a cast in androidApp/build.gradle.kts.
+      # instead of being an accidental side effect of the release convention plugin.
       # Secrets reach the script through env, never spliced into the run: text.
       - name: Require release signing credentials
         env:

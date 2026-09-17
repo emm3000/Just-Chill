@@ -30,7 +30,7 @@ class AndroidReleaseConventionPlugin : Plugin<Project> {
         gitOutput("rev-list", "--count", "HEAD")?.toIntOrNull() ?: FALLBACK_VERSION_CODE
 
     // --match is not optional: the repo carries non-release tags (pre-kmp, post-s5) and a bare
-    // describe returns whichever is nearest, which once shipped versionName "pre-kmp".
+    // describe returns whichever is nearest.
     private fun Project.releaseVersionName(): String =
         gitOutput("describe", "--tags", "--abbrev=0", "--match", "v[0-9]*")?.removePrefix("v") ?: FALLBACK_VERSION_NAME
 
@@ -41,7 +41,7 @@ class AndroidReleaseConventionPlugin : Plugin<Project> {
     }
 
     // Credentials are absent on fresh clones, forks and Dependabot runs; the release must still
-    // configure and build unsigned there. uploadRelease.yml is where a missing key is fatal.
+    // configure and build unsigned there.
     private fun Project.configureReleaseSigning(extension: ApplicationExtension, keystore: Properties) {
         if (keystore.getProperty("keyAlias") == null) return
         extension.signingConfigs.create(RELEASE) {
