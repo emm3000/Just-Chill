@@ -12,25 +12,14 @@ Two halves, different owners.
 **Admission rule: a rule that falls into neither half does not enter**, and a reviewer-half rule
 enters only with a test a diff can fail. No third bucket for taste.
 
-## The machine half — thresholds as configured today in `config/detekt/detekt.yml`
+## The machine half
 
-| Rule | Threshold | Note |
-|---|---|---|
-| `LongMethod` | 60 lines | `ignoreAnnotated: ['Composable', 'Preview']` (`:115`) |
-| `LargeClass` | 600 lines | measures *classes* |
-| `TooManyFunctions` | 8 per file, 11 per class/interface/object/enum | `ignoreAnnotatedFunctions: ['Preview', 'PreviewLightDark']`; test source sets excluded |
-| `CyclomaticComplexMethod` | 14 | |
-| `ComplexCondition` | 3 | |
-| `NestedBlockDepth` | 4 | |
-| `ReturnCount` | 2 | `equals` excluded, lambdas excluded |
-| `LongParameterList` | 5 function / 6 constructor | data classes ignored; `ignoreDefaultParameters: true` |
-| `MagicNumber` | active | `-1, 0, 1, 2` allowed; constants, properties and local vals ignored; test source sets *and* `**/*.kts` excluded (`:672`); `ignoreNamedArgument: true` (`:684`); `ignoreAnnotated: ['Composable', 'Preview']` (`:688`) |
-| `CognitiveComplexMethod` | **disabled** | |
+The thresholds are `config/detekt/detekt.yml`; read the file, a copy here goes stale.
 
 ### Where detekt goes blind — three kinds, not interchangeable
 
-- **`LongMethod` — blind by config** (`detekt.yml:115`), revertible in one edit; nothing about the
-  rule is Compose-specific.
+- **`LongMethod` — blind by config** (`ignoreAnnotated: ['Composable', 'Preview']`), revertible in
+  one edit; nothing about the rule is Compose-specific.
 - **`LargeClass` — blind structurally.** It counts lines in a *class*; a Compose screen is a
   top-level function, so there is no class to measure. No config change fixes that.
 - **Type-resolution rules — blind wherever detekt cannot resolve a symbol.** Unresolvable code is
@@ -86,43 +75,8 @@ error, no warning and no failing task.
 `androidApp/src/test`, and `LongMethod` (60 lines) has no test exclusion — a long test method is a
 red gate, not a warning. So is `MultiLineIfElse`, in a test too.
 
-## A test that waits must observe the transition, not sample the state
-
-On a `StateFlow`, `flow.first { it }` then `flow.first { !it }` can pass while proving nothing:
-`first` resolves against the *current* value, so the second call returns immediately if the work
-already finished — or if it never started, and conflation can drop the `true` before a late
-subscriber sees it. Subscribe before triggering and assert on the recorded sequence, so "finished" is
-unreachable without "started". **The check:** break the production line so the awaited emission never
-arrives; the test must fail naming what did not happen — not hang, and not pass.
-
-No test decides its outcome by machine load. `rg 'System.nanoTime|Thread.sleep' --glob '*Test.kt'`
-returns nothing, and that is the check — a polled deadline fails the poll rather than the assertion.
-A deadline hidden in a library config counts too: a Ktor `requestTimeout` raced inside `runTest`'s
-virtual time is wall clock wearing a different hat. Where a test genuinely needs real threads, assert
-the precondition, not the outcome — a race that needs two cores proves nothing on one.
-
-## A catch-all around a suspend call swallows the cancellation
-
-`runCatching` catches `Throwable`, and `catch (e: Exception)` catches nearly as much:
-`CancellationException` is an `Exception` on both the JVM and Native. Inside a coroutine that
-anything cancels, neither shape tolerates a failure — it converts the cancellation into an ordinary
-value, hands back the default, and lets the body **run on**. `MviViewModel.updateState`
-is a synchronous CAS with no suspension point, so a state write after that point executes even
-though the job is dead: a cancelled loader finishes and overwrites the newer call's result with its
-empty default. detekt sees nothing, and a `StandardTestDispatcher` test very likely passes — its
-FIFO queue puts the stale resume before the winner, which is the benign ordering.
-
-Use the idiom the repo already uses in `BackupFailures.kt`, `DeleteUserAccountUseCase`,
-`MviViewModel.launchSafe` and a dozen more: catch `CancellationException` first and rethrow it, then
-catch `Exception` for the failure you actually meant to tolerate.
-
-**Every layer owes that arm, not just the ViewModel.** A cancellation the loader rethrows never
-reaches it if something below re-typed it first — `safeDbCall` and `catchAsDomainException` sit
-under every repository read, and a `DomainException.Unknown` is not a cancellation, so the loader's
-own arm never fires. Any new catch-all boundary owes the same first arm, and a `Flow.catch` lambda
-owes it explicitly: `catch` rethrows in two cases — the collecting job's own cancellation cause, and
-whatever the collector's `emit` threw. Any other `CancellationException` still reaches the
-lambda, so it owes the arm.
+The StateFlow test idiom and the `CancellationException` arm every catch-all owes:
+`presentation/CLAUDE.md` `## Testing`.
 
 ## Arbitration and suppression
 
