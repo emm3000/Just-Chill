@@ -4,6 +4,9 @@
 - **Date**: 2026-08-09
 - **Deciders**: Edgardo Muñoz
 - **Amends**: [ADR 002](002-pull-cursor-uses-server-set-timestamp.md), Decision point 4 ("LWW conflict resolution is unchanged").
+- **Rendered dormant by**: [ADR 006](006-sync-is-backup-only-one-device-at-a-time.md) (Decision
+  point 5 — the rule is kept, unused) and [ADR 009](009-backup-is-a-snapshot-not-row-replication.md)
+  (Decision point 2 — `ConflictResolver` the class is deleted; the rule stays on the books).
 
 > Resumen (es): `ConflictResolver` deja de comparar relojes en filas que ya están sincronizadas. Si la copia local no tiene ediciones sin pushear, gana el servidor y no se mira ningún timestamp. El `updatedAt` de cliente sigue decidiendo únicamente cuando ambas réplicas tienen una edición, que es el único caso sin respuesta libre de reloj. No cambia el schema ni el servidor.
 

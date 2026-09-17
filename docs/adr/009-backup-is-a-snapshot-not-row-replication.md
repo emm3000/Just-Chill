@@ -198,5 +198,5 @@ authoritative because nothing reads rows out of it.
   release-checklist line Decision 4 creates — if that line is not written, the rule is prose.
 - Build order, the verified traps and the phase gates: [`docs/work/epics/E01-snapshot-backup.md`](../work/epics/E01-snapshot-backup.md).
 - Findings, production forensics and the loop's root cause: [`docs/archive/sync/AUDIT.md`](../archive/sync/AUDIT.md).
-  `docs/archive/sync/PLAN.md` described the old engine's phased repair and is closed by this ADR.
+  The old engine's phased repair plan is closed by this ADR; nothing of it remains outside git history.
 - Status: [`docs/PROGRESS.md`](../PROGRESS.md).

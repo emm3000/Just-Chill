@@ -4,6 +4,8 @@
 - **Date**: 2026-06-09
 - **Deciders**: Edgardo Muñoz
 - **Amends**: [ADR 001](001-reverse-local-only-to-local-first-optional-sync.md), Decision point 5 (change detection / pull cursor).
+- **Rendered dormant by**: [ADR 009](009-backup-is-a-snapshot-not-row-replication.md) in full — it
+  orders a pull, and there is no pull left to order.
 
 > Resumen (es): el cursor de pull (`lastPulledAt`) deja de comparar contra el `updatedAt` escrito por el cliente y pasa a comparar contra una columna `server_updated_at` mantenida por un trigger en Supabase. La resolución de conflictos LWW NO cambia: sigue comparando `updatedAt` de cliente. El cambio elimina dos modos de pérdida silenciosa de filas causados por relojes de cliente.
 

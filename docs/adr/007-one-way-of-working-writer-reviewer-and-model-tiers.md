@@ -5,6 +5,8 @@
 - **Deciders**: Edgardo Muñoz
 - **Amends**: [ADR 003](003-freeze-ios-keep-the-compile-gate.md), Decision point 5 ("Drop the
   per-slice writer + reviewer (both Opus) requirement. One writer, reviewed inline.").
+- **Superseded in part by**: [ADR 013](013-issues-and-pull-requests-replace-the-file-board-and-judgment-day.md)
+  — Decision points 4 and 5 (the Judgment Day panel and its judges); Decision points 1, 2 and 3 stand.
 
 > Resumen (es): el ritual de writer + reviewer —dos agentes delegados, el reviewer en contexto fresco
 > y sin haber escrito el código que revisa— vuelve para **todo el repo**, no solo iOS/KMP. El ADR 003
