@@ -25,8 +25,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 import io.github.jan.supabase.auth.status.SessionStatus as SupabaseSessionStatus
 
 // The SupabaseClient has to be real: what these tests pin is supabase-kt's own behaviour, and a
@@ -179,11 +177,6 @@ class DefaultAuthRepositorySignOutTest {
         client.auth.importSession(session(), autoRefresh = false)
     }
 
-    // Auth.init() flips Initializing to NotAuthenticated from its own scope on the client's default
-    // dispatcher, and the check is not atomic: an importSession() landing between that read and its
-    // write is overwritten, and every test here then runs on a session that is gone.
-    private suspend fun SupabaseClient.settled(): SupabaseClient = also { it.auth.awaitInitialization() }
-
     private fun session(): UserSession = UserSession(
         accessToken = "access-token",
         refreshToken = "refresh-token",
@@ -203,16 +196,5 @@ class DefaultAuthRepositorySignOutTest {
         override suspend fun loadSession(): UserSession = delegate.loadSession()
 
         override suspend fun deleteSession(): Unit = error("local session deletion failed")
-    }
-
-    private companion object {
-
-        // INFINITE is the one value for which ktor launches no timeout coroutine at all. Any finite
-        // one competes with the cancellation under test and wins under load.
-        val DISABLED_REQUEST_TIMEOUT = Duration.INFINITE
-
-        // A real clock covering the whole test body, so load still beats it: it buys an unambiguous
-        // failure — a leaked coroutine, never a session-status assertion blaming a defect that never happened.
-        val HANG_BOUND = 10.seconds
     }
 }
