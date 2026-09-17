@@ -27,8 +27,6 @@ class MigrationV5ToV6Test {
     private val schemaV5 = object : SqlSchema<QueryResult.Value<Unit>> {
         override val version: Long = 5
 
-        // Four CREATE TABLEs and fourteen indexes, verbatim. Splitting them up would hide the one
-        // thing this block is for: being readable as the schema it claims to reproduce.
         @Suppress("LongMethod")
         override fun create(driver: SqlDriver): QueryResult.Value<Unit> {
             driver.execute(

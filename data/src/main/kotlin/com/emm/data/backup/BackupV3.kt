@@ -1,5 +1,4 @@
-// The file is named for the schema version it freezes, not for the single type it declares —
-// `ExportPayloadV3Dto` and `BackupV3.kt` intentionally do not match.
+// See BackupV2.kt: same naming rationale for this frozen version.
 @file:Suppress("MatchingDeclarationName")
 
 package com.emm.data.backup
