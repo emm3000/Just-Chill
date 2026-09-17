@@ -18,7 +18,7 @@ Deletes are soft, and foreign keys fire only on a physical `DELETE`, so each ent
 
 ## Backup and session
 
-The app is local-first; backup is a snapshot, **one device at a time** (ADR 006, ADR 009). The ports live in `shared/backup/`, the auth ports in `auth/`. `shared/RemoteWriteMutex.kt` is shared by `DeleteUserAccountUseCase` and `BackupOrchestrator` so an account deletion and a backup upload never race each other. `hasLocalChangesSince` is the single predicate for "is there anything to back up": the cycle gate and the UI warning must not be able to disagree.
+The app is local-first; backup is a snapshot, **one device at a time** (ADR 006, ADR 009). The ports live in `shared/backup/`, the auth ports in `auth/`. `shared/RemoteWriteMutex.kt` is shared by `DeleteUserAccountUseCase` and `BackupOrchestrator` so an account deletion and a backup upload never race each other. It bounds only the acquisition (30s, then `DomainException.Busy`), never the work: `delete_account` is irreversible once it returns. `DeleteUserAccountUseCase.resolveAuthenticatedUserId` resolves the session once; `DefaultAuthRepository.deleteAccount` must not wait again inside the lock. `hasLocalChangesSince` is the single predicate for "is there anything to back up": the cycle gate and the UI warning must not be able to disagree.
 
 ## Testing
 

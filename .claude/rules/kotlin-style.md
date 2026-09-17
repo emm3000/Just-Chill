@@ -84,6 +84,13 @@ Each analysis task derives its own baseline from the stem `config/detekt/baselin
 - A baseline entry for a file-level rule is permanent amnesty: `TooManyFunctions:Foo.kt` carries no count, so the file is exempt at any size. Read the current holders out of the baseline files, never out of a doc.
 - Removing an entry or changing detekt config: regenerate into a scratch file and diff against the committed one; a config that silently matches nothing shows up as "no change".
 
+### Burning a baseline down
+
+- A burn-down change only shrinks a baseline. A violation too costly to fix keeps its entry and the commit says why.
+- Fix the code, never relax the rule: no threshold edited in `detekt.yml`, no new `@Suppress`.
+- `DetektCreateBaselineTask` over-reports relative to `Detekt` (it has flagged `EmptyFunctionBlock` and `TooManyFunctions` the check did not). Never commit a baseline for a source set whose check reports zero findings; delete the file.
+- File-level entries are where the effort pays most. `:androidApp`'s `src/dev/.../experiences/` sandbox entries wait on a product call about keeping the sandbox.
+
 ### Arbitration and suppression
 
 - Passing the gate is necessary, never sufficient: a reviewer may require a change detekt is happy with.

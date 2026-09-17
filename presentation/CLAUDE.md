@@ -2,7 +2,7 @@
 
 The compose-free presentation layer: the MVI core (`core/mvi/`), every feature's ViewModel with its `UiState` / `Intent` / `Effect`, the Koin modules (`hh/di/`, listed in `core/AppGraph.kt`), formatters, `UiStrings` and the preferences ports. `:ui-android` sits on it as a Gradle dependency. The compose-free rule and its grep, ViewModel purity, the once-only Koin binding and the explicit-import convention: `.claude/rules/architecture.md`.
 
-Plain `com.android.library` (ADR 011): one `src/main`, one `src/test`, `minSdk = 28`. Root packages `com.emm.justchill.{core, hh.<feature>}`, Android namespace `com.emm.presentation`. `core/` holds `AppGraph`, `DispatchersProvider`, `CommitHash.kt` and one directory per cross-cutting concern. A feature owns `hh/<feature>/` (ViewModel + UiState + Intent + Effect + `toUi` mappers) and one Koin module in `hh/di/`; pure helpers and `UiStrings` sit in `hh/shared/`. The base class and its effect channel: `docs/work/epics/E12-mvi-core.md`.
+Plain `com.android.library` (ADR 011): one `src/main`, one `src/test`, `minSdk = 28`. Root packages `com.emm.justchill.{core, hh.<feature>}`, Android namespace `com.emm.presentation`. `core/` holds `AppGraph`, `DispatchersProvider`, `CommitHash.kt` and one directory per cross-cutting concern. A feature owns `hh/<feature>/` (ViewModel + UiState + Intent + Effect + `toUi` mappers) and one Koin module in `hh/di/`; pure helpers and `UiStrings` sit in `hh/shared/`. The base class and its effect channel: `.claude/rules/architecture.md` `## MVI contract`.
 
 ## ViewModel state
 
@@ -13,6 +13,16 @@ Plain `com.android.library` (ADR 011): one `src/main`, one `src/test`, `minSdk =
 - `TodayFlow.today()` (`core/time/`) is the one way a ViewModel derives the date; a hand-written `today()` is the second way it exists to remove.
 - Ver's browsed month follows a midnight rollover only while it equals the month the rollover leaves; Report's never moves, a rollover only corrects `isCurrentMonth` and the trends window (`SeeTransactionsViewModelTest`, `ReportViewModelTest` pin both).
 - `SeeTransactionsViewModel` and `AccountsViewModel` sit at detekt's constructor cap (`allowedConstructorParameters: 6`): a datum either needs new joins through the query or an existing flow, not a seventh parameter.
+
+## Backup
+
+- `SNAPSHOT_BACKUP_ENABLED` (`core/backup/BackupKillSwitch.kt`) is `false`. Readers: `bootstrapAppGraph`, `BackupDisclosureSignal` and one `if/else` in `BackupSection.kt`, which keeps the sign-in row and the local-only note exclusive; never split it into two reads.
+- Flipping it is a disclosure change first: `docs/play/privacy-policy.md`, `docs/play/listing.md` and the Play Data Safety form change in the same release. It is also blocked by the verify phrase: `EmmSnackbar` draws two lines and `toPhrase()` appends table clauses in order, so the last tables' counts get cut off, and ADR 009 makes those counts part of the ship gate.
+- Until then no install holds a backup preference key, so renaming one is free. Keys live in `DefaultBackupMetadataStore` over raw `Settings`. The prefixes, the `-1L` "never" value and the `'|'` separator are load-bearing. The streak count and its reason share one key (`count|REASON`) because `Settings` has no transaction. `LocalExportHistory`'s unscoped `last_local_export_at` is the one exception.
+- The disclosure check comes first in `takeSnapshot`, before the due check a manual request skips; `uploader.upload` has that one call site. `DestinationUndisclosed` and `OwnerChanged` are refusals: no streak, no reason, no watermark; only a manual `OwnerChanged` emits `BackupEvent.Failed`. Failure state is booked against the captured account and published only while it is still signed in (`publishHealth`); the watermark is rechecked after upload.
+- A backup failure never signs out and reaches the UI only as `ProfileEffect.Notify`, never `ShowError`.
+- `BackupRowUi` ranks `NeedsAccount` > `DisclosurePending` > `BackingUp`; `DisclosurePending` is `Warning`, never `Danger`. A failure annotates the snapshot (`Failed` carries a `LastSnapshot`); warn on the count, never on the reason. `severity()` and `toMetaText()` stay out of composables (`ProfileViewModelBackupRowTest` pins them). The Perfil badge (`disclosureIsPending`) and `resolveBackupRow` answer the same question and must agree.
+- Stale means both more than `BACKUP_STALE_AFTER_DAYS` and a ledger that moved since the last verified snapshot.
 
 ## Testing
 
