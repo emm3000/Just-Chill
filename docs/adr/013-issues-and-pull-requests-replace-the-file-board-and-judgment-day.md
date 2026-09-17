@@ -3,7 +3,8 @@
 - **Status**: Accepted
 - **Date**: 2026-09-17
 - **Deciders**: Edgardo Muñoz
-- **Supersedes in part**: [ADR 007](007-one-way-of-working-writer-reviewer-and-model-tiers.md),
+- **Superseded in part by**: [ADR 014](014-the-workflow-follows-the-gema-playbook.md) (point 3).
+- **Supersedes in part**: ADR 007 (since removed),
   Decision points 4 and 5 (the Judgment Day two-judge panel and its global judge definitions).
   Decision points 1, 2 and 3 — separate writer and reviewer, the model tiers, the tiebreaker — stand.
 - **Amended 2026-09-17**: `docs/work/epics/` is gone too. The unit is the issue alone; the
