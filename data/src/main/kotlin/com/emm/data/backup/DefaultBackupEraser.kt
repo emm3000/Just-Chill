@@ -1,7 +1,7 @@
 package com.emm.data.backup
 
-import com.emm.domain.shared.backup.BackupEraser
-import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.backup.BackupEraser
+import com.emm.justchill.core.domain.shared.error.DomainException
 import io.github.jan.supabase.SupabaseClient
 import kotlin.coroutines.cancellation.CancellationException
 

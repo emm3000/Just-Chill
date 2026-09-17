@@ -27,8 +27,8 @@
 -- to keep in agreement by convention, three of them writing straight to :data without passing
 -- through any use case (backup import and two table syncs). A convention with nine enforcement
 -- points and three bypasses is not an invariant, and it did not hold: an Income movement shipped
--- with a Spend category on it. Enforcing it in :domain has a ceiling BY DESIGN — the three :data
--- writers never go through :domain — so it is enforced here, where every writer has to pass.
+-- with a Spend category on it. Enforcing it in :core:domain has a ceiling BY DESIGN — the three :data
+-- writers never go through :core:domain — so it is enforced here, where every writer has to pass.
 --
 -- (categoryId, type) → (categoryId, categoryType) is the whole rule. What makes it work without a
 -- special case for uncategorized movements is SQLite's own composite-FK semantics: if ANY column

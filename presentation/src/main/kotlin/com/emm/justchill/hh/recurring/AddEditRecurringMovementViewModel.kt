@@ -1,15 +1,15 @@
 package com.emm.justchill.hh.recurring
 
-import com.emm.domain.account.AccountRepository
-import com.emm.domain.category.Category
-import com.emm.domain.category.CategoryRepository
-import com.emm.domain.recurring.CreateRecurringMovementUseCase
-import com.emm.domain.recurring.RecurringMovement
-import com.emm.domain.recurring.RecurringMovementInsert
-import com.emm.domain.recurring.RecurringMovementRepository
-import com.emm.domain.recurring.UpdateRecurringMovementUseCase
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.RecurringMovementId
+import com.emm.justchill.core.domain.account.AccountRepository
+import com.emm.justchill.core.domain.category.Category
+import com.emm.justchill.core.domain.category.CategoryRepository
+import com.emm.justchill.core.domain.recurring.CreateRecurringMovementUseCase
+import com.emm.justchill.core.domain.recurring.RecurringMovement
+import com.emm.justchill.core.domain.recurring.RecurringMovementInsert
+import com.emm.justchill.core.domain.recurring.RecurringMovementRepository
+import com.emm.justchill.core.domain.recurring.UpdateRecurringMovementUseCase
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.RecurringMovementId
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.hh.transaction.Catalog

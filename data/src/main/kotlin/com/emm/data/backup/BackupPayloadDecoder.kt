@@ -1,7 +1,7 @@
 package com.emm.data.backup
 
-import com.emm.domain.shared.error.DomainException
-import com.emm.domain.shared.error.ValidationCode
+import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.ValidationCode
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject

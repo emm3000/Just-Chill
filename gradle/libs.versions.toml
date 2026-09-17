@@ -149,13 +149,13 @@ google-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "go
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinVersion" }
 # Generates KSerializer for @Serializable nav routes and sync DTOs. Applied by :androidApp, :data, :ui-android.
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinVersion" }
-# Plain (non-Android) Kotlin JVM library plugin. Applied by :domain alone — ADR 011 Decision 3.
+# Plain (non-Android) Kotlin JVM library plugin. Applied by :core:domain alone — ADR 011 Decision 3.
 # No version here: build-logic's own `kotlin-dsl` plugin applies org.jetbrains.kotlin.jvm
 # internally, to compile build-logic's own Kotlin sources, and puts it on the shared classloader
 # first — version.ref = "kotlinVersion" fails "already on the classpath with an unknown version"
 # just like it did when the now-deleted KMP marker got blamed for this (E11-07 confirmed kotlin-dsl,
 # not the marker, was always the real supplier). kotlin-dsl's embedded Kotlin trails this project's
-# by a full minor version, though, so leaving this fully unpinned would silently compile :domain
+# by a full minor version, though, so leaving this fully unpinned would silently compile :core:domain
 # against the wrong stdlib — build-logic/convention/build.gradle.kts pins the real jar explicitly instead (a
 # literal marker coordinate, not this alias, since versioning this alias is what breaks resolution).
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm" }

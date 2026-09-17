@@ -1,8 +1,8 @@
 package com.emm.data.backup
 
-import com.emm.domain.account.Account
-import com.emm.domain.account.AccountType
-import com.emm.domain.shared.AccountId
+import com.emm.justchill.core.domain.account.Account
+import com.emm.justchill.core.domain.account.AccountType
+import com.emm.justchill.core.domain.shared.AccountId
 import kotlinx.serialization.Serializable
 
 @Serializable

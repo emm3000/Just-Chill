@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.transaction
 
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.transaction.TransactionType
 
 data class FrequentComboUi(
     val accountId: String,

@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.report
 
-import com.emm.domain.shared.YearMonth
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.mvi.UiState
 
 // isCurrentMonth is computed by the ViewModel, which holds the live calendar month the screen lacks.

@@ -1,8 +1,8 @@
 package com.emm.data.recurring
 
 import com.emm.data.SelectAllWithDetails
-import com.emm.domain.recurring.Frequency
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.recurring.Frequency
+import com.emm.justchill.core.domain.transaction.TransactionType
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

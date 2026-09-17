@@ -80,7 +80,7 @@ tasks.named("qualityGate") {
 
 dependencies {
 
-    implementation(projects.domain)
+    implementation(projects.core.domain)
     implementation(projects.data)
     implementation(projects.uiAndroid)
 

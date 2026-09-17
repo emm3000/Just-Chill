@@ -1,8 +1,8 @@
 package com.emm.data.backup
 
-import com.emm.domain.shared.backup.BackupRowCounts
-import com.emm.domain.shared.backup.BackupVerification
-import com.emm.domain.shared.backup.BackupVerifier
+import com.emm.justchill.core.domain.shared.backup.BackupRowCounts
+import com.emm.justchill.core.domain.shared.backup.BackupVerification
+import com.emm.justchill.core.domain.shared.backup.BackupVerifier
 import io.github.jan.supabase.SupabaseClient
 import kotlin.time.Instant
 

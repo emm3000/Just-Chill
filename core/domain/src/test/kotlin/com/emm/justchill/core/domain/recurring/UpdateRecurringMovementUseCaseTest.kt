@@ -1,0 +1,107 @@
+package com.emm.justchill.core.domain.recurring
+
+import com.emm.justchill.core.domain.shared.AccountId
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.RecurringMovementId
+import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.transaction.TransactionType
+import kotlinx.coroutines.test.runTest
+import org.junit.Before
+import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+
+class UpdateRecurringMovementUseCaseTest {
+
+    private lateinit var repository: FakeRecurringMovementRepository
+    private lateinit var useCase: UpdateRecurringMovementUseCase
+
+    private val existingTemplate = RecurringMovement(
+        id = RecurringMovementId("rm-1"),
+        name = "Netflix",
+        type = TransactionType.Spend,
+        amount = Money(100_000L),
+        description = "",
+        categoryId = null,
+        accountId = AccountId("acc-1"),
+        frequency = Frequency.Monthly,
+        dayOfMonth = 15,
+        isActive = true,
+        lastConfirmedPeriod = null,
+        createdAt = 0L,
+    )
+
+    @Before
+    fun setUp() {
+        repository = FakeRecurringMovementRepository()
+        repository.addTemplate(existingTemplate)
+        useCase = UpdateRecurringMovementUseCase(repository)
+    }
+
+    private fun validUpdateInsert(
+        name: String = "Netflix HD",
+        dayOfMonth: Int = 20,
+        amount: Money? = Money(100_000L),
+        isActive: Boolean = true,
+    ) = RecurringMovementInsert(
+        name = name,
+        type = TransactionType.Spend,
+        amount = amount,
+        description = "",
+        categoryId = null,
+        accountId = AccountId("acc-1"),
+        dayOfMonth = dayOfMonth,
+        isActive = isActive,
+    )
+
+    @Test
+    fun `invoke delegates update to repository and does not touch transactions`() = runTest {
+        useCase(RecurringMovementId("rm-1"), validUpdateInsert())
+        assertEquals(1, repository.updateCount)
+        assertEquals(0, repository.confirmCount)
+    }
+
+    @Test
+    fun `invoke updates isActive to false`() = runTest {
+        useCase(RecurringMovementId("rm-1"), validUpdateInsert(isActive = false))
+        assertEquals(1, repository.updateCount)
+    }
+
+    @Test
+    fun `invoke accepts null amount change from fixed to variable`() = runTest {
+        useCase(RecurringMovementId("rm-1"), validUpdateInsert(amount = null))
+        assertEquals(1, repository.updateCount)
+    }
+
+    @Test
+    fun `invoke throws ValidationError when name is blank`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase(RecurringMovementId("rm-1"), validUpdateInsert(name = ""))
+        }
+        assertEquals(0, repository.updateCount)
+    }
+
+    @Test
+    fun `invoke throws ValidationError when dayOfMonth is out of range`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase(RecurringMovementId("rm-1"), validUpdateInsert(dayOfMonth = 0))
+        }
+        assertEquals(0, repository.updateCount)
+    }
+
+    @Test
+    fun `invoke throws ValidationError when amount is zero`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase(RecurringMovementId("rm-1"), validUpdateInsert(amount = Money(0L)))
+        }
+        assertEquals(0, repository.updateCount)
+    }
+
+    @Test
+    fun `invoke throws ValidationError when amount is negative`() = runTest {
+        assertFailsWith<DomainException.ValidationError> {
+            useCase(RecurringMovementId("rm-1"), validUpdateInsert(amount = Money(-1L)))
+        }
+        assertEquals(0, repository.updateCount)
+    }
+}

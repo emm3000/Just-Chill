@@ -1,7 +1,7 @@
 package com.emm.data.backup
 
 import com.emm.data.shared.ioDispatcher
-import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.DomainException
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.storage.BucketApi

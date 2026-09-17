@@ -5,7 +5,7 @@ Read the row for the target before opening any source file.
 | Target | Read first | File budget |
 |---|---|---|
 | Feature / screen flow | `.claude/rules/ui-components.md`, then the screen, its ViewModel, its use cases | 15 |
-| Architecture / module | `CLAUDE.md` `## Architecture`, then that module's own `CLAUDE.md` (only `androidApp/`, `ui-android/`, `presentation/`, `domain/`, `data/` ship one; `build-logic/` and `supabase/` have none) and the `.claude/rules/` file scoped to it | 20 |
+| Architecture / module | `CLAUDE.md` `## Architecture`, then that module's own `CLAUDE.md` (only `androidApp/`, `ui-android/`, `presentation/`, `core/domain/`, `data/` ship one; `build-logic/` and `supabase/` have none) and the `.claude/rules/` file scoped to it | 20 |
 | Sync | `data/CLAUDE.md` `## Backup`, `presentation/CLAUDE.md` `## Backup` and `docs/adr/009-backup-is-a-snapshot-not-row-replication.md` BEFORE any source file | 20 |
 | Supabase / SQLDelight migrations | `.claude/rules/sqldelight.md` and `data/CLAUDE.md` `## Persistence`, then `supabase/migrations/` against the SQLDelight schema. Flag any drift — this is the class that broke production for two months (commit `72a9b03`) | 15 |
 | Dates | `.claude/rules/architecture.md` `## Layers and dependency direction` — the live rule is an injected `Clock` AND an injected `TimeZone`, neither carrying a default, and it names its own allowed exceptions | 15 |

@@ -10,9 +10,9 @@ import com.emm.data.TransactionsQueries
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.nowMillis
 import com.emm.data.shared.toOccurredAtText
-import com.emm.domain.transaction.Transaction
-import com.emm.domain.transaction.TransactionInsert
-import com.emm.domain.transaction.TransactionUpdate
+import com.emm.justchill.core.domain.transaction.Transaction
+import com.emm.justchill.core.domain.transaction.TransactionInsert
+import com.emm.justchill.core.domain.transaction.TransactionUpdate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext

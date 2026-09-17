@@ -6,8 +6,8 @@ import com.emm.data.AccountsQueries
 import com.emm.data.EmmDatabaseData
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.nowMillis
-import com.emm.domain.account.Account
-import com.emm.domain.account.AccountUpsert
+import com.emm.justchill.core.domain.account.Account
+import com.emm.justchill.core.domain.account.AccountUpsert
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext

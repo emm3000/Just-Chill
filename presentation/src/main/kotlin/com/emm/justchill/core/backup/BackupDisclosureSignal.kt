@@ -1,7 +1,7 @@
 package com.emm.justchill.core.backup
 
-import com.emm.domain.auth.ObserveSessionUseCase
-import com.emm.domain.auth.SessionStatus
+import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
+import com.emm.justchill.core.domain.auth.SessionStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged

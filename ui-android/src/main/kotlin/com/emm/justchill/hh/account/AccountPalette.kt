@@ -8,7 +8,7 @@ import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.emm.domain.account.AccountType
+import com.emm.justchill.core.domain.account.AccountType
 import com.emm.justchill.core.theme.EmmColors
 
 fun accountDotColor(name: String, colors: EmmColors): Color {

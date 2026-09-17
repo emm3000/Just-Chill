@@ -1,11 +1,11 @@
 package com.emm.justchill.hh.category
 
-import com.emm.domain.category.CategoryRepository
-import com.emm.domain.category.CategoryUpsert
-import com.emm.domain.category.DeleteCategoryUseCase
-import com.emm.domain.category.UpdateCategoryUseCase
-import com.emm.domain.transaction.TransactionRepository
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.category.CategoryRepository
+import com.emm.justchill.core.domain.category.CategoryUpsert
+import com.emm.justchill.core.domain.category.DeleteCategoryUseCase
+import com.emm.justchill.core.domain.category.UpdateCategoryUseCase
+import com.emm.justchill.core.domain.transaction.TransactionRepository
+import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import kotlinx.coroutines.flow.combine

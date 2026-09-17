@@ -9,9 +9,9 @@ Review the pending changes (staged + unstaged) against `CLAUDE.md` and `.claude/
 ## Checklist
 
 1. **Layer boundaries**
-   - Any file under `domain/` importing Android, SQLDelight, Supabase or Ktor types?
+   - Any file under `core/domain/` importing Android, SQLDelight, Supabase or Ktor types?
    - Any file under `presentation/src/main` importing Compose, `BuildConfig`, `R.`, `koin.androidx` or MockK?
-   - Any production file under `ui-android/` or `androidApp/` importing a `:domain` repository or a `Default*` implementation?
+   - Any production file under `ui-android/` or `androidApp/` importing a `:core:domain` repository or a `Default*` implementation?
    - Allowed dependencies: `androidApp -> ui-android, presentation, data, domain`; `ui-android -> presentation, data, domain`; `presentation -> data, domain`; `data -> domain`.
 
 2. **MVI**

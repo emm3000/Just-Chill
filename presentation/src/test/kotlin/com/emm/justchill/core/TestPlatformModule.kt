@@ -4,7 +4,7 @@ import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
 import com.emm.data.provideDb
-import com.emm.domain.shared.logging.DiagnosticsLogger
+import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.hh.auth.GoogleSignInLauncher
 import com.emm.justchill.hh.auth.GoogleSignInResult
 import com.russhwolf.settings.MapSettings

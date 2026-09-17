@@ -3,7 +3,7 @@ package com.emm.justchill.core.session
 import android.content.SharedPreferences
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import androidx.core.content.edit
-import com.emm.domain.shared.logging.DiagnosticsLogger
+import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
 import io.github.jan.supabase.auth.SessionManager
 import io.github.jan.supabase.auth.exception.NoSessionFoundException
 import io.github.jan.supabase.auth.user.UserSession

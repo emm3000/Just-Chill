@@ -2,9 +2,9 @@ package com.emm.data.loan
 
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
-import com.emm.domain.loan.Loan
-import com.emm.domain.shared.LoanId
-import com.emm.domain.shared.Money
+import com.emm.justchill.core.domain.loan.Loan
+import com.emm.justchill.core.domain.shared.LoanId
+import com.emm.justchill.core.domain.shared.Money
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime

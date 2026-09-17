@@ -1,9 +1,9 @@
 package com.emm.justchill.core.backup
 
-import com.emm.domain.auth.AuthRepository
-import com.emm.domain.auth.AuthUser
-import com.emm.domain.auth.ObserveSessionUseCase
-import com.emm.domain.auth.SessionStatus
+import com.emm.justchill.core.domain.auth.AuthRepository
+import com.emm.justchill.core.domain.auth.AuthUser
+import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
+import com.emm.justchill.core.domain.auth.SessionStatus
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow

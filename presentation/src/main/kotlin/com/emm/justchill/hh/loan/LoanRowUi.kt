@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.loan
 
-import com.emm.domain.loan.LoanBalance
+import com.emm.justchill.core.domain.loan.LoanBalance
 import com.emm.justchill.hh.shared.SpanishDateFormat
 import com.emm.justchill.hh.shared.formatNeutral
 import com.emm.justchill.hh.shared.fromCentsToSolesWith

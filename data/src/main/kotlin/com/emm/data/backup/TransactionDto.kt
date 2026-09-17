@@ -3,12 +3,12 @@ package com.emm.data.backup
 import com.emm.data.shared.enumValueOrNull
 import com.emm.data.shared.toOccurredAtOrNull
 import com.emm.data.shared.toOccurredAtText
-import com.emm.domain.shared.AccountId
-import com.emm.domain.shared.CategoryId
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.TransactionId
-import com.emm.domain.transaction.Transaction
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.shared.AccountId
+import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.TransactionId
+import com.emm.justchill.core.domain.transaction.Transaction
+import com.emm.justchill.core.domain.transaction.TransactionType
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 

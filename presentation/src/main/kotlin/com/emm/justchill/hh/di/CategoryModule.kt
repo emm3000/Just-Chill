@@ -1,8 +1,8 @@
 package com.emm.justchill.hh.di
 
-import com.emm.domain.category.CreateCategoryUseCase
-import com.emm.domain.category.DeleteCategoryUseCase
-import com.emm.domain.category.UpdateCategoryUseCase
+import com.emm.justchill.core.domain.category.CreateCategoryUseCase
+import com.emm.justchill.core.domain.category.DeleteCategoryUseCase
+import com.emm.justchill.core.domain.category.UpdateCategoryUseCase
 import com.emm.justchill.hh.category.AddCategoryViewModel
 import com.emm.justchill.hh.category.CategoriesViewModel
 import org.koin.core.module.dsl.factoryOf

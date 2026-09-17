@@ -1,13 +1,13 @@
 package com.emm.justchill.hh.transaction
 
-import com.emm.domain.account.AccountRepository
-import com.emm.domain.category.CategoryRepository
-import com.emm.domain.transaction.GetFrequentCombosUseCase
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.account.AccountRepository
+import com.emm.justchill.core.domain.category.CategoryRepository
+import com.emm.justchill.core.domain.transaction.GetFrequentCombosUseCase
+import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.hh.shared.comboLabel
 import kotlinx.coroutines.flow.first
 
-// Plain strings, not domain enums, so :androidApp never needs a :domain type to build an Intent
+// Plain strings, not domain enums, so :androidApp never needs a :core:domain type to build an Intent
 // (E09-03). Spend only: income is a planned monthly event nobody reaches for a shortcut to record.
 class GetSpendShortcutCombos(
     private val getFrequentCombos: GetFrequentCombosUseCase,

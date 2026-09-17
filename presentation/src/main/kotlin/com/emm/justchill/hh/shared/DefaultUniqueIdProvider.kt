@@ -2,7 +2,7 @@
 
 package com.emm.justchill.hh.shared
 
-import com.emm.domain.shared.UniqueIdProvider
+import com.emm.justchill.core.domain.shared.UniqueIdProvider
 import kotlin.uuid.Uuid
 
 object DefaultUniqueIdProvider : UniqueIdProvider {

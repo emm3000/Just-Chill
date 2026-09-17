@@ -1,10 +1,10 @@
 package com.emm.justchill.hh.account
 
-import com.emm.domain.account.Account
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.YearMonth
-import com.emm.domain.transaction.Transaction
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.account.Account
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.domain.transaction.Transaction
+import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.hh.shared.formatNeutral
 import com.emm.justchill.hh.shared.fromCentsToSolesWith
 import com.emm.justchill.hh.shared.positiveMoneyFormatted

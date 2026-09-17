@@ -1,0 +1,56 @@
+package com.emm.justchill.core.domain.shared.backup
+
+import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.ValidationCode
+
+enum class BackupFailureReason {
+
+    Serialization,
+
+    Network,
+
+    RemoteRejected,
+
+    Unauthorized,
+
+    Busy,
+
+    Unverified,
+
+    LocalDatabase,
+
+    Unknown,
+    ;
+
+    companion object {
+
+        fun fromNameOrNull(name: String?): BackupFailureReason? = entries.firstOrNull { it.name == name }
+    }
+}
+
+fun DomainException.toBackupFailureReason(): BackupFailureReason = when (this) {
+    is DomainException.SerializationError -> BackupFailureReason.Serialization
+
+    is DomainException.NetworkUnavailable -> BackupFailureReason.Network
+
+    is DomainException.RemoteRejected -> BackupFailureReason.RemoteRejected
+
+    is DomainException.Unauthorized -> BackupFailureReason.Unauthorized
+
+    is DomainException.Busy -> BackupFailureReason.Busy
+
+    is DomainException.DatabaseError -> BackupFailureReason.LocalDatabase
+
+    is DomainException.ValidationError ->
+        if (code == ValidationCode.BackupUploadUnverified) {
+            BackupFailureReason.Unverified
+        } else {
+            BackupFailureReason.Unknown
+        }
+
+    // BackupsNotErased needs no named reason: only account deletion throws it, and that path books none.
+    is DomainException.BackupsNotErased,
+    is DomainException.NotFound,
+    is DomainException.Unknown,
+    -> BackupFailureReason.Unknown
+}

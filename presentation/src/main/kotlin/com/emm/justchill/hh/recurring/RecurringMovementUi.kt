@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.recurring
 
-import com.emm.domain.recurring.RecurringMovementDetails
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.recurring.RecurringMovementDetails
+import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.shared.fromCentsToSolesWith

@@ -1,8 +1,8 @@
 package com.emm.justchill.hh.report
 
-import com.emm.domain.report.CategoryAmount
-import com.emm.domain.shared.CategoryId
-import com.emm.domain.shared.Money
+import com.emm.justchill.core.domain.report.CategoryAmount
+import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.hh.shared.UiStrings
 import org.junit.Test
 import kotlin.test.assertEquals

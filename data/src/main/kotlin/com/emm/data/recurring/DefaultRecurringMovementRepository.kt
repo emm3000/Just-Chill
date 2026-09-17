@@ -3,13 +3,13 @@ package com.emm.data.recurring
 import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.nowMillis
 import com.emm.data.shared.safeDbCall
-import com.emm.domain.recurring.RecurringMovement
-import com.emm.domain.recurring.RecurringMovementDetails
-import com.emm.domain.recurring.RecurringMovementInsert
-import com.emm.domain.recurring.RecurringMovementRepository
-import com.emm.domain.shared.AccountId
-import com.emm.domain.shared.RecurringMovementId
-import com.emm.domain.transaction.TransactionInsert
+import com.emm.justchill.core.domain.recurring.RecurringMovement
+import com.emm.justchill.core.domain.recurring.RecurringMovementDetails
+import com.emm.justchill.core.domain.recurring.RecurringMovementInsert
+import com.emm.justchill.core.domain.recurring.RecurringMovementRepository
+import com.emm.justchill.core.domain.shared.AccountId
+import com.emm.justchill.core.domain.shared.RecurringMovementId
+import com.emm.justchill.core.domain.transaction.TransactionInsert
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.Clock
 

@@ -8,9 +8,9 @@ import com.emm.data.LoansQueries
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.nowMillis
 import com.emm.data.shared.toOccurredAtText
-import com.emm.domain.loan.Loan
-import com.emm.domain.loan.LoanBalance
-import com.emm.domain.loan.PersonBalance
+import com.emm.justchill.core.domain.loan.Loan
+import com.emm.justchill.core.domain.loan.LoanBalance
+import com.emm.justchill.core.domain.loan.PersonBalance
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext

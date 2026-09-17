@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.transaction
 
-import com.emm.domain.shared.Money
+import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.hh.shared.NumberFormatEs
 
 const val MAX_AMOUNT_DIGITS: Int = 13

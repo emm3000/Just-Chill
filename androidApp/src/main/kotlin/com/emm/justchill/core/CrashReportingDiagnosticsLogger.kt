@@ -1,7 +1,7 @@
 package com.emm.justchill.core
 
 import android.util.Log
-import com.emm.domain.shared.logging.DiagnosticsLogger
+import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 private const val TAG = "JustChill"

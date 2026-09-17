@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.category
 
-import com.emm.domain.category.Category
+import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.mvi.UiIntent
 
 sealed interface CategoriesIntent : UiIntent {

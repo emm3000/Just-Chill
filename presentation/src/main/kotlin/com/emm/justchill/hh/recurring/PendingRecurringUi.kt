@@ -1,10 +1,10 @@
 package com.emm.justchill.hh.recurring
 
-import com.emm.domain.recurring.PendingRecurring
-import com.emm.domain.recurring.periodKey
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.YearMonth
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.recurring.PendingRecurring
+import com.emm.justchill.core.domain.recurring.periodKey
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.hh.shared.formatExpense
 import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.shared.fromCentsToSolesWith

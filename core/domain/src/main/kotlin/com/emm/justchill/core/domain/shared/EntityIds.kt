@@ -1,0 +1,21 @@
+package com.emm.justchill.core.domain.shared
+
+import kotlin.jvm.JvmInline
+
+@JvmInline
+value class AccountId(val value: String)
+
+@JvmInline
+value class TransactionId(val value: String)
+
+@JvmInline
+value class CategoryId(val value: String)
+
+@JvmInline
+value class RecurringMovementId(val value: String)
+
+@JvmInline
+value class LoanId(val value: String)
+
+@JvmInline
+value class LoanPaymentId(val value: String)

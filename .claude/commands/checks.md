@@ -11,6 +11,6 @@ Run the standard pre-commit checks for this Android repo:
 
 `qualityGate` is defined once in `build-logic/.../QualityGateConventionPlugin.kt` plus the unit tests the library plugins add and `:androidApp`'s own `tasks.named("qualityGate")` block. Never substitute plain `./gradlew detekt`: it covers strictly less.
 
-Group findings by module (`:domain`, `:data`, `:presentation`, `:ui-android`, `:androidApp`, `:build-logic`). For each violation include `file:line` and the rule/test name. Test tasks go `UP-TO-DATE` across sessions; add `--rerun` per task when a real run is needed.
+Group findings by module (`:core:domain`, `:data`, `:presentation`, `:ui-android`, `:androidApp`, `:build-logic`). For each violation include `file:line` and the rule/test name. Test tasks go `UP-TO-DATE` across sessions; add `--rerun` per task when a real run is needed.
 
 Do NOT fix anything in this turn — only report. End with one line: **"ready to commit"** if both pass, or a short list of what to fix next.

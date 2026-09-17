@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.auth
 
-import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.mvi.UiEffect
 
 sealed interface AuthEffect : UiEffect {

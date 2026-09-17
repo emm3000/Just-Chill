@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.category
 
-import com.emm.domain.category.CategoryType
+import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.mvi.UiIntent
 
 sealed interface AddCategoryIntent : UiIntent {

@@ -29,7 +29,7 @@ English, neutral register, sized for one PR, at most 30 lines, self-sufficient f
 
 ## Wave plan
 
-Post one comment on the parent issue grouping the tickets into waves by dependency: shared `:domain` or design-system changes first, then independent slices. Two or three tickets per wave. No wave may contain two tickets touching the same module, and a schema change (`.sq`/`.sqm`) is always a wave of one.
+Post one comment on the parent issue grouping the tickets into waves by dependency: shared `:core:domain` or design-system changes first, then independent slices. Two or three tickets per wave. No wave may contain two tickets touching the same module, and a schema change (`.sq`/`.sqm`) is always a wave of one.
 
 ## Output
 

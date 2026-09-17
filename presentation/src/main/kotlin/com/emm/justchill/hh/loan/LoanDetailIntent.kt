@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.loan
 
-import com.emm.domain.loan.PaymentMethod
+import com.emm.justchill.core.domain.loan.PaymentMethod
 import com.emm.justchill.core.mvi.UiIntent
 import kotlinx.datetime.LocalDate
 

@@ -1,9 +1,9 @@
 package com.emm.justchill.hh.loan
 
-import com.emm.domain.loan.Loan
-import com.emm.domain.loan.LoanBalance
-import com.emm.domain.shared.LoanId
-import com.emm.domain.shared.Money
+import com.emm.justchill.core.domain.loan.Loan
+import com.emm.justchill.core.domain.loan.LoanBalance
+import com.emm.justchill.core.domain.shared.LoanId
+import com.emm.justchill.core.domain.shared.Money
 import kotlinx.datetime.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertFalse

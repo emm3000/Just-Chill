@@ -28,4 +28,9 @@ internal object BuildConventions {
         .split(':', '-')
         .filter(String::isNotEmpty)
         .joinToString(separator = ".", prefix = "$NAMESPACE_PREFIX.")
+
+    fun baselineNameOf(projectPath: String): String = projectPath
+        .split(':')
+        .filter(String::isNotEmpty)
+        .joinToString(separator = "-")
 }

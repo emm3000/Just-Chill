@@ -1,8 +1,8 @@
 package com.emm.data.backup
 
-import com.emm.domain.shared.backup.BackupRowCounts
-import com.emm.domain.shared.backup.BackupVerification
-import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.backup.BackupRowCounts
+import com.emm.justchill.core.domain.shared.backup.BackupVerification
+import com.emm.justchill.core.domain.shared.error.DomainException
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

@@ -6,9 +6,9 @@ import android.os.Build
 import androidx.core.content.edit
 import com.emm.data.provideDb
 import com.emm.data.provideSqlDriver
-import com.emm.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.BuildConfig
 import com.emm.justchill.BuildInfo
+import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.core.platform.CurrentActivityHolder
 import com.emm.justchill.core.session.KeystoreSessionCipher
 import com.emm.justchill.core.session.KeystoreSessionManager

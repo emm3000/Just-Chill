@@ -1,8 +1,8 @@
 package com.emm.justchill.hh.loan
 
-import com.emm.domain.loan.Loan
-import com.emm.domain.loan.remaining
-import com.emm.domain.shared.Money
+import com.emm.justchill.core.domain.loan.Loan
+import com.emm.justchill.core.domain.loan.remaining
+import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.hh.shared.SpanishDateFormat
 import com.emm.justchill.hh.shared.formatNeutral
 import com.emm.justchill.hh.shared.fromCentsToSolesWith

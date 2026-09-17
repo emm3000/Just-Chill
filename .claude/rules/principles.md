@@ -4,7 +4,7 @@ paths:
   - "ui-android/src/*/kotlin/**"
   - "presentation/src/*/kotlin/**"
   - "data/src/*/kotlin/**"
-  - "domain/src/*/kotlin/**"
+  - "core/domain/src/*/kotlin/**"
 ---
 
 # Design principles

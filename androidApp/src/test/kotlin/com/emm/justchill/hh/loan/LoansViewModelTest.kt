@@ -1,10 +1,10 @@
 package com.emm.justchill.hh.loan
 
-import com.emm.domain.loan.LoanRepository
-import com.emm.domain.loan.PersonBalance
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.error.DomainException
 import com.emm.justchill.MainDispatcherRule
+import com.emm.justchill.core.domain.loan.LoanRepository
+import com.emm.justchill.core.domain.loan.PersonBalance
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.error.DomainException
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow

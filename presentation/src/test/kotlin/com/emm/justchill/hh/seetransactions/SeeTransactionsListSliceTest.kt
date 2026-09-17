@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.seetransactions
 
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.YearMonth
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.YearMonth
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import kotlin.test.Test

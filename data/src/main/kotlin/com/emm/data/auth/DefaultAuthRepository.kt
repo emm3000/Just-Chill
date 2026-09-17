@@ -1,12 +1,12 @@
 package com.emm.data.auth
 
 import com.emm.data.shared.ioDispatcher
-import com.emm.domain.auth.AuthRepository
-import com.emm.domain.auth.AuthUser
-import com.emm.domain.auth.SessionStatus
-import com.emm.domain.auth.SignOutResult
-import com.emm.domain.shared.error.DomainException
-import com.emm.domain.shared.error.ValidationCode
+import com.emm.justchill.core.domain.auth.AuthRepository
+import com.emm.justchill.core.domain.auth.AuthUser
+import com.emm.justchill.core.domain.auth.SessionStatus
+import com.emm.justchill.core.domain.auth.SignOutResult
+import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.ValidationCode
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.OtpType
 import io.github.jan.supabase.auth.SignOutScope

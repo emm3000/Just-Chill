@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.shared
 
-import com.emm.domain.shared.Money
+import com.emm.justchill.core.domain.shared.Money
 
 private const val CURRENCY_SYMBOL = "S/"
 

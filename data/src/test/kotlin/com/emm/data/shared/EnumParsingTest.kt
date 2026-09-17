@@ -1,8 +1,8 @@
 package com.emm.data.shared
 
-import com.emm.domain.category.CategoryType
-import com.emm.domain.recurring.Frequency
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.domain.recurring.Frequency
+import com.emm.justchill.core.domain.transaction.TransactionType
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

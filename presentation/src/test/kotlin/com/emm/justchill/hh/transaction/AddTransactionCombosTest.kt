@@ -1,11 +1,11 @@
 package com.emm.justchill.hh.transaction
 
-import com.emm.domain.account.Account
-import com.emm.domain.category.CategoryType
-import com.emm.domain.shared.AccountId
-import com.emm.domain.shared.CategoryId
-import com.emm.domain.transaction.FrequentCombo
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.account.Account
+import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.domain.shared.AccountId
+import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.domain.transaction.FrequentCombo
+import com.emm.justchill.core.domain.transaction.TransactionType
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import org.junit.Test

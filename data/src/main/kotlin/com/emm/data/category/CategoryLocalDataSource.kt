@@ -6,8 +6,8 @@ import com.emm.data.CategoriesQueries
 import com.emm.data.EmmDatabaseData
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.nowMillis
-import com.emm.domain.category.Category
-import com.emm.domain.category.CategoryUpsert
+import com.emm.justchill.core.domain.category.Category
+import com.emm.justchill.core.domain.category.CategoryUpsert
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext

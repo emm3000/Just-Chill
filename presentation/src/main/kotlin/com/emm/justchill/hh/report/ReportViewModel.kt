@@ -1,15 +1,15 @@
 package com.emm.justchill.hh.report
 
 import androidx.lifecycle.viewModelScope
-import com.emm.domain.report.CategoryAmount
-import com.emm.domain.report.GetMonthlyAmountByCategoryUseCase
-import com.emm.domain.report.GetMonthlyComparisonUseCase
-import com.emm.domain.report.GetMonthlySectionStatsUseCase
-import com.emm.domain.report.GetSavingsRateUseCase
-import com.emm.domain.report.GetTopCategoriesOverMonthsUseCase
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.YearMonth
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.report.CategoryAmount
+import com.emm.justchill.core.domain.report.GetMonthlyAmountByCategoryUseCase
+import com.emm.justchill.core.domain.report.GetMonthlyComparisonUseCase
+import com.emm.justchill.core.domain.report.GetMonthlySectionStatsUseCase
+import com.emm.justchill.core.domain.report.GetSavingsRateUseCase
+import com.emm.justchill.core.domain.report.GetTopCategoriesOverMonthsUseCase
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.core.time.TodayFlow

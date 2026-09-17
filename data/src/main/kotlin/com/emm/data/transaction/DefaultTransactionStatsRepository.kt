@@ -2,16 +2,16 @@ package com.emm.data.transaction
 
 import com.emm.data.shared.enumValueOrNull
 import com.emm.data.shared.safeDbCall
-import com.emm.domain.report.CategoryAmount
-import com.emm.domain.report.MonthCategoryAmounts
-import com.emm.domain.report.MonthlySectionStats
-import com.emm.domain.shared.AccountId
-import com.emm.domain.shared.CategoryId
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.MonthRange
-import com.emm.domain.transaction.FrequentCombo
-import com.emm.domain.transaction.TransactionStatsRepository
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.report.CategoryAmount
+import com.emm.justchill.core.domain.report.MonthCategoryAmounts
+import com.emm.justchill.core.domain.report.MonthlySectionStats
+import com.emm.justchill.core.domain.shared.AccountId
+import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.MonthRange
+import com.emm.justchill.core.domain.transaction.FrequentCombo
+import com.emm.justchill.core.domain.transaction.TransactionStatsRepository
+import com.emm.justchill.core.domain.transaction.TransactionType
 
 class DefaultTransactionStatsRepository(private val localDataSource: TransactionStatsLocalDataSource) :
     TransactionStatsRepository {

@@ -26,10 +26,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.emm.domain.account.Account
-import com.emm.domain.category.CategoryType
-import com.emm.domain.shared.AccountId
-import com.emm.domain.shared.CategoryId
+import com.emm.justchill.core.domain.account.Account
+import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.domain.shared.AccountId
+import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors

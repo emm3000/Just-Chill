@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.loan
 
-import com.emm.domain.loan.PersonBalance
-import com.emm.domain.shared.Money
+import com.emm.justchill.core.domain.loan.PersonBalance
+import com.emm.justchill.core.domain.shared.Money
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

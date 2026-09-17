@@ -1,11 +1,11 @@
 package com.emm.data.transaction
 
 import com.emm.data.TopUsedCombos
-import com.emm.domain.report.MonthCategoryAmounts
-import com.emm.domain.shared.CategoryId
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.MonthRange
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.report.MonthCategoryAmounts
+import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.MonthRange
+import com.emm.justchill.core.domain.transaction.TransactionType
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest

@@ -15,9 +15,9 @@ import com.emm.data.shared.safeDbCall
 import com.emm.data.shared.toOccurredAtText
 import com.emm.data.transaction.asEntity
 import com.emm.data.transaction.asExternalModel
-import com.emm.domain.shared.backup.BackupRepository
-import com.emm.domain.shared.backup.ImportStats
-import com.emm.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.backup.BackupRepository
+import com.emm.justchill.core.domain.shared.backup.ImportStats
+import com.emm.justchill.core.domain.shared.error.DomainException
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString

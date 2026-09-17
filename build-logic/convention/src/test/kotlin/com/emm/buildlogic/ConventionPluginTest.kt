@@ -192,6 +192,13 @@ class ConventionPluginTest {
         assertEquals("com.emm.justchill.ui.android", BuildConventions.namespaceOf(":ui-android"))
     }
 
+    @Test
+    fun `the detekt baseline is named after the module path`() {
+        assertEquals("core-domain", BuildConventions.baselineNameOf(":core:domain"))
+        assertEquals("feature-loan", BuildConventions.baselineNameOf(":feature:loan"))
+        assertEquals("ui-android", BuildConventions.baselineNameOf(":ui-android"))
+    }
+
     private companion object {
         const val COROUTINES_OPT_INS: String = "kotlinx.coroutines.ExperimentalCoroutinesApi,kotlinx.coroutines.FlowPreview"
 

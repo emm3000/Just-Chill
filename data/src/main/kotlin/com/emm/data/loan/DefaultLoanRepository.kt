@@ -2,11 +2,11 @@ package com.emm.data.loan
 
 import com.emm.data.shared.catchAsDomainException
 import com.emm.data.shared.safeDbCall
-import com.emm.domain.loan.Loan
-import com.emm.domain.loan.LoanBalance
-import com.emm.domain.loan.LoanRepository
-import com.emm.domain.loan.PersonBalance
-import com.emm.domain.shared.LoanId
+import com.emm.justchill.core.domain.loan.Loan
+import com.emm.justchill.core.domain.loan.LoanBalance
+import com.emm.justchill.core.domain.loan.LoanRepository
+import com.emm.justchill.core.domain.loan.PersonBalance
+import com.emm.justchill.core.domain.shared.LoanId
 import kotlinx.coroutines.flow.Flow
 
 class DefaultLoanRepository(private val localDataSource: LoanLocalDataSource) : LoanRepository {

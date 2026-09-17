@@ -1,7 +1,7 @@
 package com.emm.justchill.core.session
 
 import android.content.SharedPreferences
-import com.emm.domain.shared.logging.DiagnosticsLogger
+import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
 import io.github.jan.supabase.auth.exception.NoSessionFoundException
 import io.github.jan.supabase.auth.user.UserSession
 import kotlinx.coroutines.test.runTest

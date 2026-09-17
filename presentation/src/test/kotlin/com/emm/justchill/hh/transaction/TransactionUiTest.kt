@@ -1,13 +1,13 @@
 package com.emm.justchill.hh.transaction
 
-import com.emm.domain.category.Category
-import com.emm.domain.category.CategoryType
-import com.emm.domain.shared.AccountId
-import com.emm.domain.shared.CategoryId
-import com.emm.domain.shared.Money
-import com.emm.domain.shared.TransactionId
-import com.emm.domain.transaction.TransactionType
-import com.emm.domain.transaction.TransactionWithCategory
+import com.emm.justchill.core.domain.category.Category
+import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.domain.shared.AccountId
+import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.TransactionId
+import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.transaction.TransactionWithCategory
 import kotlinx.datetime.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -1,6 +1,6 @@
 package com.emm.justchill.core
 
-import com.emm.domain.shared.logging.DiagnosticsLogger
+import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.core.preferences.AppPreferences
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope

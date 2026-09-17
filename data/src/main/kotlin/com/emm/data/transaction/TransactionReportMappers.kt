@@ -3,11 +3,11 @@ package com.emm.data.transaction
 import com.emm.data.MonthlyAmountByCategory
 import com.emm.data.MonthlyAmountByCategoryAndType
 import com.emm.data.shared.enumValueOrNull
-import com.emm.domain.report.CategoryAmount
-import com.emm.domain.report.MonthCategoryAmounts
-import com.emm.domain.shared.CategoryId
-import com.emm.domain.shared.Money
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.report.CategoryAmount
+import com.emm.justchill.core.domain.report.MonthCategoryAmounts
+import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.transaction.TransactionType
 
 fun MonthlyAmountByCategory.asEntity() = MonthlyAmountByCategoryEntity(
     categoryId = categoryId,

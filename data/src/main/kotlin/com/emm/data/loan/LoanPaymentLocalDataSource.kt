@@ -8,8 +8,8 @@ import com.emm.data.Loan_paymentsQueries
 import com.emm.data.shared.ioDispatcher
 import com.emm.data.shared.nowMillis
 import com.emm.data.shared.toOccurredAtText
-import com.emm.domain.loan.LoanPayment
-import com.emm.domain.shared.Money
+import com.emm.justchill.core.domain.loan.LoanPayment
+import com.emm.justchill.core.domain.shared.Money
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext

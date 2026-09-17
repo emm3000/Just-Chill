@@ -1,13 +1,13 @@
 package com.emm.justchill.hh.di
 
-import com.emm.domain.recurring.ConfirmRecurringMovementUseCase
-import com.emm.domain.recurring.CreateRecurringMovementUseCase
-import com.emm.domain.recurring.DeleteRecurringMovementUseCase
-import com.emm.domain.recurring.GetPendingRecurringMovementsUseCase
-import com.emm.domain.recurring.GetRecurringMonthlySummaryUseCase
-import com.emm.domain.recurring.GetRecurringMonthlyTotalsUseCase
-import com.emm.domain.recurring.SkipRecurringMovementUseCase
-import com.emm.domain.recurring.UpdateRecurringMovementUseCase
+import com.emm.justchill.core.domain.recurring.ConfirmRecurringMovementUseCase
+import com.emm.justchill.core.domain.recurring.CreateRecurringMovementUseCase
+import com.emm.justchill.core.domain.recurring.DeleteRecurringMovementUseCase
+import com.emm.justchill.core.domain.recurring.GetPendingRecurringMovementsUseCase
+import com.emm.justchill.core.domain.recurring.GetRecurringMonthlySummaryUseCase
+import com.emm.justchill.core.domain.recurring.GetRecurringMonthlyTotalsUseCase
+import com.emm.justchill.core.domain.recurring.SkipRecurringMovementUseCase
+import com.emm.justchill.core.domain.recurring.UpdateRecurringMovementUseCase
 import com.emm.justchill.hh.recurring.AddEditRecurringMovementViewModel
 import com.emm.justchill.hh.recurring.RecurringMovementsViewModel
 import org.koin.core.module.dsl.factoryOf

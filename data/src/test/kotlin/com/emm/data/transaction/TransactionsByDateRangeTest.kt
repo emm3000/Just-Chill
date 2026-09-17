@@ -2,7 +2,7 @@ package com.emm.data.transaction
 
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.data.EmmDatabaseData
-import com.emm.domain.shared.TransactionId
+import com.emm.justchill.core.domain.shared.TransactionId
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After

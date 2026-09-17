@@ -1,12 +1,12 @@
 package com.emm.justchill.core.error
 
-import com.emm.domain.auth.MIN_SIGNUP_PASSWORD_LENGTH
-import com.emm.domain.loan.MAX_INTEREST_BPS
-import com.emm.domain.loan.MIN_INTEREST_BPS
-import com.emm.domain.recurring.MAX_DAY_OF_MONTH
-import com.emm.domain.recurring.MIN_DAY_OF_MONTH
-import com.emm.domain.shared.error.DomainException
-import com.emm.domain.shared.error.ValidationCode
+import com.emm.justchill.core.domain.auth.MIN_SIGNUP_PASSWORD_LENGTH
+import com.emm.justchill.core.domain.loan.MAX_INTEREST_BPS
+import com.emm.justchill.core.domain.loan.MIN_INTEREST_BPS
+import com.emm.justchill.core.domain.recurring.MAX_DAY_OF_MONTH
+import com.emm.justchill.core.domain.recurring.MIN_DAY_OF_MONTH
+import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.ValidationCode
 
 private const val BPS_PER_PERCENT = 100
 private const val MIN_INTEREST_PERCENT = MIN_INTEREST_BPS / BPS_PER_PERCENT

@@ -2,8 +2,8 @@ package com.emm.data.transaction
 
 import com.emm.data.TransactionsQueries
 import com.emm.data.shared.ioDispatcher
-import com.emm.domain.shared.MonthRange
-import com.emm.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.shared.MonthRange
+import com.emm.justchill.core.domain.transaction.TransactionType
 import kotlinx.coroutines.withContext
 
 class TransactionStatsLocalDataSource(private val tq: TransactionsQueries) {

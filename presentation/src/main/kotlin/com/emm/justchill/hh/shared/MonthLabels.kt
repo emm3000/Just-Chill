@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.shared
 
-import com.emm.domain.shared.YearMonth
+import com.emm.justchill.core.domain.shared.YearMonth
 
 private const val ABBREV_LENGTH = 3
 
