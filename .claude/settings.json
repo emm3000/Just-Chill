@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+      "Bash(./gradlew:*)",
       "Bash(./gradlew assembleDevDebug)",
       "Bash(./gradlew assembleDevDebug:*)",
       "Bash(./gradlew assembleProdRelease)",
@@ -76,7 +77,10 @@
       "Bash(adb devices)",
       "Bash(adb devices:*)",
       "Bash(adb logcat:*)",
-      "Bash(adb shell pm list packages:*)"
+      "Bash(adb shell pm list packages:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(adb shell:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",
