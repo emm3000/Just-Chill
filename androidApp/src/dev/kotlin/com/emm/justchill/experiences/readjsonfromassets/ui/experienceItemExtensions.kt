@@ -3,7 +3,7 @@ package com.emm.justchill.experiences.readjsonfromassets.ui
 import androidx.compose.ui.graphics.Color
 import com.emm.justchill.experiences.readjsonfromassets.domain.Experience
 
-private fun Experience.toUi() = ExperienceItemUiState(
+private fun Experience.toUi() = ExperienceItem(
     title = title,
     description = description,
     date = date,

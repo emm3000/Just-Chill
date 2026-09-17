@@ -27,14 +27,14 @@ fun Experiences(
     vm: ExperiencesViewModel = koinViewModel(),
 ) {
 
-    val state: Result<List<ExperienceItemUiState>> by vm.experiences.collectAsState()
+    val state: Result<List<ExperienceItem>> by vm.experiences.collectAsState()
 
     Experiences(state = state,)
 }
 
 @Composable
 private fun Experiences(
-    state: Result<List<ExperienceItemUiState>>,
+    state: Result<List<ExperienceItem>>,
 ) {
 
     LazyColumn(
@@ -74,7 +74,7 @@ private fun Experiences(
 @Composable
 fun ExperiencesPreview() {
     EmmTheme {
-        val experience = ExperienceItemUiState(
+        val experience = ExperienceItem(
             title = "Simple list and detail from drinks api",
             description = "In this part, it was used jetpack compose components, (LazyColumn), In this part, it was used jetpack compose components, (LazyColumn)",
             date = "09/06/2024",
