@@ -8,9 +8,9 @@ How the engineering skills consume this repo's domain documentation when explori
   repo, so every ADR lives there, numbered `NNN-<decision>.md`
   (`009-backup-is-a-snapshot-not-row-replication.md`); the filename states the decision and the
   header declares what it amends or supersedes.
-- **`CONTEXT.md`** does not exist yet. When `mattpocock-skills:domain-modeling` resolves the first
-  term it creates `CONTEXT.md` at the repo root, a glossary and nothing else. Until then proceed
-  silently: do not flag its absence, do not create it upfront.
+- **`CONTEXT.md`** at the repo root: the glossary, grouped by Ledger, Recurring, Loans, Report,
+  Backup and Identity, each term with the words to avoid. A glossary and nothing else; a term is
+  added or changed through `mattpocock-skills:domain-modeling`, never by hand in passing.
 
 ## Use the glossary's vocabulary
 
