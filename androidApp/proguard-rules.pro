@@ -20,4 +20,4 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keep class com.emm.justchill.core.domain.transaction.TransactionType { *; }
+-keep class com.emm.justchill.core.domain.transaction.TransactionType { *; }-dontwarn com.emm.justchill.DryRunProbe
