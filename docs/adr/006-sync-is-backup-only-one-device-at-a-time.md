@@ -5,7 +5,7 @@
 - **Deciders**: Edgardo Muñoz
 - **Supersedes**: [ADR 001](001-reverse-local-only-to-local-first-optional-sync.md), Context point 1
   (the single-user-multi-device need) and Decision point 4 (LWW conflict resolution).
-- **Renders dormant**: [ADR 004](004-conflict-resolution-only-arbitrates-unpushed-edits.md) — its
+- **Renders dormant**: ADR 004 (since removed) — its
   rule is correct and is kept in the tree, unused, restored verbatim if multi-device ever returns.
 - **Superseded in part by**: [ADR 009](009-backup-is-a-snapshot-not-row-replication.md) — Decision
   points 1, 5 and 6; Decision point 3 survives retargeted; Decision points 2 and 4 stand.

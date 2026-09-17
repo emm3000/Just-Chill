@@ -9,8 +9,8 @@
   stand — 6 and 7 are actively protected by Decision 9 below; Decision 4 was already superseded by
   ADR 006. ADR 006 Decisions 2 and 4 survive intact and are strengthened here; **ADR 006 Decision 3
   survives, retargeted** — see Decision 5.
-- **Renders dormant**: [ADR 002](002-pull-cursor-uses-server-set-timestamp.md) in full — it orders
-  a pull, and there is no pull left to order. [ADR 004](004-conflict-resolution-only-arbitrates-unpushed-edits.md)
+- **Renders dormant**: ADR 002 (since removed) in full — it orders
+  a pull, and there is no pull left to order. ADR 004 (since removed)
   was already dormant; its rule stays on the books, but `ConflictResolver` the class is deleted
   rather than parked (see Decision 2).
 

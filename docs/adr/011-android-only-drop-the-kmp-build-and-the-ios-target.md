@@ -3,9 +3,9 @@
 - **Status**: Accepted
 - **Date**: 2026-08-26
 - **Deciders**: Edgardo Muñoz
-- **Supersedes**: [ADR 005](005-native-swiftui-ios-over-the-kmp-core.md) **in full** — the SwiftUI
+- **Supersedes**: ADR 005 (since removed) **in full** — the SwiftUI
   track, `JustChillKit`, SKIE and the relocated compile gate all end here.
-- **Scope superseded**: [ADR 003](003-freeze-ios-keep-the-compile-gate.md)'s one surviving
+- **Scope superseded**: ADR 003's (since removed) one surviving
   invariant — `compileKotlinIos*` on every gate run, the only mechanical proof that the exported
   core stays free of `java.*` / `android.*`. It is removed. Decision 3 states what replaces it and
   Decision 4 states what it does not.

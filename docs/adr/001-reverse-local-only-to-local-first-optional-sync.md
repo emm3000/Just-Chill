@@ -4,7 +4,7 @@
 - **Date**: 2026-06-04
 - **Deciders**: Edgardo Muñoz
 - **Supersedes**: the "100% local-only, no backend, no auth, no sync" positioning baked into `CLAUDE.md`, `domain/CLAUDE.md`, and the `Won't Have` rows W-02 / W-03 / W-11 of `docs/PRODUCT_REQUIREMENTS.md`.
-- **Amended by**: [ADR 002](002-pull-cursor-uses-server-set-timestamp.md) (Decision point 5 — the pull cursor no longer compares client-written `updatedAt`).
+- **Amended by**: ADR 002 (since removed) (Decision point 5 — the pull cursor no longer compares client-written `updatedAt`).
 - **Superseded in part by**: [ADR 006](006-sync-is-backup-only-one-device-at-a-time.md) (Context
   point 1 and Decision point 4 — LWW conflict resolution) and
   [ADR 009](009-backup-is-a-snapshot-not-row-replication.md) (Decision points 5 and 8 — the dirty
