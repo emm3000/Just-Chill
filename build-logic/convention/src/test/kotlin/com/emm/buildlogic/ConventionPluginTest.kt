@@ -31,9 +31,24 @@ class ConventionPluginTest {
 
     @Test
     fun `android library plugin puts the module unit tests in the quality gate`() {
-        val report: Map<String, String> = fixture.report(listOf("justchill.android.library"))
+        val report: Map<String, String> = fixture.report(
+            pluginIds = listOf("justchill.android.library"),
+            arguments = REPORT_GATE_TASKS,
+        )
 
         assertEquals("testDebugUnitTest", report["gatedTests"])
+        assertEquals(AGGREGATE_GATE_TASKS, report["gateTasks"])
+    }
+
+    @Test
+    fun `naming detekt tasks replaces the aggregates the gate runs by default`() {
+        val report: Map<String, String> = fixture.report(
+            pluginIds = listOf("justchill.android.library"),
+            androidConfiguration = """qualityGate { detektTasks.addAll("detektDebug", "detektDebugUnitTest") }""",
+            arguments = REPORT_GATE_TASKS,
+        )
+
+        assertEquals(NAMED_GATE_TASKS, report["gateTasks"])
     }
 
     @Test
@@ -195,6 +210,16 @@ class ConventionPluginTest {
         )
 
         const val CHECK_PLUGINS: String = "justchill.detekt,justchill.quality.gate"
+
+        val REPORT_GATE_TASKS: List<String> = listOf("-Pjustchill.reportGateTasks=true")
+
+        const val AGGREGATE_GATE_TASKS: String =
+            "checkComposeFreeViewModels,checkModuleBoundaries,compileDebugAndroidTestKotlin," +
+                "detektMain,detektTest,testDebugUnitTest"
+
+        const val NAMED_GATE_TASKS: String =
+            "checkComposeFreeViewModels,checkModuleBoundaries,compileDebugAndroidTestKotlin," +
+                "detektDebug,detektDebugUnitTest,testDebugUnitTest"
 
         val RELEASE_PLUGINS: List<String> = listOf("justchill.android.application", "justchill.android.release")
 

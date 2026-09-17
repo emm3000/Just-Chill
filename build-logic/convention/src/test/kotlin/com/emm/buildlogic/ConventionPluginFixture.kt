@@ -13,22 +13,36 @@ internal class ConventionPluginFixture(private val projectDirectory: File) {
         files: Map<String, String> = emptyMap(),
     ): Map<String, String> {
         files.forEach { (path, content) -> write(path, content) }
-        writeSettings()
+        writeSettings(listOf(":probe", ":core:domain", ":core:ui"))
         writeLocalProperties()
         writeStubModule("core/domain")
         writeStubModule("core/ui")
         writeProbeModule(pluginIds, androidConfiguration)
 
-        val result: BuildResult = GradleRunner.create()
-            .withProjectDir(projectDirectory)
-            .withPluginClasspath()
-            .withArguments(listOf(":probe:conventionReport", "-g", gradleUserHome, "--stacktrace") + arguments)
-            .build()
+        val result: BuildResult = runner(listOf(":probe:conventionReport") + arguments).build()
 
         return result.output
             .lineSequence()
             .filter { it.startsWith(REPORT_PREFIX) }
             .associate { it.removePrefix(REPORT_PREFIX).substringBefore('=') to it.substringAfter('=') }
+    }
+
+    fun check(
+        task: String,
+        modules: Map<String, String>,
+        sources: Map<String, String> = emptyMap(),
+    ): BuildResult {
+        prepare(modules, sources)
+        return runner(listOf(task)).build()
+    }
+
+    fun checkAndFail(
+        task: String,
+        modules: Map<String, String>,
+        sources: Map<String, String> = emptyMap(),
+    ): String {
+        prepare(modules, sources)
+        return runner(listOf(task)).buildAndFail().output
     }
 
     fun git(vararg arguments: String) {
@@ -40,7 +54,21 @@ internal class ConventionPluginFixture(private val projectDirectory: File) {
         check(process.waitFor() == 0) { "git ${arguments.joinToString(" ")} failed: $output" }
     }
 
-    private fun writeSettings() {
+    private fun prepare(modules: Map<String, String>, sources: Map<String, String>) {
+        sources.forEach { (path, content) -> write(path, content) }
+        writeSettings(modules.keys.toList())
+        writeLocalProperties()
+        modules.forEach { (path, content) ->
+            write("${path.removePrefix(":").replace(':', '/')}/build.gradle.kts", content)
+        }
+    }
+
+    private fun runner(arguments: List<String>): GradleRunner = GradleRunner.create()
+        .withProjectDir(projectDirectory)
+        .withPluginClasspath()
+        .withArguments(arguments + listOf("-g", gradleUserHome, "--stacktrace"))
+
+    private fun writeSettings(includes: List<String>) {
         val catalog: File = File(rootDirectory, "gradle/libs.versions.toml")
         write(
             "settings.gradle.kts",
@@ -58,9 +86,7 @@ internal class ConventionPluginFixture(private val projectDirectory: File) {
             }
 
             rootProject.name = "convention-fixture"
-            include(":probe")
-            include(":core:domain")
-            include(":core:ui")
+            ${includes.joinToString(separator = "\n            ") { """include("$it")""" }}
             """.trimIndent(),
         )
     }
@@ -159,6 +185,9 @@ internal class ConventionPluginFixture(private val projectDirectory: File) {
                     val gate = project.tasks.findByName("qualityGate")
                     if (gate != null) {
                         println("REPORT gatedTests=" + gate.dependsOn.filterIsInstance<String>().sorted().joinToString(","))
+                        if (project.providers.gradleProperty("justchill.reportGateTasks").isPresent) {
+                            println("REPORT gateTasks=" + gate.taskDependencies.getDependencies(gate).map { it.name }.sorted().joinToString(","))
+                        }
                     }
                 }
             }
