@@ -4,7 +4,10 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import java.io.File
 
-internal class ConventionPluginFixture(private val projectDirectory: File) {
+internal class ConventionPluginFixture(
+    private val projectDirectory: File,
+    private val ambientEnvironment: Map<String, String> = emptyMap(),
+) {
 
     fun report(
         pluginIds: List<String>,
@@ -45,13 +48,22 @@ internal class ConventionPluginFixture(private val projectDirectory: File) {
         return runner(listOf(task)).buildAndFail().output
     }
 
-    fun git(vararg arguments: String) {
-        val process: Process = ProcessBuilder(listOf("git") + GIT_IDENTITY + arguments)
-            .directory(projectDirectory)
-            .redirectErrorStream(true)
-            .start()
+    fun git(vararg arguments: String): String {
+        val process: Process = gitBuilder(arguments.toList()).start()
         val output: String = process.inputStream.bufferedReader().readText()
         check(process.waitFor() == 0) { "git ${arguments.joinToString(" ")} failed: $output" }
+        return output.trim()
+    }
+
+    fun gitEnvironment(): Map<String, String> = gitBuilder(emptyList()).environment()
+
+    private fun gitBuilder(arguments: List<String>): ProcessBuilder {
+        val builder: ProcessBuilder = ProcessBuilder(listOf("git") + GIT_IDENTITY + arguments)
+            .directory(projectDirectory)
+            .redirectErrorStream(true)
+        builder.environment().putAll(ambientEnvironment)
+        builder.environment().keys.removeAll { it.startsWith(GIT_VARIABLE_PREFIX) }
+        return builder
     }
 
     private fun prepare(modules: Map<String, String>, sources: Map<String, String>) {
@@ -123,6 +135,8 @@ internal class ConventionPluginFixture(private val projectDirectory: File) {
 
     private companion object {
         const val REPORT_PREFIX: String = "REPORT "
+
+        const val GIT_VARIABLE_PREFIX: String = "GIT_"
 
         val rootDirectory: File = File(System.getProperty("justchill.rootDir"))
 
