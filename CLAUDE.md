@@ -68,7 +68,7 @@ Kotlin, Jetpack Compose, Navigation 3, Koin, SQLDelight 2, supabase-kt with Ktor
 
 ## Commands
 
-- `./gradlew qualityGate` — detekt per module, host tests, `:core:database`'s instrumented compile, `verifySqlDelightMigration`, `checkModuleBoundaries`, `checkComposeFreeViewModels`, `:androidApp:lintDevDebug`, `:build-logic:convention:test`. Defined once in `QualityGateConventionPlugin.kt`; the pre-push hook and CI run exactly it.
+- `./gradlew qualityGate` — detekt per module, host tests, `:core:database`'s instrumented compile, each library's `compileReleaseKotlin`, `verifySqlDelightMigration`, `checkModuleBoundaries`, `checkComposeFreeViewModels`, `:androidApp:lintDevDebug`, `:build-logic:convention:test`. Defined once in `QualityGateConventionPlugin.kt`; the pre-push hook and CI run exactly it.
 - `./gradlew assembleDevDebug` — dev debug build; `assembleProdRelease` for the release.
 - `./gradlew test` — every module's host tests; per module `:<module>:testDebugUnitTest`, `:core:domain:test`, and `:androidApp:testDevDebugUnitTest` for the MockK ViewModel suite.
 - `./gradlew :core:database:connectedDebugAndroidTest` — the migration suite, on the `medium_phone` emulator, the only AVD.
