@@ -37,6 +37,7 @@ jobs:
           keystore-properties: ${{ secrets.JUST_VERONICA }}
           signing-key-base64: ${{ secrets.JUST_CHILL }}
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       # The Crashlytics mapping upload is off unless the property is true: trunk only.
       - name: Quality gate + builds
