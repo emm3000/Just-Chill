@@ -53,6 +53,19 @@ class ConventionPluginTest {
     }
 
     @Test
+    fun `a library module type checks its release variant even when no detekt task names it`() {
+        val report: Map<String, String> = fixture.report(
+            pluginIds = listOf("justchill.android.library"),
+            androidConfiguration = """qualityGate { detektTasks.addAll("detektDebug", "detektDebugUnitTest") }""",
+            arguments = REPORT_GATE_TASKS,
+        )
+
+        val gateTasks: List<String> = report.getValue("gateTasks").split(',')
+        assertTrue("compileReleaseKotlin" in gateTasks)
+        assertTrue(gateTasks.none { it.startsWith("detektRelease") })
+    }
+
+    @Test
     fun `a module that sets its own namespace keeps it over the derived one`() {
         val report: Map<String, String> = fixture.report(
             pluginIds = listOf("justchill.android.library"),
@@ -248,11 +261,11 @@ class ConventionPluginTest {
 
         const val AGGREGATE_GATE_TASKS: String =
             "checkComposeFreeViewModels,checkModuleBoundaries,compileDebugAndroidTestKotlin," +
-                "detektMain,detektTest,testDebugUnitTest"
+                "compileReleaseKotlin,detektMain,detektTest,testDebugUnitTest"
 
         const val NAMED_GATE_TASKS: String =
             "checkComposeFreeViewModels,checkModuleBoundaries,compileDebugAndroidTestKotlin," +
-                "detektDebug,detektDebugUnitTest,testDebugUnitTest"
+                "compileReleaseKotlin,detektDebug,detektDebugUnitTest,testDebugUnitTest"
 
         val RELEASE_PLUGINS: List<String> = listOf("justchill.android.application", "justchill.android.release")
 
