@@ -1,0 +1,71 @@
+package com.emm.justchill.core.database.loan
+
+import com.emm.justchill.core.database.BalancesByPerson
+import com.emm.justchill.core.database.Loans
+import com.emm.justchill.core.database.LoansWithBalance
+import com.emm.justchill.core.database.shared.toOccurredAtOrNull
+import com.emm.justchill.core.domain.loan.Loan
+import com.emm.justchill.core.domain.loan.LoanBalance
+import com.emm.justchill.core.domain.loan.PersonBalance
+import com.emm.justchill.core.domain.loan.remaining
+import com.emm.justchill.core.domain.shared.LoanId
+import com.emm.justchill.core.domain.shared.Money
+
+fun Loans.asEntity() = LoanEntity(
+    loanId = loanId,
+    personName = personName,
+    personKey = personKey,
+    principal = principal,
+    interestBps = interestBps,
+    totalDue = totalDue,
+    note = note,
+    lentAt = lentAt,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+)
+
+fun List<Loans>.asEntity() = map(Loans::asEntity)
+
+fun LoanEntity.asExternalModelOrNull(): Loan? {
+    val parsedLentAt = lentAt.toOccurredAtOrNull() ?: return null
+    return Loan(
+        id = LoanId(loanId),
+        personName = personName,
+        personKey = personKey,
+        principal = Money(principal),
+        interestBps = interestBps.toInt(),
+        totalDue = Money(totalDue),
+        note = note,
+        lentAt = parsedLentAt,
+    )
+}
+
+fun List<LoanEntity>.asExternalModel() = mapNotNull(LoanEntity::asExternalModelOrNull)
+
+fun BalancesByPerson.asExternalModel() = PersonBalance(
+    personKey = personKey,
+    personName = personName,
+    remaining = remaining(totalDue = Money(totalDue), paidSoFar = Money(paidSoFar)),
+)
+
+fun LoansWithBalance.asEntity() = LoanEntity(
+    loanId = loanId,
+    personName = personName,
+    personKey = personKey,
+    principal = principal,
+    interestBps = interestBps,
+    totalDue = totalDue,
+    note = note,
+    lentAt = lentAt,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+)
+
+fun LoansWithBalance.asExternalModelOrNull(): LoanBalance? {
+    val loan = asEntity().asExternalModelOrNull() ?: return null
+    return LoanBalance(loan = loan, paidSoFar = Money(paidSoFar))
+}
+
+// Named distinctly from the `List<LoanEntity>.asExternalModel()` above: `List<T>.asExternalModel()`
+// erases to the same JVM signature for any two element types, and the two would clash.
+fun List<LoansWithBalance>.asLoanBalances() = mapNotNull(LoansWithBalance::asExternalModelOrNull)

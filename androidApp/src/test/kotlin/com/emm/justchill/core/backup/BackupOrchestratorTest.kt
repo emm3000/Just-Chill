@@ -1,7 +1,7 @@
 package com.emm.justchill.core.backup
 
-import com.emm.data.backup.backupSnapshotName
 import com.emm.justchill.MainDispatcherRule
+import com.emm.justchill.core.database.backup.backupSnapshotName
 import com.emm.justchill.core.domain.auth.AuthUser
 import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
 import com.emm.justchill.core.domain.auth.SessionStatus

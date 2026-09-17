@@ -1,18 +1,18 @@
 ---
 paths:
-  - "data/src/main/sqldelight/**"
-  - "data/src/androidTest/**/Migration*Test.kt"
+  - "core/database/src/main/sqldelight/**"
+  - "core/database/src/androidTest/**/Migration*Test.kt"
 ---
 
 # SQLDelight schema rules
 
-`EmmDatabaseData` on device is the source of truth. Every schema change is a migration unit with its own falsifier. Why `3.sqm` and `4.sqm` are destructive: `data/CLAUDE.md`. The category/type composite key: ADR 008 and the header of `transactions.sq`.
+`JustChillDatabase` on device is the source of truth. Every schema change is a migration unit with its own falsifier. Why `3.sqm` and `4.sqm` are destructive: `core/database/CLAUDE.md`. The category/type composite key: ADR 008 and the header of `transactions.sq`.
 
 ## The snapshot is part of the diff
 
-- A change to any `.sq` that alters a `CREATE` statement ships three artifacts in the same commit: the `.sq` edit, `com/emm/data/N.sqm` where `N` is the version before the bump, and `databases/(N+1).db`.
-- Generate the snapshot with `./gradlew :data:generateDebugEmmDatabaseDataSchema`. It writes the current version to `databases/`.
-- `./gradlew :data:verifySqlDelightMigration` replays every `.sqm` over the snapshots and runs on `qualityGate`. It cannot notice a snapshot that was never written, so the `.db` is checked by the reviewer.
+- A change to any `.sq` that alters a `CREATE` statement ships three artifacts in the same commit: the `.sq` edit, `com/emm/justchill/core/database/N.sqm` where `N` is the version before the bump, and `databases/(N+1).db`.
+- Generate the snapshot with `./gradlew :core:database:generateDebugJustChillDatabaseSchema`. It writes the current version to `databases/`.
+- `./gradlew :core:database:verifySqlDelightMigration` replays every `.sqm` over the snapshots and runs on `qualityGate`. It cannot notice a snapshot that was never written, so the `.db` is checked by the reviewer.
 - Never delete or regenerate a committed `.db`, and never reset the schema. Each one is the exact schema a shipped build wrote to disk, and the author's device holds the oldest real data: a missing migration only fires there.
 - Files move freely but never rename: a `.sqm` digit is the version it migrates from (mirrored by its test's `oldVersion`), a `.sq` name is its generated `<Name>Queries` class.
 
@@ -25,13 +25,13 @@ paths:
 
 ## The migration test
 
-- Coverage is **one instrumented test per starting version** under `data/src/androidTest/`, each migrating to `EmmDatabaseData.Schema.version`, never to the next step: a device opens once and runs the whole chain in one `Schema.migrate` call.
+- Coverage is **one instrumented test per starting version** under `core/database/src/androidTest/`, each migrating to `JustChillDatabase.Schema.version`, never to the next step: a device opens once and runs the whole chain in one `Schema.migrate` call.
 - Set-up and in-chain reads use raw SQL against the historical schema (`driver.execute`, `driver.executeQuery` returning `QueryResult`); generated queries match only the current schema and work for assertions once the chain reaches it. `MigrationV1ToV2Test` is the pattern.
 - Never use `Schema.create` in a migration test: it builds the latest schema and skips the migration under test.
 - `kotlin.assert()` is a no-op on ART; use `kotlin.test.assertTrue`.
 - Prove the test is not vacuous before trusting it: set its `oldVersion` to the current schema version so the migration is skipped, watch it fail on the missing column, restore it.
 - Foreign keys: `csm()`'s `onOpen` turns them on only after the upgrade chain ran (they cannot be switched on inside `SQLiteOpenHelper`'s upgrade transaction), and SQLite never re-checks rows already written, so an FK-violating row written by a migration is silent on device forever. A test that enables foreign keys in its own `onOpen` and then calls `Schema.migrate` is the only check of the chain's writes; `MigrationV1ToV2Test` does it and `MigrationV4ToV5Test` flips them on for the cases where `4.sqm`'s statement order matters. Never drop that callback: the test stays green while proving less.
-- Run the suite with `./gradlew :data:connectedDebugAndroidTest` on the `medium_phone` emulator before shipping any schema change; the gate only compiles it.
+- Run the suite with `./gradlew :core:database:connectedDebugAndroidTest` on the `medium_phone` emulator before shipping any schema change; the gate only compiles it.
 
 ## The restore drill
 

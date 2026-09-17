@@ -3,7 +3,7 @@ paths:
   - "androidApp/src/*/kotlin/**"
   - "ui-android/src/*/kotlin/**"
   - "presentation/src/*/kotlin/**"
-  - "data/src/*/kotlin/**"
+  - "core/database/src/*/kotlin/**"
   - "core/domain/src/*/kotlin/**"
 ---
 
@@ -51,7 +51,7 @@ A name that needs a comment to be understood is the wrong name. Rename it instea
 | Identifier | value class `{Entity}Id` in `shared/EntityIds.kt` | `AccountId`, `LoanId` |
 | UseCase | `<Verb><Subject>UseCase`, `operator fun invoke` | `CreateLoanUseCase`, `GetSavingsRateUseCase` |
 | Repository (interface) | `{Entity}Repository` in `:core:domain` | `LoanRepository` |
-| Repository (impl) | `Default{Entity}Repository` in `:data` | `DefaultLoanRepository` |
+| Repository (impl) | `Default{Entity}Repository` in `:core:database` | `DefaultLoanRepository` |
 | Local model / source / mappers | `{Entity}Entity`, `{Entity}LocalDataSource`, `{entity}Mappers.kt` | `LoanLocalDataSource` |
 | ViewModel | `<Feature>ViewModel` | `AuthViewModel` |
 | UiState | `<Feature>UiState` — data class, all fields `val` | `AuthUiState` |

@@ -2,8 +2,8 @@ package com.emm.justchill.core
 
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
-import com.emm.data.EmmDatabaseData
-import com.emm.data.provideDb
+import com.emm.justchill.core.database.JustChillDatabase
+import com.emm.justchill.core.database.provideDb
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.hh.auth.GoogleSignInLauncher
 import com.emm.justchill.hh.auth.GoogleSignInResult
@@ -27,7 +27,7 @@ val testPlatformModule: Module = module {
     // reproduced here because DI resolution never reads rows.
     single<SqlDriver> {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-        EmmDatabaseData.Schema.create(driver)
+        JustChillDatabase.Schema.create(driver)
         driver
     } onClose { it?.close() }
     single { provideDb(get()) }

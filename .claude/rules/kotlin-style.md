@@ -3,7 +3,7 @@ paths:
   - "androidApp/src/*/kotlin/**"
   - "ui-android/src/*/kotlin/**"
   - "presentation/src/*/kotlin/**"
-  - "data/src/*/kotlin/**"
+  - "core/database/src/*/kotlin/**"
   - "core/domain/src/*/kotlin/**"
 ---
 
@@ -79,7 +79,7 @@ Config lives in `config/detekt/detekt.yml`, the only source of thresholds; read 
 
 Each analysis task derives its own baseline from the stem `config/detekt/baseline-<module>.xml` set in `DetektConventionPlugin`: `detektMain` fans out into `baseline-<module>-debug.xml` and `-release.xml`, `:androidApp` further over its flavors. The stem files belong to the plain `detekt` task, which is not on the gate: leave them alone.
 
-- To grandfather a pre-existing finding, run the matching baseline task and commit what it writes (`./gradlew :data:detektBaselineMain`). Never hand-edit a baseline, and never baseline a NEW violation the current change introduced.
+- To grandfather a pre-existing finding, run the matching baseline task and commit what it writes (`./gradlew :core:database:detektBaselineMain`). Never hand-edit a baseline, and never baseline a NEW violation the current change introduced.
 - A baseline entry for a file-level rule is permanent amnesty: `TooManyFunctions:Foo.kt` carries no count, so the file is exempt at any size. Read the current holders out of the baseline files, never out of a doc.
 - Removing an entry or changing detekt config: regenerate into a scratch file and diff against the committed one; a config that silently matches nothing shows up as "no change".
 

@@ -3,7 +3,7 @@ paths:
   - "androidApp/src/*/kotlin/**"
   - "ui-android/src/*/kotlin/**"
   - "presentation/src/*/kotlin/**"
-  - "data/src/*/kotlin/**"
+  - "core/database/src/*/kotlin/**"
   - "core/domain/src/*/kotlin/**"
 ---
 

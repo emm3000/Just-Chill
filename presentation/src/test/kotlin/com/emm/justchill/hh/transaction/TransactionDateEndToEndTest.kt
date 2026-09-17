@@ -1,9 +1,9 @@
 package com.emm.justchill.hh.transaction
 
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
-import com.emm.data.EmmDatabaseData
-import com.emm.data.transaction.DefaultTransactionRepository
-import com.emm.data.transaction.TransactionLocalDataSource
+import com.emm.justchill.core.database.JustChillDatabase
+import com.emm.justchill.core.database.transaction.DefaultTransactionRepository
+import com.emm.justchill.core.database.transaction.TransactionLocalDataSource
 import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.account.AccountRepository
 import com.emm.justchill.core.domain.category.CategoryRepository
@@ -51,7 +51,7 @@ class TransactionDateEndToEndTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var driver: JdbcSqliteDriver
-    private lateinit var db: EmmDatabaseData
+    private lateinit var db: JustChillDatabase
     private lateinit var transactionRepository: TransactionRepository
 
     private val lima = TimeZone.of("America/Lima")
@@ -81,8 +81,8 @@ class TransactionDateEndToEndTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-        EmmDatabaseData.Schema.create(driver)
-        db = EmmDatabaseData(driver)
+        JustChillDatabase.Schema.create(driver)
+        db = JustChillDatabase(driver)
         driver.execute(null, "PRAGMA foreign_keys=ON", 0)
         driver.execute(
             null,

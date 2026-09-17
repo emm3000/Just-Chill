@@ -53,7 +53,7 @@ class DetektConventionPlugin : Plugin<Project> {
 
     // Both excludes are needed: Ant patterns match the path RELATIVE to each source root, and
     // SQLDelight registers `<module>/build/generated/sqldelight/code/<db>/<sourceSet>` as a root,
-    // so `**/build/**` only ever sees `com/emm/data/TransactionsQueries.kt`.
+    // so `**/build/**` only ever sees `com/emm/justchill/core/database/TransactionsQueries.kt`.
     private fun SourceTask.excludeGeneratedSources() {
         exclude("**/build/**")
         exclude { element -> BuildConventions.isGeneratedSource(element.file.invariantSeparatorsPath) }

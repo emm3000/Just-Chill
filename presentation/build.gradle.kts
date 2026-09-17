@@ -9,7 +9,7 @@ android {
 
 dependencies {
     api(projects.core.domain)
-    implementation(projects.data)
+    implementation(projects.core.database)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.core)
