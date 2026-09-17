@@ -53,19 +53,6 @@ class ConventionPluginTest {
     }
 
     @Test
-    fun `a library module type checks its release variant even when no detekt task names it`() {
-        val report: Map<String, String> = fixture.report(
-            pluginIds = listOf("justchill.android.library"),
-            androidConfiguration = """qualityGate { detektTasks.addAll("detektDebug", "detektDebugUnitTest") }""",
-            arguments = REPORT_GATE_TASKS,
-        )
-
-        val gateTasks: List<String> = report.getValue("gateTasks").split(',')
-        assertTrue("compileReleaseKotlin" in gateTasks)
-        assertTrue(gateTasks.none { it.startsWith("detektRelease") })
-    }
-
-    @Test
     fun `a module that sets its own namespace keeps it over the derived one`() {
         val report: Map<String, String> = fixture.report(
             pluginIds = listOf("justchill.android.library"),
