@@ -61,7 +61,7 @@ When you delete code, delete it. Git has the history.
 
 ## detekt
 
-Config lives in `config/detekt/detekt.yml`, the only source of thresholds; read the file, a copy here goes stale. `./gradlew qualityGate` runs `detektMain` and `detektTest` per module, and on `:androidApp` `detektDevDebug`, `detektDevDebugUnitTest` and `detektProdRelease` instead, and must be green before every commit; plain `./gradlew detekt` covers strictly less and is never the gate. The rules that shape code the most:
+Config lives in `config/detekt/detekt.yml`, the only source of thresholds; read the file, a copy here goes stale. `./gradlew qualityGate` must be green before every commit; plain `./gradlew detekt` covers strictly less and is never the gate. Only `:core:domain` still rides the `detektMain` / `detektTest` aggregates. Every Android module names its analyses in its own build file — `detektDebug` and `detektDebugUnitTest`, plus `detektDebugAndroidTest` on `:core:database`, and `detektDevDebug`, `detektDevDebugUnitTest`, `detektProdRelease` on `:androidApp` — because the aggregates also pull a `detektRelease` that re-reads the same files under an identical baseline. Release *type* checking is not detekt's: the gate names `compileReleaseKotlin` itself. The rules that shape code the most:
 
 - `CyclomaticComplexMethod` (14) and `NestedBlockDepth` (allowedDepth 4, a fifth level fails). Nested `also` / `apply` / `run` / `let` chains get refactored into named intermediate functions or an early return.
 - `ReturnCount` (2, labeled returns excluded). More than two real returns means the function should be split.
@@ -77,7 +77,9 @@ Config lives in `config/detekt/detekt.yml`, the only source of thresholds; read 
 
 ### One baseline file per analysis task
 
-Each analysis task derives its own baseline from the stem `config/detekt/baseline-<module>.xml` set in `DetektConventionPlugin`: `detektMain` fans out into `baseline-<module>-debug.xml` and `-release.xml`, `:androidApp` further over its flavors. The stem files belong to the plain `detekt` task, which is not on the gate: leave them alone.
+Each analysis task derives its own baseline from the stem `config/detekt/baseline-<module>.xml` set in `DetektConventionPlugin`: `detektDebug` reads `baseline-<module>-debug.xml`, `:androidApp` fans further over its flavors. A task with no variant-specific file **falls back to the stem**, so a stem is a live gate baseline, not a spare: `baseline-core-domain.xml` is what `:core:domain:detektMain` and `detektTest` read, and `:androidApp:detektDevDebugUnitTest` had no file of its own either. Delete a stem only after proving every task that falls back to it reports zero findings — that is why `baseline-androidApp.xml` is gone and `baseline-core-domain.xml` is not.
+
+Variant baselines the gate stopped reading are not automatically junk. `baseline-<module>-release.xml` and `:androidApp`'s `-devRelease` / `-prodDebug` still hold live findings their own `detekt` task reports; deleting them reddens `./gradlew detekt` for no gain.
 
 - To grandfather a pre-existing finding, run the matching baseline task and commit what it writes (`./gradlew :core:database:detektBaselineMain`). Never hand-edit a baseline, and never baseline a NEW violation the current change introduced.
 - A baseline entry for a file-level rule is permanent amnesty: `TooManyFunctions:Foo.kt` carries no count, so the file is exempt at any size. Read the current holders out of the baseline files, never out of a doc.
