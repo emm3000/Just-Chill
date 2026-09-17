@@ -14,16 +14,54 @@ permissions:
   contents: read
 
 jobs:
-  # One job, one Gradle invocation. This used to be three jobs (lint / unit-test / detekt), each
-  # with its own hand-written task list, and all three had drifted from the pre-push hook and from
-  # the gate documented in .claude/rules/github-workflows.md. `qualityGate` is defined once in build-logic
-  # (QualityGateConventionPlugin) and is the same thing the hook runs, so the lists cannot diverge.
-  #
-  # The assemble tasks were folded in for the reason that collapsed the gate in the first place: a
-  # second job buys a second runner boot, a second cache restore and a second Gradle configuration
-  # to run tasks that a single invocation would have scheduled — and it cannot overlap, because it
-  # needs the gate to pass first. Gradle already parallelises tasks within one invocation.
+  # Decides what the PR needs. Every output defaults to "run it": a manual dispatch, an empty diff
+  # or a failure here all fall through to the full gate below.
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+      release: ${{ steps.diff.outputs.release }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Classify changed files
+        id: diff
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT_NAME" != "pull_request" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          files="$(git diff --name-only "$BASE_SHA...$HEAD_SHA")"
+          printf '%s\n' "$files"
+          code=false
+          release=false
+          if [ -z "$files" ]; then code=true; fi
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            case "$file" in
+              *.md|docs/*|.claude/*|scripts/justchill-*|.github/dependabot.yml) ;;
+              *) code=true ;;
+            esac
+            case "$file" in
+              build-logic/*|gradle/*|*.gradle.kts|gradle.properties|*/gradle.properties|*.pro|androidApp/*|.github/*) release=true ;;
+            esac
+          done <<< "$files"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+
+  # The required check. Skipped (which GitHub counts as passing) only when `changes` succeeded and
+  # found docs and agent files alone; any other outcome of `changes` runs it.
   quality-gate:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.code != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -33,20 +71,22 @@ jobs:
           # at configure time. A shallow clone silently produces wrong values for both.
           fetch-depth: 0
 
-      # No signing credentials here. assembleProdRelease still runs R8, resource shrinking, manifest
-      # merging and lint — everything that can actually break — and only skips the final signing
-      # step, which proves nothing about the code. Withholding the key keeps it out of every
-      # PR-triggered run and is what lets Dependabot PRs pass at all: GitHub gives them no repo
-      # secrets, so any job that REQUIRES one can never go green.
-      # supabase-properties stays: the anon key is embedded in the shipped client by design, so it
-      # is public, and populating it keeps the gate closer to a real build.
+      # No signing credentials here: Dependabot PRs get no repo secrets, so a job that requires one
+      # never goes green. The supabase anon key ships in the client by design, so it is public.
       - uses: ./.github/actions/setup-android
         with:
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
           cache-read-only: 'true'
 
+      # assembleProdRelease (R8, resource shrinking, release lint) only when the PR touches build
+      # configuration or CI, or when `changes` could not tell.
       - name: Quality gate + builds
-        run: ./gradlew qualityGate assembleDevDebug assembleProdRelease
+        env:
+          RELEASE: ${{ needs.changes.result != 'success' || needs.changes.outputs.release != 'false' }}
+        run: |
+          tasks=(qualityGate assembleDevDebug)
+          if [ "$RELEASE" = "true" ]; then tasks+=(assembleProdRelease); fi
+          ./gradlew "${tasks[@]}"
 
       - name: Upload test reports
         if: always()
@@ -54,12 +94,7 @@ jobs:
         with:
           name: unit-test-report
           if-no-files-found: error
-          path: |
-            domain/build/reports/tests/test/
-            data/build/reports/tests/testDebugUnitTest/
-            presentation/build/reports/tests/testDebugUnitTest/
-            ui-android/build/reports/tests/testDebugUnitTest/
-            androidApp/build/reports/tests/testDevDebugUnitTest/
+          path: '**/build/reports/tests/'
           retention-days: 7
 
       - name: Upload detekt reports
@@ -67,12 +102,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: detekt-reports
-          path: |
-            androidApp/build/reports/detekt/
-            ui-android/build/reports/detekt/
-            presentation/build/reports/detekt/
-            data/build/reports/detekt/
-            domain/build/reports/detekt/
+          path: '**/build/reports/detekt/'
           retention-days: 7
 
       - name: Upload lint report
@@ -80,5 +110,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: lint-report
-          path: androidApp/build/reports/lint-results-devDebug.html
+          path: '**/build/reports/lint-results-*.html'
           retention-days: 7

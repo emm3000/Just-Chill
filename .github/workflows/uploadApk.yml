@@ -6,9 +6,10 @@ on:
       - trunk
   workflow_dispatch:
 
+# A newer trunk push supersedes the build being distributed; only the latest reaches testers.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/trunk' }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -18,9 +19,9 @@ jobs:
   # the same Gradle configuration only to assemble what it could not have assembled in parallel
   # anyway — it needed the gate to pass first.
   #
-  # The gate runs here even though the PR workflow already ran it on the same tree: trunk accepts
-  # direct pushes (admin bypass), and for those this is the only gate that runs off the author's
-  # machine. Remove it only if direct pushes to trunk stop.
+  # The full gate and both builds run here even though the PR workflow already validated the
+  # branch: protection is `strict: false`, so two PRs green on their own can break trunk together,
+  # and admin direct pushes skip PR CI. This is the only net for both. Do not remove it.
   distribute:
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -37,8 +38,11 @@ jobs:
           signing-key-base64: ${{ secrets.JUST_CHILL }}
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
 
+      # The Crashlytics mapping upload is off unless the property is true: trunk only.
       - name: Quality gate + builds
-        run: ./gradlew qualityGate assembleDevDebug assembleProdRelease
+        env:
+          MAPPING_UPLOAD: ${{ github.ref == 'refs/heads/trunk' }}
+        run: ./gradlew qualityGate assembleDevDebug assembleProdRelease "-Pjustchill.crashlyticsMappingUpload=$MAPPING_UPLOAD"
 
       - name: Set current date
         run: echo "date_today=$(date +'%Y-%m-%d-%H-%M-%S')" >> "$GITHUB_ENV"
