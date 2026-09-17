@@ -22,7 +22,6 @@ sealed class DomainException(message: String, cause: Throwable? = null) : Except
     // The status is a field so a caller never has to parse the sentence to branch on it.
     class RemoteRejected(message: String, val statusCode: Int, cause: Throwable) : DomainException(message, cause)
 
-    // The count is a field so a caller never has to parse the sentence to branch on it.
     class BackupsNotErased(
         val failedCount: Int,
         message: String = "$failedCount cloud backup objects survived the erase sweep",
