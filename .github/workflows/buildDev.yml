@@ -14,8 +14,8 @@ permissions:
   contents: read
 
 jobs:
-  # Decides what the PR needs. Every output defaults to "run it": a manual dispatch, an empty diff
-  # or a failure here all fall through to the full gate below.
+  # Decides what the PR needs. A manual dispatch sets both outputs true, an empty diff sets `code`
+  # true, and a failure here makes quality-gate run with every build; otherwise the diff decides.
   changes:
     runs-on: ubuntu-latest
     timeout-minutes: 5
