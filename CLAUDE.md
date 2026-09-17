@@ -128,7 +128,8 @@ doc has a read-trigger in the map below, and a doc with no trigger is archive.
 - `work/epics/E01-snapshot-backup.md` — the sync/backup epic: constraints outliving every ticket
   under it, remaining work in `work/backlog/`. **Read before touching backup.**
 - `work/epics/E02-migration-coverage.md` — the coverage invariant; `PERSISTENCE.md` — the schema, the
-  migration obligation and the test mechanics. **Read both before touching a `.sq`, a `.sqm` or a migration test.**
+  migration obligation and the test mechanics. **Read both before touching a `.sq`, a `.sqm` or a migration test**
+  (`.claude/rules/sqldelight.md` auto-loads the pointer and the hard invariants on any such read).
 - `work/README.md` — the board's rules: directory-is-status, immutable IDs, ceilings. **Read before
   opening, taking or closing a ticket.**
 - `adr/` — filenames state the decision; each header declares what it amends or supersedes. 009 is
