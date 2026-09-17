@@ -103,7 +103,7 @@ premise that the risk was zero.
    | Main thread | Decides, delegates, verifies conclusions — never reads raw tool output |
 
 3. **Tiebreaker for code writers.** Sonnet writes where the compiler or a test catches the error;
-   Opus writes where nothing does. In this repo that list is the `## Gotchas` section of `CLAUDE.md`.
+   Opus writes where nothing does. In this repo that list is row 3 of the table in `.claude/skills/wave/SKILL.md`.
 
 4. **Judgment Day's two-judge blind panel is Opus, with `model` passed explicitly on every `Agent`
    call.** This Sonnet carve-out applies only to that panel — never to the per-unit reviewer defined in
@@ -144,7 +144,7 @@ premise that the risk was zero.
 - Reconciliation, and it matters: ADR 003 was pricing **two Opus agents** per slice. This ADR does not
   restore that price. Per Decision points 1–2, the default is a **Sonnet** writer plus an **Opus**
   reviewer — the reviewer unconditionally, per Decision 1 — with Opus writing only where nothing
-  catches the error (the `Gotchas` list). The ceremony returns; its original price does not.
+  catches the error (the trap list, row 3 of the `/wave` table). The ceremony returns; its original price does not.
 - ADR 003's other decision points are untouched by this ADR, except point 6. ADR 005 already
   superseded point 1's frozen-UI scope and the UI-relevant items of the thaw checklist (the modals,
   `startTab`), while explicitly keeping ADR 003's compile-gate invariant (point 2) and constraint 8

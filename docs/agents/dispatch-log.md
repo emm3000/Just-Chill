@@ -10,10 +10,10 @@ Cause values: `checklist` (a recurring item from the reviewer checklist, the mod
 
 | Row | Model:effort | Work |
 |---|---|---|
-| 1 | sonnet:low | `.md` edits, renames, applying a diff already designed |
-| 2 | sonnet:medium | code where the compiler or a test catches the error |
-| 3 | fable:medium | code on the `## Gotchas` list, where nothing catches the error |
-| 4 | fable:high | architecture, ADR content, plans, reviews |
+| 1 | sonnet:low | `.md` edits, strings, renames, applying a diff already designed |
+| 2 | sonnet:medium | code where the compiler or a test catches the error: one screen, a ViewModel rule, a use case |
+| 3 | opus:medium | code on the trap list, where nothing catches the error: a route, a Koin binding, `:presentation` purity, an atom default that changes N screens, `.github/` |
+| 4 | opus:high | migration, backup/restore, auth, DI graph, cross-module architecture |
 
 ## Summary
 
@@ -23,8 +23,8 @@ Totals of rows already folded out of Recent.
 |---|---|---|---|---|---|---|
 | 1 | sonnet:low | 0 | 0 | 0 | 0 | 0 |
 | 2 | sonnet:medium | 0 | 0 | 0 | 0 | 0 |
-| 3 | fable:medium | 0 | 0 | 0 | 0 | 0 |
-| 4 | fable:high | 0 | 0 | 0 | 0 | 0 |
+| 3 | opus:medium | 0 | 0 | 0 | 0 | 0 |
+| 4 | opus:high | 0 | 0 | 0 | 0 | 0 |
 
 ## Recent
 

@@ -29,10 +29,10 @@ Rows are ordered by blast radius: how much a mistake breaks and whether a gate c
 |---|---|---|---|
 | 1 | `.md` edits, strings, renames, applying a diff already designed; every criterion is a command with empty output | sonnet:low | none: detekt, tests and the criteria fail loudly |
 | 2 | Code where the compiler or a test catches the error: one screen, a ViewModel rule, a use case | sonnet:medium | load `mattpocock-skills:tdd` for behavior; visual check on `medium_phone` for a screen |
-| 3 | Code on the trap list, where nothing catches the error: a route, a Koin binding, `:presentation` purity, an atom default that changes N screens, `.github/` | fable:medium | visual check of every affected screen |
-| 4 | Migration, backup/restore, auth, DI graph, cross-module architecture | fable:high | the restore drill in `docs/PERSISTENCE.md` when the schema moves |
+| 3 | Code on the trap list, where nothing catches the error: a route, a Koin binding, `:presentation` purity, an atom default that changes N screens, `.github/` | opus:medium | visual check of every affected screen |
+| 4 | Migration, backup/restore, auth, DI graph, cross-module architecture | opus:high | the restore drill in `docs/PERSISTENCE.md` when the schema moves |
 
-Reviews keep the playbook rules: `pr-reviewer` is always the top tier and runs only where the risk-tiered policy says so; post-review fixes sonnet:low; `ticket-writer` fable:high.
+Reviews and other roles keep the playbook rules: `pr-reviewer` opus:high, run only where the risk-tiered policy says so; post-review fixes sonnet:low; `ticket-writer` opus:high; design fable.
 
 Every row is a bet until `docs/agents/dispatch-log.md` says otherwise. When a row shows two or more first-review FIX FIRST verdicts for reasons the checklist did not cover, raise it one step and note why there.
 

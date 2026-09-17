@@ -1,6 +1,6 @@
 # Multi-session orchestration
 
-How the owner runs several Claude Code sessions on this repo in parallel, and what the orchestrator session must do before dispatching work to them. Read this before dispatching a ticket to a peer session. Separate writer and top-tier reviewer: ADR 007. Issues as the board, `pr-reviewer` as the only review: ADR 013.
+How the owner runs several Claude Code sessions on this repo in parallel, and what the orchestrator session must do before dispatching work to them. Read this before dispatching a ticket to a peer session. Separate writer and Opus reviewer: ADR 007. Issues as the board, `pr-reviewer` as the only review: ADR 013.
 
 ## The unit
 
@@ -26,7 +26,8 @@ One GitHub issue of `emm3000/Just-Chill` labelled `ready-for-agent`. The label v
 
 ## Model and effort
 
-- Every dispatch states model and **one** explicit effort (low / medium / high, never a range), with a one-line reason. The row comes from `docs/agents/dispatch-log.md` `## Rows`, mirrored in `.claude/skills/wave/SKILL.md`: pick the cheapest model and lowest effort that gets it right; reserve the top tier for work where a mistake is silent or expensive (migrations, backup/restore, auth, the DI graph); low is enough where a wrong answer fails tests loudly.
+- Every dispatch states model and **one** explicit effort (low / medium / high, never a range), with a one-line reason. The row comes from `docs/agents/dispatch-log.md` `## Rows`, mirrored in `.claude/skills/wave/SKILL.md`: pick the cheapest model and lowest effort that gets it right; reserve Opus for work where a mistake is silent or expensive (migrations, backup/restore, auth, the DI graph); low is enough where a wrong answer fails tests loudly. The tiers are ADR 007's.
+- Fable is for architecture and design decisions only: identity, tokens, component rules, mockups, visual judgment. Reviews, implementation and doc checks go to Opus or Sonnet.
 - `model` is explicit on every Agent call: the parameter overrides an agent's frontmatter `model:`, and omitting it silently runs the definition or session default.
 - A session cannot see its own reasoning effort; `ListAgents` does not show it, and asking a session returns a guess. The owner verifies with `/model` in each terminal. The orchestrator cannot self-manage its own effort either: tell the owner when to raise it (a conflicting rebase, judging a migration) and when to lower it back.
 - Skill routing: an unknown-cause bug gets `mattpocock-skills:diagnosing-bugs` first; reading legwork goes to `mattpocock-skills:research`; a diff that is not a PR gets `mattpocock-skills:code-review`; an architecture or domain decision loads `mattpocock-skills:domain-modeling`.
@@ -79,7 +80,7 @@ Every dispatch to a peer session must include:
   - **Reviewed (mandatory):** Supabase or SQLDelight schema and migrations, backup/restore correctness, auth, DI graph changes, a Compose or UI type reaching `:presentation`, `.github/`.
   - **Gate-only (no reviewer):** UI composition, copy, presentation-layer wiring, docs, tests-only changes, mechanical refactors. CI's gate plus the orchestrator's read of the PR is the whole check.
   - A unit spanning both tiers gets one review scoped to its high-risk part. Rationale: no third-party users, the author runs the release daily on real data, and the one irreversible failure is data loss.
-- Every PR review is a fresh `pr-reviewer` subagent the orchestrator launches, one per PR, always the top tier: fresh context, adversarial, read-only. It reads the diff, the issue and `gh pr checks`; it does not rerun the gate, because CI already did. It pulls the screenshots locally with `git show origin/assets/<N>-visual-check:<file>`, checks that the SHA in each file name matches the PR head, and views the images. It boots `medium_phone` only when screenshots are missing, stale or suspicious. It returns `blocking|minor` findings, one verdict (MERGE or FIX FIRST) and one cause word (`checklist`, `judgment`, `spec`) for the dispatch log.
+- Every PR review is a fresh `pr-reviewer` subagent the orchestrator launches, one per PR, always opus:high: fresh context, adversarial, read-only. It reads the diff, the issue and `gh pr checks`; it does not rerun the gate, because CI already did. It pulls the screenshots locally with `git show origin/assets/<N>-visual-check:<file>`, checks that the SHA in each file name matches the PR head, and views the images. It boots `medium_phone` only when screenshots are missing, stale or suspicious. It returns `blocking|minor` findings, one verdict (MERGE or FIX FIRST) and one cause word (`checklist`, `judgment`, `spec`) for the dispatch log.
 - Merge is rebase-only, linear history, CI required. The orchestrator never blocks its own turn on `gh run watch`; it merges when the CI notification or the session's report arrives.
 - Auto-merge (`gh pr merge --rebase --auto`) only works while checks are still pending; on a CLEAN PR GitHub refuses it. Check `gh pr view <N> --json mergeStateStatus` first: merge directly with `gh pr merge <N> --rebase` when CLEAN, arm auto-merge only while pending, and have the implementing session confirm with `gh pr view <N> --json state` once CI passes.
 
