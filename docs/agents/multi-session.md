@@ -26,7 +26,7 @@ One GitHub issue of `emm3000/Just-Chill` labelled `ready-for-agent`. The label v
 
 ## Model and effort
 
-- Every dispatch states model and **one** explicit effort (low / medium / high, never a range), with a one-line reason. The row comes from `docs/agents/dispatch-log.md` `## Rows`, mirrored in `.claude/skills/wave/SKILL.md`: pick the cheapest model and lowest effort that gets it right; reserve Opus for work where a mistake is silent or expensive (migrations, backup/restore, auth, the DI graph); low is enough where a wrong answer fails tests loudly. The tiers are ADR 007's.
+- Every dispatch states model and **one** explicit effort (low / medium / high, never a range), with a one-line reason. The row comes from the table in `.claude/skills/wave/SKILL.md`: pick the cheapest model and lowest effort that gets it right; reserve Opus for work where a mistake is silent or expensive (migrations, backup/restore, auth, the DI graph); low is enough where a wrong answer fails tests loudly. The tiers are ADR 007's.
 - Fable is for architecture and design decisions only: identity, tokens, component rules, mockups, visual judgment. Reviews, implementation and doc checks go to Opus or Sonnet.
 - `model` is explicit on every Agent call: the parameter overrides an agent's frontmatter `model:`, and omitting it silently runs the definition or session default.
 - A session cannot see its own reasoning effort; `ListAgents` does not show it, and asking a session returns a guess. The owner verifies with `/model` in each terminal. The orchestrator cannot self-manage its own effort either: tell the owner when to raise it (a conflicting rebase, judging a migration) and when to lower it back.

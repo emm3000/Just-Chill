@@ -23,7 +23,7 @@ Run when the owner invokes `/wave` with one or more issue numbers, or when the o
 
 ## Decision Gates
 
-Rows are ordered by blast radius: how much a mistake breaks and whether a gate catches it. A ticket that matches several rows takes the highest-numbered row that matches. The rows are `docs/agents/dispatch-log.md` `## Rows`; the log is what tunes them.
+Rows are ordered by blast radius: how much a mistake breaks and whether a gate catches it. A ticket that matches several rows takes the highest-numbered row that matches. The table lives only here; `docs/agents/dispatch-log.md` records the outcomes per row.
 
 | Row | Work | Model:effort | Extra instruction |
 |---|---|---|---|
@@ -34,7 +34,7 @@ Rows are ordered by blast radius: how much a mistake breaks and whether a gate c
 
 Reviews and other roles keep the playbook rules: a `pr-reviewer` on every PR, restyle/docs/rename reviews sonnet:medium, screen/logic/migration/backup/auth/DI reviews opus:high, post-review fixes sonnet:low, `ticket-writer` opus:high, design fable.
 
-Every row is a bet until `docs/agents/dispatch-log.md` says otherwise. When a row shows two or more first-review FIX FIRST verdicts for reasons the checklist did not cover, raise it one step and note why there.
+Every row is a bet until `docs/agents/dispatch-log.md` says otherwise. When a row shows two or more first-review FIX FIRST verdicts for reasons the checklist did not cover, raise it one step and note why here.
 
 ## Execution Steps
 
@@ -52,6 +52,6 @@ Return the list `@<name> #<n> <model>:<effort>` and nothing else until a peer re
 ## References
 
 - `docs/agents/multi-session.md` — dispatch checklist, isolation, review cycle.
-- `docs/agents/dispatch-log.md` — the rows and their outcomes.
+- `docs/agents/dispatch-log.md` — the outcomes per table row.
 - `scripts/justchill-wave` — Warp tab config generator.
 - `scripts/justchill-session` — worktree plus `claude` launcher.
