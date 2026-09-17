@@ -21,7 +21,7 @@ One GitHub issue of `emm3000/Just-Chill` labelled `ready-for-agent`. The label v
 - **Owner** approves the first wave of a session and verifies model and effort with `/model` in each pane. Once a wave is fully merged the orchestrator starts the next one on its own. Peer sessions are booted only through the `/wave` skill, never by running `scripts/justchill-wave` by hand. Refer to a session with an `@` prefix in chat (`@loans`): it disambiguates the session from a feature or ticket of the same name.
 - **Orchestrator** coordinates: dispatches via `SendMessage`, reviews, merges. It stays thin.
   - Delegate investigation and any artifact-producing work (tickets, specs, surveys, docs) to a subagent with an explicit model.
-  - Do inline only routing state (`git status`, `git worktree list`, `gh issue/pr list`, `ListAgents`) and at most 1-3 files to decide. `:presentation` or a module boundary touched, run the leak grep in `.claude/rules/architecture.md`.
+  - Do inline only routing state (`git status`, `git worktree list`, `gh issue/pr list`, `ListAgents`) and at most 1-2 files to decide. `:presentation` or a module boundary touched, run the leak grep in `.claude/rules/architecture.md`.
   - Report minimal: act on review/agent findings, tell the owner 1-2 lines and only decisions that are genuinely theirs. Merging a clean PR is normal practice, not a question.
 
 ## Model and effort
@@ -57,7 +57,6 @@ Every dispatch to a peer session must include:
 - `/wave <issue numbers>` is the only entry point, whether the owner types it or the orchestrator invokes it for the next wave: it classifies each ticket with the skill table, states `@<name> #<n> <model>:<effort>` to the owner before booting (deviations from the table carry a one-line reason), runs `scripts/justchill-wave`, waits for the peers in `ListAgents` and dispatches. The skill lives in `.claude/skills/wave/SKILL.md`.
 - `scripts/justchill-wave name:model:effort [...]` writes `~/.warp/tab_configs/justchill-wave.toml` with one pane per peer in a horizontal split and opens it with `open "warp://tab_config/justchill-wave"`. A Tab Config opens as a new tab in the active Warp window; Launch Configurations (`warp://launch/`) always open a new window, so they are not used.
 - `scripts/justchill-session name model effort` creates the detached worktree `../justchill-<name>` from `origin/trunk` when missing, then runs `claude -n <name> --model <model> --effort <effort> --permission-mode bypassPermissions` inside it. The peer creates its ticket branch with `git switch -c`.
-- Closing a wave: the owner closes the panes; the orchestrator removes the worktrees. To close a pane from a script, kill the `claude` pid and then `kill -HUP` its parent `zsh`.
 
 ## Isolation: worktrees
 
@@ -84,7 +83,7 @@ Every dispatch to a peer session must include:
 
 ## Between tickets
 
-- A cycle is closed only when all of this is done, in order. First the PR is merged. Then the peer leaves its worktree clean and removes it (`git worktree remove <path>`). Then its local branch is deleted and `git worktree prune` runs. Last, any throwaway review worktree under a scratchpad is removed. The orchestrator checks `git worktree list` before reporting the session as free. If a peer is gone, the orchestrator removes the leftovers itself, but only after confirming that no live session uses them.
+- A cycle is closed only when all of this is done, in order. First the PR is merged. Then the peer leaves its worktree clean and removes it (`git worktree remove <path>`). Then its local branch is deleted with `git branch -D <branch>` (a rebase-merged branch never counts as merged, so `-d` refuses it) and `git worktree prune` runs. Last, any throwaway review worktree under a scratchpad is removed. The orchestrator checks `git worktree list` before reporting the session as free. If a peer is gone, the orchestrator removes the leftovers itself, but only after confirming that no live session uses them.
 - Also at cycle close, the orchestrator appends one row to the Recent table of `docs/agents/dispatch-log.md` and folds anything beyond the last 20 rows into its Summary: PR, issue, table row, model:effort, first-review verdict and, on FIX FIRST, whether the cause was a checklist item, a judgment error or a thin spec. The table in `.claude/skills/wave/SKILL.md` is tuned from that log, not from opinion.
 - Also at cycle close, the orchestrator asks whether the merged work made an architecture or domain decision, or changed a domain term. If it did, it files a small docs ticket that loads `mattpocock-skills:domain-modeling` and adds or updates the ADR in `docs/adr/`, `CONTEXT.md`, or both. An ADR that the shipped behavior contradicts is fixed the same way.
 - A peer session carries exactly one ticket. When its PR is merged, the orchestrator closes the cycle and kills the pane: kill the peer's `claude` pid, then `kill -HUP` its parent `zsh`. It never sends a second ticket to the same session. When every PR of the wave is merged, it invokes `/wave` with the next wave's tickets.
