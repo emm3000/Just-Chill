@@ -1,0 +1,45 @@
+#!/usr/bin/env zsh
+set -euo pipefail
+
+if (( $# == 0 )); then
+  echo "usage: scripts/justchill-wave <name>:<model>:<effort> [...]" >&2
+  exit 64
+fi
+
+repo="${0:A:h:h}"
+config_dir="$HOME/.warp/tab_configs"
+config="$config_dir/justchill-wave.toml"
+mkdir -p "$config_dir"
+
+names=()
+for spec in "$@"; do
+  IFS=':' read -r name model effort <<< "$spec"
+  if [[ -z "${name:-}" || -z "${model:-}" || -z "${effort:-}" ]]; then
+    echo "bad spec: $spec (expected name:model:effort)" >&2
+    exit 64
+  fi
+  names+=("$name")
+done
+
+{
+  echo 'name = "justchill-wave"'
+  echo
+  if (( ${#names[@]} > 1 )); then
+    echo '[[panes]]'
+    echo 'id = "root"'
+    echo 'split = "horizontal"'
+    printf 'children = [%s]\n' "$(printf '"%s", ' "${names[@]}" | sd ', $' '')"
+    echo
+  fi
+  for spec in "$@"; do
+    IFS=':' read -r name model effort <<< "$spec"
+    echo '[[panes]]'
+    echo "id = \"$name\""
+    echo 'type = "terminal"'
+    echo "directory = \"$repo\""
+    echo "commands = [\"scripts/justchill-session $name $model $effort; exit\"]"
+    echo
+  done
+} > "$config"
+
+open "warp://tab_config/justchill-wave"
