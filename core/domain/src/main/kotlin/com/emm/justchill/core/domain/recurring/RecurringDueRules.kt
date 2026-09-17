@@ -46,7 +46,7 @@ fun periodKey(yearMonth: YearMonth): String {
     return "${yearMonth.year}-$mm"
 }
 
-// Paired with RecurringMovementLocalDataSource.ensureNotSettled in :data, which answers the same
+// Paired with RecurringMovementLocalDataSource.ensureNotSettled in :core:database, which answers the same
 // "is this mark settled" question by raw string comparison and bounds nothing. Widen this year range
 // and the two disagree on which keys are well-formed, jamming the template with no tap left to fix it.
 fun parsePeriodKey(key: String): YearMonth? {

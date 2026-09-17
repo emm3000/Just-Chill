@@ -1,0 +1,323 @@
+-- `occurredAt` is WHEN THE MONEY MOVED, as the user means it: a calendar day with a wall-clock
+-- time, and no timezone. It is stored as ISO local text, 'YYYY-MM-DDTHH:MM:SS'.
+--
+-- It is deliberately NOT an instant. A personal-finance movement is a calendar-day event; asking
+-- which physical moment it happened at only ever produced bugs here — the same row read as two
+-- different days on two devices, and a "keep the day, change the hour" edit that had to hold an
+-- instant and a day in agreement by hand. There is one field now, so there is nothing to desync.
+--
+-- The text format is what makes SQL able to answer every question without a zone:
+--   • lexicographic order == chronological order, so ORDER BY occurredAt DESC is correct as-is
+--   • a month is a half-open string window: >= '2026-08-01' AND < '2026-09-01'. A 'YYYY-MM-DD'
+--     bound compares correctly against a full 'YYYY-MM-DDTHH:MM:SS' value because the date part is
+--     FIXED WIDTH and each bound is exactly that part. The upper bound is settled inside the first
+--     ten characters — '2026-08-31T23:59:59' < '2026-09-01' on the month digit, 8 < 9, so the last
+--     instant of the 31st is inside and the comparison never reaches the 'T'. The lower bound is
+--     settled by the prefix rule — '2026-08-01T00:00:00' starts with '2026-08-01' and is longer,
+--     so it sorts after it. Where 'T' falls in the character set has nothing to do with either;
+--     what the whole thing rests on is the width never varying
+--   • the calendar day alone is substr(occurredAt, 1, 10)
+--
+-- createdAt / updatedAt / deletedAt stay epoch millis on purpose: those ARE instants — storage
+-- metadata and the ordering LWW conflict resolution reads.
+--
+-- THE COMPOSITE FOREIGN KEY — why a movement's category cannot disagree with its type.
+--
+-- `type` and `categories.categoryType` used to be two unrelated TEXT columns that NINE writers had
+-- to keep in agreement by convention, three of them writing straight to :core:database without passing
+-- through any use case (backup import and two table syncs). A convention with nine enforcement
+-- points and three bypasses is not an invariant, and it did not hold: an Income movement shipped
+-- with a Spend category on it. Enforcing it in :core:domain has a ceiling BY DESIGN — the three :core:database
+-- writers never go through :core:domain — so it is enforced here, where every writer has to pass.
+--
+-- (categoryId, type) → (categoryId, categoryType) is the whole rule. What makes it work without a
+-- special case for uncategorized movements is SQLite's own composite-FK semantics: if ANY column
+-- of the child key is NULL the constraint is SATISFIED, so `categoryId IS NULL` stays legal.
+--
+-- NO `ON DELETE` CLAUSE, deliberately. `ON DELETE SET NULL` on a composite FK nulls EVERY child
+-- column, `type` included, and `type` is NOT NULL — the clause could only ever abort the delete.
+-- Dropping it changes nothing live: no code path physically deletes a category (DeleteCategoryUseCase
+-- tombstones, and preserves the dangling link on purpose), so the clause never fired.
+--
+-- LOAD-BEARING AND INVISIBLE TO THE COMPILER: the two columns are compared as TEXT, and they agree
+-- only because `TransactionType.Income/Spend` and `CategoryType.Income/Spend` have the SAME enum
+-- constant names — `TransactionType.categoryType` maps them one-to-one. Renaming a constant on
+-- either enum silently breaks every write in the app; the labels differ already and are safe to
+-- change, the names are not.
+CREATE TABLE transactions (
+    transactionId  TEXT NOT NULL PRIMARY KEY,
+    type           TEXT NOT NULL,
+    amount         INTEGER NOT NULL,
+    description    TEXT NOT NULL DEFAULT '',
+    occurredAt     TEXT NOT NULL,
+    categoryId     TEXT,
+    accountId      TEXT NOT NULL REFERENCES accounts(accountId) ON DELETE RESTRICT,
+    createdAt      INTEGER NOT NULL,
+    updatedAt      INTEGER NOT NULL,
+    userId         TEXT,
+    deletedAt      INTEGER,
+    syncState      TEXT NOT NULL DEFAULT 'Pending',
+    FOREIGN KEY (categoryId, type) REFERENCES categories(categoryId, categoryType)
+);
+
+CREATE INDEX IF NOT EXISTS transactions_account_idx  ON transactions(accountId);
+CREATE INDEX IF NOT EXISTS transactions_occurred_idx ON transactions(occurredAt);
+CREATE INDEX IF NOT EXISTS transactions_category_idx ON transactions(categoryId);
+CREATE INDEX IF NOT EXISTS transactions_syncstate_idx ON transactions(syncState);
+CREATE INDEX IF NOT EXISTS transactions_user_deleted_idx ON transactions(userId, deletedAt);
+
+all:
+SELECT * FROM transactions WHERE deletedAt IS NULL ORDER BY occurredAt DESC;
+
+-- No `deletedAt IS NULL` on the accounts join, unlike the categories one: accountId is a NOT NULL
+-- FK and DeleteAccountUseCase refuses while the account still holds live transactions, so a live
+-- row can never point at an account that is gone. Filtering here would only blank a real name.
+completeTransactions:
+SELECT
+    t.*,
+    c.name AS categoryName,
+    c.icon AS categoryIcon,
+    c.color AS categoryColor,
+    c.categoryType AS categoryType_,
+    a.name AS accountName
+FROM transactions t
+LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
+LEFT JOIN accounts a ON t.accountId = a.accountId
+WHERE t.deletedAt IS NULL
+ORDER BY t.occurredAt DESC;
+
+completeTransactionsByDateRange:
+SELECT
+    t.*,
+    c.name AS categoryName,
+    c.icon AS categoryIcon,
+    c.color AS categoryColor,
+    c.categoryType AS categoryType_,
+    a.name AS accountName
+FROM transactions t
+LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
+LEFT JOIN accounts a ON t.accountId = a.accountId
+WHERE t.deletedAt IS NULL
+  AND t.occurredAt >= :startOfMonth
+  AND t.occurredAt < :startOfNextMonth
+ORDER BY t.occurredAt DESC;
+
+-- Same lexicographic-bound shape as completeTransactionsByDateRange, but no joins: this is what
+-- accountsMonthSlice (:presentation) folds now instead of `all()`'s whole live table (E14-06). An
+-- unknown type value never reaches that fold at all -- TransactionMappers.asExternalModelOrNull()
+-- already drops a row it cannot parse, the same skip-row policy liveTotals enforces with a CASE WHEN
+-- because ITS caller never goes through that mapper.
+transactionsByDateRange:
+SELECT * FROM transactions
+WHERE deletedAt IS NULL
+  AND occurredAt >= :startInclusive
+  AND occurredAt < :endExclusive
+ORDER BY occurredAt DESC;
+
+-- Unknown type values (e.g. from a newer app version on another device) contribute 0,
+-- consistent with the mapper skip-row policy: a row the app cannot interpret is invisible
+-- everywhere rather than partially visible (misclassified as a spend).
+getAccountBalance:
+SELECT COALESCE(
+    SUM(CASE WHEN type = 'Income' THEN amount WHEN type = 'Spend' THEN -amount ELSE 0 END), 0
+)
+FROM transactions
+WHERE accountId = :accountId AND deletedAt IS NULL;
+
+-- The running balance and "has the user ever recorded anything" in one aggregate row, backing
+-- TransactionRepository.observeTotals(). Folding the whole table in memory on every emission was
+-- O(rows) per insert; this is O(1) work for the caller. Unknown type values contribute 0 to the
+-- balance and are not counted, matching the mapper skip-row policy that hides them from every
+-- list in the app.
+liveTotals:
+SELECT
+    COALESCE(
+        SUM(CASE WHEN type = 'Income' THEN amount WHEN type = 'Spend' THEN -amount ELSE 0 END), 0
+    ) AS balance,
+    COUNT(CASE WHEN type IN ('Income', 'Spend') THEN 1 END) AS movementCount
+FROM transactions
+WHERE deletedAt IS NULL;
+
+insert:
+INSERT OR REPLACE INTO transactions(transactionId, type, amount, description, occurredAt, categoryId, accountId, createdAt, updatedAt, syncState)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending');
+
+find:
+SELECT * FROM transactions WHERE transactionId = ? AND deletedAt IS NULL;
+
+update:
+UPDATE transactions
+SET type = ?, amount = ?, description = ?, occurredAt = ?, accountId = ?, categoryId = ?, updatedAt = ?, syncState = 'Pending'
+WHERE transactionId = ?;
+
+countLiveByAccount:
+SELECT COUNT(*) FROM transactions WHERE accountId = :accountId AND deletedAt IS NULL;
+
+-- LIMIT keeps the global (cross-month) search bounded: without it this is the one query
+-- left that can stream the whole table into memory. Newest rows win the cut (occurredAt DESC).
+searchTransactions:
+SELECT
+    t.*,
+    c.name AS categoryName,
+    c.icon AS categoryIcon,
+    c.color AS categoryColor,
+    c.categoryType AS categoryType_,
+    a.name AS accountName
+FROM transactions t
+LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
+LEFT JOIN accounts a ON t.accountId = a.accountId
+WHERE t.deletedAt IS NULL
+  AND (:queryEmpty = 1 OR LOWER(t.description) LIKE '%' || LOWER(:query) || '%')
+  AND (:categoryFilterEmpty = 1 OR t.categoryId IN :categoryIds)
+ORDER BY t.occurredAt DESC
+LIMIT :limit;
+
+-- Chip ranking for the transactions tab. Counting here replaces folding the whole table in
+-- memory on every emission; soft-deleted and uncategorized rows never rank a chip.
+countPerCategory:
+SELECT categoryId, COUNT(*) AS usageCount
+FROM transactions
+WHERE deletedAt IS NULL AND categoryId IS NOT NULL
+GROUP BY categoryId;
+
+-- Detaches every movement that would be left holding a category of the wrong type once that
+-- category's own type changes. Only the pull path changes a category's type behind the user's
+-- back, and without this the parent UPDATE is refused by the composite key — which the pull reads
+-- as "the parent has not arrived yet" and answers by holding the shared cursor forever.
+--
+-- No `updatedAt` bump and no syncState flip, matching 4.sqm: sync is off in production and the
+-- engine is being deleted, not repaired, in favor of snapshot backup (ADR 009), so there is no
+-- second replica for the correction to reach.
+clearCategoryOnTypeChange:
+UPDATE transactions SET categoryId = NULL WHERE categoryId = :categoryId AND type != :categoryType;
+
+softDelete:
+UPDATE transactions
+SET deletedAt = ?, updatedAt = ?, syncState = 'Pending'
+WHERE transactionId = ?;
+
+-- Backup restore — see the equivalent block in accounts.sq for the reasoning.
+softDeleteAllLive:
+UPDATE transactions
+SET deletedAt = :deletedAt, updatedAt = :updatedAt, syncState = 'Pending'
+WHERE deletedAt IS NULL;
+
+insertOrIgnoreFromBackup:
+INSERT OR IGNORE INTO transactions(transactionId, type, amount, description, occurredAt, categoryId, accountId, createdAt, updatedAt, syncState)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending');
+
+restoreFromBackup:
+UPDATE transactions
+SET type = ?, amount = ?, description = ?, occurredAt = ?, categoryId = ?, accountId = ?, updatedAt = ?, deletedAt = NULL, syncState = 'Pending'
+WHERE transactionId = ?;
+
+monthlyStats:
+SELECT COUNT(*) AS movementCount, COALESCE(SUM(amount), 0) AS totalAmount
+FROM transactions
+WHERE type = :type
+  AND occurredAt >= :startInclusive
+  AND occurredAt < :endExclusive
+  AND deletedAt IS NULL;
+
+-- LEFT JOIN, not INNER: a transaction with no category (or one whose category was
+-- soft-deleted) must still be counted. The Report folds these rows into its month total
+-- while Ver folds the raw transactions, so an INNER JOIN made the two screens disagree.
+-- All such rows collapse into a single bucket with a NULL categoryId, which the UI labels.
+monthlyAmountByCategory:
+SELECT
+    c.categoryId AS categoryId,
+    c.name       AS categoryName,
+    c.icon       AS categoryIcon,
+    c.color      AS categoryColor,
+    SUM(t.amount) AS totalAmount
+FROM transactions t
+LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
+WHERE t.type = :type
+  AND t.occurredAt >= :startInclusive
+  AND t.occurredAt < :endExclusive
+  AND t.deletedAt IS NULL
+GROUP BY c.categoryId
+ORDER BY totalAmount DESC;
+
+-- Same shape and same LEFT JOIN reasoning as monthlyAmountByCategory, but it groups by type as
+-- well, so one execution covers both Income and Spend for a month. The Trends tab needs twelve
+-- months of both; running this once per month instead of once per month per type halves the
+-- round-trips, and the caller runs the whole window inside a single read transaction.
+monthlyAmountByCategoryAndType:
+SELECT
+    t.type       AS type,
+    c.categoryId AS categoryId,
+    c.name       AS categoryName,
+    c.icon       AS categoryIcon,
+    c.color      AS categoryColor,
+    SUM(t.amount) AS totalAmount
+FROM transactions t
+LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
+WHERE t.occurredAt >= :startInclusive
+  AND t.occurredAt < :endExclusive
+  AND t.deletedAt IS NULL
+GROUP BY t.type, c.categoryId
+ORDER BY totalAmount DESC;
+
+topUsedCategoryIds:
+SELECT categoryId
+FROM transactions
+WHERE categoryId IS NOT NULL
+  AND type = :type
+  AND occurredAt >= :startInclusive
+  AND deletedAt IS NULL
+GROUP BY categoryId
+ORDER BY COUNT(*) DESC, MAX(occurredAt) DESC
+LIMIT :limit;
+
+topUsedCombos:
+SELECT accountId, categoryId, type
+FROM transactions
+WHERE categoryId IS NOT NULL
+  AND type = :type
+  AND occurredAt >= :startInclusive
+  AND deletedAt IS NULL
+GROUP BY accountId, categoryId, type
+ORDER BY COUNT(*) DESC, MAX(occurredAt) DESC
+LIMIT :limit;
+
+lastUsedAccountId:
+SELECT accountId
+FROM transactions
+WHERE deletedAt IS NULL
+ORDER BY occurredAt DESC, createdAt DESC
+LIMIT 1;
+
+claimAll:
+UPDATE transactions SET userId = :userId, syncState = 'Pending' WHERE userId IS NULL;
+
+unclaimAll:
+UPDATE transactions SET userId = NULL, syncState = 'Pending' WHERE userId = :userId;
+
+selectPending:
+SELECT * FROM transactions WHERE syncState = 'Pending' AND userId IS NOT NULL;
+
+markSynced:
+UPDATE transactions SET syncState = 'Synced' WHERE transactionId = ? AND updatedAt = ?;
+
+markPendingForResync:
+UPDATE transactions SET syncState = 'Pending' WHERE transactionId = ?;
+
+-- See accounts.sq:accountSyncRevision for why syncState is selected and why the name is per-table.
+transactionSyncRevision:
+SELECT updatedAt, syncState FROM transactions WHERE transactionId = ?;
+
+insertOrIgnoreFromRemote:
+INSERT OR IGNORE INTO transactions(transactionId, type, amount, description, occurredAt, categoryId, accountId, createdAt, updatedAt, userId, deletedAt, syncState)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Synced');
+
+updateFromRemote:
+UPDATE transactions
+SET type = ?, amount = ?, description = ?, occurredAt = ?, categoryId = ?, accountId = ?, createdAt = ?, updatedAt = ?, userId = ?, deletedAt = ?, syncState = 'Synced'
+WHERE transactionId = ?;
+
+countPending:
+SELECT COUNT(*) FROM transactions WHERE syncState = 'Pending' AND userId IS NOT NULL;
+
+countUnclaimed:
+SELECT COUNT(*) FROM transactions WHERE userId IS NULL;

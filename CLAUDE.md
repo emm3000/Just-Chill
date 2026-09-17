@@ -11,14 +11,14 @@ No third-party users, but **the author runs the release daily on a device holdin
 ## Modules
 
 ```
-androidApp   -> ui-android, presentation, data, core:domain
-ui-android   -> presentation, data, core:domain
-presentation -> data, core:domain
-data         -> core:domain
+androidApp     -> ui-android, presentation, core:database, core:domain
+ui-android     -> presentation, core:database, core:domain
+presentation   -> core:database, core:domain
+core:database  -> core:domain
 ```
 
 - `:core:domain` — **pure Kotlin** (`kotlin("jvm")`): models, value objects, use cases and the repository interfaces. `kotlinx-coroutines-core` and `kotlinx-datetime` only.
-- `:data` — the domain interfaces implemented: SQLDelight (`EmmDatabaseData`, the schema and migrations), Supabase auth and backup, mappers.
+- `:core:database` — the domain interfaces implemented: SQLDelight (`JustChillDatabase`, the schema and migrations), Supabase auth and backup, mappers.
 - `:presentation` — the compose-free MVI core, every ViewModel with its `UiState` / `Intent` / `Effect`, the Koin modules, formatters.
 - `:ui-android` — Compose screens, navigation, theme tokens and atoms. Same Kotlin packages as `:presentation` on purpose.
 - `:androidApp` — `MainActivity`, `EmmApp`, the platform Koin module, the `dev` / `prod` flavors, shortcuts, the session keystore.
@@ -68,10 +68,10 @@ Kotlin, Jetpack Compose, Navigation 3, Koin, SQLDelight 2, supabase-kt with Ktor
 
 ## Commands
 
-- `./gradlew qualityGate` — detekt per module, host tests, `:data`'s instrumented compile, `verifySqlDelightMigration`, `checkModuleBoundaries`, `checkComposeFreeViewModels`, `:androidApp:lintDevDebug`, `:build-logic:convention:test`. Defined once in `QualityGateConventionPlugin.kt`; the pre-push hook and CI run exactly it.
+- `./gradlew qualityGate` — detekt per module, host tests, `:core:database`'s instrumented compile, `verifySqlDelightMigration`, `checkModuleBoundaries`, `checkComposeFreeViewModels`, `:androidApp:lintDevDebug`, `:build-logic:convention:test`. Defined once in `QualityGateConventionPlugin.kt`; the pre-push hook and CI run exactly it.
 - `./gradlew assembleDevDebug` — dev debug build; `assembleProdRelease` for the release.
 - `./gradlew test` — every module's host tests; per module `:<module>:testDebugUnitTest`, `:core:domain:test`, and `:androidApp:testDevDebugUnitTest` for the MockK ViewModel suite.
-- `./gradlew :data:connectedDebugAndroidTest` — the migration suite, on the `medium_phone` emulator, the only AVD.
+- `./gradlew :core:database:connectedDebugAndroidTest` — the migration suite, on the `medium_phone` emulator, the only AVD.
 - Test tasks go `UP-TO-DATE` across sessions: `--rerun` forces a real run, per task.
 
 ## Test stack
@@ -103,7 +103,7 @@ Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-
 ### Design and reference docs
 
 - `gh issue list --label ready-for-agent` — the committed work. No doc holds a work list.
-- `data/CLAUDE.md` `## Backup` before touching `data/src/**/backup/`; `.claude/rules/sqldelight.md` before a `.sq`, a `.sqm` or a migration test.
+- `core/database/CLAUDE.md` `## Backup` before touching `core/database/src/**/backup/`; `.claude/rules/sqldelight.md` before a `.sq`, a `.sqm` or a migration test.
 - `docs/PRODUCT_REQUIREMENTS.md` — the Won't-have rows (ADRs amend them by row id), the NFRs, the acceptance criterion. Read before scoping a feature.
 - `docs/play/` (advertising ID, listing, privacy policy) and `docs/release.md` — the store-facing set. Read before a Play submission, a privacy change or a release tag.
 

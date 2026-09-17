@@ -2,7 +2,7 @@
 
 Thin Android entry point: `MainActivity`, `EmmApp`, and the Android halves of the ports `:presentation` declares (the platform Koin module, `DispatchersProvider`, the Crashlytics `DiagnosticsLogger` sink, `CurrentActivityHolder`, the Google sign-in launcher), plus the `@Preview` host in `components/`. ViewModels, the MVI core and the Koin graph are `:presentation`; Compose UI is `:ui-android`.
 
-`com.android.application` on AGP 9's built-in Kotlin, root package `com.emm.justchill`, `minSdk = 28`, `compileSdk = 37`. Depends on `:ui-android`, and on `:core:domain` and `:data` directly because `AndroidPlatformModule` constructs the SQLDelight driver itself.
+`com.android.application` on AGP 9's built-in Kotlin, root package `com.emm.justchill`, `minSdk = 28`, `compileSdk = 37`. Depends on `:ui-android`, and on `:core:domain` and `:core:database` directly because `AndroidPlatformModule` constructs the SQLDelight driver itself.
 
 ## Platform Koin module
 

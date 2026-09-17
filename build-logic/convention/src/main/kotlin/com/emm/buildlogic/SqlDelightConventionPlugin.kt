@@ -20,8 +20,8 @@ class SqlDelightConventionPlugin : Plugin<Project> {
     }
 
     private companion object {
-        const val DATABASE_NAME: String = "EmmDatabaseData"
-        const val DATABASE_PACKAGE: String = "com.emm.data"
+        const val DATABASE_NAME: String = "JustChillDatabase"
+        const val DATABASE_PACKAGE: String = "com.emm.justchill.core.database"
         const val SCHEMA_DIRECTORY: String = "src/main/sqldelight/databases"
     }
 }

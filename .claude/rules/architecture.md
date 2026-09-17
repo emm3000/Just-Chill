@@ -3,7 +3,7 @@ paths:
   - "androidApp/src/*/kotlin/**"
   - "ui-android/src/*/kotlin/**"
   - "presentation/src/*/kotlin/**"
-  - "data/src/*/kotlin/**"
+  - "core/database/src/*/kotlin/**"
   - "core/domain/src/*/kotlin/**"
 ---
 
@@ -16,7 +16,7 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 | Layer | Contains |
 |---|---|
 | `:core:domain` | Pure Kotlin. Models, value objects, use cases, and the **interfaces** the outer layers implement. |
-| `:data` | Implementations of the domain interfaces: SQLDelight, Supabase auth and backup, mappers. |
+| `:core:database` | Implementations of the domain interfaces: SQLDelight, Supabase auth and backup, mappers. |
 | `:presentation` | Compose-free MVI core, ViewModels with their `UiState` / `Intent` / `Effect`, Koin modules, formatters, `UiStrings`. |
 | `:ui-android` | Compose screens, navigation, theme tokens and atoms. |
 | `:androidApp` | `MainActivity`, `EmmApp`, the platform Koin module, flavors, shortcuts, the session keystore. |
@@ -32,7 +32,7 @@ data         -> domain
 
 - `:core:domain` is pure Kotlin (`kotlin("jvm")`): `kotlinx-coroutines-core` and `kotlinx-datetime` only. No Android, no SQLDelight, no Supabase, no Ktor. `android.*` cannot resolve there; the rest is convention, reviewed.
 - Whatever asks "what day is it" takes an injected `Clock` **and** an injected `TimeZone`, and neither parameter carries a default: a default never blocks an explicit argument, so a test passing a fake clock also passes against the ambient one. `hh/di/SharedModule.kt` is the only place a clock or a zone enters the graph; `AppGraphKoinTest` asserts by identity that every graph-built `com.emm.` class holds the bound instances. `TodayFlow.today()` is the one way a ViewModel derives the date.
-- `:presentation` depends on `:data` for one reason: the Koin modules in `hh/di/` bind interface to implementation in one place. A ViewModel takes `:core:domain` interfaces, never a SQLDelight type or a `Default*` implementation.
+- `:presentation` depends on `:core:database` for one reason: the Koin modules in `hh/di/` bind interface to implementation in one place. A ViewModel takes `:core:domain` interfaces, never a SQLDelight type or a `Default*` implementation.
 - `:ui-android` and `:androidApp` production code import no `:core:domain` repository; the leak stops at `:presentation`.
 - SQLDelight on device is the source of truth for reads and writes. Supabase holds snapshot backups (ADR 009); nothing reads rows from it.
 
@@ -40,7 +40,7 @@ data         -> domain
 
 The domain declares the contract; the infrastructure obeys it. The domain never imports an implementation.
 
-- Repository interfaces (`{Entity}Repository`) live in `:core:domain`. Implementations (`Default{Entity}Repository` over a `{Entity}LocalDataSource`) live in `:data`.
+- Repository interfaces (`{Entity}Repository`) live in `:core:domain`. Implementations (`Default{Entity}Repository` over a `{Entity}LocalDataSource`) live in `:core:database`.
 - A platform capability `:presentation` needs (`GoogleSignInLauncher`, `DispatchersProvider`) is an interface in `:presentation`, implemented in `:androidApp` and bound in `androidPlatformModule`.
 
 ## A use case only where there is domain logic
@@ -51,13 +51,13 @@ Loan writes always go through `CreateLoanUseCase` / `UpdateLoanUseCase`: `LoanRe
 
 ## Errors
 
-Sealed `DomainException` (`core/domain/.../shared/error/`) is the one failure type. `:data`'s `shared/SafeCall.kt` (`safeDbCall`, `catchAsDomainException`) translates SQLDelight exceptions into it; `:presentation`'s `core/error/DomainExceptionExt.kt` renders the Spanish message. Add a failure mode by extending `DomainException`, never with a new exception type.
+Sealed `DomainException` (`core/domain/.../shared/error/`) is the one failure type. `:core:database`'s `shared/SafeCall.kt` (`safeDbCall`, `catchAsDomainException`) translates SQLDelight exceptions into it; `:presentation`'s `core/error/DomainExceptionExt.kt` renders the Spanish message. Add a failure mode by extending `DomainException`, never with a new exception type.
 
 Every catch-all owes a `CancellationException` arm first. `runCatching` and `catch (e: Exception)` both swallow it, the body runs on, and a cancelled loader overwrites the winner. Rethrow cancellation, then catch `Exception` (`MviViewModel.launchSafe` is the pattern); a `Flow.catch` lambda owes the arm explicitly.
 
 ## Each layer owns its own model
 
-A SQLDelight row, a domain model and a `UiState` are three different things even when their fields match. Mappers convert between them (`{entity}Mappers.kt` in `:data`, `toUi` mappers in `:presentation`).
+A SQLDelight row, a domain model and a `UiState` are three different things even when their fields match. Mappers convert between them (`{entity}Mappers.kt` in `:core:database`, `toUi` mappers in `:presentation`).
 
 - A SQLDelight row never reaches a `UiState`.
 - A domain model never carries presentation concerns (formatted strings, resource ids, colors).
@@ -75,7 +75,7 @@ Naming lives in `naming.md`. This is the flow. The base class is `core/mvi/MviVi
 - **State stores what the user chose, never what was resolved.** A selection is an id; the resolved object is a getter over the catalog held in the same state. A stored resolved object is a cache with no invalidation, and it is how a movement gets filed under a deleted category. A save writes the resolved selection, never the raw id.
 - **Effects ride a `Channel`, never a `SharedFlow`.** Collectors are `LaunchedEffect(vm)` inside an entry and die when it is buried; the channel buffers until the next one, a replay-0 `SharedFlow` drops. An effect is a navigation or a transient message; anything the UI keeps rendering (a sheet, a dialog, a focus) is state.
 - **A visibility flag lives in `UiState`, never in `remember` / `rememberSaveable`** (ADR 012). One sheet field per screen: an enum when sheets are mutually exclusive, a `Boolean` when there is one.
-- **A ViewModel never switches dispatcher.** No `withContext` or `Dispatchers.` in `hh/`; `:data` owns its threading.
+- **A ViewModel never switches dispatcher.** No `withContext` or `Dispatchers.` in `hh/`; `:core:database` owns its threading.
 - **`launchSafeIn` retries a collector three times (200/400/800 ms), then dies for the ViewModel's life.** It heals lock contention, not a persistent failure; tab ViewModels outlive `switchTab`, so a dead collector stays dead. `stateIn` / `shareIn` upstreams bypass the funnel: today all are fed by `todayFlow()` alone, and a data-backed one has no error door.
 - **A `when` helper split out of `onIntent` takes a nested sealed sub-interface, never the wide intent type with an `else`** (`onPaymentFormIntent`, `onScreenChromeIntent`): the `else` swallows a new intent forgotten in the helper.
 - **The screen is callback-driven.** `<Feature>Screen` collects `state`, hands `vm::onIntent` down to a private stateless content composable, and consumes effects in a `LaunchedEffect(vm)`. It never touches a repository or a use case.

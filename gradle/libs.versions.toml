@@ -38,7 +38,7 @@ ktorClientOkhttp = "3.5.2"
 # the point. An undeclared transitive is a version whoever owns supabase-kt's dependency graph picks
 # for us, and a BOM bump can change or drop it with nothing in the gate saying a word — the same
 # trap this repo already documents for supabase-kt's unconfigured 10s `requestTimeout`
-# (`data/CLAUDE.md` `## Backup`), one layer down. The user's backups are verified against
+# (`core/database/CLAUDE.md` `## Backup`), one layer down. The user's backups are verified against
 # this hash, so the digest is not something to inherit by accident.
 okio = "3.17.0"
 
@@ -61,7 +61,7 @@ androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "a
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion" }
-# AndroidJUnitRunner — the instrumentation runner for :data's androidTest source set.
+# AndroidJUnitRunner — the instrumentation runner for :core:database's androidTest source set.
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "lifecycleLivedataKtx" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleLivedataKtx" }
@@ -111,7 +111,7 @@ ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "kto
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktorClientOkhttp" }
 # iOS SQLDelight driver — same SQLDelight version as the Android driver.
 sqldelight-native-driver = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
-# okio — :data only, for `ByteString.sha256()` on the backup payload. See the version note.
+# okio — :core:database only, for `ByteString.sha256()` on the backup payload. See the version note.
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
 # multiplatform-settings — the Settings interface behind :presentation's AppPreferences; :androidApp
@@ -147,7 +147,7 @@ android-library = { id = "com.android.library" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServicesVersion" }
 google-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleCrashlyticsVersion" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinVersion" }
-# Generates KSerializer for @Serializable nav routes and sync DTOs. Applied by :androidApp, :data, :ui-android.
+# Generates KSerializer for @Serializable nav routes and sync DTOs. Applied by :androidApp, :core:database, :ui-android.
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinVersion" }
 # Plain (non-Android) Kotlin JVM library plugin. Applied by :core:domain alone — ADR 011 Decision 3.
 # No version here: build-logic's own `kotlin-dsl` plugin applies org.jetbrains.kotlin.jvm

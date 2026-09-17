@@ -1,8 +1,8 @@
 @file:Suppress("UnstableApiUsage")
 
 // Gradle's canonical settings order: pluginManagement -> plugins -> dependencyResolutionManagement
-// -> project name -> includes. Keep it that way; `include(":data")` used to sit above
-// pluginManagement, which read as if :data were special. It is not.
+// -> project name -> includes. Keep it that way; `include(":core:database")` used to sit above
+// pluginManagement, which read as if :core:database were special. It is not.
 
 pluginManagement {
     // Hosts the `justchill.*` convention plugins. Because it is an included build, modules apply
@@ -41,16 +41,16 @@ rootProject.name = "JustChill"
 
 // The module map. Read the middle column as the question each module answers.
 //
-//   :core:domain   who am I?         business rules, zero framework   Android
-//   :data          where do I live?  SQLDelight + Supabase            Android
-//   :presentation  what do I think?  ViewModels, MVI, Koin, format    Android
-//   :ui-android    how do I look?    Compose screens, nav, theme      Android only
-//   :androidApp    how do I ship?    manifest, signing, flavors       Android only
+//   :core:domain    who am I?         business rules, zero framework   Android
+//   :core:database  where do I live?  SQLDelight + Supabase            Android
+//   :presentation   what do I think?  ViewModels, MVI, Koin, format    Android
+//   :ui-android     how do I look?    Compose screens, nav, theme      Android only
+//   :androidApp     how do I ship?    manifest, signing, flavors       Android only
 //
 // Dependency order, top of the graph down:
-//   androidApp -> ui-android -> presentation -> data -> core:domain
+//   androidApp -> ui-android -> presentation -> core:database -> core:domain
 include(":androidApp")
 include(":ui-android")
 include(":presentation")
-include(":data")
+include(":core:database")
 include(":core:domain")

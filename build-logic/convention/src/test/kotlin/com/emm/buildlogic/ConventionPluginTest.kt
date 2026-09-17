@@ -55,10 +55,10 @@ class ConventionPluginTest {
     fun `a module that sets its own namespace keeps it over the derived one`() {
         val report: Map<String, String> = fixture.report(
             pluginIds = listOf("justchill.android.library"),
-            androidConfiguration = """android { namespace = "com.emm.data" }""",
+            androidConfiguration = """android { namespace = "com.emm.justchill.core.database" }""",
         )
 
-        assertEquals("com.emm.data", report["namespace"])
+        assertEquals("com.emm.justchill.core.database", report["namespace"])
     }
 
     @Test
@@ -104,10 +104,10 @@ class ConventionPluginTest {
     }
 
     @Test
-    fun `sqldelight plugin configures EmmDatabaseData in the data package with the schema snapshots and migration verification on`() {
+    fun `sqldelight plugin configures JustChillDatabase in the core database package with the schema snapshots and migration verification on`() {
         val report: Map<String, String> = fixture.report(listOf("justchill.android.library", "justchill.sqldelight"))
 
-        assertEquals("EmmDatabaseData,com.emm.data,src/main/sqldelight/databases,true", report["database"])
+        assertEquals("JustChillDatabase,com.emm.justchill.core.database,src/main/sqldelight/databases,true", report["database"])
     }
 
     @Test

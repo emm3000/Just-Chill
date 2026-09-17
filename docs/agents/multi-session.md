@@ -69,7 +69,7 @@ Every dispatch to a peer session must include:
 
 ## Isolation: emulator
 
-- `medium_phone` is the only AVD. Never boot a second one and never seed a database into it. A migration change runs `:data:connectedDebugAndroidTest` there before `trunk`.
+- `medium_phone` is the only AVD. Never boot a second one and never seed a database into it. A migration change runs `:core:database:connectedDebugAndroidTest` there before `trunk`.
 - Because there is one emulator, screen-touching tickets in the same wave take turns: a peer installs with `./gradlew installDevDebug` only after the orchestrator confirms nobody else is mid-check, and reports when its screenshots are on the assets branch.
 - Shut the emulator down (`adb emu kill`) when the review cycle closes, together with the worktree cleanup. Keep the AVD.
 

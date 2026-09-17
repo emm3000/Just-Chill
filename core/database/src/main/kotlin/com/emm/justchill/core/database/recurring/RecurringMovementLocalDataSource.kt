@@ -1,0 +1,135 @@
+package com.emm.justchill.core.database.recurring
+
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
+import com.emm.justchill.core.database.JustChillDatabase
+import com.emm.justchill.core.database.Recurring_movementsQueries
+import com.emm.justchill.core.database.shared.ioDispatcher
+import com.emm.justchill.core.database.shared.nowMillis
+import com.emm.justchill.core.database.shared.toOccurredAtText
+import com.emm.justchill.core.domain.recurring.RecurringMovement
+import com.emm.justchill.core.domain.recurring.RecurringMovementDetails
+import com.emm.justchill.core.domain.recurring.RecurringMovementInsert
+import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.ValidationCode
+import com.emm.justchill.core.domain.transaction.TransactionInsert
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import kotlin.time.Clock
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+
+class RecurringMovementLocalDataSource(private val emmDatabase: JustChillDatabase, private val clock: Clock) {
+
+    private val rmq: Recurring_movementsQueries
+        get() = emmDatabase.recurring_movementsQueries
+
+    fun allActive(): Flow<List<RecurringMovement>> = rmq.selectActive()
+        .asFlow()
+        .mapToList(ioDispatcher)
+        .map { list -> list.asEntity().asExternalModel() }
+
+    fun allWithDetails(): Flow<List<RecurringMovementDetails>> = rmq.selectAllWithDetails()
+        .asFlow()
+        .mapToList(ioDispatcher)
+        .map { list -> list.mapNotNull { it.asExternalModelOrNull() } }
+
+    suspend fun find(id: String): RecurringMovement? = withContext(ioDispatcher) {
+        rmq.find(id).executeAsOneOrNull()?.asEntity()?.asExternalModelOrNull()
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    suspend fun create(insert: RecurringMovementInsert) = withContext(ioDispatcher) {
+        val entity = insert.toPersistParams(id = Uuid.random().toString(), now = clock.nowMillis())
+        rmq.insert(
+            id = entity.id,
+            name = entity.name,
+            type = entity.type,
+            amount = entity.amount,
+            description = entity.description,
+            categoryId = entity.categoryId,
+            accountId = entity.accountId,
+            frequency = entity.frequency,
+            dayOfMonth = entity.dayOfMonth,
+            isActive = entity.isActive,
+            lastConfirmedPeriod = entity.lastConfirmedPeriod,
+            createdAt = entity.createdAt,
+            updatedAt = entity.updatedAt,
+        )
+        Unit
+    }
+
+    suspend fun update(id: String, insert: RecurringMovementInsert) = withContext(ioDispatcher) {
+        rmq.update(
+            name = insert.name,
+            type = insert.type.name,
+            amount = insert.amount?.cents,
+            description = insert.description,
+            categoryId = insert.categoryId?.value,
+            accountId = insert.accountId.value,
+            dayOfMonth = insert.dayOfMonth.toLong(),
+            isActive = if (insert.isActive) 1L else 0L,
+            updatedAt = clock.nowMillis(),
+            id = id,
+        )
+        Unit
+    }
+
+    suspend fun softDelete(id: String) = withContext(ioDispatcher) {
+        val now = clock.nowMillis()
+        rmq.softDelete(deletedAt = now, updatedAt = now, id = id)
+        Unit
+    }
+
+    suspend fun countLiveByAccount(accountId: String): Long = withContext(ioDispatcher) {
+        rmq.countLiveByAccount(accountId).executeAsOne()
+    }
+
+    // One clock read stamps both writes: two rows in the same transaction must not disagree about when.
+    suspend fun confirm(insert: TransactionInsert, recurringId: String, period: String) = withContext(ioDispatcher) {
+        val now = clock.nowMillis()
+        emmDatabase.transaction {
+            ensureNotSettled(recurringId, period)
+
+            emmDatabase.transactionsQueries.insert(
+                transactionId = insert.id.value,
+                type = insert.type.name,
+                amount = insert.amount.cents,
+                description = insert.description,
+                occurredAt = insert.occurredAt.toOccurredAtText(),
+                categoryId = insert.categoryId?.value,
+                accountId = insert.accountId.value,
+                createdAt = now,
+                updatedAt = now,
+            )
+            rmq.markConfirmed(
+                lastConfirmedPeriod = period,
+                updatedAt = now,
+                id = recurringId,
+            )
+        }
+        Unit
+    }
+
+    suspend fun skip(recurringId: String, period: String, updatedAt: Long) = withContext(ioDispatcher) {
+        emmDatabase.transaction {
+            ensureNotSettled(recurringId, period)
+            rmq.markConfirmed(lastConfirmedPeriod = period, updatedAt = updatedAt, id = recurringId)
+        }
+        Unit
+    }
+
+    // Period keys are zero-padded "YYYY-MM", so string ordering is chronological and needs no parsing.
+    // parsePeriodKey in :core:domain is the only one of the two that bounds a well-formed key; a key it
+    // rejects still sorts here by raw bytes, settling every future period while it stays listed as owed.
+    private fun ensureNotSettled(recurringId: String, period: String) {
+        val settledThrough = rmq.find(recurringId).executeAsOneOrNull()?.lastConfirmedPeriod ?: return
+        if (settledThrough >= period) {
+            throw DomainException.ValidationError(
+                "Template '$recurringId' is already settled through $settledThrough (concurrent write detected)",
+                ValidationCode.RecurringAlreadyConfirmed,
+            )
+        }
+    }
+}
