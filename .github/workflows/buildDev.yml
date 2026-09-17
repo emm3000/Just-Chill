@@ -81,13 +81,19 @@ jobs:
 
       # assembleProdRelease (R8, resource shrinking, release lint) only when the PR touches an R8
       # keep-rule file or the release convention plugin, or when `changes` could not tell.
-      - name: Quality gate + builds
-        env:
-          RELEASE: ${{ needs.changes.result != 'success' || needs.changes.outputs.release != 'false' }}
-        run: |
-          tasks=(qualityGate assembleDevDebug)
-          if [ "$RELEASE" = "true" ]; then tasks+=(assembleProdRelease); fi
-          ./gradlew "${tasks[@]}"
+      - name: Build only
+        run: ./gradlew assembleDevDebug --profile
+
+      - name: Quality gate on top
+        run: ./gradlew qualityGate --profile
+
+      - name: Upload profile reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gradle-profile
+          path: build/reports/profile/**
+          retention-days: 7
 
       - name: Upload test reports
         if: always()
