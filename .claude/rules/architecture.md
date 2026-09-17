@@ -3,6 +3,7 @@ paths:
   - "androidApp/src/*/kotlin/**"
   - "ui-android/src/*/kotlin/**"
   - "presentation/src/*/kotlin/**"
+  - "core/backup/src/*/kotlin/**"
   - "core/database/src/*/kotlin/**"
   - "core/domain/src/*/kotlin/**"
 ---
@@ -16,7 +17,8 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 | Layer | Contains |
 |---|---|
 | `:core:domain` | Pure Kotlin. Models, value objects, use cases, and the **interfaces** the outer layers implement. |
-| `:core:database` | Implementations of the domain interfaces: SQLDelight, Supabase auth and backup, mappers. |
+| `:core:database` | Implementations of the domain interfaces: SQLDelight, mappers, the `SnapshotStore` over the six tables. |
+| `:core:backup` | The snapshot file and its account: DTOs, decoder, Supabase Storage, the backup cycle, auth. |
 | `:presentation` | Compose-free MVI core, ViewModels with their `UiState` / `Intent` / `Effect`, Koin modules, formatters, `UiStrings`. |
 | `:ui-android` | Compose screens, navigation, theme tokens and atoms. |
 | `:androidApp` | `MainActivity`, `EmmApp`, the platform Koin module, flavors, shortcuts, the session keystore. |
@@ -24,17 +26,18 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 Allowed dependencies, and nothing else:
 
 ```
-androidApp   -> ui-android, presentation, data, domain
-ui-android   -> presentation, data, domain
-presentation -> data, domain
-data         -> domain
+androidApp   -> ui-android, presentation, core:backup, core:database, core:domain
+ui-android   -> presentation, core:database, core:domain
+presentation -> core:backup, core:database, core:domain
+core:backup  -> core:domain
+core:database -> core:domain
 ```
 
 - `:core:domain` is pure Kotlin (`kotlin("jvm")`): `kotlinx-coroutines-core` and `kotlinx-datetime` only. No Android, no SQLDelight, no Supabase, no Ktor. `android.*` cannot resolve there; the rest is convention, reviewed.
 - Whatever asks "what day is it" takes an injected `Clock` **and** an injected `TimeZone`, and neither parameter carries a default: a default never blocks an explicit argument, so a test passing a fake clock also passes against the ambient one. `hh/di/SharedModule.kt` is the only place a clock or a zone enters the graph; `AppGraphKoinTest` asserts by identity that every graph-built `com.emm.` class holds the bound instances. `TodayFlow.today()` is the one way a ViewModel derives the date.
-- `:presentation` depends on `:core:database` for one reason: the Koin modules in `hh/di/` bind interface to implementation in one place. A ViewModel takes `:core:domain` interfaces, never a SQLDelight type or a `Default*` implementation.
+- `:presentation` depends on `:core:database` and `:core:backup` for one reason: the Koin modules in `hh/di/` bind interface to implementation in one place. `SnapshotStore` is bound there too, which is what keeps `:core:backup` off `:core:database`. A ViewModel takes `:core:domain` interfaces, never a SQLDelight type or a `Default*` implementation.
 - `:ui-android` and `:androidApp` production code import no `:core:domain` repository; the leak stops at `:presentation`.
-- SQLDelight on device is the source of truth for reads and writes. Supabase holds snapshot backups (ADR 009); nothing reads rows from it.
+- SQLDelight on device is the source of truth for reads and writes. Supabase holds snapshot backups (ADR 009); nothing reads rows from it. A snapshot crosses the two modules as a `LocalSnapshot` of domain models, never as a SQLDelight row or a DTO.
 
 ## Dependency inversion is the seam
 
