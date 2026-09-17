@@ -6,7 +6,7 @@
 
 pluginManagement {
     // Hosts the `justchill.*` convention plugins. Because it is an included build, modules apply
-    // them by id with no version — see build-logic/src/main/kotlin/.
+    // them by id with no version — see build-logic/convention/.
     includeBuild("build-logic")
 
     repositories {
