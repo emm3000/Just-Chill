@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - trunk
+      - ci/138-changed-only
   workflow_dispatch:
 
 concurrency:
