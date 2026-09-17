@@ -451,8 +451,6 @@ class LoanDetailViewModelTest {
         assertEquals(LocalDateTime(newDate, LocalTime(9, 0)), update.captured.paidAt)
     }
 
-    // The Clock answers "what hour", never "what day"; both tests below point TodayFlow at a
-    // day the clock disagrees with, the only way to tell the two sources apart.
     @Test
     fun `the payment sheet opens on TodayFlow's day, not the clock's`() = runTest {
         every { loanRepository.byId(loanIdValue) } returns flowOf(loan)

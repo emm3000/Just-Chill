@@ -92,8 +92,6 @@ class AddEditLoanViewModelTest {
         zone = lima,
     )
 
-    // The Clock answers "what hour", never "what day"; the two tests below point TodayFlow at a
-    // day the clock disagrees with to prove the split.
     @Test
     fun `today is TodayFlow's day, not the clock's`() = runTest {
         val christmas = LocalDate(2026, Month.DECEMBER, 25)

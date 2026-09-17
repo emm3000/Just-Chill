@@ -359,10 +359,8 @@ class ProfileViewModelBackupRowTest {
             coVerify(exactly = 0) { getBackupStaleness(any()) }
         }
 
-    /**
-     * The orchestrator raises `isBackingUp` for the cycle it is about to refuse, so a lower rank
-     * would flash "Respaldando…" over a device uploading nothing.
-     */
+    // The orchestrator raises `isBackingUp` for the cycle it is about to refuse, so a lower rank
+    // would flash "Respaldando…" over a device uploading nothing.
     @Test
     fun `a pending disclosure outranks a running cycle`() = runTest(testDispatcher) {
         val vm = buildViewModel()
@@ -452,8 +450,6 @@ class ProfileViewModelBackupRowTest {
             job.cancel()
         }
 
-    // Every case below describes a destination the user already acknowledged; the pending
-    // disclosure outranks all of them and has its own tests.
     private fun health(
         lastSuccessfulBackupAt: Long?,
         consecutiveFailures: Int,

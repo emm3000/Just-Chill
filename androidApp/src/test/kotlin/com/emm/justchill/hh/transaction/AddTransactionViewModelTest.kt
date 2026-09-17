@@ -194,8 +194,6 @@ class AddTransactionViewModelTest {
         assertEquals(LocalDateTime(picked, LocalTime(0, 5)), insert.captured.occurredAt)
     }
 
-    // The Clock answers "what hour", never "what day"; the three tests below point TodayFlow at
-    // a day the clock disagrees with to prove the split, one for each of state/interaction/save.
     @Test
     fun `today is TodayFlow's day, not the clock's`() = runTest(testDispatcher) {
         val christmas = LocalDate(2026, Month.DECEMBER, 25)

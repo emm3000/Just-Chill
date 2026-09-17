@@ -133,8 +133,6 @@ class SeeTransactionsPendingRecurringViewModelTest {
     @Test
     fun `pending list is sourced from GetPendingRecurringMovementsUseCase with whatever date todayFlow reports`() =
         runTest(testDispatcher) {
-            // Zone-correct date derivation is ClockTodayFlow's job, pinned in ClockTodayFlowTest;
-            // this only checks the ViewModel forwards todayFlow's value to the use case unchanged.
             val today = MutableStateFlow(LocalDate(2026, 8, 31))
 
             buildViewModel(today)

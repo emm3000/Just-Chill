@@ -42,15 +42,12 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** Midday, so nothing in these tests depends on where a day boundary falls. */
+// Midday, so nothing in these tests depends on where a day boundary falls.
 private val NOON = LocalTime(12, 0)
 
-/** Mid-month, so nothing in these tests depends on where a month boundary falls. */
+// Mid-month, so nothing in these tests depends on where a month boundary falls.
 private val TODAY = LocalDate(2026, 8, 15)
 
-// Every call inside MockK's `verify { }` records an expectation rather than consuming a result,
-// so IgnoredReturnValue fires here and means nothing. Suppressed per-class, not repo-wide: outside
-// a verification block, "called it and dropped the result" is still a real bug worth catching.
 @Suppress("IgnoredReturnValue")
 class SeeTransactionsViewModelTest {
 
@@ -154,9 +151,8 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `the initial month is the month of the date todayFlow reports`() = runTest(testDispatcher) {
-        // Zone-correct date derivation is ClockTodayFlow's job, pinned in ClockTodayFlowTest. What
-        // this pins is that the initial month and its first range query come from that one date,
-        // not from a clock the ViewModel reads for itself.
+        // The initial month and its first range query come from todayFlow's date, not from a
+        // clock the ViewModel reads for itself.
         val august = YearMonth(2026, Month.AUGUST)
         val september = YearMonth(2026, Month.SEPTEMBER)
         stubRange(august, flowOf(emptyList()))
@@ -387,8 +383,6 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `the day header labels a row HOY or AYER against the date todayFlow reports`() = runTest(testDispatcher) {
-        // Zone-correct date derivation is ClockTodayFlow's job, pinned in ClockTodayFlowTest; this
-        // only checks that the ViewModel labels its rows against todayFlow's value.
         monthTransactionsFlow.value = listOf(
             tx("t-1", TransactionType.Spend, 1_000, daysIntoMonth = 15),
         )
