@@ -1,7 +1,9 @@
 version: 2
 updates:
+  # The github-actions ecosystem scans `.github/workflows` plus a ROOT `action.yml` only, so the
+  # composite action was never covered and `actions/setup-java` sat a full major behind unnoticed.
   - package-ecosystem: github-actions
-    directory: /
+    directories: ["/", "/.github/actions/setup-android"]
     schedule:
       interval: monthly
     open-pull-requests-limit: 5
