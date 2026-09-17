@@ -51,7 +51,7 @@ jobs:
               *) code=true ;;
             esac
             case "$file" in
-              build-logic/*|gradle/*|*.gradle.kts|gradle.properties|*/gradle.properties|*.pro|androidApp/*|.github/*) release=true ;;
+              *.pro|build-logic/convention/src/main/kotlin/com/emm/buildlogic/AndroidReleaseConventionPlugin.kt) release=true ;;
             esac
           done <<< "$files"
           echo "code=$code" >> "$GITHUB_OUTPUT"
@@ -78,8 +78,8 @@ jobs:
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
           cache-read-only: 'true'
 
-      # assembleProdRelease (R8, resource shrinking, release lint) only when the PR touches build
-      # configuration or CI, or when `changes` could not tell.
+      # assembleProdRelease (R8, resource shrinking, release lint) only when the PR touches an R8
+      # keep-rule file or the release convention plugin, or when `changes` could not tell.
       - name: Quality gate + builds
         env:
           RELEASE: ${{ needs.changes.result != 'success' || needs.changes.outputs.release != 'false' }}
