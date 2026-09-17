@@ -48,10 +48,9 @@ private val NOON = LocalTime(12, 0)
 /** Mid-month, so nothing in these tests depends on where a month boundary falls. */
 private val TODAY = LocalDate(2026, 8, 15)
 
-// Every call inside a MockK `verify { }` block records an expectation instead of consuming a
-// result, so IgnoredReturnValue fires on all of them here and means nothing. Suppressed on
-// this class rather than repo-wide: outside a verification block, "called it and dropped the
-// result" is a real bug in a test, and the rule should keep catching it everywhere else.
+// Every call inside MockK's `verify { }` records an expectation rather than consuming a result,
+// so IgnoredReturnValue fires here and means nothing. Suppressed per-class, not repo-wide: outside
+// a verification block, "called it and dropped the result" is still a real bug worth catching.
 @Suppress("IgnoredReturnValue")
 class SeeTransactionsViewModelTest {
 

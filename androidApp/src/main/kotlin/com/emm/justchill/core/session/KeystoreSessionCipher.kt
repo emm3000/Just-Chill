@@ -15,10 +15,9 @@ private const val KEYSTORE_PROVIDER = "AndroidKeyStore"
 private const val TRANSFORMATION = "AES/GCM/NoPadding"
 private const val KEY_SIZE_BITS = 256
 
-// Applied on decrypt only: an AndroidKeyStore key defaults setRandomizedEncryptionRequired(true),
-// which rejects a caller-supplied IV on encrypt — the provider must draw it, and GCMParameterSpec
-// has no constructor that states a tag length without also stating an IV — so encrypt trusts
-// AndroidKeyStore's own 128-bit GCM tag default instead.
+// Applied on decrypt only: an AndroidKeyStore key defaults setRandomizedEncryptionRequired(true), so
+// encrypt cannot supply a caller IV, and GCMParameterSpec has no constructor for a tag length
+// without one — encrypt trusts AndroidKeyStore's own 128-bit GCM tag default instead.
 private const val TAG_SIZE_BITS = 128
 
 internal class KeystoreSessionCipher : SessionCipher {

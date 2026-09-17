@@ -34,10 +34,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-// Every call inside a MockK `verify { }` block records an expectation instead of consuming a
-// result, so IgnoredReturnValue fires on all of them here and means nothing. Suppressed on this
-// class rather than repo-wide, same as SeeTransactionsViewModelTest: outside a verification block,
-// "called it and dropped the result" is a real bug in a test, and the rule should keep catching it.
+// Every call inside MockK's `verify { }` records an expectation rather than consuming a result,
+// so IgnoredReturnValue fires here and means nothing. Suppressed per-class, not repo-wide: outside
+// a verification block, "called it and dropped the result" is still a real bug worth catching.
 @Suppress("IgnoredReturnValue")
 class AccountsViewModelTest {
 

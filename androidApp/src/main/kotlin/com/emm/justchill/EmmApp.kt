@@ -24,11 +24,9 @@ private const val TAG = "JustChill"
 
 class EmmApp : Application() {
 
-    // The net for everything launched at startup, and the reason no task here guards itself: the
-    // Koin lookups a task needs can throw as readily as its body — the session one opens a prefs
-    // file and builds the Crashlytics logger — and an unhandled throw would reach the thread's
-    // default handler and kill the launch. It reports through Log rather than DiagnosticsLogger
-    // because resolving that logger is itself one of the lookups this net exists to catch.
+    // Net for every startup task: a Koin lookup a task needs can throw as readily as its body, and
+    // an unhandled throw here would reach the thread's default handler and kill the launch. It logs
+    // through Log, not DiagnosticsLogger, because resolving that logger is one of the lookups this net catches.
     private val startupScope = CoroutineScope(
         SupervisorJob() + CoroutineExceptionHandler { _, error -> Log.w(TAG, "Startup task failed", error) },
     )
@@ -38,8 +36,6 @@ class EmmApp : Application() {
         val koinApp = startKoin {
             androidLogger()
             androidContext(this@EmmApp)
-            // Shared module list + the Android platform module. experiencesModule is a flavor-only
-            // (dev/prod) Android module, appended to the shared list.
             modules(appModules(androidPlatformModule) + experiencesModule)
         }
 

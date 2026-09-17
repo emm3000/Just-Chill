@@ -658,12 +658,10 @@ class BackupOrchestratorTest {
         coVerify(exactly = 1) { uploader.upload(USER_ID, backupSnapshotName(NOW), PAYLOAD) }
     }
 
-    // ── The destination disclosure gate (ADR 009 Decision 5, unit 3c) ───────────────
-
     /**
-     * THE test of this gate. An automatic cycle is headless — it never passes through
-     * `ProfileViewModel` — so a banner cannot satisfy "disclosed before the first upload"; only a
-     * refusal to upload can. It is a refusal and not a failure: no streak, no reason, no watermark.
+     * An automatic cycle is headless — it never passes through `ProfileViewModel` — so a banner
+     * cannot satisfy "disclosed before the first upload"; only a refusal to upload can. It is a
+     * refusal and not a failure: no streak, no reason, no watermark.
      */
     @Test
     fun `an undisclosed destination uploads nothing and books no failure`() = runTest(testDispatcher) {
@@ -700,8 +698,8 @@ class BackupOrchestratorTest {
     }
 
     /**
-     * The inverse of the test above, and it earns its place: a gate that never opens means backups
-     * silently never run again, and nothing else in this repo would turn red for that.
+     * A gate that never opens means backups silently never run again, and nothing else in this
+     * repo would turn red for that.
      */
     @Test
     fun `acknowledging the destination lets the very next cycle upload`() = runTest(testDispatcher) {

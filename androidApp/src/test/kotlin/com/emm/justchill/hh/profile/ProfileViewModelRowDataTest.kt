@@ -41,8 +41,6 @@ import kotlin.test.assertEquals
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-// What the Gestionar and Respaldo rows say about the ledger: the category split, the recurring
-// summary and the age of the last export.
 class ProfileViewModelRowDataTest {
 
     private val testDispatcher = StandardTestDispatcher()

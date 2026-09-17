@@ -14,10 +14,8 @@ import com.emm.justchill.hh.shared.EXTRA_TYPE
 import com.emm.justchill.hh.transaction.GetSpendShortcutCombos
 import com.emm.justchill.hh.transaction.ShortcutCombo
 
-/**
- * Publishes the launcher's dynamic combo shortcuts (E09-03). The static `loans` shortcut is
- * declared in `shortcuts.xml`, not here, so it survives every call untouched.
- */
+// The static loans shortcut is declared in shortcuts.xml, not here, so it survives every call to
+// setDynamicShortcuts untouched.
 class ShortcutPublisher(private val context: Context, private val getShortcutCombos: GetSpendShortcutCombos) {
 
     suspend fun publish() {

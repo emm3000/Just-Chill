@@ -6,22 +6,9 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 private const val TAG = "JustChill"
 
-/**
- * Android [DiagnosticsLogger]: Logcat during development, Crashlytics in the field.
- *
- * Crashlytics is what closes the observability gap this class exists for — sync, account deletion
- * and the snapshot-backup pipeline all swallow failures on purpose, so without a remote sink those
- * swallows are invisible on a user's device. Non-fatal `recordException` is the right channel:
- * these are degradations, not crashes.
- *
- * Safe in both flavors. `dev` sets `firebase_crashlytics_collection_enabled=false` in its manifest,
- * so these calls are no-ops there and the "build the dev flavor for a telemetry-free app" claim in
- * the privacy policy stays true.
- *
- * Never throws, per the port contract: a logger that can fail would defeat the resilience work it
- * is here to report on, so a Crashlytics failure (not initialised, no `google-services.json`)
- * degrades to Logcat only.
- */
+// Never throws, per the port contract: a logger that can fail would defeat the resilience work it
+// exists to report on, so a Crashlytics failure (not initialised, no google-services.json) degrades
+// to Logcat only.
 class CrashReportingDiagnosticsLogger : DiagnosticsLogger {
 
     // Intentional broad catch: the port forbids throwing, and there is no useful recovery beyond

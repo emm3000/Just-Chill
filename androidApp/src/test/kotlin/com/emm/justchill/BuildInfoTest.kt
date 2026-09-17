@@ -8,7 +8,6 @@ class BuildInfoTest {
 
     @Test
     fun `commit hash is a full lowercase sha or the unknown fallback`() {
-        // This is the only check that exercises `generate<Variant>BuildInfo`'s output.
         val hash = BuildInfo.commitHash
         assertTrue(
             hash == UNKNOWN_COMMIT_HASH || hash.matches(Regex("[0-9a-f]{40}")),
