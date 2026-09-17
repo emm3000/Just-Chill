@@ -1,0 +1,22 @@
+package com.emm.justchill.hh.__feature__
+
+import com.emm.justchill.core.mvi.MviViewModel
+
+class __Feature__ViewModel : MviViewModel<__Feature__UiState, __Feature__Intent, __Feature__Effect>(__Feature__UiState()) {
+
+    init {
+        load()
+    }
+
+    override fun onIntent(intent: __Feature__Intent) {
+        when (intent) {
+            __Feature__Intent.Back -> sendEffect(__Feature__Effect.NavigateBack)
+        }
+    }
+
+    private fun load() {
+        launchSafe(onError = { e -> __Feature__Effect.ShowError(e) }) {
+            updateState { copy(isLoading = false) }
+        }
+    }
+}

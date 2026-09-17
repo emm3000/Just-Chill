@@ -1,0 +1,9 @@
+package com.emm.justchill.hh.di
+
+import com.emm.justchill.hh.__feature__.__Feature__ViewModel
+import org.koin.core.module.dsl.viewModel
+import org.koin.dsl.module
+
+val __feature__Module = module {
+    viewModel { __Feature__ViewModel() }
+}

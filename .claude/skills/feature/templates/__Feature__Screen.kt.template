@@ -1,0 +1,109 @@
+package com.emm.justchill.hh.__feature__
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.emm.justchill.core.error.toUserMessage
+import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.theme.LocalEmmSpacing
+import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
+import com.emm.justchill.core.ui.atoms.IconBtn
+import com.emm.justchill.core.ui.atoms.JcTopBar
+import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import org.koin.compose.viewmodel.koinViewModel
+
+@Composable
+fun __Feature__Screen(
+    onBack: () -> Unit,
+    snackbarHostState: SnackbarHostState,
+    vm: __Feature__ViewModel = koinViewModel(),
+) {
+    val state by vm.state.collectAsStateWithLifecycle()
+    val currentOnBack by rememberUpdatedState(onBack)
+
+    LaunchedEffect(vm) {
+        vm.effect.collect { effect ->
+            when (effect) {
+                __Feature__Effect.NavigateBack -> currentOnBack()
+
+                is __Feature__Effect.ShowError -> snackbarHostState.showEmmSnackbar(
+                    message = effect.error.toUserMessage(),
+                    tone = EmmSnackbarTone.Error,
+                )
+            }
+        }
+    }
+
+    __Feature__Content(state = state, onIntent = vm::onIntent)
+}
+
+@Composable
+private fun __Feature__Content(state: __Feature__UiState, onIntent: (__Feature__Intent) -> Unit) {
+    val colors: EmmColors = LocalEmmColors.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.bg),
+    ) {
+        JcTopBar(
+            title = "__Feature__",
+            left = {
+                IconBtn(
+                    icon = Icons.AutoMirrored.Outlined.ArrowBack,
+                    onClick = { onIntent(__Feature__Intent.Back) },
+                    contentDescription = "Volver",
+                )
+            },
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(horizontal = LocalEmmSpacing.current.s4),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (!state.isLoading) {
+                Text(
+                    text = "Nada por aquí todavía",
+                    style = LocalEmmType.current.bodyL,
+                    color = colors.textSecondary,
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun __Feature__LoadedPreview() {
+    EmmTheme {
+        __Feature__Content(state = __Feature__UiState(isLoading = false), onIntent = {})
+    }
+}
+
+@Preview
+@Composable
+private fun __Feature__LoadingPreview() {
+    EmmTheme {
+        __Feature__Content(state = __Feature__UiState(isLoading = true), onIntent = {})
+    }
+}
