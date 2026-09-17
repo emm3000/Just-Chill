@@ -1,3 +1,4 @@
+import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -30,6 +31,7 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 val hasReleaseSigning = keystoreProperties.getProperty("keyAlias") != null
+val uploadsCrashlyticsMapping: Boolean = providers.gradleProperty("justchill.crashlyticsMappingUpload").orNull == "true"
 
 val supabasePropertiesFile = rootProject.file("supabase.properties")
 val supabaseProperties = Properties()
@@ -84,6 +86,9 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            configure<CrashlyticsExtension> {
+                mappingFileUploadEnabled = uploadsCrashlyticsMapping
+            }
         }
     }
 

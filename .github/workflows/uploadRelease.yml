@@ -58,8 +58,11 @@ jobs:
           signing-key-base64: ${{ secrets.JUST_CHILL }}
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
 
+      # The Crashlytics mapping upload runs for release tags and trunk only, never a branch dispatch.
       - name: Verify and build the release bundle
-        run: ./gradlew qualityGate lintProdRelease bundleProdRelease
+        env:
+          MAPPING_UPLOAD: ${{ startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/trunk' }}
+        run: ./gradlew qualityGate lintProdRelease bundleProdRelease "-Pjustchill.crashlyticsMappingUpload=$MAPPING_UPLOAD"
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v7
@@ -72,7 +75,7 @@ jobs:
       # floating tag can be repointed at new code by whoever controls the upstream repo.
       # Dependabot (.github/dependabot.yml) proposes the bumps.
       - name: Publish to Play Store
-        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: com.emm.justchill
