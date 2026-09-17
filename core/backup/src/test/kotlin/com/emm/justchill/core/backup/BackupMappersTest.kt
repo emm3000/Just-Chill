@@ -198,4 +198,17 @@ class BackupMappersTest {
             assertEquals(txType, restored.type)
         }
     }
+
+    @Test
+    fun `a category typed by a build that no longer exists is skipped, never coerced`() {
+        val dto = CategoryDto(
+            categoryId = "cat-both",
+            name = "Ambos",
+            icon = "work",
+            color = "#000000",
+            categoryType = "Both",
+        )
+
+        assertNull(dto.toEntityOrNull())
+    }
 }
