@@ -448,15 +448,11 @@ class LoanDetailViewModelTest {
 
         val update = slot<LoanPaymentUpdate>()
         coVerify(exactly = 1) { updateLoanPayment(capture(update)) }
-        // 09:00 is the payment() fixture's original paidAt time; the date is the newly picked one.
         assertEquals(LocalDateTime(newDate, LocalTime(9, 0)), update.captured.paidAt)
     }
 
-    /**
-     * The Clock this ViewModel still holds answers "what hour", never "what day" — for neither of
-     * the two ways a payment sheet opens. Both tests below point TodayFlow at a day the clock does
-     * not agree with, which is the only way to tell the two sources apart.
-     */
+    // The Clock answers "what hour", never "what day"; both tests below point TodayFlow at a
+    // day the clock disagrees with, the only way to tell the two sources apart.
     @Test
     fun `the payment sheet opens on TodayFlow's day, not the clock's`() = runTest {
         every { loanRepository.byId(loanIdValue) } returns flowOf(loan)

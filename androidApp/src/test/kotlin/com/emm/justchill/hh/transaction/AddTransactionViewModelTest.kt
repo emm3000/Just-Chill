@@ -68,11 +68,8 @@ class AddTransactionViewModelTest {
     private val fixedClock = MovableClock(instantAt(today, hour = 14, minute = 30))
     private val todayDates = MutableStateFlow(today)
 
-    /**
-     * A real midnight: the clock's hour and TodayFlow's day move together, the way a device does.
-     * Moving together is exactly why the tests using this cannot tell the two sources apart — the
-     * three below point them at different days for that.
-     */
+    // A real midnight: the clock's hour and TodayFlow's day move together, the way a device does,
+    // which is exactly why a test using this cannot tell the two sources apart on its own.
     private fun crossMidnightInto(date: LocalDate, hour: Int, minute: Int) {
         fixedClock.instant = instantAt(date, hour, minute)
         todayDates.value = date
@@ -197,11 +194,8 @@ class AddTransactionViewModelTest {
         assertEquals(LocalDateTime(picked, LocalTime(0, 5)), insert.captured.occurredAt)
     }
 
-    /**
-     * The Clock this ViewModel still holds answers "what hour", never "what day" — not for the
-     * initial state, not on an interaction, and not at the save. The three tests below pin one
-     * of those each, by pointing TodayFlow at a day the clock does not agree with.
-     */
+    // The Clock answers "what hour", never "what day"; the three tests below point TodayFlow at
+    // a day the clock disagrees with to prove the split, one for each of state/interaction/save.
     @Test
     fun `today is TodayFlow's day, not the clock's`() = runTest(testDispatcher) {
         val christmas = LocalDate(2026, Month.DECEMBER, 25)
@@ -233,8 +227,6 @@ class AddTransactionViewModelTest {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        // The two disagree on purpose: the day must come from TodayFlow and the hour from the
-        // clock, which is the only split that tells a second date derivation apart from none.
         todayDates.value = tomorrow
         vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
         advanceUntilIdle()
