@@ -46,8 +46,7 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, onIntent: (LoanDetailIntent) -> Un
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showAmountSheet by remember { mutableStateOf(false) }
     var showDateSheet by remember { mutableStateOf(false) }
-    // A save already in flight registers the abono whatever happens here, so every gesture the
-    // user reads as "abort" — swipe, scrim, back — has to stop until it lands.
+    // Same in-flight-blocks-abort rule as LoanDetailDialogs.dismissalProperties.
     val dismissible = !form.isSaving
 
     ModalBottomSheet(

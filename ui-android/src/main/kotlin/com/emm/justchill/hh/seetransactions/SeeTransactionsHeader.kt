@@ -171,7 +171,7 @@ internal fun HeaderAction(
             modifier = Modifier.size(spacing.s5),
         )
         if (showBadge) {
-            // The surface1 ring keeps the accent dot legible where the badge overlaps the icon.
+            // Same ring-behind-badge rule as HhBottomBar's dot.
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
