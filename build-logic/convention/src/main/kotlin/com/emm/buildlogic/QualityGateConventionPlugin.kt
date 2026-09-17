@@ -11,8 +11,8 @@ class QualityGateConventionPlugin : Plugin<Project> {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
             description =
                 "Runs every check that must pass before pushing: detektMain and detektTest, " +
-                    "compileDebugAndroidTestKotlin, verifySqlDelightMigration, :build-logic:test on the root, " +
-                    "plus the host tests and lintDevDebug each module's build file adds. " +
+                    "compileDebugAndroidTestKotlin, verifySqlDelightMigration, :build-logic:convention:test on the root, " +
+                    "the unit tests the library plugins name, plus the tests and lint :androidApp adds. " +
                     "Invoked by the pre-push hook and by CI."
 
             dependsOn(
@@ -27,7 +27,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
             // it silently stops running. `parent == null` rather than `rootProject`: that is the
             // cross-project access which blocks Gradle's Project Isolation.
             if (target.parent == null) {
-                dependsOn(target.gradle.includedBuild(BUILD_LOGIC_BUILD).task(":$TEST_TASK"))
+                dependsOn(target.gradle.includedBuild(BUILD_LOGIC_BUILD).task(TEST_TASK))
             }
         }
     }
@@ -36,7 +36,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
         const val GATE_TASK = "qualityGate"
 
         private const val BUILD_LOGIC_BUILD = "build-logic"
-        private const val TEST_TASK = "test"
+        private const val TEST_TASK = ":convention:test"
 
         /**
          * An allowlist, not `tasks.withType<Detekt>()`, which would sweep in per-variant tasks

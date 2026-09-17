@@ -23,7 +23,7 @@ data         -> domain
 - `:ui-android` — Compose screens, navigation, theme tokens and atoms. Same Kotlin packages as `:presentation` on purpose.
 - `:androidApp` — `MainActivity`, `EmmApp`, the platform Koin module, the `dev` / `prod` flavors, shortcuts, the session keystore.
 
-Shared Gradle configuration lives in convention plugins under `build-logic/` (`justchill.*`): detekt, the quality gate, build info. A module build file applies its plugins and declares its own dependencies. `gradle/libs.versions.toml` is the only place a version is written, with one exception: `:domain`'s stdlib comes from a pin in `build-logic/build.gradle.kts`, and dropping it compiles `:domain` a minor version behind and reddens the gate on opt-in errors that name nothing about the classpath.
+Shared Gradle configuration lives in convention plugins under `build-logic/convention` (`justchill.*`): `android.application`, `android.library`, `android.compose`, `android.feature`, `jvm.library`, detekt, the quality gate, build info. They set the namespace from the module path, SDKs (`minSdk` 28), Java 17, opt-ins, test dependencies and each library's unit tests in the gate. A module build file applies its plugins and declares its own dependencies. `gradle/libs.versions.toml` is the only place a version is written, with one exception: `:domain`'s stdlib comes from a pin in `build-logic/convention/build.gradle.kts`, and dropping it compiles `:domain` a minor version behind and reddens the gate on opt-in errors that name nothing about the classpath.
 
 ## Product
 
@@ -68,7 +68,7 @@ Kotlin, Jetpack Compose, Navigation 3, Koin, SQLDelight 2, supabase-kt with Ktor
 
 ## Commands
 
-- `./gradlew qualityGate` — detekt per module, host tests, `:data`'s instrumented compile, `verifySqlDelightMigration`, `:androidApp:lintDevDebug`, `:build-logic:test`. Defined once in `QualityGateConventionPlugin.kt`; the pre-push hook and CI run exactly it.
+- `./gradlew qualityGate` — detekt per module, host tests, `:data`'s instrumented compile, `verifySqlDelightMigration`, `:androidApp:lintDevDebug`, `:build-logic:convention:test`. Defined once in `QualityGateConventionPlugin.kt`; the pre-push hook and CI run exactly it.
 - `./gradlew assembleDevDebug` — dev debug build; `assembleProdRelease` for the release.
 - `./gradlew test` — every module's host tests; per module `:<module>:testDebugUnitTest`, `:domain:test`, and `:androidApp:testDevDebugUnitTest` for the MockK ViewModel suite.
 - `./gradlew :data:connectedDebugAndroidTest` — the migration suite, on the `medium_phone` emulator, the only AVD.

@@ -3,16 +3,11 @@ import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.android.application)
-    id("justchill.detekt")
-    id("justchill.quality.gate")
-    // Generates BuildInfo.kt (the commit HEAD points at), once per variant, into a directory AGP
-    // owns and adds to that variant's Kotlin sources. There is no `main` source set involved.
+    id("justchill.android.application")
     id("justchill.build.info")
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.services)
     alias(libs.plugins.google.crashlytics)
-    alias(libs.plugins.kotlin.compose)
 }
 
 // Signing credentials are optional AT CONFIGURE TIME, and that is the whole point. They are absent
@@ -55,12 +50,9 @@ fun gitLatestTag(): String = runCatching {
 
 android {
     namespace = "com.emm.justchill"
-    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.emm.justchill"
-        minSdk = 28
-        targetSdk = 36
         versionCode = gitCommitCount()
         versionName = gitLatestTag()
 
@@ -124,17 +116,7 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlin {
-        jvmToolchain(17)
-    }
-
     buildFeatures {
-        compose = true
         buildConfig = true
     }
 
@@ -157,16 +139,6 @@ tasks.named("qualityGate") {
     dependsOn("testDevDebugUnitTest", "lintDevDebug")
 }
 
-kotlin {
-    compilerOptions {
-        freeCompilerArgs.addAll(
-            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-            "-opt-in=kotlinx.coroutines.FlowPreview",
-        )
-    }
-}
-
 dependencies {
 
     implementation(projects.domain)
@@ -179,24 +151,11 @@ dependencies {
     implementation(libs.material)
 
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-
-    // @Preview rendering in the IDE. The androidTest* deps that used to sit here were removed:
-    // androidApp/src/androidTest/ does not exist, so nothing ever consumed them.
-    debugImplementation(libs.androidx.ui.tooling)
-
-    testImplementation(libs.junit)
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
-
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(kotlin("test"))
 
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.android)
@@ -216,8 +175,6 @@ dependencies {
     implementation(libs.firebase.crashlytics)
 
     implementation(libs.androidx.activity.ktx)
-
-    testImplementation(libs.mockk)
 
     // nav3 (runtime + UI) is inherited transitively from :ui-android, which hosts the unified
     // AppNavHost. :androidApp no longer references androidx.navigation3 types directly.

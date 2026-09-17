@@ -2,7 +2,7 @@
 
 Android library (`com.android.library`, ADR 011) implementing the `:domain` repository interfaces. SQLDelight is the local source of truth; Supabase (`supabase-kt`) backs the optional auth (`auth/`) and the backup pipeline (`backup/`). The row-replication sync engine is gone (ADR 009); read `## Backup` before touching `backup/`.
 
-Root package `com.emm.data.<entity>`, `minSdk = 26`. Depends on `:domain` only. Repositories funnel I/O through `shared/SafeCall.kt` (`safeDbCall`, `catchAsDomainException`), never throwing raw SQLDelight errors.
+Root package `com.emm.data.<entity>`, `minSdk = 28`. Depends on `:domain` only. Repositories funnel I/O through `shared/SafeCall.kt` (`safeDbCall`, `catchAsDomainException`), never throwing raw SQLDelight errors.
 
 `DefaultBackupRepository` is the one deliberate exception to the `Default{Entity}Repository` → `{Entity}LocalDataSource` shape: a snapshot and a restore each have to be a single transaction spanning every table, and per-entity data sources cannot share one, so it drives `EmmDatabaseData` and its `*Queries` directly.
 
