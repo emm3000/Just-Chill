@@ -1,5 +1,6 @@
 package com.emm.justchill.core.database.backup
 
+import com.emm.justchill.core.database.shared.enumValueOrNull
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.CategoryId
@@ -22,10 +23,13 @@ fun Category.toDto() = CategoryDto(
     categoryType = categoryType.name,
 )
 
-fun CategoryDto.toEntity() = Category(
-    categoryId = CategoryId(categoryId),
-    name = name,
-    icon = icon,
-    color = color,
-    categoryType = CategoryType.valueOf(categoryType),
-)
+fun CategoryDto.toEntityOrNull(): Category? {
+    val parsedType: CategoryType = enumValueOrNull<CategoryType>(categoryType) ?: return null
+    return Category(
+        categoryId = CategoryId(categoryId),
+        name = name,
+        icon = icon,
+        color = color,
+        categoryType = parsedType,
+    )
+}

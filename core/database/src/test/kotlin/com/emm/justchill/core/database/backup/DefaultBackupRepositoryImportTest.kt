@@ -55,7 +55,7 @@ class DefaultBackupRepositoryImportTest {
         db = JustChillDatabase(driver)
         exec("PRAGMA foreign_keys=ON")
         clock.instant = FIRST_IMPORT
-        repository = DefaultBackupRepository(db = db, clock = clock)
+        repository = DefaultBackupRepository(SqlDelightSnapshotStore(db = db, clock = clock))
     }
 
     @After

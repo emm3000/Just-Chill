@@ -30,10 +30,12 @@ class BackupV4CompatibilityTest {
         driver.execute(null, "PRAGMA foreign_keys=ON", 0)
         db = JustChillDatabase(driver)
         repository = DefaultBackupRepository(
-            db = db,
-            clock = object : Clock {
-                override fun now(): Instant = IMPORTED_AT
-            },
+            SqlDelightSnapshotStore(
+                db = db,
+                clock = object : Clock {
+                    override fun now(): Instant = IMPORTED_AT
+                },
+            ),
         )
     }
 
