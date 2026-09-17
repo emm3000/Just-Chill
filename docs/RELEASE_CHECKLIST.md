@@ -15,10 +15,23 @@ person actually promotes in Play Console. Nothing on this page is optional.
   - sign-out
   - a real upgrade over an old APK with `adb install -r` — never a fresh install; only an upgrade
     runs the migrations against real data
-- **Manual device check.** Run the checks in
-  [E03 § Manual device check](work/epics/E03-session-secrets.md#manual-device-check).
+- **Session device check.** Host tests stop at `SessionPayloadCodec`; the `AndroidKeyStore` round
+  trip and the 128-bit GCM tag only run on a device (`androidApp/CLAUDE.md` `## Session`).
+  - Round trip: plant a cleartext session under `LEGACY_SESSION_KEY` by hand (`adb push` a crafted
+    `shared_prefs/justchill_auth.xml`, `run-as <applicationId> cp` it into place), cold start, and
+    confirm `user.email` surfaces in Perfil. That proves the sweep encrypted into
+    `ENCRYPTED_SESSION_KEY` and decrypted for real.
+  - Tag: sign in once, kill and relaunch; Perfil still shows the session. A wrong tag length fails
+    decryption outright, there is no partial-corruption state to probe.
+  - Discard vs. keep: flip one byte in the ciphertext half of a stored `ENCRYPTED_SESSION_KEY`
+    value, cold start; the app lands on the login screen and logs "discarded and signed out"
+    (`AEADBadTagException` through `willNeverReadBack()` into `reportUnreadableSession`'s
+    `prefs.edit { remove(...) }`). An untouched value keeps the session.
+  - Named gap: `generateSessionKey`'s delete-and-regenerate path fires only when the Keystore alias
+    is present but unreadable, and nothing short of instrumented Keystore corruption reaches it.
 - **Restore drill.** [ADR 009](adr/009-backup-is-a-snapshot-not-row-replication.md) Decision 4
-  requires a continuously proven restore before backup ships, enforced by this drill.
+  requires a continuously proven restore before backup ships, and this line is its only
+  enforcement: delete it and nothing in the repo asks for the drill again.
   - While `SNAPSHOT_BACKUP_ENABLED` is `false` (its state today), the drill runs over the manual
     export: export from the installed build, record Cuentas' `Saldo total` and the Cuentas and
     Categorías counts first, import onto a clean install, and confirm all three figures and the
@@ -33,7 +46,8 @@ person actually promotes in Play Console. Nothing on this page is optional.
   rather than re-deriving it.
 - **If this release flips `SNAPSHOT_BACKUP_ENABLED`**, update the privacy policy, the store listing
   and the Data Safety answer in this same release — the app stops being "nothing leaves your phone".
-  Not after.
+  Not after. Flipping the flag is a compliance event, not a feature flag; a "Yes" set to unblock
+  one release becomes permanent.
 
 ## The tag
 
@@ -43,6 +57,7 @@ person actually promotes in Play Console. Nothing on this page is optional.
 
 The release is judged by the `Publish to Play Store` step, not by `Upload AAB artifact`. A green run
 reached no one; a red run may still have uploaded the artifact and failed only at the Edit commit.
+A tag that looks shipped may have shipped nothing.
 
 - The workflow leaves a **draft** on the alpha track. Publishing it is manual: Play Console → Pruebas
   → Alfa, confirm the draft's `versionCode`/`versionName`, publish.
