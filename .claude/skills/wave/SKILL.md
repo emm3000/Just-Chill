@@ -32,7 +32,7 @@ Rows are ordered by blast radius: how much a mistake breaks and whether a gate c
 | 3 | Code on the trap list, where nothing catches the error: a route, a Koin binding, `:presentation` purity, an atom default that changes N screens, `.github/` | opus:medium | visual check of every affected screen |
 | 4 | Migration, backup/restore, auth, DI graph, cross-module architecture | opus:high | the restore drill in `.claude/rules/sqldelight.md` when the schema moves |
 
-Reviews and other roles keep the playbook rules: `pr-reviewer` opus:high, run only where the risk-tiered policy says so; post-review fixes sonnet:low; `ticket-writer` opus:high; design fable.
+Reviews and other roles keep the playbook rules: a `pr-reviewer` on every PR, restyle/docs/rename reviews sonnet:medium, screen/logic/migration/backup/auth/DI reviews opus:high, post-review fixes sonnet:low, `ticket-writer` opus:high, design fable.
 
 Every row is a bet until `docs/agents/dispatch-log.md` says otherwise. When a row shows two or more first-review FIX FIRST verdicts for reasons the checklist did not cover, raise it one step and note why there.
 

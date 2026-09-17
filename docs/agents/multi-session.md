@@ -12,7 +12,7 @@ One GitHub issue of `emm3000/Just-Chill` labelled `ready-for-agent`. The label v
 1. Orchestrator SCOPES the issue (inline, cheap) and picks the dispatch-log row
 2. /wave boots one peer per ticket → WRITER   ── own worktree, branch, commits, PR that closes the issue
 3. CI runs qualityGate on the PR
-4. Orchestrator delegates → pr-reviewer       ── MERGE or FIX FIRST (tiered, capped)
+4. Orchestrator delegates → pr-reviewer       ── MERGE or FIX FIRST, on every PR
 5. Orchestrator rebase-merges, appends the dispatch-log row, closes the cycle
 ```
 
@@ -76,11 +76,9 @@ Every dispatch to a peer session must include:
 ## Review cycle
 
 - A session gets nothing new until its previous PR is reviewed, fixed and merged. Never queue two tickets in one dispatch.
-- **Risk-tiered and capped: one review plus one fix round per unit.** MERGE → done; fixes after a MERGE verdict (nits, copy) are covered by the gate. FIX FIRST → writer fixes → done; one re-review only for a fix touching a `blocking` finding, scoped to that finding.
-  - **Reviewed (mandatory):** Supabase or SQLDelight schema and migrations, backup/restore correctness, auth, DI graph changes, a Compose or UI type reaching `:presentation`, `.github/`.
-  - **Gate-only (no reviewer):** UI composition, copy, presentation-layer wiring, docs, tests-only changes, mechanical refactors. CI's gate plus the orchestrator's read of the PR is the whole check.
-  - A unit spanning both tiers gets one review scoped to its high-risk part. Rationale: no third-party users, the author runs the release daily on real data, and the one irreversible failure is data loss.
-- Every PR review is a fresh `pr-reviewer` subagent the orchestrator launches, one per PR, always opus:high: fresh context, adversarial, read-only. It reads the diff, the issue and `gh pr checks`; it does not rerun the gate, because CI already did. It pulls the screenshots locally with `git show origin/assets/<N>-visual-check:<file>`, checks that the SHA in each file name matches the PR head, and views the images. It boots `medium_phone` only when screenshots are missing, stale or suspicious. It returns `blocking|minor` findings, one verdict (MERGE or FIX FIRST) and one cause word (`checklist`, `judgment`, `spec`) for the dispatch log.
+- Two-axis review (standards vs. `CLAUDE.md` and `.claude/rules/`, spec vs. the issue), plus screenshots checked against `.claude/rules/ui-components.md`. Every PR gets one. Reviews of mechanical slices, such as restyles, docs and renames, run sonnet:medium. Reviews of screens, logic, migrations, backup/restore, auth and the DI graph run opus:high. Post-review fixes run sonnet:low.
+- Every PR review is a fresh `pr-reviewer` subagent that the orchestrator launches, one per PR, with the model passed on the call. It is not a long-lived peer session. The subagent is read-only. It does not build the app or rerun the gate, because CI already did. It reads the diff, the issue and `gh pr checks`, and it pulls the screenshots locally with `git show origin/assets/<N>-visual-check:<file>`. It checks that the SHA in each file name matches the PR head, and then views the images. It boots `medium_phone` only when screenshots are missing, stale or suspicious. It follows the `mattpocock-skills:code-review` skill for the Standards and Spec axes, with the PR's merge-base with `origin/trunk` as the fixed point. It returns `blocking|minor` findings, one verdict (MERGE or FIX FIRST) and one cause word (`checklist`, `judgment`, `spec`) for the dispatch log.
+- No design-doc PR order: `.claude/rules/ui-components.md` forbids a design document, so the tokens and the screenshots are the whole design contract.
 - Merge is rebase-only, linear history, CI required. The orchestrator never blocks its own turn on `gh run watch`; it merges when the CI notification or the session's report arrives.
 - Auto-merge (`gh pr merge --rebase --auto`) only works while checks are still pending; on a CLEAN PR GitHub refuses it. Check `gh pr view <N> --json mergeStateStatus` first: merge directly with `gh pr merge <N> --rebase` when CLEAN, arm auto-merge only while pending, and have the implementing session confirm with `gh pr view <N> --json state` once CI passes.
 
