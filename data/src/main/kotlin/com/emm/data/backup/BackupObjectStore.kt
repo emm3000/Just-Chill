@@ -6,10 +6,8 @@ internal const val BACKUP_LIST_PAGE_SIZE: Int = 1000
 
 internal const val BACKUP_LIST_MAX_PAGES: Int = 10
 
-/**
- * [serverReturned] counts the raw rows the server sent, folders included; [names] holds only the
- * rows that are objects. A caller proving a prefix is empty has to read [serverReturned].
- */
+// serverReturned counts the raw rows the server sent, folders included; names holds only the
+// rows that are objects. A caller proving a prefix is empty has to read serverReturned.
 internal data class ObjectPage(
     val names: List<String>,
     val serverReturned: Int,

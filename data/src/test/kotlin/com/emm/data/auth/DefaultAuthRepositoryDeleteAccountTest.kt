@@ -30,16 +30,13 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import io.github.jan.supabase.auth.status.SessionStatus as SupabaseSessionStatus
 
-/**
- * The SupabaseClient has to be real, same reasoning as DefaultAuthRepositorySignOutTest: what these
- * tests pin is deleteAccount()'s call shape against supabase-kt's own Postgrest/Auth behaviour, not
- * a mock of this repository's own dependency.
- */
+// The SupabaseClient has to be real, same reasoning as DefaultAuthRepositorySignOutTest: what these
+// tests pin is deleteAccount()'s call shape against supabase-kt's own Postgrest/Auth behaviour, not
+// a mock of this repository's own dependency.
 class DefaultAuthRepositoryDeleteAccountTest {
 
-    // This is the case the whole ticket exists for: a network failure on the revoke POST used to
-    // escape before clearSession() ran, leaving the device Authenticated for an account the RPC had
-    // already deleted.
+    // A network failure on the revoke POST could escape before clearSession() ran, leaving the
+    // device Authenticated for an account the RPC had already deleted.
     @Test
     fun `deleteAccount clears the session when the RPC succeeds but the revoke POST fails`() = runTest {
         val client = clientWithSession { request ->
@@ -64,12 +61,9 @@ class DefaultAuthRepositoryDeleteAccountTest {
         assertNull(client.auth.currentSessionOrNull())
     }
 
-    /**
-     * The mirror image of DefaultAuthRepositorySignOutTest's cancellation case, and it has to be:
-     * signOut() must leave the session alone because the user may still own it, while here the RPC
-     * already destroyed the account, so the clear cannot be skipped for any reason — cancellation
-     * included.
-     */
+    // The mirror image of DefaultAuthRepositorySignOutTest's cancellation case: signOut() leaves the
+    // session alone because the user may still own it, while here the RPC already destroyed the
+    // account, so the clear cannot be skipped for any reason — cancellation included.
     @Test
     fun `deleteAccount clears the session even when a cancellation interrupts the revoke POST`() =
         runTest(timeout = HANG_BOUND) {
@@ -140,11 +134,9 @@ class DefaultAuthRepositoryDeleteAccountTest {
         client.auth.importSession(session(), autoRefresh = false)
     }
 
-    /**
-     * Auth.init() flips Initializing to NotAuthenticated from its own scope on the client's default
-     * dispatcher, and the check is not atomic: an importSession() that lands between that read and
-     * its write is overwritten, and every test here then runs on a session that is gone.
-     */
+    // Auth.init() flips Initializing to NotAuthenticated from its own scope on the client's default
+    // dispatcher, and the check is not atomic: an importSession() landing between that read and its
+    // write is overwritten, and every test here then runs on a session that is gone.
     private suspend fun SupabaseClient.settled(): SupabaseClient = also { it.auth.awaitInitialization() }
 
     private fun session(): UserSession = UserSession(
@@ -161,17 +153,12 @@ class DefaultAuthRepositoryDeleteAccountTest {
         const val LOGOUT_PATH = "/auth/v1/logout"
         const val RPC_FAILURE_BODY = """{"code":"XX000","message":"delete_account failed"}"""
 
-        /**
-         * INFINITE is the one value for which ktor launches no timeout coroutine at all. Any finite
-         * one competes with the cancellation under test and wins under load.
-         */
+        // INFINITE is the one value for which ktor launches no timeout coroutine at all. Any finite
+        // one competes with the cancellation under test and wins under load.
         val DISABLED_REQUEST_TIMEOUT = Duration.INFINITE
 
-        /**
-         * A real clock covering the whole test body, so load still beats it. It buys an
-         * unambiguous failure — a leaked coroutine, not a session-status assertion blaming a
-         * cancellation defect that never happened — never determinism.
-         */
+        // A real clock covering the whole test body, so load still beats it: it buys an unambiguous
+        // failure — a leaked coroutine, never a session-status assertion blaming a defect that never happened.
         val HANG_BOUND = 10.seconds
     }
 }

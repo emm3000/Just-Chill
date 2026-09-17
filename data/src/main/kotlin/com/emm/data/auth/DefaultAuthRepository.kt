@@ -38,11 +38,9 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
             .map { it.toDomain() }
             .flowOn(ioDispatcher)
 
-    /**
-     * Postgrest resolves the request JWT synchronously from auth.sessionStatus.value, which is
-     * populated asynchronously while the session loads. A call fired before that read settles
-     * attaches no token and is silently downgraded to the anon key (HTTP 403 under RLS).
-     */
+    // Postgrest resolves the request JWT synchronously from auth.sessionStatus.value, which is
+    // populated asynchronously while the session loads. A call fired before that read settles
+    // attaches no token and is silently downgraded to the anon key (HTTP 403 under RLS).
     override suspend fun awaitSessionInitialization(): Unit = withContext(ioDispatcher) {
         client.auth.awaitInitialization()
     }
@@ -78,12 +76,8 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
         user.toDomain()
     }
 
-    /**
-     * clearSession sits outside the swallow on purpose: it cannot fail on network, so a failure of
-     * it means the session store itself broke and the user is still signed in — the caller has to
-     * hear that. Running it after a successful revoke is harmless rather than a no-op, and costs
-     * no extra emission only because MutableStateFlow conflates the equal NotAuthenticated value.
-     */
+    // clearSession sits outside the swallow on purpose: it cannot fail on network, so a failure of it
+    // means the session store itself broke and the user is still signed in — the caller has to hear that.
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun signOut(): SignOutResult = authCall {
         val revoked = try {
@@ -102,17 +96,9 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
         client.auth.resendEmail(OtpType.Email.SIGNUP, email)
     }
 
-    /**
-     * Fires the only Postgrest call in this class without awaiting initialization, because its only
-     * caller already did: DeleteUserAccountUseCase.resolveAuthenticatedUserId waits out Initializing
-     * under the same lock and refuses unless the session is Authenticated. Move that wait and this
-     * RPC starts attaching the anon key on a cold start, which RLS answers with 403.
-     *
-     * The RPC runs first and unguarded: if it throws, the account still exists and nothing else
-     * should. Once it succeeds the local clear has to happen whatever the revoke does — a
-     * cancellation included, which is why it sits in a finally under NonCancellable. Only the
-     * clear is uncancellable; the revoke POST stays interruptible so it can never hang the caller.
-     */
+    // Fires the RPC without awaiting initialization: DeleteUserAccountUseCase.resolveAuthenticatedUserId
+    // already waited out Initializing under the same lock. Once the RPC succeeds the local clear must
+    // run whatever the revoke does, cancellation included, so only the clear sits under NonCancellable.
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun deleteAccount(): Unit = authCall {
         client.postgrest.rpc("delete_account")
@@ -129,10 +115,8 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
         }
     }
 
-    /**
-     * Catches Throwable because this is the only funnel; anything supabase-kt or ktor can raise has
-     * to leave as a DomainException.
-     */
+    // Catches Throwable because this is the only funnel; anything supabase-kt or ktor can raise has
+    // to leave as a DomainException.
     @Suppress("TooGenericExceptionCaught")
     private suspend inline fun <T> authCall(crossinline block: suspend () -> T): T = withContext(ioDispatcher) {
         try {
@@ -147,10 +131,8 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
     }
 }
 
-/**
- * RefreshFailure maps to NotAuthenticated because the session is still structurally present but its
- * token may be expired, and every consumer of this flow gates a call that would then be rejected.
- */
+// RefreshFailure maps to NotAuthenticated because the session is still structurally present but its
+// token may be expired, and every consumer of this flow gates a call that would then be rejected.
 internal fun SupabaseSessionStatus.toDomain(): SessionStatus = when (this) {
     is SupabaseSessionStatus.Authenticated -> {
         val user = session.user
@@ -170,11 +152,9 @@ internal fun SupabaseSessionStatus.toDomain(): SessionStatus = when (this) {
 
 internal fun UserInfo.toDomain(): AuthUser = AuthUser(userId = id, email = email)
 
-/**
- * These reach the UI as a corrective hint instead of Unauthorized's "wrong credentials", which on
- * sign-up would be nonsense. The server's errorDescription is English, so the ValidationCode — not
- * the message — is what the UI translates.
- */
+// These reach the UI as a corrective hint instead of Unauthorized's "wrong credentials", which on
+// sign-up would be nonsense. The server's errorDescription is English, so the ValidationCode — not
+// the message — is what the UI translates.
 private val VALIDATION_AUTH_CODES: Map<AuthErrorCode, ValidationCode> = mapOf(
     AuthErrorCode.WeakPassword to ValidationCode.PasswordTooWeak,
     AuthErrorCode.EmailExists to ValidationCode.EmailAlreadyRegistered,
@@ -184,11 +164,8 @@ private val VALIDATION_AUTH_CODES: Map<AuthErrorCode, ValidationCode> = mapOf(
     AuthErrorCode.SamePassword to ValidationCode.PasswordUnchanged,
 )
 
-/**
- * Branch order is load-bearing: on supabase-kt 3.7.0 both AuthRestException and
- * UnauthorizedRestException extend RestException, so the plain RestException branch must stay below
- * them. SessionRequiredException, despite the name, extends Exception directly and never competes.
- */
+// Branch order is load-bearing: on supabase-kt 3.7.0 both AuthRestException and
+// UnauthorizedRestException extend RestException, so the plain RestException branch must stay below them.
 internal fun Throwable.toAuthDomainException(): DomainException = when (this) {
     is AuthRestException -> VALIDATION_AUTH_CODES[errorCode]?.let { validationCode ->
         DomainException.ValidationError(

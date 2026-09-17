@@ -64,7 +64,7 @@ class DeleteUseCasesE2ETest {
         driver = AndroidSqliteDriver(
             schema = EmmDatabaseData.Schema,
             context = context,
-            name = null, // in-memory
+            name = null,
             callback = object : AndroidSqliteDriver.Callback(schema = EmmDatabaseData.Schema) {
                 override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                     db.setForeignKeyConstraintsEnabled(true)
@@ -133,7 +133,6 @@ class DeleteUseCasesE2ETest {
     // No suspend: unlike its siblings, this bypasses the repository for direct SQL (own id
     // instead of the DataSource's generated UUID), so the body never crosses a suspend call.
     private fun insertRecurring(id: String, accountId: AccountId, categoryId: CategoryId?): RecurringMovementId {
-        // Insert via direct SQL to supply our own id (the DataSource generates a UUID on create).
         database.recurring_movementsQueries.insert(
             id = id,
             name = "Rec $id",

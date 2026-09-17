@@ -26,7 +26,7 @@ class RecurringMovementFkTest {
         driver = AndroidSqliteDriver(
             schema = EmmDatabaseData.Schema,
             context = context,
-            name = null, // in-memory
+            name = null,
             callback = object : AndroidSqliteDriver.Callback(schema = EmmDatabaseData.Schema) {
                 override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                     db.setForeignKeyConstraintsEnabled(true)

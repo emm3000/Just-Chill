@@ -29,10 +29,8 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import io.github.jan.supabase.auth.status.SessionStatus as SupabaseSessionStatus
 
-/**
- * The SupabaseClient has to be real: what these tests pin is supabase-kt's own behaviour, and a
- * mocked Auth would only assert what this repository calls.
- */
+// The SupabaseClient has to be real: what these tests pin is supabase-kt's own behaviour, and a
+// mocked Auth would only assert what this repository calls.
 class DefaultAuthRepositorySignOutTest {
 
     @Test
@@ -130,10 +128,8 @@ class DefaultAuthRepositorySignOutTest {
         client.auth.importSession(session(), autoRefresh = false)
     }
 
-    /**
-     * Raises the exception directly instead of installing a real ktor timeout and waiting for it,
-     * so the outcome never races the wall clock.
-     */
+    // Raises the exception directly instead of installing a real ktor timeout and waiting for it,
+    // so the outcome never races the wall clock.
     private suspend fun timedOutClientWithSession(): SupabaseClient = createSupabaseClient(
         supabaseUrl = "https://project.supabase.co",
         supabaseKey = "test-anon-key",
@@ -168,10 +164,8 @@ class DefaultAuthRepositorySignOutTest {
         client.auth.importSession(session(), autoRefresh = false)
     }
 
-    /**
-     * The server-side revoke succeeds so the local clear is the only thing that can fail — the
-     * override has to run after `minimalConfig()`, which installs its own in-memory manager first.
-     */
+    // The server-side revoke succeeds so the local clear is the only thing that can fail — the
+    // override has to run after minimalConfig(), which installs its own in-memory manager first.
     private suspend fun respondingClientWithFailingLocalClear(): SupabaseClient = createSupabaseClient(
         supabaseUrl = "https://project.supabase.co",
         supabaseKey = "test-anon-key",
@@ -185,11 +179,9 @@ class DefaultAuthRepositorySignOutTest {
         client.auth.importSession(session(), autoRefresh = false)
     }
 
-    /**
-     * Auth.init() flips Initializing to NotAuthenticated from its own scope on the client's default
-     * dispatcher, and the check is not atomic: an importSession() that lands between that read and
-     * its write is overwritten, and every test here then runs on a session that is gone.
-     */
+    // Auth.init() flips Initializing to NotAuthenticated from its own scope on the client's default
+    // dispatcher, and the check is not atomic: an importSession() landing between that read and its
+    // write is overwritten, and every test here then runs on a session that is gone.
     private suspend fun SupabaseClient.settled(): SupabaseClient = also { it.auth.awaitInitialization() }
 
     private fun session(): UserSession = UserSession(
@@ -200,10 +192,8 @@ class DefaultAuthRepositorySignOutTest {
         user = UserInfo(id = "user-1", aud = "authenticated", email = "user@example.com"),
     )
 
-    /**
-     * `saveSession`/`loadSession` delegate to a real in-memory manager so `importSession()` still
-     * works; only `deleteSession()` fails, to isolate the local clear as the one broken step.
-     */
+    // saveSession/loadSession delegate to a real in-memory manager so importSession() still works;
+    // only deleteSession() fails, to isolate the local clear as the one broken step.
     private class SessionManagerWithFailingDelete : SessionManager {
 
         private val delegate = MemorySessionManager()
@@ -217,17 +207,12 @@ class DefaultAuthRepositorySignOutTest {
 
     private companion object {
 
-        /**
-         * INFINITE is the one value for which ktor launches no timeout coroutine at all. Any finite
-         * one competes with the cancellation under test and wins under load.
-         */
+        // INFINITE is the one value for which ktor launches no timeout coroutine at all. Any finite
+        // one competes with the cancellation under test and wins under load.
         val DISABLED_REQUEST_TIMEOUT = Duration.INFINITE
 
-        /**
-         * A real clock covering the whole test body, so load still beats it. It buys an
-         * unambiguous failure — a leaked coroutine, not a session-status assertion blaming a
-         * cancellation defect that never happened — never determinism.
-         */
+        // A real clock covering the whole test body, so load still beats it: it buys an unambiguous
+        // failure — a leaked coroutine, never a session-status assertion blaming a defect that never happened.
         val HANG_BOUND = 10.seconds
     }
 }

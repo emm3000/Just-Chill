@@ -457,11 +457,9 @@ class MigrationV4ToV5Test {
     private fun migrate() =
         EmmDatabaseData.Schema.migrate(driver, oldVersion = 4, newVersion = EmmDatabaseData.Schema.version)
 
-    /**
-     * `setForeignKeyConstraintsEnabled` is illegal inside a transaction; both call sites are
-     * outside one, and `Schema.migrate` opens none of its own (the real upgrade's transaction
-     * belongs to `SQLiteOpenHelper`, which this test bypasses).
-     */
+    // setForeignKeyConstraintsEnabled is illegal inside a transaction; both call sites are outside
+    // one, and Schema.migrate opens none of its own (the real upgrade's transaction belongs to
+    // SQLiteOpenHelper, which this test bypasses).
     private fun enableForeignKeys() {
         val db = openedDb ?: error("onOpen never fired — the driver was never used")
         db.setForeignKeyConstraintsEnabled(true)
@@ -482,14 +480,14 @@ class MigrationV4ToV5Test {
 
     private fun exec(sql: String) = driver.execute(null, sql, 0)
 
-    /** [categoryId] is raw SQL — either a quoted literal or `NULL`, so the null case is expressible. */
+    // categoryId is raw SQL — either a quoted literal or NULL, so the null case is expressible.
     private fun insertV4Transaction(id: String, type: String, categoryId: String) = exec(
         "INSERT INTO transactions(transactionId, type, amount, description, occurredAt, categoryId, " +
             "accountId, createdAt, updatedAt) " +
             "VALUES ('$id', '$type', 350000, 'Sueldo mayo', '2025-07-31T17:13:20', $categoryId, 'A1', 2000, 2000)",
     )
 
-    /** [categoryId] is raw SQL, same reason as [insertV4Transaction]. */
+    // categoryId is raw SQL, same reason as insertV4Transaction.
     private fun insertV4Recurring(id: String, type: String, categoryId: String) = exec(
         "INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, " +
             "frequency, dayOfMonth, isActive, createdAt, updatedAt) " +

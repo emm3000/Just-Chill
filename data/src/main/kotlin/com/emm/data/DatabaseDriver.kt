@@ -5,9 +5,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 
-/**
- * Changing this name orphans every existing user's local database.
- */
+// Changing this name orphans every existing user's local database.
 private const val DATABASE_NAME = "com.emm.data.db"
 
 fun provideSqlDriver(context: Context): SqlDriver = AndroidSqliteDriver(

@@ -6,10 +6,8 @@ import com.emm.domain.shared.backup.BackupVerifier
 import io.github.jan.supabase.SupabaseClient
 import kotlin.time.Instant
 
-/**
- * Well under the 7 + 8 + 12 a shelf can hold: a bucket where nothing verifies must answer without
- * downloading every snapshot in it.
- */
+// Well under the 7 + 8 + 12 a shelf can hold: a bucket where nothing verifies must answer without
+// downloading every snapshot in it.
 internal const val BACKUP_VERIFY_MAX_PAIRS: Int = 5
 
 class DefaultBackupVerifier internal constructor(private val store: BackupObjectStore) : BackupVerifier {
@@ -70,11 +68,9 @@ private fun decodeIfDigestMatches(manifest: BackupManifestDto, payloadBytes: Byt
     return decodeBackupPayloadOrNull(payloadBytes.decodeToString())
 }
 
-/**
- * Orphans stay in the list rather than being filtered out of it: an orphan payload is the newest
- * thing in the bucket the night a manifest PUT fails, and a result that reported the pair below it
- * as the newest one would hide exactly that.
- */
+// Orphans stay in the list rather than being filtered out of it: an orphan payload is the newest
+// thing in the bucket the night a manifest PUT fails, and a result that reported the pair below it
+// as the newest one would hide exactly that.
 private fun snapshotsNewestFirst(names: List<String>): List<Snapshot> {
     val flat: List<String> = names.filterNot { it.contains('/') }
     val present: Set<String> = flat.toSet()

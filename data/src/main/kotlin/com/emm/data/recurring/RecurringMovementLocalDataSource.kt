@@ -86,10 +86,7 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData,
         rmq.countLiveByAccount(accountId).executeAsOne()
     }
 
-    /**
-     * One clock read stamps both writes. Two rows committed in the same transaction that disagree
-     * about when would be a lie about an operation that either happened or did not.
-     */
+    // One clock read stamps both writes: two rows in the same transaction must not disagree about when.
     suspend fun confirm(insert: TransactionInsert, recurringId: String, period: String) = withContext(ioDispatcher) {
         val now = clock.nowMillis()
         emmDatabase.transaction {
@@ -123,14 +120,9 @@ class RecurringMovementLocalDataSource(private val emmDatabase: EmmDatabaseData,
         Unit
     }
 
-    /**
-     * Period keys are zero-padded "YYYY-MM", so string ordering is chronological and needs no parsing.
-     *
-     * Paired with parsePeriodKey in :domain, the only one of the two that bounds a well-formed key.
-     * A key that parser rejects still sorts here by its raw bytes, so it can settle every future
-     * period while pendingPeriods keeps listing them as owed: confirm and skip both throw and the
-     * template is stuck. Change that bound and re-read this.
-     */
+    // Period keys are zero-padded "YYYY-MM", so string ordering is chronological and needs no parsing.
+    // parsePeriodKey in :domain is the only one of the two that bounds a well-formed key; a key it
+    // rejects still sorts here by raw bytes, settling every future period while it stays listed as owed.
     private fun ensureNotSettled(recurringId: String, period: String) {
         val settledThrough = rmq.find(recurringId).executeAsOneOrNull()?.lastConfirmedPeriod ?: return
         if (settledThrough >= period) {
