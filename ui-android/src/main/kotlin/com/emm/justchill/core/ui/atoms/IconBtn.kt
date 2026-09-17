@@ -22,9 +22,6 @@ private const val DISABLED_ALPHA = 0.35f
  * Disabled dims the button without collapsing its box. `DatePickerSheet` flanks the month label
  * with two of these in a `SpaceBetween` row, so hiding one at the boundary would shift the label.
  */
-// icon/onClick/contentDescription are the required params; modifier, tone and enabled each cover an
-// independent axis (layout, color, interactivity) — a config object would relocate them, not remove
-// any.
 @Suppress("LongParameterList")
 @Composable
 fun IconBtn(

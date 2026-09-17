@@ -50,9 +50,6 @@ import com.emm.justchill.hh.transaction.formatCentsForDisplay
  * confirm CTA commits it. Closing the sheet — affordance, scrim or back gesture — discards the
  * draft, so the owner keeps the amount it had.
  */
-// amountDigits/title/tone/onAmountConfirm/onDismiss are the loan and recurring callers' only
-// required inputs; modifier is conventional and subtitle the one optional extra the recurring
-// sheet adds. Splitting these into a config object would relocate the count, not reduce it.
 @Suppress("LongParameterList")
 @Composable
 fun AmountInputSheet(
@@ -86,7 +83,6 @@ fun AmountInputSheet(
     }
 }
 
-// The content mirrors the shell's inputs one for one, plus the conventional modifier.
 @Suppress("LongParameterList")
 @Composable
 private fun AmountInputSheetContent(
