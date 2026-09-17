@@ -22,10 +22,8 @@ data class DayGroup(val date: LocalDate, val today: LocalDate, val transactions:
             }
         }
 
-    /**
-     * Month context as a caption, e.g. "agosto 2026". Only search results render it — their
-     * rows cross months; in month mode the selector already names the month once.
-     */
+    // Only search results render this: their rows cross months, while in month mode the selector
+    // already names the month once.
     val monthYearCaption: String
         get() = SpanishDateFormat.monthYear(date.year, date.month)
 }

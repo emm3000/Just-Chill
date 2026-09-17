@@ -13,14 +13,10 @@ class ReportShareFormatterTest {
     // to default it to YearMonth.current(), so these tests silently ran against the wall clock.
     private val may2026 = YearMonth(2026, Month.MAY)
 
-    // ── initial selectedType ────────────────────────────────────────────────
-
     @Test
     fun `ReportUiState defaults selectedType to Spend`() {
         assertEquals(TransactionType.Spend, ReportUiState(month = may2026).selectedType)
     }
-
-    // ── buildContextSentence ──────────────────────────────────────────────
 
     @Test
     fun `buildContextSentence with null delta returns base sentence only`() {
@@ -77,8 +73,6 @@ class ReportShareFormatterTest {
         assertEquals("De cada S/ 100 que entró, ahorraste S/ 0.", result)
     }
 
-    // ── buildTopMetaText ──────────────────────────────────────────────────
-
     @Test
     fun `buildTopMetaText formats months-in-top label correctly`() {
         assertEquals("Top en 4 de 6 meses", ReportShareFormatter.buildTopMetaText(4, 6))
@@ -93,8 +87,6 @@ class ReportShareFormatterTest {
     fun `buildTopMetaText with monthsInTop zero`() {
         assertEquals("Top en 0 de 6 meses", ReportShareFormatter.buildTopMetaText(0, 6))
     }
-
-    // ── buildMonthShareText ───────────────────────────────────────────────
 
     @Test
     fun `buildMonthShareText contains JustChill footer`() {
@@ -116,8 +108,6 @@ class ReportShareFormatterTest {
         val result = ReportShareFormatter.buildMonthShareText(state)
         assertTrue(result.contains("5 movimientos"), "Expected plural 'movimientos' in: $result")
     }
-
-    // ── buildTrendsShareText ──────────────────────────────────────────────
 
     @Test
     fun `buildTrendsShareText contains JustChill footer`() {

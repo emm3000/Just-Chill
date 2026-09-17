@@ -8,5 +8,5 @@ fun YearMonth.monthYearLabel(): String = SpanishDateFormat.monthYear(year, month
 
 fun YearMonth.monthLabel(): String = SpanishDateFormat.fullMonth(month).titlecaseFirstChar()
 
-/** Three characters exactly — the fixed-width slots cannot take a wider column. */
+// Three characters exactly — the fixed-width slots cannot take a wider column.
 fun YearMonth.monthAbbrevLabel(): String = SpanishDateFormat.shortMonth(month).take(ABBREV_LENGTH).titlecaseFirstChar()

@@ -27,12 +27,9 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
-// Nine independent dependencies, each already minimal: the loan id off the route, the two
-// repositories the summary is combined from, the three use cases for the writes that carry
-// invariants (cascade delete, payment validation on create and on edit), TodayFlow for the day a
-// payment form opens on, and Clock/TimeZone — kept for the time of day only — which the graph binds
-// by identity (AppGraphKoinTest); folding any pair into a holder would lose that identity check,
-// not the count.
+// Nine independent dependencies, each already minimal: Clock/TimeZone are kept separate because the
+// graph binds them by identity (AppGraphKoinTest), and folding either into a holder would lose that
+// identity check, not the count.
 @Suppress("LongParameterList")
 class LoanDetailViewModel(
     private val loanId: String,
@@ -83,13 +80,8 @@ class LoanDetailViewModel(
             .launchSafeIn(onError = { e -> LoanDetailEffect.ShowError(e.toUserMessage()) })
     }
 
-    // The only place either cap field is set: every form is built capped at nothing and passed
-    // through here, so one can never exist admitting more than the loan allows.
-    //
-    // Mirrors UpdateLoanPaymentUseCase's own remainingBeforeThis — editing the only abono on a
-    // settled loan has its own old amount as headroom, not "Máximo S/ 0.00" — and fills the cents
-    // the CTA compares against and the label the sheet shows from the same Money, so the two can
-    // never disagree.
+    // Mirrors UpdateLoanPaymentUseCase's own remainingBeforeThis: editing the only abono on a
+    // settled loan has its own old amount as headroom, not "Máximo S/ 0.00".
     private fun LoanPaymentFormUi.withCap(): LoanPaymentFormUi {
         val loan = loadedLoan ?: return this
         val edited = editingPaymentId?.let { id -> loadedPayments.find { it.id.value == id } }
@@ -205,10 +197,8 @@ class LoanDetailViewModel(
         updateState { copy(pendingDeletePaymentId = null, isDeletingPayment = false) }
     }
 
-    /**
-     * Left open on failure, unlike confirmDeletePayment: the form still holds a typed amount worth
-     * fixing, where the delete dialog has nothing left to edit.
-     */
+    // Left open on failure, unlike confirmDeletePayment: the form still holds a typed amount worth
+    // fixing, where the delete dialog has nothing left to edit.
     private fun confirmPayment() = launchSafe(
         onError = { e ->
             updateState { copy(payment = payment?.copy(isSaving = false)) }

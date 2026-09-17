@@ -13,7 +13,7 @@ import kotlin.time.Instant
 // DefaultBackupMetadataStore key is per-user by construction.
 class LocalExportHistory(private val settings: Settings, private val clock: Clock, private val timeZone: TimeZone) {
 
-    /** [today] is the caller's, never this class's: `TodayFlow` is the app's one source of it. */
+    // today is the caller's, never this class's: TodayFlow is the app's one source of it.
     fun daysSinceLastExport(today: LocalDate): Int? {
         val exportedAt: Long = settings.getLong(KEY_LAST_EXPORT_AT, NEVER)
         if (exportedAt == NEVER) return null

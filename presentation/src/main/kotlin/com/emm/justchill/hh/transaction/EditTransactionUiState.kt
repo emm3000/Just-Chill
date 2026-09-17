@@ -13,7 +13,7 @@ import kotlinx.datetime.LocalDate
 data class EditTransactionUiState(
     val date: LocalDate,
     val today: LocalDate,
-    /** The row as stored, and the only yardstick for "was anything edited". Null until it loads. */
+    // The row as stored, and the only yardstick for "was anything edited". Null until it loads.
     val original: Transaction? = null,
     val amount: String = "",
     val description: String = String.Empty,
@@ -22,7 +22,7 @@ data class EditTransactionUiState(
     val accountId: AccountId? = null,
     val categoryId: CategoryId? = null,
     val frequentCategoryIds: List<String> = emptyList(),
-    /** The sheet currently rendered over this screen; `null` means none is (ADR 012 Decision 2). */
+    // null means no sheet is open (ADR 012 Decision 2).
     val openSheet: TransactionSheet? = null,
 ) : UiState {
     val dateLabel: String get() = relativeDayLabel(date, today)
@@ -34,11 +34,8 @@ data class EditTransactionUiState(
 
     val accountSelected: Account? get() = accounts.find { it.accountId == accountId }
 
-    /**
-     * "Uncategorized" is a choice, so there is no fall back to the first row. The stored id is the
-     * second candidate rather than the first: a pick of the current type always wins, and switching
-     * type away and back re-offers what the movement was actually filed under.
-     */
+    // "Uncategorized" is a choice, so there is no fall back to the first row. The stored id is the
+    // second candidate rather than the first: a pick of the current type always wins.
     val categorySelected: SelectableCategory?
         get() = categories.find { it.categoryId == categoryId }
             ?: categories.find { it.categoryId == original?.categoryId }
@@ -64,12 +61,8 @@ data class EditTransactionUiState(
                 categoryEdited(stored.categoryId)
         }
 
-    /**
-     * Compares the RESOLVED selection, so a save can never file the movement under a category that
-     * is gone — but a stored category the catalog can no longer offer is not an edit the *user*
-     * made. `DeleteCategoryUseCase` soft-deletes unconditionally and `categories.sq:all` filters
-     * `deletedAt IS NULL`, so without this the CTA is armed the moment such a screen opens.
-     */
+    // Compares the RESOLVED selection: a stored category the catalog can no longer offer is not an
+    // edit the user made, or the CTA would be armed the moment such a screen opens.
     private fun categoryEdited(storedId: CategoryId?): Boolean = when {
         storedId == null -> categorySelected != null
         categories.none { it.categoryId == storedId } -> false

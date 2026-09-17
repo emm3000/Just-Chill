@@ -4,10 +4,8 @@ import com.emm.domain.loan.PersonBalance
 import com.emm.domain.shared.Money
 import com.emm.justchill.hh.shared.positiveMoneyFormatted
 
-/**
- * [remainingIsPositive] is the raw sign [remaining] already formats into `+`/nothing —
- * DESIGN_SYSTEM.md §1.4 tone (`success` vs monochrome) lives at the render site, not here.
- */
+// remainingIsPositive is the raw sign remaining already formats into +/nothing — tone (success vs
+// monochrome) lives at the render site, not here.
 data class PersonBalanceUi(
     val personKey: String,
     val personName: String,
@@ -26,16 +24,12 @@ private fun PersonBalance.toUi() = PersonBalanceUi(
 
 fun List<PersonBalance>.toUi(): List<PersonBalanceUi> = map { it.toUi() }
 
-/**
- * Money owed to the user, so a positive total is signed `+` and tinted `success` at the call site
- * (DESIGN_SYSTEM.md §1.4/§3.3); zero carries no sign, having no direction to point in.
- */
+// Money owed to the user, so a positive total is signed + and tinted at the call site; zero carries
+// no sign, having no direction to point in.
 fun List<PersonBalance>.totalOwedFormatted(): String = totalRemaining().positiveMoneyFormatted()
 
-/**
- * The aggregate's own sign — never [owingNames]' emptiness. Two balances can offset to a zero
- * total while [owingNames] still names whoever holds the positive half.
- */
+// The aggregate's own sign — never owingNames' emptiness. Two balances can offset to a zero total
+// while owingNames still names whoever holds the positive half.
 fun List<PersonBalance>.totalOwedIsPositive(): Boolean = totalRemaining().cents > 0L
 
 fun List<PersonBalance>.owingNames(): List<String> = filter { it.remaining.cents > 0L }.map { it.personName }

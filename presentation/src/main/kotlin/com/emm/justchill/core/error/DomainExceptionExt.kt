@@ -25,18 +25,9 @@ fun DomainException.toUserMessage(): String = when (this) {
     is DomainException.SerializationError -> "No pudimos preparar tus datos — intenta de nuevo"
 }
 
-/**
- * The only place a [ValidationCode] becomes words the user reads — a form warning about a code it
- * expects the domain to raise calls this rather than writing the sentence again.
- *
- * A `ValidationError`'s own `message` is English and diagnostic; it never reaches the snackbar.
- * Keep every branch on one line — a multiline branch makes ktlint demand a blank line between all
- * twenty of them.
- *
- * Suppressed: this is a flat dispatch table over an enum, so every case added raises the cyclomatic
- * count by one while the code stays exactly as simple as it was. Splitting it to satisfy the
- * threshold would trade the compiler's exhaustiveness check for nothing.
- */
+// Keep every branch on one line: a multiline branch makes ktlint demand a blank line between all
+// twenty of them. Suppressed: a flat dispatch table over an enum raises the cyclomatic count by one
+// per case added while staying exactly as simple; splitting it trades exhaustiveness for nothing.
 @Suppress("CyclomaticComplexMethod")
 internal fun ValidationCode.toUserMessage(): String = when (this) {
     ValidationCode.NameRequired -> "El nombre no puede estar vacío"

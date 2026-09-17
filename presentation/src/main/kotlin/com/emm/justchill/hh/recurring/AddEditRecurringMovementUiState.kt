@@ -19,12 +19,10 @@ data class AddEditRecurringMovementUiState(
     val isActive: Boolean = true,
     val description: String = "",
     val catalog: Catalog = Catalog.Loading,
-    /**
-     * The template's account until the user picks another. An id never expires, so it lands
-     * whenever the catalog arrives — whichever of the two loads finishes first.
-     */
+    // The template's account until the user picks another. An id never expires, so it lands
+    // whenever the catalog arrives — whichever of the two loads finishes first.
     val accountId: AccountId? = null,
-    /** Null is "Sin categoría", which the save writes as such. */
+    // Null is "Sin categoría", which the save writes as such.
     val categoryId: CategoryId? = null,
 ) : UiState {
     val accounts: List<Account> get() = catalog.accounts
@@ -32,7 +30,7 @@ data class AddEditRecurringMovementUiState(
     val categories: List<SelectableCategory>
         get() = catalog.loaded?.categories?.get(type.categoryType).orEmpty()
 
-    /** The first account is both the create-mode default and what a deleted account falls back to. */
+    // The first account is both the create-mode default and what a deleted account falls back to.
     val selectedAccount: Account? get() = accounts.find { it.accountId == accountId } ?: accounts.firstOrNull()
 
     val selectedCategory: SelectableCategory? get() = categories.find { it.categoryId == categoryId }

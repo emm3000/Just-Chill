@@ -37,34 +37,9 @@ import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-/**
- * Whole-graph Koin resolution test — the CI guard for the project's highest runtime risk.
- *
- * Every binding except the platform seam lives in one place and is assembled by
- * `appModules(platformModule)`. A missing, mistyped or wrongly qualified binding there
- * compiles cleanly AND survives `assembleDevDebug`: it only surfaces as a crash the moment a user
- * navigates to the affected screen. This test closes that gap by building the real graph against
- * [testPlatformModule] and resolving EVERY definition it contains.
- *
- * Deliberately NOT *called*: `bootstrapAppGraph` itself, because that would start the orchestrator's
- * collector and the Android `resumeEvents()` / `backgroundEvents()` actuals need
- * `ProcessLifecycleOwner` — an Android runtime this host test does not have. Its resolution
- * is covered instead by [every single bootstrapAppGraph resolves is bound], which resolves it
- * the way it does. Resolving is safe because both lifecycle actuals are `callbackFlow` builders:
- * nothing touches `ProcessLifecycleOwner` until something collects. Any ViewModel that injects
- * `TodayFlow` collects `resumeEvents()` eagerly from its constructor and stays queued for the
- * reason `setUp` gives — do not add `advanceUntilIdle()` to this class.
- *
- * ### The boundary, stated so nobody assumes past it
- *
- * The graph here is `appModules(testPlatformModule)`. The REAL platform module —
- * `androidPlatformModule` in `:androidApp` — is not on this source set's classpath and is never
- * loaded, so nothing in this file says anything about what it binds. A binding only it carries is
- * guarded where it lives: `AndroidPlatformModuleTest` (`:androidApp`) does that for [CommitHash],
- * which `AppNavHost` resolves at launch. An
- * assertion written here against [testPlatformModule]'s own literal would only be the fixture
- * checking itself — that is exactly what this test used to do.
- */
+// A missing, mistyped or wrongly qualified binding in appModules() compiles cleanly AND survives
+// assembleDevDebug, surfacing only as a crash when a user navigates to the affected screen. This
+// test resolves EVERY definition to close that gap; bootstrapAppGraph itself is never called.
 @OptIn(KoinInternalApi::class)
 class AppGraphKoinTest {
 
@@ -72,17 +47,13 @@ class AppGraphKoinTest {
 
     @Before
     fun setUp() {
-        // supabaseModule's `install(Auth)` builds a SettingsSessionManager from multiplatform-
-        // settings' no-arg Settings(), whose Android implementation takes its Context from an
-        // androidx.startup Initializer that only runs inside a real app. SettingsInitializer.create
-        // is the library's documented hook for supplying that Context from tests; without it the
-        // SupabaseClient single cannot be created and every auth binding would be untestable.
-        // A relaxed mock is enough — nothing here reads or writes preferences.
+        // supabaseModule's install(Auth) needs a Context from an androidx.startup Initializer that
+        // only runs inside a real app; SettingsInitializer.create is the documented hook to supply
+        // one from tests. A relaxed mock is enough — nothing here reads or writes preferences.
         SettingsInitializer().create(mockk<Context>(relaxed = true))
 
-        // Every ViewModel creates a viewModelScope on Dispatchers.Main at construction. Standard
-        // (not Unconfined) on purpose: init-block coroutines stay queued and never run, so this
-        // test measures WIRING only and cannot flake on database contents or network reachability.
+        // Standard (not Unconfined): init-block coroutines stay queued and never run, so this test
+        // measures WIRING only and cannot flake on database contents or network reachability.
         Dispatchers.setMain(StandardTestDispatcher())
         koin = koinApplication { modules(appModules(testPlatformModule)) }.koin
     }
@@ -130,17 +101,14 @@ class AppGraphKoinTest {
             .mapNotNull { it.primaryType.simpleName }
             .toSet()
 
-        // Exhaustive by design. A ViewModel missing from the graph resolves to nothing at
-        // navigation time, so a NEW ViewModel must be added BOTH to its Koin module and to this
-        // list; a ViewModel that disappears from here without a matching deletion is a regression.
+        // Exhaustive by design: a ViewModel missing from this list resolves to nothing at
+        // navigation time, so a new one must be added both here and to its Koin module.
         assertEquals(
             EXPECTED_VIEW_MODELS,
             registered.toSortedSet(),
             "The set of ViewModels registered in appModules() changed.",
         )
 
-        // Resolving each one is what a Screen does at navigation time — including the three that
-        // take runtime parameters off the nav route.
         registered.forEach { name ->
             val definition = koin.definitions().first { it.primaryType.simpleName == name }
             val viewModel = koin.get<Any>(
@@ -152,66 +120,25 @@ class AppGraphKoinTest {
         }
     }
 
-    /**
-     * The one definition `bootstrapAppGraph` resolves BY TYPE, resolved exactly the way it does.
-     *
-     * The sweep above proves every *bound* definition resolves. It cannot notice one that was never
-     * bound at all — there is nothing in the registry to iterate over — and `bootstrapAppGraph` is
-     * precisely where that gap bites: the orchestrator is resolved behind a kill switch that is
-     * off today, so deleting its binding would compile, keep this whole suite green, and crash
-     * on the day the flag flips. Naming it here is what turns a deleted binding red now.
-     *
-     * No assertion body on purpose: a missing or unresolvable definition throws out of `get`, which
-     * is the failure this test exists to produce.
-     */
+    // The sweep above proves every BOUND definition resolves; it cannot notice one that was never
+    // bound. BackupOrchestrator is resolved behind a kill switch that is off today, so a deleted
+    // binding would compile and keep the sweep green. No assertion body: get() throws on failure.
     @Test
     fun `every single bootstrapAppGraph resolves is bound`() {
         koin.get<BackupOrchestrator>()
     }
 
-    /**
-     * The backup port and the orchestrator are ONE instance, not two.
-     *
-     * `backupModule` publishes [BackupController] as a secondary type of the orchestrator's `single`.
-     * Written instead as a second definition — a `single<BackupController> { BackupOrchestrator(…) }`
-     * beside the first, or the same class bound as a `factory` — every other test in this file stays
-     * green: both types resolve, the sweep is happy, and the ViewModel gets a perfectly valid
-     * controller. It is just not the one `bootstrapAppGraph` called `start()` on, so its request
-     * channel has no consumer and its status flow never moves. A manual backup would then do
-     * *nothing*, silently, which is the exact failure shape ADR 009 hard constraint 4 forbids.
-     *
-     * `assertSame`, not `assertEquals`: two orchestrators built from the same graph are not equal to
-     * each other, but a `factory` would produce two distinct instances that are also not equal, and
-     * only identity separates "the port IS the running orchestrator" from "the port resolves".
-     */
+    // backupModule publishes BackupController as a secondary type of the orchestrator's single. A
+    // second definition or a factory would still pass every other test while silently breaking a
+    // manual backup (ADR 009 hard constraint 4) — assertSame catches what assertEquals cannot.
     @Test
     fun `the backup controller port is the orchestrator single, not a second instance`() {
         assertSame(koin.get<BackupOrchestrator>(), koin.get<BackupController>())
     }
 
-    /**
-     * Every `Clock` and `TimeZone` a graph-built class holds is the instance the graph BOUND.
-     *
-     * Resolution succeeding is not the same as resolution being correct, and the two tests above
-     * only prove the first. A class can resolve perfectly while holding a clock nobody injected:
-     * `sharedModule` binds `Clock.System`, and a Kotlin default of `Clock.System` produces an
-     * indistinguishable value — so the wiring can be wrong and every assertion in this file stays
-     * green. That is not hypothetical. `ProfileModule` omitted `clock = get()` for the whole life
-     * of the class and nothing here noticed; it was found by reading, not by failing.
-     *
-     * The hand-written blocks are where this can go wrong, because they list arguments by hand and
-     * a hand-written list can forget one: `profileModule`'s `viewModel { }` and `loanModule`'s two
-     * parametrised blocks. The constructor DSL cannot forget. The sweep is not limited to those,
-     * though — it checks every definition, so converting any class to a hand-written block later
-     * inherits the guard for free.
-     *
-     * Binding sentinels is what makes the difference observable: a clock at a fixed instant and a
-     * zone the machine is not in. `assertSame`, not `assertEquals` — two `Clock.System` references
-     * are equal and only identity separates "injected" from "defaulted".
-     *
-     * Scoped to `com.emm.` classes on purpose: third-party singles in the graph (Supabase, Ktor)
-     * legitimately hold clocks of their own that this project does not bind.
-     */
+    // Resolution succeeding is not the same as resolution being correct: sharedModule binds
+    // Clock.System, indistinguishable from a hand-written block's default (ProfileModule once
+    // forgot clock = get() and nothing noticed). Sentinel instances plus assertSame catch that.
     @Test
     fun `every graph-built class holds the Clock and TimeZone the graph bound`() {
         val boundClock = object : Clock {
@@ -257,11 +184,8 @@ class AppGraphKoinTest {
         )
     }
 
-    /**
-     * Every `Clock`/`TimeZone` field held by a `com.emm.` object the graph can build, paired with
-     * the instance that holds it. Third-party singles are skipped: Supabase and Ktor carry clocks
-     * of their own that this project does not bind and has no business asserting on.
-     */
+    // Third-party singles are skipped: Supabase and Ktor carry clocks of their own that this
+    // project does not bind and has no business asserting on.
     private fun Koin.ownTimeFields(): List<Pair<Any, Field>> = definitions().flatMap { definition ->
         val instance: Any = get(
             definition.primaryType,
@@ -281,10 +205,8 @@ class AppGraphKoinTest {
     private fun expectedFor(field: Field, boundClock: Clock, boundZone: TimeZone): Any =
         if (field.type == Clock::class.java) boundClock else boundZone
 
-    /**
-     * Every distinct (type, qualifier) pair a consumer could ask Koin for: each definition's primary
-     * type plus every interface it is `bind`-ed to, since consumers inject the interface.
-     */
+    // Each definition's primary type plus every interface it is bind-ed to, since consumers inject
+    // the interface.
     private fun Koin.boundTypes(): List<Pair<KClass<*>, Qualifier?>> = definitions()
         .flatMap { definition ->
             (listOf(definition.primaryType) + definition.secondaryTypes).map { it to definition.qualifier }
@@ -302,11 +224,8 @@ class AppGraphKoinTest {
     private fun describe(type: KClass<*>, qualifier: Qualifier?): String =
         if (qualifier == null) type.simpleName.orEmpty() else "${type.simpleName}(${qualifier.value})"
 
-    /**
-     * Koin wraps every resolution failure in one InstanceCreationException per nesting level, so the
-     * outermost message only names the consumer. The innermost cause is the actionable one — it
-     * names the type that has no definition.
-     */
+    // Koin wraps every resolution failure in one InstanceCreationException per nesting level; the
+    // innermost cause is the actionable one — it names the type that has no definition.
     private fun Exception.rootCauseMessage(): String {
         var root: Throwable = this
         while (root.cause != null && root.cause !== root) {
@@ -321,7 +240,7 @@ class AppGraphKoinTest {
 
         const val OWN_PACKAGE_PREFIX = "com.emm."
 
-        /** A floor, deliberately under the real count: adding an injected date field must not fail this. */
+        // A floor, deliberately under the real count: adding an injected date field must not fail this.
         const val MIN_EXPECTED_TIME_FIELDS = 20
 
         val EXPECTED_VIEW_MODELS = sortedSetOf(
@@ -343,18 +262,12 @@ class AppGraphKoinTest {
             "SeeTransactionsViewModel",
         )
 
-        /**
-         * Representative values for the definitions declared as `viewModel { parameters -> ... }`.
-         * They mirror what the nav routes pass in, so the parameter slots are exercised rather than
-         * skipped. Each entry is a factory, not a shared holder, so one resolution cannot consume
-         * the parameters of another.
-         */
+        // Each entry is a factory, not a shared holder, so one resolution cannot consume the
+        // parameters of another.
         val RUNTIME_PARAMETERS: Map<KClass<*>, ParametersDefinition> = mapOf(
-            // Opened pre-filled from the transaction form (chosen type + typed-in name).
             AddCategoryViewModel::class to { parametersOf(CategoryType.Spend, "Test Category") },
-            // Transaction id from the edit route.
             EditTransactionViewModel::class to { parametersOf("test-transaction-id") },
-            // Nullable template id; a non-null value exercises the edit branch over the create one.
+            // Non-null so this exercises the edit branch over the create one.
             AddEditRecurringMovementViewModel::class to { parametersOf("test-recurring-id") },
             PersonLoansViewModel::class to { parametersOf("test-person-key") },
             LoanDetailViewModel::class to { parametersOf("test-loan-id") },

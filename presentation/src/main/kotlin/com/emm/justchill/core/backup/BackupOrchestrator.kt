@@ -217,9 +217,8 @@ class BackupOrchestrator(
 
     private suspend fun takeSnapshot(userId: String, manual: Boolean): SnapshotOutcome {
         val takenAt: Instant = clock.now()
-        // The disclosure is checked ahead of the due-check a manual request skips, so a tap cannot
-        // walk around it. manual skips isBackupDue: a user-requested backup runs regardless of
-        // dirty state or the once-a-day cap.
+        // manual skips isBackupDue: a user-requested backup runs regardless of dirty state or the
+        // once-a-day cap.
         val refusal: SnapshotOutcome? = when {
             metadata.destinationDisclosedAt(userId) == null -> {
                 logger.warn(

@@ -9,15 +9,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 
-/**
- * Emits [Unit] on every `ON_STOP` event of the process lifecycle, backed by [ProcessLifecycleOwner]
- * so it fires when the app leaves the foreground (last Activity stops). [awaitClose] removes the
- * observer when the downstream flow is cancelled.
- *
- * Sibling of [resumeEvents], the opposite edge of the same foreground/background cycle. This is the
- * trigger ADR 009's backup orchestrator uses: the app going to background is when a snapshot is
- * cheap to take, since nothing on screen still needs the CPU or the network at that moment.
- */
+// ADR 009: the backup orchestrator triggers on this edge because backgrounding is when a snapshot
+// is cheap — nothing on screen still needs the CPU or the network at that moment.
 fun backgroundEvents(): Flow<Unit> = callbackFlow {
     val observer = object : DefaultLifecycleObserver {
         override fun onStop(owner: LifecycleOwner) {

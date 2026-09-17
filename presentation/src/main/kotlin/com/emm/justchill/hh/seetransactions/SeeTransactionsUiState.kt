@@ -38,25 +38,19 @@ data class SeeTransactionsUiState(
     val movementCount: Long? = null,
     val query: String = "",
     val activeCategory: ActiveCategoryInfo? = null,
-    /** Every category, most-used first — the filter sheet is the only way into a category filter. */
+    // Every category, most-used first — the filter sheet is the only way into a category filter.
     val sheetItems: List<CategorySheetItem> = emptyList(),
     val incomeCount: Int = 0,
     val spendCount: Int = 0,
     val pendingRecurringMovements: List<PendingRecurringUi> = emptyList(),
-    /** The clock's real month, refreshed each time [pendingRecurringMovements] re-emits. */
+    // The clock's real month, refreshed each time pendingRecurringMovements re-emits.
     val currentMonth: YearMonth = month,
-    /** The clock's day, straight off [com.emm.justchill.core.time.TodayFlow]; `null` before its first emission. */
+    // The clock's day, straight off TodayFlow; null before its first emission.
     val today: LocalDate? = null,
-    /**
-     * The id of the [PendingRecurringUi] the confirm sheet is open for, resolved from
-     * [pendingRecurringMovements]; `null` means the sheet is closed (ADR 012 Decision 2).
-     */
+    // null means the confirm sheet is closed (ADR 012 Decision 2).
     val confirmSheetPendingId: String? = null,
     val showFilterSheet: Boolean = false,
-    /**
-     * Whether the search bar replaces the header, even before any character is typed — closing it
-     * is [isSearchOpen]'s other half, alongside a non-blank [query] (ADR 012 Decision 2).
-     */
+    // Closing this is isSearchOpen's other half, alongside a non-blank query (ADR 012 Decision 2).
     val searchRequested: Boolean = false,
 ) : UiState {
 
@@ -66,10 +60,8 @@ data class SeeTransactionsUiState(
     val isSearchOpen: Boolean
         get() = searchRequested || query.isNotBlank()
 
-    /**
-     * A filter turns the list into a cross-month search, so the month selector steps aside; in
-     * month mode it is always there, including before the ledger count is known.
-     */
+    // A filter turns the list into a cross-month search, so the month selector steps aside; in
+    // month mode it is always there, including before the ledger count is known.
     val isMonthSelectorVisible: Boolean
         get() = !isFilterActive
 
@@ -82,7 +74,7 @@ data class SeeTransactionsUiState(
             else -> ListDisplayState.EmptyMonth
         }
 
-    /** [ListDisplayState.EmptyLedger] already fills the screen with the same invitation. */
+    // ListDisplayState.EmptyLedger already fills the screen with the same invitation.
     val isTodayNudgeVisible: Boolean
         get() = !isFilterActive &&
             month == currentMonth &&
@@ -90,10 +82,8 @@ data class SeeTransactionsUiState(
             listDisplayState != ListDisplayState.EmptyLedger &&
             days.none { it.date == today }
 
-    /**
-     * Pending recurring movements are about "now": a filtered list stays filtered, and browsing a
-     * past or future month must not surface today's pending row under a month it doesn't belong to.
-     */
+    // Pending recurring movements are about "now": a filtered list stays filtered, and browsing a
+    // past or future month must not surface today's pending row under a month it doesn't belong to.
     val isPendingSectionVisible: Boolean
         get() = !isFilterActive && month == currentMonth && pendingRecurringMovements.isNotEmpty()
 }

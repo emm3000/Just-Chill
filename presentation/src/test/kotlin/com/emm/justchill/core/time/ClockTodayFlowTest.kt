@@ -20,26 +20,14 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
-/**
- * Pins the delay-until-midnight arithmetic in isolation, without a ViewModel around it.
- * `SeeTransactionsViewModelTest`/`SeeTransactionsPendingRecurringViewModelTest` cover how a ViewModel
- * reacts to a date change, using a fake [TodayFlow] backed by a `MutableStateFlow` instead of this
- * class — they never exercise the `delay` below.
- *
- * Every collector here runs on [kotlinx.coroutines.test.TestScope.backgroundScope] on purpose: this
- * flow's `delay` never completes on its own, so a foreground collector would make `advanceUntilIdle`
- * spin forever waiting for an event that is always about to be rescheduled (`MviViewModelTest.settle`
- * documents the same trap). `advanceTimeBy` still drains a background event inside its window; only
- * `advanceUntilIdle` treats background work as invisible.
- */
+// Every collector here runs on backgroundScope on purpose: this flow's delay never completes on its
+// own, so a foreground collector would make advanceUntilIdle spin forever waiting for an event that
+// is always about to be rescheduled (MviViewModelTest.settle documents the same trap).
 class ClockTodayFlowTest {
 
-    /**
-     * Reads the virtual clock, so moving time moves the date too: a clock frozen while virtual time
-     * advances lets a premature wake re-read the same date, which `distinctUntilChanged` then hides.
-     * [slept] is the one thing virtual time cannot model — real time passing while `delay` is frozen,
-     * which is what deep sleep does to Android's uptime-scheduled `delay`.
-     */
+    // Reads the virtual clock, so moving time moves the date too. slept is the one thing virtual
+    // time cannot model — real time passing while delay is frozen, which is what deep sleep does to
+    // Android's uptime-scheduled delay.
     private class MovingClock(private val start: Instant, private val scheduler: TestCoroutineScheduler) : Clock {
 
         var slept: Duration = Duration.ZERO

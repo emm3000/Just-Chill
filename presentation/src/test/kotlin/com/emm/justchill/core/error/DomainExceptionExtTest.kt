@@ -7,10 +7,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * Guards the boundary that let 24 English validation strings reach the Spanish snackbar:
- * `toUserMessage()` must translate the [ValidationCode], never echo the diagnostic `message`.
- */
+// Guards the boundary that let English validation strings reach the Spanish snackbar:
+// toUserMessage() must translate the ValidationCode, never echo the diagnostic message.
 class DomainExceptionExtTest {
 
     private val diagnosticMessage = "Name cannot be empty"

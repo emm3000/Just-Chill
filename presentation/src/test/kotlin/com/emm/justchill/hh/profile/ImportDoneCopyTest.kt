@@ -39,10 +39,8 @@ class ImportDoneCopyTest {
 
     @Test
     fun `uses both singulars when one movement and one recurring movement landed`() {
-        // The only input where the two singular rules meet, and the one this suite was missing
-        // while the transactions half had no singular at all: the sentence then showed a correct
-        // "1 recurrente" next to a wrong "1 movimientos", one rule each, in one line of copy.
-        // The participle stays plural — two singular subjects joined by "y" take it.
+        // The only input where the two singular rules meet. The participle stays plural — two
+        // singular subjects joined by "y" take it.
         assertEquals(
             "Listo — 1 movimiento y 1 recurrente importados.",
             buildImportDoneMessage(transactions = 1, recurring = 1, loans = 0, loanPayments = 0),

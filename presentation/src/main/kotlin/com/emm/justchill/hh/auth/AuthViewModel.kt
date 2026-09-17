@@ -17,7 +17,6 @@ class AuthViewModel(
     private val googleSignInLauncher: GoogleSignInLauncher,
 ) : MviViewModel<AuthUiState, AuthIntent, AuthEffect>(AuthUiState.Form()) {
 
-    // Pure dispatch — each handler owns its own state guard.
     override fun onIntent(intent: AuthIntent) = when (intent) {
         is AuthIntent.EmailChanged -> updateForm { copy(email = intent.value) }
         is AuthIntent.PasswordChanged -> updateForm { copy(password = intent.value) }
@@ -100,15 +99,9 @@ class AuthViewModel(
         is AuthUiState.Form -> sendEffect(AuthEffect.NavigateBack)
     }
 
-    /**
-     * Shared lifecycle for every submit path (email or Google): guard against re-entry,
-     * raise [AuthUiState.Form.submitting] to [via], run [block] with a snapshot of the
-     * form, and always lower the flag again.
-     *
-     * The try/finally is what guarantees the reset on EVERY exit — success, domain error
-     * (rethrown to [launchSafe]'s handler), and coroutine cancellation. Without it each
-     * path would need its own reset, and a missed one leaves the screen disabled forever.
-     */
+    // try/finally guarantees the reset on every exit — success, domain error, and cancellation.
+    // Without it each path would need its own reset, and a missed one leaves the screen disabled
+    // forever.
     private fun launchSubmitting(via: Submitting, block: suspend (AuthUiState.Form) -> Unit) {
         val form = currentState as? AuthUiState.Form ?: return
         if (form.submitting != Submitting.None) return
@@ -122,11 +115,9 @@ class AuthViewModel(
         }
     }
 
-    // Routes Form mutations; no-ops when the state is CheckEmail.
     private inline fun updateForm(crossinline reducer: AuthUiState.Form.() -> AuthUiState) =
         updateState { if (this is AuthUiState.Form) reducer() else this }
 
-    // Routes CheckEmail mutations; no-ops when the state is Form.
     private inline fun updateCheckEmail(crossinline reducer: AuthUiState.CheckEmail.() -> AuthUiState) =
         updateState { if (this is AuthUiState.CheckEmail) reducer() else this }
 

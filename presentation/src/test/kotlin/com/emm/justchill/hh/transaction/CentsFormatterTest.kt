@@ -8,7 +8,6 @@ import kotlin.test.assertTrue
 
 class CentsFormatterTest {
 
-    // sanitizeCentsInput
     @Test fun sanitize_keeps_only_digits() {
         assertEquals("125050", sanitizeCentsInput("1,250.50"))
         assertEquals("100", sanitizeCentsInput("S/ 1.00"))
@@ -24,7 +23,6 @@ class CentsFormatterTest {
         assertEquals("", sanitizeCentsInput(""))
     }
 
-    // formatCentsForDisplay
     @Test fun format_empty_digits_as_zero() {
         assertEquals("0.00", formatCentsForDisplay(""))
     }
@@ -55,7 +53,6 @@ class CentsFormatterTest {
         assertEquals("99,999,999,999.99", result)
     }
 
-    // isSavableAmount
     @Test fun a_positive_count_of_cents_is_savable() {
         assertTrue("1".isSavableAmount())
         assertTrue("125050".isSavableAmount())
@@ -68,36 +65,30 @@ class CentsFormatterTest {
         assertFalse("000".isSavableAmount())
     }
 
-    // sanitizeCentsInput strips the sign and caps the length, so neither reaches the forms from the
-    // Android UI — but the intents carrying these strings are exported to Swift unsanitized.
     @Test fun a_string_that_is_not_a_positive_count_of_cents_is_not_savable() {
         assertFalse("-5".isSavableAmount())
         assertFalse("9".repeat(25).isSavableAmount())
         assertFalse("abc".isSavableAmount())
     }
 
-    // centsToSoles
     @Test fun centsToSoles_converts_correctly() {
         assertEquals(0.0, centsToSoles(""), 0.0001)
         assertEquals(0.01, centsToSoles("1"), 0.0001)
         assertEquals(1250.50, centsToSoles("125050"), 0.0001)
     }
 
-    // centsToMoney
     @Test fun centsToMoney_converts_correctly() {
         assertEquals(Money(0L), centsToMoney(""))
         assertEquals(Money(1L), centsToMoney("1"))
         assertEquals(Money(125050L), centsToMoney("125050"))
     }
 
-    // moneyCentsString
     @Test fun moneyCentsString_converts_correctly() {
         assertEquals("0", moneyCentsString(Money(0L)))
         assertEquals("1", moneyCentsString(Money(1L)))
         assertEquals("125050", moneyCentsString(Money(125050L)))
     }
 
-    // Round-trip: cents string -> Money -> back to cents string
     @Test fun round_trip_cents_string_to_money_and_back() {
         listOf("1", "100", "125050", "99999999").forEach { original ->
             val money = centsToMoney(original)

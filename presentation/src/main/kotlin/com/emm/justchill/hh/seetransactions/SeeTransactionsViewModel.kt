@@ -96,11 +96,9 @@ class SeeTransactionsViewModel(
             .debounce { (_, currentFilter) -> if (currentFilter.query.isBlank()) 0L else SEARCH_DEBOUNCE_MS }
             .distinctUntilChanged()
             .flatMapLatest { (month, currentFilter) ->
-                // Both branches catch their own failures: a `.catch` out here would kill the whole
+                // Both branches catch their own failures: a top-level .catch would kill the whole
                 // collector on the first database error, leaving the month arrows dead until the
-                // ViewModel is recreated. Caught inside, a broken query degrades to an empty slice.
-                // Combined with the shared `today` so a midnight rollover re-labels HOY/AYER without
-                // re-running the query underneath the rows.
+                // ViewModel is recreated.
                 if (currentFilter.isEmpty) {
                     combine(
                         transactionRepository
@@ -227,20 +225,16 @@ class SeeTransactionsViewModel(
         }
     }
 
-    /**
-     * Advances the month synchronously so the tap gets instant feedback; the list stream lands the
-     * actual rows later.
-     */
+    // Advances the month synchronously so the tap gets instant feedback; the list stream lands the
+    // actual rows later.
     private fun selectMonth(month: YearMonth) {
         selectedMonth.value = month
         updateState { copy(month = month) }
     }
 
-    /**
-     * The month comes from the date that produced [pending], not from the selected one: browsing to
-     * March must not relabel March's own pending row, and it must not decide whether the section is
-     * visible either.
-     */
+    // The month comes from the date that produced pending, not from the selected one: browsing to
+    // March must not relabel March's own pending row, and it must not decide whether the section is
+    // visible either.
     private fun SeeTransactionsUiState.mapToPendingUiState(
         pending: List<PendingRecurring>,
         today: LocalDate,
@@ -252,7 +246,7 @@ class SeeTransactionsViewModel(
         )
     }
 
-    /** Name breaks ties so two categories tied at zero usage don't swap places between emissions. */
+    // Name breaks ties so two categories tied at zero usage don't swap places between emissions.
     private fun buildCategoryFilterState(
         categories: List<Category>,
         usageCounts: Map<CategoryId, Int>,
@@ -304,20 +298,16 @@ internal data class ListSlice(val month: YearMonth?, val days: List<DayGroup>, v
     }
 }
 
-/**
- * Applies a slice, unless it is a late answer for a month the user has already left — that one
- * would pair the new month's label with the old month's rows and totals. Search slices carry no
- * month and always apply.
- */
+// Applies a slice, unless it is a late answer for a month the user has already left — that one
+// would pair the new month's label with the old month's rows and totals. Search slices carry no
+// month and always apply.
 internal fun SeeTransactionsUiState.withListSlice(slice: ListSlice, selectedMonth: YearMonth): SeeTransactionsUiState {
     val isStale = slice.month != null && slice.month != selectedMonth
     return if (isStale) this else copy(days = slice.days, summary = slice.summary)
 }
 
-/**
- * The day a row belongs under is the day it carries. No zone, no conversion, nothing that can put
- * the same transaction under a different header on a different device.
- */
+// The day a row belongs under is the day it carries. No zone, no conversion, nothing that can put
+// the same transaction under a different header on a different device.
 private fun List<TransactionWithCategory>.toDayGroups(today: LocalDate): List<DayGroup> =
     groupBy { transaction -> transaction.occurredAt.date }
         .map { (date, transactions) ->

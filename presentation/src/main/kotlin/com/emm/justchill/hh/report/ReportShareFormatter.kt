@@ -7,7 +7,7 @@ private const val PERCENT_BASE = 100
 
 internal object ReportShareFormatter {
 
-    /** At -50%, `PERCENT_BASE - ratePercent` adds: the user spent 150 per 100 earned. */
+    // At -50%, PERCENT_BASE - ratePercent adds: the user spent 150 per 100 earned.
     fun buildContextSentence(ratePercent: Int, deltaPoints: Int?): String {
         val base = if (ratePercent < 0) {
             "De cada S/ 100 que entró, gastaste S/ ${PERCENT_BASE - ratePercent}."

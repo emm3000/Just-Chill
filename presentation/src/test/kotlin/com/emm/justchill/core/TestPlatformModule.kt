@@ -18,31 +18,13 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.koin.dsl.onClose
 
-/**
- * JVM stand-in for `androidPlatformModule` — the `platformModule` seam that
- * `appModules(platformModule)` is parameterized by.
- *
- * It supplies the SAME binding set the real platform module does, so the rest of the graph
- * (every feature module plus the supabase/auth/data/commonCore wiring) can be built and
- * resolved off-device by [AppGraphKoinTest]. Construction is REAL wherever that is cheap — a real
- * SQLDelight schema on an in-memory JDBC driver, a real Settings store, a real Supabase client —
- * because the whole point is proving the production graph actually wires up, not that mocks do.
- *
- * ONE binding is deliberately absent: `DispatchersProvider`. `androidPlatformModule` binds it, but
- * its only consumers are `EmmApp.sweepLegacySession` and the Android dev-flavor `experiencesModule`,
- * neither of which is part of `appModules()`, so binding it here would assert wiring that no shared
- * consumer resolves.
- *
- * [CommitHash] is absent for the same reason. It is resolved by `AppNavHost` in `:ui-android`,
- * outside `appModules()`, so binding it here would have asserted nothing about the production
- * binding in `androidPlatformModule` — a module this source set cannot even import. That binding is
- * guarded by `AndroidPlatformModuleTest` in `:androidApp`, where it lives.
- */
+// JVM stand-in for androidPlatformModule. Construction is REAL wherever cheap, because the point is
+// proving the production graph actually wires up, not that mocks do. DispatchersProvider and
+// CommitHash are absent: neither is part of appModules(), both guarded by AndroidPlatformModuleTest.
 val testPlatformModule: Module = module {
 
-    // Real SQLDelight schema over an in-memory JDBC database (the driver :data's own host tests use).
-    // The Android driver seeds default categories from its onCreate callback; that is not reproduced
-    // here because DI resolution never reads rows.
+    // The Android driver seeds default categories from its onCreate callback; that is not
+    // reproduced here because DI resolution never reads rows.
     single<SqlDriver> {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         EmmDatabaseData.Schema.create(driver)
@@ -80,16 +62,13 @@ val testPlatformModule: Module = module {
     factoryOf(::NoOpGoogleSignInLauncher) { bind<GoogleSignInLauncher>() }
 }
 
-/**
- * No-op `GoogleSignInLauncher`: `AuthViewModel`'s Koin dependency must resolve to something, and no
- * real launcher works off-device. Never invoked: the test only constructs the graph.
- */
+// AuthViewModel's Koin dependency must resolve to something, and no real launcher works
+// off-device. Never invoked: the test only constructs the graph.
 private class NoOpGoogleSignInLauncher : GoogleSignInLauncher {
     override suspend fun signIn(serverClientId: String): GoogleSignInResult =
         GoogleSignInResult.Failure(IllegalStateException("Google Sign-In is not available in tests"))
 }
 
-/** Discards everything: this test asserts wiring, and a real sink would only add console noise. */
 private class NoOpDiagnosticsLogger : DiagnosticsLogger {
     override fun warn(message: String, throwable: Throwable?) = Unit
 }

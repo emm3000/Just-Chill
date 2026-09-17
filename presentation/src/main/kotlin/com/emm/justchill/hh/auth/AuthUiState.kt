@@ -4,7 +4,6 @@ import com.emm.justchill.core.mvi.UiState
 
 enum class AuthMode { SignIn, SignUp }
 
-/** Tracks which submit path (if any) is currently in flight. */
 enum class Submitting { None, Email, Google }
 
 sealed interface AuthUiState : UiState {

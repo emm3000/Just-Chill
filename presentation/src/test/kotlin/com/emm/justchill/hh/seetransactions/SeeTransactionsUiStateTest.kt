@@ -8,10 +8,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * The list's empty/loading precedence is decided here, not in a UI `when`. Every consumer of
- * [SeeTransactionsUiState] reads one value and renders it, so these cases are the whole contract.
- */
+// The list's empty/loading precedence is decided here, not in a UI when: every consumer reads one
+// value and renders it, so these cases are the whole contract.
 class SeeTransactionsUiStateTest {
 
     // Stated, not read. The state used to default `month` to YearMonth.current(), which quietly
