@@ -37,24 +37,3 @@ supabase.properties
 .claude/worktrees/
 CLAUDE.local.md
 .atl/
-
-# docs/ is an allowlist: a new doc needs a line here, on purpose (CLAUDE.md, Docs contract)
-docs/*
-!docs/adr/
-!docs/adr/**
-!docs/archive/
-!docs/archive/**
-!docs/work/
-!docs/work/**
-!docs/agents/
-!docs/agents/**
-!docs/PRODUCT_REQUIREMENTS.md
-!docs/DESIGN_SYSTEM.md
-!docs/PROGRESS.md
-!docs/PLAY_STORE_LISTING.md
-!docs/PLAY_ADVERTISING_ID.md
-!docs/PRIVACY_POLICY.md
-!docs/WORKFLOW.md
-!docs/CODE_QUALITY.md
-!docs/PERSISTENCE.md
-!docs/RELEASE_CHECKLIST.md
