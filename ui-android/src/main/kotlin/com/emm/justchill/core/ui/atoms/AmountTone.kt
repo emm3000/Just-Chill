@@ -9,7 +9,7 @@ enum class AmountTone {
     Mute,
 }
 
-/** The one place an [AmountTone] becomes a [Color] (DESIGN_SYSTEM.md §1.4) — every caller reuses it. */
+/** The one place an [AmountTone] becomes a [Color] — every caller reuses it. */
 fun AmountTone.color(colors: EmmColors): Color = when (this) {
     AmountTone.Neutral -> colors.textPrimary
     AmountTone.Pos -> colors.success

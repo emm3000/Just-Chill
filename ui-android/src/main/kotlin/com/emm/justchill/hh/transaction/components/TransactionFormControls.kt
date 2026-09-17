@@ -47,7 +47,7 @@ private val ChipChevronSize: Dp = 16.dp
 
 /**
  * Selection reads through the text ladder and one surface step — never a tint. An expense is not
- * red and an income is not green here (`DESIGN_SYSTEM.md` §1.4); the amount above carries that.
+ * red and an income is not green here; the amount above carries that.
  */
 @Composable
 internal fun SignToggle(
@@ -81,8 +81,8 @@ private fun SignSegment(label: String, selected: Boolean, onClick: () -> Unit) {
     val type = LocalEmmType.current
 
     // The target is the whole segment; the fill sits inset inside it, so a tap on the pill's edge
-    // still selects (DESIGN_SYSTEM.md §4). Selection is a surface step and a weight — neither
-    // reaches TalkBack, so it is stated.
+    // still selects. Selection is a surface step and a weight — neither reaches TalkBack, so it
+    // is stated.
     Box(
         modifier = Modifier
             .width(SignSegmentWidth)

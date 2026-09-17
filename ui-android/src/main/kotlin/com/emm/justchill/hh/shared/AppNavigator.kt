@@ -58,12 +58,9 @@ class AppNavigator internal constructor(
     }
 
     /**
-     * Unlike [push], never a silent no-op: a shortcut's promise is "land on this screen now," and
-     * `backStack.contains` alone leaves [route] buried under whatever sits above it. A buried entry
-     * equal to [route] by value is revealed — only what sits above it is dropped, so its ViewModel
-     * and saveable state survive. A buried entry of the same route type but a different value (an
-     * `AddTransactionRoute` from an earlier combo) is replaced instead: the caller asked for a
-     * specific state, not the stale one.
+     * Unlike [push], never a silent no-op: it reveals a buried entry equal to [route] by value,
+     * preserving its ViewModel and saveable state, but replaces a buried entry of the same route
+     * type holding a different value, since the caller asked for that state, not the stale one.
      */
     fun pushToTop(route: AppRoute) {
         if (!isReady() || backStack.lastOrNull() == route) return

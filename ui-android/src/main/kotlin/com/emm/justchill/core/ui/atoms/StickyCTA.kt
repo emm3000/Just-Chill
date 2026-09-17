@@ -102,7 +102,7 @@ fun StickyCTA(
                         fontFamily = InterFontFamily,
                     )
                     // The inline sublabel is the amount the button is about to write, and money is
-                    // mono (DESIGN_SYSTEM.md §3.1).
+                    // mono.
                     Text(
                         text = sublabel,
                         color = fgColor.copy(alpha = 0.9f),

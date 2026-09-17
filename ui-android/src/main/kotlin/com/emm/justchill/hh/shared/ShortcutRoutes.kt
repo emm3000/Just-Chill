@@ -10,8 +10,8 @@ const val EXTRA_CATEGORY_ID = "com.emm.justchill.extra.CATEGORY_ID"
 const val EXTRA_TYPE = "com.emm.justchill.extra.TYPE"
 
 /**
- * The only shape a launcher intent may cross into `:androidApp` as: nav3 and `:domain` types cannot
- * follow, since `ui-android/build.gradle.kts` declares nav3 `implementation`, not `api` (E06-11).
+ * The only shape a launcher intent may cross into `:androidApp` as: nav3 and `:domain` types
+ * cannot follow, since `ui-android/build.gradle.kts` declares nav3 `implementation`, not `api`.
  */
 data class ShortcutIntent(
     val action: String? = null,
