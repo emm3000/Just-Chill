@@ -202,6 +202,22 @@ class SqlDelightSnapshotStoreTest {
     }
 
     @Test
+    fun `a restored account carries the ledger's only currency, whatever the file held`() = runTest {
+        db.accountsQueries.insert(
+            accountId = "acc-1",
+            name = "Yape",
+            type = "Cash",
+            currency = "USD",
+            updatedAt = 1L,
+            createdAt = 1L,
+        )
+
+        store.restore(fullSnapshot())
+
+        assertEquals("PEN", db.accountsQueries.all().executeAsOne().currency)
+    }
+
+    @Test
     fun `latestLocalChangeAt is null on an empty database`() = runTest {
         assertNull(store.latestLocalChangeAt())
     }
