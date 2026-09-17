@@ -5,10 +5,8 @@ import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Nothing in the compiler connects the manifest, the extraction rules and the preference file name
- * the session manager writes to. Each one alone silently re-exposes the refresh token.
- */
+// Nothing in the compiler connects the manifest, the extraction rules and the preference file
+// name the session manager writes to. Each one alone silently re-exposes the refresh token.
 class AuthPrefsBackupExclusionTest {
 
     @Test

@@ -50,22 +50,18 @@ class EditTransactionViewModelTest {
     private val today = LocalDate(2026, Month.AUGUST, 10)
     private val todayDates = MutableStateFlow(today)
 
-    /**
-     * Deliberately FIRST in the catalog, and never what the stored movement points at or what any
-     * test picks. `accountSelected` and `categorySelected` are plain lookups with no fallback, so
-     * a fixture of one answers correctly even with the lookup deleted — every assertion about a
-     * selection would then pass while pinning nothing.
-     */
+    // Deliberately FIRST in the catalog, and never what the stored movement points at, so a
+    // fixture of one cannot pass a selection assertion by luck if the id lookup gets deleted.
     private val decoyAccount = Account(AccountId("interbank"), "Interbank")
 
     private val account = Account(AccountId("bcp"), "BCP")
 
-    /** Neither stored nor first: only a live pick can put this one on screen or in a write. */
+    // Neither stored nor first: only a live pick can put this one on screen or in a write.
     private val pickedAccount = Account(AccountId("yape"), "Yape")
 
     private val accounts = listOf(decoyAccount, account, pickedAccount)
 
-    /** The decoy's category half — same reasoning, and never what the stored movement points at. */
+    // The decoy's category half — same reasoning, and never what the stored movement points at.
     private val decoyCategory = Category(
         categoryId = CategoryId("transport"),
         name = "Transporte",
@@ -84,7 +80,7 @@ class EditTransactionViewModelTest {
 
     private val categories = listOf(decoyCategory, category)
 
-    /** Recorded on 4 March 2026 at 09:15 — a day that is neither today nor yesterday. */
+    // Recorded on 4 March 2026 at 09:15 — a day that is neither today nor yesterday.
     private val marchDay = LocalDate(2026, Month.MARCH, 4)
     private val marchOccurredAt = LocalDateTime(marchDay, LocalTime(9, 15, 33))
 

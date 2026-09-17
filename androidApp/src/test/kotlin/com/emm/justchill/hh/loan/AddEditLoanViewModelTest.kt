@@ -67,7 +67,7 @@ class AddEditLoanViewModelTest {
     private val createLoan = mockk<CreateLoanUseCase>(relaxed = true)
     private val updateLoan = mockk<UpdateLoanUseCase>(relaxed = true)
 
-    /** Recorded on 4 March 2026 at 09:15:33 — a time the fixed clock (14:30) never produces. */
+    // Recorded on 4 March 2026 at 09:15:33 — a time the fixed clock (14:30) never produces.
     private val marchDay = LocalDate(2026, Month.MARCH, 4)
     private val marchLentAt = LocalDateTime(marchDay, LocalTime(9, 15, 33))
 
@@ -92,11 +92,8 @@ class AddEditLoanViewModelTest {
         zone = lima,
     )
 
-    /**
-     * The Clock this ViewModel still holds answers "what hour", never "what day" — neither for the
-     * initial state nor for the lentAt a save stamps. The two tests below pin one each, by
-     * pointing TodayFlow at a day the clock does not agree with.
-     */
+    // The Clock answers "what hour", never "what day"; the two tests below point TodayFlow at a
+    // day the clock disagrees with to prove the split.
     @Test
     fun `today is TodayFlow's day, not the clock's`() = runTest {
         val christmas = LocalDate(2026, Month.DECEMBER, 25)
@@ -111,8 +108,6 @@ class AddEditLoanViewModelTest {
     @Test
     fun `an untouched date is lent on TodayFlow's day, at the clock's hour`() = runTest {
         coEvery { createLoan(any()) } returns Unit
-        // The two disagree on purpose: the day must come from TodayFlow and the hour from the
-        // clock, which is the only split that tells a second date derivation apart from none.
         val christmas = LocalDate(2026, Month.DECEMBER, 25)
         todayDates.value = christmas
         val vm = viewModel()

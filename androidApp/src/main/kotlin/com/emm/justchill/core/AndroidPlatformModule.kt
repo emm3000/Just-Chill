@@ -32,7 +32,6 @@ private const val PREFS_NAME = "justchill_prefs"
 internal const val AUTH_PREFS_NAME = "justchill_auth"
 private const val PREFS_MIGRATED_FLAG = "_migrated_from_build_id"
 
-// The ONLY place Android-specific DI lives; the platform-agnostic graph is shared via appModules().
 val androidPlatformModule = module {
 
     single { provideSqlDriver(androidContext()) }

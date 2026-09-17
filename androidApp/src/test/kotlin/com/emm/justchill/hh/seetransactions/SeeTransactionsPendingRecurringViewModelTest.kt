@@ -44,17 +44,13 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** Midday, so nothing here depends on where a day boundary falls. */
+// Midday, so nothing here depends on where a day boundary falls.
 private val NOON = LocalTime(12, 0)
 
-/** Mid-month, so nothing here depends on where a month boundary falls. */
+// Mid-month, so nothing here depends on where a month boundary falls.
 private val TODAY = LocalDate(2026, 8, 15)
 
-/**
- * The pending-recurring wiring `SeeTransactionsViewModel` owns: sourcing, the visibility rule,
- * confirm, skip, and the refresh into the list below. Split out of SeeTransactionsViewModelTest so
- * neither class trips detekt's LargeClass.
- */
+// Split out of SeeTransactionsViewModelTest so neither class trips detekt's LargeClass.
 @Suppress("IgnoredReturnValue")
 class SeeTransactionsPendingRecurringViewModelTest {
 

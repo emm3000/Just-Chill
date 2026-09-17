@@ -4,10 +4,8 @@ import org.junit.Test
 import java.io.File
 import kotlin.test.assertTrue
 
-/**
- * `Application.onCreate` runs on no JVM host test and `:androidApp` has no instrumented source set,
- * so the one call that starts the sweep is reachable only as source text.
- */
+// `Application.onCreate` runs on no JVM host test and `:androidApp` has no instrumented source
+// set, so the one call that starts the sweep is reachable only as source text.
 class LegacySessionSweepStartupTest {
 
     @Test

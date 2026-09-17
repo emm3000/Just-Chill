@@ -54,12 +54,9 @@ class AddEditRecurringMovementViewModelTest {
 
     private val testAccount = Account(accountId = AccountId("acc-1"), name = "BCP", type = AccountType.Bank)
 
-    /**
-     * Deliberately FIRST in every catalog this suite builds, and never the one a template points
-     * at. `selectedAccount` falls back to `accounts.firstOrNull()`, so a fixture holding one
-     * account answers correctly even with the id lookup deleted — every edit-mode assertion below
-     * would then pass while pinning nothing.
-     */
+    // Deliberately FIRST in every catalog this suite builds, and never the one a template points
+    // at, so a fixture with one account cannot pass an edit-mode assertion by luck if the id
+    // lookup gets deleted.
     private val decoyAccount = Account(accountId = AccountId("acc-0"), name = "Interbank", type = AccountType.Bank)
 
     private val allAccounts = listOf(decoyAccount, testAccount)
