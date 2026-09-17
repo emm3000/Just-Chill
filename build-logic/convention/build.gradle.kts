@@ -15,7 +15,9 @@ fun marker(plugin: Provider<PluginDependency>): String = plugin.get().run {
 dependencies {
     implementation(marker(libs.plugins.android.application))
     implementation(marker(libs.plugins.detekt))
+    implementation(marker(libs.plugins.google.crashlytics))
     implementation(marker(libs.plugins.kotlin.compose))
+    implementation(marker(libs.plugins.sqldelight))
     implementation("org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:${libs.versions.kotlinVersion.get()}")
 
     testImplementation(libs.junit)
@@ -32,6 +34,10 @@ gradlePlugin {
         register("androidApplication") {
             id = "justchill.android.application"
             implementationClass = "com.emm.buildlogic.AndroidApplicationConventionPlugin"
+        }
+        register("androidRelease") {
+            id = "justchill.android.release"
+            implementationClass = "com.emm.buildlogic.AndroidReleaseConventionPlugin"
         }
         register("androidLibrary") {
             id = "justchill.android.library"
@@ -60,6 +66,10 @@ gradlePlugin {
         register("buildInfo") {
             id = "justchill.build.info"
             implementationClass = "com.emm.buildlogic.BuildInfoConventionPlugin"
+        }
+        register("sqlDelight") {
+            id = "justchill.sqldelight"
+            implementationClass = "com.emm.buildlogic.SqlDelightConventionPlugin"
         }
     }
 }

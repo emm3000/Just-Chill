@@ -1,6 +1,7 @@
 package com.emm.buildlogic
 
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
+import com.emm.buildlogic.internal.gitOutput
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -48,16 +49,7 @@ class BuildInfoConventionPlugin : Plugin<Project> {
         }
     }
 
-    /**
-     * Read at configuration time on purpose: `providers.exec` resolved here is a
-     * configuration-cache input, so a new commit invalidates the cached entry. Reading git from
-     * inside the task action instead would hide the change from up-to-date checking.
-     */
-    private fun Project.gitCommitHash(): String = runCatching {
-        providers.exec {
-            commandLine("git", "rev-parse", "HEAD")
-        }.standardOutput.asText.get().trim()
-    }.getOrDefault(GenerateBuildInfoTask.UNKNOWN_COMMIT)
+    private fun Project.gitCommitHash(): String = gitOutput("rev-parse", "HEAD") ?: GenerateBuildInfoTask.UNKNOWN_COMMIT
 
     private companion object {
         const val APPLICATION_PLUGIN = "com.android.application"

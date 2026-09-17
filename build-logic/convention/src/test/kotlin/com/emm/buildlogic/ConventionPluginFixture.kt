@@ -6,7 +6,13 @@ import java.io.File
 
 internal class ConventionPluginFixture(private val projectDirectory: File) {
 
-    fun report(pluginIds: List<String>, androidConfiguration: String = ""): Map<String, String> {
+    fun report(
+        pluginIds: List<String>,
+        androidConfiguration: String = "",
+        arguments: List<String> = emptyList(),
+        files: Map<String, String> = emptyMap(),
+    ): Map<String, String> {
+        files.forEach { (path, content) -> write(path, content) }
         writeSettings()
         writeLocalProperties()
         writeStubModule("core/domain")
@@ -16,13 +22,22 @@ internal class ConventionPluginFixture(private val projectDirectory: File) {
         val result: BuildResult = GradleRunner.create()
             .withProjectDir(projectDirectory)
             .withPluginClasspath()
-            .withArguments(":probe:conventionReport", "-g", gradleUserHome, "--stacktrace")
+            .withArguments(listOf(":probe:conventionReport", "-g", gradleUserHome, "--stacktrace") + arguments)
             .build()
 
         return result.output
             .lineSequence()
             .filter { it.startsWith(REPORT_PREFIX) }
             .associate { it.removePrefix(REPORT_PREFIX).substringBefore('=') to it.substringAfter('=') }
+    }
+
+    fun git(vararg arguments: String) {
+        val process: Process = ProcessBuilder(listOf("git") + GIT_IDENTITY + arguments)
+            .directory(projectDirectory)
+            .redirectErrorStream(true)
+            .start()
+        val output: String = process.inputStream.bufferedReader().readText()
+        check(process.waitFor() == 0) { "git ${arguments.joinToString(" ")} failed: $output" }
     }
 
     private fun writeSettings() {
@@ -85,6 +100,13 @@ internal class ConventionPluginFixture(private val projectDirectory: File) {
 
         val rootDirectory: File = File(System.getProperty("justchill.rootDir"))
 
+        val GIT_IDENTITY: List<String> = listOf(
+            "-c", "user.name=t",
+            "-c", "user.email=t@t",
+            "-c", "commit.gpgsign=false",
+            "-c", "tag.gpgsign=false",
+        )
+
         val gradleUserHome: String = File(System.getProperty("user.home"), ".gradle").absolutePath
 
         val REPORT_TASK: String = """
@@ -101,6 +123,26 @@ internal class ConventionPluginFixture(private val projectDirectory: File) {
                     val application = project.extensions.findByType(com.android.build.api.dsl.ApplicationExtension::class.java)
                     if (application != null) {
                         println("REPORT targetSdk=" + application.defaultConfig.targetSdk)
+                        println("REPORT versionCode=" + application.defaultConfig.versionCode)
+                        println("REPORT versionName=" + application.defaultConfig.versionName)
+                        val release = application.buildTypes.getByName("release")
+                        println("REPORT releaseMinify=" + release.isMinifyEnabled)
+                        println("REPORT releaseShrink=" + release.isShrinkResources)
+                        println("REPORT releaseProguard=" + release.proguardFiles.map { it.name }.joinToString(","))
+                        println("REPORT releaseSigning=" + release.signingConfig?.name)
+                        println("REPORT signingConfigs=" + application.signingConfigs.map { it.name }.sorted().joinToString(","))
+                        application.signingConfigs.findByName("release")?.let { signing ->
+                            println("REPORT releaseStoreFile=" + signing.storeFile?.relativeTo(project.projectDir)?.invariantSeparatorsPath)
+                            println("REPORT releaseKeyAlias=" + signing.keyAlias)
+                        }
+                        val crashlytics = (release as ExtensionAware).extensions.findByName("firebaseCrashlytics")
+                        if (crashlytics != null) {
+                            println("REPORT mappingUpload=" + (crashlytics as com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension).mappingFileUploadEnabled)
+                        }
+                    }
+                    val sqldelight = project.extensions.findByType(app.cash.sqldelight.gradle.SqlDelightExtension::class.java)
+                    sqldelight?.databases?.forEach { database ->
+                        println("REPORT database=" + listOf(database.name, database.packageName.get(), database.schemaOutputDirectory.get().asFile.relativeTo(project.projectDir).invariantSeparatorsPath, database.verifyMigrations.get()).joinToString(","))
                     }
                     val java = project.extensions.findByType(org.gradle.api.plugins.JavaPluginExtension::class.java)
                     if (java != null) {

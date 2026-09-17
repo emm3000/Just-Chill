@@ -1,6 +1,6 @@
 plugins {
     id("justchill.android.library")
-    alias(libs.plugins.sqldelight)
+    id("justchill.sqldelight")
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -37,13 +37,4 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.android.driver)
-}
-
-sqldelight {
-    databases {
-        create("EmmDatabaseData") {
-            packageName.set("com.emm.data")
-            schemaOutputDirectory.set(file("src/main/sqldelight/databases"))
-        }
-    }
 }
