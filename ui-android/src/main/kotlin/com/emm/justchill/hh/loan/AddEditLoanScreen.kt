@@ -209,10 +209,9 @@ private fun AddEditLoanContent(
 }
 
 /**
- * The one field the ViewModel rewrites on every keystroke — `sanitizeInterestPercentInput` drops
- * what the parser would truncate — so the caret has to be placed against the text that came back
- * rather than the text that went in. [lastEdit] caches that caret and nothing else: what renders is
- * always [text], straight off the state.
+ * `sanitizeInterestPercentInput` rewrites what was typed, so the caret has to be placed against
+ * the text that came back, not the text that went in. [lastEdit] caches only that caret; what
+ * renders is always [text], straight off the state.
  */
 @Composable
 private fun InterestPercentField(text: String, onTextChange: (String) -> Unit) {
