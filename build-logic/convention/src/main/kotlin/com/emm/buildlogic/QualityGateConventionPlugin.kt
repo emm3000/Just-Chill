@@ -22,7 +22,8 @@ class QualityGateConventionPlugin : Plugin<Project> {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
             description =
                 "Runs every check that must pass before pushing: detektMain and detektTest, " +
-                    "compileDebugAndroidTestKotlin, verifySqlDelightMigration, :build-logic:convention:test on the root, " +
+                    "compileDebugAndroidTestKotlin, compileReleaseKotlin, verifySqlDelightMigration, " +
+                    ":build-logic:convention:test on the root, " +
                     "checkModuleBoundaries and checkComposeFreeViewModels, " +
                     "the unit tests the library plugins name, plus the tests and lint :androidApp adds. " +
                     "Invoked by the pre-push hook and by CI."
@@ -96,8 +97,13 @@ class QualityGateConventionPlugin : Plugin<Project> {
         )
 
         // detekt passes on unresolvable code, so only compiling `androidTest` catches a signature
-        // change that breaks the instrumented suite.
-        val COMPILE_GATE_TASKS: Set<String> = setOf("compileDebugAndroidTestKotlin")
+        // change that breaks the instrumented suite. `compileReleaseKotlin` is named because
+        // `assembleProdRelease` is not on the gate and no library module's release variant is
+        // type-checked anywhere else; it used to ride along on `detektRelease` by accident.
+        val COMPILE_GATE_TASKS: Set<String> = setOf(
+            "compileDebugAndroidTestKotlin",
+            "compileReleaseKotlin",
+        )
 
         // The only check that a `.sq` change shipped its `.sqm`. SQLDelight wires it into `check`
         // alone, which the gate never runs.

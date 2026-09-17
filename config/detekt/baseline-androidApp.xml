@@ -1,9 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>CyclomaticComplexMethod:AddTransactionScreen.kt:@Composable private fun AddTransactionScreenContent</ID>
-    <ID>CyclomaticComplexMethod:EmmButton.kt:@Composable fun EmmButton</ID>
-    <ID>CyclomaticComplexMethod:EmmTextInput.kt:@Composable fun EmmTextInput</ID>
-  </CurrentIssues>
-</SmellBaseline>

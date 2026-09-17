@@ -10,6 +10,14 @@ android {
     }
 }
 
+// detektMain and detektTest aggregate detektDebug, detektRelease, detektDebugUnitTest and
+// detektDebugAndroidTest. This module has no per-variant source directory, so the release analysis
+// reads the same files under an identical baseline; androidTest stays, it carries the migration
+// suite. Release type checking is the gate's own compileReleaseKotlin.
+qualityGate {
+    detektTasks.addAll("detektDebug", "detektDebugUnitTest", "detektDebugAndroidTest")
+}
+
 dependencies {
     implementation(projects.core.domain)
     implementation(libs.coroutines.extensions)

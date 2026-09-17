@@ -12,6 +12,14 @@ composeCompiler {
     stabilityConfigurationFiles.add(layout.projectDirectory.file("compose_stability.conf"))
 }
 
+// detektMain and detektTest aggregate detektDebug, detektRelease, detektDebugUnitTest and
+// detektDebugAndroidTest. This module has no per-variant and no androidTest source directory, so
+// the release analysis reads the same files under an identical baseline and the androidTest one
+// reads nothing. Release type checking is the gate's own compileReleaseKotlin.
+qualityGate {
+    detektTasks.addAll("detektDebug", "detektDebugUnitTest")
+}
+
 dependencies {
     api(projects.presentation)
     implementation(projects.core.domain)
