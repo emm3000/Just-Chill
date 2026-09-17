@@ -13,7 +13,7 @@ metadata:
 ACTIVATE: existing target, no fresh diff — feature flow, module, `.github/`, docs vs code, project state.
 
 NOT here:
-- fresh writer change → `docs/WORKFLOW.md` step 4 reviewer
+- fresh writer change → the `pr-reviewer` agent (`docs/WORKFLOW.md` step 4)
 - frozen target, blind dual judgment → `judgment-day`
 - pending diff/PR/branch/path → `code-review`, `security-review`, `simplify`
 - editing skill text → `skill-improver`
@@ -23,7 +23,7 @@ NOT here:
 
 - Evidence per finding: `file:line`; for an ABSENCE, the exact `rg`/`fd` pattern and scope. None → drop it.
 - Lead with what is broken; no praise, no hedging.
-- Severity `CRITICAL`/`WARNING`/`NIT` only (`docs/WORKFLOW.md`).
+- Severity `CRITICAL`/`WARNING`/`NIT` only.
 - Never edit or commit ANYTHING — code, docs, config, skills. The auditor writes no file in this repo; its output IS the report.
 - Never run Gradle — no `qualityGate`, no compile task. A finding only a Gradle task can prove is UNPROVEN, plus the exact command for the main thread.
 - Aggression never licenses inflated severity; unevidenced is worse than silent.

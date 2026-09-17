@@ -165,7 +165,7 @@
       "Read(./keystore.properties)",
       "Read(./local.properties)",
       "Read(./key/**)",
-      "Read(./app/google-services.json)",
+      "Read(./androidApp/google-services.json)",
       "Read(~/.ssh/**)",
       "Read(~/.aws/**)",
       "Read(~/.gnupg/**)",
