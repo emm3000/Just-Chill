@@ -52,11 +52,16 @@ jobs:
             exit 1
           fi
 
+      # Read-only cache on purpose: this job runs on a `v*.*.*` tag ref, and a cache entry written
+      # from a tag is scoped to that tag, so no later run can ever restore it. Writing it only
+      # consumes the repo's 10 GB cache budget. `uploadApk` on `trunk` stays the only writer.
       - uses: ./.github/actions/setup-android
         with:
           keystore-properties: ${{ secrets.JUST_VERONICA }}
           signing-key-base64: ${{ secrets.JUST_CHILL }}
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          cache-read-only: 'true'
 
       # The Crashlytics mapping upload runs for release tags and trunk only, never a branch dispatch.
       - name: Verify and build the release bundle
